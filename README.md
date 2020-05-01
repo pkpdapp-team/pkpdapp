@@ -1,5 +1,4 @@
 # What is the PKPDApp
----
 
 It's a web application for modeling the distribution and effects of drugs. It is currently in its infancy, but we plan to build an application with an intuitive user interface for
 
