@@ -1,2 +1,11 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+
 # Virtual environments
 venv
+
+# Setuptools files
+*.egg-info
+
+# vscode
+.vscode
