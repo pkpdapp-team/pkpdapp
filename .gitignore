@@ -9,3 +9,6 @@ venv
 
 # vscode
 .vscode
+
+# database file (not sure yet what its good for)
+db.sqlite3

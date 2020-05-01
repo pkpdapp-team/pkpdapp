@@ -10,7 +10,7 @@ def load_version():
     try:
         import os
         root = os.path.abspath(os.path.dirname(__file__))
-        with open(os.path.join(root, 'pkpdapp/pkpdapp', 'version'), 'r') as f:
+        with open(os.path.join(root, 'pkpdapp', 'version'), 'r') as f:
             version = f.read().strip().split(',')
         return '.'.join([str(int(x)) for x in version])
     except Exception as e:
