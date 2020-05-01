@@ -14,6 +14,6 @@ It's a web application for modeling the distribution and effects of drugs. It is
 
 - finding the best model for a given dataset
 
-At heart of the app is it to provide a best-practice pipeline for PKPD modeling that will make it easier to compare different modelling startegies. 
+At heart of the app is it to provide a best-practice pipeline for PKPD modeling that will make it easier to compare different modelling strategies. 
 
 If you are interested and would like to contribute to the project, you are welcome to drop me an email. Especially at a later stage of the project, when the basic architecture of the app is sorted out, contributions will be very welcome.
