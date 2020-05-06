@@ -13,6 +13,3 @@ venv
 
 # database file (not sure yet what its good for)
 db.sqlite3
-
-# Polls app, just for orientation in the beginning
-polls
