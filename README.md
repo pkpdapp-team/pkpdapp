@@ -20,7 +20,7 @@ If you are interested and would like to contribute to the project, you are welco
 
 # Development
 
-The PKPDApp is being built with Django's API, and as such supports the idea of reusable applications. The PKPDApp will therefore be split into mutliple smaller applications that are either imported from existing [Django Packages](https://djangopackages.org) or implemented and made availbale as a Django package. A quick guide for building resuable apps in Django is available [here](https://docs.djangoproject.com/en/3.0/intro/reusable-apps/).
+The PKPDApp is being built with Django's API, and as such supports the idea of reusable applications. The PKPDApp will therefore be split into mutliple smaller applications that are either imported from existing [Django Packages](https://djangopackages.org) or implemented and made availbale as Django packages. A quick guide for building resuable apps in Django is available [here](https://docs.djangoproject.com/en/3.0/intro/reusable-apps/).
 
 For further guidance on how to build Django apps we recommend Django's documentation, and its
 
