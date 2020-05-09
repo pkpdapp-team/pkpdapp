@@ -11,6 +11,7 @@ app_name = 'home'
 # Generalised version
 urlpatterns = [
     path('', views.IndexView.as_view(), name='index'),
+    path('generic/', views.GenericView.as_view(), name='generic'),
     path('old/', views.OldIndexView.as_view(), name='old_index'),
     path('<int:pk>/', views.DetailView.as_view(), name='detail'),
     path('<int:pk>/results/', views.ResultsView.as_view(), name='results'),

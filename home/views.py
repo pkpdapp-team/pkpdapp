@@ -34,6 +34,19 @@ class IndexView(generic.base.TemplateView):
         return context
 
 
+class GenericView(generic.base.TemplateView):
+    template_name = 'home/generic.html'
+
+    def get_context_data(self):
+        """
+        Returns the specifications of the web page.
+        """
+        context = {
+            'app_name': 'PKPDApp'
+        }
+        return context
+
+
 class OldIndexView(generic.ListView):
     template_name = 'home/old_index.html'
     context_object_name = 'latest_question_list'
