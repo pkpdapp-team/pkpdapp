@@ -12,3 +12,6 @@ venv
 
 # database file (not sure yet what its good for)
 db.sqlite3
+
+# DS
+.DS_Store
