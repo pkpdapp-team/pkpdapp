@@ -43,7 +43,8 @@ setup(
 
     # List of dependencies
     install_requires=[
-        'Django>=1.11',
+        'Django>=2.0',
+        'django_plotly_dash',
     ],
     extras_require={
         'docs': [
