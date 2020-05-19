@@ -45,6 +45,8 @@ setup(
     install_requires=[
         'Django>=2.0',
         'django_plotly_dash',
+        'whitenoise',
+        'dpd-static-support',
     ],
     extras_require={
         'docs': [

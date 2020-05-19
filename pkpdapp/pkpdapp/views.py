@@ -25,3 +25,4 @@ class GenericView(generic.base.TemplateView):
         """
         context = {}
         return context
+

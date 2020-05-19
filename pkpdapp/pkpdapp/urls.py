@@ -15,12 +15,16 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import include, path
+from django.conf.urls import url
+from django.views.generic import TemplateView
 
 from . import views
+from . import test_app
 
 urlpatterns = [
     path('', views.IndexView.as_view(), name='index'),
     path('generic/', views.GenericView.as_view(), name='generic'),
+    url('^demo-one$', TemplateView.as_view(template_name='demo.html'), name="demo"),
     path('django_plotly_dash/', include('django_plotly_dash.urls')),
     path('admin/', admin.site.urls),
 ]
