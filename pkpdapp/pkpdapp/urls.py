@@ -16,8 +16,11 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import include, path
 
+from . import views
+
 urlpatterns = [
-    path('', include('home.urls')),  # (url route, view, kwargs, name)
+    path('', views.IndexView.as_view(), name='index'),
+    path('generic/', views.GenericView.as_view(), name='generic'),
     path('django_plotly_dash/', include('django_plotly_dash.urls')),
     path('admin/', admin.site.urls),
 ]
