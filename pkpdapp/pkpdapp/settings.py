@@ -32,6 +32,7 @@ ALLOWED_HOSTS = []
 # migrate` first
 
 INSTALLED_APPS = [
+    # standard Django apps
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -39,8 +40,12 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    # external apps
     'django_plotly_dash.apps.DjangoPlotlyDashConfig',
     'dpd_static_support',
+
+    # internal apps
+    'simulate.apps.SimulateConfig',
 ]
 
 MIDDLEWARE = [
