@@ -2,7 +2,67 @@
 {% load static %}
 
 {% block content %}
-<h1>Simulate</h1>
-<p>The simulate workflow bla bla bla.</p>
-<span class="image main"><img src="{% static 'images/pic13.jpg' %}" alt="" /></span>
+<header>
+    <h1>Simulate</h1>
+    <p>
+        This is the workflow to explore the behaviour of PKPD models away from data.
+        It's purpose is to provide an easy interface to compare different dosing regimens,
+        model parameters or even model structures.
+    </p>
+</header>
+<header>
+    <h2>Step 1: Build Model</h2>
+    <p>
+        A model is composed of a mechanistic model, a route of administration of the drug,
+        an error model and a population model. For further details on the definition and
+        usage of the terms, please have a look at the documentation.
+    </p>
+</header>
+<section class="tiles">
+	<article class="model">
+		<span class="image">
+			<img src="{% static 'images/pic03.jpg' %}" alt="" />
+		</span>
+		<a href="{% url 'generic' %}">
+			<h3>Mechanistic Model</h3>
+			<div class="content">
+				<p>Visualise your population data. Stratify by dose, covariates or individual IDs, and more...</p>
+			</div>
+		</a>
+	</article>
+	<article class="model">
+		<span class="image">
+			<img src="{% static 'images/pic03.jpg' %}" alt="" />
+		</span>
+		<a href="{% url 'simulate:index' %}">
+			<h3>Route of Administration</h3>
+			<div class="content">
+				<p>Build and compare models to explore dosing regimens and effect variations between individuals.</p>
+			</div>
+		</a>
+	</article>
+	<article class="model">
+		<span class="image">
+			<img src="{% static 'images/pic03.jpg' %}" alt="" />
+		</span>
+		<a href="{% url 'generic' %}">
+			<h3>Error Model</h3>
+			<div class="content">
+				<p>Find the model that describes your data. Compare the identifiability of models and explore the potential for optimised experiments.</p>
+			</div>
+		</a>
+	</article>
+    <article class="model">
+		<span class="image">
+			<img src="{% static 'images/pic03.jpg' %}" alt="" />
+		</span>
+		<a href="{% url 'generic' %}">
+			<h3>Population Model</h3>
+			<div class="content">
+				<p>Find the model that describes your data. Compare the identifiability of models and explore the potential for optimised experiments.</p>
+			</div>
+		</a>
+	</article>
+</section>
+
 {% endblock %}
