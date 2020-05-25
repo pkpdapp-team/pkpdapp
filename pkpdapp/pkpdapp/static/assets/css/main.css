@@ -2,7 +2,7 @@
 @import url("https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,700,900");
 
 /*
-	Phantom by HTML5 UP
+	Adapted from Phantom by HTML5 UP
 	html5up.net | @ajlkn
 	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
 */
@@ -555,7 +555,7 @@ input, select, textarea {
 					padding-top: 4em;
 				}
 
-		@media screen and (max-width: 1680px) {
+		/* @media screen and (max-width: 1680px) {
 
 			.row {
 				display: flex;
@@ -1778,7 +1778,7 @@ input, select, textarea {
 							padding-top: 2em;
 						}
 
-		}
+		} */
 
 /* Section/Article */
 
@@ -2570,12 +2570,14 @@ input, select, textarea {
 		display: -webkit-flex;
 		display: -ms-flex;
 		display: flex;
+		flex-direction: row;
 		-moz-flex-wrap: wrap;
 		-webkit-flex-wrap: wrap;
 		-ms-flex-wrap: wrap;
 		flex-wrap: wrap;
 		position: relative;
-		margin: -2.5em 0 0 -2.5em;
+		margin: 0 0 0 0;
+		justify-content: center;
 	}
 
 		.tiles article {
@@ -2584,8 +2586,12 @@ input, select, textarea {
 			-ms-transition: -ms-transform 0.5s ease, opacity 0.5s ease;
 			transition: transform 0.5s ease, opacity 0.5s ease;
 			position: relative;
-			width: calc(33.33333% - 2.5em);
-			margin: 2.5em 0 0 2.5em;
+			width: 28vw;
+			margin: 0 0 0 0;
+			-moz-transform: scale(0.9);
+			-webkit-transform: scale(0.9);
+			-ms-transform: scale(0.9);
+			transform: scale(0.9);
 		}
 
 			.tiles article > .image {
@@ -2746,10 +2752,10 @@ input, select, textarea {
 		}
 
 		body.is-preload .tiles article {
-			-moz-transform: scale(0.9);
-			-webkit-transform: scale(0.9);
-			-ms-transform: scale(0.9);
-			transform: scale(0.9);
+			-moz-transform: scale(0.8);
+			-webkit-transform: scale(0.8);
+			-ms-transform: scale(0.8);
+			transform: scale(0.8);
 			opacity: 0;
 		}
 
@@ -2760,60 +2766,53 @@ input, select, textarea {
 
 		@media screen and (max-width: 1280px) {
 
-			.tiles {
-				margin: -1.25em 0 0 -1.25em;
+			.tiles article {
+				width: 25vw;
+				margin: 0 0 0 0;
+				-moz-transform: scale(0.9);
+				-webkit-transform: scale(0.9);
+				-ms-transform: scale(0.9);
+				transform: scale(0.9);
 			}
-
-				.tiles article {
-					width: calc(33.33333% - 1.25em);
-					margin: 1.25em 0 0 1.25em;
-				}
 
 		}
 
 		@media screen and (max-width: 980px) {
 
-			.tiles {
-				margin: -2.5em 0 0 -2.5em;
+			.tiles article {
+				width: 25vw;
+				margin: 0 0 0 0;
+				-moz-transform: scale(0.9);
+				-webkit-transform: scale(0.9);
+				-ms-transform: scale(0.9);
+				transform: scale(0.9);
 			}
-
-				.tiles article {
-					width: calc(50% - 2.5em);
-					margin: 2.5em 0 0 2.5em;
-				}
 
 		}
 
 		@media screen and (max-width: 736px) {
 
 			.tiles {
-				margin: -1.25em 0 0 -1.25em;
+				flex-direction: column;
+				justify-content: center;
+				align-items: center;
 			}
 
-				.tiles article {
-					width: calc(50% - 1.25em);
-					margin: 1.25em 0 0 1.25em;
-				}
+			.tiles article {
+				width: calc(736px * 0.25);
+				margin: 0 0 0 0;
+				-moz-transform: scale(0.9);
+				-webkit-transform: scale(0.9);
+				-ms-transform: scale(0.9);
+				transform: scale(0.9);
+			}
 
 					.tiles article:hover > .image {
-						-moz-transform: scale(1.0);
-						-webkit-transform: scale(1.0);
-						-ms-transform: scale(1.0);
-						transform: scale(1.0);
+						-moz-transform: scale(1.1);
+						-webkit-transform: scale(1.1);
+						-ms-transform: scale(1.1);
+						transform: scale(1.1);
 					}
-
-		}
-
-		@media screen and (max-width: 480px) {
-
-			.tiles {
-				margin: 0;
-			}
-
-				.tiles article {
-					width: 100%;
-					margin: 1.25em 0 0 0;
-				}
 
 		}
 
@@ -2829,7 +2828,17 @@ input, select, textarea {
 		margin: 2.5em 0 0 2.5em;
 	}
 
-		/* .tiles article > .image {
+	.tiles article.model.active {
+		-moz-transition: -moz-transform 0.5s ease, opacity 0.5s ease;
+		-webkit-transition: -webkit-transform 0.5s ease, opacity 0.5s ease;
+		-ms-transition: -ms-transform 0.5s ease, opacity 0.5s ease;
+		transition: transform 0.5s ease, opacity 0.5s ease;
+		position: relative;
+		width: calc(95vw);
+		margin: 2.5em 0 0 2.5em;
+	}
+
+		.tiles article.model > .image {
 			-moz-transition: -moz-transform 0.5s ease;
 			-webkit-transition: -webkit-transform 0.5s ease;
 			-ms-transition: -ms-transform 0.5s ease;
@@ -2839,15 +2848,15 @@ input, select, textarea {
 			width: 100%;
 			border-radius: 4px;
 			overflow: hidden;
-		} */
+		}
 
 			/* .tiles article > .image img {
 				display: block;
 				width: 100%;
 			} */
-/*
-			.tiles article > .image:before {
-				pointer-events: none;
+
+			.tiles article.model > .image:before {
+				pointer-events: auto;
 				-moz-transition: background-color 0.5s ease, opacity 0.5s ease;
 				-webkit-transition: background-color 0.5s ease, opacity 0.5s ease;
 				-ms-transition: background-color 0.5s ease, opacity 0.5s ease;
@@ -2862,10 +2871,10 @@ input, select, textarea {
 				opacity: 1.0;
 				z-index: 1;
 				opacity: 0.8;
-			} */
+			}
 
-			/* .tiles article > .image:after {
-				pointer-events: none;
+			.tiles article > .image:after {
+				pointer-events: auto;
 				-moz-transition: opacity 0.5s ease;
 				-webkit-transition: opacity 0.5s ease;
 				-ms-transition: opacity 0.5s ease;
@@ -2883,7 +2892,7 @@ input, select, textarea {
 				background-size: 100% 100%;
 				opacity: 0.25;
 				z-index: 2;
-			} */
+			}
 
 		/* .tiles article > a {
 			display: -moz-flex;
@@ -2953,12 +2962,16 @@ input, select, textarea {
 			background-color: #3f3e3e;
 		}
 
-		/* body:not(.is-touch) .tiles article:hover > .image {
-			-moz-transform: scale(1.1);
-			-webkit-transform: scale(1.1);
-			-ms-transform: scale(1.1);
-			transform: scale(1.1);
-		} */
+		.tiles article.model-active > .image:before {
+			background-color: #db0505;
+		}
+
+		body:not(.is-touch) .tiles article.model:active > .image {
+			-moz-transform: scale(2);
+			-webkit-transform: scale(2);
+			-ms-transform: scale(2);
+			transform: scale(2);
+		}
 
 			/* body:not(.is-touch) .tiles article:hover > .image:before {
 				background-color: #333333;
@@ -2991,6 +3004,13 @@ input, select, textarea {
 		opacity: 1;
 	} */
 
+	/* full screen upon click */
+	.tiles article.model.fullscreen {
+		position: relative;
+		width: calc(100% - 2.5em);
+		margin: 2.5em 0 0 2.5em;
+	}
+
 	@media screen and (max-width: 1280px) {
 
 		/* .tiles {
@@ -3005,10 +3025,6 @@ input, select, textarea {
 	}
 
 	@media screen and (max-width: 980px) {
-
-		.tiles {
-			margin: -2.5em 0 0 -2.5em;
-		}
 
 			.tiles article.model {
 				width: calc(980px * 0.25 - 1.25em);
