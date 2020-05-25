@@ -48,7 +48,7 @@
 		<a href="{% url 'generic' %}">
 			<h3>Error Model</h3>
 			<div class="content">
-				<p>Find the model that describes your data. Compare the identifiability of models and explore the potential for optimised experiments.</p>
+				<p>Model the error of the mechanistic model.</p>
 			</div>
 		</a>
 	</article>
@@ -59,13 +59,21 @@
 		<a href="{% url 'generic' %}">
 			<h3>Population Model</h3>
 			<div class="content">
-				<p>Find the model that describes your data. Compare the identifiability of models and explore the potential for optimised experiments.</p>
+				<p>Model variation between individuals.</p>
 			</div>
 		</a>
 	</article>
 </section>
 
-<!-- Scripts -->
+<head>
+<script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
+  <meta charset="utf-8">
+  <title>JS Bin</title>
+</head>
+<body>
+  <img class="crossRotate" src="http://placehold.it/100" alt="Cross Menu button" tabindex="1" />
+</body>
+
 <script src="{% static 'assets/js/tiles.js' %}"></script>
 
 {% endblock %}

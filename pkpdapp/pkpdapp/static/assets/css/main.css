@@ -2586,7 +2586,7 @@ input, select, textarea {
 			-ms-transition: -ms-transform 0.5s ease, opacity 0.5s ease;
 			transition: transform 0.5s ease, opacity 0.5s ease;
 			position: relative;
-			width: 28vw;
+			width: 25vw;
 			margin: 0 0 0 0;
 			-moz-transform: scale(0.9);
 			-webkit-transform: scale(0.9);
@@ -2865,38 +2865,19 @@ input, select, textarea {
 
 	}
 
-	/* @media screen and (max-width: 736px) {
-
-		.tiles {
-			margin: -1.25em 0 0 -1.25em;
-		}
-
-			.tiles article {
-				width: calc(50% - 1.25em);
-				margin: 1.25em 0 0 1.25em;
-			}
-
-				.tiles article:hover > .image {
-					-moz-transform: scale(1.0);
-					-webkit-transform: scale(1.0);
-					-ms-transform: scale(1.0);
-					transform: scale(1.0);
-				}
-
-	} */
-/*
-	@media screen and (max-width: 480px) {
-
-		.tiles {
-			margin: 0;
-		}
-
-			.tiles article {
-				width: 100%;
-				margin: 1.25em 0 0 0;
-			}
-
-	} */
+	.tiles article.model.active {
+		-moz-transition: -moz-transform 0.5s ease, opacity 0.5s ease;
+		-webkit-transition: -webkit-transform 0.5s ease, opacity 0.5s ease;
+		-ms-transition: -ms-transform 0.5s ease, opacity 0.5s ease;
+		transition: transform 0.5s ease, opacity 0.5s ease;
+		position: relative;
+		width: 100vw;
+		margin: 0 0 0 0;
+		-moz-transform: scale(0.9);
+		-webkit-transform: scale(0.9);
+		-ms-transform: scale(0.9);
+		transform: scale(0.9);
+	}
 
 /* Header */
 
@@ -3399,3 +3380,36 @@ input, select, textarea {
 			}
 
 		}
+
+/* To be removed */
+img {
+  display: block;
+  width=calc(100% - 1.25em)
+  height=calc(100% - 1.25em)
+  margin: 20px;
+}
+
+.crossRotate {
+  -webkit-transition-duration: 1s;
+  -moz-transition-duration: 1s;
+  -o-transition-duration: 1s;
+  transition-duration: 1s;
+  -webkit-transition-property: -webkit-transform;
+  -moz-transition-property: -moz-transform;
+  -o-transition-property: -o-transform;
+  transition-property: transform;
+  -webkit-transform: scale(calc(0.1));
+  -moz-transform: scale(calc(0.1));
+  -ms-transform: scale(calc(0.1));
+  -o-transform: scale(calc(0.1));
+  transform: scale(calc(0.1));
+  outline: 0;
+}
+
+.crossRotate.active {
+  -webkit-transform: scale(1) translate(50%, 50%);
+  -moz-transform: scale(1) translate(50%, 50%);
+  -ms-transform: scale(1) translate(50%, 50%);
+  -o-transform: scale(1) translate(50%, 50%);
+  transform: scale(1) translate(50%, 50%);
+}
