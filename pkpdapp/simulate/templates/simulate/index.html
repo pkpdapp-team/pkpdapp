@@ -23,10 +23,10 @@
 		<span class="image">
 			<img src="{% static 'images/pic03.jpg' %}" alt="" />
 		</span>
-		<a href="{% url 'generic' %}">
+		<a>
 			<h3>Mechanistic Model</h3>
 			<div class="content">
-				<p>Visualise your population data. Stratify by dose, covariates or individual IDs, and more...</p>
+				<p>Model the pharmacokinetic and pharmacodynamic processes.</p>
 			</div>
 		</a>
 	</article>
@@ -37,7 +37,7 @@
 		<a href="{% url 'simulate:index' %}">
 			<h3>Route of Administration</h3>
 			<div class="content">
-				<p>Build and compare models to explore dosing regimens and effect variations between individuals.</p>
+				<p>Specify the route of administration of the drug.</p>
 			</div>
 		</a>
 	</article>
@@ -64,5 +64,8 @@
 		</a>
 	</article>
 </section>
+
+<!-- Scripts -->
+<script src="{% static 'assets/js/tiles.js' %}"></script>
 
 {% endblock %}
