@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
+{% load plotly_dash %}
 
 {% block content %}
 
@@ -12,6 +13,8 @@
         model parameters or even model structures.
     </p>
 </header>
+
+{% comment %} Step 1: Model building {% endcomment %}
 <header>
     <h2>Step 1: Build Model</h2>
     <p>
@@ -73,5 +76,22 @@
 <div id="subtask">
     <h3>This is a place holder - Subtask is under development</h1>
 </div>
+
+{% comment %} Visualisation of model building blocks {% endcomment %}
+<article>
+{% plotly_app name="ModelApp" ratio=0.5 %}
+</article>
+
+{% comment %} Step 2: Simulation {% endcomment %}
+<header>
+    <h2>Step 2: Simulation</h2>
+    <p>
+        Some brief instructions how to do it.
+    </p>
+</header>
+
+{% comment %} Simulation Dash App {% endcomment %}
+{% plotly_app name="DashBoard" ratio=0.5 %}
+
 
 {% endblock %}

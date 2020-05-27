@@ -47,6 +47,8 @@ setup(
         'django_plotly_dash',
         'whitenoise',
         'dpd-static-support',
+        'networkx',
+        'pandas',
     ],
     extras_require={
         'docs': [
