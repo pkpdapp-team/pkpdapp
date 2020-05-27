@@ -2,6 +2,8 @@
 {% load static %}
 
 {% block content %}
+
+{% comment %} Header and first instructions {% endcomment %}
 <header>
     <h1>Simulate</h1>
     <p>
@@ -18,12 +20,14 @@
         usage of the terms, please have a look at the documentation.
     </p>
 </header>
+
+{% comment %} Creating subtask tiles {% endcomment %}
 <section class="tiles">
 	<article class="model">
 		<span class="image">
 			<img src="{% static 'images/pic03.jpg' %}" alt="" />
 		</span>
-		<a>
+		<a href="#subtask">
 			<h3>Mechanistic Model</h3>
 			<div class="content">
 				<p>Model the pharmacokinetic and pharmacodynamic processes.</p>
@@ -34,7 +38,7 @@
 		<span class="image">
 			<img src="{% static 'images/pic03.jpg' %}" alt="" />
 		</span>
-		<a href="{% url 'simulate:index' %}">
+		<a href="#subtask">
 			<h3>Route of Administration</h3>
 			<div class="content">
 				<p>Specify the route of administration of the drug.</p>
@@ -45,7 +49,7 @@
 		<span class="image">
 			<img src="{% static 'images/pic03.jpg' %}" alt="" />
 		</span>
-		<a href="{% url 'generic' %}">
+		<a href="#subtask">
 			<h3>Error Model</h3>
 			<div class="content">
 				<p>Model the error of the mechanistic model.</p>
@@ -56,7 +60,7 @@
 		<span class="image">
 			<img src="{% static 'images/pic03.jpg' %}" alt="" />
 		</span>
-		<a href="{% url 'generic' %}">
+		<a href="#subtask">
 			<h3>Population Model</h3>
 			<div class="content">
 				<p>Model variation between individuals.</p>
@@ -65,15 +69,9 @@
 	</article>
 </section>
 
-<head>
-<script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
-  <meta charset="utf-8">
-  <title>JS Bin</title>
-</head>
-<body>
-  <img class="crossRotate" src="http://placehold.it/100" alt="Cross Menu button" tabindex="1" />
-</body>
-
-<script src="{% static 'assets/js/tiles.js' %}"></script>
+{% comment %} This fills the active subtask window {% endcomment %}
+<div id="subtask">
+    <h3>This is a place holder - Subtask is under development</h1>
+</div>
 
 {% endblock %}

@@ -182,4 +182,98 @@
 
 			});
 
+		// Sub-task.
+		var $subtask = $('#subtask');
+
+		$subtask.wrapInner('<div class="inner"></div>');
+
+		$subtask._locked = false;
+
+		$subtask._lock = function() {
+
+			if ($subtask._locked)
+				return false;
+
+			$subtask._locked = true;
+
+			window.setTimeout(function() {
+				$subtask._locked = false;
+			}, 350);
+
+			return true;
+
+		};
+
+		$subtask._show = function() {
+
+			if ($subtask._lock())
+				$body.addClass('is-subtask-visible');
+
+		};
+
+		$subtask._hide = function() {
+
+			if ($subtask._lock())
+				$body.removeClass('is-subtask-visible');
+
+		};
+
+		$subtask._toggle = function() {
+
+			if ($subtask._lock())
+				$body.toggleClass('is-subtask-visible');
+
+		};
+
+		$subtask
+			.appendTo($body)
+			.on('click', function(event) {
+				event.stopPropagation();
+			})
+			.on('click', 'a', function(event) {
+
+				var href = $(this).attr('href');
+
+				event.preventDefault();
+				event.stopPropagation();
+
+				// Hide.
+					$subtask._hide();
+
+				// Redirect.
+					if (href == '#subtask')
+						return;
+
+					window.setTimeout(function() {
+						window.location.href = href;
+					}, 350);
+
+			})
+			.append('<a class="close" href="#subtask">Close</a>');
+
+		$body
+			.on('click', 'a[href="#subtask"]', function(event) {
+
+				event.stopPropagation();
+				event.preventDefault();
+
+				// Toggle.
+					$subtask._toggle();
+
+			})
+			.on('click', function(event) {
+
+				// Hide.
+					$subtask._hide();
+
+			})
+			.on('keydown', function(event) {
+
+				// Hide on escape.
+					if (event.keyCode == 27)
+						$subtask._hide();
+
+			});
+
+
 })(jQuery);
