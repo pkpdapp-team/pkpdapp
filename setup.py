@@ -43,7 +43,12 @@ setup(
 
     # List of dependencies
     install_requires=[
-        'Django>=1.11',
+        'Django>=2.0',
+        'django_plotly_dash',
+        'whitenoise',
+        'dpd-static-support',
+        'networkx',
+        'pandas',
     ],
     extras_require={
         'docs': [
