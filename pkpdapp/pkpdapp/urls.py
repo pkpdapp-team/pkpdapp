@@ -12,7 +12,6 @@ https://docs.djangoproject.com/en/3.0/topics/http/urls/.
 """
 from django.contrib import admin
 from django.urls import include, path
-from django.conf.urls import url
 
 from . import views
 
