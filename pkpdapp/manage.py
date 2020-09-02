@@ -1,10 +1,18 @@
-#!/usr/bin/env python
-"""Django's command-line utility for administrative tasks."""
+#
+# This file is part of PKDPApp (https://github.com/pkpdapp-team/pkpdapp) which
+# is released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
+#
+
 import os
 import sys
 
 
 def main():
+    """
+    This function makes Django's core app management features accessible from
+    the command line.
+    """
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'pkpdapp.settings')
     try:
         from django.core.management import execute_from_command_line
