@@ -1,9 +1,15 @@
 #
-# This is just temporary placeholder for an app that
-# will visualise the model building blocks.
+# This file is part of PKDPApp (https://github.com/pkpdapp-team/pkpdapp) which
+# is released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
-# It may be an unnecessary fancy graph.
-#
+
+"""
+This is just temporary placeholder for an app that
+will visualise the model building blocks.
+
+It may be an unnecessary fancy graph.
+"""
 
 import dash_core_components as dcc
 import dash_html_components as html
@@ -11,6 +17,7 @@ import plotly.graph_objects as go
 import networkx as nx
 
 from django_plotly_dash import DjangoDash
+
 
 # Create network
 G = nx.random_geometric_graph(200, 0.125)
@@ -58,7 +65,7 @@ node_adjacencies = []
 node_text = []
 for node, adjacencies in enumerate(G.adjacency()):
     node_adjacencies.append(len(adjacencies[1]))
-    node_text.append('# of connections: '+str(len(adjacencies[1])))
+    node_text.append('# of connections: '+ str(len(adjacencies[1])))
 
 node_trace.marker.color = node_adjacencies
 node_trace.text = node_text
@@ -70,10 +77,11 @@ fig = go.Figure(data=[edge_trace, node_trace],
                     titlefont_size=16,
                     showlegend=False,
                     hovermode='closest',
-                    margin=dict(b=20,l=5,r=5,t=40),
-                    xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
-                    yaxis=dict(showgrid=False, zeroline=False, showticklabels=False))
-                    )
+                    margin=dict(b=20, l=5, r=5, t=40),
+                    xaxis=dict(
+                        showgrid=False, zeroline=False, showticklabels=False),
+                    yaxis=dict(
+                        showgrid=False, zeroline=False, showticklabels=False)))
 
 # Create dash app
 app = DjangoDash('ModelApp')

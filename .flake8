@@ -1,0 +1,9 @@
+[flake8]
+
+exclude=
+    .git,
+    venv
+
+ignore=
+    # Accept ambiguously named variables
+    E741
