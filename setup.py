@@ -1,4 +1,11 @@
+#
+# This file is part of PKDPApp (https://github.com/pkpdapp-team/pkpdapp) which
+# is released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
+#
+
 from setuptools import setup, find_packages
+
 
 # Load text for description and license
 with open('README.md') as f:
@@ -19,12 +26,12 @@ def load_version():
 
 # Go!
 setup(
-    # Module name (lowercase)
+    # App name
     name='pkpdapp',
     version=load_version(),
 
     # Description
-    description='Modeling of distribution and effects of drugs.',
+    description='PKPD analysis and modelling of chemical compunds.',
     long_description=readme,
 
     # License name
@@ -38,24 +45,13 @@ setup(
     # Packages to include
     packages=find_packages(include=('pkpdapp', 'pkpdapp.*')),
 
-    # Include non-python files (via MANIFEST.in)
-    # include_package_data=True,
-
     # List of dependencies
     install_requires=[
-        'Django>=2.0',
-        'django_plotly_dash',
-        'whitenoise',
-        'dpd-static-support',
-        'networkx',
-        'pandas',
+        'Django==3.0.5',
+        'django_plotly_dash==1.3.1',
+        'dpd-static-support==0.0.5',
+        'networkx==2.4',
+        'pandas==1.0.3',
+        'whitenoise==5.0.1',
     ],
-    extras_require={
-        'docs': [
-            'sphinx>=1.5, !=1.7.3',     # For doc generation
-        ],
-        'dev': [
-            'flake8>=3',            # For code style checking
-        ],
-    },
 )
