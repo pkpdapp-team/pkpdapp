@@ -20,4 +20,7 @@ At heart of the app is it to provide a best-practice pipeline for PKPD modeling 
 
 The PKPDApp is under heavy development and many things still have to be figured out. If you are nevertheless interested to contribute, please don't hesitate to get in touch. First guidelines and an overview of the development structure of the PKDPApp can be found [here](CONTRIBUTING.md)
 
+## License
+PKPDApp is fully open source. For more information about its license, see [LICENSE.md](LICENSE.md).
+
 
