@@ -47,7 +47,7 @@ setup(
 
     # List of dependencies
     install_requires=[
-        'Django==3.0.5',
+        'Django==3.0.7',
         'django_plotly_dash==1.3.1',
         'dpd-static-support==0.0.5',
         'networkx==2.4',
