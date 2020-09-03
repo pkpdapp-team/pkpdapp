@@ -31,7 +31,7 @@ jobs:
           python -m pip install coverage codecov
       - name: build pkpdapp
         run: |
-          pkpdapp/manage.py collectstatic
+          python pkpdapp/manage.py collectstatic
       - name: run coverage
         run: |
           coverage run pkpdapp/manage.py test pkpdapp
