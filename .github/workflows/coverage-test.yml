@@ -1,4 +1,4 @@
-name: Unit tests (python versions)
+name: Coverage
 
 on:
   push:
@@ -11,18 +11,16 @@ on:
 jobs:
 
   build-and-test:
+    name: coverage
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: [3.6, 3.7, 3.8]
 
     steps:
       - uses: actions/checkout@v1
 
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Set up Python 3.8
         uses: actions/setup-python@v1
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: 3.8
           architecture: x64
 
       - name: install pkpdapp
@@ -30,9 +28,16 @@ jobs:
           python --version
           python -m pip install --upgrade pip setuptools wheel
           python -m pip install .
-      - name: build pkdpapp
+          python -m pip install coverage codecov
+      - name: build pkpdapp
         run: |
           python pkpdapp/manage.py collectstatic
-      - name: run unit tests
+      - name: run coverage
         run: |
-          python pkpdapp/manage.py test pkpdapp
+          coverage run pkpdapp/manage.py test pkpdapp
+      - name: codecov
+        if: success()
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        run: |
+          codecov
