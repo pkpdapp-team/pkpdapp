@@ -29,6 +29,9 @@ jobs:
           python -m pip install --upgrade pip setuptools wheel
           python -m pip install .
           python -m pip install coverage codecov
+      - name: build pkpdapp
+        run: |
+          pkpdapp/manage.py collectstatic
       - name: run coverage
         run: |
           coverage run pkpdapp/manage.py test pkpdapp
