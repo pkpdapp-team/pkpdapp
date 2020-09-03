@@ -46,3 +46,31 @@ class TestIndexView(SimpleTestCase):
         response = self.client.get('/')
         self.assertNotContains(
             response, 'Hi there! I should not be on the page.')
+
+
+class TestGenericView(SimpleTestCase):
+    """
+    Tests the generic view.
+    """
+    def test_index_status_code(self):
+        response = self.client.get('/generic/')
+        self.assertEquals(response.status_code, 200)
+
+    def test_view_url_by_name(self):
+        response = self.client.get(reverse('generic'))
+        self.assertEquals(response.status_code, 200)
+
+    def test_view_uses_correct_template(self):
+        response = self.client.get(reverse('generic'))
+        self.assertEquals(response.status_code, 200)
+        self.assertTemplateUsed(response, 'generic.html')
+
+    def test_index_contains_correct_html(self):
+        response = self.client.get('/generic/')
+        contents = '<h1>Generic Page - This Page is under Development</h1>'
+        self.assertContains(response, contents)
+
+    def test_index_does_not_contain_incorrect_html(self):
+        response = self.client.get('/')
+        self.assertNotContains(
+            response, 'Hi there! I should not be on the page.')
