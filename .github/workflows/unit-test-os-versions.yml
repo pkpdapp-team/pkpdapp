@@ -32,7 +32,7 @@ jobs:
           python -m pip install .
       - name: build pkpdapp
         run: |
-          python pkdpapp/manage.py collectstatic
+          python pkpdapp/manage.py collectstatic
       - name: run unit tests
         run: |
           python pkdpapp/manage.py test pkpdapp
