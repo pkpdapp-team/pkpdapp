@@ -32,4 +32,4 @@ jobs:
           python -m pip install .
       - name: run unit tests
         run: |
-          python pkpdapp/manage.py pkpdapp
+          python pkpdapp/manage.py test pkpdapp
