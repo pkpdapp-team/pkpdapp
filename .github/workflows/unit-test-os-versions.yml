@@ -35,4 +35,4 @@ jobs:
           python pkpdapp/manage.py collectstatic
       - name: run unit tests
         run: |
-          python pkdpapp/manage.py test pkpdapp
+          python pkpdapp/manage.py test pkpdapp
