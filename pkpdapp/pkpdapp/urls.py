@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/3.0/topics/http/urls/.
 """
 
 from django.urls import include, path
+from django.contrib import admin
 
 from . import views
 
@@ -19,6 +20,7 @@ from . import views
 # TODO: Move django_plotly_dash to the app that is actually using it!
 urlpatterns = [
     path('', views.IndexView.as_view(), name='index'),
+    path('admin/', admin.site.urls),
     path('generic/', views.GenericView.as_view(), name='generic'),
     path('simulate/', include('simulate.urls')),
     path('django_plotly_dash/', include('django_plotly_dash.urls')),
