@@ -21,6 +21,7 @@ from . import views
 urlpatterns = [
     path('', views.IndexView.as_view(), name='index'),
     path('admin/', admin.site.urls),
+    path('accounts/', include('django.contrib.auth.urls')),
     path('generic/', views.GenericView.as_view(), name='generic'),
     path('simulate/', include('simulate.urls')),
     path('django_plotly_dash/', include('django_plotly_dash.urls')),
