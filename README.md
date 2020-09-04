@@ -6,7 +6,7 @@
 
 PKPDApp is a web-based application to explore, analyse and model the pharmacokinetics and pharmacodynamics of chemical compounds. The app is currently under development, but we hope to release a beta-version soon. 
 
-# Installation
+## Installation
 
 Install app and requirements
 
