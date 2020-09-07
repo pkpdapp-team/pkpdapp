@@ -4,8 +4,11 @@
 # copyright notice and full license details.
 #
 
-from django.test import SimpleTestCase
+from django.test import SimpleTestCase, TestCase
+from django.core import mail
 from django.urls import reverse
+from django.contrib.auth.models import User
+import re
 
 
 class TestIndexView(SimpleTestCase):
@@ -74,3 +77,96 @@ class TestGenericView(SimpleTestCase):
         response = self.client.get('/')
         self.assertNotContains(
             response, 'Hi there! I should not be on the page.')
+
+
+class TestRegistrationViews(TestCase):
+    """
+    Tests the login/logout templates and functionality
+    """
+    def setUp(self):
+        self.credentials = {
+            'username': 'testuser',
+            'password': 'secret',
+            'email': 'test@test.com',
+        }
+        self.user = User.objects.create_user(**self.credentials)
+
+    def test_login(self):
+        endpoint = reverse('login')
+        response = self.client.post(endpoint, self.credentials, follow=True)
+        self.assertTrue(response.context['user'].is_active)
+
+    def test_login_view(self):
+        endpoint = reverse('login')
+        response = self.client.get(endpoint)
+        self.assertEquals(response.status_code, 200)
+        self.assertTemplateUsed(response, 'registration/login.html')
+
+    def test_logged_out_view(self):
+        endpoint = reverse('logout')
+        response = self.client.get(endpoint)
+        self.assertEquals(response.status_code, 200)
+        self.assertTemplateUsed(response, 'registration/logged_out.html')
+
+    def test_password_reset_done(self):
+        endpoint = reverse('password_reset_done')
+        response = self.client.get(endpoint)
+        self.assertEquals(response.status_code, 200)
+        self.assertTemplateUsed(response,
+                                'registration/password_reset_done.html')
+
+    def test_password_reset(self):
+        endpoint = reverse('password_reset')
+        response = self.client.get(endpoint)
+        self.assertEquals(response.status_code, 200)
+        self.assertTemplateUsed(response,
+                                'registration/password_reset_form.html')
+
+    def test_password_done(self):
+        endpoint = reverse('password_reset_done')
+        response = self.client.get(endpoint)
+        self.assertEquals(response.status_code, 200)
+        self.assertTemplateUsed(response,
+                                'registration/password_reset_done.html')
+
+    def test_password_reset_workflow(self):
+        # post to the password reset form using the user email
+        response = self.client.post(
+            reverse('password_reset'),
+            {'email': self.credentials['email']},
+            follow=True
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response,
+                                'registration/password_reset_done.html')
+
+        # check the email
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn(
+            'Password reset on',
+            mail.outbox[0].subject
+        )
+        self.assertIn(
+            self.credentials['email'],
+            mail.outbox[0].body
+        )
+
+        # get the url from the response
+        url = re.search(
+            "(?P<url>https?://[^\s]+)",
+            mail.outbox[0].body
+        ).group("url")
+
+        # use this to get the get the password reset confirm form
+        response = self.client.get(url, follow=True)
+
+        self.assertEquals(response.status_code, 200)
+        self.assertTemplateUsed(response,
+                                'registration/password_reset_confirm.html')
+
+        # check we can set a new password
+        response = self.client.post(
+            url,
+            {'new_password1': 'pass', 'new_password2': 'pass'},
+        )
+        self.assertEquals(response.status_code, 302)
