@@ -1,0 +1,5 @@
+[run]
+source = pkpdapp
+omit =
+    pkpdapp/*/tests/*
+    pkpd/manage.py
