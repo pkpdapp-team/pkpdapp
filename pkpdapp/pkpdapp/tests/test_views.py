@@ -91,11 +91,6 @@ class TestRegistrationViews(TestCase):
         }
         self.user = User.objects.create_user(**self.credentials)
 
-    def test_login(self):
-        endpoint = reverse('login')
-        response = self.client.post(endpoint, self.credentials, follow=True)
-        self.assertTrue(response.context['user'].is_active)
-
     def test_login_view(self):
         endpoint = reverse('login')
         response = self.client.get(endpoint)
@@ -128,6 +123,15 @@ class TestRegistrationViews(TestCase):
         self.assertEquals(response.status_code, 200)
         self.assertTemplateUsed(response,
                                 'registration/password_reset_done.html')
+
+    def test_login(self):
+        endpoint = reverse('login')
+        response = self.client.post(endpoint, self.credentials, follow=True)
+        self.assertTrue(response.context['user'].is_active)
+
+        # check that the home page displays the username
+        response = self.client.get('/')
+        self.assertContains(response, self.credentials['username'])
 
     def test_password_reset_workflow(self):
         # post to the password reset form using the user email
