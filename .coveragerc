@@ -2,4 +2,6 @@
 source = pkpdapp
 omit =
     pkpdapp/*/tests/*
-    pkpd/manage.py
+    pkpdapp/manage.py
+    pkpdapp/pkpdapp/asgi.py
+    pkpdapp/pkpdapp/wsgi.py
