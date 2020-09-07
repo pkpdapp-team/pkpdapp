@@ -157,7 +157,7 @@ class TestRegistrationViews(TestCase):
 
         # get the url from the response
         url = re.search(
-            "(?P<url>https?://[^\s]+)",
+            r"(?P<url>https?://[^\s]+)",
             mail.outbox[0].body
         ).group("url")
 
