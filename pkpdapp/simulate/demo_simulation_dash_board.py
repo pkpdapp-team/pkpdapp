@@ -190,7 +190,7 @@ def plot_measurements_and_simulation(
                             "sliders[0].visible": False,
                             "sliders[1].visible": True,
                             "sliders[2].visible": False}],
-                        label="Exp. growth rate",
+                        label="Critical volume",
                         method="relayout"
                     ),
                     dict(
@@ -198,7 +198,7 @@ def plot_measurements_and_simulation(
                             "sliders[0].visible": False,
                             "sliders[1].visible": False,
                             "sliders[2].visible": True}],
-                        label="Lin. growth rate",
+                        label="Growth rate",
                         method="relayout"
                     )
                 ]),
