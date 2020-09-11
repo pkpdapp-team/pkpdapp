@@ -24,6 +24,17 @@ jobs:
         with:
           python-version: 3.8
           architecture: x64
+          
+     - name: install sundials (ubuntu)
+        if: ${{ matrix.os == 'ubuntu-latest' }}
+        run: |
+          sudo apt-get install libsundials-dev
+      
+      - name: install sundials (macos)
+        if: ${{ matrix.os == 'macos-latest' }}
+        run: |
+          brew update-reset
+          brew install sundials
 
       - name: install pkpdapp
         run: |
