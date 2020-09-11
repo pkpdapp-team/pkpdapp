@@ -17,7 +17,9 @@ $ apt-get install libsundials-dev
 $ brew install sundials
 ```
 1. Install sundials (Windows-latest)
-    Will be installed automatically at a later stage.
+```bash
+No action required - Sundials will be installed automatically at a later stage.
+```
 
 2. Install app and requirements
 
