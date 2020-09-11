@@ -9,8 +9,6 @@ This is just temporary placeholder for an app that
 will visualise the model building blocks.
 """
 
-import os
-
 import dash_core_components as dcc
 import dash_html_components as html
 from django.conf import settings
@@ -34,11 +32,10 @@ class PharmacodynamicModel(pints.ForwardModel):
                               log-transformed.
     """
 
-    def __init__(self, path, is_log_transformed=True):
+    def __init__(self, path):
         super(PharmacodynamicModel, self).__init__()
 
         model = sbml.SBMLImporter().model(path)
-        self._is_log_transformed = is_log_transformed
 
         # Get the number of states and parameters
         self._n_states = model.count_states()
@@ -52,8 +49,8 @@ class PharmacodynamicModel(pints.ForwardModel):
             [var.qname() for var in model.variables(const=True)])
 
         # Set default outputs
-        self._output_names = self._state_names
         self._n_outputs = self._n_states
+        self._output_names = self._state_names
 
         # Create simulator
         self._sim = myokit.Simulation(model)
@@ -82,37 +79,6 @@ class PharmacodynamicModel(pints.ForwardModel):
         """
         return self._n_parameters
 
-    def outputs(self):
-        """
-        Returns the output names of the model.
-        """
-        return self._output_names
-
-    def parameters(self):
-        """
-        Returns the parameter names of the model.
-        """
-        return self._state_names + self._const_names
-
-    def set_outputs(self, outputs):
-        """
-        Sets outputs of the model.
-
-        Outputs has to be a list of quantifiable variable names of the
-        myokit.Model, e.g. `compartment.variable`.
-        """
-        # Check that outputs are valid
-        for output in outputs:
-            try:
-                self._sim._model.get(output)
-            except KeyError:
-                raise KeyError(
-                    'The variable <' + str(output) + '> does not exist in the '
-                    'model.')
-
-        self._output_names = outputs
-        self._n_outputs = len(outputs)
-
     def simulate(self, parameters, times):
         """
         Returns the numerical solution of the model outputs for specified
@@ -120,10 +86,6 @@ class PharmacodynamicModel(pints.ForwardModel):
         """
         # Reset simulation
         self._sim.reset()
-
-        # Transform parameters back to linear scale if log-transfomed
-        if self._is_log_transformed:
-            parameters = np.exp(parameters)
 
         # Set initial conditions
         self._sim.set_state(parameters[:self._n_states])
@@ -169,63 +131,10 @@ def plot_measurements_and_simulation(
                       individual in the dataset.
                       Shape: (n_individuals, n_parameters)
     """
-    # Check data has the correct type
-    if not isinstance(data, pd.DataFrame):
-        raise TypeError(
-            'Data has to be pandas.DataFrame.')
-    # Check that data has the required keys
-    keys = ['#ID', 'TIME in day', 'TUMOUR VOLUME in cm^3', 'BODY WEIGHT in g']
-    for key in keys:
-        if key not in data.keys():
-            raise ValueError(
-                'Data must have key <' + str(key) +
-                '>.')
-    # Check that model has the correct type
-    if not isinstance(model, pints.ForwardModel):
-        raise TypeError(
-            'Model needs to be an instance of `pints.ForwardModel`.')
-    # Check that model has only one output dimension
-    if model.n_outputs() != 1:
-        raise ValueError(
-            'Model output dimension has to be 1.')
-    # Check that parameters have the correct dimensions
+    # Get parameters
     default_parameters = np.asarray(default_parameters)
-    if default_parameters.ndim != 1:
-        raise ValueError(
-            'Default parameters need to have dimension 1. `default_parameters`'
-            ' has dimension <' + str(default_parameters.ndim) + '>.')
     min_parameters = np.asarray(min_parameters)
-    if min_parameters.ndim != 1:
-        raise ValueError(
-            'Minimum parameters need to have dimension 1. `min_parameters` has'
-            ' dimension <' + str(min_parameters.ndim) + '>.')
     max_parameters = np.asarray(max_parameters)
-    if max_parameters.ndim != 1:
-        raise ValueError(
-            'Maximum parameters need to have dimension 1. `max_parameters` has'
-            ' dimension <' + str(max_parameters.ndim) + '>.')
-    # Check that parameters have the correct shape
-    if default_parameters.shape != (model.n_parameters(),):
-        raise ValueError(
-            'Default parameters do not have the correct shape. Expected '
-            'shape (n_parameters,) = ' + str((model.n_parameters(),)) + '.')
-    if min_parameters.shape != (model.n_parameters(),):
-        raise ValueError(
-            'Minimum parameters do not have the correct shape. Expected shape '
-            '(n_parameters,) = ' + str((model.n_parameters(),)) + '.')
-    if max_parameters.shape != (model.n_parameters(),):
-        raise ValueError(
-            'Maximum parameters do not have the correct shape. Expected shape '
-            '(n_parameters,) = ' + str((model.n_parameters(),)) + '.')
-
-    if parameter_names is None:
-        parameter_names = [
-            'Parameter %d' % n for n in range(model.n_parameters())]
-
-    # Check parameter names
-    if len(parameter_names) != model.n_parameters():
-        raise ValueError(
-            'Number of parameter names does not match number of parameters.')
 
     # Define colorscheme
     n_ids = len(data['#ID'].unique())
@@ -465,8 +374,7 @@ data = pd.read_csv(path + '/data/lxf_control_growth.csv')
 
 # Define model
 model = PharmacodynamicModel(
-    path + '/model/tumour_growth_without_treatment.xml',
-    is_log_transformed=False)
+    path + '/model/tumour_growth_without_treatment.xml')
 
 # Define parameter ranges for sliders
 default_parameters = [0.2, 1, 0.12]
