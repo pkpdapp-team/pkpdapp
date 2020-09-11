@@ -62,14 +62,6 @@ class PharmacodynamicModel(pints.ForwardModel):
         for id_var, var in enumerate(self._const_names):
             self._sim.set_constant(var, float(parameters[id_var]))
 
-    def n_outputs(self):
-        """
-        Returns the number of output dimensions.
-
-        By default this is the number of states.
-        """
-        return self._n_outputs
-
     def n_parameters(self):
         """
         Returns the number of parameters in the model.
@@ -98,14 +90,7 @@ class PharmacodynamicModel(pints.ForwardModel):
             times[-1] + 1, log=self._output_names, log_times=times)
         result = [output[name] for name in self._output_names]
 
-        # Transform shape of output to be compatible with
-        # pints.SingleOutputProblem/pints.MultiOutputProblem
-        if self._n_outputs == 1:
-            result = np.array(result).flatten()
-        else:
-            result = np.array(result).transpose()
-
-        return result
+        return np.array(result).flatten()
 
 
 def plot_measurements_and_simulation(
