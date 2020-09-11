@@ -7,8 +7,15 @@
 from django.views import generic
 
 
-class IndexView(generic.base.TemplateView):
+class BuildModelView(generic.base.TemplateView):
     """
-    This class organises the simulate workflow of the PKPDApp.
+    This view defines the interface to build a model for simulation.
     """
-    template_name = 'simulate/index.html'
+    template_name = 'simulate/build_model.html'
+
+
+class SimulationView(generic.base.TemplateView):
+    """
+    This class defines the interface for model simulation.
+    """
+    template_name = 'simulate/simulation.html'
