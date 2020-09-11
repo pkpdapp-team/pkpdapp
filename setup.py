@@ -37,8 +37,11 @@ setup(
         'Django==3.0.7',
         'django_plotly_dash==1.3.1',
         'dpd-static-support==0.0.5',
-        'networkx==2.4',
+        'myokit>=1.31',
+        'numpy>=1.8',
         'pandas==1.0.3',
+        'pints>=0.3',
+        'plotly==4.8.1',
         'whitenoise==5.0.1',
     ],
 )
