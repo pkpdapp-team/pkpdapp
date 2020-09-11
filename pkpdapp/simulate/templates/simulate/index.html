@@ -1,7 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
 {% load plotly_dash %}
-
 {% block content %}
 
 {% comment %} Header and first instructions {% endcomment %}
@@ -78,9 +77,12 @@
 </div>
 
 {% comment %} Visualisation of model building blocks {% endcomment %}
-<article>
-{% plotly_app name="ModelApp" ratio=0.5 %}
-</article>
+
+<header>
+	<h3></h3> {% comment %} temporary fix for spacing {% endcomment %}
+	<h4>Demo model: Tumour growth in absence of treatement</h4>
+	<h1 align="center">\( \frac{\text{d}V_T}{\text{d}t} = \frac{\lambda V_T}{V_T / V_{\text{crit}} + 1} \)</h1>
+</header>
 
 {% comment %} Step 2: Simulation {% endcomment %}
 <header>
