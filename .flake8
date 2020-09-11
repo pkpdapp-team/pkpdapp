@@ -7,3 +7,6 @@ exclude=
 ignore=
     # Accept ambiguously named variables
     E741
+
+    # Accept line breaks after binary operators
+    W504

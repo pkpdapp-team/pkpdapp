@@ -11,6 +11,9 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 		<link rel="stylesheet" href="{% static 'assets/css/main.css' %}" />
 		<noscript><link rel="stylesheet" href="{% static 'assets/css/noscript.css' %}" /></noscript>
+		<script type="text/javascript" id="MathJax-script" async
+			src="https://cdn.jsdelivr.net/npm/mathjax@3.0.0/es5/tex-mml-chtml.js">
+		</script>
 		<link rel="icon" href="{% static 'images/icon_pkpdapp.svg' %}">
 	</head>
 	<body class="is-preload">
@@ -33,8 +36,8 @@
                        <li>User: {{ user.get_username }}</li>
                        <li><a href="{% url 'logout'%}?next={{request.path}}">Logout</a></li>   
                      {% else %}
-                       <li><a href="{% url 'login'%}?next={{request.path}}">Login</a></li>   
-                     {% endif %} 
+                       <li><a href="{% url 'login'%}?next={{request.path}}">Login</a></li>
+                     {% endif %}
 										<li><a href="#menu">Menu</a></li>
 									</ul>
 								</nav>
@@ -49,7 +52,7 @@
 							<li><a href="{% url 'index' %}">Home</a></li>
 							<li><a href="{% url 'generic' %}">About</a></li>
 							<li><a href="{% url 'generic' %}">Explore Data</a></li>
-							<li><a href="{% url 'simulate:index' %}">Simulate</a></li>
+							<li><a href="{% url 'simulate:build-model' %}">Simulate</a></li>
 							<li><a href="{% url 'generic' %}">Infer Model</a></li>
 							<li><a href="{% url 'generic' %}">Model Repository</a></li>
 						</ul>

@@ -8,26 +8,32 @@ PKPDApp is a web-based application to explore, analyse and model the pharmacokin
 
 ## Installation
 
-Install app and requirements
+1. Install sundials
+    - Ubuntu-latest
+```bash
+$ apt-get install libsundials-dev
+```
+
+2. Install app and requirements
 
 ```bash
 $ pip install -e .
 ```
 
-Create database
+3. Create database
 
 ```bash
 $ cd pkpdapp
 $ python manage.py migrate
 ```
 
-Create admin user
+4. Create admin user
 
 ```bash
 $ python manage.py createsuperuser
 ```
 
-Run local server
+5. Run local server
 
 ```bash
 $ python manage.py runserver

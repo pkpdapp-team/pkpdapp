@@ -25,7 +25,7 @@ jobs:
           python-version: 3.8
           architecture: x64
           
-     - name: install sundials (ubuntu)
+      - name: install sundials (ubuntu)
         if: ${{ matrix.os == 'ubuntu-latest' }}
         run: |
           sudo apt-get install libsundials-dev
@@ -41,9 +41,11 @@ jobs:
           python --version
           python -m pip install --upgrade pip setuptools wheel
           python -m pip install .
+      
       - name: build pkpdapp
         run: |
           python pkpdapp/manage.py collectstatic
+      
       - name: run unit tests
         run: |
           python pkpdapp/manage.py test pkpdapp
