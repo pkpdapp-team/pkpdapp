@@ -24,15 +24,21 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           architecture: x64
+          
+      - name: install sundials
+        run: |
+          sudo apt-get install libsundials-dev
 
       - name: install pkpdapp
         run: |
           python --version
           python -m pip install --upgrade pip setuptools wheel
           python -m pip install .
+          
       - name: build pkdpapp
         run: |
           python pkpdapp/manage.py collectstatic
+          
       - name: run unit tests
         run: |
           python pkpdapp/manage.py test pkpdapp
