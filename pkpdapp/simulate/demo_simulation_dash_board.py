@@ -404,3 +404,4 @@ app.layout = html.Div(children=[
         figure=fig
     )
 ])
+
