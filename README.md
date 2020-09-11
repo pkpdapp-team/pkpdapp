@@ -8,12 +8,16 @@ PKPDApp is a web-based application to explore, analyse and model the pharmacokin
 
 ## Installation
 
-1. Install sundials
-On Ubuntu latest
+1. Install sundials (Ubuntu-latest)
 ```bash
 $ apt-get install libsundials-dev
 ```
-For MacOS latest the command is `brew install sundials` and for Windows sundials will be installed automatically at a later stage.
+1. Install sundials (MacOS-latest)
+```bash
+$ brew install sundials
+```
+1. Install sundials (Windows-latest)
+    Will be installed automatically at a later stage.
 
 2. Install app and requirements
 
