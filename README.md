@@ -6,7 +6,7 @@
 
 PKPDApp is a web-based application to explore, analyse and model the pharmacokinetics and pharmacodynamics of chemical compounds. The app is currently under development, but we hope to release a beta-version soon. 
 
-## Installation
+## Installation - development
 
 1. Install sundials
     - Ubuntu-latest
@@ -38,6 +38,29 @@ $ python manage.py createsuperuser
 ```bash
 $ python manage.py runserver
 ```
+
+You should be able to see the pkpd web app at [127.0.0.1:8000](127.0.0.1:8000).
+
+
+## Installation - docker with nginx and gunicorn
+
+Build the image using docker
+
+```bash
+$ docker build -t pkpdapp .
+```
+
+Run the server
+
+```bash
+$ docker run -it -p 8020:8020 \
+                 -e DJANGO_SUPERUSER_USERNAME=admin \
+                 -e DJANGO_SUPERUSER_PASSWORD=sekret1 \
+                 -e DJANGO_SUPERUSER_EMAIL=admin@example.com \
+                 pkpdapp
+```
+
+You should be able to see the pkpd web app at [127.0.0.1:8020](127.0.0.1:8020).
 
 
 ## License
