@@ -39,6 +39,8 @@ $ python manage.py createsuperuser
 $ python manage.py runserver
 ```
 
+You should be able to see the pkpd web app at [127.0.0.1:8000](127.0.0.1:8000).
+
 
 ## Installation - docker with nginx and gunicorn
 
@@ -58,7 +60,7 @@ $ docker run -it -p 8020:8020 \
                  pkpdapp
 ```
 
-You then should be able to see the pkpd web app at [127.0.0.1:8080](127.0.0.1:8080).
+You should be able to see the pkpd web app at [127.0.0.1:8020](127.0.0.1:8020).
 
 
 ## License
