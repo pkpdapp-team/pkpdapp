@@ -26,12 +26,19 @@ RUN python /pkpdapp/pkpdapp/manage.py migrate --noinput
 RUN python /pkpdapp/pkpdapp/manage.py collectstatic --noinput
 
 WORKDIR /pkpdapp
+
+# gunicorn server uses www-data user, so make the files owned by this user
 RUN chown -R www-data:www-data /pkpdapp
 
 # make root/.config dir and make it writable (myokit writes to it)
 RUN mkdir -p /root/.config
 RUN chown -R www-data:www-data /root
 
-# start server
+# gunicorn needs to write to tmp
+RUN chown -R www-data:www-data /tmp
+
+# start server using the port given by the environment variable $PORT
+# nginx config files don't support env variables so have to do it manually
+# using envsubst
 STOPSIGNAL SIGTERM
 CMD /bin/bash -c "envsubst '\$PORT' < /pkpdapp/nginx.default.template > /etc/nginx/sites-available/default" && "/pkpdapp/start-server.sh"
