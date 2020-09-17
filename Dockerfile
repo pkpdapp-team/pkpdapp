@@ -6,7 +6,6 @@ RUN apt-get install -y libsundials-serial-dev
 
 # install nginx
 RUN apt-get install nginx vim -y --no-install-recommends
-COPY nginx.default /etc/nginx/sites-available/default
 RUN ln -sf /dev/stdout /var/log/nginx/access.log \
     && ln -sf /dev/stderr /var/log/nginx/error.log
 
@@ -32,4 +31,4 @@ RUN chown -R www-data:www-data /root
 
 # start server
 STOPSIGNAL SIGTERM
-CMD /bin/bash -c "envsubst '\$PORT' < /pkpdapp/nginx.default.template > /pkpdapp/nginx.default" && "/pkpdapp/start-server.sh"
+CMD /bin/bash -c "envsubst '\$PORT' < /pkpdapp/nginx.default.template > /etc/nginx/sites-available/default/nginx.default" && "/pkpdapp/start-server.sh"
