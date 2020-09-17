@@ -37,6 +37,9 @@ RUN chown -R www-data:www-data /root
 # gunicorn needs to write to tmp
 RUN chown -R www-data:www-data /tmp
 
+# run as www-data
+USER www-data
+
 # start server using the port given by the environment variable $PORT
 # nginx config files don't support env variables so have to do it manually
 # using envsubst
