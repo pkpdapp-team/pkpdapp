@@ -6,6 +6,7 @@ RUN apt-get install -y libsundials-serial-dev
 
 # install nginx
 RUN apt-get install nginx vim -y --no-install-recommends
+COPY nginx.default.template /etc/nginx/sites-available/default
 RUN ln -sf /dev/stdout /var/log/nginx/access.log \
     && ln -sf /dev/stderr /var/log/nginx/error.log
 
