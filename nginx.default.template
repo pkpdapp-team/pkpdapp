@@ -1,7 +1,7 @@
 # nginx.default
 
 server {
-    listen 8020;
+    listen $PORT;
     server_name example.org;
 
     location / {

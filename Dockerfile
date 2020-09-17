@@ -31,6 +31,5 @@ RUN mkdir -p /root/.config
 RUN chown -R www-data:www-data /root
 
 # start server
-EXPOSE 8020
 STOPSIGNAL SIGTERM
-CMD ["/pkpdapp/start-server.sh"]
+CMD /bin/bash -c "envsubst '\$PORT' < /pkpdapp/nginx.default.template > /pkpdapp/nginx.default" && "/pkpdapp/start-server.sh"
