@@ -27,8 +27,3 @@ class TestIndexView(SimpleTestCase):
         self.assertContains(response, contents)
         contents = 'Analyse Pharmacodynamics'
         self.assertContains(response, contents)
-
-    def test_index_does_not_contain_incorrect_html(self):
-        response = self.client.get(reverse('explore_data:index'))
-        self.assertNotContains(
-            response, 'Hi there! I should not be on the page.')
