@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'dpd_static_support',
 
     # internal apps
+    'explore_data.apps.ExploreDataConfig',
     'simulate.apps.SimulateConfig',
 ]
 
