@@ -1,80 +1,35 @@
 {% extends "base.html" %}
 {% load static %}
-{% load plotly_dash %}
+
 {% block content %}
-
-{% comment %} Header and first instructions {% endcomment %}
-<header>
-    <h1>Explore Data</h1>
-</header>
-
-{% comment %} Creating subtask tiles {% endcomment %}
 <section class="tiles">
-	<article class="model">
+	<article class="explore_data_style1">
 		<span class="image">
 			<img src="{% static 'images/pic03.jpg' %}" alt="" />
 		</span>
-		<a href="#subtask">
-			<h3>PKPD Model</h3>
+		<a href="{% url 'generic' %}">
+			<h1>PK</h1>
+			<h2>Analyse pharmacokinetics</h2>
 			<div class="content">
-				<p>Model the pharmacokinetic and pharmacodynamic processes.</p>
+				<p>
+					Perform a non-compartmental analysis (NCA) of the pharmacokinetics.
+				</p>
 			</div>
 		</a>
 	</article>
-	<article class="model">
+	<article class="explore_data_style1">
 		<span class="image">
 			<img src="{% static 'images/pic03.jpg' %}" alt="" />
 		</span>
-		<a href="#subtask">
-			<h3>Route of Administration</h3>
+		<a href="{% url 'generic' %}">
+			<h1>PD</h1>
+			<h2>Analyse Pharmacodynamics</h2>
 			<div class="content">
-				<p>Specify the route of administration of the drug.</p>
-			</div>
-		</a>
-	</article>
-	<article class="model">
-		<span class="image">
-			<img src="{% static 'images/pic03.jpg' %}" alt="" />
-		</span>
-		<a href="#subtask">
-			<h3>Error Model</h3>
-			<div class="content">
-				<p>Model the error of the mechanistic model.</p>
-			</div>
-		</a>
-	</article>
-    <article class="model">
-		<span class="image">
-			<img src="{% static 'images/pic03.jpg' %}" alt="" />
-		</span>
-		<a href="#subtask">
-			<h3>Population Model</h3>
-			<div class="content">
-				<p>Model variation between individuals.</p>
+				<p>
+					Perform an area under the curve estimation (AUCE) analysis of the pharmacodynamics.
+				</p>
 			</div>
 		</a>
 	</article>
 </section>
-
-{% comment %} This fills the active subtask window {% endcomment %}
-<div id="subtask">
-    <h3>This is a place holder - Subtask is under development</h1>
-</div>
-
-{% comment %} Visualisation of model building blocks {% endcomment %}
-
-<header>
-	<h3></h3> {% comment %} temporary fix for spacing {% endcomment %}
-	<h4>Model Summary</h4>
-	<p><b>Model name:</b> Tumour growth in absence of treatment</p>
-	<p style="font-size:25px", align="center">\( \frac{\text{d}V_T}{\text{d}t} = \frac{\lambda V_T}{V_T / V_{\text{crit}} + 1}, \quad  V_T(t=0)=V_0\)</p>
-	<p>
-		<ul>
-			<li><b>Model type:</b> PD model</li>
-			<li><b>Number of parameters:</b> 3</li>
-		</ul>
-	</p>
-	<form action="{% url 'simulate:simulation' %}" align="right"><input type="submit" value="SIMULATE"/></form>
-</header>
-
 {% endblock %}
