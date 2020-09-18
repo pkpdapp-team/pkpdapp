@@ -45,11 +45,6 @@ class TestIndexView(SimpleTestCase):
         contents = '<h2>Infer Model</h2>'
         self.assertContains(response, contents)
 
-    def test_index_does_not_contain_incorrect_html(self):
-        response = self.client.get('/')
-        self.assertNotContains(
-            response, 'Hi there! I should not be on the page.')
-
 
 class TestGenericView(SimpleTestCase):
     """
@@ -72,11 +67,6 @@ class TestGenericView(SimpleTestCase):
         response = self.client.get('/generic/')
         contents = '<h1>Generic Page - This Page is under Development</h1>'
         self.assertContains(response, contents)
-
-    def test_index_does_not_contain_incorrect_html(self):
-        response = self.client.get('/')
-        self.assertNotContains(
-            response, 'Hi there! I should not be on the page.')
 
 
 class TestRegistrationViews(TestCase):
