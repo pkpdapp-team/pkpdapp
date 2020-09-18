@@ -8,6 +8,7 @@ RUN apt-get install -y libsundials-serial-dev
 RUN apt-get install nginx vim -y --no-install-recommends
 RUN ln -sf /dev/stdout /var/log/nginx/access.log \
     && ln -sf /dev/stderr /var/log/nginx/error.log
+RUN chown www-data:www-data /etc/nginx/sites-available/default
 
 # install envsubst
 RUN apt-get install -y gettext-base
@@ -27,15 +28,18 @@ RUN python /pkpdapp/pkpdapp/manage.py collectstatic --noinput
 
 WORKDIR /pkpdapp
 
-# gunicorn server uses www-data user, so make the files owned by this user
+# we're running as the www-data user, so make the files owned by this user
 RUN chown -R www-data:www-data /pkpdapp
 
-# make root/.config dir and make it writable (myokit writes to it)
-RUN mkdir -p /root/.config
-RUN chown -R www-data:www-data /root
+# make /var/www/.config dir and make it writable (myokit writes to it)
+RUN mkdir -p /var/www/.config
+RUN chown -R www-data:www-data /var/www
 
-# gunicorn needs to write to tmp
+# gunicorn needs to write to tmp 
 RUN chown -R www-data:www-data /tmp
+
+# nginx needs to write to a few places
+RUN chown -R www-data:www-data /var/lib/nginx /run
 
 # run as www-data
 USER www-data
