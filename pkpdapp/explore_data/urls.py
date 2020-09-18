@@ -4,8 +4,13 @@
 # copyright notice and full license details.
 #
 
-from django.apps import AppConfig
+from django.urls import path
+
+from . import views
 
 
-class ExploreDataConfig(AppConfig):
-    name = 'explore_data'
+app_name = 'explore_data'
+
+urlpatterns = [
+    path('', views.IndexView.as_view(), name='index'),
+]
