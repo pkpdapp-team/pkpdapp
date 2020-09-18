@@ -2,7 +2,7 @@
 
 server {
     listen $PORT;
-    server_name example.org;
+    server_name pkpdapp.herokuapp.com;
 
     location / {
         include proxy_params;
