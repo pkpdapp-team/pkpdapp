@@ -35,11 +35,8 @@ RUN chown -R www-data:www-data /pkpdapp
 RUN mkdir -p /var/www/.config
 RUN chown -R www-data:www-data /var/www
 
-# gunicorn needs to write to tmp 
-RUN chown -R www-data:www-data /tmp
-
-# nginx needs to write to a few places
-RUN chown -R www-data:www-data /var/lib/nginx /run
+# gunicorn and nginx needs to write to a few places
+RUN chown -R www-data:www-data /var/lib/nginx /run /tmp
 
 # run as www-data
 USER www-data
