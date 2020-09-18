@@ -6,7 +6,7 @@ server {
 
     location / {
         include proxy_params;
-        proxy_pass https://unix:/run/gunicorn.socket;
+        proxy_pass http://unix:/run/gunicorn.socket;
     }
     location /static {
         root /pkpdapp/pkpdapp;
