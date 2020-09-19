@@ -4,9 +4,11 @@
 
 # PKPDApp
 
-PKPDApp is a web-based application to explore, analyse and model the pharmacokinetics and pharmacodynamics of chemical compounds. The app is currently under development, but we hope to release a beta-version soon. 
+PKPDApp is a web-based application to explore, analyse and model the pharmacokinetics and pharmacodynamics of chemical compounds. The app is currently under heavy development, however a preliminary version is being deployed with Heroku and can be found under https://pkpdapp.herokuapp.com/. 
 
 ## Installation - development
+
+If you are interested in developing PKPDApp with us, or just run the app locally, you can clone the repository and follow the installation instructions below.
 
 1. Install sundials
     - Ubuntu-latest
@@ -44,7 +46,7 @@ You should be able to see the pkpd web app at [127.0.0.1:8000](127.0.0.1:8000).
 
 ## Installation - docker with nginx and gunicorn
 
-Build the image using docker
+Alternatively you can build a docker image and run the image inside the container with commands below.
 
 ```bash
 $ docker build -t pkpdapp .
