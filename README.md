@@ -29,16 +29,21 @@ $ cd pkpdapp
 $ python manage.py migrate
 ```
 
-4. Create admin user
-
+4. Collect static files
 ```bash
-$ python manage.py createsuperuser
+$ python manage.py collectstatic
 ```
 
 5. Run local server
 
 ```bash
 $ python manage.py runserver
+```
+
+6. (Optional) Create admin user
+
+```bash
+$ python manage.py createsuperuser
 ```
 
 You should be able to see the pkpd web app at [127.0.0.1:8000](127.0.0.1:8000).
