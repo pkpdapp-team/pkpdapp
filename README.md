@@ -12,10 +12,16 @@ If you are interested in developing PKPDApp with us, or just run the app locally
 
 1. Install sundials
     - Ubuntu-latest
-```bash
-$ apt-get install libsundials-dev
-```
-
+    ```bash
+    $ apt-get install libsundials-dev
+    ```
+    - MacOS-latest
+    ```bash
+    $ brew install sundials
+    ```
+    - Windows-latest
+    Sundials will be installed automatically by installing the app.
+    
 2. Install app and requirements
 
 ```bash
