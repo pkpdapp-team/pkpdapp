@@ -33,23 +33,35 @@ copyright notice and full license details.
 			TODO: Needs cleaning!
 		{% endcomment %}
 		<script type="text/javascript" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-MML-AM_CHTML"></script>
-		<script src="{% static 'assets/js/jquery.min.js' %}"></script>
+		{% comment %} <script src="{% static 'assets/js/jquery.min.js' %}"></script>
 		<script src="{% static 'assets/js/browser.min.js' %}"></script>
 		<script src="{% static 'assets/js/breakpoints.min.js' %}"></script>
-		<script src="{% static 'assets/js/util.js' %}"></script>
+		<script src="{% static 'assets/js/util.js' %}"></script> {% endcomment %}
 		<script src="{% static 'assets/js/main.js' %}"></script>
 		<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
 		<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script>
 		<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js" integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV" crossorigin="anonymous"></script>
 	</head>
 	<body>
-		<div class='container-fluid'>
-
+		<div class='container-fluid py-sm-3 px-sm-5'>
+			<div class='row justify-content-between'>
+				<div class='"col-sm-auto"'>
+					<div class="alert alert-primary" role="alert">
+					A simple primary alert—check it out!
+					</div>
+				</div>
+				<div class='"col-sm-auto"'>
+					<div class="alert alert-primary" role="alert">
+					A simple primary alert—check it out!
+					</div>
+				</div>
+			</div>
 		</div>
 		<!-- Wrapper -->
 			<div id="wrapper">
 
 				<!-- Header -->
+					{% comment %}
 					<header id="header">
 						<div class="inner">
 
@@ -63,7 +75,7 @@ copyright notice and full license details.
 									<ul>
                      {% if user.is_authenticated %}
                        <li>User: {{ user.get_username }}</li>
-                       <li><a href="{% url 'logout'%}?next={{request.path}}">Logout</a></li>   
+                       <li><a href="{% url 'logout'%}?next={{request.path}}">Logout</a></li>
                      {% else %}
                        <li><a href="{% url 'login'%}?next={{request.path}}">Login</a></li>
                      {% endif %}
@@ -73,6 +85,7 @@ copyright notice and full license details.
 
 						</div>
 					</header>
+					{% endcomment %}
 
 				<!-- Menu -->
 					<nav id="menu">
