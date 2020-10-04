@@ -29,25 +29,20 @@ copyright notice and full license details.
 		<link rel="stylesheet" href="{% static 'assets/css/main.css' %}">
 
 		{% comment %}
-			Import javascripts:
-			TODO: Needs cleaning!
+			Import Mathjax javascripts to allow rendering mathematical equations encoded in LaTeX and MathML.
+			(At the moment all languages are encoded, see doc for mathjax, but it may be worth focus on either MathML or LaTeX.)
 		{% endcomment %}
 		<script type="text/javascript" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-MML-AM_CHTML"></script>
-		{% comment %} <script src="{% static 'assets/js/jquery.min.js' %}"></script>
-		<script src="{% static 'assets/js/browser.min.js' %}"></script>
-		<script src="{% static 'assets/js/breakpoints.min.js' %}"></script>
-		<script src="{% static 'assets/js/util.js' %}"></script> {% endcomment %}
-		<script src="{% static 'assets/js/main.js' %}"></script>
-		<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
-		<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script>
-		<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js" integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV" crossorigin="anonymous"></script>
 	</head>
 	<body>
 		<div class='container-fluid py-sm-3 px-sm-5'>
 			<div class='row justify-content-between'>
 				<div class='"col-sm-auto"'>
-					<div class="alert alert-primary" role="alert">
-					A simple primary alert—check it out!
+					<div>
+						<a href="{% url 'index' %}" id="logo">
+							<span class="symbol"><img src="{% static 'images/logo_pkpdapp.svg' %}" alt="" /></span>
+							<span class="title">PKPDAPP</span>
+						</a>
 					</div>
 				</div>
 				<div class='"col-sm-auto"'>
@@ -153,5 +148,16 @@ copyright notice and full license details.
 						</div>
 					</footer>
 			</div>
+		{% comment %}
+			Include javascripts to enable responsive behaviour.
+		{% endcomment %}
+		<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+		<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script>
+		<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js" integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV" crossorigin="anonymous"></script>
+		{% comment %} <script src="{% static 'assets/js/jquery.min.js' %}"></script>
+		<script src="{% static 'assets/js/browser.min.js' %}"></script>
+		<script src="{% static 'assets/js/breakpoints.min.js' %}"></script>
+		<script src="{% static 'assets/js/util.js' %}"></script>
+		<script src="{% static 'assets/js/main.js' %}"></script> {% endcomment %}
 	</body>
 </html>
