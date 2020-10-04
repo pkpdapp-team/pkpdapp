@@ -10,7 +10,27 @@ copyright notice and full license details.
 
 <html>
 	<head>
-		{% include 'base/head.html' %}
+		{% comment %}
+			Set tab representation of PKPDApp in browser.
+		{% endcomment %}
+		<title>PKPDApp</title>
+		<link rel="icon" href="{% static 'images/icon_pkpdapp.svg' %}">
+
+		{% comment %}
+			Set character encoding and viewport settings.
+		{% endcomment %}
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+		{% comment %}
+			Import style of PKPDApp defined in css files.
+		{% endcomment %}
+		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+		<link rel="stylesheet" href="{% static 'assets/css/main.css' %}">
+
+		<script type="text/javascript" async
+			src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-MML-AM_CHTML">
+		</script>
 	</head>
 	<body>
 		<div class='container-fluid'>
@@ -109,9 +129,6 @@ copyright notice and full license details.
 							</ul>
 						</div>
 					</footer>
-
 			</div>
-
-		{% include 'base/javascript.html'%}
 	</body>
 </html>
