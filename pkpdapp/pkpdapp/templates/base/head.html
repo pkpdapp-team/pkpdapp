@@ -6,16 +6,35 @@ copyright notice and full license details.
 
 {% load static %}
 
-<title>PKPDApp</title>
-<link rel="icon" href="{% static 'images/icon_pkpdapp.svg' %}">
-
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-
-<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
-<link rel="stylesheet" href="{% static 'assets/css/main.css' %}">
-<noscript><link rel="stylesheet" href="{% static 'assets/css/noscript.css' %}" /></noscript>
-
-<script type="text/javascript" id="MathJax-script" async
-    src="https://cdn.jsdelivr.net/npm/mathjax@3.0.0/es5/tex-mml-chtml.js">
-</script>
+<div class='container-fluid py-2 px-3 py-sm-3 px-sm-5' id='header'>
+    <div class='row'>
+        <div class='col'>
+            <div class='header'>
+                <a href="{% url 'index' %}" id='logo'>
+                    <span id='symbol'><img src="{% static 'images/logo_pkpdapp.svg' %}" alt="" />
+                        <div><span id='PKPDAPP'>PKPD<br>APP</span></div>
+                    </span>
+                </a>
+            </div>
+        </div>
+        <div class='col-auto'>
+            <div class='header'>
+                <span id='symbol'>
+                    {% if user.is_authenticated %}
+                        <span>User: {{ user.get_username }}</span>
+                        <a href="{% url 'logout' %}?next={{request.path}}">Logout</a>
+                    {% else %}
+                        <a href="{% url 'login' %}?next={{request.path}}">Login</a>
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+        <div class='col-auto'>
+            <div class='header'>
+                <nav>
+                    <a href="#menu">Menu</a>
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>

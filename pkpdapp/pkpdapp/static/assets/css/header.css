@@ -4,8 +4,18 @@ is released under the BSD 3-clause license. See accompanying LICENSE.md for
 copyright notice and full license details.
 */
 
+/* Define general header style */
+
+/*
+Separate out stickiness to the top, because otherwise it will break boostrap
+container-fluid
+*/
+#header {
+    position: sticky;
+    top: 0;
+}
+
 .header {
-    position: fixed;
     color: inherit;
     font-weight: 900;
     letter-spacing: 0.35rem;
@@ -15,46 +25,137 @@ copyright notice and full license details.
     z-index: 10000;
 }
 
-.header a {
+    .header a {
+        display: block;
+        position: relative;
+        height: 3rem;
+        line-height: 3rem;
+        background-color: rgba(255, 255, 255, 0.5);
+        border-radius: 4px;
+        border: 0;
+        -moz-transition: border-color 0.2s ease, color 0.2s ease;
+        -webkit-transition: border-color 0.2s ease, color 0.2s ease;
+        -ms-transition: border-color 0.2s ease, color 0.2s ease;
+        transition: border-color 0.2s ease, color 0.2s ease;
+        text-decoration: none;
+        color: #585858;
+    }
+
+        .header a:hover {
+            border-color: transparent;
+            color: #8498f2 !important;
+        }
+
+    /* Define logo specific style */
+    .header #logo {
+        padding: 0 0.2rem 0 0;
+    }
+
+    .header #logo #symbol {
+        display: inline-flex;
+    }
+
+        .header #logo #symbol img {
+            display: inline-block;
+            width: 3rem;
+            height: 3rem;
+        }
+
+        .header #logo #symbol div {
+            line-height: 1.4rem;
+            font-size: 1.5rem;
+            padding: 0.15rem 0;
+        }
+
+        .header #logo #symbol #PKPDAPP {
+            font-family: monospace;
+            font-weight: 100;
+            letter-spacing: 0rem;
+        }
+
+/* Define login and menu style */
+/* #header nav {
+    position: fixed;
+    right: 2em;
+    top: 2em;
+    z-index: 10000;
+}
+
+#header nav ul {
+    display: -moz-flex;
+    display: -webkit-flex;
+    display: -ms-flex;
+    display: flex;
+    -moz-align-items: center;
+    -webkit-align-items: center;
+    -ms-align-items: center;
+    align-items: center;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+#header nav ul li {
+    display: block;
+    padding: 0;
+}
+
+#header nav ul li a {
     display: block;
     position: relative;
-    height: 3rem;
-    line-height: 3rem;
+    height: 3em;
+    line-height: 3em;
+    padding: 0 1.5em;
     background-color: rgba(255, 255, 255, 0.5);
     border-radius: 4px;
     border: 0;
-    padding: 0 0.2rem 0 0;
-    -moz-transition: border-color 0.2s ease, color 0.2s ease;
-    -webkit-transition: border-color 0.2s ease, color 0.2s ease;
-    -ms-transition: border-color 0.2s ease, color 0.2s ease;
-    transition: border-color 0.2s ease, color 0.2s ease;
-    text-decoration: none;
-    color: #585858;
+    font-size: 0.8em;
+    font-weight: 900;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
 }
 
-.header a:hover {
-    border-color: transparent;
-    color: #8498f2 !important;
+#header nav ul li a[href="#menu"] {
+    -webkit-tap-highlight-color: transparent;
+    width: 4em;
+    text-indent: 4em;
+    font-size: 1em;
+    overflow: hidden;
+    padding: 0;
+    white-space: nowrap;
 }
 
-.header #logo #symbol {
-    display: inline-flex;
+#header nav ul li a[href="#menu"]:before, #header nav ul li a[href="#menu"]:after {
+    -moz-transition: opacity 0.2s ease;
+    -webkit-transition: opacity 0.2s ease;
+    -ms-transition: opacity 0.2s ease;
+    transition: opacity 0.2s ease;
+    content: '';
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: 2em 2em;
 }
 
-.header #logo #symbol img {
-    display: inline-block;
-    width: 3rem;
-    height: 3rem;
+#header nav ul li a[href="#menu"]:before {
+    background-image: url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cstyle%3Eline %7B stroke-width: 8px%3B stroke: %23f2849e%3B %7D%3C/style%3E%3Cline x1='0' y1='25' x2='100' y2='25' /%3E%3Cline x1='0' y1='50' x2='100' y2='50' /%3E%3Cline x1='0' y1='75' x2='100' y2='75' /%3E%3C/svg%3E");
+    opacity: 0;
 }
 
-.header #logo #symbol div {
-    line-height: 1.4rem;
-    font-size: 1.5rem;
-    padding: 0.15rem 0;
+#header nav ul li a[href="#menu"]:after {
+    background-image: url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cstyle%3Eline %7B stroke-width: 8px%3B stroke: %23585858%3B %7D%3C/style%3E%3Cline x1='0' y1='25' x2='100' y2='25' /%3E%3Cline x1='0' y1='50' x2='100' y2='50' /%3E%3Cline x1='0' y1='75' x2='100' y2='75' /%3E%3C/svg%3E");
+    opacity: 1;
 }
 
-.header #logo #symbol #PKPDAPP {
-    font-family: monospace;
-    font-weight: 100;
-    letter-spacing: 0rem;
+#header nav ul li a[href="#menu"]:hover:before {
+    opacity: 1;
 }
+
+#header nav ul li a[href="#menu"]:hover:after {
+    opacity: 0;
+} */
