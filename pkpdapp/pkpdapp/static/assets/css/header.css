@@ -48,11 +48,13 @@ copyright notice and full license details.
 }
 
 .header #logo #symbol div {
-    line-height: 1.3rem;
+    line-height: 1.4rem;
     font-size: 1.5rem;
-    padding: 0.3rem 0;
+    padding: 0.15rem 0;
 }
 
 .header #logo #symbol #PKPDAPP {
+    font-family: monospace;
+    font-weight: 100;
     letter-spacing: 0rem;
 }
