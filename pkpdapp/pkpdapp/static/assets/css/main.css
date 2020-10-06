@@ -16,11 +16,22 @@ body, input, select, textarea {
 	line-height: 1.75;
 }
 
+/* Remove blue default color from anchors */
+a {
+	color:  #585858;
+}
+
 /* Adaptions to navigation bar icon */
 .navbar-toggler {
     height: auto;
     width: auto;
     padding: 0.25rem 0.25rem;
+}
+
+/* Adjust size of icons */
+
+i {
+	font-size: 2rem;
 }
 
 /*
