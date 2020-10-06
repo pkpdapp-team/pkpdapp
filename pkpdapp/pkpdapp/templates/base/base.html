@@ -4,27 +4,20 @@ is released under the BSD 3-clause license. See accompanying LICENSE.md for
 copyright notice and full license details.
 -->
 
-<!DOCTYPE HTML>
+<!doctype html>
+<html lang="en">
+	{% load static %}
 
-{% load static %}
-
-<html>
 	<head>
-		{% comment %}
-			Set tab representation of PKPDApp in browser.
-		{% endcomment %}
+		{% comment %} Set tab representation of PKPDApp in browser. {% endcomment %}
 		<title>PKPDApp</title>
 		<link rel="icon" href="{% static 'images/icon_pkpdapp.svg' %}">
 
-		{% comment %}
-			Set character encoding and viewport settings.
-		{% endcomment %}
+		{% comment %} Set character encoding and viewport settings. {% endcomment %}
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-		{% comment %}
-			Import style of PKPDApp defined in css files.
-		{% endcomment %}
+		{% comment %} Import style of PKPDApp defined in css files. {% endcomment %}
 		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
 		<link rel="stylesheet" href="{% static 'assets/css/main.css' %}">
 
@@ -34,55 +27,15 @@ copyright notice and full license details.
 		{% endcomment %}
 		<script type="text/javascript" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-MML-AM_CHTML"></script>
 	</head>
+
 	<body>
-		<div class='container-fluid py-sm-3 px-sm-5'>
-			<div class='row justify-content-between'>
-				<div class='"col-sm-auto"'>
-					<div>
-						<a href="{% url 'index' %}" id="logo">
-							<span class="symbol"><img src="{% static 'images/logo_pkpdapp.svg' %}" alt="" /></span>
-							<span class="title">PKPDAPP</span>
-						</a>
-					</div>
-				</div>
-				<div class='"col-sm-auto"'>
-					<div class="alert alert-primary" role="alert">
-					A simple primary alert—check it out!
-					</div>
-				</div>
-			</div>
-		</div>
+		{% comment %} Include header definition {% endcomment %}
+		{% include 'base/head.html' %}
+
 		<!-- Wrapper -->
 			<div id="wrapper">
 
-				<!-- Header -->
-					{% comment %}
-					<header id="header">
-						<div class="inner">
-
-							<!-- Logo -->
-								<a href="{% url 'index' %}" class="logo">
-									<span class="symbol"><img src="{% static 'images/logo_pkpdapp.svg' %}" alt="" /></span><span class="title">PKPDAPP</span>
-								</a>
-
-							<!-- Nav -->
-								<nav>
-									<ul>
-                     {% if user.is_authenticated %}
-                       <li>User: {{ user.get_username }}</li>
-                       <li><a href="{% url 'logout'%}?next={{request.path}}">Logout</a></li>
-                     {% else %}
-                       <li><a href="{% url 'login'%}?next={{request.path}}">Login</a></li>
-                     {% endif %}
-										<li><a href="#menu">Menu</a></li>
-									</ul>
-								</nav>
-
-						</div>
-					</header>
-					{% endcomment %}
-
-				<!-- Menu -->
+				{% comment %} <!-- Menu -->
 					<nav id="menu">
 						<h2>Menu</h2>
 						<ul>
@@ -93,7 +46,7 @@ copyright notice and full license details.
 							<li><a href="{% url 'generic' %}">Infer Model</a></li>
 							<li><a href="{% url 'generic' %}">Model Repository</a></li>
 						</ul>
-					</nav>
+					</nav> {% endcomment %}
 
 				<!-- Main -->
 					<div id="main">
