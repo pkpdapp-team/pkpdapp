@@ -32,6 +32,16 @@ copyright notice and full license details.
 		{% comment %} Include header definition {% endcomment %}
 		{% include 'base/head.html' %}
 
+		<div class='container-fluid'>
+			<div class='row'>
+				<div class='col'>
+				<div class="alert alert-primary" role="alert" style='min-height: 800px;'>
+                	A simple primary alert—check it out!
+                </div>
+				</div>
+			</div>
+		</div>
+
 		<!-- Wrapper -->
 			<div id="wrapper">
 
@@ -55,8 +65,7 @@ copyright notice and full license details.
 						</div>
 					</div>
 
-				<!-- Footer -->
-					<footer id="footer">
+					{% comment %} <footer id="footer">
 						<div class="inner">
 							<section>
 								<h2>Get in touch</h2>
@@ -95,12 +104,13 @@ copyright notice and full license details.
 
 								</ul>
 							</section>
-							<ul class="copyright">
-								<li>&copy; Untitled. All rights reserved</li><li>Design: Adapted from <a href="http://html5up.net">HTML5 UP</a></li>
-							</ul>
 						</div>
-					</footer>
+					</footer> {% endcomment %}
 			</div>
+		
+		{% comment %} Include footer definition {% endcomment %}
+		{% include 'base/foot.html' %}
+
 		{% comment %}
 			Include javascripts to enable responsive behaviour.
 		{% endcomment %}
