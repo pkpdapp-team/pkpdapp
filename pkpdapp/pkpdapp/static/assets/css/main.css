@@ -32,6 +32,13 @@ a {
 
 i {
 	font-size: 2rem;
+	padding: 0.2rem;
+}
+
+/* Ajust minimum height of main content */
+/* (Subtract header and footer height) */
+main.main {
+	min-height: calc(100vh - (36px + 1rem + 0.625rem) - 4rem);
 }
 
 /*
