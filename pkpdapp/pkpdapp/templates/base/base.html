@@ -37,72 +37,6 @@ copyright notice and full license details.
 			{% block main_content %}{% endblock %}
 		</main>
 
-		<!-- Wrapper -->
-			{% comment %} <div id="wrapper"> {% endcomment %}
-
-				{% comment %} <!-- Menu -->
-					<nav id="menu">
-						<h2>Menu</h2>
-						<ul>
-							<li><a href="{% url 'index' %}">Home</a></li>
-							<li><a href="{% url 'generic' %}">About</a></li>
-							<li><a href="{% url 'explore_data:index' %}">Explore Data</a></li>
-							<li><a href="{% url 'simulate:build-model' %}">Simulate</a></li>
-							<li><a href="{% url 'generic' %}">Infer Model</a></li>
-							<li><a href="{% url 'generic' %}">Model Repository</a></li>
-						</ul>
-					</nav> {% endcomment %}
-
-				<!-- Main -->
-					{% comment %} <div id="main">
-						<div class="inner">
-							{% block content %}{% endblock %}
-						</div>
-					</div> {% endcomment %}
-
-					{% comment %} <footer id="footer">
-						<div class="inner">
-							<section>
-								<h2>Get in touch</h2>
-								<form method="post" action="{% url 'index' %}">
-								{% csrf_token %}
-									<div class="fields">
-										<div class="field half">
-											<input type="text" name="name" id="name" placeholder="Name" />
-										</div>
-										<div class="field half">
-											<input type="email" name="email" id="email" placeholder="Email" />
-										</div>
-										<div class="field">
-											<textarea name="message" id="message" placeholder="Message"></textarea>
-										</div>
-									</div>
-									<ul class="actions">
-										<li><input type="submit" value="Send" class="primary" disabled/></li>
-									</ul>
-								</form>
-							</section>
-							<section>
-								<h2>Follow</h2>
-								<ul class="icons">
-									<li><a href="https://github.com/pkpdapp-team/pkpdapp" class="icon brands style2 fa-github"><span class="label">GitHub</span></a></li>
-
-									<!-- More social media links that we should consider at a later stage
-									<li><a href="#" class="icon brands style2 fa-twitter"><span class="label">Twitter</span></a></li>
-									<li><a href="#" class="icon brands style2 fa-facebook-f"><span class="label">Facebook</span></a></li>
-									<li><a href="#" class="icon brands style2 fa-instagram"><span class="label">Instagram</span></a></li>
-									<li><a href="#" class="icon brands style2 fa-dribbble"><span class="label">Dribbble</span></a></li>
-									<li><a href="#" class="icon brands style2 fa-500px"><span class="label">500px</span></a></li>
-									<li><a href="#" class="icon solid style2 fa-phone"><span class="label">Phone</span></a></li>
-									<li><a href="#" class="icon solid style2 fa-envelope"><span class="label">Email</span></a></li>
-									-->
-
-								</ul>
-							</section>
-						</div>
-					</footer> {% endcomment %}
-			{% comment %} </div> {% endcomment %}
-
 		{% comment %} Include footer definition {% endcomment %}
 		{% include 'base/foot.html' %}
 
@@ -112,10 +46,6 @@ copyright notice and full license details.
 		<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
 		<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script>
 		<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js" integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV" crossorigin="anonymous"></script>
-		{% comment %} <script src="{% static 'assets/js/jquery.min.js' %}"></script>
-		<script src="{% static 'assets/js/browser.min.js' %}"></script>
-		<script src="{% static 'assets/js/breakpoints.min.js' %}"></script>
-		<script src="{% static 'assets/js/util.js' %}"></script>
-		<script src="{% static 'assets/js/main.js' %}"></script> {% endcomment %}
 	</body>
+	
 </html>
