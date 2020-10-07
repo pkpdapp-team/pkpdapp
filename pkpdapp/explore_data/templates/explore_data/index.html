@@ -1,35 +1,45 @@
 {% extends "base/base.html" %}
 {% load static %}
 
-{% block content %}
-<section class="tiles">
-	<article class="explore_data_style1">
-		<span class="image">
-			<img src="{% static 'images/pic03.jpg' %}" alt="" />
-		</span>
-		<a href="{% url 'generic' %}">
-			<h1>PK</h1>
-			<h2>Analyse Pharmacokinetics</h2>
-			<div class="content">
-				<p>
-					Perform a non-compartmental analysis (NCA) of the pharmacokinetics.
-				</p>
-			</div>
-		</a>
-	</article>
-	<article class="explore_data_style1">
-		<span class="image">
-			<img src="{% static 'images/pic03.jpg' %}" alt="" />
-		</span>
-		<a href="{% url 'generic' %}">
-			<h1>PD</h1>
-			<h2>Analyse Pharmacodynamics</h2>
-			<div class="content">
-				<p>
-					Perform an area under the curve estimation (AUCE) analysis of the pharmacodynamics.
-				</p>
-			</div>
-		</a>
-	</article>
-</section>
+{% block main_content %}
+	<div class="album py-5">
+        <div class="container">
+            <div class="row">
+				<div class="col-md-6">
+					<div class="tiles">
+						<article class="style1">
+							<span class="image">
+								<img src="{% static 'images/pic03.jpg' %}" alt="" />
+							</span>
+							<a href="{% url 'generic' %}">
+								<h2>NCA</h2>
+								<div class="content">
+									<p>
+										Perform a non-compartmental analysis of the observed pharmacokinetics.
+									</p>
+								</div>
+							</a>
+						</article>
+					</div>
+				</div>
+				<div class="col-md-6">
+					<div class="tiles">
+						<article class="style1">
+							<span class="image">
+								<img src="{% static 'images/pic03.jpg' %}" alt="" />
+							</span>
+							<a href="{% url 'generic' %}">
+								<h2>AUCE</h2>
+								<div class="content">
+									<p>
+										Perform an area under the curve effect analysis of the observed pharmacodynamics.
+									</p>
+								</div>
+							</a>
+						</article>
+					</div>
+				</div>
+        	</div>
+      	</div>
+	</div>
 {% endblock %}
