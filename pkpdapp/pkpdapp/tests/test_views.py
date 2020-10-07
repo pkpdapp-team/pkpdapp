@@ -119,10 +119,6 @@ class TestRegistrationViews(TestCase):
         response = self.client.post(endpoint, self.credentials, follow=True)
         self.assertTrue(response.context['user'].is_active)
 
-        # check that the home page displays the username
-        response = self.client.get('/')
-        self.assertContains(response, self.credentials['username'])
-
     def test_password_reset_workflow(self):
         # post to the password reset form using the user email
         response = self.client.post(
