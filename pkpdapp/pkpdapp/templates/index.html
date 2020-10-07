@@ -2,67 +2,71 @@
 {% load static %}
 
 {% block main_content %}
-	<div class='row'>
-		<div class='col'>
-		<div class="alert alert-primary" role="alert" style='min-height: 800px;'>
-			A simple primary alert—check it out!
-		</div>
+	<div class="container">
+		<div class="row py-5">
+			<div class="col">
+				<h1>
+					Welcome to the PKPDApp, a web-based application to model the
+					distribution and effects of drugs.
+				</h1>
+			</div>
 		</div>
 	</div>
-{% comment %} <header>
-	<h1>
-		This is the PKPDApp, a web-based application to model the
-		distribution and effects of drugs.
-	</h1>
-	<p>
-		The PKPDApp is an open-source project that provides tools
-		for modelling drug distribution and effects. To ease
-		collaborations for drug discovery, the app puts a huge
-		emphasis on making modelling as transparent, shareable and
-		reproducible as possible.
-	</p>
-</header>
-<section class="tiles">
-	<article class="style1">
-		<span class="image">
-			<img src="{% static 'images/pic03.jpg' %}" alt="" />
-		</span>
-		<a href="{% url 'explore_data:index' %}">
-			<h2>Explore Data</h2>
-			<div class="content">
-				<p>
-					Visualise your population data. Stratify by dose,
-					covariates or individual IDs, and more...
-				</p>
-			</div>
-		</a>
-	</article>
-	<article class="style2">
-		<span class="image">
-			<img src="{% static 'images/pic03.jpg' %}" alt="" />
-		</span>
-		<a href="{% url 'simulate:build-model' %}">
-			<h2>Simulate</h2>
-			<div class="content">
-				<p>
-					Build and compare models to explore dosing regimens
-					and effect variations between individuals.
-				</p>
-			</div>
-		</a>
-	</article>
-	<article class="style3">
-		<span class="image">
-			<img src="{% static 'images/pic03.jpg' %}" alt="" />
-		</span>
-		<a href="{% url 'generic' %}">
-			<h2>Infer Model</h2>
-			<div class="content">
-				<p>
-					Find the model that describes your data.
-				</p>
-			</div>
-		</a>
-	</article>
-</section> {% endcomment %}
+    <div class="album py-5">
+        <div class="container">
+            <div class="row">
+				<div class="col-md-4">
+					<div class="tiles">
+						<article class="style1">
+							<span class="image">
+								<img src="{% static 'images/pic03.jpg' %}" alt="" />
+							</span>
+							<a href="{% url 'explore_data:index' %}">
+								<h2>Explore Data</h2>
+								<div class="content">
+									<p>
+										Visualise and illustrate your PKPD data, using NCA and AUCE analyses.
+									</p>
+								</div>
+							</a>
+						</article>
+					</div>
+				</div>
+				<div class="col-md-4">
+					<div class="tiles">
+						<article class="style2">
+							<span class="image">
+								<img src="{% static 'images/pic03.jpg' %}" alt="" />
+							</span>
+							<a href="{% url 'simulate:build-model' %}">
+								<h2>Simulate</h2>
+								<div class="content">
+									<p>
+										Build models and compare their dose-response for different patients.
+									</p>
+								</div>
+							</a>
+						</article>
+					</div>
+				</div>
+				<div class="col-md-4">
+					<div class="tiles">
+						<article class="style3">
+							<span class="image">
+								<img src="{% static 'images/pic03.jpg' %}" alt="" />
+							</span>
+							<a href="{% url 'generic' %}">
+								<h2>Infer Model</h2>
+								<div class="content">
+									<p>
+										Find the model that describes and predicts the dose-response in patients.
+									</p>
+								</div>
+							</a>
+						</article>
+					</div>
+				</div>
+        	</div>
+      	</div>
+	</div>
 {% endblock %}

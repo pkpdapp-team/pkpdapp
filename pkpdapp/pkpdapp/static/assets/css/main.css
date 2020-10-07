@@ -41,6 +41,11 @@ main.main {
 	min-height: calc(100vh - (36px + 1rem + 0.625rem) - 4rem);
 }
 
+/* Ajust title font */
+h1, h2, h3 {
+	font-weight: 600;
+}
+
 /*
 body {
 	line-height: 1;
@@ -204,6 +209,7 @@ input, select, textarea {
 
 	/* h2, h3, h4, h5, h6 {
 		font-weight: 900;
+		font-size: 1.1em;
 		line-height: 1.5;
 		margin: 0 0 2em 0;
 		text-transform: uppercase;
@@ -1105,7 +1111,7 @@ input, select, textarea {
 
 	/* For Index Page */
 
-	/* .tiles {
+	.tiles {
 		display: -moz-flex;
 		display: -webkit-flex;
 		display: -ms-flex;
@@ -1126,7 +1132,7 @@ input, select, textarea {
 			-ms-transition: -ms-transform 0.5s ease, opacity 0.5s ease;
 			transition: transform 0.5s ease, opacity 0.5s ease;
 			position: relative;
-			width: 25vw;
+			width: 100%;
 			margin: 0 0 0 0;
 			-moz-transform: scale(0.9);
 			-webkit-transform: scale(0.9);
@@ -1234,7 +1240,12 @@ input, select, textarea {
 				}
 
 				.tiles article > a h2 {
-					margin: 0;
+					font-weight: 900;
+					font-size: 1.1em;
+					line-height: 1.5;
+					margin: 0 0 2em 0;
+					text-transform: uppercase;
+					letter-spacing: 0.35em;
 				}
 
 				.tiles article > a .content {
@@ -1308,7 +1319,7 @@ input, select, textarea {
 			opacity: 1;
 		}
 
-		@media screen and (max-width: 1280px) {
+		/* @media screen and (max-width: 1280px) {
 
 			.tiles article {
 				width: 25vw;
@@ -1358,7 +1369,7 @@ input, select, textarea {
 						transform: scale(1.1);
 					}
 
-		}
+		} */
 
 	/* For Model Building - subclasses Tiles */
 
