@@ -1,80 +1,101 @@
 {% extends "base/base.html" %}
+
 {% load static %}
 {% load plotly_dash %}
-{% block content %}
 
-{% comment %} Header and first instructions {% endcomment %}
-<header>
-    <h1>Simulate</h1>
-</header>
+{% block main_content %}
+	{% comment %} Creating subtask tiles {% endcomment %}
+	<div class="album py-5">
+        <div class="container">
+            <div class="row">
+				<div class="col-md-3">
+					<div class="tiles">
+						<article class="style2">
+							<span class="image">
+								<img src="{% static 'images/pic03.jpg' %}" alt="" />
+							</span>
+							<a href="{% url 'generic' %}">
+								<h3>PKPD Model</h3>
+								<div class="content">
+									<p>Model the pharmacokinetic and pharmacodynamic processes.</p>
+								</div>
+							</a>
+						</article>
+					</div>
+				</div>
+				<div class="col-md-3">
+					<div class="tiles">
+						<article class="style2">
+							<span class="image">
+								<img src="{% static 'images/pic03.jpg' %}" alt="" />
+							</span>
+							<a href="{% url 'generic' %}">
+								<h3>Route of Administration</h3>
+								<div class="content">
+									<p>Specify the route of administration of the drug.</p>
+								</div>
+							</a>
+						</article>
+					</div>
+				</div>
+				<div class="col-md-3">
+					<div class="tiles">
+						<article class="style2">
+							<span class="image">
+								<img src="{% static 'images/pic03.jpg' %}" alt="" />
+							</span>
+							<a href="{% url 'generic' %}">
+								<h3>Error Model</h3>
+								<div class="content">
+									<p>Model the error of the mechanistic model.</p>
+								</div>
+							</a>
+						</article>
+					</div>
+				</div>
+				<div class="col-md-3">
+					<div class="tiles">
+						<article class="style2">
+							<span class="image">
+								<img src="{% static 'images/pic03.jpg' %}" alt="" />
+							</span>
+							<a href="{% url 'generic' %}">
+								<h3>Population Model</h3>
+								<div class="content">
+									<p>Model variation between individuals.</p>
+								</div>
+							</a>
+						</article>
+					</div>
+				</div>
+        	</div>
+      	</div>
+	</div>
 
-{% comment %} Creating subtask tiles {% endcomment %}
-<section class="tiles">
-	<article class="model">
-		<span class="image">
-			<img src="{% static 'images/pic03.jpg' %}" alt="" />
-		</span>
-		<a href="#subtask">
-			<h3>PKPD Model</h3>
-			<div class="content">
-				<p>Model the pharmacokinetic and pharmacodynamic processes.</p>
+	{% comment %} Visualisation of model building blocks {% endcomment %}
+	<div class="container">
+		<div class="row">
+			<div class"col">
+				<h4>Model Summary</h4>
 			</div>
-		</a>
-	</article>
-	<article class="model">
-		<span class="image">
-			<img src="{% static 'images/pic03.jpg' %}" alt="" />
-		</span>
-		<a href="#subtask">
-			<h3>Route of Administration</h3>
-			<div class="content">
-				<p>Specify the route of administration of the drug.</p>
+		</div>
+		<div class="row">
+			<div class"col">
+				<p><b>Model name:</b> Tumour growth in absence of treatment</p>
+				<p style="font-size:25px; padding-left: 5rem;">
+					\( \frac{\text{d}V_T}{\text{d}t} = \frac{\lambda V_T}{V_T / V_{\text{crit}} + 1}, \quad  V_T(t=0)=V_0\)</p>
+				<p>
+					<ul>
+						<li><b>Model type:</b> PD model</li>
+						<li><b>Number of parameters:</b> 3</li>
+					</ul>
+				</p>
 			</div>
-		</a>
-	</article>
-	<article class="model">
-		<span class="image">
-			<img src="{% static 'images/pic03.jpg' %}" alt="" />
-		</span>
-		<a href="#subtask">
-			<h3>Error Model</h3>
-			<div class="content">
-				<p>Model the error of the mechanistic model.</p>
+		</div>
+		<div class="row py-3 justify-content-end">
+			<div class"col">
+				<form action="{% url 'simulate:simulation' %}"><input type="submit" value="Simulate"/></form>
 			</div>
-		</a>
-	</article>
-    <article class="model">
-		<span class="image">
-			<img src="{% static 'images/pic03.jpg' %}" alt="" />
-		</span>
-		<a href="#subtask">
-			<h3>Population Model</h3>
-			<div class="content">
-				<p>Model variation between individuals.</p>
-			</div>
-		</a>
-	</article>
-</section>
-
-{% comment %} This fills the active subtask window {% endcomment %}
-<div id="subtask">
-    <h3>This is a place holder - Subtask is under development</h1>
-</div>
-
-{% comment %} Visualisation of model building blocks {% endcomment %}
-
-<header>
-	<h3></h3> {% comment %} temporary fix for spacing {% endcomment %}
-	<h4>Model Summary</h4>
-	<p><b>Model name:</b> Tumour growth in absence of treatment</p>
-	<p style="font-size:25px", align="center">\( \frac{\text{d}V_T}{\text{d}t} = \frac{\lambda V_T}{V_T / V_{\text{crit}} + 1}, \quad  V_T(t=0)=V_0\)</p>
-	<p>
-		<ul>
-			<li><b>Model type:</b> PD model</li>
-			<li><b>Number of parameters:</b> 3</li>
-		</ul>
-	</p>
-	<form action="{% url 'simulate:simulation' %}" align="right"><input type="submit" value="SIMULATE"/></form>
-</header>
-
+		</div>
+	</div>
 {% endblock %}

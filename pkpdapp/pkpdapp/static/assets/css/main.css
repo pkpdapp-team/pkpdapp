@@ -1275,11 +1275,6 @@ input, select, textarea {
 				background-color: #7bd0c1;
 			}
 
-			.tiles article.explore_data_style1 > .image:before {
-				background-color:  #585858;
-				border: solid #7ecaf6;
-			}
-
 			body:not(.is-touch) .tiles article:hover > .image {
 				-moz-transform: scale(1.1);
 				-webkit-transform: scale(1.1);
@@ -1303,14 +1298,6 @@ input, select, textarea {
 
 		* + .tiles {
 			margin-top: 2em;
-		}
-
-		body.is-preload .tiles article {
-			-moz-transform: scale(0.8);
-			-webkit-transform: scale(0.8);
-			-ms-transform: scale(0.8);
-			transform: scale(0.8);
-			opacity: 0;
 		}
 
 		body.is-touch .tiles article .content {
