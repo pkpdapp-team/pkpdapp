@@ -1,14 +1,7 @@
 {% extends "base/base.html" %}
 {% load static %}
 {% load plotly_dash %}
-{% block content %}
 
-{% comment %} Header and first instructions {% endcomment %}
-<header>
-    <h1>Simulate</h1>
-</header>
-
-{% plotly_app name="DashBoard" ratio=0.5 %}
-
-
+{% block main_content %}
+    {% plotly_app name="DashBoard" ratio=0.5 %}
 {% endblock %}
