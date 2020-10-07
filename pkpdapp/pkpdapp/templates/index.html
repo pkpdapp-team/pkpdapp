@@ -1,8 +1,15 @@
 {% extends "base/base.html" %}
 {% load static %}
 
-{% block content %}
-<header>
+{% block main_content %}
+	<div class='row'>
+		<div class='col'>
+		<div class="alert alert-primary" role="alert" style='min-height: 800px;'>
+			A simple primary alert—check it out!
+		</div>
+		</div>
+	</div>
+{% comment %} <header>
 	<h1>
 		This is the PKPDApp, a web-based application to model the
 		distribution and effects of drugs.
@@ -57,5 +64,5 @@
 			</div>
 		</a>
 	</article>
-</section>
+</section> {% endcomment %}
 {% endblock %}

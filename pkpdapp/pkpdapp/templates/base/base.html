@@ -32,18 +32,13 @@ copyright notice and full license details.
 		{% comment %} Include header definition {% endcomment %}
 		{% include 'base/head.html' %}
 
+		{% comment %} Include main content of page {% endcomment %}
 		<div class='container-fluid'>
-			<div class='row'>
-				<div class='col'>
-				<div class="alert alert-primary" role="alert" style='min-height: 800px;'>
-                	A simple primary alert—check it out!
-                </div>
-				</div>
-			</div>
+			{% block main_content %}{% endblock %}
 		</div>
 
 		<!-- Wrapper -->
-			<div id="wrapper">
+			{% comment %} <div id="wrapper"> {% endcomment %}
 
 				{% comment %} <!-- Menu -->
 					<nav id="menu">
@@ -59,11 +54,11 @@ copyright notice and full license details.
 					</nav> {% endcomment %}
 
 				<!-- Main -->
-					<div id="main">
+					{% comment %} <div id="main">
 						<div class="inner">
 							{% block content %}{% endblock %}
 						</div>
-					</div>
+					</div> {% endcomment %}
 
 					{% comment %} <footer id="footer">
 						<div class="inner">
@@ -106,8 +101,8 @@ copyright notice and full license details.
 							</section>
 						</div>
 					</footer> {% endcomment %}
-			</div>
-		
+			{% comment %} </div> {% endcomment %}
+
 		{% comment %} Include footer definition {% endcomment %}
 		{% include 'base/foot.html' %}
 
