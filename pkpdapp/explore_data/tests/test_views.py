@@ -23,7 +23,7 @@ class TestIndexView(SimpleTestCase):
 
     def test_index_contains_correct_html(self):
         response = self.client.get(reverse('explore_data:index'))
-        contents = 'Analyse Pharmacokinetics'
+        contents = 'NCA'
         self.assertContains(response, contents)
-        contents = 'Analyse Pharmacodynamics'
+        contents = 'AUCE'
         self.assertContains(response, contents)
