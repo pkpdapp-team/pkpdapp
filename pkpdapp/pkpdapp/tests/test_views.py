@@ -1,5 +1,5 @@
 #
-# This file is part of PKDPApp (https://github.com/pkpdapp-team/pkpdapp) which
+# This file is part of PKPDApp (https://github.com/pkpdapp-team/pkpdapp) which
 # is released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
@@ -119,10 +119,6 @@ class TestRegistrationViews(TestCase):
         response = self.client.post(endpoint, self.credentials, follow=True)
         self.assertTrue(response.context['user'].is_active)
 
-        # check that the home page displays the username
-        response = self.client.get('/')
-        self.assertContains(response, self.credentials['username'])
-
     def test_password_reset_workflow(self):
         # post to the password reset form using the user email
         response = self.client.post(
@@ -146,10 +142,13 @@ class TestRegistrationViews(TestCase):
         )
 
         # get the url from the response
-        url = re.search(
+        url = re.findall(
             r"(?P<url>https?://[^\s]+)",
             mail.outbox[0].body
-        ).group("url")
+        )
+
+        # url we want is the second one
+        url = url[1]
 
         # use this to get the get the password reset confirm form
         response = self.client.get(url, follow=True)

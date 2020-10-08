@@ -1,0 +1,44 @@
+<!--
+This file is part of PKPDApp (https://github.com/pkpdapp-team/pkpdapp) which
+is released under the BSD 3-clause license. See accompanying LICENSE.md for
+copyright notice and full license details.
+-->
+
+{% load static %}
+
+<nav class="navbar sticky-top navbar-expand-lg navbar-light bg-light">
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggler" aria-controls="navbarToggler" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <a class="navbar-brand mr-0 mr-md-2" href="{% url 'index' %}">
+        <img class="d-block" height="36" src="{% static 'images/logo_pkpdapp_with_text_no_boundary.svg' %}" alt="" />
+    </a>
+    <div class="collapse navbar-collapse" id="navbarToggler">
+        <ul class="navbar-nav mr-auto mt-2 mt-lg-0">
+            <li class="nav-item">
+                <a class="nav-link active" href="{% url 'index' %}">Home</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'generic' %}">About</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'generic' %}">Workflows</a>
+            </li>
+             <li class="nav-item">
+                <a class="nav-link" href="{% url 'generic' %}">Model Repository</a>
+            </li>
+             <li class="nav-item">
+                <a class="nav-link" href="{% url 'generic' %}">Documentation</a>
+            </li>
+        </ul>
+        <ul class="navbar-nav my-2 my-lg-0">
+            <li class="nav-item">
+                {% if user.is_authenticated %}
+                    <a href="{% url 'logout' %}?next={{request.path}}">Logout</a>
+                {% else %}
+                    <a href="{% url 'login' %}?next={{request.path}}">Login</a>
+                {% endif %}
+            </li>
+        </ul>
+    </div>
+</nav>
