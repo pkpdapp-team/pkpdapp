@@ -142,10 +142,13 @@ class TestRegistrationViews(TestCase):
         )
 
         # get the url from the response
-        url = re.search(
+        url = re.findall(
             r"(?P<url>https?://[^\s]+)",
             mail.outbox[0].body
-        ).group("url")
+        )
+
+        # url we want is the second one
+        url = url[1]
 
         # use this to get the get the password reset confirm form
         response = self.client.get(url, follow=True)
