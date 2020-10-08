@@ -1,3 +1,5 @@
+[![PKPDApp logo](https://github.com/pkpdapp-team/pkpdapp/pkpdapp/pkpdapp/static/images/logo_pkpdapp_with_text_no_boundary.svg)](https://pkpdapp.herokuapp.com)
+
 [![Unit tests on multiple python versions](https://github.com/pkpdapp-team/pkpdapp/workflows/Unit%20tests%20(python%20versions)/badge.svg)](https://github.com/pkpdapp-team/pkpdapp/actions)
 [![Unit tests on multiple operating systems](https://github.com/pkpdapp-team/pkpdapp/workflows/Unit%20tests%20(OS%20versions)/badge.svg)](https://github.com/pkpdapp-team/pkpdapp/actions)
 [![codecov](https://codecov.io/gh/pkpdapp-team/pkpdapp/branch/master/graph/badge.svg)](https://codecov.io/gh/pkpdapp-team/pkpdapp)
