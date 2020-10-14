@@ -22,6 +22,7 @@ urlpatterns = [
     path('', views.IndexView.as_view(), name='index'),
     path('admin/', admin.site.urls),
     path('accounts/', include('django.contrib.auth.urls')),
+    path('auce/', include('auce.urls')),
     path('explore_data/', include('explore_data.urls')),
     path('generic/', views.GenericView.as_view(), name='generic'),
     path('simulate/', include('simulate.urls')),

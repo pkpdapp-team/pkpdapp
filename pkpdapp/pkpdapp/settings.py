@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'dpd_static_support',
 
     # internal apps
+    'auce.apps.AuceConfig',
     'explore_data.apps.ExploreDataConfig',
     'simulate.apps.SimulateConfig',
 ]
