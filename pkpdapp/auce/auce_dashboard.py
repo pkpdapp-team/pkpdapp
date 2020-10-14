@@ -13,6 +13,7 @@ import dash_html_components as html
 from django.conf import settings
 from django_plotly_dash import DjangoDash
 
+import dash_table
 import numpy as np
 import pandas as pd 
 import plotly
@@ -245,8 +246,6 @@ def auce_fit(auce_conc_fit_type, auce_y_axis_type, auce_x_axis_type, class2_sele
 
         y = fsigmoid(x, fit_top,fit_bottom,fit_EC50)
 
-        print(x)
-        print(y)
         auce_vs_concentration_fig.add_trace(go.Scatter(
                 x = x,
                 y = y,
@@ -431,6 +430,9 @@ def update_app() :
                                 value = 'linear',
                             )
                         ], style={'width': '40%'}),  
+                        html.Br(),
+                        html.Br(),
+                        "Fit type :",
                         dcc.RadioItems(
                                 id= 'auce-conc-fit-type',
                                 options=[{'label':i, 'value':i} for i in ['None','Sigmoid']],
@@ -455,7 +457,7 @@ def update_app() :
                 )
             ]
         )       
-    ])
+    ], style = {'font-family':'sans-serif'})
 
 update_app()
 
