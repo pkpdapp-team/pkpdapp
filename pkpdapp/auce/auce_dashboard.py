@@ -220,6 +220,7 @@ def compute_auce_vs_concentration(time_selection, auce_conc_fit_type, auce_y_axi
                 color=colors[index_class2]
             )
         )) 
+
     auce_vs_concentration_fig.update_layout(
         autosize=True,
         xaxis_title='Concentration',
@@ -245,7 +246,20 @@ def auce_fit(auce_conc_fit_type, auce_y_axis_type, auce_x_axis_type, class2_sele
             x = np.geomspace(0.1, max(concentrations), 500)
 
         y = fsigmoid(x, fit_top,fit_bottom,fit_EC50)
-
+        if fit_EC50>0:    
+            auce_vs_concentration_fig.add_shape(dict(
+                type="line",
+                x0=fit_EC50,
+                y0=0,
+                x1=fit_EC50,
+                yref= 'paper',
+                y1= 1,
+                line=dict(
+                    color=colors[index_class2],
+                    width=2,
+                    dash = 'dot'
+                )
+            ))   
         auce_vs_concentration_fig.add_trace(go.Scatter(
                 x = x,
                 y = y,
@@ -265,6 +279,7 @@ def auce_fit(auce_conc_fit_type, auce_y_axis_type, auce_x_axis_type, class2_sele
                 line=dict(color=colors[index_class2])
                 
             )) 
+ 
         auce_vs_concentration_fig.update_layout(
             autosize=True,
             xaxis_title='Concentration',
