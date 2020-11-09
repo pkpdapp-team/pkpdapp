@@ -181,6 +181,7 @@ def compute_auce_vs_concentration(time_selection, auce_conc_fit_type, auce_y_axi
              class3_plot_selection):
 
     auce_vs_concentration_fig.data = []
+    auce_vs_concentration_fig.layout={}
     data = dataset.loc[dataset[class1_selection]==class1_plot_selection]
 
     class2 = [class2_plot_selection] if class2_plot_selection else data[class2_selection].unique()
@@ -306,6 +307,9 @@ def auce_fit(auce_conc_fit_type, auce_y_axis_type, auce_x_axis_type, class2_sele
                 yaxis_type = auce_y_axis_type,
                 template="plotly_white",
             )
+        else :
+            auce_vs_concentration_fig.add_annotation(text=("Could not fit %s %s<br> " %(class2_selection, class2_selected)), 
+                                                    xref='paper', yref='paper', x=0.05, y=1-index_class2*0.1, showarrow=False,font=dict(color=colors[index_class2]))
 ################################# LAYOUT #################################
 def update_app() :
 
