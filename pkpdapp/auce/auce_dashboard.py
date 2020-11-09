@@ -231,12 +231,15 @@ def compute_auce_vs_concentration(time_selection, auce_conc_fit_type, auce_y_axi
     )
     return auce_vs_concentration_fig
 
-def auce_fit(auce_conc_fit_type, auce_y_axis_type, auce_x_axis_type, class2_selection, class2_selected, index_class2, concentrations, auce_vs_concentration_data):
-    if auce_conc_fit_type == 'Sigmoid' and len(concentrations) >= 4:
+def auce_fit(auce_conc_fit_type, auce_y_axis_type, auce_x_axis_type, class2_selection, class2_selected, 
+            index_class2, concentrations, auce_vs_concentration_data):
 
+    if auce_conc_fit_type == 'Sigmoid' and len(concentrations) >= 4:
         p0 = [max(auce_vs_concentration_data), min(auce_vs_concentration_data), 1000]
         fitted_params, covariates = curve_fit(fsigmoid,concentrations, auce_vs_concentration_data, p0=p0)
         fit_top,fit_bottom,fit_EC50 = fitted_params
+
+        sigma_top,sigma_bottom,sigma_EC50 = np.sqrt(np.diag(covariates))
 
         if auce_x_axis_type == 'linear' :
             x = np.linspace(min(concentrations), max(concentrations), 500) 
@@ -245,22 +248,23 @@ def auce_fit(auce_conc_fit_type, auce_y_axis_type, auce_x_axis_type, class2_sele
         else :
             x = np.geomspace(0.1, max(concentrations), 500)
 
-        y = fsigmoid(x, fit_top,fit_bottom,fit_EC50)
-        if fit_EC50>0:    
-            auce_vs_concentration_fig.add_shape(dict(
-                type="line",
-                x0=fit_EC50,
-                y0=0,
-                x1=fit_EC50,
-                yref= 'paper',
-                y1= 1,
-                line=dict(
-                    color=colors[index_class2],
-                    width=2,
-                    dash = 'dot'
-                )
-            ))   
-        auce_vs_concentration_fig.add_trace(go.Scatter(
+        y = fsigmoid(x, *fitted_params)
+
+        y_upper = fsigmoid(x, fit_top+abs(sigma_top), fit_bottom+abs(sigma_bottom), fit_EC50-abs(sigma_EC50))
+        y_lower = fsigmoid(x, fit_top-abs(sigma_top), fit_bottom-abs(sigma_bottom), fit_EC50+abs(sigma_EC50))
+
+        if (fit_EC50>0 and sigma_bottom and sigma_EC50 and sigma_top and (fit_EC50-abs(sigma_EC50)) >0):    
+            auce_vs_concentration_fig.add_trace(go.Scatter(
+                x=[fit_EC50, fit_EC50],
+                y=[0,fsigmoid(fit_EC50, *fitted_params)],
+                line=dict(width=1,color=colors[index_class2], dash = 'dot'),
+                mode='lines',
+                hovertemplate=(
+                "EC50 : %f +/- %f<br><br>" % (fit_EC50, sigma_EC50)+
+                "<extra></extra>"),
+                showlegend=False
+            ))
+            auce_vs_concentration_fig.add_trace(go.Scatter(
                 x = x,
                 y = y,
                 name = "FIT %s, %s" %(class2_selection, class2_selected),
@@ -269,25 +273,39 @@ def auce_fit(auce_conc_fit_type, auce_y_axis_type, auce_x_axis_type, class2_sele
                 hovertemplate=(
                 "<b>Fit </b><br>" +
                 "Parameters :<br>"+
-                "Top : %f<br>" % fit_top +
-                "Bottom : %f<br>" % fit_bottom +
-                "EC50 : %f<br><br>" % fit_EC50 +
+                "Top : %f +/- %f<br> " % (fit_top, sigma_top) +
+                "Bottom : %f +/- %f<br>" % (fit_bottom, sigma_bottom) +
+                "EC50 : %f +/- %f<br><br>" % (fit_EC50, sigma_EC50)+
                 "X : %{x:}<br>" +
                 "Y: %{y:}<br>" +
                 "<extra></extra>"),
                 mode="lines",
-                line=dict(color=colors[index_class2])
-                
-            )) 
- 
-        auce_vs_concentration_fig.update_layout(
-            autosize=True,
-            xaxis_title='Concentration',
-            yaxis_title='AUCE',
-            xaxis_type = auce_x_axis_type,
-            yaxis_type = auce_y_axis_type,
-            template="plotly_white",
-        )
+                line=dict(color=colors[index_class2])        
+            ))
+            auce_vs_concentration_fig.add_trace(go.Scatter(
+                x=x,
+                y=y_upper,
+                mode='lines',
+                line=dict(width=0.3,color=colors[index_class2]),
+                showlegend=False,
+                hoverinfo='skip'
+            ))
+            auce_vs_concentration_fig.add_trace(go.Scatter(
+                x=x,
+                y=y_lower,
+                line=dict(width=0.3,color=colors[index_class2]),
+                mode='lines',
+                showlegend=False,
+                hoverinfo='skip'
+            ))
+            auce_vs_concentration_fig.update_layout(
+                autosize=True,
+                xaxis_title='Concentration',
+                yaxis_title='AUCE',
+                xaxis_type = auce_x_axis_type,
+                yaxis_type = auce_y_axis_type,
+                template="plotly_white",
+            )
 ################################# LAYOUT #################################
 def update_app() :
 
@@ -455,6 +473,15 @@ def update_app() :
                         ),
 
                     ], style={'width': '100%'})
+                ),
+                dcc.Tab(
+                    label='Simulation',
+                    value='simulation',
+                    children=html.Div(className='control-tab', children=[
+                        html.Br(),
+                        html.Br(),
+               
+                    ])
                 ),
                 dcc.Tab(
                     label='About',
