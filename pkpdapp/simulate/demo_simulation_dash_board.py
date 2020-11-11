@@ -22,6 +22,80 @@ import plotly.colors
 import plotly.graph_objects as go
 
 
+class PharmacokineticModel(pints.ForwardModel):
+    """
+    Creates a `pints.ForwardModel` from a SBML model.
+
+    Arguments:
+        path -- Absolute path to SBML model file.
+        is_log_transformed -- Flag whether model parameters are
+                              log-transformed.
+    """
+
+    def __init__(self, path, model_input):
+        super(PharmacokineticModel, self).__init__()
+
+        # model = sbml.SBMLImporter().model(path)
+        
+        model, _, _ = myokit.load(path)
+        _, dosing, _ =  myokit.load(model_input)
+
+        # Get the number of states and parameters
+        self._n_states = model.count_states()
+        n_const = model.count_variables(const=True)
+        self._n_parameters = self._n_states + n_const
+
+        # Get constant variable names and state names
+        self._state_names = sorted(
+            [var.qname() for var in model.states()])
+        self._const_names = sorted(
+            [var.qname() for var in model.variables(const=True)])
+        print(self._state_names , self._const_names)
+        # Set default outputs
+        self._n_outputs = self._n_states
+        self._output_names = self._state_names
+
+        # Create simulator
+        self._sim = myokit.Simulation(model, dosing)
+
+    def _set_const(self, parameters):
+        """
+        Sets values of constant model parameters.
+        """
+        for id_var, var in enumerate(self._const_names):
+            self._sim.set_constant(var, float(parameters[id_var]))
+
+    def n_parameters(self):
+        """
+        Returns the number of parameters in the model.
+
+        Parameters of the model are initial state values and structural
+        parameter values.
+        """
+        return self._n_parameters
+
+    def simulate(self, parameters, times):
+        """
+        Returns the numerical solution of the model outputs for specified
+        parameters and times.
+        """
+        # Reset simulation
+        self._sim.reset()
+
+        # Set initial conditions
+        self._sim.set_state(parameters[:self._n_states])
+
+        # Set constant model parameters
+        self._set_const(parameters[self._n_states:])
+
+        # Simulate
+        output = self._sim.run(
+            times[-1] + 1, log=self._output_names, log_times=times)
+        result = [output[name] for name in self._output_names]
+
+        return np.array(result).flatten()
+
+
 class PharmacodynamicModel(pints.ForwardModel):
     """
     Creates a `pints.ForwardModel` from a SBML model.
@@ -358,25 +432,37 @@ path = settings.MEDIA_ROOT
 data = pd.read_csv(path + '/data/lxf_control_growth.csv')
 
 # Define model
-model = PharmacodynamicModel(
-    path + '/model/tumour_growth_without_treatment.xml')
-
+model = PharmacokineticModel(path + '/model/TwoCompartment_IV_Model.mmt', path + '/model/protocol_New.mmt')
 # Define parameter ranges for sliders
-default_parameters = [0.2, 1, 0.12]
-min_parameters = [0.01, 0.1, 0.01]
-max_parameters = [1, 5, 0.5]
+default_parameters = [0.2, 1, 0.2, 1, 1, 1, 1]
+min_parameters = [0.1, 0.1, 0.01, 0.01, 0.01, 0.01, 0.01]
+max_parameters = [1, 5, 0.5, 5, 5, 5, 5]
 parameter_names = [
-    'Initial tumour volume in cm^3',
-    'Critical tumour volume in cm^3',
-    'Growth rate in 1/day']
+    'Initial Conc in Central Compartment',
+    'Initial Conc in Periferal Compartment',
+    'Clearance',
+    'Qp1',
+    'Vc',
+    'Vp1',
+    'DoseAmount']
 
 # Create figure
-fig = plot_measurements_and_simulation(
+fig1 = plot_measurements_and_simulation(
     data, model, default_parameters, min_parameters, max_parameters,
     parameter_names)
 
 # Set height of image
-fig.update_layout(
+fig1.update_layout(
+    height=550
+)
+
+# Create figure
+fig2 = plot_measurements_and_simulation(
+    data, model, default_parameters, min_parameters, max_parameters,
+    parameter_names)
+
+# Set height of image
+fig2.update_layout(
     height=550
 )
 
@@ -385,7 +471,11 @@ app = DjangoDash('DashBoard')
 
 app.layout = html.Div(children=[
     dcc.Graph(
-        id='simulation-dashboard',
-        figure=fig
+        id='PKsimulation-dashboard',
+        figure=fig1
+    ),
+    dcc.Graph(
+        id='PDsimulation-dashboard',
+        figure=fig2
     )
 ])

@@ -1,0 +1,42 @@
+[[model]]
+name: Three compartment Linear (oral) SC PK model
+author: Ken Wang
+
+# Initial values:
+
+AllCompartment.Drug_Central = 0
+AllCompartment.Drug_P1 = 0
+
+
+
+[environment]
+t = 0 bind time
+    
+
+[dose]
+doseAmount = 1  # Will be set later by Python script 
+DoseBinary = 0  # 0 when not dosing, 1 when dosing
+    bind pace   # set DoseBinary using the protocol
+doseApplication = DoseBinary * doseAmount
+
+
+
+[AllCompartment]
+CL = 1 [mL/h]
+    desc: Clearance/elimination rate from central compartment 
+Vc = 1 [mL]
+    desc: Volume of the central compartment 
+Qp1 = 1 [mL/h]
+    desc: Transition rate between compartment 1 (central compartment) and compartment 2 (one of the peripheral compartment) 
+Vp1 = 1 [mL]
+    desc: Volume of the compartment 2 (one of the peripheral compartment )
+
+dot(Drug_Central) = dose.doseApplication - CL/Vc*Drug_Central-Qp1*(Drug_Central/Vc-Drug_P1/Vp1)
+    desc: Amount of drug in central compartment unit in ng 
+dot(Drug_P1) = Qp1*(Drug_Central/Vc-Drug_P1/Vp1)
+    desc: Amount of drug in first peripheral compartment unit in ng
+
+
+Drug_Concentration_Central = Drug_Central / Vc
+    desc: Concentration of drug in the central compartment unit ng/mL
+
