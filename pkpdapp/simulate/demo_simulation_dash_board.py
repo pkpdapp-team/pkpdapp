@@ -466,14 +466,19 @@ fig2.update_layout(
     height=550
 )
 
-# Create dash app
-app = DjangoDash('DashBoard')
+# Create dash apps
+app1 = DjangoDash('PKDashBoard')
 
-app.layout = html.Div(children=[
+app1.layout = html.Div(children=[
     dcc.Graph(
         id='PKsimulation-dashboard',
         figure=fig1
-    ),
+    )
+])
+
+app2 = DjangoDash('PDDashBoard')
+
+app2.layout = html.Div(children=[
     dcc.Graph(
         id='PDsimulation-dashboard',
         figure=fig2

@@ -9,5 +9,60 @@ copyright notice and full license details.
 {% load plotly_dash %}
 
 {% block main_content %}
-    {% plotly_app name="DashBoard" ratio=0.5 %}
+
+    {% comment %} PK Model Description {% endcomment %}
+    <div class="container">
+        <div class="row px-xs-2">
+            <div class"col">
+                <h2>Pharmacokinetic Model</h2>
+            </div>
+        </div>
+        <div class="row px-xs-2">
+            <div class"col">
+                <p><b>Current Model:</b> Two Compartment IV Model  </p> 
+                <p><b>Current Input:</b> Dosing Regime 1</p>
+                <p><b>Current Data:</b> None</p>
+            </div>
+
+            <div class"col">
+                &emsp;
+            </div>
+            <div class"col">
+                <form action="{% url 'simulate:simulation' %}"><input type="submit" value="Change Model"/></form>
+                <form action="{% url 'simulate:simulation' %}"><input type="submit" value="Change Input"/></form>
+                <form action="{% url 'simulate:simulation' %}"><input type="submit" value="Change Data"/></form>
+            </div>
+        </div>
+    </div>
+
+    {% comment %} PK Graph {% endcomment %}
+    {% plotly_app name="PKDashBoard" ratio=0.5 %}
+
+    {% comment %} PD Model Description {% endcomment %}
+    <div class="container">
+        <div class="row px-xs-2">
+            <div class"col">
+                <h2>Pharmacodynamic Model</h2>
+            </div>
+        </div>
+        <div class="row px-xs-2">
+            <div class"col">
+                <p><b>Current Model:</b> Myelotoxicity Friberg Model </p> 
+                <p><b>Current Input:</b> PK - Central Compartment Concentration </p>
+                <p><b>Current Data:</b> Docetaxel Platelets</p>
+            </div>
+
+            <div class"col">
+                &emsp;
+            </div>
+            <div class"col">
+                <form action="{% url 'simulate:simulation' %}"><input type="submit" value="Change Model"/></form>
+                <form action="{% url 'simulate:simulation' %}"><input type="submit" value="Change Input"/></form>
+                <form action="{% url 'simulate:simulation' %}"><input type="submit" value="Change Data"/></form>
+            </div>
+        </div>
+    </div>
+
+    {% comment %} PD Graph {% endcomment %}
+    {% plotly_app name="PDDashBoard" ratio=0.5 %}
 {% endblock %}

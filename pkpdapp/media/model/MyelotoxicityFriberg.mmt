@@ -1,0 +1,74 @@
+[[model]]
+name: Two compartment Linear (IV) PK model with Myelotoxicity model
+
+# Initial values:
+
+PK.Drug_Central = 0
+PK.Drug_P1 = 0
+
+PD.Prol = 1
+PD.T1 = 0
+PD.T2 = 0
+PD.T3 = 0
+PD.Circ = 0
+
+[environment]
+t = 0 bind time
+    
+
+[dose]
+doseAmount = 1  # Will be set later by Python script 
+DoseBinary = 0  # 0 when not dosing, 1 when dosing
+    bind pace   # set DoseBinary using the protocol
+doseApplication = DoseBinary * doseAmount
+
+
+
+[PK]
+# Parameters
+CL = 1 [mL/h]
+    desc: Clearance/elimination rate from central compartment 
+Vc = 1 [mL]
+    desc: Volume of the central compartment 
+Qp1 = 1 [mL/h]
+    desc: Transition rate between compartment 1 (central compartment) and compartment 2 (one of the peripheral compartment) 
+Vp1 = 1 [mL]
+    desc: Volume of the compartment 2 (one of the peripheral compartment )
+
+# Equations
+dot(Drug_Central) = dose.doseApplication - CL/Vc*Drug_Central-Qp1*(Drug_Central/Vc-Drug_P1/Vp1)
+    desc: Amount of drug in central compartment unit in ng 
+dot(Drug_P1) = Qp1*(Drug_Central/Vc-Drug_P1/Vp1)
+    desc: Amount of drug in first peripheral compartment unit in ng
+
+
+Drug_Concentration_Central = Drug_Central / Vc
+    desc: Concentration of drug in the central compartment unit ng/mL
+
+[PD]
+use PK.Drug_Concentration_Central as Conc
+
+# Parameters
+Circ_0 = 1 [ng/mL]
+    desc: Steady state of circulating cells
+MTT = 1 [hour]
+    desc: Mean transit time from Proliferation to Circulation
+gamma = 1 []
+    desc: The exponent of the negative feedback loop 
+Slope = 1 [mL/ng]
+    desc: The slope of the linear drug effect
+
+k_tr = 4/MTT
+k_prol = k_tr
+E_Drug = Slope*Conc
+k_circ = k_tr
+
+# Equations
+dot(Prol) = k_prol * Prol * (1-E_Drug) * (Circ_0/Circ)^gamma - k_tr*Prol
+    desc: Concentration of proliferating blood cells in ng/mL
+dot(T1) = k_tr * Prol - k_tr * T1
+dot(T2) = k_tr * T1 - k_tr * T2
+dot(T3) = k_tr * T2 - k_tr * T3
+dot(Circ) = k_tr * T2 - k_circ * Circ
+    desc: Concentration of circulating blood cells in ng/mL
+
