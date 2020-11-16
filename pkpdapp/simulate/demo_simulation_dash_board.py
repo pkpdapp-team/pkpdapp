@@ -106,28 +106,37 @@ class PharmacodynamicModel(pints.ForwardModel):
                               log-transformed.
     """
 
-    def __init__(self, path):
+    def __init__(self, path, model_input):
         super(PharmacodynamicModel, self).__init__()
 
-        model = sbml.SBMLImporter().model(path)
+        # model = sbml.SBMLImporter().model(path)
+        
+        model, _, _ = myokit.load(path)
+        _, dosing, _ =  myokit.load(model_input)
 
-        # Get the number of states and parameters
-        self._n_states = model.count_states()
-        n_const = model.count_variables(const=True)
-        self._n_parameters = self._n_states + n_const
 
         # Get constant variable names and state names
         self._state_names = sorted(
             [var.qname() for var in model.states()])
-        self._const_names = sorted(
-            [var.qname() for var in model.variables(const=True)])
+        # self._const_names = sorted(
+        #     [var.qname() for var in model.variables(const=True, bound=False, inter=False, state=False)])
+        self._const_names = []
+        for var in model.variables(const=True, bound=False, inter=False, state=False):
+            if var.is_literal():
+                self._const_names.append(var.qname())
+        self._const_names = sorted(self._const_names)
+        # Get the number of states and parameters
+        self._n_states = model.count_states()
+        n_const = len(self._const_names)
+        self._n_parameters = self._n_states + n_const
 
+        print(self._state_names , self._const_names)
         # Set default outputs
         self._n_outputs = self._n_states
         self._output_names = self._state_names
 
         # Create simulator
-        self._sim = myokit.Simulation(model)
+        self._sim = myokit.Simulation(model, dosing)
 
     def _set_const(self, parameters):
         """
@@ -175,9 +184,9 @@ def plot_measurements_and_simulation(
     with interactive sliders.
 
     This function assumes the following keys naming convention:
-        ids: '#ID'
-        time: 'TIME in day'
-        tumour volume: 'TUMOUR VOLUME in cm^3
+        ids: 'ID'
+        time: 'TIME'
+        observation value: 'OBS'
 
     The axis labels as well as the hoverinfo assume that time is measured in
     day, volume is measured in cm^3.
@@ -196,7 +205,7 @@ def plot_measurements_and_simulation(
     max_parameters = np.asarray(max_parameters)
 
     # Define colorscheme
-    n_ids = len(data['#ID'].unique())
+    n_ids = len(data['ID'].unique())
     colors = plotly.colors.qualitative.Plotly[:n_ids]
 
     # Create figure
@@ -213,8 +222,8 @@ def plot_measurements_and_simulation(
     # Set X, Y axis and figure size
     fig.update_layout(
         autosize=True,
-        xaxis_title='Time in day',
-        yaxis_title='Tumour volume in cm^3',
+        xaxis_title='Time in' + str(data['TIME_UNIT'].values[0]),
+        yaxis_title= str(data['YNAME'].values[0]) + 'in' + str(data['UNIT'].values[0]),
         template="plotly_white")
 
     # Create parameter sliders
@@ -293,14 +302,14 @@ def _add_data(fig, data, colors):
     """
     Adds a scatter plot of the data to the figure.
     """
-    ids = data['#ID'].unique()
+    ids = data['ID'].unique()
     for index, id_m in enumerate(ids):
         # Create mask for mouse
-        mask = data['#ID'] == id_m
+        mask = data['ID'] == id_m
 
         # Get observed data for indiviudal
-        observed_times = data['TIME in day'][mask].to_numpy()
-        observed_data = data['TUMOUR VOLUME in cm^3'][mask]
+        observed_times = data['TIME'][mask].to_numpy()
+        observed_data = data['OBS'][mask]
 
         # Plot data
         fig.add_trace(go.Scatter(
@@ -321,7 +330,8 @@ def _add_data(fig, data, colors):
                 symbol='circle',
                 opacity=0.7,
                 line=dict(color='black', width=1),
-                color=colors[index])
+                # color=colors[index]
+                )
         ))
 
 
@@ -331,10 +341,10 @@ def _add_slider_step_plots(
     Add a plot for each slider step to the figure.
     """
     # Define time range based on data
-    start_experiment = data['TIME in day'].min()
-    end_experiment = data['TIME in day'].max()
+    start_experiment = data['TIME'].min()
+    end_experiment = data['TIME'].max()
     simulated_times = np.linspace(
-        start=start_experiment, stop=end_experiment)
+        start=start_experiment, stop=end_experiment, num=100)
 
     # Add plot for each slider step
     for param_id in range(model.n_parameters()):
@@ -387,7 +397,7 @@ def _create_sliders(
     """
     # Get number of parameters and measured individuals
     n_params = len(parameter_names)
-    n_ids = len(data['#ID'].unique())
+    n_ids = len(data['ID'].unique())
 
     # Create slider object for each parameter
     sliders = []
@@ -429,15 +439,24 @@ def _create_sliders(
 
 # Import data
 path = settings.MEDIA_ROOT
-data = pd.read_csv(path + '/data/lxf_control_growth.csv')
+data = pd.read_csv(path + '/data/0470-2008_2018-05-09.csv')
+observation_name = "Platelets "
+drug = "Docetaxel"
+data = data.sort_values(['DOSE', 'TIME'], ascending=True)
+
+PD_data = data.loc[((data['DRUG'] == drug) | (data['DRUG'] == 'Controls'))&(data['YNAME'] == observation_name)]
+PD_data = PD_data.drop(PD_data[PD_data['OBS'] == '.'].index)
+
+PK_data = data.loc[((data['DRUG'] == drug) | (data['DRUG'] == 'Controls'))&(data['YNAME'] == drug)]
+PK_data = PK_data.drop(PK_data[PK_data['OBS'] == '.'].index)
 
 # Define model
-model = PharmacokineticModel(path + '/model/TwoCompartment_IV_Model.mmt', path + '/model/protocol_New.mmt')
+model1 = PharmacokineticModel(path + '/model/TwoCompartment_IV_Model.mmt', path + '/model/protocol_New.mmt')
 # Define parameter ranges for sliders
-default_parameters = [0.2, 1, 0.2, 1, 1, 1, 1]
-min_parameters = [0.1, 0.1, 0.01, 0.01, 0.01, 0.01, 0.01]
-max_parameters = [1, 5, 0.5, 5, 5, 5, 5]
-parameter_names = [
+default_parametersPK = [0.2, 1, 0.2, 1, 1, 1, 1]
+min_parametersPK = [0.1, 0.1, 0.01, 0.01, 0.01, 0.01, 0.01]
+max_parametersPK = [1, 5, 0.5, 5, 5, 5, 5]
+parameter_namesPK = [
     'Initial Conc in Central Compartment',
     'Initial Conc in Periferal Compartment',
     'Clearance',
@@ -446,10 +465,34 @@ parameter_names = [
     'Vp1',
     'DoseAmount']
 
+# Define model
+model2 = PharmacodynamicModel(path + '/model/MyelotoxicityFriberg.mmt', path + '/model/protocol_New.mmt')
+# Define parameter ranges for sliders
+default_parametersPD = [5.45, 5.45, 5.45, 5.45, 5.45, 0.1, 0.1, 5.45, 135, 0.126, 0.174, 0.5, 0.5, 2, 1, 1]
+min_parametersPD = [1, 1, 1, 1, 1, 0.1, 0.1, 1, 50, 0.01, 0.01, 0.1, 0.1, 0.5, 0.5, 0.5]
+max_parametersPD = [20, 20, 20, 20, 20, 1, 1, 20, 200, 0.5, 0.5, 1, 1, 10, 10, 10]
+parameter_namesPD = [
+    'PD.Circ', 
+    'PD.Prol', 
+    'PD.T1', 
+    'PD.T2', 
+    'PD.T3', 
+    'PK.Drug_Central', 
+    'PK.Drug_P1', 
+    'PD.Circ_0', 
+    'PD.MTT', 
+    'PD.Slope', 
+    'PD.gamma', 
+    'PK.CL', 
+    'PK.Qp1', 
+    'PK.Vc', 
+    'PK.Vp1', 
+    'dose.doseAmount']
+
 # Create figure
 fig1 = plot_measurements_and_simulation(
-    data, model, default_parameters, min_parameters, max_parameters,
-    parameter_names)
+    PK_data, model1, default_parametersPK, min_parametersPK, max_parametersPK,
+    parameter_namesPK)
 
 # Set height of image
 fig1.update_layout(
@@ -458,8 +501,8 @@ fig1.update_layout(
 
 # Create figure
 fig2 = plot_measurements_and_simulation(
-    data, model, default_parameters, min_parameters, max_parameters,
-    parameter_names)
+    PD_data, model2, default_parametersPD, min_parametersPD, max_parametersPD,
+    parameter_namesPD)
 
 # Set height of image
 fig2.update_layout(
