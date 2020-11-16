@@ -1,0 +1,57 @@
+[[model]]
+name: Adaptive Antibiotic Model 
+author: Ken Wang
+
+# Initial values:
+PDCompartment.P1 = 10 #10^6.58
+PDCompartment.P2 = 0
+
+[environment]
+t = 0 bind time
+    
+
+[drug]
+drugAmount = 1  # Will be set later by Python script 
+DoseBinary = 0  # 0 when not dosing, 1 when dosing
+    bind pace   # set DoseBinary using the protocol
+drugApplication = DoseBinary * drugAmount
+
+
+[PDCompartment]
+
+KNetgrowth = 1 #[1/h] 
+    desc: rate of bacterial net growth 
+   
+tvbmax = 1 
+    desc: maximal possible size of the inoculum in CFU/mL
+    
+Kmax = 1 #[1/h]
+    desc: maximum killing rate of the compound 
+EC50k = 1 #[ug/mL]
+    desc: EC50 of antibiotic killing without any adaptation 
+gamma = 1  #[dimensionless]
+    desc: Hill Coefficient of killling 
+beta = 1 #[dimensionless]
+    desc:Maximum adaptation on EC50 
+tau = 1 #[mL/h*ug] 
+    desc: rate of adaptation 
+Alpha =1 #[1/h]
+    desc: time rate at which the kill can reach maximum (mimicking delay) 
+Kdeath = 1 #[1/h] 
+    desc: death rate of the P population 
+Ksr_max=1 #[1/h] 
+    desc: maximum transit rate between S and P (traditionally it was just a fraction of netgrowh but could be idependent) 
+    
+Drug_Concentration =  drug.drugApplication   
+    desc:The fixed drug concentration (e.g. for in vitro TK) in ug/mL
+
+EC50Adapted= EC50k*(1+beta*(1-exp(-Drug_Concentration*tau*environment.t)))
+Ksr =  (Ksr_max/tvbmax) *(P1+P2)  # transition rate from S to P drug senstive pop
+       
+dot(P1) = KNetgrowth*(1-(P1+P2)/tvbmax)*P1-Ksr*P1-Kmax*(1-exp(-environment.t*Alpha))*Drug_Concentration^gamma/(EC50Adapted^gamma+Drug_Concentration^gamma)*P1
+    desc: the growing and susceptible population of bacterial in  CFU/mL
+dot(P2) = Ksr*P1- Kdeath*P2
+    desc: the sleeping and non-susceptible population of bacterial in CFU/mL
+        
+Total_Bacterial = P1+P2
+    desc: total population of bacterial in CFU/mL
