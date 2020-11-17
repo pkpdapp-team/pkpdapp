@@ -218,7 +218,7 @@ def update_figure(time_selection, y_selection, class1_selection, concentration_s
     fig.update_layout(
     autosize=True,
     xaxis_title='Time in hours',
-    yaxis_title='Concentration',
+    yaxis_title='Bacteria count',
     xaxis_type = xaxis_type_selection,
     yaxis_type = yaxis_type_selection,
     template="plotly_white",
@@ -493,7 +493,6 @@ def update_simulation(time_selection, y_selection, class1_selection, concentrati
 
         index = np.where(drug_conc.astype(np.float) == (float(concentration_plot_selection)/1000))
         trace = (test_simulation.T[index])
-        print(trace[0].shape)
         simulation_fig.add_trace(go.Scatter(
             x = x_simulation,
             y = trace[0],
@@ -530,7 +529,7 @@ def update_simulation(time_selection, y_selection, class1_selection, concentrati
     simulation_fig.update_layout(
     autosize=True,
     xaxis_title='Time in hours',
-    yaxis_title='Concentration',
+    yaxis_title='Bacteria count',
     xaxis_type = xaxis_sim_type_selection,
     yaxis_type = yaxis_sim_type_selection,
     template="plotly_white",
