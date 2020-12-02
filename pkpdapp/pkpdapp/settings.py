@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     # internal apps
     'explore_data.apps.ExploreDataConfig',
     'simulate.apps.SimulateConfig',
+    'pkpdapp',
 ]
 
 MIDDLEWARE = [

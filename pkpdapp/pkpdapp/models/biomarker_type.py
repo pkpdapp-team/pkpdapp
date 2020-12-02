@@ -4,6 +4,6 @@ class BiomarkerType(models.Model):
     UNIT_CHOICES = [
         ('mg', 'type1'),
     ]
+    name = models.CharField(max_length=100)
     unit = models.CharField(max_length=2, choices=UNIT_CHOICES)
-    name = models.CharField()
     description = models.TextField()

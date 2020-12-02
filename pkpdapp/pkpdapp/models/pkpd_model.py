@@ -6,7 +6,7 @@ class PkpdModel(models.Model):
         ('PK', 'Pharmokinetic'),
         ('PD', 'Pharmodynamic'),
     ]
-    name = models.CharField()
+    name = models.CharField(max_length=100)
     description = models.TextField()
     model_type = models.CharField(
         max_length=2, choices=MODEL_TYPE_CHOICES
