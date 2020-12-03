@@ -1,7 +1,10 @@
 from django.test import TestCase
-from pkpdapp.models import Dataset, Project, Biomarker, BiomarkerType, PkpdModel
+from pkpdapp.models import (
+    Dataset, Project, Biomarker, BiomarkerType, PkpdModel
+)
 from django.contrib.auth.models import User
 from django.utils import timezone
+
 
 class TestDatasetModel(TestCase):
     def test_dataset_creation(self):
@@ -12,6 +15,7 @@ class TestDatasetModel(TestCase):
         )
         self.assertTrue(isinstance(d, Dataset))
 
+
 class TestBiomarkerTypeModel(TestCase):
     def test_biomarker_type_creation(self):
         bt = BiomarkerType.objects.create(
@@ -20,6 +24,7 @@ class TestBiomarkerTypeModel(TestCase):
             unit='mg',
         )
         self.assertTrue(isinstance(bt, BiomarkerType))
+
 
 class TestBiomarkerModel(TestCase):
     def test_biomarker_creation(self):
@@ -35,6 +40,7 @@ class TestBiomarkerModel(TestCase):
             dataset=d,
         )
         self.assertTrue(isinstance(b, Biomarker))
+
 
 class TestPkpdModel(TestCase):
     def test_pkpd_model_creation(self):
@@ -82,12 +88,3 @@ class TestProjectModel(TestCase):
         )
         p.users.add(u)
         self.assertQuerysetEqual(p.users.all(), [repr(u)])
-
-
-
-
-
-
-
-
-

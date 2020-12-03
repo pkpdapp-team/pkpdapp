@@ -2,6 +2,7 @@ from django.db import models
 from pkpdapp.models import Dataset, PkpdModel
 from django.contrib.auth.models import User
 
+
 class Project(models.Model):
     """
     A project, containing multiple datasets, models and users
