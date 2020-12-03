@@ -5,6 +5,6 @@ from django.contrib.auth.models import User
 class Project(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField()
-    dataset = models.ManyToManyField(Dataset)
-    pkpd_model = models.ManyToManyField(PkpdModel)
+    datasets = models.ManyToManyField(Dataset)
+    pkpd_models = models.ManyToManyField(PkpdModel)
     users = models.ManyToManyField(User)
