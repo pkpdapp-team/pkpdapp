@@ -4,21 +4,22 @@ from django.db import migrations
 
 
 def load_biomarker_types(apps, schema_editor):
-    init_biomarkers = [
+    biomarkers = [
         {
             'id': 0,
             'name': 'concentration',
+            'description': 'concentration',
             'unit': 'mg',
         }
     ]
 
     BiomarkerType = apps.get_model("pkpdapp", "BiomarkerType")
-    for biomarker_obj in init_biomarkers:
+    for b in biomarkers:
         biomarker = BiomarkerType(
-            id=0,
-            name='concentration',
-            description='concentration',
-            unit='mg'
+            id=b['id'],
+            name=b['name'],
+            description=b['description'],
+            unit=b['unit']
         )
         biomarker.save()
 
