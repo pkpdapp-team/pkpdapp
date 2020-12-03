@@ -3,6 +3,9 @@ from pkpdapp.models import Dataset, PkpdModel
 from django.contrib.auth.models import User
 
 class Project(models.Model):
+    """
+    A project, containing multiple datasets, models and users
+    """
     name = models.CharField(max_length=100)
     description = models.TextField()
     datasets = models.ManyToManyField(Dataset)
