@@ -29,8 +29,8 @@ def load_biomarker_types(apps, schema_editor):
 
 
 def delete_biomarker_types(apps, schema_editor):
-    BiomarkerTypes = apps.get_model("pkpdapp", "BiomarkerTypes")
-    BiomarkerTypes.objects.all().delete()
+    BiomarkerType = apps.get_model("pkpdapp", "BiomarkerType")
+    BiomarkerType.objects.all().delete()
 
 
 class Migration(migrations.Migration):

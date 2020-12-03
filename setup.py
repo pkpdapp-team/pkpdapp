@@ -43,5 +43,6 @@ setup(
         'pints>=0.3',
         'plotly==4.8.1',
         'whitenoise==5.0.1',
+        'django-test-migrations==1.0.0',
     ],
 )
