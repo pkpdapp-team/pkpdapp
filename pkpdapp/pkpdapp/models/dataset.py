@@ -1,6 +1,10 @@
 from django.db import models
 
+
 class Dataset(models.Model):
+    """
+    A dataset
+    """
     ADMINISTRATION_TYPE_CHOICES = [
         ('T1', 'type1'),
         ('T2', 'type2'),

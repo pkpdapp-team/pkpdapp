@@ -1,6 +1,12 @@
 from django.db import models
 
+
 class BiomarkerType(models.Model):
+    """
+    A biomarker type. Eache value, or biomarker, in a dataset must be one of
+    these types
+    """
+
     UNIT_CHOICES = [
         ('mg', 'type1'),
     ]

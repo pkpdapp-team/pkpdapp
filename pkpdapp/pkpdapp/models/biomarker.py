@@ -3,6 +3,9 @@ from pkpdapp.models import BiomarkerType, Dataset
 
 
 class Biomarker(models.Model):
+    """
+    A measurement value for use in a dataset
+    """
     time = models.DateTimeField()
     value = models.FloatField()
     biomarker_type = models.ForeignKey(
