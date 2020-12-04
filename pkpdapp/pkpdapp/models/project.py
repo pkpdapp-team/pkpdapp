@@ -11,10 +11,21 @@ from django.contrib.auth.models import User
 
 class Project(models.Model):
     """
-    A project, containing multiple datasets, models and users
+    A project, containing multiple :model:`pkpdapp.Dataset`,
+    :model:`pkpdapp.PkpdModel` and users
     """
-    name = models.CharField(max_length=100)
-    description = models.TextField()
-    datasets = models.ManyToManyField(Dataset)
-    pkpd_models = models.ManyToManyField(PkpdModel)
-    users = models.ManyToManyField(User)
+    name = models.CharField(max_length=100, help_text='name of the project')
+    description = models.TextField(
+        help_text='short description of the project'
+    )
+    datasets = models.ManyToManyField(
+        Dataset, help_text='datasets referenced by this project'
+    )
+    pkpd_models = models.ManyToManyField(
+        PkpdModel,
+        help_text='models referenced by this project'
+    )
+    users = models.ManyToManyField(
+        User,
+        help_text='users with access to this project'
+    )

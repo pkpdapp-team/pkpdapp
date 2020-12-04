@@ -10,13 +10,16 @@ from pkpdapp.models import BiomarkerType, Dataset
 
 class Biomarker(models.Model):
     """
-    A biomarker measurement value for use in a dataset
+    A single biomarker measurement value stored in a :model:`pkpdapp.Dataset`.
+    Each biomarker is assigned a type stored in :model:`pkpdapp.BiomarkerType`
     """
-    time = models.DateTimeField()
-    value = models.FloatField()
+    time = models.DateTimeField(help_text='time point of measurement')
+    value = models.FloatField(help_text='value of the measurement')
     biomarker_type = models.ForeignKey(
-        BiomarkerType, on_delete=models.PROTECT
+        BiomarkerType, on_delete=models.PROTECT,
+        help_text='biomarker type, for example "concentration in mg"'
     )
     dataset = models.ForeignKey(
-        Dataset, on_delete=models.CASCADE
+        Dataset, on_delete=models.CASCADE,
+        help_text='dataset containing this biomarker measurement'
     )

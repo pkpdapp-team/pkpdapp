@@ -15,9 +15,13 @@ class PkpdModel(models.Model):
         ('PK', 'Pharmokinetic'),
         ('PD', 'Pharmodynamic'),
     ]
-    name = models.CharField(max_length=100)
-    description = models.TextField()
+    name = models.CharField(max_length=100, help_text='name of the model')
+    description = models.TextField(help_text='short description of the model')
     model_type = models.CharField(
-        max_length=2, choices=MODEL_TYPE_CHOICES
+        max_length=2, choices=MODEL_TYPE_CHOICES,
+        help_text='type of model, e.g. PK or PD'
+
     )
-    sbml = models.TextField()
+    sbml = models.TextField(
+        help_text='the model represented using SBML (see http://sbml.org)'
+    )
