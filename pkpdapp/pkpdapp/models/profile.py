@@ -10,4 +10,5 @@ from django.contrib.auth.models import User
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    selected_project = models.ForeignKey(Project, on_delete=models.SET_NULL)
+    selected_project = models.ForeignKey(Project,
+                                         null=True, on_delete=models.SET_NULL)

@@ -60,6 +60,7 @@ class TestPkpdModel(TestCase):
 
 class TestProfileModel(TestCase):
     def test_profile_creation(self):
+        # create a profile with a selected_project
         u = User.objects.create_user(
             'john', 'lennon@thebeatles.com', 'johnpassword'
         )
@@ -71,7 +72,17 @@ class TestProfileModel(TestCase):
             user=u,
             selected_project=p,
         )
+
+        # create a profile with no selected_project
+        u2 = User.objects.create_user(
+            'paul', 'mcartney@thebeatles.com', 'paulpassword'
+        )
         self.assertTrue(isinstance(profile, Profile))
+        profile_no_selected_project = Profile.objects.create(
+            user=u2,
+        )
+        self.assertTrue(isinstance(profile_no_selected_project, Profile))
+
 
 
 class TestProjectModel(TestCase):
