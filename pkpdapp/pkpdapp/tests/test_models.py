@@ -6,7 +6,7 @@
 
 from django.test import TestCase
 from pkpdapp.models import (
-    Dataset, Project, Biomarker, BiomarkerType, PkpdModel
+    Dataset, Project, Biomarker, BiomarkerType, PkpdModel, Profile
 )
 from django.contrib.auth.models import User
 from django.utils import timezone
@@ -57,6 +57,21 @@ class TestPkpdModel(TestCase):
             sbml='sbml_here',
         )
         self.assertTrue(isinstance(m, PkpdModel))
+
+class TestProfileModel(TestCase):
+    def test_profile_creation(self):
+        u = User.objects.create_user(
+            'john', 'lennon@thebeatles.com', 'johnpassword'
+        )
+        p = Project.objects.create(
+            name='my_cool_project',
+            description='description for my cool project',
+        )
+        profile = Profile.objects.create(
+            user=u,
+            selected_project=p,
+        )
+        self.assertTrue(isinstance(profile, Profile))
 
 
 class TestProjectModel(TestCase):
