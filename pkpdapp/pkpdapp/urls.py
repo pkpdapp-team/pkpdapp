@@ -20,6 +20,7 @@ from . import views
 # TODO: Move django_plotly_dash to the app that is actually using it!
 urlpatterns = [
     path('', views.IndexView.as_view(), name='index'),
+    path('admin/doc/', include('django.contrib.admindocs.urls')),
     path('admin/', admin.site.urls),
     path('accounts/', include('django.contrib.auth.urls')),
     path('explore_data/', include('explore_data.urls')),

@@ -37,6 +37,8 @@ ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'pkpdapp.herokuapp.com']
 INSTALLED_APPS = [
     # standard Django apps
     'django.contrib.admin',
+    'django.contrib.admindocs',
+    # 'django.contrib.admindocs.middleware.XViewMiddleware',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
