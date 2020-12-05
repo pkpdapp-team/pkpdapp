@@ -32,9 +32,10 @@ copyright notice and full license details.
             </li>
         </ul>
         <ul class="navbar-nav my-2 my-lg-0">
+            {% if user.is_authenticated %}
             <li class="nav-item">
               <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                Dropdown button
+                {{ user.profile.selected_project }}
               </button>
               <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                 <a class="dropdown-item" href="#">Action</a>
@@ -42,6 +43,7 @@ copyright notice and full license details.
                 <a class="dropdown-item" href="#">Something else here</a>
               </div>
             </li>
+            {% endif %}
             <li class="nav-item">
                 {% if user.is_authenticated %}
                     <a href="{% url 'logout' %}?next={{request.path}}">Logout</a>
