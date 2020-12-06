@@ -22,6 +22,7 @@ class Test0002InitialBiomarkerTypeReverse(MigratorTestCase):
         )
         self.assertTrue(len(new_biomarker_types.objects.all()) == 0)
 
+
 class Test0003InitialUsersProjectReverse(MigratorTestCase):
     migrate_from = ('pkpdapp', '0003_initial_users_and_projects')
     migrate_to = ('pkpdapp', '0001_initial')

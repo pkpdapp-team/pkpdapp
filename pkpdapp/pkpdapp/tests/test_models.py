@@ -6,7 +6,7 @@
 
 from django.test import TestCase
 from pkpdapp.models import (
-    Dataset, Project, Biomarker, BiomarkerType, PkpdModel, Profile
+    Dataset, Project, Biomarker, BiomarkerType, PkpdModel
 )
 from django.contrib.auth.models import User
 from django.utils import timezone
@@ -58,6 +58,7 @@ class TestPkpdModel(TestCase):
         )
         self.assertTrue(isinstance(m, PkpdModel))
 
+
 class TestProfileModel(TestCase):
     def test_profile_creation(self):
         u = User.objects.create_user(
@@ -70,6 +71,7 @@ class TestProfileModel(TestCase):
         self.assertEqual(u.profile.user.username, 'john')
         u.profile.selected_project = p
         self.assertEqual(u.profile.selected_project, p)
+
 
 class TestProjectModel(TestCase):
     def setUp(self):

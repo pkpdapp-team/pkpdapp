@@ -1,7 +1,10 @@
-from django.db.models.signals import post_save
-from django.dispatch import receiver
+#
+# This file is part of PKPDApp (https://github.com/pkpdapp-team/pkpdapp) which
+# is released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
+#
+
 from pkpdapp.models import Profile
-from django.contrib.auth.models import User
 
 
 def add_profile_on_user_save(sender, **kwargs):
