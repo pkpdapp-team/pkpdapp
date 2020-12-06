@@ -11,7 +11,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('pkpdapp', '0002_initial_biomarker_types'),
-        ('pkpdapp', '0003_initial_projects'),
+        ('pkpdapp', '0003_initial_users_and_projects'),
     ]
 
     operations = [

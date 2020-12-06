@@ -22,18 +22,28 @@ class Test0002InitialBiomarkerTypeReverse(MigratorTestCase):
         )
         self.assertTrue(len(new_biomarker_types.objects.all()) == 0)
 
-class Test0003InitialProjectReverse(MigratorTestCase):
-    migrate_from = ('pkpdapp', '0003_initial_projects')
+class Test0003InitialUsersProjectReverse(MigratorTestCase):
+    migrate_from = ('pkpdapp', '0003_initial_users_and_projects')
     migrate_to = ('pkpdapp', '0001_initial')
 
     def prepare(self):
-        old_project_types = self.old_state.apps.get_model(
+        old_projects = self.old_state.apps.get_model(
             'pkpdapp', 'Project'
         )
-        self.assertTrue(len(old_project_types.objects.all()) > 0)
+        old_users = self.old_state.apps.get_model(
+            'auth', 'User'
+        )
+        self.assertTrue(len(old_projects.objects.all()) > 0)
+        self.assertTrue(len(old_users.objects.filter(is_superuser=False)) > 0)
 
-    def test_all_projects_are_deleted(self):
-        new_project_types = self.new_state.apps.get_model(
+    def test_all_users_and_projects_are_deleted(self):
+        new_projects = self.new_state.apps.get_model(
             'pkpdapp', 'Project'
         )
-        self.assertTrue(len(new_project_types.objects.all()) == 0)
+        new_users = self.new_state.apps.get_model(
+            'auth', 'User'
+        )
+        self.assertTrue(len(new_projects.objects.all()) == 0)
+        self.assertTrue(
+            len(new_users.objects.filter(is_superuser=False)) == 0
+        )
