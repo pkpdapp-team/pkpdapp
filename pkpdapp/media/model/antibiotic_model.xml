@@ -7,6 +7,11 @@
           <unit kind="second" exponent="-1" scale="0" multiplier="3600"/>
         </listOfUnits>
       </unitDefinition>
+      <unitDefinition id="hour">
+        <listOfUnits>
+          <unit kind="second" exponent="1" scale="0" multiplier="3600"/>
+        </listOfUnits>
+      </unitDefinition>
       <unitDefinition id="ug_per_ml">
         <listOfUnits>
           <unit kind="gram" exponent="1" scale="-6" multiplier="1"/>
@@ -35,59 +40,12 @@
       <parameter id="Drug_concentration" value="1" constant="true" units="dimensionless"/>
     </listOfParameters>
     <listOfCompartments>
-      <compartment constant="false" id="P1" name="P1" size="1" units="dimensionless">
-      <compartment constant="false" id="P2" name="P2" size="1" units="dimensionless">
+      <compartment constant="false" id="P1" size="1" units="dimensionless"/>
+      <compartment constant="false" id="P2" size="1" units="dimensionless"/>
+      <compartment constant="false" id="Ptotal" size="1" units="dimensionless"/>
+
     </listOfCompartments>
-    <ListOfRules>
-      <assignmentRule variable="EC50Adapted">
-        <math xmlns="http://www.w3.org/1998/Math/MathML"> 
-          <apply>
-            <times/>
-              <ci> EC50k </ci>
-              <apply>
-                <plus/>
-                <ci> 1 </ci>
-                <apply>
-                  <times/>
-                  <ci> beta </ci>
-                  <apply>
-                    <minus/>
-                    <ci> 1 </ci>
-                    <apply>
-                      <exp/>
-                        <apply>
-                          <times/>
-                          <apply>
-                            <minus/> 
-                            <ci> Drug_concentration </ci>
-                          </apply>
-                          <ci> tau </ci>
-                          <ci> hour </ci>
-                        </apply>
-                    </apply>    
-                  </apply>
-                </apply>
-              </apply>
-          </apply>
-        </math>
-      </assignmentRule>
-      <assignmentRule variable = "Ksr">
-        <math xmlns="http://www.w3.org/1998/Math/MathML"> 
-          <apply>
-            <times/>
-            <apply>
-              <divide/>
-              <ci> Ksr_max </ci>
-              <ci> tvbmax </ci>
-            </apply>
-            <apply>
-              <plus/>
-              <ci> P1 </ci>
-              <ci> P2 </ci>
-            </apply>
-          </apply>
-        </math>  
-      </assignmentRule>
+    <listOfRules>
       <rateRule variable="P1">
         <math xmlns="http://www.w3.org/1998/Math/MathML">
           <apply>
@@ -98,7 +56,7 @@
               <ci> P1 </ci>
               <apply>
                 <minus/>
-                <ci> 1 </ci>
+                <cn> 1 </cn>
                 <apply>
                   <divide/>
                   <apply>
@@ -109,10 +67,22 @@
                   <ci> tvbmax </ci>
                 </apply>
               </apply>
-            <apply/>
+            </apply>
             <apply>
               <times/>
-              <ci> Ksr </ci>
+              <apply>
+                <times/>
+                <apply>
+                  <divide/>
+                  <ci> Ksr_max </ci>
+                  <ci> tvbmax </ci>
+                </apply>
+                <apply>
+                  <plus/>
+                  <ci> P1 </ci>
+                  <ci> P2 </ci>
+                </apply>
+              </apply>
               <ci> P1 </ci>
             </apply>
             <apply>
@@ -122,16 +92,16 @@
                 <ci> Kmax </ci>
                 <apply>
                   <minus/>
-                  <ci> 1 </ci>
+                  <cn> 1 </cn>
                   <apply>
                     <exp/>
                     <apply>
                       <times/>
                       <apply>
                         <minus/>
-                        <ci> hour </ci>
+                        <cn> 0 </cn>
                       </apply>  
-                      <ci> Alpha </ci>
+                      <ci> alpha </ci>
                     </apply>
                   </apply>  
                 </apply>
@@ -143,12 +113,39 @@
               </apply>
               <apply>
                 <times/>
-                <ci> P1 <ci>
+                <ci> P1 </ci>
                 <apply>
                   <plus/>
                   <apply>
                     <power/>
-                    <ci> EC50Adapted </ci>
+                      <apply>
+                        <times/>
+                          <ci> EC50k </ci>
+                          <apply>
+                            <plus/>
+                            <cn> 1 </cn>
+                            <apply>
+                              <times/>
+                              <ci> beta </ci>
+                              <apply>
+                                <minus/>
+                                <cn> 1 </cn>
+                                <apply>
+                                  <exp/>
+                                    <apply>
+                                      <times/>
+                                      <apply>
+                                        <minus/> 
+                                        <ci> Drug_concentration </ci>
+                                      </apply>
+                                      <ci> tau </ci>
+                                      <cn> 0 </cn>
+                                    </apply>
+                                </apply>    
+                              </apply>
+                            </apply>
+                          </apply>
+                      </apply>
                     <ci> gamma </ci>
                   </apply>
                   <apply>
@@ -168,7 +165,19 @@
             <minus/>
             <apply>
               <times/>
-              <ci> Ksr </ci>
+                <apply>
+                  <times/>
+                  <apply>
+                    <divide/>
+                    <ci> Ksr_max </ci>
+                    <ci> tvbmax </ci>
+                  </apply>
+                  <apply>
+                    <plus/>
+                    <ci> P1 </ci>
+                    <ci> P2 </ci>
+                  </apply>
+                </apply>
               <ci> P1 </ci>
             </apply>
             <apply>
@@ -179,7 +188,7 @@
           </apply>
         </math>  
       </rateRule>
-      <assignmentRule variable = "Total_Bacteria">
+      <assignmentRule variable = "Ptotal">
         <math xmlns="http://www.w3.org/1998/Math/MathML"> 
           <apply>
             <plus/>

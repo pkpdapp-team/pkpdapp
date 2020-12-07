@@ -122,7 +122,6 @@ class MyokitModel(pints.ForwardModel):
         
         return np.array(total_CFU).T
 
-
 ############################################################
 
 
@@ -412,16 +411,12 @@ def update_simulation(time_selection, y_selection, class1_selection, concentrati
                   class3_selection, class1_plot_selection, concentration_plot_selection, class2_plot_selection, 
                   class3_plot_selection, yaxis_sim_type_selection, xaxis_sim_type_selection, model, parameters):
 
-
     AdaptiveModel = MyokitModel()
-
     if xaxis_sim_type_selection == 'linear' :
         x_simulation = np.linspace(0, 24, 500) 
     else :
         x_simulation = np.geomspace(0.1, 24, 500)
-
     test_simulation = AdaptiveModel.simulate (parameters,x_simulation)
-
     simulation_fig.data = []
 
     data = dataset.loc[dataset[class1_selection]==class1_plot_selection]
@@ -743,6 +738,8 @@ def update_app() :
                         ], style={'width': '40%'}), 
                         html.Div([
                             html.Span(id='p1-label', style={'color':'grey'}),
+                            dcc.Input(id="p1-min", type="number", placeholder="min", debounce=True, style={'width': '20%'}),
+                            dcc.Input(id="p1-max", type="number", placeholder="max", debounce=True, style={'width': '20%'}),
                             dcc.Slider(
                                 id='p1',
                                 min=0,
@@ -750,7 +747,9 @@ def update_app() :
                                 step=0.1,
                                 value= 2.3,
                             ),  
-                            html.Span(id='p2-label', style={'color':'grey'}),   
+                            html.Span(id='p2-label', style={'color':'grey'}),  
+                            dcc.Input(id="p2-min", type="number", placeholder="min", debounce=True, style={'width': '20%'}),
+                            dcc.Input(id="p2-max", type="number", placeholder="max", debounce=True, style={'width': '20%'}), 
                             dcc.Slider(
                                 id='p2',
                                 min=1E+8,
@@ -759,6 +758,8 @@ def update_app() :
                                 value=1E+9,
                             ), 
                             html.Span(id='p3-label', style={'color':'grey'}),
+                            dcc.Input(id="p3-min", type="number", placeholder="min", debounce=True, style={'width': '20%'}),
+                            dcc.Input(id="p3-max", type="number", placeholder="max", debounce=True, style={'width': '20%'}),
                             dcc.Slider(
                                 id='p3',
                                 min=0,
@@ -767,6 +768,8 @@ def update_app() :
                                 value=3.2,
                             ), 
                             html.Span(id='p4-label', style={'color':'grey'}),
+                            dcc.Input(id="p4-min", type="number", placeholder="min", debounce=True, style={'width': '20%'}),
+                            dcc.Input(id="p4-max", type="number", placeholder="max", debounce=True, style={'width': '20%'}),
                             dcc.Slider(
                                 id='p4',
                                 min=0,
@@ -775,6 +778,8 @@ def update_app() :
                                 value=0.5,
                             ), 
                             html.Span(id='p5-label', style={'color':'grey'}),
+                            dcc.Input(id="p5-min", type="number", placeholder="min", debounce=True, style={'width': '20%'}),
+                            dcc.Input(id="p5-max", type="number", placeholder="max", debounce=True, style={'width': '20%'}),
                             dcc.Slider(
                                 id='p5',
                                 min=0,
@@ -782,7 +787,9 @@ def update_app() :
                                 step=0.1,
                                 value=3.8,
                             ),
-                            html.Span(id='p6-label', style={'color':'grey'}), 
+                            html.Span(id='p6-label', style={'color':'grey'}),
+                            dcc.Input(id="p6-min", type="number", placeholder="min", debounce=True, style={'width': '20%'}),
+                            dcc.Input(id="p6-max", type="number", placeholder="max", debounce=True, style={'width': '20%'}),
                             dcc.Slider(
                                 id='p6',
                                 min=0,
@@ -791,6 +798,8 @@ def update_app() :
                                 value=44,
                             ), 
                             html.Span(id='p7-label', style={'color':'grey'}),
+                            dcc.Input(id="p7-min", type="number", placeholder="min", debounce=True, style={'width': '20%'}),
+                            dcc.Input(id="p7-max", type="number", placeholder="max", debounce=True, style={'width': '20%'}),
                             dcc.Slider(
                                 id='p7',
                                 min=0,
@@ -799,6 +808,8 @@ def update_app() :
                                 value=0.002,
                             ), 
                             html.Span(id='p8-label', style={'color':'grey'}),
+                            dcc.Input(id="p8-min", type="number", placeholder="min", debounce=True, style={'width': '20%'}),
+                            dcc.Input(id="p8-max", type="number", placeholder="max", debounce=True, style={'width': '20%'}),
                             dcc.Slider(
                                 id='p8',
                                 min=0,
@@ -807,6 +818,8 @@ def update_app() :
                                 value=3.1,
                             ), 
                             html.Span(id='p9-label', style={'color':'grey'}),
+                            dcc.Input(id="p9-min", type="number", placeholder="min", debounce=True, style={'width': '20%'}),
+                            dcc.Input(id="p9-max", type="number", placeholder="max", debounce=True, style={'width': '20%'}),
                             dcc.Slider(
                                 id='p9',
                                 min=0,
@@ -815,6 +828,8 @@ def update_app() :
                                 value=0.3,
                             ), 
                             html.Span(id='p10-label', style={'color':'grey'}),
+                            dcc.Input(id="p10-min", type="number", placeholder="min", debounce=True, style={'width': '20%'}),
+                            dcc.Input(id="p10-max", type="number", placeholder="max", debounce=True, style={'width': '20%'}),
                             dcc.Slider(
                                 id='p10',
                                 min=0,
@@ -978,6 +993,7 @@ def auce_vs_concentration(n_clicks, auce_conc_fit_type, auce_y_axis_type, auce_x
 
 @app.callback(
     [Output('p1','max'),
+    Output('p1','min'),
     Output('p2', 'max'),
     Output('p3','max'),
     Output('p4','max'),
@@ -1017,12 +1033,15 @@ def auce_vs_concentration(n_clicks, auce_conc_fit_type, auce_y_axis_type, auce_x
     Output('p8','marks'),
     Output('p9','marks'),
     Output('p10','marks')],
-    [Input('model-selection', 'value')]
+    [Input('model-selection', 'value'),
+    Input('p1-min', 'value'),
+    Input('p1-max', 'value')]
 )
-def update_sliders(model):
+def update_sliders(model, p1_min_input, p1_max_input):
     if model == 'AdpativeModelWithConstentDrugConcentration.mmt':
-        p1_max=10
-        p1_step=0.1
+        p1_max = p1_max_input if p1_max_input else 10
+        p1_min = p1_min_input if p1_min_input else 0
+        p1_step=(p1_max-p1_min)/100
         p1_value=2.3
         p2_max=1E+10
         p2_step=1E+8
@@ -1053,7 +1072,7 @@ def update_sliders(model):
         p10_value=2.8
 
         p1_marks={
-            0:{'label':'0'},
+            p1_min:{'label':'%f'%p1_min},
             p1_max:{'label':'%f'%p1_max}
         }
         p2_marks={
@@ -1094,7 +1113,7 @@ def update_sliders(model):
         }
 
 
-    return p1_max,p2_max,p3_max,p4_max,p5_max,p6_max,p7_max,p8_max,p9_max,p10_max, p1_step,p2_step,p3_step,p4_step,p5_step,p6_step,p7_step,p8_step,p9_step,p10_step,p1_value,p2_value,p3_value,p4_value,p5_value,p6_value,p7_value,p8_value,p9_value,p10_value,p1_marks,p2_marks,p3_marks,p4_marks,p5_marks,p6_marks,p7_marks,p8_marks,p9_marks,p10_marks
+    return p1_max,p1_min,p2_max,p3_max,p4_max,p5_max,p6_max,p7_max,p8_max,p9_max,p10_max, p1_step,p2_step,p3_step,p4_step,p5_step,p6_step,p7_step,p8_step,p9_step,p10_step,p1_value,p2_value,p3_value,p4_value,p5_value,p6_value,p7_value,p8_value,p9_value,p10_value,p1_marks,p2_marks,p3_marks,p4_marks,p5_marks,p6_marks,p7_marks,p8_marks,p9_marks,p10_marks
 
 @app.callback(
     [Output('p1-label', 'children'),
@@ -1120,6 +1139,7 @@ def update_sliders(model):
     [State('model-selection', 'value')]
 )
 def update_sliders_labels(p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,model):
+    print('updating SLIDERS')
     if model == 'AdpativeModelWithConstentDrugConcentration.mmt':
         p1_label = 'KNetgrowth : %f'%p1
         p2_label = 'tvbmax : %f'%p2
@@ -1164,11 +1184,13 @@ def update_sliders_labels(p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,model):
 def callback_update_simulation(n_clicks, p1,p2,p3,p4,p5,p6,p7,p8,p9,p10, yaxis_sim_type_selection, xaxis_sim_type_selection, model, time_selection, y_selection, class1_selection, concentration_selection, class2_selection, 
                   class3_selection, class1_plot_selection, concentration_plot_selection, class2_plot_selection, 
                   class3_plot_selection):
+    print('updating SIMULATION')
     if n_clicks:
         parameters = [p1,p2,p3,p4,p5,p6,p7,p8,p9,p10]
-
+        print(parameters)
+        
         simulation_fig_updated = update_simulation(time_selection, y_selection, class1_selection, concentration_selection, class2_selection, 
                     class3_selection, class1_plot_selection, concentration_plot_selection, class2_plot_selection, 
                     class3_plot_selection, yaxis_sim_type_selection, xaxis_sim_type_selection, model, parameters)  
-
+    print('update SIMULATION DONE')
     return simulation_fig_updated        
