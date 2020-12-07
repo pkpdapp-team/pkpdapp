@@ -30,54 +30,23 @@ from os.path import isfile, join
 
 # Import data
 path = settings.MEDIA_ROOT
-dataset = pd.read_csv(path + '/data/antibiotics_dataset.csv')
 
-columns = dataset.columns
+datasets = [f for f in listdir(path + '/data') if isfile(join(path + '/data', f))]
 
 fig = go.Figure()
 auce_vs_concentration_fig = go.Figure()
 simulation_fig = go.Figure()
 
+fig.data = []
+auce_vs_concentration_fig.data = []
+simulation_fig.data = []
+
 available_models = [f for f in listdir(path + '/model') if isfile(join(path + '/model', f))]
 ########################################################
 
-
-NumberTimePoint=8 # excluding the zero time point 
-File_path=(path + '/data/antibiotics_dataset.csv')
-with open (File_path) as f : 
-    data=pd.read_csv (f, sep=',')
-    data.head()
-    f.close()
-data=data.to_numpy()
-InitialCFU=data[0,2]
-timeReadIn=data[:,0]#np.reshape(data[1:-1,0],(NumberTimePoint, )
-concReadIn=data[:,1]
-CFUReadIn=data[:,2]
-timeFinal=timeReadIn[0:NumberTimePoint]
-
-CFUFinal=np.reshape(CFUReadIn,(int(len(CFUReadIn)/NumberTimePoint), NumberTimePoint,))
-concTemp=np.reshape(concReadIn,(int(len(CFUReadIn)/NumberTimePoint), NumberTimePoint,))
-drug_conc=concTemp[:,0]/1000
-
-InitialCFU=CFUFinal[:,0]
-Original_data = {'time': timeFinal,
-                 'observation': CFUFinal}
-
-# Define model
-m = myokit.load_model(path + '/model/AdpativeModelWithConstentDrugConcentration.mmt') #path for the model file 
-p = myokit.load_protocol(path + '/model/protocol_FixedConc.mmt')#path for the protocol file(e.g. dose regimen)
-
-ref = myokit.Simulation(m, p) #set up myokit model: input model and protocol 
-save_state = ref.state()  #save the original initial state 
-P1 = m.get('PDCompartment.P1')
-P1.state_value()
-P1.set_state_value(1000000)
-m.state ()
-
 class MyokitModel(pints.ForwardModel):
-    def __init__(self):
-        m = myokit.load_model(path + '/model/AdpativeModelWithConstentDrugConcentration.mmt') #path for the model file 
-        p = myokit.load_protocol(path + '/model/protocol_FixedConc.mmt')#path for the protocol file(e.g. dose regimen)
+    def __init__(self, m, p):
+
         
         self.simulation = myokit.Simulation(m, p) #define simulation (i.e. run the model via myokit)
         
@@ -87,7 +56,7 @@ class MyokitModel(pints.ForwardModel):
     def n_outputs(self):
         return len(drug_conc) 
     
-    def simulate(self, PD_parameters,times):
+    def simulate(self, PD_parameters,times, save_state, m, drug_conc, InitialCFU):
         total_CFU = []
         
         self.simulation.set_state(save_state)
@@ -143,10 +112,12 @@ def fsigmoid(concentration,top,bottom,EC50):
 
 ################################# GRAPH #################################
 
-def update_figure(time_selection, y_selection, class1_selection, concentration_selection, class2_selection, 
+def update_figure(dataset_selection, time_selection, y_selection, class1_selection, concentration_selection, class2_selection, 
                   class3_selection, class1_plot_selection, concentration_plot_selection, class2_plot_selection, 
                   class3_plot_selection, yaxis_type_selection, xaxis_type_selection):
     fig.data = []
+
+    dataset = pd.read_csv(path + '/data/' + dataset_selection)
 
     data = dataset.loc[dataset[class1_selection]==class1_plot_selection]
 
@@ -217,22 +188,22 @@ def update_figure(time_selection, y_selection, class1_selection, concentration_s
     fig.update_layout(
     autosize=True,
     xaxis_title='Time in hours',
-    yaxis_title='Bacteria count',
+    yaxis_title=y_selection,
     xaxis_type = xaxis_type_selection,
     yaxis_type = yaxis_type_selection,
     template="plotly_white",
     ),
-                              
+
     return fig
 
 ################################# MODELING #################################
 
-def model(time_selection, y_selection, class1_selection, concentration_selection, class2_selection, 
+def model(dataset_selection, time_selection, y_selection, class1_selection, concentration_selection, class2_selection, 
         class3_selection, class1_plot_selection, concentration_plot_selection, class2_plot_selection, 
         class3_plot_selection):
 
     modeling_values = []
-
+    dataset = pd.read_csv(path + '/data/' + dataset_selection)
     data = dataset.loc[dataset[class1_selection]==class1_plot_selection]
 
     concentration = [concentration_plot_selection] if concentration_plot_selection else data[concentration_selection].unique()
@@ -272,12 +243,15 @@ def calculate_model_values(data, time_selection, y_selection, class1_selected, c
 
     return modeling_values
 
-def compute_auce_vs_concentration(time_selection, auce_conc_fit_type, auce_y_axis_type, auce_x_axis_type, y_selection, class1_selection, concentration_selection, class2_selection, 
-             class3_selection, class1_plot_selection, class2_plot_selection, 
-             class3_plot_selection):
+def compute_auce_vs_concentration(dataset_selection, time_selection, auce_conc_fit_type, auce_y_axis_type, auce_x_axis_type, y_selection, 
+                class1_selection, concentration_selection, class2_selection, 
+                class3_selection, class1_plot_selection, class2_plot_selection, 
+                class3_plot_selection):
 
     auce_vs_concentration_fig.data = []
     auce_vs_concentration_fig.layout={}
+
+    dataset = pd.read_csv(path + '/data/' + dataset_selection)
     data = dataset.loc[dataset[class1_selection]==class1_plot_selection]
 
     class2 = [class2_plot_selection] if class2_plot_selection else data[class2_selection].unique()
@@ -407,18 +381,56 @@ def auce_fit(auce_conc_fit_type, auce_y_axis_type, auce_x_axis_type, class2_sele
             auce_vs_concentration_fig.add_annotation(text=("Could not fit %s %s<br> " %(class2_selection, class2_selected)), 
                                                     xref='paper', yref='paper', x=0.05, y=1-index_class2*0.1, showarrow=False,font=dict(color=colors[index_class2]))
 
-def update_simulation(time_selection, y_selection, class1_selection, concentration_selection, class2_selection, 
+def update_simulation(dataset_selection, time_selection, y_selection, class1_selection, concentration_selection, class2_selection, 
                   class3_selection, class1_plot_selection, concentration_plot_selection, class2_plot_selection, 
-                  class3_plot_selection, yaxis_sim_type_selection, xaxis_sim_type_selection, model, parameters):
+                  class3_plot_selection, yaxis_sim_type_selection, xaxis_sim_type_selection, model, parameters, protocol):
 
-    AdaptiveModel = MyokitModel()
+
+    NumberTimePoint=8 # excluding the zero time point
+    File_path=(path + '/data/antibiotics_dataset.csv')
+    with open (File_path) as f :
+        data=pd.read_csv (f, sep=',')
+        data.head()
+        f.close()
+    data=data.to_numpy()
+    InitialCFU=data[0,2]
+    timeReadIn=data[:,0]#np.reshape(data[1:-1,0],(NumberTimePoint, )
+    concReadIn=data[:,1]
+    CFUReadIn=data[:,2]
+    timeFinal=timeReadIn[0:NumberTimePoint]
+
+    CFUFinal=np.reshape(CFUReadIn,(int(len(CFUReadIn)/NumberTimePoint), NumberTimePoint,))
+    concTemp=np.reshape(concReadIn,(int(len(CFUReadIn)/NumberTimePoint), NumberTimePoint,))
+    drug_conc=concTemp[:,0]/1000
+
+    InitialCFU=CFUFinal[:,0]
+    Original_data = {'time': timeFinal,
+                    'observation': CFUFinal}
+
+    # Define model
+    m = myokit.load_model(path + '/model/AdpativeModelWithConstentDrugConcentration.mmt') #path for the model file 
+    #p = myokit.load_protocol(path + '/model/protocol_FixedConc.mmt')#path for the protocol file(e.g. dose regimen)
+
+    p = myokit.Protocol()
+    [protocol_level, protocol_start, protocol_duration, protocol_period, protocol_multiplier] = protocol
+    p.schedule(level = protocol_level, start = protocol_start, duration = protocol_duration, period = protocol_period, multiplier = protocol_multiplier)
+
+    ref = myokit.Simulation(m, p) #set up myokit model: input model and protocol 
+    save_state = ref.state()  #save the original initial state 
+    P1 = m.get('PDCompartment.P1')
+    P1.state_value()
+    P1.set_state_value(1000000)
+    m.state ()
+
+    AdaptiveModel = MyokitModel(m,p)
     if xaxis_sim_type_selection == 'linear' :
         x_simulation = np.linspace(0, 24, 500) 
     else :
         x_simulation = np.geomspace(0.1, 24, 500)
-    test_simulation = AdaptiveModel.simulate (parameters,x_simulation)
+    test_simulation = AdaptiveModel.simulate (parameters,x_simulation, save_state, m, drug_conc, InitialCFU)
     simulation_fig.data = []
 
+    dataset = pd.read_csv(path + '/data/' + dataset_selection)
     data = dataset.loc[dataset[class1_selection]==class1_plot_selection]
 
     concentration = [concentration_plot_selection] if concentration_plot_selection else data[concentration_selection].unique()
@@ -551,27 +563,31 @@ def update_app() :
                     children=html.Div(className='control-tab', children=[
                         html.Br(),
                         html.Br(),
-                        html.Div([html.Span("Time :", style={'font-weight':'bold'}),
-                                dcc.Dropdown(id='time-selection', 
-                                                options=[{'label':i, 'value':i} for i in columns],
-                                                value = 'Time',
+                        html.Div([html.Span("Dataset :", style={'font-weight':'bold'}),
+                                dcc.Dropdown(id='dataset-selection', 
+                                                options=[{'label':i, 'value':i} for i in datasets],
+                                                value = '',
+                                                style = dict(
+                                                    width = '80%',
+                                             )),
+                                html.Br(),
+                                html.Br(),
+                                html.Br(),
+                                html.Span("Time :", style={'font-weight':'bold'}),
+                                dcc.Dropdown(id='time-selection',
                                                 style = dict(
                                                     width = '50%',
                                              )),
                                 html.Br(),
                                 html.Span("Measurements :", style={'font-weight':'bold'}),
                                 dcc.Dropdown(id='y-selection', 
-                                                options=[{'label':i, 'value':i} for i in columns],
-                                                value = 'CFU',
                                                 style = dict(
                                                     width = '50%',
                                              )),
                                 html.Br(),
                                 html.Br(),
                                 html.Span("Dose group :", style={'font-weight':'bold'}),
-                                dcc.Dropdown(id='concentration-selection', 
-                                                options=[{'label':i, 'value':i} for i in columns],
-                                                value = 'Conc',
+                                dcc.Dropdown(id='concentration-selection',
                                                 style = dict(
                                                     width = '50%',
                                                     display = ''
@@ -585,9 +601,7 @@ def update_app() :
                                              )),
                                 html.Br(),              
                                 html.Span("Classifier 1 :", style={'font-weight':'bold'}),
-                                dcc.Dropdown(id='class1-selection', 
-                                                options=[{'label':i, 'value':i} for i in columns],
-                                                value = 'Drug',
+                                dcc.Dropdown(id='class1-selection',
                                                 style = dict(
                                                     width = '50%',
                                                     display = ''
@@ -603,9 +617,7 @@ def update_app() :
                                 html.Br(),
                                 html.Br(),
                                 html.Span("Classifier 2 :", style={'font-weight':'bold'}),
-                                dcc.Dropdown(id='class2-selection', 
-                                                options=[{'label':i, 'value':i} for i in columns],
-                                                value = 'Dosing',
+                                dcc.Dropdown(id='class2-selection',
                                                 style = dict(
                                                     width = '50%',
                                                     display = ''
@@ -622,9 +634,7 @@ def update_app() :
                                 html.Br(),
                                 html.Span("Classifier 3 :", style={'color':'grey'}),
                                 dcc.Dropdown(id='class3-selection',
-                                                placeholder = 'Optional...', 
-                                                options=[{'label':i, 'value':i} for i in columns],
-                                                value = '',
+                                                placeholder = 'Optional...',
                                                 style = dict(
                                                     width = '50%',
                                                     display = ''
@@ -736,109 +746,146 @@ def update_app() :
                                 html.Br(),
                                 html.Br(),
                         ], style={'width': '40%'}), 
-                        html.Div([
-                            html.Span(id='p1-label', style={'color':'grey'}),
-                            dcc.Input(id="p1-min", type="number", placeholder="min", debounce=True, style={'width': '20%'}),
-                            dcc.Input(id="p1-max", type="number", placeholder="max", debounce=True, style={'width': '20%'}),
-                            dcc.Slider(
-                                id='p1',
-                                min=0,
-                                max=10,
-                                step=0.1,
-                                value= 2.3,
-                            ),  
-                            html.Span(id='p2-label', style={'color':'grey'}),  
-                            dcc.Input(id="p2-min", type="number", placeholder="min", debounce=True, style={'width': '20%'}),
-                            dcc.Input(id="p2-max", type="number", placeholder="max", debounce=True, style={'width': '20%'}), 
-                            dcc.Slider(
-                                id='p2',
-                                min=1E+8,
-                                max=1E+10,
-                                step=1E+7,
-                                value=1E+9,
-                            ), 
-                            html.Span(id='p3-label', style={'color':'grey'}),
-                            dcc.Input(id="p3-min", type="number", placeholder="min", debounce=True, style={'width': '20%'}),
-                            dcc.Input(id="p3-max", type="number", placeholder="max", debounce=True, style={'width': '20%'}),
-                            dcc.Slider(
-                                id='p3',
-                                min=0,
-                                max=20,
-                                step=0.1,
-                                value=3.2,
-                            ), 
-                            html.Span(id='p4-label', style={'color':'grey'}),
-                            dcc.Input(id="p4-min", type="number", placeholder="min", debounce=True, style={'width': '20%'}),
-                            dcc.Input(id="p4-max", type="number", placeholder="max", debounce=True, style={'width': '20%'}),
-                            dcc.Slider(
-                                id='p4',
-                                min=0,
-                                max=3,
-                                step=0.05,
-                                value=0.5,
-                            ), 
-                            html.Span(id='p5-label', style={'color':'grey'}),
-                            dcc.Input(id="p5-min", type="number", placeholder="min", debounce=True, style={'width': '20%'}),
-                            dcc.Input(id="p5-max", type="number", placeholder="max", debounce=True, style={'width': '20%'}),
-                            dcc.Slider(
-                                id='p5',
-                                min=0,
-                                max=10,
-                                step=0.1,
-                                value=3.8,
-                            ),
-                            html.Span(id='p6-label', style={'color':'grey'}),
-                            dcc.Input(id="p6-min", type="number", placeholder="min", debounce=True, style={'width': '20%'}),
-                            dcc.Input(id="p6-max", type="number", placeholder="max", debounce=True, style={'width': '20%'}),
-                            dcc.Slider(
-                                id='p6',
-                                min=0,
-                                max=100,
-                                step=1,
-                                value=44,
-                            ), 
-                            html.Span(id='p7-label', style={'color':'grey'}),
-                            dcc.Input(id="p7-min", type="number", placeholder="min", debounce=True, style={'width': '20%'}),
-                            dcc.Input(id="p7-max", type="number", placeholder="max", debounce=True, style={'width': '20%'}),
-                            dcc.Slider(
-                                id='p7',
-                                min=0,
-                                max=0.01,
-                                step=0.001,
-                                value=0.002,
-                            ), 
-                            html.Span(id='p8-label', style={'color':'grey'}),
-                            dcc.Input(id="p8-min", type="number", placeholder="min", debounce=True, style={'width': '20%'}),
-                            dcc.Input(id="p8-max", type="number", placeholder="max", debounce=True, style={'width': '20%'}),
-                            dcc.Slider(
-                                id='p8',
-                                min=0,
-                                max=10,
-                                step=0.1,
-                                value=3.1,
-                            ), 
-                            html.Span(id='p9-label', style={'color':'grey'}),
-                            dcc.Input(id="p9-min", type="number", placeholder="min", debounce=True, style={'width': '20%'}),
-                            dcc.Input(id="p9-max", type="number", placeholder="max", debounce=True, style={'width': '20%'}),
-                            dcc.Slider(
-                                id='p9',
-                                min=0,
-                                max=3,
-                                step=0.1,
-                                value=0.3,
-                            ), 
-                            html.Span(id='p10-label', style={'color':'grey'}),
-                            dcc.Input(id="p10-min", type="number", placeholder="min", debounce=True, style={'width': '20%'}),
-                            dcc.Input(id="p10-max", type="number", placeholder="max", debounce=True, style={'width': '20%'}),
-                            dcc.Slider(
-                                id='p10',
-                                min=0,
-                                max=10,
-                                step=0.1,
-                                value=2.8,
-                            ),  
-                        ], style={'width': '50%'})
+                        dcc.Tabs(
+                            id='simulation-parameters',
+                            value='sim-param',
+                            children=[                
+                                dcc.Tab(
+                                    label='Parameters',
+                                    children =
+                                    html.Div([
+                                        html.Br(),
+                                        html.Br(),
+                                        html.Span(id='p1-label', style={'color':'grey'}),
+                                        dcc.Input(id="p1-min", type="number", placeholder="min", debounce=True, style={'width': '20%'}),
+                                        dcc.Input(id="p1-max", type="number", placeholder="max", debounce=True, style={'width': '20%'}),
+                                        dcc.Slider(
+                                            id='p1',
+                                            min=0,
+                                            max=10,
+                                            step=0.1,
+                                            value= 2.3,
+                                        ),  
+                                        html.Span(id='p2-label', style={'color':'grey'}),  
+                                        dcc.Input(id="p2-min", type="number", placeholder="min", debounce=True, style={'width': '20%'}),
+                                        dcc.Input(id="p2-max", type="number", placeholder="max", debounce=True, style={'width': '20%'}), 
+                                        dcc.Slider(
+                                            id='p2',
+                                            min=1E+8,
+                                            max=1E+10,
+                                            step=1E+7,
+                                            value=1E+9,
+                                        ), 
+                                        html.Span(id='p3-label', style={'color':'grey'}),
+                                        dcc.Input(id="p3-min", type="number", placeholder="min", debounce=True, style={'width': '20%'}),
+                                        dcc.Input(id="p3-max", type="number", placeholder="max", debounce=True, style={'width': '20%'}),
+                                        dcc.Slider(
+                                            id='p3',
+                                            min=0,
+                                            max=20,
+                                            step=0.1,
+                                            value=3.2,
+                                        ), 
+                                        html.Span(id='p4-label', style={'color':'grey'}),
+                                        dcc.Input(id="p4-min", type="number", placeholder="min", debounce=True, style={'width': '20%'}),
+                                        dcc.Input(id="p4-max", type="number", placeholder="max", debounce=True, style={'width': '20%'}),
+                                        dcc.Slider(
+                                            id='p4',
+                                            min=0,
+                                            max=3,
+                                            step=0.05,
+                                            value=0.5,
+                                        ), 
+                                        html.Span(id='p5-label', style={'color':'grey'}),
+                                        dcc.Input(id="p5-min", type="number", placeholder="min", debounce=True, style={'width': '20%'}),
+                                        dcc.Input(id="p5-max", type="number", placeholder="max", debounce=True, style={'width': '20%'}),
+                                        dcc.Slider(
+                                            id='p5',
+                                            min=0,
+                                            max=10,
+                                            step=0.1,
+                                            value=3.8,
+                                        ),
+                                        html.Span(id='p6-label', style={'color':'grey'}),
+                                        dcc.Input(id="p6-min", type="number", placeholder="min", debounce=True, style={'width': '20%'}),
+                                        dcc.Input(id="p6-max", type="number", placeholder="max", debounce=True, style={'width': '20%'}),
+                                        dcc.Slider(
+                                            id='p6',
+                                            min=0,
+                                            max=100,
+                                            step=1,
+                                            value=44,
+                                        ), 
+                                        html.Span(id='p7-label', style={'color':'grey'}),
+                                        dcc.Input(id="p7-min", type="number", placeholder="min", debounce=True, style={'width': '20%'}),
+                                        dcc.Input(id="p7-max", type="number", placeholder="max", debounce=True, style={'width': '20%'}),
+                                        dcc.Slider(
+                                            id='p7',
+                                            min=0,
+                                            max=0.01,
+                                            step=0.001,
+                                            value=0.002,
+                                        ), 
+                                        html.Span(id='p8-label', style={'color':'grey'}),
+                                        dcc.Input(id="p8-min", type="number", placeholder="min", debounce=True, style={'width': '20%'}),
+                                        dcc.Input(id="p8-max", type="number", placeholder="max", debounce=True, style={'width': '20%'}),
+                                        dcc.Slider(
+                                            id='p8',
+                                            min=0,
+                                            max=10,
+                                            step=0.1,
+                                            value=3.1,
+                                        ), 
+                                        html.Span(id='p9-label', style={'color':'grey'}),
+                                        dcc.Input(id="p9-min", type="number", placeholder="min", debounce=True, style={'width': '20%'}),
+                                        dcc.Input(id="p9-max", type="number", placeholder="max", debounce=True, style={'width': '20%'}),
+                                        dcc.Slider(
+                                            id='p9',
+                                            min=0,
+                                            max=3,
+                                            step=0.1,
+                                            value=0.3,
+                                        ), 
+                                        html.Span(id='p10-label', style={'color':'grey'}),
+                                        dcc.Input(id="p10-min", type="number", placeholder="min", debounce=True, style={'width': '20%'}),
+                                        dcc.Input(id="p10-max", type="number", placeholder="max", debounce=True, style={'width': '20%'}),
+                                        dcc.Slider(
+                                            id='p10',
+                                            min=0,
+                                            max=10,
+                                            step=0.1,
+                                            value=2.8,
+                                        )
+                                    ], style={'width': '50%'})
+                                ),
+                                dcc.Tab(
+                                    label = 'Protocol',
+                                    children= [
+                                        html.Div([
+                                            html.Br(),
+                                            html.Br(),
+                                            html.Span("Level (portion of full-dose):", style={'color':'grey'}), 
+                                            dcc.Slider(id='protocol-level', min = 0, max = 1, step = 0.05, value = 1, marks = {0:{'label':'0'}, 0.5:{'label':'Half dose'}, 1:{'label':'Full dose'} }),
+                                            html.Br(),
+                                            html.Span("Start at time :", style={'color':'grey'}), 
+                                            dcc.Input(id='protocol-start', type='number', value = 0, debounce = True, style={'width': '20%'}),
+                                            html.Br(),
+                                            html.Br(),
+                                            html.Span('Duration of each stimulus (h):', style={'color':'grey'}),
+                                            dcc.Slider(id='protocol-duration', min = 0, max = 24, step = 0.1, value = 24, marks = {0:{'label':'0'}, 12:{'label':'12h'}, 24:{'label':'24h'} }),
+                                            html.Br(),
+                                            html.Span('Period of stimulus (0 if constant or one-off) :', style={'color':'grey'}),
+                                            dcc.Slider(id='protocol-period', min = 0, max = 24, step = 0.1, value = 0, marks = {0:{'label':'One'}, 12:{'label':'12h'}, 24:{'label':'24h'} }),
+                                            html.Br(),
+                                            html.Span('Number of doses (0 for non periodic events):', style={'color':'grey'}),
+                                            dcc.Slider(id = 'protocol-multiplier', min = 0, max = 10, step = 1, value = 0, marks = {0:{'label':'0'}, 5:{'label':'5'}, 10:{'label':'10'} }) 
+                                        ], style={'width': '50%'})
+                                        
+                                    ]
 
+                                )
+                            ]        
+                        )
                     ])
                 ),
                 dcc.Tab(
@@ -862,8 +909,32 @@ def update_app() :
 update_app()
 
 @app.callback(
+    [Output('time-selection', 'options'),
+    Output('y-selection', 'options'),
+    Output('concentration-selection', 'options'),
+    Output('class1-selection', 'options'),
+    Output('class2-selection', 'options'),
+    Output('class3-selection', 'options')],
+    [Input('dataset-selection', 'value')]
+)
+
+def update_column_choices(dataset_selection):
+    dataset = pd.read_csv(path + '/data/' + dataset_selection)
+    columns = dataset.columns
+
+    time_options=[{'label':i, 'value':i} for i in columns]
+    y_options=[{'label':i, 'value':i} for i in columns]
+    concentration_options=[{'label':i, 'value':i} for i in columns]
+    class1_options=[{'label':i, 'value':i} for i in columns]
+    class2_options=[{'label':i, 'value':i} for i in columns]
+    class3_options=[{'label':i, 'value':i} for i in columns]
+
+    return time_options, y_options, concentration_options, class1_options, class2_options, class3_options
+
+@app.callback(
     Output('explore-dashboard','figure'),
-    [Input('time-selection', 'value'),
+    [Input('dataset-selection', 'value'),
+    Input('time-selection', 'value'),
     Input('y-selection', 'value'),
     Input('class1-selection', 'value'),
     Input('concentration-selection', 'value'),
@@ -876,21 +947,24 @@ update_app()
     Input('yaxis-type', 'value'),
     Input('xaxis-type', 'value')]
 )
-def update_output_div(time_selection, y_selection, class1_selection, concentration_selection, class2_selection, 
+def update_output_div(dataset_selection, time_selection, y_selection, class1_selection, concentration_selection, class2_selection, 
                       class3_selection, class1_plot_selection, concentration_plot_selection, class2_plot_selection, 
                       class3_plot_selection, yaxis_type_selection, xaxis_type_selection):
 
     update_app()
-    fig = update_figure(time_selection, y_selection, class1_selection, concentration_selection, class2_selection, 
+    fig = update_figure(dataset_selection, time_selection, y_selection, class1_selection, concentration_selection, class2_selection, 
                         class3_selection, class1_plot_selection, concentration_plot_selection, class2_plot_selection, 
                         class3_plot_selection, yaxis_type_selection, xaxis_type_selection)
     return fig
 
 @app.callback(
     Output('class1-plot-selection', 'options'),
-    [Input('class1-selection', 'value')]
+    [Input('dataset-selection', 'value'),
+    Input('class1-selection', 'value')]
 )
-def update_selected_class1(class1_selection):
+def update_selected_class1(dataset_selection, class1_selection):
+    dataset = pd.read_csv(path + '/data/' + dataset_selection)
+
     if class1_selection:
         return [{'label':i, 'value':i} for i in dataset[class1_selection].unique()]
     else:
@@ -898,9 +972,11 @@ def update_selected_class1(class1_selection):
 
 @app.callback(
     Output('concentration-plot-selection', 'options'),
-    [Input('concentration-selection', 'value')]
+    [Input('dataset-selection','value'),
+    Input('concentration-selection', 'value')]
 )
-def update_selected_concentration(concentration_selection):
+def update_selected_concentration(dataset_selection, concentration_selection):
+    dataset = pd.read_csv(path + '/data/' + dataset_selection)
     if concentration_selection:
         return [{'label':i, 'value':i} for i in dataset[concentration_selection].unique()]
     else:
@@ -908,9 +984,11 @@ def update_selected_concentration(concentration_selection):
 
 @app.callback(
     Output('class2-plot-selection', 'options'),
-    [Input('class2-selection', 'value')]
+    [Input('dataset-selection', 'value'),
+    Input('class2-selection', 'value')]
 )
-def update_selected_class2(class2_selection):
+def update_selected_class2(dataset_selection, class2_selection):
+    dataset = pd.read_csv(path + '/data/' + dataset_selection)
     if class2_selection:
         return [{'label':i, 'value':i} for i in dataset[class2_selection].unique()]
     else:
@@ -918,9 +996,11 @@ def update_selected_class2(class2_selection):
 
 @app.callback(
     Output('class3-plot-selection', 'options'),
-    [Input('class3-selection', 'value')]
+    [Input('dataset-selection', 'value'),
+    Input('class3-selection', 'value')]
 )
-def update_selected_class3(class3_selection):
+def update_selected_class3(dataset_selection, class3_selection):
+    dataset = pd.read_csv(path + '/data/' + dataset_selection)
     if class3_selection:
         return [{'label':i, 'value':i} for i in dataset[class3_selection].unique()]
     else:
@@ -929,7 +1009,8 @@ def update_selected_class3(class3_selection):
 @app.callback(
     Output('modeling-values', 'children'),
     [Input('auce-button', 'n_clicks')],
-    [State('time-selection', 'value'),
+    [State('dataset-selection', 'value'),
+    State('time-selection', 'value'),
     State('y-selection', 'value'),
     State('class1-selection', 'value'),
     State('concentration-selection', 'value'),
@@ -940,13 +1021,13 @@ def update_selected_class3(class3_selection):
     State('class2-plot-selection', 'value'),
     State('class3-plot-selection', 'value')]
 )
-def modeling(n_clicks, time_selection, y_selection, class1_selection, concentration_selection, class2_selection, 
+def modeling(n_clicks, dataset_selection,time_selection, y_selection, class1_selection, concentration_selection, class2_selection, 
              class3_selection, class1_plot_selection, concentration_plot_selection, class2_plot_selection, 
              class3_plot_selection):
     if  n_clicks % 2 == 0 :  #to toggle if the AUCE appears or not
         modeling_output = []
     else :    
-        modeling_values = model(time_selection, y_selection, class1_selection, concentration_selection, class2_selection, 
+        modeling_values = model(dataset_selection, time_selection, y_selection, class1_selection, concentration_selection, class2_selection, 
                         class3_selection, class1_plot_selection, concentration_plot_selection, class2_plot_selection, 
                         class3_plot_selection)
         series_nb = len(modeling_values)
@@ -970,7 +1051,8 @@ def modeling(n_clicks, time_selection, y_selection, class1_selection, concentrat
     Input('auce-conc-fit-type', 'value'),
     Input('auce-y-axis-type', 'value'),
     Input('auce-x-axis-type', 'value')],
-    [State('time-selection', 'value'),
+    [State('dataset-selection', 'value'),
+    State('time-selection', 'value'),
     State('y-selection', 'value'),
     State('class1-selection', 'value'),
     State('concentration-selection', 'value'),
@@ -981,11 +1063,12 @@ def modeling(n_clicks, time_selection, y_selection, class1_selection, concentrat
     State('class2-plot-selection', 'value'),
     State('class3-plot-selection', 'value')]
 )
-def auce_vs_concentration(n_clicks, auce_conc_fit_type, auce_y_axis_type, auce_x_axis_type, time_selection, y_selection, class1_selection, concentration_selection, class2_selection, 
+def auce_vs_concentration(n_clicks, auce_conc_fit_type, auce_y_axis_type, auce_x_axis_type, dataset_selection, time_selection, y_selection, class1_selection, concentration_selection, class2_selection, 
              class3_selection, class1_plot_selection, concentration_plot_selection, class2_plot_selection, 
              class3_plot_selection):
     if not concentration_plot_selection :         
-        auce_vs_concentration_fig = compute_auce_vs_concentration(time_selection, auce_conc_fit_type, auce_y_axis_type, auce_x_axis_type, y_selection, class1_selection, concentration_selection, class2_selection, 
+        auce_vs_concentration_fig = compute_auce_vs_concentration(dataset_selection, time_selection, auce_conc_fit_type, auce_y_axis_type, auce_x_axis_type, y_selection, 
+                                                    class1_selection, concentration_selection, class2_selection, 
                                                     class3_selection, class1_plot_selection, class2_plot_selection, 
                                                     class3_plot_selection)
 
@@ -1168,8 +1251,14 @@ def update_sliders_labels(p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,model):
     Input('p9', 'value'),
     Input('p10', 'value'),
     Input('yaxis-sim-type', 'value'),
-    Input('xaxis-sim-type', 'value')],
+    Input('xaxis-sim-type', 'value'),
+    Input('protocol-level', 'value'),
+    Input('protocol-start', 'value'),
+    Input('protocol-duration','value'),
+    Input('protocol-period', 'value'),
+    Input('protocol-multiplier', 'value')],
     [State('model-selection', 'value'),
+    State('dataset-selection','value'),
     State('time-selection', 'value'),
     State('y-selection', 'value'),
     State('class1-selection', 'value'),
@@ -1181,16 +1270,14 @@ def update_sliders_labels(p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,model):
     State('class2-plot-selection', 'value'),
     State('class3-plot-selection', 'value')]
 )    
-def callback_update_simulation(n_clicks, p1,p2,p3,p4,p5,p6,p7,p8,p9,p10, yaxis_sim_type_selection, xaxis_sim_type_selection, model, time_selection, y_selection, class1_selection, concentration_selection, class2_selection, 
-                  class3_selection, class1_plot_selection, concentration_plot_selection, class2_plot_selection, 
-                  class3_plot_selection):
-    print('updating SIMULATION')
+def callback_update_simulation(n_clicks, p1,p2,p3,p4,p5,p6,p7,p8,p9,p10, yaxis_sim_type_selection, xaxis_sim_type_selection, protocol_level, protocol_start, protocol_duration, 
+                    protocol_period, protocol_multiplier, model, dataset_selection, time_selection, y_selection, class1_selection, concentration_selection, class2_selection, 
+                    class3_selection, class1_plot_selection, concentration_plot_selection, class2_plot_selection, 
+                    class3_plot_selection):
     if n_clicks:
         parameters = [p1,p2,p3,p4,p5,p6,p7,p8,p9,p10]
-        print(parameters)
-        
-        simulation_fig_updated = update_simulation(time_selection, y_selection, class1_selection, concentration_selection, class2_selection, 
+        protocol = [protocol_level, protocol_start, protocol_duration, protocol_period, protocol_multiplier]
+        simulation_fig_updated = update_simulation(dataset_selection, time_selection, y_selection, class1_selection, concentration_selection, class2_selection, 
                     class3_selection, class1_plot_selection, concentration_plot_selection, class2_plot_selection, 
-                    class3_plot_selection, yaxis_sim_type_selection, xaxis_sim_type_selection, model, parameters)  
-    print('update SIMULATION DONE')
+                    class3_plot_selection, yaxis_sim_type_selection, xaxis_sim_type_selection, model, parameters, protocol)  
     return simulation_fig_updated        
