@@ -95,6 +95,7 @@ class MyokitModel(pints.ForwardModel):
 
 
 # Create dash app 
+
 app = DjangoDash('auce_dashboard') 
 
 colors = plotly.colors.qualitative.Plotly[:1000]
