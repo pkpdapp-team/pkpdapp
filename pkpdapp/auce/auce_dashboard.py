@@ -109,8 +109,6 @@ def fsigmoid(concentration,top,bottom,EC50):
     # this function simulates Emax-EC50 curve for a given concentration range
     return bottom + concentration*(top-bottom)/(EC50  + concentration)
 
-
-
 ################################# GRAPH #################################
 
 def update_figure(dataset_selection, time_selection, y_selection, class1_selection, concentration_selection, class2_selection, 
@@ -381,6 +379,20 @@ def auce_fit(auce_conc_fit_type, auce_y_axis_type, auce_x_axis_type, class2_sele
         else :
             auce_vs_concentration_fig.add_annotation(text=("Could not fit %s %s<br> " %(class2_selection, class2_selected)), 
                                                     xref='paper', yref='paper', x=0.05, y=1-index_class2*0.1, showarrow=False,font=dict(color=colors[index_class2]))
+    elif auce_conc_fit_type == 'Hockey-Stick':
+        log_concentrations = np.log(concentrations)
+        instant_slopes= np.diff(auce_vs_concentration_data)/np.diff(log_concentrations)
+        instant_second_slopes = np.diff(instant_slopes)
+        print(instant_slopes)
+        print(instant_second_slopes)
+        slope_class=np.zeros(len(instant_slopes))
+        mean_slope = (auce_vs_concentration_data[len(concentrations)-1]-auce_vs_concentration_data[0])/(max(concentrations)-min(concentrations))
+        for i, slope in enumerate(instant_slopes):
+            if slope <= mean_slope:
+                slope_class[i]=0
+            else :
+                slope_class[i]=1
+        print(slope_class)
 
 def update_simulation(dataset_selection, time_selection, y_selection, class1_selection, concentration_selection, class2_selection, 
                   class3_selection, class1_plot_selection, concentration_plot_selection, class2_plot_selection, 
@@ -705,7 +717,7 @@ def update_app() :
                         "Fit type :",
                         dcc.RadioItems(
                                 id= 'auce-conc-fit-type',
-                                options=[{'label':i, 'value':i} for i in ['None','Sigmoid']],
+                                options=[{'label':i, 'value':i} for i in ['None','Sigmoid', 'Hockey-Stick']],
                                 value = 'None',
                         ),
 
