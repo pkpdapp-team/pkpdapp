@@ -6,7 +6,7 @@
 
 from django.urls import path
 
-from . import apps, views
+from . import apps, views  # noqa
 
 
 app_name = 'simulate'
