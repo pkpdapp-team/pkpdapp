@@ -14,13 +14,13 @@ class BiomarkerType(models.Model):
     """
 
     UNIT_CHOICES = [
-        ('mg', 'type1'),
+        ('mg', 'g'),
     ]
     name = models.CharField(
         max_length=100, help_text='name of the biomarker type'
     )
     unit = models.CharField(
-        max_length=2, choices=UNIT_CHOICES,
+        max_length=5, choices=UNIT_CHOICES,
         help_text='units for the value stored in :model:`pkpdapp.Biomarker`'
     )
     description = models.TextField(

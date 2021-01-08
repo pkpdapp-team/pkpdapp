@@ -25,7 +25,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(help_text='name of the biomarker type', max_length=100)),
-                ('unit', models.CharField(choices=[('mg', 'type1')], help_text='units for the value stored in :model:`pkpdapp.Biomarker`', max_length=2)),
+                ('unit', models.CharField(choices=[('mg', 'g')], help_text='units for the value stored in :model:`pkpdapp.Biomarker`', max_length=5)),
                 ('description', models.TextField(help_text='short description of the biomarker type')),
             ],
         ),
