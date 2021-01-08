@@ -12,7 +12,7 @@ from django.contrib.auth.models import User
 class Project(models.Model):
     """
     A project, containing multiple :model:`pkpdapp.Dataset`,
-    :model:`pkpdapp.PkpdModel` and users
+    :model:`pkpdapp.PkpdModel` and users.
     """
     name = models.CharField(max_length=100, help_text='name of the project')
     description = models.TextField(

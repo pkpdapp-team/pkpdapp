@@ -10,7 +10,7 @@ from django.db import models
 class BiomarkerType(models.Model):
     """
     A biomarker type, for example "concentration in mg". Each
-    :model:`pkpdapp.Biomarker` is assigned on of these types
+    :model:`pkpdapp.Biomarker` is assigned on of these types.
     """
 
     UNIT_CHOICES = [
