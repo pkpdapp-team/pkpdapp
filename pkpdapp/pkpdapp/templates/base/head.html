@@ -31,14 +31,17 @@ copyright notice and full license details.
                 <a class="nav-link" href="{% url 'generic' %}">Documentation</a>
             </li>
         </ul>
-        <ul class="navbar-nav my-2 my-lg-0">
-            <li class="nav-item">
-                {% if user.is_authenticated %}
+        <ul class="navbar-nav my-2 my-lg-0 ">
+            {% if user.is_authenticated %}
+                <li class="nav-item mr-2">User: {{ user.get_username }}</li>
+                <li class="nav-item">
                     <a href="{% url 'logout' %}?next={{request.path}}">Logout</a>
-                {% else %}
+                </li>
+            {% else %}
+                <li class="nav-item">
                     <a href="{% url 'login' %}?next={{request.path}}">Login</a>
-                {% endif %}
-            </li>
+                </li>
+            {% endif %}
         </ul>
     </div>
 </nav>
