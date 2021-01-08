@@ -12,7 +12,7 @@ from django.contrib.auth.models import User
 class Profile(models.Model):
     """
     A user profile, containing neccessary information for users not held in
-    :model:`auth.User`
+    :model:`auth.User`.
     """
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     selected_project = models.ForeignKey(
