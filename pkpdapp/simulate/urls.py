@@ -6,10 +6,7 @@
 
 from django.urls import path
 
-from . import views
-from . import (  # noqa
-    demo_simulation_dash_board
-)
+from . import apps, views
 
 
 app_name = 'simulate'
