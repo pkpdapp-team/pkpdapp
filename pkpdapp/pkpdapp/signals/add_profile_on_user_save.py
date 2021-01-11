@@ -4,4 +4,9 @@
 # copyright notice and full license details.
 #
 
-default_app_config = 'pkpdapp.apps.PkpdAppConfig'
+from pkpdapp.models import Profile
+
+
+def add_profile_on_user_save(sender, **kwargs):
+    if kwargs['created']:
+        Profile.objects.create(user=kwargs['instance']).save()

@@ -83,6 +83,20 @@ class TestPkpdModel(TestCase):
         self.assertTrue(isinstance(m, PkpdModel))
 
 
+class TestProfileModel(TestCase):
+    def test_profile_creation(self):
+        u = User.objects.create_user(
+            'john', 'lennon@thebeatles.com', 'johnpassword'
+        )
+        p = Project.objects.create(
+            name='my_cool_project',
+            description='description for my cool project',
+        )
+        self.assertEqual(u.profile.user.username, 'john')
+        u.profile.selected_project = p
+        self.assertEqual(u.profile.selected_project, p)
+
+
 class TestProjectModel(TestCase):
     def setUp(self):
         Project.objects.create(

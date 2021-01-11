@@ -11,7 +11,7 @@ from pkpdapp.models import BiomarkerMap, Dataset
 class Biomarker(models.Model):
     """
     A single biomarker measurement value stored in a :model:`pkpdapp.Dataset`.
-    Each biomarker is assigned a type stored in :model:`pkpdapp.BiomarkerType`
+    Each biomarker is assigned a type stored in :model:`pkpdapp.BiomarkerType`.
     """
     time = models.FloatField(
         help_text='time point of measurement, in days'
