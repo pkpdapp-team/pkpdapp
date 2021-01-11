@@ -9,8 +9,8 @@ from django.db import models
 
 class BiomarkerType(models.Model):
     """
-    A generic (not associated with a particular dataset) biomarker type, for example
-    "concentration in mg", or "volume in cm^3".
+    A generic (not associated with a particular dataset) biomarker type, for
+    example "concentration in mg", or "volume in cm^3".
     """
 
     UNIT_CHOICES = [

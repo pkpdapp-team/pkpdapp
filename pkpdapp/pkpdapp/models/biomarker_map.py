@@ -10,10 +10,10 @@ from pkpdapp.models import BiomarkerType, Dataset
 
 class BiomarkerMap(models.Model):
     """
-    A biomarker type associated with a particular dataset, e.g. "Tumour volume".  Each
-    :model:`pkpdapp.BiomarkerMap` is classified with a particular entry in
-    :model:`pkpdapp.BiomarkerType`, e.g. "Tumour volume" is a "volume in cm^3". This
-    would correspond with a particular column in a dataset. Each
+    This model contains additional information about a biomarker type within a
+    particular dataset, e.g. "Tumour volume", rather than a generic "volume"
+    biomarker type. This would correspond with a particular column in a
+    dataset.
     """
     name = models.CharField(
         max_length=100,
@@ -23,7 +23,7 @@ class BiomarkerMap(models.Model):
         help_text='description of the biomarker for a particular dataset',
     )
     biomarker_type = models.ForeignKey(
-        BiomarkerType, on_delete=models.PROTECT,
+        BiomarkerType, on_delete=models.CASCADE,
         help_text='biomarker type, for example "concentration in mg"'
     )
     dataset = models.ForeignKey(

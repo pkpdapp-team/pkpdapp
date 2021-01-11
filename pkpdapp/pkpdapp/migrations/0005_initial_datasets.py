@@ -11,7 +11,7 @@ import codecs
 from datetime import datetime
 from django.utils.timezone import make_aware
 
-datafile_url = 'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/datasets/lxf_control_growth.csv'
+datafile_url = 'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/datasets/lxf_control_growth.csv'  # noqa: E501
 
 datafile_description = '''
 The dataset from [1] contains the time series data of 8 mice with
@@ -78,7 +78,6 @@ def load_datasets(apps, schema_editor):
         for b in biomarker_types
     ]
     [bm.save() for bm in biomarker_maps]
-
 
     # create all the biomarker measurements for that dataset
     with urllib.request.urlopen(datafile_url) as f:

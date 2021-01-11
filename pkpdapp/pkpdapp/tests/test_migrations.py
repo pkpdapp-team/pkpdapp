@@ -22,9 +22,10 @@ class Test0002InitialBiomarkerTypeReverse(MigratorTestCase):
         )
         self.assertTrue(len(new_biomarker_types.objects.all()) == 0)
 
+
 class Test0005InitialDatasetsReverse(MigratorTestCase):
-    migrate_from = ('pkpdapp', '0005_initial_biomarker_types')
-    migrate_to = ('pkpdapp', '0002_initial')
+    migrate_from = ('pkpdapp', '0005_initial_datasets')
+    migrate_to = ('pkpdapp', '0002_initial_biomarker_types')
 
     def prepare(self):
         old_dataset = self.old_state.apps.get_model(

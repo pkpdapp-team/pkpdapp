@@ -21,7 +21,7 @@ class Biomarker(models.Model):
     )
     value = models.FloatField(help_text='value of the measurement')
     biomarker_type = models.ForeignKey(
-        BiomarkerMap, on_delete=models.PROTECT,
+        BiomarkerMap, on_delete=models.CASCADE,
         help_text='biomarker type, for example "concentration in mg"'
     )
     dataset = models.ForeignKey(
