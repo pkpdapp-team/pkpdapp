@@ -6,7 +6,7 @@
 
 from django.test import TestCase
 from pkpdapp.models import (
-    Dataset, Project, Biomarker, BiomarkerType, PkpdModel
+    Dataset, Project, Biomarker, BiomarkerType, PkpdModel, BiomarkerMap
 )
 from django.contrib.auth.models import User
 from django.utils import timezone
@@ -16,6 +16,7 @@ class TestDatasetModel(TestCase):
     def test_dataset_creation(self):
         d = Dataset.objects.create(
             name='my_cool_dataset',
+            datetime=timezone.now(),
             description='description for my cool dataset',
             administration_type='T1',
         )
@@ -32,17 +33,40 @@ class TestBiomarkerTypeModel(TestCase):
         self.assertTrue(isinstance(bt, BiomarkerType))
 
 
+class TestBiomarkerMapModel(TestCase):
+    def test_biomarker_map_creation(self):
+        d = Dataset.objects.create(
+            name='my_cool_dataset',
+            datetime=timezone.now(),
+            description='description for my cool biomarker',
+            administration_type='T1',
+        )
+        m = BiomarkerMap.objects.create(
+            name='my map',
+            biomarker_type=BiomarkerType.objects.get(name='concentration'),
+            dataset=d,
+        )
+        self.assertTrue(isinstance(m, BiomarkerMap))
+
+
 class TestBiomarkerModel(TestCase):
     def test_biomarker_creation(self):
         d = Dataset.objects.create(
             name='my_cool_dataset',
+            datetime=timezone.now(),
             description='description for my cool biomarker',
             administration_type='T1',
         )
-        b = Biomarker.objects.create(
-            time=timezone.now(),
-            value=1.0,
+        m = BiomarkerMap.objects.create(
+            name='my map',
             biomarker_type=BiomarkerType.objects.get(name='concentration'),
+            dataset=d,
+        )
+        b = Biomarker.objects.create(
+            time=0.0,
+            value=1.0,
+            subject_id=1,
+            biomarker_type=m,
             dataset=d,
         )
         self.assertTrue(isinstance(b, Biomarker))
@@ -74,6 +98,7 @@ class TestProjectModel(TestCase):
         p = Project.objects.get(name='my_cool_project')
         d = Dataset.objects.create(
             name='my_cool_dataset',
+            datetime=timezone.now(),
             description='description for my cool dataset',
             administration_type='T1',
         )
