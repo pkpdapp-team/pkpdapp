@@ -14,7 +14,19 @@ def load_biomarker_types(apps, schema_editor):
             'name': 'concentration',
             'description': 'concentration',
             'unit': 'mg',
-        }
+        },
+        {
+            'id': 1,
+            'name': 'weight',
+            'description': 'A measure of mass',
+            'unit': 'g',
+        },
+        {
+            'id': 2,
+            'name': 'volume',
+            'description': 'A measure of volume',
+            'unit': 'cm^3',
+        },
     ]
 
     BiomarkerType = apps.get_model("pkpdapp", "BiomarkerType")

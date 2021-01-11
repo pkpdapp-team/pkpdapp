@@ -5,7 +5,7 @@
 #
 
 from django.db import models
-from pkpdapp.models import BiomarkerType, Dataset
+from pkpdapp.models import BiomarkerMap, Dataset
 
 
 class Biomarker(models.Model):
@@ -13,10 +13,15 @@ class Biomarker(models.Model):
     A single biomarker measurement value stored in a :model:`pkpdapp.Dataset`.
     Each biomarker is assigned a type stored in :model:`pkpdapp.BiomarkerType`
     """
-    time = models.DateTimeField(help_text='time point of measurement')
+    time = models.FloatField(
+        help_text='time point of measurement, in days'
+    )
+    subject_id = models.IntegerField(
+        help_text='subject id for biomarker measurement'
+    )
     value = models.FloatField(help_text='value of the measurement')
     biomarker_type = models.ForeignKey(
-        BiomarkerType, on_delete=models.PROTECT,
+        BiomarkerMap, on_delete=models.PROTECT,
         help_text='biomarker type, for example "concentration in mg"'
     )
     dataset = models.ForeignKey(

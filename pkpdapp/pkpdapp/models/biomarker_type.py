@@ -9,18 +9,20 @@ from django.db import models
 
 class BiomarkerType(models.Model):
     """
-    A biomarker type, for example "concentration in mg". Each
-    :model:`pkpdapp.Biomarker` is assigned on of these types
+    A generic (not associated with a particular dataset) biomarker type, for example
+    "concentration in mg", or "volume in cm^3".
     """
 
     UNIT_CHOICES = [
-        ('mg', 'type1'),
+        ('mg', 'mg'),
+        ('g', 'g'),
+        ('cm3', 'cm^3'),
     ]
     name = models.CharField(
         max_length=100, help_text='name of the biomarker type'
     )
     unit = models.CharField(
-        max_length=2, choices=UNIT_CHOICES,
+        max_length=3, choices=UNIT_CHOICES,
         help_text='units for the value stored in :model:`pkpdapp.Biomarker`'
     )
     description = models.TextField(
