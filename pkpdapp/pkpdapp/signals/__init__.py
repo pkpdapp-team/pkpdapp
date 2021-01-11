@@ -4,4 +4,4 @@
 # copyright notice and full license details.
 #
 
-default_app_config = 'pkpdapp.apps.PkpdAppConfig'
+from .add_profile_on_user_save import add_profile_on_user_save  # noqa: F401

@@ -9,7 +9,7 @@ from django.db import models
 
 class Dataset(models.Model):
     """
-    A PKPD dataset containing one or more :model:`pkpdapp.Biomarker`
+    A PKPD dataset containing one or more :model:`pkpdapp.Biomarker`.
     """
     ADMINISTRATION_TYPE_CHOICES = [
         ('T1', 'type1'),
