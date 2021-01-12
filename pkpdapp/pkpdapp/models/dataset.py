@@ -5,7 +5,6 @@
 #
 
 from django.db import models
-from pkpdapp.models import BiomarkerType
 
 
 class Dataset(models.Model):
@@ -25,10 +24,6 @@ class Dataset(models.Model):
     )
     description = models.TextField(
         help_text='short description of the dataset'
-    )
-    biomarkers = models.ManyToManyField(
-        BiomarkerType, through='BiomarkerMap',
-        related_name='dataset',
     )
     administration_type = models.CharField(
         max_length=2, choices=ADMINISTRATION_TYPE_CHOICES,

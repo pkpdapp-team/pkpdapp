@@ -5,12 +5,13 @@
 #
 
 from django.db import models
+from pkpdapp.models import Dataset
 
 
 class BiomarkerType(models.Model):
     """
-    A generic (not associated with a particular dataset) biomarker type, for
-    example "concentration in mg", or "volume in cm^3".
+    A type of biomarker measurement associated with a particular dataset, for
+    example "concentration in mg", or "tumor volume in cm^3".
     """
 
     UNIT_CHOICES = [
@@ -27,4 +28,8 @@ class BiomarkerType(models.Model):
     )
     description = models.TextField(
         help_text='short description of the biomarker type'
+    )
+    dataset = models.ForeignKey(
+        Dataset, on_delete=models.CASCADE,
+        help_text='dataset containing this biomarker measurement'
     )

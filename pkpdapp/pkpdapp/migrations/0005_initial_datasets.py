@@ -29,11 +29,11 @@ References
 biomarkers = [
     {
         'name': 'Tumour volume',
-        'biomarker': 'volume',
+        'unit': 'cm^3',
     },
     {
         'name': 'Body weight',
-        'biomarker': 'weight',
+        'unit': 'g',
     },
 ]
 
@@ -42,7 +42,6 @@ def load_datasets(apps, schema_editor):
     Dataset = apps.get_model("pkpdapp", "Dataset")
     Biomarker = apps.get_model("pkpdapp", "Biomarker")
     BiomarkerType = apps.get_model("pkpdapp", "BiomarkerType")
-    BiomarkerMap = apps.get_model("pkpdapp", "BiomarkerMap")
 
     # create the dataset
     dataset = Dataset(
@@ -53,31 +52,23 @@ def load_datasets(apps, schema_editor):
     )
     dataset.save()
 
-    # find the biomarkers types for that dataset
-    biomarker_types = [
-        {
-            'name': b['name'],
-            'biomarker_type': BiomarkerType.objects.get(name=b['biomarker']),
-        }
-        for b in biomarkers
-    ]
-
-    # find the index of the biomarker, so we don't have to keep looking it up
+    # find the index of the biomarker type, so we don't have to keep looking it
+    # up
     biomarker_index = {}
     for i, b in enumerate(biomarkers):
         biomarker_index[b['name']] = i
 
-    # create all the biomarker maps for that dataset
-    biomarker_maps = [
-        BiomarkerMap(
+    # create all the biomarker types for that dataset
+    biomarker_types = [
+        BiomarkerType(
             name=b['name'],
             description=b['name'],
-            biomarker_type=b['biomarker_type'],
+            unit=b['unit'],
             dataset=dataset
         )
-        for b in biomarker_types
+        for b in biomarkers
     ]
-    [bm.save() for bm in biomarker_maps]
+    [bm.save() for bm in biomarker_types]
 
     # create all the biomarker measurements for that dataset
     with urllib.request.urlopen(datafile_url) as f:
@@ -98,8 +89,7 @@ def load_datasets(apps, schema_editor):
                 time=row[TIME_COLUMN],
                 subject_id=row[SUBJECT_ID_COLUMN],
                 value=row[VALUE_COLUMN],
-                biomarker_type=biomarker_maps[index],
-                dataset=dataset
+                biomarker_type=biomarker_types[index]
             )
             biomarker.save()
 
@@ -112,7 +102,7 @@ def delete_datasets(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('pkpdapp', '0002_initial_biomarker_types'),
+        ('pkpdapp', '0001_initial'),
     ]
 
     operations = [

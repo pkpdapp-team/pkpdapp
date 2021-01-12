@@ -5,7 +5,7 @@
 #
 
 from django.db import models
-from pkpdapp.models import BiomarkerMap, Dataset
+from pkpdapp.models import BiomarkerType
 
 
 class Biomarker(models.Model):
@@ -21,10 +21,6 @@ class Biomarker(models.Model):
     )
     value = models.FloatField(help_text='value of the measurement')
     biomarker_type = models.ForeignKey(
-        BiomarkerMap, on_delete=models.CASCADE,
+        BiomarkerType, on_delete=models.CASCADE,
         help_text='biomarker type, for example "concentration in mg"'
-    )
-    dataset = models.ForeignKey(
-        Dataset, on_delete=models.CASCADE,
-        help_text='dataset containing this biomarker measurement'
     )

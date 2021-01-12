@@ -6,7 +6,7 @@
 
 from django.test import TestCase
 from pkpdapp.models import (
-    Dataset, Project, Biomarker, BiomarkerType, PkpdModel, BiomarkerMap
+    Dataset, Project, Biomarker, BiomarkerType, PkpdModel
 )
 from django.contrib.auth.models import User
 from django.utils import timezone
@@ -25,28 +25,19 @@ class TestDatasetModel(TestCase):
 
 class TestBiomarkerTypeModel(TestCase):
     def test_biomarker_type_creation(self):
-        bt = BiomarkerType.objects.create(
-            name='my_cool_biomarker_type',
-            description='description for my cool biomarker_type',
-            unit='mg',
-        )
-        self.assertTrue(isinstance(bt, BiomarkerType))
-
-
-class TestBiomarkerMapModel(TestCase):
-    def test_biomarker_map_creation(self):
         d = Dataset.objects.create(
             name='my_cool_dataset',
             datetime=timezone.now(),
             description='description for my cool biomarker',
             administration_type='T1',
         )
-        m = BiomarkerMap.objects.create(
-            name='my map',
-            biomarker_type=BiomarkerType.objects.get(name='concentration'),
+        bt = BiomarkerType.objects.create(
+            name='my_cool_biomarker_type',
+            description='description for my cool biomarker_type',
+            unit='mg',
             dataset=d,
         )
-        self.assertTrue(isinstance(m, BiomarkerMap))
+        self.assertTrue(isinstance(bt, BiomarkerType))
 
 
 class TestBiomarkerModel(TestCase):
@@ -57,17 +48,15 @@ class TestBiomarkerModel(TestCase):
             description='description for my cool biomarker',
             administration_type='T1',
         )
-        m = BiomarkerMap.objects.create(
-            name='my map',
-            biomarker_type=BiomarkerType.objects.get(name='concentration'),
+        b = BiomarkerType.objects.create(
+            name='my type',
             dataset=d,
         )
         b = Biomarker.objects.create(
             time=0.0,
             value=1.0,
             subject_id=1,
-            biomarker_type=m,
-            dataset=d,
+            biomarker_type=b
         )
         self.assertTrue(isinstance(b, Biomarker))
 
