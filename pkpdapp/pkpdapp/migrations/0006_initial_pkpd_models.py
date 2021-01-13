@@ -40,7 +40,7 @@ References
 ----------
 .. [1] Koch, G. et al. Modeling of tumor growth and anticancer effects
     of combination therapy. J Pharmacokinet Pharmacodyn 36, 179–197
-    (2009).''',
+    (2009).''',  # noqa: W605
             'model_type': 'Pharmacodynamic',
             'sbml_url':
             'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/models/tgi_Koch_2009.xml'  # noqa: E501
