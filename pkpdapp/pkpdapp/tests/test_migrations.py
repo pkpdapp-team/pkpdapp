@@ -23,6 +23,23 @@ class Test0002InitialBiomarkerTypeReverse(MigratorTestCase):
         self.assertTrue(len(new_biomarker_types.objects.all()) == 0)
 
 
+class Test0006InitialPkpdModelsReverse(MigratorTestCase):
+    migrate_from = ('pkpdapp', '0006_initial_pkpd_models')
+    migrate_to = ('pkpdapp', '0001_initial')
+
+    def prepare(self):
+        old_pkpd_models = self.old_state.apps.get_model(
+            'pkpdapp', 'PkpdModel'
+        )
+        self.assertTrue(len(old_pkpd_models.objects.all()) > 0)
+
+    def test_all_pkpd_models_are_deleted(self):
+        new_pkpd_models = self.old_state.apps.get_model(
+            'pkpdapp', 'PkpdModel'
+        )
+        self.assertTrue(len(new_pkpd_models.objects.all()) == 0)
+
+
 class Test0003InitialUsersProjectReverse(MigratorTestCase):
     migrate_from = ('pkpdapp', '0003_initial_users_and_projects')
     migrate_to = ('pkpdapp', '0001_initial')
