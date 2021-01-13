@@ -16,6 +16,7 @@ class TestDatasetModel(TestCase):
     def test_dataset_creation(self):
         d = Dataset.objects.create(
             name='my_cool_dataset',
+            datetime=timezone.now(),
             description='description for my cool dataset',
             administration_type='T1',
         )
@@ -24,10 +25,17 @@ class TestDatasetModel(TestCase):
 
 class TestBiomarkerTypeModel(TestCase):
     def test_biomarker_type_creation(self):
+        d = Dataset.objects.create(
+            name='my_cool_dataset',
+            datetime=timezone.now(),
+            description='description for my cool biomarker',
+            administration_type='T1',
+        )
         bt = BiomarkerType.objects.create(
             name='my_cool_biomarker_type',
             description='description for my cool biomarker_type',
             unit='mg',
+            dataset=d,
         )
         self.assertTrue(isinstance(bt, BiomarkerType))
 
@@ -36,14 +44,19 @@ class TestBiomarkerModel(TestCase):
     def test_biomarker_creation(self):
         d = Dataset.objects.create(
             name='my_cool_dataset',
+            datetime=timezone.now(),
             description='description for my cool biomarker',
             administration_type='T1',
         )
-        b = Biomarker.objects.create(
-            time=timezone.now(),
-            value=1.0,
-            biomarker_type=BiomarkerType.objects.get(name='concentration'),
+        b = BiomarkerType.objects.create(
+            name='my type',
             dataset=d,
+        )
+        b = Biomarker.objects.create(
+            time=0.0,
+            value=1.0,
+            subject_id=1,
+            biomarker_type=b
         )
         self.assertTrue(isinstance(b, Biomarker))
 
@@ -88,6 +101,7 @@ class TestProjectModel(TestCase):
         p = Project.objects.get(name='my_cool_project')
         d = Dataset.objects.create(
             name='my_cool_dataset',
+            datetime=timezone.now(),
             description='description for my cool dataset',
             administration_type='T1',
         )

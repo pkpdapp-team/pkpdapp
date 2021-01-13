@@ -16,6 +16,12 @@ class Dataset(models.Model):
         ('T2', 'type2'),
     ]
     name = models.CharField(max_length=100, help_text='name of the dataset')
+    datetime = models.DateTimeField(
+        help_text=(
+            'Date/time the experiment was conducted. ',
+            'All time measurements are relative to this date/time',
+        )
+    )
     description = models.TextField(
         help_text='short description of the dataset'
     )
