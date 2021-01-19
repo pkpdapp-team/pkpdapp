@@ -201,16 +201,21 @@ class PDSimulationApp(BaseApp):
         if self._model is not None:
             # This is a temporary fix! In a future issue we will handle the
             # simulation of multiple models
-            warnings.warn(
+            raise ValueError(
                 'A model has been set previously. The passed model was '
                 'therefore ignored.')
-
-            return None
 
         if not isinstance(model, erlo.PharmacodynamicModel):
             raise TypeError(
                 'Model has to be an instance of '
                 'erlotinib.PharmacodynamicModel.')
+
+        parameter_names = model.parameters()
+        for name in parameter_names:
+            if '.' in name:
+                raise ValueError(
+                    'Dots cannot be in the parameter names, or the Dash '
+                    'callback fails.')
 
         self._model = model
 
@@ -257,22 +262,9 @@ class _SlidersComponent(object):
         self._slider_groups = {}
 
     def __call__(self):
-        # Returns the contents in form of a list of dash components.
-
-        # If no sliders have been added, print a default message.
-        if not self._sliders:
-            default = [dbc.Alert(
-                "No model has been chosen.", color="primary")]
-            return default
-
-        # If sliders have not been grouped, print a default message.
-        if not self._sliders:
-            default = [dbc.Alert(
-                "Sliders have not been grouped.", color="primary")]
-            return default
-
         # Group and label sliders
         contents = self._compose_contents()
+
         return contents
 
     def _compose_contents(self):
@@ -325,14 +317,6 @@ class _SlidersComponent(object):
         step_size
             Elementary step size of slider.
         """
-        # Replace "."s by a spaces in slider_ids if present
-        # (plotly doesn't allow "." for slider_ids in callbacks)
-        if '.' in slider_id:
-            warnings.warn(
-                'Dots (.) have been removed in parameter names when creating '
-                'the sliders.')
-            slider_id = slider_id.replace(oldvalue='.', newvalue=' ')
-
         self._sliders[slider_id] = dcc.Slider(
             id=slider_id,
             value=value,
