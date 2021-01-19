@@ -12,30 +12,34 @@ https://docs.djangoproject.com/en/3.0/topics/http/views/.
 """
 
 from django.views.generic import TemplateView, DetailView
-from django.http import HttpResponseNotFound, Http404
+from django.http import Http404
 from pkpdapp.models import Project, Dataset, PkpdModel
 
 
 class IndexView(TemplateView):
     template_name = 'index.html'
 
+
 class GenericView(TemplateView):
     template_name = 'generic.html'
+
 
 class PkpdModelDetailView(DetailView):
     model = PkpdModel
     template_name = 'pkpd_model_detail.html'
 
+
 class DatasetDetailView(DetailView):
     model = Dataset
     template_name = 'dataset_detail.html'
+
 
 class ProjectDetailView(DetailView):
     """
     As per django.DetailView, by default this uses the pk argument to select a
     project.  However, if pk is not provided, then the currently logged in
     user's selected project is shown.  A project is only shown if the currently
-    logged in user is added to this project
+    logged in user has access to the project, otherwise it gives a 404 error
     """
 
     model = Project

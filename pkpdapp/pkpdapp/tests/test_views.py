@@ -70,6 +70,7 @@ class TestGenericView(SimpleTestCase):
         contents = '<h1>Generic Page - This Page is under Development</h1>'
         self.assertContains(response, contents)
 
+
 class TestDatasetView(TestCase):
     """
     Tests the dataset view.
@@ -92,6 +93,7 @@ class TestDatasetView(TestCase):
         self.assertContains(response, self.test_dataset.name)
         self.assertContains(response, self.test_dataset.description)
 
+
 class TestPkpdModelView(TestCase):
     """
     Tests the pkpd_model view.
@@ -103,12 +105,16 @@ class TestPkpdModelView(TestCase):
         )
 
     def test_view_uses_correct_template(self):
-        response = self.client.get('/pkpd_model/{}/'.format(self.test_model.id))
+        response = self.client.get(
+            '/pkpd_model/{}/'.format(self.test_model.id)
+        )
         self.assertEquals(response.status_code, 200)
         self.assertTemplateUsed(response, 'pkpd_model_detail.html')
 
     def test_index_contains_correct_html(self):
-        response = self.client.get('/pkpd_model/{}/'.format(self.test_model.id))
+        response = self.client.get(
+            '/pkpd_model/{}/'.format(self.test_model.id)
+        )
         self.assertContains(response, self.test_model.name)
         self.assertContains(response, self.test_model.description)
 

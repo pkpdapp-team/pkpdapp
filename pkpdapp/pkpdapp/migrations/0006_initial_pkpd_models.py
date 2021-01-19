@@ -65,7 +65,6 @@ References
             demo_project.pkpd_models.add(pkpd_model)
 
 
-
 def delete_pkpd_models(apps, schema_editor):
     PkpdModel = apps.get_model("pkpdapp", "PkpdModel")
     PkpdModel.objects.all().delete()
