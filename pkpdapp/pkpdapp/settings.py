@@ -153,9 +153,11 @@ STATICFILES_DIRS = [
 
 # Staticfiles finders for locating dash app assets and related files
 STATICFILES_FINDERS = [
+    # Django default finders
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 
+    # Dash default finders
     'django_plotly_dash.finders.DashAssetFinder',
     'django_plotly_dash.finders.DashComponentFinder',
     'django_plotly_dash.finders.DashAppDirectoryFinder',
