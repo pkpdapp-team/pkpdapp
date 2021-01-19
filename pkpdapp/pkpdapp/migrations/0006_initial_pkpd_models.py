@@ -48,6 +48,7 @@ References
     ]
 
     PkpdModel = apps.get_model("pkpdapp", "PkpdModel")
+    Project = apps.get_model("pkpdapp", "Project")
     for m in models:
         with urllib.request.urlopen(m['sbml_url']) as f:
             # parse as csv file
@@ -59,6 +60,10 @@ References
                 sbml=sbml_string
             )
             pkpd_model.save()
+            # add to demo project
+            demo_project = Project.objects.get(name='demo')
+            demo_project.pkpd_models.add(pkpd_model)
+
 
 
 def delete_pkpd_models(apps, schema_editor):
@@ -69,7 +74,7 @@ def delete_pkpd_models(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('pkpdapp', '0001_initial'),
+        ('pkpdapp', '0003_initial_users_and_projects'),
     ]
 
     operations = [
