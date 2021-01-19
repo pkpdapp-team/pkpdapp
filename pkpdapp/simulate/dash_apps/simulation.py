@@ -89,7 +89,7 @@ class PDSimulationApp(BaseApp):
         for parameter in parameters:
             self._sliders.add_slider(slider_id=parameter)
 
-        # Split parameters into initial values, and parameters
+        # Split parameters into initial values and parameters
         n_states = self._model._n_states
         states = parameters[:n_states]
         parameters = parameters[n_states:]
