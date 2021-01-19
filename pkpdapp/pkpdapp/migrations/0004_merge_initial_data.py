@@ -11,6 +11,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('pkpdapp', '0003_initial_users_and_projects'),
+        ('pkpdapp', '0006_initial_pkpd_models'),
         ('pkpdapp', '0005_initial_datasets'),
     ]
 
