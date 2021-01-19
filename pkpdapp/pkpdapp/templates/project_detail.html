@@ -1,0 +1,33 @@
+<!--
+This file is part of PKPDApp (https://github.com/pkpdapp-team/pkpdapp) which
+is released under the BSD 3-clause license. See accompanying LICENSE.md for
+copyright notice and full license details.
+-->
+
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block main_content %}
+<p></p>
+<h2>Project {{project.name}}</h2>
+<p>{{project.description}}</p>
+<h3>Datasets</h3>
+<ul>
+{% for dataset in project.datasets.all %}
+  <li>{{dataset.name}}: {{dataset.description|truncatewords:"10"}} </li>
+{% endfor %}
+</ul>
+<h3>Models</h3>
+<ul>
+{% for model in project.pkpd_models.all %}
+  <li>{{model.name}}: {{model.description|truncatewords:"10"}} </li>
+{% endfor %}
+</ul>
+<h3>Users</h3>
+<ul>
+{% for user in project.users.all %}
+  <li>{{user.username}}</li>
+{% endfor %}
+</ul>
+<p></p>
+{% endblock %}
