@@ -8,7 +8,9 @@ from django.test import SimpleTestCase, TestCase
 from django.core import mail
 from django.urls import reverse
 from django.contrib.auth.models import User
+from django.utils import timezone
 import re
+from pkpdapp.models import Dataset, PkpdModel, Project
 
 
 class TestIndexView(SimpleTestCase):
@@ -67,6 +69,109 @@ class TestGenericView(SimpleTestCase):
         response = self.client.get('/generic/')
         contents = '<h1>Generic Page - This Page is under Development</h1>'
         self.assertContains(response, contents)
+
+class TestDatasetView(TestCase):
+    """
+    Tests the dataset view.
+    """
+    def setUp(self):
+        self.test_dataset = Dataset.objects.create(
+            name='my_cool_dataset',
+            datetime=timezone.now(),
+            description='description for my cool dataset',
+            administration_type='T1',
+        )
+
+    def test_view_uses_correct_template(self):
+        response = self.client.get('/dataset/{}/'.format(self.test_dataset.id))
+        self.assertEquals(response.status_code, 200)
+        self.assertTemplateUsed(response, 'dataset_detail.html')
+
+    def test_index_contains_correct_html(self):
+        response = self.client.get('/dataset/{}/'.format(self.test_dataset.id))
+        self.assertContains(response, self.test_dataset.name)
+        self.assertContains(response, self.test_dataset.description)
+
+class TestPkpdModelView(TestCase):
+    """
+    Tests the pkpd_model view.
+    """
+    def setUp(self):
+        self.test_model = PkpdModel.objects.create(
+            name='my_cool_model',
+            description='description for my cool model',
+        )
+
+    def test_view_uses_correct_template(self):
+        response = self.client.get('/pkpd_model/{}/'.format(self.test_model.id))
+        self.assertEquals(response.status_code, 200)
+        self.assertTemplateUsed(response, 'pkpd_model_detail.html')
+
+    def test_index_contains_correct_html(self):
+        response = self.client.get('/pkpd_model/{}/'.format(self.test_model.id))
+        self.assertContains(response, self.test_model.name)
+        self.assertContains(response, self.test_model.description)
+
+
+class TestProjectView(TestCase):
+    """
+    Tests the project view.
+    """
+    def setUp(self):
+        self.test_model = PkpdModel.objects.create(
+            name='my_cool_model',
+            description='description for my cool model',
+        )
+        self.test_dataset = Dataset.objects.create(
+            name='my_cool_dataset',
+            datetime=timezone.now(),
+            description='description for my cool dataset',
+            administration_type='T1',
+        )
+        self.credentials = {
+            'username': 'testuser',
+            'password': 'secret',
+            'email': 'test@test.com',
+        }
+        self.test_user = User.objects.create_user(**self.credentials)
+
+        self.test_project = Project.objects.create(
+            name='my_cool_project',
+            description='description for my cool project',
+        )
+        self.test_project.datasets.add(self.test_dataset)
+        self.test_project.pkpd_models.add(self.test_model)
+        self.test_project.users.add(self.test_user)
+        self.test_user.profile.selected_project = self.test_project
+        self.test_user.profile.save(update_fields=["selected_project"])
+
+    def test_view_not_logged_in(self):
+        response = self.client.get('/project/{}/'.format(self.test_project.id))
+        self.assertEquals(response.status_code, 404)
+        response = self.client.get('/project/')
+        self.assertEquals(response.status_code, 404)
+
+    def test_view_uses_correct_template(self):
+        response = self.client.post(
+            reverse('login'), self.credentials, follow=True)
+        response = self.client.get('/project/{}/'.format(self.test_project.id))
+        self.assertEquals(response.status_code, 200)
+        self.assertTemplateUsed(response, 'project_detail.html')
+        response = self.client.get('/project/')
+        self.assertEquals(response.status_code, 200)
+        self.assertTemplateUsed(response, 'project_detail.html')
+
+    def test_index_contains_correct_html(self):
+        response = self.client.post(
+            reverse('login'), self.credentials, follow=True)
+        response = self.client.get('/project/{}/'.format(self.test_project.id))
+        self.assertContains(response, self.test_project.name)
+        self.assertContains(response, self.test_project.description)
+        self.assertContains(response, self.test_model.name)
+        self.assertContains(response, self.test_dataset.name)
+        self.assertContains(response, self.test_user.username)
+        response = self.client.get('/project/')
+        self.assertContains(response, self.test_project.name)
 
 
 class TestRegistrationViews(TestCase):

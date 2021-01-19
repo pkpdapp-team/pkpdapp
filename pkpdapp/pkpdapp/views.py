@@ -12,7 +12,7 @@ https://docs.djangoproject.com/en/3.0/topics/http/views/.
 """
 
 from django.views.generic import TemplateView, DetailView
-from django.http import HttpResponseNotFound
+from django.http import HttpResponseNotFound, Http404
 from pkpdapp.models import Project, Dataset, PkpdModel
 
 
@@ -51,10 +51,14 @@ class ProjectDetailView(DetailView):
         if queryset is None:
             queryset = self.get_queryset()
         if "pk" in self.kwargs:
-            return queryset.get(
-                id=self.kwargs.get("pk")
-            )
+            try:
+                return queryset.get(
+                    id=self.kwargs.get("pk")
+                )
+            except Project.DoesNotExist:
+                raise Http404
         else:
             if self.request.user.is_authenticated:
                 return self.request.user.profile.selected_project
-
+            else:
+                raise Http404
