@@ -8,7 +8,7 @@ from django.urls import path
 
 from . import views
 from . import (  # noqa
-    auce_dashboard
+    data_dashboard
 )
 
 app_name = 'auce'
