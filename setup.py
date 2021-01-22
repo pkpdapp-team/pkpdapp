@@ -44,6 +44,8 @@ setup(
         'pandas>=1.0',
         'plotly>=4.8',
         'whitenoise==5.0.1',
+        'django-test-migrations==1.0.0',
+        'docutils==0.16',
     ],
     dependency_links=[
         "git+git://github.com/DavAug/erlotinib.git#egg=erlotinib-latest",
