@@ -14,16 +14,11 @@ from django.conf import settings
 from django_plotly_dash import DjangoDash
 
 import dash_table
-import numpy as np
-import pandas as pd 
 import plotly
 import plotly.colors
 import plotly.graph_objects as go
 from plotly.validators.scatter.marker import SymbolValidator
 from dash.dependencies import Input, Output, State
-from scipy.optimize import curve_fit
-import myokit
-import pints
 from os import listdir
 from os.path import isfile, join
 
@@ -46,7 +41,7 @@ auce_vs_concentration_fig.data = []
 
 app = DjangoDash('data_dashboard') 
 
-colors = plotly.colors.qualitative.Plotly[:1000]
+colors = plotly.colors.qualitative.Plotly
 symbols = SymbolValidator().values
 
 
