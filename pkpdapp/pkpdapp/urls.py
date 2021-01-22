@@ -23,16 +23,18 @@ urlpatterns = [
     path('admin/doc/', include('django.contrib.admindocs.urls')),
     path('admin/', admin.site.urls),
     path('accounts/', include('django.contrib.auth.urls')),
-    path('explore_data/', include('explore_data.urls')),
-    path('generic/', views.GenericView.as_view(), name='generic'),
-    path('simulate/', include('simulate.urls')),
-    path('django_plotly_dash/', include('django_plotly_dash.urls')),
     path('dataset/<int:pk>/',
          views.DatasetDetailView.as_view(), name='dataset-detail'),
+    path('explore_data/', include('explore_data.urls')),
     path('pkpd_model/<int:pk>/',
          views.PkpdModelDetailView.as_view(), name='pkpd_model-detail'),
     path('project/<int:pk>/',
          views.ProjectDetailView.as_view(), name='project-detail'),
     path('project/',
          views.ProjectDetailView.as_view(), name='selected-project-detail'),
+    path('simulate/', include('simulate.urls')),
+
+    path('generic/', views.GenericView.as_view(), name='generic'),
+    path('django_plotly_dash/', include('django_plotly_dash.urls')),
+
 ]
