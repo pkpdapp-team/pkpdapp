@@ -41,4 +41,4 @@ jobs:
           
       - name: run unit tests
         run: |
-          python pkpdapp/manage.py test pkpdapp
+          cd pkpdapp && python manage.py test
