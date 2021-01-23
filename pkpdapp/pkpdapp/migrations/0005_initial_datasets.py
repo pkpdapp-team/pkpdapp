@@ -42,6 +42,7 @@ def load_datasets(apps, schema_editor):
     Dataset = apps.get_model("pkpdapp", "Dataset")
     Biomarker = apps.get_model("pkpdapp", "Biomarker")
     BiomarkerType = apps.get_model("pkpdapp", "BiomarkerType")
+    Project = apps.get_model("pkpdapp", "Project")
 
     # create the dataset
     dataset = Dataset(
@@ -51,6 +52,10 @@ def load_datasets(apps, schema_editor):
         administration_type='type1',
     )
     dataset.save()
+
+    # add to demo project
+    demo_project = Project.objects.get(name='demo')
+    demo_project.datasets.add(dataset)
 
     # find the index of the biomarker type, so we don't have to keep looking it
     # up
@@ -102,7 +107,7 @@ def delete_datasets(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('pkpdapp', '0001_initial'),
+        ('pkpdapp', '0003_initial_users_and_projects'),
     ]
 
     operations = [

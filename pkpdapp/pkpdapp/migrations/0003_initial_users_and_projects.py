@@ -32,14 +32,13 @@ def load_users_and_projects(apps, schema_editor):
             username=u['username'],
             password=make_password(u['password']),
         )
-        user.save()
 
         for p in u['projects']:
             project = Project.objects.create(
                 name=p['name'],
                 description=p['description'],
             )
-            project.save()
+            project.users.add(user)
 
         project = Project.objects.get(name=u['selected_project'])
         profile = Profile(
