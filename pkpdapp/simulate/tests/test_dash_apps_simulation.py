@@ -12,7 +12,6 @@ import plotly.graph_objects as go
 from ..dash_apps.simulation import PDSimulationApp
 
 
-
 class TestPDSimulationApp(unittest.TestCase):
     """
     Tests the PDSimulationApp.
