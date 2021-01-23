@@ -11,6 +11,11 @@ import django_plotly_dash as dpd
 class BaseApp(object):
     """
     Base class for applications.
+
+    Parameters
+    ----------
+    optional name
+        Name of the app which is used as reference in HTML templates.
     """
 
     def __init__(self, name):

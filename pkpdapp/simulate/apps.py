@@ -10,7 +10,13 @@ import erlotinib as erlo
 
 from .dash_apps.simulation import PDSimulationApp
 
-# Get data and model
+
+class SimulateConfig(AppConfig):
+    name = 'simulate'
+
+
+# Define Dash apps that are part of the simulate app
+# Get data and model (temporary, will be replaced by database callback)
 data = erlo.DataLibrary().lung_cancer_control_group()
 path = erlo.ModelLibrary().tumour_growth_inhibition_model_koch()
 model = erlo.PharmacodynamicModel(path)
@@ -21,8 +27,8 @@ model.set_parameter_names(names={
     'myokit.lambda_0': 'Exponential growth rate in 1/day',
     'myokit.lambda_1': 'Linear growth rate in cm^3/day'})
 
-# Set up demo app
-app = PDSimulationApp()
+# Set up dash app
+app = PDSimulationApp(name='simulation-app')
 app.add_model(model)
 app.add_data(data, biomarker='Tumour volume')
 
@@ -42,7 +48,3 @@ def update_simulation(*args):
     fig = app.update_simulation(parameters)
 
     return fig
-
-
-class SimulateConfig(AppConfig):
-    name = 'simulate'

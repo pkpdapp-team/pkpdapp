@@ -23,7 +23,7 @@ class TestPDSimulationApp(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # Define test app
-        cls.app = PDSimulationApp()
+        cls.app = PDSimulationApp(name='Test')
 
     def test_add_data(self):
         # Add data and check that it doesn't break
@@ -47,7 +47,7 @@ class TestPDSimulationApp(unittest.TestCase):
     def test_add_model_bad_input(self):
         # Model has wrong type
         model = 'Bad type'
-        app = PDSimulationApp()
+        app = PDSimulationApp(name='Test')
         with self.assertRaisesRegex(TypeError, 'Model has to be an instance'):
             app.add_model(model)
 

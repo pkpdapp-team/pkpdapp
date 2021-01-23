@@ -22,11 +22,15 @@ class PDSimulationApp(BaseApp):
     the simulation.
 
     Extends :class:`BaseApp`.
+
+    Parameters
+    ----------
+    optional name
+        Name of the app which is used as reference in HTML templates.
     """
 
-    def __init__(self):
-        super(PDSimulationApp, self).__init__(
-            name='SimulationApp')
+    def __init__(self, name):
+        super(PDSimulationApp, self).__init__(name)
 
         # Instantiate figure and sliders
         self._fig = erlo.plots.PDTimeSeriesPlot(updatemenu=False)
