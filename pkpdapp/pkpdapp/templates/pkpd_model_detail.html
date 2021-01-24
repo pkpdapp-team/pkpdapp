@@ -6,13 +6,14 @@ copyright notice and full license details.
 
 {% extends "base/base.html" %}
 {% load static %}
+{% load markdownify %}
 
 {% block main_content %}
 <p></p>
 <h2>PkpdModel {{object.name}}</h2>
-<p>{{object.description}}</p>
+{{object.description|markdownify}}
 <h3>SBML</h3>
-<p>{{object.sbml}}</p>
+<pre>{{object.sbml}}</pre>
 <ul>
 <p></p>
 {% endblock %}

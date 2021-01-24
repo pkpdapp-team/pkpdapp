@@ -47,11 +47,45 @@ INSTALLED_APPS = [
     # external apps
     'django_plotly_dash.apps.DjangoPlotlyDashConfig',
     'dpd_static_support',
+    'markdownify',
 
     # internal apps
     'explore_data.apps.ExploreDataConfig',
     'pkpdapp',
     'simulate.apps.SimulateConfig',
+]
+
+MARKDOWNIFY_MARKDOWN_EXTENSIONS = [
+    'mdx_math',
+]
+
+MARKDOWNIFY_WHITELIST_TAGS = [
+    'a',
+    'abbr',
+    'acronym',
+    'b',
+    'blockquote',
+    'em',
+    'i',
+    'li',
+    'ol',
+    'p',
+    'strong',
+    'ul',
+    'h',
+    'script',
+]
+
+MARKDOWNIFY_WHITELIST_ATTRS = [
+    'href',
+    'src',
+    'alt',
+    'type',
+]
+
+MARKDOWNIFY_WHITELIST_STYLES = [
+    'color',
+    'font-weight',
 ]
 
 MIDDLEWARE = [

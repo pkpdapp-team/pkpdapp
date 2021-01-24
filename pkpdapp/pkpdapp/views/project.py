@@ -4,34 +4,9 @@
 # copyright notice and full license details.
 #
 
-"""
-Views of the pkpdapp project.
-
-For more information please see
-https://docs.djangoproject.com/en/3.0/topics/http/views/.
-"""
-
-from django.views.generic import TemplateView, DetailView
+from django.views.generic import DetailView
+from pkpdapp.models import Project
 from django.http import Http404
-from pkpdapp.models import Project, Dataset, PkpdModel
-
-
-class IndexView(TemplateView):
-    template_name = 'index.html'
-
-
-class GenericView(TemplateView):
-    template_name = 'generic.html'
-
-
-class PkpdModelDetailView(DetailView):
-    model = PkpdModel
-    template_name = 'pkpd_model_detail.html'
-
-
-class DatasetDetailView(DetailView):
-    model = Dataset
-    template_name = 'dataset_detail.html'
 
 
 class ProjectDetailView(DetailView):

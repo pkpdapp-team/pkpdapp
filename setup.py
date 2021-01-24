@@ -45,5 +45,7 @@ setup(
         'whitenoise==5.0.1',
         'django-test-migrations==1.0.0',
         'docutils==0.16',
+        'django-pivot==1.8.1',
+        'django-markdownify==0.8.2',
     ],
 )

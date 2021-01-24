@@ -35,7 +35,7 @@ copyright notice and full license details.
             {% if user.is_authenticated %}
             <li class="nav-item mr-2">
               <div class="form-inline">
-                <label for="projectSelect">Project:</label>
+                <label for="projectSelect"><a href="/project/">Project:</a></label>
                 <select class="form-control mx-2" id="projectSelect">
                   <option selected>{{ user.profile.selected_project.name }}</option>
             
