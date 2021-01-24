@@ -82,11 +82,35 @@ class TestDatasetView(TestCase):
             description='description for my cool dataset',
             administration_type='T1',
         )
+        self.test_dataset2 = Dataset.objects.create(
+            name='my_cool_dataset2',
+            datetime=timezone.now(),
+            description='description for my cool dataset',
+            administration_type='T1',
+        )
 
     def test_view_uses_correct_template(self):
         response = self.client.get('/dataset/{}/'.format(self.test_dataset.id))
         self.assertEquals(response.status_code, 200)
         self.assertTemplateUsed(response, 'dataset_detail.html')
+
+    def test_update_form(self):
+        response = self.client.get('/dataset/{}/update'.format(self.test_dataset.id))
+        self.assertEquals(response.status_code, 200)
+        self.assertTemplateUsed(response, 'dataset_form.html')
+        self.assertContains(response, self.test_dataset.name)
+
+    def test_add_form(self):
+        response = self.client.get('/dataset/add'.format(self.test_dataset.id))
+        self.assertEquals(response.status_code, 200)
+        self.assertTemplateUsed(response, 'dataset_form.html')
+        self.assertContains(response, 'Add new dataset')
+
+    def test_delete_form(self):
+        response = self.client.get('/pkpd_model/{}/delete'.format(self.test_dataset2.id))
+        self.assertEquals(response.status_code, 200)
+        self.assertTemplateUsed(response, 'dataset_confirm_delete.html')
+        Dataset.objects.get(id=self.test_dataset2.id)
 
     def test_index_contains_correct_html(self):
         response = self.client.get('/dataset/{}/'.format(self.test_dataset.id))
@@ -103,6 +127,28 @@ class TestPkpdModelView(TestCase):
             name='my_cool_model',
             description='description for my cool model',
         )
+        self.test_model2 = PkpdModel.objects.create(
+            name='my_cool_model2',
+            description='description for my cool model',
+        )
+
+    def test_update_form(self):
+        response = self.client.get('/pkpd_model/{}/update'.format(self.test_model.id))
+        self.assertEquals(response.status_code, 200)
+        self.assertTemplateUsed(response, 'pkpd_model_form.html')
+        self.assertContains(response, self.test_model.name)
+
+    def test_add_form(self):
+        response = self.client.get('/dataset/add'.format(self.test_model.id))
+        self.assertEquals(response.status_code, 200)
+        self.assertTemplateUsed(response, 'pkpd_model_form.html')
+        self.assertContains(response, 'Add new model')
+
+    def test_delete_form(self):
+        response = self.client.get('/pkpd_model/{}/delete'.format(self.test_model2.id))
+        self.assertEquals(response.status_code, 200)
+        self.assertTemplateUsed(response, 'pkpd_model_confirm_delete.html')
+        PkpdModel.objects.get(id=self.test_model2.id)
 
     def test_view_uses_correct_template(self):
         response = self.client.get(
@@ -145,11 +191,33 @@ class TestProjectView(TestCase):
             name='my_cool_project',
             description='description for my cool project',
         )
+        self.test_project2 = Project.objects.create(
+            name='my_cool_project2',
+            description='description for my cool project2',
+        )
         self.test_project.datasets.add(self.test_dataset)
         self.test_project.pkpd_models.add(self.test_model)
         self.test_project.users.add(self.test_user)
         self.test_user.profile.selected_project = self.test_project
         self.test_user.profile.save(update_fields=["selected_project"])
+
+    def test_update_form(self):
+        response = self.client.get('/project/{}/update'.format(self.test_project.id))
+        self.assertEquals(response.status_code, 200)
+        self.assertTemplateUsed(response, 'project_form.html')
+        self.assertContains(response, self.test_project.name)
+
+    def test_add_form(self):
+        response = self.client.get('/project/add'.format(self.test_project.id))
+        self.assertEquals(response.status_code, 200)
+        self.assertTemplateUsed(response, 'project_form.html')
+        self.assertContains(response, 'Add new project')
+
+    def test_delete_form(self):
+        response = self.client.get('/project/{}/delete'.format(self.test_project2.id))
+        self.assertEquals(response.status_code, 200)
+        self.assertTemplateUsed(response, 'project_confirm_delete.html')
+        Project.objects.get(id=self.test_project2.id)
 
     def test_view_not_logged_in(self):
         response = self.client.get('/project/{}/'.format(self.test_project.id))
