@@ -47,5 +47,6 @@ setup(
         'docutils==0.16',
         'django-pivot==1.8.1',
         'django-markdownify==0.8.2',
+        'python-markdown-math==0.8',
     ],
 )
