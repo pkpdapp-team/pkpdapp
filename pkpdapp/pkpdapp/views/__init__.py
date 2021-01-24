@@ -3,6 +3,7 @@
 # is released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
+# flake8: noqa F401
 
 """
 Views of the pkpdapp project.
@@ -16,18 +17,18 @@ from .project import (
     ProjectCreate,
     ProjectDelete,
     ProjectUpdate,
-)  # noqa: F401
+)
 from .dataset import (
     DatasetDetailView,
     DatasetCreate,
     DatasetDelete,
     DatasetUpdate,
-)  # noqa: F401
-from .index import IndexView  # noqa: F401
-from .generic import GenericView  # noqa: F401
+)
+from .index import IndexView
+from .generic import GenericView
 from .pkpd_model import (
     PkpdModelDetailView,
     PkpdModelCreate,
     PkpdModelDelete,
     PkpdModelUpdate,
-)  # noqa: F401
+)

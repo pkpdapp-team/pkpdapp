@@ -43,15 +43,18 @@ class ProjectDetailView(DetailView):
             else:
                 raise Http404
 
+
 class ProjectCreate(CreateView):
     model = Project
     template_name = 'project_form.html'
     fields = ['name', 'description', 'users']
 
+
 class ProjectUpdate(UpdateView):
     model = Project
     template_name = 'project_form.html'
     fields = ['name', 'description', 'users']
+
 
 class ProjectDelete(DeleteView):
     model = Project

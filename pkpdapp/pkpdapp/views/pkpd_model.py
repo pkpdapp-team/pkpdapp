@@ -13,13 +13,16 @@ class PkpdModelDetailView(DetailView):
     model = PkpdModel
     template_name = 'pkpd_model_detail.html'
 
+
 class PkpdModelCreate(CreateView):
     model = PkpdModel
     fields = ['name', 'description']
 
+
 class PkpdModelUpdate(UpdateView):
     model = PkpdModel
     fields = ['name', 'description']
+
 
 class PkpdModelDelete(DeleteView):
     model = PkpdModel

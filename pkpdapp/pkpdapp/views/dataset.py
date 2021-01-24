@@ -24,13 +24,16 @@ class DatasetDetailView(DetailView):
         )
         return context
 
+
 class DatasetCreate(CreateView):
     model = Dataset
     fields = ['name', 'description']
 
+
 class DatasetUpdate(UpdateView):
     model = Dataset
     fields = ['name', 'description']
+
 
 class DatasetDelete(DeleteView):
     model = Dataset
