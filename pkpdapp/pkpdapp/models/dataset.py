@@ -5,6 +5,7 @@
 #
 
 from django.db import models
+from django.urls import reverse
 
 
 class Dataset(models.Model):
@@ -29,3 +30,8 @@ class Dataset(models.Model):
         max_length=2, choices=ADMINISTRATION_TYPE_CHOICES,
         help_text='method of drug administration'
     )
+
+    def get_absolute_url(self):
+        return reverse('dataset-detail', kwargs={'pk': self.pk})
+
+

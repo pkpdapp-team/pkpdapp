@@ -11,6 +11,7 @@ copyright notice and full license details.
 {% block main_content %}
 <p></p>
 <h2>Dataset {{dataset.name}}</h2>
+(<a href="{% url 'dataset-update' dataset.id %}"> Update </a>)
 <p>{{dataset.description|markdownify}}</p>
 <h3>Biomarker Types</h2>
 <ul>

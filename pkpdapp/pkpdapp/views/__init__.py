@@ -11,8 +11,23 @@ For more information please see
 https://docs.djangoproject.com/en/3.0/topics/http/views/.
 """
 
-from .project import ProjectDetailView  # noqa: F401
-from .dataset import DatasetDetailView  # noqa: F401
+from .project import (
+    ProjectDetailView,
+    ProjectCreate,
+    ProjectDelete,
+    ProjectUpdate,
+)  # noqa: F401
+from .dataset import (
+    DatasetDetailView,
+    DatasetCreate,
+    DatasetDelete,
+    DatasetUpdate,
+)  # noqa: F401
 from .index import IndexView  # noqa: F401
 from .generic import GenericView  # noqa: F401
-from .pkpd_model import PkpdModelDetailView  # noqa: F401
+from .pkpd_model import (
+    PkpdModelDetailView,
+    PkpdModelCreate,
+    PkpdModelDelete,
+    PkpdModelUpdate,
+)  # noqa: F401

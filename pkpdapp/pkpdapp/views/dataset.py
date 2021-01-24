@@ -3,7 +3,8 @@
 # is released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-from django.views.generic import DetailView
+from django.views.generic import DetailView, CreateView, UpdateView, DeleteView
+from django.urls import reverse_lazy
 from pkpdapp.models import Dataset, Biomarker, BiomarkerType
 
 
@@ -22,3 +23,15 @@ class DatasetDetailView(DetailView):
             dataset=context['dataset']
         )
         return context
+
+class DatasetCreate(CreateView):
+    model = Dataset
+    fields = ['name']
+
+class DatasetUpdate(UpdateView):
+    model = Dataset
+    fields = ['name']
+
+class DatasetDelete(DeleteView):
+    model = Dataset
+    success_url = reverse_lazy('dataset-list')

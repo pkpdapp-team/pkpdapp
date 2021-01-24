@@ -5,8 +5,9 @@
 #
 
 from django.db import models
-from pkpdapp.models import Dataset, PkpdModel
 from django.contrib.auth.models import User
+from django.urls import reverse
+from pkpdapp.models import Dataset, PkpdModel
 
 
 class Project(models.Model):
@@ -29,3 +30,8 @@ class Project(models.Model):
         User,
         help_text='users with access to this project'
     )
+
+    def get_absolute_url(self):
+        return reverse('project-detail', kwargs={'pk': self.pk})
+
+
