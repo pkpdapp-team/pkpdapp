@@ -17,13 +17,16 @@ class PkpdModelDetailView(DetailView):
 class PkpdModelCreate(CreateView):
     model = PkpdModel
     fields = ['name', 'description']
+    template_name = 'pkpd_model_form.html'
 
 
 class PkpdModelUpdate(UpdateView):
     model = PkpdModel
     fields = ['name', 'description']
+    template_name = 'pkpd_model_form.html'
 
 
 class PkpdModelDelete(DeleteView):
     model = PkpdModel
     success_url = reverse_lazy('pkpd_model-list')
+    template_name = 'pkpd_model_confirm_delete.html'

@@ -28,13 +28,16 @@ class DatasetDetailView(DetailView):
 class DatasetCreate(CreateView):
     model = Dataset
     fields = ['name', 'description']
+    template_name = 'dataset_form.html'
 
 
 class DatasetUpdate(UpdateView):
     model = Dataset
     fields = ['name', 'description']
+    template_name = 'dataset_form.html'
 
 
 class DatasetDelete(DeleteView):
     model = Dataset
     success_url = reverse_lazy('dataset-list')
+    template_name = 'dataset_confirm_delete.html'
