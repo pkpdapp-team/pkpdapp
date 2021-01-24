@@ -15,11 +15,11 @@ class PkpdModelDetailView(DetailView):
 
 class PkpdModelCreate(CreateView):
     model = PkpdModel
-    fields = ['name']
+    fields = ['name', 'description']
 
 class PkpdModelUpdate(UpdateView):
     model = PkpdModel
-    fields = ['name']
+    fields = ['name', 'description']
 
 class PkpdModelDelete(DeleteView):
     model = PkpdModel

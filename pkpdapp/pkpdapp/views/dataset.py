@@ -26,11 +26,11 @@ class DatasetDetailView(DetailView):
 
 class DatasetCreate(CreateView):
     model = Dataset
-    fields = ['name']
+    fields = ['name', 'description']
 
 class DatasetUpdate(UpdateView):
     model = Dataset
-    fields = ['name']
+    fields = ['name', 'description']
 
 class DatasetDelete(DeleteView):
     model = Dataset
