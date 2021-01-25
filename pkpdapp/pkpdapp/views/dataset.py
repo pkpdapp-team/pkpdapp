@@ -12,6 +12,8 @@ from django.conf import settings
 import pandas as pd
 from django.contrib import messages
 
+BASE_FILE_UPLOAD_ERROR = 'FILE UPLOAD FAILED: '
+
 
 class DatasetDetailView(DetailView):
     model = Dataset
@@ -47,13 +49,32 @@ def upload(request):
     if request.method == 'POST':
         uploaded_file = request.FILES['document']
         if not uploaded_file.name.endswith('.csv'):
-            messages.error(request, 'FILE UPLOAD FAILED: THIS IS NOT A CSV FILE.')
+            messages.error(request,
+                           BASE_FILE_UPLOAD_ERROR + 'THIS IS NOT A CSV FILE.')
             return render(request, 'upload.html', context)
         path = settings.MEDIA_ROOT
+        data = pd.read_csv(uploaded_file)
+        colnames = list(data.columns)
+        if len(colnames) > 4:
+            messages.error(request,
+                           BASE_FILE_UPLOAD_ERROR +
+                           'THIS FILE HAS TOO MANY COLUMNS. ' +
+                           'IT SHOULD ONLY HAVE: id, time, measurement, dose')
+            return render(request, 'upload.html', context)
+
+        required_cols = ['id', 'time', 'measurement', 'dose']
+        error_cols = []
+        error_string = (BASE_FILE_UPLOAD_ERROR +
+                        'FILE DOES NOT CONTAIN: ')
+        for col in required_cols:
+            if col not in colnames:
+                error_cols.append(col)
+        if len(error_cols) > 0:
+            messages.error(request,
+                           error_string + ', '.join(error_cols))
+            return render(request, 'upload.html', context)
         fs = FileSystemStorage(location=path + '/data/')
         name = fs.save(uploaded_file.name, uploaded_file)
-        data = pd.read_csv(path + '/data/' + uploaded_file.name)
-        print(list(data.columns))
         context['url'] = fs.url(name)
     return render(request, 'upload.html', context)
 
