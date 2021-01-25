@@ -9,6 +9,8 @@ from django.urls import reverse_lazy
 from pkpdapp.models import Dataset, Biomarker, BiomarkerType
 from django.core.files.storage import FileSystemStorage
 from django.conf import settings
+import pandas as pd
+from django.contrib import messages
 
 
 class DatasetDetailView(DetailView):
@@ -41,12 +43,19 @@ class DatasetUpdate(UpdateView):
 
 
 def upload(request):
+    context = {}
     if request.method == 'POST':
         uploaded_file = request.FILES['document']
+        if not uploaded_file.name.endswith('.csv'):
+            messages.error(request, 'FILE UPLOAD FAILED: THIS IS NOT A CSV FILE.')
+            return render(request, 'upload.html', context)
         path = settings.MEDIA_ROOT
         fs = FileSystemStorage(location=path + '/data/')
-        fs.save(uploaded_file.name, uploaded_file)
-    return render(request, 'upload.html')
+        name = fs.save(uploaded_file.name, uploaded_file)
+        data = pd.read_csv(path + '/data/' + uploaded_file.name)
+        print(list(data.columns))
+        context['url'] = fs.url(name)
+    return render(request, 'upload.html', context)
 
 
 class DatasetDelete(DeleteView):
