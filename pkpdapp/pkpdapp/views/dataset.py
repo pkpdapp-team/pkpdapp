@@ -76,6 +76,10 @@ def upload(request):
         fs = FileSystemStorage(location=path + '/data/')
         name = fs.save(uploaded_file.name, uploaded_file)
         context['url'] = fs.url(name)
+        num_rows = len(data)
+        if num_rows > 20:
+            data = data[:20]
+        context['df_html'] = data.to_html()
     return render(request, 'upload.html', context)
 
 

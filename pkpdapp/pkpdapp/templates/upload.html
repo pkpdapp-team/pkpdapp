@@ -25,5 +25,13 @@ copyright notice and full license details.
         {% endfor %}
     </ul>
   {% endif %}
+  {% if df_html %}
+    <p>
+      Uploaded file (max 20 rows shown):
+    </p>
+    {% autoescape off %}
+        {{ df_html }}
+    {% endautoescape %}
+  {% endif %}
 
 {% endblock %}
