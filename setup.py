@@ -34,16 +34,20 @@ setup(
 
     # List of dependencies
     install_requires=[
+        'dash-bootstrap-components>=0.10',
         'Django==3.0.7',
-        'django_plotly_dash==1.3.1',
-        'dpd-static-support==0.0.5',
-        'myokit>=1.31',
+        'django-bootstrap4>=2.2',
+        'django_plotly_dash>=1.3',
+        'dpd-static-support>=0.0.5',
+        'erlotinib @ git+git://github.com/DavAug/erlotinib.git#egg=erlotinib',
         'numpy>=1.8',
-        'pandas==1.0.3',
-        'pints>=0.3',
-        'plotly==4.8.1',
+        'pandas>=1.0',
+        'plotly>=4.8',
         'whitenoise==5.0.1',
         'django-test-migrations==1.0.0',
         'docutils==0.16',
+    ],
+    dependency_links=[
+        "git+git://github.com/DavAug/erlotinib.git#egg=erlotinib-latest",
     ],
 )

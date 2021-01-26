@@ -38,7 +38,7 @@ jobs:
           python pkpdapp/manage.py collectstatic
       - name: run coverage
         run: |
-          coverage run pkpdapp/manage.py test pkpdapp
+          cd pkpdapp && coverage run manage.py test
       - name: codecov
         if: success()
         env:
