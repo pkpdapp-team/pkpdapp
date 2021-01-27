@@ -1,0 +1,8 @@
+[run]
+source = .
+omit =
+    */apps.py
+    */tests/*
+    manage.py
+    pkpdapp/asgi.py
+    pkpdapp/wsgi.py
