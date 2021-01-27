@@ -90,6 +90,13 @@ class TestDatasetView(TestCase):
             administration_type='T1',
         )
 
+    def test_list_view(self):
+        response = self.client.get(reverse('dataset-list'))
+        self.assertEquals(response.status_code, HTTPStatus.OK)
+        self.assertTemplateUsed(response, 'dataset_list.html')
+        self.assertContains(response, self.test_dataset.name)
+        self.assertContains(response, self.test_dataset2.name)
+
     def test_update_form(self):
         response = self.client.get(
             reverse('dataset-update', args=[self.test_dataset.id])
@@ -182,6 +189,13 @@ class TestPkpdModelView(TestCase):
             name='my_cool_model2',
             description='description for my cool model',
         )
+
+    def test_list_view(self):
+        response = self.client.get(reverse('pkpd_model-list'))
+        self.assertEquals(response.status_code, HTTPStatus.OK)
+        self.assertTemplateUsed(response, 'pkpd_model_list.html')
+        self.assertContains(response, self.test_model.name)
+        self.assertContains(response, self.test_model2.name)
 
     def test_update_form(self):
         response = self.client.get(
@@ -298,6 +312,13 @@ class TestProjectView(TestCase):
         self.test_project.users.add(self.test_user)
         self.test_user.profile.selected_project = self.test_project
         self.test_user.profile.save(update_fields=["selected_project"])
+
+    def test_list_view(self):
+        response = self.client.get(reverse('project-list'))
+        self.assertEquals(response.status_code, HTTPStatus.OK)
+        self.assertTemplateUsed(response, 'project_list.html')
+        self.assertContains(response, self.test_project.name)
+        self.assertContains(response, self.test_project2.name)
 
     def test_update_form(self):
         response = self.client.post(
