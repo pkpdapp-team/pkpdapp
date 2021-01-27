@@ -4,7 +4,11 @@
 # copyright notice and full license details.
 #
 
-from django.views.generic import DetailView, CreateView, UpdateView, DeleteView
+from django.views.generic import (
+    DetailView, CreateView,
+    UpdateView, DeleteView,
+    ListView
+)
 from django.urls import reverse_lazy
 from pkpdapp.models import PkpdModel
 
@@ -12,6 +16,11 @@ from pkpdapp.models import PkpdModel
 class PkpdModelDetailView(DetailView):
     model = PkpdModel
     template_name = 'pkpd_model_detail.html'
+
+
+class PkpdModelListView(ListView):
+    model = PkpdModel
+    template_name = 'pkpd_model_list.html'
 
 
 class PkpdModelCreate(CreateView):

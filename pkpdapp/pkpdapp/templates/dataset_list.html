@@ -1,0 +1,23 @@
+<!--
+This file is part of PKPDApp (https://github.com/pkpdapp-team/pkpdapp) which
+is released under the BSD 3-clause license. See accompanying LICENSE.md for
+copyright notice and full license details.
+-->
+
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block main_content %}
+<h1>Dataset List</h1>
+{% if dataset_list %}
+  <ul>
+    {% for dataset in dataset_list %}
+      <li>
+        <a href="{{ dataset.get_absolute_url }}">{{ dataset.name}}</a> 
+      </li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <p>There are no datasets in the database.</p>
+{% endif %} 
+{% endblock %}

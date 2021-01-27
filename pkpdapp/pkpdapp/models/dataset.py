@@ -6,6 +6,7 @@
 
 from django.db import models
 from django.urls import reverse
+from django.utils import timezone
 
 
 class Dataset(models.Model):
@@ -18,9 +19,10 @@ class Dataset(models.Model):
     ]
     name = models.CharField(max_length=100, help_text='name of the dataset')
     datetime = models.DateTimeField(
+        default=timezone.now,
         help_text=(
-            'Date/time the experiment was conducted. ',
-            'All time measurements are relative to this date/time',
+            'Date/time the experiment was conducted. '
+            'All time measurements are relative to this date/time'
         )
     )
     description = models.TextField(
@@ -33,3 +35,6 @@ class Dataset(models.Model):
 
     def get_absolute_url(self):
         return reverse('dataset-detail', kwargs={'pk': self.pk})
+
+    def __str__(self):
+        return self.name

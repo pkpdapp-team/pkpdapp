@@ -4,7 +4,11 @@
 # copyright notice and full license details.
 #
 
-from django.views.generic import DetailView, CreateView, UpdateView, DeleteView
+from django.views.generic import (
+    DetailView, CreateView,
+    UpdateView, DeleteView,
+    ListView
+)
 from django.urls import reverse_lazy
 from pkpdapp.models import Project
 from django.http import Http404
@@ -42,6 +46,11 @@ class ProjectDetailView(DetailView):
                 return self.request.user.profile.selected_project
             else:
                 raise Http404
+
+
+class ProjectListView(ListView):
+    model = Project
+    template_name = 'project_list.html'
 
 
 class ProjectCreate(CreateView):
