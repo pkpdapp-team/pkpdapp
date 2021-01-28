@@ -58,7 +58,7 @@ def create(request):
                 messages.error(request,
                                BASE_FILE_UPLOAD_ERROR +
                                'THIS IS NOT A CSV FILE.')
-                return render(request, 'create_dataset.html',
+                return render(request, 'dataset_create.html',
                               {"form": form, "context": context})
 
             # error in file content
@@ -70,7 +70,7 @@ def create(request):
                     BASE_FILE_UPLOAD_ERROR +
                     'THIS FILE HAS TOO MANY COLUMNS. ' +
                     'IT SHOULD ONLY HAVE: id, time, measurement, dose')
-                return render(request, 'create_dataset.html',
+                return render(request, 'dataset_create.html',
                               {"form": form, "context": context})
             required_cols = ['id', 'time', 'measurement', 'dose']
             error_cols = []
@@ -94,45 +94,8 @@ def create(request):
 
     else:
         form = CreateNewDataset()
-    return render(request, 'create_dataset.html',
+    return render(request, 'dataset_create.html',
                   {"form": form, "context": context})
-
-
-def upload(request):
-    context = {}
-    if request.method == 'POST':
-        if len(request.FILES) == 0:
-            messages.error(request,
-                           BASE_FILE_UPLOAD_ERROR + 'NO FILE SELECTED.')
-            return render(request, 'upload.html', context)
-        uploaded_file = request.FILES['document']
-        if not uploaded_file.name.endswith('.csv'):
-            messages.error(request,
-                           BASE_FILE_UPLOAD_ERROR + 'THIS IS NOT A CSV FILE.')
-            return render(request, 'upload.html', context)
-        data = pd.read_csv(uploaded_file)
-        colnames = list(data.columns)
-        if len(colnames) > 4:
-            messages.error(request,
-                           BASE_FILE_UPLOAD_ERROR +
-                           'THIS FILE HAS TOO MANY COLUMNS. ' +
-                           'IT SHOULD ONLY HAVE: id, time, measurement, dose')
-            return render(request, 'upload.html', context)
-
-        required_cols = ['id', 'time', 'measurement', 'dose']
-        error_cols = []
-        error_string = (BASE_FILE_UPLOAD_ERROR +
-                        'FILE DOES NOT CONTAIN: ')
-        for col in required_cols:
-            if col not in colnames:
-                error_cols.append(col)
-        if len(error_cols) > 0:
-            messages.error(request,
-                           error_string + ', '.join(error_cols))
-            return render(request, 'upload.html', context)
-        context['url'] = uploaded_file.name
-        context['df_html'] = data.to_html()
-    return render(request, 'upload.html', context)
 
 
 class DatasetDelete(DeleteView):

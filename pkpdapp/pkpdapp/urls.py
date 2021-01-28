@@ -31,7 +31,6 @@ urlpatterns = [
 
     path('dataset/add/', views.DatasetCreate.as_view(), name='dataset-add'),
     path('dataset/create/', views.dataset.create, name='dataset-create'),
-    path('dataset/upload/', views.dataset.upload, name='dataset-upload'),
     path(
         'dataset/<int:pk>/update/',
         views.DatasetUpdate.as_view(),
