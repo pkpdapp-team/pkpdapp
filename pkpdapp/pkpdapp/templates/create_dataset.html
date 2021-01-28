@@ -1,0 +1,28 @@
+<!--
+This file is part of PKPDApp (https://github.com/pkpdapp-team/pkpdapp) which
+is released under the BSD 3-clause license. See accompanying LICENSE.md for
+copyright notice and full license details.
+-->
+
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block main_content %}
+
+<form enctype="multipart/form-data" method="post">
+  {% csrf_token %}
+  <table>
+  {{ form.as_table }}
+  </table>
+  <input type="submit" value="Submit">
+</form>
+{% if messages %}
+  <ul class="messages">
+      {% for message in messages %}
+      <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+      {% endfor %}
+  </ul>
+{% endif %}
+
+
+{% endblock %}

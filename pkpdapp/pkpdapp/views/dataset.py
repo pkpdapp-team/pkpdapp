@@ -7,8 +7,7 @@ from django.shortcuts import render
 from django.views.generic import DetailView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
 from pkpdapp.models import Dataset, Biomarker, BiomarkerType
-from django.core.files.storage import FileSystemStorage
-from django.conf import settings
+from ..forms import CreateNewDataset
 import pandas as pd
 from django.contrib import messages
 
@@ -42,6 +41,61 @@ class DatasetUpdate(UpdateView):
     model = Dataset
     fields = ['name', 'description']
     template_name = 'dataset_form.html'
+
+
+def create(request):
+    context = {}
+    if request.method == "POST":
+        form = CreateNewDataset(request.POST, request.FILES)
+
+        if form.is_valid():
+            uploaded_file = request.FILES['file']
+
+            # handling errors in uploaded files
+
+            # error in file type
+            if not uploaded_file.name.endswith('.csv'):
+                messages.error(request,
+                               BASE_FILE_UPLOAD_ERROR +
+                               'THIS IS NOT A CSV FILE.')
+                return render(request, 'create_dataset.html',
+                              {"form": form, "context": context})
+
+            # error in file content
+            data = pd.read_csv(uploaded_file)
+            colnames = list(data.columns)
+            if len(colnames) > 4:
+                messages.error(
+                    request,
+                    BASE_FILE_UPLOAD_ERROR +
+                    'THIS FILE HAS TOO MANY COLUMNS. ' +
+                    'IT SHOULD ONLY HAVE: id, time, measurement, dose')
+                return render(request, 'create_dataset.html',
+                              {"form": form, "context": context})
+            required_cols = ['id', 'time', 'measurement', 'dose']
+            error_cols = []
+            error_string = (BASE_FILE_UPLOAD_ERROR +
+                            'FILE DOES NOT CONTAIN: ')
+            for col in required_cols:
+                if col not in colnames:
+                    error_cols.append(col)
+            if len(error_cols) > 0:
+                messages.error(request,
+                               error_string + ', '.join(error_cols))
+
+            # no errors -> process and save as dataset
+            dataset = Dataset(
+                name=form.cleaned_data["name"],
+                description=form.cleaned_data["description"],
+                datetime=form.cleaned_data["datetime"],
+                administration_type=form.cleaned_data["administration_type"],
+            )
+            dataset.save()
+
+    else:
+        form = CreateNewDataset()
+    return render(request, 'create_dataset.html',
+                  {"form": form, "context": context})
 
 
 def upload(request):
