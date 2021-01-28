@@ -10,6 +10,7 @@ from pkpdapp.models import Dataset, Biomarker, BiomarkerType
 from ..forms import CreateNewDataset
 import pandas as pd
 from django.contrib import messages
+from django.apps import apps
 
 BASE_FILE_UPLOAD_ERROR = 'FILE UPLOAD FAILED: '
 
@@ -91,6 +92,11 @@ def create(request):
                 administration_type=form.cleaned_data["administration_type"],
             )
             dataset.save()
+
+            # add to demo project
+            Project = apps.get_model("pkpdapp", "Project")
+            demo_project = Project.objects.get(name='demo')
+            demo_project.datasets.add(dataset)
 
     else:
         form = CreateNewDataset()
