@@ -14,6 +14,17 @@ from django.apps import apps
 
 BASE_FILE_UPLOAD_ERROR = 'FILE UPLOAD FAILED: '
 
+biomarkers = [
+    {
+        'name': 'Tumour volume',
+        'unit': 'cm^3',
+    },
+    {
+        'name': 'Body weight',
+        'unit': 'g',
+    },
+]
+
 
 class DatasetDetailView(DetailView):
     model = Dataset
@@ -70,10 +81,11 @@ def create(request):
                     request,
                     BASE_FILE_UPLOAD_ERROR +
                     'THIS FILE HAS TOO MANY COLUMNS. ' +
-                    'IT SHOULD ONLY HAVE: id, time, measurement, dose')
+                    'IT SHOULD ONLY HAVE: subject id, time, biomarker type, ' +
+                    'value')
                 return render(request, 'dataset_create.html',
                               {"form": form, "context": context})
-            required_cols = ['id', 'time', 'measurement', 'dose']
+            required_cols = ['subject id', 'time', 'biomarker type', 'value']
             error_cols = []
             error_string = (BASE_FILE_UPLOAD_ERROR +
                             'FILE DOES NOT CONTAIN: ')
@@ -97,6 +109,38 @@ def create(request):
             Project = apps.get_model("pkpdapp", "Project")
             demo_project = Project.objects.get(name='demo')
             demo_project.datasets.add(dataset)
+
+            Biomarker = apps.get_model("pkpdapp", "Biomarker")
+            BiomarkerType = apps.get_model("pkpdapp", "BiomarkerType")
+
+            # find the index of the biomarker type, so we don't have to
+            # keep looking it up
+            biomarker_index = {}
+            for i, b in enumerate(biomarkers):
+                biomarker_index[b['name']] = i
+
+            # create all the biomarker types for that dataset
+            biomarker_types = [
+                BiomarkerType(
+                    name=b['name'],
+                    description=b['name'],
+                    unit=b['unit'],
+                    dataset=dataset
+                )
+                for b in biomarkers
+            ]
+            [bm.save() for bm in biomarker_types]
+
+            # create all the biomarker measurements for that dataset
+            for index, row in data.iterrows():
+                index = biomarker_index[row['biomarker type']]
+                biomarker = Biomarker(
+                    time=row['time'],
+                    subject_id=row['subject id'],
+                    value=row['value'],
+                    biomarker_type=biomarker_types[index]
+                )
+                biomarker.save()
 
     else:
         form = CreateNewDataset()
