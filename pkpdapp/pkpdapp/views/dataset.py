@@ -47,12 +47,15 @@ class DatasetUpdate(UpdateView):
 def upload(request):
     context = {}
     if request.method == 'POST':
+        if len(request.FILES) == 0:
+            messages.error(request,
+                           BASE_FILE_UPLOAD_ERROR + 'NO FILE SELECTED.')
+            return render(request, 'upload.html', context)
         uploaded_file = request.FILES['document']
         if not uploaded_file.name.endswith('.csv'):
             messages.error(request,
                            BASE_FILE_UPLOAD_ERROR + 'THIS IS NOT A CSV FILE.')
             return render(request, 'upload.html', context)
-        path = settings.MEDIA_ROOT
         data = pd.read_csv(uploaded_file)
         colnames = list(data.columns)
         if len(colnames) > 4:
@@ -73,12 +76,7 @@ def upload(request):
             messages.error(request,
                            error_string + ', '.join(error_cols))
             return render(request, 'upload.html', context)
-        fs = FileSystemStorage(location=path + '/data/')
-        name = fs.save(uploaded_file.name, uploaded_file)
-        context['url'] = fs.url(name)
-        num_rows = len(data)
-        if num_rows > 20:
-            data = data[:20]
+        context['url'] = uploaded_file.name
         context['df_html'] = data.to_html()
     return render(request, 'upload.html', context)
 
