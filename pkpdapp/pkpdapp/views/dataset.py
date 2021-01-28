@@ -59,6 +59,7 @@ def create(request):
     context = {}
     if request.method == "POST":
         form = CreateNewDataset(request.POST, request.FILES)
+        context["form"] = form
 
         if form.is_valid():
             uploaded_file = request.FILES['file']
@@ -71,7 +72,7 @@ def create(request):
                                BASE_FILE_UPLOAD_ERROR +
                                'THIS IS NOT A CSV FILE.')
                 return render(request, 'dataset_create.html',
-                              {"form": form, "context": context})
+                              context)
 
             # error in file content
             data = pd.read_csv(uploaded_file)
@@ -84,7 +85,7 @@ def create(request):
                     'IT SHOULD ONLY HAVE: subject id, time, biomarker type, ' +
                     'value')
                 return render(request, 'dataset_create.html',
-                              {"form": form, "context": context})
+                              context)
             required_cols = ['subject id', 'time', 'biomarker type', 'value']
             error_cols = []
             error_string = (BASE_FILE_UPLOAD_ERROR +
@@ -142,10 +143,13 @@ def create(request):
                 )
                 biomarker.save()
 
+            context["dataset"] = dataset
+
     else:
         form = CreateNewDataset()
+        context["form"] = form
     return render(request, 'dataset_create.html',
-                  {"form": form, "context": context})
+                  context)
 
 
 class DatasetDelete(DeleteView):
