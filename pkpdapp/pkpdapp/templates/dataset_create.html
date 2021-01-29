@@ -17,6 +17,8 @@ copyright notice and full license details.
   {% if formset %}
   <p> Select units for each biomarker type</p>
     <form enctype="multipart/form-data" method="post">
+      {% csrf_token %}
+      {{ formset.management_form }}
       {% for biomarkername in biomarkernames %}
         <li>
           {{ biomarkernames|lookup:forloop.counter0 }}:

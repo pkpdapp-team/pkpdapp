@@ -12,20 +12,10 @@ import pandas as pd
 from django.contrib import messages
 from django.apps import apps
 from django.forms import formset_factory
+from django.shortcuts import redirect
 
 
 BASE_FILE_UPLOAD_ERROR = 'FILE UPLOAD FAILED: '
-
-biomarkers = [
-    {
-        'name': 'Tumour volume',
-        'unit': 'cm^3',
-    },
-    {
-        'name': 'Body weight',
-        'unit': 'g',
-    },
-]
 
 
 class DatasetDetailView(DetailView):
@@ -112,37 +102,56 @@ def create(request):
             Project = apps.get_model("pkpdapp", "Project")
             demo_project = Project.objects.get(name='demo')
             demo_project.datasets.add(dataset)
-
-            Biomarker = apps.get_model("pkpdapp", "Biomarker")
-            BiomarkerType = apps.get_model("pkpdapp", "BiomarkerType")
-
-            # find the index of the biomarker type, so we don't have to
-            # keep looking it up
-            biomarker_index = {}
-            for i, b in enumerate(biomarkers):
-                biomarker_index[b['name']] = i
+            context["dataset"] = dataset
 
             # find all the biomarker types for that dataset
-            biomarkers_types_unique = data["biomarker type"].unique()
-            formset = formset_factory(
-                CreateNewBiomarkerUnit,
-                extra=len(biomarkers_types_unique)
-            )
-            context["formset"] = formset
-            context["biomarkernames"] = biomarkers_types_unique
+            bts_unique = data["biomarker type"].unique().tolist()
+            request.session['bts_unique'] = bts_unique
+            request.session['data_raw'] = data.to_json()
+            return redirect('dataset-biomarkers')
 
-            biomarker_types = [
-                BiomarkerType(
-                    name=b['name'],
-                    description=b['name'],
-                    unit=b['unit'],
+    else:
+        form = CreateNewDataset()
+        context["form"] = form
+    return render(request, 'dataset_create.html',
+                  context)
+
+
+def select_biomarkers(request):
+    context = {}
+    bts_unique = request.session["bts_unique"]
+    data = pd.read_json(request.session["data_raw"])
+    # dataset = request.session["dataset"]
+    formset = formset_factory(
+        CreateNewBiomarkerUnit,
+        extra=len(bts_unique)
+    )
+    context["biomarkernames"] = bts_unique
+    context["formset"] = formset
+    dataset = Dataset.objects.latest('id')
+    if request.method == "POST":
+        formset = formset(request.POST)
+        if formset.is_valid():
+            biomarker_types = []
+            k = 0
+            for f in formset:
+                cd = f.cleaned_data
+                unit = cd.get("unit")
+                biomarker_types.append(BiomarkerType(
+                    name=bts_unique[k],
+                    description=bts_unique[k],
+                    unit=unit,
                     dataset=dataset
-                )
-                for b in biomarkers
-            ]
+                ))
+                k += 1
             [bm.save() for bm in biomarker_types]
 
             # create all the biomarker measurements for that dataset
+            # find the index of the biomarker type, so we don't have to
+            # keep looking it up
+            biomarker_index = {}
+            for i, b in enumerate(bts_unique):
+                biomarker_index[b] = i
             for index, row in data.iterrows():
                 index = biomarker_index[row['biomarker type']]
                 biomarker = Biomarker(
@@ -152,12 +161,11 @@ def create(request):
                     biomarker_type=biomarker_types[index]
                 )
                 biomarker.save()
-
-            context["dataset"] = dataset
-
+        context['dataset'] = dataset
+        return render(request, 'dataset_create.html',
+                      context)
     else:
-        form = CreateNewDataset()
-        context["form"] = form
+        context["formset"] = formset
     return render(request, 'dataset_create.html',
                   context)
 
