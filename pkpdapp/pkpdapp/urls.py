@@ -28,7 +28,8 @@ urlpatterns = [
 
     path('dataset/add/', views.DatasetCreate.as_view(), name='dataset-add'),
     path('dataset/create/', views.dataset.create, name='dataset-create'),
-    path('dataset/biomarkers', views.dataset.select_biomarkers, name='dataset-biomarkers'),
+    path('dataset/biomarkers', views.dataset.select_biomarkers,
+         name='dataset-biomarkers'),
     path(
         'dataset/<int:pk>/update/',
         views.DatasetUpdate.as_view(),

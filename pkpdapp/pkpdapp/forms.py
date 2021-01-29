@@ -1,8 +1,10 @@
+#
+# This file is part of PKPDApp (https://github.com/pkpdapp-team/pkpdapp) which
+# is released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
+#
 from django import forms
 from pkpdapp.models.dataset import ADMINISTRATION_TYPE_CHOICES
-from django.template.defaultfilters import filesizeformat
-from django.utils.translation import ugettext_lazy as _
-from django.conf import settings
 from django.core.exceptions import ValidationError
 
 MAX_UPLOAD_SIZE = "5242880"
