@@ -139,9 +139,10 @@ def select_biomarkers(request):
             for f in formset:
                 cd = f.cleaned_data
                 unit = cd.get("unit")
+                desc = cd.get("description")
                 biomarker_types.append(BiomarkerType(
                     name=bts_unique[k],
-                    description=bts_unique[k],
+                    description=desc,
                     unit=unit,
                     dataset=dataset
                 ))

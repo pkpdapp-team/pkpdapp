@@ -1,5 +1,17 @@
 from django import forms
 from pkpdapp.models.dataset import ADMINISTRATION_TYPE_CHOICES
+from django.template.defaultfilters import filesizeformat
+from django.utils.translation import ugettext_lazy as _
+from django.conf import settings
+from django.core.exceptions import ValidationError
+
+MAX_UPLOAD_SIZE = "5242880"
+
+
+def file_size(value):
+    limit = 50 * 1024 * 1024
+    if value.size > limit:
+        raise ValidationError('File too large. Size should not exceed 50 MiB.')
 
 
 class CreateNewDataset(forms.Form):
@@ -14,7 +26,8 @@ class CreateNewDataset(forms.Form):
     description = forms.CharField(
         widget=forms.Textarea,
         label='Description',
-        help_text='short description of the dataset'
+        help_text='short description of the dataset',
+        required=False
     )
 
     datetime = forms.DateTimeField(
@@ -36,7 +49,7 @@ class CreateNewDataset(forms.Form):
         help_text='method of drug administration'
     )
 
-    file = forms.FileField(label='Data file')
+    file = forms.FileField(label='Data file', validators=[file_size])
 
 
 class CreateNewBiomarkerUnit(forms.Form):
@@ -51,4 +64,10 @@ class CreateNewBiomarkerUnit(forms.Form):
     unit = forms.ChoiceField(
         label='',
         choices=UNIT_CHOICES
+    )
+
+    description = forms.CharField(
+        widget=forms.Textarea(attrs={'rows': 2, 'cols': 25}),
+        label='Description',
+        required=False
     )
