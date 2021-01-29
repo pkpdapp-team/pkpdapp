@@ -6,6 +6,7 @@ copyright notice and full license details.
 
 {% extends "base/base.html" %}
 {% load static %}
+{% load app_filters %}
 
 {% block main_content %}
 
@@ -13,22 +14,37 @@ copyright notice and full license details.
   <p>Uploaded dataset</p>
   <li><a href=/dataset/{{dataset.id}}/>{{dataset.name}}</a>: {{dataset.description|truncatewords:"10"}} </li>
 {% else %}
-  <p>Upload dataset</p>
-  <form enctype="multipart/form-data" method="post">
-    {% csrf_token %}
-    <table>
-    {{ form.as_table }}
-    </table>
-    <input type="submit" value="Submit">
-  </form>
-  {% if messages %}
-    <ul class="messages">
-        {% for message in messages %}
-        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-        {% endfor %}
-    </ul>
+  {% if formset %}
+  <p> Select units for each biomarker type</p>
+    <form enctype="multipart/form-data" method="post">
+      {% for biomarkername in biomarkernames %}
+        <li>
+          {{ biomarkernames|lookup:forloop.counter0 }}:
+          {{ formset|lookup:forloop.counter0 }}
+        </li>
+      {% endfor %}
+      <input type="submit" value="Submit">
+    </form>
+
+  {% else %}
+    <p>Upload dataset</p>
+    <form enctype="multipart/form-data" method="post">
+      {% csrf_token %}
+      <table>
+      {{ form.as_table }}
+      </table>
+      <input type="submit" value="Submit">
+    </form>
+    {% if messages %}
+      <ul class="messages">
+          {% for message in messages %}
+          <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+          {% endfor %}
+      </ul>
+    {% endif %}
   {% endif %}
 {% endif %}
+
 
 
 {% endblock %}

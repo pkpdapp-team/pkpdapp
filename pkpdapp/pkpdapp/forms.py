@@ -37,3 +37,18 @@ class CreateNewDataset(forms.Form):
     )
 
     file = forms.FileField(label='Data file')
+
+
+class CreateNewBiomarkerUnit(forms.Form):
+    """
+    A form to associate a unit with a predefined biomarker type name.
+    """
+    UNIT_CHOICES = [
+        ('mg', 'mg'),
+        ('g', 'g'),
+        ('cm3', 'cm^3'),
+    ]
+    unit = forms.ChoiceField(
+        label='',
+        choices=UNIT_CHOICES
+    )

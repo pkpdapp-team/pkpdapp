@@ -7,10 +7,12 @@ from django.shortcuts import render
 from django.views.generic import DetailView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
 from pkpdapp.models import Dataset, Biomarker, BiomarkerType
-from ..forms import CreateNewDataset
+from ..forms import CreateNewDataset, CreateNewBiomarkerUnit
 import pandas as pd
 from django.contrib import messages
 from django.apps import apps
+from django.forms import formset_factory
+
 
 BASE_FILE_UPLOAD_ERROR = 'FILE UPLOAD FAILED: '
 
@@ -120,7 +122,15 @@ def create(request):
             for i, b in enumerate(biomarkers):
                 biomarker_index[b['name']] = i
 
-            # create all the biomarker types for that dataset
+            # find all the biomarker types for that dataset
+            biomarkers_types_unique = data["biomarker type"].unique()
+            formset = formset_factory(
+                CreateNewBiomarkerUnit,
+                extra=len(biomarkers_types_unique)
+            )
+            context["formset"] = formset
+            context["biomarkernames"] = biomarkers_types_unique
+
             biomarker_types = [
                 BiomarkerType(
                     name=b['name'],
