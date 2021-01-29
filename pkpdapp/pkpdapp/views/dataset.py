@@ -88,6 +88,8 @@ def create(request):
             if len(error_cols) > 0:
                 messages.error(request,
                                error_string + ', '.join(error_cols))
+                return render(request, 'dataset_create.html',
+                              context)
 
             # no errors -> process and save as dataset
             dataset = Dataset(
