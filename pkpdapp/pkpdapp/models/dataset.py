@@ -6,7 +6,6 @@
 
 from django.db import models
 from django.urls import reverse
-from django.utils import timezone
 
 
 class Dataset(models.Model):
@@ -19,14 +18,15 @@ class Dataset(models.Model):
     ]
     name = models.CharField(max_length=100, help_text='name of the dataset')
     datetime = models.DateTimeField(
-        default=timezone.now,
         help_text=(
             'Date/time the experiment was conducted. '
             'All time measurements are relative to this date/time'
-        )
+        ),
+        null=True, blank=True
     )
     description = models.TextField(
-        help_text='short description of the dataset'
+        help_text='short description of the dataset',
+        blank=True, default=''
     )
     administration_type = models.CharField(
         max_length=2, choices=ADMINISTRATION_TYPE_CHOICES,
