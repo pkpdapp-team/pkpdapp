@@ -34,6 +34,7 @@ class CreateNewDataset(forms.Form):
 
     datetime = forms.DateTimeField(
         label='Date-time',
+        required=False,
         help_text=(
             'Date/time the experiment was conducted. ' +
             'All time measurements are relative to this date/time.'

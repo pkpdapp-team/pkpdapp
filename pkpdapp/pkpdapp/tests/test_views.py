@@ -10,8 +10,39 @@ from django.urls import reverse
 from django.contrib.auth.models import User
 from django.utils import timezone
 import re
-from pkpdapp.models import Dataset, PkpdModel, Project
+from pkpdapp.models import (Dataset, PkpdModel,
+                            Project, BiomarkerType, Biomarker)
 from http import HTTPStatus
+from urllib.request import urlretrieve
+import pandas as pd
+from django.core.files import File
+
+
+BASE_URL = 'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/datasets/'   # noqa: E501
+
+
+def faux_test_file(url, ending='.csv'):
+    tempname, _ = urlretrieve(url)
+    file = File(open(tempname, 'rb'))
+    file.name = 'test' + ending
+    return(file)
+
+
+def test_file_upload_error(cls, filename, error_message, ending=".csv"):
+    file = faux_test_file(BASE_URL + filename, ending)
+    response = cls.client.post(
+        reverse('dataset-create'),
+        data={
+            'name': 'updated name',
+            'description': 'update description',
+            'datetime': '',
+            'administration_type': 'T1',
+            'file': file
+        },
+        follow=True
+    )
+    cls.assertEquals(response.status_code, HTTPStatus.OK)
+    cls.assertContains(response, error_message)
 
 
 class TestIndexView(SimpleTestCase):
@@ -89,6 +120,91 @@ class TestDatasetView(TestCase):
             description='description for my cool dataset',
             administration_type='T1',
         )
+
+    def test_create_form(self):
+        response = self.client.get(reverse('dataset-create'))
+        self.assertEquals(response.status_code, HTTPStatus.OK)
+        self.assertTemplateUsed(response, 'dataset_create.html')
+
+        # test incorrect file format
+        test_file_upload_error(self,
+                               filename='test_data_incorrect.xls',
+                               error_message='THIS IS NOT A CSV FILE.',
+                               ending='.xls')
+
+        # incorrect cols
+        base = 'time_data_incorrect'
+        for i in range(5):
+            if i == 0:
+                filename_t = base
+            else:
+                filename_t = base + str(i)
+            test_file_upload_error(self,
+                                   filename=filename_t + '.csv',
+                                   error_message='FILE DOES NOT CONTAIN')
+        test_file_upload_error(self,
+                               filename='time_data_incorrect5.csv',
+                               error_message='THIS FILE HAS TOO MANY COLUMNS')
+
+        # test works correctly when file of right format
+        num_datasets = len(Dataset.objects.all())
+        file = faux_test_file(BASE_URL + 'test_data.csv')
+        response = self.client.post(
+            reverse('dataset-create'),
+            data={
+                'name': 'updated name',
+                'description': 'update description',
+                'datetime': '',
+                'administration_type': 'T1',
+                'file': file
+            },
+            follow=True
+        )
+        self.assertEquals(response.status_code, HTTPStatus.OK)
+        self.assertEquals(
+            response.redirect_chain[0][0],
+            reverse('dataset-biomarkers')
+        )
+        # check new dataset added
+        num_datasets1 = len(Dataset.objects.all())
+        self.assertEquals(num_datasets1 - num_datasets, 1)
+
+    def test_biomarkerunit_form(self):
+        num_biomarker_type = len(BiomarkerType.objects.all())
+        num_biomarker = len(Biomarker.objects.all())
+        data = pd.read_csv(BASE_URL + 'test_data.csv')
+        bts_unique = data["biomarker type"].unique().tolist()
+        session = self.client.session
+        session['bts_unique'] = bts_unique
+        session['data_raw'] = data.to_json()
+        session.save()
+
+        response = self.client.get(reverse('dataset-biomarkers'))
+        self.assertEquals(response.status_code, HTTPStatus.OK)
+        self.assertTemplateUsed(response, 'dataset_create.html')
+
+        response = self.client.post(
+            reverse('dataset-biomarkers'),
+            data={'form-TOTAL_FORMS': '2',
+                  'form-INITIAL_FORMS': '0',
+                  'form-0-unit': 'cm3',
+                  'form-0-description': 'update description',
+                  'form-1-unit': 'g',
+                  'form-1-description': 'update description1'
+                  },
+            follow=True
+        )
+        self.assertEquals(response.status_code, HTTPStatus.OK)
+        self.assertTemplateUsed(response, 'dataset_create.html')
+        self.assertContains(response, 'Uploaded dataset')
+
+        # check biomarker types have been saved
+        num_biomarker_type1 = len(BiomarkerType.objects.all())
+        self.assertEquals(num_biomarker_type1 - num_biomarker_type, 2)
+
+        # check biomarkers have been saved
+        num_biomarker1 = len(Biomarker.objects.all())
+        self.assertEquals(num_biomarker1 - num_biomarker, len(data))
 
     def test_list_view(self):
         response = self.client.get(reverse('dataset-list'))
