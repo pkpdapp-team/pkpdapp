@@ -25,8 +25,8 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(help_text='name of the dataset', max_length=100)),
-                ('datetime', models.DateTimeField(help_text=('Date/time the experiment was conducted. ', 'All time measurements are relative to this date/time'))),
-                ('description', models.TextField(help_text='short description of the dataset')),
+                ('datetime', models.DateTimeField(blank=True, help_text='Date/time the experiment was conducted. All time measurements are relative to this date/time', null=True)),
+                ('description', models.TextField(blank=True, default='', help_text='short description of the dataset')),
                 ('administration_type', models.CharField(choices=[('T1', 'type1'), ('T2', 'type2')], help_text='method of drug administration', max_length=2)),
             ],
         ),

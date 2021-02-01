@@ -6,14 +6,13 @@
 
 from django.urls import path
 
-from . import views
-from . import (  # noqa
-    demo_simulation_dash_board
-)
+from . import apps, views  # noqa
 
-
+# Configure simulate app.
+# This also sets up the Dash apps defined in apps.py
 app_name = 'simulate'
 
+# Define URL patterns
 urlpatterns = [
     path('', views.BuildModelView.as_view(), name='build-model'),
     path('simulation', views.SimulationView.as_view(), name='simulation'),

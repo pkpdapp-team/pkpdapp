@@ -26,6 +26,11 @@ urlpatterns = [
     path('dataset/<int:pk>/',
          views.DatasetDetailView.as_view(), name='dataset-detail'),
 
+    path(
+        'dataset/list/',
+        views.DatasetListView.as_view(),
+        name='dataset-list'
+    ),
     path('dataset/add/', views.DatasetCreate.as_view(), name='dataset-add'),
     path('dataset/create/', views.dataset.create, name='dataset-create'),
     path('dataset/biomarkers', views.dataset.select_biomarkers,
@@ -46,6 +51,11 @@ urlpatterns = [
     path('explore_data/', include('explore_data.urls')),
 
     path(
+        'pkpd_model/list/',
+        views.PkpdModelListView.as_view(),
+        name='pkpd_model-list'
+    ),
+    path(
         'pkpd_model/add/',
         views.PkpdModelCreate.as_view(),
         name='pkpd_model-add'
@@ -65,6 +75,11 @@ urlpatterns = [
 
     path('project/',
          views.ProjectDetailView.as_view(), name='selected-project-detail'),
+    path(
+        'project/list/',
+        views.ProjectListView.as_view(),
+        name='project-list'
+    ),
     path('project/add/', views.ProjectCreate.as_view(), name='project-add'),
     path(
         'project/<int:pk>/update/',
