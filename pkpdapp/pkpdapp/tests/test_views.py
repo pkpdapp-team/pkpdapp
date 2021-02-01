@@ -95,16 +95,16 @@ class TestDatasetView(TestCase):
         self.assertTemplateUsed(response, 'dataset_detail.html')
 
     def test_update_form(self):
-        response = self.client.get('/dataset/{}/update'.format(self.test_dataset.id))
+        response = self.client.get('/dataset/{}/update/'.format(self.test_dataset.id))
         self.assertEquals(response.status_code, 200)
         self.assertTemplateUsed(response, 'dataset_form.html')
         self.assertContains(response, self.test_dataset.name)
 
     def test_add_form(self):
-        response = self.client.get('/dataset/add'.format(self.test_dataset.id))
+        response = self.client.get('/dataset/add/'.format(self.test_dataset.id))
         self.assertEquals(response.status_code, 200)
         self.assertTemplateUsed(response, 'dataset_form.html')
-        self.assertContains(response, 'Add new dataset')
+        self.assertContains(response, 'Update Dataset')
 
     def test_delete_form(self):
         response = self.client.get('/pkpd_model/{}/delete'.format(self.test_dataset2.id))
@@ -133,16 +133,16 @@ class TestPkpdModelView(TestCase):
         )
 
     def test_update_form(self):
-        response = self.client.get('/pkpd_model/{}/update'.format(self.test_model.id))
+        response = self.client.get('/pkpd_model/{}/update/'.format(self.test_model.id))
         self.assertEquals(response.status_code, 200)
         self.assertTemplateUsed(response, 'pkpd_model_form.html')
         self.assertContains(response, self.test_model.name)
 
     def test_add_form(self):
-        response = self.client.get('/dataset/add'.format(self.test_model.id))
+        response = self.client.get('/pkpd_model/add/'.format(self.test_model.id))
         self.assertEquals(response.status_code, 200)
         self.assertTemplateUsed(response, 'pkpd_model_form.html')
-        self.assertContains(response, 'Add new model')
+        self.assertContains(response, 'Update Model')
 
     def test_delete_form(self):
         response = self.client.get('/pkpd_model/{}/delete'.format(self.test_model2.id))
@@ -202,16 +202,16 @@ class TestProjectView(TestCase):
         self.test_user.profile.save(update_fields=["selected_project"])
 
     def test_update_form(self):
-        response = self.client.get('/project/{}/update'.format(self.test_project.id))
+        response = self.client.get('/project/{}/update/'.format(self.test_project.id))
         self.assertEquals(response.status_code, 200)
         self.assertTemplateUsed(response, 'project_form.html')
         self.assertContains(response, self.test_project.name)
 
     def test_add_form(self):
-        response = self.client.get('/project/add'.format(self.test_project.id))
+        response = self.client.get('/project/add/'.format(self.test_project.id))
         self.assertEquals(response.status_code, 200)
         self.assertTemplateUsed(response, 'project_form.html')
-        self.assertContains(response, 'Add new project')
+        self.assertContains(response, 'Update Project')
 
     def test_delete_form(self):
         response = self.client.get('/project/{}/delete'.format(self.test_project2.id))
