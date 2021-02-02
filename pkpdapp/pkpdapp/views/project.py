@@ -4,34 +4,14 @@
 # copyright notice and full license details.
 #
 
-"""
-Views of the pkpdapp project.
-
-For more information please see
-https://docs.djangoproject.com/en/3.0/topics/http/views/.
-"""
-
-from django.views.generic import TemplateView, DetailView
+from django.views.generic import (
+    DetailView, CreateView,
+    UpdateView, DeleteView,
+    ListView
+)
+from django.urls import reverse_lazy
+from pkpdapp.models import Project
 from django.http import Http404
-from pkpdapp.models import Project, Dataset, PkpdModel
-
-
-class IndexView(TemplateView):
-    template_name = 'index.html'
-
-
-class GenericView(TemplateView):
-    template_name = 'generic.html'
-
-
-class PkpdModelDetailView(DetailView):
-    model = PkpdModel
-    template_name = 'pkpd_model_detail.html'
-
-
-class DatasetDetailView(DetailView):
-    model = Dataset
-    template_name = 'dataset_detail.html'
 
 
 class ProjectDetailView(DetailView):
@@ -66,3 +46,26 @@ class ProjectDetailView(DetailView):
                 return self.request.user.profile.selected_project
             else:
                 raise Http404
+
+
+class ProjectListView(ListView):
+    model = Project
+    template_name = 'project_list.html'
+
+
+class ProjectCreate(CreateView):
+    model = Project
+    template_name = 'project_form.html'
+    fields = ['name', 'description', 'users']
+
+
+class ProjectUpdate(UpdateView):
+    model = Project
+    template_name = 'project_form.html'
+    fields = ['name', 'description', 'users']
+
+
+class ProjectDelete(DeleteView):
+    model = Project
+    template_name = 'project_confirm_delete.html'
+    success_url = reverse_lazy('project-list')
