@@ -7,8 +7,9 @@
 from django.views.generic import (
     DetailView, CreateView,
     UpdateView, DeleteView,
-    ListView
+    ListView,
 )
+from pkpdapp.forms import CreateNewPkpdModel
 from django.urls import reverse_lazy
 from pkpdapp.models import PkpdModel
 
@@ -24,10 +25,15 @@ class PkpdModelListView(ListView):
 
 
 class PkpdModelCreate(CreateView):
+    form_class = CreateNewPkpdModel
     model = PkpdModel
-    fields = ['name', 'description']
     template_name = 'pkpd_model_form.html'
 
+    def get_success_url(self):
+        return reverse_lazy(
+            'pkpd_model-detail',
+            kwargs={'pk': self.object.pk}
+        )
 
 class PkpdModelUpdate(UpdateView):
     model = PkpdModel

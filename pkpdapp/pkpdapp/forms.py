@@ -5,7 +5,9 @@
 #
 from django import forms
 from pkpdapp.models.dataset import ADMINISTRATION_TYPE_CHOICES
+from pkpdapp.models import PkpdModel
 from django.core.exceptions import ValidationError
+import xml.etree.ElementTree as ET
 
 MAX_UPLOAD_SIZE = "5242880"
 
@@ -74,3 +76,37 @@ class CreateNewBiomarkerUnit(forms.Form):
         label='Description',
         required=False
     )
+
+
+def sbml_content_validator(sbml_file):
+    # check if file is xml by trying to parse it
+    try:
+        ET.parse(sbml_file).getroot()
+        # make sure to reset the read position so we can
+        # read it later in the save
+        # TODO: can we save this text?
+        sbml_file.file.seek(0)
+    except ET.ParseError:
+        raise forms.ValidationError("Error parsing sbml")
+
+
+class CreateNewPkpdModel(forms.ModelForm):
+    """
+    A form to create a new :model:`pkpdapp.PkpdModel`, which allows a user to
+    upload their sbml from a file.
+    """
+    sbml = forms.FileField(validators=[sbml_content_validator])
+
+    class Meta:
+        model = PkpdModel
+        fields = ('name', 'description', 'model_type', 'sbml')
+
+    def save(self, commit=True):
+        sbml_file = self.cleaned_data.get("sbml")
+
+        sbml_txt = str(sbml_file.read())
+
+        if sbml_txt:
+            self.instance.sbml = sbml_txt
+
+        return super().save(commit)
