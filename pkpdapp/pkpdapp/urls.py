@@ -61,6 +61,11 @@ urlpatterns = [
         name='pkpd_model-add'
     ),
     path(
+        'pkpd_model/add/project/<int:project>/',
+        views.PkpdModelCreate.as_view(),
+        name='pkpd_model-add-to-project'
+    ),
+    path(
         'pkpd_model/<int:pk>/update/',
         views.PkpdModelUpdate.as_view(),
         name='pkpd_model-update'

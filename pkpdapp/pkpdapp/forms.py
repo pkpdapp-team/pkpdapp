@@ -5,9 +5,10 @@
 #
 from django import forms
 from pkpdapp.models.dataset import ADMINISTRATION_TYPE_CHOICES
-from pkpdapp.models import PkpdModel
+from pkpdapp.models import PkpdModel, Project
 from django.core.exceptions import ValidationError
 import xml.etree.ElementTree as ET
+from django.utils.translation import gettext as _
 
 MAX_UPLOAD_SIZE = "5242880"
 
@@ -78,35 +79,52 @@ class CreateNewBiomarkerUnit(forms.Form):
     )
 
 
-def sbml_content_validator(sbml_file):
-    # check if file is xml by trying to parse it
-    try:
-        ET.parse(sbml_file).getroot()
-        # make sure to reset the read position so we can
-        # read it later in the save
-        # TODO: can we save this text?
-        sbml_file.file.seek(0)
-    except ET.ParseError:
-        raise forms.ValidationError("Error parsing sbml")
-
-
 class CreateNewPkpdModel(forms.ModelForm):
     """
     A form to create a new :model:`pkpdapp.PkpdModel`, which allows a user to
     upload their sbml from a file.
+
+    can pass an additional kwarg 'project', which adds the new model to this
+    project id
     """
-    sbml = forms.FileField(validators=[sbml_content_validator])
+    def __init__(self, *args, **kwargs):
+        if 'project' in kwargs:
+            self.project_id = kwargs.pop('project')
+        else:
+            self.project_id = None
+
+        super().__init__(*args, **kwargs)
 
     class Meta:
         model = PkpdModel
         fields = ('name', 'description', 'model_type', 'sbml')
 
-    def save(self, commit=True):
+    sbml = forms.FileField()
+
+    def clean_sbml(self):
         sbml_file = self.cleaned_data.get("sbml")
+        try:
+            sbml_et = ET.parse(sbml_file).getroot()
+            sbml = ET.tostring(
+                sbml_et, encoding='unicode', method='xml'
+            )
+        except ET.ParseError:
+            raise forms.ValidationError(
+                _((
+                    'Error parsing file, '
+                    '%(filename)s does not seem to be valid XML'
+                )),
+                code='invalid',
+                params={'filename': sbml_file.name},
+            )
+        return sbml
 
-        sbml_txt = str(sbml_file.read())
+    def save(self, commit=True):
+        instance = super().save()
+        if self.project_id is not None:
+            project = Project.objects.get(id=self.project_id)
+            project.pkpd_models.add(instance)
+            if commit:
+                project.save()
 
-        if sbml_txt:
-            self.instance.sbml = sbml_txt
-
-        return super().save(commit)
+        return instance

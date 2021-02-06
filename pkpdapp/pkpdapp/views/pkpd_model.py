@@ -29,15 +29,22 @@ class PkpdModelCreate(CreateView):
     model = PkpdModel
     template_name = 'pkpd_model_form.html'
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        if 'project' in self.kwargs:
+            kwargs['project'] = self.kwargs['project']
+        return kwargs
+
     def get_success_url(self):
         return reverse_lazy(
             'pkpd_model-detail',
             kwargs={'pk': self.object.pk}
         )
 
+
 class PkpdModelUpdate(UpdateView):
     model = PkpdModel
-    fields = ['name', 'description']
+    fields = ['name', 'description', 'model_type', 'sbml']
     template_name = 'pkpd_model_form.html'
 
 

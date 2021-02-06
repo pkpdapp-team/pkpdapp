@@ -18,7 +18,8 @@ import pandas as pd
 from django.core.files import File
 
 
-BASE_URL = 'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/datasets/'   # noqa: E501
+BASE_URL_DATASETS = 'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/datasets/'   # noqa: E501
+BASE_URL_MODELS = 'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/models/'   # noqa: E501
 
 
 def faux_test_file(url, ending='.csv'):
@@ -29,7 +30,7 @@ def faux_test_file(url, ending='.csv'):
 
 
 def test_file_upload_error(cls, filename, error_message, ending=".csv"):
-    file = faux_test_file(BASE_URL + filename, ending)
+    file = faux_test_file(BASE_URL_DATASETS + filename, ending)
     response = cls.client.post(
         reverse('dataset-create'),
         data={
@@ -148,7 +149,7 @@ class TestDatasetView(TestCase):
 
         # test works correctly when file of right format
         num_datasets = len(Dataset.objects.all())
-        file = faux_test_file(BASE_URL + 'test_data.csv')
+        file = faux_test_file(BASE_URL_DATASETS + 'test_data.csv')
         response = self.client.post(
             reverse('dataset-create'),
             data={
@@ -172,7 +173,7 @@ class TestDatasetView(TestCase):
     def test_biomarkerunit_form(self):
         num_biomarker_type = len(BiomarkerType.objects.all())
         num_biomarker = len(Biomarker.objects.all())
-        data = pd.read_csv(BASE_URL + 'test_data.csv')
+        data = pd.read_csv(BASE_URL_DATASETS + 'test_data.csv')
         bts_unique = data["biomarker type"].unique().tolist()
         session = self.client.session
         session['bts_unique'] = bts_unique
@@ -305,6 +306,10 @@ class TestPkpdModelView(TestCase):
             name='my_cool_model2',
             description='description for my cool model',
         )
+        self.test_project = Project.objects.create(
+            name='my_cool_project',
+            description='description for my cool project',
+        )
 
     def test_list_view(self):
         response = self.client.get(reverse('pkpd_model-list'))
@@ -326,14 +331,16 @@ class TestPkpdModelView(TestCase):
             data={
                 'name': 'updated name',
                 'description': 'update description',
+                'model_type': 'PK',
+                'sbml': 'test',
             },
             follow=True
         )
+        self.assertEquals(response.status_code, HTTPStatus.OK)
         self.assertEquals(
             response.redirect_chain[0][0],
             reverse('pkpd_model-detail', args=[self.test_model.id])
         )
-        self.assertEquals(response.status_code, HTTPStatus.OK)
         new_model = PkpdModel.objects.get(id=self.test_model.id)
         self.assertEquals(new_model.name, 'updated name')
 
@@ -344,11 +351,15 @@ class TestPkpdModelView(TestCase):
         self.assertEquals(response.status_code, HTTPStatus.OK)
         self.assertTemplateUsed(response, 'pkpd_model_form.html')
 
+        file = faux_test_file(BASE_URL_MODELS + 'tgi_Koch_2009.xml',
+                              ending='xml')
         response = self.client.post(
             reverse('pkpd_model-add'),
             data={
                 'name': 'add name',
                 'description': 'add description',
+                'model_type': 'PK',
+                'sbml': file,
             },
             follow=True
         )
@@ -361,6 +372,57 @@ class TestPkpdModelView(TestCase):
             reverse('pkpd_model-detail', args=[new_model.id])
         )
         self.assertEquals(new_model.name, 'add name')
+
+        file = faux_test_file(BASE_URL_DATASETS + 'test_data.csv',
+                              ending='csv')
+        response = self.client.post(
+            reverse('pkpd_model-add'),
+            data={
+                'name': 'add name2',
+                'description': 'add description',
+                'model_type': 'PK',
+                'sbml': file,
+            },
+            follow=True
+        )
+        self.assertEquals(response.status_code, HTTPStatus.OK)
+        self.assertContains(response, 'does not seem to be valid XML')
+        with self.assertRaises(PkpdModel.DoesNotExist):
+            PkpdModel.objects.get(name='add name2')
+
+    def test_add_to_project_form(self):
+        response = self.client.get(
+            reverse('pkpd_model-add-to-project',
+                    args=[self.test_project.id])
+        )
+        self.assertEquals(response.status_code, HTTPStatus.OK)
+        self.assertTemplateUsed(response, 'pkpd_model_form.html')
+
+        file = faux_test_file(BASE_URL_MODELS + 'tgi_Koch_2009.xml',
+                              ending='xml')
+        response = self.client.post(
+            reverse(
+                'pkpd_model-add-to-project', args=[self.test_project.id]
+            ),
+            data={
+                'name': 'add name to project',
+                'description': 'add description',
+                'model_type': 'PK',
+                'sbml': file,
+            },
+            follow=True
+        )
+        self.assertEquals(response.status_code, HTTPStatus.OK)
+        self.assertTrue(
+            PkpdModel.objects.filter(
+                name='add name to project'
+            ).exists()
+        )
+        self.assertTrue(
+            self.test_project.pkpd_models.filter(
+                name='add name to project'
+            ).exists()
+        )
 
     def test_delete_form(self):
         response = self.client.get(
@@ -452,7 +514,9 @@ class TestProjectView(TestCase):
             data={
                 'name': 'updated name',
                 'description': 'update description',
-                'users': [self.test_user.id]
+                'users': [self.test_user.id],
+                'pkpd_models': [self.test_model.id],
+                'datasets': [self.test_dataset.id]
             },
             follow=True
         )

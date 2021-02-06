@@ -33,3 +33,6 @@ class BiomarkerType(models.Model):
         Dataset, on_delete=models.CASCADE,
         help_text='dataset containing this biomarker measurement'
     )
+
+    def __str__(self):
+        return self.name

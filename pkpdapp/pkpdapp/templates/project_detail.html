@@ -16,6 +16,7 @@ copyright notice and full license details.
 </h2>
 (<a href="{% url 'project-update' project.id %}"> Update </a>)
 (<a href="{% url 'dataset-create'%}"> Upload dataset </a>)
+(<a href="{% url 'pkpd_model-add-to-project' project.id %}"> Upload model </a>)
 <p>{{project.description|markdownify}}</p>
 <h3>Datasets</h3>
 <ul>
