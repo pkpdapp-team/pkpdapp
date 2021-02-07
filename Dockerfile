@@ -10,8 +10,8 @@ RUN ln -sf /dev/stdout /var/log/nginx/access.log \
     && ln -sf /dev/stderr /var/log/nginx/error.log
 RUN chown www-data:www-data /etc/nginx/sites-available/default
 
-# install envsubst
-RUN apt-get install -y gettext-base
+# install envsubst and git
+RUN apt-get install -y gettext-base git
 
 # clean up apt
 RUN apt-get clean
