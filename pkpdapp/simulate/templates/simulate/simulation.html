@@ -16,14 +16,22 @@ copyright notice and full license details.
     <h3>Models</h3>
     {% for model in project.pkpd_models.all %}
     <input type="checkbox" id="model{{model.id}}" name="model{{model.id}}">
-      <label for="dataset{{model.id}}">{{model.name}}</label><br>
+    <label for="dataset{{model.id}}">{{model.name}}
+      <a href={% url 'pkpd_model-detail' model.id %}>
+        <i class="fas fa-info-circle"></i>
+      </a>
+    </label><br>
     {% endfor %}
     </div>
     <div class="col">
     <h3>Datasets</h3>
     {% for dataset in project.datasets.all %}
       <input type="checkbox" id="dataset{{dataset.id}} name="dataset{{dataset.id}}"">
-      <label for="dataset{{dataset.id}}">{{dataset.name}}</label><br>
+      <label for="dataset{{dataset.id}}">{{dataset.name}}
+        <a href={% url 'dataset-detail' dataset.id %}>
+          <i class="fas fa-info-circle"></i>
+        </a>
+      </label><br>
     {% endfor %}
     </div>
   </div>
