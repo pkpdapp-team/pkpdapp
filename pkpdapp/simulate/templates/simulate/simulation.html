@@ -9,5 +9,26 @@ copyright notice and full license details.
 {% load plotly_dash %}
 
 {% block main_content %}
-    {% plotly_app_bootstrap name="simulation-app"  %}
+  <form action="" method="get">
+  <div class="container">
+  <div class="row">
+    <div class="col">
+    <h3>Models</h3>
+    {% for model in project.pkpd_models.all %}
+    <input type="checkbox" id="model{{model.id}}" name="model{{model.id}}">
+      <label for="dataset{{model.id}}">{{model.name}}</label><br>
+    {% endfor %}
+    </div>
+    <div class="col">
+    <h3>Datasets</h3>
+    {% for dataset in project.datasets.all %}
+      <input type="checkbox" id="dataset{{dataset.id}} name="dataset{{dataset.id}}"">
+      <label for="dataset{{dataset.id}}">{{dataset.name}}</label><br>
+    {% endfor %}
+    </div>
+  </div>
+  <input type="submit" value="Submit">
+  </div>
+  </form>
+  {% plotly_app_bootstrap name="simulation-app" %}
 {% endblock %}
