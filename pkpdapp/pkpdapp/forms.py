@@ -82,9 +82,9 @@ class CreateNewBiomarkerUnit(forms.Form):
 class CreateNewPkpdModel(forms.ModelForm):
     """
     A form to create a new :model:`pkpdapp.PkpdModel`, which allows a user to
-    upload their sbml from a file.
+    upload their SBML from a file.
 
-    can pass an additional kwarg 'project', which adds the new model to this
+    Can pass an additional kwarg 'project', which adds the new model to this
     project id
     """
     def __init__(self, *args, **kwargs):
