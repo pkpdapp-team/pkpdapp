@@ -6,27 +6,38 @@ copyright notice and full license details.
 
 {% extends "base/base.html" %}
 {% load static %}
+{% load markdownify %}
 
 {% block main_content %}
+
 <p></p>
-<h2>Project {{project.name}}</h2>
-<p>{{project.description}}</p>
+<h2>
+  Project {{project.name}}
+</h2>
+(<a href="{% url 'project-update' project.id %}">Update project information</a>)
+<p>{{project.description|markdownify}}</p>
 <h3>Datasets</h3>
 <ul>
 {% for dataset in project.datasets.all %}
 <li><a href=/dataset/{{dataset.id}}/>{{dataset.name}}</a>: {{dataset.description|truncatewords:"10"}} </li>
+{% empty %}
+    <li>No datasets yet.</li>
 {% endfor %}
 </ul>
 <h3>Models</h3>
 <ul>
 {% for model in project.pkpd_models.all %}
 <li><a href=/pkpd_model/{{model.id}}/>{{model.name}}</a>: {{model.description|truncatewords:"10"}} </li>
+{% empty %}
+    <li>No models yet.</li>
 {% endfor %}
 </ul>
 <h3>Users</h3>
 <ul>
 {% for user in project.users.all %}
   <li>{{user.username}}</li>
+{% empty %}
+    <li>No users yet.</li>
 {% endfor %}
 </ul>
 <p></p>

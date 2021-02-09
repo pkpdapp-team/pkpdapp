@@ -6,10 +6,52 @@ copyright notice and full license details.
 
 {% extends "base/base.html" %}
 {% load static %}
+{% load markdownify %}
 
 {% block main_content %}
 <p></p>
 <h2>Dataset {{dataset.name}}</h2>
-<p>{{dataset.description}}</p>
+(<a href="{% url 'dataset-update' dataset.id %}"> Update </a>)
+<p>{{dataset.description|markdownify}}</p>
+<h3>Biomarker Types</h2>
+<ul>
+{% for type in biomarker_types %}
+  <li>{{ type.name }}: {{ type.description|truncatewords:"10"}}</li>
+{% endfor %}
+</ul>
+<h3>Data</h2>
+<table style="width:100%">
+  <tr>
+    <th>Time</th>
+    <th>Subject Id</th>
+    <th>Biomarker Type</th>
+    <th>Value</th>
+  </tr>
+  {% for biomarker in biomarker_dataset %}
+  <tr>
+    <td>{{ biomarker.time }}</td>
+    <td>{{ biomarker.subject_id}}</td>
+    <td>{{ biomarker.biomarker_type.name }}</td>
+    <td>{{ biomarker.value }}</td>
+  </tr>
+  {% endfor %}
+</table>
+<div class="pagination">
+    <span class="step-links">
+        {% if page_obj.has_previous %}
+            <a href="?page=1">&laquo; first</a>
+            <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+        {% endif %}
+
+        <span class="current">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+        </span>
+
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}">next</a>
+            <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+        {% endif %}
+    </span>
+</div>
 <p></p>
 {% endblock %}

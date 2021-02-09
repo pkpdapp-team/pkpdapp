@@ -6,15 +6,9 @@ copyright notice and full license details.
 
 {% extends "base/base.html" %}
 {% load static %}
-{% load markdownify %}
 
 {% block main_content %}
-<p></p>
-<h2>PkpdModel {{object.name}}</h2>
-(<a href="{% url 'pkpd_model-update' object.id %}"> Update </a>)
-{{object.description|markdownify}}
-<h3>SBML</h3>
-<pre>{{object.sbml}}</pre>
-<ul>
-<p></p>
+
+<h2>Model {{object.name}} deleted</h2>
+
 {% endblock %}

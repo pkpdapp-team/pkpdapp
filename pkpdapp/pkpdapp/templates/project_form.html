@@ -6,15 +6,17 @@ copyright notice and full license details.
 
 {% extends "base/base.html" %}
 {% load static %}
-{% load markdownify %}
 
 {% block main_content %}
-<p></p>
-<h2>PkpdModel {{object.name}}</h2>
-(<a href="{% url 'pkpd_model-update' object.id %}"> Update </a>)
-{{object.description|markdownify}}
-<h3>SBML</h3>
-<pre>{{object.sbml}}</pre>
-<ul>
-<p></p>
+
+<h2>Update Project {{project.name}}</h2>
+
+<form action="" method="post">
+  {% csrf_token %}
+  <table>
+  {{ form.as_table }}
+  </table>
+  <input type="submit" value="Submit">
+</form>
+
 {% endblock %}

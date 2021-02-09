@@ -1,8 +1,0 @@
-[run]
-source = pkpdapp
-omit =
-    pkpdapp/*/apps.py
-    pkpdapp/*/tests/*
-    pkpdapp/manage.py
-    pkpdapp/pkpdapp/asgi.py
-    pkpdapp/pkpdapp/wsgi.py

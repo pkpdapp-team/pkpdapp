@@ -23,15 +23,75 @@ urlpatterns = [
     path('admin/doc/', include('django.contrib.admindocs.urls')),
     path('admin/', admin.site.urls),
     path('accounts/', include('django.contrib.auth.urls')),
+
     path('dataset/<int:pk>/',
          views.DatasetDetailView.as_view(), name='dataset-detail'),
+
+    path(
+        'dataset/list/',
+        views.DatasetListView.as_view(),
+        name='dataset-list'
+    ),
+    path('dataset/add/', views.DatasetCreate.as_view(), name='dataset-add'),
+    path(
+        'dataset/<int:pk>/update/',
+        views.DatasetUpdate.as_view(),
+        name='dataset-update'
+    ),
+    path('dataset/<int:pk>/',
+         views.DatasetDetailView.as_view(), name='dataset-detail'),
+    path(
+        'dataset/<int:pk>/delete/',
+        views.DatasetDelete.as_view(),
+        name='dataset-delete'
+    ),
+
     path('explore_data/', include('explore_data.urls')),
+
+    path(
+        'pkpd_model/list/',
+        views.PkpdModelListView.as_view(),
+        name='pkpd_model-list'
+    ),
+    path(
+        'pkpd_model/add/',
+        views.PkpdModelCreate.as_view(),
+        name='pkpd_model-add'
+    ),
+    path(
+        'pkpd_model/<int:pk>/update/',
+        views.PkpdModelUpdate.as_view(),
+        name='pkpd_model-update'
+    ),
     path('pkpd_model/<int:pk>/',
          views.PkpdModelDetailView.as_view(), name='pkpd_model-detail'),
-    path('project/<int:pk>/',
-         views.ProjectDetailView.as_view(), name='project-detail'),
+    path(
+        'pkpd_model/<int:pk>/delete/',
+        views.PkpdModelDelete.as_view(),
+        name='pkpd_model-delete'
+    ),
+
     path('project/',
          views.ProjectDetailView.as_view(), name='selected-project-detail'),
+    path(
+        'project/list/',
+        views.ProjectListView.as_view(),
+        name='project-list'
+    ),
+    path('project/add/', views.ProjectCreate.as_view(), name='project-add'),
+    path(
+        'project/<int:pk>/update/',
+        views.ProjectUpdate.as_view(),
+        name='project-update'
+    ),
+    path('project/<int:pk>/',
+         views.ProjectDetailView.as_view(), name='project-detail'),
+    path(
+        'project/<int:pk>/delete/',
+        views.ProjectDelete.as_view(),
+        name='project-delete'
+    ),
+
     path('simulate/', include('simulate.urls')),
 
     path('generic/', views.GenericView.as_view(), name='generic'),

@@ -6,15 +6,18 @@ copyright notice and full license details.
 
 {% extends "base/base.html" %}
 {% load static %}
-{% load markdownify %}
 
 {% block main_content %}
-<p></p>
-<h2>PkpdModel {{object.name}}</h2>
-(<a href="{% url 'pkpd_model-update' object.id %}"> Update </a>)
-{{object.description|markdownify}}
-<h3>SBML</h3>
-<pre>{{object.sbml}}</pre>
-<ul>
-<p></p>
+<h1>Dataset List</h1>
+{% if dataset_list %}
+  <ul>
+    {% for dataset in dataset_list %}
+      <li>
+        <a href="{{ dataset.get_absolute_url }}">{{ dataset.name}}</a> 
+      </li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <p>There are no datasets in the database.</p>
+{% endif %} 
 {% endblock %}

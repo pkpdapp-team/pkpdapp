@@ -26,6 +26,13 @@ copyright notice and full license details.
 			(At the moment all languages are encoded, see doc for mathjax, but it may be worth focus on either MathML or LaTeX.)
 		{% endcomment %}
 		<script type="text/javascript" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-MML-AM_CHTML"></script>
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        config: ["MMLorHTML.js"],
+        jax: ["input/TeX", "output/HTML-CSS", "output/NativeMML"],
+        extensions: ["MathMenu.js", "MathZoom.js"]
+      });
+  </script>
 	</head>
 
 	<body>

@@ -6,15 +6,18 @@ copyright notice and full license details.
 
 {% extends "base/base.html" %}
 {% load static %}
-{% load markdownify %}
 
 {% block main_content %}
-<p></p>
-<h2>PkpdModel {{object.name}}</h2>
-(<a href="{% url 'pkpd_model-update' object.id %}"> Update </a>)
-{{object.description|markdownify}}
-<h3>SBML</h3>
-<pre>{{object.sbml}}</pre>
-<ul>
-<p></p>
+<h1>PkpdModel List</h1>
+{% if object_list %}
+  <ul>
+    {% for pkpd_model in object_list %}
+      <li>
+        <a href="{{ pkpd_model.get_absolute_url }}">{{ pkpd_model.name}}</a> 
+      </li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <p>There are no models in the database.</p>
+{% endif %} 
 {% endblock %}

@@ -11,6 +11,7 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 import re
 from pkpdapp.models import Dataset, PkpdModel, Project
+from http import HTTPStatus
 
 
 class TestIndexView(SimpleTestCase):
@@ -73,7 +74,7 @@ class TestGenericView(SimpleTestCase):
 
 class TestDatasetView(TestCase):
     """
-    Tests the dataset view.
+    Tests the dataset views.
     """
     def setUp(self):
         self.test_dataset = Dataset.objects.create(
@@ -82,14 +83,95 @@ class TestDatasetView(TestCase):
             description='description for my cool dataset',
             administration_type='T1',
         )
+        self.test_dataset2 = Dataset.objects.create(
+            name='my_cool_dataset2',
+            datetime=timezone.now(),
+            description='description for my cool dataset',
+            administration_type='T1',
+        )
+
+    def test_list_view(self):
+        response = self.client.get(reverse('dataset-list'))
+        self.assertEquals(response.status_code, HTTPStatus.OK)
+        self.assertTemplateUsed(response, 'dataset_list.html')
+        self.assertContains(response, self.test_dataset.name)
+        self.assertContains(response, self.test_dataset2.name)
+
+    def test_update_form(self):
+        response = self.client.get(
+            reverse('dataset-update', args=[self.test_dataset.id])
+        )
+        self.assertEquals(response.status_code, HTTPStatus.OK)
+        self.assertTemplateUsed(response, 'dataset_form.html')
+        self.assertContains(response, self.test_dataset.name)
+
+        response = self.client.post(
+            reverse('dataset-update', args=[self.test_dataset.id]),
+            data={
+                'name': 'updated name',
+                'description': 'update description',
+            },
+            follow=True
+        )
+        self.assertEquals(
+            response.redirect_chain[0][0],
+            reverse('dataset-detail', args=[self.test_dataset.id])
+        )
+        self.assertEquals(response.status_code, HTTPStatus.OK)
+        new_dataset = Dataset.objects.get(id=self.test_dataset.id)
+        self.assertEquals(new_dataset.name, 'updated name')
+
+    def test_add_form(self):
+        response = self.client.get(
+            reverse('dataset-add')
+        )
+        self.assertEquals(response.status_code, HTTPStatus.OK)
+        self.assertTemplateUsed(response, 'dataset_form.html')
+
+        response = self.client.post(
+            reverse('dataset-add'),
+            data={
+                'name': 'add name',
+                'description': 'add description',
+            },
+            follow=True
+        )
+        self.assertEquals(response.status_code, HTTPStatus.OK)
+
+        new_dataset = Dataset.objects.get(name='add name')
+
+        self.assertRedirects(
+            response,
+            reverse('dataset-detail', args=[new_dataset.id])
+        )
+
+    def test_delete_form(self):
+        response = self.client.get(
+            reverse('dataset-delete', args=[self.test_dataset2.id])
+        )
+        self.assertEquals(response.status_code, HTTPStatus.OK)
+        self.assertTemplateUsed(response, 'dataset_confirm_delete.html')
+        Dataset.objects.get(id=self.test_dataset2.id)
+
+        response = self.client.post(
+            reverse('dataset-delete', args=[self.test_dataset2.id]),
+            follow=True
+        )
+        self.assertRedirects(response, reverse('dataset-list'))
+        with self.assertRaises(Dataset.DoesNotExist):
+            Dataset.objects.get(id=self.test_dataset2.id)
 
     def test_view_uses_correct_template(self):
-        response = self.client.get('/dataset/{}/'.format(self.test_dataset.id))
+        response = self.client.get(
+            reverse('dataset-detail', args=[self.test_dataset.id])
+        )
         self.assertEquals(response.status_code, 200)
         self.assertTemplateUsed(response, 'dataset_detail.html')
 
     def test_index_contains_correct_html(self):
-        response = self.client.get('/dataset/{}/'.format(self.test_dataset.id))
+        response = self.client.get(
+            reverse('dataset-detail', args=[self.test_dataset.id])
+        )
         self.assertContains(response, self.test_dataset.name)
         self.assertContains(response, self.test_dataset.description)
 
@@ -103,17 +185,93 @@ class TestPkpdModelView(TestCase):
             name='my_cool_model',
             description='description for my cool model',
         )
+        self.test_model2 = PkpdModel.objects.create(
+            name='my_cool_model2',
+            description='description for my cool model',
+        )
+
+    def test_list_view(self):
+        response = self.client.get(reverse('pkpd_model-list'))
+        self.assertEquals(response.status_code, HTTPStatus.OK)
+        self.assertTemplateUsed(response, 'pkpd_model_list.html')
+        self.assertContains(response, self.test_model.name)
+        self.assertContains(response, self.test_model2.name)
+
+    def test_update_form(self):
+        response = self.client.get(
+            reverse('pkpd_model-update', args=[self.test_model.id])
+        )
+        self.assertEquals(response.status_code, HTTPStatus.OK)
+        self.assertTemplateUsed(response, 'pkpd_model_form.html')
+        self.assertContains(response, self.test_model.name)
+
+        response = self.client.post(
+            reverse('pkpd_model-update', args=[self.test_model.id]),
+            data={
+                'name': 'updated name',
+                'description': 'update description',
+            },
+            follow=True
+        )
+        self.assertEquals(
+            response.redirect_chain[0][0],
+            reverse('pkpd_model-detail', args=[self.test_model.id])
+        )
+        self.assertEquals(response.status_code, HTTPStatus.OK)
+        new_model = PkpdModel.objects.get(id=self.test_model.id)
+        self.assertEquals(new_model.name, 'updated name')
+
+    def test_add_form(self):
+        response = self.client.get(
+            reverse('pkpd_model-add')
+        )
+        self.assertEquals(response.status_code, HTTPStatus.OK)
+        self.assertTemplateUsed(response, 'pkpd_model_form.html')
+
+        response = self.client.post(
+            reverse('pkpd_model-add'),
+            data={
+                'name': 'add name',
+                'description': 'add description',
+            },
+            follow=True
+        )
+        self.assertEquals(response.status_code, HTTPStatus.OK)
+
+        new_model = PkpdModel.objects.get(name='add name')
+
+        self.assertEquals(
+            response.redirect_chain[0][0],
+            reverse('pkpd_model-detail', args=[new_model.id])
+        )
+        self.assertEquals(new_model.name, 'add name')
+
+    def test_delete_form(self):
+        response = self.client.get(
+            reverse('pkpd_model-delete', args=[self.test_model2.id])
+        )
+        self.assertEquals(response.status_code, HTTPStatus.OK)
+        self.assertTemplateUsed(response, 'pkpd_model_confirm_delete.html')
+        PkpdModel.objects.get(id=self.test_model2.id)
+
+        response = self.client.post(
+            reverse('pkpd_model-delete', args=[self.test_model2.id]),
+            follow=True
+        )
+        self.assertRedirects(response, reverse('pkpd_model-list'))
+        with self.assertRaises(PkpdModel.DoesNotExist):
+            PkpdModel.objects.get(id=self.test_model2.id)
 
     def test_view_uses_correct_template(self):
         response = self.client.get(
-            '/pkpd_model/{}/'.format(self.test_model.id)
+            reverse('pkpd_model-detail', args=[self.test_model.id])
         )
         self.assertEquals(response.status_code, 200)
         self.assertTemplateUsed(response, 'pkpd_model_detail.html')
 
     def test_index_contains_correct_html(self):
         response = self.client.get(
-            '/pkpd_model/{}/'.format(self.test_model.id)
+            reverse('pkpd_model-detail', args=[self.test_model.id])
         )
         self.assertContains(response, self.test_model.name)
         self.assertContains(response, self.test_model.description)
@@ -145,11 +303,99 @@ class TestProjectView(TestCase):
             name='my_cool_project',
             description='description for my cool project',
         )
+        self.test_project2 = Project.objects.create(
+            name='my_cool_project2',
+            description='description for my cool project2',
+        )
         self.test_project.datasets.add(self.test_dataset)
         self.test_project.pkpd_models.add(self.test_model)
         self.test_project.users.add(self.test_user)
         self.test_user.profile.selected_project = self.test_project
         self.test_user.profile.save(update_fields=["selected_project"])
+
+    def test_list_view(self):
+        response = self.client.get(reverse('project-list'))
+        self.assertEquals(response.status_code, HTTPStatus.OK)
+        self.assertTemplateUsed(response, 'project_list.html')
+        self.assertContains(response, self.test_project.name)
+        self.assertContains(response, self.test_project2.name)
+
+    def test_update_form(self):
+        response = self.client.post(
+            reverse('login'), self.credentials, follow=True)
+
+        response = self.client.get(
+            reverse('project-update', args=[self.test_project.id])
+        )
+        self.assertEquals(response.status_code, HTTPStatus.OK)
+        self.assertTemplateUsed(response, 'project_form.html')
+        self.assertContains(response, self.test_project.name)
+
+        response = self.client.post(
+            reverse('project-update', args=[self.test_project.id]),
+            data={
+                'name': 'updated name',
+                'description': 'update description',
+                'users': [self.test_user.id]
+            },
+            follow=True
+        )
+        self.assertEquals(response.status_code, HTTPStatus.OK)
+
+        self.assertRedirects(
+            response,
+            reverse('project-detail', args=[self.test_project.id])
+        )
+        new_project = Project.objects.get(id=self.test_project.id)
+        self.assertEquals(new_project.name, 'updated name')
+
+    def test_add_form(self):
+        response = self.client.post(
+            reverse('login'), self.credentials, follow=True)
+
+        response = self.client.get(
+            reverse('project-add')
+        )
+        self.assertEquals(response.status_code, HTTPStatus.OK)
+        self.assertTemplateUsed(response, 'project_form.html')
+
+        response = self.client.post(
+            reverse('project-add'),
+            data={
+                'name': 'add name',
+                'description': 'add description',
+                'users': [self.test_user.id]
+            },
+            follow=True
+        )
+        self.assertEquals(response.status_code, HTTPStatus.OK)
+
+        new_project = Project.objects.get(name='add name')
+
+        self.assertRedirects(
+            response,
+            reverse('project-detail', args=[new_project.id])
+        )
+        self.assertEquals(new_project.name, 'add name')
+
+    def test_delete_form(self):
+        response = self.client.post(
+            reverse('login'), self.credentials, follow=True)
+
+        response = self.client.get(
+            reverse('project-delete', args=[self.test_project2.id])
+        )
+        self.assertEquals(response.status_code, HTTPStatus.OK)
+        self.assertTemplateUsed(response, 'project_confirm_delete.html')
+        Project.objects.get(id=self.test_project2.id)
+
+        response = self.client.post(
+            reverse('project-delete', args=[self.test_project2.id]),
+            follow=True
+        )
+        self.assertRedirects(response, reverse('project-list'))
+        with self.assertRaises(Project.DoesNotExist):
+            Project.objects.get(id=self.test_project2.id)
 
     def test_view_not_logged_in(self):
         response = self.client.get('/project/{}/'.format(self.test_project.id))

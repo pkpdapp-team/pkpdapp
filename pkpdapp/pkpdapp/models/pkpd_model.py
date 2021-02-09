@@ -5,6 +5,7 @@
 #
 
 from django.db import models
+from django.urls import reverse
 
 
 class PkpdModel(models.Model):
@@ -25,3 +26,6 @@ class PkpdModel(models.Model):
     sbml = models.TextField(
         help_text='the model represented using SBML (see http://sbml.org)'
     )
+
+    def get_absolute_url(self):
+        return reverse('pkpd_model-detail', kwargs={'pk': self.pk})
