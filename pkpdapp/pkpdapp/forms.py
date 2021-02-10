@@ -62,8 +62,6 @@ class CreateNewDataset(forms.ModelForm):
         # error in columns
         data = pd.read_csv(uploaded_file)
         colnames = list(data.columns)
-        print(data)
-        print(colnames)
         if len(colnames) > 4:
             raise forms.ValidationError(
                 _((
@@ -74,6 +72,23 @@ class CreateNewDataset(forms.ModelForm):
                 )),
                 code='invalid',
                 params={'filename': uploaded_file.name},
+            )
+
+        required_cols = ['subject id', 'time', 'biomarker type', 'value']
+        error_cols = []
+        for col in required_cols:
+            if col not in colnames:
+                error_cols.append(col)
+        if len(error_cols) > 0:
+            raise forms.ValidationError(
+                _((
+                    'Error parsing file, '
+                    '%(filename)s does not have the following columns: '
+                    '%(error_cols)s'
+                )),
+                code='invalid',
+                params={'filename': uploaded_file.name,
+                        'error_cols': error_cols},
             )
         return data
 
