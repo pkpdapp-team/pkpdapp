@@ -4,9 +4,8 @@
 # copyright notice and full license details.
 #
 from django import forms
-from pkpdapp.models.dataset import ADMINISTRATION_TYPE_CHOICES
 from django.core.exceptions import ValidationError
-from pkpdapp.models import Dataset
+from pkpdapp.models import Dataset, BiomarkerType, Project
 
 MAX_UPLOAD_SIZE = "5242880"
 
@@ -22,6 +21,13 @@ class CreateNewDataset(forms.ModelForm):
     A form to create a new :model:`pkpdapp.Dataset`, which allows a user to
     upload their data from a file.
     """
+    def __init__(self, *args, **kwargs):
+        if 'project' in kwargs:
+            self.project_id = kwargs.pop('project')
+        else:
+            self.project_id = None
+
+        super().__init__(*args, **kwargs)
 
     class Meta:
         model = Dataset
@@ -34,25 +40,32 @@ class CreateNewDataset(forms.ModelForm):
             }
         }
 
-    file = forms.FileField(label='Data file', validators=[file_size])
+    file = forms.FileField(label='Data file', validators=[file_size],
+                           help_text='csv format required')
+
+    # def clean_file(self):
+
+    def save(self, commit=True):
+        instance = super().save()
+        if self.project_id is not None:
+            project = Project.objects.get(id=self.project_id)
+            project.pkpd_models.add(instance)
+            if commit:
+                project.save()
+
+        return instance
 
 
-class CreateNewBiomarkerUnit(forms.Form):
+class CreateNewBiomarkerUnit(forms.ModelForm):
     """
     A form to associate a unit with a predefined biomarker type name.
     """
-    UNIT_CHOICES = [
-        ('mg', 'mg'),
-        ('g', 'g'),
-        ('cm3', 'cm^3'),
-    ]
-    unit = forms.ChoiceField(
-        label='',
-        choices=UNIT_CHOICES
-    )
+
+    class Meta:
+        model = BiomarkerType
+        fields = ['name', 'unit', 'description']
 
     description = forms.CharField(
         widget=forms.Textarea(attrs={'rows': 2, 'cols': 25}),
-        label='Description',
         required=False
     )
