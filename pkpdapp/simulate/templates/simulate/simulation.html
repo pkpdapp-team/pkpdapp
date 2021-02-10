@@ -7,6 +7,7 @@ copyright notice and full license details.
 {% extends "base/base.html" %}
 {% load static %}
 {% load plotly_dash %}
+{% load simulate_extras %}
 
 {% block main_content %}
   <form action="" method="get">
@@ -15,7 +16,10 @@ copyright notice and full license details.
     <div class="col">
     <h3>Models</h3>
     {% for model in project.pkpd_models.all %}
-    <input type="checkbox" id="model{{model.id}}" name="model{{model.id}}">
+    <input type="checkbox" 
+           id="model{{model.id}}" 
+           name="model{{model.id}}"
+           {% if 'model'|addstr:model.id in request.GET %}checked{% endif %}>
     <label for="dataset{{model.id}}">{{model.name}}
       <a href={% url 'pkpd_model-detail' model.id %}>
         <i class="fas fa-info-circle"></i>
@@ -26,7 +30,10 @@ copyright notice and full license details.
     <div class="col">
     <h3>Datasets</h3>
     {% for dataset in project.datasets.all %}
-      <input type="checkbox" id="dataset{{dataset.id}} name="dataset{{dataset.id}}"">
+      <input type="checkbox" 
+             id="dataset{{dataset.id}}" 
+             name="dataset{{dataset.id}}"
+             {% if 'dataset'|addstr:dataset.id in request.GET %}checked{% endif %}>
       <label for="dataset{{dataset.id}}">{{dataset.name}}
         <a href={% url 'dataset-detail' dataset.id %}>
           <i class="fas fa-info-circle"></i>
