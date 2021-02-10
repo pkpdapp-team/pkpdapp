@@ -88,51 +88,51 @@ def create(request):
                               context)
 
             # error in file content
-            print(uploaded_file)
-            data = pd.read_csv(uploaded_file)
-            colnames = list(data.columns)
-            if len(colnames) > 4:
-                messages.error(
-                    request,
-                    BASE_FILE_UPLOAD_ERROR +
-                    'THIS FILE HAS TOO MANY COLUMNS. ' +
-                    'IT SHOULD ONLY HAVE: subject id, time, biomarker type, ' +
-                    'value')
-                return render(request, 'dataset_create.html',
-                              context)
-            required_cols = ['subject id', 'time', 'biomarker type', 'value']
-            error_cols = []
-            error_string = (BASE_FILE_UPLOAD_ERROR +
-                            'FILE DOES NOT CONTAIN: ')
-            for col in required_cols:
-                if col not in colnames:
-                    error_cols.append(col)
-            if len(error_cols) > 0:
-                messages.error(request,
-                               error_string + ', '.join(error_cols))
-                return render(request, 'dataset_create.html',
-                              context)
-
-            # no errors -> process and save as dataset
-            dataset = Dataset(
-                name=form.cleaned_data["name"],
-                description=form.cleaned_data["description"],
-                datetime=form.cleaned_data["datetime"],
-                administration_type=form.cleaned_data["administration_type"],
-            )
-            dataset.save()
-
-            # add to demo project
-            Project = apps.get_model("pkpdapp", "Project")
-            demo_project = Project.objects.get(name='demo')
-            demo_project.datasets.add(dataset)
-            context["dataset"] = dataset
-
-            # find all the biomarker types for that dataset
-            bts_unique = data["biomarker type"].unique().tolist()
-            request.session['bts_unique'] = bts_unique
-            request.session['data_raw'] = data.to_json()
-            return redirect('dataset-biomarkers')
+            # print(uploaded_file)
+            # data = pd.read_csv(uploaded_file)
+            # colnames = list(data.columns)
+            # if len(colnames) > 4:
+            #     messages.error(
+            #         request,
+            #         BASE_FILE_UPLOAD_ERROR +
+            #         'THIS FILE HAS TOO MANY COLUMNS. ' +
+            #         'IT SHOULD ONLY HAVE: subject id, time, biomarker type, ' +
+            #         'value')
+            #     return render(request, 'dataset_create.html',
+            #                   context)
+            # required_cols = ['subject id', 'time', 'biomarker type', 'value']
+            # error_cols = []
+            # error_string = (BASE_FILE_UPLOAD_ERROR +
+            #                 'FILE DOES NOT CONTAIN: ')
+            # for col in required_cols:
+            #     if col not in colnames:
+            #         error_cols.append(col)
+            # if len(error_cols) > 0:
+            #     messages.error(request,
+            #                    error_string + ', '.join(error_cols))
+            #     return render(request, 'dataset_create.html',
+            #                   context)
+            #
+            # # no errors -> process and save as dataset
+            # dataset = Dataset(
+            #     name=form.cleaned_data["name"],
+            #     description=form.cleaned_data["description"],
+            #     datetime=form.cleaned_data["datetime"],
+            #     administration_type=form.cleaned_data["administration_type"],
+            # )
+            # dataset.save()
+            #
+            # # add to demo project
+            # Project = apps.get_model("pkpdapp", "Project")
+            # demo_project = Project.objects.get(name='demo')
+            # demo_project.datasets.add(dataset)
+            # context["dataset"] = dataset
+            #
+            # # find all the biomarker types for that dataset
+            # bts_unique = data["biomarker type"].unique().tolist()
+            # request.session['bts_unique'] = bts_unique
+            # request.session['data_raw'] = data.to_json()
+            # return redirect('dataset-biomarkers')
 
     else:
         form = CreateNewDataset()

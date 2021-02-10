@@ -59,23 +59,23 @@ class CreateNewDataset(forms.ModelForm):
                 params={'filename': uploaded_file.name},
             )
 
-        # # error in columns
-        # data = pd.read_csv(uploaded_file)
-        # colnames = list(data.columns)
-        # print(data)
-        # print(colnames)
-        # if len(colnames) > 4:
-        #     raise forms.ValidationError(
-        #         _((
-        #             'Error parsing file, '
-        #             '%(filename)s has too many columns. '
-        #             'It should only have: subject id, time, biomarker type, '
-        #             'value'
-        #         )),
-        #         code='invalid',
-        #         params={'filename': uploaded_file.name},
-        #     )
-        # return data
+        # error in columns
+        data = pd.read_csv(uploaded_file)
+        colnames = list(data.columns)
+        print(data)
+        print(colnames)
+        if len(colnames) > 4:
+            raise forms.ValidationError(
+                _((
+                    'Error parsing file, '
+                    '%(filename)s has too many columns. '
+                    'It should only have: subject id, time, biomarker type, '
+                    'value'
+                )),
+                code='invalid',
+                params={'filename': uploaded_file.name},
+            )
+        return data
 
     def save(self, commit=True):
         instance = super().save()
