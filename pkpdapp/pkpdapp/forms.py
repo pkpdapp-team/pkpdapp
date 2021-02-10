@@ -6,6 +6,8 @@
 from django import forms
 from django.core.exceptions import ValidationError
 from pkpdapp.models import Dataset, BiomarkerType, Project
+from django.utils.translation import gettext as _
+import pandas as pd
 
 MAX_UPLOAD_SIZE = "5242880"
 
@@ -43,7 +45,37 @@ class CreateNewDataset(forms.ModelForm):
     file = forms.FileField(label='Data file', validators=[file_size],
                            help_text='csv format required')
 
-    # def clean_file(self):
+    def clean_file(self):
+        uploaded_file = self.cleaned_data.get("file")
+
+        # error in file type
+        if not uploaded_file.name.endswith('.csv'):
+            raise forms.ValidationError(
+                _((
+                    'Error parsing file, '
+                    '%(filename)s does not seem to be valid csv'
+                )),
+                code='invalid',
+                params={'filename': uploaded_file.name},
+            )
+
+        # # error in columns
+        # data = pd.read_csv(uploaded_file)
+        # colnames = list(data.columns)
+        # print(data)
+        # print(colnames)
+        # if len(colnames) > 4:
+        #     raise forms.ValidationError(
+        #         _((
+        #             'Error parsing file, '
+        #             '%(filename)s has too many columns. '
+        #             'It should only have: subject id, time, biomarker type, '
+        #             'value'
+        #         )),
+        #         code='invalid',
+        #         params={'filename': uploaded_file.name},
+        #     )
+        # return data
 
     def save(self, commit=True):
         instance = super().save()

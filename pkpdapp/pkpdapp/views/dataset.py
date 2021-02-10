@@ -88,6 +88,7 @@ def create(request):
                               context)
 
             # error in file content
+            print(uploaded_file)
             data = pd.read_csv(uploaded_file)
             colnames = list(data.columns)
             if len(colnames) > 4:
