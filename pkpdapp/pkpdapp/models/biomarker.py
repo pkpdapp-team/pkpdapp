@@ -19,8 +19,8 @@ class Biomarker(models.Model):
     subject_id = models.IntegerField(
         help_text='subject id for biomarker measurement'
     )
-    value = models.FloatField(help_text='value of the measurement')
     biomarker_type = models.ForeignKey(
         BiomarkerType, on_delete=models.CASCADE,
         help_text='biomarker type, for example "concentration in mg"'
     )
+    value = models.FloatField(help_text='value of the measurement')

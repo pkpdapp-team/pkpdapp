@@ -11,7 +11,8 @@ from dash.dependencies import Input, Output
 import erlotinib as erlo
 from .dash_apps.simulation import PDSimulationApp
 import re
-from pkpdapp.models import Dataset, PkpdModel
+import pandas as pd
+from pkpdapp.models import Dataset, PkpdModel, Biomarker, BiomarkerType
 
 
 def _get_trailing_number(s):
@@ -51,7 +52,6 @@ class SimulationView(LoginRequiredMixin, generic.base.TemplateView):
         dataset_objs = [Dataset.objects.get(id=id) for id in dataset_ids]
         model_objs = [PkpdModel.objects.get(id=id) for id in model_ids]
 
-
         # create dash app
         app = PDSimulationApp(name='simulation-app')
 
@@ -68,21 +68,27 @@ class SimulationView(LoginRequiredMixin, generic.base.TemplateView):
 
         # add datasets
         for d in dataset_objs:
+            biomarker_types = BiomarkerType.objects.filter(dataset=d)
+            biomarkers = Biomarker.objects\
+                .select_related('biomarker_type__name')\
+                .filter(biomarker_type__in=biomarker_types)
 
-
-        # Define Dash apps that are part of the simulate app
-        # Get data and model (temporary, will be replaced by database callback)
-        data = erlo.DataLibrary().lung_cancer_control_group()
-        #model.set_parameter_names(names={
-        #    'myokit.drug_concentration': 'Drug concentration in mg/L',
-        #    'myokit.tumour_volume': 'Tumour volume in cm^3',
-        #    'myokit.kappa': 'Potency in L/mg/day',
-        #    'myokit.lambda_0': 'Exponential growth rate in 1/day',
-        #    'myokit.lambda_1': 'Linear growth rate in cm^3/day'})
-
-        # Set up dash app
-
-        app.add_data(data, biomarker='Tumour volume')
+            # convert to pandas dataframe with the column names expected
+            df = pd.DataFrame(
+                list(biomarkers.values(
+                    'time',  'subject_id',
+                    'biomarker_type__name', 'value'
+                ))
+            )
+            df.rename(columns={
+                'subject_id': 'ID',
+                'time': 'Time',
+                'biomarker_type__name': 'Biomarker',
+                'value': 'Measurement'
+            }, inplace=True)
+            for bt in biomarker_types:
+                print('adding bt', bt.name)
+                app.add_data(df, biomarker=bt.name)
 
         # Define a simulation callback
         sliders = app.slider_ids()
