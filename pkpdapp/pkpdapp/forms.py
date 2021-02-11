@@ -8,6 +8,7 @@ from django.core.exceptions import ValidationError
 from pkpdapp.models import Dataset, BiomarkerType, Project
 from django.utils.translation import gettext as _
 import pandas as pd
+from django.forms import modelformset_factory
 
 MAX_UPLOAD_SIZE = "5242880"
 
@@ -116,3 +117,10 @@ class CreateNewBiomarkerUnit(forms.ModelForm):
         widget=forms.Textarea(attrs={'rows': 2, 'cols': 25}),
         required=False
     )
+
+
+BiomarkerTypeFormset = modelformset_factory(
+    BiomarkerType,
+    fields=('name', 'unit', 'description'),
+    extra=1,
+)

@@ -7,7 +7,8 @@ from django.shortcuts import render
 from django.urls import reverse_lazy
 from django.core.paginator import Paginator
 from pkpdapp.models import Dataset, Biomarker, BiomarkerType
-from ..forms import CreateNewDataset, CreateNewBiomarkerUnit
+from ..forms import (CreateNewDataset, CreateNewBiomarkerUnit,
+                     BiomarkerTypeFormset)
 import pandas as pd
 from django.contrib import messages
 from django.apps import apps
@@ -57,9 +58,21 @@ class DatasetListView(ListView):
 
 
 class DatasetCreate(CreateView):
+    form_class = CreateNewDataset
     model = Dataset
-    fields = ['name', 'description']
     template_name = 'dataset_form.html'
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        if 'project' in self.kwargs:
+            kwargs['project'] = self.kwargs['project']
+        return kwargs
+
+    def get_success_url(self):
+        return reverse_lazy(
+            'dataset-biomarkers-create',
+            kwargs={'pk': self.object.pk}
+        )
 
 
 class DatasetUpdate(UpdateView):
@@ -75,43 +88,7 @@ def create(request):
         context["form"] = form
 
         if form.is_valid():
-            uploaded_file = request.FILES['file']
-
-            # handling errors in uploaded files
-
-            # error in file type
-            if not uploaded_file.name.endswith('.csv'):
-                messages.error(request,
-                               BASE_FILE_UPLOAD_ERROR +
-                               'THIS IS NOT A CSV FILE.')
-                return render(request, 'dataset_create.html',
-                              context)
-
-            # error in file content
-            # print(uploaded_file)
-            # data = pd.read_csv(uploaded_file)
-            # colnames = list(data.columns)
-            # if len(colnames) > 4:
-            #     messages.error(
-            #         request,
-            #         BASE_FILE_UPLOAD_ERROR +
-            #         'THIS FILE HAS TOO MANY COLUMNS. ' +
-            #         'IT SHOULD ONLY HAVE: subject id, time, biomarker type, ' +
-            #         'value')
-            #     return render(request, 'dataset_create.html',
-            #                   context)
-            # required_cols = ['subject id', 'time', 'biomarker type', 'value']
-            # error_cols = []
-            # error_string = (BASE_FILE_UPLOAD_ERROR +
-            #                 'FILE DOES NOT CONTAIN: ')
-            # for col in required_cols:
-            #     if col not in colnames:
-            #         error_cols.append(col)
-            # if len(error_cols) > 0:
-            #     messages.error(request,
-            #                    error_string + ', '.join(error_cols))
-            #     return render(request, 'dataset_create.html',
-            #                   context)
+            pass
             #
             # # no errors -> process and save as dataset
             # dataset = Dataset(
@@ -193,6 +170,34 @@ def select_biomarkers(request):
         context["formset"] = formset
     return render(request, 'dataset_create.html',
                   context)
+
+
+def create_biomarker_model_form(request, pk):
+    template_name = 'biomarker_form.html'
+    if request.method == 'POST':
+        formset = BiomarkerTypeFormset(request.POST)
+        dataset = Dataset.objects.get(pk=pk)
+        if formset.is_valid():
+            for f in formset:
+                cd = f.cleaned_data
+                name = cd.get("name")
+                unit = cd.get("unit")
+                desc = cd.get("description")
+                bm = BiomarkerType(
+                    name=name,
+                    description=desc,
+                    unit=unit,
+                    dataset=dataset
+                )
+                bm.save()
+        return render(request, template_name, {
+            'formset': formset,
+        })
+    else:
+        formset = BiomarkerTypeFormset(queryset=BiomarkerType.objects.none())
+        return render(request, template_name, {
+            'formset': formset,
+        })
 
 
 class DatasetDelete(DeleteView):
