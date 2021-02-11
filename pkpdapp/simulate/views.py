@@ -36,13 +36,14 @@ class SimulationView(LoginRequiredMixin, generic.base.TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['project'] = self.request.user.profile.selected_project
+        print('context kwargs are ', kwargs, context)
         return context
 
     def get(self, request, *args, **kwargs):
         # extract dataset and model ids from GET parameters
         dataset_ids = []
         model_ids = []
-        for k in request.GET.keys():
+        for k, v in request.GET.items():
             if k.startswith('model'):
                 model_ids.append(_get_trailing_number(k))
             elif k.startswith('dataset'):
@@ -86,9 +87,9 @@ class SimulationView(LoginRequiredMixin, generic.base.TemplateView):
                 'biomarker_type__name': 'Biomarker',
                 'value': 'Measurement'
             }, inplace=True)
-            for bt in biomarker_types:
-                print('adding bt', bt.name)
-                app.add_data(df, biomarker=bt.name)
+
+            # use by default the 1st biomarker type
+            app.add_data(df, biomarker=biomarker_types[0].name)
 
         # Define a simulation callback
         sliders = app.slider_ids()
