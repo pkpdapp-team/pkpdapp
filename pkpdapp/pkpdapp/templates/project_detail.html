@@ -19,7 +19,12 @@ copyright notice and full license details.
 <h3>Datasets</h3>
 <ul>
 {% for dataset in project.datasets.all %}
-<li><a href=/dataset/{{dataset.id}}/>{{dataset.name}}</a>: {{dataset.description|truncatewords:"10"}} </li>
+  <li>
+    <b>{{dataset.name}}</b>: {{dataset.description|truncatewords:"10"}} 
+    <a href={% url 'dataset-detail' dataset.id %}>
+      <i class="fas fa-info-circle"></i>
+    </a>
+  </li>
 {% empty %}
     <li>No datasets yet.</li>
 {% endfor %}
@@ -27,7 +32,12 @@ copyright notice and full license details.
 <h3>Models</h3>
 <ul>
 {% for model in project.pkpd_models.all %}
-<li><a href=/pkpd_model/{{model.id}}/>{{model.name}}</a>: {{model.description|truncatewords:"10"}} </li>
+  <li>
+    <b>{{model.name}}</b>: {{model.description|truncatewords:"10"}} 
+    <a href={% url 'pkpd_model-detail' model.id %}>
+      <i class="fas fa-info-circle"></i>
+    </a>
+  </li>
 {% empty %}
     <li>No models yet.</li>
 {% endfor %}

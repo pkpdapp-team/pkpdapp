@@ -10,42 +10,5 @@ copyright notice and full license details.
 {% load simulate_extras %}
 
 {% block main_content %}
-  <form action="" method="get">
-  <div class="container">
-  <div class="row">
-    <div class="col">
-    <h3>Models</h3>
-    {% for model in project.pkpd_models.all %}
-    <input type="checkbox" 
-           id="model{{model.id}}" 
-           name="model{{model.id}}"
-           {% if 'model'|addstr:model.id in request.GET %}checked{% endif %}>
-    <label for="dataset{{model.id}}">{{model.name}}
-      <a href={% url 'pkpd_model-detail' model.id %}>
-        <i class="fas fa-info-circle"></i>
-      </a>
-    </label>
-    <br>
-    {% endfor %}
-    </div>
-    <div class="col">
-    <h3>Datasets</h3>
-    {% for dataset in project.datasets.all %}
-      <input type="checkbox" 
-             id="dataset{{dataset.id}}" 
-             name="dataset{{dataset.id}}"
-             {% if 'dataset'|addstr:dataset.id in request.GET %}checked{% endif %}>
-      <label for="dataset{{dataset.id}}">{{dataset.name}}
-        <a href={% url 'dataset-detail' dataset.id %}>
-          <i class="fas fa-info-circle"></i>
-        </a>
-      </label>
-      <br>
-    {% endfor %}
-    </div>
-  </div>
-  <input type="submit" value="Submit">
-  </div>
-  </form>
   {% plotly_app_bootstrap name="simulation-app" %}
 {% endblock %}

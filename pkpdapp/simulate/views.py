@@ -8,6 +8,7 @@ from django.views import generic
 from django.contrib.auth.mixins import LoginRequiredMixin
 
 from dash.dependencies import Input, Output
+import dash
 import erlotinib as erlo
 from .dash_apps.simulation import PDSimulationApp
 import re
@@ -40,24 +41,13 @@ class SimulationView(LoginRequiredMixin, generic.base.TemplateView):
         return context
 
     def get(self, request, *args, **kwargs):
-        # extract dataset and model ids from GET parameters
-        dataset_ids = []
-        model_ids = []
-        for k, v in request.GET.items():
-            if k.startswith('model'):
-                model_ids.append(_get_trailing_number(k))
-            elif k.startswith('dataset'):
-                dataset_ids.append(_get_trailing_number(k))
-
-        # convert ids to model objects
-        dataset_objs = [Dataset.objects.get(id=id) for id in dataset_ids]
-        model_objs = [PkpdModel.objects.get(id=id) for id in model_ids]
-
         # create dash app
         app = PDSimulationApp(name='simulation-app')
+        self._app = app
+        project = self.request.user.profile.selected_project
 
         # get model sbml strings and add erlo models
-        for m in model_objs:
+        for m in project.pkpd_models.all():
             sbml_str = m.sbml.encode('utf-8')
             erlo_m = erlo.PharmacodynamicModel(sbml_str)
             param_names = erlo_m.parameters()
@@ -65,10 +55,11 @@ class SimulationView(LoginRequiredMixin, generic.base.TemplateView):
             for p in param_names:
                 param_names_dict[p] = p.replace('.', '_')
             erlo_m.set_parameter_names(names=param_names_dict)
-            app.add_model(erlo_m)
+            app.add_model(erlo_m, m.name)
 
         # add datasets
-        for d in dataset_objs:
+        for d in project.datasets.all():
+            print('doing dataset', d)
             biomarker_types = BiomarkerType.objects.filter(dataset=d)
             biomarkers = Biomarker.objects\
                 .select_related('biomarker_type__name')\
@@ -88,22 +79,33 @@ class SimulationView(LoginRequiredMixin, generic.base.TemplateView):
                 'value': 'Measurement'
             }, inplace=True)
 
-            # use by default the 1st biomarker type
-            app.add_data(df, biomarker=biomarker_types[0].name)
+            app.add_data(df)
 
-        # Define a simulation callback
+        # generate dash app
+        app.set_layout()
+
         sliders = app.slider_ids()
+        n_params = [len(s) for s in sliders]
+        offsets = [0]
+        for i in range(1, len(n_params)):
+            offsets.append(offsets[i - 1] + n_params[i])
 
+        # Define simulation callbacks
         @app.app.callback(
             Output('fig', 'figure'),
-            [Input(s, 'value') for s in sliders])
+            [Input(s, 'value') for s in sum(sliders, [])])
         def update_simulation(*args):
             """
             Simulates the model for the current slider values and updates the
             model plot in the figure.
             """
-            parameters = args
-            fig = app.update_simulation(parameters)
+
+            ctx = dash.callback_context
+            model_index = int(ctx.triggered[0]['prop_id'][:2])
+            n = n_params[model_index]
+            offset = offsets[model_index]
+            parameters = args[offset:offset + n]
+            fig = app.update_simulation(model_index, parameters)
 
             return fig
 

@@ -14,37 +14,3 @@ from .dash_apps.simulation import PDSimulationApp
 class SimulateConfig(AppConfig):
     name = 'simulate'
 
-
-# Define Dash apps that are part of the simulate app
-# Get data and model (temporary, will be replaced by database callback)
-data = erlo.DataLibrary().lung_cancer_control_group()
-path = erlo.ModelLibrary().tumour_growth_inhibition_model_koch()
-model = erlo.PharmacodynamicModel(path)
-model.set_parameter_names(names={
-    'myokit.drug_concentration': 'Drug concentration in mg/L',
-    'myokit.tumour_volume': 'Tumour volume in cm^3',
-    'myokit.kappa': 'Potency in L/mg/day',
-    'myokit.lambda_0': 'Exponential growth rate in 1/day',
-    'myokit.lambda_1': 'Linear growth rate in cm^3/day'})
-
-# Set up dash app
-app = PDSimulationApp(name='simulation-app')
-app.add_model(model)
-app.add_data(data, biomarker='Tumour volume')
-
-# Define a simulation callback
-sliders = app.slider_ids()
-
-
-@app.app.callback(
-    Output('fig', 'figure'),
-    [Input(s, 'value') for s in sliders])
-def update_simulation(*args):
-    """
-    Simulates the model for the current slider values and updates the
-    model plot in the figure.
-    """
-    parameters = args
-    fig = app.update_simulation(parameters)
-
-    return fig

@@ -32,43 +32,52 @@ class PDSimulationApp(BaseApp):
     def __init__(self, name):
         super(PDSimulationApp, self).__init__(name)
 
-        # Instantiate figure and sliders
-        self._fig = erlo.plots.PDTimeSeriesPlot(updatemenu=False)
-        self._sliders = _SlidersComponent()
+        self._id_key = 'ID'
+        self._time_key = 'Time'
+        self._biom_key = 'Biomarker'
+        self._meas_key = 'Measurement'
 
-        # Create default layout
-        self._set_layout()
+        self._fig = erlo.plots.PDTimeSeriesPlot(updatemenu=False)
 
         # Create defaults
-        self._model = None
+        self._models = []
+        self._model_names = []
+        self._parameters = []
+        self._models_traces = []
+        self._datasets = []
+        self._data_biomarkers = []
+        self._slider_ids = []
         self._times = np.linspace(start=0, stop=30)
 
-    def _add_simulation(self):
+    def _add_simulation_to_fig(self):
         """
         Adds trace of simulation results to the figure.
         """
-        # Make sure that parameters and sliders are ordered the same
-        if self._model.parameters() != list(self._sliders.sliders().keys()):
-            raise Warning('Model parameters do not align with slider.')
+        model_traces = [-1] * len(self._models)
+        for i in range(len(self._models)):
+            model = self._models[i]
+            parameters = self._parameters[i]
+            # Make sure that parameters and sliders are ordered the same
+            if len(model.parameters()) != len(parameters):
+                raise Warning('Model parameters do not align with slider.')
 
-        # Get parameter values
-        parameters = []
-        for slider in self._sliders.sliders().values():
-            value = slider.value
-            parameters.append(value)
+            # Add simulation to figure
+            result = self._simulate(parameters, model)
+            print('adding result', result)
+            self._fig.add_simulation(result)
 
-        # Add simulation to figure
-        result = self._simulate(parameters)
-        self._fig.add_simulation(result)
-
-        # Remember index of model trace for update callback
-        n_traces = len(self._fig._fig.data)
-        self._model_trace = n_traces - 1
+            # Remember index of model trace for update callback
+            n_traces = len(self._fig._fig.data)
+            model_traces[i] = n_traces - 1
+        self._model_traces = model_traces
 
     def _create_figure_component(self):
         """
         Returns a figure component.
         """
+        self._add_simulation_to_fig()
+        self._add_data_to_fig()
+
         figure = dbc.Col(
             children=[dcc.Graph(
                 figure=self._fig._fig,
@@ -79,54 +88,89 @@ class PDSimulationApp(BaseApp):
 
         return figure
 
-    def _create_sliders(self):
+    def _create_sliders(self, model_index, model):
         """
         Creates one slider for each parameter, and groups the slider by
         1. Pharmacokinetic input
         2. Initial values (of states)
         3. Parameters
         """
-        parameters = self._model.parameters()
+        sliders = _SlidersComponent()
+        parameters = model.parameters()
+        id_format = '{:02d}{}'
+        parameters = [
+            id_format.format(model_index, p) for p in parameters
+        ]
         # Add one slider for each parameter
         for parameter in parameters:
-            self._sliders.add_slider(slider_id=parameter)
+            sliders.add_slider(
+                slider_id=parameter
+            )
+        print('doing sliders for model', model, 'sliders', sliders)
+        print('added', len(parameters), 'sliders')
 
         # Split parameters into initial values and parameters
-        n_states = self._model._n_states
+        n_states = model._n_states
         states = parameters[:n_states]
         parameters = parameters[n_states:]
 
         # Group parameters:
         # Create PK input slider group
-        pk_input = self._model.pk_input()
+        pk_input = model.pk_input()
         if pk_input is not None:
-            self._sliders.group_sliders(
+            pk_input = id_format.format(model_index, pk_input)
+            sliders.group_sliders(
                 slider_ids=[pk_input], group_id='Pharmacokinetic input')
 
             # Make sure that pk input is not assigned to two sliders
             parameters.remove(pk_input)
 
         # Create initial values slider group
-        self._sliders.group_sliders(
+        sliders.group_sliders(
             slider_ids=states, group_id='Initial values')
 
         # Create parameters slider group
-        self._sliders.group_sliders(
+        sliders.group_sliders(
             slider_ids=parameters, group_id='Parameters')
+
+        return sliders
 
     def _create_sliders_component(self):
         """
         Returns a slider component.
         """
+
+        sliders_components = [
+            self._create_sliders(i, m) for i, m in enumerate(self._models)
+        ]
+
+        # save slider ids so we can construct callbacks
+        self._slider_ids = [
+            list(s.sliders().keys()) for s in sliders_components
+        ]
+        print('creating {} sliders'.format(len(sliders_components)))
+
         sliders = dbc.Col(
-            children=self._sliders(),
+            children=[
+                dbc.Tabs(
+                    children=[
+                        dbc.Tab(
+                            children=s(),
+                            label=mn,
+                        ) for s, mn in zip(
+                            sliders_components,
+                            self._model_names
+                        )
+                    ],
+                )
+            ],
             md=3,
             style={'marginTop': '5em'}
         )
 
         return sliders
 
-    def _set_layout(self):
+    def set_layout(self):
         """
         Sets the layout of the app.
 
@@ -140,22 +184,39 @@ class PDSimulationApp(BaseApp):
             fluid=True,
             style={'height': '90vh'})
 
-    def _simulate(self, parameters):
+    def _simulate(self, parameters, model):
         """
         Returns simulation of pharmacodynamic model in standard format, i.e.
         pandas.DataFrame with 'Time' and 'Biomarker' column.
         """
         # Solve the model
-        result = self._model.simulate(parameters, self._times)
+        result = model.simulate(parameters, self._times)
 
         # Rearrange results into a pandas.DataFrame
         result = pd.DataFrame({'Time': self._times, 'Biomarker': result[0, :]})
 
         return result
 
-    def add_data(
-            self, data, biomarker, id_key='ID', time_key='Time',
-            biom_key='Biomarker', meas_key='Measurement'):
+    def _add_data_to_fig(self):
+        # for data, biomarker in zip(self._datasets, self._data_biomarkers):
+        data = self._datasets[0]
+        biomarker = self._data_biomarkers[0]
+        # Add data to figure
+        print('adding data', data)
+        print('using biomarker', biomarker)
+        self._fig.add_data(
+            data, biomarker, self._id_key,
+            self._time_key, self._biom_key,
+            self._meas_key
+        )
+
+        # Set axes labels to time_key and biom_key
+        self._fig.set_axis_labels(
+            xlabel=self._time_key,
+            ylabel=self._biom_key
+        )
+
+    def add_data(self, data):
         """
         Adds pharmacodynamic time series data of (multiple) individuals to
         the figure.
@@ -169,83 +230,54 @@ class PDSimulationApp(BaseApp):
         data
             A :class:`pandas.DataFrame` with the time series PD data in form of
             an ID, time, and biomarker column.
-        biomarker
-            Selector for the displayed biomarker. The provided value has to be
-            an element of the biomarker column.
-        id_key
-            Key label of the :class:`DataFrame` which specifies the ID column.
-            The ID refers to the identity of an individual. Defaults to
-            ``'ID'``.
-        time_key
-            Key label of the :class:`DataFrame` which specifies the time
-            column. Defaults to ``'Time'``.
-        biom_key
-            Key label of the :class:`DataFrame` which specifies the PD
-            biomarker column. Defaults to ``'Biomarker'``.
-        meas_key
-            Key label of the :class:`DataFrame` which specifies the column of
-            the measured PD biomarker. Defaults to ``'Measurement'``.
         """
-        # Add data to figure
-        self._fig.add_data(
-            data, biomarker, id_key, time_key, biom_key, meas_key)
+        self._datasets.append(data)
+        self._data_biomarkers.append(data[self._biom_key][0])
 
-        # Set axes labels to time_key and biom_key
-        self._fig.set_axis_labels(xlabel=time_key, ylabel=biom_key)
-
-    def add_model(self, model):
+    def add_model(self, model, name):
         """
         Adds a :class:`erlotinib.PharmacodynamicModel` to the application.
 
         One parameter slider is generated for each model parameter, and
         the solution for a default set of parameters is added to the figure.
         """
-        if self._model is not None:
-            # This is a temporary fix! In a future issue we will handle the
-            # simulation of multiple models
-            raise ValueError(
-                'A model has been set previously. The passed model was '
-                'therefore ignored.')
-
         if not isinstance(model, erlo.PharmacodynamicModel):
             raise TypeError(
                 'Model has to be an instance of '
                 'erlotinib.PharmacodynamicModel.')
 
         parameter_names = model.parameters()
-        for name in parameter_names:
-            if '.' in name:
+        for pname in parameter_names:
+            if '.' in pname:
                 raise ValueError(
                     'Dots cannot be in the parameter names, or the Dash '
                     'callback fails.')
 
-        self._model = model
-
-        # Add one slider for each parameter to the app
-        self._create_sliders()
-
-        # Add simulation of model to the figure
-        self._add_simulation()
-
-        # Update layout
-        self._set_layout()
+        self._parameters.append([0.5] * len(parameter_names))
+        self._models.append(model)
+        self._model_names.append(name)
 
     def slider_ids(self):
         """
         Returns a list of the slider ids.
         """
-        return list(self._sliders.sliders().keys())
+        return self._slider_ids
 
-    def update_simulation(self, parameters):
+    def update_simulation(self, i, new_parameters):
         """
-        Simulates the model for the provided parameters and replaces the
+        Simulates model i for the provided parameters and replaces the
         current simulation plot by the new one.
         """
+        model = self._models[i]
+        self._parameters[i] = new_parameters
+        model_parameters = self._parameters[i]
+        model_trace = self._model_traces[i]
+
         # Solve model
-        result = self._model.simulate(parameters, self._times).flatten()
+        result = model.simulate(model_parameters, self._times).flatten()
 
         # Replace simulation values in plotly.Figure
-        self._fig._fig.data[self._model_trace].y = result
+        self._fig._fig.data[model_trace].y = result
 
         return self._fig._fig
 
@@ -283,7 +315,7 @@ class _SlidersComponent(object):
             container = []
             for slider_id in group:
                 # Create label for slider
-                label = html.Label(slider_id, style={'fontSize': '0.8rem'})
+                label = html.Label(slider_id[2:], style={'fontSize': '0.8rem'})
                 slider = self._sliders[slider_id]
 
                 # Add label and slider to group container
@@ -328,7 +360,7 @@ class _SlidersComponent(object):
             marks={
                 str(min_value): str(min_value),
                 str(max_value): str(max_value)},
-            updatemode='drag')
+            updatemode='mouseup')
 
     def group_sliders(self, slider_ids, group_id):
         """

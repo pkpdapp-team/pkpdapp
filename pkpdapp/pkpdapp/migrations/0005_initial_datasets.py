@@ -19,6 +19,14 @@ datafile_urls = [
     'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/datasets/lxf_single_erlotinib_dose.csv',  # noqa: E501
 ]
 
+datafile_names = [
+    'lxf_control_growth',
+    'lxf_high_erlotinib_dose',
+    'lxf_low_erlotinib_dose',
+    'lxf_medium_erlotinib_dose',
+    'lxf_single_erlotinib_dose',
+]
+
 datafile_descriptions = [
 '''
 The dataset from [1] contains the time series data of 8 mice with
@@ -139,10 +147,6 @@ biomarkers_for_datasets = [
     ],
     [
         {
-            'name': 'Tumour volume',
-            'unit': 'cm^3',
-        },
-        {
             'name': 'Body weight',
             'unit': 'g',
         },
@@ -160,12 +164,12 @@ def load_datasets(apps, schema_editor):
     BiomarkerType = apps.get_model("pkpdapp", "BiomarkerType")
     Project = apps.get_model("pkpdapp", "Project")
 
-    for datafile_url, datafile_description, biomarkers \
-            in zip(datafile_urls, datafile_descriptions,
+    for datafile_name, datafile_url, datafile_description, biomarkers \
+            in zip(datafile_names, datafile_urls, datafile_descriptions,
                    biomarkers_for_datasets):
         # create the dataset
         dataset = Dataset(
-            name='lung_cancer_control_group',
+            name=datafile_name,
             description=datafile_description,
             datetime=make_aware(datetime.today()),
             administration_type='type1',
@@ -213,7 +217,12 @@ def load_datasets(apps, schema_editor):
                     continue
                 index = biomarker_index[biomarker_type_str]
                 value = row[VALUE_COLUMN]
-                if value.isnumeric():
+                try:
+                    value = float(value)
+                    is_number = True
+                except ValueError:
+                    is_number = False
+                if is_number:
                     biomarker = Biomarker(
                         time=row[TIME_COLUMN],
                         subject_id=row[SUBJECT_ID_COLUMN],
