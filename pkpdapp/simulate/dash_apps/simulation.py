@@ -37,17 +37,27 @@ class PDSimulationApp(BaseApp):
         self._biom_key = 'Biomarker'
         self._meas_key = 'Measurement'
 
-        self._fig = erlo.plots.PDTimeSeriesPlot(updatemenu=False)
+        self._fig = None
 
         # Create defaults
         self._models = []
+        self._use_models = []
         self._model_names = []
         self._parameters = []
         self._models_traces = []
         self._datasets = []
+        self._use_datasets = []
+        self._dataset_names = []
         self._data_biomarkers = []
         self._slider_ids = []
+        self._slider_tabs = []
         self._times = np.linspace(start=0, stop=30)
+
+    def set_used_datasets(self, value):
+        self._use_datasets = value
+
+    def set_used_models(self, value):
+        self._use_models = value
 
     def _add_simulation_to_fig(self):
         """
@@ -55,6 +65,8 @@ class PDSimulationApp(BaseApp):
         """
         model_traces = [-1] * len(self._models)
         for i in range(len(self._models)):
+            if i not in self._use_models:
+                continue
             model = self._models[i]
             parameters = self._parameters[i]
             # Make sure that parameters and sliders are ordered the same
@@ -63,7 +75,6 @@ class PDSimulationApp(BaseApp):
 
             # Add simulation to figure
             result = self._simulate(parameters, model)
-            print('adding result', result)
             self._fig.add_simulation(result)
 
             # Remember index of model trace for update callback
@@ -71,16 +82,46 @@ class PDSimulationApp(BaseApp):
             model_traces[i] = n_traces - 1
         self._model_traces = model_traces
 
+    def _create_selects(self):
+        return [
+            dbc.Col(
+                children=[dcc.Dropdown(
+                    id='model-select',
+                    options=[
+                        {'label': name, 'value': i}
+                        for i, name in enumerate(self._model_names)
+                    ],
+                    value=self._use_models,
+                    multi=True
+                )]
+            ),
+            dbc.Col(
+                children=[dcc.Dropdown(
+                    id='dataset-select',
+                    options=[
+                        {'label': name, 'value': i}
+                        for i, name in enumerate(self._dataset_names)
+                    ],
+                    value=self._use_datasets,
+                    multi=True
+                )]
+            ),
+        ]
+
+    def create_figure(self):
+        self._fig = erlo.plots.PDTimeSeriesPlot(updatemenu=False)
+        self._add_simulation_to_fig()
+        self._add_data_to_fig()
+        return self._fig._fig
+
     def _create_figure_component(self):
         """
         Returns a figure component.
         """
-        self._add_simulation_to_fig()
-        self._add_data_to_fig()
 
         figure = dbc.Col(
             children=[dcc.Graph(
-                figure=self._fig._fig,
+                figure=self.create_figure(),
                 id='fig',
                 style={'height': '100%'})],
             md=9
@@ -106,8 +147,6 @@ class PDSimulationApp(BaseApp):
             sliders.add_slider(
                 slider_id=parameter
             )
-        print('doing sliders for model', model, 'sliders', sliders)
-        print('added', len(parameters), 'sliders')
 
         # Split parameters into initial values and parameters
         n_states = model._n_states
@@ -135,6 +174,16 @@ class PDSimulationApp(BaseApp):
 
         return sliders
 
+    def set_slider_disabled(self):
+        for i, t in enumerate(self._slider_tabs):
+            if i in self._use_models:
+                t.disabled = False
+                t.label = self._model_names[i]
+            else:
+                t.disabled = True
+                t.label = ''
+        return self._slider_tabs
+
     def _create_sliders_component(self):
         """
         Returns a slider component.
@@ -148,20 +197,21 @@ class PDSimulationApp(BaseApp):
         self._slider_ids = [
             list(s.sliders().keys()) for s in sliders_components
         ]
-        print('creating {} sliders'.format(len(sliders_components)))
+
+        self._slider_tabs = [
+            dbc.Tab(
+                children=sliders_components[i](),
+                label=self._model_names[i],
+            ) for i in range(len(self._model_names))
+        ]
+
+        self._slider_tabs = self.set_slider_disabled()
 
         sliders = dbc.Col(
             children=[
                 dbc.Tabs(
-                    children=[
-                        dbc.Tab(
-                            children=s(),
-                            label=mn,
-                        ) for s, mn in zip(
-                            sliders_components,
-                            self._model_names
-                        )
-                    ],
+                    id='slider-tabs',
+                    children=self._slider_tabs,
                 )
             ],
             md=3,
@@ -178,9 +228,14 @@ class PDSimulationApp(BaseApp):
         - Parameter sliders on the right.
         """
         self.app.layout = dbc.Container(
-            children=[dbc.Row([
-                self._create_figure_component(),
-                self._create_sliders_component()])],
+            children=[
+                dbc.Row(
+                    self._create_selects(),
+                ),
+                dbc.Row([
+                    self._create_figure_component(),
+                    self._create_sliders_component()])
+                ],
             fluid=True,
             style={'height': '90vh'})
 
@@ -198,14 +253,18 @@ class PDSimulationApp(BaseApp):
         return result
 
     def _add_data_to_fig(self):
-        # for data, biomarker in zip(self._datasets, self._data_biomarkers):
-        data = self._datasets[0]
+        used_datasets = [
+            d for i, d in enumerate(self._datasets)
+            if i in self._use_datasets
+        ]
+
+        combined_data = pd.concat(used_datasets)
+
         biomarker = self._data_biomarkers[0]
+
         # Add data to figure
-        print('adding data', data)
-        print('using biomarker', biomarker)
         self._fig.add_data(
-            data, biomarker, self._id_key,
+            combined_data, biomarker, self._id_key,
             self._time_key, self._biom_key,
             self._meas_key
         )
@@ -216,7 +275,7 @@ class PDSimulationApp(BaseApp):
             ylabel=self._biom_key
         )
 
-    def add_data(self, data):
+    def add_data(self, data, name, use=False):
         """
         Adds pharmacodynamic time series data of (multiple) individuals to
         the figure.
@@ -231,10 +290,13 @@ class PDSimulationApp(BaseApp):
             A :class:`pandas.DataFrame` with the time series PD data in form of
             an ID, time, and biomarker column.
         """
+        if use:
+            self._use_datasets.append(len(self._datasets))
         self._datasets.append(data)
+        self._dataset_names.append(name)
         self._data_biomarkers.append(data[self._biom_key][0])
 
-    def add_model(self, model, name):
+    def add_model(self, model, name, use=False):
         """
         Adds a :class:`erlotinib.PharmacodynamicModel` to the application.
 
@@ -254,6 +316,8 @@ class PDSimulationApp(BaseApp):
                     'callback fails.')
 
         self._parameters.append([0.5] * len(parameter_names))
+        if use:
+            self._use_models.append(len(self._models))
         self._models.append(model)
         self._model_names.append(name)
 

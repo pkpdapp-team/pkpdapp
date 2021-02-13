@@ -37,7 +37,6 @@ class SimulationView(LoginRequiredMixin, generic.base.TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['project'] = self.request.user.profile.selected_project
-        print('context kwargs are ', kwargs, context)
         return context
 
     def get(self, request, *args, **kwargs):
@@ -47,7 +46,7 @@ class SimulationView(LoginRequiredMixin, generic.base.TemplateView):
         project = self.request.user.profile.selected_project
 
         # get model sbml strings and add erlo models
-        for m in project.pkpd_models.all():
+        for i, m in enumerate(project.pkpd_models.all()):
             sbml_str = m.sbml.encode('utf-8')
             erlo_m = erlo.PharmacodynamicModel(sbml_str)
             param_names = erlo_m.parameters()
@@ -55,11 +54,10 @@ class SimulationView(LoginRequiredMixin, generic.base.TemplateView):
             for p in param_names:
                 param_names_dict[p] = p.replace('.', '_')
             erlo_m.set_parameter_names(names=param_names_dict)
-            app.add_model(erlo_m, m.name)
+            app.add_model(erlo_m, m.name, use=i==0)
 
         # add datasets
-        for d in project.datasets.all():
-            print('doing dataset', d)
+        for i, d in enumerate(project.datasets.all()):
             biomarker_types = BiomarkerType.objects.filter(dataset=d)
             biomarkers = Biomarker.objects\
                 .select_related('biomarker_type__name')\
@@ -79,7 +77,7 @@ class SimulationView(LoginRequiredMixin, generic.base.TemplateView):
                 'value': 'Measurement'
             }, inplace=True)
 
-            app.add_data(df)
+            app.add_data(df, d.name, use=i==0)
 
         # generate dash app
         app.set_layout()
@@ -90,24 +88,52 @@ class SimulationView(LoginRequiredMixin, generic.base.TemplateView):
         for i in range(1, len(n_params)):
             offsets.append(offsets[i - 1] + n_params[i])
 
+        @app.app.callback(
+            Output('slider-tabs', 'children'),
+            [Input('model-select', 'value')])
+        def update_models_used(use_models):
+            """
+            Simulates the model for the current slider values and updates the
+            model plot in the figure.
+            """
+            app.set_used_models(use_models)
+            tabs = app.set_slider_disabled()
+            return tabs
+
         # Define simulation callbacks
         @app.app.callback(
             Output('fig', 'figure'),
-            [Input(s, 'value') for s in sum(sliders, [])])
+            [Input(s, 'value') for s in sum(sliders, [])],
+            [Input('model-select', 'value'), Input('dataset-select', 'value')])
         def update_simulation(*args):
             """
             Simulates the model for the current slider values and updates the
             model plot in the figure.
             """
-
             ctx = dash.callback_context
-            model_index = int(ctx.triggered[0]['prop_id'][:2])
-            n = n_params[model_index]
-            offset = offsets[model_index]
-            parameters = args[offset:offset + n]
-            fig = app.update_simulation(model_index, parameters)
+            cid = None
+            if ctx.triggered:
+                cid = ctx.triggered[0]['prop_id'].split('.')[0]
+            print('ARGS', args)
 
-            return fig
+            if cid == 'model-select':
+                print('update models')
+                app.set_used_models(args[-2])
+                return app.create_figure()
+            elif cid == 'dataset-select':
+                print('update datasets')
+                app.set_used_datasets(args[-1])
+                return app.create_figure()
+            elif cid is not None:
+                model_index = int(cid[:2])
+                n = n_params[model_index]
+                offset = offsets[model_index]
+                parameters = args[offset:offset + n]
+                return app.update_simulation(model_index, parameters)
+
+            return app._fig._fig
+
+
 
         return super().get(request)
 
