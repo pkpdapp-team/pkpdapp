@@ -13,7 +13,7 @@ import erlotinib as erlo
 from .dash_apps.simulation import PDSimulationApp
 import re
 import pandas as pd
-from pkpdapp.models import Dataset, PkpdModel, Biomarker, BiomarkerType
+from pkpdapp.models import Biomarker, BiomarkerType
 
 
 def _get_trailing_number(s):
@@ -34,11 +34,6 @@ class SimulationView(LoginRequiredMixin, generic.base.TemplateView):
     """
     template_name = 'simulate/simulation.html'
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['project'] = self.request.user.profile.selected_project
-        return context
-
     def get(self, request, *args, **kwargs):
         # create dash app
         app = PDSimulationApp(name='simulation-app')
@@ -54,7 +49,7 @@ class SimulationView(LoginRequiredMixin, generic.base.TemplateView):
             for p in param_names:
                 param_names_dict[p] = p.replace('.', '_')
             erlo_m.set_parameter_names(names=param_names_dict)
-            app.add_model(erlo_m, m.name, use=i==0)
+            app.add_model(erlo_m, m.name, use=i == 0)
 
         # add datasets
         for i, d in enumerate(project.datasets.all()):
@@ -65,11 +60,9 @@ class SimulationView(LoginRequiredMixin, generic.base.TemplateView):
 
             # convert to pandas dataframe with the column names expected
             df = pd.DataFrame(
-                list(biomarkers.values(
-                    'time',  'subject_id',
-                    'biomarker_type__name', 'value'
-                ))
-            )
+                list(
+                    biomarkers.values('time', 'subject_id',
+                                      'biomarker_type__name', 'value')))
             df.rename(columns={
                 'subject_id': 'ID',
                 'time': 'Time',
@@ -77,38 +70,44 @@ class SimulationView(LoginRequiredMixin, generic.base.TemplateView):
                 'value': 'Measurement'
             }, inplace=True)
 
-            app.add_data(df, d.name, use=i==0)
+            app.add_data(df, d.name, use=i == 0)
 
         # generate dash app
         app.set_layout()
 
+        # we need slider ids for callback, count the number of parameters for
+        # each model so we know what parameter in the list corresponds to which
+        # model
         sliders = app.slider_ids()
         n_params = [len(s) for s in sliders]
         offsets = [0]
         for i in range(1, len(n_params)):
             offsets.append(offsets[i - 1] + n_params[i])
 
-        @app.app.callback(
-            Output('slider-tabs', 'children'),
-            [Input('model-select', 'value')])
+        @app.app.callback(Output('slider-tabs', 'children'),
+                          [Input('model-select', 'value')])
         def update_models_used(use_models):
             """
-            Simulates the model for the current slider values and updates the
-            model plot in the figure.
+            if the models selected are changed, then update the slider tabs
+            (only show those tabs that are selected)
             """
             app.set_used_models(use_models)
             tabs = app.set_slider_disabled()
             return tabs
 
         # Define simulation callbacks
-        @app.app.callback(
-            Output('fig', 'figure'),
-            [Input(s, 'value') for s in sum(sliders, [])],
-            [Input('model-select', 'value'), Input('dataset-select', 'value')])
+        @app.app.callback(Output('fig', 'figure'),
+                          [Input(s, 'value') for s in sum(sliders, [])],
+                          [Input('model-select', 'value'),
+                           Input('dataset-select', 'value'),
+                           Input('biomarker-select', 'value')])
         def update_simulation(*args):
             """
-            Simulates the model for the current slider values and updates the
-            model plot in the figure.
+            if the models, datasets or biomarkers are
+            changed then regenerate the figure entirely
+
+            if a slider is moved, determine the relevent model based on the id
+            name, then update that particular simulation
             """
             ctx = dash.callback_context
             cid = None
@@ -118,11 +117,14 @@ class SimulationView(LoginRequiredMixin, generic.base.TemplateView):
 
             if cid == 'model-select':
                 print('update models')
-                app.set_used_models(args[-2])
+                app.set_used_models(args[-3])
                 return app.create_figure()
             elif cid == 'dataset-select':
                 print('update datasets')
-                app.set_used_datasets(args[-1])
+                app.set_used_datasets(args[-2])
+                return app.create_figure()
+            elif cid == 'biomarker-select':
+                app.set_used_biomarker(args[-1])
                 return app.create_figure()
             elif cid is not None:
                 model_index = int(cid[:2])
@@ -133,7 +135,4 @@ class SimulationView(LoginRequiredMixin, generic.base.TemplateView):
 
             return app._fig._fig
 
-
-
         return super().get(request)
-

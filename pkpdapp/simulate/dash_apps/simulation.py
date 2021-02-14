@@ -16,7 +16,8 @@ from .base import BaseApp
 
 class PDSimulationApp(BaseApp):
     """
-    Creates an app which simulates a :class:`erlotinib.PharmacodynamicModel`.
+    Creates an app which simulates multiple
+    :class:`erlotinib.PharmacodynamicModel`.
 
     Parameter sliders can be used to adjust parameter values during
     the simulation.
@@ -28,7 +29,6 @@ class PDSimulationApp(BaseApp):
     optional name
         Name of the app which is used as reference in HTML templates.
     """
-
     def __init__(self, name):
         super(PDSimulationApp, self).__init__(name)
 
@@ -48,16 +48,29 @@ class PDSimulationApp(BaseApp):
         self._datasets = []
         self._use_datasets = []
         self._dataset_names = []
-        self._data_biomarkers = []
+        self._data_biomarkers = set()
+        self._use_biomarkers = None
         self._slider_ids = []
         self._slider_tabs = []
         self._times = np.linspace(start=0, stop=30)
 
     def set_used_datasets(self, value):
+        """
+        set dataset indices that will be used
+        """
         self._use_datasets = value
 
     def set_used_models(self, value):
+        """
+        set model indices that will be used
+        """
         self._use_models = value
+
+    def set_used_biomarker(self, value):
+        """
+        set biomarker that will be used
+        """
+        self._use_biomarkers = value
 
     def _add_simulation_to_fig(self):
         """
@@ -83,32 +96,48 @@ class PDSimulationApp(BaseApp):
         self._model_traces = model_traces
 
     def _create_selects(self):
+        """
+        create selects for model, dataset and biomarkers up the top of the dash
+        app
+        """
         return [
-            dbc.Col(
-                children=[dcc.Dropdown(
-                    id='model-select',
-                    options=[
-                        {'label': name, 'value': i}
-                        for i, name in enumerate(self._model_names)
-                    ],
-                    value=self._use_models,
-                    multi=True
-                )]
-            ),
-            dbc.Col(
-                children=[dcc.Dropdown(
-                    id='dataset-select',
-                    options=[
-                        {'label': name, 'value': i}
-                        for i, name in enumerate(self._dataset_names)
-                    ],
-                    value=self._use_datasets,
-                    multi=True
-                )]
-            ),
+            dbc.Col(children=[
+                html.Label('Models:'),
+                dcc.Dropdown(id='model-select',
+                             options=[{
+                                 'label': name,
+                                 'value': i
+                             } for i, name in enumerate(self._model_names)],
+                             value=self._use_models,
+                             multi=True)
+            ]),
+            dbc.Col(children=[
+                html.Label('Datasets:'),
+                dcc.Dropdown(id='dataset-select',
+                             options=[{
+                                 'label': name,
+                                 'value': i
+                             } for i, name in enumerate(self._dataset_names)],
+                             value=self._use_datasets,
+                             multi=True)
+            ]),
+            dbc.Col(children=[
+                html.Label('Biomarker:'),
+                dcc.Dropdown(
+                    id='biomarker-select',
+                    options=[{
+                        'label': name,
+                        'value': name
+                    } for name in self._data_biomarkers],
+                    value=self._use_biomarkers,
+                )
+            ]),
         ]
 
     def create_figure(self):
+        """
+        returns the main figure
+        """
         self._fig = erlo.plots.PDTimeSeriesPlot(updatemenu=False)
         self._add_simulation_to_fig()
         self._add_data_to_fig()
@@ -116,16 +145,14 @@ class PDSimulationApp(BaseApp):
 
     def _create_figure_component(self):
         """
-        Returns a figure component.
+        Returns a figure component containing the main figure.
         """
 
-        figure = dbc.Col(
-            children=[dcc.Graph(
-                figure=self.create_figure(),
-                id='fig',
-                style={'height': '100%'})],
-            md=9
-        )
+        figure = dbc.Col(children=[
+            dcc.Graph(figure=self.create_figure(),
+                      id='fig',
+                      style={'height': '100%'})
+        ], md=9)
 
         return figure
 
@@ -139,14 +166,10 @@ class PDSimulationApp(BaseApp):
         sliders = _SlidersComponent()
         parameters = model.parameters()
         id_format = '{:02d}{}'
-        parameters = [
-            id_format.format(model_index, p) for p in parameters
-        ]
+        parameters = [id_format.format(model_index, p) for p in parameters]
         # Add one slider for each parameter
         for parameter in parameters:
-            sliders.add_slider(
-                slider_id=parameter
-            )
+            sliders.add_slider(slider_id=parameter)
 
         # Split parameters into initial values and parameters
         n_states = model._n_states
@@ -158,23 +181,24 @@ class PDSimulationApp(BaseApp):
         pk_input = model.pk_input()
         if pk_input is not None:
             pk_input = id_format.format(model_index, pk_input)
-            sliders.group_sliders(
-                slider_ids=[pk_input], group_id='Pharmacokinetic input')
+            sliders.group_sliders(slider_ids=[pk_input],
+                                  group_id='Pharmacokinetic input')
 
             # Make sure that pk input is not assigned to two sliders
             parameters.remove(pk_input)
 
         # Create initial values slider group
-        sliders.group_sliders(
-            slider_ids=states, group_id='Initial values')
+        sliders.group_sliders(slider_ids=states, group_id='Initial values')
 
         # Create parameters slider group
-        sliders.group_sliders(
-            slider_ids=parameters, group_id='Parameters')
+        sliders.group_sliders(slider_ids=parameters, group_id='Parameters')
 
         return sliders
 
     def set_slider_disabled(self):
+        """
+        disables parameter slider tabs if the model is not chosen
+        """
         for i, t in enumerate(self._slider_tabs):
             if i in self._use_models:
                 t.disabled = False
@@ -186,7 +210,7 @@ class PDSimulationApp(BaseApp):
 
     def _create_sliders_component(self):
         """
-        Returns a slider component.
+        Returns all the sliders for a tab/model.
         """
 
         sliders_components = [
@@ -207,16 +231,12 @@ class PDSimulationApp(BaseApp):
 
         self._slider_tabs = self.set_slider_disabled()
 
-        sliders = dbc.Col(
-            children=[
-                dbc.Tabs(
-                    id='slider-tabs',
-                    children=self._slider_tabs,
-                )
-            ],
-            md=3,
-            style={'marginTop': '5em'}
-        )
+        sliders = dbc.Col(children=[
+            dbc.Tabs(
+                id='slider-tabs',
+                children=self._slider_tabs,
+            )
+        ], md=3, style={'marginTop': '5em'})
 
         return sliders
 
@@ -224,20 +244,17 @@ class PDSimulationApp(BaseApp):
         """
         Sets the layout of the app.
 
+        - Selectors for model, datasets and biomarker.
         - Plot of simulation/data on the left.
         - Parameter sliders on the right.
         """
-        self.app.layout = dbc.Container(
-            children=[
-                dbc.Row(
-                    self._create_selects(),
-                ),
-                dbc.Row([
-                    self._create_figure_component(),
-                    self._create_sliders_component()])
-                ],
-            fluid=True,
-            style={'height': '90vh'})
+        self.app.layout = dbc.Container(children=[
+            dbc.Row(self._create_selects(), ),
+            dbc.Row([
+                self._create_figure_component(),
+                self._create_sliders_component()
+            ])
+        ], fluid=True, style={'height': '90vh'})
 
     def _simulate(self, parameters, model):
         """
@@ -253,27 +270,29 @@ class PDSimulationApp(BaseApp):
         return result
 
     def _add_data_to_fig(self):
+        """
+        add chosen datasets to figure
+        """
         used_datasets = [
-            d for i, d in enumerate(self._datasets)
-            if i in self._use_datasets
+            d for i, d in enumerate(self._datasets) if i in self._use_datasets
         ]
 
         combined_data = pd.concat(used_datasets)
 
-        biomarker = self._data_biomarkers[0]
+        biomarker = self._use_biomarkers
 
-        # Add data to figure
-        self._fig.add_data(
-            combined_data, biomarker, self._id_key,
-            self._time_key, self._biom_key,
-            self._meas_key
-        )
+        if biomarker is not None:
+            # Add data to figure,
+            # ignore error if biomarker does not exist
+            try:
+                self._fig.add_data(combined_data, biomarker, self._id_key,
+                                   self._time_key, self._biom_key,
+                                   self._meas_key)
+            except ValueError:
+                pass
 
         # Set axes labels to time_key and biom_key
-        self._fig.set_axis_labels(
-            xlabel=self._time_key,
-            ylabel=self._biom_key
-        )
+        self._fig.set_axis_labels(xlabel=self._time_key, ylabel=self._biom_key)
 
     def add_data(self, data, name, use=False):
         """
@@ -289,12 +308,24 @@ class PDSimulationApp(BaseApp):
         data
             A :class:`pandas.DataFrame` with the time series PD data in form of
             an ID, time, and biomarker column.
+        name
+            A str name for the dataset
+        use
+            Set to True if you want this dataset to be initially chosen
         """
         if use:
             self._use_datasets.append(len(self._datasets))
         self._datasets.append(data)
         self._dataset_names.append(name)
-        self._data_biomarkers.append(data[self._biom_key][0])
+        print(data[self._biom_key].values)
+        print(type(data[self._biom_key].values))
+        available_biomarkers = np.unique(data[self._biom_key].values)
+        for b in available_biomarkers:
+            self._data_biomarkers.add((b))
+        print('available_biomarkers', available_biomarkers)
+        if self._use_biomarkers is None:
+            self._use_biomarkers = available_biomarkers[0]
+        print('use biomarker', self._use_biomarkers)
 
     def add_model(self, model, name, use=False):
         """
@@ -302,11 +333,19 @@ class PDSimulationApp(BaseApp):
 
         One parameter slider is generated for each model parameter, and
         the solution for a default set of parameters is added to the figure.
+
+        Parameters
+        ----------
+        model
+            A :class:`erlotinib.PharmacodynamicModel` representing the model.
+        name
+            A str name for the model
+        use
+            Set to True if you want this model to be initially chosen
         """
         if not isinstance(model, erlo.PharmacodynamicModel):
-            raise TypeError(
-                'Model has to be an instance of '
-                'erlotinib.PharmacodynamicModel.')
+            raise TypeError('Model has to be an instance of '
+                            'erlotinib.PharmacodynamicModel.')
 
         parameter_names = model.parameters()
         for pname in parameter_names:
@@ -323,7 +362,7 @@ class PDSimulationApp(BaseApp):
 
     def slider_ids(self):
         """
-        Returns a list of the slider ids.
+        Returns a list of the slider ids for the callbacks.
         """
         return self._slider_ids
 
@@ -353,7 +392,6 @@ class _SlidersComponent(object):
 
     The sliders are arranged horizontally. Sliders may be grouped by meaning.
     """
-
     def __init__(self):
         # Set defaults
         self._sliders = {}
@@ -385,20 +423,23 @@ class _SlidersComponent(object):
                 # Add label and slider to group container
                 container += [
                     dbc.Col(children=[label], width=12),
-                    dbc.Col(children=[slider], width=12)]
+                    dbc.Col(children=[slider], width=12)
+                ]
 
             # Convert slider group to dash component
-            group = dbc.Row(
-                children=container, style={'marginBottom': '1em'})
+            group = dbc.Row(children=container, style={'marginBottom': '1em'})
 
             # Add label and group to contents
             contents += [group_label, group]
 
         return contents
 
-    def add_slider(
-            self, slider_id, value=0.5, min_value=0, max_value=2,
-            step_size=0.01):
+    def add_slider(self,
+                   slider_id,
+                   value=0.5,
+                   min_value=0,
+                   max_value=2,
+                   step_size=0.01):
         """
         Adds a slider.
 
@@ -415,16 +456,18 @@ class _SlidersComponent(object):
         step_size
             Elementary step size of slider.
         """
-        self._sliders[slider_id] = dcc.Slider(
-            id=slider_id,
-            value=value,
-            min=min_value,
-            max=max_value,
-            step=step_size,
-            marks={
-                str(min_value): str(min_value),
-                str(max_value): str(max_value)},
-            updatemode='mouseup')
+        self._sliders[slider_id] = dcc.Slider(id=slider_id,
+                                              value=value,
+                                              min=min_value,
+                                              max=max_value,
+                                              step=step_size,
+                                              marks={
+                                                  str(min_value):
+                                                  str(min_value),
+                                                  str(max_value):
+                                                  str(max_value)
+                                              },
+                                              updatemode='mouseup')
 
     def group_sliders(self, slider_ids, group_id):
         """
@@ -436,9 +479,11 @@ class _SlidersComponent(object):
         for index, existing_group in enumerate(self._slider_groups.values()):
             for slider in slider_ids:
                 if slider in existing_group:
-                    raise ValueError(
-                        'Slider <' + str(slider) + '> exists already in group '
-                        '<' + str(self._slider_groups.keys()[index]) + '>.')
+                    raise ValueError('Slider <' + str(slider) +
+                                     '> exists already in group '
+                                     '<' +
+                                     str(self._slider_groups.keys()[index]) +
+                                     '>.')
 
         self._slider_groups[group_id] = slider_ids
 

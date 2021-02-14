@@ -91,7 +91,8 @@ parametersation in [1]_ by
         {
             'name': 'one_compartment_pk_model',
             'description': """
-Returns the absolute path to a SBML file, specifying a one compartment pharmacokinetic model.
+Returns the absolute path to a SBML file, specifying a one compartment
+pharmacokinetic model.
 
 In this model the distribution of the drug is modelled by one
 compartment with a linear elimination rate :math:`k_e`

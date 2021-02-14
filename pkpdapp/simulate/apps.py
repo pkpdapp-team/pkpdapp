@@ -5,12 +5,7 @@
 #
 
 from django.apps import AppConfig
-from dash.dependencies import Input, Output
-import erlotinib as erlo
-
-from .dash_apps.simulation import PDSimulationApp
 
 
 class SimulateConfig(AppConfig):
     name = 'simulate'
-

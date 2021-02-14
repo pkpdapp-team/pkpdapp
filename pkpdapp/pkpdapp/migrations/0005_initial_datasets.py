@@ -28,7 +28,7 @@ datafile_names = [
 ]
 
 datafile_descriptions = [
-'''
+    '''
 The dataset from [1] contains the time series data of 8 mice with
 patient-derived lung cancer implants. The tumour volume of each
 mouse was monitored over a period of 30 days and measured a
@@ -40,56 +40,60 @@ References
     Translational PKPD Modeling to Differentiate Erlotinib and
     Gefitinib, Mol Cancer Ther. 2016; 15(12):3110-3119.
 ''',
-"""
+    '''
 Returns the high erlotinib dose lung cancer treatment group data
 published in [1]_ as a :class:`pandas.DataFrame`.
 
 The dataset contains the time series data of 6 mice with
 patient-derived lung cancer implants. Each mouse was treated with
-an oral dose of erlotinib of :math:`100\, \text{mg}` per
-:math:`\text{g}` body weight. The dose was administered daily from
+an oral dose of erlotinib of \(100\, \\text{mg}\) per
+\(\\text{g}\) body weight. The dose was administered daily from
 day 3 to day 16, with a treatment break on days 9 to 13.
 
 The blood plasma concentration of erlotinib was measured on day 14,
 while the tumour volume of each mouse was monitored over a period
 of 30 days and measured a couple times a week.
-""",
-"""
+''',  # noqa: W605
+    '''
 Returns the low erlotinib dose lung cancer treatment group data
 published in [1]_ as a :class:`pandas.DataFrame`.
 
 The dataset contains the time series data of 8 mice with
 patient-derived lung cancer implants. Each mouse was treated with
-an oral dose of erlotinib of :math:`6.25\, \text{mg}` per
-:math:`\text{g}` body weight. The dose was administered daily from
+an oral dose of erlotinib of \(6.25\, \\text{mg}\) per
+\(\\text{g}\) body weight. The dose was administered daily from
 day 3 to day 16.
 
-The blood plasma concentration of erlotinib was measured on day 10 and 16, while the tumour volume of each mouse was monitored over a period of 30 days and measured a couple times a week.
-""",
-"""
+The blood plasma concentration of erlotinib was measured on day 10 and 16,
+while the tumour volume of each mouse was monitored over a period of 30 days
+and measured a couple times a week.
+''',  # noqa: W605
+    '''
 Returns the medium erlotinib dose lung cancer treatment group data
 published in [1]_ as a :class:`pandas.DataFrame`.
 
-The dataset contains the time series data of 8 mice with
-patient-derived lung cancer implants. Each mouse was treated with
-an oral dose of erlotinib of :math:`25\, \text{mg}` per
-:math:`\text{g}` body weight. The dose was administered daily from
-day 3 to day 16.
+The dataset contains the time series data of 8 mice with patient-derived lung
+cancer implants. Each mouse was treated with an oral dose of erlotinib of
+\(25\, \\text{mg}\) per \(\\text{g}\) body weight. The dose was administered
+daily from day 3 to day 16.
 
-The blood plasma concentration of erlotinib was measured on day 10 and 16, while the tumour volume of each mouse was monitored over a period of 30 days and measured a couple times a week.
-""",
-"""
+The blood plasma concentration of erlotinib was measured on day 10 and 16,
+while the tumour volume of each mouse was monitored over a period of 30 days
+and measured a couple times a week.
+''',  # noqa: W605
+    '''
 Returns the single erlotinib dose lung cancer treatment group data
 published in [1]_ as a :class:`pandas.DataFrame`.
 
 The dataset contains the time series data of 30 mice with
 patient-derived lung cancer implants. Each mouse was treated with
-a single oral dose of erlotinib of :math:`100\, \text{mg}` per
-:math:`\text{g}` body weight. The dose was administered either on
+a single oral dose of erlotinib of \(100\, \\text{mg}\) per
+\(\\text{g}\) body weight. The dose was administered either on
 day 0 or day 4.
 
-The blood plasma concentration of erlotinib was measured only once per mouse, either on day 0 or day 4.
-""",
+The blood plasma concentration of erlotinib was measured only once per mouse,
+either on day 0 or day 4.
+''',  # noqa: W605
 ]
 
 biomarkers_for_datasets = [
@@ -180,21 +184,18 @@ def load_datasets(apps, schema_editor):
         demo_project = Project.objects.get(name='demo')
         demo_project.datasets.add(dataset)
 
-        # find the index of the biomarker type, so we don't have to keep looking it
-        # up
+        # find the index of the biomarker type, so we don't have to keep
+        # looking it up
         biomarker_index = {}
         for i, b in enumerate(biomarkers):
             biomarker_index[b['name']] = i
 
         # create all the biomarker types for that dataset
         biomarker_types = [
-            BiomarkerType(
-                name=b['name'],
-                description=b['name'],
-                unit=b['unit'],
-                dataset=dataset
-            )
-            for b in biomarkers
+            BiomarkerType(name=b['name'],
+                          description=b['name'],
+                          unit=b['unit'],
+                          dataset=dataset) for b in biomarkers
         ]
         [bm.save() for bm in biomarker_types]
 
@@ -227,8 +228,7 @@ def load_datasets(apps, schema_editor):
                         time=row[TIME_COLUMN],
                         subject_id=row[SUBJECT_ID_COLUMN],
                         value=value,
-                        biomarker_type=biomarker_types[index]
-                    )
+                        biomarker_type=biomarker_types[index])
                     biomarker.save()
 
 
