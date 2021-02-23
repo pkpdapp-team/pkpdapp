@@ -16,11 +16,6 @@ import pandas as pd
 from pkpdapp.models import Biomarker, BiomarkerType
 
 
-def _get_trailing_number(s):
-    m = re.search(r'\d+$', s)
-    return int(m.group()) if m else None
-
-
 class BuildModelView(generic.base.TemplateView):
     """
     This view defines the interface to build a model for simulation.
