@@ -82,9 +82,6 @@ class PDSimulationApp(BaseApp):
                 continue
             model = self._models[i]
             parameters = self._parameters[i]
-            # Make sure that parameters and sliders are ordered the same
-            if len(model.parameters()) != len(parameters):
-                raise Warning('Model parameters do not align with slider.')
 
             # Add simulation to figure
             result = self._simulate(parameters, model)
@@ -197,7 +194,9 @@ class PDSimulationApp(BaseApp):
 
     def set_slider_disabled(self):
         """
-        disables parameter slider tabs if the model is not chosen
+        Disables parameter slider tabs if the model is not chosen
+
+        Returns new slider tabs
         """
         for i, t in enumerate(self._slider_tabs):
             if i in self._use_models:
@@ -277,6 +276,9 @@ class PDSimulationApp(BaseApp):
             d for i, d in enumerate(self._datasets) if i in self._use_datasets
         ]
 
+        if not used_datasets:
+            return
+
         combined_data = pd.concat(used_datasets)
 
         biomarker = self._use_biomarkers
@@ -317,15 +319,11 @@ class PDSimulationApp(BaseApp):
             self._use_datasets.append(len(self._datasets))
         self._datasets.append(data)
         self._dataset_names.append(name)
-        print(data[self._biom_key].values)
-        print(type(data[self._biom_key].values))
         available_biomarkers = np.unique(data[self._biom_key].values)
         for b in available_biomarkers:
             self._data_biomarkers.add((b))
-        print('available_biomarkers', available_biomarkers)
         if self._use_biomarkers is None:
             self._use_biomarkers = available_biomarkers[0]
-        print('use biomarker', self._use_biomarkers)
 
     def add_model(self, model, name, use=False):
         """
@@ -483,7 +481,7 @@ class _SlidersComponent(object):
                                      '> exists already in group '
                                      '<' +
                                      str(self._slider_groups.keys()[index]) +
-                                     '>.')
+                                     '>.')  # pragma: no cover
 
         self._slider_groups[group_id] = slider_ids
 
