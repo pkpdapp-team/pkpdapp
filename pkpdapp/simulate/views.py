@@ -10,10 +10,9 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from dash.dependencies import Input, Output
 import dash
 import erlotinib as erlo
-from .dash_apps.simulation import PDSimulationApp
-import re
 import pandas as pd
 from pkpdapp.models import Biomarker, BiomarkerType
+from .dash_apps.simulation import PDSimulationApp
 
 
 class BuildModelView(generic.base.TemplateView):

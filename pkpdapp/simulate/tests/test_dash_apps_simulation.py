@@ -10,9 +10,8 @@ import erlotinib as erlo
 import plotly.graph_objects as go
 import dash_bootstrap_components as dbc
 from pkpdapp.models import (
-    Dataset, PkpdModel, Biomarker, BiomarkerType
+    PkpdModel
 )
-import copy
 import pandas as pd
 import codecs
 import urllib.request

@@ -4,12 +4,10 @@
 # copyright notice and full license details.
 #
 
-from django.test import SimpleTestCase, TestCase
-from django.core import mail
+from django.test import TestCase
 from django.urls import reverse
 from django.contrib.auth.models import User
 from django.utils import timezone
-import re
 from pkpdapp.models import (
     Dataset, Project, Biomarker, BiomarkerType, PkpdModel
 )
