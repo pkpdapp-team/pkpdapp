@@ -103,7 +103,6 @@ def update_biomarkertypes_formset(request, pk):
         formset = BiomarkerFormset(request.POST)
         if formset.is_valid():
             k = 0
-            print(len(formset))
             for f in formset:
                 cd = f.cleaned_data
                 unit = cd.get("unit")
