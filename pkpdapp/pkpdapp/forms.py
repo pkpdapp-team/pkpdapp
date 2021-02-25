@@ -155,18 +155,3 @@ class CreateNewBiomarkerUnit(forms.ModelForm):
         widget=forms.Textarea(attrs={'rows': 2, 'cols': 25}),
         required=False
     )
-
-
-BiomarkerTypeFormset = modelformset_factory(
-    BiomarkerType,
-    fields=('name', 'unit', 'description'),
-    extra=1,
-)
-
-
-class BiomarkerTypeForm(forms.ModelForm):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        biomarkertypes = BiomarkerType.objects.filter(
-            profile=self.instance
-        )

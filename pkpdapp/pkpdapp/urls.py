@@ -22,24 +22,20 @@ urlpatterns = [
     path('admin/doc/', include('django.contrib.admindocs.urls')),
     path('admin/', admin.site.urls),
     path('accounts/', include('django.contrib.auth.urls')),
-
     path('dataset/<int:pk>/',
          views.DatasetDetailView.as_view(), name='dataset-detail'),
-
     path(
         'dataset/list/',
         views.DatasetListView.as_view(),
         name='dataset-list'
     ),
     path('dataset/add/', views.DatasetCreate.as_view(), name='dataset-add'),
-    path('dataset/create/', views.dataset.create, name='dataset-create'),
-    path('dataset/biomarkers/', views.dataset.select_biomarkers,
-         name='dataset-biomarkers'),
-    path('dataset/<int:pk>/biomarkers/', views.dataset.update_biomarkertypes_formset,
+    path('dataset/<int:pk>/biomarkers/',
+         views.dataset.update_biomarkertypes_formset,
          name='dataset-biomarkers-update'),
     path('dataset/<int:pk>/create/',
          views.DatasetCreate.as_view(),
-         name='dataset-create1'),
+         name='dataset-create'),
     path(
         'dataset/<int:pk>/update/',
         views.DatasetUpdate.as_view(),
