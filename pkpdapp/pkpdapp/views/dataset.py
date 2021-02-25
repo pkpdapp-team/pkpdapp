@@ -7,11 +7,7 @@ from django.shortcuts import render
 from django.urls import reverse_lazy
 from django.core.paginator import Paginator
 from pkpdapp.models import Dataset, Biomarker, BiomarkerType
-from ..forms import (CreateNewDataset, CreateNewBiomarkerUnit,
-                     BiomarkerTypeFormset)
-import pandas as pd
-from django.contrib import messages
-from django.apps import apps
+from ..forms import CreateNewDataset, CreateNewBiomarkerUnit
 from django.forms import formset_factory
 from django.shortcuts import redirect
 from django.views.generic import (
@@ -81,11 +77,17 @@ class DatasetUpdate(UpdateView):
     template_name = 'dataset_form.html'
 
 
+class DatasetDelete(DeleteView):
+    model = Dataset
+    success_url = reverse_lazy('dataset-list')
+    template_name = 'dataset_confirm_delete.html'
+
+
 def update_biomarkertypes_formset(request, pk):
     context = {}
     current_dataset = Dataset.objects.get(pk=pk)
     biomarkertypes = BiomarkerType.objects.filter(dataset=current_dataset)
-    formset = formset_factory(
+    BiomarkerFormset = formset_factory(
         CreateNewBiomarkerUnit,
         extra=len(biomarkertypes)
     )
@@ -96,12 +98,12 @@ def update_biomarkertypes_formset(request, pk):
         biomarker_names.append(biomarkertypes[k].name)
         biomarker_units.append(biomarkertypes[k].unit)
         k += 1
-    print(biomarker_units)
     context["biomarkernames"] = biomarker_names
     if request.method == "POST":
-        formset = formset(request.POST)
+        formset = BiomarkerFormset(request.POST)
         if formset.is_valid():
             k = 0
+            print(len(formset))
             for f in formset:
                 cd = f.cleaned_data
                 unit = cd.get("unit")
@@ -115,13 +117,6 @@ def update_biomarkertypes_formset(request, pk):
             kwargs={'pk': pk}
         ))
     else:
-        context["formset"] = formset
-        formset = formset(initial=[{'unit': x} for x in biomarker_units])
+        context["formset"] = BiomarkerFormset
     return render(request, 'biomarker_update.html',
                   context)
-
-
-class DatasetDelete(DeleteView):
-    model = Dataset
-    success_url = reverse_lazy('dataset-list')
-    template_name = 'dataset_confirm_delete.html'
