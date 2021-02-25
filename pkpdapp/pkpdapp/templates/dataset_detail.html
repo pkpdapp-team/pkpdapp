@@ -11,12 +11,13 @@ copyright notice and full license details.
 {% block main_content %}
 <p></p>
 <h2>Dataset {{dataset.name}}</h2>
-(<a href="{% url 'dataset-update' dataset.id %}"> Update </a>)
+(<a href="{% url 'dataset-update' dataset.id %}"> Update dataset </a>)
+(<a href="{% url 'dataset-biomarkers-update' dataset.id %}"> Update biomarkers </a>)
 <p>{{dataset.description|markdownify}}</p>
 <h3>Biomarker Types</h2>
 <ul>
 {% for type in biomarker_types %}
-  <li>{{ type.name }}: {{ type.description|truncatewords:"10"}}</li>
+  <li>{{ type.name }} ({{ type.unit}}): {{ type.description|truncatewords:"10"}}</li>
 {% endfor %}
 </ul>
 <h3>Data</h2>

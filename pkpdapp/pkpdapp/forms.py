@@ -5,7 +5,7 @@
 #
 from django import forms
 from django.core.exceptions import ValidationError
-from pkpdapp.models import Dataset, BiomarkerType, Project
+from pkpdapp.models import Dataset, BiomarkerType, Project, Biomarker
 from django.utils.translation import gettext as _
 import pandas as pd
 from django.forms import modelformset_factory
@@ -30,6 +30,7 @@ class CreateNewDataset(forms.ModelForm):
         else:
             self.project_id = None
 
+        self._data = None
         super().__init__(*args, **kwargs)
 
     class Meta:
@@ -91,15 +92,43 @@ class CreateNewDataset(forms.ModelForm):
                 params={'filename': uploaded_file.name,
                         'error_cols': error_cols},
             )
+        self._data = data
         return data
 
     def save(self, commit=True):
         instance = super().save()
         if self.project_id is not None:
             project = Project.objects.get(id=self.project_id)
-            project.pkpd_models.add(instance)
+            project.datasets.add(instance)
             if commit:
                 project.save()
+
+        # save default biomarker types
+        data = self._data
+        bts_unique = data["biomarker type"].unique().tolist()
+        biomarker_types = []
+        for i in range(len(bts_unique)):
+            biomarker_types.append(BiomarkerType(
+                name=bts_unique[i],
+                description="",
+                unit="mg",
+                dataset=instance
+            ))
+        [bm.save() for bm in biomarker_types]
+
+        # save each row of data
+        biomarker_index = {}
+        for i, b in enumerate(bts_unique):
+            biomarker_index[b] = i
+        for index, row in data.iterrows():
+            index = biomarker_index[row['biomarker type']]
+            biomarker = Biomarker(
+                time=row['time'],
+                subject_id=row['subject id'],
+                value=row['value'],
+                biomarker_type=biomarker_types[index]
+            )
+            biomarker.save()
 
         return instance
 
@@ -108,10 +137,19 @@ class CreateNewBiomarkerUnit(forms.ModelForm):
     """
     A form to associate a unit with a predefined biomarker type name.
     """
+    UNIT_CHOICES = [
+        ('mg', 'mg'),
+        ('g', 'g'),
+        ('cm3', 'cm^3'),
+    ]
 
     class Meta:
         model = BiomarkerType
-        fields = ['name', 'unit', 'description']
+        fields = ['unit', 'description']
+
+    unit = forms.ChoiceField(
+        choices=UNIT_CHOICES
+    )
 
     description = forms.CharField(
         widget=forms.Textarea(attrs={'rows': 2, 'cols': 25}),
@@ -124,3 +162,11 @@ BiomarkerTypeFormset = modelformset_factory(
     fields=('name', 'unit', 'description'),
     extra=1,
 )
+
+
+class BiomarkerTypeForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        biomarkertypes = BiomarkerType.objects.filter(
+            profile=self.instance
+        )

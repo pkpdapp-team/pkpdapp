@@ -70,7 +70,7 @@ class DatasetCreate(CreateView):
 
     def get_success_url(self):
         return reverse_lazy(
-            'dataset-biomarkers-create',
+            'dataset-detail',
             kwargs={'pk': self.object.pk}
         )
 
@@ -169,6 +169,43 @@ def select_biomarkers(request):
     else:
         context["formset"] = formset
     return render(request, 'dataset_create.html',
+                  context)
+
+
+def update_biomarkertypes_formset(request, pk):
+    context = {}
+    current_dataset = Dataset.objects.get(pk=pk)
+    biomarkertypes = BiomarkerType.objects.filter(dataset=current_dataset)
+    formset = formset_factory(
+        CreateNewBiomarkerUnit,
+        extra=len(biomarkertypes)
+    )
+    biomarker_names = []
+    k = 0
+    for bm in biomarkertypes:
+        biomarker_names.append(biomarkertypes[k].name)
+        k += 1
+    context["biomarkernames"] = biomarker_names
+    context["formset"] = formset
+    if request.method == "POST":
+        formset = formset(request.POST)
+        if formset.is_valid():
+            k = 0
+            for f in formset:
+                cd = f.cleaned_data
+                unit = cd.get("unit")
+                desc = cd.get("description")
+                biomarkertypes[k].description = desc
+                biomarkertypes[k].unit = unit
+                biomarkertypes[k].save()
+                k += 1
+        return redirect(reverse_lazy(
+            'dataset-detail',
+            kwargs={'pk': pk}
+        ))
+    else:
+        context["formset"] = formset
+    return render(request, 'biomarker_update.html',
                   context)
 
 
