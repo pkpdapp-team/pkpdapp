@@ -8,24 +8,26 @@ from django.db import models
 from django.urls import reverse
 
 
-class PkpdModel(models.Model):
+class MechanisticModel(models.Model):
     """
     A PK or PD model, represented using SBML
     """
-    MODEL_TYPE_CHOICES = [
-        ('PK', 'Pharmokinetic'),
-        ('PD', 'Pharmodynamic'),
-    ]
+
     name = models.CharField(max_length=100, help_text='name of the model')
     description = models.TextField(help_text='short description of the model')
-    model_type = models.CharField(
-        max_length=2, choices=MODEL_TYPE_CHOICES,
-        help_text='type of model, e.g. PK or PD'
-
-    )
     sbml = models.TextField(
         help_text='the model represented using SBML (see http://sbml.org)'
     )
 
+    class Meta:
+        abstract = True
+
+class PharmokineticModel(MechanisticModel):
+
     def get_absolute_url(self):
-        return reverse('pkpd_model-detail', kwargs={'pk': self.pk})
+        return reverse('pharmacokinetic_model-detail', kwargs={'pk': self.pk})
+
+class PharmacodynamicModel(MechanisticModel):
+
+    def get_absolute_url(self):
+        return reverse('pharmacodynamic_model-detail', kwargs={'pk': self.pk})

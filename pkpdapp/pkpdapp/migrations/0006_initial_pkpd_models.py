@@ -10,7 +10,7 @@ import codecs
 
 
 def load_pkpd_models(apps, schema_editor):
-    models = [
+    models_pd = [
         {
             'name': 'tumour_growth_inhibition_model_koch',
             'description': '''
@@ -88,6 +88,8 @@ parametersation in [1]_ by
             'sbml_url':
             'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/models/tgi_Koch_2009_reparametrised.xml'  # noqa: E501
         },
+    ]
+    models_pk = [
         {
             'name': 'one_compartment_pk_model',
             'description': """
@@ -119,13 +121,16 @@ compartment.
         }
     ]
 
-    PkpdModel = apps.get_model("pkpdapp", "PkpdModel")
+    PharmacodynamicModel = apps.get_model("pkpdapp",
+                                          "PharmacodynamicModel")
+    PharmacokineticModel= apps.get_model("pkpdapp",
+                                         "PharmacokineticModel")
     Project = apps.get_model("pkpdapp", "Project")
-    for m in models:
+    for m in models_pd:
         with urllib.request.urlopen(m['sbml_url']) as f:
             # parse as csv file
             sbml_string = codecs.decode(f.read(), 'utf-8')
-            pkpd_model = PkpdModel(
+            pkpd_model = PharmacodynamicModel(
                 name=m['name'],
                 description=m['description'],
                 model_type=m['model_type'],
@@ -135,6 +140,22 @@ compartment.
             # add to demo project
             demo_project = Project.objects.get(name='demo')
             demo_project.pkpd_models.add(pkpd_model)
+
+    for m in models_pk:
+        with urllib.request.urlopen(m['sbml_url']) as f:
+            # parse as csv file
+            sbml_string = codecs.decode(f.read(), 'utf-8')
+            pkpd_model = PharmacokineticModel(
+                name=m['name'],
+                description=m['description'],
+                model_type=m['model_type'],
+                sbml=sbml_string
+            )
+            pkpd_model.save()
+            # add to demo project
+            demo_project = Project.objects.get(name='demo')
+            demo_project.pkpd_models.add(pkpd_model)
+
 
 
 def delete_pkpd_models(apps, schema_editor):

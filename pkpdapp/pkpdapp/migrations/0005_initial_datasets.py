@@ -181,7 +181,7 @@ def load_datasets(apps, schema_editor):
         dataset.save()
 
         # add to demo project
-        demo_project = Project.objects.get(name='demo')
+        demo_project = Project.objects.get(name='pd_demo')
         demo_project.datasets.add(dataset)
 
         # find the index of the biomarker type, so we don't have to keep
