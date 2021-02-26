@@ -46,7 +46,6 @@ $$
 [1] Koch, G. et al. Modeling of tumor growth and anticancer effects
     of combination therapy. J Pharmacokinet Pharmacodyn 36, 179–197
     (2009).''',  # noqa: W605
-            'model_type': 'Pharmacodynamic',
             'sbml_url':
             'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/models/tgi_Koch_2009.xml'  # noqa: E501
         },
@@ -84,7 +83,6 @@ parametersation in [1]_ by
     V_{\text{crit}} = \frac{\lambda _1}{2\lambda _0} \quad \text{and}
     \quad \lambda = 2\lambda _1 .
 """,  # noqa: W605
-            'model_type': 'Pharmacodynamic',
             'sbml_url':
             'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/models/tgi_Koch_2009_reparametrised.xml'  # noqa: E501
         },
@@ -115,7 +113,6 @@ With a :class:`erlotinib.PharmacokineticModel` the drug may be either
 directly administered to :math:`A` or indirectly through a dosing
 compartment.
 """,  # noqa: W605
-            'model_type': 'Pharmacokinetic',
             'sbml_url':
             'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/models/pk_one_comp.xml'  # noqa: E501
         }
@@ -133,13 +130,12 @@ compartment.
             pkpd_model = PharmacodynamicModel(
                 name=m['name'],
                 description=m['description'],
-                model_type=m['model_type'],
                 sbml=sbml_string
             )
             pkpd_model.save()
             # add to demo project
             demo_project = Project.objects.get(name='demo')
-            demo_project.pkpd_models.add(pkpd_model)
+            demo_project.pd_models.add(pkpd_model)
 
     for m in models_pk:
         with urllib.request.urlopen(m['sbml_url']) as f:
@@ -148,15 +144,16 @@ compartment.
             pkpd_model = PharmacokineticModel(
                 name=m['name'],
                 description=m['description'],
-                model_type=m['model_type'],
                 sbml=sbml_string
             )
             pkpd_model.save()
 
 
 def delete_pkpd_models(apps, schema_editor):
-    PkpdModel = apps.get_model("pkpdapp", "PkpdModel")
-    PkpdModel.objects.all().delete()
+    PharmacodynamicModel = apps.get_model("pkpdapp", "PharmacodynamicModel")
+    PharmacodynamicModel.objects.all().delete()
+    PharmacokineticModel = apps.get_model("pkpdapp", "PharmacokineticModel")
+    PharmacokineticModel.objects.all().delete()
 
 
 class Migration(migrations.Migration):

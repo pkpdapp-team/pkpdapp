@@ -13,7 +13,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from pkpdapp.forms import CreateNewPharmodynamicModel
 from django.urls import reverse_lazy
 from pkpdapp.models import (
-    PharmokineticModel, DosedPharmokineticModel, PharmacodynamicModel
+    PharmacokineticModel, DosedPharmacokineticModel, PharmacodynamicModel
 )
 from pkpdapp.dash_apps.simulation import PDSimulationApp
 
@@ -54,7 +54,7 @@ class PharmacodynamicModelDeleteView(DeleteView):
     template_name = 'pkpd_model_confirm_delete.html'
 
 
-class DosedPharmokineticModelCreate(LoginRequiredMixin, TemplateView):
+class DosedPharmacokineticModelCreate(LoginRequiredMixin, TemplateView):
     """
     This class defines the interface for model simulation.
     """
@@ -66,7 +66,7 @@ class DosedPharmokineticModelCreate(LoginRequiredMixin, TemplateView):
         self._app = app
 
         # get model sbml strings and add erlo models
-        for i, m in enumerate(PharmokineticModel.objects.all()):
+        for i, m in enumerate(PharmacokineticModel.objects.all()):
             sbml_str = m.sbml.encode('utf-8')
             erlo_m = erlo.PharmacodynamicModel(sbml_str)
             param_names = erlo_m.parameters()

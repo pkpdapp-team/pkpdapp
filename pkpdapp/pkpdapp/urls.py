@@ -51,31 +51,31 @@ urlpatterns = [
     path('explore_data/', include('explore_data.urls')),
 
     path(
-        'pkpd_model/list/',
-        views.PkpdModelListView.as_view(),
-        name='pkpd_model-list'
+        'pd_model/list/',
+        views.PharmacodynamicModelListView.as_view(),
+        name='pd_model-list'
     ),
     path(
-        'pkpd_model/add/',
-        views.PkpdModelCreate.as_view(),
-        name='pkpd_model-add'
+        'pd_model/add/',
+        views.PharmacodynamicModelCreate.as_view(),
+        name='pd_model-add'
     ),
     path(
-        'pkpd_model/add/project/<int:project>/',
-        views.PkpdModelCreate.as_view(),
-        name='pkpd_model-add-to-project'
+        'pd_model/add/project/<int:project>/',
+        views.PharmacodynamicModelCreate.as_view(),
+        name='pd_model-add-to-project'
     ),
     path(
-        'pkpd_model/<int:pk>/update/',
-        views.PkpdModelUpdate.as_view(),
-        name='pkpd_model-update'
+        'pd_model/<int:pk>/update/',
+        views.PharmacodynamicModelUpdate.as_view(),
+        name='pd_model-update'
     ),
-    path('pkpd_model/<int:pk>/',
-         views.PkpdModelDetailView.as_view(), name='pkpd_model-detail'),
+    path('pd_model/<int:pk>/',
+         views.PharmacodynamicModelDetailView.as_view(), name='pd_model-detail'),
     path(
-        'pkpd_model/<int:pk>/delete/',
-        views.PkpdModelDelete.as_view(),
-        name='pkpd_model-delete'
+        'pd_model/<int:pk>/delete/',
+        views.PharmacodynamicModelDeleteView.as_view(),
+        name='pd_model-delete'
     ),
 
     path('project/',

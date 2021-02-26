@@ -5,7 +5,7 @@
 #
 from django import forms
 from pkpdapp.models.dataset import ADMINISTRATION_TYPE_CHOICES
-from pkpdapp.models import PkpdModel, Project
+from pkpdapp.models import PharmacodynamicModel, Project
 from django.core.exceptions import ValidationError
 import xml.etree.ElementTree as ET
 from django.utils.translation import gettext as _
@@ -97,8 +97,8 @@ class CreateNewPharmodynamicModel(forms.ModelForm):
         super().__init__(*args, **kwargs)
 
     class Meta:
-        model = PkpdModel
-        fields = ('name', 'description', 'model_type', 'sbml')
+        model = PharmacodynamicModel
+        fields = ('name', 'description', 'sbml')
 
     sbml = forms.FileField()
 
