@@ -13,7 +13,6 @@ https://docs.djangoproject.com/en/3.0/topics/http/urls/.
 
 from django.urls import include, path
 from django.contrib import admin
-
 from . import views
 
 
@@ -33,6 +32,9 @@ urlpatterns = [
         name='dataset-list'
     ),
     path('dataset/add/', views.DatasetCreate.as_view(), name='dataset-add'),
+    path('dataset/create/', views.dataset.create, name='dataset-create'),
+    path('dataset/biomarkers/', views.dataset.select_biomarkers,
+         name='dataset-biomarkers'),
     path(
         'dataset/<int:pk>/update/',
         views.DatasetUpdate.as_view(),
@@ -57,6 +59,11 @@ urlpatterns = [
         'pkpd_model/add/',
         views.PkpdModelCreate.as_view(),
         name='pkpd_model-add'
+    ),
+    path(
+        'pkpd_model/add/project/<int:project>/',
+        views.PkpdModelCreate.as_view(),
+        name='pkpd_model-add-to-project'
     ),
     path(
         'pkpd_model/<int:pk>/update/',

@@ -17,7 +17,8 @@ class Project(models.Model):
     """
     name = models.CharField(max_length=100, help_text='name of the project')
     description = models.TextField(
-        help_text='short description of the project'
+        help_text='short description of the project',
+        blank=True, default=''
     )
     datasets = models.ManyToManyField(
         Dataset, help_text='datasets referenced by this project'

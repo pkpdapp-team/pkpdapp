@@ -7,8 +7,9 @@
 from django.views.generic import (
     DetailView, CreateView,
     UpdateView, DeleteView,
-    ListView
+    ListView,
 )
+from pkpdapp.forms import CreateNewPkpdModel
 from django.urls import reverse_lazy
 from pkpdapp.models import (
     PharmokineticModel, DosedPharmokineticModel, PharmacodynamicModel
@@ -25,15 +26,46 @@ class PharmacodynamicModelListView(ListView):
     template_name = 'pkpd_model_list.html'
 
 
-class PkpdModelCreate(CreateView):
+class PharmacodynamicModelCreate(CreateView):
     model = PharmacodynamicModel
-    fields = ['name', 'description']
+    form_class = CreateNewPkpdModel
     template_name = 'pkpd_model_form.html'
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        if 'project' in self.kwargs:
+            kwargs['project'] = self.kwargs['project']
+        return kwargs
+
+    def get_success_url(self):
+        return reverse_lazy(
+            'pkpd_model-detail',
+            kwargs={'pk': self.object.pk}
+        )
+
+class PharmacokineticModelCreate(CreateView):
+    model = PharmacokineticModel
+    form_class = CreateNewPkpdModel
+    template_name = 'pkpd_model_form.html'
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        if 'project' in self.kwargs:
+            kwargs['project'] = self.kwargs['project']
+        return kwargs
+
+    def get_success_url(self):
+        return reverse_lazy(
+            'pkpd_model-detail',
+            kwargs={'pk': self.object.pk}
+        )
+
+
 
 
 class PkpdModelUpdate(UpdateView):
     model = PharmacodynamicModel
-    fields = ['name', 'description']
+    fields = ['name', 'description', 'model_type', 'sbml']
     template_name = 'pkpd_model_form.html'
 
 

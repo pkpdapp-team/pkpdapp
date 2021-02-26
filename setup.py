@@ -49,6 +49,7 @@ setup(
         'django-pivot==1.8.1',
         'django-markdownify==0.8.2',
         'python-markdown-math==0.8',
+        'xlrd>=1.0.0',
     ],
     dependency_links=[
         "git+git://github.com/DavAug/erlotinib.git#egg=erlotinib-latest",

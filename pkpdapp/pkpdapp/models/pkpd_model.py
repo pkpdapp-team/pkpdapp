@@ -14,7 +14,15 @@ class MechanisticModel(models.Model):
     """
 
     name = models.CharField(max_length=100, help_text='name of the model')
-    description = models.TextField(help_text='short description of the model')
+    description = models.TextField(
+        help_text='short description of the model',
+        blank=True, default=''
+    )
+    model_type = models.CharField(
+        max_length=2, choices=MODEL_TYPE_CHOICES,
+        help_text='type of model, e.g. PK or PD'
+
+    )
     sbml = models.TextField(
         help_text='the model represented using SBML (see http://sbml.org)'
     )
@@ -43,3 +51,6 @@ class PharmacodynamicModel(MechanisticModel):
 
     def get_absolute_url(self):
         return reverse('pharmacodynamic_model-detail', kwargs={'pk': self.pk})
+
+    def __str__(self):
+        return str(self.name)

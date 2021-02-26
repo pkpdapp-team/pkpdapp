@@ -62,7 +62,7 @@ class ProjectCreate(CreateView):
 class ProjectUpdate(UpdateView):
     model = Project
     template_name = 'project_form.html'
-    fields = ['name', 'description', 'users']
+    fields = ['name', 'description', 'users', 'datasets', 'pkpd_models']
 
 
 class ProjectDelete(DeleteView):
