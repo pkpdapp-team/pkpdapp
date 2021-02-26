@@ -23,9 +23,21 @@ class MechanisticModel(models.Model):
         abstract = True
 
 class PharmokineticModel(MechanisticModel):
+    """
+    this just creates a concrete table for PK models without dosing
+    """
 
     def get_absolute_url(self):
         return reverse('pharmacokinetic_model-detail', kwargs={'pk': self.pk})
+
+class DosedPharmokineticModel(MechanisticModel):
+    """
+    PK model plus dosing and protocol information
+    """
+
+    def get_absolute_url(self):
+        return reverse('dosed-pharmacokinetic_model-detail', kwargs={'pk': self.pk})
+
 
 class PharmacodynamicModel(MechanisticModel):
 

@@ -10,32 +10,34 @@ from django.views.generic import (
     ListView
 )
 from django.urls import reverse_lazy
-from pkpdapp.models import PkpdModel
+from pkpdapp.models import (
+    PharmokineticModel, DosedPharmokineticModel, PharmacodynamicModel
+)
 
 
-class PkpdModelDetailView(DetailView):
-    model = PkpdModel
+class PharmacodynamicModelDetailView(DetailView):
+    model = PharmacodynamicModel
     template_name = 'pkpd_model_detail.html'
 
 
-class PkpdModelListView(ListView):
-    model = PkpdModel
+class PharmacodynamicModelListView(ListView):
+    model = PharmacodynamicModel
     template_name = 'pkpd_model_list.html'
 
 
 class PkpdModelCreate(CreateView):
-    model = PkpdModel
+    model = PharmacodynamicModel
     fields = ['name', 'description']
     template_name = 'pkpd_model_form.html'
 
 
 class PkpdModelUpdate(UpdateView):
-    model = PkpdModel
+    model = PharmacodynamicModel
     fields = ['name', 'description']
     template_name = 'pkpd_model_form.html'
 
 
-class PkpdModelDelete(DeleteView):
-    model = PkpdModel
-    success_url = reverse_lazy('pkpd_model-list')
+class PharmacodynamicModelDeleteView(DeleteView):
+    model = PharmacodynamicModel
+    success_url = reverse_lazy('pharmodynamic_model-list')
     template_name = 'pkpd_model_confirm_delete.html'
