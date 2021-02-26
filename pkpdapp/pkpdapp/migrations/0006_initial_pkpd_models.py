@@ -152,10 +152,6 @@ compartment.
                 sbml=sbml_string
             )
             pkpd_model.save()
-            # add to demo project
-            demo_project = Project.objects.get(name='demo')
-            demo_project.pkpd_models.add(pkpd_model)
-
 
 
 def delete_pkpd_models(apps, schema_editor):

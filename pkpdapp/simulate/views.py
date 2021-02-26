@@ -12,7 +12,7 @@ import dash
 import erlotinib as erlo
 import pandas as pd
 from pkpdapp.models import Biomarker, BiomarkerType
-from .dash_apps.simulation import PDSimulationApp
+from pkpdapp.dash_apps.simulation import PDSimulationApp
 
 
 class BuildModelView(generic.base.TemplateView):

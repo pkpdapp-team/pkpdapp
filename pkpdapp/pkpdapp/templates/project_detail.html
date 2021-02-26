@@ -31,12 +31,25 @@ copyright notice and full license details.
     <li>No datasets yet.</li>
 {% endfor %}
 </ul>
-<h3>Models</h3>
+<h3>PK Models</h3>
 <ul>
-{% for model in project.pkpd_models.all %}
+{% for model in project.pk_models.all %}
   <li>
     <b>{{model.name}}</b>: {{model.description|truncatewords:"10"}} 
-    <a href={% url 'pkpd_model-detail' model.id %}>
+    <a href={% url 'dosed_pk_model-detail' model.id %}>
+      <i class="fas fa-info-circle"></i>
+    </a>
+  </li>
+{% empty %}
+    <li>No models yet.</li>
+{% endfor %}
+</ul>
+<h3>PD Models</h3>
+<ul>
+{% for model in project.pd_models.all %}
+  <li>
+    <b>{{model.name}}</b>: {{model.description|truncatewords:"10"}} 
+    <a href={% url 'pd_model-detail' model.id %}>
       <i class="fas fa-info-circle"></i>
     </a>
   </li>

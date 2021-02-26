@@ -42,15 +42,60 @@ class DosedPharmokineticModel(MechanisticModel):
     """
     PK model plus dosing and protocol information
     """
+    dose_compartment = models.CharField(
+        max_length=100,
+        help_text='compartment name to be dosed'
+    )
+    direct_dose = models.BooleanField(
+        default=True,
+        help_text=(
+            'True if drug is administered directly into the dosing '
+            'compartment'
+        ),
+    )
+    dose_amount = models.FloatField(
+        default=0.0,
+        help_text=(
+            'The amount of the compound that is injected at each '
+            'administration.'
+        ),
+    )
+    dose_start = models.FloatField(
+        default=0.0,
+        help_text='Start time of the treatment.',
+    )
+    dose_duration = models.FloatField(
+        default=0.01,
+        help_text='''
+            Duration of dose administration. For a bolus injection, a dose
+            duration of 1% of the time unit should suffice. By default the
+            duration is set to 0.01 (bolus).
+        '''
+    )
+    dose_period = models.FloatField(
+        blank=True,
+        help_text='''
+            Periodicity at which doses are administered. If empty the dose
+            is administered only once.
+        '''
+    )
+    number_of_doses = models.IntegerField(
+        blank=True,
+        help_text='''
+            Number of administered doses. If empty and the periodicity of
+            the administration is not empty, doses are administered
+            indefinitely.
+        '''
+    )
 
     def get_absolute_url(self):
-        return reverse('dosed-pharmacokinetic_model-detail', kwargs={'pk': self.pk})
+        return reverse('dosed_pk_model-detail', kwargs={'pk': self.pk})
 
 
 class PharmacodynamicModel(MechanisticModel):
 
     def get_absolute_url(self):
-        return reverse('pharmacodynamic_model-detail', kwargs={'pk': self.pk})
+        return reverse('pd_model-detail', kwargs={'pk': self.pk})
 
     def __str__(self):
         return str(self.name)

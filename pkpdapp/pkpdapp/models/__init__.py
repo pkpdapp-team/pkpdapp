@@ -5,7 +5,8 @@
 #
 
 from .pkpd_model import (
-    MechanisticModel, PharmokineticModel, PharmacodynamicModel
+    MechanisticModel, PharmokineticModel, PharmacodynamicModel,
+    DosedPharmokineticModel
 )   # noqa: F401
 from .dataset import Dataset  # noqa: F401
 from .biomarker_type import BiomarkerType  # noqa: F401
