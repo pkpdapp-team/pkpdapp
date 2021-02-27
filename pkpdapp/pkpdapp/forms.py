@@ -78,6 +78,56 @@ class CreateNewBiomarkerUnit(forms.Form):
         required=False
     )
 
+class CreateNewDosedPharmokineticModel(forms.ModelForm):
+    """
+    A form to create a new
+    :model:`pkpdapp.DosedPharmacokineticModel`, which allows a user to
+    choose.
+
+    Can pass an additional kwarg 'project', which adds the new model to this
+    project id
+    """
+    def __init__(self, *args, **kwargs):
+        if 'project' in kwargs:
+            self.project_id = kwargs.pop('project')
+        else:
+            self.project_id = None
+
+        super().__init__(*args, **kwargs)
+
+    class Meta:
+        model = PharmacodynamicModel
+        fields = ('name', 'description', 'sbml')
+
+    sbml = forms.FileField()
+
+    def clean_sbml(self):
+        sbml_file = self.cleaned_data.get("sbml")
+        try:
+            sbml_et = ET.parse(sbml_file).getroot()
+            sbml = ET.tostring(
+                sbml_et, encoding='unicode', method='xml'
+            )
+        except ET.ParseError:
+            raise forms.ValidationError(
+                _((
+                    'Error parsing file, '
+                    '%(filename)s does not seem to be valid XML'
+                )),
+                code='invalid',
+                params={'filename': sbml_file.name},
+            )
+        return sbml
+
+    def save(self, commit=True):
+        instance = super().save()
+        if self.project_id is not None:
+            project = Project.objects.get(id=self.project_id)
+            project.pkpd_models.add(instance)
+            if commit:
+                project.save()
+
+        return instance
 
 class CreateNewPharmodynamicModel(forms.ModelForm):
     """

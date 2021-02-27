@@ -7,17 +7,19 @@
 import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
-import erlotinib as erlo
+import pkpdapp.erlotinib as erlo
 import numpy as np
 import pandas as pd
 
 from .base import BaseApp
 
 
-class PDSimulationApp(BaseApp):
+
+class SimulationApp(BaseApp):
     """
     Creates an app which simulates multiple
-    :class:`erlotinib.PharmacodynamicModel`.
+    :class:`erlotinib.PharmacodynamicModel` or
+    :class:`erlotinib.PharmacokineticModel`.
 
     Parameter sliders can be used to adjust parameter values during
     the simulation.
@@ -30,7 +32,7 @@ class PDSimulationApp(BaseApp):
         Name of the app which is used as reference in HTML templates.
     """
     def __init__(self, name):
-        super(PDSimulationApp, self).__init__(name)
+        super(SimulationApp, self).__init__(name)
 
         self._id_key = 'ID'
         self._time_key = 'Time'
@@ -40,6 +42,7 @@ class PDSimulationApp(BaseApp):
         self._fig = None
 
         # Create defaults
+        self._multiple_models = True
         self._models = []
         self._use_models = []
         self._model_names = []
@@ -53,6 +56,9 @@ class PDSimulationApp(BaseApp):
         self._slider_ids = []
         self._slider_tabs = []
         self._times = np.linspace(start=0, stop=30)
+
+    def set_multiple_models(self, value):
+        self._multiple_models = value
 
     def set_used_datasets(self, value):
         """
@@ -97,16 +103,23 @@ class PDSimulationApp(BaseApp):
         create selects for model, dataset and biomarkers up the top of the dash
         app
         """
-        return [
-            dbc.Col(children=[
-                html.Label('Models:'),
-                dcc.Dropdown(id='model-select',
+        model_dropdown = dcc.Dropdown(id='model-select',
                              options=[{
                                  'label': name,
                                  'value': i
-                             } for i, name in enumerate(self._model_names)],
-                             value=self._use_models,
-                             multi=True)
+                             } for i, name in enumerate(self._model_names)])
+
+        if self._multiple_models:
+            model_dropdown.multi = True
+            model_dropdown.value = self._use_models
+        else:
+            model_dropdown.multi = False
+            model_dropdown.value = self._use_models[0]
+
+        return [
+            dbc.Col(children=[
+                html.Label('Models:'),
+                model_dropdown
             ]),
             dbc.Col(children=[
                 html.Label('Datasets:'),
@@ -175,11 +188,12 @@ class PDSimulationApp(BaseApp):
 
         # Group parameters:
         # Create PK input slider group
-        pk_input = model.pk_input()
-        if pk_input is not None:
-            pk_input = id_format.format(model_index, pk_input)
-            sliders.group_sliders(slider_ids=[pk_input],
-                                  group_id='Pharmacokinetic input')
+        if isinstance(model, PDSimulationApp):
+            pk_input = model.pk_input()
+            if pk_input is not None:
+                pk_input = id_format.format(model_index, pk_input)
+                sliders.group_sliders(slider_ids=[pk_input],
+                                      group_id='Pharmacokinetic input')
 
             # Make sure that pk input is not assigned to two sliders
             parameters.remove(pk_input)
@@ -341,9 +355,11 @@ class PDSimulationApp(BaseApp):
         use
             Set to True if you want this model to be initially chosen
         """
-        if not isinstance(model, erlo.PharmacodynamicModel):
+        if not (isinstance(model, erlo.PharmacodynamicModel) or \
+                isinstance(model, erlo.PharmacokineticModel)):
             raise TypeError('Model has to be an instance of '
-                            'erlotinib.PharmacodynamicModel.')
+                            'erlotinib.PharmacodynamicModel '
+                            'or erlotinib.PharmacodynamicModel.')
 
         parameter_names = model.parameters()
         for pname in parameter_names:
@@ -381,6 +397,266 @@ class PDSimulationApp(BaseApp):
         self._fig._fig.data[model_trace].y = result
 
         return self._fig._fig
+
+
+class PKSimulationApp(SimulationApp):
+    """
+    Creates an app which simulates a single
+    :class:`erlotinib.PharmacokineticModel`.
+
+    Parameter sliders can be used to adjust parameter values during
+    the simulation. Method of application and protocol can be set
+
+    Extends :class:`BaseApp`.
+
+    Parameters
+    ----------
+    optional name
+        Name of the app which is used as reference in HTML templates.
+    """
+    def __init__(self, name):
+        super(PKSimulationApp, self).__init__(name)
+        self.set_multiple_models(False)
+
+        self._compartment = 'central'
+        self._direct = True
+        self._dose = 0.0
+        self._start = 0.0
+        self._duration = 0.01
+        self._period = None
+        self._num = None
+
+    def add_model(self, model, name, use=False):
+        """
+        Adds a :class:`erlotinib.PharmacokineticModel` to the application.
+
+        One parameter slider is generated for each model parameter, and
+        the solution for a default set of parameters is added to the figure.
+
+        Parameters
+        ----------
+        model
+            A :class:`erlotinib.PharmacokineticModel` representing the model.
+        name
+            A str name for the model
+        use
+            Set to True if you want this model to be initially chosen
+        """
+        if not isinstance(model, erlo.PharmacokineticModel):
+            raise TypeError('Model has to be an instance of '
+                            'erlotinib.PharmacokineticModel.')
+
+        super(PKSimulationApp, self).add_model(model, name, use)
+
+    def set_administration(self, compartment, direct=True):
+        r"""
+        Sets the route of administration
+
+        Parameters
+        ----------
+        compartment
+            Compartment to which doses are either directly or indirectly
+            administered.
+        amount_var
+            Drug amount variable in the compartment. By default the drug amount
+            variable is assumed to be 'drug_amount'.
+        direct
+            A boolean flag that indicates whether the dose is administered
+            directly or indirectly to the compartment.
+        """
+        self._compartment = compartment
+        self._direct = compartment
+
+    def set_dosing_regimen(
+            self, dose, start, duration=0.01, period=None, num=None):
+        """
+        Sets the dosing regimen
+
+        Parameters
+        ----------
+        dose
+            The amount of the compound that is injected at each administration.
+        start
+            Start time of the treatment.
+        duration
+            Duration of dose administration. For a bolus injection, a dose
+            duration of 1% of the time unit should suffice. By default the
+            duration is set to 0.01 (bolus).
+        period
+            Periodicity at which doses are administered. If ``None`` the dose
+            is administered only once.
+        num
+            Number of administered doses. If ``None`` and the periodicity of
+            the administration is not ``None``, doses are administered
+            indefinitely.
+        """
+        self._dose = dose
+        self._start = dose
+        self._duration = duration
+        self._period = period
+        self._num = num
+
+    def _add_simulation_to_fig(self):
+        """
+        Adds trace of simulation results to the figure.
+        """
+        self._models[0].set_administration(
+            self._compartment, direct=self._direct
+        )
+        self._models[0].set_dosing_regimen(
+            self._dose, self._start, self._duration, self._period, self._num
+        )
+        super(PKSimulationApp, self)._add_simulation_to_fig()
+
+    def _create_sliders_component(self):
+        administration = [
+            {
+                'name': 'compartment',
+                'comp': dcc.Dropdown(
+                    id='admin-compartment-select',
+                    options=[{
+                        'label': c.name(),
+                        'value': c.name(),
+                    } for c in
+                        self._models[0]._default_model.components()
+                    ],
+                    value=self._compartment
+                ),
+            },
+            {
+                'name': 'direct',
+                'comp': dcc.Dropdown(
+                    id='admin-direct-select',
+                    options=[
+                        {
+                            'label': 'Direct',
+                            'value': True,
+                        },
+                        {
+                            'label': 'Indirect',
+                            'value': False,
+                        }
+                    ],
+                    value=self._direct,
+                ),
+            }
+        ]
+        protocol = [
+            {
+                'name': 'dose',
+                'comp': dcc.Slider(
+                    id='dose-select',
+                    value=self._dose,
+                    min=0.0,
+                    max=2.0,
+                    step=0.01,
+                ),
+            },
+            {
+                'name': 'start',
+                'comp': dcc.Slider(
+                    id='dose-start',
+                    value=self._start,
+                    min=0.0,
+                    max=2.0,
+                    step=0.01,
+                ),
+            },
+            {
+                'name': 'duration',
+                'comp': dcc.Slider(
+                    id='dose-duration',
+                    value=self._duration,
+                    min=0.01,
+                    max=2.0,
+                    step=0.01,
+                ),
+            },
+            {
+                'name': 'period',
+                'comp': dcc.Slider(
+                    id='dose-period',
+                    value=self._period,
+                    min=0.01,
+                    max=2.0,
+                    step=0.01,
+                ),
+            },
+            {
+                'name': 'num',
+                'comp': dcc.Slider(
+                    id='dose-num',
+                    value=self._num,
+                    min=0,
+                    max=20,
+                    step=1,
+                ),
+            }
+        ]
+
+        sliders = super(PKSimulationApp, self)._create_sliders_component()
+        tab = sliders.children[0].children[0]
+        for name, comps in zip(['Administration', 'Protocol'],
+                               [administration, protocol]):
+            group = [html.Label(name)]
+            for c in comps:
+                label = html.Label(c['name'], style={'fontSize': '0.8rem'})
+                group += [
+                    dbc.Col(children=[label], width=12),
+                    dbc.Col(children=[c['comp']], width=12),
+                ]
+            group = dbc.Row(children=group, style={'marginBottom': '1em'})
+            tab.children.append(group)
+
+        return sliders
+
+class PDSimulationApp(SimulationApp):
+    """
+    Creates an app which simulates multiple
+    :class:`erlotinib.PharmacodynamicModel`.
+
+    Parameter sliders can be used to adjust parameter values during
+    the simulation.
+
+    Extends :class:`BaseApp`.
+
+    Parameters
+    ----------
+    optional name
+        Name of the app which is used as reference in HTML templates.
+    """
+    def __init__(self, name):
+        super(PDSimulationApp, self).__init__(name)
+
+    def add_model(self, model, name, use=False):
+        """
+        Adds a :class:`erlotinib.PharmacodynamicModel` to the application.
+
+        One parameter slider is generated for each model parameter, and
+        the solution for a default set of parameters is added to the figure.
+
+        Parameters
+        ----------
+        model
+            A :class:`erlotinib.PharmacodynamicModel` representing the model.
+        name
+            A str name for the model
+        use
+            Set to True if you want this model to be initially chosen
+        """
+        if not isinstance(model, erlo.PharmacodynamicModel):
+            raise TypeError('Model has to be an instance of '
+                            'erlotinib.PharmacodynamicModel.')
+
+        super(PDSimulationApp, self).add_model(model, name, use)
+
+
+    def _create_sliders(self, model_index, model):
+        sliders = super(PDSimulationApp, self)._create_sliders(
+            model_index, model
+        )
+
+
 
 
 class _SlidersComponent(object):

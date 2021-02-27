@@ -37,6 +37,8 @@ class DosedPharmacokineticModel(MechanisticModel):
     """
     PK model plus dosing and protocol information
     """
+    pharmacokinetic_model = models.ForeignKey(PharmacokineticModel)
+
     dose_compartment = models.CharField(
         max_length=100,
         help_text='compartment name to be dosed'

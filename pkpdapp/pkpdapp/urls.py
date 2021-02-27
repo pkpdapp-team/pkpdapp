@@ -78,6 +78,12 @@ urlpatterns = [
         name='pd_model-delete'
     ),
 
+    path(
+        'pk_model/add/project/<int:project>/',
+        views.DosedPharmacokineticModelCreate.as_view(),
+        name='pk_model-add-to-project'
+    ),
+
     path('project/',
          views.ProjectDetailView.as_view(), name='selected-project-detail'),
     path(

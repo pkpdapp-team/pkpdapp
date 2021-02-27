@@ -10,12 +10,20 @@ from django.views.generic import (
     ListView, TemplateView
 )
 from django.contrib.auth.mixins import LoginRequiredMixin
-from pkpdapp.forms import CreateNewPharmodynamicModel
+from pkpdapp.forms import (
+    CreateNewPharmodynamicModel,
+    CreateNewDosedPharmokineticModel,
+)
 from django.urls import reverse_lazy
 from pkpdapp.models import (
-    PharmacokineticModel, DosedPharmacokineticModel, PharmacodynamicModel
+    PharmacokineticModel, DosedPharmacokineticModel, PharmacodynamicModel,
+    Biomarker, BiomarkerType
 )
-from pkpdapp.dash_apps.simulation import PDSimulationApp
+import pandas as pd
+from pkpdapp.dash_apps.simulation import PKSimulationApp
+import pkpdapp.erlotinib as erlo
+from dash.dependencies import Input, Output
+import dash
 
 
 class PharmacodynamicModelDetailView(DetailView):
@@ -54,21 +62,25 @@ class PharmacodynamicModelDeleteView(DeleteView):
     template_name = 'pkpd_model_confirm_delete.html'
 
 
-class DosedPharmacokineticModelCreate(LoginRequiredMixin, TemplateView):
+class DosedPharmacokineticModelCreate(LoginRequiredMixin, CreateView):
     """
     This class defines the interface for model simulation.
     """
-    template_name = 'dosed_parmokinetic_create.html'
+    template_name = 'dosed_pharmacokinetic_create.html'
+    # form_class = CreateNewDosedPharmokineticModel
+    fields = ['pharmacokinetic_model', 'dose_compartment', 'direct_dose', 'dose_amount', 'dose_start',
+              'dose_duration', 'dose_period', 'number_of_doses']
+    model = DosedPharmacokineticModel
 
     def get(self, request, *args, **kwargs):
         # create dash app
-        app = PDSimulationApp(name='dosed_parmokinetic_create')
+        app = PKSimulationApp(name='dosed_parmokinetic_create')
         self._app = app
 
         # get model sbml strings and add erlo models
         for i, m in enumerate(PharmacokineticModel.objects.all()):
             sbml_str = m.sbml.encode('utf-8')
-            erlo_m = erlo.PharmacodynamicModel(sbml_str)
+            erlo_m = erlo.PharmacokineticModel(sbml_str)
             param_names = erlo_m.parameters()
             param_names_dict = {}
             for p in param_names:
