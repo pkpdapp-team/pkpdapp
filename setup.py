@@ -39,7 +39,6 @@ setup(
         'django-bootstrap4>=2.2',
         'django_plotly_dash>=1.3',
         'dpd-static-support>=0.0.5',
-        'erlotinib @ git+git://github.com/pkpdapp-team/erlotinib.git#egg=erlotinib',  # noqa E501
         'numpy>=1.8',
         'pandas>=1.0',
         'plotly>=4.8',
