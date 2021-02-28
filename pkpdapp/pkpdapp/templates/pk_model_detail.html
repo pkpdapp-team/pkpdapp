@@ -6,14 +6,12 @@ copyright notice and full license details.
 
 {% extends "base/base.html" %}
 {% load static %}
-{% load plotly_dash %}
+{% load markdownify %}
 
 {% block main_content %}
-  <form action="" method="post"  enctype="multipart/form-data">
-    {% csrf_token %}
-    <table>
-    {{ form.as_table }}
-    </table>
-    <input type="submit" value="Submit">
-  </form>
+<h2>Pharmokinetic Model {{object.name}}</h2>
+{{object.description|markdownify}}
+<h3>SBML</h3>
+<pre>{{object.sbml}}</pre>
+<ul>
 {% endblock %}

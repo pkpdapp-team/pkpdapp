@@ -116,24 +116,15 @@ class SimulationApp(BaseApp):
             model_dropdown.multi = False
             model_dropdown.value = self._use_models[0]
 
-        return [
-            dbc.Col(children=[
-                html.Label('Models:'),
-                model_dropdown
-            ]),
-            dbc.Col(children=[
-                html.Label('Datasets:'),
-                dcc.Dropdown(id='dataset-select',
+        dataset_dropdown = dcc.Dropdown(id='dataset-select',
                              options=[{
                                  'label': name,
                                  'value': i
                              } for i, name in enumerate(self._dataset_names)],
                              value=self._use_datasets,
                              multi=True)
-            ]),
-            dbc.Col(children=[
-                html.Label('Biomarker:'),
-                dcc.Dropdown(
+
+        biomarker_dropdown = dcc.Dropdown(
                     id='biomarker-select',
                     options=[{
                         'label': name,
@@ -141,8 +132,31 @@ class SimulationApp(BaseApp):
                     } for name in self._data_biomarkers],
                     value=self._use_biomarkers,
                 )
-            ]),
-        ]
+
+        cols = []
+        if len(self._models) > 1:
+            cols.append(
+                dbc.Col(children=[
+                    html.Label('Models:'),
+                    model_dropdown
+                ])
+            )
+        if len(self._datasets) > 1:
+            cols.append(
+                dbc.Col(children=[
+                    html.Label('Datasets:'),
+                    dataset_dropdown
+                ])
+            )
+        if len(self._datasets) > 0:
+            cols.append(
+                dbc.Col(children=[
+                    html.Label('Biomarker:'),
+                    biomarker_dropdown
+                ]),
+            )
+
+        return cols
 
     def create_figure(self):
         """
@@ -465,7 +479,7 @@ class PKSimulationApp(SimulationApp):
             directly or indirectly to the compartment.
         """
         self._compartment = compartment
-        self._direct = compartment
+        self._direct = direct
 
     def set_dosing_regimen(
             self, dose, start, duration=0.01, period=None, num=None):
@@ -491,7 +505,7 @@ class PKSimulationApp(SimulationApp):
             indefinitely.
         """
         self._dose = dose
-        self._start = dose
+        self._start = start
         self._duration = duration
         self._period = period
         self._num = num
@@ -500,115 +514,16 @@ class PKSimulationApp(SimulationApp):
         """
         Adds trace of simulation results to the figure.
         """
+        print('set admin to', self._compartment, self._direct)
         self._models[0].set_administration(
             self._compartment, direct=self._direct
         )
+        print('set dosing to', self._dose, self._start, self._duration, self._period,
+              self._num)
         self._models[0].set_dosing_regimen(
             self._dose, self._start, self._duration, self._period, self._num
         )
         super(PKSimulationApp, self)._add_simulation_to_fig()
-
-    def _create_sliders_component(self):
-        administration = [
-            {
-                'name': 'compartment',
-                'comp': dcc.Dropdown(
-                    id='admin-compartment-select',
-                    options=[{
-                        'label': c.name(),
-                        'value': c.name(),
-                    } for c in
-                        self._models[0]._default_model.components()
-                    ],
-                    value=self._compartment
-                ),
-            },
-            {
-                'name': 'direct',
-                'comp': dcc.Dropdown(
-                    id='admin-direct-select',
-                    options=[
-                        {
-                            'label': 'Direct',
-                            'value': True,
-                        },
-                        {
-                            'label': 'Indirect',
-                            'value': False,
-                        }
-                    ],
-                    value=self._direct,
-                ),
-            }
-        ]
-        protocol = [
-            {
-                'name': 'dose',
-                'comp': dcc.Slider(
-                    id='dose-select',
-                    value=self._dose,
-                    min=0.0,
-                    max=2.0,
-                    step=0.01,
-                ),
-            },
-            {
-                'name': 'start',
-                'comp': dcc.Slider(
-                    id='dose-start',
-                    value=self._start,
-                    min=0.0,
-                    max=2.0,
-                    step=0.01,
-                ),
-            },
-            {
-                'name': 'duration',
-                'comp': dcc.Slider(
-                    id='dose-duration',
-                    value=self._duration,
-                    min=0.01,
-                    max=2.0,
-                    step=0.01,
-                ),
-            },
-            {
-                'name': 'period',
-                'comp': dcc.Slider(
-                    id='dose-period',
-                    value=self._period,
-                    min=0.01,
-                    max=2.0,
-                    step=0.01,
-                ),
-            },
-            {
-                'name': 'num',
-                'comp': dcc.Slider(
-                    id='dose-num',
-                    value=self._num,
-                    min=0,
-                    max=20,
-                    step=1,
-                ),
-            }
-        ]
-
-        sliders = super(PKSimulationApp, self)._create_sliders_component()
-        tab = sliders.children[0].children[0]
-        for name, comps in zip(['Administration', 'Protocol'],
-                               [administration, protocol]):
-            group = [html.Label(name)]
-            for c in comps:
-                label = html.Label(c['name'], style={'fontSize': '0.8rem'})
-                group += [
-                    dbc.Col(children=[label], width=12),
-                    dbc.Col(children=[c['comp']], width=12),
-                ]
-            group = dbc.Row(children=group, style={'marginBottom': '1em'})
-            tab.children.append(group)
-
-        return sliders
 
 class PDSimulationApp(SimulationApp):
     """
@@ -650,11 +565,6 @@ class PDSimulationApp(SimulationApp):
 
         super(PDSimulationApp, self).add_model(model, name, use)
 
-
-    def _create_sliders(self, model_index, model):
-        sliders = super(PDSimulationApp, self)._create_sliders(
-            model_index, model
-        )
 
 
 

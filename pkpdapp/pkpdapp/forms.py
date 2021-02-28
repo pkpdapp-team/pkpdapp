@@ -5,7 +5,9 @@
 #
 from django import forms
 from pkpdapp.models.dataset import ADMINISTRATION_TYPE_CHOICES
-from pkpdapp.models import PharmacodynamicModel, Project
+from pkpdapp.models import (
+    DosedPharmacokineticModel, PharmacodynamicModel, Project
+)
 from django.core.exceptions import ValidationError
 import xml.etree.ElementTree as ET
 from django.utils.translation import gettext as _
@@ -81,8 +83,8 @@ class CreateNewBiomarkerUnit(forms.Form):
 class CreateNewDosedPharmokineticModel(forms.ModelForm):
     """
     A form to create a new
-    :model:`pkpdapp.DosedPharmacokineticModel`, which allows a user to
-    choose.
+    :model:`pkpdapp.PharmacodynamicModel`, which allows a user to
+    upload their SBML from a file.
 
     Can pass an additional kwarg 'project', which adds the new model to this
     project id
@@ -96,34 +98,16 @@ class CreateNewDosedPharmokineticModel(forms.ModelForm):
         super().__init__(*args, **kwargs)
 
     class Meta:
-        model = PharmacodynamicModel
-        fields = ('name', 'description', 'sbml')
-
-    sbml = forms.FileField()
-
-    def clean_sbml(self):
-        sbml_file = self.cleaned_data.get("sbml")
-        try:
-            sbml_et = ET.parse(sbml_file).getroot()
-            sbml = ET.tostring(
-                sbml_et, encoding='unicode', method='xml'
-            )
-        except ET.ParseError:
-            raise forms.ValidationError(
-                _((
-                    'Error parsing file, '
-                    '%(filename)s does not seem to be valid XML'
-                )),
-                code='invalid',
-                params={'filename': sbml_file.name},
-            )
-        return sbml
+        model = DosedPharmacokineticModel
+        fields = ['pharmacokinetic_model', 'dose_compartment', 'direct_dose',
+              'dose_amount', 'dose_start',
+              'dose_duration', 'dose_period', 'number_of_doses']
 
     def save(self, commit=True):
         instance = super().save()
         if self.project_id is not None:
             project = Project.objects.get(id=self.project_id)
-            project.pkpd_models.add(instance)
+            project.pk_models.add(instance)
             if commit:
                 project.save()
 

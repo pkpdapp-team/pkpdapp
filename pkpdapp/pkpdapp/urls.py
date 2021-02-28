@@ -79,11 +79,25 @@ urlpatterns = [
     ),
 
     path(
-        'pk_model/add/project/<int:project>/',
+        'dosed_pk_model/add/project/<int:project>/',
         views.DosedPharmacokineticModelCreate.as_view(),
-        name='pk_model-add-to-project'
+        name='dosed_pk_model-add-to-project'
     ),
-
+    path(
+        'dosed_pk_model/<int:pk>/update',
+        views.DosedPharmacokineticModelUpdate.as_view(),
+        name='dosed_pk_model-update'
+    ),
+    path(
+        'dosed_pk_model/<int:pk>',
+        views.DosedPharmacokineticModelDetail.as_view(),
+        name='dosed_pk_model-detail'
+    ),
+    path(
+        'pk_model/<int:pk>',
+        views.PharmacokineticModelDetail.as_view(),
+        name='pk_model-detail'
+    ),
     path('project/',
          views.ProjectDetailView.as_view(), name='selected-project-detail'),
     path(

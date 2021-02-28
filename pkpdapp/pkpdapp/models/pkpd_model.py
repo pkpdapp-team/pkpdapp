@@ -25,6 +25,9 @@ class MechanisticModel(models.Model):
     class Meta:
         abstract = True
 
+    def __str__(self):
+        return str(self.name)
+
 class PharmacokineticModel(MechanisticModel):
     """
     this just creates a concrete table for PK models without dosing
@@ -37,8 +40,11 @@ class DosedPharmacokineticModel(MechanisticModel):
     """
     PK model plus dosing and protocol information
     """
-    pharmacokinetic_model = models.ForeignKey(PharmacokineticModel)
-
+    pharmacokinetic_model = models.ForeignKey(
+        PharmacokineticModel,
+        on_delete=models.CASCADE,
+        help_text='pharmacokinetic model'
+    )
     dose_compartment = models.CharField(
         max_length=100,
         help_text='compartment name to be dosed'
@@ -70,14 +76,14 @@ class DosedPharmacokineticModel(MechanisticModel):
         '''
     )
     dose_period = models.FloatField(
-        blank=True,
+        blank=True, null=True,
         help_text='''
             Periodicity at which doses are administered. If empty the dose
             is administered only once.
         '''
     )
     number_of_doses = models.IntegerField(
-        blank=True,
+        blank=True, null=True,
         help_text='''
             Number of administered doses. If empty and the periodicity of
             the administration is not empty, doses are administered
@@ -89,10 +95,8 @@ class DosedPharmacokineticModel(MechanisticModel):
         return reverse('dosed_pk_model-detail', kwargs={'pk': self.pk})
 
 
+
 class PharmacodynamicModel(MechanisticModel):
 
     def get_absolute_url(self):
         return reverse('pd_model-detail', kwargs={'pk': self.pk})
-
-    def __str__(self):
-        return str(self.name)

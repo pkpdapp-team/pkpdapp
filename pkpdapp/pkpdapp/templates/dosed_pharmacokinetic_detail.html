@@ -1,0 +1,28 @@
+<!--
+This file is part of PKPDApp (https://github.com/pkpdapp-team/pkpdapp) which
+is released under the BSD 3-clause license. See accompanying LICENSE.md for
+copyright notice and full license details.
+-->
+
+{% extends "base/base.html" %}
+{% load static %}
+{% load plotly_dash %}
+
+{% block main_content %}
+<h2>Dosed Pharmacokinetic Model</h2>
+(<a href="{% url 'dosed_pk_model-update' object.id %}"> Update </a>)
+<ul>
+  <li>Pharmacokinetic Model: {{object.pharmacokinetic_model}} 
+     <a href={% url 'pk_model-detail' object.pharmacokinetic_model.id %}>
+      <i class="fas fa-info-circle"></i>
+    </a></li>
+  <li>Dose compartment: {{object.dose_compartment}}</li>
+  <li>Direct dose?: {{ object.direct_dose|yesno:"yes,no,maybe" }}</li>
+  <li>Dose amount: {{object.dose_amount}}</li>
+  <li>Dose start: {{object.dose_start}}</li>
+  <li>Dose duration: {{object.dose_duration}}</li>
+  <li>Dose period: {{object.dose_period}}</li>
+  <li>Number of doses: {{object.number_of_doses}}</li>
+<ul>
+  {% plotly_app_bootstrap name="dosed_parmokinetic_view" %}
+{% endblock %}

@@ -34,7 +34,8 @@ copyright notice and full license details.
 <ul>
 {% for model in project.pk_models.all %}
   <li>
-    <b>{{model.name}}</b>: {{model.description|truncatewords:"10"}} 
+    <b>{{model.pharmacokinetic_model.name}}</b>:
+    {{model.pharmacokinetic_model.description|truncatewords:"10"}} 
     <a href={% url 'dosed_pk_model-detail' model.id %}>
       <i class="fas fa-info-circle"></i>
     </a>
@@ -42,7 +43,7 @@ copyright notice and full license details.
 {% empty %}
     <li>No models yet.</li>
 {% endfor %}
-(<a href="{% url 'pk_model-add-to-project' project.id %}"> Create model </a>)
+(<a href="{% url 'dosed_pk_model-add-to-project' project.id %}"> Create model </a>)
 </ul>
 <h3>PD Models</h3>
 <ul>

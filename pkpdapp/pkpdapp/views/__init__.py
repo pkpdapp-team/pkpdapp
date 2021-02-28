@@ -32,6 +32,9 @@ from .pkpd_model import (
     PharmacodynamicModelDetailView,
     PharmacodynamicModelCreate,
     DosedPharmacokineticModelCreate,
+    DosedPharmacokineticModelUpdate,
+    DosedPharmacokineticModelDetail,
+    PharmacokineticModelDetail,
     PharmacodynamicModelDeleteView,
     PharmacodynamicModelListView,
     PharmacodynamicModelUpdate
