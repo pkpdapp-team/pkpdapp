@@ -11,7 +11,7 @@ import numpy as np
 import pints
 import pints.toy
 
-import erlotinib as erlo
+import pkpdapp.erlotinib as erlo
 
 
 class TestHierarchicalLogLikelihood(unittest.TestCase):

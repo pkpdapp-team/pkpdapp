@@ -10,7 +10,7 @@ import unittest
 import numpy as np
 import plotly.graph_objects as go
 
-import erlotinib as erlo
+import pkpdapp.erlotinib as erlo
 
 
 class TestPDPredictivePlot(unittest.TestCase):

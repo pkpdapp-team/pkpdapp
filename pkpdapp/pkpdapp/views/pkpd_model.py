@@ -81,7 +81,7 @@ def create_dash_app(model, project):
             'value': 'Measurement'
         }, inplace=True)
 
-        app.add_data(df, d.name, use=i == 0)
+        app.add_data(df, d.name, use=False)
 
     # generate dash app
     app.set_layout()

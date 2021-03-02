@@ -10,7 +10,7 @@ import unittest
 import numpy as np
 import pandas as pd
 
-import erlotinib as erlo
+import pkpdapp.erlotinib as erlo
 
 
 class TestParameterEstimatePlot(unittest.TestCase):

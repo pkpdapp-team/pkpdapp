@@ -10,7 +10,7 @@ import unittest
 import myokit
 import numpy as np
 
-import erlotinib as erlo
+import pkpdapp.erlotinib as erlo
 
 
 class TestModel(unittest.TestCase):

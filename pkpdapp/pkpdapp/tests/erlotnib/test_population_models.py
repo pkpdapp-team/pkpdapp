@@ -9,7 +9,7 @@ import unittest
 
 import numpy as np
 
-import erlotinib as erlo
+import pkpdapp.erlotinib as erlo
 
 
 class TestHeterogeneousModel(unittest.TestCase):
