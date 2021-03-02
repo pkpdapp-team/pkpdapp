@@ -28,6 +28,7 @@ class MechanisticModel(models.Model):
     def __str__(self):
         return str(self.name)
 
+
 class PharmacokineticModel(MechanisticModel):
     """
     this just creates a concrete table for PK models without dosing
@@ -35,6 +36,7 @@ class PharmacokineticModel(MechanisticModel):
 
     def get_absolute_url(self):
         return reverse('pk_model-detail', kwargs={'pk': self.pk})
+
 
 class DosedPharmacokineticModel(MechanisticModel):
     """
@@ -93,7 +95,6 @@ class DosedPharmacokineticModel(MechanisticModel):
 
     def get_absolute_url(self):
         return reverse('dosed_pk_model-detail', kwargs={'pk': self.pk})
-
 
 
 class PharmacodynamicModel(MechanisticModel):

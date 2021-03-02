@@ -19,7 +19,6 @@ class DataDrivenPredictiveModel(object):
     A base class for predictive models whose parameters are either drawn from
     distribution, or are set by a :class:`pandas.DataFrame`.
     """
-
     def __init__(self, predictive_model):
         super(DataDrivenPredictiveModel, self).__init__()
 
@@ -79,16 +78,19 @@ class DataDrivenPredictiveModel(object):
         """
         return self._predictive_model.get_submodels()
 
-    def sample(
-            self, times, n_samples=None, seed=None, include_regimen=False):
+    def sample(self, times, n_samples=None, seed=None, include_regimen=False):
         """
         Samples "measurements" of the biomarkers from the predictive model and
         returns them in form of a :class:`pandas.DataFrame`.
         """
         raise NotImplementedError
 
-    def set_dosing_regimen(
-            self, dose, start, duration=0.01, period=None, num=None):
+    def set_dosing_regimen(self,
+                           dose,
+                           start,
+                           duration=0.01,
+                           period=None,
+                           num=None):
         """
         Sets the dosing regimen with which the compound is administered.
 
@@ -122,8 +124,8 @@ class DataDrivenPredictiveModel(object):
             the administration is not ``None``, doses are administered
             indefinitely.
         """
-        self._predictive_model.set_dosing_regimen(
-            dose, start, duration, period, num)
+        self._predictive_model.set_dosing_regimen(dose, start, duration,
+                                                  period, num)
 
 
 class PosteriorPredictiveModel(DataDrivenPredictiveModel):
@@ -192,12 +194,17 @@ class PosteriorPredictiveModel(DataDrivenPredictiveModel):
         routine at which the parameter value was sampled. Defaults to
         ``'Run'``.
     """
-
-    def __init__(
-            self, predictive_model, posterior_samples, warm_up_iter=None,
-            individual=None, param_map=None, id_key='ID',
-            param_key='Parameter', sample_key='Sample',
-            iter_key='Iteration', run_key='Run'):
+    def __init__(self,
+                 predictive_model,
+                 posterior_samples,
+                 warm_up_iter=None,
+                 individual=None,
+                 param_map=None,
+                 id_key='ID',
+                 param_key='Parameter',
+                 sample_key='Sample',
+                 iter_key='Iteration',
+                 run_key='Run'):
         super(PosteriorPredictiveModel, self).__init__(predictive_model)
 
         # Check input
@@ -242,9 +249,9 @@ class PosteriorPredictiveModel(DataDrivenPredictiveModel):
 
             # Make sure individual exists
             if individual not in ids:
-                raise ValueError(
-                    'The individual <' + str(individual) + '> could not be '
-                    'found in the ID column.')
+                raise ValueError('The individual <' + str(individual) +
+                                 '> could not be '
+                                 'found in the ID column.')
 
         # Get warm-up iterations
         if warm_up_iter is None:
@@ -267,20 +274,21 @@ class PosteriorPredictiveModel(DataDrivenPredictiveModel):
 
         # Check that the parameters of the posterior can be identified in the
         # dataframe
-        parameter_names = self._check_parameters(
-            posterior_samples, id_key, param_key, param_map)
+        parameter_names = self._check_parameters(posterior_samples, id_key,
+                                                 param_key, param_map)
 
         # Filter dataframe for relevant data
-        posterior_samples = self._get_relevant_data(
-            posterior_samples, parameter_names, individual, keys)
+        posterior_samples = self._get_relevant_data(posterior_samples,
+                                                    parameter_names,
+                                                    individual, keys)
 
         # Transform dataframe into more convenient format for sampling
         keys = keys[1:]
-        self._format_posterior_samples(
-            posterior_samples, parameter_names, keys)
+        self._format_posterior_samples(posterior_samples, parameter_names,
+                                       keys)
 
-    def _check_parameters(
-            self, posterior_samples, id_key, param_key, param_map):
+    def _check_parameters(self, posterior_samples, id_key, param_key,
+                          param_map):
         """
         Checks whether the parameters of the posterior exist in the dataframe,
         and returns them.
@@ -386,8 +394,8 @@ class PosteriorPredictiveModel(DataDrivenPredictiveModel):
         # Remember reformated samples
         self._posterior = container
 
-    def _get_relevant_data(
-            self, posterior_samples, parameter_names, individual, keys):
+    def _get_relevant_data(self, posterior_samples, parameter_names,
+                           individual, keys):
         """
         Filters the dataframe for the relevant samples.
 
@@ -441,16 +449,17 @@ class PosteriorPredictiveModel(DataDrivenPredictiveModel):
                     temp2 = temp[mask]
 
                 # Add samples to container
-                container = container.append(pd.DataFrame({
-                    param_key: _id + ' ' + name,
-                    sample_key: temp2[sample_key],
-                    iter_key: temp2[iter_key],
-                    run_key: temp2[run_key]}))
+                container = container.append(
+                    pd.DataFrame({
+                        param_key: _id + ' ' + name,
+                        sample_key: temp2[sample_key],
+                        iter_key: temp2[iter_key],
+                        run_key: temp2[run_key]
+                    }))
 
         return container
 
-    def sample(
-            self, times, n_samples=None, seed=None, include_regimen=False):
+    def sample(self, times, n_samples=None, seed=None, include_regimen=False):
         """
         Samples "measurements" of the biomarkers from the posterior predictive
         model and returns them in form of a :class:`pandas.DataFrame`.
@@ -483,8 +492,7 @@ class PosteriorPredictiveModel(DataDrivenPredictiveModel):
         times = np.sort(times)
 
         # Create container for samples
-        container = pd.DataFrame(
-            columns=['ID', 'Biomarker', 'Time', 'Sample'])
+        container = pd.DataFrame(columns=['ID', 'Biomarker', 'Time', 'Sample'])
 
         # Get model outputs (biomarkers)
         outputs = self._predictive_model.get_output_names()
@@ -493,7 +501,7 @@ class PosteriorPredictiveModel(DataDrivenPredictiveModel):
         rng = np.random.default_rng(seed=seed)
 
         # Draw samples
-        sample_ids = np.arange(start=1, stop=n_samples+1)
+        sample_ids = np.arange(start=1, stop=n_samples + 1)
         for sample_id in sample_ids:
             # Sample parameter from posterior
             parameters = rng.choice(self._posterior)
@@ -503,16 +511,21 @@ class PosteriorPredictiveModel(DataDrivenPredictiveModel):
                 seed += 1
 
             # Sample from predictive model
-            sample = self._predictive_model.sample(
-                parameters, times, n_samples, seed, return_df=False)
+            sample = self._predictive_model.sample(parameters,
+                                                   times,
+                                                   n_samples,
+                                                   seed,
+                                                   return_df=False)
 
             # Append samples to dataframe
             for output_id, name in enumerate(outputs):
-                container = container.append(pd.DataFrame({
-                    'ID': sample_id,
-                    'Biomarker': name,
-                    'Time': times,
-                    'Sample': sample[output_id, :, 0]}))
+                container = container.append(
+                    pd.DataFrame({
+                        'ID': sample_id,
+                        'Biomarker': name,
+                        'Time': times,
+                        'Sample': sample[output_id, :, 0]
+                    }))
 
         # Add dosing regimen, if set
         final_time = np.max(times)
@@ -558,7 +571,6 @@ class PredictiveModel(object):
         outputs. If ``None`` the error models are assumed to be listed in the
         same order as the model outputs.
     """
-
     def __init__(self, mechanistic_model, error_models, outputs=None):
         super(PredictiveModel, self).__init__()
 
@@ -566,16 +578,14 @@ class PredictiveModel(object):
         if not isinstance(
                 mechanistic_model,
                 (erlo.MechanisticModel, erlo.ReducedMechanisticModel)):
-            raise TypeError(
-                'The mechanistic model has to be an instance of a '
-                'erlotinib.MechanisticModel.')
+            raise TypeError('The mechanistic model has to be an instance of a '
+                            'erlotinib.MechanisticModel.')
 
         for error_model in error_models:
-            if not isinstance(
-                    error_model, (erlo.ErrorModel, erlo.ReducedErrorModel)):
-                raise TypeError(
-                    'All error models have to be instances of a '
-                    'erlotinib.ErrorModel.')
+            if not isinstance(error_model,
+                              (erlo.ErrorModel, erlo.ReducedErrorModel)):
+                raise TypeError('All error models have to be instances of a '
+                                'erlotinib.ErrorModel.')
 
         # Copy mechanistic model
         mechanistic_model = copy.deepcopy(mechanistic_model)
@@ -594,7 +604,8 @@ class PredictiveModel(object):
 
         # Copy error models
         error_models = [
-            copy.deepcopy(error_model) for error_model in error_models]
+            copy.deepcopy(error_model) for error_model in error_models
+        ]
 
         # Remember models
         self._mechanistic_model = mechanistic_model
@@ -760,10 +771,12 @@ class PredictiveModel(object):
 
             if period == 0:
                 # Dose is administered only once
-                regimen_df = regimen_df.append(pd.DataFrame({
-                    'Time': [start_time],
-                    'Duration': [dose_duration],
-                    'Dose': [dose_amount]}))
+                regimen_df = regimen_df.append(
+                    pd.DataFrame({
+                        'Time': [start_time],
+                        'Duration': [dose_duration],
+                        'Dose': [dose_amount]
+                    }))
 
                 # Continue to next dose event
                 continue
@@ -786,10 +799,12 @@ class PredictiveModel(object):
             dose_times = dose_times[mask]
 
             # Add dose administrations to dataframe
-            regimen_df = regimen_df.append(pd.DataFrame({
-                'Time': dose_times,
-                'Duration': dose_duration,
-                'Dose': dose_amount}))
+            regimen_df = regimen_df.append(
+                pd.DataFrame({
+                    'Time': dose_times,
+                    'Duration': dose_duration,
+                    'Dose': dose_amount
+                }))
 
         # If no dose event before final_time exist, return None
         if regimen_df.empty:
@@ -834,7 +849,8 @@ class PredictiveModel(object):
 
         submodels = dict({
             'Mechanistic model': mechanistic_model,
-            'Error models': error_models})
+            'Error models': error_models
+        })
 
         return submodels
 
@@ -844,9 +860,13 @@ class PredictiveModel(object):
         """
         return self._n_parameters
 
-    def sample(
-            self, parameters, times, n_samples=None, seed=None,
-            return_df=True, include_regimen=False):
+    def sample(self,
+               parameters,
+               times,
+               n_samples=None,
+               seed=None,
+               return_df=True,
+               include_regimen=False):
         """
         Samples "measurements" of the biomarkers from the predictive model and
         returns them in form of a :class:`pandas.DataFrame` or a
@@ -927,18 +947,19 @@ class PredictiveModel(object):
 
         # Structure samples in a pandas.DataFrame
         output_names = self._mechanistic_model.outputs()
-        sample_ids = np.arange(start=1, stop=n_samples+1)
-        samples = pd.DataFrame(
-            columns=['ID', 'Biomarker', 'Time', 'Sample'])
+        sample_ids = np.arange(start=1, stop=n_samples + 1)
+        samples = pd.DataFrame(columns=['ID', 'Biomarker', 'Time', 'Sample'])
 
         # Fill in all samples at a specific time point at once
         for output_id, name in enumerate(output_names):
             for time_id, time in enumerate(times):
-                samples = samples.append(pd.DataFrame({
-                    'ID': sample_ids,
-                    'Time': time,
-                    'Biomarker': name,
-                    'Sample': container[output_id, time_id, :]}))
+                samples = samples.append(
+                    pd.DataFrame({
+                        'ID': sample_ids,
+                        'Time': time,
+                        'Biomarker': name,
+                        'Sample': container[output_id, time_id, :]
+                    }))
 
         # Add dosing regimen information, if set
         final_time = np.max(times)
@@ -951,8 +972,12 @@ class PredictiveModel(object):
 
         return samples
 
-    def set_dosing_regimen(
-            self, dose, start, duration=0.01, period=None, num=None):
+    def set_dosing_regimen(self,
+                           dose,
+                           start,
+                           duration=0.01,
+                           period=None,
+                           num=None):
         """
         Sets the dosing regimen with which the compound is administered.
 
@@ -987,8 +1012,8 @@ class PredictiveModel(object):
             indefinitely.
         """
         try:
-            self._mechanistic_model.set_dosing_regimen(
-                dose, start, duration, period, num)
+            self._mechanistic_model.set_dosing_regimen(dose, start, duration,
+                                                       period, num)
         except AttributeError:
             # This error means that the mechanistic model is a
             # PharmacodynamicModel and therefore no dosing regimen can be set.
@@ -1036,13 +1061,11 @@ class PredictivePopulationModel(PredictiveModel):
         predictive model parameters. If ``None``, the population models are
         assumed to be listed in the same order as the model parameters.
     """
-
     def __init__(self, predictive_model, population_models, params=None):
         # Check inputs
         if not isinstance(predictive_model, erlo.PredictiveModel):
-            raise TypeError(
-                'The predictive model has to be an instance of a '
-                'erlotinib.PredictiveModel.')
+            raise TypeError('The predictive model has to be an instance of a '
+                            'erlotinib.PredictiveModel.')
 
         for pop_model in population_models:
             if not isinstance(pop_model, erlo.PopulationModel):
@@ -1087,7 +1110,8 @@ class PredictivePopulationModel(PredictiveModel):
         # Remember predictive model and population models
         self._predictive_model = predictive_model
         self._population_models = [
-            copy.copy(pop_model) for pop_model in population_models]
+            copy.copy(pop_model) for pop_model in population_models
+        ]
 
         # Set number and names of model parameters
         self._set_population_parameter_names()
@@ -1260,9 +1284,13 @@ class PredictivePopulationModel(PredictiveModel):
         """
         return self._n_parameters
 
-    def sample(
-            self, parameters, times, n_samples=None, seed=None,
-            return_df=True, include_regimen=False):
+    def sample(self,
+               parameters,
+               times,
+               n_samples=None,
+               seed=None,
+               return_df=True,
+               include_regimen=False):
         """
         Samples "measurements" of the biomarkers from virtual "patients" and
         returns them in form of a :class:`pandas.DataFrame` or a
@@ -1336,7 +1364,8 @@ class PredictivePopulationModel(PredictiveModel):
 
             # Sample patient parameters
             patients[:, param_id] = pop_model.sample(
-                parameters=parameters[start:end], n_samples=n_samples,
+                parameters=parameters[start:end],
+                n_samples=n_samples,
                 seed=seed)
 
             # Increment seed for each iteration, to avoid repeated patterns
@@ -1353,8 +1382,10 @@ class PredictivePopulationModel(PredictiveModel):
 
         # Sample measurements for each patient
         for patient_id, patient in enumerate(patients):
-            sample = self._predictive_model.sample(
-                parameters=patient, times=times, seed=seed, return_df=False)
+            sample = self._predictive_model.sample(parameters=patient,
+                                                   times=times,
+                                                   seed=seed,
+                                                   return_df=False)
             container[..., patient_id] = sample[..., 0]
 
         if return_df is False:
@@ -1363,18 +1394,19 @@ class PredictivePopulationModel(PredictiveModel):
 
         # Structure samples in a pandas.DataFrame
         output_names = self._predictive_model.get_output_names()
-        sample_ids = np.arange(start=1, stop=n_samples+1)
-        samples = pd.DataFrame(
-            columns=['ID', 'Biomarker', 'Time', 'Sample'])
+        sample_ids = np.arange(start=1, stop=n_samples + 1)
+        samples = pd.DataFrame(columns=['ID', 'Biomarker', 'Time', 'Sample'])
 
         # Fill in all samples at a specific time point at once
         for output_id, name in enumerate(output_names):
             for time_id, time in enumerate(times):
-                samples = samples.append(pd.DataFrame({
-                    'ID': sample_ids,
-                    'Time': time,
-                    'Biomarker': name,
-                    'Sample': container[output_id, time_id, :]}))
+                samples = samples.append(
+                    pd.DataFrame({
+                        'ID': sample_ids,
+                        'Time': time,
+                        'Biomarker': name,
+                        'Sample': container[output_id, time_id, :]
+                    }))
 
         # Add dosing regimen information, if set
         final_time = np.max(times)
@@ -1387,8 +1419,12 @@ class PredictivePopulationModel(PredictiveModel):
 
         return samples
 
-    def set_dosing_regimen(
-            self, dose, start, duration=0.01, period=None, num=None):
+    def set_dosing_regimen(self,
+                           dose,
+                           start,
+                           duration=0.01,
+                           period=None,
+                           num=None):
         """
         Sets the dosing regimen with which the compound is administered.
 
@@ -1422,8 +1458,8 @@ class PredictivePopulationModel(PredictiveModel):
             the administration is not ``None``, doses are administered
             indefinitely.
         """
-        self._predictive_model.set_dosing_regimen(
-            dose, start, duration, period, num)
+        self._predictive_model.set_dosing_regimen(dose, start, duration,
+                                                  period, num)
 
 
 class PriorPredictiveModel(DataDrivenPredictiveModel):
@@ -1454,7 +1490,6 @@ class PriorPredictiveModel(DataDrivenPredictiveModel):
         An instance of a :class:`pints.LogPrior` of the same dimensionality as
         the number of predictive model parameters.
     """
-
     def __init__(self, predictive_model, log_prior):
         super(PriorPredictiveModel, self).__init__(predictive_model)
 
@@ -1513,14 +1548,13 @@ class PriorPredictiveModel(DataDrivenPredictiveModel):
         times = np.sort(times)
 
         # Create container for samples
-        container = pd.DataFrame(
-            columns=['ID', 'Biomarker', 'Time', 'Sample'])
+        container = pd.DataFrame(columns=['ID', 'Biomarker', 'Time', 'Sample'])
 
         # Get model outputs (biomarkers)
         outputs = self._predictive_model.get_output_names()
 
         # Draw samples
-        sample_ids = np.arange(start=1, stop=n_samples+1)
+        sample_ids = np.arange(start=1, stop=n_samples + 1)
         for sample_id in sample_ids:
             # Sample parameter
             parameters = self._log_prior.sample().flatten()
@@ -1531,16 +1565,21 @@ class PriorPredictiveModel(DataDrivenPredictiveModel):
                 seed = base_seed + sample_id
 
             # Sample from predictive model
-            sample = self._predictive_model.sample(
-                parameters, times, n_samples, seed, return_df=False)
+            sample = self._predictive_model.sample(parameters,
+                                                   times,
+                                                   n_samples,
+                                                   seed,
+                                                   return_df=False)
 
             # Append samples to dataframe
             for output_id, name in enumerate(outputs):
-                container = container.append(pd.DataFrame({
-                    'ID': sample_id,
-                    'Biomarker': name,
-                    'Time': times,
-                    'Sample': sample[output_id, :, 0]}))
+                container = container.append(
+                    pd.DataFrame({
+                        'ID': sample_id,
+                        'Biomarker': name,
+                        'Time': times,
+                        'Sample': sample[output_id, :, 0]
+                    }))
 
         # Add dosing regimen, if set
         final_time = np.max(times)

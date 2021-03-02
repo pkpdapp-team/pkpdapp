@@ -23,7 +23,6 @@ class MechanisticModel(object):
         in SBML format that specifies the model.
 
     """
-
     def __init__(self, sbml_input):
         super(MechanisticModel, self).__init__()
 
@@ -31,7 +30,6 @@ class MechanisticModel(object):
             model = sbml.SBMLParser().parse_string(sbml_input).myokit_model()
         elif isinstance(sbml_input, str):
             model = sbml.SBMLImporter().model(sbml_input)
-
 
         # Set default number and names of states, parameters and outputs.
         self._set_number_and_names(model)
@@ -141,9 +139,9 @@ class MechanisticModel(object):
             try:
                 self.simulator._model.get(output)
             except KeyError:
-                raise KeyError(
-                    'The variable <' + str(output) + '> does not exist in the '
-                    'model.')
+                raise KeyError('The variable <' + str(output) +
+                               '> does not exist in the '
+                               'model.')
 
         self._output_names = list(outputs)
         self._n_outputs = len(outputs)
@@ -200,8 +198,9 @@ class MechanisticModel(object):
         self._set_const(parameters[self._n_states:])
 
         # Simulate
-        output = self.simulator.run(
-            times[-1] + 1, log=self._output_names, log_times=times)
+        output = self.simulator.run(times[-1] + 1,
+                                    log=self._output_names,
+                                    log_times=times)
         result = [output[name] for name in self._output_names]
 
         return np.array(result)
@@ -226,7 +225,6 @@ class PharmacodynamicModel(MechanisticModel):
         A path to the SBML model file that specifies the pharmacodynamic model.
 
     """
-
     def __init__(self, sbml_file):
         super(PharmacodynamicModel, self).__init__(sbml_file)
 
@@ -289,8 +287,7 @@ class PharmacodynamicModel(MechanisticModel):
         The name has to match a parameter of the model.
         """
         if name not in self._parameter_names:
-            raise ValueError(
-                'The name does not match a model parameter.')
+            raise ValueError('The name does not match a model parameter.')
 
         self._pk_input = name
 
@@ -308,7 +305,6 @@ class PharmacokineticModel(MechanisticModel):
         A path to the SBML model file that specifies the pharmacokinetic model.
 
     """
-
     def __init__(self, sbml_file):
         super(PharmacokineticModel, self).__init__(sbml_file)
 
@@ -351,23 +347,16 @@ class PharmacokineticModel(MechanisticModel):
 
         # Add outflow expression to dose compartment
         dose_drug_amount.set_rhs(
-            myokit.Multiply(
-                myokit.PrefixMinus(myokit.Name(absorption_rate)),
-                myokit.Name(dose_drug_amount)
-                )
-            )
+            myokit.Multiply(myokit.PrefixMinus(myokit.Name(absorption_rate)),
+                            myokit.Name(dose_drug_amount)))
 
         # Add inflow expression to connected compartment
         rhs = drug_amount.rhs()
         drug_amount.set_rhs(
             myokit.Plus(
                 rhs,
-                myokit.Multiply(
-                    myokit.Name(absorption_rate),
-                    myokit.Name(dose_drug_amount)
-                )
-            )
-        )
+                myokit.Multiply(myokit.Name(absorption_rate),
+                                myokit.Name(dose_drug_amount))))
 
         # Update number of parameters and states, as well as their names
         self._set_number_and_names(model)
@@ -388,8 +377,7 @@ class PharmacokineticModel(MechanisticModel):
         # pace, i.e. tell myokit that its value is set by the dosing regimen/
         # myokit.Protocol
         compartment = drug_amount.parent()
-        dose_rate = compartment.add_variable_allow_renaming(
-            str('dose_rate'))
+        dose_rate = compartment.add_variable_allow_renaming(str('dose_rate'))
         dose_rate.set_binding('pace')
 
         # Set initial value to 0 and unit to unit of drug amount over unit of
@@ -399,12 +387,7 @@ class PharmacokineticModel(MechanisticModel):
 
         # Add the dose rate to the rhs of the drug amount variable
         rhs = drug_amount.rhs()
-        drug_amount.set_rhs(
-            myokit.Plus(
-                rhs,
-                myokit.Name(dose_rate)
-            )
-        )
+        drug_amount.set_rhs(myokit.Plus(rhs, myokit.Name(dose_rate)))
 
     def administration(self):
         """
@@ -425,8 +408,10 @@ class PharmacokineticModel(MechanisticModel):
         """
         return self.simulator._protocol
 
-    def set_administration(
-            self, compartment, amount_var='drug_amount', direct=True):
+    def set_administration(self,
+                           compartment,
+                           amount_var='drug_amount',
+                           direct=True):
         r"""
         Sets the route of administration of the compound.
 
@@ -478,21 +463,20 @@ class PharmacokineticModel(MechanisticModel):
         # Check inputs
         model = self._default_model.clone()
         if not model.has_component(compartment):
-            raise ValueError(
-                'The model does not have a compartment named <'
-                + str(compartment) + '>.')
+            raise ValueError('The model does not have a compartment named <' +
+                             str(compartment) + '>.')
         comp = model.get(compartment, class_filter=myokit.Component)
 
         if not comp.has_variable(amount_var):
-            raise ValueError(
-                'The drug amount variable <' + str(amount_var) + '> could not '
-                'be found in the compartment.')
+            raise ValueError('The drug amount variable <' + str(amount_var) +
+                             '> could not '
+                             'be found in the compartment.')
 
         drug_amount = comp.get(amount_var)
         if not drug_amount.is_state():
-            raise ValueError(
-                'The variable <' + str(drug_amount) + '> is not a state '
-                'variable, and can therefore not be dosed.')
+            raise ValueError('The variable <' + str(drug_amount) +
+                             '> is not a state '
+                             'variable, and can therefore not be dosed.')
 
         # If administration is indirect, add a dosing compartment and update
         # the drug amount variable to the one in the dosing compartment
@@ -507,11 +491,17 @@ class PharmacokineticModel(MechanisticModel):
         self.simulator = myokit.Simulation(model)
 
         # Remember type of administration
-        self._administration = dict(
-            {'compartment': compartment, 'direct': direct})
+        self._administration = dict({
+            'compartment': compartment,
+            'direct': direct
+        })
 
-    def set_dosing_regimen(
-            self, dose, start, duration=0.01, period=None, num=None):
+    def set_dosing_regimen(self,
+                           dose,
+                           start,
+                           duration=0.01,
+                           period=None,
+                           num=None):
         """
         Sets the dosing regimen with which the compound is administered.
 
@@ -563,9 +553,11 @@ class PharmacokineticModel(MechanisticModel):
         dose_rate = dose / duration
 
         # Set dosing regimen
-        dosing_regimen = myokit.pacing.blocktrain(
-            period=period, duration=duration, offset=start, level=dose_rate,
-            limit=num)
+        dosing_regimen = myokit.pacing.blocktrain(period=period,
+                                                  duration=duration,
+                                                  offset=start,
+                                                  level=dose_rate,
+                                                  limit=num)
         self.simulator.set_protocol(dosing_regimen)
 
     def set_parameter_names(self, names):
@@ -631,12 +623,12 @@ class PharmacokineticModel(MechanisticModel):
         """
         # Get intermediate variable names
         inter_names = [
-            var.qname() for var in self.simulator._model.variables(inter=True)]
+            var.qname() for var in self.simulator._model.variables(inter=True)
+        ]
 
         names = inter_names + self._parameter_names
         if name not in names:
-            raise ValueError(
-                'The name does not match a model variable.')
+            raise ValueError('The name does not match a model variable.')
 
         self._pd_output = name
 
@@ -654,7 +646,6 @@ class ReducedMechanisticModel(object):
     mechanistic_model
         An instance of a :class:`MechanisticModel`.
     """
-
     def __init__(self, mechanistic_model):
         super(ReducedMechanisticModel, self).__init__()
 
@@ -710,8 +701,8 @@ class ReducedMechanisticModel(object):
         # If no model parameters have been fixed before, instantiate a mask
         # and values
         if self._fixed_params_mask is None:
-            self._fixed_params_mask = np.zeros(
-                shape=self._n_parameters, dtype=bool)
+            self._fixed_params_mask = np.zeros(shape=self._n_parameters,
+                                               dtype=bool)
 
         if self._fixed_params_values is None:
             self._fixed_params_values = np.empty(shape=self._n_parameters)
@@ -829,8 +820,12 @@ class ReducedMechanisticModel(object):
         except AttributeError:
             return None
 
-    def set_dosing_regimen(
-            self, dose, start, duration=0.01, period=None, num=None):
+    def set_dosing_regimen(self,
+                           dose,
+                           start,
+                           duration=0.01,
+                           period=None,
+                           num=None):
         """
         Sets the dosing regimen with which the compound is administered.
 
@@ -865,8 +860,8 @@ class ReducedMechanisticModel(object):
             indefinitely.
         """
         try:
-            self._mechanistic_model.set_dosing_regimen(
-                dose, start, duration, period, num)
+            self._mechanistic_model.set_dosing_regimen(dose, start, duration,
+                                                       period, num)
         except AttributeError:
             raise AttributeError(
                 'The mechanistic model does not support dosing regimens.')
@@ -915,8 +910,7 @@ class ReducedMechanisticModel(object):
         """
         # Insert fixed parameter values
         if self._fixed_params_mask is not None:
-            self._fixed_params_values[
-                ~self._fixed_params_mask] = parameters
+            self._fixed_params_values[~self._fixed_params_mask] = parameters
             parameters = self._fixed_params_values
 
         return self._mechanistic_model.simulate(parameters, times)

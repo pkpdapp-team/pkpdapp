@@ -41,7 +41,6 @@ class HierarchicalLogLikelihood(pints.LogPDF):
         A list of :class:`PopulationModel` instances with one
         population model for each parameter of the log-likelihoods.
     """
-
     def __init__(self, log_likelihoods, population_models):
         super(HierarchicalLogLikelihood, self).__init__()
 
@@ -120,8 +119,7 @@ class HierarchicalLogLikelihood(pints.LogPDF):
             return score
 
         # Create container for individual parameters
-        individual_params = np.empty(
-            shape=(self._n_ids, self._n_indiv_params))
+        individual_params = np.empty(shape=(self._n_ids, self._n_indiv_params))
 
         # Fill conrainer with parameter values
         for param_id, indices in enumerate(self._indiv_params):
@@ -135,8 +133,7 @@ class HierarchicalLogLikelihood(pints.LogPDF):
                 continue
 
             # Set the parameter values to the input values
-            individual_params[:, param_id] = parameters[
-                start_index:end_index]
+            individual_params[:, param_id] = parameters[start_index:end_index]
 
         # Evaluate individual likelihoods
         for index, log_likelihood in enumerate(self._log_likelihoods):
@@ -363,18 +360,20 @@ class LogLikelihood(pints.LogPDF):
         A list of output names, which sets the mechanistic model outputs. If
         ``None`` the previously set outputs are assumed.
     """
-    def __init__(
-            self, mechanistic_model, error_models, observations, times,
-            outputs=None):
+    def __init__(self,
+                 mechanistic_model,
+                 error_models,
+                 observations,
+                 times,
+                 outputs=None):
         super(LogLikelihood, self).__init__()
 
         # Check inputs
         if not isinstance(
                 mechanistic_model,
                 (erlo.MechanisticModel, erlo.ReducedMechanisticModel)):
-            raise TypeError(
-                'The mechanistic model as to be an instance of a '
-                'erlotinib.MechanisticModel.')
+            raise TypeError('The mechanistic model as to be an instance of a '
+                            'erlotinib.MechanisticModel.')
 
         if not isinstance(error_models, list):
             error_models = [error_models]
@@ -393,11 +392,10 @@ class LogLikelihood(pints.LogPDF):
                 'model output.')
 
         for error_model in error_models:
-            if not isinstance(
-                    error_model, (erlo.ErrorModel, erlo.ReducedErrorModel)):
-                raise TypeError(
-                    'The error models have to instances of a '
-                    'erlotinib.ErrorModel.')
+            if not isinstance(error_model,
+                              (erlo.ErrorModel, erlo.ReducedErrorModel)):
+                raise TypeError('The error models have to instances of a '
+                                'erlotinib.ErrorModel.')
 
         if n_outputs == 1:
             # For single-output problems the observations can be provided as a
@@ -448,7 +446,8 @@ class LogLikelihood(pints.LogPDF):
 
         # Copy error models, such that renaming doesn't affect input models
         error_models = [
-            copy.deepcopy(error_model) for error_model in error_models]
+            copy.deepcopy(error_model) for error_model in error_models
+        ]
 
         # Remember models and observations
         # (Mechanistic model needs to be copied, such that it's dosing regimen
@@ -670,7 +669,8 @@ class LogLikelihood(pints.LogPDF):
 
         submodels = dict({
             'Mechanistic model': mechanistic_model,
-            'Error models': error_models})
+            'Error models': error_models
+        })
 
         return submodels
 
@@ -716,13 +716,14 @@ class LogPosterior(pints.LogPosterior):
         An instance of a :class:`pints.LogPrior` which represents the prior
         probability distributions for the parameters of the log-likelihood.
     """
-
     def __init__(self, log_likelihood, log_prior):
         super(LogPosterior, self).__init__(log_likelihood, log_prior)
 
         # Set defaults
         n_params = self._n_parameters
-        self._default_names = ['Parameter %d' % (n+1) for n in range(n_params)]
+        self._default_names = [
+            'Parameter %d' % (n + 1) for n in range(n_params)
+        ]
 
     def get_id(self):
         """
@@ -774,7 +775,6 @@ class ReducedLogPDF(pints.LogPDF):
     values
         A list of values the parameters are fixed at.
     """
-
     def __init__(self, log_pdf, mask, values):
         super(ReducedLogPDF, self).__init__()
 
@@ -791,8 +791,7 @@ class ReducedLogPDF(pints.LogPDF):
 
         mask = np.asarray(mask)
         if mask.dtype != bool:
-            raise ValueError(
-                'Mask has to be a boolean array.')
+            raise ValueError('Mask has to be a boolean array.')
 
         n_fixed = int(np.sum(mask))
         if n_fixed != len(values):

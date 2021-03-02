@@ -22,7 +22,7 @@ class TestModel(unittest.TestCase):
         path = erlo.ModelLibrary().tumour_growth_inhibition_model_koch()
         cls.model = erlo.MechanisticModel(path)
 
-        with open (path, "rb") as f:
+        with open(path, "rb") as f:
             sbml_str = f.read()
             cls.model_from_str = erlo.MechanisticModel(sbml_str)
 
@@ -51,8 +51,8 @@ class TestModel(unittest.TestCase):
     def test_set_outputs(self):
 
         # Set bad output
-        self.assertRaisesRegex(
-            KeyError, 'The variable <', self.model.set_outputs, ['some.thing'])
+        self.assertRaisesRegex(KeyError, 'The variable <',
+                               self.model.set_outputs, ['some.thing'])
 
         # Set twice the same output
         outputs = ['myokit.tumour_volume', 'myokit.tumour_volume']
@@ -74,7 +74,8 @@ class TestModel(unittest.TestCase):
         # Set some parameter names
         names = {
             'myokit.tumour_volume': 'TV',
-            'myokit.lambda_0': 'Expon. growth rate'}
+            'myokit.lambda_0': 'Expon. growth rate'
+        }
         self.model.set_parameter_names(names)
         parameters = self.model.parameters()
 
@@ -87,7 +88,8 @@ class TestModel(unittest.TestCase):
         # Reverse parameter names
         names = {
             'TV': 'myokit.tumour_volume',
-            'Expon. growth rate': 'myokit.lambda_0'}
+            'Expon. growth rate': 'myokit.lambda_0'
+        }
         self.model.set_parameter_names(names)
         parameters = self.model.parameters()
 
@@ -155,8 +157,8 @@ class TestPharmacodynamicModel(unittest.TestCase):
     def test_set_outputs(self):
 
         # Set bad output
-        self.assertRaisesRegex(
-            KeyError, 'The variable <', self.model.set_outputs, ['some.thing'])
+        self.assertRaisesRegex(KeyError, 'The variable <',
+                               self.model.set_outputs, ['some.thing'])
 
         # Set twice the same output
         outputs = ['myokit.tumour_volume', 'myokit.tumour_volume']
@@ -178,7 +180,8 @@ class TestPharmacodynamicModel(unittest.TestCase):
         # Set some parameter names
         names = {
             'myokit.tumour_volume': 'TV',
-            'myokit.lambda_0': 'Expon. growth rate'}
+            'myokit.lambda_0': 'Expon. growth rate'
+        }
         self.model.set_parameter_names(names)
         parameters = self.model.parameters()
 
@@ -191,7 +194,8 @@ class TestPharmacodynamicModel(unittest.TestCase):
         # Reverse parameter names
         names = {
             'TV': 'myokit.tumour_volume',
-            'Expon. growth rate': 'myokit.lambda_0'}
+            'Expon. growth rate': 'myokit.lambda_0'
+        }
         self.model.set_parameter_names(names)
         parameters = self.model.parameters()
 
@@ -329,13 +333,13 @@ class TestPharmacokineticModel(unittest.TestCase):
 
         # Bad amount variable (not existent)
         with self.assertRaisesRegex(ValueError, 'The drug amount variable'):
-            self.model.set_administration(
-                compartment='central', amount_var='SOME VARIABLE')
+            self.model.set_administration(compartment='central',
+                                          amount_var='SOME VARIABLE')
 
         # Bad amount variable (not state)
         with self.assertRaisesRegex(ValueError, 'The variable <'):
-            self.model.set_administration(
-                compartment='central', amount_var='drug_concentration')
+            self.model.set_administration(compartment='central',
+                                          amount_var='drug_concentration')
 
     def test_set_dosing_regimen(self):
         path = erlo.ModelLibrary().one_compartment_pk_model()
@@ -404,14 +408,13 @@ class TestPharmacokineticModel(unittest.TestCase):
         duration = 0.01
         period = 5
         num = 4
-        model.set_dosing_regimen(
-            dose, start, duration, period, num)
+        model.set_dosing_regimen(dose, start, duration, period, num)
 
         events = model.dosing_regimen().events()
         self.assertEqual(len(events), 1)
 
         event = events[0]
-        self.assertEqual(event.level(), dose/duration)
+        self.assertEqual(event.level(), dose / duration)
         self.assertEqual(event.start(), start)
         self.assertEqual(event.period(), period)
         self.assertEqual(event.duration(), duration)
@@ -429,8 +432,8 @@ class TestPharmacokineticModel(unittest.TestCase):
     def test_set_outputs(self):
 
         # Set bad output
-        self.assertRaisesRegex(
-            KeyError, 'The variable <', self.model.set_outputs, ['some.thing'])
+        self.assertRaisesRegex(KeyError, 'The variable <',
+                               self.model.set_outputs, ['some.thing'])
 
         # Set two outputs
         outputs = ['central.drug_amount', 'central.drug_concentration']
@@ -450,9 +453,7 @@ class TestPharmacokineticModel(unittest.TestCase):
 
     def test_set_parameter_names(self):
         # Set some parameter names
-        names = {
-            'central.drug_amount': 'A',
-            'myokit.elimination_rate': 'k_e'}
+        names = {'central.drug_amount': 'A', 'myokit.elimination_rate': 'k_e'}
         self.model.set_parameter_names(names)
         parameters = self.model.parameters()
 
@@ -461,9 +462,7 @@ class TestPharmacokineticModel(unittest.TestCase):
         self.assertEqual(parameters[2], 'k_e')
 
         # Reverse parameter names
-        names = {
-            'A': 'central.drug_amount',
-            'k_e': 'myokit.elimination_rate'}
+        names = {'A': 'central.drug_amount', 'k_e': 'myokit.elimination_rate'}
         self.model.set_parameter_names(names)
         parameters = self.model.parameters()
 
@@ -513,7 +512,6 @@ class TestReducedMechanisticModel(unittest.TestCase):
     """
     Tests the erlotinib.ReducedMechanisticModel class.
     """
-
     @classmethod
     def setUpClass(cls):
         # Set up model
@@ -536,7 +534,8 @@ class TestReducedMechanisticModel(unittest.TestCase):
         # Test case I: fix some parameters
         self.pd_model.fix_parameters(name_value_dict={
             'myokit.tumour_volume': 1,
-            'myokit.kappa': 1})
+            'myokit.kappa': 1
+        })
 
         n_parameters = self.pd_model.n_parameters()
         self.assertEqual(n_parameters, 3)
@@ -551,7 +550,8 @@ class TestReducedMechanisticModel(unittest.TestCase):
         self.pd_model.fix_parameters(name_value_dict={
             'myokit.kappa': None,
             'myokit.lambda_0': 0.5,
-            'myokit.lambda_1': 0.3})
+            'myokit.lambda_1': 0.3
+        })
 
         n_parameters = self.pd_model.n_parameters()
         self.assertEqual(n_parameters, 2)
@@ -562,10 +562,12 @@ class TestReducedMechanisticModel(unittest.TestCase):
         self.assertEqual(parameter_names[1], 'myokit.kappa')
 
         # Test case III: unfix all parameters
-        self.pd_model.fix_parameters(name_value_dict={
-            'myokit.tumour_volume': None,
-            'myokit.lambda_0': None,
-            'myokit.lambda_1': None})
+        self.pd_model.fix_parameters(
+            name_value_dict={
+                'myokit.tumour_volume': None,
+                'myokit.lambda_0': None,
+                'myokit.lambda_1': None
+            })
 
         n_parameters = self.pd_model.n_parameters()
         self.assertEqual(n_parameters, 5)
@@ -584,14 +586,15 @@ class TestReducedMechanisticModel(unittest.TestCase):
             self.pd_model.fix_parameters(name_value_dict)
 
     def test_mechanistic_model(self):
-        self.assertIsInstance(
-            self.pd_model.mechanistic_model(), erlo.MechanisticModel)
+        self.assertIsInstance(self.pd_model.mechanistic_model(),
+                              erlo.MechanisticModel)
 
     def test_n_fixed_parameters(self):
         # Test case I: fix some parameters
         self.pd_model.fix_parameters(name_value_dict={
             'myokit.tumour_volume': 1,
-            'myokit.kappa': 1})
+            'myokit.kappa': 1
+        })
 
         self.assertEqual(self.pd_model.n_fixed_parameters(), 2)
 
@@ -599,15 +602,18 @@ class TestReducedMechanisticModel(unittest.TestCase):
         self.pd_model.fix_parameters(name_value_dict={
             'myokit.kappa': None,
             'myokit.lambda_0': 0.5,
-            'myokit.lambda_1': 0.3})
+            'myokit.lambda_1': 0.3
+        })
 
         self.assertEqual(self.pd_model.n_fixed_parameters(), 3)
 
         # Test case III: unfix all parameters
-        self.pd_model.fix_parameters(name_value_dict={
-            'myokit.tumour_volume': None,
-            'myokit.lambda_0': None,
-            'myokit.lambda_1': None})
+        self.pd_model.fix_parameters(
+            name_value_dict={
+                'myokit.tumour_volume': None,
+                'myokit.lambda_0': None,
+                'myokit.lambda_1': None
+            })
 
         self.assertEqual(self.pd_model.n_fixed_parameters(), 0)
 
@@ -622,13 +628,12 @@ class TestReducedMechanisticModel(unittest.TestCase):
         self.assertIsNone(self.pd_model.pd_output())
 
         # Test PK model
-        self.assertEqual(
-            self.pk_model.pd_output(), 'central.drug_concentration')
+        self.assertEqual(self.pk_model.pd_output(),
+                         'central.drug_concentration')
 
     def test_pk_output(self):
         # Test PD model
-        self.assertEqual(
-            self.pd_model.pk_input(), 'myokit.drug_concentration')
+        self.assertEqual(self.pd_model.pk_input(), 'myokit.drug_concentration')
         self.assertIsNone(self.pd_model.pd_output())
 
         # Test PK model
@@ -650,14 +655,12 @@ class TestReducedMechanisticModel(unittest.TestCase):
 
         # Test PK model
         self.pk_model.set_dosing_regimen(1, 1)
-        self.assertIsInstance(
-            self.pk_model.dosing_regimen(), myokit.Protocol)
+        self.assertIsInstance(self.pk_model.dosing_regimen(), myokit.Protocol)
 
     def test_set_get_outputs(self):
         # Test case I: Set outputs
-        self.pd_model.set_outputs([
-            'myokit.tumour_volume',
-            'myokit.tumour_volume'])
+        self.pd_model.set_outputs(
+            ['myokit.tumour_volume', 'myokit.tumour_volume'])
 
         outputs = self.pd_model.outputs()
         self.assertEqual(len(outputs), 2)
@@ -673,8 +676,7 @@ class TestReducedMechanisticModel(unittest.TestCase):
 
     def test_set_get_parameters(self):
         # Test case I: set some parameter names
-        self.pd_model.set_parameter_names({
-            'myokit.tumour_volume': 'Test'})
+        self.pd_model.set_parameter_names({'myokit.tumour_volume': 'Test'})
 
         parameters = self.pd_model.parameters()
         self.assertEqual(len(parameters), 5)
@@ -685,8 +687,7 @@ class TestReducedMechanisticModel(unittest.TestCase):
         self.assertEqual(parameters[4], 'myokit.lambda_1')
 
         # Test case II: set back to default
-        self.pd_model.set_parameter_names({
-            'Test': 'myokit.tumour_volume'})
+        self.pd_model.set_parameter_names({'Test': 'myokit.tumour_volume'})
 
         parameters = self.pd_model.parameters()
         self.assertEqual(len(parameters), 5)
@@ -700,7 +701,8 @@ class TestReducedMechanisticModel(unittest.TestCase):
         # Test case I: fix some parameters
         self.pd_model.fix_parameters(name_value_dict={
             'myokit.tumour_volume': 1,
-            'myokit.kappa': 1})
+            'myokit.kappa': 1
+        })
 
         # Simulate
         times = [1, 2, 3]

@@ -26,7 +26,6 @@ class PDPredictivePlot(eplt.SingleFigure):
         Boolean flag that enables or disables interactive buttons, such as a
         logarithmic scale switch for the y-axis.
     """
-
     def __init__(self, updatemenu=True):
         super(PDPredictivePlot, self).__init__(updatemenu)
 
@@ -35,17 +34,15 @@ class PDPredictivePlot(eplt.SingleFigure):
         Adds scatter plot of an indiviudals pharamcodynamics to figure.
         """
         self._fig.add_trace(
-            go.Scatter(
-                x=times,
-                y=measurements,
-                name="ID: %d" % _id,
-                showlegend=True,
-                mode="markers",
-                marker=dict(
-                    symbol='circle',
-                    color=color,
-                    opacity=0.7,
-                    line=dict(color='black', width=1))))
+            go.Scatter(x=times,
+                       y=measurements,
+                       name="ID: %d" % _id,
+                       showlegend=True,
+                       mode="markers",
+                       marker=dict(symbol='circle',
+                                   color=color,
+                                   opacity=0.7,
+                                   line=dict(color='black', width=1))))
 
     def _add_prediction_scatter_trace(self, times, samples):
         """
@@ -56,17 +53,15 @@ class PDPredictivePlot(eplt.SingleFigure):
 
         # Add trace
         self._fig.add_trace(
-            go.Scatter(
-                x=times,
-                y=samples,
-                name="Predicted samples",
-                showlegend=True,
-                mode="markers",
-                marker=dict(
-                    symbol='circle',
-                    color=color,
-                    opacity=0.7,
-                    line=dict(color='black', width=1))))
+            go.Scatter(x=times,
+                       y=samples,
+                       name="Predicted samples",
+                       showlegend=True,
+                       mode="markers",
+                       marker=dict(symbol='circle',
+                                   color=color,
+                                   opacity=0.7,
+                                   line=dict(color='black', width=1))))
 
     def _add_prediction_bulk_prob_trace(self, data):
         """
@@ -85,7 +80,7 @@ class PDPredictivePlot(eplt.SingleFigure):
         # Get colors (shift start a little bit, because 0th level is too light)
         n_traces = len(bulk_probs)
         shift = 2
-        colors = plotly.colors.sequential.Blues[shift:shift+n_traces]
+        colors = plotly.colors.sequential.Blues[shift:shift + n_traces]
 
         # Add traces
         for trace_id, bulk_prob in enumerate(bulk_probs):
@@ -98,16 +93,17 @@ class PDPredictivePlot(eplt.SingleFigure):
             values = np.hstack([upper, lower[::-1]])
 
             # Add trace
-            self._fig.add_trace(go.Scatter(
-                x=times,
-                y=values,
-                line=dict(width=1, color=colors[trace_id]),
-                fill='toself',
-                legendgroup='Model prediction',
-                name='Predictive model',
-                text="%s Bulk" % bulk_prob,
-                hoverinfo='text',
-                showlegend=True if trace_id == n_traces-1 else False))
+            self._fig.add_trace(
+                go.Scatter(x=times,
+                           y=values,
+                           line=dict(width=1, color=colors[trace_id]),
+                           fill='toself',
+                           legendgroup='Model prediction',
+                           name='Predictive model',
+                           text="%s Bulk" % bulk_prob,
+                           hoverinfo='text',
+                           showlegend=True if trace_id == n_traces -
+                           1 else False))
 
     def _compute_bulk_probs(self, data, bulk_probs, time_key, sample_key):
         """
@@ -115,8 +111,8 @@ class PDPredictivePlot(eplt.SingleFigure):
         samples, corresponding to the provided bulk probabilities.
         """
         # Create container for perecentiles
-        container = pd.DataFrame(columns=[
-            'Time', 'Upper', 'Lower', 'Bulk probability'])
+        container = pd.DataFrame(
+            columns=['Time', 'Upper', 'Lower', 'Bulk probability'])
 
         # Translate bulk probabilities into percentiles
         percentiles = []
@@ -136,8 +132,7 @@ class PDPredictivePlot(eplt.SingleFigure):
             reduced_data = data[mask]
 
             # Get percentiles
-            percentile_df = reduced_data[sample_key].rank(
-                pct=True)
+            percentile_df = reduced_data[sample_key].rank(pct=True)
             for item in percentiles:
                 bulk_prob, lower, upper = item
 
@@ -149,17 +144,23 @@ class PDPredictivePlot(eplt.SingleFigure):
                 biom_upper = reduced_data[mask][sample_key].min()
 
                 # Append percentiles to container
-                container = container.append(pd.DataFrame({
-                    'Time': [time],
-                    'Lower': [biom_lower],
-                    'Upper': [biom_upper],
-                    'Bulk probability': [str(bulk_prob)]}))
+                container = container.append(
+                    pd.DataFrame({
+                        'Time': [time],
+                        'Lower': [biom_lower],
+                        'Upper': [biom_upper],
+                        'Bulk probability': [str(bulk_prob)]
+                    }))
 
         return container
 
-    def add_data(
-            self, data, biomarker=None, id_key='ID', time_key='Time',
-            biom_key='Biomarker', meas_key='Measurement'):
+    def add_data(self,
+                 data,
+                 biomarker=None,
+                 id_key='ID',
+                 time_key='Time',
+                 biom_key='Biomarker',
+                 meas_key='Measurement'):
         """
         Adds pharmacodynamic time series data of (multiple) individuals to
         the figure.
@@ -194,13 +195,12 @@ class PDPredictivePlot(eplt.SingleFigure):
         """
         # Check input format
         if not isinstance(data, pd.DataFrame):
-            raise TypeError(
-                'Data has to be pandas.DataFrame.')
+            raise TypeError('Data has to be pandas.DataFrame.')
 
         for key in [id_key, time_key, biom_key, meas_key]:
             if key not in data.keys():
-                raise ValueError(
-                    'Data does not have the key <' + str(key) + '>.')
+                raise ValueError('Data does not have the key <' + str(key) +
+                                 '>.')
 
         # Default to first bimoarker, if biomarker is not specified
         biom_types = data[biom_key].unique()
@@ -231,9 +231,13 @@ class PDPredictivePlot(eplt.SingleFigure):
             # Create Scatter plot
             self._add_data_trace(_id, times, measurements, color)
 
-    def add_prediction(
-            self, data, biomarker=None, bulk_probs=[0.9], time_key='Time',
-            biom_key='Biomarker', sample_key='Sample'):
+    def add_prediction(self,
+                       data,
+                       biomarker=None,
+                       bulk_probs=[0.9],
+                       time_key='Time',
+                       biom_key='Biomarker',
+                       sample_key='Sample'):
         r"""
         Adds the prediction for the observable pharmacodynamic biomarker values
         to the figure.
@@ -278,13 +282,12 @@ class PDPredictivePlot(eplt.SingleFigure):
         """
         # Check input format
         if not isinstance(data, pd.DataFrame):
-            raise TypeError(
-                'Data has to be pandas.DataFrame.')
+            raise TypeError('Data has to be pandas.DataFrame.')
 
         for key in [time_key, biom_key, sample_key]:
             if key not in data.keys():
-                raise ValueError(
-                    'Data does not have the key <' + str(key) + '>.')
+                raise ValueError('Data does not have the key <' + str(key) +
+                                 '>.')
 
         # Default to first bimoarker, if biomarker is not specified
         biom_types = data[biom_key].dropna().unique()
@@ -323,8 +326,8 @@ class PDPredictivePlot(eplt.SingleFigure):
                     'The provided bulk probabilities have to between 0 and 1.')
 
         # Add bulk probabilities to figure
-        percentile_df = self._compute_bulk_probs(
-            data, bulk_probs, time_key, sample_key)
+        percentile_df = self._compute_bulk_probs(data, bulk_probs, time_key,
+                                                 sample_key)
         self._add_prediction_bulk_prob_trace(percentile_df)
 
 
@@ -344,7 +347,6 @@ class PDTimeSeriesPlot(eplt.SingleFigure):
         Boolean flag that enables or disables interactive buttons, such as a
         logarithmic scale switch for the y-axis.
     """
-
     def __init__(self, updatemenu=True):
         super(PDTimeSeriesPlot, self).__init__(updatemenu)
 
@@ -353,34 +355,35 @@ class PDTimeSeriesPlot(eplt.SingleFigure):
         Adds scatter plot of an indiviudals pharamcodynamics to figure.
         """
         self._fig.add_trace(
-            go.Scatter(
-                x=times,
-                y=measurements,
-                name="ID: %d" % _id,
-                showlegend=True,
-                mode="markers",
-                marker=dict(
-                    symbol='circle',
-                    color=color,
-                    opacity=0.7,
-                    line=dict(color='black', width=1))))
+            go.Scatter(x=times,
+                       y=measurements,
+                       name="ID: %d" % _id,
+                       showlegend=True,
+                       mode="markers",
+                       marker=dict(symbol='circle',
+                                   color=color,
+                                   opacity=0.7,
+                                   line=dict(color='black', width=1))))
 
     def _add_simulation_trace(self, times, biomarker):
         """
         Adds scatter plot of an indiviudals pharamcodynamics to figure.
         """
         self._fig.add_trace(
-            go.Scatter(
-                x=times,
-                y=biomarker,
-                name="Model",
-                showlegend=True,
-                mode="lines",
-                line=dict(color='black')))
+            go.Scatter(x=times,
+                       y=biomarker,
+                       name="Model",
+                       showlegend=True,
+                       mode="lines",
+                       line=dict(color='black')))
 
-    def add_data(
-            self, data, biomarker=None, id_key='ID', time_key='Time',
-            biom_key='Biomarker', meas_key='Measurement'):
+    def add_data(self,
+                 data,
+                 biomarker=None,
+                 id_key='ID',
+                 time_key='Time',
+                 biom_key='Biomarker',
+                 meas_key='Measurement'):
         """
         Adds pharmacodynamic time series data of (multiple) individuals to
         the figure.
@@ -415,13 +418,12 @@ class PDTimeSeriesPlot(eplt.SingleFigure):
         """
         # Check input format
         if not isinstance(data, pd.DataFrame):
-            raise TypeError(
-                'Data has to be pandas.DataFrame.')
+            raise TypeError('Data has to be pandas.DataFrame.')
 
         for key in [id_key, time_key, biom_key, meas_key]:
             if key not in data.keys():
-                raise ValueError(
-                    'Data does not have the key <' + str(key) + '>.')
+                raise ValueError('Data does not have the key <' + str(key) +
+                                 '>.')
 
         # Default to first bimoarker, if biomarker is not specified
         biom_types = data[biom_key].dropna().unique()
@@ -474,13 +476,12 @@ class PDTimeSeriesPlot(eplt.SingleFigure):
         """
         # Check input format
         if not isinstance(data, pd.DataFrame):
-            raise TypeError(
-                'Data has to be pandas.DataFrame.')
+            raise TypeError('Data has to be pandas.DataFrame.')
 
         for key in [time_key, biom_key]:
             if key not in data.keys():
-                raise ValueError(
-                    'Data does not have the key <' + str(key) + '>.')
+                raise ValueError('Data does not have the key <' + str(key) +
+                                 '>.')
 
         times = data[time_key]
         biomarker = data[biom_key]
@@ -504,12 +505,13 @@ class PKTimeSeriesPlot(eplt.SingleSubplotFigure):
         Boolean flag that enables or disables interactive buttons, such as a
         logarithmic scale switch for the y-axis.
     """
-
     def __init__(self, updatemenu=True):
         super(PKTimeSeriesPlot, self).__init__()
 
-        self._create_template_figure(
-            rows=2, cols=1, shared_x=True, row_heights=[0.2, 0.8])
+        self._create_template_figure(rows=2,
+                                     cols=1,
+                                     shared_x=True,
+                                     row_heights=[0.2, 0.8])
 
         if updatemenu:
             self._add_updatemenu()
@@ -520,83 +522,84 @@ class PKTimeSeriesPlot(eplt.SingleSubplotFigure):
         """
         # Convert durations to strings
         durations = [
-            'Dose duration: ' + str(duration) for duration in durations]
+            'Dose duration: ' + str(duration) for duration in durations
+        ]
 
         # Add scatter plot of dose events
-        self._fig.add_trace(
-            go.Scatter(
-                x=times,
-                y=doses,
-                name="ID: %s" % str(_id),
-                legendgroup="ID: %s" % str(_id),
-                showlegend=False,
-                mode="markers",
-                text=durations,
-                hoverinfo='text',
-                marker=dict(
-                    symbol='circle',
-                    color=color,
-                    opacity=0.7,
-                    line=dict(color='black', width=1))),
-            row=1,
-            col=1)
+        self._fig.add_trace(go.Scatter(x=times,
+                                       y=doses,
+                                       name="ID: %s" % str(_id),
+                                       legendgroup="ID: %s" % str(_id),
+                                       showlegend=False,
+                                       mode="markers",
+                                       text=durations,
+                                       hoverinfo='text',
+                                       marker=dict(symbol='circle',
+                                                   color=color,
+                                                   opacity=0.7,
+                                                   line=dict(color='black',
+                                                             width=1))),
+                            row=1,
+                            col=1)
 
     def _add_biom_trace(self, _id, times, measurements, color):
         """
         Adds scatter plot of an indiviudals pharamcodynamics to figure.
         """
-        self._fig.add_trace(
-            go.Scatter(
-                x=times,
-                y=measurements,
-                name="ID: %s" % str(_id),
-                legendgroup="ID: %s" % str(_id),
-                showlegend=True,
-                mode="markers",
-                marker=dict(
-                    symbol='circle',
-                    color=color,
-                    opacity=0.7,
-                    line=dict(color='black', width=1))),
-            row=2,
-            col=1)
+        self._fig.add_trace(go.Scatter(x=times,
+                                       y=measurements,
+                                       name="ID: %s" % str(_id),
+                                       legendgroup="ID: %s" % str(_id),
+                                       showlegend=True,
+                                       mode="markers",
+                                       marker=dict(symbol='circle',
+                                                   color=color,
+                                                   opacity=0.7,
+                                                   line=dict(color='black',
+                                                             width=1))),
+                            row=2,
+                            col=1)
 
     def _add_updatemenu(self):
         """
         Adds a button to the figure that switches the biomarker scale from
         linear to logarithmic.
         """
-        self._fig.update_layout(
-            updatemenus=[
-                dict(
-                    type="buttons",
-                    direction="left",
-                    buttons=list([
-                        dict(
-                            args=[{"yaxis2.type": "linear"}],
-                            label="Linear y-scale",
-                            method="relayout"
-                        ),
-                        dict(
-                            args=[{"yaxis2.type": "log"}],
-                            label="Log y-scale",
-                            method="relayout"
-                        )
-                    ]),
-                    pad={"r": 0, "t": -10},
-                    showactive=True,
-                    x=0.0,
-                    xanchor="left",
-                    y=1.15,
-                    yanchor="top"
-                )
-            ]
-        )
+        self._fig.update_layout(updatemenus=[
+            dict(type="buttons",
+                 direction="left",
+                 buttons=list([
+                     dict(args=[{
+                         "yaxis2.type": "linear"
+                     }],
+                         label="Linear y-scale",
+                         method="relayout"),
+                     dict(args=[{
+                         "yaxis2.type": "log"
+                     }],
+                         label="Log y-scale",
+                         method="relayout")
+                 ]),
+                 pad={
+                     "r": 0,
+                     "t": -10
+                 },
+                 showactive=True,
+                 x=0.0,
+                 xanchor="left",
+                 y=1.15,
+                 yanchor="top")
+        ])
 
-    def add_data(
-            self, data, biomarker=None, id_key='ID', time_key='Time',
-            biom_key='Biomarker', meas_key='Measurement', dose_key='Dose',
-            dose_duration_key='Duration'):
+    def add_data(self,
+                 data,
+                 biomarker=None,
+                 id_key='ID',
+                 time_key='Time',
+                 biom_key='Biomarker',
+                 meas_key='Measurement',
+                 dose_key='Dose',
+                 dose_duration_key='Duration'):
         """
         Adds pharmacokinetic time series data of (multiple) individuals to
         the figure.
@@ -638,15 +641,15 @@ class PKTimeSeriesPlot(eplt.SingleSubplotFigure):
         """
         # Check input format
         if not isinstance(data, pd.DataFrame):
-            raise TypeError(
-                'Data has to be pandas.DataFrame.')
+            raise TypeError('Data has to be pandas.DataFrame.')
 
         keys = [
-            id_key, time_key, biom_key, meas_key, dose_key, dose_duration_key]
+            id_key, time_key, biom_key, meas_key, dose_key, dose_duration_key
+        ]
         for key in keys:
             if key not in data.keys():
-                raise ValueError(
-                    'Data does not have the key <' + str(key) + '>.')
+                raise ValueError('Data does not have the key <' + str(key) +
+                                 '>.')
 
         # Default to first bimoarker, if biomarker is not specified
         biom_types = data[biom_key].dropna().unique()
@@ -695,9 +698,11 @@ class PKTimeSeriesPlot(eplt.SingleSubplotFigure):
             # Create Scatter plot
             self._add_biom_trace(_id, times, measurements, color)
 
-    def add_simulation(
-            self, data, time_key='Time', biom_key='Biomarker',
-            dose_key='Dose'):
+    def add_simulation(self,
+                       data,
+                       time_key='Time',
+                       biom_key='Biomarker',
+                       dose_key='Dose'):
         """
         Adds a pharmacokinetic time series simulation to the figure.
 

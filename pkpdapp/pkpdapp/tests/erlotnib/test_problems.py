@@ -34,13 +34,16 @@ class TestProblemModellingControllerPDProblem(unittest.TestCase):
         dose = [3.4, np.nan, 0.5, 0.5, np.nan, np.nan]
         duration = [0.01, np.nan, 0.31, np.nan, 0.5, np.nan]
         cls.data = pd.DataFrame({
-            'ID': ids_v + ids_c + ids_d,
-            'Time': times_v + times_c + times_d,
-            'Biomarker':
-                ['Tumour volume']*8 + ['IL 6']*4 + [np.nan]*6,
-            'Measurement': volumes + cytokines + [np.nan]*6,
-            'Dose': [np.nan]*12 + dose,
-            'Duration': [np.nan]*12 + duration})
+            'ID':
+            ids_v + ids_c + ids_d,
+            'Time':
+            times_v + times_c + times_d,
+            'Biomarker': ['Tumour volume'] * 8 + ['IL 6'] * 4 + [np.nan] * 6,
+            'Measurement':
+            volumes + cytokines + [np.nan] * 6,
+            'Dose': [np.nan] * 12 + dose,
+            'Duration': [np.nan] * 12 + duration
+        })
 
         # Test case I: create PD modelling problem
         lib = erlo.ModelLibrary()
@@ -54,55 +57,52 @@ class TestProblemModellingControllerPDProblem(unittest.TestCase):
         lib = erlo.ModelLibrary()
         path = lib.erlotinib_tumour_growth_inhibition_model()
         cls.pkpd_model = erlo.PharmacokineticModel(path)
-        cls.pkpd_model.set_outputs([
-            'central.drug_concentration',
-            'myokit.tumour_volume'])
+        cls.pkpd_model.set_outputs(
+            ['central.drug_concentration', 'myokit.tumour_volume'])
         cls.error_models = [
             erlo.ConstantAndMultiplicativeGaussianErrorModel(),
-            erlo.ConstantAndMultiplicativeGaussianErrorModel()]
+            erlo.ConstantAndMultiplicativeGaussianErrorModel()
+        ]
         cls.pkpd_problem = erlo.ProblemModellingController(
-            cls.pkpd_model, cls.error_models,
-            outputs=[
-                'central.drug_concentration',
-                'myokit.tumour_volume'])
+            cls.pkpd_model,
+            cls.error_models,
+            outputs=['central.drug_concentration', 'myokit.tumour_volume'])
 
     def test_bad_input(self):
         # Mechanistic model has wrong type
         mechanistic_model = 'wrong type'
         with self.assertRaisesRegex(TypeError, 'The mechanistic model'):
-            erlo.ProblemModellingController(
-                mechanistic_model, self.error_model)
+            erlo.ProblemModellingController(mechanistic_model,
+                                            self.error_model)
 
         # Error model has wrong type
         error_model = 'wrong type'
         with self.assertRaisesRegex(TypeError, 'Error models have to be'):
-            erlo.ProblemModellingController(
-                self.pd_model, error_model)
+            erlo.ProblemModellingController(self.pd_model, error_model)
 
         error_models = ['wrong', 'type']
         with self.assertRaisesRegex(TypeError, 'Error models have to be'):
-            erlo.ProblemModellingController(
-                self.pd_model, error_models)
+            erlo.ProblemModellingController(self.pd_model, error_models)
 
         # Wrong number of error models
         error_model = erlo.ConstantAndMultiplicativeGaussianErrorModel()
         with self.assertRaisesRegex(ValueError, 'Wrong number of error'):
-            erlo.ProblemModellingController(
-                self.pkpd_model, error_model)
+            erlo.ProblemModellingController(self.pkpd_model, error_model)
 
         error_models = [
             erlo.ConstantAndMultiplicativeGaussianErrorModel(),
-            erlo.ConstantAndMultiplicativeGaussianErrorModel()]
+            erlo.ConstantAndMultiplicativeGaussianErrorModel()
+        ]
         with self.assertRaisesRegex(ValueError, 'Wrong number of error'):
-            erlo.ProblemModellingController(
-                self.pd_model, error_models)
+            erlo.ProblemModellingController(self.pd_model, error_models)
 
     def test_fix_parameters(self):
         # Test case I: PD model
         # Fix model parameters
         name_value_dict = dict({
             'myokit.drug_concentration': 0,
-            'Sigma base': 1})
+            'Sigma base': 1
+        })
         self.pd_problem.fix_parameters(name_value_dict)
 
         self.assertEqual(self.pd_problem.get_n_parameters(), 5)
@@ -115,9 +115,7 @@ class TestProblemModellingControllerPDProblem(unittest.TestCase):
         self.assertEqual(param_names[4], 'Sigma rel.')
 
         # Free and fix a parameter
-        name_value_dict = dict({
-            'myokit.lambda_1': 2,
-            'Sigma base': None})
+        name_value_dict = dict({'myokit.lambda_1': 2, 'Sigma base': None})
         self.pd_problem.fix_parameters(name_value_dict)
 
         self.assertEqual(self.pd_problem.get_n_parameters(), 5)
@@ -132,7 +130,8 @@ class TestProblemModellingControllerPDProblem(unittest.TestCase):
         # Free all parameters again
         name_value_dict = dict({
             'myokit.lambda_1': None,
-            'myokit.drug_concentration': None})
+            'myokit.drug_concentration': None
+        })
         self.pd_problem.fix_parameters(name_value_dict)
 
         self.assertEqual(self.pd_problem.get_n_parameters(), 7)
@@ -152,13 +151,14 @@ class TestProblemModellingControllerPDProblem(unittest.TestCase):
             'myokit.tumour_volume': 1,
             'myokit.drug_concentration': 0,
             'myokit.kappa': 1,
-            'myokit.lambda_1': 2})
+            'myokit.lambda_1': 2
+        })
         problem.fix_parameters(name_value_dict)
-        problem.set_population_model(
-            pop_models=[
-                erlo.HeterogeneousModel(),
-                erlo.PooledModel(),
-                erlo.LogNormalModel()])
+        problem.set_population_model(pop_models=[
+            erlo.HeterogeneousModel(),
+            erlo.PooledModel(),
+            erlo.LogNormalModel()
+        ])
         problem.set_data(
             self.data,
             output_biomarker_dict={'myokit.tumour_volume': 'Tumour volume'})
@@ -182,7 +182,8 @@ class TestProblemModellingControllerPDProblem(unittest.TestCase):
         name_value_dict = dict({
             'ID 1: myokit.lambda_0': 1,
             'ID 2: myokit.lambda_0': 4,
-            'Pooled Sigma base': 2})
+            'Pooled Sigma base': 2
+        })
         problem.fix_parameters(name_value_dict)
 
         # self.assertEqual(problem.get_n_parameters(), 8)
@@ -201,7 +202,8 @@ class TestProblemModellingControllerPDProblem(unittest.TestCase):
         # Fix model parameters
         name_value_dict = dict({
             'myokit.kappa': 0,
-            'central.drug_concentration Sigma base': 1})
+            'central.drug_concentration Sigma base': 1
+        })
         self.pkpd_problem.fix_parameters(name_value_dict)
 
         self.assertEqual(self.pkpd_problem.get_n_parameters(), 9)
@@ -213,15 +215,13 @@ class TestProblemModellingControllerPDProblem(unittest.TestCase):
         self.assertEqual(param_names[3], 'myokit.critical_volume')
         self.assertEqual(param_names[4], 'myokit.elimination_rate')
         self.assertEqual(param_names[5], 'myokit.lambda')
-        self.assertEqual(
-            param_names[6], 'central.drug_concentration Sigma rel.')
+        self.assertEqual(param_names[6],
+                         'central.drug_concentration Sigma rel.')
         self.assertEqual(param_names[7], 'myokit.tumour_volume Sigma base')
         self.assertEqual(param_names[8], 'myokit.tumour_volume Sigma rel.')
 
         # Free and fix a parameter
-        name_value_dict = dict({
-            'myokit.lambda': 2,
-            'myokit.kappa': None})
+        name_value_dict = dict({'myokit.lambda': 2, 'myokit.kappa': None})
         self.pkpd_problem.fix_parameters(name_value_dict)
 
         self.assertEqual(self.pkpd_problem.get_n_parameters(), 9)
@@ -233,15 +233,16 @@ class TestProblemModellingControllerPDProblem(unittest.TestCase):
         self.assertEqual(param_names[3], 'myokit.critical_volume')
         self.assertEqual(param_names[4], 'myokit.elimination_rate')
         self.assertEqual(param_names[5], 'myokit.kappa')
-        self.assertEqual(
-            param_names[6], 'central.drug_concentration Sigma rel.')
+        self.assertEqual(param_names[6],
+                         'central.drug_concentration Sigma rel.')
         self.assertEqual(param_names[7], 'myokit.tumour_volume Sigma base')
         self.assertEqual(param_names[8], 'myokit.tumour_volume Sigma rel.')
 
         # Free all parameters again
         name_value_dict = dict({
             'myokit.lambda': None,
-            'central.drug_concentration Sigma base': None})
+            'central.drug_concentration Sigma base': None
+        })
         self.pkpd_problem.fix_parameters(name_value_dict)
 
         self.assertEqual(self.pkpd_problem.get_n_parameters(), 11)
@@ -254,10 +255,10 @@ class TestProblemModellingControllerPDProblem(unittest.TestCase):
         self.assertEqual(param_names[4], 'myokit.elimination_rate')
         self.assertEqual(param_names[5], 'myokit.kappa')
         self.assertEqual(param_names[6], 'myokit.lambda')
-        self.assertEqual(
-            param_names[7], 'central.drug_concentration Sigma base')
-        self.assertEqual(
-            param_names[8], 'central.drug_concentration Sigma rel.')
+        self.assertEqual(param_names[7],
+                         'central.drug_concentration Sigma base')
+        self.assertEqual(param_names[8],
+                         'central.drug_concentration Sigma rel.')
         self.assertEqual(param_names[9], 'myokit.tumour_volume Sigma base')
         self.assertEqual(param_names[10], 'myokit.tumour_volume Sigma rel.')
 
@@ -288,21 +289,21 @@ class TestProblemModellingControllerPDProblem(unittest.TestCase):
         self.assertIsNone(regimens)
 
         # Data has been set, but duration is ignored
-        problem.set_data(
-            self.data,
-            output_biomarker_dict={
-                'myokit.tumour_volume': 'Tumour volume',
-                'central.drug_concentration': 'IL 6'},
-            dose_duration_key=None)
+        problem.set_data(self.data,
+                         output_biomarker_dict={
+                             'myokit.tumour_volume': 'Tumour volume',
+                             'central.drug_concentration': 'IL 6'
+                         },
+                         dose_duration_key=None)
         regimens = problem.get_dosing_regimens()
         self.assertIsInstance(regimens, dict)
 
         # Data has been set with duration information
-        problem.set_data(
-            self.data,
-            output_biomarker_dict={
-                'myokit.tumour_volume': 'Tumour volume',
-                'central.drug_concentration': 'IL 6'})
+        problem.set_data(self.data,
+                         output_biomarker_dict={
+                             'myokit.tumour_volume': 'Tumour volume',
+                             'central.drug_concentration': 'IL 6'
+                         })
         regimens = problem.get_dosing_regimens()
         self.assertIsInstance(regimens, dict)
 
@@ -312,10 +313,8 @@ class TestProblemModellingControllerPDProblem(unittest.TestCase):
 
         # Set data which does not provide measurements for all IDs
         problem.set_data(
-            self.data,
-            output_biomarker_dict={'myokit.tumour_volume': 'IL 6'})
-        problem.set_log_prior([
-            pints.HalfCauchyLogPrior(0, 1)]*7)
+            self.data, output_biomarker_dict={'myokit.tumour_volume': 'IL 6'})
+        problem.set_log_prior([pints.HalfCauchyLogPrior(0, 1)] * 7)
 
         # Get all posteriors
         posteriors = problem.get_log_posterior()
@@ -330,8 +329,7 @@ class TestProblemModellingControllerPDProblem(unittest.TestCase):
         problem.set_data(
             self.data,
             output_biomarker_dict={'myokit.tumour_volume': 'Tumour volume'})
-        problem.set_log_prior([
-            pints.HalfCauchyLogPrior(0, 1)]*7)
+        problem.set_log_prior([pints.HalfCauchyLogPrior(0, 1)] * 7)
 
         # Get all posteriors
         posteriors = problem.get_log_posterior()
@@ -354,10 +352,10 @@ class TestProblemModellingControllerPDProblem(unittest.TestCase):
         # Test case II: Fix some parameters
         name_value_dict = dict({
             'myokit.drug_concentration': 0,
-            'myokit.kappa': 1})
+            'myokit.kappa': 1
+        })
         problem.fix_parameters(name_value_dict)
-        problem.set_log_prior([
-            pints.HalfCauchyLogPrior(0, 1)]*5)
+        problem.set_log_prior([pints.HalfCauchyLogPrior(0, 1)] * 5)
 
         # Get all posteriors
         posteriors = problem.get_log_posterior()
@@ -383,10 +381,10 @@ class TestProblemModellingControllerPDProblem(unittest.TestCase):
             erlo.HeterogeneousModel(),
             erlo.PooledModel(),
             erlo.PooledModel(),
-            erlo.LogNormalModel()]
+            erlo.LogNormalModel()
+        ]
         problem.set_population_model(pop_models)
-        problem.set_log_prior([
-            pints.HalfCauchyLogPrior(0, 1)]*11)
+        problem.set_log_prior([pints.HalfCauchyLogPrior(0, 1)] * 11)
         posterior = problem.get_log_posterior()
 
         self.assertIsInstance(posterior, erlo.LogPosterior)
@@ -468,7 +466,7 @@ class TestProblemModellingControllerPDProblem(unittest.TestCase):
 
         # The selected individual does not exist
         individual = 'Not existent'
-        problem.set_log_prior([pints.HalfCauchyLogPrior(0, 1)]*7)
+        problem.set_log_prior([pints.HalfCauchyLogPrior(0, 1)] * 7)
 
         with self.assertRaisesRegex(ValueError, 'The individual cannot'):
             problem.get_log_posterior(individual)
@@ -493,7 +491,8 @@ class TestProblemModellingControllerPDProblem(unittest.TestCase):
             erlo.PooledModel(),
             erlo.PooledModel(),
             erlo.LogNormalModel(),
-            erlo.LogNormalModel()]
+            erlo.LogNormalModel()
+        ]
         problem.set_population_model(pop_models)
         n_parameters = problem.get_n_parameters()
         self.assertEqual(n_parameters, 8)
@@ -536,7 +535,8 @@ class TestProblemModellingControllerPDProblem(unittest.TestCase):
             erlo.PooledModel(),
             erlo.PooledModel(),
             erlo.PooledModel(),
-            erlo.PooledModel()]
+            erlo.PooledModel()
+        ]
         problem.set_population_model(pop_models)
         n_parameters = problem.get_n_parameters()
         self.assertEqual(n_parameters, 12)
@@ -546,11 +546,11 @@ class TestProblemModellingControllerPDProblem(unittest.TestCase):
         self.assertEqual(n_parameters, 11)
 
         # Test case II.3: Set data
-        problem.set_data(
-            self.data,
-            output_biomarker_dict={
-                'myokit.tumour_volume': 'Tumour volume',
-                'central.drug_concentration': 'IL 6'})
+        problem.set_data(self.data,
+                         output_biomarker_dict={
+                             'myokit.tumour_volume': 'Tumour volume',
+                             'central.drug_concentration': 'IL 6'
+                         })
         n_parameters = problem.get_n_parameters()
         self.assertEqual(n_parameters, 21)
 
@@ -593,7 +593,8 @@ class TestProblemModellingControllerPDProblem(unittest.TestCase):
             erlo.PooledModel(),
             erlo.PooledModel(),
             erlo.LogNormalModel(),
-            erlo.LogNormalModel()]
+            erlo.LogNormalModel()
+        ]
         problem.set_population_model(pop_models)
         param_names = problem.get_parameter_names()
         self.assertEqual(len(param_names), 8)
@@ -666,10 +667,10 @@ class TestProblemModellingControllerPDProblem(unittest.TestCase):
         self.assertEqual(param_names[4], 'myokit.elimination_rate')
         self.assertEqual(param_names[5], 'myokit.kappa')
         self.assertEqual(param_names[6], 'myokit.lambda')
-        self.assertEqual(
-            param_names[7], 'central.drug_concentration Sigma base')
-        self.assertEqual(
-            param_names[8], 'central.drug_concentration Sigma rel.')
+        self.assertEqual(param_names[7],
+                         'central.drug_concentration Sigma base')
+        self.assertEqual(param_names[8],
+                         'central.drug_concentration Sigma rel.')
         self.assertEqual(param_names[9], 'myokit.tumour_volume Sigma base')
         self.assertEqual(param_names[10], 'myokit.tumour_volume Sigma rel.')
 
@@ -683,10 +684,10 @@ class TestProblemModellingControllerPDProblem(unittest.TestCase):
         self.assertEqual(param_names[4], 'myokit.elimination_rate')
         self.assertEqual(param_names[5], 'myokit.kappa')
         self.assertEqual(param_names[6], 'myokit.lambda')
-        self.assertEqual(
-            param_names[7], 'central.drug_concentration Sigma base')
-        self.assertEqual(
-            param_names[8], 'central.drug_concentration Sigma rel.')
+        self.assertEqual(param_names[7],
+                         'central.drug_concentration Sigma base')
+        self.assertEqual(param_names[8],
+                         'central.drug_concentration Sigma rel.')
         self.assertEqual(param_names[9], 'myokit.tumour_volume Sigma base')
         self.assertEqual(param_names[10], 'myokit.tumour_volume Sigma rel.')
 
@@ -702,7 +703,8 @@ class TestProblemModellingControllerPDProblem(unittest.TestCase):
             erlo.PooledModel(),
             erlo.PooledModel(),
             erlo.PooledModel(),
-            erlo.PooledModel()]
+            erlo.PooledModel()
+        ]
         problem.set_population_model(pop_models)
         param_names = problem.get_parameter_names()
         self.assertEqual(len(param_names), 12)
@@ -714,14 +716,14 @@ class TestProblemModellingControllerPDProblem(unittest.TestCase):
         self.assertEqual(param_names[5], 'Std. myokit.kappa')
         self.assertEqual(param_names[6], 'Mean myokit.lambda')
         self.assertEqual(param_names[7], 'Std. myokit.lambda')
-        self.assertEqual(
-            param_names[8], 'Pooled central.drug_concentration Sigma base')
-        self.assertEqual(
-            param_names[9], 'Pooled central.drug_concentration Sigma rel.')
-        self.assertEqual(
-            param_names[10], 'Pooled myokit.tumour_volume Sigma base')
-        self.assertEqual(
-            param_names[11], 'Pooled myokit.tumour_volume Sigma rel.')
+        self.assertEqual(param_names[8],
+                         'Pooled central.drug_concentration Sigma base')
+        self.assertEqual(param_names[9],
+                         'Pooled central.drug_concentration Sigma rel.')
+        self.assertEqual(param_names[10],
+                         'Pooled myokit.tumour_volume Sigma base')
+        self.assertEqual(param_names[11],
+                         'Pooled myokit.tumour_volume Sigma rel.')
 
         # Test exclude population model True
         param_names = problem.get_parameter_names(exclude_pop_model=True)
@@ -733,19 +735,19 @@ class TestProblemModellingControllerPDProblem(unittest.TestCase):
         self.assertEqual(param_names[4], 'myokit.elimination_rate')
         self.assertEqual(param_names[5], 'myokit.kappa')
         self.assertEqual(param_names[6], 'myokit.lambda')
-        self.assertEqual(
-            param_names[7], 'central.drug_concentration Sigma base')
-        self.assertEqual(
-            param_names[8], 'central.drug_concentration Sigma rel.')
+        self.assertEqual(param_names[7],
+                         'central.drug_concentration Sigma base')
+        self.assertEqual(param_names[8],
+                         'central.drug_concentration Sigma rel.')
         self.assertEqual(param_names[9], 'myokit.tumour_volume Sigma base')
         self.assertEqual(param_names[10], 'myokit.tumour_volume Sigma rel.')
 
         # Test case II.3: Set data
-        problem.set_data(
-            self.data,
-            output_biomarker_dict={
-                'myokit.tumour_volume': 'Tumour volume',
-                'central.drug_concentration': 'IL 6'})
+        problem.set_data(self.data,
+                         output_biomarker_dict={
+                             'myokit.tumour_volume': 'Tumour volume',
+                             'central.drug_concentration': 'IL 6'
+                         })
         param_names = problem.get_parameter_names()
         self.assertEqual(len(param_names), 21)
         self.assertEqual(param_names[0], 'Pooled central.drug_amount')
@@ -765,14 +767,14 @@ class TestProblemModellingControllerPDProblem(unittest.TestCase):
         self.assertEqual(param_names[14], 'ID 2: myokit.lambda')
         self.assertEqual(param_names[15], 'Mean myokit.lambda')
         self.assertEqual(param_names[16], 'Std. myokit.lambda')
-        self.assertEqual(
-            param_names[17], 'Pooled central.drug_concentration Sigma base')
-        self.assertEqual(
-            param_names[18], 'Pooled central.drug_concentration Sigma rel.')
-        self.assertEqual(
-            param_names[19], 'Pooled myokit.tumour_volume Sigma base')
-        self.assertEqual(
-            param_names[20], 'Pooled myokit.tumour_volume Sigma rel.')
+        self.assertEqual(param_names[17],
+                         'Pooled central.drug_concentration Sigma base')
+        self.assertEqual(param_names[18],
+                         'Pooled central.drug_concentration Sigma rel.')
+        self.assertEqual(param_names[19],
+                         'Pooled myokit.tumour_volume Sigma base')
+        self.assertEqual(param_names[20],
+                         'Pooled myokit.tumour_volume Sigma rel.')
 
         # Test exclude population model True
         param_names = problem.get_parameter_names(exclude_pop_model=True)
@@ -784,10 +786,10 @@ class TestProblemModellingControllerPDProblem(unittest.TestCase):
         self.assertEqual(param_names[4], 'myokit.elimination_rate')
         self.assertEqual(param_names[5], 'myokit.kappa')
         self.assertEqual(param_names[6], 'myokit.lambda')
-        self.assertEqual(
-            param_names[7], 'central.drug_concentration Sigma base')
-        self.assertEqual(
-            param_names[8], 'central.drug_concentration Sigma rel.')
+        self.assertEqual(param_names[7],
+                         'central.drug_concentration Sigma base')
+        self.assertEqual(param_names[8],
+                         'central.drug_concentration Sigma rel.')
         self.assertEqual(param_names[9], 'myokit.tumour_volume Sigma base')
         self.assertEqual(param_names[10], 'myokit.tumour_volume Sigma rel.')
 
@@ -800,8 +802,7 @@ class TestProblemModellingControllerPDProblem(unittest.TestCase):
         self.assertIsInstance(predictive_model, erlo.PredictiveModel)
 
         # Exclude population model
-        predictive_model = problem.get_predictive_model(
-            exclude_pop_model=True)
+        predictive_model = problem.get_predictive_model(exclude_pop_model=True)
         self.assertIsInstance(predictive_model, erlo.PredictiveModel)
 
         # Test case I.2: Population model
@@ -812,16 +813,15 @@ class TestProblemModellingControllerPDProblem(unittest.TestCase):
             erlo.PooledModel(),
             erlo.PooledModel(),
             erlo.LogNormalModel(),
-            erlo.LogNormalModel()])
+            erlo.LogNormalModel()
+        ])
         predictive_model = problem.get_predictive_model()
-        self.assertIsInstance(
-            predictive_model, erlo.PredictivePopulationModel)
+        self.assertIsInstance(predictive_model, erlo.PredictivePopulationModel)
 
         # Exclude population model
-        predictive_model = problem.get_predictive_model(
-            exclude_pop_model=True)
-        self.assertNotIsInstance(
-            predictive_model, erlo.PredictivePopulationModel)
+        predictive_model = problem.get_predictive_model(exclude_pop_model=True)
+        self.assertNotIsInstance(predictive_model,
+                                 erlo.PredictivePopulationModel)
         self.assertIsInstance(predictive_model, erlo.PredictiveModel)
 
         # Test case II: PKPD model
@@ -832,8 +832,7 @@ class TestProblemModellingControllerPDProblem(unittest.TestCase):
         self.assertIsInstance(predictive_model, erlo.PredictiveModel)
 
         # Exclude population model
-        predictive_model = problem.get_predictive_model(
-            exclude_pop_model=True)
+        predictive_model = problem.get_predictive_model(exclude_pop_model=True)
         self.assertIsInstance(predictive_model, erlo.PredictiveModel)
 
         # Test case II.2: Population model
@@ -848,16 +847,15 @@ class TestProblemModellingControllerPDProblem(unittest.TestCase):
             erlo.PooledModel(),
             erlo.PooledModel(),
             erlo.PooledModel(),
-            erlo.PooledModel()])
+            erlo.PooledModel()
+        ])
         predictive_model = problem.get_predictive_model()
-        self.assertIsInstance(
-            predictive_model, erlo.PredictivePopulationModel)
+        self.assertIsInstance(predictive_model, erlo.PredictivePopulationModel)
 
         # Exclude population model
-        predictive_model = problem.get_predictive_model(
-            exclude_pop_model=True)
-        self.assertNotIsInstance(
-            predictive_model, erlo.PredictivePopulationModel)
+        predictive_model = problem.get_predictive_model(exclude_pop_model=True)
+        self.assertNotIsInstance(predictive_model,
+                                 erlo.PredictivePopulationModel)
         self.assertIsInstance(predictive_model, erlo.PredictiveModel)
 
     def test_set_data(self):
@@ -932,13 +930,9 @@ class TestProblemModellingControllerPDProblem(unittest.TestCase):
 
         # Specify prior parameter map explicitly
         param_names = [
-            'myokit.kappa',
-            'Sigma base',
-            'Sigma rel.',
-            'myokit.tumour_volume',
-            'myokit.lambda_1',
-            'myokit.drug_concentration',
-            'myokit.lambda_0']
+            'myokit.kappa', 'Sigma base', 'Sigma rel.', 'myokit.tumour_volume',
+            'myokit.lambda_1', 'myokit.drug_concentration', 'myokit.lambda_0'
+        ]
         problem.set_log_prior(log_priors, param_names)
 
     def test_set_log_prior_bad_input(self):
@@ -956,13 +950,15 @@ class TestProblemModellingControllerPDProblem(unittest.TestCase):
 
         # Number of log priors does not match number of parameters
         log_priors = [
-            pints.GaussianLogPrior(0, 1), pints.HalfCauchyLogPrior(0, 1)]
+            pints.GaussianLogPrior(0, 1),
+            pints.HalfCauchyLogPrior(0, 1)
+        ]
         with self.assertRaisesRegex(ValueError, 'One marginal log-prior'):
             problem.set_log_prior(log_priors)
 
         # Dimensionality of joint log-pior does not match number of parameters
-        prior = pints.ComposedLogPrior(
-            pints.GaussianLogPrior(0, 1), pints.GaussianLogPrior(0, 1))
+        prior = pints.ComposedLogPrior(pints.GaussianLogPrior(0, 1),
+                                       pints.GaussianLogPrior(0, 1))
         log_priors = [
             prior,
             pints.UniformLogPrior(0, 1),
@@ -970,7 +966,8 @@ class TestProblemModellingControllerPDProblem(unittest.TestCase):
             pints.UniformLogPrior(0, 1),
             pints.UniformLogPrior(0, 1),
             pints.UniformLogPrior(0, 1),
-            pints.UniformLogPrior(0, 1)]
+            pints.UniformLogPrior(0, 1)
+        ]
         with self.assertRaisesRegex(ValueError, 'The joint log-prior'):
             problem.set_log_prior(log_priors)
 
@@ -991,7 +988,8 @@ class TestProblemModellingControllerPDProblem(unittest.TestCase):
             erlo.PooledModel(),
             erlo.PooledModel(),
             erlo.PooledModel(),
-            erlo.LogNormalModel()]
+            erlo.LogNormalModel()
+        ]
 
         # Test case I.1: Don't specify order
         problem.set_population_model(pop_models)
@@ -1015,13 +1013,10 @@ class TestProblemModellingControllerPDProblem(unittest.TestCase):
 
         # Test case I.2: Specify order
         parameter_names = [
-            'Sigma base',
-            'myokit.drug_concentration',
-            'myokit.lambda_1',
-            'myokit.kappa',
-            'myokit.tumour_volume',
-            'Sigma rel.',
-            'myokit.lambda_0']
+            'Sigma base', 'myokit.drug_concentration', 'myokit.lambda_1',
+            'myokit.kappa', 'myokit.tumour_volume', 'Sigma rel.',
+            'myokit.lambda_0'
+        ]
         problem.set_population_model(pop_models, parameter_names)
 
         self.assertEqual(problem.get_n_parameters(), 13)
@@ -1043,11 +1038,11 @@ class TestProblemModellingControllerPDProblem(unittest.TestCase):
 
         # Test case II: PKPD model
         problem = copy.deepcopy(self.pkpd_problem)
-        problem.set_data(
-            self.data,
-            output_biomarker_dict={
-                'central.drug_concentration': 'IL 6',
-                'myokit.tumour_volume': 'Tumour volume'})
+        problem.set_data(self.data,
+                         output_biomarker_dict={
+                             'central.drug_concentration': 'IL 6',
+                             'myokit.tumour_volume': 'Tumour volume'
+                         })
         pop_models = [
             erlo.LogNormalModel(),
             erlo.LogNormalModel(),
@@ -1059,7 +1054,8 @@ class TestProblemModellingControllerPDProblem(unittest.TestCase):
             erlo.PooledModel(),
             erlo.LogNormalModel(),
             erlo.PooledModel(),
-            erlo.LogNormalModel()]
+            erlo.LogNormalModel()
+        ]
 
         # Test case I.1: Don't specify order
         problem.set_population_model(pop_models)
@@ -1088,30 +1084,30 @@ class TestProblemModellingControllerPDProblem(unittest.TestCase):
         self.assertEqual(param_names[18], 'ID 1: myokit.kappa')
         self.assertEqual(param_names[19], 'ID 2: myokit.kappa')
         self.assertEqual(param_names[20], 'Pooled myokit.lambda')
-        self.assertEqual(
-            param_names[21], 'Pooled central.drug_concentration Sigma base')
-        self.assertEqual(
-            param_names[22], 'ID 0: central.drug_concentration Sigma rel.')
-        self.assertEqual(
-            param_names[23], 'ID 1: central.drug_concentration Sigma rel.')
-        self.assertEqual(
-            param_names[24], 'ID 2: central.drug_concentration Sigma rel.')
-        self.assertEqual(
-            param_names[25], 'Mean central.drug_concentration Sigma rel.')
-        self.assertEqual(
-            param_names[26], 'Std. central.drug_concentration Sigma rel.')
-        self.assertEqual(
-            param_names[27], 'Pooled myokit.tumour_volume Sigma base')
-        self.assertEqual(
-            param_names[28], 'ID 0: myokit.tumour_volume Sigma rel.')
-        self.assertEqual(
-            param_names[29], 'ID 1: myokit.tumour_volume Sigma rel.')
-        self.assertEqual(
-            param_names[30], 'ID 2: myokit.tumour_volume Sigma rel.')
-        self.assertEqual(
-            param_names[31], 'Mean myokit.tumour_volume Sigma rel.')
-        self.assertEqual(
-            param_names[32], 'Std. myokit.tumour_volume Sigma rel.')
+        self.assertEqual(param_names[21],
+                         'Pooled central.drug_concentration Sigma base')
+        self.assertEqual(param_names[22],
+                         'ID 0: central.drug_concentration Sigma rel.')
+        self.assertEqual(param_names[23],
+                         'ID 1: central.drug_concentration Sigma rel.')
+        self.assertEqual(param_names[24],
+                         'ID 2: central.drug_concentration Sigma rel.')
+        self.assertEqual(param_names[25],
+                         'Mean central.drug_concentration Sigma rel.')
+        self.assertEqual(param_names[26],
+                         'Std. central.drug_concentration Sigma rel.')
+        self.assertEqual(param_names[27],
+                         'Pooled myokit.tumour_volume Sigma base')
+        self.assertEqual(param_names[28],
+                         'ID 0: myokit.tumour_volume Sigma rel.')
+        self.assertEqual(param_names[29],
+                         'ID 1: myokit.tumour_volume Sigma rel.')
+        self.assertEqual(param_names[30],
+                         'ID 2: myokit.tumour_volume Sigma rel.')
+        self.assertEqual(param_names[31],
+                         'Mean myokit.tumour_volume Sigma rel.')
+        self.assertEqual(param_names[32],
+                         'Std. myokit.tumour_volume Sigma rel.')
 
     def test_set_population_model_bad_input(self):
         # Population models have the wrong type
@@ -1135,7 +1131,6 @@ class TestInverseProblem(unittest.TestCase):
     """
     Tests the erlotinib.InverseProblem class.
     """
-
     @classmethod
     def setUpClass(cls):
         # Create test data

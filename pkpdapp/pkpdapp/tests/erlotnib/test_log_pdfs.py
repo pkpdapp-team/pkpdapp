@@ -18,7 +18,6 @@ class TestHierarchicalLogLikelihood(unittest.TestCase):
     """
     Tests the erlotinib.HierarchicalLogLikelihood class.
     """
-
     @classmethod
     def setUpClass(cls):
         # Create data
@@ -35,14 +34,16 @@ class TestHierarchicalLogLikelihood(unittest.TestCase):
         cls.model.set_administration('central', direct=False)
         cls.model.set_outputs(['central.drug_amount', 'dose.drug_amount'])
         cls.error_models = [
-            erlo.ConstantAndMultiplicativeGaussianErrorModel()] * 2
+            erlo.ConstantAndMultiplicativeGaussianErrorModel()
+        ] * 2
 
         # Create log-likelihoods
         cls.log_likelihoods = [
-            erlo.LogLikelihood(
-                cls.model, cls.error_models, cls.observations, cls.times),
-            erlo.LogLikelihood(
-                cls.model, cls.error_models, cls.observations, cls.times)]
+            erlo.LogLikelihood(cls.model, cls.error_models, cls.observations,
+                               cls.times),
+            erlo.LogLikelihood(cls.model, cls.error_models, cls.observations,
+                               cls.times)
+        ]
 
         # Create population models
         cls.population_models = [
@@ -54,7 +55,8 @@ class TestHierarchicalLogLikelihood(unittest.TestCase):
             erlo.PooledModel(),
             erlo.PooledModel(),
             erlo.PooledModel(),
-            erlo.PooledModel()]
+            erlo.PooledModel()
+        ]
 
         cls.hierarchical_model = erlo.HierarchicalLogLikelihood(
             cls.log_likelihoods, cls.population_models)
@@ -63,50 +65,48 @@ class TestHierarchicalLogLikelihood(unittest.TestCase):
         # Log-likelihoods are not pints.LogPDF
         log_likelihoods = ['bad', 'type']
         with self.assertRaisesRegex(ValueError, 'The log-likelihoods have'):
-            erlo.HierarchicalLogLikelihood(
-                log_likelihoods, self.population_models)
+            erlo.HierarchicalLogLikelihood(log_likelihoods,
+                                           self.population_models)
 
         # Log-likelihoods are defined on different parameter spaces
         path = erlo.ModelLibrary().one_compartment_pk_model()
         model = erlo.PharmacokineticModel(path)
         model.set_administration('central', direct=False)
-        error_models = [
-            erlo.ConstantAndMultiplicativeGaussianErrorModel()]
+        error_models = [erlo.ConstantAndMultiplicativeGaussianErrorModel()]
         log_likelihoods = [
             self.log_likelihoods[0],
-            erlo.LogLikelihood(
-                model, error_models, self.observations[0], self.times[0])]
+            erlo.LogLikelihood(model, error_models, self.observations[0],
+                               self.times[0])
+        ]
 
         with self.assertRaisesRegex(ValueError, 'The number of parameters'):
-            erlo.HierarchicalLogLikelihood(
-                log_likelihoods, self.population_models)
+            erlo.HierarchicalLogLikelihood(log_likelihoods,
+                                           self.population_models)
 
         # The log-likelihood parameter names differ
         model.set_outputs(['central.drug_concentration', 'dose.drug_amount'])
-        error_models = [
-            erlo.ConstantAndMultiplicativeGaussianErrorModel()] * 2
+        error_models = [erlo.ConstantAndMultiplicativeGaussianErrorModel()] * 2
         log_likelihoods = [
             self.log_likelihoods[0],
-            erlo.LogLikelihood(
-                model, error_models, self.observations, self.times)]
+            erlo.LogLikelihood(model, error_models, self.observations,
+                               self.times)
+        ]
 
         with self.assertRaisesRegex(ValueError, 'The parameter names'):
-            erlo.HierarchicalLogLikelihood(
-                log_likelihoods, self.population_models)
+            erlo.HierarchicalLogLikelihood(log_likelihoods,
+                                           self.population_models)
 
         # Population models are not erlotinib.PopulationModel
         population_models = ['bad', 'type'] + ['match dimension'] * 7
         with self.assertRaisesRegex(ValueError, 'The population models have'):
-            erlo.HierarchicalLogLikelihood(
-                self.log_likelihoods, population_models)
+            erlo.HierarchicalLogLikelihood(self.log_likelihoods,
+                                           population_models)
 
         # Not all parameters of the likelihoods are assigned to a pop model
-        population_models = [
-            erlo.PooledModel(),
-            erlo.PooledModel()]
+        population_models = [erlo.PooledModel(), erlo.PooledModel()]
         with self.assertRaisesRegex(ValueError, 'Wrong number of population'):
-            erlo.HierarchicalLogLikelihood(
-                self.log_likelihoods, population_models)
+            erlo.HierarchicalLogLikelihood(self.log_likelihoods,
+                                           population_models)
 
     def test_call(self):
         # Test case I: All parameters pooled
@@ -115,8 +115,8 @@ class TestHierarchicalLogLikelihood(unittest.TestCase):
             population_models=[erlo.PooledModel()] * 9)
 
         # Create reference model
-        pooled_log_pdf = pints.PooledLogPDF(
-            self.log_likelihoods, pooled=[True]*9)
+        pooled_log_pdf = pints.PooledLogPDF(self.log_likelihoods,
+                                            pooled=[True] * 9)
 
         # Test case I.1
         parameters = [1, 1, 1, 1, 1, 1, 1, 1, 1]
@@ -133,8 +133,7 @@ class TestHierarchicalLogLikelihood(unittest.TestCase):
         # Test case II.1: Heterogeneous model
         likelihood = erlo.HierarchicalLogLikelihood(
             log_likelihoods=self.log_likelihoods,
-            population_models=[
-                erlo.HeterogeneousModel()] * 9)
+            population_models=[erlo.HeterogeneousModel()] * 9)
 
         # Compute score from individual likelihoods
         parameters = [1, 1, 1, 1, 1, 1, 1, 1, 1]
@@ -186,19 +185,12 @@ class TestHierarchicalLogLikelihood(unittest.TestCase):
         pop_params = [0.2, 1]
 
         parameters = [
-            indiv_parameters_1[0],
-            indiv_parameters_1[1],
-            indiv_parameters_1[2],
-            indiv_parameters_2[2],
-            pop_params[0],
-            pop_params[1],
-            indiv_parameters_1[3],
-            indiv_parameters_1[4],
-            indiv_parameters_2[4],
-            indiv_parameters_1[5],
-            indiv_parameters_1[6],
-            indiv_parameters_1[7],
-            indiv_parameters_1[8]]
+            indiv_parameters_1[0], indiv_parameters_1[1],
+            indiv_parameters_1[2], indiv_parameters_2[2], pop_params[0],
+            pop_params[1], indiv_parameters_1[3], indiv_parameters_1[4],
+            indiv_parameters_2[4], indiv_parameters_1[5],
+            indiv_parameters_1[6], indiv_parameters_1[7], indiv_parameters_1[8]
+        ]
 
         score = \
             ref_pop_model.compute_log_likelihood(
@@ -217,19 +209,12 @@ class TestHierarchicalLogLikelihood(unittest.TestCase):
         pop_params = [0.2, 10E-10]
 
         parameters = [
-            indiv_parameters_1[0],
-            indiv_parameters_1[1],
-            indiv_parameters_1[2],
-            indiv_parameters_2[2],
-            pop_params[0],
-            pop_params[1],
-            indiv_parameters_1[3],
-            indiv_parameters_1[4],
-            indiv_parameters_2[4],
-            indiv_parameters_1[5],
-            indiv_parameters_1[6],
-            indiv_parameters_1[7],
-            indiv_parameters_1[8]]
+            indiv_parameters_1[0], indiv_parameters_1[1],
+            indiv_parameters_1[2], indiv_parameters_2[2], pop_params[0],
+            pop_params[1], indiv_parameters_1[3], indiv_parameters_1[4],
+            indiv_parameters_2[4], indiv_parameters_1[5],
+            indiv_parameters_1[6], indiv_parameters_1[7], indiv_parameters_1[8]
+        ]
 
         self.assertEqual(self.hierarchical_model(parameters), -np.inf)
 
@@ -265,14 +250,10 @@ class TestHierarchicalLogLikelihood(unittest.TestCase):
         self.assertEqual(parameter_names[6], 'dose.absorption_rate')
         self.assertEqual(parameter_names[7], 'myokit.elimination_rate')
         self.assertEqual(parameter_names[8], 'myokit.elimination_rate')
-        self.assertEqual(
-            parameter_names[9], 'central.drug_amount Sigma base')
-        self.assertEqual(
-            parameter_names[10], 'central.drug_amount Sigma rel.')
-        self.assertEqual(
-            parameter_names[11], 'dose.drug_amount Sigma base')
-        self.assertEqual(
-            parameter_names[12], 'dose.drug_amount Sigma rel.')
+        self.assertEqual(parameter_names[9], 'central.drug_amount Sigma base')
+        self.assertEqual(parameter_names[10], 'central.drug_amount Sigma rel.')
+        self.assertEqual(parameter_names[11], 'dose.drug_amount Sigma base')
+        self.assertEqual(parameter_names[12], 'dose.drug_amount Sigma rel.')
 
         # Test case II: with ids
         parameter_names = self.hierarchical_model.get_parameter_names(
@@ -286,18 +267,18 @@ class TestHierarchicalLogLikelihood(unittest.TestCase):
         self.assertEqual(parameter_names[4], 'Mean central.size')
         self.assertEqual(parameter_names[5], 'Std. central.size')
         self.assertEqual(parameter_names[6], 'Pooled dose.absorption_rate')
-        self.assertEqual(
-            parameter_names[7], 'automatic-id-1 myokit.elimination_rate')
-        self.assertEqual(
-            parameter_names[8], 'automatic-id-2 myokit.elimination_rate')
-        self.assertEqual(
-            parameter_names[9], 'Pooled central.drug_amount Sigma base')
-        self.assertEqual(
-            parameter_names[10], 'Pooled central.drug_amount Sigma rel.')
-        self.assertEqual(
-            parameter_names[11], 'Pooled dose.drug_amount Sigma base')
-        self.assertEqual(
-            parameter_names[12], 'Pooled dose.drug_amount Sigma rel.')
+        self.assertEqual(parameter_names[7],
+                         'automatic-id-1 myokit.elimination_rate')
+        self.assertEqual(parameter_names[8],
+                         'automatic-id-2 myokit.elimination_rate')
+        self.assertEqual(parameter_names[9],
+                         'Pooled central.drug_amount Sigma base')
+        self.assertEqual(parameter_names[10],
+                         'Pooled central.drug_amount Sigma rel.')
+        self.assertEqual(parameter_names[11],
+                         'Pooled dose.drug_amount Sigma base')
+        self.assertEqual(parameter_names[12],
+                         'Pooled dose.drug_amount Sigma rel.')
 
     def test_get_population_models(self):
         pop_models = self.hierarchical_model.get_population_models()
@@ -321,15 +302,13 @@ class TestHierarchicalLogLikelihood(unittest.TestCase):
         # 1 log-normally and the rest is pooled
         # And there are 2 individuals
         n_parameters = 2 + 4 + 1 + 1 + 1 + 1 + 1 + 1 + 1
-        self.assertEqual(
-            self.hierarchical_model.n_parameters(), n_parameters)
+        self.assertEqual(self.hierarchical_model.n_parameters(), n_parameters)
 
 
 class TestLogLikelihood(unittest.TestCase):
     """
     Test the erlotinib.LogLikelihood class.
     """
-
     @classmethod
     def setUpClass(cls):
         # Create test data
@@ -347,64 +326,63 @@ class TestLogLikelihood(unittest.TestCase):
         cls.model.set_administration('central', direct=False)
         cls.model.set_outputs(['central.drug_amount', 'dose.drug_amount'])
         cls.error_models = [
-            erlo.ConstantAndMultiplicativeGaussianErrorModel()] * 2
+            erlo.ConstantAndMultiplicativeGaussianErrorModel()
+        ] * 2
 
         # Create log-likelihood
-        cls.log_likelihood = erlo.LogLikelihood(
-            cls.model, cls.error_models, cls.observations, cls.times)
+        cls.log_likelihood = erlo.LogLikelihood(cls.model, cls.error_models,
+                                                cls.observations, cls.times)
 
     def test_bad_instantiation(self):
         # Mechantic model has wrong type
         mechanistic_model = 'wrong type'
         with self.assertRaisesRegex(TypeError, 'The mechanistic model'):
-            erlo.LogLikelihood(
-                mechanistic_model, self.error_models, self.observations,
-                self.times)
+            erlo.LogLikelihood(mechanistic_model, self.error_models,
+                               self.observations, self.times)
 
         # Wrong number of error models
         outputs = ['central.drug_amount']
         with self.assertRaisesRegex(ValueError, 'One error model has'):
-            erlo.LogLikelihood(
-                self.model, self.error_models, self.observations, self.times,
-                outputs)
+            erlo.LogLikelihood(self.model, self.error_models,
+                               self.observations, self.times, outputs)
 
         # Wrong number of error models
         error_models = ['Wrong', 'type']
         with self.assertRaisesRegex(TypeError, 'The error models have to'):
-            erlo.LogLikelihood(
-                self.model, error_models, self.observations, self.times)
+            erlo.LogLikelihood(self.model, error_models, self.observations,
+                               self.times)
 
         # Wrong length of observations
         observations = [['There'], ['are'], ['only two outputs']]
         with self.assertRaisesRegex(ValueError, 'The observations have'):
-            erlo.LogLikelihood(
-                self.model, self.error_models, observations, self.times)
+            erlo.LogLikelihood(self.model, self.error_models, observations,
+                               self.times)
 
         # Wrong length of times
         times = [['There'], ['are'], ['only two outputs']]
         with self.assertRaisesRegex(ValueError, 'The times have the wrong'):
-            erlo.LogLikelihood(
-                self.model, self.error_models, self.observations, times)
+            erlo.LogLikelihood(self.model, self.error_models,
+                               self.observations, times)
 
         # Negative times
         observations = [[1, 2], [1, 2]]
         times = [[-1, 2], [1, 2]]
         with self.assertRaisesRegex(ValueError, 'Times cannot be negative'):
-            erlo.LogLikelihood(
-                self.model, self.error_models, observations, times)
+            erlo.LogLikelihood(self.model, self.error_models, observations,
+                               times)
 
         # Not strictly increasing times
         observations = [[1, 2], [1, 2]]
         times = [[2, 1], [1, 2]]
         with self.assertRaisesRegex(ValueError, 'Times must be increasing.'):
-            erlo.LogLikelihood(
-                self.model, self.error_models, observations, times)
+            erlo.LogLikelihood(self.model, self.error_models, observations,
+                               times)
 
         # Observations and times don't match
         observations = [[1, 2], [1, 2]]  # Times have 4 and 3
         with self.assertRaisesRegex(ValueError, 'The observations and times'):
-            erlo.LogLikelihood(
-                self.model, self.error_models, observations, self.times)
+            erlo.LogLikelihood(self.model, self.error_models, observations,
+                               self.times)
 
     def test_call(self):
         # Test case I: Compute reference score manually
@@ -438,16 +416,16 @@ class TestLogLikelihood(unittest.TestCase):
         observations = self.observations[0]
         self.model.set_outputs(['central.drug_amount'])
         error_model = self.error_models[0]
-        log_likelihood = erlo.LogLikelihood(
-            self.model, error_model, observations, times)
+        log_likelihood = erlo.LogLikelihood(self.model, error_model,
+                                            observations, times)
         ref_score_1 = log_likelihood(parameters[:7])
 
         times = self.times[1]
         observations = self.observations[1]
         self.model.set_outputs(['dose.drug_amount'])
         error_model = self.error_models[1]
-        log_likelihood = erlo.LogLikelihood(
-            self.model, error_model, observations, times)
+        log_likelihood = erlo.LogLikelihood(self.model, error_model,
+                                            observations, times)
         ref_score_2 = log_likelihood(parameters[:5] + parameters[7:9])
 
         ref_score = ref_score_1 + ref_score_2
@@ -462,7 +440,8 @@ class TestLogLikelihood(unittest.TestCase):
         # Test case I: fix some parameters
         self.log_likelihood.fix_parameters(name_value_dict={
             'central.drug_amount': 1,
-            'dose.absorption_rate': 1})
+            'dose.absorption_rate': 1
+        })
 
         n_parameters = self.log_likelihood.n_parameters()
         self.assertEqual(n_parameters, 7)
@@ -478,10 +457,12 @@ class TestLogLikelihood(unittest.TestCase):
         self.assertEqual(parameter_names[6], 'dose.drug_amount Sigma rel.')
 
         # Test case II: fix overlapping set of parameters
-        self.log_likelihood.fix_parameters(name_value_dict={
-            'dose.absorption_rate': None,
-            'dose.drug_amount Sigma base': 0.5,
-            'myokit.elimination_rate': 0.3})
+        self.log_likelihood.fix_parameters(
+            name_value_dict={
+                'dose.absorption_rate': None,
+                'dose.drug_amount Sigma base': 0.5,
+                'myokit.elimination_rate': 0.3
+            })
 
         n_parameters = self.log_likelihood.n_parameters()
         self.assertEqual(n_parameters, 6)
@@ -496,10 +477,12 @@ class TestLogLikelihood(unittest.TestCase):
         self.assertEqual(parameter_names[5], 'dose.drug_amount Sigma rel.')
 
         # Test case III: unfix all parameters
-        self.log_likelihood.fix_parameters(name_value_dict={
-            'central.drug_amount': None,
-            'dose.drug_amount Sigma base': None,
-            'myokit.elimination_rate': None})
+        self.log_likelihood.fix_parameters(
+            name_value_dict={
+                'central.drug_amount': None,
+                'dose.drug_amount Sigma base': None,
+                'myokit.elimination_rate': None
+            })
 
         n_parameters = self.log_likelihood.n_parameters()
         self.assertEqual(n_parameters, 9)
@@ -565,7 +548,8 @@ class TestLogLikelihood(unittest.TestCase):
         # Test case II: some fixed parameters
         self.log_likelihood.fix_parameters(name_value_dict={
             'central.drug_amount': 1,
-            'dose.drug_amount Sigma base': 1})
+            'dose.drug_amount Sigma base': 1
+        })
         submodels = self.log_likelihood.get_submodels()
 
         keys = list(submodels.keys())
@@ -584,7 +568,8 @@ class TestLogLikelihood(unittest.TestCase):
         # Unfix parameter
         self.log_likelihood.fix_parameters({
             'central.drug_amount': None,
-            'dose.drug_amount Sigma base': None})
+            'dose.drug_amount Sigma base': None
+        })
 
     def test_n_parameters(self):
         # Test case I:
@@ -596,8 +581,8 @@ class TestLogLikelihood(unittest.TestCase):
         observations = self.observations[0]
         self.model.set_outputs(['central.drug_amount'])
         error_model = self.error_models[0]
-        log_likelihood = erlo.LogLikelihood(
-            self.model, error_model, observations, times)
+        log_likelihood = erlo.LogLikelihood(self.model, error_model,
+                                            observations, times)
 
         n_parameters = log_likelihood.n_parameters()
         self.assertEqual(n_parameters, 7)
@@ -610,7 +595,6 @@ class TestLogPosterior(unittest.TestCase):
     """
     Tests the erlotinib.LogPosterior class.
     """
-
     @classmethod
     def setUpClass(cls):
         # Create test dataset
@@ -623,26 +607,24 @@ class TestLogPosterior(unittest.TestCase):
         error_model = erlo.ConstantAndMultiplicativeGaussianErrorModel()
         log_likelihood = erlo.LogLikelihood(model, error_model, values, times)
         log_likelihood.set_id('42')
-        log_prior = pints.ComposedLogPrior(
-            pints.UniformLogPrior(0, 1),
-            pints.UniformLogPrior(0, 1),
-            pints.UniformLogPrior(0, 1),
-            pints.UniformLogPrior(0, 1),
-            pints.UniformLogPrior(0, 1),
-            pints.UniformLogPrior(0, 1),
-            pints.UniformLogPrior(0, 1))
+        log_prior = pints.ComposedLogPrior(pints.UniformLogPrior(0, 1),
+                                           pints.UniformLogPrior(0, 1),
+                                           pints.UniformLogPrior(0, 1),
+                                           pints.UniformLogPrior(0, 1),
+                                           pints.UniformLogPrior(0, 1),
+                                           pints.UniformLogPrior(0, 1),
+                                           pints.UniformLogPrior(0, 1))
         cls.log_posterior = erlo.LogPosterior(log_likelihood, log_prior)
 
         # Create a pints test model
         problem = erlo.InverseProblem(model, values, times)
         log_likelihood = pints.GaussianLogLikelihood(problem)
-        log_prior = pints.ComposedLogPrior(
-            pints.UniformLogPrior(0, 1),
-            pints.UniformLogPrior(0, 1),
-            pints.UniformLogPrior(0, 1),
-            pints.UniformLogPrior(0, 1),
-            pints.UniformLogPrior(0, 1),
-            pints.UniformLogPrior(0, 1))
+        log_prior = pints.ComposedLogPrior(pints.UniformLogPrior(0, 1),
+                                           pints.UniformLogPrior(0, 1),
+                                           pints.UniformLogPrior(0, 1),
+                                           pints.UniformLogPrior(0, 1),
+                                           pints.UniformLogPrior(0, 1),
+                                           pints.UniformLogPrior(0, 1))
         cls.pints_log_posterior = erlo.LogPosterior(log_likelihood, log_prior)
 
     def test_get_id(self):
@@ -685,7 +667,6 @@ class TestReducedLogPDF(unittest.TestCase):
     """
     Tests the erlotinib.ReducedLogPDF class.
     """
-
     @classmethod
     def setUpClass(cls):
         # Create test data
@@ -699,8 +680,8 @@ class TestReducedLogPDF(unittest.TestCase):
         cls.log_likelihood = pints.GaussianLogLikelihood(problem)
         cls.mask = [True, False, False, True, False, True]
         cls.values = [11, 12, 13]
-        cls.reduced_log_pdf = erlo.ReducedLogPDF(
-            cls.log_likelihood, cls.mask, cls.values)
+        cls.reduced_log_pdf = erlo.ReducedLogPDF(cls.log_likelihood, cls.mask,
+                                                 cls.values)
 
     def test_bad_input(self):
         # Wrong log-pdf
@@ -731,16 +712,14 @@ class TestReducedLogPDF(unittest.TestCase):
         parameters = np.array([11, 1, 1, 12, 1, 13])
         reduced_params = parameters[~np.array(self.mask)]
 
-        self.assertEqual(
-            self.reduced_log_pdf(reduced_params),
-            self.log_likelihood(parameters))
+        self.assertEqual(self.reduced_log_pdf(reduced_params),
+                         self.log_likelihood(parameters))
 
     def test_n_parameters(self):
         before = self.log_likelihood.n_parameters()
         n_fixed = np.sum(self.mask)
 
-        self.assertEqual(
-            self.reduced_log_pdf.n_parameters(), before - n_fixed)
+        self.assertEqual(self.reduced_log_pdf.n_parameters(), before - n_fixed)
 
 
 if __name__ == '__main__':

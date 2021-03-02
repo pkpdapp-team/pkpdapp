@@ -5,9 +5,8 @@
 #
 from django import forms
 from pkpdapp.models.dataset import ADMINISTRATION_TYPE_CHOICES
-from pkpdapp.models import (
-    DosedPharmacokineticModel, PharmacodynamicModel, Project
-)
+from pkpdapp.models import (DosedPharmacokineticModel, PharmacodynamicModel,
+                            Project)
 from django.core.exceptions import ValidationError
 import xml.etree.ElementTree as ET
 from django.utils.translation import gettext as _
@@ -28,34 +27,30 @@ class CreateNewDataset(forms.Form):
     """
 
     name = forms.CharField(label='Name',
-                           max_length=100, help_text='name of the dataset')
+                           max_length=100,
+                           help_text='name of the dataset')
 
-    description = forms.CharField(
-        widget=forms.Textarea,
-        label='Description',
-        help_text='short description of the dataset',
-        required=False
-    )
+    description = forms.CharField(widget=forms.Textarea,
+                                  label='Description',
+                                  help_text='short description of the dataset',
+                                  required=False)
 
     datetime = forms.DateTimeField(
         label='Date-time',
         required=False,
-        help_text=(
-            'Date/time the experiment was conducted. ' +
-            'All time measurements are relative to this date/time.'
-        ),
+        help_text=('Date/time the experiment was conducted. ' +
+                   'All time measurements are relative to this date/time.'),
         error_messages={
-            'required': 'This field is required',
-            'invalid': ('Enter a valid date/time. ' +
-                        'For example, 2020-10-25 14:30:59.')
-        }
-    )
+            'required':
+            'This field is required',
+            'invalid':
+            ('Enter a valid date/time. ' + 'For example, 2020-10-25 14:30:59.')
+        })
 
     administration_type = forms.ChoiceField(
         label='Administration type',
         choices=ADMINISTRATION_TYPE_CHOICES,
-        help_text='method of drug administration'
-    )
+        help_text='method of drug administration')
 
     file = forms.FileField(label='Data file', validators=[file_size])
 
@@ -69,16 +64,19 @@ class CreateNewBiomarkerUnit(forms.Form):
         ('g', 'g'),
         ('cm3', 'cm^3'),
     ]
-    unit = forms.ChoiceField(
-        label='',
-        choices=UNIT_CHOICES
-    )
+    unit = forms.ChoiceField(label='', choices=UNIT_CHOICES)
 
     description = forms.CharField(
-        widget=forms.Textarea(attrs={'rows': 2, 'cols': 25}),
+        widget=forms.Textarea(
+            attrs={
+                'rows': 2,
+                'cols': 25
+            }
+        ),
         label='Description',
         required=False
     )
+
 
 class CreateNewDosedPharmokineticModel(forms.ModelForm):
     """
@@ -99,9 +97,11 @@ class CreateNewDosedPharmokineticModel(forms.ModelForm):
 
     class Meta:
         model = DosedPharmacokineticModel
-        fields = ['pharmacokinetic_model', 'dose_compartment', 'direct_dose',
-              'dose_amount', 'dose_start',
-              'dose_duration', 'dose_period', 'number_of_doses']
+        fields = [
+            'pharmacokinetic_model', 'dose_compartment', 'direct_dose',
+            'dose_amount', 'dose_start', 'dose_duration', 'dose_period',
+            'number_of_doses'
+        ]
 
     def save(self, commit=True):
         instance = super().save()
@@ -112,6 +112,7 @@ class CreateNewDosedPharmokineticModel(forms.ModelForm):
                 project.save()
 
         return instance
+
 
 class CreateNewPharmodynamicModel(forms.ModelForm):
     """
@@ -140,15 +141,11 @@ class CreateNewPharmodynamicModel(forms.ModelForm):
         sbml_file = self.cleaned_data.get("sbml")
         try:
             sbml_et = ET.parse(sbml_file).getroot()
-            sbml = ET.tostring(
-                sbml_et, encoding='unicode', method='xml'
-            )
+            sbml = ET.tostring(sbml_et, encoding='unicode', method='xml')
         except ET.ParseError:
             raise forms.ValidationError(
-                _((
-                    'Error parsing file, '
-                    '%(filename)s does not seem to be valid XML'
-                )),
+                _(('Error parsing file, '
+                   '%(filename)s does not seem to be valid XML')),
                 code='invalid',
                 params={'filename': sbml_file.name},
             )

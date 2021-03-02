@@ -3,13 +3,16 @@
 # is released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
+# flake8: noqa f401
 
 from .pkpd_model import (
-    MechanisticModel, PharmacokineticModel, PharmacodynamicModel,
-    DosedPharmacokineticModel
-)   # noqa: F401
-from .dataset import Dataset  # noqa: F401
-from .biomarker_type import BiomarkerType  # noqa: F401
-from .biomarker import Biomarker  # noqa: F401
-from .project import Project  # noqa: F401
-from .profile import Profile  # noqa: F401
+    MechanisticModel,
+    PharmacokineticModel,
+    PharmacodynamicModel,
+    DosedPharmacokineticModel,
+)
+from .dataset import Dataset
+from .biomarker_type import BiomarkerType
+from .biomarker import Biomarker
+from .project import Project
+from .profile import Profile

@@ -27,7 +27,6 @@ class InferenceController(object):
         :class:`LogPosterior` instances. If multiple log-posteriors are
         provided, they have to be defined on the same parameter space.
     """
-
     def __init__(self, log_posterior):
         super(InferenceController, self).__init__()
 
@@ -41,9 +40,8 @@ class InferenceController(object):
 
         for log_posterior in log_posteriors:
             if not isinstance(log_posterior, erlo.LogPosterior):
-                raise ValueError(
-                    'Log-posterior has to be an instance of a '
-                    '`erlotinib.LogPosterior`.')
+                raise ValueError('Log-posterior has to be an instance of a '
+                                 '`erlotinib.LogPosterior`.')
 
         # Check that the log-posteriors have the same number of parameters
         n_parameters = log_posteriors[0].n_parameters()
@@ -62,17 +60,15 @@ class InferenceController(object):
         self._transform = None
 
         # Get parameter names
-        self._parameters = list(
-            self._log_posteriors[0].get_parameter_names())
+        self._parameters = list(self._log_posteriors[0].get_parameter_names())
 
         # Get number of parameters
         self._n_parameters = self._log_prior.n_parameters()
 
         # Sample initial parameters from log-prior
-        self._initial_params = np.empty(shape=(
-            len(self._log_posteriors),
-            self._n_runs,
-            self._n_parameters))
+        self._initial_params = np.empty(shape=(len(self._log_posteriors),
+                                               self._n_runs,
+                                               self._n_parameters))
         self._sample_initial_parameters()
 
     def _sample_initial_parameters(self):
@@ -95,7 +91,7 @@ class InferenceController(object):
                 n_ids = log_likelihood.n_log_likelihoods()
                 population_models = log_likelihood.get_population_models()
                 self._initial_params[index] = self._sample_population(
-                        index, n_ids, population_models)
+                    index, n_ids, population_models)
 
     def _sample_population(self, index, n_ids, population_models):
         """
@@ -150,10 +146,9 @@ class InferenceController(object):
         self._n_runs = int(n_runs)
 
         # Sample initial parameters from log-prior
-        self._initial_params = np.empty(shape=(
-            len(self._log_posteriors),
-            self._n_runs,
-            self._n_parameters))
+        self._initial_params = np.empty(shape=(len(self._log_posteriors),
+                                               self._n_runs,
+                                               self._n_parameters))
         for index in range(len(self._log_posteriors)):
             self._initial_params[index] = self._log_prior.sample(self._n_runs)
 
@@ -173,8 +168,7 @@ class InferenceController(object):
             raise ValueError(
                 '`run_in_parallel` has to a boolean or an integer.')
         if run_in_parallel < 0:
-            raise ValueError(
-                '`run_in_parallel` cannot be negative.')
+            raise ValueError('`run_in_parallel` cannot be negative.')
 
         self._parallel_evaluation = run_in_parallel
 
@@ -221,16 +215,17 @@ class OptimisationController(InferenceController):
         :class:`LogPosterior` instances. If multiple log-posteriors are
         provided, they have to be defined on the same parameter space.
     """
-
     def __init__(self, log_posterior):
         super(OptimisationController, self).__init__(log_posterior)
 
         # Set default optimiser
         self._optimiser = pints.CMAES
 
-    def run(
-            self, n_max_iterations=10000, show_id_progress_bar=False,
-            show_run_progress_bar=False, log_to_screen=False):
+    def run(self,
+            n_max_iterations=10000,
+            show_id_progress_bar=False,
+            show_run_progress_bar=False,
+            log_to_screen=False):
         """
         Runs the optimisation and returns the maximum a posteriori probability
         parameter estimates in from of a :class:`pandas.DataFrame` with the
@@ -268,8 +263,8 @@ class OptimisationController(InferenceController):
         run_result['Parameter'] = self._parameters
 
         # Get posterior
-        for posterior_id, log_posterior in enumerate(tqdm(
-                self._log_posteriors, disable=not show_id_progress_bar)):
+        for posterior_id, log_posterior in enumerate(
+                tqdm(self._log_posteriors, disable=not show_id_progress_bar)):
             individual_result = pd.DataFrame(
                 columns=['ID', 'Parameter', 'Estimate', 'Score', 'Run'])
 
@@ -277,8 +272,8 @@ class OptimisationController(InferenceController):
             run_result['ID'] = log_posterior.get_id()
 
             # Run optimisation multiple times
-            for run_id in tqdm(
-                    range(self._n_runs), disable=not show_run_progress_bar):
+            for run_id in tqdm(range(self._n_runs),
+                               disable=not show_run_progress_bar):
                 opt = pints.OptimisationController(
                     function=log_posterior,
                     x0=self._initial_params[posterior_id, run_id, :],
@@ -315,8 +310,7 @@ class OptimisationController(InferenceController):
         estimates.
         """
         if not issubclass(optimiser, pints.Optimiser):
-            raise ValueError(
-                'Optimiser has to be a `pints.Optimiser`.')
+            raise ValueError('Optimiser has to be a `pints.Optimiser`.')
         self._optimiser = optimiser
 
 
@@ -334,7 +328,6 @@ class SamplingController(InferenceController):
 
     Extends :class:`InferenceController`.
     """
-
     def __init__(self, log_posterior):
         super(SamplingController, self).__init__(log_posterior)
 
@@ -364,8 +357,9 @@ class SamplingController(InferenceController):
 
         return zip(ids, parameters)
 
-    def run(
-            self, n_iterations=10000, show_progress_bar=False,
+    def run(self,
+            n_iterations=10000,
+            show_progress_bar=False,
             log_to_screen=False):
         """
         Runs the sampling routine and returns the sampled parameter values in
@@ -386,8 +380,8 @@ class SamplingController(InferenceController):
         result = pd.DataFrame(
             columns=['ID', 'Parameter', 'Sample', 'Iteration', 'Run'])
 
-        for posterior_id, log_posterior in enumerate(tqdm(
-                self._log_posteriors, disable=not show_progress_bar)):
+        for posterior_id, log_posterior in enumerate(
+                tqdm(self._log_posteriors, disable=not show_progress_bar)):
             # Set up sampler
             sampler = pints.MCMCController(
                 log_pdf=log_posterior,
@@ -421,8 +415,8 @@ class SamplingController(InferenceController):
 
             # Sort pints sample output into dataframe format
             for run_id, samples in enumerate(output):
-                run_results['Iteration'] = np.arange(
-                    start=1, stop=len(samples)+1)
+                run_results['Iteration'] = np.arange(start=1,
+                                                     stop=len(samples) + 1)
                 run_results['Run'] = run_id + 1
 
                 for param_id, name in enumerate(self._parameters):
@@ -437,9 +431,13 @@ class SamplingController(InferenceController):
 
         return result
 
-    def set_initial_parameters(
-            self, data, id_key='ID', param_key='Parameter', est_key='Estimate',
-            score_key='Score', run_key='Run'):
+    def set_initial_parameters(self,
+                               data,
+                               id_key='ID',
+                               param_key='Parameter',
+                               est_key='Estimate',
+                               score_key='Score',
+                               run_key='Run'):
         """
         Sets the initial parameter values of the MCMC runs to the parameter set
         with the maximal a posteriori probability across a number of parameter
@@ -480,13 +478,12 @@ class SamplingController(InferenceController):
         """
         # Check input format
         if not isinstance(data, pd.DataFrame):
-            raise TypeError(
-                'Data has to be pandas.DataFrame.')
+            raise TypeError('Data has to be pandas.DataFrame.')
 
         for key in [id_key, param_key, est_key, score_key, run_key]:
             if key not in data.keys():
-                raise ValueError(
-                    'Data does not have the key <' + str(key) + '>.')
+                raise ValueError('Data does not have the key <' + str(key) +
+                                 '>.')
 
         # Convert dataframe IDs and parameter names to strings
         data = data.astype({id_key: str, param_key: str})
@@ -557,7 +554,5 @@ class SamplingController(InferenceController):
         Sets method that is used to sample from the log-posterior.
         """
         if not issubclass(sampler, pints.MCMCSampler):
-            raise ValueError(
-                'Sampler has to be a `pints.MCMCSampler`.'
-            )
+            raise ValueError('Sampler has to be a `pints.MCMCSampler`.')
         self._sampler = sampler

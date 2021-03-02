@@ -4,27 +4,23 @@
 # copyright notice and full license details.
 #
 
-from django.views.generic import (
-    DetailView, CreateView,
-    UpdateView, DeleteView,
-    ListView, TemplateView
-)
+from django.views.generic import (DetailView, CreateView, UpdateView,
+                                  DeleteView, ListView)
 from django.contrib.auth.mixins import LoginRequiredMixin
 from pkpdapp.forms import (
     CreateNewPharmodynamicModel,
     CreateNewDosedPharmokineticModel,
 )
 from django.urls import reverse_lazy
-from pkpdapp.models import (
-    PharmacokineticModel, DosedPharmacokineticModel, PharmacodynamicModel,
-    Biomarker, BiomarkerType
-)
+from pkpdapp.models import (PharmacokineticModel, DosedPharmacokineticModel,
+                            PharmacodynamicModel, Biomarker, BiomarkerType)
 import pandas as pd
 from pkpdapp.dash_apps.simulation import PKSimulationApp, PDSimulationApp
 import pkpdapp.erlotinib as erlo
 from dash.dependencies import Input, Output
 import dash
 from myokit.formats.sbml import SBMLParsingError
+
 
 def create_dash_app(model, project):
     # create dash app
@@ -56,17 +52,11 @@ def create_dash_app(model, project):
                 param_names_dict[p] = p.replace('.', '_')
             erlo_m.set_parameter_names(names=param_names_dict)
             app.add_model(erlo_m, m.name, use=True)
-            app.set_administration(
-                model.dose_compartment,
-                direct=model.direct_dose
-            )
-            app.set_dosing_regimen(
-                model.dose_amount,
-                model.dose_start,
-                model.dose_duration,
-                model.dose_period,
-                model.number_of_doses
-            )
+            app.set_administration(model.dose_compartment,
+                                   direct=model.direct_dose)
+            app.set_dosing_regimen(model.dose_amount, model.dose_start,
+                                   model.dose_duration, model.dose_period,
+                                   model.number_of_doses)
         except SBMLParsingError:
             pass
 
@@ -105,10 +95,10 @@ def create_dash_app(model, project):
         offsets.append(offsets[i - 1] + n_params[i])
 
     # Define simulation callbacks
-    @app.app.callback(Output('fig', 'figure'),
-                      [Input(s, 'value') for s in sum(sliders, [])],
-                      [Input('dataset-select', 'value'),
-                       Input('biomarker-select', 'value')])
+    @app.app.callback(
+        Output('fig', 'figure'), [Input(s, 'value') for s in sum(sliders, [])],
+        [Input('dataset-select', 'value'),
+         Input('biomarker-select', 'value')])
     def update_simulation(*args):
         """
         if the models, datasets or biomarkers are
@@ -138,6 +128,7 @@ def create_dash_app(model, project):
             return app.update_simulation(model_index, parameters)
 
         return app._fig._fig
+
     return app
 
 
@@ -146,15 +137,15 @@ class PharmacodynamicModelDetailView(LoginRequiredMixin, DetailView):
     template_name = 'pd_model_detail.html'
 
     def get(self, request, *args, **kwargs):
-        self._app = create_dash_app(
-            self.get_object(), self.request.user.profile.selected_project
-        )
+        self._app = create_dash_app(self.get_object(),
+                                    self.request.user.profile.selected_project)
         return super().get(request)
 
 
 class PharmacodynamicModelListView(ListView):
     model = PharmacodynamicModel
     template_name = 'pd_model_list.html'
+
 
 class PharmacodynamicModelCreate(CreateView):
     model = PharmacodynamicModel
@@ -168,10 +159,9 @@ class PharmacodynamicModelCreate(CreateView):
         return kwargs
 
     def get_success_url(self):
-        return reverse_lazy(
-            'pd_model-detail',
-            kwargs={'pk': self.object.pk}
-        )
+        return reverse_lazy('pd_model-detail', kwargs={'pk': self.object.pk})
+
+
 class PharmacodynamicModelUpdate(UpdateView):
     model = PharmacodynamicModel
     fields = ['name', 'description', 'sbml']
@@ -183,18 +173,21 @@ class PharmacodynamicModelDeleteView(DeleteView):
     success_url = reverse_lazy('pd_model-list')
     template_name = 'pd_model_confirm_delete.html'
 
+
 class DosedPharmacokineticModelDetail(LoginRequiredMixin, DetailView):
     template_name = 'dosed_pharmacokinetic_detail.html'
-    fields = ['pharmacokinetic_model', 'dose_compartment', 'direct_dose',
-              'dose_amount', 'dose_start',
-              'dose_duration', 'dose_period', 'number_of_doses']
+    fields = [
+        'pharmacokinetic_model', 'dose_compartment', 'direct_dose',
+        'dose_amount', 'dose_start', 'dose_duration', 'dose_period',
+        'number_of_doses'
+    ]
     model = DosedPharmacokineticModel
 
     def get(self, request, *args, **kwargs):
-        self._app = create_dash_app(
-            self.get_object(), self.request.user.profile.selected_project
-        )
+        self._app = create_dash_app(self.get_object(),
+                                    self.request.user.profile.selected_project)
         return super().get(request)
+
 
 class DosedPharmacokineticModelCreate(LoginRequiredMixin, CreateView):
     template_name = 'dosed_pharmacokinetic_create.html'
@@ -207,25 +200,25 @@ class DosedPharmacokineticModelCreate(LoginRequiredMixin, CreateView):
             kwargs['project'] = self.kwargs['project']
         return kwargs
 
+
 class DosedPharmacokineticModelUpdate(LoginRequiredMixin, UpdateView):
     """
     This class defines the interface for model simulation.
     """
     template_name = 'dosed_pharmacokinetic_update.html'
     model = DosedPharmacokineticModel
-    fields = ['pharmacokinetic_model', 'dose_compartment', 'direct_dose',
-              'dose_amount', 'dose_start',
-              'dose_duration', 'dose_period', 'number_of_doses']
-
+    fields = [
+        'pharmacokinetic_model', 'dose_compartment', 'direct_dose',
+        'dose_amount', 'dose_start', 'dose_duration', 'dose_period',
+        'number_of_doses'
+    ]
 
     def get(self, request, *args, **kwargs):
-        self._app = create_dash_app(
-            self.get_object(), self.request.user.profile.selected_project
-        )
+        self._app = create_dash_app(self.get_object(),
+                                    self.request.user.profile.selected_project)
         return super().get(request)
+
 
 class PharmacokineticModelDetail(DetailView):
     model = PharmacokineticModel
     template_name = 'pk_model_detail.html'
-
-

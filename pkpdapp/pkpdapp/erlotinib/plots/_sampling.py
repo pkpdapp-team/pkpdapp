@@ -30,7 +30,6 @@ class MarginalPosteriorPlot(eplt.MultiSubplotFigure):
 
     Extends :class:`MultiFigure`.
     """
-
     def __init__(self):
         super(MarginalPosteriorPlot, self).__init__()
 
@@ -49,8 +48,8 @@ class MarginalPosteriorPlot(eplt.MultiSubplotFigure):
         for index, individual in enumerate(ids):
             # Get individual data
             mask = data[self._id_key] == individual
-            samples = data[
-                [self._sample_key, self._iter_key, self._run_key]][mask]
+            samples = data[[self._sample_key, self._iter_key,
+                            self._run_key]][mask]
 
             # Compute diagnostics
             diagnostics = self._compute_diagnostics(samples)
@@ -58,11 +57,11 @@ class MarginalPosteriorPlot(eplt.MultiSubplotFigure):
             # Add trace
             color = colors[index % n_colors]
             samples = samples[self._sample_key]
-            self._add_trace(
-                fig_id, index, individual, samples, diagnostics, color)
+            self._add_trace(fig_id, index, individual, samples, diagnostics,
+                            color)
 
-    def _add_trace(
-            self, fig_id, index, individual, samples, diagnostics, color):
+    def _add_trace(self, fig_id, index, individual, samples, diagnostics,
+                   color):
         """
         Adds a histogram of an indiviudals samples to a figure.
         """
@@ -71,24 +70,18 @@ class MarginalPosteriorPlot(eplt.MultiSubplotFigure):
 
         # Add trace
         rhat, = diagnostics
-        fig.add_trace(
-            go.Histogram(
-                y=samples,
-                name='%s' % str(individual),
-                hovertemplate=(
-                    'Sample: %{y:.2f}<br>' +
-                    'Rhat: %.02f<br>' % rhat),
-                visible=True,
-                marker=dict(color=color),
-                opacity=0.8),
-            row=1,
-            col=index+1)
+        fig.add_trace(go.Histogram(y=samples,
+                                   name='%s' % str(individual),
+                                   hovertemplate=('Sample: %{y:.2f}<br>' +
+                                                  'Rhat: %.02f<br>' % rhat),
+                                   visible=True,
+                                   marker=dict(color=color),
+                                   opacity=0.8),
+                      row=1,
+                      col=index + 1)
 
         # Turn off xaxis ticks
-        fig.update_xaxes(
-            tickvals=[],
-            row=1,
-            col=index+1)
+        fig.update_xaxes(tickvals=[], row=1, col=index + 1)
 
     def _compute_diagnostics(self, data):
         """
@@ -115,9 +108,14 @@ class MarginalPosteriorPlot(eplt.MultiSubplotFigure):
 
         return diagnostics
 
-    def add_data(
-            self, data, warm_up_iter=0, id_key='ID', param_key='Parameter',
-            sample_key='Sample', iter_key='Iteration', run_key='Run'):
+    def add_data(self,
+                 data,
+                 warm_up_iter=0,
+                 id_key='ID',
+                 param_key='Parameter',
+                 sample_key='Sample',
+                 iter_key='Iteration',
+                 run_key='Run'):
         """
         Adds marginal histograms of the samples across runs to the figure. The
         estimates are grouped by the individual ID.
@@ -151,14 +149,13 @@ class MarginalPosteriorPlot(eplt.MultiSubplotFigure):
         """
         # Check input format
         if not isinstance(data, pd.DataFrame):
-            raise TypeError(
-                'Data has to be pandas.DataFrame.')
+            raise TypeError('Data has to be pandas.DataFrame.')
 
         keys = [param_key, id_key, sample_key, iter_key, run_key]
         for key in keys:
             if key not in data.keys():
-                raise ValueError(
-                    'Data does not have the key <' + str(key) + '>.')
+                raise ValueError('Data does not have the key <' + str(key) +
+                                 '>.')
         self._id_key, self._sample_key, self._iter_key, self._run_key = keys[
             1:]
 
@@ -172,8 +169,10 @@ class MarginalPosteriorPlot(eplt.MultiSubplotFigure):
 
         # Create a template figure (assigns it to self._fig)
         n_ids = len(data[id_key].unique())
-        self._create_template_figure(
-            rows=1, cols=n_ids, x_title='Normalised counts', spacing=0.01)
+        self._create_template_figure(rows=1,
+                                     cols=n_ids,
+                                     x_title='Normalised counts',
+                                     spacing=0.01)
 
         # Create one figure for each parameter
         figs = []
@@ -185,9 +184,10 @@ class MarginalPosteriorPlot(eplt.MultiSubplotFigure):
             number_ids = len(data[mask][id_key].unique())
             if number_ids != n_ids:
                 # Create a new template
-                self._create_template_figure(
-                    rows=1, cols=number_ids, x_title='Normalised counts',
-                    spacing=0.01)
+                self._create_template_figure(rows=1,
+                                             cols=number_ids,
+                                             x_title='Normalised counts',
+                                             spacing=0.01)
 
             # Append a copy of the template figure to all figures
             figs.append(copy.copy(self._fig))
@@ -201,8 +201,7 @@ class MarginalPosteriorPlot(eplt.MultiSubplotFigure):
         # Add estimates to parameter figures
         for index, parameter in enumerate(parameters):
             # Set y label of plot to parameter name
-            self._figs[index].update_yaxes(
-                title_text=parameter, row=1, col=1)
+            self._figs[index].update_yaxes(title_text=parameter, row=1, col=1)
 
             # Get estimates for this parameter
             mask = data[param_key] == parameter

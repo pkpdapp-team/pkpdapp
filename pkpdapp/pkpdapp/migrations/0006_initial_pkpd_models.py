@@ -12,8 +12,10 @@ import codecs
 def load_pkpd_models(apps, schema_editor):
     models_pd = [
         {
-            'name': 'tumour_growth_inhibition_model_koch',
-            'description': '''
+            'name':
+            'tumour_growth_inhibition_model_koch',
+            'description':
+            '''
 Tumour growth inhibition pharmacodynamic model introduced by Koch et al. in
 [1].  In this model the tumour growth inhibition is modelled by an empirical
 model of the tumour volume \(V_T\) over time
@@ -52,7 +54,8 @@ $$
         {
             'name':
             'tumour_growth_inhibition_model_koch_reparametrised',
-            'description': """
+            'description':
+            """
 Returns the absolute path to a SBML file, specifying the tumour growth
 inhibition pharmacodynamic model introduced by Koch et al. in [1]_ with
 modified parametrisation.
@@ -87,10 +90,11 @@ parametersation in [1]_ by
             'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/models/tgi_Koch_2009_reparametrised.xml'  # noqa: E501
         },
     ]
-    models_pk = [
-        {
-            'name': 'one_compartment_pk_model',
-            'description': """
+    models_pk = [{
+        'name':
+        'one_compartment_pk_model',
+        'description':
+        """
 Returns the absolute path to a SBML file, specifying a one compartment
 pharmacokinetic model.
 
@@ -113,25 +117,20 @@ With a :class:`erlotinib.PharmacokineticModel` the drug may be either
 directly administered to :math:`A` or indirectly through a dosing
 compartment.
 """,  # noqa: W605
-            'sbml_url':
-            'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/models/pk_one_comp.xml'  # noqa: E501
-        }
-    ]
+        'sbml_url':
+        'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/models/pk_one_comp.xml'  # noqa: E501
+    }]
 
-    PharmacodynamicModel = apps.get_model("pkpdapp",
-                                          "PharmacodynamicModel")
-    PharmacokineticModel= apps.get_model("pkpdapp",
-                                         "PharmacokineticModel")
+    PharmacodynamicModel = apps.get_model("pkpdapp", "PharmacodynamicModel")
+    PharmacokineticModel = apps.get_model("pkpdapp", "PharmacokineticModel")
     Project = apps.get_model("pkpdapp", "Project")
     for m in models_pd:
         with urllib.request.urlopen(m['sbml_url']) as f:
             # parse as csv file
             sbml_string = codecs.decode(f.read(), 'utf-8')
-            pkpd_model = PharmacodynamicModel(
-                name=m['name'],
-                description=m['description'],
-                sbml=sbml_string
-            )
+            pkpd_model = PharmacodynamicModel(name=m['name'],
+                                              description=m['description'],
+                                              sbml=sbml_string)
             pkpd_model.save()
             # add to demo project
             demo_project = Project.objects.get(name='demo')
@@ -141,11 +140,9 @@ compartment.
         with urllib.request.urlopen(m['sbml_url']) as f:
             # parse as csv file
             sbml_string = codecs.decode(f.read(), 'utf-8')
-            pkpd_model = PharmacokineticModel(
-                name=m['name'],
-                description=m['description'],
-                sbml=sbml_string
-            )
+            pkpd_model = PharmacokineticModel(name=m['name'],
+                                              description=m['description'],
+                                              sbml=sbml_string)
             pkpd_model.save()
 
 

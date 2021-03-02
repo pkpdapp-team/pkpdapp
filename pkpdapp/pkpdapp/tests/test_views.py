@@ -11,7 +11,7 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 import re
 from pkpdapp.models import (
-    Dataset, DosedPharmacokineticModel, PharmacodynamicModel,
+    Dataset, PharmacodynamicModel,
     Project, BiomarkerType, Biomarker
 )
 from http import HTTPStatus

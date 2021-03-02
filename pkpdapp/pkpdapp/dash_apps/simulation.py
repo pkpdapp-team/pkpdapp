@@ -14,7 +14,6 @@ import pandas as pd
 from .base import BaseApp
 
 
-
 class SimulationApp(BaseApp):
     """
     Creates an app which simulates multiple
@@ -103,11 +102,13 @@ class SimulationApp(BaseApp):
         create selects for model, dataset and biomarkers up the top of the dash
         app
         """
-        model_dropdown = dcc.Dropdown(id='model-select',
-                             options=[{
-                                 'label': name,
-                                 'value': i
-                             } for i, name in enumerate(self._model_names)])
+        model_dropdown = dcc.Dropdown(
+            id='model-select',
+            options=[{
+                'label': name,
+                'value': i
+            } for i, name in enumerate(self._model_names)]
+        )
 
         if self._multiple_models:
             model_dropdown.multi = True
@@ -116,22 +117,24 @@ class SimulationApp(BaseApp):
             model_dropdown.multi = False
             model_dropdown.value = self._use_models[0]
 
-        dataset_dropdown = dcc.Dropdown(id='dataset-select',
-                             options=[{
-                                 'label': name,
-                                 'value': i
-                             } for i, name in enumerate(self._dataset_names)],
-                             value=self._use_datasets,
-                             multi=True)
+        dataset_dropdown = dcc.Dropdown(
+            id='dataset-select',
+            options=[{
+                'label': name,
+                'value': i
+            } for i, name in enumerate(self._dataset_names)],
+            value=self._use_datasets,
+            multi=True
+        )
 
         biomarker_dropdown = dcc.Dropdown(
-                    id='biomarker-select',
-                    options=[{
-                        'label': name,
-                        'value': name
-                    } for name in self._data_biomarkers],
-                    value=self._use_biomarkers,
-                )
+            id='biomarker-select',
+            options=[{
+                'label': name,
+                'value': name
+            } for name in self._data_biomarkers],
+            value=self._use_biomarkers,
+        )
 
         cols = []
         if len(self._models) > 1:
@@ -369,7 +372,7 @@ class SimulationApp(BaseApp):
         use
             Set to True if you want this model to be initially chosen
         """
-        if not (isinstance(model, erlo.PharmacodynamicModel) or \
+        if not (isinstance(model, erlo.PharmacodynamicModel) or
                 isinstance(model, erlo.PharmacokineticModel)):
             raise TypeError('Model has to be an instance of '
                             'erlotinib.PharmacodynamicModel '
@@ -518,12 +521,13 @@ class PKSimulationApp(SimulationApp):
         self._models[0].set_administration(
             self._compartment, direct=self._direct
         )
-        print('set dosing to', self._dose, self._start, self._duration, self._period,
-              self._num)
+        print('set dosing to', self._dose, self._start,
+              self._duration, self._period, self._num)
         self._models[0].set_dosing_regimen(
             self._dose, self._start, self._duration, self._period, self._num
         )
         super(PKSimulationApp, self)._add_simulation_to_fig()
+
 
 class PDSimulationApp(SimulationApp):
     """
@@ -564,9 +568,6 @@ class PDSimulationApp(SimulationApp):
                             'erlotinib.PharmacodynamicModel.')
 
         super(PDSimulationApp, self).add_model(model, name, use)
-
-
-
 
 
 class _SlidersComponent(object):

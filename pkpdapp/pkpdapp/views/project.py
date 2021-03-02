@@ -4,11 +4,8 @@
 # copyright notice and full license details.
 #
 
-from django.views.generic import (
-    DetailView, CreateView,
-    UpdateView, DeleteView,
-    ListView
-)
+from django.views.generic import (DetailView, CreateView, UpdateView,
+                                  DeleteView, ListView)
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
 from pkpdapp.models import Project
@@ -37,9 +34,7 @@ class ProjectDetailView(LoginRequiredMixin, DetailView):
             queryset = self.get_queryset()
         if "pk" in self.kwargs:
             try:
-                return queryset.get(
-                    id=self.kwargs.get("pk")
-                )
+                return queryset.get(id=self.kwargs.get("pk"))
             except Project.DoesNotExist:
                 raise Http404
         else:
@@ -63,7 +58,9 @@ class ProjectCreate(LoginRequiredMixin, CreateView):
 class ProjectUpdate(LoginRequiredMixin, UpdateView):
     model = Project
     template_name = 'project_form.html'
-    fields = ['name', 'description', 'users', 'datasets', 'pk_models', 'pd_models']
+    fields = [
+        'name', 'description', 'users', 'datasets', 'pk_models', 'pd_models'
+    ]
 
 
 class ProjectDelete(LoginRequiredMixin, DeleteView):

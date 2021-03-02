@@ -7,7 +7,7 @@
 from django.test import TestCase
 from pkpdapp.models import (
     Dataset, Project, Biomarker, BiomarkerType,
-    PharmacodynamicModel, DosedPharmacokineticModel,
+    PharmacodynamicModel,
 )
 from django.contrib.auth.models import User
 from django.utils import timezone

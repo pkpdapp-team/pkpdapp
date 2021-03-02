@@ -13,21 +13,20 @@ class BaseApp(object):
     """
     Base class for applications.
     """
-
     def __init__(self, name):
         super(BaseApp, self).__init__()
 
         # Create basic app
-        self.app = dash.Dash(
-            name=name, external_stylesheets=[dbc.themes.BOOTSTRAP])
+        self.app = dash.Dash(name=name,
+                             external_stylesheets=[dbc.themes.BOOTSTRAP])
 
         self.app.layout = dbc.Container(
             children=[
-                dbc.Alert(
-                    children="No app content has been added!",
-                    color="primary"),
-                ],
-            style={'marginTop': '15em'},)
+                dbc.Alert(children="No app content has been added!",
+                          color="primary"),
+            ],
+            style={'marginTop': '15em'},
+        )
 
     def start_application(self, debug=False):
         self.app.run_server(debug=debug)
