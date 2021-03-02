@@ -16,7 +16,7 @@ import numpy as np
 import pandas as pd
 import pints
 
-import erlotinib as erlo
+import pkpdapp.erlotinib as erlo
 
 
 class InverseProblem(object):

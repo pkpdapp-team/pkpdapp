@@ -13,8 +13,8 @@ import dash_html_components as html
 import numpy as np
 import pandas as pd
 
-import erlotinib as erlo
-import erlotinib.apps as apps
+import pkpdapp.erlotinib as erlo
+import pkpdapp.erlotinib.apps as apps
 
 
 class PDSimulationController(apps.BaseApp):

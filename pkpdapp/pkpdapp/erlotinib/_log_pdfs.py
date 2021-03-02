@@ -10,7 +10,7 @@ import copy
 import numpy as np
 import pints
 
-import erlotinib as erlo
+import pkpdapp.erlotinib as erlo
 
 
 class HierarchicalLogLikelihood(pints.LogPDF):

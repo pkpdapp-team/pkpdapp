@@ -12,7 +12,7 @@ import pandas as pd
 import pints
 from tqdm.notebook import tqdm
 
-import erlotinib as erlo
+import pkpdapp.erlotinib as erlo
 
 
 class InferenceController(object):

@@ -13,7 +13,7 @@ import pints
 import plotly.colors
 import plotly.graph_objects as go
 
-import erlotinib.plots as eplt
+import pkpdapp.erlotinib.plots as eplt
 
 
 class MarginalPosteriorPlot(eplt.MultiSubplotFigure):

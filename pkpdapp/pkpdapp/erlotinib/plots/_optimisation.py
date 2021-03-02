@@ -11,7 +11,7 @@ import pandas as pd
 import plotly.colors
 import plotly.graph_objects as go
 
-import erlotinib.plots as eplt
+import pkpdapp.erlotinib.plots as eplt
 
 
 class ParameterEstimatePlot(eplt.MultiFigure):
