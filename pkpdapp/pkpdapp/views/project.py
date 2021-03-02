@@ -63,7 +63,7 @@ class ProjectCreate(LoginRequiredMixin, CreateView):
 class ProjectUpdate(LoginRequiredMixin, UpdateView):
     model = Project
     template_name = 'project_form.html'
-    fields = ['name', 'description', 'users', 'datasets', 'pkpd_models']
+    fields = ['name', 'description', 'users', 'datasets', 'pk_models', 'pd_models']
 
 
 class ProjectDelete(LoginRequiredMixin, DeleteView):

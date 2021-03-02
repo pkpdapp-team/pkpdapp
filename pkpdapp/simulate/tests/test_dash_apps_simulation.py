@@ -6,17 +6,17 @@
 
 import unittest
 
-import erlotinib as erlo
+import pkpdapp.erlotinib as erlo
 import plotly.graph_objects as go
 import dash_bootstrap_components as dbc
 from pkpdapp.models import (
-    PkpdModel
+    PharmacodynamicModel
 )
 import pandas as pd
 import codecs
 import urllib.request
 
-from ..dash_apps.simulation import PDSimulationApp
+from pkpdapp.dash_apps.simulation import PDSimulationApp
 
 
 class TestPDSimulationApp(unittest.TestCase):
@@ -32,10 +32,9 @@ class TestPDSimulationApp(unittest.TestCase):
         with urllib.request.urlopen(sbml_url) as f:
             # parse as csv file
             sbml_string = codecs.decode(f.read(), 'utf-8')
-            self.m = PkpdModel(
+            self.m = PharmacodynamicModel(
                 name='test',
                 description='test',
-                model_type='PK',
                 sbml=sbml_string
             )
 

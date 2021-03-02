@@ -6,7 +6,8 @@
 
 from django.test import TestCase
 from pkpdapp.models import (
-    Dataset, Project, Biomarker, BiomarkerType, PkpdModel
+    Dataset, Project, Biomarker, BiomarkerType,
+    PharmacodynamicModel, DosedPharmacokineticModel,
 )
 from django.contrib.auth.models import User
 from django.utils import timezone
@@ -61,15 +62,14 @@ class TestBiomarkerModel(TestCase):
         self.assertTrue(isinstance(b, Biomarker))
 
 
-class TestPkpdModel(TestCase):
-    def test_pkpd_model_creation(self):
-        m = PkpdModel.objects.create(
+class TestPharmodynamicModel(TestCase):
+    def test_pd_model_creation(self):
+        m = PharmacodynamicModel.objects.create(
             name='my_cool_model',
             description='description for my cool model',
-            model_type='PK',
             sbml='sbml_here',
         )
-        self.assertTrue(isinstance(m, PkpdModel))
+        self.assertTrue(isinstance(m, PharmacodynamicModel))
 
 
 class TestProfileModel(TestCase):
@@ -108,14 +108,13 @@ class TestProjectModel(TestCase):
         p.datasets.add(d)
         self.assertQuerysetEqual(p.datasets.all(), [repr(d)])
 
-        m = PkpdModel.objects.create(
+        m = PharmacodynamicModel.objects.create(
             name='my_cool_model',
             description='description for my cool model',
-            model_type='PK',
             sbml='sbml_here',
         )
-        p.pkpd_models.add(m)
-        self.assertQuerysetEqual(p.pkpd_models.all(), [repr(m)])
+        p.pd_models.add(m)
+        self.assertQuerysetEqual(p.pd_models.all(), [repr(m)])
 
         u = User.objects.create_user(
             'john', 'lennon@thebeatles.com', 'johnpassword'

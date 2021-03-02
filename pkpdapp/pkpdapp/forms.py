@@ -158,7 +158,7 @@ class CreateNewPharmodynamicModel(forms.ModelForm):
         instance = super().save()
         if self.project_id is not None:
             project = Project.objects.get(id=self.project_id)
-            project.pkpd_models.add(instance)
+            project.pd_models.add(instance)
             if commit:
                 project.save()
 

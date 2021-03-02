@@ -24,6 +24,7 @@ from pkpdapp.dash_apps.simulation import PKSimulationApp, PDSimulationApp
 import pkpdapp.erlotinib as erlo
 from dash.dependencies import Input, Output
 import dash
+from myokit.formats.sbml import SBMLParsingError
 
 def create_dash_app(model, project):
     # create dash app
@@ -31,57 +32,65 @@ def create_dash_app(model, project):
     if isinstance(model, PharmacodynamicModel):
         app = PDSimulationApp(name='parmacodynamic_view')
         sbml_str = model.sbml.encode('utf-8')
-        erlo_m = erlo.PharmacodynamicModel(sbml_str)
-        param_names = erlo_m.parameters()
-        param_names_dict = {}
-        for p in param_names:
-            param_names_dict[p] = p.replace('.', '_')
-        erlo_m.set_parameter_names(names=param_names_dict)
-        app.add_model(erlo_m, model.name, use=True)
+        try:
+            erlo_m = erlo.PharmacodynamicModel(sbml_str)
+            param_names = erlo_m.parameters()
+            param_names_dict = {}
+            for p in param_names:
+                param_names_dict[p] = p.replace('.', '_')
+            erlo_m.set_parameter_names(names=param_names_dict)
+            app.add_model(erlo_m, model.name, use=True)
+        except SBMLParsingError:
+            pass
+
     else:
         app = PKSimulationApp(name='dosed_parmokinetic_view')
         # get model sbml strings and add erlo models
         m = model.pharmacokinetic_model
         sbml_str = m.sbml.encode('utf-8')
-        erlo_m = erlo.PharmacokineticModel(sbml_str)
-        param_names = erlo_m.parameters()
-        param_names_dict = {}
-        for p in param_names:
-            param_names_dict[p] = p.replace('.', '_')
-        erlo_m.set_parameter_names(names=param_names_dict)
-        app.add_model(erlo_m, m.name, use=True)
-        app.set_administration(
-            model.dose_compartment,
-            direct=model.direct_dose
-        )
-        app.set_dosing_regimen(
-            model.dose_amount,
-            model.dose_start,
-            model.dose_duration,
-            model.dose_period,
-            model.number_of_doses
-        )
+        try:
+            erlo_m = erlo.PharmacokineticModel(sbml_str)
+            param_names = erlo_m.parameters()
+            param_names_dict = {}
+            for p in param_names:
+                param_names_dict[p] = p.replace('.', '_')
+            erlo_m.set_parameter_names(names=param_names_dict)
+            app.add_model(erlo_m, m.name, use=True)
+            app.set_administration(
+                model.dose_compartment,
+                direct=model.direct_dose
+            )
+            app.set_dosing_regimen(
+                model.dose_amount,
+                model.dose_start,
+                model.dose_duration,
+                model.dose_period,
+                model.number_of_doses
+            )
+        except SBMLParsingError:
+            pass
 
     # add datasets
-    for i, d in enumerate(project.datasets.all()):
-        biomarker_types = BiomarkerType.objects.filter(dataset=d)
-        biomarkers = Biomarker.objects\
-            .select_related('biomarker_type__name')\
-            .filter(biomarker_type__in=biomarker_types)
+    if project:
+        for i, d in enumerate(project.datasets.all()):
+            biomarker_types = BiomarkerType.objects.filter(dataset=d)
+            biomarkers = Biomarker.objects\
+                .select_related('biomarker_type__name')\
+                .filter(biomarker_type__in=biomarker_types)
 
-        # convert to pandas dataframe with the column names expected
-        df = pd.DataFrame(
-            list(
-                biomarkers.values('time', 'subject_id',
-                                  'biomarker_type__name', 'value')))
-        df.rename(columns={
-            'subject_id': 'ID',
-            'time': 'Time',
-            'biomarker_type__name': 'Biomarker',
-            'value': 'Measurement'
-        }, inplace=True)
+            # convert to pandas dataframe with the column names expected
+            df = pd.DataFrame(
+                list(
+                    biomarkers.values('time', 'subject_id',
+                                      'biomarker_type__name', 'value')))
+            df.rename(columns={
+                'subject_id': 'ID',
+                'time': 'Time',
+                'biomarker_type__name': 'Biomarker',
+                'value': 'Measurement'
+            }, inplace=True)
 
-        app.add_data(df, d.name, use=False)
+            app.add_data(df, d.name, use=False)
 
     # generate dash app
     app.set_layout()
@@ -132,7 +141,7 @@ def create_dash_app(model, project):
     return app
 
 
-class PharmacodynamicModelDetailView(DetailView):
+class PharmacodynamicModelDetailView(LoginRequiredMixin, DetailView):
     model = PharmacodynamicModel
     template_name = 'pd_model_detail.html'
 
@@ -171,7 +180,7 @@ class PharmacodynamicModelUpdate(UpdateView):
 
 class PharmacodynamicModelDeleteView(DeleteView):
     model = PharmacodynamicModel
-    success_url = reverse_lazy('pharmodynamic_model-list')
+    success_url = reverse_lazy('pd_model-list')
     template_name = 'pd_model_confirm_delete.html'
 
 class DosedPharmacokineticModelDetail(LoginRequiredMixin, DetailView):

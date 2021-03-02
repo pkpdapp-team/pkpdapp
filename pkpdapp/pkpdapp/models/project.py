@@ -24,14 +24,18 @@ class Project(models.Model):
         blank=True, default=''
     )
     datasets = models.ManyToManyField(
-        Dataset, help_text='datasets referenced by this project'
+        Dataset,
+        blank=True,
+        help_text='datasets referenced by this project'
     )
     pk_models = models.ManyToManyField(
         DosedPharmacokineticModel,
+        blank=True,
         help_text='PK models referenced by this project'
     )
     pd_models = models.ManyToManyField(
         PharmacodynamicModel,
+        blank=True,
         help_text='PD models referenced by this project'
     )
     users = models.ManyToManyField(

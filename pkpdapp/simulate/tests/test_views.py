@@ -9,7 +9,7 @@ from django.urls import reverse
 from django.contrib.auth.models import User
 from django.utils import timezone
 from pkpdapp.models import (
-    Dataset, Project, Biomarker, BiomarkerType, PkpdModel
+    Dataset, Project, Biomarker, BiomarkerType, PharmacodynamicModel
 )
 from http import HTTPStatus
 import codecs
@@ -26,10 +26,9 @@ class TestSimulationView(TestCase):
         with urllib.request.urlopen(sbml_url) as f:
             # parse as csv file
             sbml_string = codecs.decode(f.read(), 'utf-8')
-            self.test_model = PkpdModel.objects.create(
+            self.test_model = PharmacodynamicModel.objects.create(
                 name='test',
                 description='test',
-                model_type='PK',
                 sbml=sbml_string
             )
 
@@ -61,7 +60,7 @@ class TestSimulationView(TestCase):
             description='description for my cool project',
         )
         self.test_project.datasets.add(self.test_dataset)
-        self.test_project.pkpd_models.add(self.test_model)
+        self.test_project.pd_models.add(self.test_model)
         self.test_project.users.add(self.test_user)
         self.test_user.profile.selected_project = self.test_project
         self.test_user.profile.save(update_fields=["selected_project"])

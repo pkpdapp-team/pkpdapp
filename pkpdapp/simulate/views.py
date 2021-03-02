@@ -9,7 +9,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 
 from dash.dependencies import Input, Output
 import dash
-import erlotinib as erlo
+import pkpdapp.erlotinib as erlo
 import pandas as pd
 from pkpdapp.models import Biomarker, BiomarkerType
 from pkpdapp.dash_apps.simulation import PDSimulationApp
@@ -35,7 +35,7 @@ class SimulationView(LoginRequiredMixin, generic.base.TemplateView):
         project = self.request.user.profile.selected_project
 
         # get model sbml strings and add erlo models
-        for i, m in enumerate(project.pkpd_models.all()):
+        for i, m in enumerate(project.pd_models.all()):
             sbml_str = m.sbml.encode('utf-8')
             erlo_m = erlo.PharmacodynamicModel(sbml_str)
             param_names = erlo_m.parameters()
