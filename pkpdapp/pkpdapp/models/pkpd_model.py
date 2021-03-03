@@ -49,6 +49,7 @@ class DosedPharmacokineticModel(MechanisticModel):
     )
     dose_compartment = models.CharField(
         max_length=100,
+        default='central',
         help_text='compartment name to be dosed'
     )
     direct_dose = models.BooleanField(

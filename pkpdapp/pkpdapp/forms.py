@@ -10,6 +10,7 @@ from pkpdapp.models import (DosedPharmacokineticModel, PharmacodynamicModel,
 from django.core.exceptions import ValidationError
 import xml.etree.ElementTree as ET
 from django.utils.translation import gettext as _
+import pkpdapp.erlotinib as erlo
 
 MAX_UPLOAD_SIZE = "5242880"
 
