@@ -49,6 +49,9 @@ setup(
         'django-markdownify==0.8.2',
         'python-markdown-math==0.8',
         'xlrd>=1.0.0',
+        'pints @ git+git://github.com/pints-team/pints.git#egg=pints',
+        'myokit>=1.31',
+        'tqdm==4.46.1',
     ],
     dependency_links=[
         "git+git://github.com/DavAug/erlotinib.git#egg=erlotinib-latest",
