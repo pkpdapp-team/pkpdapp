@@ -16,3 +16,6 @@ from .biomarker_type import BiomarkerType
 from .biomarker import Biomarker
 from .project import Project
 from .profile import Profile
+from .compound import Compound
+from .dose import Dose
+
