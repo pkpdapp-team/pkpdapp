@@ -5,7 +5,7 @@
 #
 
 from django.db import models
-from pkpdapp.models import Dataset
+from pkpdapp.models import Dataset, StandardUnit
 
 
 
@@ -15,21 +15,12 @@ class BiomarkerType(models.Model):
     example "concentration in mg", or "tumor volume in cm^3".
     """
 
-    UNIT_CHOICES = [
-        ('g', 'g'),
-        ('m3', 'm^3'),
-    ]
-
-    UNIT_CONVERSION = {
-        'mg': ('g', 1e-3),
-        'cm^3': ('m3', 1e-2**3),
-    }
     name = models.CharField(
         max_length=100, help_text='name of the biomarker type'
     )
-    unit = models.CharField(
-        max_length=3, choices=UNIT_CHOICES,
-        help_text='units for the value stored in :model:`pkpdapp.Biomarker`'
+    unit = models.ForeignKey(
+        StandardUnit, on_delete=models.CASCADE,
+        help_text='unit for the value stored in :model:`pkpdapp.Biomarker`'
     )
     description = models.TextField(
         help_text='short description of the biomarker type'
@@ -41,6 +32,3 @@ class BiomarkerType(models.Model):
 
     def __str__(self):
         return self.name
-
-    def normalise_unit(unit):
-        return standard_unit, multiplier

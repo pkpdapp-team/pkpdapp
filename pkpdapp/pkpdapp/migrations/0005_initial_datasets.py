@@ -197,6 +197,8 @@ def load_datasets(apps, schema_editor):
     Project = apps.get_model("pkpdapp", "Project")
     Compound = apps.get_model("pkpdapp", "Compound")
     Dose = apps.get_model("pkpdapp", "Dose")
+    Unit = apps.get_model("pkpdapp", "Unit")
+    StandardUnit = apps.get_model("pkpdapp", "StandardUnit")
 
     for datafile_name, datafile_url, datafile_description, biomarkers \
             in zip(datafile_names, datafile_urls, datafile_descriptions,
@@ -222,12 +224,15 @@ def load_datasets(apps, schema_editor):
 
         # create all the biomarker types for that dataset
         biomarker_types = [
-            BiomarkerType(name=b['name'],
-                          description=b['name'],
-                          unit=b['unit'],
-                          dataset=dataset) for b in biomarkers
+            BiomarkerType.objects.create(
+                name=b['name'],
+                description=b['name'],
+                unit=Unit.objects.get(
+                    symbol=b['unit']
+                ).standard_unit,
+                dataset=dataset
+            ) for b in biomarkers
         ]
-        [bm.save() for bm in biomarker_types]
 
         # create all the biomarker measurements for that dataset
         with urllib.request.urlopen(datafile_url) as f:
@@ -240,14 +245,18 @@ def load_datasets(apps, schema_editor):
             # create entries
             if datafile_name == 'demo_pk_data':
                 TIME_COLUMN = 4
+                TIME_UNIT_COLUMN = 5
                 VALUE_COLUMN = 3
+                UNIT_COLUMN = 11
                 BIOMARKER_TYPE_COLUMN = 13
                 SUBJECT_ID_COLUMN = 2
                 DOSE_COLUMN = 1
                 COMPOUND_COLUMN = 0
             else:
                 TIME_COLUMN = 1
+                TIME_UNIT_COLUMN = 2
                 VALUE_COLUMN = 4
+                UNIT_COLUMN = 5
                 BIOMARKER_TYPE_COLUMN = 3
                 SUBJECT_ID_COLUMN = 0
                 DOSE_COLUMN = None
@@ -260,18 +269,21 @@ def load_datasets(apps, schema_editor):
                     continue
                 index = biomarker_index[biomarker_type_str]
                 value = row[VALUE_COLUMN]
+                unit = Unit.objects.get(symbol=row[UNIT_COLUMN])
+                time_unit = Unit.objects.get(symbol=row[TIME_UNIT_COLUMN])
                 try:
                     value = float(value)
                     is_number = True
                 except ValueError:
                     is_number = False
                 if is_number:
-                    biomarker = Biomarker(
-                        time=row[TIME_COLUMN],
+                    bt = biomarker_types[index]
+                    Biomarker.objects.create(
+                        time=time_unit.multiplier * float(row[TIME_COLUMN]),
                         subject_id=row[SUBJECT_ID_COLUMN],
-                        value=value,
-                        biomarker_type=biomarker_types[index])
-                    biomarker.save()
+                        value=unit.multiplier * value,
+                        biomarker_type=bt
+                    )
                 elif DOSE_COLUMN and row[VALUE_COLUMN] == '.':
                     compound_str = row[COMPOUND_COLUMN]
                     try:
@@ -281,9 +293,9 @@ def load_datasets(apps, schema_editor):
                             name=compound_str
                         )
                     Dose.objects.create(
-                        time=row[TIME_COLUMN],
+                        time=time_unit.multiplier * float(row[TIME_COLUMN]),
                         subject_id=row[SUBJECT_ID_COLUMN],
-                        amount=row[DOSE_COLUMN],
+                        amount=unit.multiplier * float(row[DOSE_COLUMN]),
                         compound=compound,
                         dataset=dataset,
                     )
@@ -303,6 +315,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('pkpdapp', '0003_initial_users_and_projects'),
+        ('pkpdapp', '0007_initial_units'),
     ]
 
     operations = [

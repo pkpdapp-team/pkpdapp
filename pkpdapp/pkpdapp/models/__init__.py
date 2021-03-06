@@ -11,6 +11,7 @@ from .pkpd_model import (
     PharmacodynamicModel,
     DosedPharmacokineticModel,
 )
+from .units import StandardUnit, Unit
 from .dataset import Dataset
 from .biomarker_type import BiomarkerType
 from .biomarker import Biomarker
