@@ -14,7 +14,7 @@ class Biomarker(models.Model):
     Each biomarker is assigned a type stored in :model:`pkpdapp.BiomarkerType`.
     """
     time = models.FloatField(
-        help_text='time point of measurement, in days'
+        help_text='time point of measurement, in hours'
     )
     subject_id = models.IntegerField(
         help_text='subject id for biomarker measurement'
