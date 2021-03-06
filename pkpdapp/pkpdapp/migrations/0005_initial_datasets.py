@@ -17,6 +17,7 @@ datafile_urls = [
     'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/datasets/lxf_low_erlotinib_dose.csv',  # noqa: E501
     'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/datasets/lxf_medium_erlotinib_dose.csv',  # noqa: E501
     'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/datasets/lxf_single_erlotinib_dose.csv',  # noqa: E501
+    'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/datasets/demo_pk_data.csv',  # noqa: E501
 ]
 
 datafile_names = [
@@ -25,6 +26,7 @@ datafile_names = [
     'lxf_low_erlotinib_dose',
     'lxf_medium_erlotinib_dose',
     'lxf_single_erlotinib_dose',
+    'demo_pk_data',
 ]
 
 datafile_descriptions = [
@@ -94,6 +96,10 @@ day 0 or day 4.
 The blood plasma concentration of erlotinib was measured only once per mouse,
 either on day 0 or day 4.
 ''',  # noqa: W605
+    '''
+Demo PK data
+''',  # noqa: W605
+
 ]
 
 biomarkers_for_datasets = [
@@ -159,6 +165,28 @@ biomarkers_for_datasets = [
             'unit': 'ng/mL',
         },
     ],
+    [
+        {
+            'name': 'Docetaxel',
+            'unit': 'ng/mL',
+        },
+        {
+            'name': 'Red blood cells',
+            'unit': '10^6/mcL',
+        },
+        {
+            'name': 'Hemoglobin',
+            'unit': 'g/dL',
+        },
+        {
+            'name': 'Platelets',
+            'unit': '10^3/mcL',
+        },
+        {
+            'name': 'White blood cells',
+            'unit': '10^3/mcL',
+        },
+    ],
 ]
 
 
@@ -167,6 +195,8 @@ def load_datasets(apps, schema_editor):
     Biomarker = apps.get_model("pkpdapp", "Biomarker")
     BiomarkerType = apps.get_model("pkpdapp", "BiomarkerType")
     Project = apps.get_model("pkpdapp", "Project")
+    Compound = apps.get_model("pkpdapp", "Compound")
+    Dose = apps.get_model("pkpdapp", "Dose")
 
     for datafile_name, datafile_url, datafile_description, biomarkers \
             in zip(datafile_names, datafile_urls, datafile_descriptions,
@@ -208,13 +238,25 @@ def load_datasets(apps, schema_editor):
             next(data_reader)
 
             # create entries
-            TIME_COLUMN = 1
-            VALUE_COLUMN = 4
-            BIOMARKER_TYPE_COLUMN = 3
-            SUBJECT_ID_COLUMN = 0
+            if datafile_name == 'demo_pk_data':
+                TIME_COLUMN = 4
+                VALUE_COLUMN = 3
+                BIOMARKER_TYPE_COLUMN = 13
+                SUBJECT_ID_COLUMN = 2
+                DOSE_COLUMN = 1
+                COMPOUND_COLUMN = 0
+            else:
+                TIME_COLUMN = 1
+                VALUE_COLUMN = 4
+                BIOMARKER_TYPE_COLUMN = 3
+                SUBJECT_ID_COLUMN = 0
+                DOSE_COLUMN = None
+                COMPOUND_COLUMN = None
             for row in data_reader:
                 biomarker_type_str = row[BIOMARKER_TYPE_COLUMN]
                 if not biomarker_type_str:
+                    continue
+                if biomarker_type_str not in biomarker_index:
                     continue
                 index = biomarker_index[biomarker_type_str]
                 value = row[VALUE_COLUMN]
@@ -230,6 +272,26 @@ def load_datasets(apps, schema_editor):
                         value=value,
                         biomarker_type=biomarker_types[index])
                     biomarker.save()
+                elif DOSE_COLUMN and row[VALUE_COLUMN] == '.':
+                    compound_str = row[COMPOUND_COLUMN]
+                    try:
+                        compound = Compound.objects.get(name=compound_str)
+                    except Compound.DoesNotExist:
+                        compound = Compound.objects.create(
+                            name=compound_str
+                        )
+                    Dose.objects.create(
+                        time=row[TIME_COLUMN],
+                        subject_id=row[SUBJECT_ID_COLUMN],
+                        amount=row[DOSE_COLUMN],
+                        compound=compound,
+                        dataset=dataset,
+                    )
+
+
+
+
+
 
 
 def delete_datasets(apps, schema_editor):

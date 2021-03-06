@@ -29,4 +29,3 @@ class Dose(models.Model):
     amount = models.FloatField(
         help_text='amount of compound administered, in XXX'
     )
-    value = models.FloatField(help_text='value of the measurement')

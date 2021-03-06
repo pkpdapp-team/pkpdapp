@@ -8,6 +8,7 @@ from django.db import models
 from pkpdapp.models import Dataset
 
 
+
 class BiomarkerType(models.Model):
     """
     A type of biomarker measurement associated with a particular dataset, for
@@ -15,10 +16,14 @@ class BiomarkerType(models.Model):
     """
 
     UNIT_CHOICES = [
-        ('mg', 'mg'),
         ('g', 'g'),
-        ('cm3', 'cm^3'),
+        ('m3', 'm^3'),
     ]
+
+    UNIT_CONVERSION = {
+        'mg': ('g', 1e-3),
+        'cm^3': ('m3', 1e-2**3),
+    }
     name = models.CharField(
         max_length=100, help_text='name of the biomarker type'
     )
@@ -36,3 +41,6 @@ class BiomarkerType(models.Model):
 
     def __str__(self):
         return self.name
+
+    def normalise_unit(unit):
+        return standard_unit, multiplier
