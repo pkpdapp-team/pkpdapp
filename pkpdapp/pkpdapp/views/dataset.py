@@ -6,7 +6,9 @@
 from django.shortcuts import render
 from django.urls import reverse_lazy
 from django.core.paginator import Paginator
-from pkpdapp.models import Dataset, Biomarker, BiomarkerType
+from pkpdapp.models import (
+    Dataset, Biomarker, BiomarkerType, Dose, Compound
+)
 from ..forms import CreateNewDataset, CreateNewBiomarkerUnit
 import pandas as pd
 from django.contrib import messages
@@ -18,6 +20,7 @@ from django.views.generic import (
     UpdateView, DeleteView,
     ListView
 )
+from pkpdapp.dash_apps.demo_nca_app import NcaApp
 
 
 BASE_FILE_UPLOAD_ERROR = 'FILE UPLOAD FAILED: '
@@ -27,6 +30,50 @@ class DatasetDetailView(DetailView):
     model = Dataset
     paginate_by = 100
     template_name = 'dataset_detail.html'
+
+    def get(self, request, *args, **kwargs):
+        dataset = self.get_object()
+        ID = 5335
+        doses = Dose.objects.filter(dataset=dataset, subject_id=ID)
+        compound_name = doses.first().compound.name
+        doses.filter(compount__name=compound_name)
+        biomarker_types = BiomarkerType.objects.filter(
+            dataset=dataset,
+            name=compound_name
+        )
+        biomarkers = Biomarker.objects\
+            .select_related('biomarker_type__name')\
+            .filter(biomarker_type__in=biomarker_types)
+
+        # convert to pandas dataframe with the column names expected
+        df_meas = pd.DataFrame(
+            list(
+                biomarkers.values('time', 'subject_id',
+                                  'biomarker_type__name', 'value')
+            )
+        )
+        df_meas.rename(columns={
+            'subject_id': 'ID',
+            'time': 'Time',
+            'biomarker_type__name': 'Biomarker',
+            'value': 'Measurement'
+        }, inplace=True)
+
+        df_dose = pd.DataFrame(
+            list(
+                doses.values('time', 'subject_id',
+                             'compound__name', 'amount')
+            )
+        )
+        df_dose.rename(columns={
+            'subject_id': 'ID',
+            'time': 'Time',
+            'compound__name': 'Compound',
+            'amount': 'Amount'
+        }, inplace=True)
+
+        self._app = NcaApp('nca_view', df_meas, df_dose, ID)
+        return super().get(request)
 
     def get_context_data(self, **kwargs):
         # Call the base implementation first to get a context
