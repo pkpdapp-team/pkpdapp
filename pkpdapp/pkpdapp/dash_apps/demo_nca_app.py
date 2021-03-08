@@ -311,12 +311,15 @@ class NcaApp(BaseApp):
 
         self._rounding = 3
 
+        print(data_meas)
+        print(data_dose)
+        print('got subject_id', subject_id)
+
         self._dose_amount = data_dose[self._amount_key][0]
         self._drug = data_dose[self._compound_key][0]
 
         self._subject_id = subject_id
         self._process_data(data_meas, self._dose_amount)
-        self._dose_categories = self._df_conc.DOSE.unique()
         self._fig = self._create_figure()
         self.set_layout()
 
@@ -364,7 +367,7 @@ class NcaApp(BaseApp):
         # Visualisation using Plotly
         y_label = self._drug + " Concentration"
         x_label = "Time"
-        main_title = self._drug + " Concentration for ID" + str(self._rat_id)
+        main_title = self._drug + " Concentration for ID" + str(self._subject_id)
         hex_colour = px.colors.qualitative.Plotly[0]
 
         # Make the scatter plot
@@ -746,9 +749,12 @@ class NcaApp(BaseApp):
 
     def set_layout(self):
         # Create dash app
-        self._app.layout = html.Div(children=[
-            dcc.Graph(
-                id='nca-dashboard',
-                figure=self._fig
-            )
-        ])
+        self.app.layout = html.Div(
+            children=[
+                dcc.Graph(
+                    id='nca-dashboard',
+                    figure=self._fig,
+                    style={'height': '600'}
+                )
+            ],
+        )

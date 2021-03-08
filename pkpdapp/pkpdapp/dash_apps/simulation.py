@@ -139,24 +139,33 @@ class SimulationApp(BaseApp):
         cols = []
         if len(self._models) > 1:
             cols.append(
-                dbc.Col(children=[
-                    html.Label('Models:'),
-                    model_dropdown
-                ])
+                dbc.Col(
+                    children=[
+                        html.Label('Models:'),
+                        model_dropdown
+                    ],
+                    width=2,
+                )
             )
         if len(self._datasets) > 1:
             cols.append(
-                dbc.Col(children=[
-                    html.Label('Datasets:'),
-                    dataset_dropdown
-                ])
+                dbc.Col(
+                    children=[
+                        html.Label('Datasets:'),
+                        dataset_dropdown,
+                    ],
+                    width=2,
+                )
             )
         if len(self._datasets) > 0:
             cols.append(
-                dbc.Col(children=[
-                    html.Label('Biomarker:'),
-                    biomarker_dropdown
-                ]),
+                dbc.Col(
+                    children=[
+                        html.Label('Biomarker:'),
+                        biomarker_dropdown,
+                    ],
+                    width=2,
+                ),
             )
 
         return cols
@@ -175,11 +184,14 @@ class SimulationApp(BaseApp):
         Returns a figure component containing the main figure.
         """
 
-        figure = dbc.Col(children=[
-            dcc.Graph(figure=self.create_figure(),
-                      id='fig',
-                      style={'height': '100%'})
-        ], md=9)
+        figure = dbc.Col(
+            children=[
+                dcc.Graph(figure=self.create_figure(),
+                          id='fig',
+                          style={'height': '100%'})
+            ],
+            width=9,
+        )
 
         return figure
 
@@ -278,12 +290,20 @@ class SimulationApp(BaseApp):
         - Plot of simulation/data on the left.
         - Parameter sliders on the right.
         """
-        self.app.layout = dbc.Container(children=[
-            dbc.Row(self._create_selects(), ),
-            dbc.Row([
+        if self._models:
+            vis_row = dbc.Row([
                 self._create_figure_component(),
                 self._create_sliders_component()
             ])
+        else:
+            vis_row = dbc.Row([
+                self._create_figure_component(),
+            ])
+
+        self.app.layout = dbc.Container(children=[
+            dbc.Row(self._create_selects(), ),
+            vis_row
+
         ], fluid=True, style={'height': '90vh'})
 
     def _simulate(self, parameters, model):

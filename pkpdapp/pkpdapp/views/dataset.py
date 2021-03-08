@@ -10,6 +10,7 @@ from pkpdapp.models import (
     Dataset, Biomarker, BiomarkerType, Dose, Compound
 )
 from ..forms import CreateNewDataset, CreateNewBiomarkerUnit
+from pkpdapp.dash_apps.simulation import PDSimulationApp
 import pandas as pd
 from django.contrib import messages
 from django.apps import apps
@@ -21,9 +22,119 @@ from django.views.generic import (
     ListView
 )
 from pkpdapp.dash_apps.demo_nca_app import NcaApp
+from dash.dependencies import Input, Output
+import dash
 
 
 BASE_FILE_UPLOAD_ERROR = 'FILE UPLOAD FAILED: '
+
+
+def create_visualisation_app(dataset):
+    # create dash app
+    app = PDSimulationApp(name='dataset_view')
+
+    # add datasets
+    biomarker_types = BiomarkerType.objects.filter(dataset=dataset)
+    biomarkers = Biomarker.objects\
+        .select_related('biomarker_type__name')\
+        .filter(biomarker_type__in=biomarker_types)
+
+    # convert to pandas dataframe with the column names expected
+    df = pd.DataFrame(
+        list(
+            biomarkers.values('time', 'subject_id',
+                              'biomarker_type__name', 'value')))
+    df.rename(columns={
+        'subject_id': 'ID',
+        'time': 'Time',
+        'biomarker_type__name': 'Biomarker',
+        'value': 'Measurement'
+    }, inplace=True)
+
+    app.add_data(df, dataset.name, use=True)
+
+    # generate dash app
+    app.set_layout()
+
+    # we need slider ids for callback, count the number of parameters for
+    # each model so we know what parameter in the list corresponds to which
+    # model
+    sliders = app.slider_ids()
+    n_params = [len(s) for s in sliders]
+    offsets = [0]
+    for i in range(1, len(n_params)):
+        offsets.append(offsets[i - 1] + n_params[i])
+
+    # Define simulation callbacks
+    @app.app.callback(
+        Output('fig', 'figure'),
+        [Input('biomarker-select', 'value')])
+    def update_simulation(*args):
+        """
+        if the models, datasets or biomarkers are
+        changed then regenerate the figure entirely
+
+        if a slider is moved, determine the relevent model based on the id
+        name, then update that particular simulation
+        """
+        ctx = dash.callback_context
+        cid = None
+        if ctx.triggered:
+            cid = ctx.triggered[0]['prop_id'].split('.')[0]
+        print('ARGS', args)
+
+        if cid == 'biomarker-select':
+            app.set_used_biomarker(args[-1])
+            return app.create_figure()
+
+        return app._fig._fig
+
+    return app
+
+def create_nca_app(dataset):
+    ID = 5335
+    doses = Dose.objects.filter(dataset=dataset, subject_id=ID)
+    if not doses:
+        return None
+    compound_name = doses.first().compound.name
+    doses.filter(compound__name=compound_name)
+    biomarker_types = BiomarkerType.objects.filter(
+        dataset=dataset,
+        name=compound_name
+    )
+    biomarkers = Biomarker.objects\
+        .select_related('biomarker_type__name')\
+        .filter(biomarker_type__in=biomarker_types)\
+        .filter(subject_id=ID)
+
+    # convert to pandas dataframe with the column names expected
+    df_meas = pd.DataFrame(
+        list(
+            biomarkers.values('time', 'subject_id',
+                              'biomarker_type__name', 'value')
+        )
+    )
+    df_meas.rename(columns={
+        'subject_id': 'ID',
+        'time': 'Time',
+        'biomarker_type__name': 'Biomarker',
+        'value': 'Measurement'
+    }, inplace=True)
+
+    df_dose = pd.DataFrame(
+        list(
+            doses.values('time', 'subject_id',
+                         'compound__name', 'amount')
+        )
+    )
+    df_dose.rename(columns={
+        'subject_id': 'ID',
+        'time': 'Time',
+        'compound__name': 'Compound',
+        'amount': 'Amount'
+    }, inplace=True)
+
+    return NcaApp('nca_view', df_meas, df_dose, ID)
 
 
 class DatasetDetailView(DetailView):
@@ -33,46 +144,8 @@ class DatasetDetailView(DetailView):
 
     def get(self, request, *args, **kwargs):
         dataset = self.get_object()
-        ID = 5335
-        doses = Dose.objects.filter(dataset=dataset, subject_id=ID)
-        compound_name = doses.first().compound.name
-        doses.filter(compount__name=compound_name)
-        biomarker_types = BiomarkerType.objects.filter(
-            dataset=dataset,
-            name=compound_name
-        )
-        biomarkers = Biomarker.objects\
-            .select_related('biomarker_type__name')\
-            .filter(biomarker_type__in=biomarker_types)
-
-        # convert to pandas dataframe with the column names expected
-        df_meas = pd.DataFrame(
-            list(
-                biomarkers.values('time', 'subject_id',
-                                  'biomarker_type__name', 'value')
-            )
-        )
-        df_meas.rename(columns={
-            'subject_id': 'ID',
-            'time': 'Time',
-            'biomarker_type__name': 'Biomarker',
-            'value': 'Measurement'
-        }, inplace=True)
-
-        df_dose = pd.DataFrame(
-            list(
-                doses.values('time', 'subject_id',
-                             'compound__name', 'amount')
-            )
-        )
-        df_dose.rename(columns={
-            'subject_id': 'ID',
-            'time': 'Time',
-            'compound__name': 'Compound',
-            'amount': 'Amount'
-        }, inplace=True)
-
-        self._app = NcaApp('nca_view', df_meas, df_dose, ID)
+        self._visualisation_app = create_visualisation_app(dataset)
+        self._nca_app = create_nca_app(dataset)
         return super().get(request)
 
     def get_context_data(self, **kwargs):
@@ -86,6 +159,8 @@ class DatasetDetailView(DetailView):
         biomarker_dataset = self.get_paginated_biomarker_dataset(context)
         context['biomarker_dataset'] = biomarker_dataset
         context['page_obj'] = biomarker_dataset
+        doses = Dose.objects.filter(dataset=context['dataset'])
+        context['has_doses'] = len(doses) > 0
         return context
 
     def get_paginated_biomarker_dataset(self, context):
