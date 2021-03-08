@@ -144,7 +144,7 @@ class SimulationApp(BaseApp):
                         html.Label('Models:'),
                         model_dropdown
                     ],
-                    width=2,
+                    width=3,
                 )
             )
         if len(self._datasets) > 1:
@@ -154,7 +154,7 @@ class SimulationApp(BaseApp):
                         html.Label('Datasets:'),
                         dataset_dropdown,
                     ],
-                    width=2,
+                    width=3,
                 )
             )
         if len(self._datasets) > 0:
@@ -164,7 +164,7 @@ class SimulationApp(BaseApp):
                         html.Label('Biomarker:'),
                         biomarker_dropdown,
                     ],
-                    width=2,
+                    width=3,
                 ),
             )
 
@@ -190,7 +190,6 @@ class SimulationApp(BaseApp):
                           id='fig',
                           style={'height': '100%'})
             ],
-            width=9,
         )
 
         return figure

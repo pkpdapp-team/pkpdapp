@@ -376,7 +376,6 @@ class NcaApp(BaseApp):
             title=main_title,
             x=self._time_key,
             y=self._obs_key,
-            height=550,
         )
 
         fig.update_xaxes(title_text=x_label, range=[0, self._last_point[0] * 1.1])
@@ -754,7 +753,7 @@ class NcaApp(BaseApp):
                 dcc.Graph(
                     id='nca-dashboard',
                     figure=self._fig,
-                    style={'height': '600'}
+                    style={'height': '100%'}
                 )
             ],
         )
