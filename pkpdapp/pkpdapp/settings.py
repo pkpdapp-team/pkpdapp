@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'django_plotly_dash.apps.DjangoPlotlyDashConfig',
     'dpd_static_support',
     'markdownify',
+    'django_extensions',
 
     # internal apps
     'explore_data.apps.ExploreDataConfig',

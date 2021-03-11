@@ -52,6 +52,7 @@ setup(
         'pints @ git+git://github.com/pints-team/pints.git#egg=pints',
         'myokit>=1.31',
         'tqdm==4.46.1',
+        'django-extensions==3.1.1',
     ],
     dependency_links=[
         "git+git://github.com/DavAug/erlotinib.git#egg=erlotinib-latest",

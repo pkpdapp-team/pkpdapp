@@ -198,7 +198,7 @@ def load_datasets(apps, schema_editor):
     Compound = apps.get_model("pkpdapp", "Compound")
     Dose = apps.get_model("pkpdapp", "Dose")
     Unit = apps.get_model("pkpdapp", "Unit")
-    StandardUnit = apps.get_model("pkpdapp", "StandardUnit")
+    Protocol = apps.get_model("pkpdapp", "Protocol")
 
     for datafile_name, datafile_url, datafile_description, biomarkers \
             in zip(datafile_names, datafile_urls, datafile_descriptions,
@@ -208,7 +208,6 @@ def load_datasets(apps, schema_editor):
             name=datafile_name,
             description=datafile_description,
             datetime=make_aware(datetime.today()),
-            administration_type='type1',
         )
         dataset.save()
 
@@ -292,18 +291,29 @@ def load_datasets(apps, schema_editor):
                         compound = Compound.objects.create(
                             name=compound_str
                         )
+                    subject_id = row[SUBJECT_ID_COLUMN]
+                    try:
+                        protocol = Protocol.objects.get(
+                            dataset=dataset,
+                            subject_id=subject_id,
+                            compound=compound
+                        )
+                    except Protocol.DoesNotExist:
+                        protocol = Protocol.objects.create(
+                            name='{}-{}-{}'.format(
+                                dataset.name,
+                                compound.name,
+                                subject_id
+                            ),
+                            compound=compound,
+                            dataset=dataset,
+                            subject_id=subject_id,
+                        )
                     Dose.objects.create(
-                        time=time_unit.multiplier * float(row[TIME_COLUMN]),
-                        subject_id=row[SUBJECT_ID_COLUMN],
+                        start_time=time_unit.multiplier * float(row[TIME_COLUMN]),
                         amount=unit.multiplier * float(row[DOSE_COLUMN]),
-                        compound=compound,
-                        dataset=dataset,
+                        protocol=protocol,
                     )
-
-
-
-
-
 
 
 def delete_datasets(apps, schema_editor):

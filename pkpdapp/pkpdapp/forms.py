@@ -4,12 +4,12 @@
 # copyright notice and full license details.
 #
 from django import forms
-from pkpdapp.models.dataset import ADMINISTRATION_TYPE_CHOICES
-from pkpdapp.models import (DosedPharmacokineticModel, PharmacodynamicModel,
-                            Project)
+from pkpdapp.models import (
+    DosedPharmacokineticModel, PharmacodynamicModel,
+    Project, Dose, Protocol
+)
 from django.core.exceptions import ValidationError
 import xml.etree.ElementTree as ET
-from django.utils.translation import gettext as _
 import pkpdapp.erlotinib as erlo
 
 MAX_UPLOAD_SIZE = "5242880"
@@ -50,7 +50,6 @@ class CreateNewDataset(forms.Form):
 
     administration_type = forms.ChoiceField(
         label='Administration type',
-        choices=ADMINISTRATION_TYPE_CHOICES,
         help_text='method of drug administration')
 
     file = forms.FileField(label='Data file', validators=[file_size])
@@ -99,9 +98,7 @@ class CreateNewDosedPharmokineticModel(forms.ModelForm):
     class Meta:
         model = DosedPharmacokineticModel
         fields = [
-            'pharmacokinetic_model', 'dose_compartment', 'direct_dose',
-            'dose_amount', 'dose_start', 'dose_duration', 'dose_period',
-            'number_of_doses'
+            'pharmacokinetic_model', 'dose_compartment', 'protocol',
         ]
 
     def save(self, commit=True):
@@ -159,5 +156,74 @@ class CreateNewPharmodynamicModel(forms.ModelForm):
             project.pd_models.add(instance)
             if commit:
                 project.save()
+
+        return instance
+
+class CreateNewProtocol(forms.ModelForm):
+    """
+    A form to create a new
+    :model:`pkpdapp.Protocol`.
+
+    Can pass an additional kwarg 'project', which adds the new model to this
+    project id
+    """
+    def __init__(self, *args, **kwargs):
+        if 'project' in kwargs:
+            self.project_id = kwargs.pop('project')
+        else:
+            self.project_id = None
+
+        super().__init__(*args, **kwargs)
+
+    class Meta:
+        fields = ('name', 'compound', 'dataset', 'subject_id')
+        model = Protocol
+
+    dose_amount = forms.FloatField(
+        initial=0.0,
+        help_text=Dose._meta.get_field('amount').help_text,
+    )
+    protocol_start_time = forms.FloatField(
+        initial=0.0,
+        help_text='Start time of the treatment, in hours',
+    )
+    dose_duration = forms.FloatField(
+        initial=0.01,
+        help_text=Dose._meta.get_field('duration').help_text,
+    )
+    dose_period = forms.FloatField(
+        required=False,
+        help_text='''
+            Periodicity at which doses are administered. If empty the dose
+            is administered only once.
+        '''
+    )
+    number_of_doses = forms.IntegerField(
+        help_text='''
+            Number of administered doses.
+        '''
+    )
+
+    def save(self, commit=True):
+        instance = super().save()
+        if self.project_id is not None:
+            project = Project.objects.get(id=self.project_id)
+            project.protocols.add(instance)
+            if commit:
+                project.save()
+        for i in range(self.number_of_doses):
+            start_time = self.start_time + i * self.dose_period
+            dose = Dose(
+                protocol=instance,
+                start_time=start_time,
+                duration=self.dose_duration,
+                amount=self.dose_amount,
+            )
+            if commit:
+                dose.save()
+
+
+
+
 
         return instance

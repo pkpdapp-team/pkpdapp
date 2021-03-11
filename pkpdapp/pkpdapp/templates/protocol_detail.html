@@ -7,45 +7,23 @@ copyright notice and full license details.
 {% extends "base/base.html" %}
 {% load static %}
 {% load markdownify %}
-{% load plotly_dash %}
 
 {% block main_content %}
 <h2>Dataset {{dataset.name}} (<a href="{% url 'dataset-update' dataset.id %}"> Update </a>)</h2>
 <p>{{dataset.description|markdownify}}</p>
-<h3>Biomarker Types</h2>
-<ul>
-{% for type in biomarker_types %}
-  <li>{{ type.name }}: {{ type.description|truncatewords:"10"}}</li>
-{% endfor %}
-</ul>
 
-<div class="container-fluid">
-  <div class="row">
-    <div class="col-sm">
-      {% plotly_app_bootstrap name="dataset_view" aspect="16by9"%}
-    </div>
-    {% if has_protocol %}
-    <div class="col-sm">
-        {% plotly_app_bootstrap name="nca_view" aspect="16by9"%}
-    </div>
-    {% endif %}
-  </div>
-</div>
-
-<h3>Data</h2>
+<h3>Doses</h2>
 <table style="width:100%">
   <tr>
     <th>Time</th>
-    <th>Subject Id</th>
-    <th>Biomarker Type</th>
-    <th>Value</th>
+    <th>Amount</th>
+    <th>Duration</th>
   </tr>
-  {% for biomarker in biomarker_dataset %}
+  {% for dose in doses %}
   <tr>
-    <td>{{ biomarker.time }}</td>
-    <td>{{ biomarker.subject_id}}</td>
-    <td>{{ biomarker.biomarker_type.name }}</td>
-    <td>{{ biomarker.value }}</td>
+    <td>{{ dose.time }}</td>
+    <td>{{ dose.amount}}</td>
+    <td>{{ dose.duration }}</td>
   </tr>
   {% endfor %}
 </table>

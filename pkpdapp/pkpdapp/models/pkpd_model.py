@@ -6,6 +6,9 @@
 
 from django.db import models
 from django.urls import reverse
+from pkpdapp.models import (
+    Protocol
+)
 
 
 class MechanisticModel(models.Model):
@@ -52,46 +55,10 @@ class DosedPharmacokineticModel(MechanisticModel):
         default='central',
         help_text='compartment name to be dosed'
     )
-    direct_dose = models.BooleanField(
-        default=True,
-        help_text=(
-            'True if drug is administered directly into the dosing '
-            'compartment'
-        ),
-    )
-    dose_amount = models.FloatField(
-        default=0.0,
-        help_text=(
-            'The amount of the compound that is injected at each '
-            'administration.'
-        ),
-    )
-    dose_start = models.FloatField(
-        default=0.0,
-        help_text='Start time of the treatment.',
-    )
-    dose_duration = models.FloatField(
-        default=0.01,
-        help_text='''
-            Duration of dose administration. For a bolus injection, a dose
-            duration of 1% of the time unit should suffice. By default the
-            duration is set to 0.01 (bolus).
-        '''
-    )
-    dose_period = models.FloatField(
-        blank=True, null=True,
-        help_text='''
-            Periodicity at which doses are administered. If empty the dose
-            is administered only once.
-        '''
-    )
-    number_of_doses = models.IntegerField(
-        blank=True, null=True,
-        help_text='''
-            Number of administered doses. If empty and the periodicity of
-            the administration is not empty, doses are administered
-            indefinitely.
-        '''
+    protocol = models.ForeignKey(
+        Protocol,
+        on_delete=models.CASCADE,
+        help_text='dosing protocol'
     )
 
     def get_absolute_url(self):

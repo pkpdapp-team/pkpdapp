@@ -9,7 +9,7 @@ from django.contrib.auth.models import User
 from django.urls import reverse
 from pkpdapp.models import (
     Dataset, PharmacodynamicModel,
-    DosedPharmacokineticModel
+    DosedPharmacokineticModel, Protocol
 )
 
 
@@ -37,6 +37,11 @@ class Project(models.Model):
         PharmacodynamicModel,
         blank=True,
         help_text='PD models referenced by this project'
+    )
+    protocols = models.ManyToManyField(
+        Protocol,
+        blank=True,
+        help_text='Protocols referenced by this project'
     )
     users = models.ManyToManyField(
         User,

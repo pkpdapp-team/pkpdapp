@@ -7,7 +7,7 @@ from django.shortcuts import render
 from django.urls import reverse_lazy
 from django.core.paginator import Paginator
 from pkpdapp.models import (
-    Dataset, Biomarker, BiomarkerType, Dose, Compound
+    Dataset, Biomarker, BiomarkerType, Dose, Compound, Protocol
 )
 from ..forms import CreateNewDataset, CreateNewBiomarkerUnit
 from pkpdapp.dash_apps.simulation import PDSimulationApp
@@ -93,11 +93,10 @@ def create_visualisation_app(dataset):
 
 def create_nca_app(dataset):
     ID = 5335
-    doses = Dose.objects.filter(dataset=dataset, subject_id=ID)
-    if not doses:
+    protocol = Protocol.objects.filter(dataset=dataset, subject_id=ID).first()
+    if not protocol:
         return None
-    compound_name = doses.first().compound.name
-    doses.filter(compound__name=compound_name)
+    compound_name = protocol.compound.name
     biomarker_types = BiomarkerType.objects.filter(
         dataset=dataset,
         name=compound_name
@@ -121,16 +120,19 @@ def create_nca_app(dataset):
         'value': 'Measurement'
     }, inplace=True)
 
+    doses = Dose.objects.filter(protocol=protocol)\
+                .select_related('protocol__subject_id')\
+                .select_related('protocol__compound__name')
     df_dose = pd.DataFrame(
         list(
-            doses.values('time', 'subject_id',
-                         'compound__name', 'amount')
+            doses.values('time', 'protocol__subject_id',
+                         'protocol__compound__name', 'amount')
         )
     )
     df_dose.rename(columns={
-        'subject_id': 'ID',
+        'protocol__subject_id': 'ID',
         'time': 'Time',
-        'compound__name': 'Compound',
+        'protocol__compound__name': 'Compound',
         'amount': 'Amount'
     }, inplace=True)
 
@@ -159,8 +161,8 @@ class DatasetDetailView(DetailView):
         biomarker_dataset = self.get_paginated_biomarker_dataset(context)
         context['biomarker_dataset'] = biomarker_dataset
         context['page_obj'] = biomarker_dataset
-        doses = Dose.objects.filter(dataset=context['dataset'])
-        context['has_doses'] = len(doses) > 0
+        protocol = Protocol.objects.filter(dataset=context['dataset'])
+        context['has_protocol'] = len(protocol) > 0
         return context
 
     def get_paginated_biomarker_dataset(self, context):

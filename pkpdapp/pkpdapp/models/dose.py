@@ -5,27 +5,29 @@
 #
 
 from django.db import models
-from pkpdapp.models import Compound, Dataset
+from pkpdapp.models import Protocol
 
 
 class Dose(models.Model):
     """
     A single dose event.
     """
-    time = models.FloatField(
-        help_text='time point of dose, in days'
+    protocol = models.ForeignKey(
+        Protocol, on_delete=models.CASCADE,
+        help_text='protocol containing this dose'
     )
-    subject_id = models.IntegerField(
-        help_text='subject id'
-    )
-    compound = models.ForeignKey(
-        Compound, on_delete=models.CASCADE,
-        help_text='drug compound'
-    )
-    dataset = models.ForeignKey(
-        Dataset, on_delete=models.CASCADE,
-        help_text='dataset containing this biomarker measurement'
+    start_time = models.FloatField(
+        help_text='starting time point of dose, in hours'
     )
     amount = models.FloatField(
         help_text='amount of compound administered, in XXX'
+    )
+    duration = models.FloatField(
+        default=0.01,
+        help_text=(
+            'Duration of dose administration. '
+            'For a bolus injection, a dose duration of 1% '
+            'of the time unit should suffice. By default the '
+            'duration is set to 0.01 (bolus).'
+        )
     )
