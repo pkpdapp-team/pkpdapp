@@ -6,7 +6,7 @@
 from django import forms
 from pkpdapp.models import (
     DosedPharmacokineticModel, PharmacodynamicModel,
-    Project, Dose, Protocol
+    Project, Dose, Protocol, Dataset,
 )
 from django.core.exceptions import ValidationError
 import xml.etree.ElementTree as ET
@@ -90,10 +90,20 @@ class CreateNewDosedPharmokineticModel(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         if 'project' in kwargs:
             self.project_id = kwargs.pop('project')
+            self.project = Project.objects.get(id=self.project_id)
+            protocols_from_datasets = Protocol.objects.filter(
+                dataset__in=Dataset.objects.filter(project=self.project)
+            )
+            protocol_queryset = \
+                Protocol.objects.filter(project=self.project) \
+                | protocols_from_datasets
         else:
             self.project_id = None
-
+            protocol_queryset = Protocol.objects.none()
         super().__init__(*args, **kwargs)
+        self.fields['protocol'].queryset = protocol_queryset
+
+
 
     class Meta:
         model = DosedPharmacokineticModel
@@ -176,7 +186,7 @@ class CreateNewProtocol(forms.ModelForm):
         super().__init__(*args, **kwargs)
 
     class Meta:
-        fields = ('name', 'compound', 'dataset', 'subject_id')
+        fields = ('name', )
         model = Protocol
 
     dose_amount = forms.FloatField(
@@ -199,6 +209,7 @@ class CreateNewProtocol(forms.ModelForm):
         '''
     )
     number_of_doses = forms.IntegerField(
+        required=False,
         help_text='''
             Number of administered doses.
         '''
@@ -211,13 +222,20 @@ class CreateNewProtocol(forms.ModelForm):
             project.protocols.add(instance)
             if commit:
                 project.save()
-        for i in range(self.number_of_doses):
-            start_time = self.start_time + i * self.dose_period
+        number_of_doses = self.cleaned_data['number_of_doses']
+        if number_of_doses is None:
+            number_of_doses = 1
+        dose_period = self.cleaned_data['dose_period']
+        if dose_period is None:
+            dose_period = 0.0
+        for i in range(number_of_doses):
+            start_time = self.cleaned_data['protocol_start_time'] \
+                + i * dose_period
             dose = Dose(
                 protocol=instance,
                 start_time=start_time,
-                duration=self.dose_duration,
-                amount=self.dose_amount,
+                duration=self.cleaned_data['dose_duration'],
+                amount=self.cleaned_data['dose_amount'],
             )
             if commit:
                 dose.save()

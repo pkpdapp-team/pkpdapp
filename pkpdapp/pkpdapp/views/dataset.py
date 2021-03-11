@@ -125,13 +125,13 @@ def create_nca_app(dataset):
                 .select_related('protocol__compound__name')
     df_dose = pd.DataFrame(
         list(
-            doses.values('time', 'protocol__subject_id',
+            doses.values('start_time', 'protocol__subject_id',
                          'protocol__compound__name', 'amount')
         )
     )
     df_dose.rename(columns={
         'protocol__subject_id': 'ID',
-        'time': 'Time',
+        'start_time': 'Time',
         'protocol__compound__name': 'Compound',
         'amount': 'Amount'
     }, inplace=True)
@@ -141,7 +141,7 @@ def create_nca_app(dataset):
 
 class DatasetDetailView(DetailView):
     model = Dataset
-    paginate_by = 100
+    paginate_by = 20
     template_name = 'dataset_detail.html'
 
     def get(self, request, *args, **kwargs):
@@ -163,13 +163,24 @@ class DatasetDetailView(DetailView):
         context['page_obj'] = biomarker_dataset
         protocol = Protocol.objects.filter(dataset=context['dataset'])
         context['has_protocol'] = len(protocol) > 0
+
+        context['protocols'] = self.get_paginated_protocols(context)
         return context
 
     def get_paginated_biomarker_dataset(self, context):
         queryset = Biomarker.objects.filter(
             biomarker_type__dataset=context['dataset']
         ).order_by('id')
-        paginator = Paginator(queryset, 20)  # paginate_by
+        paginator = Paginator(queryset, self.paginate_by)
+        page = self.request.GET.get('page')
+        activities = paginator.get_page(page)
+        return activities
+
+    def get_paginated_protocols(self, context):
+        queryset = Protocol.objects.filter(
+            dataset=context['dataset']
+        ).order_by('subject_id')
+        paginator = Paginator(queryset, self.paginate_by)
         page = self.request.GET.get('page')
         activities = paginator.get_page(page)
         return activities

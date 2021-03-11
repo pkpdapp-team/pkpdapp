@@ -560,6 +560,24 @@ class PharmacokineticModel(MechanisticModel):
                                                   limit=num)
         self.simulator.set_protocol(dosing_regimen)
 
+    def set_dosing_events(self, events):
+        """
+
+        Parameters
+        ----------
+        events
+            list of (level, start, duration)
+        """
+        if self._administration is None:
+            raise ValueError(
+                'The route of administration of the dose has not been set.')
+
+        myokit_protocol = myokit.Protocol()
+        for e in events:
+            myokit_protocol.schedule(e[0], e[1], e[2])
+
+        self.simulator.set_protocol(myokit_protocol)
+
     def set_parameter_names(self, names):
         """
         Assigns names to the parameters. By default the :class:`myokit.Model`

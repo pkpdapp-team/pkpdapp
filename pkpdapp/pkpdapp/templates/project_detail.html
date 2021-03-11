@@ -45,6 +45,20 @@ copyright notice and full license details.
 {% endfor %}
 (<a href="{% url 'dosed_pk_model-add-to-project' project.id %}"> Create model </a>)
 </ul>
+<h3>Protocols</h3>
+<ul>
+{% for protocol in project.protocols.all %}
+  <li>
+    <b>{{protocol.name}}</b>
+    <a href={% url 'protocol-detail' protocol.id %}>
+      <i class="fas fa-info-circle"></i>
+    </a>
+  </li>
+{% empty %}
+    <li>No protocols yet.</li>
+{% endfor %}
+(<a href="{% url 'protocol-add-to-project' project.id %}"> Create protocol</a>)
+</ul>
 <h3>PD Models</h3>
 <ul>
 {% for model in project.pd_models.all %}

@@ -5,6 +5,7 @@
 #
 
 from django.db import models
+from django.urls import reverse
 from pkpdapp.models import Compound, Dataset
 
 
@@ -18,6 +19,7 @@ class Protocol(models.Model):
     )
     compound = models.ForeignKey(
         Compound, on_delete=models.CASCADE,
+        blank=True, null=True,
         help_text='drug compound'
     )
     dataset = models.ForeignKey(
@@ -32,5 +34,9 @@ class Protocol(models.Model):
 
     def get_absolute_url(self):
         return reverse('protocol-detail', kwargs={'pk': self.pk})
+
+    def __str__(self):
+        return str(self.name)
+
 
 

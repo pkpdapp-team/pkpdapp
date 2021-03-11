@@ -13,7 +13,8 @@ from pkpdapp.forms import (
 )
 from django.urls import reverse_lazy
 from pkpdapp.models import (PharmacokineticModel, DosedPharmacokineticModel,
-                            PharmacodynamicModel, Biomarker, BiomarkerType)
+                            PharmacodynamicModel, Biomarker, BiomarkerType,
+                            Dose)
 import pandas as pd
 from pkpdapp.dash_apps.simulation import PKSimulationApp, PDSimulationApp
 import pkpdapp.erlotinib as erlo
@@ -52,11 +53,12 @@ def create_dash_app(model, project):
                 param_names_dict[p] = p.replace('.', '_')
             erlo_m.set_parameter_names(names=param_names_dict)
             app.add_model(erlo_m, m.name, use=True)
-            app.set_administration(model.dose_compartment,
-                                   direct=model.direct_dose)
-            app.set_dosing_regimen(model.dose_amount, model.dose_start,
-                                   model.dose_duration, model.dose_period,
-                                   model.number_of_doses)
+            app.set_administration(model.dose_compartment)
+            events = [
+                (d.amount, d.start_time, d.duration)
+                for d in Dose.objects.filter(protocol=model.protocol)
+            ]
+            app.set_dosing_events(events)
         except SBMLParsingError:
             pass
 
@@ -177,9 +179,7 @@ class PharmacodynamicModelDeleteView(DeleteView):
 class DosedPharmacokineticModelDetail(LoginRequiredMixin, DetailView):
     template_name = 'dosed_pharmacokinetic_detail.html'
     fields = [
-        'pharmacokinetic_model', 'dose_compartment', 'direct_dose',
-        'dose_amount', 'dose_start', 'dose_duration', 'dose_period',
-        'number_of_doses'
+        'pharmacokinetic_model', 'dose_compartment', 'protocol',
     ]
     model = DosedPharmacokineticModel
 

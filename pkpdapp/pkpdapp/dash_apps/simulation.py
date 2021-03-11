@@ -455,12 +455,7 @@ class PKSimulationApp(SimulationApp):
         self.set_multiple_models(False)
 
         self._compartment = 'central'
-        self._direct = True
-        self._dose = 0.0
-        self._start = 0.0
-        self._duration = 0.01
-        self._period = None
-        self._num = None
+        self._dosing_events = []
 
     def add_model(self, model, name, use=False):
         """
@@ -503,34 +498,12 @@ class PKSimulationApp(SimulationApp):
         self._compartment = compartment
         self._direct = direct
 
-    def set_dosing_regimen(
-            self, dose, start, duration=0.01, period=None, num=None):
+    def set_dosing_events(self, dosing_events):
         """
-        Sets the dosing regimen
+        Sets the dosing events
 
-        Parameters
-        ----------
-        dose
-            The amount of the compound that is injected at each administration.
-        start
-            Start time of the treatment.
-        duration
-            Duration of dose administration. For a bolus injection, a dose
-            duration of 1% of the time unit should suffice. By default the
-            duration is set to 0.01 (bolus).
-        period
-            Periodicity at which doses are administered. If ``None`` the dose
-            is administered only once.
-        num
-            Number of administered doses. If ``None`` and the periodicity of
-            the administration is not ``None``, doses are administered
-            indefinitely.
         """
-        self._dose = dose
-        self._start = start
-        self._duration = duration
-        self._period = period
-        self._num = num
+        self._dosing_events = dosing_events
 
     def _add_simulation_to_fig(self):
         """
@@ -540,10 +513,9 @@ class PKSimulationApp(SimulationApp):
         self._models[0].set_administration(
             self._compartment, direct=self._direct
         )
-        print('set dosing to', self._dose, self._start,
-              self._duration, self._period, self._num)
-        self._models[0].set_dosing_regimen(
-            self._dose, self._start, self._duration, self._period, self._num
+        print('set dosing to', self._dosing_events)
+        self._models[0].set_dosing_events(
+            self._dosing_events
         )
         super(PKSimulationApp, self)._add_simulation_to_fig()
 

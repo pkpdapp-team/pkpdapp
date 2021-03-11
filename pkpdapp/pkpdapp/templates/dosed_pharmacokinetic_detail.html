@@ -17,12 +17,12 @@ copyright notice and full license details.
       <i class="fas fa-info-circle"></i>
     </a></li>
   <li>Dose compartment: {{object.dose_compartment}}</li>
-  <li>Direct dose?: {{ object.direct_dose|yesno:"yes,no,maybe" }}</li>
-  <li>Dose amount: {{object.dose_amount}}</li>
-  <li>Dose start: {{object.dose_start}}</li>
-  <li>Dose duration: {{object.dose_duration}}</li>
-  <li>Dose period: {{object.dose_period}}</li>
-  <li>Number of doses: {{object.number_of_doses}}</li>
+  <li>
+    Protocol: {{ object.protocol.name }}
+    <a href={% url 'protocol-detail' object.protocol.id %}>
+      <i class="fas fa-info-circle"></i>
+    </a>
+  </li>
 <ul>
   {% plotly_app_bootstrap name="dosed_parmokinetic_view" %}
 {% endblock %}

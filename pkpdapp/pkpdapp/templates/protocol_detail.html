@@ -9,8 +9,7 @@ copyright notice and full license details.
 {% load markdownify %}
 
 {% block main_content %}
-<h2>Dataset {{dataset.name}} (<a href="{% url 'dataset-update' dataset.id %}"> Update </a>)</h2>
-<p>{{dataset.description|markdownify}}</p>
+<h2>Protocol {{protocol.name}} (<a href="{% url 'protocol-update' protocol.id %}"> Update </a>)</h2>
 
 <h3>Doses</h2>
 <table style="width:100%">
@@ -21,7 +20,7 @@ copyright notice and full license details.
   </tr>
   {% for dose in doses %}
   <tr>
-    <td>{{ dose.time }}</td>
+    <td>{{ dose.start_time }}</td>
     <td>{{ dose.amount}}</td>
     <td>{{ dose.duration }}</td>
   </tr>

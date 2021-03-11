@@ -31,6 +31,12 @@ class ProtocolCreate(CreateView):
     template_name = 'protocol_create.html'
     form_class = CreateNewProtocol
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        if 'project' in self.kwargs:
+            kwargs['project'] = self.kwargs['project']
+        return kwargs
+
 
 class ProtocolDetailView(DetailView):
     model = Protocol
@@ -48,7 +54,7 @@ class ProtocolDetailView(DetailView):
     def get_paginated_doses(self, context):
         queryset = Dose.objects.filter(
             protocol=context['protocol']
-        ).order_by('time')
+        ).order_by('start_time')
         paginator = Paginator(queryset, self.paginate_by)
         page = self.request.GET.get('page')
         return paginator.get_page(page)
