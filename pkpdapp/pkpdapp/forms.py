@@ -3,14 +3,14 @@
 # is released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
+import xml.etree.ElementTree as ET
 from django import forms
+from django.core.exceptions import ValidationError
+from django.utils.translation import gettext as _
 from pkpdapp.models import (
     DosedPharmacokineticModel, PharmacodynamicModel,
     Project, Dose, Protocol, Dataset,
 )
-from django.core.exceptions import ValidationError
-import xml.etree.ElementTree as ET
-import pkpdapp.erlotinib as erlo
 
 MAX_UPLOAD_SIZE = "5242880"
 
@@ -87,6 +87,7 @@ class CreateNewDosedPharmokineticModel(forms.ModelForm):
     Can pass an additional kwarg 'project', which adds the new model to this
     project id
     """
+
     def __init__(self, *args, **kwargs):
         if 'project' in kwargs:
             self.project_id = kwargs.pop('project')
@@ -102,8 +103,6 @@ class CreateNewDosedPharmokineticModel(forms.ModelForm):
             protocol_queryset = Protocol.objects.none()
         super().__init__(*args, **kwargs)
         self.fields['protocol'].queryset = protocol_queryset
-
-
 
     class Meta:
         model = DosedPharmacokineticModel
@@ -131,6 +130,7 @@ class CreateNewPharmodynamicModel(forms.ModelForm):
     Can pass an additional kwarg 'project', which adds the new model to this
     project id
     """
+
     def __init__(self, *args, **kwargs):
         if 'project' in kwargs:
             self.project_id = kwargs.pop('project')
@@ -169,6 +169,7 @@ class CreateNewPharmodynamicModel(forms.ModelForm):
 
         return instance
 
+
 class CreateNewProtocol(forms.ModelForm):
     """
     A form to create a new
@@ -177,6 +178,7 @@ class CreateNewProtocol(forms.ModelForm):
     Can pass an additional kwarg 'project', which adds the new model to this
     project id
     """
+
     def __init__(self, *args, **kwargs):
         if 'project' in kwargs:
             self.project_id = kwargs.pop('project')
@@ -239,9 +241,5 @@ class CreateNewProtocol(forms.ModelForm):
             )
             if commit:
                 dose.save()
-
-
-
-
 
         return instance

@@ -3,27 +3,15 @@
 # is released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-from django.shortcuts import render
-from django.urls import reverse_lazy
 from django.core.paginator import Paginator
 from pkpdapp.models import (
-    Dataset, Biomarker, BiomarkerType, Dose, Compound, Protocol
+    Dose, Protocol
 )
 from ..forms import CreateNewProtocol
-from pkpdapp.dash_apps.simulation import PDSimulationApp
-import pandas as pd
-from django.contrib import messages
-from django.apps import apps
-from django.forms import formset_factory
-from django.shortcuts import redirect
 from django.views.generic import (
     DetailView, CreateView,
     UpdateView, DeleteView,
-    ListView
 )
-from pkpdapp.dash_apps.demo_nca_app import NcaApp
-from dash.dependencies import Input, Output
-import dash
 
 
 class ProtocolCreate(CreateView):

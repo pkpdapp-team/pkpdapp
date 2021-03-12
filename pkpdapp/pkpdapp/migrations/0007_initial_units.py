@@ -6,6 +6,7 @@
 
 from django.db import migrations
 
+
 def load_units(apps, schema_editor):
     Unit = apps.get_model("pkpdapp", "Unit")
     StandardUnit = apps.get_model("pkpdapp", "StandardUnit")

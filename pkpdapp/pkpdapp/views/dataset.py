@@ -7,7 +7,7 @@ from django.shortcuts import render
 from django.urls import reverse_lazy
 from django.core.paginator import Paginator
 from pkpdapp.models import (
-    Dataset, Biomarker, BiomarkerType, Dose, Compound, Protocol
+    Dataset, Biomarker, BiomarkerType, Dose, Protocol
 )
 from ..forms import CreateNewDataset, CreateNewBiomarkerUnit
 from pkpdapp.dash_apps.simulation import PDSimulationApp
@@ -90,6 +90,7 @@ def create_visualisation_app(dataset):
         return app._fig._fig
 
     return app
+
 
 def create_nca_app(dataset):
     ID = 5335

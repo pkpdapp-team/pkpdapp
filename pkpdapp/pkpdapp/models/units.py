@@ -6,11 +6,13 @@
 
 from django.db import models
 
+
 class AbstractUnit(models.Model):
     symbol = models.CharField(
         max_length=20,
         help_text='unit symbol (e.g. "mg")'
     )
+
     class Meta:
         abstract = True
 
@@ -21,6 +23,7 @@ class AbstractUnit(models.Model):
 class StandardUnit(AbstractUnit):
     """
     """
+
 
 class Unit(AbstractUnit):
     """
@@ -36,5 +39,3 @@ class Unit(AbstractUnit):
 
     def to_standard_unit(self, measure):
         return measure * self.multiplier
-
-

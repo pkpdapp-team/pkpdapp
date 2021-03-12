@@ -309,9 +309,11 @@ def load_datasets(apps, schema_editor):
                             dataset=dataset,
                             subject_id=subject_id,
                         )
+                    start_time = time_unit.multiplier * float(row[TIME_COLUMN])
+                    amount = unit.multiplier * float(row[DOSE_COLUMN])
                     Dose.objects.create(
-                        start_time=time_unit.multiplier * float(row[TIME_COLUMN]),
-                        amount=unit.multiplier * float(row[DOSE_COLUMN]),
+                        start_time=start_time,
+                        amount=amount,
                         protocol=protocol,
                     )
 

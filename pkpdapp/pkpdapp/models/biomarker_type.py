@@ -8,7 +8,6 @@ from django.db import models
 from pkpdapp.models import Dataset, StandardUnit
 
 
-
 class BiomarkerType(models.Model):
     """
     A type of biomarker measurement associated with a particular dataset, for
@@ -31,4 +30,4 @@ class BiomarkerType(models.Model):
     )
 
     def __str__(self):
-        return self.name
+        return str(self.name)

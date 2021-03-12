@@ -11,8 +11,8 @@ from pkpdapp.models import Compound, Dataset
 
 class Protocol(models.Model):
     """
-    Multiple doses forming a single protocol. Can optionally be associated with a
-    compound, dataset and subject.
+    Multiple doses forming a single protocol. Can optionally be associated with
+    a compound, dataset and subject.
     """
     name = models.CharField(
         max_length=100, help_text='name of the protocol'
@@ -37,6 +37,3 @@ class Protocol(models.Model):
 
     def __str__(self):
         return str(self.name)
-
-
-

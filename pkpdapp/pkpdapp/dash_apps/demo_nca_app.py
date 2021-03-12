@@ -11,14 +11,7 @@ will visualise the NCA functionalities.
 
 import dash_core_components as dcc
 import dash_html_components as html
-from django.conf import settings
-from django_plotly_dash import DjangoDash
-import myokit
-import myokit.formats.sbml as sbml
 import numpy as np
-import pandas as pd
-import pints
-import plotly.colors
 import plotly.express as px
 import plotly.graph_objects as go
 import scipy.stats as stats
@@ -26,7 +19,10 @@ from .base import BaseApp
 
 
 class NCA():
-    def __init__(self, time, conc, DM, doseSchedule='Single', administrationRoute='IVBolus'):
+    def __init__(self,
+                 time, conc, DM,
+                 doseSchedule='Single', administrationRoute='IVBolus'
+                 ):
         """
         Initialise NCA class for calculating and storing NCA parameters
         :param time: {np.ndarray} --- array of observation times
@@ -67,7 +63,6 @@ class NCA():
         # self.AUCx_y
         self.AUC_extrap_percent = self._AUC_extrap_percent()
         self.CL = self._CL()
-        #self.C_0 = self._C_0()
         self.C_max, self.T_max = self._find_Cmax()
         self.C_max_Dose = self._C_max_Dose()
         # C_max_x_y
@@ -87,9 +82,9 @@ class NCA():
 
     @staticmethod
     def extrapolate_c0(y, x):
-        """Calculate initial concentration when not given,
-        computed using a (log) regression of the first two data points in a profile.
-
+        """
+        Calculate initial concentration when not given, computed using a (log)
+        regression of the first two data points in a profile.
         Arguments:
         y {np.ndarray} -- y coordinates of points on curve
         x {np.ndarray} -- x coordinates of points on curve
@@ -97,7 +92,8 @@ class NCA():
         Returns:
         c0 {double} -- extrapoloated c0
         """
-        slope, intercept, r_value, _, _ = stats.linregress(x[:2], np.log(y[:2]), )
+        slope, intercept, r_value, _, _ = \
+            stats.linregress(x[:2], np.log(y[:2]), )
         c0 = np.exp(intercept)
         return c0
 
@@ -120,8 +116,10 @@ class NCA():
 
     @staticmethod
     def linlog_trapz(y, x, linlog=True):
-        """Calculate area under curve using combination of linear and log trapezoidal method
-        (linear when increasing, log when decreasing) or optionally just linear trapezoidal method
+        """
+        Calculate area under curve using combination of linear and log
+        trapezoidal method (linear when increasing, log when decreasing) or
+        optionally just linear trapezoidal method
         :param y {np.ndarray} -- y coordinates of points on curve
         :param x {np.ndarray} -- x coordinates of points on curve
         :param linlog {bool} -- use linear-log trapezoidal method
@@ -140,8 +138,9 @@ class NCA():
         return area
 
     def _AUC_0_last(self, linlog=True):
-        """Calculates area under the concentration–time curve (AUC)
-         from time 0 to the last time point Tlast using linear-log trapezoidal method
+        """
+        Calculates area under the concentration–time curve (AUC) from time 0 to
+        the last time point Tlast using linear-log trapezoidal method
         Arguments:
         :param y {np.ndarray} -- y coordinates of points on curve
         :param x {np.ndarray} -- x coordinates of points on curve
@@ -154,8 +153,10 @@ class NCA():
         return auc
 
     def _AUMC_0_last(self, linlog=True):
-        """Calculate area under the first moment of the concentration–time curve (AUMC)
-         from time 0 to the last time point Tlast using linear log trapezoidal method
+        """
+        Calculate area under the first moment of the concentration–time curve
+        (AUMC) from time 0 to the last time point Tlast using linear log
+        trapezoidal method
         Arguments:
         :param y {np.ndarray} -- y coordinates of points on curve
         :param x {np.ndarray} -- x coordinates of points on curve
@@ -169,11 +170,13 @@ class NCA():
 
     def _Lambda_z(self):
         """
-        Calculates terminal rate constant by performing set of linear regressions on log(conc)-time data
-        using the last n (=3,4,...) points from the terminal (decreasing T >= Tmax) section of curve and
-        returning rate constant with maximum adj_r
+        Calculates terminal rate constant by performing set of linear
+        regressions on log(conc)-time data using the last n (=3,4,...) points
+        from the terminal (decreasing T >= Tmax) section of curve and returning
+        rate constant with maximum adj_r
         :return lambda_z {float} -- terminal rate constant
-        :return R2 {float} -- coefficient of determination for best linear regression
+        :return R2 {float} -- coefficient of determination for best
+                            linear regression
         :return m {int} -- number of data points used in best linear regression
         """
         y = self.conc
@@ -183,7 +186,8 @@ class NCA():
         cmax_indx = np.argmax(y)  # index of max concentration
         n_upper = len(y) - cmax_indx  # max number of points to consider
         for n in range(3, n_upper + 1):  # perform regressions
-            slope, intercept, r_value, _, _ = stats.linregress(x[-n:], np.log(y[-n:]))
+            slope, intercept, r_value, _, _ = \
+                stats.linregress(x[-n:], np.log(y[-n:]))
             adj_r = 1 - ((1 - r_value ** 2) * (n - 1)) / (n - 2)
             # Update lambda, r and m if adj_r has increased
             if adj_r > r:
@@ -194,8 +198,8 @@ class NCA():
 
     def _AUC_infinity(self):
         """
-        Calculate total area under the concentration–time curve extrapolating to Inf
-         using the terminal rate constant Lambda_z.
+        Calculate total area under the concentration–time curve extrapolating
+        to Inf using the terminal rate constant Lambda_z.
         :return: auc_inf {float} AUC-Inf
         """
         auc_inf = self.AUC_0_last + self.conc[-1] / self.Lambda_z
@@ -243,7 +247,8 @@ class NCA():
 
     def _AUMC(self):
         """
-        Calculate area under the first moment of the concentration–time curve extrapolated to Inf
+        Calculate area under the first moment of the concentration–time curve
+        extrapolated to Inf
         :return: aumc {float} -- AUMC
         """
         aumc = self.AUMC_0_last + \
@@ -273,14 +278,16 @@ class NCA():
 
     def _T_half(self):
         """
-        Calculate terminal half life of drug (time to decay to half amount under terminal rate constant)
+        Calculate terminal half life of drug (time to decay to half amount
+        under terminal rate constant)
         :return: {float} -- terminal half life
         """
         return np.log(2) / self.Tlast
 
     def _V_ss(self):
         """
-        Calculate apparent volume of distribution at equilibrium. (IV Bolus doses only).
+        Calculate apparent volume of distribution at equilibrium. (IV Bolus
+        doses only).
         :return: {float} -- apparent volume of distribution
         """
         return (self.DM * self.AUMC) / (self.AUC_infinity * self.Lambda_z)
@@ -336,12 +343,14 @@ class NcaApp(BaseApp):
         nca.calculate_nca()
 
         first_point = np.asarray(
-            df_single[df_single[self._time_key] ==
-                      df_single[self._time_key].min()][[self._time_key, self._obs_key]])[0]
+            df_single[
+                df_single[self._time_key] == df_single[self._time_key].min()
+            ][[self._time_key, self._obs_key]])[0]
 
         last_point = np.asarray(
-            df_single[df_single[self._time_key] ==
-                      df_single[self._time_key].max()][[self._time_key, self._obs_key]])[0]
+            df_single[
+                df_single[self._time_key] == df_single[self._time_key].max()
+            ][[self._time_key, self._obs_key]])[0]
 
         max_point = [nca.T_max, nca.C_max]
 
@@ -367,7 +376,8 @@ class NcaApp(BaseApp):
         # Visualisation using Plotly
         y_label = self._drug + " Concentration"
         x_label = "Time"
-        main_title = self._drug + " Concentration for ID" + str(self._subject_id)
+        main_title = self._drug + \
+            " Concentration for ID" + str(self._subject_id)
         hex_colour = px.colors.qualitative.Plotly[0]
 
         # Make the scatter plot
@@ -378,7 +388,10 @@ class NcaApp(BaseApp):
             y=self._obs_key,
         )
 
-        fig.update_xaxes(title_text=x_label, range=[0, self._last_point[0] * 1.1])
+        fig.update_xaxes(
+            title_text=x_label,
+            range=[0, self._last_point[0] * 1.1]
+        )
         fig.update_yaxes(title_text=y_label)
         fig.update_traces(mode='markers+lines')
         fig['data'][0]['showlegend'] = True
@@ -399,25 +412,34 @@ class NcaApp(BaseApp):
         C0_text = "C_0 = " + str(round(self._nca.C_0, self._rounding))
         text = ["", C0_text]
 
-        fig.add_trace(go.Scatter(x=self._before[:, 0],
-                                 y=self._before[:, 1],
-                                 mode='lines',
-                                 line={'dash': 'dash', 'color': hex_colour},
-                                 name='Extrapolation',
-                                 visible=False,
-                                 hovertemplate='<b>%{text}</b>',
-                                 text=[text[i].format(i + 1) for i in range(2)]))
+        fig.add_trace(
+            go.Scatter(
+                x=self._before[:, 0],
+                y=self._before[:, 1],
+                mode='lines',
+                line={'dash': 'dash', 'color': hex_colour},
+                name='Extrapolation',
+                visible=False,
+                hovertemplate='<b>%{text}</b>',
+                text=[text[i].format(i + 1) for i in range(2)]
+            )
+        )
 
-        T_half_text = "T_half = " + str(round(self._nca.T_half, self._rounding))
+        T_half_text = "T_half = " + \
+            str(round(self._nca.T_half, self._rounding))
         text = ["", T_half_text, T_half_text]
 
-        fig.add_trace(go.Scatter(x=self._after[:, 0], y=self._after[:, 1],
-                                 mode='lines',
-                                 line={'dash': 'dash', 'color': "cyan"},
-                                 name='Extrapolation',
-                                 visible=False,
-                                 hovertemplate='<b>%{text}</b>',
-                                 text=[text[i].format(i + 1) for i in range(3)]))
+        fig.add_trace(
+            go.Scatter(
+                x=self._after[:, 0], y=self._after[:, 1],
+                mode='lines',
+                line={'dash': 'dash', 'color': "cyan"},
+                name='Extrapolation',
+                visible=False,
+                hovertemplate='<b>%{text}</b>',
+                text=[text[i].format(i + 1) for i in range(3)]
+            )
+        )
 
         # Assign settings for the Extrapolated points
         AUC_fill = AUC_fill + ['tozeroy'] * 2
@@ -428,24 +450,31 @@ class NcaApp(BaseApp):
         Tmax_visibility = Tmax_visibility + [True] * 2
 
         # Extrapolation text
-        lambdaz_text = " Lambda_z = " + str(round(self._nca.Lambda_z, self._rounding)) + \
+        lambdaz_text = " Lambda_z = " + \
+            str(round(self._nca.Lambda_z, self._rounding)) + \
             "<br> T_half = " + str(round(self._nca.T_half, self._rounding)) + \
             "<br> Num_points = " + str(self._nca.Num_points) + \
             "<br> R2 = " + str(round(self._nca.R2, self._rounding))
         num_on_line = 100
         text = [lambdaz_text] * num_on_line
 
-        hover_point = [np.linspace(self._after[0, 0], self._after[-1, 0], num_on_line),
-                       np.linspace(self._after[0, 1], self._after[-1, 1], num_on_line)]
-        fig.add_trace(go.Scatter(x=hover_point[0], y=hover_point[1],
-                                 mode='markers',
-                                 marker=dict(opacity=0,
-                                             size=5),
-                                 name='',
-                                 visible=False,
-                                 showlegend=False,
-                                 hovertemplate='<b>%{text}</b>',
-                                 text=[text[i].format(i + 1) for i in range(num_on_line)]))
+        hover_point = [
+            np.linspace(self._after[0, 0], self._after[-1, 0], num_on_line),
+            np.linspace(self._after[0, 1], self._after[-1, 1], num_on_line)
+        ]
+        fig.add_trace(
+            go.Scatter(
+                x=hover_point[0], y=hover_point[1],
+                mode='markers',
+                marker=dict(opacity=0,
+                            size=5),
+                name='',
+                visible=False,
+                showlegend=False,
+                hovertemplate='<b>%{text}</b>',
+                text=[text[i].format(i + 1) for i in range(num_on_line)]
+            )
+        )
 
         # Assign settings for the Extrapolated points
         AUC_fill = AUC_fill + ['None']
@@ -458,14 +487,17 @@ class NcaApp(BaseApp):
         # First Moment Data (Time*Concentration)
         first_moment_y = np.asarray(self._df_single[self._obs_key]) \
             * np.asarray(self._df_single[self._time_key])
-        fig.add_trace(go.Scatter(x=np.asarray(self._df_single[self._time_key]),
-                                 y=first_moment_y,
-                                 mode='lines+markers',
-                                 line={'dash': 'solid', 'color': hex_colour},
-                                 marker=dict(color=hex_colour),
-                                 name='First Moment',
-                                 visible=False
-                                 ))
+        fig.add_trace(
+            go.Scatter(
+                x=np.asarray(self._df_single[self._time_key]),
+                y=first_moment_y,
+                mode='lines+markers',
+                line={'dash': 'solid', 'color': hex_colour},
+                marker=dict(color=hex_colour),
+                name='First Moment',
+                visible=False
+            )
+        )
 
         # Assign settings for the First Moment
         AUC_fill = AUC_fill + ['None']
@@ -479,26 +511,35 @@ class NcaApp(BaseApp):
         C0_text = "C_0 = " + str(round(self._nca.C_0, self._rounding))
         text = ["", C0_text]
 
-        fig.add_trace(go.Scatter(x=self._before[:, 0],
-                                 y=self._before[:, 1] * self._before[:, 0],
-                                 mode='lines',
-                                 line={'dash': 'dash', 'color': hex_colour},
-                                 name='Extrapolation',
-                                 visible=False,
-                                 hovertemplate='<b>%{text}</b>',
-                                 text=[text[i].format(i + 1) for i in range(2)]))
+        fig.add_trace(
+            go.Scatter(
+                x=self._before[:, 0],
+                y=self._before[:, 1] * self._before[:, 0],
+                mode='lines',
+                line={'dash': 'dash', 'color': hex_colour},
+                name='Extrapolation',
+                visible=False,
+                hovertemplate='<b>%{text}</b>',
+                text=[text[i].format(i + 1) for i in range(2)]
+            )
+        )
 
-        T_half_text = "T_half = " + str(round(self._nca.T_half, self._rounding))
+        T_half_text = "T_half = " + \
+            str(round(self._nca.T_half, self._rounding))
         text = ["", T_half_text, T_half_text]
 
         first_moment_after = self._after[:, 1] * self._after[:, 0]
-        fig.add_trace(go.Scatter(x=self._after[:, 0], y=first_moment_after,
-                                 mode='lines',
-                                 line={'dash': 'dash', 'color': "cyan"},
-                                 name='Extrapolation',
-                                 visible=False,
-                                 hovertemplate='<b>%{text}</b>',
-                                 text=[text[i].format(i + 1) for i in range(3)]))
+        fig.add_trace(
+            go.Scatter(
+                x=self._after[:, 0], y=first_moment_after,
+                mode='lines',
+                line={'dash': 'dash', 'color': "cyan"},
+                name='Extrapolation',
+                visible=False,
+                hovertemplate='<b>%{text}</b>',
+                text=[text[i].format(i + 1) for i in range(3)]
+            )
+        )
 
         # Assign settings for the First Moment Extrapolated points
         AUC_fill = AUC_fill + ['None'] * 2
@@ -515,34 +556,44 @@ class NcaApp(BaseApp):
                    min(self._df_single[self._time_key])),
             max(first_moment_y) * 0.5
         ]
-        AUMC_text = "AUMC_0_last = " + str(round(self._nca.AUMC_0_last, self._rounding))
+        AUMC_text = "AUMC_0_last = " + \
+            str(round(self._nca.AUMC_0_last, self._rounding))
         text = [AUMC_text]
 
-        fig.add_trace(go.Scatter(x=[hover_point[0]], y=[hover_point[1]],
-                                 mode='markers',
-                                 marker=dict(opacity=0,
-                                             size=40),
-                                 name='AUMC',
-                                 visible=False,
-                                 showlegend=False,
-                                 hovertemplate='<b>%{text}</b>',
-                                 text=[text[i].format(i + 1) for i in range(1)]))
+        fig.add_trace(
+            go.Scatter(
+                x=[hover_point[0]], y=[hover_point[1]],
+                mode='markers',
+                marker=dict(opacity=0,
+                            size=40),
+                name='AUMC',
+                visible=False,
+                showlegend=False,
+                hovertemplate='<b>%{text}</b>',
+                text=[text[i].format(i + 1) for i in range(1)]
+            )
+        )
 
         hover_point = [self._last_point[0] * 1.05,
                        self._last_point[1] * self._last_point[0] * 0.5]
-        AUMC_inf_text = " AUMC = " + str(round(self._nca.AUMC, self._rounding)) + \
+        AUMC_inf_text = " AUMC = " + \
+            str(round(self._nca.AUMC, self._rounding)) + \
             "<br> AUMC_extrap_percent = " + \
             str(round(self._nca.AUMC_extrap_percent, self._rounding))
         text = [AUMC_inf_text]
-        fig.add_trace(go.Scatter(x=[hover_point[0]], y=[hover_point[1]],
-                                 mode='markers',
-                                 marker=dict(opacity=0,
-                                             size=0.5),
-                                 name='AUMC',
-                                 visible=False,
-                                 showlegend=False,
-                                 hovertemplate='<b>%{text}</b>',
-                                 text=[text[i].format(i + 1) for i in range(1)]))
+        fig.add_trace(
+            go.Scatter(
+                x=[hover_point[0]], y=[hover_point[1]],
+                mode='markers',
+                marker=dict(opacity=0,
+                            size=0.5),
+                name='AUMC',
+                visible=False,
+                showlegend=False,
+                hovertemplate='<b>%{text}</b>',
+                text=[text[i].format(i + 1) for i in range(1)]
+            )
+        )
 
         # AUMC Text
         fig.add_trace(go.Scatter(x=[self._last_point[0]],
@@ -570,34 +621,46 @@ class NcaApp(BaseApp):
 
 # AUC
         hover_point = [self._max_point[0], self._max_point[1] * 0.5]
-        AUC_text = "AUC_0_last = " + str(round(self._nca.AUC_0_last, self._rounding))
+        AUC_text = "AUC_0_last = " + \
+            str(round(self._nca.AUC_0_last, self._rounding))
         text = [AUC_text]
 
-        fig.add_trace(go.Scatter(x=[hover_point[0]], y=[hover_point[1]],
-                                 mode='markers',
-                                 marker=dict(opacity=0,
-                                             size=40),
-                                 name='AUC',
-                                 visible=False,
-                                 showlegend=False,
-                                 hovertemplate='<b>%{text}</b>',
-                                 text=[text[i].format(i + 1) for i in range(1)]))
+        fig.add_trace(
+            go.Scatter(
+                x=[hover_point[0]], y=[hover_point[1]],
+                mode='markers',
+                marker=dict(opacity=0,
+                            size=40),
+                name='AUC',
+                visible=False,
+                showlegend=False,
+                hovertemplate='<b>%{text}</b>',
+                text=[text[i].format(i + 1) for i in range(1)]
+            )
+        )
 
         hover_point = [self._last_point[0] * 1.05, self._last_point[1] * 0.5]
-        AUC_inf_text = " AUC_infinity = " + str(round(self._nca.AUC_infinity, self._rounding)) + \
-            "<br> AUC_infinity_dose = " + str(round(self._nca.AUC_infinity_dose, self._rounding)) + \
+        AUC_inf_text = \
+            " AUC_infinity = " + \
+            str(round(self._nca.AUC_infinity, self._rounding)) + \
+            "<br> AUC_infinity_dose = " + \
+            str(round(self._nca.AUC_infinity_dose, self._rounding)) + \
             "<br> AUC_extrap_percent = " + \
             str(round(self._nca.AUC_extrap_percent, self._rounding))
         text = [AUC_inf_text]
-        fig.add_trace(go.Scatter(x=[hover_point[0]], y=[hover_point[1]],
-                                 mode='markers',
-                                 marker=dict(opacity=0,
-                                             size=0.5),
-                                 name='AUC',
-                                 visible=False,
-                                 showlegend=False,
-                                 hovertemplate='<b>%{text}</b>',
-                                 text=[text[i].format(i + 1) for i in range(1)]))
+        fig.add_trace(
+            go.Scatter(
+                x=[hover_point[0]], y=[hover_point[1]],
+                mode='markers',
+                marker=dict(opacity=0,
+                            size=0.5),
+                name='AUC',
+                visible=False,
+                showlegend=False,
+                hovertemplate='<b>%{text}</b>',
+                text=[text[i].format(i + 1) for i in range(1)]
+            )
+        )
 
         # AUC Text
         fig.add_trace(go.Scatter(x=[self._last_point[0]],
@@ -628,20 +691,22 @@ class NcaApp(BaseApp):
         Cmax_text = "C_max = " + str(self._max_point[1])
         text = [Tmax_text, "", Cmax_text]
 
-        fig.add_trace(go.Scatter(x=[self._max_point[0], self._max_point[0], 0],
-                                 y=[0, self._max_point[1], self._max_point[1]],
-                                 mode='lines',
-                                 line=dict(color=hex_colour,
-                                           dash="dashdot"
-                                           ),
-                                 # name="T_max/C_max",
-                                 name="",
-                                 showlegend=False,
-                                 visible=False,
-                                 hovertemplate='<b>%{text}</b>',
-                                 text=[text[i].format(i + 1) for i in range(3)],
-                                 )
-                      )
+        fig.add_trace(
+            go.Scatter(
+                x=[self._max_point[0], self._max_point[0], 0],
+                y=[0, self._max_point[1], self._max_point[1]],
+                mode='lines',
+                line=dict(color=hex_colour,
+                          dash="dashdot"
+                          ),
+                # name="T_max/C_max",
+                name="",
+                showlegend=False,
+                visible=False,
+                hovertemplate='<b>%{text}</b>',
+                text=[text[i].format(i + 1) for i in range(3)],
+            )
+        )
 
         # Maximum Text
         fig.add_trace(go.Scatter(x=[self._last_point[0]],
