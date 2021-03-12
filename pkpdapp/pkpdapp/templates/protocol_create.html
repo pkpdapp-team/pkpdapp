@@ -9,9 +9,9 @@ copyright notice and full license details.
 
 {% block main_content %}
 
-<h2>Update Model {{object.name}}</h2>
+<h2>Create Protocol</h2>
 
-<form action="" method="post">
+<form action="" method="post"  enctype="multipart/form-data">
   {% csrf_token %}
   <table>
   {{ form.as_table }}

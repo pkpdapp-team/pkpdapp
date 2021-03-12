@@ -19,7 +19,7 @@ def load_users_and_projects(apps, schema_editor):
                     'name': 'demo',
                     'description': '''This is an example project demonstrating some of the
                     capabilities of pkpdapp''',
-                }
+                },
             ]
         }
     ]

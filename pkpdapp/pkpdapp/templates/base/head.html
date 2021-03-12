@@ -5,6 +5,11 @@ copyright notice and full license details.
 -->
 
 {% load static %}
+{% load current_project %}
+
+{% if user.is_authenticated %}
+{% current_project user as current_project %}
+{% endif %}
 
 <nav class="navbar sticky-top navbar-expand-lg navbar-light bg-light">
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggler" aria-controls="navbarToggler" aria-expanded="false" aria-label="Toggle navigation">
@@ -21,15 +26,45 @@ copyright notice and full license details.
             <li class="nav-item">
                 <a class="nav-link" href="{% url 'generic' %}">About</a>
             </li>
-            <li class="nav-item">
-                <a class="nav-link" href="{% url 'generic' %}">Workflows</a>
+            {% if user.is_authenticated and current_project %}
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                Datasets
+              </a>
+              <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                {% for d in current_project.datasets.all %}
+                <a class="dropdown-item" href={% url 'dataset-detail' d.id %}>{{d.name}}</a>
+                {% endfor %}
+              </div>
             </li>
-             <li class="nav-item">
-                <a class="nav-link" href="{% url 'generic' %}">Model Repository</a>
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                PK Models
+              </a>
+              <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                {% for m in current_project.pk_models.all %}
+                <a class="dropdown-item" href={% url 'dosed_pk_model-detail' m.id
+                  %}>{{m.pharmacokinetic_model.name}}</a>
+                {% endfor %}
+                <a class="dropdown-item" href="{% url 'dosed_pk_model-add-to-project' current_project.id %}"> 
+                  Create model.. 
+                </a>
+              </div>
             </li>
-             <li class="nav-item">
-                <a class="nav-link" href="{% url 'generic' %}">Documentation</a>
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                PD Models
+              </a>
+              <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                {% for m in current_project.pd_models.all %}
+                <a class="dropdown-item" href={% url 'pd_model-detail' m.id %}>{{m.name}}</a>
+                {% endfor %}
+                <a class="dropdown-item" href="{% url 'pd_model-add-to-project' current_project.id %}"> 
+                  Create model.. 
+                </a>
+              </div>
             </li>
+            {% endif %}
         </ul>
         <ul class="navbar-nav my-2 my-lg-0">
             {% if user.is_authenticated %}
@@ -37,7 +72,7 @@ copyright notice and full license details.
               <div class="form-inline">
                 <label for="projectSelect"><a href="/project/">Project:</a></label>
                 <select class="form-control mx-2" id="projectSelect">
-                  <option selected>{{ user.profile.selected_project.name }}</option>
+                  <option selected>{{ current_project.name }}</option>
             
                   {% for p in user.project_set.all %}
                   <option>{{ p.name }}</option>

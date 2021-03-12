@@ -38,16 +38,16 @@ class Test0006InitialPkpdModelsReverse(MigratorTestCase):
     migrate_to = ('pkpdapp', '0001_initial')
 
     def prepare(self):
-        old_pkpd_models = self.old_state.apps.get_model(
-            'pkpdapp', 'PkpdModel'
+        old_pd_models = self.old_state.apps.get_model(
+            'pkpdapp', 'PharmacodynamicModel'
         )
-        self.assertTrue(len(old_pkpd_models.objects.all()) > 0)
+        self.assertTrue(len(old_pd_models.objects.all()) > 0)
 
     def test_all_pkpd_models_are_deleted(self):
-        new_pkpd_models = self.old_state.apps.get_model(
-            'pkpdapp', 'PkpdModel'
+        new_pd_models = self.old_state.apps.get_model(
+            'pkpdapp', 'PharmacodynamicModel'
         )
-        self.assertTrue(len(new_pkpd_models.objects.all()) == 0)
+        self.assertTrue(len(new_pd_models.objects.all()) == 0)
 
 
 class Test0003InitialUsersProjectReverse(MigratorTestCase):
