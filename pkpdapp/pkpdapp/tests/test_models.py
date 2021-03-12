@@ -19,7 +19,6 @@ class TestDatasetModel(TestCase):
             name='my_cool_dataset',
             datetime=timezone.now(),
             description='description for my cool dataset',
-            administration_type='T1',
         )
         self.assertTrue(isinstance(d, Dataset))
 
@@ -30,12 +29,11 @@ class TestBiomarkerTypeModel(TestCase):
             name='my_cool_dataset',
             datetime=timezone.now(),
             description='description for my cool biomarker',
-            administration_type='T1',
         )
+
         bt = BiomarkerType.objects.create(
             name='my_cool_biomarker_type',
             description='description for my cool biomarker_type',
-            unit='mg',
             dataset=d,
         )
         self.assertTrue(isinstance(bt, BiomarkerType))
@@ -47,8 +45,8 @@ class TestBiomarkerModel(TestCase):
             name='my_cool_dataset',
             datetime=timezone.now(),
             description='description for my cool biomarker',
-            administration_type='T1',
         )
+
         b = BiomarkerType.objects.create(
             name='my type',
             dataset=d,
@@ -103,7 +101,6 @@ class TestProjectModel(TestCase):
             name='my_cool_dataset',
             datetime=timezone.now(),
             description='description for my cool dataset',
-            administration_type='T1',
         )
         p.datasets.add(d)
         self.assertQuerysetEqual(p.datasets.all(), [repr(d)])

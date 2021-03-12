@@ -36,22 +36,22 @@ def create_visualisation_app(dataset):
     # add datasets
     biomarker_types = BiomarkerType.objects.filter(dataset=dataset)
     biomarkers = Biomarker.objects\
-        .select_related('biomarker_type__name')\
         .filter(biomarker_type__in=biomarker_types)
 
-    # convert to pandas dataframe with the column names expected
-    df = pd.DataFrame(
-        list(
-            biomarkers.values('time', 'subject_id',
-                              'biomarker_type__name', 'value')))
-    df.rename(columns={
-        'subject_id': 'ID',
-        'time': 'Time',
-        'biomarker_type__name': 'Biomarker',
-        'value': 'Measurement'
-    }, inplace=True)
+    if biomarkers:
+        # convert to pandas dataframe with the column names expected
+        df = pd.DataFrame(
+            list(
+                biomarkers.values('time', 'subject_id',
+                                  'biomarker_type__name', 'value')))
+        df.rename(columns={
+            'subject_id': 'ID',
+            'time': 'Time',
+            'biomarker_type__name': 'Biomarker',
+            'value': 'Measurement'
+        }, inplace=True)
 
-    app.add_data(df, dataset.name, use=True)
+        app.add_data(df, dataset.name, use=True)
 
     # generate dash app
     app.set_layout()
