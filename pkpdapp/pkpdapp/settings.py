@@ -53,7 +53,6 @@ INSTALLED_APPS = [
     # internal apps
     'explore_data.apps.ExploreDataConfig',
     'pkpdapp',
-    'simulate.apps.SimulateConfig',
 ]
 
 MARKDOWNIFY_MARKDOWN_EXTENSIONS = [

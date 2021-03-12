@@ -26,7 +26,7 @@ copyright notice and full license details.
             <li class="nav-item">
                 <a class="nav-link" href="{% url 'generic' %}">About</a>
             </li>
-            {% if user.is_authenticated %}
+            {% if user.is_authenticated and current_project %}
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                 Datasets

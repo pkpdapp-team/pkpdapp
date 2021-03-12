@@ -39,7 +39,6 @@ def test_file_upload_error(cls, filename, error_message, ending=".csv"):
             'name': 'updated name',
             'description': 'update description',
             'datetime': '',
-            'administration_type': 'T1',
             'file': file
         },
         follow=True
@@ -75,12 +74,6 @@ class TestIndexView(SimpleTestCase):
             'The PKPDApp is an open-source project that provides tools '
             'for modelling drug distribution and effects.')
         self.assertContains(response, contents[0])
-        contents = '<h2>Explore Data</h2>'
-        self.assertContains(response, contents)
-        contents = '<h2>Simulate</h2>'
-        self.assertContains(response, contents)
-        contents = '<h2>Infer Model</h2>'
-        self.assertContains(response, contents)
 
 
 class TestGenericView(SimpleTestCase):
@@ -115,13 +108,11 @@ class TestDatasetView(TestCase):
             name='my_cool_dataset',
             datetime=timezone.now(),
             description='description for my cool dataset',
-            administration_type='T1',
         )
         self.test_dataset2 = Dataset.objects.create(
             name='my_cool_dataset2',
             datetime=timezone.now(),
             description='description for my cool dataset',
-            administration_type='T1',
         )
 
     def test_create_form(self):
@@ -478,7 +469,6 @@ class TestProjectView(TestCase):
             name='my_cool_dataset',
             datetime=timezone.now(),
             description='description for my cool dataset',
-            administration_type='T1',
         )
         self.credentials = {
             'username': 'testuser',
