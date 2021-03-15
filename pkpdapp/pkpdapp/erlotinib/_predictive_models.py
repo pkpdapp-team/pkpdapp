@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 import pints
 
-import pkpdapp.erlotinib as erlo
+from ._population_models import PopulationModel, HeterogeneousModel
 
 
 class DataDrivenPredictiveModel(object):

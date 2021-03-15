@@ -13,10 +13,10 @@ import pints
 import plotly.colors
 import plotly.graph_objects as go
 
-import pkpdapp.erlotinib.plots as eplt
+from ._base import MultiSubplotFigure
 
 
-class MarginalPosteriorPlot(eplt.MultiSubplotFigure):
+class MarginalPosteriorPlot(MultiSubplotFigure):
     """
     A figure class that visualises the marginal posterior probability for each
     parameter across individuals.

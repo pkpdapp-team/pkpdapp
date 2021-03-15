@@ -10,10 +10,10 @@ import pandas as pd
 import plotly.colors
 import plotly.graph_objects as go
 
-import pkpdapp.erlotinib.plots as eplt
+from ._base import SingleFigure, SingleSubplotFigure
 
 
-class PDPredictivePlot(eplt.SingleFigure):
+class PDPredictivePlot(SingleFigure):
     """
     A figure class that visualises the predictions of a predictive
     pharmacodynamic model.
@@ -331,7 +331,7 @@ class PDPredictivePlot(eplt.SingleFigure):
         self._add_prediction_bulk_prob_trace(percentile_df)
 
 
-class PDTimeSeriesPlot(eplt.SingleFigure):
+class PDTimeSeriesPlot(SingleFigure):
     """
     A figure class that visualises measurements of a pharmacodynamic biomarker
     across multiple individuals.
@@ -489,7 +489,7 @@ class PDTimeSeriesPlot(eplt.SingleFigure):
         self._add_simulation_trace(times, biomarker)
 
 
-class PKTimeSeriesPlot(eplt.SingleSubplotFigure):
+class PKTimeSeriesPlot(SingleSubplotFigure):
     """
     A figure class that visualises measurements of a pharmacokinetic biomarker
     across multiple individuals.

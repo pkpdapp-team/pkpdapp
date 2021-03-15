@@ -12,7 +12,7 @@ import pandas as pd
 import pints
 from tqdm.notebook import tqdm
 
-import pkpdapp.erlotinib as erlo
+from ._log_pdfs import LogPosterior, HierarchicalLogLikelihood
 
 
 class InferenceController(object):

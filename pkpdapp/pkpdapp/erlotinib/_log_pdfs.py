@@ -10,7 +10,9 @@ import copy
 import numpy as np
 import pints
 
-import pkpdapp.erlotinib as erlo
+from ._population_models import PopulationModel
+from ._mechanistic_models import MechanisticModel, ReducedMechanisticModel
+from ._error_models import ErrorModel, ReducedErrorModel
 
 
 class HierarchicalLogLikelihood(pints.LogPDF):

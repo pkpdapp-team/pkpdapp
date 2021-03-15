@@ -11,10 +11,10 @@ import pandas as pd
 import plotly.colors
 import plotly.graph_objects as go
 
-import pkpdapp.erlotinib.plots as eplt
+from ._base import MultiFigure
 
 
-class ParameterEstimatePlot(eplt.MultiFigure):
+class ParameterEstimatePlot(MultiFigure):
     """
     A figure class that visualises parameter maximum a posteriori probability
     estimates across multiple optimisation runs.
