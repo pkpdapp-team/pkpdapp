@@ -1,9 +1,9 @@
 #
-# This file is part of the erlotinib repository
-# (https://github.com/DavAug/erlotinib/) which is released under the
-# BSD 3-clause license. See accompanying LICENSE.md for copyright notice and
-# full license details.
+# This file is part of PKPDApp (https://github.com/pkpdapp-team/pkpdapp) which
+# is released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
+
 
 import copy
 
@@ -11,7 +11,12 @@ import numpy as np
 import pandas as pd
 import pints
 
-from ._population_models import PopulationModel, HeterogeneousModel
+from ._population_models import (
+    PopulationModel, HeterogeneousModel,
+    ReducedPopulationModel
+)
+from ._mechanistic_models import ReducedMechanisticModel, MechanisticModel
+from ._error_models import ErrorModel, ReducedErrorModel
 
 
 class DataDrivenPredictiveModel(object):
@@ -23,7 +28,7 @@ class DataDrivenPredictiveModel(object):
         super(DataDrivenPredictiveModel, self).__init__()
 
         # Check inputs
-        if not isinstance(predictive_model, erlo.PredictiveModel):
+        if not isinstance(predictive_model, PredictiveModel):
             raise ValueError(
                 'The provided predictive model has to be an instance of a '
                 'erlotinib.PredictiveModel.')
@@ -232,7 +237,7 @@ class PosteriorPredictiveModel(DataDrivenPredictiveModel):
                 'dictionary.')
 
         # Check individual for population model
-        if isinstance(predictive_model, erlo.PredictivePopulationModel):
+        if isinstance(predictive_model, PredictivePopulationModel):
             if individual is not None:
                 raise ValueError(
                     "Individual ID's cannot be selected for a "
@@ -312,7 +317,7 @@ class PosteriorPredictiveModel(DataDrivenPredictiveModel):
 
         # Get unique parameter names in dataframe
         df_names = posterior_samples[param_key].unique()
-        if isinstance(self._predictive_model, erlo.PredictivePopulationModel):
+        if isinstance(self._predictive_model, PredictivePopulationModel):
             # Construct all ID-name pairs
             all_id_name_pairs = \
                 posterior_samples[id_key].apply(str) + ' ' + \
@@ -322,7 +327,7 @@ class PosteriorPredictiveModel(DataDrivenPredictiveModel):
         # If the model parameter is heterogenously modelled, replace the
         # prefix 'Heterogeneous' by any ID in the dataframe
         temp_model_names = copy.copy(model_names)
-        if isinstance(self._predictive_model, erlo.PredictivePopulationModel):
+        if isinstance(self._predictive_model, PredictivePopulationModel):
             for param_id, parameter_name in enumerate(temp_model_names):
                 prefix, name = parameter_name.split(maxsplit=1)
                 if prefix == 'Heterogeneous':
@@ -577,13 +582,13 @@ class PredictiveModel(object):
         # Check inputs
         if not isinstance(
                 mechanistic_model,
-                (erlo.MechanisticModel, erlo.ReducedMechanisticModel)):
+                (MechanisticModel, ReducedMechanisticModel)):
             raise TypeError('The mechanistic model has to be an instance of a '
                             'erlotinib.MechanisticModel.')
 
         for error_model in error_models:
             if not isinstance(error_model,
-                              (erlo.ErrorModel, erlo.ReducedErrorModel)):
+                              (ErrorModel, ReducedErrorModel)):
                 raise TypeError('All error models have to be instances of a '
                                 'erlotinib.ErrorModel.')
 
@@ -681,11 +686,11 @@ class PredictiveModel(object):
         error_models = self._error_models
 
         # Convert models to reduced models
-        if not isinstance(mechanistic_model, erlo.ReducedMechanisticModel):
-            mechanistic_model = erlo.ReducedMechanisticModel(mechanistic_model)
+        if not isinstance(mechanistic_model, ReducedMechanisticModel):
+            mechanistic_model = ReducedMechanisticModel(mechanistic_model)
         for model_id, error_model in enumerate(error_models):
-            if not isinstance(error_model, erlo.ReducedErrorModel):
-                error_models[model_id] = erlo.ReducedErrorModel(error_model)
+            if not isinstance(error_model, ReducedErrorModel):
+                error_models[model_id] = ReducedErrorModel(error_model)
 
         # Fix model parameters
         mechanistic_model.fix_parameters(name_value_dict)
@@ -836,13 +841,13 @@ class PredictiveModel(object):
         """
         # Get original submodels
         mechanistic_model = self._mechanistic_model
-        if isinstance(mechanistic_model, erlo.ReducedMechanisticModel):
+        if isinstance(mechanistic_model, ReducedMechanisticModel):
             mechanistic_model = mechanistic_model.mechanistic_model()
 
         error_models = []
         for error_model in self._error_models:
             # Get original error model
-            if isinstance(error_model, erlo.ReducedErrorModel):
+            if isinstance(error_model, ReducedErrorModel):
                 error_model = error_model.get_error_model()
 
             error_models.append(error_model)
@@ -1063,12 +1068,12 @@ class PredictivePopulationModel(PredictiveModel):
     """
     def __init__(self, predictive_model, population_models, params=None):
         # Check inputs
-        if not isinstance(predictive_model, erlo.PredictiveModel):
+        if not isinstance(predictive_model, PredictiveModel):
             raise TypeError('The predictive model has to be an instance of a '
                             'erlotinib.PredictiveModel.')
 
         for pop_model in population_models:
-            if not isinstance(pop_model, erlo.PopulationModel):
+            if not isinstance(pop_model, PopulationModel):
                 raise TypeError(
                     'All population models have to be instances of a '
                     'erlotinib.PopulationModel.')
@@ -1133,7 +1138,7 @@ class PredictivePopulationModel(PredictiveModel):
             pop_model.set_parameter_names(None)
             pop_params = pop_model.get_parameter_names()
 
-            if isinstance(pop_model, erlo.HeterogeneousModel):
+            if isinstance(pop_model, HeterogeneousModel):
                 # Insert a prefix, to have the heterogenous parameter appear
                 # among the model parameters.
                 pop_params = ['Heterogeneous']
@@ -1191,8 +1196,8 @@ class PredictivePopulationModel(PredictiveModel):
 
         # Convert models to reduced models
         for model_id, pop_model in enumerate(pop_models):
-            if not isinstance(pop_model, erlo.ReducedPopulationModel):
-                pop_models[model_id] = erlo.ReducedPopulationModel(pop_model)
+            if not isinstance(pop_model, ReducedPopulationModel):
+                pop_models[model_id] = ReducedPopulationModel(pop_model)
 
         # Fix model parameters
         for pop_model in pop_models:
@@ -1269,7 +1274,7 @@ class PredictivePopulationModel(PredictiveModel):
         pop_models = []
         for pop_model in self._population_models:
             # Get original population model
-            if isinstance(pop_model, erlo.ReducedPopulationModel):
+            if isinstance(pop_model, ReducedPopulationModel):
                 pop_model = pop_model.get_population_model()
 
             pop_models.append(pop_model)
@@ -1351,7 +1356,7 @@ class PredictivePopulationModel(PredictiveModel):
         start = 0
         for param_id, pop_model in enumerate(self._population_models):
             # If heterogenous model, use input parameter for all patients
-            if isinstance(pop_model, erlo.HeterogeneousModel):
+            if isinstance(pop_model, HeterogeneousModel):
                 patients[:, param_id] = parameters[start]
 
                 # Increment population parameter counter and continue to next

@@ -1,12 +1,7 @@
 #
-# This file is part of the erlotinib repository
-# (https://github.com/DavAug/erlotinib/) which is released under the
-# BSD 3-clause license. See accompanying LICENSE.md for copyright notice and
-# full license details.
-#
-# The InverseProblem class is based on the SingleOutputProblem and
-# MultiOutputProblem classes of PINTS (https://github.com/pints-team/pints/),
-# which is distributed under the BSD 3-clause license.
+# This file is part of PKPDApp (https://github.com/pkpdapp-team/pkpdapp) which
+# is released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 
 import copy
@@ -16,10 +11,21 @@ import numpy as np
 import pandas as pd
 import pints
 
-from ._mechanistic_models import MechanisticModel, ReducedMechanisticModel
-from ._error_models import ErrorModel
-from ._population_models import ReducedPopulationModel
-from ._log_pdfs import HierarchicalLogLikelihood, LogPosterior
+from ._mechanistic_models import (
+    MechanisticModel, ReducedMechanisticModel,
+    PharmacodynamicModel
+)
+from ._error_models import ErrorModel, ReducedErrorModel
+from ._population_models import (
+    PopulationModel,
+    ReducedPopulationModel,
+    PredictivePopulationModel,
+)
+from ._predictive_models import PredictiveModel
+from ._log_pdfs import (
+    HierarchicalLogLikelihood, LogPosterior,
+    LogLikelihood
+)
 
 
 class InverseProblem(object):
