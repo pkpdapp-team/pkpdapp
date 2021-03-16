@@ -3,7 +3,6 @@
 # is released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-
 """
 URL config of the pkpdapp project.
 
@@ -14,7 +13,6 @@ https://docs.djangoproject.com/en/3.0/topics/http/urls/.
 from django.urls import include, path
 from django.contrib import admin
 from . import views
-
 
 # TODO: Move django_plotly_dash to the app that is actually using it!
 urlpatterns = [
@@ -42,62 +40,66 @@ urlpatterns = [
         name='dataset-update'
     ),
     path('dataset/<int:pk>/',
-         views.DatasetDetailView.as_view(), name='dataset-detail'),
-    path(
-        'dataset/<int:pk>/delete/',
-        views.DatasetDelete.as_view(),
-        name='dataset-delete'
-    ),
-
+         views.DatasetDetailView.as_view(),
+         name='dataset-detail'),
+    path('dataset/<int:pk>/delete/',
+         views.DatasetDelete.as_view(),
+         name='dataset-delete'),
     path('explore_data/', include('explore_data.urls')),
-
-    path(
-        'pkpd_model/list/',
-        views.PkpdModelListView.as_view(),
-        name='pkpd_model-list'
-    ),
-    path(
-        'pkpd_model/add/',
-        views.PkpdModelCreate.as_view(),
-        name='pkpd_model-add'
-    ),
-    path(
-        'pkpd_model/<int:pk>/update/',
-        views.PkpdModelUpdate.as_view(),
-        name='pkpd_model-update'
-    ),
-    path('pkpd_model/<int:pk>/',
-         views.PkpdModelDetailView.as_view(), name='pkpd_model-detail'),
-    path(
-        'pkpd_model/<int:pk>/delete/',
-        views.PkpdModelDelete.as_view(),
-        name='pkpd_model-delete'
-    ),
-
+    path('pd_model/list/',
+         views.PharmacodynamicModelListView.as_view(),
+         name='pd_model-list'),
+    path('pd_model/add/',
+         views.PharmacodynamicModelCreate.as_view(),
+         name='pd_model-add'),
+    path('pd_model/add/project/<int:project>/',
+         views.PharmacodynamicModelCreate.as_view(),
+         name='pd_model-add-to-project'),
+    path('pd_model/<int:pk>/update/',
+         views.PharmacodynamicModelUpdate.as_view(),
+         name='pd_model-update'),
+    path('pd_model/<int:pk>/',
+         views.PharmacodynamicModelDetailView.as_view(),
+         name='pd_model-detail'),
+    path('pd_model/<int:pk>/delete/',
+         views.PharmacodynamicModelDeleteView.as_view(),
+         name='pd_model-delete'),
+    path('dosed_pk_model/add/project/<int:project>/',
+         views.DosedPharmacokineticModelCreate.as_view(),
+         name='dosed_pk_model-add-to-project'),
+    path('dosed_pk_model/<int:pk>/update',
+         views.DosedPharmacokineticModelUpdate.as_view(),
+         name='dosed_pk_model-update'),
+    path('dosed_pk_model/<int:pk>',
+         views.DosedPharmacokineticModelDetail.as_view(),
+         name='dosed_pk_model-detail'),
+    path('pk_model/<int:pk>',
+         views.PharmacokineticModelDetail.as_view(),
+         name='pk_model-detail'),
+    path('protocol/add/project/<int:project>/',
+         views.ProtocolCreate.as_view(),
+         name='protocol-add-to-project'),
+    path('protocol/<int:pk>/update',
+         views.ProtocolUpdate.as_view(),
+         name='protocol-update'),
+    path('protocol/<int:pk>',
+         views.ProtocolDetailView.as_view(),
+         name='protocol-detail'),
     path('project/',
-         views.ProjectDetailView.as_view(), name='selected-project-detail'),
-    path(
-        'project/list/',
-        views.ProjectListView.as_view(),
-        name='project-list'
-    ),
+         views.ProjectDetailView.as_view(),
+         name='selected-project-detail'),
+    path('project/list/', views.ProjectListView.as_view(),
+         name='project-list'),
     path('project/add/', views.ProjectCreate.as_view(), name='project-add'),
-    path(
-        'project/<int:pk>/update/',
-        views.ProjectUpdate.as_view(),
-        name='project-update'
-    ),
+    path('project/<int:pk>/update/',
+         views.ProjectUpdate.as_view(),
+         name='project-update'),
     path('project/<int:pk>/',
-         views.ProjectDetailView.as_view(), name='project-detail'),
-    path(
-        'project/<int:pk>/delete/',
-        views.ProjectDelete.as_view(),
-        name='project-delete'
-    ),
-
-    path('simulate/', include('simulate.urls')),
-
+         views.ProjectDetailView.as_view(),
+         name='project-detail'),
+    path('project/<int:pk>/delete/',
+         views.ProjectDelete.as_view(),
+         name='project-delete'),
     path('generic/', views.GenericView.as_view(), name='generic'),
     path('django_plotly_dash/', include('django_plotly_dash.urls')),
-
 ]

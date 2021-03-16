@@ -1,8 +1,8 @@
-FROM python:3.6-slim-stretch
+FROM python:3.8-slim
 
-# install libsundials-serial-dev
+# install libsundials-dev
 RUN apt-get update && apt-get upgrade -y
-RUN apt-get install -y libsundials-serial-dev
+RUN apt-get install -y libsundials-dev
 
 # install nginx
 RUN apt-get install nginx vim -y --no-install-recommends
@@ -10,8 +10,8 @@ RUN ln -sf /dev/stdout /var/log/nginx/access.log \
     && ln -sf /dev/stderr /var/log/nginx/error.log
 RUN chown www-data:www-data /etc/nginx/sites-available/default
 
-# install envsubst
-RUN apt-get install -y gettext-base
+# install envsubst and git
+RUN apt-get install -y gettext-base git
 
 # clean up apt
 RUN apt-get clean

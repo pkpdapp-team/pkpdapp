@@ -1,0 +1,22 @@
+<!--
+This file is part of PKPDApp (https://github.com/pkpdapp-team/pkpdapp) which
+is released under the BSD 3-clause license. See accompanying LICENSE.md for
+copyright notice and full license details.
+-->
+
+{% extends "base/base.html" %}
+{% load static %}
+{% load markdownify %}
+{% load plotly_dash %}
+
+{% block main_content %}
+<p></p>
+<h2>PkpdModel {{object.name}}</h2>
+(<a href="{% url 'pd_model-update' object.id %}"> Update </a>)
+{{object.description|markdownify}}
+{% plotly_app_bootstrap name="parmacodynamic_view" %}
+<h3>SBML</h3>
+<pre>{{object.sbml}}</pre>
+<ul>
+<p></p>
+{% endblock %}

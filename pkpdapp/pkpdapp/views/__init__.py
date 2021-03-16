@@ -29,9 +29,18 @@ from .dataset import (
 from .index import IndexView
 from .generic import GenericView
 from .pkpd_model import (
-    PkpdModelDetailView,
-    PkpdModelCreate,
-    PkpdModelDelete,
-    PkpdModelUpdate,
-    PkpdModelListView,
+    PharmacodynamicModelDetailView,
+    PharmacodynamicModelCreate,
+    DosedPharmacokineticModelCreate,
+    DosedPharmacokineticModelUpdate,
+    DosedPharmacokineticModelDetail,
+    PharmacokineticModelDetail,
+    PharmacodynamicModelDeleteView,
+    PharmacodynamicModelListView,
+    PharmacodynamicModelUpdate
+)
+from .protocol import (
+    ProtocolCreate,
+    ProtocolDetailView,
+    ProtocolUpdate,
 )

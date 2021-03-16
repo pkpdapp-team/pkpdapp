@@ -7,6 +7,7 @@ copyright notice and full license details.
 {% extends "base/base.html" %}
 {% load static %}
 {% load markdownify %}
+{% load plotly_dash %}
 
 {% block main_content %}
 <p></p>
@@ -20,6 +21,51 @@ copyright notice and full license details.
   <li>{{ type.name }} ({{ type.unit}}): {{ type.description|truncatewords:"10"}}</li>
 {% endfor %}
 </ul>
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-sm">
+      {% plotly_app_bootstrap name="dataset_view" aspect="16by9"%}
+    </div>
+    {% if has_protocol %}
+    <div class="col-sm">
+        {% plotly_app_bootstrap name="nca_view" aspect="16by9"%}
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<h3>Protocols</h2>
+<table style="width:100%">
+  <tr>
+    <th>Subject ID</th>
+    <th>Compound</th>
+  </tr>
+  {% for protocol in protocols %}
+  <tr>
+    <td><a href="{% url 'protocol-detail' protocol.id %}">{{ protocol.subject_id }}</a></td>
+    <td>{{ protocol.compound}}</td>
+  </tr>
+  {% endfor %}
+</table>
+<div class="pagination">
+    <span class="step-links">
+        {% if protocol.has_previous %}
+            <a href="?page=1">&laquo; first</a>
+            <a href="?page={{ protocol.previous_page_number }}">previous</a>
+        {% endif %}
+
+        <span class="current">
+            Page {{ protocol.number }} of {{ protocol.paginator.num_pages }}.
+        </span>
+
+        {% if protocol.has_next %}
+            <a href="?page={{ protocol.next_page_number }}">next</a>
+            <a href="?page={{ protocol.paginator.num_pages }}">last &raquo;</a>
+        {% endif %}
+    </span>
+</div>
+
 <h3>Data</h2>
 <table style="width:100%">
   <tr>
@@ -54,5 +100,4 @@ copyright notice and full license details.
         {% endif %}
     </span>
 </div>
-<p></p>
 {% endblock %}

@@ -7,11 +7,6 @@
 from django.db import models
 from django.urls import reverse
 
-ADMINISTRATION_TYPE_CHOICES = (
-    ('T1', 'type1'),
-    ('T2', 'type2'),
-)
-
 
 class Dataset(models.Model):
     """
@@ -30,10 +25,6 @@ class Dataset(models.Model):
     description = models.TextField(
         help_text='short description of the dataset',
         blank=True, default=''
-    )
-    administration_type = models.CharField(
-        max_length=10, choices=ADMINISTRATION_TYPE_CHOICES,
-        help_text='method of drug administration'
     )
 
     def get_absolute_url(self):

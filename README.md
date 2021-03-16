@@ -8,7 +8,7 @@
 
 # PKPDApp
 
-PKPDApp is an open source web-based application to explore, analyse and model the pharmacokinetics and pharmacodynamics of chemical compounds. The app is currently under heavy development, however a preliminary version is being deployed with Heroku and can be found under https://pkpdapp.herokuapp.com/. 
+PKPDApp is an open source web-based application to explore, analyse and model the pharmacokinetics and pharmacodynamics of chemical compounds. The app is currently under heavy development, however a preliminary version is being deployed with Heroku and can be found under https://pkpdapp.herokuapp.com/.
 
 ## Installation - development
 
@@ -25,7 +25,7 @@ If you are interested in developing PKPDApp with us, or just run the app locally
     ```
     - Windows-latest:
     Sundials will be installed automatically by installing the app.
-    
+
 2. Install app and requirements
 
 ```bash
@@ -82,8 +82,18 @@ $ docker run -it -p 8020:8020 \
 
 You should be able to see the pkpd web app at [127.0.0.1:8020](127.0.0.1:8020).
 
+## Code testing
+
+We run a range of tests each time a commit is pushed to an open pull request
+using Github Actions. Passing these tests is prerequisite for merging a pull
+request. Some of these can be run locally as described below:
+
+- copyright tests: `python run-tests.py --copyright`
+- code style: `flake8`
+- unit tests: `python manage.py test` runs everything; to run a single test in
+a file (say) called `test_models.py` use
+`python manage.py test pkpdapp.tests.test_models`
+- code coverage tests: can't be done locally
 
 ## License
 PKPDApp is fully open source. For more information about its license, see [LICENSE.md](LICENSE.md).
-
-

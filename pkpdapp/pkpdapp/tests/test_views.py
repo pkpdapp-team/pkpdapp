@@ -10,15 +10,19 @@ from django.urls import reverse
 from django.contrib.auth.models import User
 from django.utils import timezone
 import re
-from pkpdapp.models import (Dataset, PkpdModel,
-                            Project, BiomarkerType, Biomarker)
+from pkpdapp.models import (
+    Dataset, PharmacodynamicModel,
+    Project, BiomarkerType, Biomarker
+)
 from http import HTTPStatus
 from urllib.request import urlretrieve
 import pandas as pd
 from django.core.files import File
+import unittest
 
 
-BASE_URL = 'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/datasets/'   # noqa: E501
+BASE_URL_DATASETS = 'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/datasets/'   # noqa: E501
+BASE_URL_MODELS = 'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/models/'   # noqa: E501
 
 
 def faux_test_file(url, ending='.csv'):
@@ -29,14 +33,13 @@ def faux_test_file(url, ending='.csv'):
 
 
 def test_file_upload_error(cls, filename, error_message, ending=".csv"):
-    file = faux_test_file(BASE_URL + filename, ending)
+    file = faux_test_file(BASE_URL_DATASETS + filename, ending)
     response = cls.client.post(
         reverse('dataset-create'),
         data={
             'name': 'updated name',
             'description': 'update description',
             'datetime': '',
-            'administration_type': 'T1',
             'file': file
         },
         follow=True
@@ -72,12 +75,6 @@ class TestIndexView(SimpleTestCase):
             'The PKPDApp is an open-source project that provides tools '
             'for modelling drug distribution and effects.')
         self.assertContains(response, contents[0])
-        contents = '<h2>Explore Data</h2>'
-        self.assertContains(response, contents)
-        contents = '<h2>Simulate</h2>'
-        self.assertContains(response, contents)
-        contents = '<h2>Infer Model</h2>'
-        self.assertContains(response, contents)
 
 
 class TestGenericView(SimpleTestCase):
@@ -112,15 +109,14 @@ class TestDatasetView(TestCase):
             name='my_cool_dataset',
             datetime=timezone.now(),
             description='description for my cool dataset',
-            administration_type='T1',
         )
         self.test_dataset2 = Dataset.objects.create(
             name='my_cool_dataset2',
             datetime=timezone.now(),
             description='description for my cool dataset',
-            administration_type='T1',
         )
 
+    @unittest.skip("this is part of dataset upload (ongoing - #98)")
     def test_create_form(self):
         response = self.client.get(reverse('dataset-create'))
         self.assertEquals(response.status_code, HTTPStatus.OK)
@@ -148,7 +144,7 @@ class TestDatasetView(TestCase):
 
         # test works correctly when file of right format
         num_datasets = len(Dataset.objects.all())
-        file = faux_test_file(BASE_URL + 'test_data.csv')
+        file = faux_test_file(BASE_URL_DATASETS + 'test_data.csv')
         response = self.client.post(
             reverse('dataset-create'),
             data={
@@ -169,10 +165,11 @@ class TestDatasetView(TestCase):
         num_datasets1 = len(Dataset.objects.all())
         self.assertEquals(num_datasets1 - num_datasets, 1)
 
+    @unittest.skip("this is part of dataset upload (ongoing) - #98")
     def test_biomarkerunit_form(self):
         num_biomarker_type = len(BiomarkerType.objects.all())
         num_biomarker = len(Biomarker.objects.all())
-        data = pd.read_csv(BASE_URL + 'test_data.csv')
+        data = pd.read_csv(BASE_URL_DATASETS + 'test_data.csv')
         bts_unique = data["biomarker type"].unique().tolist()
         session = self.client.session
         session['bts_unique'] = bts_unique
@@ -292,102 +289,171 @@ class TestDatasetView(TestCase):
         self.assertContains(response, self.test_dataset.description)
 
 
-class TestPkpdModelView(TestCase):
+class TestPharmodynamicModelView(TestCase):
     """
-    Tests the pkpd_model view.
+    Tests the pd_model view.
     """
     def setUp(self):
-        self.test_model = PkpdModel.objects.create(
+        self.test_model = PharmacodynamicModel.objects.create(
             name='my_cool_model',
             description='description for my cool model',
         )
-        self.test_model2 = PkpdModel.objects.create(
+        self.test_model2 = PharmacodynamicModel.objects.create(
             name='my_cool_model2',
             description='description for my cool model',
         )
+        self.test_project = Project.objects.create(
+            name='my_cool_project',
+            description='description for my cool project',
+        )
+        self.credentials = {
+            'username': 'testuser',
+            'password': 'secret',
+            'email': 'test@test.com',
+        }
+        self.test_user = User.objects.create_user(**self.credentials)
+        self.client.post(
+            reverse('login'), self.credentials, follow=True)
 
     def test_list_view(self):
-        response = self.client.get(reverse('pkpd_model-list'))
+        response = self.client.get(reverse('pd_model-list'))
         self.assertEquals(response.status_code, HTTPStatus.OK)
-        self.assertTemplateUsed(response, 'pkpd_model_list.html')
+        self.assertTemplateUsed(response, 'pd_model_list.html')
         self.assertContains(response, self.test_model.name)
         self.assertContains(response, self.test_model2.name)
 
     def test_update_form(self):
         response = self.client.get(
-            reverse('pkpd_model-update', args=[self.test_model.id])
+            reverse('pd_model-update', args=[self.test_model.id])
         )
         self.assertEquals(response.status_code, HTTPStatus.OK)
-        self.assertTemplateUsed(response, 'pkpd_model_form.html')
+        self.assertTemplateUsed(response, 'pd_model_form.html')
         self.assertContains(response, self.test_model.name)
 
         response = self.client.post(
-            reverse('pkpd_model-update', args=[self.test_model.id]),
+            reverse('pd_model-update', args=[self.test_model.id]),
             data={
                 'name': 'updated name',
                 'description': 'update description',
+                'model_type': 'PK',
+                'sbml': 'test',
             },
             follow=True
         )
+        self.assertEquals(response.status_code, HTTPStatus.OK)
         self.assertEquals(
             response.redirect_chain[0][0],
-            reverse('pkpd_model-detail', args=[self.test_model.id])
+            reverse('pd_model-detail', args=[self.test_model.id])
         )
-        self.assertEquals(response.status_code, HTTPStatus.OK)
-        new_model = PkpdModel.objects.get(id=self.test_model.id)
+        new_model = PharmacodynamicModel.objects.get(id=self.test_model.id)
         self.assertEquals(new_model.name, 'updated name')
 
     def test_add_form(self):
         response = self.client.get(
-            reverse('pkpd_model-add')
+            reverse('pd_model-add')
         )
         self.assertEquals(response.status_code, HTTPStatus.OK)
-        self.assertTemplateUsed(response, 'pkpd_model_form.html')
+        self.assertTemplateUsed(response, 'pd_model_form.html')
 
+        file = faux_test_file(BASE_URL_MODELS + 'tgi_Koch_2009.xml',
+                              ending='xml')
         response = self.client.post(
-            reverse('pkpd_model-add'),
+            reverse('pd_model-add'),
             data={
                 'name': 'add name',
                 'description': 'add description',
+                'model_type': 'PK',
+                'sbml': file,
             },
             follow=True
         )
         self.assertEquals(response.status_code, HTTPStatus.OK)
 
-        new_model = PkpdModel.objects.get(name='add name')
+        new_model = PharmacodynamicModel.objects.get(name='add name')
 
         self.assertEquals(
             response.redirect_chain[0][0],
-            reverse('pkpd_model-detail', args=[new_model.id])
+            reverse('pd_model-detail', args=[new_model.id])
         )
         self.assertEquals(new_model.name, 'add name')
 
-    def test_delete_form(self):
-        response = self.client.get(
-            reverse('pkpd_model-delete', args=[self.test_model2.id])
-        )
-        self.assertEquals(response.status_code, HTTPStatus.OK)
-        self.assertTemplateUsed(response, 'pkpd_model_confirm_delete.html')
-        PkpdModel.objects.get(id=self.test_model2.id)
-
+        file = faux_test_file(BASE_URL_DATASETS + 'test_data.csv',
+                              ending='csv')
         response = self.client.post(
-            reverse('pkpd_model-delete', args=[self.test_model2.id]),
+            reverse('pd_model-add'),
+            data={
+                'name': 'add name2',
+                'description': 'add description',
+                'model_type': 'PK',
+                'sbml': file,
+            },
             follow=True
         )
-        self.assertRedirects(response, reverse('pkpd_model-list'))
-        with self.assertRaises(PkpdModel.DoesNotExist):
-            PkpdModel.objects.get(id=self.test_model2.id)
+        self.assertEquals(response.status_code, HTTPStatus.OK)
+        self.assertContains(response, 'does not seem to be valid XML')
+        with self.assertRaises(PharmacodynamicModel.DoesNotExist):
+            PharmacodynamicModel.objects.get(name='add name2')
+
+    def test_add_to_project_form(self):
+        response = self.client.get(
+            reverse('pd_model-add-to-project',
+                    args=[self.test_project.id])
+        )
+        self.assertEquals(response.status_code, HTTPStatus.OK)
+        self.assertTemplateUsed(response, 'pd_model_form.html')
+
+        file = faux_test_file(BASE_URL_MODELS + 'tgi_Koch_2009.xml',
+                              ending='xml')
+        response = self.client.post(
+            reverse(
+                'pd_model-add-to-project', args=[self.test_project.id]
+            ),
+            data={
+                'name': 'add name to project',
+                'description': 'add description',
+                'model_type': 'PK',
+                'sbml': file,
+            },
+            follow=True
+        )
+        self.assertEquals(response.status_code, HTTPStatus.OK)
+        self.assertTrue(
+            PharmacodynamicModel.objects.filter(
+                name='add name to project'
+            ).exists()
+        )
+        self.assertTrue(
+            self.test_project.pd_models.filter(
+                name='add name to project'
+            ).exists()
+        )
+
+    def test_delete_form(self):
+        response = self.client.get(
+            reverse('pd_model-delete', args=[self.test_model2.id])
+        )
+        self.assertEquals(response.status_code, HTTPStatus.OK)
+        self.assertTemplateUsed(response, 'pd_model_confirm_delete.html')
+        PharmacodynamicModel.objects.get(id=self.test_model2.id)
+
+        response = self.client.post(
+            reverse('pd_model-delete', args=[self.test_model2.id]),
+            follow=True
+        )
+        self.assertRedirects(response, reverse('pd_model-list'))
+        with self.assertRaises(PharmacodynamicModel.DoesNotExist):
+            PharmacodynamicModel.objects.get(id=self.test_model2.id)
 
     def test_view_uses_correct_template(self):
         response = self.client.get(
-            reverse('pkpd_model-detail', args=[self.test_model.id])
+            reverse('pd_model-detail', args=[self.test_model.id])
         )
         self.assertEquals(response.status_code, 200)
-        self.assertTemplateUsed(response, 'pkpd_model_detail.html')
+        self.assertTemplateUsed(response, 'pd_model_detail.html')
 
     def test_index_contains_correct_html(self):
         response = self.client.get(
-            reverse('pkpd_model-detail', args=[self.test_model.id])
+            reverse('pd_model-detail', args=[self.test_model.id])
         )
         self.assertContains(response, self.test_model.name)
         self.assertContains(response, self.test_model.description)
@@ -398,7 +464,7 @@ class TestProjectView(TestCase):
     Tests the project view.
     """
     def setUp(self):
-        self.test_model = PkpdModel.objects.create(
+        self.test_model = PharmacodynamicModel.objects.create(
             name='my_cool_model',
             description='description for my cool model',
         )
@@ -406,7 +472,6 @@ class TestProjectView(TestCase):
             name='my_cool_dataset',
             datetime=timezone.now(),
             description='description for my cool dataset',
-            administration_type='T1',
         )
         self.credentials = {
             'username': 'testuser',
@@ -424,12 +489,14 @@ class TestProjectView(TestCase):
             description='description for my cool project2',
         )
         self.test_project.datasets.add(self.test_dataset)
-        self.test_project.pkpd_models.add(self.test_model)
+        self.test_project.pd_models.add(self.test_model)
         self.test_project.users.add(self.test_user)
         self.test_user.profile.selected_project = self.test_project
         self.test_user.profile.save(update_fields=["selected_project"])
 
     def test_list_view(self):
+        response = self.client.post(
+            reverse('login'), self.credentials, follow=True)
         response = self.client.get(reverse('project-list'))
         self.assertEquals(response.status_code, HTTPStatus.OK)
         self.assertTemplateUsed(response, 'project_list.html')
@@ -439,7 +506,6 @@ class TestProjectView(TestCase):
     def test_update_form(self):
         response = self.client.post(
             reverse('login'), self.credentials, follow=True)
-
         response = self.client.get(
             reverse('project-update', args=[self.test_project.id])
         )
@@ -452,7 +518,10 @@ class TestProjectView(TestCase):
             data={
                 'name': 'updated name',
                 'description': 'update description',
-                'users': [self.test_user.id]
+                'users': [self.test_user.id],
+                'pk_models': [],
+                'pd_models': [self.test_model.id],
+                'datasets': [self.test_dataset.id]
             },
             follow=True
         )
@@ -514,10 +583,12 @@ class TestProjectView(TestCase):
             Project.objects.get(id=self.test_project2.id)
 
     def test_view_not_logged_in(self):
-        response = self.client.get('/project/{}/'.format(self.test_project.id))
-        self.assertEquals(response.status_code, 404)
+        response = self.client.get(
+            '/project/{}/'.format(self.test_project.id)
+        )
+        self.assertEquals(response.status_code, HTTPStatus.FOUND)
         response = self.client.get('/project/')
-        self.assertEquals(response.status_code, 404)
+        self.assertEquals(response.status_code, HTTPStatus.FOUND)
 
     def test_view_uses_correct_template(self):
         response = self.client.post(
