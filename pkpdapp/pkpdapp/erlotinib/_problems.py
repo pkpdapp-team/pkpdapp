@@ -19,9 +19,8 @@ from ._error_models import ErrorModel, ReducedErrorModel
 from ._population_models import (
     PopulationModel,
     ReducedPopulationModel,
-    PredictivePopulationModel,
 )
-from ._predictive_models import PredictiveModel
+from ._predictive_models import PredictiveModel, PredictivePopulationModel
 from ._log_pdfs import (
     HierarchicalLogLikelihood, LogPosterior,
     LogLikelihood
