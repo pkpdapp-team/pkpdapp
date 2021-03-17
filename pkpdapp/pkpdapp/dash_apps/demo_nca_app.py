@@ -1,13 +1,8 @@
 #
-# This file is part of PKDPApp (https://github.com/pkpdapp-team/pkpdapp) which
+# This file is part of PKPDApp (https://github.com/pkpdapp-team/pkpdapp) which
 # is released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-
-"""
-This is just temporary placeholder for an app that
-will visualise the NCA functionalities.
-"""
 
 import dash_core_components as dcc
 import dash_html_components as html

@@ -1,8 +1,7 @@
 #
-# This file is part of the erlotinib repository
-# (https://github.com/DavAug/erlotinib/) which is released under the
-# BSD 3-clause license. See accompanying LICENSE.md for copyright notice and
-# full license details.
+# This file is part of PKPDApp (https://github.com/pkpdapp-team/pkpdapp) which
+# is released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 
 import warnings
@@ -12,7 +11,7 @@ import pandas as pd
 import pints
 from tqdm.notebook import tqdm
 
-import pkpdapp.erlotinib as erlo
+from ._log_pdfs import LogPosterior, HierarchicalLogLikelihood
 
 
 class InferenceController(object):
@@ -39,7 +38,7 @@ class InferenceController(object):
             log_posteriors = [log_posterior]
 
         for log_posterior in log_posteriors:
-            if not isinstance(log_posterior, erlo.LogPosterior):
+            if not isinstance(log_posterior, LogPosterior):
                 raise ValueError('Log-posterior has to be an instance of a '
                                  '`erlotinib.LogPosterior`.')
 
@@ -87,7 +86,7 @@ class InferenceController(object):
 
             # Sample initial population, if model is hierarchical
             log_likelihood = log_posterior.log_likelihood()
-            if isinstance(log_likelihood, erlo.HierarchicalLogLikelihood):
+            if isinstance(log_likelihood, HierarchicalLogLikelihood):
                 n_ids = log_likelihood.n_log_likelihoods()
                 population_models = log_likelihood.get_population_models()
                 self._initial_params[index] = self._sample_population(

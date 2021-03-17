@@ -1,8 +1,7 @@
 #
-# This file is part of the erlotinib repository
-# (https://github.com/DavAug/erlotinib/) which is released under the
-# BSD 3-clause license. See accompanying LICENSE.md for copyright notice and
-# full license details.
+# This file is part of PKPDApp (https://github.com/pkpdapp-team/pkpdapp) which
+# is released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 
 import copy
@@ -10,7 +9,9 @@ import copy
 import numpy as np
 import pints
 
-import pkpdapp.erlotinib as erlo
+from ._population_models import PopulationModel
+from ._mechanistic_models import MechanisticModel, ReducedMechanisticModel
+from ._error_models import ErrorModel, ReducedErrorModel
 
 
 class HierarchicalLogLikelihood(pints.LogPDF):
@@ -72,7 +73,7 @@ class HierarchicalLogLikelihood(pints.LogPDF):
                 'to be provided for each model parameters.')
 
         for pop_model in population_models:
-            if not isinstance(pop_model, erlo.PopulationModel):
+            if not isinstance(pop_model, PopulationModel):
                 raise ValueError(
                     'The population models have to be instances of '
                     'erlotinib.PopulationModel')
@@ -371,7 +372,7 @@ class LogLikelihood(pints.LogPDF):
         # Check inputs
         if not isinstance(
                 mechanistic_model,
-                (erlo.MechanisticModel, erlo.ReducedMechanisticModel)):
+                (MechanisticModel, ReducedMechanisticModel)):
             raise TypeError('The mechanistic model as to be an instance of a '
                             'erlotinib.MechanisticModel.')
 
@@ -393,7 +394,7 @@ class LogLikelihood(pints.LogPDF):
 
         for error_model in error_models:
             if not isinstance(error_model,
-                              (erlo.ErrorModel, erlo.ReducedErrorModel)):
+                              (ErrorModel, ReducedErrorModel)):
                 raise TypeError('The error models have to instances of a '
                                 'erlotinib.ErrorModel.')
 
@@ -609,11 +610,11 @@ class LogLikelihood(pints.LogPDF):
         error_models = self._error_models
 
         # Convert models to reduced models
-        if not isinstance(mechanistic_model, erlo.ReducedMechanisticModel):
-            mechanistic_model = erlo.ReducedMechanisticModel(mechanistic_model)
+        if not isinstance(mechanistic_model, ReducedMechanisticModel):
+            mechanistic_model = ReducedMechanisticModel(mechanistic_model)
         for model_id, error_model in enumerate(error_models):
-            if not isinstance(error_model, erlo.ReducedErrorModel):
-                error_models[model_id] = erlo.ReducedErrorModel(error_model)
+            if not isinstance(error_model, ReducedErrorModel):
+                error_models[model_id] = ReducedErrorModel(error_model)
 
         # Fix model parameters
         mechanistic_model.fix_parameters(name_value_dict)
@@ -656,13 +657,13 @@ class LogLikelihood(pints.LogPDF):
         """
         # Get original submodels
         mechanistic_model = self._mechanistic_model
-        if isinstance(mechanistic_model, erlo.ReducedMechanisticModel):
+        if isinstance(mechanistic_model, ReducedMechanisticModel):
             mechanistic_model = mechanistic_model.mechanistic_model()
 
         error_models = []
         for error_model in self._error_models:
             # Get original error model
-            if isinstance(error_model, erlo.ReducedErrorModel):
+            if isinstance(error_model, ReducedErrorModel):
                 error_model = error_model.get_error_model()
 
             error_models.append(error_model)
