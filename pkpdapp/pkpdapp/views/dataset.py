@@ -7,13 +7,11 @@ from django.shortcuts import render
 from django.urls import reverse_lazy
 from django.core.paginator import Paginator
 from pkpdapp.models import (
-    Dataset, Biomarker, BiomarkerType, Dose, Protocol
+    Dataset, Biomarker, BiomarkerType, Dose, Protocol, StandardUnit
 )
-from ..forms import CreateNewDataset, CreateNewBiomarkerUnit
+from ..forms import CreateNewDataset, CreateNewBiomarkerType
 from pkpdapp.dash_apps.simulation import PDSimulationApp
 import pandas as pd
-from django.contrib import messages
-from django.apps import apps
 from django.forms import formset_factory
 from django.shortcuts import redirect
 from django.views.generic import (
@@ -227,7 +225,7 @@ def update_biomarkertypes_formset(request, pk):
     current_dataset = Dataset.objects.get(pk=pk)
     biomarkertypes = BiomarkerType.objects.filter(dataset=current_dataset)
     BiomarkerFormset = formset_factory(
-        CreateNewBiomarkerUnit,
+        CreateNewBiomarkerType,
         extra=len(biomarkertypes)
     )
     biomarker_names = []
@@ -238,16 +236,23 @@ def update_biomarkertypes_formset(request, pk):
         biomarker_units.append(biomarkertypes[k].unit)
         k += 1
     context["biomarkernames"] = biomarker_names
+    print("jello")
     if request.method == "POST":
         formset = BiomarkerFormset(request.POST)
         if formset.is_valid():
             k = 0
             for f in formset:
                 cd = f.cleaned_data
-                unit = cd.get("unit")
+                symbol = cd.get("symbol")
                 desc = cd.get("description")
+                print("jelly")
+                print(symbol)
+                a = StandardUnit(symbol)
+                print(a)
+                print("jello")
+                print(biomarkertypes[k].dataset)
                 biomarkertypes[k].description = desc
-                biomarkertypes[k].unit = unit
+                biomarkertypes[k].unit = a
                 biomarkertypes[k].save()
                 k += 1
         return redirect(reverse_lazy(
@@ -255,6 +260,7 @@ def update_biomarkertypes_formset(request, pk):
             kwargs={'pk': pk}
         ))
     else:
-        context["formset"] = BiomarkerFormset
+        formset = BiomarkerFormset()
+        context["formset"] = formset
     return render(request, 'biomarker_update.html',
                   context)

@@ -5,11 +5,10 @@
 #
 from django import forms
 from django.core.exceptions import ValidationError
-from pkpdapp.models import Dataset, BiomarkerType, Project, Biomarker
+from pkpdapp.models import (Dataset, BiomarkerType,
+                            Project, Biomarker)
 from django.utils.translation import gettext as _
 import pandas as pd
-from django.forms import modelformset_factory
-from pkpdapp.models import StandardUnit
 
 MAX_UPLOAD_SIZE = "5242880"
 
@@ -133,23 +132,18 @@ class CreateNewDataset(forms.ModelForm):
         return instance
 
 
-class CreateNewBiomarkerUnit(forms.ModelForm):
+class CreateNewBiomarkerType(forms.ModelForm):
     """
     A form to associate a unit with a predefined biomarker type name.
     """
-    UNIT_CHOICES = [
-        ('mg', 'mg'),
-        ('g', 'g'),
-        ('cm3', 'cm^3'),
-    ]
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
     class Meta:
         model = BiomarkerType
-        fields = ['unit', 'description']
+        fields = ['description']
 
-    unit = forms.ChoiceField(
-        choices=UNIT_CHOICES
-    )
+    symbol = forms.CharField(label='Unit')
 
     description = forms.CharField(
         widget=forms.Textarea(attrs={'rows': 2, 'cols': 25}),

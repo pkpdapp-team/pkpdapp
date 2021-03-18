@@ -46,8 +46,8 @@ copyright notice and full license details.
                 <a class="dropdown-item" href={% url 'dosed_pk_model-detail' m.id
                   %}>{{m.pharmacokinetic_model.name}}</a>
                 {% endfor %}
-                <a class="dropdown-item" href="{% url 'dosed_pk_model-add-to-project' current_project.id %}"> 
-                  Create model.. 
+                <a class="dropdown-item" href="{% url 'dosed_pk_model-add-to-project' current_project.id %}">
+                  Create model..
                 </a>
               </div>
             </li>
@@ -59,8 +59,8 @@ copyright notice and full license details.
                 {% for m in current_project.pd_models.all %}
                 <a class="dropdown-item" href={% url 'pd_model-detail' m.id %}>{{m.name}}</a>
                 {% endfor %}
-                <a class="dropdown-item" href="{% url 'pd_model-add-to-project' current_project.id %}"> 
-                  Create model.. 
+                <a class="dropdown-item" href="{% url 'pd_model-add-to-project' current_project.id %}">
+                  Create model..
                 </a>
               </div>
             </li>
@@ -70,10 +70,10 @@ copyright notice and full license details.
             {% if user.is_authenticated %}
             <li class="nav-item mr-2">
               <div class="form-inline">
-                <label for="projectSelect"><a href="/project/">Project:</a></label>
+                <label for="projectSelect"><a href="{% url 'project-detail' current_project.id %}">Project:</a></label>
                 <select class="form-control mx-2" id="projectSelect">
                   <option selected>{{ current_project.name }}</option>
-            
+
                   {% for p in user.project_set.all %}
                   <option>{{ p.name }}</option>
                   {% endfor %}

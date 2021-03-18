@@ -15,7 +15,7 @@ copyright notice and full license details.
 (<a href="{% url 'dataset-update' dataset.id %}"> Update dataset </a>)
 (<a href="{% url 'dataset-biomarkers-update' dataset.id %}"> Update biomarkers </a>)
 <p>{{dataset.description|markdownify}}</p>
-<h3>Biomarker Types</h2>
+<h3>Biomarker Types</h3>
 <ul>
 {% for type in biomarker_types %}
   <li>{{ type.name }} ({{ type.unit}}): {{ type.description|truncatewords:"10"}}</li>
