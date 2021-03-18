@@ -243,11 +243,12 @@ def update_biomarkertypes_formset(request, pk):
             k = 0
             for f in formset:
                 cd = f.cleaned_data
-                symbol = cd.get("symbol")
+                a_symbol = cd.get("symbol")
                 desc = cd.get("description")
                 print("jelly")
-                print(symbol)
-                a = StandardUnit(symbol)
+                print(a_symbol)
+                a = StandardUnit(symbol=a_symbol)
+                a.save()
                 print(a)
                 print("jello")
                 print(biomarkertypes[k].dataset)
