@@ -37,7 +37,7 @@ class AUCEFigure():
     """
     """
 
-    def __init__(self, data_meas, data_dose, subject_id):
+    def __init__(self, data_meas, data_dose):
 
         self._id_key = 'ID'
         self._time_key = 'Time'
@@ -56,15 +56,18 @@ class AUCEFigure():
         self._auce_fit_type = 'None' #  or 'Sigmoid'
         self._auce_y_axis_type = 'linear' # or 'log'
         self._auce_x_axis_type = 'linear' # or 'log'
-        self._class1_selection = None
-        self._class2_selection = None
+        self._yaxis_type_selection = 'linear' # or 'log'
+        self._xaxis_type_selection = 'linear' # or 'log'
+        self._class1_selection = 'Biomarker'
+        self._class2_selection = 'Compound'
         self._class3_selection = None
         self._class1_plot_selection = None
         self._class2_plot_selection = None
         self._class3_plot_selection = None
+        self._concentration_plot_selection = None
 
         self._auce_vs_concentration_fig = compute_auce_vs_concentration(
-            self._dataset,
+            self._dataset, self._auce_vs_concentration_fig,
             self._time_key, self._auce_fit_type, self._auce_y_axis_type,
             self._auce_y_axis_type, self._obs_key, self._class1_selection,
             self._concentration_key, self._class2_selection,
@@ -72,12 +75,13 @@ class AUCEFigure():
             self._class2_plot_selection, self._class3_plot_selection)
 
         self._fig = update_figure(
-            dataset,
-            time_selection, y_selection, class1_selection,
-            concentration_selection, class2_selection,
-            class3_selection, class1_plot_selection,
-            concentration_plot_selection, class2_plot_selection,
-            class3_plot_selection, yaxis_type_selection, xaxis_type_selection)
+            self._dataset, self._fig,
+            self._time_key, self._obs_key, self._class1_selection,
+            self._concentration_key, self._class2_selection,
+            self._class3_selection, self._class1_plot_selection,
+            self._concentration_plot_selection, self._class2_plot_selection,
+            self._class3_plot_selection, self._yaxis_type_selection,
+            self._xaxis_type_selection)
 
 
 
@@ -88,7 +92,7 @@ def fsigmoid(concentration, top, bottom, EC50):
 ################################# GRAPH #################################
 
 
-def update_figure(time_selection, y_selection, class1_selection, concentration_selection, class2_selection,
+def update_figure(dataset, fig, time_selection, y_selection, class1_selection, concentration_selection, class2_selection,
                   class3_selection, class1_plot_selection, concentration_plot_selection, class2_plot_selection,
                   class3_plot_selection, yaxis_type_selection, xaxis_type_selection):
     fig.data = []
@@ -231,7 +235,8 @@ def calculate_model_values(data, time_selection, y_selection, class1_selected, c
     return modeling_values
 
 
-def compute_auce_vs_concentration(time_selection, auce_conc_fit_type, auce_y_axis_type, auce_x_axis_type, y_selection, class1_selection, concentration_selection, class2_selection,
+def compute_auce_vs_concentration(dataset,
+                                  auce_vs_concentration_fig, time_selection, auce_conc_fit_type, auce_y_axis_type, auce_x_axis_type, y_selection, class1_selection, concentration_selection, class2_selection,
                                   class3_selection, class1_plot_selection, class2_plot_selection,
                                   class3_plot_selection):
 
