@@ -9,6 +9,7 @@ from pkpdapp.models import Dataset, BiomarkerType, Project, Biomarker
 from django.utils.translation import gettext as _
 import pandas as pd
 from django.forms import modelformset_factory
+from pkpdapp.models import StandardUnit
 
 MAX_UPLOAD_SIZE = "5242880"
 
@@ -111,7 +112,6 @@ class CreateNewDataset(forms.ModelForm):
             biomarker_types.append(BiomarkerType(
                 name=bts_unique[i],
                 description="",
-                unit="mg",
                 dataset=instance
             ))
         [bm.save() for bm in biomarker_types]
