@@ -59,7 +59,7 @@ class AuceFigure():
         self._class1_selection = 'Biomarker'
         self._class2_selection = 'Compound'
         self._class3_selection = None
-        self._class1_plot_selection = None
+        self._class1_plot_selection = dataset['Compound'][0]
         self._class2_plot_selection = None
         self._class3_plot_selection = None
         self._concentration_plot_selection = None
@@ -102,6 +102,10 @@ def update_figure(dataset, fig, time_selection, y_selection, class1_selection, c
 
     concentration = [
         concentration_plot_selection] if concentration_plot_selection else data[concentration_selection].unique()
+    print(data)
+    print(concentration_selection)
+
+    print('got concentrations', concentration)
 
     for index_concentration, concentration_selected in enumerate(concentration):
 
@@ -109,6 +113,7 @@ def update_figure(dataset, fig, time_selection, y_selection, class1_selection, c
                                       == concentration_selected]
         class2 = [
             class2_plot_selection] if class2_plot_selection else concentration_data[class2_selection].unique()
+        print('got class2 ', class2)
 
         for index_class2, class2_selected in enumerate(class2):
 

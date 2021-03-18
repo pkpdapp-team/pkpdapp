@@ -69,11 +69,21 @@ class DataAnalysisApp(BaseApp):
                     ],
                 ),
                 dcc.Tab(
+                    label='Initial Doses', value='initial-doses-tab',
+                    children=[
+                        dcc.Graph(
+                            id='initial-doses-dashboard',
+                            figure=self._auce_figure.figures()[0],
+                            style={'height': '100%'}
+                        )
+                    ],
+                ),
+                dcc.Tab(
                     label='AUCE', value='auce-tab',
                     children=[
                         dcc.Graph(
                             id='auce-dashboard',
-                            figure=self._auce_figure.figures()[0],
+                            figure=self._auce_figure.figures()[1],
                             style={'height': '100%'}
                         )
                     ],
