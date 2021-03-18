@@ -29,7 +29,7 @@ copyright notice and full license details.
 {% empty %}
     <li>No datasets yet.</li>
 {% endfor %}
-(<a href="{% url 'dataset-create'%}"> Upload dataset </a>)
+(<a href="{% url 'dataset-create' project.id %}"> Upload dataset </a>)
 </ul>
 <h3>PK Models</h3>
 <ul>

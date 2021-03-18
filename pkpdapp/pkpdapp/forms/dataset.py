@@ -35,7 +35,7 @@ class CreateNewDataset(forms.ModelForm):
 
     class Meta:
         model = Dataset
-        fields = ['name', 'description', 'datetime', 'administration_type']
+        fields = ['name', 'description', 'datetime']
 
         error_messages = {
             'datetime': {
