@@ -33,26 +33,24 @@ class modeling_class:
         self.auce = 0
 
 
-class AUCEFigure():
+class AuceFigure():
     """
     """
 
-    def __init__(self, data_meas, data_dose):
+    def __init__(self, dataset):
 
         self._id_key = 'ID'
         self._time_key = 'Time'
         self._obs_type_key = 'Biomarker'
         self._obs_key = 'Measurement'
         self._amount_key = 'Amount'
+        self._concentration_key = 'Amount'
         self._compound_key = 'Compound'
 
-        self._fig = None
 
         self._fig = go.Figure()
         self._auce_vs_concentration_fig = go.Figure()
-        self._data_meas = data_meas
-        self._data_dose = data_dose
-        self._concentration_key = 'Conc'
+        self._dataset = dataset
         self._auce_fit_type = 'None' #  or 'Sigmoid'
         self._auce_y_axis_type = 'linear' # or 'log'
         self._auce_x_axis_type = 'linear' # or 'log'
@@ -82,6 +80,9 @@ class AUCEFigure():
             self._concentration_plot_selection, self._class2_plot_selection,
             self._class3_plot_selection, self._yaxis_type_selection,
             self._xaxis_type_selection)
+
+    def figures(self):
+        return self._fig, self._auce_vs_concentration_fig
 
 
 
@@ -597,143 +598,3 @@ def update_app():
         )
     ], style={'font-family': 'sans-serif'})
 
-
-update_app()
-
-
-@app.callback(
-    Output('explore-dashboard', 'figure'),
-    [Input('time-selection', 'value'),
-     Input('y-selection', 'value'),
-     Input('class1-selection', 'value'),
-     Input('concentration-selection', 'value'),
-     Input('class2-selection', 'value'),
-     Input('class3-selection', 'value'),
-     Input('class1-plot-selection', 'value'),
-     Input('concentration-plot-selection', 'value'),
-     Input('class2-plot-selection', 'value'),
-     Input('class3-plot-selection', 'value'),
-     Input('yaxis-type', 'value'),
-     Input('xaxis-type', 'value')]
-)
-def update_output_div(time_selection, y_selection, class1_selection, concentration_selection, class2_selection,
-                      class3_selection, class1_plot_selection, concentration_plot_selection, class2_plot_selection,
-                      class3_plot_selection, yaxis_type_selection, xaxis_type_selection):
-
-    update_app()
-    fig = update_figure(time_selection, y_selection, class1_selection, concentration_selection, class2_selection,
-                        class3_selection, class1_plot_selection, concentration_plot_selection, class2_plot_selection,
-                        class3_plot_selection, yaxis_type_selection, xaxis_type_selection)
-    return fig
-
-
-@app.callback(
-    Output('class1-plot-selection', 'options'),
-    [Input('class1-selection', 'value')]
-)
-def update_selected_class1(class1_selection):
-    if class1_selection:
-        return [{'label': i, 'value': i} for i in dataset[class1_selection].unique()]
-    else:
-        return ''
-
-
-@app.callback(
-    Output('concentration-plot-selection', 'options'),
-    [Input('concentration-selection', 'value')]
-)
-def update_selected_concentration(concentration_selection):
-    if concentration_selection:
-        return [{'label': i, 'value': i} for i in dataset[concentration_selection].unique()]
-    else:
-        return ''
-
-
-@app.callback(
-    Output('class2-plot-selection', 'options'),
-    [Input('class2-selection', 'value')]
-)
-def update_selected_class2(class2_selection):
-    if class2_selection:
-        return [{'label': i, 'value': i} for i in dataset[class2_selection].unique()]
-    else:
-        return ''
-
-
-@app.callback(
-    Output('class3-plot-selection', 'options'),
-    [Input('class3-selection', 'value')]
-)
-def update_selected_class3(class3_selection):
-    if class3_selection:
-        return [{'label': i, 'value': i} for i in dataset[class3_selection].unique()]
-    else:
-        return ''
-
-
-@app.callback(
-    Output('modeling-values', 'children'),
-    [Input('auce-button', 'n_clicks')],
-    [State('time-selection', 'value'),
-     State('y-selection', 'value'),
-     State('class1-selection', 'value'),
-     State('concentration-selection', 'value'),
-     State('class2-selection', 'value'),
-     State('class3-selection', 'value'),
-     State('class1-plot-selection', 'value'),
-     State('concentration-plot-selection', 'value'),
-     State('class2-plot-selection', 'value'),
-     State('class3-plot-selection', 'value')]
-)
-def modeling(n_clicks, time_selection, y_selection, class1_selection, concentration_selection, class2_selection,
-             class3_selection, class1_plot_selection, concentration_plot_selection, class2_plot_selection,
-             class3_plot_selection):
-    if n_clicks % 2 == 0:  # to toggle if the AUCE appears or not
-        modeling_output = []
-    else:
-        modeling_values = model(time_selection, y_selection, class1_selection, concentration_selection, class2_selection,
-                                class3_selection, class1_plot_selection, concentration_plot_selection, class2_plot_selection,
-                                class3_plot_selection)
-        series_nb = len(modeling_values)
-
-        modeling_output = []
-        for i in range(series_nb):
-            modeling_output.append(html.Div(
-                id=modeling_values[i].series,
-                children=[
-                    '''{} :'''.format(modeling_values[i].series),
-                    html.Span(''' AUCE is {} '''.format(
-                        modeling_values[i].auce), style={'font-weight': 'bold'}),
-                    html.Br(),
-                    html.Br()
-                ]
-            ))
-    return modeling_output
-
-
-@app.callback(
-    Output('auce-concentration-fig', 'figure'),
-    [Input('auce-concentration-button', 'n_clicks'),
-     Input('auce-conc-fit-type', 'value'),
-     Input('auce-y-axis-type', 'value'),
-     Input('auce-x-axis-type', 'value')],
-    [State('time-selection', 'value'),
-     State('y-selection', 'value'),
-     State('class1-selection', 'value'),
-     State('concentration-selection', 'value'),
-     State('class2-selection', 'value'),
-     State('class3-selection', 'value'),
-     State('class1-plot-selection', 'value'),
-     State('concentration-plot-selection', 'value'),
-     State('class2-plot-selection', 'value'),
-     State('class3-plot-selection', 'value')]
-)
-def auce_vs_concentration(n_clicks, auce_conc_fit_type, auce_y_axis_type, auce_x_axis_type, time_selection, y_selection, class1_selection, concentration_selection, class2_selection,
-                          class3_selection, class1_plot_selection, concentration_plot_selection, class2_plot_selection,
-                          class3_plot_selection):
-    if not concentration_plot_selection:
-        auce_vs_concentration_fig = compute_auce_vs_concentration(time_selection, auce_conc_fit_type, auce_y_axis_type, auce_x_axis_type, y_selection, class1_selection, concentration_selection, class2_selection,
-                                                                  class3_selection, class1_plot_selection, class2_plot_selection,
-                                                                  class3_plot_selection)
-
-    return auce_vs_concentration_fig

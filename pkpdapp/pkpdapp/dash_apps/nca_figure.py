@@ -1,11 +1,21 @@
+import numpy as np
+from .nca import NCA
+import dash_core_components as dcc
+import dash_html_components as html
+import numpy as np
+import plotly.express as px
+import plotly.graph_objects as go
+import scipy.stats as stats
+import pandas as pd
 
 
 
-class NCAFigure():
+
+class NcaFigure():
     """
     """
 
-    def __init__(self, data_meas, data_dose, subject_id):
+    def __init__(self, dataset, subject_id):
 
         self._id_key = 'ID'
         self._time_key = 'Time'
@@ -18,17 +28,17 @@ class NCAFigure():
 
         self._rounding = 3
 
-        print(data_meas)
-        print(data_dose)
-        print('got subject_id', subject_id)
+        self._dataset = dataset
+        self._subject_dataset = dataset.loc[
+            dataset[self._id_key] == subject_id
+        ]
 
-        self._dose_amount = data_dose[self._amount_key][0]
-        self._drug = data_dose[self._compound_key][0]
+        self._dose_amount = self._subject_dataset[self._amount_key][0]
+        self._drug = self._subject_dataset[self._compound_key][0]
 
         self._subject_id = subject_id
-        self._process_nca(data_meas, self._dose_amount)
+        self._process_nca(self._subject_dataset, self._dose_amount)
         self._fig = self._create_nca_figure()
-        self.set_layout()
 
     def figure(self):
         return self._fig

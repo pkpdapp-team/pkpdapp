@@ -4,6 +4,12 @@
 # copyright notice and full license details.
 #
 
+import numpy as np
+import scipy.stats as stats
+import pandas as pd
+
+
+
 class NCA():
     def __init__(self,
                  time, conc, DM,

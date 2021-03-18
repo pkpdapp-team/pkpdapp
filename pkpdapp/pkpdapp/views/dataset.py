@@ -21,7 +21,7 @@ from django.views.generic import (
     UpdateView, DeleteView,
     ListView
 )
-from pkpdapp.dash_apps.demo_nca_app import NcaApp
+from pkpdapp.dash_apps.data_analysis_app import DataAnalysisApp
 from dash.dependencies import Input, Output
 import dash
 
@@ -92,20 +92,16 @@ def create_visualisation_app(dataset):
     return app
 
 
-def create_nca_app(dataset):
-    ID = 5335
-    protocol = Protocol.objects.filter(dataset=dataset, subject_id=ID).first()
+def create_data_analysis_app(dataset):
+    protocol = Protocol.objects.filter(dataset=dataset)
     if not protocol:
         return None
-    compound_name = protocol.compound.name
     biomarker_types = BiomarkerType.objects.filter(
         dataset=dataset,
-        name=compound_name
     )
     biomarkers = Biomarker.objects\
         .select_related('biomarker_type__name')\
-        .filter(biomarker_type__in=biomarker_types)\
-        .filter(subject_id=ID)
+        .filter(biomarker_type__in=biomarker_types)
 
     # convert to pandas dataframe with the column names expected
     df_meas = pd.DataFrame(
@@ -121,7 +117,7 @@ def create_nca_app(dataset):
         'value': 'Measurement'
     }, inplace=True)
 
-    doses = Dose.objects.filter(protocol=protocol)\
+    doses = Dose.objects.filter(protocol__in=protocol)\
                 .select_related('protocol__subject_id')\
                 .select_related('protocol__compound__name')
     df_dose = pd.DataFrame(
@@ -137,7 +133,7 @@ def create_nca_app(dataset):
         'amount': 'Amount'
     }, inplace=True)
 
-    return NcaApp('nca_view', df_meas, df_dose, ID)
+    return DataAnalysisApp('data_analysis_view', df_meas, df_dose)
 
 
 class DatasetDetailView(DetailView):
@@ -148,7 +144,7 @@ class DatasetDetailView(DetailView):
     def get(self, request, *args, **kwargs):
         dataset = self.get_object()
         self._visualisation_app = create_visualisation_app(dataset)
-        self._nca_app = create_nca_app(dataset)
+        self._data_analysis_app = create_data_analysis_app(dataset)
         return super().get(request)
 
     def get_context_data(self, **kwargs):
