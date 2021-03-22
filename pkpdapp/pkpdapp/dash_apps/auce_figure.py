@@ -37,7 +37,7 @@ class AuceFigure():
     """
     """
 
-    def __init__(self, dataset):
+    def __init__(self, dataset, biomarker):
 
         self._id_key = 'ID'
         self._time_key = 'Time'
@@ -51,15 +51,15 @@ class AuceFigure():
         self._fig = go.Figure()
         self._auce_vs_concentration_fig = go.Figure()
         self._dataset = dataset
-        self._auce_fit_type = 'None' #  or 'Sigmoid'
+        self._auce_fit_type = 'Sigmoid'
         self._auce_y_axis_type = 'linear' # or 'log'
         self._auce_x_axis_type = 'linear' # or 'log'
         self._yaxis_type_selection = 'linear' # or 'log'
         self._xaxis_type_selection = 'linear' # or 'log'
         self._class1_selection = 'Biomarker'
-        self._class2_selection = 'Compound'
+        self._class2_selection = 'Dataset'
         self._class3_selection = None
-        self._class1_plot_selection = dataset['Compound'][0]
+        self._class1_plot_selection = biomarker
         self._class2_plot_selection = None
         self._class3_plot_selection = None
         self._concentration_plot_selection = None
@@ -102,10 +102,6 @@ def update_figure(dataset, fig, time_selection, y_selection, class1_selection, c
 
     concentration = [
         concentration_plot_selection] if concentration_plot_selection else data[concentration_selection].unique()
-    print(data)
-    print(concentration_selection)
-
-    print('got concentrations', concentration)
 
     for index_concentration, concentration_selected in enumerate(concentration):
 
@@ -113,7 +109,6 @@ def update_figure(dataset, fig, time_selection, y_selection, class1_selection, c
                                       == concentration_selected]
         class2 = [
             class2_plot_selection] if class2_plot_selection else concentration_data[class2_selection].unique()
-        print('got class2 ', class2)
 
         for index_class2, class2_selected in enumerate(class2):
 
@@ -177,7 +172,7 @@ def update_figure(dataset, fig, time_selection, y_selection, class1_selection, c
     fig.update_layout(
         autosize=True,
         xaxis_title='Time in hours',
-        yaxis_title='Concentration',
+        yaxis_title=class1_plot_selection,
         xaxis_type=xaxis_type_selection,
         yaxis_type=yaxis_type_selection,
         template="plotly_white",
@@ -268,7 +263,7 @@ def compute_auce_vs_concentration(dataset,
                 concentration_data[y_selection], concentration_data[time_selection])
 
         if not (auce_conc_fit_type == 'None'):
-            auce_fit(auce_conc_fit_type, auce_y_axis_type, auce_x_axis_type, class2_selection,
+            auce_fit(auce_vs_concentration_fig, auce_conc_fit_type, auce_y_axis_type, auce_x_axis_type, class2_selection,
                      class2_selected, index_class2, concentrations, auce_vs_concentration_data)
 
         auce_vs_concentration_fig.add_trace(go.Scatter(
@@ -303,7 +298,7 @@ def compute_auce_vs_concentration(dataset,
     return auce_vs_concentration_fig
 
 
-def auce_fit(auce_conc_fit_type, auce_y_axis_type, auce_x_axis_type, class2_selection, class2_selected,
+def auce_fit(auce_vs_concentration_fig, auce_conc_fit_type, auce_y_axis_type, auce_x_axis_type, class2_selection, class2_selected,
              index_class2, concentrations, auce_vs_concentration_data):
 
     if auce_conc_fit_type == 'Sigmoid' and len(concentrations) >= 4:

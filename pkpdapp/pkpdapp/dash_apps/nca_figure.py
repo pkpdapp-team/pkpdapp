@@ -30,11 +30,15 @@ class NcaFigure():
 
         self._dataset = dataset
         self._subject_dataset = dataset.loc[
-            dataset[self._id_key] == subject_id
+            (dataset[self._id_key] == subject_id)
+        ]
+        self._subject_dataset = dataset.loc[
+            (dataset[self._id_key] == subject_id) &
+            (dataset[self._obs_type_key] == dataset[self._compound_key])
         ]
 
-        self._dose_amount = self._subject_dataset[self._amount_key][0]
-        self._drug = self._subject_dataset[self._compound_key][0]
+        self._dose_amount = self._subject_dataset[self._amount_key].values[0]
+        self._drug = self._subject_dataset[self._compound_key].values[0]
 
         self._subject_id = subject_id
         self._process_nca(self._subject_dataset, self._dose_amount)

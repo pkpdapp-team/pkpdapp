@@ -44,3 +44,4 @@ from .protocol import (
     ProtocolDetailView,
     ProtocolUpdate,
 )
+from .data_analysis import DataAnalysis

@@ -21,7 +21,6 @@ from django.views.generic import (
     UpdateView, DeleteView,
     ListView
 )
-from pkpdapp.dash_apps.data_analysis_app import DataAnalysisApp
 from dash.dependencies import Input, Output
 import dash
 
@@ -92,50 +91,6 @@ def create_visualisation_app(dataset):
     return app
 
 
-def create_data_analysis_app(dataset):
-    protocol = Protocol.objects.filter(dataset=dataset)
-    if not protocol:
-        return None
-    biomarker_types = BiomarkerType.objects.filter(
-        dataset=dataset,
-    )
-    biomarkers = Biomarker.objects\
-        .select_related('biomarker_type__name')\
-        .filter(biomarker_type__in=biomarker_types)
-
-    # convert to pandas dataframe with the column names expected
-    df_meas = pd.DataFrame(
-        list(
-            biomarkers.values('time', 'subject_id',
-                              'biomarker_type__name', 'value')
-        )
-    )
-    df_meas.rename(columns={
-        'subject_id': 'ID',
-        'time': 'Time',
-        'biomarker_type__name': 'Biomarker',
-        'value': 'Measurement'
-    }, inplace=True)
-
-    doses = Dose.objects.filter(protocol__in=protocol)\
-                .select_related('protocol__subject_id')\
-                .select_related('protocol__compound__name')
-    df_dose = pd.DataFrame(
-        list(
-            doses.values('start_time', 'protocol__subject_id',
-                         'protocol__compound__name', 'amount')
-        )
-    )
-    df_dose.rename(columns={
-        'protocol__subject_id': 'ID',
-        'start_time': 'Time',
-        'protocol__compound__name': 'Compound',
-        'amount': 'Amount'
-    }, inplace=True)
-
-    return DataAnalysisApp('data_analysis_view', df_meas, df_dose)
-
-
 class DatasetDetailView(DetailView):
     model = Dataset
     paginate_by = 20
@@ -144,7 +99,6 @@ class DatasetDetailView(DetailView):
     def get(self, request, *args, **kwargs):
         dataset = self.get_object()
         self._visualisation_app = create_visualisation_app(dataset)
-        self._data_analysis_app = create_data_analysis_app(dataset)
         return super().get(request)
 
     def get_context_data(self, **kwargs):
@@ -155,23 +109,13 @@ class DatasetDetailView(DetailView):
         context['biomarker_types'] = BiomarkerType.objects.filter(
             dataset=context['dataset']
         )
-        biomarker_dataset = self.get_paginated_biomarker_dataset(context)
-        context['biomarker_dataset'] = biomarker_dataset
-        context['page_obj'] = biomarker_dataset
         protocol = Protocol.objects.filter(dataset=context['dataset'])
         context['has_protocol'] = len(protocol) > 0
 
         context['protocols'] = self.get_paginated_protocols(context)
+        context['page_obj'] = context['protocols']
         return context
 
-    def get_paginated_biomarker_dataset(self, context):
-        queryset = Biomarker.objects.filter(
-            biomarker_type__dataset=context['dataset']
-        ).order_by('id')
-        paginator = Paginator(queryset, self.paginate_by)
-        page = self.request.GET.get('page')
-        activities = paginator.get_page(page)
-        return activities
 
     def get_paginated_protocols(self, context):
         queryset = Protocol.objects.filter(
