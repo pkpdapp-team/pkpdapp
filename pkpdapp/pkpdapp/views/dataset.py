@@ -7,7 +7,7 @@ from django.shortcuts import render
 from django.urls import reverse_lazy
 from django.core.paginator import Paginator
 from pkpdapp.models import (
-    Dataset, Biomarker, BiomarkerType, Dose, Protocol
+    Dataset, Biomarker, BiomarkerType, Protocol
 )
 from ..forms import CreateNewDataset, CreateNewBiomarkerUnit
 from pkpdapp.dash_apps.simulation import PDSimulationApp
@@ -115,7 +115,6 @@ class DatasetDetailView(DetailView):
         context['protocols'] = self.get_paginated_protocols(context)
         context['page_obj'] = context['protocols']
         return context
-
 
     def get_paginated_protocols(self, context):
         queryset = Protocol.objects.filter(

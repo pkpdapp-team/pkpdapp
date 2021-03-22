@@ -3,25 +3,14 @@
 # is released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-from django.shortcuts import render
-from django.urls import reverse_lazy
-from django.core.paginator import Paginator
 from pkpdapp.models import (
-    Dataset, Biomarker, BiomarkerType, Dose, Protocol
+    Biomarker, BiomarkerType, Dose, Protocol
 )
-from ..forms import CreateNewDataset, CreateNewBiomarkerUnit
-from pkpdapp.dash_apps.simulation import PDSimulationApp
 import pandas as pd
-from django.contrib import messages
-from django.apps import apps
-from django.forms import formset_factory
-from django.shortcuts import redirect
 from django.views.generic import (
     TemplateView
 )
 from pkpdapp.dash_apps.data_analysis_app import DataAnalysisApp
-from dash.dependencies import Input, Output
-import dash
 from django.contrib.auth.mixins import LoginRequiredMixin
 
 
@@ -82,7 +71,6 @@ def create_data_analysis_app(project):
         datasets.append(df)
         dataset_names.append(dataset.name)
 
-
     return DataAnalysisApp('data_analysis_view', datasets, dataset_names)
 
 
@@ -93,4 +81,3 @@ class DataAnalysis(TemplateView, LoginRequiredMixin):
         project = self.request.user.profile.selected_project
         self._data_analysis_app = create_data_analysis_app(project)
         return super().get(request)
-

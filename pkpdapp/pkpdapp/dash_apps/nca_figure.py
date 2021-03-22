@@ -1,14 +1,7 @@
 import numpy as np
 from .nca import NCA
-import dash_core_components as dcc
-import dash_html_components as html
-import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
-import scipy.stats as stats
-import pandas as pd
-
-
 
 
 class NcaFigure():
@@ -527,4 +520,3 @@ class NcaFigure():
         )
 
         return fig
-

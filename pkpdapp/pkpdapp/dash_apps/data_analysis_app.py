@@ -7,13 +7,9 @@
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_bootstrap_components as dbc
-import numpy as np
 from dash.dependencies import Input, Output
-import plotly.express as px
 import plotly.graph_objects as go
-import scipy.stats as stats
 from .base import BaseApp
-from .nca import NCA
 from .nca_figure import NcaFigure
 from .auce_figure import AuceFigure
 import pandas as pd
@@ -84,12 +80,17 @@ class DataAnalysisApp(BaseApp):
     def _get_subject_ids(self):
         ids = set()
         ids = self._merged_datasets[self._id_key].unique().tolist()
-        return [{'label': str(i), 'value':i} for i in ids if self.is_valid_nca_subject(i)]
+        return [
+            {'label': str(i), 'value': i}
+            for i in ids if self.is_valid_nca_subject(i)
+        ]
 
     def _get_biomarkers(self):
         biomarkers = set()
-        biomarkers = self._merged_datasets[self._biomarker_key].unique().tolist()
-        return [{'label': str(i), 'value':i} for i in biomarkers]
+        biomarkers = self._merged_datasets[
+            self._biomarker_key
+        ].unique().tolist()
+        return [{'label': str(i), 'value': i} for i in biomarkers]
 
     def set_callbacks(self):
         @self.app.callback(
@@ -125,7 +126,7 @@ class DataAnalysisApp(BaseApp):
                 Input('dataset-dropdown', 'value'),
             ],
         )
-        def update_nca(auce_biomarker_dropdown, dataset_dropdown):
+        def update_auce(auce_biomarker_dropdown, dataset_dropdown):
             ctx = dash.callback_context
             if not ctx.triggered:
                 triggered_id = 'Nothing'
@@ -140,8 +141,6 @@ class DataAnalysisApp(BaseApp):
                 return self.generate_auce_figures()
             else:
                 return self.generate_auce_figures()
-
-
 
     def set_layout(self):
         nca_figure = self.generate_nca_figure()
@@ -160,57 +159,58 @@ class DataAnalysisApp(BaseApp):
                 ])
             ]),
             dbc.Row([dbc.Col([
-            dcc.Tabs(id='data-analysis-tabs', value='nca-tab', children=[
-                dcc.Tab(
-                    label='Non-compartmental Analysis', value='nca-tab',
-                    children=[
-                        html.P(children=(
-                            'Note: NCA app assumes that the datasets chosen '
-                            'have a single dose occuring at time 0'
-                        )),
-                        dbc.Col(width=3, children=[
-                            html.Label("Choose subject id:"),
-                            dcc.Dropdown(
-                                id='nca-subject-dropdown',
-                                options=self._get_subject_ids(),
-                                value=self._nca_subject_id,
+                dcc.Tabs(id='data-analysis-tabs', value='nca-tab', children=[
+                    dcc.Tab(
+                        label='Non-compartmental Analysis', value='nca-tab',
+                        children=[
+                            html.P(children=(
+                                'Note: NCA app assumes that the datasets '
+                                'chosen have a single dose occuring at time 0'
+                            )),
+                            dbc.Col(width=3, children=[
+                                html.Label("Choose subject id:"),
+                                dcc.Dropdown(
+                                    id='nca-subject-dropdown',
+                                    options=self._get_subject_ids(),
+                                    value=self._nca_subject_id,
+                                ),
+                            ]),
+                            dcc.Graph(
+                                id='nca-dashboard',
+                                figure=nca_figure,
+                                style={'height': '100%'}
+                            )
+                        ],
+                    ),
+                    dcc.Tab(
+                        label='AUCE', value='initial-doses-tab',
+                        children=[
+                            html.P(children=(
+                                'Note: AUCE app assumes that the datasets '
+                                'chosen have a single continuous dose '
+                                'starting at time 0 and continuing for the '
+                                'entire duration'
+                            )),
+                            dbc.Col(width=3, children=[
+                                html.Label("Choose biomarkers:"),
+                                dcc.Dropdown(
+                                    id='auce-biomarker-dropdown',
+                                    options=self._get_biomarkers(),
+                                    value=self._auce_biomarker,
+                                ),
+                            ]),
+                            dcc.Graph(
+                                id='initial-doses-dashboard',
+                                figure=auce_figures[0],
+                                style={'height': '100%'}
                             ),
-                        ]),
-                        dcc.Graph(
-                            id='nca-dashboard',
-                            figure=nca_figure,
-                            style={'height': '100%'}
-                        )
-                    ],
-                ),
-                dcc.Tab(
-                    label='AUCE', value='initial-doses-tab',
-                    children=[
-                        html.P(children=(
-                            'Note: AUCE app assumes that the datasets chosen '
-                            'have a single continuous dose starting at time 0 '
-                            'and continuing for the entire duration'
-                        )),
-                        dbc.Col(width=3, children=[
-                            html.Label("Choose biomarkers:"),
-                            dcc.Dropdown(
-                                id='auce-biomarker-dropdown',
-                                options=self._get_biomarkers(),
-                                value=self._auce_biomarker,
-                            ),
-                        ]),
-                        dcc.Graph(
-                            id='initial-doses-dashboard',
-                            figure=auce_figures[0],
-                            style={'height': '100%'}
-                        ),
-                        dcc.Graph(
-                            id='auce-dashboard',
-                            figure=auce_figures[1],
-                            style={'height': '100%'}
-                        )
-                    ],
-                ),
-            ]),
+                            dcc.Graph(
+                                id='auce-dashboard',
+                                figure=auce_figures[1],
+                                style={'height': '100%'}
+                            )
+                        ],
+                    ),
+                ]),
             ])])
         ])

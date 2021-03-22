@@ -6,8 +6,6 @@
 
 import numpy as np
 import scipy.stats as stats
-import pandas as pd
-
 
 
 class NCA():
@@ -290,4 +288,3 @@ class NCA():
         :return: volume of distribution
         """
         return self.DM / (self.AUC_infinity * self.Lambda_z)
-
