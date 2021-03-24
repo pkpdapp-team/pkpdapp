@@ -65,19 +65,8 @@ class CreateNewDataset(forms.ModelForm):
         # error in columns
         data = pd.read_csv(uploaded_file)
         colnames = list(data.columns)
-        if len(colnames) > 4:
-            raise forms.ValidationError(
-                _((
-                    'Error parsing file, '
-                    '%(filename)s has too many columns. '
-                    'It should only have: subject id, time, biomarker type, '
-                    'value'
-                )),
-                code='invalid',
-                params={'filename': uploaded_file.name},
-            )
 
-        required_cols = ['subject id', 'time', 'biomarker type', 'value']
+        required_cols = ['ID', 'TIME', 'YDESC', 'DV']
         error_cols = []
         for col in required_cols:
             if col not in colnames:
@@ -120,7 +109,7 @@ class CreateNewDataset(forms.ModelForm):
 
         # save default biomarker types
         data = self._data
-        bts_unique = data["biomarker type"].unique().tolist()
+        bts_unique = data["YDESC"].unique().tolist()
         biomarker_types = []
         for i in range(len(bts_unique)):
             biomarker_types.append(BiomarkerType(
@@ -137,9 +126,9 @@ class CreateNewDataset(forms.ModelForm):
         for index, row in data.iterrows():
             index = biomarker_index[row['biomarker type']]
             biomarker = Biomarker(
-                time=row['time'],
-                subject_id=row['subject id'],
-                value=row['value'],
+                time=row['TIME'],
+                subject_id=row['ID'],
+                value=row['DV'],
                 biomarker_type=biomarker_types[index]
             )
             biomarker.save()
