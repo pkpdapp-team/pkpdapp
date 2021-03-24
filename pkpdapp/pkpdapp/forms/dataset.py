@@ -143,7 +143,7 @@ class CreateNewBiomarkerType(forms.ModelForm):
         model = BiomarkerType
         fields = ['description']
 
-    symbol = forms.CharField(label='Unit')
+    symbol = forms.CharField(label='Unit', required=False)
 
     description = forms.CharField(
         widget=forms.Textarea(attrs={'rows': 2, 'cols': 25}),

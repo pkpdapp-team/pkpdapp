@@ -79,7 +79,6 @@ def create_visualisation_app(dataset):
         cid = None
         if ctx.triggered:
             cid = ctx.triggered[0]['prop_id'].split('.')[0]
-        print('ARGS', args)
 
         if cid == 'biomarker-select':
             app.set_used_biomarker(args[-1])
@@ -236,24 +235,27 @@ def update_biomarkertypes_formset(request, pk):
         biomarker_units.append(biomarkertypes[k].unit)
         k += 1
     context["biomarkernames"] = biomarker_names
-    print("jello")
     if request.method == "POST":
         formset = BiomarkerFormset(request.POST)
         if formset.is_valid():
             k = 0
             for f in formset:
                 cd = f.cleaned_data
-                a_symbol = cd.get("symbol")
+                symbol = cd.get("symbol")
                 desc = cd.get("description")
-                print("jelly")
-                print(a_symbol)
-                a = StandardUnit(symbol=a_symbol)
-                a.save()
-                print(a)
-                print("jello")
-                print(biomarkertypes[k].dataset)
-                biomarkertypes[k].description = desc
-                biomarkertypes[k].unit = a
+                if symbol is None and desc is None:
+                    continue
+                if symbol != "":
+                    unit_query = StandardUnit.objects.filter(symbol=symbol)
+                    if not unit_query:
+                        unit = StandardUnit(symbol=symbol)
+                        unit.save()
+                    else:
+                        unit = unit_query[0]
+                    biomarkertypes[k].unit = unit
+                if desc != "":
+                    print("hiya")
+                    biomarkertypes[k].description = desc
                 biomarkertypes[k].save()
                 k += 1
         return redirect(reverse_lazy(
