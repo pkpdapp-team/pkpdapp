@@ -124,7 +124,7 @@ class CreateNewDataset(forms.ModelForm):
         for i, b in enumerate(bts_unique):
             biomarker_index[b] = i
         for index, row in data.iterrows():
-            index = biomarker_index[row['biomarker type']]
+            index = biomarker_index[row['YDESC']]
             biomarker = Biomarker(
                 time=row['TIME'],
                 subject_id=row['ID'],
@@ -132,6 +132,8 @@ class CreateNewDataset(forms.ModelForm):
                 biomarker_type=biomarker_types[index]
             )
             biomarker.save()
+
+        # handle dosing
 
         return instance
 
