@@ -9,6 +9,7 @@ from pkpdapp.models import (Dataset, BiomarkerType,
                             Project, Biomarker)
 from django.utils.translation import gettext as _
 import pandas as pd
+from django.utils.html import format_html
 
 MAX_UPLOAD_SIZE = "5242880"
 
@@ -92,6 +93,20 @@ class CreateNewDataset(forms.ModelForm):
                 params={'filename': uploaded_file.name,
                         'error_cols': error_cols},
             )
+
+        # check for missing data and drop any rows where data are missing
+        num_missing = data.isna().sum().sum()
+        if num_missing > 0:
+            if not self.instance.id and "warn_missing_data" not in self.data:
+                # creates entry in self.data if a user tries to save again
+                self.add_error('file', format_html(
+                    'Warning! There are ' + str(num_missing) + ' missing data '
+                    'values in file which will be dropped during upload.'
+                    ' To add the dataset anyway, please save again.'
+                    '<input type="hidden" id="warn-missing-data"'
+                    'name="warn_missing_data" value="0"/>')
+                )
+            data = data.dropna()
         self._data = data
         return data
 
