@@ -26,16 +26,20 @@ class DataAnalysisApp(BaseApp):
     def __init__(self, name, datasets, dataset_names):
         super(DataAnalysisApp, self).__init__(name)
 
+        # by default show first datset only
         self._selected_datasets = [0]
         self._datasets = datasets
-        for d, name in zip(self._datasets, dataset_names):
-            d['Dataset'] = name
+        for dataset, dataset_name in zip(self._datasets, dataset_names):
+            dataset['Dataset'] = dataset_name
         self.merge_datasets(self._selected_datasets)
         self._dataset_options = [
             {'label': name, 'value': i} for i, name in enumerate(dataset_names)
         ]
+
+        # by default use first subject and biomarker
         self._nca_subject_id = self._merged_datasets[self._id_key][0]
         self._auce_biomarker = self._merged_datasets[self._biomarker_key][0]
+
         self.set_layout()
         self.set_callbacks()
 

@@ -10,32 +10,32 @@ import scipy.stats as stats
 
 class NCA():
     def __init__(self,
-                 time, conc, DM,
+                 times, concs, DM,
                  doseSchedule='Single', administrationRoute='IVBolus'
                  ):
         """
         Initialise NCA class for calculating and storing NCA parameters
-        :param time: {np.ndarray} --- array of observation times
-        :param conc: {np.ndarray} --- array of observed concentration values
+        :param times: {np.ndarray} --- array of observation times
+        :param concs: {np.ndarray} --- array of observed concentration values
         :param DM: {float} --- administered dose amount
         :param doseSchedule: {string} Single or Multiple dose data
         :param administrationRoute: {string} IVBolus, IVInfusion, ExtraVascular
         """
         # Check if intial concentration has been measured
 
-        if time[0] == 0:
+        if times[0] == 0:
             self.is_c0extrapolated = False  # initial concentration measured
-            self.time = time
-            self.conc = conc
+            self.time = times
+            self.conc = concs
             self.DM = DM  # dose amount
             self.C_0 = None  # not extrapolated
             self.administrationRoute = administrationRoute
         else:
             self.is_c0extrapolated = True  # initial concentration NOT measured
-            c0 = self.extrapolate_c0(conc, time)  # extrapolate initial conc
+            c0 = self.extrapolate_c0(concs, times)  # extrapolate initial conc
             self.C_0 = c0
-            self.time = np.insert(time, 0, 0, axis=0)
-            self.conc = np.insert(conc, 0, c0, axis=0)
+            self.time = np.insert(times, 0, 0, axis=0)
+            self.conc = np.insert(concs, 0, c0, axis=0)
             self.DM = DM  # dose amount
             self.administrationRoute = administrationRoute
 
@@ -82,7 +82,7 @@ class NCA():
         Returns:
         c0 {double} -- extrapoloated c0
         """
-        slope, intercept, r_value, _, _ = \
+        _, intercept, _, _, _ = \
             stats.linregress(x[:2], np.log(y[:2]), )
         c0 = np.exp(intercept)
         return c0
@@ -96,10 +96,10 @@ class NCA():
         Returns:
         :return area {double} -- area under curve
         """
-        y1 = y[:-1]  # exclude last term
-        x1 = x[:-1]  # exclude last term
-        y2 = y[1:]  # exclude first term
-        x2 = x[1:]  # exclude first term
+        y1 = y[:-1]
+        x1 = x[:-1]
+        y2 = y[1:]
+        x2 = x[1:]
 
         area = np.sum((y1 - y2) / (np.log(y1) - np.log(y2)) * (x2 - x1))
         return area
