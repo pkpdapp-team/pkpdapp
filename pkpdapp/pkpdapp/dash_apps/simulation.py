@@ -30,6 +30,7 @@ class SimulationApp(BaseApp):
     optional name
         Name of the app which is used as reference in HTML templates.
     """
+
     def __init__(self, name):
         super(SimulationApp, self).__init__(name)
 
@@ -90,7 +91,8 @@ class SimulationApp(BaseApp):
 
             # Add simulation to figure
             result = self._simulate(parameters, model)
-            self._fig.add_simulation(result)
+            for output in model._output_names:
+                self._fig.add_simulation(result, biom_key=output)
 
             # Remember index of model trace for update callback
             n_traces = len(self._fig._fig.data)
@@ -314,9 +316,12 @@ class SimulationApp(BaseApp):
         result = model.simulate(parameters, self._times)
 
         # Rearrange results into a pandas.DataFrame
-        result = pd.DataFrame({'Time': self._times, 'Biomarker': result[0, :]})
+        result_df = pd.DataFrame({'Time': self._times})
 
-        return result
+        for i, output in enumerate(model._output_names):
+            result_df[output] = result[i, :]
+
+        return result_df
 
     def _add_data_to_fig(self):
         """
@@ -421,18 +426,9 @@ class SimulationApp(BaseApp):
         Simulates model i for the provided parameters and replaces the
         current simulation plot by the new one.
         """
-        model = self._models[i]
         self._parameters[i] = new_parameters
-        model_parameters = self._parameters[i]
-        model_trace = self._model_traces[i]
 
-        # Solve model
-        result = model.simulate(model_parameters, self._times).flatten()
-
-        # Replace simulation values in plotly.Figure
-        self._fig._fig.data[model_trace].y = result
-
-        return self._fig._fig
+        return self.create_figure()
 
 
 class PKSimulationApp(SimulationApp):
@@ -450,6 +446,7 @@ class PKSimulationApp(SimulationApp):
     optional name
         Name of the app which is used as reference in HTML templates.
     """
+
     def __init__(self, name):
         super(PKSimulationApp, self).__init__(name)
         self.set_multiple_models(False)
@@ -497,6 +494,10 @@ class PKSimulationApp(SimulationApp):
         """
         self._compartment = compartment
         self._direct = direct
+        self._models[0].set_administration(
+            self._compartment, direct=self._direct,
+            amount_var='A1_amount'
+        )
 
     def set_dosing_events(self, dosing_events):
         """
@@ -504,20 +505,9 @@ class PKSimulationApp(SimulationApp):
 
         """
         self._dosing_events = dosing_events
-
-    def _add_simulation_to_fig(self):
-        """
-        Adds trace of simulation results to the figure.
-        """
-        print('set admin to', self._compartment, self._direct)
-        self._models[0].set_administration(
-            self._compartment, direct=self._direct
-        )
-        print('set dosing to', self._dosing_events)
         self._models[0].set_dosing_events(
             self._dosing_events
         )
-        super(PKSimulationApp, self)._add_simulation_to_fig()
 
 
 class PDSimulationApp(SimulationApp):
@@ -535,6 +525,7 @@ class PDSimulationApp(SimulationApp):
     optional name
         Name of the app which is used as reference in HTML templates.
     """
+
     def __init__(self, name):
         super(PDSimulationApp, self).__init__(name)
 
@@ -568,6 +559,7 @@ class _SlidersComponent(object):
 
     The sliders are arranged horizontally. Sliders may be grouped by meaning.
     """
+
     def __init__(self):
         # Set defaults
         self._sliders = {}
