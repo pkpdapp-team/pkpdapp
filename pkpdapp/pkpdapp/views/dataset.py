@@ -7,7 +7,7 @@ from django.shortcuts import render
 from django.urls import reverse_lazy
 from django.core.paginator import Paginator
 from pkpdapp.models import (
-    Dataset, Biomarker, BiomarkerType, Dose, Protocol
+    Dataset, Biomarker, BiomarkerType, Protocol
 )
 from ..forms import CreateNewDataset, CreateNewBiomarkerUnit
 from pkpdapp.dash_apps.simulation import PDSimulationApp
@@ -21,7 +21,6 @@ from django.views.generic import (
     UpdateView, DeleteView,
     ListView
 )
-from pkpdapp.dash_apps.demo_nca_app import NcaApp
 from dash.dependencies import Input, Output
 import dash
 
@@ -92,54 +91,6 @@ def create_visualisation_app(dataset):
     return app
 
 
-def create_nca_app(dataset):
-    ID = 5335
-    protocol = Protocol.objects.filter(dataset=dataset, subject_id=ID).first()
-    if not protocol:
-        return None
-    compound_name = protocol.compound.name
-    biomarker_types = BiomarkerType.objects.filter(
-        dataset=dataset,
-        name=compound_name
-    )
-    biomarkers = Biomarker.objects\
-        .select_related('biomarker_type__name')\
-        .filter(biomarker_type__in=biomarker_types)\
-        .filter(subject_id=ID)
-
-    # convert to pandas dataframe with the column names expected
-    df_meas = pd.DataFrame(
-        list(
-            biomarkers.values('time', 'subject_id',
-                              'biomarker_type__name', 'value')
-        )
-    )
-    df_meas.rename(columns={
-        'subject_id': 'ID',
-        'time': 'Time',
-        'biomarker_type__name': 'Biomarker',
-        'value': 'Measurement'
-    }, inplace=True)
-
-    doses = Dose.objects.filter(protocol=protocol)\
-                .select_related('protocol__subject_id')\
-                .select_related('protocol__compound__name')
-    df_dose = pd.DataFrame(
-        list(
-            doses.values('start_time', 'protocol__subject_id',
-                         'protocol__compound__name', 'amount')
-        )
-    )
-    df_dose.rename(columns={
-        'protocol__subject_id': 'ID',
-        'start_time': 'Time',
-        'protocol__compound__name': 'Compound',
-        'amount': 'Amount'
-    }, inplace=True)
-
-    return NcaApp('nca_view', df_meas, df_dose, ID)
-
-
 class DatasetDetailView(DetailView):
     model = Dataset
     paginate_by = 20
@@ -148,7 +99,6 @@ class DatasetDetailView(DetailView):
     def get(self, request, *args, **kwargs):
         dataset = self.get_object()
         self._visualisation_app = create_visualisation_app(dataset)
-        self._nca_app = create_nca_app(dataset)
         return super().get(request)
 
     def get_context_data(self, **kwargs):
@@ -159,23 +109,12 @@ class DatasetDetailView(DetailView):
         context['biomarker_types'] = BiomarkerType.objects.filter(
             dataset=context['dataset']
         )
-        biomarker_dataset = self.get_paginated_biomarker_dataset(context)
-        context['biomarker_dataset'] = biomarker_dataset
-        context['page_obj'] = biomarker_dataset
         protocol = Protocol.objects.filter(dataset=context['dataset'])
         context['has_protocol'] = len(protocol) > 0
 
         context['protocols'] = self.get_paginated_protocols(context)
+        context['page_obj'] = context['protocols']
         return context
-
-    def get_paginated_biomarker_dataset(self, context):
-        queryset = Biomarker.objects.filter(
-            biomarker_type__dataset=context['dataset']
-        ).order_by('id')
-        paginator = Paginator(queryset, self.paginate_by)
-        page = self.request.GET.get('page')
-        activities = paginator.get_page(page)
-        return activities
 
     def get_paginated_protocols(self, context):
         queryset = Protocol.objects.filter(
