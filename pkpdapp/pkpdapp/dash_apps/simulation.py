@@ -494,9 +494,15 @@ class PKSimulationApp(SimulationApp):
         """
         self._compartment = compartment
         self._direct = direct
+        variables = {
+            'central': 'A1',
+            'peripheral': 'A2',
+            'peripheral2': 'A3',
+        }
         self._models[0].set_administration(
             self._compartment, direct=self._direct,
-            amount_var='A1_amount'
+            amount_var='{}_amount'
+            .format(variables[self._compartment])
         )
 
     def set_dosing_events(self, dosing_events):

@@ -200,7 +200,6 @@ class MechanisticModel(object):
         output = self.simulator.run(times[-1] + 1,
                                     log=self._output_names,
                                     log_times=times)
-        print('simulating with output names', self._output_names)
         result = [output[name] for name in self._output_names]
 
         return np.array(result)
