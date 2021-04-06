@@ -254,7 +254,6 @@ def update_biomarkertypes_formset(request, pk):
                         unit = unit_query[0]
                     biomarkertypes[k].unit = unit
                 if desc != "":
-                    print("hiya")
                     biomarkertypes[k].description = desc
                 biomarkertypes[k].save()
                 k += 1

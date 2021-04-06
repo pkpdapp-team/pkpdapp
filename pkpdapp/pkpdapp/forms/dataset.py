@@ -66,7 +66,27 @@ class CreateNewDataset(forms.ModelForm):
         data = pd.read_csv(uploaded_file)
         colnames = list(data.columns)
 
-        required_cols = ['ID', 'TIME', 'YDESC', 'DV']
+        # all columns in Roche data format
+        required_cols = ['ID',
+                         'STUDYID',
+                         'SPECIES',
+                         'MOW',
+                         'ROUTE',
+                         'AMT',
+                         'COMPOUND',
+                         'DOSEGROUP',
+                         'ADDL',
+                         'II',
+                         'TIME',
+                         'YTYPE',
+                         'YDESC',
+                         'DV',
+                         'LLOQ',
+                         'EVID',
+                         'ADA_T',
+                         'COV',
+                         'COV_T',
+                         'COMMENTS']
         error_cols = []
         for col in required_cols:
             if col not in colnames:
