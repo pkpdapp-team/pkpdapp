@@ -97,6 +97,7 @@ class SimulationApp(BaseApp):
             # Remember index of model trace for update callback
             n_traces = len(self._fig._fig.data)
             model_traces[i] = n_traces - 1
+        self._fig.set_axis_labels('Time', 'Biomarker')
         self._model_traces = model_traces
 
     def _create_selects(self):
