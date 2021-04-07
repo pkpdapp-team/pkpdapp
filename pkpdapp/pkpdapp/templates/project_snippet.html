@@ -1,5 +1,7 @@
 {% load markdownify %}
 
+
+{% if project %}
 <h3>
   Project {{project.name}}
 </h3>
@@ -70,3 +72,6 @@
     <li>No users yet.</li>
 {% endfor %}
 </ul>
+{% else %}
+<p>No project...</p>
+{% endif %}

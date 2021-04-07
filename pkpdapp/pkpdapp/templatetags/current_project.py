@@ -4,10 +4,18 @@
 # copyright notice and full license details.
 #
 from django import template
+from pkpdapp.models import Project
 
 register = template.Library()
 
 
 @register.simple_tag
 def current_project(user):
-    return user.profile.selected_project
+    if user.profile.selected_project:
+        return user.profile.selected_project
+
+    projects = Project.objects.filter(users=user)
+    if projects:
+        return projects.first()
+
+    return Project.objects.none()
