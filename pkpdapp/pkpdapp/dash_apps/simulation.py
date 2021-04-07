@@ -271,8 +271,6 @@ class SimulationApp(BaseApp):
             list(s.sliders().keys()) for s in sliders_components
         ]
 
-
-
         self._slider_tabs = [
             dbc.Tab(
                 children=sliders_components[i](),
