@@ -9,9 +9,11 @@ copyright notice and full license details.
 {% load markdownify %}
 
 {% block main_content %}
+<div class="container">
 <h2>Pharmokinetic Model {{object.name}}</h2>
 {{object.description|markdownify}}
 <h3>SBML</h3>
 <pre>{{object.sbml}}</pre>
 <ul>
+</div>
 {% endblock %}

@@ -9,10 +9,9 @@ from pkpdapp.models import (
 )
 
 
-class CreateNewProtocol(forms.ModelForm):
+class ProtocolForm(forms.ModelForm):
     """
-    A form to create a new
-    :model:`pkpdapp.Protocol`.
+    A form to create a :model:`pkpdapp.Protocol`.
 
     Can pass an additional kwarg 'project', which adds the new model to this
     project id
@@ -69,6 +68,8 @@ class CreateNewProtocol(forms.ModelForm):
         dose_period = self.cleaned_data['dose_period']
         if dose_period is None:
             dose_period = 0.0
+        if commit:
+            Dose.objects.filter(protocol=instance).delete()
         for i in range(number_of_doses):
             start_time = self.cleaned_data['protocol_start_time'] \
                 + i * dose_period

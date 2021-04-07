@@ -9,6 +9,7 @@ copyright notice and full license details.
 {% load markdownify %}
 
 {% block main_content %}
+<div class="container">
 <h2>Protocol {{protocol.name}} (<a href="{% url 'protocol-update' protocol.id %}"> Update </a>)</h2>
 
 <h3>Doses</h2>
@@ -42,5 +43,6 @@ copyright notice and full license details.
             <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
         {% endif %}
     </span>
+</div>
 </div>
 {% endblock %}
