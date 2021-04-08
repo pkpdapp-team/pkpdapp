@@ -6,7 +6,7 @@
 from django import forms
 from django.core.exceptions import ValidationError
 from pkpdapp.models import (Dataset, BiomarkerType,
-                            Project, Biomarker)
+                            Project, Biomarker, Compound, Protocol, Unit)
 from django.utils.translation import gettext as _
 import pandas as pd
 from django.utils.html import format_html
@@ -73,14 +73,17 @@ class CreateNewDataset(forms.ModelForm):
                          'MOW',
                          'ROUTE',
                          'AMT',
+                         'AMT_UNIT',  # not in Roche list but seems needed
                          'COMPOUND',
                          'DOSEGROUP',
                          'ADDL',
                          'II',
                          'TIME',
+                         'TIME_UNIT',  # not in Roche list but seems needed
                          'YTYPE',
                          'YDESC',
                          'DV',
+                         'DV_UNIT',  # not in Roche list but seems needed
                          'LLOQ',
                          'EVID',
                          'ADA_T',
@@ -131,27 +134,60 @@ class CreateNewDataset(forms.ModelForm):
         data = self._data
         bts_unique = data["YDESC"].unique().tolist()
         biomarker_types = []
-        for i in range(len(bts_unique)):
-            biomarker_types.append(BiomarkerType(
-                name=bts_unique[i],
-                description="",
-                dataset=instance
-            ))
-        [bm.save() for bm in biomarker_types]
+        [BiomarkerType.objects.create(
+            name=bt,
+            description="",
+            dataset=instance)
+            for bt in bts_unique]
 
-        # save each row of data
         biomarker_index = {}
         for i, b in enumerate(bts_unique):
             biomarker_index[b] = i
+        # save each row of data as either biomarker or dose
         for index, row in data.iterrows():
-            index = biomarker_index[row['YDESC']]
-            biomarker = Biomarker(
-                time=row['TIME'],
-                subject_id=row['ID'],
-                value=row['DV'],
-                biomarker_type=biomarker_types[index]
-            )
-            biomarker.save()
+            value = row['DV']
+            subject_id = row['ID']
+            if value != ".":  # measurement observation
+                index = biomarker_index[row['YDESC']]
+                Biomarker.objects.create(
+                    time=row['TIME'],
+                    subject_id=subject_id,
+                    value=row['DV'],
+                    biomarker_type=biomarker_types[index]
+                )
+            else:  # dose observation
+                compound_str = row['COMPOUND']
+                try:
+                    compound = Compound.objects.get(name=compound_str)
+                except Compound.DoesNotExist:
+                    compound = Compound.objects.create(
+                        name=compound_str
+                    )
+                try:
+                    protocol = Protocol.objects.get(
+                        dataset=instance,
+                        subject_id=subject_id,
+                        compound=compound
+                    )
+                except Protocol.DoesNotExist:
+                    protocol = Protocol.objects.create(
+                        name='{}-{}-{}'.format(
+                            instance.name,
+                            compound.name,
+                            subject_id
+                        ),
+                        compound=compound,
+                        dataset=instance,
+                        subject_id=subject_id,
+                    )
+                time_unit = Unit.objects.get(symbol=row['TIME_UNIT'])
+                start_time = time_unit.multiplier * float(row['TIME'])
+                amount = unit.multiplier * float(row['DOSE'])
+                Dose.objects.create(
+                    start_time=start_time,
+                    amount=amount,
+                    protocol=protocol,
+                )
 
         # handle dosing
 
