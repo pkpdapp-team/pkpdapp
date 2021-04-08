@@ -5,7 +5,7 @@
 #
 from django import forms
 from django.core.exceptions import ValidationError
-from pkpdapp.models import (Dataset, BiomarkerType, StandardUnit,
+from pkpdapp.models import (Dataset, BiomarkerType, StandardUnit, Dose,
                             Project, Biomarker, Compound, Protocol, Unit)
 from django.utils.translation import gettext as _
 import pandas as pd
@@ -70,14 +70,13 @@ class CreateNewDataset(forms.ModelForm):
         required_cols = ['ID',
                          'STUDYID',
                          'AMT',
-                         'AMT_UNIT',  # not in Roche list but seems needed
                          'COMPOUND',
                          'TIME',
                          'TIME_UNIT',  # not in Roche list but seems needed
                          'YTYPE',
                          'YDESC',
                          'DV',
-                         'DV_UNIT',  # not in Roche list but seems needed
+                         'UNIT',  # not in Roche list but seems needed
                          'LLOQ',
                          'EVID',
                          'ADA_T',
@@ -97,6 +96,24 @@ class CreateNewDataset(forms.ModelForm):
                 code='invalid',
                 params={'filename': uploaded_file.name,
                         'error_cols': error_cols},
+            )
+
+        # check that time unit is only h or d
+        time_units = data['TIME_UNIT'].unique().tolist()
+        error_tunits = []
+        for t_unit in time_units:
+            if t_unit not in ['h', 'd']:
+                error_tunits.append(t_unit)
+        if len(error_tunits) > 0:
+            raise forms.ValidationError(
+                _((
+                    'Error parsing file, '
+                    '%(filename)s contains the following unknown time units: '
+                    '%(error_tunits)s'
+                )),
+                code='invalid',
+                params={'filename': uploaded_file.name,
+                        'error_tunits': error_tunits},
             )
 
         # check for missing data and drop any rows where data are missing
@@ -125,18 +142,17 @@ class CreateNewDataset(forms.ModelForm):
 
         # save default biomarker types
         data = self._data
-        bts_unique = data[['YDESC', 'DV_UNIT']].drop_duplicates()
+        bts_unique = data[['YDESC', 'UNIT']].drop_duplicates()
         for index, row in bts_unique.iterrows():
-            print(row['DV_UNIT'])
-            if row['DV_UNIT'] == ".":
+            if row['UNIT'] == ".":
                 BiomarkerType.objects.create(
                     name=row['YDESC'],
                     description="",
                     dataset=instance)
             else:
-                unit_query = StandardUnit.objects.filter(symbol=row['DV_UNIT'])
+                unit_query = StandardUnit.objects.filter(symbol=row['UNIT'])
                 if not unit_query:
-                    unit = StandardUnit(symbol=row['DV_UNIT'])
+                    unit = StandardUnit(symbol=row['UNIT'])
                     unit.save()
                 else:
                     unit = unit_query[0]
@@ -151,11 +167,12 @@ class CreateNewDataset(forms.ModelForm):
             biomarker_index[b] = i
         # save each row of data as either biomarker or dose
         for index, row in data.iterrows():
+            time_unit = Unit.objects.get(symbol=row['TIME_UNIT'])
             value = row['DV']
             subject_id = row['ID']
             if value != ".":  # measurement observation
                 Biomarker.objects.create(
-                    time=row['TIME'],
+                    time=time_unit.multiplier * row['TIME'],
                     subject_id=subject_id,
                     value=row['DV'],
                     biomarker_type=BiomarkerType.objects.get(
@@ -187,14 +204,15 @@ class CreateNewDataset(forms.ModelForm):
                         dataset=instance,
                         subject_id=subject_id,
                     )
-                time_unit = Unit.objects.get(symbol=row['TIME_UNIT'])
+                print("hyia")
                 start_time = time_unit.multiplier * float(row['TIME'])
-                amount = unit.multiplier * float(row['DOSE'])
+                amount = float(row['AMT'])
                 Dose.objects.create(
                     start_time=start_time,
                     amount=amount,
                     protocol=protocol,
                 )
+                print("biya")
 
         # handle dosing
 
