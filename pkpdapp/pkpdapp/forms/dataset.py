@@ -5,7 +5,7 @@
 #
 from django import forms
 from django.core.exceptions import ValidationError
-from pkpdapp.models import (Dataset, BiomarkerType,
+from pkpdapp.models import (Dataset, BiomarkerType, StandardUnit,
                             Project, Biomarker, Compound, Protocol, Unit)
 from django.utils.translation import gettext as _
 import pandas as pd
@@ -69,15 +69,9 @@ class CreateNewDataset(forms.ModelForm):
         # all columns in Roche data format
         required_cols = ['ID',
                          'STUDYID',
-                         'SPECIES',
-                         'MOW',
-                         'ROUTE',
                          'AMT',
                          'AMT_UNIT',  # not in Roche list but seems needed
                          'COMPOUND',
-                         'DOSEGROUP',
-                         'ADDL',
-                         'II',
                          'TIME',
                          'TIME_UNIT',  # not in Roche list but seems needed
                          'YTYPE',
@@ -88,8 +82,7 @@ class CreateNewDataset(forms.ModelForm):
                          'EVID',
                          'ADA_T',
                          'COV',
-                         'COV_T',
-                         'COMMENTS']
+                         'COV_T']
         error_cols = []
         for col in required_cols:
             if col not in colnames:
@@ -132,13 +125,26 @@ class CreateNewDataset(forms.ModelForm):
 
         # save default biomarker types
         data = self._data
-        bts_unique = data["YDESC"].unique().tolist()
-        biomarker_types = []
-        [BiomarkerType.objects.create(
-            name=bt,
-            description="",
-            dataset=instance)
-            for bt in bts_unique]
+        bts_unique = data[['YDESC', 'DV_UNIT']].drop_duplicates()
+        for index, row in bts_unique.iterrows():
+            print(row['DV_UNIT'])
+            if row['DV_UNIT'] == ".":
+                BiomarkerType.objects.create(
+                    name=row['YDESC'],
+                    description="",
+                    dataset=instance)
+            else:
+                unit_query = StandardUnit.objects.filter(symbol=row['DV_UNIT'])
+                if not unit_query:
+                    unit = StandardUnit(symbol=row['DV_UNIT'])
+                    unit.save()
+                else:
+                    unit = unit_query[0]
+                BiomarkerType.objects.create(
+                    name=row['YDESC'],
+                    description="",
+                    unit=unit,
+                    dataset=instance)
 
         biomarker_index = {}
         for i, b in enumerate(bts_unique):
@@ -148,12 +154,13 @@ class CreateNewDataset(forms.ModelForm):
             value = row['DV']
             subject_id = row['ID']
             if value != ".":  # measurement observation
-                index = biomarker_index[row['YDESC']]
                 Biomarker.objects.create(
                     time=row['TIME'],
                     subject_id=subject_id,
                     value=row['DV'],
-                    biomarker_type=biomarker_types[index]
+                    biomarker_type=BiomarkerType.objects.get(
+                        name=row['YDESC'],
+                        dataset=instance)
                 )
             else:  # dose observation
                 compound_str = row['COMPOUND']
