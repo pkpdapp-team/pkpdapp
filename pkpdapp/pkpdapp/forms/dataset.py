@@ -215,7 +215,6 @@ class CreateNewDataset(forms.ModelForm):
                     amount=amount,
                     protocol=protocol,
                 )
-        # handle dosing
 
         return instance
 
