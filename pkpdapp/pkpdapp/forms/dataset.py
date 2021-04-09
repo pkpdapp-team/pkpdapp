@@ -102,7 +102,7 @@ class CreateNewDataset(forms.ModelForm):
         time_units = data['TIME_UNIT'].unique().tolist()
         error_tunits = []
         for t_unit in time_units:
-            if t_unit not in ['h', 'd', '.']:
+            if t_unit not in ['h', 'd', '.', 'hours']:
                 error_tunits.append(t_unit)
         if len(error_tunits) > 0:
             raise forms.ValidationError(
