@@ -142,7 +142,8 @@ class CreateNewDataset(forms.ModelForm):
 
         # save default biomarker types
         data = self._data
-        bts_unique = data[['YDESC', 'UNIT']].drop_duplicates()
+        data_without_dose = data.query('DV != "."')
+        bts_unique = data_without_dose[['YDESC', 'UNIT']].drop_duplicates()
         for index, row in bts_unique.iterrows():
             if row['UNIT'] == ".":
                 BiomarkerType.objects.create(
