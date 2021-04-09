@@ -1,12 +1,7 @@
 #
-# This file is part of the erlotinib repository
-# (https://github.com/DavAug/erlotinib/) which is released under the
-# BSD 3-clause license. See accompanying LICENSE.md for copyright notice and
-# full license details.
-#
-# The InverseProblem class is based on the SingleOutputProblem and
-# MultiOutputProblem classes of PINTS (https://github.com/pints-team/pints/),
-# which is distributed under the BSD 3-clause license.
+# This file is part of PKPDApp (https://github.com/pkpdapp-team/pkpdapp) which
+# is released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 
 import copy
@@ -16,7 +11,20 @@ import numpy as np
 import pandas as pd
 import pints
 
-import pkpdapp.erlotinib as erlo
+from ._mechanistic_models import (
+    MechanisticModel, ReducedMechanisticModel,
+    PharmacodynamicModel
+)
+from ._error_models import ErrorModel, ReducedErrorModel
+from ._population_models import (
+    PopulationModel,
+    ReducedPopulationModel,
+)
+from ._predictive_models import PredictiveModel, PredictivePopulationModel
+from ._log_pdfs import (
+    HierarchicalLogLikelihood, LogPosterior,
+    LogLikelihood
+)
 
 
 class InverseProblem(object):
@@ -41,7 +49,7 @@ class InverseProblem(object):
     def __init__(self, model, times, values):
 
         # Check model
-        if not isinstance(model, erlo.MechanisticModel):
+        if not isinstance(model, MechanisticModel):
             raise ValueError(
                 'Model has to be an instance of a erlotinib.Model.'
             )
@@ -157,7 +165,7 @@ class ProblemModellingController(object):
         super(ProblemModellingController, self).__init__()
 
         # Check inputs
-        if not isinstance(mechanistic_model, erlo.MechanisticModel):
+        if not isinstance(mechanistic_model, MechanisticModel):
             raise TypeError(
                 'The mechanistic model has to be an instance of a '
                 'erlotinib.MechanisticModel.')
@@ -166,7 +174,7 @@ class ProblemModellingController(object):
             error_models = [error_models]
 
         for error_model in error_models:
-            if not isinstance(error_model, erlo.ErrorModel):
+            if not isinstance(error_model, ErrorModel):
                 raise TypeError(
                     'Error models have to be instances of a '
                     'erlotinib.ErrorModel.')
@@ -317,7 +325,7 @@ class ProblemModellingController(object):
             return None
 
         # Create log-likelihood and set ID to individual
-        log_likelihood = erlo.LogLikelihood(
+        log_likelihood = LogLikelihood(
             self._mechanistic_model, self._error_models, observations, times)
         log_likelihood.set_id(individual)
 
@@ -504,8 +512,8 @@ class ProblemModellingController(object):
 
             # Convert models to reduced models
             for model_id, pop_model in enumerate(pop_models):
-                if not isinstance(pop_model, erlo.ReducedPopulationModel):
-                    pop_models[model_id] = erlo.ReducedPopulationModel(
+                if not isinstance(pop_model, ReducedPopulationModel):
+                    pop_models[model_id] = ReducedPopulationModel(
                         pop_model)
 
             # Fix parameters
@@ -535,11 +543,11 @@ class ProblemModellingController(object):
         error_models = self._error_models
 
         # Convert models to reduced models
-        if not isinstance(mechanistic_model, erlo.ReducedMechanisticModel):
-            mechanistic_model = erlo.ReducedMechanisticModel(mechanistic_model)
+        if not isinstance(mechanistic_model, ReducedMechanisticModel):
+            mechanistic_model = ReducedMechanisticModel(mechanistic_model)
         for model_id, error_model in enumerate(error_models):
-            if not isinstance(error_model, erlo.ReducedErrorModel):
-                error_models[model_id] = erlo.ReducedErrorModel(error_model)
+            if not isinstance(error_model, ReducedErrorModel):
+                error_models[model_id] = ReducedErrorModel(error_model)
 
         # Fix model parameters
         mechanistic_model.fix_parameters(name_value_dict)
@@ -616,13 +624,13 @@ class ProblemModellingController(object):
         log_likelihoods = self._create_log_likelihoods(_id)
         if self._population_models is not None:
             # Compose HierarchicalLogLikelihoods
-            log_likelihoods = [erlo.HierarchicalLogLikelihood(
+            log_likelihoods = [HierarchicalLogLikelihood(
                 log_likelihoods, self._population_models)]
 
         # Compose the log-posteriors
         log_posteriors = []
         for log_likelihood in log_likelihoods:
-            log_posterior = erlo.LogPosterior(log_likelihood, self._log_prior)
+            log_posterior = LogPosterior(log_likelihood, self._log_prior)
             log_posteriors.append(log_posterior)
 
         # If only one log-posterior in list, unwrap the list
@@ -682,7 +690,7 @@ class ProblemModellingController(object):
         :type exclude_pop_model: bool, optional
         """
         # Create predictive model
-        predictive_model = erlo.PredictiveModel(
+        predictive_model = PredictiveModel(
             self._mechanistic_model, self._error_models)
 
         # Return if no population model has been set, or is excluded
@@ -690,7 +698,7 @@ class ProblemModellingController(object):
             return predictive_model
 
         # Create predictive population model
-        predictive_model = erlo.PredictivePopulationModel(
+        predictive_model = PredictivePopulationModel(
             predictive_model, self._population_models)
 
         return predictive_model
@@ -747,7 +755,7 @@ class ProblemModellingController(object):
                 'Data has to be a pandas.DataFrame.')
 
         # If model does not support dose administration, set dose keys to None
-        if isinstance(self._mechanistic_model, erlo.PharmacodynamicModel):
+        if isinstance(self._mechanistic_model, PharmacodynamicModel):
             dose_key = None
             dose_duration_key = None
 
@@ -900,7 +908,7 @@ class ProblemModellingController(object):
         """
         # Check inputs
         for pop_model in pop_models:
-            if not isinstance(pop_model, erlo.PopulationModel):
+            if not isinstance(pop_model, PopulationModel):
                 raise TypeError(
                     'The population models have to be an instance of a '
                     'erlotinib.PopulationModel.')

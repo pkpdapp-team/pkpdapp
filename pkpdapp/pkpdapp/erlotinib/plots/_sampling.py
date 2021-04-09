@@ -1,8 +1,7 @@
 #
-# This file is part of the erlotinib repository
-# (https://github.com/DavAug/erlotinib/) which is released under the
-# BSD 3-clause license. See accompanying LICENSE.md for copyright notice and
-# full license details.
+# This file is part of PKPDApp (https://github.com/pkpdapp-team/pkpdapp) which
+# is released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 
 import copy
@@ -13,10 +12,10 @@ import pints
 import plotly.colors
 import plotly.graph_objects as go
 
-import pkpdapp.erlotinib.plots as eplt
+from ._base import MultiSubplotFigure
 
 
-class MarginalPosteriorPlot(eplt.MultiSubplotFigure):
+class MarginalPosteriorPlot(MultiSubplotFigure):
     """
     A figure class that visualises the marginal posterior probability for each
     parameter across individuals.
