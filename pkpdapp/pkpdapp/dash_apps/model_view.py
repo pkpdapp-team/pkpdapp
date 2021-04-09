@@ -10,12 +10,12 @@ import dash_html_components as html
 import pkpdapp.erlotinib as erlo
 import plotly.graph_objects as go
 import django_plotly_dash as dpd
-from dash.dependencies import Input, Output, State, MATCH, ALL
-import dash
+from dash.dependencies import Input, Output, ALL
 import numpy as np
 import pandas as pd
 import json
 import threading
+import myokit
 
 max_sliders = 20
 
@@ -344,7 +344,11 @@ class ModelViewState:
         """
         if isinstance(sbml, str):
             sbml = sbml.encode()
-        erlo_m = erlo.MechanisticModel(sbml)
+
+        try:
+            erlo_m = erlo.MechanisticModel(sbml)
+        except myokit.formats.sbml._parser.SBMLParsingError:
+            return
         param_names = erlo_m.parameters()
         for i, p in enumerate(param_names):
             param_names[i] = p.replace('.', '_')
@@ -479,11 +483,13 @@ class _SlidersComponent(object):
         for index, existing_group in enumerate(self._slider_groups.values()):
             for slider_index in slider_indices:
                 if slider_index in existing_group:
-                    raise ValueError('Slider <' + str(slider_index) +
-                                     '> exists already in group '
-                                     '<' +
-                                     str(list(self._slider_groups.keys())[index]) +
-                                     '>.')  # pragma: no cover
+                    raise ValueError(
+                        'Slider <' + str(slider_index) +
+                        '> exists already in group '
+                        '<' +
+                        str(list(self._slider_groups.keys())[index]) +
+                        '>.'
+                    )  # pragma: no cover
 
         self._slider_groups[group_id] = slider_indices
 

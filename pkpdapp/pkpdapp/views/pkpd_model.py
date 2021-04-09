@@ -13,14 +13,9 @@ from pkpdapp.forms import (
 )
 from django.urls import reverse_lazy
 from pkpdapp.models import (PharmacokineticModel, DosedPharmacokineticModel,
-                            PharmacodynamicModel, Biomarker, BiomarkerType,
+                            PharmacodynamicModel,
                             Dose)
-import pandas as pd
 from pkpdapp.dash_apps.model_view import ModelViewState
-import pkpdapp.erlotinib as erlo
-from dash.dependencies import Input, Output
-import dash
-from myokit.formats.sbml import SBMLParsingError
 
 
 def create_model_view_state(model, project):
@@ -134,8 +129,13 @@ class DosedPharmacokineticModelUpdate(LoginRequiredMixin, UpdateView):
     ]
 
     def get(self, request, *args, **kwargs):
-        self._app = create_dash_app(self.get_object(),
-                                    self.request.user.profile.selected_project)
+        session = request.session
+        session['django_plotly_dash'] = {
+            'model_view': create_model_view_state(
+                self.get_object(),
+                self.request.user.profile.selected_project
+            ).to_json()
+        }
         return super().get(request)
 
 

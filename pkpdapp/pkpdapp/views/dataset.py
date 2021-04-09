@@ -21,7 +21,6 @@ from django.views.generic import (
     UpdateView, DeleteView,
     ListView
 )
-import dash
 
 
 BASE_FILE_UPLOAD_ERROR = 'FILE UPLOAD FAILED: '

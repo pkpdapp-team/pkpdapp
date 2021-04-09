@@ -48,27 +48,6 @@ app.layout = dbc.Container(children=[
     ])
 ], fluid=True, style={'height': '90vh'})
 
-@app.callback(
-    [
-        Output('biomarker-select', 'options'),
-        Output('biomarker-select', 'value'),
-    ],
-    [
-        Input('fig', 'style'),
-    ])
-def update_biomarker_options(_, session_state=None):
-    if session_state is None:
-        raise NotImplementedError("Cannot handle a missing session state")
-
-    state = session_state.get('data_view', None)
-
-    if state is None:
-        raise NotImplementedError('DataViewState missing in session state')
-
-    state = DataViewState.from_json(state)
-    options = state.biomarker_dropdown_options()
-    return options, state._use_biomarkers
-
 
 @app.callback(
     [
@@ -90,6 +69,7 @@ def update_biomarker_options(_, session_state=None):
     state = DataViewState.from_json(state)
     options = state.biomarker_dropdown_options()
     return options, state._use_biomarkers
+
 
 @app.callback(
     Output('fig', 'figure'),
