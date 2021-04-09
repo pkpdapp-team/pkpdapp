@@ -102,7 +102,7 @@ class CreateNewDataset(forms.ModelForm):
         time_units = data['TIME_UNIT'].unique().tolist()
         error_tunits = []
         for t_unit in time_units:
-            if t_unit not in ['h', 'd']:
+            if t_unit not in ['h', 'd', '.']:
                 error_tunits.append(t_unit)
         if len(error_tunits) > 0:
             raise forms.ValidationError(
@@ -167,7 +167,10 @@ class CreateNewDataset(forms.ModelForm):
             biomarker_index[b] = i
         # save each row of data as either biomarker or dose
         for index, row in data.iterrows():
-            time_unit = Unit.objects.get(symbol=row['TIME_UNIT'])
+            if row['TIME_UNIT'] != ".":
+                time_unit = Unit.objects.get(symbol=row['TIME_UNIT'])
+            else:  # assume hours as default
+                time_unit = Unit.objects.get(symbol='h')
             value = row['DV']
             subject_id = row['ID']
             if value != ".":  # measurement observation
@@ -204,7 +207,6 @@ class CreateNewDataset(forms.ModelForm):
                         dataset=instance,
                         subject_id=subject_id,
                     )
-                print("hyia")
                 start_time = time_unit.multiplier * float(row['TIME'])
                 amount = float(row['AMT'])
                 Dose.objects.create(
@@ -212,8 +214,6 @@ class CreateNewDataset(forms.ModelForm):
                     amount=amount,
                     protocol=protocol,
                 )
-                print("biya")
-
         # handle dosing
 
         return instance
