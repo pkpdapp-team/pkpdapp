@@ -14,7 +14,7 @@ copyright notice and full license details.
 <h2>PkpdModel {{object.name}}</h2>
 (<a href="{% url 'pd_model-update' object.id %}"> Update </a>)
 {{object.description|markdownify}}
-{% plotly_app_bootstrap name="parmacodynamic_view" aspect="4by3"%}
+{% plotly_app_bootstrap name="model_view" aspect="4by3"%}
 <h3>SBML</h3>
 <pre>{{object.sbml}}</pre>
 <ul>
