@@ -86,12 +86,12 @@ class MechanisticModel(object):
             [var.qname() for var in model.variables(const=True)])
 
         self._default_values = {}
-        self._default_values.update({
-            v: model.get(v).state_value() for v in names
-        })
-        self._default_values.update({
-            v: model.get(v).value() for v in self._const_names
-        })
+        for v in self._state_names + self._const_names:
+            variable = model.get(v)
+            if variable.is_state():
+                self._default_values[v] = variable.state_value()
+            else:
+                self._default_values[v] = variable.value()
 
         # Remember original order of state names for simulation
         order_after_sort = np.argsort(names)
