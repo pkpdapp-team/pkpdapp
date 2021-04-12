@@ -22,6 +22,7 @@ class MechanisticModel(object):
         in SBML format that specifies the model.
 
     """
+
     def __init__(self, sbml_input):
         super(MechanisticModel, self).__init__()
 
@@ -83,6 +84,14 @@ class MechanisticModel(object):
         self._state_names = sorted(names)
         self._const_names = sorted(
             [var.qname() for var in model.variables(const=True)])
+
+        self._default_values = {}
+        self._default_values.update({
+            v: model.get(v).value() for v in names
+        })
+        self._default_values.update({
+            v: model.get(v).value() for v in self._const_names
+        })
 
         # Remember original order of state names for simulation
         order_after_sort = np.argsort(names)
@@ -225,6 +234,7 @@ class PharmacodynamicModel(MechanisticModel):
         A path to the SBML model file that specifies the pharmacodynamic model.
 
     """
+
     def __init__(self, sbml_file):
         super(PharmacodynamicModel, self).__init__(sbml_file)
 
@@ -305,6 +315,7 @@ class PharmacokineticModel(MechanisticModel):
         A path to the SBML model file that specifies the pharmacokinetic model.
 
     """
+
     def __init__(self, sbml_file):
         super(PharmacokineticModel, self).__init__(sbml_file)
 
@@ -664,6 +675,7 @@ class ReducedMechanisticModel(object):
     mechanistic_model
         An instance of a :class:`MechanisticModel`.
     """
+
     def __init__(self, mechanistic_model):
         super(ReducedMechanisticModel, self).__init__()
 

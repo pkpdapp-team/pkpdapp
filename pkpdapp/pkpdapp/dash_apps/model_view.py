@@ -93,6 +93,7 @@ class ModelViewState:
     _time_key = 'Time'
     _biom_key = 'Biomarker'
     _meas_key = 'Measurement'
+    _times_num = 100
 
     def __init__(self):
 
@@ -105,7 +106,9 @@ class ModelViewState:
         self._parameters = []
         self._parameter_names = []
         self._n_states = []
-        self._times = np.linspace(start=0, stop=30)
+        self._times = np.linspace(
+            start=0, stop=30, num=self._times_num
+        )
 
         self._direct = True
         self._compartment = 'central'
@@ -166,10 +169,32 @@ class ModelViewState:
 
     def set_dosing_events(self, dosing_events):
         """
-        Sets the dosing events
+        Sets the dosing events, which is a list of tuples
+        (d.amount, d.start_time, d.duration)
 
         """
         self._dosing_events = dosing_events
+
+        # try to intelligently chose an integration period
+        # based on the dosing events
+        min_time = 0
+        max_time = 30
+        time_scale = 15  # TODO base this on something!
+        if len(self._dosing_events) > 0:
+            # if doses, base it on the last start time and duration
+            # plus some timescale
+            e0 = self._dosing_events[-1]
+            max_time = e0[1] + e0[2] + time_scale
+        if len(self._dosing_events) > 1:
+            # if more than two doses, use the distance between them
+            # as the timescale
+            e0 = self._dosing_events[-2]
+            e1 = self._dosing_events[-1]
+            time_scale = e1[1] - e0[1]
+            max_time = e1[1] + e1[2] + time_scale
+        self._times = np.linspace(
+            min_time, max_time, num=self._times_num
+        )
 
     def set_multiple_models(self, value):
         self._multiple_models = value
@@ -229,9 +254,20 @@ class ModelViewState:
         """
         sliders = _SlidersComponent()
         parameters = self._parameter_names[model_index]
+        parameter_values = self._parameters[model_index]
         # Add one slider for each parameter
         for i, parameter in enumerate(parameters):
-            sliders.add_slider(i, parameter)
+            min_value = 0
+            max_value = 2
+            if parameter_values[i] < min_value:
+                min_value = 2 * parameter_values[i]
+            if parameter_values[i] > max_value:
+                max_value = 2 * parameter_values[i]
+
+            sliders.add_slider(i, parameter,
+                               min_value=min_value,
+                               max_value=max_value,
+                               value=parameter_values[i])
 
         # Split parameters into initial values and parameters
         n_states = self._n_states[model_index]
@@ -353,7 +389,9 @@ class ModelViewState:
         for i, p in enumerate(param_names):
             param_names[i] = p.replace('.', '_')
 
-        self._parameters.append([0.5] * len(param_names))
+        self._parameters.append([
+            erlo_m._default_values[n] for n in erlo_m.parameters()
+        ])
         self._parameter_names.append(param_names)
         self._n_states.append(erlo_m._n_states)
         if use:
@@ -438,7 +476,7 @@ class _SlidersComponent(object):
                    value=0.5,
                    min_value=0,
                    max_value=2,
-                   step_size=0.01):
+                   n_increments=200):
         """
         Adds a slider.
 
@@ -452,9 +490,10 @@ class _SlidersComponent(object):
             Minimal value of slider.
         max_value
             Maximal value of slider.
-        step_size
-            Elementary step size of slider.
+       n_increments
+            Number of increments of slider.
         """
+        step_size = (max_value - min_value) / n_increments
         self._sliders[slider_index] = dcc.Slider(
             id={
                 'type': 'slider',
@@ -465,10 +504,10 @@ class _SlidersComponent(object):
             max=max_value,
             step=step_size,
             marks={
-                str(min_value):
-                str(min_value),
-                str(max_value):
-                str(max_value)
+                str(round(min_value)):
+                str(round(min_value)),
+                str(round(max_value)):
+                str(round(max_value))
             },
             updatemode='mouseup')
         self._labels[slider_index] = label

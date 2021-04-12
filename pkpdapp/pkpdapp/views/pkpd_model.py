@@ -32,6 +32,7 @@ def create_model_view_state(model, project):
             (d.amount, d.start_time, d.duration)
             for d in Dose.objects.filter(protocol=model.protocol)
         ]
+        print('asdfasdfasdf', events)
         state.set_dosing_events(events)
     else:
         state.add_model(model.sbml, model.name, is_pk=is_pk, use=True)
