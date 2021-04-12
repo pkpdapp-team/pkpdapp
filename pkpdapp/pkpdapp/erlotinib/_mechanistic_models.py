@@ -87,7 +87,7 @@ class MechanisticModel(object):
 
         self._default_values = {}
         self._default_values.update({
-            v: model.get(v).value() for v in names
+            v: model.get(v).state_value() for v in names
         })
         self._default_values.update({
             v: model.get(v).value() for v in self._const_names
