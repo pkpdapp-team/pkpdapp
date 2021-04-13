@@ -190,7 +190,7 @@ class SimulationApp(BaseApp):
             children=[
                 dcc.Graph(figure=self.create_figure(),
                           id='fig',
-                          style={'height': '100%'})
+                          style={'height': '550px'})
             ],
         )
 
@@ -245,11 +245,17 @@ class SimulationApp(BaseApp):
         for i, t in enumerate(self._slider_tabs):
             if i in self._use_models:
                 t.disabled = False
-                t.label = self._model_names[i]
+                t.label = self._trim_model_name(self._model_names[i])
             else:
                 t.disabled = True
                 t.label = ''
         return self._slider_tabs
+
+    def _trim_model_name(self, name):
+        n = 26
+        if len(name) > n:
+            name = name[:n] + '...'
+        return name
 
     def _create_sliders_component(self):
         """
@@ -268,7 +274,7 @@ class SimulationApp(BaseApp):
         self._slider_tabs = [
             dbc.Tab(
                 children=sliders_components[i](),
-                label=self._model_names[i],
+                label=self._trim_model_name(self._model_names[i]),
             ) for i in range(len(self._model_names))
         ]
 
@@ -279,7 +285,7 @@ class SimulationApp(BaseApp):
                 id='slider-tabs',
                 children=self._slider_tabs,
             )
-        ], md=3, style={'marginTop': '5em'})
+        ], width=3, style={'marginTop': '5em'})
 
         return sliders
 

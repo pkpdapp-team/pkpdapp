@@ -6,16 +6,44 @@ copyright notice and full license details.
 
 {% extends "base/base.html" %}
 {% load static %}
+{% load current_project %}
 
 {% block main_content %}
-	<div class="container">
-		<div class="row py-5">
-			<div class="col">
-				<h1>
-					Welcome to the PKPDApp, a web-based application to model the
-					distribution and effects of drugs.
-				</h1>
-			</div>
-		</div>
-	</div>
+<div class="container">
+<h1>
+  Welcome to the PKPDApp, a web-based application to model the
+	distribution and effects of drugs.
+</h1>
+{% if user.is_authenticated %}
+<p>
+Each user has a number of projects that they have created or are assigned to. Use the drop-down in the upper right corner to select from the list of available
+projects. 
+</p>
+
+<p>
+Set the currently selected project here:
+</p>
+
+<form action="" method="post"  enctype="multipart/form-data">
+  {% csrf_token %}
+  <table>
+  {{ form.as_table }}
+  </table>
+  <input type="submit" value="Submit">
+</form>
+
+{% current_project user as project %}
+
+<p>
+The currently selected project is 
+<span class="font-weight-bold">{{ project.name }}</span>, the details of this project are as
+follows:
+</p>
+  {% include "project_snippet.html" %}
+{% else %}
+<p>Please login using the "Login" link in the top-right of your screen</p>
+
+{% endif %}
+</div>
+
 {% endblock %}

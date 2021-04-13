@@ -11,6 +11,7 @@ copyright notice and full license details.
 
 <h2>Update Dataset {{dataset.name}}</h2>
 
+<div class="container">
 <form action="" method="post">
   {% csrf_token %}
   <table>
@@ -18,5 +19,6 @@ copyright notice and full license details.
   </table>
   <input type="submit" value="Submit">
 </form>
+</div>
 
 {% endblock %}

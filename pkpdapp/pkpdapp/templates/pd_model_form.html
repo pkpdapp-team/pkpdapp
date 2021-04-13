@@ -8,9 +8,8 @@ copyright notice and full license details.
 {% load static %}
 
 {% block main_content %}
-
+<div class="container">
 <h2>Update Model {{object.name}}</h2>
-
 <form action="" method="post"  enctype="multipart/form-data">
   {% csrf_token %}
   <table>
@@ -18,5 +17,5 @@ copyright notice and full license details.
   </table>
   <input type="submit" value="Submit">
 </form>
-
+</div>
 {% endblock %}

@@ -13,4 +13,5 @@ from .pkpd_model import (
     CreateNewPharmodynamicModel,
     CreateNewDosedPharmokineticModel,
 )
-from .protocol import CreateNewProtocol
+from .protocol import ProtocolForm
+from .index import IndexForm

@@ -9,6 +9,7 @@ copyright notice and full license details.
 {% load plotly_dash %}
 
 {% block main_content %}
+<div class="container">
   <form action="" method="post"  enctype="multipart/form-data">
     {% csrf_token %}
     <table>
@@ -16,4 +17,5 @@ copyright notice and full license details.
     </table>
     <input type="submit" value="Submit">
   </form>
+</div>
 {% endblock %}
