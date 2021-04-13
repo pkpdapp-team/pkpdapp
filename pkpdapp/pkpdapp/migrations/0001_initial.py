@@ -128,6 +128,20 @@ class Migration(migrations.Migration):
                 ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
         ),
+        migrations.CreateModel(
+            name='PkpdModel',
+            fields=[
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('name', models.CharField(help_text='name of the model', max_length=100)),
+                ('description', models.TextField(blank=True, default='', help_text='short description of the model')),
+                ('sbml', models.TextField(help_text='the model represented using SBML (see http://sbml.org)')),
+                ('dose_compartment', models.CharField(default='central', help_text='compartment name to be dosed', max_length=100)),
+                ('protocol', models.ForeignKey(help_text='dosing protocol', on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.Protocol')),
+            ],
+            options={
+                'abstract': False,
+            },
+        ),
         migrations.AddField(
             model_name='dosedpharmacokineticmodel',
             name='pharmacokinetic_model',

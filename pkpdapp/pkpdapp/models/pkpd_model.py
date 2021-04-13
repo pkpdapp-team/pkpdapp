@@ -69,3 +69,17 @@ class PharmacodynamicModel(MechanisticModel):
 
     def get_absolute_url(self):
         return reverse('pd_model-detail', kwargs={'pk': self.pk})
+
+
+class PkpdModel(MechanisticModel):
+    dose_compartment = models.CharField(
+        max_length=100,
+        default='central',
+        help_text='compartment name to be dosed'
+    )
+    protocol = models.ForeignKey(
+        Protocol,
+        on_delete=models.CASCADE,
+        help_text='dosing protocol'
+    )
+
