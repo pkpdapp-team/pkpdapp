@@ -336,11 +336,6 @@ class ModelViewState:
         else:
             erlo_m = erlo.PharmacodynamicModel(sbml)
 
-        param_names = erlo_m.parameters()
-        param_names_dict = {}
-        for p in param_names:
-            param_names_dict[p] = p.replace('.', '_')
-        erlo_m.set_parameter_names(names=param_names_dict)
         return erlo_m
 
     def _simulate(self, parameters, sbml, is_pk):
@@ -351,6 +346,13 @@ class ModelViewState:
         with app_lock:
             # compile model
             model = self._convert_to_erlo_model(sbml, is_pk)
+
+            # output concentrations instead of amounts
+            outputs = [
+                n.replace('_amount', '_concentration')
+                for n in model.outputs()
+            ]
+            model.set_outputs(outputs)
 
             # Solve the model
             result = model.simulate(parameters, self._times)

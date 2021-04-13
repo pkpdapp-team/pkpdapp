@@ -80,7 +80,7 @@ class MechanisticModel(object):
 
         # Get constant variable names and state names
         names = [var.qname() for var in model.states()]
-        names = [n.replace('_amount', '_concentration') for n in names]
+        # names = [n.replace('_amount', '_concentration') for n in names]
         self._state_names = sorted(names)
         self._const_names = sorted(
             [var.qname() for var in model.variables(const=True)])
