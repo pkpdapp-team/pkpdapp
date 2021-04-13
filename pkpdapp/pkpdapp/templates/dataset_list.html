@@ -8,6 +8,7 @@ copyright notice and full license details.
 {% load static %}
 
 {% block main_content %}
+<div class="container">
 <h1>Dataset List</h1>
 {% if dataset_list %}
   <ul>
@@ -20,4 +21,5 @@ copyright notice and full license details.
 {% else %}
   <p>There are no datasets in the database.</p>
 {% endif %} 
+</div>
 {% endblock %}

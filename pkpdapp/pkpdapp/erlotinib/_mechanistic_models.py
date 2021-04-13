@@ -79,6 +79,7 @@ class MechanisticModel(object):
 
         # Get constant variable names and state names
         names = [var.qname() for var in model.states()]
+        names = [n.replace('_amount', '_concentration') for n in names]
         self._state_names = sorted(names)
         self._const_names = sorted(
             [var.qname() for var in model.variables(const=True)])
@@ -200,7 +201,6 @@ class MechanisticModel(object):
         output = self.simulator.run(times[-1] + 1,
                                     log=self._output_names,
                                     log_times=times)
-        print('simulating with output names', self._output_names)
         result = [output[name] for name in self._output_names]
 
         return np.array(result)
