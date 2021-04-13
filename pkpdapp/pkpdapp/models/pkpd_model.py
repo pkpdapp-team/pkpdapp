@@ -82,4 +82,3 @@ class PkpdModel(MechanisticModel):
         on_delete=models.CASCADE,
         help_text='dosing protocol'
     )
-
