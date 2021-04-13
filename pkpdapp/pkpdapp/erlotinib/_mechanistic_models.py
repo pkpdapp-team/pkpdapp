@@ -466,6 +466,9 @@ class PharmacokineticModel(MechanisticModel):
                              str(compartment) + '>.')
         comp = model.get(compartment, class_filter=myokit.Component)
 
+        print('model has variables')
+        for v in comp.variables():
+            print(v.name())
         if not comp.has_variable(amount_var):
             raise ValueError('The drug amount variable <' + str(amount_var) +
                              '> could not '

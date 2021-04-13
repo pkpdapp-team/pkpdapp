@@ -90,14 +90,12 @@ parametersation in [1]_ by
             'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/models/tgi_Koch_2009_reparametrised.xml'  # noqa: E501
         },
     ]
-    models_pk = [{
-        'name':
-        'one_compartment_pk_model',
-        'description':
-        """
-Returns the absolute path to a SBML file, specifying a one compartment
-pharmacokinetic model.
-
+    models_pk = [
+        {
+            'name':
+            'one_compartment_pk_model',
+            'description':
+            """
 In this model the distribution of the drug is modelled by one
 compartment with a linear elimination rate :math:`k_e`
 
@@ -117,9 +115,30 @@ With a :class:`erlotinib.PharmacokineticModel` the drug may be either
 directly administered to :math:`A` or indirectly through a dosing
 compartment.
 """,  # noqa: W605
-        'sbml_url':
-        'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/models/pk_one_comp.xml'  # noqa: E501
-    }]
+            'sbml_url':
+            'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/models/pk_one_comp.xml'  # noqa: E501
+        },
+        {
+            'name':
+            'two_compartment_pk_model',
+            'description':
+            """
+Description of a two compartment PK model here.
+""",  # noqa: W605
+            'sbml_url':
+            'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/models/pk_two_comp.xml'  # noqa: E501
+        },
+        {
+            'name':
+            'three_compartment_pk_model',
+            'description':
+            """
+Description of a three compartment PK model here.
+""",  # noqa: W605
+            'sbml_url':
+            'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/models/pk_three_comp.xml'  # noqa: E501
+        },
+    ]
 
     PharmacodynamicModel = apps.get_model("pkpdapp", "PharmacodynamicModel")
     PharmacokineticModel = apps.get_model("pkpdapp", "PharmacokineticModel")

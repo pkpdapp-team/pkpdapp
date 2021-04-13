@@ -364,17 +364,17 @@ class PDTimeSeriesPlot(SingleFigure):
                                    opacity=0.7,
                                    line=dict(color='black', width=1))))
 
-    def _add_simulation_trace(self, times, biomarker):
+    def _add_simulation_trace(self, times, biomarker, label='Model'):
         """
         Adds scatter plot of an indiviudals pharamcodynamics to figure.
         """
         self._fig.add_trace(
             go.Scatter(x=times,
                        y=biomarker,
-                       name="Model",
+                       name=label,
                        showlegend=True,
                        mode="lines",
-                       line=dict(color='black')))
+                       ))
 
     def add_data(self,
                  data,
@@ -485,7 +485,7 @@ class PDTimeSeriesPlot(SingleFigure):
         times = data[time_key]
         biomarker = data[biom_key]
 
-        self._add_simulation_trace(times, biomarker)
+        self._add_simulation_trace(times, biomarker, label=biom_key)
 
 
 class PKTimeSeriesPlot(SingleSubplotFigure):
