@@ -54,6 +54,9 @@ def create_model_view_state(model, project):
         state.add_model(model.sbml, model.name, is_pk=is_pk, use=True)
 
     # add datasets
+    if project is None:
+        return state
+
     for dataset in project.datasets.all():
         biomarker_types = BiomarkerType.objects.filter(dataset=dataset)
         biomarkers = Biomarker.objects\
