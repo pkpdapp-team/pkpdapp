@@ -37,7 +37,10 @@ from .pkpd_model import (
     PharmacokineticModelDetail,
     PharmacodynamicModelDeleteView,
     PharmacodynamicModelListView,
-    PharmacodynamicModelUpdate
+    PharmacodynamicModelUpdate,
+    PkpdModelCreate,
+    PkpdModelDetail,
+    PkpdModelUpdate,
 )
 from .protocol import (
     ProtocolCreate,

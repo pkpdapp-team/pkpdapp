@@ -11,10 +11,22 @@ copyright notice and full license details.
 
 {% block main_content %}
 <div class="container">
-<h2>Pharmacodynamic Model {{object.name}}</h2>
-(<a href="{% url 'pd_model-update' object.id %}"> Update </a>)
+<h2>PkpdModel {{object.name}}</h2>
+(<a href="{% url 'pkpd_model-update' object.id %}"> Update </a>)
 {{object.description|markdownify}}
+
+<ul>
+  <li>Dose compartment: {{object.dose_compartment}}</li>
+  <li>
+    Protocol: {{ object.protocol.name }}
+    <a href={% url 'protocol-detail' object.protocol.id %}>
+      <i class="fas fa-info-circle"></i>
+    </a>
+  </li>
+<ul>
+
 {% plotly_app_bootstrap name="model_view" aspect="4by3"%}
+
 <h3>SBML</h3>
 <pre>{{object.sbml}}</pre>
 <ul>

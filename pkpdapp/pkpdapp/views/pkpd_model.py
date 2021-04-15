@@ -10,11 +10,14 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from pkpdapp.forms import (
     CreateNewPharmodynamicModel,
     CreateNewDosedPharmokineticModel,
+    CreateNewPkpdModel,
 )
 from django.urls import reverse_lazy
-from pkpdapp.models import (PharmacokineticModel, DosedPharmacokineticModel,
-                            PharmacodynamicModel,
-                            Dose)
+from pkpdapp.models import (
+    PharmacokineticModel, DosedPharmacokineticModel,
+    PharmacodynamicModel, PkpdModel,
+    Dose
+)
 from pkpdapp.dash_apps.model_view import ModelViewState
 
 
@@ -22,6 +25,7 @@ def create_model_view_state(model, project):
     # create dash state
     state = ModelViewState()
     is_pk = isinstance(model, DosedPharmacokineticModel)
+    is_pkpd = isinstance(model, PkpdModel)
     if is_pk:
         state.add_model(
             model.pharmacokinetic_model.sbml,
@@ -32,8 +36,19 @@ def create_model_view_state(model, project):
             (d.amount, d.start_time, d.duration)
             for d in Dose.objects.filter(protocol=model.protocol)
         ]
-        print('asdfasdfasdf', events)
         state.set_dosing_events(events)
+    elif is_pkpd:
+        state.add_model(
+            model.sbml,
+            model.name, is_pk=True, use=True
+        )
+        state.set_administration(model.dose_compartment)
+        events = [
+            (d.amount, d.start_time, d.duration)
+            for d in Dose.objects.filter(protocol=model.protocol)
+        ]
+        state.set_dosing_events(events)
+
     else:
         state.add_model(model.sbml, model.name, is_pk=is_pk, use=True)
 
@@ -106,7 +121,7 @@ class DosedPharmacokineticModelDetail(LoginRequiredMixin, DetailView):
 
 
 class DosedPharmacokineticModelCreate(LoginRequiredMixin, CreateView):
-    template_name = 'dosed_pharmacokinetic_create.html'
+    template_name = 'dosed_pharmacokinetic_form.html'
     model = DosedPharmacokineticModel
     form_class = CreateNewDosedPharmokineticModel
 
@@ -121,13 +136,50 @@ class DosedPharmacokineticModelUpdate(LoginRequiredMixin, UpdateView):
     """
     This class defines the interface for model simulation.
     """
-    template_name = 'dosed_pharmacokinetic_update.html'
+    template_name = 'dosed_pharmacokinetic_form.html'
     model = DosedPharmacokineticModel
+    form_class = CreateNewDosedPharmokineticModel
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['project'] = self.request.user.profile.selected_project.id
+        return kwargs
+
+
+class PkpdModelDetail(LoginRequiredMixin, DetailView):
+    template_name = 'pkpd_model_detail.html'
     fields = [
-        'pharmacokinetic_model', 'dose_compartment', 'direct_dose',
-        'dose_amount', 'dose_start', 'dose_duration', 'dose_period',
-        'number_of_doses'
+        'name', 'sbml', 'dose_compartment', 'protocol',
     ]
+    model = PkpdModel
+
+    def get(self, request, *args, **kwargs):
+        session = request.session
+        session['django_plotly_dash'] = {
+            'model_view': create_model_view_state(
+                self.get_object(),
+                self.request.user.profile.selected_project
+            ).to_json()
+        }
+        return super().get(request)
+
+
+class PkpdModelCreate(LoginRequiredMixin, CreateView):
+    template_name = 'pkpd_model_form.html'
+    model = PkpdModel
+    form_class = CreateNewPkpdModel
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        if 'project' in self.kwargs:
+            kwargs['project'] = self.kwargs['project']
+        return kwargs
+
+
+class PkpdModelUpdate(LoginRequiredMixin, UpdateView):
+    template_name = 'pkpd_model_form.html'
+    model = PkpdModel
+    form_class = CreateNewPkpdModel
 
     def get(self, request, *args, **kwargs):
         session = request.session

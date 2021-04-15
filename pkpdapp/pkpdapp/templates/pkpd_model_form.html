@@ -6,17 +6,16 @@ copyright notice and full license details.
 
 {% extends "base/base.html" %}
 {% load static %}
-{% load plotly_dash %}
 
 {% block main_content %}
 <div class="container">
-  <form action="" method="post"  enctype="multipart/form-data">
-    {% csrf_token %}
-    <table>
-    {{ form.as_table }}
-    </table>
-    <input type="submit" value="Submit">
-  </form>
-  {% plotly_app_bootstrap name="dosed_parmokinetic_view" %}
+<h2>Update PKPD Model {{object.name}}</h2>
+<form action="" method="post"  enctype="multipart/form-data">
+  {% csrf_token %}
+  <table>
+  {{ form.as_table }}
+  </table>
+  <input type="submit" value="Submit">
+</form>
 </div>
 {% endblock %}

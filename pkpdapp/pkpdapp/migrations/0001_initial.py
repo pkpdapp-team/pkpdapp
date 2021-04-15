@@ -76,6 +76,19 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
+            name='PkpdModel',
+            fields=[
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('name', models.CharField(help_text='name of the model', max_length=100)),
+                ('description', models.TextField(blank=True, default='', help_text='short description of the model')),
+                ('sbml', models.TextField(help_text='the model represented using SBML (see http://sbml.org)')),
+                ('dose_compartment', models.CharField(default='central', help_text='compartment name to be dosed', max_length=100)),
+            ],
+            options={
+                'abstract': False,
+            },
+        ),
+        migrations.CreateModel(
             name='StandardUnit',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
@@ -116,6 +129,7 @@ class Migration(migrations.Migration):
                 ('datasets', models.ManyToManyField(blank=True, help_text='datasets referenced by this project', to='pkpdapp.Dataset')),
                 ('pd_models', models.ManyToManyField(blank=True, help_text='PD models referenced by this project', to='pkpdapp.PharmacodynamicModel')),
                 ('pk_models', models.ManyToManyField(blank=True, help_text='PK models referenced by this project', to='pkpdapp.DosedPharmacokineticModel')),
+                ('pkpd_models', models.ManyToManyField(blank=True, help_text='PKPD models referenced by this project', to='pkpdapp.PkpdModel')),
                 ('protocols', models.ManyToManyField(blank=True, help_text='Protocols referenced by this project', to='pkpdapp.Protocol')),
                 ('users', models.ManyToManyField(help_text='users with access to this project', to=settings.AUTH_USER_MODEL)),
             ],
@@ -128,19 +142,10 @@ class Migration(migrations.Migration):
                 ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
         ),
-        migrations.CreateModel(
-            name='PkpdModel',
-            fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(help_text='name of the model', max_length=100)),
-                ('description', models.TextField(blank=True, default='', help_text='short description of the model')),
-                ('sbml', models.TextField(help_text='the model represented using SBML (see http://sbml.org)')),
-                ('dose_compartment', models.CharField(default='central', help_text='compartment name to be dosed', max_length=100)),
-                ('protocol', models.ForeignKey(help_text='dosing protocol', on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.Protocol')),
-            ],
-            options={
-                'abstract': False,
-            },
+        migrations.AddField(
+            model_name='pkpdmodel',
+            name='protocol',
+            field=models.ForeignKey(help_text='dosing protocol', on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.Protocol'),
         ),
         migrations.AddField(
             model_name='dosedpharmacokineticmodel',

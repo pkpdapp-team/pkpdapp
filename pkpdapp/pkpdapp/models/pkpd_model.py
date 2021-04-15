@@ -82,3 +82,6 @@ class PkpdModel(MechanisticModel):
         on_delete=models.CASCADE,
         help_text='dosing protocol'
     )
+
+    def get_absolute_url(self):
+        return reverse('pkpd_model-detail', kwargs={'pk': self.pk})

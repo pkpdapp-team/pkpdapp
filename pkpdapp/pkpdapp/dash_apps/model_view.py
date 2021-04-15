@@ -319,15 +319,13 @@ class ModelViewState:
             sbml = sbml.encode()
         if is_pk:
             erlo_m = erlo.PharmacokineticModel(sbml)
-            variables = {
-                'central': 'A1',
-                'peripheral': 'A2',
-                'peripheral2': 'A3',
-            }
+            amount_var = 'central.drug_amount'
+            for v in erlo_m.simulator._model.variables(state=True):
+                if self._compartment + '.' in v.qname():
+                    amount_var = v
             erlo_m.set_administration(
                 self._compartment, direct=self._direct,
-                amount_var='{}_amount'
-                .format(variables[self._compartment])
+                amount_var=amount_var.name()
             )
 
             erlo_m.set_dosing_events(
@@ -349,8 +347,9 @@ class ModelViewState:
 
             # output concentrations instead of amounts
             outputs = [
-                n.replace('_amount', '_concentration')
-                for n in model.outputs()
+                v.qname().replace('_amount', '_concentration')
+                for v in
+                model.simulator._model.variables(state=True)
             ]
             model.set_outputs(outputs)
 
