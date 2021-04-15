@@ -16,8 +16,9 @@ from django.urls import reverse_lazy
 from pkpdapp.models import (
     PharmacokineticModel, DosedPharmacokineticModel,
     PharmacodynamicModel, PkpdModel,
-    Dose
+    Dose, Biomarker, BiomarkerType
 )
+import pandas as pd
 from pkpdapp.dash_apps.model_view import ModelViewState
 
 
@@ -51,6 +52,27 @@ def create_model_view_state(model, project):
 
     else:
         state.add_model(model.sbml, model.name, is_pk=is_pk, use=True)
+
+    # add datasets
+    for dataset in project.datasets.all():
+        biomarker_types = BiomarkerType.objects.filter(dataset=dataset)
+        biomarkers = Biomarker.objects\
+            .filter(biomarker_type__in=biomarker_types)
+
+        if biomarkers:
+            # convert to pandas dataframe with the column names expected
+            df = pd.DataFrame(
+                list(
+                    biomarkers.values('time', 'subject_id',
+                                      'biomarker_type__name', 'value')))
+            df.rename(columns={
+                'subject_id': 'ID',
+                'time': 'Time',
+                'biomarker_type__name': 'Biomarker',
+                'value': 'Measurement'
+            }, inplace=True)
+
+            state.add_data(df, dataset.name)
 
     return state
 

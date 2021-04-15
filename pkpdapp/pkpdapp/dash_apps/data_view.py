@@ -49,6 +49,18 @@ app.layout = dbc.Container(children=[
 ], fluid=True, style={'height': '90vh'})
 
 
+def rehydrate_state(session_state):
+    if session_state is None:
+        raise NotImplementedError("Cannot handle a missing session state")
+
+    state = session_state.get('data_view', None)
+
+    if state is None:
+        raise NotImplementedError('DataViewState missing in session state')
+
+    return DataViewState.from_json(state)
+
+
 @app.callback(
     [
         Output('biomarker-select', 'options'),
@@ -58,15 +70,7 @@ app.layout = dbc.Container(children=[
         Input('fig', 'style'),
     ])
 def update_biomarker_options(_, session_state=None):
-    if session_state is None:
-        raise NotImplementedError("Cannot handle a missing session state")
-
-    state = session_state.get('data_view', None)
-
-    if state is None:
-        raise NotImplementedError('DataViewState missing in session state')
-
-    state = DataViewState.from_json(state)
+    state = rehydrate_state(session_state)
     options = state.biomarker_dropdown_options()
     return options, state._use_biomarkers
 
@@ -81,15 +85,7 @@ def update_figure(biomarker, session_state=None):
     if the datasets or biomarkers are
     changed then regenerate the figure entirely
     """
-    if session_state is None:
-        raise NotImplementedError("Cannot handle a missing session state")
-
-    state = session_state.get('data_view', None)
-
-    if state is None:
-        raise NotImplementedError('DataViewState missing in session state')
-
-    state = DataViewState.from_json(state)
+    state = rehydrate_state(session_state)
 
     ctx = dash.callback_context
     cid = None

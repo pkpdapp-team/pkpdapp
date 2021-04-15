@@ -32,6 +32,26 @@ app.layout = dbc.Container(id='container', children=[
     dbc.Row([
         dbc.Col(
             children=[
+                html.Label('Compare with dataset:'),
+                dcc.Dropdown(
+                    id='data-select',
+                )
+            ],
+            width=3,
+        ),
+        dbc.Col(
+            children=[
+                html.Label('Use dataset biomarker:'),
+                dcc.Dropdown(
+                    id='biomarker-select',
+                )
+            ],
+            width=3,
+        ),
+    ]),
+    dbc.Row([
+        dbc.Col(
+            children=[
                 dcc.Graph(
                     figure=go.Figure(),
                     id='fig',
@@ -45,44 +65,67 @@ app.layout = dbc.Container(id='container', children=[
 ], fluid=True, style={'height': '90vh'})
 
 
+def rehydrate_state(session_state):
+    if session_state is None:
+        raise NotImplementedError("Cannot handle a missing session state")
+
+    state = session_state.get('model_view', None)
+
+    if state is None:
+        raise NotImplementedError('ModelViewState missing in session state')
+
+    return ModelViewState.from_json(state)
+
+
+@app.callback(
+    Output('data-select', 'options'),
+    [Input('container', 'style')],
+)
+def update_data_options(_, session_state=None):
+    state = rehydrate_state(session_state)
+    return state.dataset_dropdown_options()
+
+
 @app.callback(
     Output('sliders', 'children'),
     [Input('container', 'style')],
 )
 def update_sliders(_, session_state=None):
-    if session_state is None:
-        raise NotImplementedError("Cannot handle a missing session state")
-
-    state = session_state.get('model_view', None)
-
-    if state is None:
-        raise NotImplementedError('DataViewState missing in session state')
-
-    state = ModelViewState.from_json(state)
+    state = rehydrate_state(session_state)
     return state._create_sliders_component()
 
 
 @app.callback(
     Output('fig', 'figure'),
-    Input({'type': 'slider', 'index': ALL}, 'value')
+    [
+        Input({'type': 'slider', 'index': ALL}, 'value'),
+        Input('biomarker-select', 'value'),
+        Input('data-select', 'value'),
+    ]
 )
-def update_simulation(sliders, session_state=None):
+def update_figure(sliders, biomarker_select, data_select, session_state=None):
     """
     if any sliders are changed then regenerate the figure entirely
     """
-    if session_state is None:
-        raise NotImplementedError("Cannot handle a missing session state")
-
-    state = session_state.get('model_view', None)
-
-    if state is None:
-        raise NotImplementedError('DataViewState missing in session state')
-
-    state = ModelViewState.from_json(state)
-
+    state = rehydrate_state(session_state)
     model_index = 0
+
+    state.set_used_biomarker(biomarker_select)
+    state.set_used_datasets([data_select])
     parameters = sliders[:len(state._parameters[model_index])]
     return state.update_simulation(model_index, parameters)
+
+
+@app.callback(
+    Output('biomarker-select', 'options'),
+    [
+        Input('data-select', 'value'),
+    ])
+def update_biomarker_options(data_select, session_state=None):
+    state = rehydrate_state(session_state)
+    state.set_used_datasets([data_select])
+    options = state.biomarker_dropdown_options()
+    return options
 
 
 class ModelViewState:
@@ -114,6 +157,12 @@ class ModelViewState:
         self._compartment = 'central'
         self._dosing_events = []
 
+        self._datasets = []
+        self._use_datasets = []
+        self._dataset_names = []
+        self._data_biomarkers = []
+        self._use_biomarkers = None
+
     def to_json(self):
         return json.dumps({
             '_multiple_models': self._multiple_models,
@@ -128,6 +177,11 @@ class ModelViewState:
             '_direct': self._direct,
             '_compartment': self._compartment,
             '_dosing_events': self._dosing_events,
+            '_datasets': [d.to_dict() for d in self._datasets],
+            '_use_datasets': self._use_datasets,
+            '_dataset_names': self._dataset_names,
+            '_data_biomarkers': self._data_biomarkers,
+            '_use_biomarkers': self._use_biomarkers,
         })
 
     @classmethod
@@ -146,7 +200,47 @@ class ModelViewState:
         o._direct = data_dict['_direct']
         o._compartment = data_dict['_compartment']
         o._dosing_events = data_dict['_dosing_events']
+        o._datasets = [
+            pd.DataFrame.from_dict(d) for d in data_dict['_datasets']
+        ]
+        o._use_datasets = data_dict['_use_datasets']
+        o._dataset_names = data_dict['_dataset_names']
+        o._data_biomarkers = data_dict['_data_biomarkers']
+        o._use_biomarkers = data_dict['_use_biomarkers']
+
         return o
+
+    def set_used_datasets(self, value):
+        """
+        set dataset indices that will be used
+        """
+        self._use_datasets = value
+
+    def set_used_biomarker(self, value):
+        """
+        set biomarker that will be used
+        """
+        self._use_biomarkers = value
+
+    def dataset_dropdown_options(self):
+        """
+        create selects for model, dataset and biomarkers up the top of the dash
+        app
+        """
+        return [
+            {
+                'label': name,
+                'value': i
+            } for i, name in enumerate(self._dataset_names)
+        ]
+
+    def biomarker_dropdown_options(self):
+        return [
+            {
+                'label': name,
+                'value': name
+            } for name in self._data_biomarkers[self._use_datasets[0]]
+        ]
 
     def set_administration(self, compartment, direct=True):
         r"""
@@ -243,6 +337,7 @@ class ModelViewState:
         """
         fig = erlo.plots.PDTimeSeriesPlot(updatemenu=False)
         self._add_simulation_to_fig(fig)
+        self._add_data_to_fig(fig)
         return fig._fig
 
     def _create_sliders(self, model_index, model):
@@ -363,6 +458,60 @@ class ModelViewState:
             result_df[output] = result[i, :]
 
         return result_df, model._output_names
+
+    def _add_data_to_fig(self, fig):
+        """
+        add chosen datasets to figure
+        """
+        used_datasets = [
+            d for i, d in enumerate(self._datasets) if i in self._use_datasets
+        ]
+
+        if not used_datasets:
+            return
+
+        combined_data = pd.concat(used_datasets)
+
+        biomarker = self._use_biomarkers
+        if biomarker is not None:
+            # Add data to figure,
+            # ignore error if biomarker does not exist
+            try:
+                fig.add_data(combined_data, biomarker, self._id_key,
+                             self._time_key, self._biom_key,
+                             self._meas_key)
+            except ValueError as e:
+                print(e)
+                pass
+
+        # Set axes labels to time_key and biom_key
+        fig.set_axis_labels(xlabel=self._time_key, ylabel=self._biom_key)
+
+    def add_data(self, data, name, use=False):
+        """
+        Adds pharmacodynamic time series data of (multiple) individuals to
+        the figure.
+
+        Expects a :class:`pandas.DataFrame` with an ID, a time and a PD
+        biomarker column, and adds a scatter plot of the biomarker time series
+        to the figure. Each individual receives a unique colour.
+
+        Parameters
+        ----------
+        data
+            A :class:`pandas.DataFrame` with the time series PD data in form of
+            an ID, time, and biomarker column.
+        name
+            A str name for the dataset
+        use
+            Set to True if you want this dataset to be initially chosen
+        """
+        if use:
+            self._use_datasets.append(len(self._datasets))
+        self._datasets.append(data)
+        self._dataset_names.append(name)
+        available_biomarkers = np.unique(data[self._biom_key].values)
+        self._data_biomarkers.append(available_biomarkers.tolist())
 
     def add_model(self, sbml, name, is_pk=False, use=False):
         """
