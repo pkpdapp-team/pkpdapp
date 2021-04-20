@@ -11,7 +11,7 @@ from pkpdapp.models import Dataset
 
 class Subject(models.Model):
     """
-    A subject in a a particular dataset.
+    A subject in a particular dataset.
     """
     id_in_dataset = models.IntegerField(help_text='unique id in the dataset')
     dataset = models.ForeignKey(
