@@ -22,6 +22,7 @@ class MechanisticModel(object):
         in SBML format that specifies the model.
 
     """
+
     def __init__(self, sbml_input):
         super(MechanisticModel, self).__init__()
 
@@ -79,10 +80,18 @@ class MechanisticModel(object):
 
         # Get constant variable names and state names
         names = [var.qname() for var in model.states()]
-        names = [n.replace('_amount', '_concentration') for n in names]
+        # names = [n.replace('_amount', '_concentration') for n in names]
         self._state_names = sorted(names)
         self._const_names = sorted(
             [var.qname() for var in model.variables(const=True)])
+
+        self._default_values = {}
+        for v in self._state_names + self._const_names:
+            variable = model.get(v)
+            if variable.is_state():
+                self._default_values[v] = variable.state_value()
+            else:
+                self._default_values[v] = variable.value()
 
         # Remember original order of state names for simulation
         order_after_sort = np.argsort(names)
@@ -225,6 +234,7 @@ class PharmacodynamicModel(MechanisticModel):
         A path to the SBML model file that specifies the pharmacodynamic model.
 
     """
+
     def __init__(self, sbml_file):
         super(PharmacodynamicModel, self).__init__(sbml_file)
 
@@ -305,6 +315,7 @@ class PharmacokineticModel(MechanisticModel):
         A path to the SBML model file that specifies the pharmacokinetic model.
 
     """
+
     def __init__(self, sbml_file):
         super(PharmacokineticModel, self).__init__(sbml_file)
 
@@ -467,9 +478,6 @@ class PharmacokineticModel(MechanisticModel):
                              str(compartment) + '>.')
         comp = model.get(compartment, class_filter=myokit.Component)
 
-        print('model has variables')
-        for v in comp.variables():
-            print(v.name())
         if not comp.has_variable(amount_var):
             raise ValueError('The drug amount variable <' + str(amount_var) +
                              '> could not '
@@ -667,6 +675,7 @@ class ReducedMechanisticModel(object):
     mechanistic_model
         An instance of a :class:`MechanisticModel`.
     """
+
     def __init__(self, mechanistic_model):
         super(ReducedMechanisticModel, self).__init__()
 

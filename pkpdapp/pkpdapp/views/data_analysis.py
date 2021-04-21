@@ -10,7 +10,7 @@ import pandas as pd
 from django.views.generic import (
     TemplateView
 )
-from pkpdapp.dash_apps.data_analysis_app import DataAnalysisApp
+from pkpdapp.dash_apps.data_analysis_app import DataAnalysisState
 from django.contrib.auth.mixins import LoginRequiredMixin
 
 
@@ -68,10 +68,15 @@ def create_data_analysis_app(project):
             'amount': 'Amount'
         }, inplace=True)
 
+        # cannot JSON serialise int64
+        df = df.astype({'ID': 'str'})
+
         datasets.append(df)
         dataset_names.append(dataset.name)
 
-    return DataAnalysisApp('data_analysis_view', datasets, dataset_names)
+    state = DataAnalysisState()
+    state.add_datasets(datasets, dataset_names)
+    return state
 
 
 class DataAnalysis(TemplateView, LoginRequiredMixin):
@@ -79,5 +84,10 @@ class DataAnalysis(TemplateView, LoginRequiredMixin):
 
     def get(self, request, *args, **kwargs):
         project = self.request.user.profile.selected_project
-        self._data_analysis_app = create_data_analysis_app(project)
+        session = request.session
+        session['django_plotly_dash'] = {
+            'data_analysis_view': create_data_analysis_app(
+                project
+            ).to_json()
+        }
         return super().get(request)

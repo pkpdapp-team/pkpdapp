@@ -8,6 +8,10 @@ from . import (  # noqa
     plots
 )
 
+from ._models import ModelLibrary  # noqa
+
+from ._data import DataLibrary  # noqa
+
 from ._error_models import (  # noqa
     ConstantAndMultiplicativeGaussianErrorModel,
     ErrorModel,
