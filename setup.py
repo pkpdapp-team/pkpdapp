@@ -53,6 +53,7 @@ setup(
         'myokit>=1.31',
         'tqdm==4.46.1',
         'django-extensions==3.1.1',
+        'jsonfield==3.1.0',
     ],
     dependency_links=[
         "git+git://github.com/DavAug/erlotinib.git#egg=erlotinib-latest",
