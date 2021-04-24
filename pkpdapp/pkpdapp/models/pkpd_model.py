@@ -75,13 +75,13 @@ class PkpdModel(MechanisticModel):
     dose_compartment = models.CharField(
         max_length=100,
         default='central',
-        help_text='compartment name to be dosed'
+        help_text='compartment name to be dosed',
         blank=True, null=True,
     )
     protocol = models.ForeignKey(
         Protocol,
         on_delete=models.CASCADE,
-        help_text='dosing protocol'
+        help_text='dosing protocol',
         blank=True, null=True,
     )
 

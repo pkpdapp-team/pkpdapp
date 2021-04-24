@@ -82,7 +82,7 @@ class Migration(migrations.Migration):
                 ('name', models.CharField(help_text='name of the model', max_length=100)),
                 ('description', models.TextField(blank=True, default='', help_text='short description of the model')),
                 ('sbml', models.TextField(help_text='the model represented using SBML (see http://sbml.org)')),
-                ('dose_compartment', models.CharField(default='central', help_text='compartment name to be dosed', max_length=100)),
+                ('dose_compartment', models.CharField(blank=True, default='central', help_text='compartment name to be dosed', max_length=100, null=True)),
             ],
             options={
                 'abstract': False,
@@ -154,7 +154,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='pkpdmodel',
             name='protocol',
-            field=models.ForeignKey(help_text='dosing protocol', on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.Protocol'),
+            field=models.ForeignKey(blank=True, help_text='dosing protocol', null=True, on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.Protocol'),
         ),
         migrations.AddField(
             model_name='dosedpharmacokineticmodel',
