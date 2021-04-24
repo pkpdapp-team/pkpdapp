@@ -21,4 +21,5 @@ from .biomarker import Biomarker
 from .project import Project
 from .profile import Profile
 from .dose import Dose
+from .subject import Subject
 
