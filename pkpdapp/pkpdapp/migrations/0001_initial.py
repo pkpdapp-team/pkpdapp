@@ -34,7 +34,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(help_text='name of the dataset', max_length=100)),
-                ('datetime', models.DateTimeField(blank=True, help_text='Date/time the experiment was conducted. All time measurements are relative to this date/time', null=True)),
+                ('datetime', models.DateTimeField(blank=True, help_text='date/time the experiment was conducted. All time measurements are relative to this date/time, which is in YYYY-MM-DD HH:MM:SS format. For example, 2020-07-18 14:30:59', null=True)),
                 ('description', models.TextField(blank=True, default='', help_text='short description of the dataset')),
             ],
         ),
@@ -153,7 +153,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(help_text='name of the biomarker type', max_length=100)),
-                ('description', models.TextField(help_text='short description of the biomarker type')),
+                ('description', models.TextField(blank=True, help_text='short description of the biomarker type', null=True)),
                 ('dataset', models.ForeignKey(help_text='dataset containing this biomarker measurement', on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.Dataset')),
                 ('unit', models.ForeignKey(blank=True, help_text='unit for the value stored in :model:`pkpdapp.Biomarker`', null=True, on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.StandardUnit')),
             ],
