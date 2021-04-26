@@ -159,12 +159,14 @@ class CreateNewDataset(forms.ModelForm):
         data_without_dose = data.query('DV != "."')
         bts_unique = data_without_dose[['YDESC', 'UNIT']].drop_duplicates()
         for index, row in bts_unique.iterrows():
-            unit_query = StandardUnit.objects.filter(symbol=row['UNIT'])
+            unit_query = Unit.objects.filter(symbol=row['UNIT'])
+            print(row['UNIT'])
+            print(unit_query)
             unit = unit_query[0]
             BiomarkerType.objects.create(
                 name=row['YDESC'],
                 description="",
-                unit=unit,
+                unit=unit.standard_unit,
                 dataset=instance)
 
         biomarker_index = {}
@@ -184,7 +186,7 @@ class CreateNewDataset(forms.ModelForm):
                         name=row['YDESC'],
                         dataset=instance)
                 )
-            else:  # dose observation
+            elif row['AMT'] != ".":  # dose observation
                 compound_str = row['COMPOUND']
                 try:
                     compound = Compound.objects.get(name=compound_str)
