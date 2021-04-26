@@ -76,12 +76,7 @@ class CreateNewDataset(forms.ModelForm):
                          'YTYPE',
                          'YDESC',
                          'DV',
-                         'UNIT',  # not in Roche list but seems needed
-                         'LLOQ',
-                         'EVID',
-                         'ADA_T',
-                         'COV',
-                         'COV_T']
+                         'UNIT']  # not in Roche list but seems needed]
         error_cols = []
         for col in required_cols:
             if col not in colnames:
