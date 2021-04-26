@@ -35,6 +35,9 @@ copyright notice and full license details.
                 {% for d in current_project.datasets.all %}
                 <a class="dropdown-item" href={% url 'dataset-detail' d.id %}>{{d.name}}</a>
                 {% endfor %}
+                <a class="dropdown-item" href="{% url 'dataset-create' current_project.id %}">
+                  Create dataset..
+                </a>
               </div>
             </li>
             <li class="nav-item dropdown">
