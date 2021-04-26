@@ -160,8 +160,6 @@ class CreateNewDataset(forms.ModelForm):
         bts_unique = data_without_dose[['YDESC', 'UNIT']].drop_duplicates()
         for index, row in bts_unique.iterrows():
             unit_query = Unit.objects.filter(symbol=row['UNIT'])
-            print(row['UNIT'])
-            print(unit_query)
             unit = unit_query[0]
             BiomarkerType.objects.create(
                 name=row['YDESC'],
