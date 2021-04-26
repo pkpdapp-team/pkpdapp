@@ -7,7 +7,7 @@
 
 from .dataset import (
     CreateNewDataset,
-    CreateNewBiomarkerType,
+    UpdateBiomarkerType,
 )
 from .pkpd_model import (
     CreateNewPharmodynamicModel,

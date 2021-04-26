@@ -97,7 +97,7 @@ class CreateNewDataset(forms.ModelForm):
         time_units = data['TIME_UNIT'].unique().tolist()
         error_tunits = []
         for t_unit in time_units:
-            if t_unit not in ['h', 'd', '.', 'hours']:
+            if t_unit not in ['h', 'd', 'hours']:
                 error_tunits.append(t_unit)
         if len(error_tunits) > 0:
             raise forms.ValidationError(
@@ -109,6 +109,25 @@ class CreateNewDataset(forms.ModelForm):
                 code='invalid',
                 params={'filename': uploaded_file.name,
                         'error_tunits': error_tunits},
+            )
+
+        # check whether biomarker units are in list of standard units
+        bio_units = data['UNIT'].unique().tolist()
+        error_bunits = []
+        for b_unit in bio_units:
+            if b_unit not in ['mg', 'g/dL', '10^3/mcL', 'cm^3', 'ng/mL',
+                              '10^6/mcL']:
+                error_bunits.append(b_unit)
+        if len(error_bunits) > 0:
+            raise forms.ValidationError(
+                _((
+                    'Error parsing file, '
+                    '%(filename)s contains the following unknown units: '
+                    '%(error_bunits)s'
+                )),
+                code='invalid',
+                params={'filename': uploaded_file.name,
+                        'error_bunits': error_bunits},
             )
 
         # check for missing data and drop any rows where data are missing
@@ -140,33 +159,20 @@ class CreateNewDataset(forms.ModelForm):
         data_without_dose = data.query('DV != "."')
         bts_unique = data_without_dose[['YDESC', 'UNIT']].drop_duplicates()
         for index, row in bts_unique.iterrows():
-            if row['UNIT'] == ".":
-                BiomarkerType.objects.create(
-                    name=row['YDESC'],
-                    description="",
-                    dataset=instance)
-            else:
-                unit_query = StandardUnit.objects.filter(symbol=row['UNIT'])
-                if not unit_query:
-                    unit = StandardUnit(symbol=row['UNIT'])
-                    unit.save()
-                else:
-                    unit = unit_query[0]
-                BiomarkerType.objects.create(
-                    name=row['YDESC'],
-                    description="",
-                    unit=unit,
-                    dataset=instance)
+            unit_query = StandardUnit.objects.filter(symbol=row['UNIT'])
+            unit = unit_query[0]
+            BiomarkerType.objects.create(
+                name=row['YDESC'],
+                description="",
+                unit=unit,
+                dataset=instance)
 
         biomarker_index = {}
         for i, b in enumerate(bts_unique):
             biomarker_index[b] = i
         # save each row of data as either biomarker or dose
         for index, row in data.iterrows():
-            if row['TIME_UNIT'] != ".":
-                time_unit = Unit.objects.get(symbol=row['TIME_UNIT'])
-            else:  # assume hours as default
-                time_unit = Unit.objects.get(symbol='h')
+            time_unit = Unit.objects.get(symbol=row['TIME_UNIT'])
             value = row['DV']
             subject_id = row['ID']
             if value != ".":  # measurement observation
@@ -214,9 +220,9 @@ class CreateNewDataset(forms.ModelForm):
         return instance
 
 
-class CreateNewBiomarkerType(forms.ModelForm):
+class UpdateBiomarkerType(forms.ModelForm):
     """
-    A form to associate a unit with a predefined biomarker type name.
+    A form to select a bio
     """
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -225,8 +231,8 @@ class CreateNewBiomarkerType(forms.ModelForm):
         model = BiomarkerType
         fields = ['description']
 
-    symbol = forms.CharField(label='Unit', required=False)
-
+    other_unit = forms.ModelChoiceField(queryset=Unit.objects.all(),
+                                        required=False)
     description = forms.CharField(
         widget=forms.Textarea(attrs={'rows': 2, 'cols': 25}),
         required=False

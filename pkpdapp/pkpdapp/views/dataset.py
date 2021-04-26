@@ -9,7 +9,7 @@ from django.core.paginator import Paginator
 from pkpdapp.models import (
     Dataset, Biomarker, BiomarkerType, Protocol, StandardUnit
 )
-from ..forms import CreateNewDataset, CreateNewBiomarkerType
+from ..forms import CreateNewDataset, UpdateBiomarkerType
 from pkpdapp.dash_apps.simulation import PDSimulationApp
 import pandas as pd
 from django.forms import formset_factory
@@ -163,7 +163,7 @@ def update_biomarkertypes_formset(request, pk):
     current_dataset = Dataset.objects.get(pk=pk)
     biomarkertypes = BiomarkerType.objects.filter(dataset=current_dataset)
     BiomarkerFormset = formset_factory(
-        CreateNewBiomarkerType,
+        UpdateBiomarkerType,
         extra=len(biomarkertypes)
     )
     biomarker_names = []
@@ -176,24 +176,18 @@ def update_biomarkertypes_formset(request, pk):
     context["biomarkernames"] = biomarker_names
     if request.method == "POST":
         formset = BiomarkerFormset(request.POST)
+        print(formset.is_valid())
         if formset.is_valid():
             k = 0
             for f in formset:
                 cd = f.cleaned_data
-                symbol = cd.get("symbol")
+                unit = cd.get("other_unit")
                 desc = cd.get("description")
-                if symbol is None and desc is None:
-                    continue
-                if symbol != "":
-                    unit_query = StandardUnit.objects.filter(symbol=symbol)
-                    if not unit_query:
-                        unit = StandardUnit(symbol=symbol)
-                        unit.save()
-                    else:
-                        unit = unit_query[0]
-                    biomarkertypes[k].unit = unit
-                if desc != "":
+                if unit is not None:
+                    biomarkertypes[k].unit = unit.standard_unit
+                if desc is not None:
                     biomarkertypes[k].description = desc
+                print(unit)
                 biomarkertypes[k].save()
                 k += 1
         return redirect(reverse_lazy(
