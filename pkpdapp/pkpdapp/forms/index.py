@@ -23,5 +23,6 @@ class IndexForm(forms.Form):
                 Project.objects.filter(users=user)
 
     def change_selected_project(self):
-        self.profile.selected_project = self.current_project
+        new_project = self.cleaned_data['current_project']
+        self.profile.selected_project = new_project
         self.profile.save()

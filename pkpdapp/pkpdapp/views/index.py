@@ -18,7 +18,7 @@ class IndexView(FormView):
         return super().form_valid(form)
 
     def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
         if self.request.user.is_authenticated:
-            return {'user': self.request.user}
-        else:
-            return {}
+            kwargs.update({'user': self.request.user})
+        return kwargs

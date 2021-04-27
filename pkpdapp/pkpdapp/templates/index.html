@@ -29,7 +29,12 @@ Set the currently selected project here:
   <table>
   {{ form.as_table }}
   </table>
-  <input type="submit" value="Submit">
+  <button class="btn btn-primary" type="submit" value="Submit">
+    Change Project
+  </button>
+  <a class="btn btn-primary" href="{% url 'project-add' %}" role="button">
+    Add New Project 
+  </a>
 </form>
 
 {% current_project user as project %}
