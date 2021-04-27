@@ -69,11 +69,22 @@ def create_model_view_state(model, project):
             .filter(biomarker_type__in=biomarker_types)
 
         if biomarkers:
-            # convert to pandas dataframe with the column names expected
+            biomarker_units = {
+                b['name']: b['unit__symbol']
+                for b in biomarker_types.values(
+                    'name', 'unit__symbol'
+                )
+            }
+
             df = pd.DataFrame(
                 list(
-                    biomarkers.values('time', 'subject_id',
-                                      'biomarker_type__name', 'value')))
+                    biomarkers.values(
+                        'time', 'subject_id',
+                        'biomarker_type__name',
+                        'value'
+                    )
+                )
+            )
             df.rename(columns={
                 'subject_id': 'ID',
                 'time': 'Time',
@@ -81,7 +92,7 @@ def create_model_view_state(model, project):
                 'value': 'Measurement'
             }, inplace=True)
 
-            state.add_data(df, dataset.name)
+            state.add_data(df, dataset.name, biomarker_units)
 
     return state
 

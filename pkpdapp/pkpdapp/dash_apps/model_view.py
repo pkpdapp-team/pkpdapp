@@ -48,6 +48,15 @@ app.layout = dbc.Container(id='container', children=[
             ],
             width=3,
         ),
+        dbc.Col(
+            children=[(
+                'Model outputs with compatible units '
+                'will be converted to match the chosen '
+                'biomarker units'
+            )],
+            width=3,
+        ),
+
     ]),
     dbc.Row([
         dbc.Col(
@@ -135,6 +144,7 @@ class ModelViewState:
     _id_key = 'ID'
     _time_key = 'Time'
     _biom_key = 'Biomarker'
+    _unit_key = 'BiomarkerUnit'
     _meas_key = 'Measurement'
     _times_num = 100
 
@@ -237,9 +247,10 @@ class ModelViewState:
     def biomarker_dropdown_options(self):
         return [
             {
-                'label': name,
+                'label': '{} ({})'.format(name, unit),
                 'value': name
-            } for name in self._data_biomarkers[self._use_datasets[0]]
+            } for name, unit in
+            self._data_biomarkers[self._use_datasets[0]].items()
         ]
 
     def set_administration(self, compartment, direct=True):
@@ -267,16 +278,12 @@ class ModelViewState:
             erlo_m = self._convert_to_erlo_model(
                 model_sbml, True
             )
+            self._parameter_names[i] = \
+                self._get_parameter_names(erlo_m)
 
             self._parameters[i] = [
                 erlo_m._default_values[n] for n in erlo_m.parameters()
             ]
-            param_names = erlo_m.parameters()
-            for j, p in enumerate(param_names):
-                param_names[j] = p.replace('.', '_')
-
-            print('param names are ', param_names)
-            self._parameter_names[i] = param_names
             self._n_states[i] = erlo_m._n_states
 
     def set_dosing_events(self, dosing_events):
@@ -285,7 +292,27 @@ class ModelViewState:
         (d.amount, d.start_time, d.duration)
 
         """
-        self._dosing_events = dosing_events
+        model_sbml = self._models[0]
+        erlo_m = self._convert_to_erlo_model(
+            model_sbml, True
+        )
+
+        # get conversions
+        hours = myokit.Unit.parse_simple('h')
+        time_multiplier = myokit.Unit.conversion_factor(
+            hours, erlo_m.time_unit()
+        ).value()
+
+        # our pk models are defined in g
+        amount_multiplier = 1
+
+        # convert to model time unit
+        self._dosing_events = [
+            (amount_multiplier * e[0],
+             time_multiplier * e[1],
+             time_multiplier * e[2])
+            for e in dosing_events
+        ]
 
         # try to intelligently chose an integration period
         # based on the dosing events
@@ -330,14 +357,40 @@ class ModelViewState:
             is_pk = self._is_pk[i]
 
             # Add simulation to figure
-            result, output_names = self._simulate(parameters, model, is_pk)
-            for output in output_names:
-                fig.add_simulation(result, biom_key=output)
+            result, output_names, units = \
+                self._simulate(parameters, model, is_pk)
+            for output, unit in zip(output_names, units):
+                name = output.replace('myokit.', '')
+                y_mult = 1
+                label = name + ' ' + repr(unit)
+                if self._use_biomarkers:
+                    biomarker_unit = self._data_biomarkers[
+                        self._use_datasets[0]
+                    ][self._use_biomarkers]
+                    biomarker_unit = \
+                        myokit.parse_unit(biomarker_unit)
+                    try:
+                        y_mult = myokit.Unit.conversion_factor(
+                            unit, biomarker_unit
+                        ).value()
+                        label = name + ' ' + repr(biomarker_unit)
+                    except myokit.IncompatibleUnitError:
+                        pass
+
+                fig._fig.add_trace(
+                    go.Scatter(
+                        x=result['Time'],
+                        y=y_mult * result[output],
+                        name=label,
+                        showlegend=True,
+                        mode="lines",
+                    )
+                )
 
             # Remember index of model trace for update callback
             n_traces = len(fig._fig.data)
             model_traces[i] = n_traces - 1
-        fig.set_axis_labels('Time', 'Biomarker')
+        fig.set_axis_labels('Time (h)', 'Biomarker')
         self._model_traces = model_traces
         return fig
 
@@ -463,7 +516,7 @@ class ModelViewState:
             for v in model.simulator._model.variables(state=True):
                 name = v.qname()
                 if not name.startswith('dose'):
-                    name.replace('_amount', '_concentration')
+                    name = name.replace('_amount', '_concentration')
                 outputs.append(name)
 
             model.set_outputs(outputs)
@@ -471,13 +524,26 @@ class ModelViewState:
             # Solve the model
             result = model.simulate(parameters, self._times)
 
+        # get time conversion factor to hours
+        hours = myokit.Unit.parse_simple('h')
+        time_multiplier = myokit.Unit.conversion_factor(
+            model.time_unit(), hours
+        ).value()
+
         # Rearrange results into a pandas.DataFrame
-        result_df = pd.DataFrame({'Time': self._times})
+        result_df = pd.DataFrame({
+            'Time': time_multiplier * self._times
+        })
+
+        units = [
+            model.simulator._model.get(name).unit()
+            for name in model._output_names
+        ]
 
         for i, output in enumerate(model._output_names):
             result_df[output] = result[i, :]
 
-        return result_df, model._output_names
+        return result_df, model._output_names, units
 
     def _add_data_to_fig(self, fig):
         """
@@ -505,9 +571,9 @@ class ModelViewState:
                 pass
 
         # Set axes labels to time_key and biom_key
-        fig.set_axis_labels(xlabel=self._time_key, ylabel=self._biom_key)
+        # fig.set_axis_labels(xlabel=self._time_key, ylabel=self._biom_key)
 
-    def add_data(self, data, name, use=False):
+    def add_data(self, data, name, biomarkers, use=False):
         """
         Adds pharmacodynamic time series data of (multiple) individuals to
         the figure.
@@ -523,6 +589,8 @@ class ModelViewState:
             an ID, time, and biomarker column.
         name
             A str name for the dataset
+        biomarkers
+            dict with {biomarker: unit}
         use
             Set to True if you want this dataset to be initially chosen
         """
@@ -530,8 +598,28 @@ class ModelViewState:
             self._use_datasets.append(len(self._datasets))
         self._datasets.append(data)
         self._dataset_names.append(name)
-        available_biomarkers = np.unique(data[self._biom_key].values)
-        self._data_biomarkers.append(available_biomarkers.tolist())
+        self._data_biomarkers.append(biomarkers)
+
+    def _get_parameter_names(self, erlo_m):
+        param_names = erlo_m.parameters()
+        units = [
+            repr(
+                erlo_m.simulator._model.get(n).unit()
+            )
+            for n in param_names
+        ]
+
+        for i, p in enumerate(param_names):
+            param_names[i] = p\
+                .replace('.', '_')\
+                .replace('myokit_', '')
+
+        param_names = [
+            name + ' ' + unit
+            for name, unit in zip(param_names, units)
+        ]
+
+        return param_names
 
     def add_model(self, sbml, name, is_pk=False, use=False):
         """
@@ -555,14 +643,13 @@ class ModelViewState:
             erlo_m = erlo.MechanisticModel(sbml)
         except myokit.formats.sbml._parser.SBMLParsingError:
             return
-        param_names = erlo_m.parameters()
-        for i, p in enumerate(param_names):
-            param_names[i] = p.replace('.', '_')
 
         self._parameters.append([
             erlo_m._default_values[n] for n in erlo_m.parameters()
         ])
-        self._parameter_names.append(param_names)
+        self._parameter_names.append(
+            self._get_parameter_names(erlo_m)
+        )
         self._n_states.append(erlo_m._n_states)
         if use:
             self._use_models.append(len(self._models))
