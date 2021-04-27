@@ -6,17 +6,18 @@ copyright notice and full license details.
 
 {% extends "base/base.html" %}
 {% load static %}
+{% load crispy_forms_tags %}
 
 {% block main_content %}
 
 <h2>Create/Update Project {{project.name}}</h2>
 
-<form action="" method="post">
+<form action="" method="post" class="uniForm">
   {% csrf_token %}
   <table>
-  {{ form.as_table }}
+  {{ form|crispy }}
   </table>
-  <input type="submit" value="Submit">
+  <input class="btn btn-primary" type="submit" value="Submit">
 </form>
 
 {% endblock %}

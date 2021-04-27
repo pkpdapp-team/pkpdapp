@@ -10,7 +10,6 @@ copyright notice and full license details.
 {% load plotly_dash %}
 
 {% block main_content %}
-<div class="container">
 <h2>Dataset {{dataset.name}} (<a href="{% url 'dataset-update' dataset.id %}"> Update </a>)</h2>
 <p>{{dataset.description|markdownify}}</p>
 <h3>Biomarker Types</h2>
@@ -51,6 +50,5 @@ copyright notice and full license details.
             <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
         {% endif %}
     </span>
-</div>
 </div>
 {% endblock %}

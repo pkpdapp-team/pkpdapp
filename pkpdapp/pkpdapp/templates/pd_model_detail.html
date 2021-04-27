@@ -10,7 +10,6 @@ copyright notice and full license details.
 {% load plotly_dash %}
 
 {% block main_content %}
-<div class="container">
 <h2>Pharmacodynamic Model {{object.name}}</h2>
 (<a href="{% url 'pd_model-update' object.id %}"> Update </a>)
 {{object.description|markdownify}}
@@ -18,5 +17,4 @@ copyright notice and full license details.
 <h3>SBML</h3>
 <pre>{{object.sbml}}</pre>
 <ul>
-</div>
 {% endblock %}

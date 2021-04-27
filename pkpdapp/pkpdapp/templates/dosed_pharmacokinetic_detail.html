@@ -9,7 +9,6 @@ copyright notice and full license details.
 {% load plotly_dash %}
 
 {% block main_content %}
-<div class="container">
 <h2>Dosed Pharmacokinetic Model</h2>
 (<a href="{% url 'dosed_pk_model-update' object.id %}"> Update </a>)
 <ul>
@@ -25,8 +24,5 @@ copyright notice and full license details.
     </a>
   </li>
 <ul>
-</div>
-<div class="container-xl">
   {% plotly_app_bootstrap name="model_view" %}
-</div>
 {% endblock %}
