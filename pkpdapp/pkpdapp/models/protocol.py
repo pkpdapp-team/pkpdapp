@@ -32,6 +32,16 @@ class Protocol(models.Model):
         blank=True, null=True,
     )
 
+    class DoseType(models.TextChoices):
+        DIRECT = 'D', 'Direct'
+        INDIRECT = 'I', 'Indirect'
+
+    dose_type = models.CharField(
+        max_length=1,
+        choices=DoseType.choices,
+        default=DoseType.DIRECT,
+    )
+
     def get_absolute_url(self):
         return reverse('protocol-detail', kwargs={'pk': self.pk})
 
