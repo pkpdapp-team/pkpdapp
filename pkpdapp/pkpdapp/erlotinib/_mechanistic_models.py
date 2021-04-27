@@ -153,7 +153,7 @@ class MechanisticModel(object):
                                'model.')
 
         self._output_names = list(outputs)
-        self._n_outputs = len(outputs)
+        self._n_outputs = len(self._output_names)
 
     def set_parameter_names(self, names):
         """

@@ -16,7 +16,7 @@ from django.urls import reverse_lazy
 from pkpdapp.models import (
     PharmacokineticModel, DosedPharmacokineticModel,
     PharmacodynamicModel, PkpdModel,
-    Dose, Biomarker, BiomarkerType
+    Dose, Biomarker, BiomarkerType, Protocol
 )
 import pandas as pd
 from pkpdapp.dash_apps.model_view import ModelViewState
@@ -32,7 +32,10 @@ def create_model_view_state(model, project):
             model.pharmacokinetic_model.sbml,
             model.pharmacokinetic_model.name, is_pk=is_pk, use=True
         )
-        state.set_administration(model.dose_compartment)
+        state.set_administration(
+            model.dose_compartment,
+            direct=model.protocol.dose_type == Protocol.DoseType.DIRECT
+        )
         events = [
             (d.amount, d.start_time, d.duration)
             for d in Dose.objects.filter(protocol=model.protocol)
@@ -43,7 +46,10 @@ def create_model_view_state(model, project):
             model.sbml,
             model.name, is_pk=True, use=True
         )
-        state.set_administration(model.dose_compartment)
+        state.set_administration(
+            model.dose_compartment,
+            direct=model.protocol.dose_type == Protocol.DoseType.DIRECT
+        )
         events = [
             (d.amount, d.start_time, d.duration)
             for d in Dose.objects.filter(protocol=model.protocol)

@@ -260,6 +260,24 @@ class ModelViewState:
         """
         self._compartment = compartment
         self._direct = direct
+        for i in range(len(self._models)):
+            if not self._is_pk[i]:
+                continue
+            model_sbml = self._models[i]
+            erlo_m = self._convert_to_erlo_model(
+                model_sbml, True
+            )
+
+            self._parameters[i] = [
+                erlo_m._default_values[n] for n in erlo_m.parameters()
+            ]
+            param_names = erlo_m.parameters()
+            for j, p in enumerate(param_names):
+                param_names[j] = p.replace('.', '_')
+
+            print('param names are ', param_names)
+            self._parameter_names[i] = param_names
+            self._n_states[i] = erlo_m._n_states
 
     def set_dosing_events(self, dosing_events):
         """
@@ -441,11 +459,13 @@ class ModelViewState:
             model = self._convert_to_erlo_model(sbml, is_pk)
 
             # output concentrations instead of amounts
-            outputs = [
-                v.qname().replace('_amount', '_concentration')
-                for v in
-                model.simulator._model.variables(state=True)
-            ]
+            outputs = []
+            for v in model.simulator._model.variables(state=True):
+                name = v.qname()
+                if not name.startswith('dose'):
+                    name.replace('_amount', '_concentration')
+                outputs.append(name)
+
             model.set_outputs(outputs)
 
             # Solve the model

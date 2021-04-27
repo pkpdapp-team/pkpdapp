@@ -125,6 +125,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(help_text='name of the protocol', max_length=100)),
                 ('subject_id', models.IntegerField(blank=True, help_text='subject id', null=True)),
+                ('dose_type', models.CharField(choices=[('D', 'Direct'), ('I', 'Indirect')], default='D', max_length=1)),
                 ('compound', models.ForeignKey(blank=True, help_text='drug compound', null=True, on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.Compound')),
                 ('dataset', models.ForeignKey(blank=True, help_text='dataset containing this protocol', null=True, on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.Dataset')),
             ],
@@ -171,7 +172,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('start_time', models.FloatField(help_text='starting time point of dose, in hours')),
-                ('amount', models.FloatField(help_text='amount of compound administered, in XXX')),
+                ('amount', models.FloatField(help_text='amount of compound administered, in grams')),
                 ('duration', models.FloatField(default=0.01, help_text='Duration of dose administration. For a bolus injection, a dose duration of 1% of the time unit should suffice. By default the duration is set to 0.01 (bolus).')),
                 ('protocol', models.ForeignKey(help_text='protocol containing this dose', on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.Protocol')),
             ],
