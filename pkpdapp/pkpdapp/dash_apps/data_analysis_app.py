@@ -205,8 +205,13 @@ class DataAnalysisState:
         self._dataset_options = []
         self._nca_subject_id = None
         self._auce_biomarker = None
+        self._merged_datasets = None
 
     def add_datasets(self, datasets, dataset_names):
+        # handle empty datasets
+        if not datasets:
+            return
+
         # by default show first datset only
         self._selected_datasets = [0]
         self._datasets = datasets
@@ -224,14 +229,23 @@ class DataAnalysisState:
         self._auce_biomarker = self._merged_datasets[self._biomarker_key][0]
 
     def to_json(self):
-        return json.dumps({
+        state_dict = {
             '_selected_datasets': self._selected_datasets,
             '_datasets': [d.to_dict() for d in self._datasets],
-            '_merged_datasets': self._merged_datasets.to_dict(),
             '_dataset_options': self._dataset_options,
             '_nca_subject_id': self._nca_subject_id,
             '_auce_biomarker': self._auce_biomarker,
-        })
+        }
+        if isinstance(self._merged_datasets, pd.DataFrame):
+            state_dict.update({
+                '_merged_datasets': self._merged_datasets.to_dict()
+            })
+        else:
+            state_dict.update({
+                '_merged_datasets': self._merged_datasets
+            })
+
+        return json.dumps(state_dict)
 
     @classmethod
     def from_json(cls, j):
@@ -241,9 +255,13 @@ class DataAnalysisState:
         o._datasets = [
             pd.DataFrame.from_dict(d) for d in data_dict['_datasets']
         ]
-        o._merged_datasets = pd.DataFrame.from_dict(
-            data_dict['_merged_datasets']
-        )
+        if isinstance(data_dict['_merged_datasets'], dict):
+            o._merged_datasets = pd.DataFrame.from_dict(
+                data_dict['_merged_datasets']
+            )
+        else:
+            o._merged_datasets = data_dict['_merged_datasets']
+
         o._dataset_options = data_dict['_dataset_options']
         o._nca_subject_id = data_dict['_nca_subject_id']
         o._auce_biomarker = data_dict['_auce_biomarker']
