@@ -115,6 +115,8 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('id_in_dataset', models.IntegerField(help_text='unique id in the dataset')),
+                ('dose_group', models.CharField(blank=True, help_text='dosing group for this subject', max_length=100)),
+                ('group', models.CharField(blank=True, help_text='dataset specific grouping for this subject', max_length=100)),
                 ('metadata', jsonfield.fields.JSONField(help_text='subject metadata')),
                 ('dataset', models.ForeignKey(help_text='dataset containing this subject', on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.Dataset')),
             ],
@@ -124,10 +126,10 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(help_text='name of the protocol', max_length=100)),
-                ('subject_id', models.IntegerField(blank=True, help_text='subject id', null=True)),
                 ('dose_type', models.CharField(choices=[('D', 'Direct'), ('I', 'Indirect')], default='D', max_length=1)),
                 ('compound', models.ForeignKey(blank=True, help_text='drug compound', null=True, on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.Compound')),
                 ('dataset', models.ForeignKey(blank=True, help_text='dataset containing this protocol', null=True, on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.Dataset')),
+                ('subject', models.ForeignKey(blank=True, help_text='subject associated with protocol', null=True, on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.Subject')),
             ],
         ),
         migrations.CreateModel(
@@ -192,9 +194,9 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('time', models.FloatField(help_text='time point of measurement, in hours')),
-                ('subject_id', models.IntegerField(help_text='subject id for biomarker measurement')),
                 ('value', models.FloatField(help_text='value of the measurement')),
                 ('biomarker_type', models.ForeignKey(help_text='biomarker type, for example "concentration in mg"', on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.BiomarkerType')),
+                ('subject', models.ForeignKey(help_text='subject associated with this biomarker', on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.Subject')),
             ],
         ),
         migrations.AddConstraint(

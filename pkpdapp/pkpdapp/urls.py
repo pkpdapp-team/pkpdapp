@@ -104,6 +104,8 @@ urlpatterns = [
          views.ProjectDelete.as_view(),
          name='project-delete'),
     path('generic/', views.GenericView.as_view(), name='generic'),
-    path('data_analysis/', views.DataAnalysis.as_view(), name='data-analysis'),
+    path('auce/', views.Auce.as_view(), name='auce'),
+    path('nca/', views.Nca.as_view(), name='nca'),
+
     path('django_plotly_dash/', include('django_plotly_dash.urls')),
 ]

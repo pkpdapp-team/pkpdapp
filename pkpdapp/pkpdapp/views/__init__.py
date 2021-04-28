@@ -47,4 +47,5 @@ from .protocol import (
     ProtocolDetailView,
     ProtocolUpdate,
 )
-from .data_analysis import DataAnalysis
+from .nca import Nca
+from .auce import Auce

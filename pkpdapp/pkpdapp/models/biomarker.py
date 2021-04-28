@@ -5,7 +5,7 @@
 #
 
 from django.db import models
-from pkpdapp.models import BiomarkerType
+from pkpdapp.models import BiomarkerType, Subject
 
 
 class Biomarker(models.Model):
@@ -16,8 +16,9 @@ class Biomarker(models.Model):
     time = models.FloatField(
         help_text='time point of measurement, in hours'
     )
-    subject_id = models.IntegerField(
-        help_text='subject id for biomarker measurement'
+    subject = models.ForeignKey(
+        Subject, on_delete=models.CASCADE,
+        help_text='subject associated with this biomarker'
     )
     biomarker_type = models.ForeignKey(
         BiomarkerType, on_delete=models.CASCADE,

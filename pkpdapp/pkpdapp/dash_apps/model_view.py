@@ -570,9 +570,6 @@ class ModelViewState:
                 print(e)
                 pass
 
-        # Set axes labels to time_key and biom_key
-        # fig.set_axis_labels(xlabel=self._time_key, ylabel=self._biom_key)
-
     def add_data(self, data, name, biomarkers, use=False):
         """
         Adds pharmacodynamic time series data of (multiple) individuals to
