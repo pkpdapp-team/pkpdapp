@@ -184,7 +184,6 @@ def update_biomarkertypes_formset(request, pk):
     context["biomarkernames"] = biomarker_names
     if request.method == "POST":
         formset = BiomarkerFormset(request.POST)
-        print(formset.is_valid())
         if formset.is_valid():
             k = 0
             for f in formset:
@@ -195,7 +194,6 @@ def update_biomarkertypes_formset(request, pk):
                     biomarkertypes[k].unit = unit.standard_unit
                 if desc is not None:
                     biomarkertypes[k].description = desc
-                print(unit)
                 biomarkertypes[k].save()
                 k += 1
         return redirect(reverse_lazy(

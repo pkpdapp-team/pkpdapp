@@ -365,11 +365,10 @@ def load_datasets(apps, schema_editor):
                         compound = Compound.objects.create(
                             name=compound_str
                         )
-                    subject_id = row[SUBJECT_ID_COLUMN]
                     try:
                         protocol = Protocol.objects.get(
                             dataset=dataset,
-                            subject_id=subject_id,
+                            subject=subject,
                             compound=compound
                         )
                     except Protocol.DoesNotExist:

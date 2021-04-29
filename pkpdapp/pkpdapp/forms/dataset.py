@@ -5,8 +5,9 @@
 #
 from django import forms
 from django.core.exceptions import ValidationError
-from pkpdapp.models import (Dataset, BiomarkerType, StandardUnit, Dose,
-                            Project, Biomarker, Compound, Protocol, Unit)
+from pkpdapp.models import (Dataset, BiomarkerType, Dose,
+                            Project, Biomarker, Compound, Protocol, Unit,
+                            Subject)
 from django.utils.translation import gettext as _
 import pandas as pd
 from django.utils.html import format_html
@@ -76,7 +77,9 @@ class CreateNewDataset(forms.ModelForm):
                          'YTYPE',
                          'YDESC',
                          'DV',
-                         'UNIT']  # not in Roche list but seems needed]
+                         'UNIT',
+                         'SUBJECT_GROUP',
+                         'DOSE_GROUP']  # not in Roche list but seems needed]
         error_cols = []
         for col in required_cols:
             if col not in colnames:
@@ -175,10 +178,27 @@ class CreateNewDataset(forms.ModelForm):
             time_unit = Unit.objects.get(symbol=row['TIME_UNIT'])
             value = row['DV']
             subject_id = row['ID']
+
+            # create subject
+            try:
+                subject = Subject.objects.get(
+                    id_in_dataset=subject_id,
+                    dataset=instance,
+                )
+            except Subject.DoesNotExist:
+                group = row['SUBJECT_GROUP']
+                dose_group = row['DOSE_GROUP']
+
+                subject = Subject.objects.create(
+                    id_in_dataset=subject_id,
+                    dataset=instance,
+                    group=group,
+                    dose_group=dose_group,
+                )
             if value != ".":  # measurement observation
                 Biomarker.objects.create(
                     time=time_unit.multiplier * row['TIME'],
-                    subject_id=subject_id,
+                    subject=subject,
                     value=row['DV'],
                     biomarker_type=BiomarkerType.objects.get(
                         name=row['YDESC'],
@@ -195,7 +215,7 @@ class CreateNewDataset(forms.ModelForm):
                 try:
                     protocol = Protocol.objects.get(
                         dataset=instance,
-                        subject_id=subject_id,
+                        subject_id=subject,
                         compound=compound
                     )
                 except Protocol.DoesNotExist:
@@ -203,11 +223,11 @@ class CreateNewDataset(forms.ModelForm):
                         name='{}-{}-{}'.format(
                             instance.name,
                             compound.name,
-                            subject_id
+                            subject
                         ),
                         compound=compound,
                         dataset=instance,
-                        subject_id=subject_id,
+                        subject=subject,
                     )
                 start_time = time_unit.multiplier * float(row['TIME'])
                 amount = float(row['AMT'])
