@@ -49,11 +49,14 @@ INSTALLED_APPS = [
     'dpd_static_support',
     'markdownify',
     'django_extensions',
+    'crispy_forms',
 
     # internal apps
     'explore_data.apps.ExploreDataConfig',
     'pkpdapp',
 ]
+
+CRISPY_TEMPLATE_PACK = 'bootstrap4'
 
 MARKDOWNIFY_MARKDOWN_EXTENSIONS = [
     'mdx_math',

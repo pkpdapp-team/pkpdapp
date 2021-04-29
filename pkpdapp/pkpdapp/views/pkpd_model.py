@@ -10,71 +10,81 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from pkpdapp.forms import (
     CreateNewPharmodynamicModel,
     CreateNewDosedPharmokineticModel,
+    CreateNewPkpdModel,
 )
 from django.urls import reverse_lazy
-from pkpdapp.models import (PharmacokineticModel, DosedPharmacokineticModel,
-                            PharmacodynamicModel, Biomarker, BiomarkerType,
-                            Dose)
+from pkpdapp.models import (
+    PharmacokineticModel, DosedPharmacokineticModel,
+    PharmacodynamicModel, PkpdModel,
+    Dose, Biomarker, BiomarkerType, Protocol
+)
 import pandas as pd
-from pkpdapp.dash_apps.simulation import PKSimulationApp, PDSimulationApp
-import pkpdapp.erlotinib as erlo
-from dash.dependencies import Input, Output
-import dash
-from myokit.formats.sbml import SBMLParsingError
+from pkpdapp.dash_apps.model_view import ModelViewState
 
 
-def create_dash_app(model, project):
-    # create dash app
-
-    if isinstance(model, PharmacodynamicModel):
-        app = PDSimulationApp(name='parmacodynamic_view')
-        sbml_str = model.sbml.encode('utf-8')
-        try:
-            erlo_m = erlo.PharmacodynamicModel(sbml_str)
-            param_names = erlo_m.parameters()
-            param_names_dict = {}
-            for p in param_names:
-                param_names_dict[p] = p.replace('.', '_')
-            erlo_m.set_parameter_names(names=param_names_dict)
-            app.add_model(erlo_m, model.name, use=True)
-        except SBMLParsingError:
-            pass
+def create_model_view_state(model, project):
+    # create dash state
+    state = ModelViewState()
+    is_pk = isinstance(model, DosedPharmacokineticModel)
+    is_pkpd = isinstance(model, PkpdModel)
+    if is_pk:
+        state.add_model(
+            model.pharmacokinetic_model.sbml,
+            model.pharmacokinetic_model.name, is_pk=is_pk, use=True
+        )
+        state.set_administration(
+            model.dose_compartment,
+            direct=model.protocol.dose_type == Protocol.DoseType.DIRECT
+        )
+        events = [
+            (d.amount, d.start_time, d.duration)
+            for d in Dose.objects.filter(protocol=model.protocol)
+        ]
+        state.set_dosing_events(events)
+    elif is_pkpd:
+        state.add_model(
+            model.sbml,
+            model.name, is_pk=True, use=True
+        )
+        state.set_administration(
+            model.dose_compartment,
+            direct=model.protocol.dose_type == Protocol.DoseType.DIRECT
+        )
+        events = [
+            (d.amount, d.start_time, d.duration)
+            for d in Dose.objects.filter(protocol=model.protocol)
+        ]
+        state.set_dosing_events(events)
 
     else:
-        app = PKSimulationApp(name='dosed_parmokinetic_view')
-        # get model sbml strings and add erlo models
-        m = model.pharmacokinetic_model
-        sbml_str = m.sbml.encode('utf-8')
-        try:
-            erlo_m = erlo.PharmacokineticModel(sbml_str)
-            param_names = erlo_m.parameters()
-            param_names_dict = {}
-            for p in param_names:
-                param_names_dict[p] = p.replace('.', '_')
-            erlo_m.set_parameter_names(names=param_names_dict)
-            app.add_model(erlo_m, m.name, use=True)
-            app.set_administration(model.dose_compartment)
-            events = [
-                (d.amount, d.start_time, d.duration)
-                for d in Dose.objects.filter(protocol=model.protocol)
-            ]
-            app.set_dosing_events(events)
-        except SBMLParsingError:
-            pass
+        state.add_model(model.sbml, model.name, is_pk=is_pk, use=True)
 
     # add datasets
-    if project:
-        for i, d in enumerate(project.datasets.all()):
-            biomarker_types = BiomarkerType.objects.filter(dataset=d)
-            biomarkers = Biomarker.objects\
-                .select_related('biomarker_type__name')\
-                .filter(biomarker_type__in=biomarker_types)
+    if project is None:
+        return state
 
-            # convert to pandas dataframe with the column names expected
+    for dataset in project.datasets.all():
+        biomarker_types = BiomarkerType.objects.filter(dataset=dataset)
+        biomarkers = Biomarker.objects\
+            .filter(biomarker_type__in=biomarker_types)
+
+        if biomarkers:
+            biomarker_units = {
+                b['name']: b['unit__symbol']
+                for b in biomarker_types.values(
+                    'name', 'unit__symbol'
+                )
+            }
+
             df = pd.DataFrame(
                 list(
-                    biomarkers.values('time', 'subject_id',
-                                      'biomarker_type__name', 'value')))
+                    biomarkers.values(
+                        'time', 'subject_id',
+                        'biomarker_type__name',
+                        'value'
+                    )
+                )
+            )
             df.rename(columns={
                 'subject_id': 'ID',
                 'time': 'Time',
@@ -82,56 +92,9 @@ def create_dash_app(model, project):
                 'value': 'Measurement'
             }, inplace=True)
 
-            app.add_data(df, d.name, use=False)
+            state.add_data(df, dataset.name, biomarker_units)
 
-    # generate dash app
-    app.set_layout()
-
-    # we need slider ids for callback, count the number of parameters for
-    # each model so we know what parameter in the list corresponds to which
-    # model
-    sliders = app.slider_ids()
-    n_params = [len(s) for s in sliders]
-    offsets = [0]
-    for i in range(1, len(n_params)):
-        offsets.append(offsets[i - 1] + n_params[i])
-
-    # Define simulation callbacks
-    @app.app.callback(
-        Output('fig', 'figure'), [Input(s, 'value') for s in sum(sliders, [])],
-        [Input('dataset-select', 'value'),
-         Input('biomarker-select', 'value')])
-    def update_simulation(*args):
-        """
-        if the models, datasets or biomarkers are
-        changed then regenerate the figure entirely
-
-        if a slider is moved, determine the relevent model based on the id
-        name, then update that particular simulation
-        """
-        ctx = dash.callback_context
-        cid = None
-        if ctx.triggered:
-            cid = ctx.triggered[0]['prop_id'].split('.')[0]
-        print('ARGS', args)
-
-        if cid == 'dataset-select':
-            print('update datasets')
-            app.set_used_datasets(args[-2])
-            return app.create_figure()
-        elif cid == 'biomarker-select':
-            app.set_used_biomarker(args[-1])
-            return app.create_figure()
-        elif cid is not None:
-            model_index = int(cid[:2])
-            n = n_params[model_index]
-            offset = offsets[model_index]
-            parameters = args[offset:offset + n]
-            return app.update_simulation(model_index, parameters)
-
-        return app._fig._fig
-
-    return app
+    return state
 
 
 class PharmacodynamicModelDetailView(LoginRequiredMixin, DetailView):
@@ -139,8 +102,13 @@ class PharmacodynamicModelDetailView(LoginRequiredMixin, DetailView):
     template_name = 'pd_model_detail.html'
 
     def get(self, request, *args, **kwargs):
-        self._app = create_dash_app(self.get_object(),
-                                    self.request.user.profile.selected_project)
+        session = request.session
+        session['django_plotly_dash'] = {
+            'model_view': create_model_view_state(
+                self.get_object(),
+                self.request.user.profile.selected_project
+            ).to_json()
+        }
         return super().get(request)
 
 
@@ -184,13 +152,18 @@ class DosedPharmacokineticModelDetail(LoginRequiredMixin, DetailView):
     model = DosedPharmacokineticModel
 
     def get(self, request, *args, **kwargs):
-        self._app = create_dash_app(self.get_object(),
-                                    self.request.user.profile.selected_project)
+        session = request.session
+        session['django_plotly_dash'] = {
+            'model_view': create_model_view_state(
+                self.get_object(),
+                self.request.user.profile.selected_project
+            ).to_json()
+        }
         return super().get(request)
 
 
 class DosedPharmacokineticModelCreate(LoginRequiredMixin, CreateView):
-    template_name = 'dosed_pharmacokinetic_create.html'
+    template_name = 'dosed_pharmacokinetic_form.html'
     model = DosedPharmacokineticModel
     form_class = CreateNewDosedPharmokineticModel
 
@@ -205,17 +178,59 @@ class DosedPharmacokineticModelUpdate(LoginRequiredMixin, UpdateView):
     """
     This class defines the interface for model simulation.
     """
-    template_name = 'dosed_pharmacokinetic_update.html'
+    template_name = 'dosed_pharmacokinetic_form.html'
     model = DosedPharmacokineticModel
+    form_class = CreateNewDosedPharmokineticModel
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['project'] = self.request.user.profile.selected_project.id
+        return kwargs
+
+
+class PkpdModelDetail(LoginRequiredMixin, DetailView):
+    template_name = 'pkpd_model_detail.html'
     fields = [
-        'pharmacokinetic_model', 'dose_compartment', 'direct_dose',
-        'dose_amount', 'dose_start', 'dose_duration', 'dose_period',
-        'number_of_doses'
+        'name', 'sbml', 'dose_compartment', 'protocol',
     ]
+    model = PkpdModel
 
     def get(self, request, *args, **kwargs):
-        self._app = create_dash_app(self.get_object(),
-                                    self.request.user.profile.selected_project)
+        session = request.session
+        session['django_plotly_dash'] = {
+            'model_view': create_model_view_state(
+                self.get_object(),
+                self.request.user.profile.selected_project
+            ).to_json()
+        }
+        return super().get(request)
+
+
+class PkpdModelCreate(LoginRequiredMixin, CreateView):
+    template_name = 'pkpd_model_form.html'
+    model = PkpdModel
+    form_class = CreateNewPkpdModel
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        if 'project' in self.kwargs:
+            kwargs['project'] = self.kwargs['project']
+        return kwargs
+
+
+class PkpdModelUpdate(LoginRequiredMixin, UpdateView):
+    template_name = 'pkpd_model_form.html'
+    model = PkpdModel
+    form_class = CreateNewPkpdModel
+
+    def get(self, request, *args, **kwargs):
+        session = request.session
+        session['django_plotly_dash'] = {
+            'model_view': create_model_view_state(
+                self.get_object(),
+                self.request.user.profile.selected_project
+            ).to_json()
+        }
         return super().get(request)
 
 

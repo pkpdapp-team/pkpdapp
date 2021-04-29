@@ -10,17 +10,35 @@ copyright notice and full license details.
 {% load plotly_dash %}
 
 {% block main_content %}
-<p></p>
-<h2>Dataset {{dataset.name}}</h2>
-(<a href="{% url 'dataset-update' dataset.id %}"> Update dataset </a>)
-(<a href="{% url 'dataset-biomarkers-update' dataset.id %}"> Update biomarkers </a>)
+<h2>Dataset {{dataset.name}} (<a href="{% url 'dataset-update' dataset.id %}"> Update </a>)</h2>
 <p>{{dataset.description|markdownify}}</p>
-<h3>Biomarker Types</h3>
-<ul>
-{% for type in biomarker_types %}
-  <li>{{ type.name }} ({{ type.unit}}): {{ type.description|truncatewords:"10"}}</li>
-{% endfor %}
-</ul>
+<div class="row">
+    <div class="col-sm">
+      <h3>Biomarker Types</h2>
+      <ul>
+      {% for type in biomarker_types %}
+        <li>{{ type.name }}</li>
+      {% endfor %}
+      </ul>
+    </div>
+    <div class="col-sm">
+      <h3>Dose Groups</h2>
+      <ul>
+      {% for g in dose_groups %}
+        <li>{{ g.dose_group }}</li>
+      {% endfor %}
+      </ul>
+    </div>
+    <div class="col-sm">
+      <h3>Subject Groups</h2>
+      <ul>
+      {% for g in subject_groups %}
+        <li>{{ g.group }}</li>
+      {% endfor %}
+      </ul>
+    </div>
+  </div>
+
 
 {% plotly_app_bootstrap name="dataset_view" aspect="16by9"%}
 
@@ -32,7 +50,7 @@ copyright notice and full license details.
   </tr>
   {% for protocol in protocols %}
   <tr>
-    <td><a href="{% url 'protocol-detail' protocol.id %}">{{ protocol.subject_id }}</a></td>
+    <td><a href="{% url 'protocol-detail' protocol.id %}">{{ protocol.subject }}</a></td>
     <td>{{ protocol.compound}}</td>
   </tr>
   {% endfor %}
@@ -54,6 +72,4 @@ copyright notice and full license details.
         {% endif %}
     </span>
 </div>
-
-
 {% endblock %}

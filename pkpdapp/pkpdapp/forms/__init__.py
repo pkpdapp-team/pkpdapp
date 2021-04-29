@@ -12,5 +12,6 @@ from .dataset import (
 from .pkpd_model import (
     CreateNewPharmodynamicModel,
     CreateNewDosedPharmokineticModel,
+    CreateNewPkpdModel,
 )
 from .protocol import CreateNewProtocol

@@ -6,7 +6,7 @@
 
 from django.db import models
 from django.urls import reverse
-from pkpdapp.models import Compound, Dataset
+from pkpdapp.models import Compound, Dataset, Subject
 
 
 class Protocol(models.Model):
@@ -27,9 +27,20 @@ class Protocol(models.Model):
         blank=True, null=True,
         help_text='dataset containing this protocol'
     )
-    subject_id = models.IntegerField(
-        help_text='subject id',
+    subject = models.ForeignKey(
+        Subject, on_delete=models.CASCADE,
+        help_text='subject associated with protocol',
         blank=True, null=True,
+    )
+
+    class DoseType(models.TextChoices):
+        DIRECT = 'D', 'Direct'
+        INDIRECT = 'I', 'Indirect'
+
+    dose_type = models.CharField(
+        max_length=1,
+        choices=DoseType.choices,
+        default=DoseType.DIRECT,
     )
 
     def get_absolute_url(self):

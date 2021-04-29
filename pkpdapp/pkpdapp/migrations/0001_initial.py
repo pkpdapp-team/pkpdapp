@@ -76,6 +76,19 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
+            name='PkpdModel',
+            fields=[
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('name', models.CharField(help_text='name of the model', max_length=100)),
+                ('description', models.TextField(blank=True, default='', help_text='short description of the model')),
+                ('sbml', models.TextField(help_text='the model represented using SBML (see http://sbml.org)')),
+                ('dose_compartment', models.CharField(blank=True, default='central', help_text='compartment name to be dosed', max_length=100, null=True)),
+            ],
+            options={
+                'abstract': False,
+            },
+        ),
+        migrations.CreateModel(
             name='StandardUnit',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
@@ -98,13 +111,25 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
+            name='Subject',
+            fields=[
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id_in_dataset', models.IntegerField(help_text='unique id in the dataset')),
+                ('dose_group', models.CharField(blank=True, help_text='dosing group for this subject', max_length=100)),
+                ('group', models.CharField(blank=True, help_text='dataset specific grouping for this subject', max_length=100)),
+                ('metadata', jsonfield.fields.JSONField(help_text='subject metadata')),
+                ('dataset', models.ForeignKey(help_text='dataset containing this subject', on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.Dataset')),
+            ],
+        ),
+        migrations.CreateModel(
             name='Protocol',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(help_text='name of the protocol', max_length=100)),
-                ('subject_id', models.IntegerField(blank=True, help_text='subject id', null=True)),
+                ('dose_type', models.CharField(choices=[('D', 'Direct'), ('I', 'Indirect')], default='D', max_length=1)),
                 ('compound', models.ForeignKey(blank=True, help_text='drug compound', null=True, on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.Compound')),
                 ('dataset', models.ForeignKey(blank=True, help_text='dataset containing this protocol', null=True, on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.Dataset')),
+                ('subject', models.ForeignKey(blank=True, help_text='subject associated with protocol', null=True, on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.Subject')),
             ],
         ),
         migrations.CreateModel(
@@ -116,6 +141,7 @@ class Migration(migrations.Migration):
                 ('datasets', models.ManyToManyField(blank=True, help_text='datasets referenced by this project', to='pkpdapp.Dataset')),
                 ('pd_models', models.ManyToManyField(blank=True, help_text='PD models referenced by this project', to='pkpdapp.PharmacodynamicModel')),
                 ('pk_models', models.ManyToManyField(blank=True, help_text='PK models referenced by this project', to='pkpdapp.DosedPharmacokineticModel')),
+                ('pkpd_models', models.ManyToManyField(blank=True, help_text='PKPD models referenced by this project', to='pkpdapp.PkpdModel')),
                 ('protocols', models.ManyToManyField(blank=True, help_text='Protocols referenced by this project', to='pkpdapp.Protocol')),
                 ('users', models.ManyToManyField(help_text='users with access to this project', to=settings.AUTH_USER_MODEL)),
             ],
@@ -127,6 +153,11 @@ class Migration(migrations.Migration):
                 ('selected_project', models.ForeignKey(help_text='currently selected project for user', null=True, on_delete=django.db.models.deletion.SET_NULL, to='pkpdapp.Project')),
                 ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
+        ),
+        migrations.AddField(
+            model_name='pkpdmodel',
+            name='protocol',
+            field=models.ForeignKey(blank=True, help_text='dosing protocol', null=True, on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.Protocol'),
         ),
         migrations.AddField(
             model_name='dosedpharmacokineticmodel',
@@ -143,7 +174,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('start_time', models.FloatField(help_text='starting time point of dose, in hours')),
-                ('amount', models.FloatField(help_text='amount of compound administered, in XXX')),
+                ('amount', models.FloatField(help_text='amount of compound administered, in grams')),
                 ('duration', models.FloatField(default=0.01, help_text='Duration of dose administration. For a bolus injection, a dose duration of 1% of the time unit should suffice. By default the duration is set to 0.01 (bolus).')),
                 ('protocol', models.ForeignKey(help_text='protocol containing this dose', on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.Protocol')),
             ],
@@ -163,9 +194,9 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('time', models.FloatField(help_text='time point of measurement, in hours')),
-                ('subject_id', models.IntegerField(help_text='subject id for biomarker measurement')),
                 ('value', models.FloatField(help_text='value of the measurement')),
                 ('biomarker_type', models.ForeignKey(help_text='biomarker type, for example "concentration in mg"', on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.BiomarkerType')),
+                ('subject', models.ForeignKey(help_text='subject associated with this biomarker', on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.Subject')),
             ],
         ),
     ]

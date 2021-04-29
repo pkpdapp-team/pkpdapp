@@ -7,10 +7,13 @@
 from django.test import TestCase
 from pkpdapp.models import (
     Dataset, Project, Biomarker, BiomarkerType,
-    PharmacodynamicModel,
+    PharmacodynamicModel, Protocol, PharmacokineticModel,
+    PkpdModel, Compound, DosedPharmacokineticModel,
+    Subject
 )
 from django.contrib.auth.models import User
 from django.utils import timezone
+from django.db.utils import IntegrityError
 
 
 class TestDatasetModel(TestCase):
@@ -21,6 +24,51 @@ class TestDatasetModel(TestCase):
             description='description for my cool dataset',
         )
         self.assertTrue(isinstance(d, Dataset))
+
+
+class TestSubjectModel(TestCase):
+    def setUp(self):
+        self.dataset = Dataset.objects.create(
+            name='test_subject_model',
+            datetime=timezone.now(),
+            description='description for my cool dataset',
+        )
+
+    def test_subject_creation(self):
+        metadata = {
+            'test': 2
+        }
+        s = Subject.objects.create(
+            id_in_dataset=1, dataset=self.dataset, metadata=metadata
+        )
+        self.assertTrue(isinstance(s, Subject))
+
+    def test_subject_constraint(self):
+
+        metadata = {
+            'test': 2
+        }
+        Subject.objects.create(
+            id_in_dataset=2, dataset=self.dataset, metadata=metadata
+        )
+
+        # this is ok
+        d2 = Dataset.objects.create(
+            name='test_subject_model2',
+            datetime=timezone.now(),
+            description='description for my cool dataset',
+        )
+        Subject.objects.create(
+            id_in_dataset=2, dataset=d2, metadata=metadata
+        )
+
+        # this should raise error
+        with self.assertRaises(IntegrityError) as context:
+            Subject.objects.create(
+                id_in_dataset=2, dataset=self.dataset, metadata=metadata
+            )
+
+        self.assertTrue('UNIQUE constraint failed' in str(context.exception))
 
 
 class TestBiomarkerTypeModel(TestCase):
@@ -60,14 +108,98 @@ class TestBiomarkerModel(TestCase):
         self.assertTrue(isinstance(b, Biomarker))
 
 
+class TestCompoundModel(TestCase):
+    def test_model_creation(self):
+        c = Compound.objects.create(
+            name='my_cool_compound',
+            description='placebo',
+        )
+        self.assertTrue(isinstance(c, Compound))
+
+
+class TestProtocolModel(TestCase):
+    def test_model_creation(self):
+        c = Compound.objects.create(
+            name='my_cool_compound',
+            description='placebo',
+        )
+
+        # test optional dataset
+        p = Protocol.objects.create(
+            name='my_cool_protocol',
+            compound=c,
+            subject_id=1
+        )
+
+        self.assertTrue(isinstance(p, Protocol))
+
+        # test with dataset
+        d = Dataset.objects.create(
+            name='test_protocol_creation',
+            datetime=timezone.now(),
+            description='description for my cool dataset',
+        )
+        p = Protocol.objects.create(
+            name='my_cool_protocol',
+            compound=c,
+            dataset=d,
+            subject_id=1
+        )
+
+
 class TestPharmodynamicModel(TestCase):
-    def test_pd_model_creation(self):
+    def test_model_creation(self):
         m = PharmacodynamicModel.objects.create(
             name='my_cool_model',
             description='description for my cool model',
             sbml='sbml_here',
         )
         self.assertTrue(isinstance(m, PharmacodynamicModel))
+
+
+class TestDosedPharmokineticModel(TestCase):
+    def test_model_creation(self):
+        pk = PharmacokineticModel.objects\
+            .get(name='one_compartment_pk_model')
+
+        c = Compound.objects.create(
+            name='test_dosed_pk_model',
+            description='placebo',
+        )
+
+        p = Protocol.objects.create(
+            name='my_cool_protocol',
+            compound=c,
+            subject_id=1
+        )
+
+        m = DosedPharmacokineticModel.objects.create(
+            pharmacokinetic_model=pk,
+            dose_compartment='central',
+            protocol=p,
+        )
+        self.assertTrue(isinstance(m, DosedPharmacokineticModel))
+
+
+class TestPkpdModel(TestCase):
+    def test_pkpd_model_creation(self):
+        c = Compound.objects.create(
+            name='test_pkpd_model_creation',
+            description='placebo',
+        )
+
+        p = Protocol.objects.create(
+            name='my_cool_protocol',
+            compound=c,
+            subject_id=1
+        )
+        m = PkpdModel.objects.create(
+            name='my_cool_model',
+            sbml='sbml_here',
+            dose_compartment='central',
+            protocol=p,
+        )
+        self.assertTrue(isinstance(m, PkpdModel))
 
 
 class TestProfileModel(TestCase):

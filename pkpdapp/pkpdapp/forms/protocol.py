@@ -27,7 +27,7 @@ class CreateNewProtocol(forms.ModelForm):
         super().__init__(*args, **kwargs)
 
     class Meta:
-        fields = ('name', )
+        fields = ('name', 'dose_type')
         model = Protocol
 
     dose_amount = forms.FloatField(

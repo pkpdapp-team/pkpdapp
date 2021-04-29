@@ -18,6 +18,7 @@ datafile_urls = [
     'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/datasets/lxf_medium_erlotinib_dose.csv',  # noqa: E501
     'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/datasets/lxf_single_erlotinib_dose.csv',  # noqa: E501
     'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/datasets/demo_pk_data.csv',  # noqa: E501
+    'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/datasets/TCB4dataset.csv',  # noqa: E501
 ]
 
 datafile_names = [
@@ -27,6 +28,7 @@ datafile_names = [
     'lxf_medium_erlotinib_dose',
     'lxf_single_erlotinib_dose',
     'demo_pk_data',
+    'TCB4dataset',
 ]
 
 datafile_descriptions = [
@@ -98,6 +100,9 @@ either on day 0 or day 4.
 ''',  # noqa: W605
     '''
 Demo PK data
+''',  # noqa: W605
+    '''
+TCB4 dataset
 ''',  # noqa: W605
 
 ]
@@ -187,11 +192,38 @@ biomarkers_for_datasets = [
             'unit': '10^3/mcL',
         },
     ],
+    [
+        {
+            'name': 'IL2',
+            'unit': 'ng/mL',
+        },
+        {
+            'name': 'IL10',
+            'unit': 'ng/mL',
+        },
+        {
+            'name': 'IL6',
+            'unit': 'ng/mL',
+        },
+        {
+            'name': 'IFNg',
+            'unit': 'ng/mL',
+        },
+        {
+            'name': 'TNFa',
+            'unit': 'ng/mL',
+        },
+        {
+            'name': 'Cells',
+            'unit': 'ng/mL',
+        },
+    ],
 ]
 
 
 def load_datasets(apps, schema_editor):
     Dataset = apps.get_model("pkpdapp", "Dataset")
+    Subject = apps.get_model("pkpdapp", "Subject")
     Biomarker = apps.get_model("pkpdapp", "Biomarker")
     BiomarkerType = apps.get_model("pkpdapp", "BiomarkerType")
     Project = apps.get_model("pkpdapp", "Project")
@@ -242,24 +274,39 @@ def load_datasets(apps, schema_editor):
             next(data_reader)
 
             # create entries
-            if datafile_name == 'demo_pk_data':
+            if datafile_name == 'TCB4dataset':
+                TIME_COLUMN = 0
+                TIME_UNIT_COLUMN = 10
+                VALUE_COLUMN = 1
+                UNIT_COLUMN = 11
+                BIOMARKER_TYPE_COLUMN = 2
+                SUBJECT_ID_COLUMN = 8
+                DOSE_COLUMN = None
+                DOSE_GROUP_COLUMN = 4
+                COMPOUND_COLUMN = None
+                SUBJECT_GROUP_COLUMN = 3
+            elif datafile_name == 'demo_pk_data':
                 TIME_COLUMN = 4
                 TIME_UNIT_COLUMN = 5
                 VALUE_COLUMN = 3
                 UNIT_COLUMN = 11
                 BIOMARKER_TYPE_COLUMN = 13
                 SUBJECT_ID_COLUMN = 2
+                DOSE_GROUP_COLUMN = None
                 DOSE_COLUMN = 1
                 COMPOUND_COLUMN = 0
+                SUBJECT_GROUP_COLUMN = None
             else:
                 TIME_COLUMN = 1
                 TIME_UNIT_COLUMN = 2
                 VALUE_COLUMN = 4
                 UNIT_COLUMN = 5
                 BIOMARKER_TYPE_COLUMN = 3
+                DOSE_GROUP_COLUMN = None
                 SUBJECT_ID_COLUMN = 0
                 DOSE_COLUMN = None
                 COMPOUND_COLUMN = None
+                SUBJECT_GROUP_COLUMN = None
             for row in data_reader:
                 biomarker_type_str = row[BIOMARKER_TYPE_COLUMN]
                 if not biomarker_type_str:
@@ -268,8 +315,35 @@ def load_datasets(apps, schema_editor):
                     continue
                 index = biomarker_index[biomarker_type_str]
                 value = row[VALUE_COLUMN]
-                unit = Unit.objects.get(symbol=row[UNIT_COLUMN])
-                time_unit = Unit.objects.get(symbol=row[TIME_UNIT_COLUMN])
+
+                subject_id = row[SUBJECT_ID_COLUMN]
+                try:
+                    subject = Subject.objects.get(
+                        id_in_dataset=subject_id,
+                        dataset=dataset,
+                    )
+                except Subject.DoesNotExist:
+                    group = ''
+                    dose_group = ''
+                    if SUBJECT_GROUP_COLUMN:
+                        group = row[SUBJECT_GROUP_COLUMN]
+                    if DOSE_GROUP_COLUMN:
+                        dose_group = row[DOSE_GROUP_COLUMN]
+
+                    subject = Subject.objects.create(
+                        id_in_dataset=subject_id,
+                        dataset=dataset,
+                        group=group,
+                        dose_group=dose_group,
+                    )
+                if UNIT_COLUMN is None:
+                    unit = Unit.objects.get(symbol='')
+                else:
+                    unit = Unit.objects.get(symbol=row[UNIT_COLUMN])
+                if TIME_UNIT_COLUMN is None:
+                    time_unit = Unit.objects.get(symbol='h')
+                else:
+                    time_unit = Unit.objects.get(symbol=row[TIME_UNIT_COLUMN])
                 try:
                     value = float(value)
                     is_number = True
@@ -279,7 +353,7 @@ def load_datasets(apps, schema_editor):
                     bt = biomarker_types[index]
                     Biomarker.objects.create(
                         time=time_unit.multiplier * float(row[TIME_COLUMN]),
-                        subject_id=row[SUBJECT_ID_COLUMN],
+                        subject=subject,
                         value=unit.multiplier * value,
                         biomarker_type=bt
                     )
@@ -307,7 +381,7 @@ def load_datasets(apps, schema_editor):
                             ),
                             compound=compound,
                             dataset=dataset,
-                            subject_id=subject_id,
+                            subject=subject,
                         )
                     start_time = time_unit.multiplier * float(row[TIME_COLUMN])
                     amount = unit.multiplier * float(row[DOSE_COLUMN])

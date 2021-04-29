@@ -7,7 +7,7 @@ from django.shortcuts import render
 from django.urls import reverse_lazy
 from django.core.paginator import Paginator
 from pkpdapp.models import (
-    Dataset, Biomarker, BiomarkerType, Protocol, StandardUnit
+    Dataset, Biomarker, BiomarkerType, Protocol, Subject
 )
 from ..forms import CreateNewDataset, UpdateBiomarkerType
 from pkpdapp.dash_apps.simulation import PDSimulationApp
@@ -101,11 +101,19 @@ class DatasetDetailView(DetailView):
     def get_context_data(self, **kwargs):
         # Call the base implementation first to get a context
         context = super().get_context_data(**kwargs)
-        # Add in a QuerySet of all the books
 
         context['biomarker_types'] = BiomarkerType.objects.filter(
             dataset=context['dataset']
         )
+
+        context['dose_groups'] = Subject.objects.filter(
+            dataset=context['dataset']
+        ).order_by('dose_group').values('dose_group').distinct()
+
+        context['subject_groups'] = Subject.objects.filter(
+            dataset=context['dataset']
+        ).order_by('group').values('group').distinct()
+
         protocol = Protocol.objects.filter(dataset=context['dataset'])
         context['has_protocol'] = len(protocol) > 0
 

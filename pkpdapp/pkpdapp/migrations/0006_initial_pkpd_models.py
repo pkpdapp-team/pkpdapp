@@ -126,7 +126,6 @@ compartment.
     Project = apps.get_model("pkpdapp", "Project")
     for m in models_pd:
         with urllib.request.urlopen(m['sbml_url']) as f:
-            # parse as csv file
             sbml_string = codecs.decode(f.read(), 'utf-8')
             pkpd_model = PharmacodynamicModel(name=m['name'],
                                               description=m['description'],

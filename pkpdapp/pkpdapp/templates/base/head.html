@@ -67,10 +67,26 @@ copyright notice and full license details.
                 </a>
               </div>
             </li>
-            <li class="nav-item">
-                <a class="nav-link" href="{% url 'data-analysis' %}">Data
-                  Analysis</a>
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                PKPD Models
+              </a>
+              <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                {% for m in current_project.pkpd_models.all %}
+                <a class="dropdown-item" href={% url 'pkpd_model-detail' m.id %}>{{m.name}}</a>
+                {% endfor %}
+                <a class="dropdown-item" href="{% url 'pkpd_model-add-to-project' current_project.id %}"> 
+                  Create model.. 
+                </a>
+              </div>
             </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'nca' %}">NCA</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'auce' %}">AUCE</a>
+            </li>
+
             {% endif %}
         </ul>
         <ul class="navbar-nav my-2 my-lg-0">
