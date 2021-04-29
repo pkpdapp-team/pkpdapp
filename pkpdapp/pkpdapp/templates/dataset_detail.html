@@ -18,6 +18,8 @@ copyright notice and full license details.
       <ul>
       {% for type in biomarker_types %}
         <li>{{ type.name }}</li>
+      {% empty %}
+        None
       {% endfor %}
       </ul>
     </div>
@@ -26,6 +28,8 @@ copyright notice and full license details.
       <ul>
       {% for g in dose_groups %}
         <li>{{ g.dose_group }}</li>
+      {% empty %}
+        None
       {% endfor %}
       </ul>
     </div>
@@ -34,6 +38,8 @@ copyright notice and full license details.
       <ul>
       {% for g in subject_groups %}
         <li>{{ g.group }}</li>
+      {% empty %}
+        None
       {% endfor %}
       </ul>
     </div>
