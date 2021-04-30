@@ -35,9 +35,9 @@ setup(
     # List of dependencies
     install_requires=[
         'dash-bootstrap-components>=0.10',
-        'Django==3.0.12',
+        'Django==3.0.14',
         'django-bootstrap4>=2.2',
-        'django_plotly_dash==1.4.1',
+        'django_plotly_dash>=1.6.3',
         'dpd-static-support>=0.0.5',
         'numpy>=1.8',
         'pandas>=1.0',
