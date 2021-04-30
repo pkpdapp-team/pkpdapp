@@ -44,6 +44,7 @@ class CreateNewPkpdModel(forms.ModelForm):
         model = PkpdModel
         fields = [
             'name', 'description', 'sbml', 'dose_compartment', 'protocol',
+            'time_max',
         ]
 
     dose_compartment = forms.ChoiceField(
@@ -127,7 +128,8 @@ class CreateNewDosedPharmokineticModel(forms.ModelForm):
     class Meta:
         model = DosedPharmacokineticModel
         fields = [
-            'pharmacokinetic_model', 'dose_compartment', 'protocol',
+            'name', 'pharmacokinetic_model', 'dose_compartment',
+            'protocol', 'time_max'
         ]
 
     dose_compartment = forms.ChoiceField(
@@ -187,7 +189,7 @@ class CreateNewPharmodynamicModel(forms.ModelForm):
 
     class Meta:
         model = PharmacodynamicModel
-        fields = ('name', 'description', 'sbml')
+        fields = ('name', 'description', 'sbml', 'time_max')
 
     sbml = forms.FileField()
 
