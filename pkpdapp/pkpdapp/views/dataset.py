@@ -36,6 +36,12 @@ def create_visualisation_app(dataset):
         .filter(biomarker_type__in=biomarker_types)
 
     if biomarkers:
+        biomarker_units = {
+            b['name']: b['unit__symbol']
+            for b in biomarker_types.values(
+                'name', 'unit__symbol'
+            )
+        }
         # convert to pandas dataframe with the column names expected
         df = pd.DataFrame(
             list(
@@ -48,7 +54,7 @@ def create_visualisation_app(dataset):
             'value': 'Measurement'
         }, inplace=True)
 
-        app.add_data(df, dataset.name, use=True)
+        state.add_data(df, dataset.name, biomarker_units, use=True)
 
     # generate dash app
     app.set_layout()
@@ -108,11 +114,12 @@ class DatasetDetailView(DetailView):
 
         context['dose_groups'] = Subject.objects.filter(
             dataset=context['dataset']
-        ).order_by('dose_group').values('dose_group').distinct()
+        ).order_by('dose_group').values('dose_group').distinct()\
+            .exclude(dose_group='')
 
         context['subject_groups'] = Subject.objects.filter(
             dataset=context['dataset']
-        ).order_by('group').values('group').distinct()
+        ).order_by('group').values('group').distinct().exclude(dose_group='')
 
         protocol = Protocol.objects.filter(dataset=context['dataset'])
         context['has_protocol'] = len(protocol) > 0

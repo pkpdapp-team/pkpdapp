@@ -10,7 +10,6 @@ import dash_html_components as html
 import pkpdapp.erlotinib as erlo
 import plotly.graph_objects as go
 import django_plotly_dash as dpd
-import numpy as np
 import pandas as pd
 from dash.dependencies import Input, Output
 import dash
@@ -112,7 +111,7 @@ class DataViewState:
         self._datasets = []
         self._use_datasets = []
         self._dataset_names = []
-        self._data_biomarkers = set()
+        self._data_biomarkers = []
         self._use_biomarkers = None
 
     def to_json(self):
@@ -120,7 +119,7 @@ class DataViewState:
             '_datasets': [d.to_dict() for d in self._datasets],
             '_use_datasets': self._use_datasets,
             '_dataset_names': self._dataset_names,
-            '_data_biomarkers': list(self._data_biomarkers),
+            '_data_biomarkers': self._data_biomarkers,
             '_use_biomarkers': self._use_biomarkers,
         })
 
@@ -133,7 +132,7 @@ class DataViewState:
         ]
         o._use_datasets = data_dict['_use_datasets']
         o._dataset_names = data_dict['_dataset_names']
-        o._data_biomarkers = set(data_dict['_data_biomarkers'])
+        o._data_biomarkers = data_dict['_data_biomarkers']
         o._use_biomarkers = data_dict['_use_biomarkers']
         return o
 
@@ -164,9 +163,10 @@ class DataViewState:
     def biomarker_dropdown_options(self):
         return [
             {
-                'label': name,
+                'label': '{} ({})'.format(name, unit),
                 'value': name
-            } for name in self._data_biomarkers
+            } for name, unit in
+            self._data_biomarkers[self._use_datasets[0]].items()
         ]
 
     def create_figure(self):
@@ -205,7 +205,7 @@ class DataViewState:
         # Set axes labels to time_key and biom_key
         fig.set_axis_labels(xlabel='Time (h)', ylabel=self._biom_key)
 
-    def add_data(self, data, name, use=False):
+    def add_data(self, data, name, biomarkers, use=False):
         """
         Adds pharmacodynamic time series data of (multiple) individuals to
         the figure.
@@ -221,6 +221,8 @@ class DataViewState:
             an ID, time, and biomarker column.
         name
             A str name for the dataset
+        biomarkers
+            dict with {biomarker: unit}
         use
             Set to True if you want this dataset to be initially chosen
         """
@@ -228,8 +230,7 @@ class DataViewState:
             self._use_datasets.append(len(self._datasets))
         self._datasets.append(data)
         self._dataset_names.append(name)
-        available_biomarkers = np.unique(data[self._biom_key].values)
-        for b in available_biomarkers:
-            self._data_biomarkers.add((b))
+
+        self._data_biomarkers.append(biomarkers)
         if self._use_biomarkers is None:
-            self._use_biomarkers = available_biomarkers[0]
+            self._use_biomarkers = next(iter(biomarkers.keys()))

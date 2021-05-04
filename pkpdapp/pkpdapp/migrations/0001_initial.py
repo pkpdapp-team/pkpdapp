@@ -44,13 +44,9 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(help_text='name of the model', max_length=100)),
-                ('description', models.TextField(blank=True, default='', help_text='short description of the model')),
-                ('sbml', models.TextField(help_text='the model represented using SBML (see http://sbml.org)')),
                 ('dose_compartment', models.CharField(default='central', help_text='compartment name to be dosed', max_length=100)),
+                ('time_max', models.FloatField(default=30, help_text='suggested time to simulate after the last dose (in the time units specified by the sbml model)')),
             ],
-            options={
-                'abstract': False,
-            },
         ),
         migrations.CreateModel(
             name='PharmacodynamicModel',
@@ -59,6 +55,7 @@ class Migration(migrations.Migration):
                 ('name', models.CharField(help_text='name of the model', max_length=100)),
                 ('description', models.TextField(blank=True, default='', help_text='short description of the model')),
                 ('sbml', models.TextField(help_text='the model represented using SBML (see http://sbml.org)')),
+                ('time_max', models.FloatField(default=30, help_text='suggested maximum time to simulate for this model (in the time units specified by the sbml model)')),
             ],
             options={
                 'abstract': False,
@@ -71,6 +68,7 @@ class Migration(migrations.Migration):
                 ('name', models.CharField(help_text='name of the model', max_length=100)),
                 ('description', models.TextField(blank=True, default='', help_text='short description of the model')),
                 ('sbml', models.TextField(help_text='the model represented using SBML (see http://sbml.org)')),
+                ('time_max', models.FloatField(default=30, help_text='suggested maximum time to simulate for this model (in the time units specified by the sbml model)')),
             ],
             options={
                 'abstract': False,
@@ -83,6 +81,7 @@ class Migration(migrations.Migration):
                 ('name', models.CharField(help_text='name of the model', max_length=100)),
                 ('description', models.TextField(blank=True, default='', help_text='short description of the model')),
                 ('sbml', models.TextField(help_text='the model represented using SBML (see http://sbml.org)')),
+                ('time_max', models.FloatField(default=30, help_text='suggested maximum time to simulate for this model (in the time units specified by the sbml model)')),
                 ('dose_compartment', models.CharField(blank=True, default='central', help_text='compartment name to be dosed', max_length=100, null=True)),
             ],
             options={
@@ -176,7 +175,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('start_time', models.FloatField(help_text='starting time point of dose, in hours')),
                 ('amount', models.FloatField(help_text='amount of compound administered, in grams')),
-                ('duration', models.FloatField(default=0.01, help_text='Duration of dose administration. For a bolus injection, a dose duration of 1% of the time unit should suffice. By default the duration is set to 0.01 (bolus).')),
+                ('duration', models.FloatField(default=0.0, help_text='Duration of dose administration in hours. For a bolus injection, set a dose duration of 0.')),
                 ('protocol', models.ForeignKey(help_text='protocol containing this dose', on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.Protocol')),
             ],
         ),

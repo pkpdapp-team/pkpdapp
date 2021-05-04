@@ -67,6 +67,7 @@ app.layout = dbc.Container(id='container', children=[
                     style={'height': '550px'}
                 )
             ],
+            width=9,
         ),
         dbc.Col(id='sliders', children=[],
                 width=3, style={'marginTop': '5em'})
@@ -159,12 +160,10 @@ class ModelViewState:
         self._parameters = []
         self._parameter_names = []
         self._n_states = []
-        self._times = np.linspace(
-            start=0, stop=30, num=self._times_num
-        )
+        self._times = np.array([0.0])
 
         self._direct = True
-        self._compartment = 'central'
+        self._compartment = None
         self._dosing_events = []
 
         self._datasets = []
@@ -286,7 +285,7 @@ class ModelViewState:
             ]
             self._n_states[i] = erlo_m._n_states
 
-    def set_dosing_events(self, dosing_events):
+    def set_dosing_events(self, dosing_events, time_max=None):
         """
         Sets the dosing events, which is a list of tuples
         (d.amount, d.start_time, d.duration)
@@ -303,37 +302,48 @@ class ModelViewState:
             hours, erlo_m.time_unit()
         ).value()
 
-        # our pk models are defined in g
-        amount_multiplier = 1
+        if self._compartment is None:
+            raise RuntimeError(
+                'Need to call set_administration before set_dosing_events'
+            )
 
-        # convert to model time unit
-        self._dosing_events = [
-            (amount_multiplier * e[0],
-             time_multiplier * e[1],
-             time_multiplier * e[2])
-            for e in dosing_events
-        ]
+        amount_var = 'central.drug_amount'
+        for v in erlo_m.simulator._model.variables(state=True):
+            if self._compartment + '.' in v.qname():
+                amount_var = v
 
-        # try to intelligently chose an integration period
-        # based on the dosing events
-        min_time = 0
-        max_time = 30
-        time_scale = 15  # TODO base this on something!
-        if len(self._dosing_events) > 0:
-            # if doses, base it on the last start time and duration
-            # plus some timescale
-            e0 = self._dosing_events[-1]
-            max_time = e0[1] + e0[2] + time_scale
-        if len(self._dosing_events) > 1:
-            # if more than two doses, use the distance between them
-            # as the timescale
-            e0 = self._dosing_events[-2]
-            e1 = self._dosing_events[-1]
-            time_scale = e1[1] - e0[1]
-            max_time = e1[1] + e1[2] + time_scale
-        self._times = np.linspace(
-            min_time, max_time, num=self._times_num
-        )
+        # our dosing amounts are in grams
+        grams = myokit.Unit.parse_simple('g')
+        amount_multiplier = myokit.Unit.conversion_factor(
+            grams, amount_var.unit()
+        ).value()
+
+        # convert to model time and amount units, change amounts to a dose rate
+        self._dosing_events = []
+        for e in dosing_events:
+            if e[2] == 0:
+                self._dosing_events.append(
+                    (amount_multiplier * e[0] / 0.01,
+                     time_multiplier * e[1],
+                     0.01)
+                )
+            else:
+                self._dosing_events.append(
+                    (amount_multiplier * e[0] / (time_multiplier * e[2]),
+                     time_multiplier * e[1],
+                     time_multiplier * e[2])
+                )
+
+        if time_max is not None:
+            # set times to be time_max after the last dosing event
+            if len(self._dosing_events) > 0:
+                # if doses, base it on the last start time and duration
+                # plus some timescale
+                e0 = self._dosing_events[-1]
+                final_time = e0[1] + e0[2] + time_max
+            self._times = np.linspace(
+                0, final_time, num=self._times_num
+            )
 
     def set_multiple_models(self, value):
         self._multiple_models = value
@@ -391,6 +401,33 @@ class ModelViewState:
             n_traces = len(fig._fig.data)
             model_traces[i] = n_traces - 1
         fig.set_axis_labels('Time (h)', 'Biomarker')
+        fig._fig.update_layout(
+            updatemenus=[
+                # Button for linear versus log scale
+                dict(
+                    type="buttons",
+                    direction="left",
+                    buttons=list([
+                        dict(
+                            args=[{"yaxis.type": "linear"}],
+                            label="Linear y-scale",
+                            method="relayout"
+                        ),
+                        dict(
+                            args=[{"yaxis.type": "log"}],
+                            label="Log y-scale",
+                            method="relayout"
+                        )
+                    ]),
+                    pad={"r": 0, "t": -10},
+                    showactive=True,
+                    x=1.0,
+                    xanchor="right",
+                    y=1.15,
+                    yanchor="top"
+                ),
+            ]
+        )
         self._model_traces = model_traces
         return fig
 
@@ -618,7 +655,7 @@ class ModelViewState:
 
         return param_names
 
-    def add_model(self, sbml, name, is_pk=False, use=False):
+    def add_model(self, sbml, name, time_max=30, is_pk=False, use=False):
         """
         Adds a sbml model to the application.
 
@@ -640,6 +677,11 @@ class ModelViewState:
             erlo_m = erlo.MechanisticModel(sbml)
         except myokit.formats.sbml._parser.SBMLParsingError:
             return
+
+        if time_max > self._times[-1]:
+            self._times = np.linspace(
+                start=0, stop=time_max, num=self._times_num
+            )
 
         self._parameters.append([
             erlo_m._default_values[n] for n in erlo_m.parameters()

@@ -30,7 +30,9 @@ def create_model_view_state(model, project):
     if is_pk:
         state.add_model(
             model.pharmacokinetic_model.sbml,
-            model.pharmacokinetic_model.name, is_pk=is_pk, use=True
+            model.name,
+            time_max=model.pharmacokinetic_model.time_max,
+            is_pk=is_pk, use=True
         )
         state.set_administration(
             model.dose_compartment,
@@ -40,11 +42,12 @@ def create_model_view_state(model, project):
             (d.amount, d.start_time, d.duration)
             for d in Dose.objects.filter(protocol=model.protocol)
         ]
-        state.set_dosing_events(events)
+        state.set_dosing_events(events, time_max=model.time_max)
     elif is_pkpd:
         state.add_model(
-            model.sbml,
-            model.name, is_pk=True, use=True
+            model.sbml, model.name,
+            time_max=model.time_max,
+            is_pk=True, use=True
         )
         state.set_administration(
             model.dose_compartment,
@@ -54,10 +57,14 @@ def create_model_view_state(model, project):
             (d.amount, d.start_time, d.duration)
             for d in Dose.objects.filter(protocol=model.protocol)
         ]
-        state.set_dosing_events(events)
+        state.set_dosing_events(events, time_max=None)
 
     else:
-        state.add_model(model.sbml, model.name, is_pk=is_pk, use=True)
+        state.add_model(
+            model.sbml, model.name,
+            time_max=model.time_max,
+            is_pk=is_pk, use=True
+        )
 
     # add datasets
     if project is None:
@@ -134,7 +141,7 @@ class PharmacodynamicModelCreate(CreateView):
 
 class PharmacodynamicModelUpdate(UpdateView):
     model = PharmacodynamicModel
-    fields = ['name', 'description', 'sbml']
+    fields = ['name', 'description', 'sbml', 'time_max']
     template_name = 'pd_model_form.html'
 
 
@@ -147,7 +154,7 @@ class PharmacodynamicModelDeleteView(DeleteView):
 class DosedPharmacokineticModelDetail(LoginRequiredMixin, DetailView):
     template_name = 'dosed_pharmacokinetic_detail.html'
     fields = [
-        'pharmacokinetic_model', 'dose_compartment', 'protocol',
+        'pharmacokinetic_model', 'dose_compartment', 'protocol', 'time_max'
     ]
     model = DosedPharmacokineticModel
 
@@ -191,7 +198,7 @@ class DosedPharmacokineticModelUpdate(LoginRequiredMixin, UpdateView):
 class PkpdModelDetail(LoginRequiredMixin, DetailView):
     template_name = 'pkpd_model_detail.html'
     fields = [
-        'name', 'sbml', 'dose_compartment', 'protocol',
+        'name', 'sbml', 'dose_compartment', 'protocol', 'time_max',
     ]
     model = PkpdModel
 

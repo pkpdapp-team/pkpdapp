@@ -31,7 +31,7 @@ class CreateNewProtocol(forms.ModelForm):
         model = Protocol
 
     dose_amount = forms.FloatField(
-        initial=0.0,
+        initial=1.0,
         help_text=Dose._meta.get_field('amount').help_text,
     )
     protocol_start_time = forms.FloatField(
@@ -39,7 +39,7 @@ class CreateNewProtocol(forms.ModelForm):
         help_text='Start time of the treatment, in hours',
     )
     dose_duration = forms.FloatField(
-        initial=0.01,
+        initial=0.0,
         help_text=Dose._meta.get_field('duration').help_text,
     )
     dose_period = forms.FloatField(
