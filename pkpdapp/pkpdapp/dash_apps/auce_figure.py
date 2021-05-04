@@ -107,8 +107,6 @@ def update_figure(dataset, fig, time_selection, y_selection, class1_selection,
         else:
             class2 = concentration_data[class2_selection].unique()
 
-        print('update_figure', concentration, class2)
-
         for index_class2, class2_selected in enumerate(class2):
 
             class2_data = concentration_data.loc[
@@ -190,9 +188,6 @@ def update_figure(dataset, fig, time_selection, y_selection, class1_selection,
                         color=colors[index_class2]
                     )
                 ))
-    print('yaxis_title', class1_plot_selection)
-    print('yaxis_type', yaxis_type_selection)
-    print('xaxis_type', xaxis_type_selection)
     fig.update_layout(
         autosize=True,
         xaxis_title='Time in hours',
@@ -284,8 +279,6 @@ def compute_auce_vs_concentration(dataset,
 def auce_fit(auce_vs_concentration_fig, auce_conc_fit_type, auce_y_axis_type,
              auce_x_axis_type, class2_selection, class2_selected,
              index_class2, concentrations, auce_vs_concentration_data):
-
-    print('aucefit', concentrations)
 
     if auce_conc_fit_type == 'Sigmoid' and len(concentrations) >= 4:
         p0 = [

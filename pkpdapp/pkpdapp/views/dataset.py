@@ -10,7 +10,7 @@ from pkpdapp.models import (
     Dataset, Biomarker, BiomarkerType, Protocol, Subject
 )
 from ..forms import CreateNewDataset, UpdateBiomarkerType
-from pkpdapp.dash_apps.simulation import PDSimulationApp
+from pkpdapp.dash_apps.data_view import DataViewState
 import pandas as pd
 from django.forms import formset_factory
 from django.shortcuts import redirect
@@ -19,16 +19,13 @@ from django.views.generic import (
     UpdateView, DeleteView,
     ListView
 )
-from dash.dependencies import Input, Output
-import dash
 
 
 BASE_FILE_UPLOAD_ERROR = 'FILE UPLOAD FAILED: '
 
 
-def create_visualisation_app(dataset):
-    # create dash app
-    app = PDSimulationApp(name='dataset_view')
+def create_data_view_state(dataset):
+    state = DataViewState()
 
     # add datasets
     biomarker_types = BiomarkerType.objects.filter(dataset=dataset)
@@ -56,42 +53,7 @@ def create_visualisation_app(dataset):
 
         state.add_data(df, dataset.name, biomarker_units, use=True)
 
-    # generate dash app
-    app.set_layout()
-
-    # we need slider ids for callback, count the number of parameters for
-    # each model so we know what parameter in the list corresponds to which
-    # model
-    sliders = app.slider_ids()
-    n_params = [len(s) for s in sliders]
-    offsets = [0]
-    for i in range(1, len(n_params)):
-        offsets.append(offsets[i - 1] + n_params[i])
-
-    # Define simulation callbacks
-    @app.app.callback(
-        Output('fig', 'figure'),
-        [Input('biomarker-select', 'value')])
-    def update_simulation(*args):
-        """
-        if the models, datasets or biomarkers are
-        changed then regenerate the figure entirely
-
-        if a slider is moved, determine the relevent model based on the id
-        name, then update that particular simulation
-        """
-        ctx = dash.callback_context
-        cid = None
-        if ctx.triggered:
-            cid = ctx.triggered[0]['prop_id'].split('.')[0]
-
-        if cid == 'biomarker-select':
-            app.set_used_biomarker(args[-1])
-            return app.create_figure()
-
-        return app._fig._fig
-
-    return app
+    return state
 
 
 class DatasetDetailView(DetailView):
@@ -101,7 +63,10 @@ class DatasetDetailView(DetailView):
 
     def get(self, request, *args, **kwargs):
         dataset = self.get_object()
-        self._visualisation_app = create_visualisation_app(dataset)
+        session = request.session
+        session['django_plotly_dash'] = {
+            'data_view': create_data_view_state(dataset).to_json()
+        }
         return super().get(request)
 
     def get_context_data(self, **kwargs):

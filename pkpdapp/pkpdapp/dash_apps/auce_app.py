@@ -96,7 +96,6 @@ def update_nca_auce_options(dataset_dropdown, session_state=None):
     state = rehydrate_state(session_state)
     state._selected_dataset = dataset_dropdown
     biomarkers = state._get_biomarkers()
-    print('update_options', biomarkers, biomarkers[0])
     return biomarkers, biomarkers[0]['value']
 
 
@@ -112,7 +111,6 @@ def update_nca_auce_options(dataset_dropdown, session_state=None):
 )
 def update_auce(auce_biomarker_dropdown, dataset_dropdown,
                 session_state=None):
-    print('update_auce', auce_biomarker_dropdown)
     state = rehydrate_state(session_state)
     state._selected_dataset = dataset_dropdown
     return state.generate_auce_figures(auce_biomarker_dropdown)
@@ -132,7 +130,6 @@ class AuceState:
         self._auce_biomarker = None
 
     def add_datasets(self, datasets, dataset_names):
-        print('add_datasets', dataset_names)
         # handle empty datasets
         if not datasets:
             return

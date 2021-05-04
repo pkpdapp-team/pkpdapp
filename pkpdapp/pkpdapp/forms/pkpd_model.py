@@ -8,7 +8,7 @@ from django import forms
 from django.utils.translation import gettext as _
 from pkpdapp.models import (
     DosedPharmacokineticModel, PharmacodynamicModel,
-    PharmacokineticModel, PkpdModel,
+    PkpdModel,
     Project, Protocol, Dataset,
 )
 import myokit.formats.sbml as sbml
