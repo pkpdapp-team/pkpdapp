@@ -10,7 +10,6 @@ import dash_html_components as html
 import pkpdapp.erlotinib as erlo
 import plotly.graph_objects as go
 import django_plotly_dash as dpd
-import numpy as np
 import pandas as pd
 from dash.dependencies import Input, Output
 import dash

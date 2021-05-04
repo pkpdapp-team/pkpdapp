@@ -337,6 +337,7 @@ class TestPharmodynamicModelView(TestCase):
                 'description': 'update description',
                 'model_type': 'PK',
                 'sbml': 'test',
+                'time_max': 30,
             },
             follow=True
         )
@@ -364,6 +365,7 @@ class TestPharmodynamicModelView(TestCase):
                 'description': 'add description',
                 'model_type': 'PK',
                 'sbml': file,
+                'time_max': 30,
             },
             follow=True
         )
@@ -413,6 +415,7 @@ class TestPharmodynamicModelView(TestCase):
                 'description': 'add description',
                 'model_type': 'PK',
                 'sbml': file,
+                'time_max': 30,
             },
             follow=True
         )

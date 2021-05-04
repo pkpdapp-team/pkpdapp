@@ -67,6 +67,7 @@ app.layout = dbc.Container(id='container', children=[
                     style={'height': '550px'}
                 )
             ],
+            width=9,
         ),
         dbc.Col(id='sliders', children=[],
                 width=3, style={'marginTop': '5em'})
@@ -317,13 +318,21 @@ class ModelViewState:
             grams, amount_var.unit()
         ).value()
 
-        # convert to model time unit
-        self._dosing_events = [
-            (amount_multiplier * e[0],
-             time_multiplier * e[1],
-             time_multiplier * e[2])
-            for e in dosing_events
-        ]
+        # convert to model time and amount units, change amounts to a dose rate
+        self._dosing_events = []
+        for e in dosing_events:
+            if e[2] == 0:
+                self._dosing_events.append(
+                    (amount_multiplier * e[0] / 0.01,
+                     time_multiplier * e[1],
+                     0.01)
+                )
+            else:
+                self._dosing_events.append(
+                    (amount_multiplier * e[0] / (time_multiplier * e[2]),
+                     time_multiplier * e[1],
+                     time_multiplier * e[2])
+                )
 
         if time_max is not None:
             # set times to be time_max after the last dosing event

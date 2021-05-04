@@ -16,7 +16,7 @@ def load_units(apps, schema_editor):
         {'symbol': 'g'},
         {'symbol': 'cm^3'},
         {'symbol': 'ng/mL'},
-        {'symbol': '10^6/mcL'},
+        {'symbol': '1/mL'},
     ]
 
     units = [
@@ -42,9 +42,15 @@ def load_units(apps, schema_editor):
         },
         {
             'symbol': '10^3/mcL',
-            'standard_unit': '10^6/mcL',
+            'standard_unit': '1/mL',
+            'multiplier': 1,
+        },
+        {
+            'symbol': '10^6/mcL',
+            'standard_unit': '1/mL',
             'multiplier': 1e-3,
         },
+
     ]
 
     for u in standard_units:

@@ -293,7 +293,7 @@ def load_datasets(apps, schema_editor):
                 BIOMARKER_TYPE_COLUMN = 13
                 SUBJECT_ID_COLUMN = 2
                 DOSE_GROUP_COLUMN = None
-                DOSE_COLUMN = 1
+                DOSE_COLUMN = 8
                 COMPOUND_COLUMN = 0
                 SUBJECT_GROUP_COLUMN = None
             else:
@@ -357,7 +357,11 @@ def load_datasets(apps, schema_editor):
                         value=unit.multiplier * value,
                         biomarker_type=bt
                     )
-                elif DOSE_COLUMN and row[VALUE_COLUMN] == '.':
+                elif (
+                    DOSE_COLUMN and
+                    row[VALUE_COLUMN] == '.' and
+                    row[DOSE_COLUMN] != '.'
+                ):
                     compound_str = row[COMPOUND_COLUMN]
                     try:
                         compound = Compound.objects.get(name=compound_str)

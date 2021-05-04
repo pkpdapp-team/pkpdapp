@@ -23,11 +23,9 @@ class Dose(models.Model):
         help_text='amount of compound administered, in grams'
     )
     duration = models.FloatField(
-        default=0.01,
+        default=0.0,
         help_text=(
-            'Duration of dose administration. '
-            'For a bolus injection, a dose duration of 1% '
-            'of the time unit should suffice. By default the '
-            'duration is set to 0.01 (bolus).'
+            'Duration of dose administration in hours. '
+            'For a bolus injection, set a dose duration of 0.'
         )
     )
