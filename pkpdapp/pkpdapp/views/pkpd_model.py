@@ -222,6 +222,9 @@ class PkpdModelCreate(LoginRequiredMixin, CreateView):
         kwargs = super().get_form_kwargs()
         if 'project' in self.kwargs:
             kwargs['project'] = self.kwargs['project']
+        else:
+            kwargs['project'] = self.request.user.profile.selected_project.id
+
         return kwargs
 
 
@@ -230,15 +233,14 @@ class PkpdModelUpdate(LoginRequiredMixin, UpdateView):
     model = PkpdModel
     form_class = CreateNewPkpdModel
 
-    def get(self, request, *args, **kwargs):
-        session = request.session
-        session['django_plotly_dash'] = {
-            'model_view': create_model_view_state(
-                self.get_object(),
-                self.request.user.profile.selected_project
-            ).to_json()
-        }
-        return super().get(request)
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        if 'project' in self.kwargs:
+            kwargs['project'] = self.kwargs['project']
+        else:
+            kwargs['project'] = self.request.user.profile.selected_project.id
+        return kwargs
+
 
 
 class PharmacokineticModelDetail(DetailView):

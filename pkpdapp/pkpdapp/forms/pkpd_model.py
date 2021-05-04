@@ -8,7 +8,7 @@ from django import forms
 from django.utils.translation import gettext as _
 from pkpdapp.models import (
     DosedPharmacokineticModel, PharmacodynamicModel,
-    PkpdModel,
+    PharmacokineticModel, PkpdModel,
     Project, Protocol, Dataset,
 )
 import myokit.formats.sbml as sbml
@@ -131,6 +131,32 @@ class CreateNewDosedPharmokineticModel(forms.ModelForm):
             'name', 'pharmacokinetic_model', 'dose_compartment',
             'protocol', 'time_max'
         ]
+
+    dose_compartment = forms.ChoiceField(
+        choices=[
+            (s, s) for s in ['central', 'peripheral', 'peripheral2']
+        ]
+    )
+
+    def clean(self):
+        """Check if dose compartment exists in model."""
+        cleaned_data = super().clean()
+        model = cleaned_data.get("pharmacokinetic_model")
+        dose_compartment = cleaned_data.get("dose_compartment")
+        pk_model = PharmacokineticModel.objects.get(name=model)
+        myokit_model = sbml.SBMLParser().parse_string(
+            pk_model.sbml
+        ).myokit_model()
+        compartment_names = [
+            c.name() for c in myokit_model.components()
+        ]
+        if dose_compartment not in compartment_names:
+            raise forms.ValidationError((
+                'Compartment "{}" does not exist in the '
+                'Pharmacokinetic Model "{}"'.format(
+                    dose_compartment, pk_model
+                )
+            ))
 
     def save(self, commit=True):
         instance = super().save()

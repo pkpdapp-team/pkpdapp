@@ -58,6 +58,23 @@ copyright notice and full license details.
             </li>
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                Protocols
+              </a>
+              <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                {% for p in current_project.protocols.all %}
+                <a class="dropdown-item" 
+                  href={% url 'protocol-detail' p.id %}>
+                  {{p.name}}
+                </a>
+                {% endfor %}
+                <a class="dropdown-item" 
+                  href="{% url 'protocol-add-to-project' current_project.id %}"> 
+                  Create protocol... 
+                </a>
+              </div>
+            </li>
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                 PD Models
               </a>
               <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">

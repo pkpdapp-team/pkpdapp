@@ -100,7 +100,7 @@ urlpatterns = [
     path('project/<int:pk>/update/',
          views.ProjectUpdate.as_view(),
          name='project-update'),
-    path('project/<int:project>/',
+    path('project/<int:pk>/',
          views.ProjectDetailView.as_view(),
          name='project-detail'),
     path('project/<int:pk>/delete/',
