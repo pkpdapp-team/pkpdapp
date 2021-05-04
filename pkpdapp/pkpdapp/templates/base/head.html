@@ -110,17 +110,8 @@ copyright notice and full license details.
         </ul>
         <ul class="navbar-nav my-2 my-lg-0">
             {% if user.is_authenticated %}
-            <li class="nav-item mr-2">
-              <div class="form-inline">
-                <label for="projectSelect"><a href="{% url 'project-detail' current_project.id %}">Project:</a></label>
-                <select class="form-control mx-2" id="projectSelect">
-                  <option selected>{{ current_project.name }}</option>
-
-                  {% for p in user.project_set.all %}
-                  <option>{{ p.name }}</option>
-                  {% endfor %}
-                </select>
-              </div>
+            <li class="nav-item mr-4">
+              Current project: <span class="font-weight-bold">{{ current_project.name }}</span>
             </li>
             {% endif %}
             <li class="nav-item">

@@ -234,30 +234,6 @@ class TestDatasetView(TestCase):
         new_dataset = Dataset.objects.get(id=self.test_dataset.id)
         self.assertEquals(new_dataset.name, 'updated name')
 
-    def test_add_form(self):
-        response = self.client.get(
-            reverse('dataset-add')
-        )
-        self.assertEquals(response.status_code, HTTPStatus.OK)
-        self.assertTemplateUsed(response, 'dataset_form.html')
-
-        response = self.client.post(
-            reverse('dataset-add'),
-            data={
-                'name': 'add name',
-                'description': 'add description',
-            },
-            follow=True
-        )
-        self.assertEquals(response.status_code, HTTPStatus.OK)
-
-        new_dataset = Dataset.objects.get(name='add name')
-
-        self.assertRedirects(
-            response,
-            reverse('dataset-detail', args=[new_dataset.id])
-        )
-
     def test_delete_form(self):
         response = self.client.get(
             reverse('dataset-delete', args=[self.test_dataset2.id])

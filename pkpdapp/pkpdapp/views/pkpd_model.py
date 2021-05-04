@@ -242,7 +242,6 @@ class PkpdModelUpdate(LoginRequiredMixin, UpdateView):
         return kwargs
 
 
-
 class PharmacokineticModelDetail(DetailView):
     model = PharmacokineticModel
     template_name = 'pk_model_detail.html'
