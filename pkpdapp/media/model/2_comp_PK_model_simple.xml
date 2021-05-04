@@ -1,0 +1,175 @@
+<sbml version="2" level="3" xmlns="http://www.sbml.org/sbml/level3/version2/core">
+<model name="PK Model 1065667" substanceUnits="substance" timeUnits="time" volumeUnits="volume" areaUnits="area" lengthUnits="length" extentUnits="substance">
+
+<listOfUnitDefinitions>
+
+     <unitDefinition id="length" name="length">
+        <listOfUnits>
+          <unit kind="metre" exponent="1" scale="0" multiplier="1"/>
+        </listOfUnits>
+      </unitDefinition>
+      <unitDefinition id="area" name="area">
+        <listOfUnits>
+          <unit kind="metre" exponent="2" scale="0" multiplier="1"/>
+        </listOfUnits>
+      </unitDefinition>
+      <unitDefinition id="time" name="time">
+        <listOfUnits>
+          <unit kind="second" exponent="1" scale="0" multiplier="1"/>
+        </listOfUnits>
+      </unitDefinition>
+      <unitDefinition id="hour" name="hour">
+        <listOfUnits>
+          <unit kind="second" exponent="1" scale="0" multiplier="3600"/>
+        </listOfUnits>
+      </unitDefinition>
+      <unitDefinition id="substance" name="substance">
+        <listOfUnits>
+
+		<unit kind="mole" exponent="1" scale="0" multiplier="1"/>
+
+        </listOfUnits>
+      </unitDefinition>
+
+<unitDefinition id="per_hr">
+<listOfUnits>
+ <unit kind="second" exponent="-1" scale="0" multiplier="3600"/>
+ </listOfUnits>
+</unitDefinition>
+
+<unitDefinition id="volume" name="volume">
+	<listOfUnits>
+		<unit kind="litre" exponent="1" scale="-3" multiplier="1"/>
+	</listOfUnits>
+</unitDefinition>
+
+<unitDefinition id="ng_per_mL">
+<listOfUnits>
+<unit kind="gram" exponent="1" scale="-9" multiplier="1"/>
+<unit kind="litre" exponent="-1" scale="-3" multiplier="1"/>
+ </listOfUnits>
+ </unitDefinition>
+
+</listOfUnitDefinitions>
+
+
+
+
+<listOfCompartments>
+
+
+      <compartment id="IV" name="IV" spatialDimensions="3" size="1" constant="true">
+      </compartment>
+      <compartment id="central" name="central" spatialDimensions="3" size="60" constant="true">
+      </compartment>
+      <compartment id="peripheral" name="peripheral" spatialDimensions="3" size="45" constant="true">
+      </compartment>
+
+</listOfCompartments>
+
+<listOfSpecies>
+
+<species id="Agi" name="Agi" compartment="IV" initialConcentration="20" substanceUnits="substance" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false">
+</species>
+
+<species id="A1" name="A1" compartment="central" initialConcentration="0" substanceUnits="substance" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false">
+</species>
+
+<species id="A2" name="A2" compartment="peripheral" initialConcentration="0" substanceUnits="substance" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false">
+</species>
+
+</listOfSpecies>
+
+
+<listOfParameters>
+
+      <parameter id="k10" name="k10" value="0.555" constant="true" units="per_hr">
+      </parameter>
+      <parameter id="ka" name="ka" value="0.8" constant="true" units="per_hr">
+      </parameter>
+      <parameter id="k12" name="k12" value="0.898" constant="true" units="per_hr">
+      </parameter>
+      <parameter id="k21" name="k21" value="0.634" constant="true" units="per_hr">
+      </parameter>
+
+
+</listOfParameters>
+
+
+
+<listOfReactions>
+
+      <reaction id="intravenous" name="intravenous" reversible="false">
+        <listOfReactants>
+          <speciesReference species="Agi" constant="true"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="A1" constant="true"/>
+        </listOfProducts>
+        <kineticLaw>
+		<math xmlns="http://www.w3.org/1998/Math/MathML">
+			<apply>
+				<times/>
+				<ci>ka</ci>
+				<ci>Agi</ci>
+			</apply>
+		</math>
+	</kineticLaw>
+	</reaction>
+
+      <reaction id="Central_to_Peripheral" name="Central_to_Peripheral" reversible="false">
+        <listOfReactants>
+          <speciesReference species="A1" constant="true"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="A2" constant="true"/>
+        </listOfProducts>
+        <kineticLaw>
+		<math xmlns="http://www.w3.org/1998/Math/MathML">
+			<apply>
+				<times/>
+				<ci>k12</ci>
+				<ci>A1</ci>
+			</apply>
+		</math>
+	</kineticLaw>
+	</reaction>
+
+      <reaction id="Peripheral_to_Central" name="Peripheral_to_Central" reversible="false">
+        <listOfReactants>
+          <speciesReference species="A2" constant="true"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="A1" constant="true"/>
+        </listOfProducts>
+        <kineticLaw>
+		<math xmlns="http://www.w3.org/1998/Math/MathML">
+			<apply>
+				<times/>
+				<ci>k21</ci>
+				<ci>A2</ci>
+			</apply>
+		</math>
+	</kineticLaw>
+	</reaction>
+
+      <reaction id="elimination" name="elimination" reversible="false">
+        <listOfReactants>
+          <speciesReference species="A1" constant="true"/>
+        </listOfReactants>
+        <kineticLaw>
+		<math xmlns="http://www.w3.org/1998/Math/MathML">
+			<apply>
+				<times/>
+				<ci>k10</ci>
+				<ci>A1</ci>
+			</apply>
+		</math>
+	</kineticLaw>
+	</reaction>
+
+
+</listOfReactions>
+
+</model>
+</sbml>

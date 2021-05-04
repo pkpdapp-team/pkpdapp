@@ -10,13 +10,11 @@ copyright notice and full license details.
 {% load plotly_dash %}
 
 {% block main_content %}
-<div class="container">
-<h2>PkpdModel {{object.name}}</h2>
+<h2>Pharmacodynamic Model {{object.name}}</h2>
 (<a href="{% url 'pd_model-update' object.id %}"> Update </a>)
 {{object.description|markdownify}}
 {% plotly_app_bootstrap name="model_view" aspect="4by3"%}
 <h3>SBML</h3>
 <pre>{{object.sbml}}</pre>
 <ul>
-</div>
 {% endblock %}

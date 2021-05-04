@@ -32,12 +32,42 @@ app.layout = dbc.Container(id='container', children=[
     dbc.Row([
         dbc.Col(
             children=[
+                html.Label('Compare with dataset:'),
+                dcc.Dropdown(
+                    id='data-select',
+                )
+            ],
+            width=3,
+        ),
+        dbc.Col(
+            children=[
+                html.Label('Use dataset biomarker:'),
+                dcc.Dropdown(
+                    id='biomarker-select',
+                )
+            ],
+            width=3,
+        ),
+        dbc.Col(
+            children=[(
+                'Model outputs with compatible units '
+                'will be converted to match the chosen '
+                'biomarker units'
+            )],
+            width=3,
+        ),
+
+    ]),
+    dbc.Row([
+        dbc.Col(
+            children=[
                 dcc.Graph(
                     figure=go.Figure(),
                     id='fig',
                     style={'height': '550px'}
                 )
             ],
+            width=9,
         ),
         dbc.Col(id='sliders', children=[],
                 width=3, style={'marginTop': '5em'})
@@ -45,44 +75,67 @@ app.layout = dbc.Container(id='container', children=[
 ], fluid=True, style={'height': '90vh'})
 
 
+def rehydrate_state(session_state):
+    if session_state is None:
+        raise NotImplementedError("Cannot handle a missing session state")
+
+    state = session_state.get('model_view', None)
+
+    if state is None:
+        raise NotImplementedError('ModelViewState missing in session state')
+
+    return ModelViewState.from_json(state)
+
+
+@app.callback(
+    Output('data-select', 'options'),
+    [Input('container', 'style')],
+)
+def update_data_options(_, session_state=None):
+    state = rehydrate_state(session_state)
+    return state.dataset_dropdown_options()
+
+
 @app.callback(
     Output('sliders', 'children'),
     [Input('container', 'style')],
 )
 def update_sliders(_, session_state=None):
-    if session_state is None:
-        raise NotImplementedError("Cannot handle a missing session state")
-
-    state = session_state.get('model_view', None)
-
-    if state is None:
-        raise NotImplementedError('DataViewState missing in session state')
-
-    state = ModelViewState.from_json(state)
+    state = rehydrate_state(session_state)
     return state._create_sliders_component()
 
 
 @app.callback(
     Output('fig', 'figure'),
-    Input({'type': 'slider', 'index': ALL}, 'value')
+    [
+        Input({'type': 'slider', 'index': ALL}, 'value'),
+        Input('biomarker-select', 'value'),
+        Input('data-select', 'value'),
+    ]
 )
-def update_simulation(sliders, session_state=None):
+def update_figure(sliders, biomarker_select, data_select, session_state=None):
     """
     if any sliders are changed then regenerate the figure entirely
     """
-    if session_state is None:
-        raise NotImplementedError("Cannot handle a missing session state")
-
-    state = session_state.get('model_view', None)
-
-    if state is None:
-        raise NotImplementedError('DataViewState missing in session state')
-
-    state = ModelViewState.from_json(state)
-
+    state = rehydrate_state(session_state)
     model_index = 0
+
+    state.set_used_biomarker(biomarker_select)
+    state.set_used_datasets([data_select])
     parameters = sliders[:len(state._parameters[model_index])]
     return state.update_simulation(model_index, parameters)
+
+
+@app.callback(
+    Output('biomarker-select', 'options'),
+    [
+        Input('data-select', 'value'),
+    ])
+def update_biomarker_options(data_select, session_state=None):
+    state = rehydrate_state(session_state)
+    state.set_used_datasets([data_select])
+    options = state.biomarker_dropdown_options()
+    return options
 
 
 class ModelViewState:
@@ -92,6 +145,7 @@ class ModelViewState:
     _id_key = 'ID'
     _time_key = 'Time'
     _biom_key = 'Biomarker'
+    _unit_key = 'BiomarkerUnit'
     _meas_key = 'Measurement'
     _times_num = 100
 
@@ -106,13 +160,17 @@ class ModelViewState:
         self._parameters = []
         self._parameter_names = []
         self._n_states = []
-        self._times = np.linspace(
-            start=0, stop=30, num=self._times_num
-        )
+        self._times = np.array([0.0])
 
         self._direct = True
-        self._compartment = 'central'
+        self._compartment = None
         self._dosing_events = []
+
+        self._datasets = []
+        self._use_datasets = []
+        self._dataset_names = []
+        self._data_biomarkers = []
+        self._use_biomarkers = None
 
     def to_json(self):
         return json.dumps({
@@ -128,6 +186,11 @@ class ModelViewState:
             '_direct': self._direct,
             '_compartment': self._compartment,
             '_dosing_events': self._dosing_events,
+            '_datasets': [d.to_dict() for d in self._datasets],
+            '_use_datasets': self._use_datasets,
+            '_dataset_names': self._dataset_names,
+            '_data_biomarkers': self._data_biomarkers,
+            '_use_biomarkers': self._use_biomarkers,
         })
 
     @classmethod
@@ -146,7 +209,48 @@ class ModelViewState:
         o._direct = data_dict['_direct']
         o._compartment = data_dict['_compartment']
         o._dosing_events = data_dict['_dosing_events']
+        o._datasets = [
+            pd.DataFrame.from_dict(d) for d in data_dict['_datasets']
+        ]
+        o._use_datasets = data_dict['_use_datasets']
+        o._dataset_names = data_dict['_dataset_names']
+        o._data_biomarkers = data_dict['_data_biomarkers']
+        o._use_biomarkers = data_dict['_use_biomarkers']
+
         return o
+
+    def set_used_datasets(self, value):
+        """
+        set dataset indices that will be used
+        """
+        self._use_datasets = value
+
+    def set_used_biomarker(self, value):
+        """
+        set biomarker that will be used
+        """
+        self._use_biomarkers = value
+
+    def dataset_dropdown_options(self):
+        """
+        create selects for model, dataset and biomarkers up the top of the dash
+        app
+        """
+        return [
+            {
+                'label': name,
+                'value': i
+            } for i, name in enumerate(self._dataset_names)
+        ]
+
+    def biomarker_dropdown_options(self):
+        return [
+            {
+                'label': '{} ({})'.format(name, unit),
+                'value': name
+            } for name, unit in
+            self._data_biomarkers[self._use_datasets[0]].items()
+        ]
 
     def set_administration(self, compartment, direct=True):
         r"""
@@ -166,35 +270,80 @@ class ModelViewState:
         """
         self._compartment = compartment
         self._direct = direct
+        for i in range(len(self._models)):
+            if not self._is_pk[i]:
+                continue
+            model_sbml = self._models[i]
+            erlo_m = self._convert_to_erlo_model(
+                model_sbml, True
+            )
+            self._parameter_names[i] = \
+                self._get_parameter_names(erlo_m)
 
-    def set_dosing_events(self, dosing_events):
+            self._parameters[i] = [
+                erlo_m._default_values[n] for n in erlo_m.parameters()
+            ]
+            self._n_states[i] = erlo_m._n_states
+
+    def set_dosing_events(self, dosing_events, time_max=None):
         """
         Sets the dosing events, which is a list of tuples
         (d.amount, d.start_time, d.duration)
 
         """
-        self._dosing_events = dosing_events
-
-        # try to intelligently chose an integration period
-        # based on the dosing events
-        min_time = 0
-        max_time = 30
-        time_scale = 15  # TODO base this on something!
-        if len(self._dosing_events) > 0:
-            # if doses, base it on the last start time and duration
-            # plus some timescale
-            e0 = self._dosing_events[-1]
-            max_time = e0[1] + e0[2] + time_scale
-        if len(self._dosing_events) > 1:
-            # if more than two doses, use the distance between them
-            # as the timescale
-            e0 = self._dosing_events[-2]
-            e1 = self._dosing_events[-1]
-            time_scale = e1[1] - e0[1]
-            max_time = e1[1] + e1[2] + time_scale
-        self._times = np.linspace(
-            min_time, max_time, num=self._times_num
+        model_sbml = self._models[0]
+        erlo_m = self._convert_to_erlo_model(
+            model_sbml, True
         )
+
+        # get conversions
+        hours = myokit.Unit.parse_simple('h')
+        time_multiplier = myokit.Unit.conversion_factor(
+            hours, erlo_m.time_unit()
+        ).value()
+
+        if self._compartment is None:
+            raise RuntimeError(
+                'Need to call set_administration before set_dosing_events'
+            )
+
+        amount_var = 'central.drug_amount'
+        for v in erlo_m.simulator._model.variables(state=True):
+            if self._compartment + '.' in v.qname():
+                amount_var = v
+
+        # our dosing amounts are in grams
+        grams = myokit.Unit.parse_simple('g')
+        amount_multiplier = myokit.Unit.conversion_factor(
+            grams, amount_var.unit()
+        ).value()
+
+        # convert to model time and amount units, change amounts to a dose rate
+        self._dosing_events = []
+        for e in dosing_events:
+            if e[2] == 0:
+                self._dosing_events.append(
+                    (amount_multiplier * e[0] / 0.01,
+                     time_multiplier * e[1],
+                     0.01)
+                )
+            else:
+                self._dosing_events.append(
+                    (amount_multiplier * e[0] / (time_multiplier * e[2]),
+                     time_multiplier * e[1],
+                     time_multiplier * e[2])
+                )
+
+        if time_max is not None:
+            # set times to be time_max after the last dosing event
+            if len(self._dosing_events) > 0:
+                # if doses, base it on the last start time and duration
+                # plus some timescale
+                e0 = self._dosing_events[-1]
+                final_time = e0[1] + e0[2] + time_max
+            self._times = np.linspace(
+                0, final_time, num=self._times_num
+            )
 
     def set_multiple_models(self, value):
         self._multiple_models = value
@@ -218,14 +367,67 @@ class ModelViewState:
             is_pk = self._is_pk[i]
 
             # Add simulation to figure
-            result, output_names = self._simulate(parameters, model, is_pk)
-            for output in output_names:
-                fig.add_simulation(result, biom_key=output)
+            result, output_names, units = \
+                self._simulate(parameters, model, is_pk)
+            for output, unit in zip(output_names, units):
+                name = output.replace('myokit.', '')
+                y_mult = 1
+                label = name + ' ' + repr(unit)
+                if self._use_biomarkers:
+                    biomarker_unit = self._data_biomarkers[
+                        self._use_datasets[0]
+                    ][self._use_biomarkers]
+                    biomarker_unit = \
+                        myokit.parse_unit(biomarker_unit)
+                    try:
+                        y_mult = myokit.Unit.conversion_factor(
+                            unit, biomarker_unit
+                        ).value()
+                        label = name + ' ' + repr(biomarker_unit)
+                    except myokit.IncompatibleUnitError:
+                        pass
+
+                fig._fig.add_trace(
+                    go.Scatter(
+                        x=result['Time'],
+                        y=y_mult * result[output],
+                        name=label,
+                        showlegend=True,
+                        mode="lines",
+                    )
+                )
 
             # Remember index of model trace for update callback
             n_traces = len(fig._fig.data)
             model_traces[i] = n_traces - 1
-        fig.set_axis_labels('Time', 'Biomarker')
+        fig.set_axis_labels('Time (h)', 'Biomarker')
+        fig._fig.update_layout(
+            updatemenus=[
+                # Button for linear versus log scale
+                dict(
+                    type="buttons",
+                    direction="left",
+                    buttons=list([
+                        dict(
+                            args=[{"yaxis.type": "linear"}],
+                            label="Linear y-scale",
+                            method="relayout"
+                        ),
+                        dict(
+                            args=[{"yaxis.type": "log"}],
+                            label="Log y-scale",
+                            method="relayout"
+                        )
+                    ]),
+                    pad={"r": 0, "t": -10},
+                    showactive=True,
+                    x=1.0,
+                    xanchor="right",
+                    y=1.15,
+                    yanchor="top"
+                ),
+            ]
+        )
         self._model_traces = model_traces
         return fig
 
@@ -243,6 +445,7 @@ class ModelViewState:
         """
         fig = erlo.plots.PDTimeSeriesPlot(updatemenu=False)
         self._add_simulation_to_fig(fig)
+        self._add_data_to_fig(fig)
         return fig._fig
 
     def _create_sliders(self, model_index, model):
@@ -319,15 +522,13 @@ class ModelViewState:
             sbml = sbml.encode()
         if is_pk:
             erlo_m = erlo.PharmacokineticModel(sbml)
-            variables = {
-                'central': 'A1',
-                'peripheral': 'A2',
-                'peripheral2': 'A3',
-            }
+            amount_var = 'central.drug_amount'
+            for v in erlo_m.simulator._model.variables(state=True):
+                if self._compartment + '.' in v.qname():
+                    amount_var = v
             erlo_m.set_administration(
                 self._compartment, direct=self._direct,
-                amount_var='{}_amount'
-                .format(variables[self._compartment])
+                amount_var=amount_var.name()
             )
 
             erlo_m.set_dosing_events(
@@ -348,24 +549,113 @@ class ModelViewState:
             model = self._convert_to_erlo_model(sbml, is_pk)
 
             # output concentrations instead of amounts
-            outputs = [
-                n.replace('_amount', '_concentration')
-                for n in model.outputs()
-            ]
+            outputs = []
+            for v in model.simulator._model.variables(state=True):
+                name = v.qname()
+                if not name.startswith('dose'):
+                    name = name.replace('_amount', '_concentration')
+                outputs.append(name)
+
             model.set_outputs(outputs)
 
             # Solve the model
             result = model.simulate(parameters, self._times)
 
+        # get time conversion factor to hours
+        hours = myokit.Unit.parse_simple('h')
+        time_multiplier = myokit.Unit.conversion_factor(
+            model.time_unit(), hours
+        ).value()
+
         # Rearrange results into a pandas.DataFrame
-        result_df = pd.DataFrame({'Time': self._times})
+        result_df = pd.DataFrame({
+            'Time': time_multiplier * self._times
+        })
+
+        units = [
+            model.simulator._model.get(name).unit()
+            for name in model._output_names
+        ]
 
         for i, output in enumerate(model._output_names):
             result_df[output] = result[i, :]
 
-        return result_df, model._output_names
+        return result_df, model._output_names, units
 
-    def add_model(self, sbml, name, is_pk=False, use=False):
+    def _add_data_to_fig(self, fig):
+        """
+        add chosen datasets to figure
+        """
+        used_datasets = [
+            d for i, d in enumerate(self._datasets) if i in self._use_datasets
+        ]
+
+        if not used_datasets:
+            return
+
+        combined_data = pd.concat(used_datasets)
+
+        biomarker = self._use_biomarkers
+        if biomarker is not None:
+            # Add data to figure,
+            # ignore error if biomarker does not exist
+            try:
+                fig.add_data(combined_data, biomarker, self._id_key,
+                             self._time_key, self._biom_key,
+                             self._meas_key)
+            except ValueError as e:
+                print(e)
+                pass
+
+    def add_data(self, data, name, biomarkers, use=False):
+        """
+        Adds pharmacodynamic time series data of (multiple) individuals to
+        the figure.
+
+        Expects a :class:`pandas.DataFrame` with an ID, a time and a PD
+        biomarker column, and adds a scatter plot of the biomarker time series
+        to the figure. Each individual receives a unique colour.
+
+        Parameters
+        ----------
+        data
+            A :class:`pandas.DataFrame` with the time series PD data in form of
+            an ID, time, and biomarker column.
+        name
+            A str name for the dataset
+        biomarkers
+            dict with {biomarker: unit}
+        use
+            Set to True if you want this dataset to be initially chosen
+        """
+        if use:
+            self._use_datasets.append(len(self._datasets))
+        self._datasets.append(data)
+        self._dataset_names.append(name)
+        self._data_biomarkers.append(biomarkers)
+
+    def _get_parameter_names(self, erlo_m):
+        param_names = erlo_m.parameters()
+        units = [
+            repr(
+                erlo_m.simulator._model.get(n).unit()
+            )
+            for n in param_names
+        ]
+
+        for i, p in enumerate(param_names):
+            param_names[i] = p\
+                .replace('.', '_')\
+                .replace('myokit_', '')
+
+        param_names = [
+            name + ' ' + unit
+            for name, unit in zip(param_names, units)
+        ]
+
+        return param_names
+
+    def add_model(self, sbml, name, time_max=30, is_pk=False, use=False):
         """
         Adds a sbml model to the application.
 
@@ -387,14 +677,18 @@ class ModelViewState:
             erlo_m = erlo.MechanisticModel(sbml)
         except myokit.formats.sbml._parser.SBMLParsingError:
             return
-        param_names = erlo_m.parameters()
-        for i, p in enumerate(param_names):
-            param_names[i] = p.replace('.', '_')
+
+        if time_max > self._times[-1]:
+            self._times = np.linspace(
+                start=0, stop=time_max, num=self._times_num
+            )
 
         self._parameters.append([
             erlo_m._default_values[n] for n in erlo_m.parameters()
         ])
-        self._parameter_names.append(param_names)
+        self._parameter_names.append(
+            self._get_parameter_names(erlo_m)
+        )
         self._n_states.append(erlo_m._n_states)
         if use:
             self._use_models.append(len(self._models))

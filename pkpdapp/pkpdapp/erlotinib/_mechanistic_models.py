@@ -22,7 +22,6 @@ class MechanisticModel(object):
         in SBML format that specifies the model.
 
     """
-
     def __init__(self, sbml_input):
         super(MechanisticModel, self).__init__()
 
@@ -80,7 +79,6 @@ class MechanisticModel(object):
 
         # Get constant variable names and state names
         names = [var.qname() for var in model.states()]
-        # names = [n.replace('_amount', '_concentration') for n in names]
         self._state_names = sorted(names)
         self._const_names = sorted(
             [var.qname() for var in model.variables(const=True)])
@@ -153,7 +151,7 @@ class MechanisticModel(object):
                                'model.')
 
         self._output_names = list(outputs)
-        self._n_outputs = len(outputs)
+        self._n_outputs = len(self._output_names)
 
     def set_parameter_names(self, names):
         """
@@ -234,7 +232,6 @@ class PharmacodynamicModel(MechanisticModel):
         A path to the SBML model file that specifies the pharmacodynamic model.
 
     """
-
     def __init__(self, sbml_file):
         super(PharmacodynamicModel, self).__init__(sbml_file)
 
@@ -315,7 +312,6 @@ class PharmacokineticModel(MechanisticModel):
         A path to the SBML model file that specifies the pharmacokinetic model.
 
     """
-
     def __init__(self, sbml_file):
         super(PharmacokineticModel, self).__init__(sbml_file)
 
@@ -675,7 +671,6 @@ class ReducedMechanisticModel(object):
     mechanistic_model
         An instance of a :class:`MechanisticModel`.
     """
-
     def __init__(self, mechanistic_model):
         super(ReducedMechanisticModel, self).__init__()
 

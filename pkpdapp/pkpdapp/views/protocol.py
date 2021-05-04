@@ -7,7 +7,7 @@ from django.core.paginator import Paginator
 from pkpdapp.models import (
     Dose, Protocol
 )
-from pkpdapp.forms import ProtocolForm
+from ..forms import CreateNewProtocol
 from django.views.generic import (
     DetailView, CreateView,
     UpdateView, DeleteView,
@@ -17,7 +17,7 @@ from django.views.generic import (
 class ProtocolCreate(CreateView):
     model = Protocol
     template_name = 'protocol_create.html'
-    form_class = ProtocolForm
+    form_class = CreateNewProtocol
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -51,7 +51,6 @@ class ProtocolDetailView(DetailView):
 class ProtocolUpdate(UpdateView):
     model = Protocol
     template_name = 'protocol_update.html'
-    form_class = ProtocolForm
 
 
 class ProtocolDelete(DeleteView):

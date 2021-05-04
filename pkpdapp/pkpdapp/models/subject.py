@@ -18,6 +18,15 @@ class Subject(models.Model):
         Dataset, on_delete=models.CASCADE,
         help_text='dataset containing this subject'
     )
+    dose_group = models.CharField(
+        max_length=100, help_text='dosing group for this subject',
+        blank=True
+    )
+    group = models.CharField(
+        max_length=100,
+        help_text='dataset specific grouping for this subject',
+        blank=True
+    )
     metadata = JSONField(help_text='subject metadata')
 
     class Meta:
@@ -25,3 +34,6 @@ class Subject(models.Model):
             models.UniqueConstraint(fields=['id_in_dataset', 'dataset'],
                                     name='subject_dataset_unique')
         ]
+
+    def __str__(self):
+        return str(self.id_in_dataset)

@@ -9,9 +9,10 @@ from pkpdapp.models import (
 )
 
 
-class ProtocolForm(forms.ModelForm):
+class CreateNewProtocol(forms.ModelForm):
     """
-    A form to create a :model:`pkpdapp.Protocol`.
+    A form to create a new
+    :model:`pkpdapp.Protocol`.
 
     Can pass an additional kwarg 'project', which adds the new model to this
     project id
@@ -26,11 +27,11 @@ class ProtocolForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
 
     class Meta:
-        fields = ('name', )
+        fields = ('name', 'dose_type')
         model = Protocol
 
     dose_amount = forms.FloatField(
-        initial=0.0,
+        initial=1.0,
         help_text=Dose._meta.get_field('amount').help_text,
     )
     protocol_start_time = forms.FloatField(
@@ -38,7 +39,7 @@ class ProtocolForm(forms.ModelForm):
         help_text='Start time of the treatment, in hours',
     )
     dose_duration = forms.FloatField(
-        initial=0.01,
+        initial=0.0,
         help_text=Dose._meta.get_field('duration').help_text,
     )
     dose_period = forms.FloatField(
@@ -68,8 +69,6 @@ class ProtocolForm(forms.ModelForm):
         dose_period = self.cleaned_data['dose_period']
         if dose_period is None:
             dose_period = 0.0
-        if commit:
-            Dose.objects.filter(protocol=instance).delete()
         for i in range(number_of_doses):
             start_time = self.cleaned_data['protocol_start_time'] \
                 + i * dose_period

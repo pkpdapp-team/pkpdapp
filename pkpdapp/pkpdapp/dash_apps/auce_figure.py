@@ -36,9 +36,8 @@ class AuceFigure():
         self._time_key = 'Time'
         self._obs_type_key = 'Biomarker'
         self._obs_key = 'Measurement'
-        self._amount_key = 'Amount'
-        self._concentration_key = 'Amount'
-        self._compound_key = 'Compound'
+        self._dose_group_key = 'DoseGroup'
+        self._group_key = 'Group'
 
         self._fig = go.Figure()
         self._auce_vs_concentration_fig = go.Figure()
@@ -49,7 +48,7 @@ class AuceFigure():
         self._yaxis_type_selection = 'linear'  # or 'log'
         self._xaxis_type_selection = 'linear'  # or 'log'
         self._class1_selection = 'Biomarker'
-        self._class2_selection = 'Dataset'
+        self._class2_selection = 'Group'
         self._class3_selection = None
         self._class1_plot_selection = biomarker
         self._class2_plot_selection = None
@@ -60,14 +59,14 @@ class AuceFigure():
             self._dataset, self._auce_vs_concentration_fig,
             self._time_key, self._auce_fit_type, self._auce_y_axis_type,
             self._auce_y_axis_type, self._obs_key, self._class1_selection,
-            self._concentration_key, self._class2_selection,
+            self._dose_group_key, self._class2_selection,
             self._class3_selection, self._class1_plot_selection,
             self._class2_plot_selection, self._class3_plot_selection)
 
         self._fig = update_figure(
             self._dataset, self._fig,
             self._time_key, self._obs_key, self._class1_selection,
-            self._concentration_key, self._class2_selection,
+            self._dose_group_key, self._class2_selection,
             self._class3_selection, self._class1_plot_selection,
             self._concentration_plot_selection, self._class2_plot_selection,
             self._class3_plot_selection, self._yaxis_type_selection,

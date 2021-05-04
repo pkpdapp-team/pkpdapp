@@ -9,9 +9,7 @@ copyright notice and full license details.
 {% load crispy_forms_tags %}
 
 {% block main_content %}
-
-<h2>Create Protocol</h2>
-
+<h2>Update PKPD Model {{object.name}}</h2>
 <form action="" method="post"  enctype="multipart/form-data">
   {% csrf_token %}
   <table>
@@ -19,5 +17,4 @@ copyright notice and full license details.
   </table>
   <input class="btn btn-primary" type="submit" value="Submit">
 </form>
-
 {% endblock %}

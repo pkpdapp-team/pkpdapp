@@ -9,13 +9,7 @@ copyright notice and full license details.
 {% load plotly_dash %}
 
 {% block main_content %}
-<div class="container">
-  <form action="" method="post"  enctype="multipart/form-data">
-    {% csrf_token %}
-    <table>
-    {{ form.as_table }}
-    </table>
-    <input type="submit" value="Submit">
-  </form>
-</div>
+
+{% plotly_app_bootstrap name="nca_view" %}
+
 {% endblock %}

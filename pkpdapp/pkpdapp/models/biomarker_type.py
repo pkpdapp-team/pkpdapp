@@ -23,7 +23,8 @@ class BiomarkerType(models.Model):
         help_text='unit for the value stored in :model:`pkpdapp.Biomarker`'
     )
     description = models.TextField(
-        help_text='short description of the biomarker type'
+        help_text='short description of the biomarker type',
+        blank=True, null=True
     )
     dataset = models.ForeignKey(
         Dataset, on_delete=models.CASCADE,

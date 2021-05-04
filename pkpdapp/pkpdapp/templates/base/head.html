@@ -35,6 +35,9 @@ copyright notice and full license details.
                 {% for d in current_project.datasets.all %}
                 <a class="dropdown-item" href={% url 'dataset-detail' d.id %}>{{d.name}}</a>
                 {% endfor %}
+                <a class="dropdown-item" href="{% url 'dataset-create' current_project.id %}">
+                  Create dataset..
+                </a>
               </div>
             </li>
             <li class="nav-item dropdown">
@@ -45,12 +48,11 @@ copyright notice and full license details.
                 {% for m in current_project.pk_models.all %}
                 <a class="dropdown-item" 
                   href={% url 'dosed_pk_model-detail' m.id %}>
-                  {{m.pharmacokinetic_model.name}}
+                  {{m.name}}
                 </a>
                 {% endfor %}
-                <a class="dropdown-item" 
-                  href="{% url 'dosed_pk_model-add-to-project' current_project.id %}"> 
-                  Create model.. 
+                <a class="dropdown-item" href="{% url 'dosed_pk_model-add-to-project' current_project.id %}">
+                  Create model..
                 </a>
               </div>
             </li>
@@ -79,15 +81,31 @@ copyright notice and full license details.
                 {% for m in current_project.pd_models.all %}
                 <a class="dropdown-item" href={% url 'pd_model-detail' m.id %}>{{m.name}}</a>
                 {% endfor %}
-                <a class="dropdown-item" href="{% url 'pd_model-add-to-project' current_project.id %}"> 
+                <a class="dropdown-item" href="{% url 'pd_model-add-to-project' current_project.id %}">
+                  Create model..
+                </a>
+              </div>
+            </li>
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                PKPD Models
+              </a>
+              <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                {% for m in current_project.pkpd_models.all %}
+                <a class="dropdown-item" href={% url 'pkpd_model-detail' m.id %}>{{m.name}}</a>
+                {% endfor %}
+                <a class="dropdown-item" href="{% url 'pkpd_model-add-to-project' current_project.id %}"> 
                   Create model.. 
                 </a>
               </div>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="{% url 'data-analysis' %}">Data
-                  Analysis</a>
+                <a class="nav-link" href="{% url 'nca' %}">NCA</a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'auce' %}">AUCE</a>
+            </li>
+
             {% endif %}
         </ul>
         <ul class="navbar-nav my-2 my-lg-0">

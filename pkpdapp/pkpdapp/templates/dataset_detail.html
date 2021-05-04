@@ -10,15 +10,41 @@ copyright notice and full license details.
 {% load plotly_dash %}
 
 {% block main_content %}
-<div class="container">
 <h2>Dataset {{dataset.name}} (<a href="{% url 'dataset-update' dataset.id %}"> Update </a>)</h2>
 <p>{{dataset.description|markdownify}}</p>
-<h3>Biomarker Types</h2>
-<ul>
-{% for type in biomarker_types %}
-  <li>{{ type.name }}: {{ type.description|truncatewords:"10"}}</li>
-{% endfor %}
-</ul>
+<div class="row">
+    <div class="col-sm">
+      <h3>Biomarker Types</h2>
+      <ul>
+      {% for type in biomarker_types %}
+        <li>{{ type.name }}</li>
+      {% empty %}
+        None
+      {% endfor %}
+      </ul>
+    </div>
+    <div class="col-sm">
+      <h3>Dose Groups</h2>
+      <ul>
+      {% for g in dose_groups %}
+        <li>{{ g.dose_group }}</li>
+      {% empty %}
+        None
+      {% endfor %}
+      </ul>
+    </div>
+    <div class="col-sm">
+      <h3>Subject Groups</h2>
+      <ul>
+      {% for g in subject_groups %}
+        <li>{{ g.group }}</li>
+      {% empty %}
+        None
+      {% endfor %}
+      </ul>
+    </div>
+  </div>
+
 
 {% plotly_app_bootstrap name="data_view_app" aspect="16by9"%}
 
@@ -30,7 +56,7 @@ copyright notice and full license details.
   </tr>
   {% for protocol in protocols %}
   <tr>
-    <td><a href="{% url 'protocol-detail' protocol.id %}">{{ protocol.subject_id }}</a></td>
+    <td><a href="{% url 'protocol-detail' protocol.id %}">{{ protocol.subject }}</a></td>
     <td>{{ protocol.compound}}</td>
   </tr>
   {% endfor %}
@@ -51,6 +77,5 @@ copyright notice and full license details.
             <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
         {% endif %}
     </span>
-</div>
 </div>
 {% endblock %}

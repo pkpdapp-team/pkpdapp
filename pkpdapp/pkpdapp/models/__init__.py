@@ -7,12 +7,14 @@
 
 from .compound import Compound
 from .dataset import Dataset
+from .subject import Subject
 from .protocol import Protocol
 from .pkpd_model import (
     MechanisticModel,
     PharmacokineticModel,
     PharmacodynamicModel,
     DosedPharmacokineticModel,
+    PkpdModel,
 )
 from .units import StandardUnit, Unit
 from .biomarker_type import BiomarkerType
@@ -20,5 +22,4 @@ from .biomarker import Biomarker
 from .project import Project
 from .profile import Profile
 from .dose import Dose
-from .subject import Subject
 
