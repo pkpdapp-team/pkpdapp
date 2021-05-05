@@ -686,7 +686,8 @@ class ModelViewState:
         for i, p in enumerate(param_names):
             param_names[i] = p\
                 .replace('.', '_')\
-                .replace('myokit_', '')
+                .replace('myokit_', '')\
+                .replace('size', 'volume')
 
         param_names = [
             name + ' ' + unit
