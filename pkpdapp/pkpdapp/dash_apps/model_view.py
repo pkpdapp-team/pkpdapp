@@ -17,6 +17,7 @@ import json
 import threading
 import myokit
 import math
+import copy
 
 max_sliders = 20
 
@@ -278,11 +279,12 @@ class ModelViewState:
             erlo_m = self._convert_to_erlo_model(
                 model_sbml, True
             )
+            parameters = erlo_m.parameters()
             self._parameter_names[i] = \
-                self._get_parameter_names(erlo_m)
+                self._convert_parameter_names(erlo_m, parameters)
 
             self._parameters[i] = [
-                erlo_m._default_values[n] for n in erlo_m.parameters()
+                erlo_m._default_values[n] for n in parameters
             ]
             self._n_states[i] = erlo_m._n_states
 
@@ -384,8 +386,8 @@ class ModelViewState:
                         y_mult = myokit.Unit.conversion_factor(
                             unit, biomarker_unit
                         ).value()
-                        label = (name + ' '
-                                 + self._repr_myokit_unit(biomarker_unit))
+                        label = (name + ' ' +
+                                 self._repr_myokit_unit(biomarker_unit))
                     except myokit.IncompatibleUnitError:
                         pass
 
@@ -460,6 +462,8 @@ class ModelViewState:
         sliders = _SlidersComponent()
         parameters = self._parameter_names[model_index]
         parameter_values = self._parameters[model_index]
+        is_pk = self._is_pk[model_index]
+        n_states = self._n_states[model_index]
         # Add one slider for each parameter
         for i, parameter in enumerate(parameters):
             min_value = 0
@@ -475,12 +479,13 @@ class ModelViewState:
                                value=parameter_values[i])
 
         # Split parameters into initial values and parameters
-        n_states = self._n_states[model_index]
         states = list(range(n_states))
         parameters = list(range(n_states, len(parameters)))
 
         # Create initial values slider group
-        sliders.group_sliders(slider_indices=states, group_id='Initial values')
+        sliders.group_sliders(slider_indices=states,
+                              group_id='Initial values',
+                              hide=is_pk)
 
         # Create parameters slider group
         sliders.group_sliders(slider_indices=parameters, group_id='Parameters')
@@ -650,21 +655,21 @@ class ModelViewState:
                 unit_str = 'μg/mL'
         # m^3/g/s
         elif unit.exponents() == [-1, 3, -1, 0, 0, 0, 0]:
-            if math.isclose(unit.multiplier(), 1/(24*60**2)):
+            if math.isclose(unit.multiplier(), 1 / (24 * 60**2)):
                 unit_str = 'mL/μg/d'
-            elif math.isclose(unit.multiplier(), 1/(60**2)):
+            elif math.isclose(unit.multiplier(), 1 / (60**2)):
                 unit_str = 'mL/μg/h'
         # m^3/s
         elif unit.exponents() == [0, 3, -1, 0, 0, 0, 0]:
-            if math.isclose(unit.multiplier(), 1e-6/(24*60**2)):
+            if math.isclose(unit.multiplier(), 1e-6 / (24 * 60**2)):
                 unit_str = 'mL/d'
-            elif math.isclose(unit.multiplier(), 1e-6/(60**2)):
+            elif math.isclose(unit.multiplier(), 1e-6 / (60**2)):
                 unit_str = 'mL/h'
         # 1/s
         elif unit.exponents() == [0, 0, -1, 0, 0, 0, 0]:
-            if math.isclose(unit.multiplier(), 1/(24*60**2)):
+            if math.isclose(unit.multiplier(), 1 / (24 * 60**2)):
                 unit_str = 'd'
-            elif math.isclose(unit.multiplier(), 1/(60**2)):
+            elif math.isclose(unit.multiplier(), 1 / (60**2)):
                 unit_str = 'h'
 
         if unit_str is not None:
@@ -672,8 +677,8 @@ class ModelViewState:
         else:
             return str(unit)
 
-    def _get_parameter_names(self, erlo_m):
-        param_names = erlo_m.parameters()
+    def _convert_parameter_names(self, erlo_m, parameters):
+        param_names = copy.copy(parameters)
 
         # make sure myokit has our standard units registered
         units = [
@@ -724,11 +729,12 @@ class ModelViewState:
                 start=0, stop=time_max, num=self._times_num
             )
 
+        parameters = erlo_m.parameters()
         self._parameters.append([
-            erlo_m._default_values[n] for n in erlo_m.parameters()
+            erlo_m._default_values[n] for n in parameters
         ])
         self._parameter_names.append(
-            self._get_parameter_names(erlo_m)
+            self._convert_parameter_names(erlo_m, parameters)
         )
         self._n_states.append(erlo_m._n_states)
         if use:
@@ -768,6 +774,7 @@ class _SlidersComponent(object):
         self._sliders = {}
         self._labels = {}
         self._slider_groups = {}
+        self._hide_groups = {}
 
     def __call__(self):
         # Group and label sliders
@@ -786,11 +793,12 @@ class _SlidersComponent(object):
 
             # Group sliders
             group = self._slider_groups[group_id]
+
             container = []
             for slider_index in group:
                 # Create label for slider
-                label = html.Label(self._labels[slider_index], style={
-                                   'fontSize': '0.8rem'})
+                label = html.Label(self._labels[slider_index],
+                                   style={'fontSize': '0.8rem'})
                 slider = self._sliders[slider_index]
 
                 # Add label and slider to group container
@@ -799,11 +807,16 @@ class _SlidersComponent(object):
                     dbc.Col(children=[slider], width=12)
                 ]
 
+            hide = self._hide_groups[group_id]
+            style = {'display': 'block', 'width': '100%'}
+            if hide:
+                style = {'display': 'none', 'width': '100%'}
+
             # Convert slider group to dash component
             group = dbc.Row(children=container, style={'marginBottom': '1em'})
 
             # Add label and group to contents
-            contents += [group_label, group]
+            contents += [html.Div([group_label, group], style=style)]
 
         return contents
 
@@ -849,7 +862,7 @@ class _SlidersComponent(object):
             updatemode='mouseup')
         self._labels[slider_index] = label
 
-    def group_sliders(self, slider_indices, group_id):
+    def group_sliders(self, slider_indices, group_id, hide=False):
         """
         Visually groups sliders. Group ID will be used as label.
 
@@ -868,6 +881,7 @@ class _SlidersComponent(object):
                     )  # pragma: no cover
 
         self._slider_groups[group_id] = slider_indices
+        self._hide_groups[group_id] = hide
 
     def sliders(self):
         """

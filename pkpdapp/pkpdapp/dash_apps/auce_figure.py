@@ -53,7 +53,8 @@ class AuceFigure():
 
         self._auce_vs_concentration_fig = compute_auce_vs_concentration(
             self._dataset, self._auce_vs_concentration_fig,
-            self._time_key, self._auce_fit_type, self._obs_key, self._class1_selection,
+            self._time_key, self._auce_fit_type, self._obs_key,
+            self._class1_selection,
             self._dose_group_key, self._class2_selection,
             self._class3_selection, self._class1_plot_selection,
             self._class2_plot_selection, self._class3_plot_selection)
@@ -65,7 +66,7 @@ class AuceFigure():
             self._class3_selection, self._class1_plot_selection,
             self._concentration_plot_selection, self._class2_plot_selection,
             self._class3_plot_selection
-            )
+        )
 
     def figures(self):
         return self._fig, self._auce_vs_concentration_fig
@@ -186,7 +187,7 @@ def update_figure(dataset, fig, time_selection, y_selection, class1_selection,
         # Button for linear versus log scale
         updatemenus=[
             dict(
-                type = "buttons",
+                type="buttons",
                 direction="right",
                 pad={"r": 10, "t": 10},
                 showactive=True,
@@ -294,7 +295,7 @@ def compute_auce_vs_concentration(dataset,
     auce_vs_concentration_fig.update_layout(
         updatemenus=[
             dict(
-                type = "buttons",
+                type="buttons",
                 direction="right",
                 pad={"r": 10, "t": 10},
                 showactive=True,
@@ -405,12 +406,12 @@ def auce_fit(auce_vs_concentration_fig, auce_conc_fit_type,
                 showlegend=False,
                 hoverinfo='skip'
             ))
-            #auce_vs_concentration_fig.update_layout(
+            # auce_vs_concentration_fig.update_layout(
             #    autosize=True,
             #    xaxis_title='Concentration',
             #    yaxis_title='AUCE',
             #    template="plotly_white",
-            #)
+            # )
         else:
             auce_vs_concentration_fig.add_annotation(
                 text=(
