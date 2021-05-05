@@ -18,6 +18,7 @@ import threading
 import myokit
 import math
 import copy
+from itertools import chain
 
 max_sliders = 20
 
@@ -557,10 +558,14 @@ class ModelViewState:
 
             # output concentrations instead of amounts
             outputs = []
-            for v in model.simulator._model.variables(state=True):
+            for v in chain(
+                    model.simulator._model.variables(state=True),
+                    model.simulator._model.variables(inter=True),
+            ):
                 name = v.qname()
                 if not name.startswith('dose'):
-                    name = name.replace('_amount', '_concentration')
+                    if name.endswith('_amount'):
+                        continue
                 outputs.append(name)
 
             model.set_outputs(outputs)
@@ -653,6 +658,10 @@ class ModelViewState:
         elif unit.exponents() == [1, -3, 0, 0, 0, 0, 0]:
             if unit.multiplier() == 1:
                 unit_str = 'μg/mL'
+            elif unit.multiplier() == 1e6:
+                unit_str = 'g/mL'
+            elif unit.multiplier() == 1e3:
+                unit_str = 'mg/mL'
         # m^3/g/s
         elif unit.exponents() == [-1, 3, -1, 0, 0, 0, 0]:
             if math.isclose(unit.multiplier(), 1 / (24 * 60**2)):
