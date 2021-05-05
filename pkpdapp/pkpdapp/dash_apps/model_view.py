@@ -16,6 +16,7 @@ import pandas as pd
 import json
 import threading
 import myokit
+import math
 
 max_sliders = 20
 
@@ -372,7 +373,7 @@ class ModelViewState:
             for output, unit in zip(output_names, units):
                 name = output.replace('myokit.', '')
                 y_mult = 1
-                label = name + ' ' + repr(unit)
+                label = name + ' ' + self._repr_myokit_unit(unit)
                 if self._use_biomarkers:
                     biomarker_unit = self._data_biomarkers[
                         self._use_datasets[0]
@@ -383,7 +384,8 @@ class ModelViewState:
                         y_mult = myokit.Unit.conversion_factor(
                             unit, biomarker_unit
                         ).value()
-                        label = name + ' ' + repr(biomarker_unit)
+                        label = (name + ' '
+                                 + self._repr_myokit_unit(biomarker_unit))
                     except myokit.IncompatibleUnitError:
                         pass
 
@@ -634,10 +636,48 @@ class ModelViewState:
         self._dataset_names.append(name)
         self._data_biomarkers.append(biomarkers)
 
+    def _repr_myokit_unit(self, unit):
+        # grams
+        unit_str = None
+        if unit.exponents() == [1, 0, 0, 0, 0, 0, 0]:
+            if unit.multiplier() == 1e-3:
+                unit_str = 'mg'
+            elif unit.multiplier() == 1e-6:
+                unit_str = 'μg'
+        # grams / m^3
+        elif unit.exponents() == [1, -3, 0, 0, 0, 0, 0]:
+            if unit.multiplier() == 1:
+                unit_str = 'μg/mL'
+        # m^3/g/s
+        elif unit.exponents() == [-1, 3, -1, 0, 0, 0, 0]:
+            if math.isclose(unit.multiplier(), 1/(24*60**2)):
+                unit_str = 'mL/μg/d'
+            elif math.isclose(unit.multiplier(), 1/(60**2)):
+                unit_str = 'mL/μg/h'
+        # m^3/s
+        elif unit.exponents() == [0, 3, -1, 0, 0, 0, 0]:
+            if math.isclose(unit.multiplier(), 1e-6/(24*60**2)):
+                unit_str = 'mL/d'
+            elif math.isclose(unit.multiplier(), 1e-6/(60**2)):
+                unit_str = 'mL/h'
+        # 1/s
+        elif unit.exponents() == [0, 0, -1, 0, 0, 0, 0]:
+            if math.isclose(unit.multiplier(), 1/(24*60**2)):
+                unit_str = 'd'
+            elif math.isclose(unit.multiplier(), 1/(60**2)):
+                unit_str = 'h'
+
+        if unit_str is not None:
+            return '[' + unit_str + ']'
+        else:
+            return str(unit)
+
     def _get_parameter_names(self, erlo_m):
         param_names = erlo_m.parameters()
+
+        # make sure myokit has our standard units registered
         units = [
-            repr(
+            self._repr_myokit_unit(
                 erlo_m.simulator._model.get(n).unit()
             )
             for n in param_names
