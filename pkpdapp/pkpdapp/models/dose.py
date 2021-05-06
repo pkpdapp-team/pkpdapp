@@ -20,7 +20,7 @@ class Dose(models.Model):
         help_text='starting time point of dose, in hours'
     )
     amount = models.FloatField(
-        help_text='amount of compound administered, in grams'
+        help_text='amount of compound administered, in micro grams'
     )
     duration = models.FloatField(
         default=0.0,

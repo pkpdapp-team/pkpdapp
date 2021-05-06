@@ -316,10 +316,10 @@ class ModelViewState:
             if self._compartment + '.' in v.qname():
                 amount_var = v
 
-        # our dosing amounts are in grams
-        grams = myokit.Unit.parse_simple('g')
+        # our dosing amounts are in micrograms
+        micrograms = myokit.Unit.parse_simple('ug')
         amount_multiplier = myokit.Unit.conversion_factor(
-            grams, amount_var.unit()
+            micrograms, amount_var.unit()
         ).value()
 
         # convert to model time and amount units, change amounts to a dose rate
@@ -662,6 +662,8 @@ class ModelViewState:
                 unit_str = 'g/mL'
             elif unit.multiplier() == 1e3:
                 unit_str = 'mg/mL'
+            elif unit.multiplier() == 1e-3:
+                unit_str = 'ng/mL'
         # m^3/g/s
         elif unit.exponents() == [-1, 3, -1, 0, 0, 0, 0]:
             if math.isclose(unit.multiplier(), 1 / (24 * 60**2)):
@@ -677,9 +679,9 @@ class ModelViewState:
         # 1/s
         elif unit.exponents() == [0, 0, -1, 0, 0, 0, 0]:
             if math.isclose(unit.multiplier(), 1 / (24 * 60**2)):
-                unit_str = 'd'
+                unit_str = '1/d'
             elif math.isclose(unit.multiplier(), 1 / (60**2)):
-                unit_str = 'h'
+                unit_str = '1/h'
 
         if unit_str is not None:
             return '[' + unit_str + ']'
