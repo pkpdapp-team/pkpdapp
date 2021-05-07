@@ -44,7 +44,7 @@ app.layout = dbc.Container(id='container', children=[
         ),
         dbc.Col(
             children=[
-                html.Label('Use dataset biomarker:'),
+                html.Label('Use dataset variable:'),
                 dcc.Dropdown(
                     id='biomarker-select',
                 )
@@ -55,7 +55,7 @@ app.layout = dbc.Container(id='container', children=[
             children=[(
                 'Model outputs with compatible units '
                 'will be converted to match the chosen '
-                'biomarker units'
+                'dataset variable units'
             )],
             width=3,
         ),
@@ -405,7 +405,7 @@ class ModelViewState:
             # Remember index of model trace for update callback
             n_traces = len(fig._fig.data)
             model_traces[i] = n_traces - 1
-        fig.set_axis_labels('Time (h)', 'Biomarker')
+        fig.set_axis_labels('Time (h)', 'Variable')
         fig._fig.update_layout(
             updatemenus=[
                 # Button for linear versus log scale

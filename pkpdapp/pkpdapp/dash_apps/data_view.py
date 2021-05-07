@@ -26,7 +26,7 @@ app.layout = dbc.Container(children=[
     dbc.Row([
         dbc.Col(
             children=[
-                html.Label('Biomarker:'),
+                html.Label('Variable:'),
                 dcc.Dropdown(
                     id='biomarker-select',
                 )
