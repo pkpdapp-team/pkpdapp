@@ -431,7 +431,10 @@ class ModelViewState:
                     y=1.15,
                     yanchor="top"
                 ),
-            ]
+            ],
+            yaxis = dict(
+                exponentformat = 'e'
+            ),
         )
         self._model_traces = model_traces
         return fig

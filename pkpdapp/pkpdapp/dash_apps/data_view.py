@@ -204,6 +204,11 @@ class DataViewState:
 
         # Set axes labels to time_key and biom_key
         fig.set_axis_labels(xlabel='Time (h)', ylabel=self._biom_key)
+        fig._fig.update_layout(
+            yaxis = dict(
+                exponentformat = 'e'
+            ),
+        )
 
     def add_data(self, data, name, biomarkers, use=False):
         """
