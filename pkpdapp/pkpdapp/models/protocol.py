@@ -34,8 +34,8 @@ class Protocol(models.Model):
     )
 
     class DoseType(models.TextChoices):
-        DIRECT = 'D', 'Direct'
-        INDIRECT = 'I', 'Indirect'
+        DIRECT = 'D', 'IV'
+        INDIRECT = 'I', 'Extravascular'
 
     dose_type = models.CharField(
         max_length=1,

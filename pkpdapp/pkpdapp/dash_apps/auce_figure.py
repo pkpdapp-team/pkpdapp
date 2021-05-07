@@ -43,10 +43,6 @@ class AuceFigure():
         self._auce_vs_concentration_fig = go.Figure()
         self._dataset = dataset
         self._auce_fit_type = 'Sigmoid'
-        self._auce_y_axis_type = 'linear'  # or 'log'
-        self._auce_x_axis_type = 'linear'  # or 'log'
-        self._yaxis_type_selection = 'linear'  # or 'log'
-        self._xaxis_type_selection = 'linear'  # or 'log'
         self._class1_selection = 'Biomarker'
         self._class2_selection = 'Group'
         self._class3_selection = None
@@ -57,8 +53,8 @@ class AuceFigure():
 
         self._auce_vs_concentration_fig = compute_auce_vs_concentration(
             self._dataset, self._auce_vs_concentration_fig,
-            self._time_key, self._auce_fit_type, self._auce_y_axis_type,
-            self._auce_y_axis_type, self._obs_key, self._class1_selection,
+            self._time_key, self._auce_fit_type, self._obs_key,
+            self._class1_selection,
             self._dose_group_key, self._class2_selection,
             self._class3_selection, self._class1_plot_selection,
             self._class2_plot_selection, self._class3_plot_selection)
@@ -69,8 +65,8 @@ class AuceFigure():
             self._dose_group_key, self._class2_selection,
             self._class3_selection, self._class1_plot_selection,
             self._concentration_plot_selection, self._class2_plot_selection,
-            self._class3_plot_selection, self._yaxis_type_selection,
-            self._xaxis_type_selection)
+            self._class3_plot_selection
+        )
 
     def figures(self):
         return self._fig, self._auce_vs_concentration_fig
@@ -85,8 +81,7 @@ def update_figure(dataset, fig, time_selection, y_selection, class1_selection,
                   concentration_selection, class2_selection,
                   class3_selection, class1_plot_selection,
                   concentration_plot_selection, class2_plot_selection,
-                  class3_plot_selection, yaxis_type_selection,
-                  xaxis_type_selection):
+                  class3_plot_selection):
     fig.data = []
 
     data = dataset.loc[dataset[class1_selection] == class1_plot_selection]
@@ -189,11 +184,44 @@ def update_figure(dataset, fig, time_selection, y_selection, class1_selection,
                     )
                 ))
     fig.update_layout(
+        # Button for linear versus log scale
+        updatemenus=[
+            dict(
+                type="buttons",
+                direction="right",
+                pad={"r": 10, "t": 10},
+                showactive=True,
+                x=0.13,
+                xanchor="left",
+                y=1.21,
+                yanchor="top",
+                buttons=list([
+                    dict(
+                        args=[{"yaxis.type": "linear"}],
+                        label="Linear y-scale",
+                        method="relayout"
+                    ),
+                    dict(
+                        args=[{"yaxis.type": "log"}],
+                        label="Log y-scale",
+                        method="relayout"
+                    ),
+                    dict(
+                        args=[{"xaxis.type": "linear"}],
+                        label="Linear x-scale",
+                        method="relayout"
+                    ),
+                    dict(
+                        args=[{"xaxis.type": "log"}],
+                        label="Log x-scale",
+                        method="relayout"
+                    )
+                ]),
+            )
+        ],
         autosize=True,
         xaxis_title='Time in hours',
         yaxis_title=class1_plot_selection,
-        xaxis_type=xaxis_type_selection,
-        yaxis_type=yaxis_type_selection,
         template="plotly_white",
     ),
 
@@ -202,8 +230,8 @@ def update_figure(dataset, fig, time_selection, y_selection, class1_selection,
 
 def compute_auce_vs_concentration(dataset,
                                   auce_vs_concentration_fig, time_selection,
-                                  auce_conc_fit_type, auce_y_axis_type,
-                                  auce_x_axis_type, y_selection,
+                                  auce_conc_fit_type,
+                                  y_selection,
                                   class1_selection,
                                   concentration_selection, class2_selection,
                                   class3_selection, class1_plot_selection,
@@ -239,8 +267,7 @@ def compute_auce_vs_concentration(dataset,
 
         if not (auce_conc_fit_type == 'None'):
             auce_fit(auce_vs_concentration_fig, auce_conc_fit_type,
-                     auce_y_axis_type,
-                     auce_x_axis_type, class2_selection,
+                     class2_selection,
                      class2_selected, index_class2, concentrations,
                      auce_vs_concentration_data)
 
@@ -266,18 +293,52 @@ def compute_auce_vs_concentration(dataset,
         ))
 
     auce_vs_concentration_fig.update_layout(
+        updatemenus=[
+            dict(
+                type="buttons",
+                direction="right",
+                pad={"r": 10, "t": 10},
+                showactive=True,
+                x=0.13,
+                xanchor="left",
+                y=1.21,
+                yanchor="top",
+                buttons=list([
+                    dict(
+                        args=[{"yaxis.type": "linear"}],
+                        label="Linear y-scale",
+                        method="relayout"
+                    ),
+                    dict(
+                        args=[{"yaxis.type": "log"}],
+                        label="Log y-scale",
+                        method="relayout"
+                    ),
+                    dict(
+                        args=[{"xaxis.type": "linear"}],
+                        label="Linear x-scale",
+                        method="relayout"
+                    ),
+                    dict(
+                        args=[{"xaxis.type": "log"}],
+                        label="Log x-scale",
+                        method="relayout"
+                    )
+                ]),
+            )
+        ],
         autosize=True,
         xaxis_title='Concentration',
+        xaxis_type='log',
         yaxis_title='AUCE',
-        xaxis_type=auce_x_axis_type,
-        yaxis_type=auce_y_axis_type,
+        yaxis_type='log',
         template="plotly_white",
     )
     return auce_vs_concentration_fig
 
 
-def auce_fit(auce_vs_concentration_fig, auce_conc_fit_type, auce_y_axis_type,
-             auce_x_axis_type, class2_selection, class2_selected,
+def auce_fit(auce_vs_concentration_fig, auce_conc_fit_type,
+             class2_selection, class2_selected,
              index_class2, concentrations, auce_vs_concentration_data):
 
     if auce_conc_fit_type == 'Sigmoid' and len(concentrations) >= 4:
@@ -292,9 +353,7 @@ def auce_fit(auce_vs_concentration_fig, auce_conc_fit_type, auce_y_axis_type,
 
         sigma_top, sigma_bottom, sigma_EC50 = np.sqrt(np.diag(covariates))
 
-        if auce_x_axis_type == 'linear':
-            x = np.linspace(min(concentrations), max(concentrations), 500)
-        elif min(concentrations):
+        if min(concentrations):
             x = np.geomspace(min(concentrations), max(concentrations), 500)
         else:
             x = np.geomspace(0.1, max(concentrations), 500)
@@ -352,14 +411,12 @@ def auce_fit(auce_vs_concentration_fig, auce_conc_fit_type, auce_y_axis_type,
                 showlegend=False,
                 hoverinfo='skip'
             ))
-            auce_vs_concentration_fig.update_layout(
-                autosize=True,
-                xaxis_title='Concentration',
-                yaxis_title='AUCE',
-                xaxis_type=auce_x_axis_type,
-                yaxis_type=auce_y_axis_type,
-                template="plotly_white",
-            )
+            # auce_vs_concentration_fig.update_layout(
+            #    autosize=True,
+            #    xaxis_title='Concentration',
+            #    yaxis_title='AUCE',
+            #    template="plotly_white",
+            # )
         else:
             auce_vs_concentration_fig.add_annotation(
                 text=(

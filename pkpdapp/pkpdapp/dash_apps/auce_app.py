@@ -38,7 +38,7 @@ app.layout = dbc.Container([
                     'numerical concentrations '
                 )),
                 dbc.Col(width=3, children=[
-                    html.Label("Choose biomarkers:"),
+                    html.Label("Choose variable:"),
                     dcc.Dropdown(
                         id='auce-biomarker-dropdown',
                     ),

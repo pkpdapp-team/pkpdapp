@@ -13,13 +13,18 @@ def load_units(apps, schema_editor):
 
     standard_units = [
         {'symbol': 'h'},
-        {'symbol': 'g'},
-        {'symbol': 'cm^3'},
+        {'symbol': 'μg'},
+        {'symbol': 'mL'},
         {'symbol': 'ng/mL'},
         {'symbol': '1/mL'},
     ]
 
     units = [
+        {
+            'symbol': 'cm^3',
+            'standard_unit': 'mL',
+            'multiplier': 1.0,
+        },
         {
             'symbol': 'd',
             'standard_unit': 'h',
@@ -32,8 +37,13 @@ def load_units(apps, schema_editor):
         },
         {
             'symbol': 'mg',
-            'standard_unit': 'g',
-            'multiplier': 1e-3,
+            'standard_unit': 'μg',
+            'multiplier': 1e3,
+        },
+        {
+            'symbol': 'g',
+            'standard_unit': 'μg',
+            'multiplier': 1e6,
         },
         {
             'symbol': 'g/dL',

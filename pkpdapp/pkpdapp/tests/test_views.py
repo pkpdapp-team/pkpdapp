@@ -538,7 +538,7 @@ class TestProjectView(TestCase):
 
         self.assertRedirects(
             response,
-            reverse('project-detail', args=[new_project.id])
+            reverse('index')
         )
         self.assertEquals(new_project.name, 'add name')
 
