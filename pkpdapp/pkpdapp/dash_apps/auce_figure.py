@@ -329,7 +329,9 @@ def compute_auce_vs_concentration(dataset,
         ],
         autosize=True,
         xaxis_title='Concentration',
+        xaxis_type='log',
         yaxis_title='AUCE',
+        yaxis_type='log',
         template="plotly_white",
     )
     return auce_vs_concentration_fig
@@ -351,7 +353,10 @@ def auce_fit(auce_vs_concentration_fig, auce_conc_fit_type,
 
         sigma_top, sigma_bottom, sigma_EC50 = np.sqrt(np.diag(covariates))
 
-        x = np.linspace(min(concentrations), max(concentrations), 500)
+        if min(concentrations):
+            x = np.geomspace(min(concentrations), max(concentrations), 500)
+        else:
+            x = np.geomspace(0.1, max(concentrations), 500)
 
         y = fsigmoid(x, *fitted_params)
 
