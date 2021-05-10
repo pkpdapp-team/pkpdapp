@@ -117,9 +117,11 @@ class CreateNewDataset(forms.ModelForm):
         # check whether biomarker units are in list of standard units
         bio_units = data['UNIT'].unique().tolist()
         error_bunits = []
+        available_units = [
+            s['symbol'] for s in Unit.objects.values('symbol')
+        ]
         for b_unit in bio_units:
-            if b_unit not in ['mg', 'g/dL', '10^3/mcL', 'cm^3', 'ng/mL',
-                              '10^6/mcL']:
+            if b_unit not in available_units:
                 error_bunits.append(b_unit)
         if len(error_bunits) > 0:
             raise forms.ValidationError(
@@ -176,6 +178,7 @@ class CreateNewDataset(forms.ModelForm):
         # save each row of data as either biomarker or dose
         for index, row in data.iterrows():
             time_unit = Unit.objects.get(symbol=row['TIME_UNIT'])
+            value_unit = Unit.objects.get(symbol=row['UNIT'])
             value = row['DV']
             subject_id = row['ID']
 
@@ -230,7 +233,7 @@ class CreateNewDataset(forms.ModelForm):
                         subject=subject,
                     )
                 start_time = time_unit.multiplier * float(row['TIME'])
-                amount = float(row['AMT'])
+                amount = value_unit.multiplier * float(row['AMT'])
                 Dose.objects.create(
                     start_time=start_time,
                     amount=amount,

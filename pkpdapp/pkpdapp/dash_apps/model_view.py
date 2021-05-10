@@ -19,6 +19,7 @@ import myokit
 import math
 import copy
 from itertools import chain
+from math import floor, ceil
 
 max_sliders = 20
 
@@ -868,10 +869,10 @@ class _SlidersComponent(object):
             max=max_value,
             step=step_size,
             marks={
-                str(round(min_value)):
-                str(round(min_value)),
-                str(round(max_value)):
-                str(round(max_value))
+                min_value:
+                '{:.2g}'.format(min_value),
+                (1 - np.finfo(float).eps) * max_value:
+                '{:.2g}'.format(max_value)
             },
             updatemode='mouseup')
         self._labels[slider_index] = label
