@@ -19,7 +19,6 @@ import myokit
 import math
 import copy
 from itertools import chain
-from math import floor, ceil
 
 max_sliders = 20
 
