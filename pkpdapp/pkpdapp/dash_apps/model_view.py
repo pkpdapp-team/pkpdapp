@@ -679,6 +679,8 @@ class ModelViewState:
                 unit_str = 'mL/d'
             elif math.isclose(unit.multiplier(), 1e-6 / (60**2)):
                 unit_str = 'mL/h'
+            elif math.isclose(unit.multiplier(), 1e-3 / (60**2)):
+                unit_str = 'L/h'
         # 1/s
         elif unit.exponents() == [0, 0, -1, 0, 0, 0, 0]:
             if math.isclose(unit.multiplier(), 1 / (24 * 60**2)):
