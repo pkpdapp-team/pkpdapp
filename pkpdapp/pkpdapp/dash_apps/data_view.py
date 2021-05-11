@@ -26,7 +26,7 @@ app.layout = dbc.Container(children=[
     dbc.Row([
         dbc.Col(
             children=[
-                html.Label('Biomarker:'),
+                html.Label('Variable:'),
                 dcc.Dropdown(
                     id='biomarker-select',
                 )
@@ -203,7 +203,12 @@ class DataViewState:
                 pass
 
         # Set axes labels to time_key and biom_key
-        fig.set_axis_labels(xlabel='Time (h)', ylabel=self._biom_key)
+        fig.set_axis_labels(xlabel='Time (h)', ylabel='Variable')
+        fig._fig.update_layout(
+            yaxis=dict(
+                exponentformat='e'
+            ),
+        )
 
     def add_data(self, data, name, biomarkers, use=False):
         """

@@ -16,6 +16,9 @@ import pandas as pd
 import json
 import threading
 import myokit
+import math
+import copy
+from itertools import chain
 
 max_sliders = 20
 
@@ -41,7 +44,7 @@ app.layout = dbc.Container(id='container', children=[
         ),
         dbc.Col(
             children=[
-                html.Label('Use dataset biomarker:'),
+                html.Label('Use dataset variable:'),
                 dcc.Dropdown(
                     id='biomarker-select',
                 )
@@ -52,7 +55,7 @@ app.layout = dbc.Container(id='container', children=[
             children=[(
                 'Model outputs with compatible units '
                 'will be converted to match the chosen '
-                'biomarker units'
+                'dataset variable units'
             )],
             width=3,
         ),
@@ -277,11 +280,12 @@ class ModelViewState:
             erlo_m = self._convert_to_erlo_model(
                 model_sbml, True
             )
+            parameters = erlo_m.parameters()
             self._parameter_names[i] = \
-                self._get_parameter_names(erlo_m)
+                self._convert_parameter_names(erlo_m, parameters)
 
             self._parameters[i] = [
-                erlo_m._default_values[n] for n in erlo_m.parameters()
+                erlo_m._default_values[n] for n in parameters
             ]
             self._n_states[i] = erlo_m._n_states
 
@@ -312,10 +316,10 @@ class ModelViewState:
             if self._compartment + '.' in v.qname():
                 amount_var = v
 
-        # our dosing amounts are in grams
-        grams = myokit.Unit.parse_simple('g')
+        # our dosing amounts are in micrograms
+        micrograms = myokit.Unit.parse_simple('ug')
         amount_multiplier = myokit.Unit.conversion_factor(
-            grams, amount_var.unit()
+            micrograms, amount_var.unit()
         ).value()
 
         # convert to model time and amount units, change amounts to a dose rate
@@ -372,7 +376,7 @@ class ModelViewState:
             for output, unit in zip(output_names, units):
                 name = output.replace('myokit.', '')
                 y_mult = 1
-                label = name + ' ' + repr(unit)
+                label = name + ' ' + self._repr_myokit_unit(unit)
                 if self._use_biomarkers:
                     biomarker_unit = self._data_biomarkers[
                         self._use_datasets[0]
@@ -383,7 +387,8 @@ class ModelViewState:
                         y_mult = myokit.Unit.conversion_factor(
                             unit, biomarker_unit
                         ).value()
-                        label = name + ' ' + repr(biomarker_unit)
+                        label = (name + ' ' +
+                                 self._repr_myokit_unit(biomarker_unit))
                     except myokit.IncompatibleUnitError:
                         pass
 
@@ -400,7 +405,7 @@ class ModelViewState:
             # Remember index of model trace for update callback
             n_traces = len(fig._fig.data)
             model_traces[i] = n_traces - 1
-        fig.set_axis_labels('Time (h)', 'Biomarker')
+        fig.set_axis_labels('Time (h)', 'Variable')
         fig._fig.update_layout(
             updatemenus=[
                 # Button for linear versus log scale
@@ -426,7 +431,10 @@ class ModelViewState:
                     y=1.15,
                     yanchor="top"
                 ),
-            ]
+            ],
+            yaxis=dict(
+                exponentformat='e'
+            ),
         )
         self._model_traces = model_traces
         return fig
@@ -458,6 +466,8 @@ class ModelViewState:
         sliders = _SlidersComponent()
         parameters = self._parameter_names[model_index]
         parameter_values = self._parameters[model_index]
+        is_pk = self._is_pk[model_index]
+        n_states = self._n_states[model_index]
         # Add one slider for each parameter
         for i, parameter in enumerate(parameters):
             min_value = 0
@@ -473,12 +483,13 @@ class ModelViewState:
                                value=parameter_values[i])
 
         # Split parameters into initial values and parameters
-        n_states = self._n_states[model_index]
         states = list(range(n_states))
         parameters = list(range(n_states, len(parameters)))
 
         # Create initial values slider group
-        sliders.group_sliders(slider_indices=states, group_id='Initial values')
+        sliders.group_sliders(slider_indices=states,
+                              group_id='Initial values',
+                              hide=is_pk)
 
         # Create parameters slider group
         sliders.group_sliders(slider_indices=parameters, group_id='Parameters')
@@ -550,10 +561,14 @@ class ModelViewState:
 
             # output concentrations instead of amounts
             outputs = []
-            for v in model.simulator._model.variables(state=True):
+            for v in chain(
+                    model.simulator._model.variables(state=True),
+                    model.simulator._model.variables(inter=True),
+            ):
                 name = v.qname()
                 if not name.startswith('dose'):
-                    name = name.replace('_amount', '_concentration')
+                    if name.endswith('_amount'):
+                        continue
                 outputs.append(name)
 
             model.set_outputs(outputs)
@@ -634,10 +649,56 @@ class ModelViewState:
         self._dataset_names.append(name)
         self._data_biomarkers.append(biomarkers)
 
-    def _get_parameter_names(self, erlo_m):
-        param_names = erlo_m.parameters()
+    def _repr_myokit_unit(self, unit):
+        # grams
+        unit_str = None
+        if unit.exponents() == [1, 0, 0, 0, 0, 0, 0]:
+            if unit.multiplier() == 1e-3:
+                unit_str = 'mg'
+            elif unit.multiplier() == 1e-6:
+                unit_str = 'μg'
+        # grams / m^3
+        elif unit.exponents() == [1, -3, 0, 0, 0, 0, 0]:
+            if unit.multiplier() == 1:
+                unit_str = 'μg/mL'
+            elif unit.multiplier() == 1e6:
+                unit_str = 'g/mL'
+            elif unit.multiplier() == 1e3:
+                unit_str = 'mg/mL'
+            elif unit.multiplier() == 1e-3:
+                unit_str = 'ng/mL'
+        # m^3/g/s
+        elif unit.exponents() == [-1, 3, -1, 0, 0, 0, 0]:
+            if math.isclose(unit.multiplier(), 1 / (24 * 60**2)):
+                unit_str = 'mL/μg/d'
+            elif math.isclose(unit.multiplier(), 1 / (60**2)):
+                unit_str = 'mL/μg/h'
+        # m^3/s
+        elif unit.exponents() == [0, 3, -1, 0, 0, 0, 0]:
+            if math.isclose(unit.multiplier(), 1e-6 / (24 * 60**2)):
+                unit_str = 'mL/d'
+            elif math.isclose(unit.multiplier(), 1e-6 / (60**2)):
+                unit_str = 'mL/h'
+            elif math.isclose(unit.multiplier(), 1e-3 / (60**2)):
+                unit_str = 'L/h'
+        # 1/s
+        elif unit.exponents() == [0, 0, -1, 0, 0, 0, 0]:
+            if math.isclose(unit.multiplier(), 1 / (24 * 60**2)):
+                unit_str = '1/d'
+            elif math.isclose(unit.multiplier(), 1 / (60**2)):
+                unit_str = '1/h'
+
+        if unit_str is not None:
+            return '[' + unit_str + ']'
+        else:
+            return str(unit)
+
+    def _convert_parameter_names(self, erlo_m, parameters):
+        param_names = copy.copy(parameters)
+
+        # make sure myokit has our standard units registered
         units = [
-            repr(
+            self._repr_myokit_unit(
                 erlo_m.simulator._model.get(n).unit()
             )
             for n in param_names
@@ -646,7 +707,8 @@ class ModelViewState:
         for i, p in enumerate(param_names):
             param_names[i] = p\
                 .replace('.', '_')\
-                .replace('myokit_', '')
+                .replace('myokit_', '')\
+                .replace('size', 'volume')
 
         param_names = [
             name + ' ' + unit
@@ -683,11 +745,12 @@ class ModelViewState:
                 start=0, stop=time_max, num=self._times_num
             )
 
+        parameters = erlo_m.parameters()
         self._parameters.append([
-            erlo_m._default_values[n] for n in erlo_m.parameters()
+            erlo_m._default_values[n] for n in parameters
         ])
         self._parameter_names.append(
-            self._get_parameter_names(erlo_m)
+            self._convert_parameter_names(erlo_m, parameters)
         )
         self._n_states.append(erlo_m._n_states)
         if use:
@@ -727,6 +790,7 @@ class _SlidersComponent(object):
         self._sliders = {}
         self._labels = {}
         self._slider_groups = {}
+        self._hide_groups = {}
 
     def __call__(self):
         # Group and label sliders
@@ -745,11 +809,12 @@ class _SlidersComponent(object):
 
             # Group sliders
             group = self._slider_groups[group_id]
+
             container = []
             for slider_index in group:
                 # Create label for slider
-                label = html.Label(self._labels[slider_index], style={
-                                   'fontSize': '0.8rem'})
+                label = html.Label(self._labels[slider_index],
+                                   style={'fontSize': '0.8rem'})
                 slider = self._sliders[slider_index]
 
                 # Add label and slider to group container
@@ -758,11 +823,16 @@ class _SlidersComponent(object):
                     dbc.Col(children=[slider], width=12)
                 ]
 
+            hide = self._hide_groups[group_id]
+            style = {'display': 'block', 'width': '100%'}
+            if hide:
+                style = {'display': 'none', 'width': '100%'}
+
             # Convert slider group to dash component
             group = dbc.Row(children=container, style={'marginBottom': '1em'})
 
             # Add label and group to contents
-            contents += [group_label, group]
+            contents += [html.Div([group_label, group], style=style)]
 
         return contents
 
@@ -800,15 +870,15 @@ class _SlidersComponent(object):
             max=max_value,
             step=step_size,
             marks={
-                str(round(min_value)):
-                str(round(min_value)),
-                str(round(max_value)):
-                str(round(max_value))
+                min_value:
+                '{:.2g}'.format(min_value),
+                (1 - np.finfo(float).eps) * max_value:
+                '{:.2g}'.format(max_value)
             },
             updatemode='mouseup')
         self._labels[slider_index] = label
 
-    def group_sliders(self, slider_indices, group_id):
+    def group_sliders(self, slider_indices, group_id, hide=False):
         """
         Visually groups sliders. Group ID will be used as label.
 
@@ -827,6 +897,7 @@ class _SlidersComponent(object):
                     )  # pragma: no cover
 
         self._slider_groups[group_id] = slider_indices
+        self._hide_groups[group_id] = hide
 
     def sliders(self):
         """

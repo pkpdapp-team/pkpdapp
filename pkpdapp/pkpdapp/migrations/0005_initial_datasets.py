@@ -17,7 +17,7 @@ datafile_urls = [
     'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/datasets/lxf_low_erlotinib_dose.csv',  # noqa: E501
     'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/datasets/lxf_medium_erlotinib_dose.csv',  # noqa: E501
     'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/datasets/lxf_single_erlotinib_dose.csv',  # noqa: E501
-    'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/datasets/demo_pk_data.csv',  # noqa: E501
+    'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/datasets/demo_pk_data_upload.csv',  # noqa: E501
     'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/datasets/TCB4dataset.csv',  # noqa: E501
 ]
 
@@ -184,7 +184,7 @@ biomarkers_for_datasets = [
             'unit': 'g/dL',
         },
         {
-            'name': 'Platelets',
+            'name': 'Platelets ',
             'unit': '10^3/mcL',
         },
         {

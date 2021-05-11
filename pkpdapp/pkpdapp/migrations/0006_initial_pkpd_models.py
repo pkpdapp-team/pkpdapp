@@ -118,7 +118,7 @@ directly administered to \(A$ or indirectly through a dosing
 compartment.
 """,  # noqa: W605
             'sbml_url':
-            'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/models/pk_one_comp.xml'  # noqa: E501
+            'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/models/PK_one_comp.xml'  # noqa: E501
         },
         {
             'name':
@@ -128,7 +128,7 @@ compartment.
 Description of a two compartment PK model here.
 """,  # noqa: W605
             'sbml_url':
-            'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/models/pk_two_comp.xml'  # noqa: E501
+            'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/models/PK_two_comp.xml'  # noqa: E501
         },
         {
             'name':
@@ -138,7 +138,7 @@ Description of a two compartment PK model here.
 Description of a three compartment PK model here.
 """,  # noqa: W605
             'sbml_url':
-            'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/models/pk_three_comp.xml'  # noqa: E501
+            'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/models/PK_three_comp.xml'  # noqa: E501
         },
     ]
 

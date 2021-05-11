@@ -53,6 +53,7 @@ class ProjectCreate(LoginRequiredMixin, CreateView):
     model = Project
     template_name = 'project_form.html'
     fields = ['name', 'description', 'users']
+    success_url = reverse_lazy('index')
 
 
 class ProjectUpdate(LoginRequiredMixin, UpdateView):

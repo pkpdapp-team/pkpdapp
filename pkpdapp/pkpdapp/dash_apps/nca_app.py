@@ -76,7 +76,6 @@ def rehydrate_state(session_state):
     [Input('nca-subject-dropdown', 'style')],
 )
 def update_datasets(_, session_state=None):
-    print('update_datasets')
     state = rehydrate_state(session_state)
     return state._dataset_options, state._selected_dataset
 
@@ -91,7 +90,6 @@ def update_datasets(_, session_state=None):
     ]
 )
 def update_nca_auce_options(dataset_dropdown, session_state=None):
-    print('update_nca_options')
     state = rehydrate_state(session_state)
     state._selected_dataset = dataset_dropdown
     subject_ids = state._get_subject_ids()
@@ -107,7 +105,6 @@ def update_nca_auce_options(dataset_dropdown, session_state=None):
 )
 def update_nca(nca_subject_dropdown, dataset_dropdown,
                session_state=None):
-    print('update_nca')
     state = rehydrate_state(session_state)
     ctx = dash.callback_context
     if not ctx.triggered:
