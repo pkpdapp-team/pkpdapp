@@ -1,21 +1,44 @@
 from rest_framework import serializers
-from pkpdapp.models import (Dataset, BiomarkerType, Subject)
+from pkpdapp.models import (Dataset, BiomarkerType, Subject, Protocol)
+
+
+# all serializers that get used by the dataset serializer
+class BiomarkerTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BiomarkerType
+        fields = ('name', 'unit', 'description', 'dataset')
+
+
+class ProtocolSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Protocol
+        fields = ('name', 'compound', 'subject', 'dose_type')
+
+
+class SubjectSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Subject
+        fields = ('id_in_dataset', 'dose_group', 'group', 'metadata')
 
 
 class DatasetSerializer(serializers.ModelSerializer):
     biomarkertypes = serializers.SerializerMethodField('find_biomarkertypes')
-    subject_dosegroup = serializers.SerializerMethodField(
-        'find_subject_dosegroup')
+    subjects = serializers.SerializerMethodField('find_subjects')
+    protocols = serializers.SerializerMethodField('find_protocols')
 
     def find_biomarkertypes(self, dataset):
         biomarkers = BiomarkerType.objects.filter(dataset=dataset)
-        return [bm.name for bm in biomarkers]
+        return [BiomarkerTypeSerializer(bm).data for bm in biomarkers]
 
-    def find_subject_dosegroup(self, dataset):
+    def find_protocols(self, dataset):
+        protocols = Protocol.objects.filter(dataset=dataset)
+        return [ProtocolSerializer(pc).data for pc in protocols]
+
+    def find_subjects(self, dataset):
         subjects = Subject.objects.filter(dataset=dataset)
-        return [sj.dose_group for sj in subjects]
+        return [SubjectSerializer(sj).data for sj in subjects]
 
     class Meta:
         model = Dataset
-        fields = ('name', 'datetime', 'description',
-                  'biomarkertypes', 'subject_dosegroup')
+        fields = ('name', 'datetime', 'description', 'subjects',
+                  'biomarkertypes', 'protocols')
