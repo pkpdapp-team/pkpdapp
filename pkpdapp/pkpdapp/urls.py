@@ -13,12 +13,18 @@ https://docs.djangoproject.com/en/3.0/topics/http/urls/.
 from django.urls import include, path
 from django.contrib import admin
 from . import views
+from . import api
+from rest_framework import routers
+
+router = routers.DefaultRouter()
+router.register('datasets', api.DatasetView, 'user')
 
 # TODO: Move django_plotly_dash to the app that is actually using it!
 urlpatterns = [
     path('', views.IndexView.as_view(), name='index'),
     path('admin/doc/', include('django.contrib.admindocs.urls')),
     path('admin/', admin.site.urls),
+    path('api/', include(router.urls), name='api-main'),
     path('accounts/', include('django.contrib.auth.urls')),
     path('dataset/<int:pk>/',
          views.DatasetDetailView.as_view(), name='dataset-detail'),

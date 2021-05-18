@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'markdownify',
     'django_extensions',
     'crispy_forms',
+    'rest_framework',
 
     # internal apps
     'explore_data.apps.ExploreDataConfig',
