@@ -233,7 +233,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 
-function AvatarListItem({ item, selected, handleClick, small }) {
+function AvatarListItem({ nested, item, selected, handleClick, small }) {
   const classes = useStyles();
   let itemClassName;
   if (small) {
@@ -251,7 +251,7 @@ function AvatarListItem({ item, selected, handleClick, small }) {
   }
   return (
     <Tooltip title={item.name} placement="right" arrow>
-    <ListItem button onClick={handleClick}>
+      <ListItem button className={nested ? classes.nested : null} onClick={handleClick}>
       <ListItemAvatar>
         <Avatar  className={itemClassName}>{item.name[0]}</Avatar>
       </ListItemAvatar>
@@ -288,7 +288,7 @@ function ExpandableListItem({icon: Icon, items, text, selectedItems, type, handl
       <List component="div" disablePadding>
         {items.map((item) => (
           <AvatarListItem
-            className={classes.nested}
+            nested={true}
             key={item.id}
             item={item} 
             selected={selectedItems.find((i) => i.id === item.id) !== undefined}
@@ -299,6 +299,7 @@ function ExpandableListItem({icon: Icon, items, text, selectedItems, type, handl
           />
         ))}
         <AddButton 
+          nested={true}
           handleClick={handleNewClick} component={CreateProjectDialog} 
           open={openCreateNew}
           label={`create ${text}`} small={true}
@@ -309,21 +310,21 @@ function ExpandableListItem({icon: Icon, items, text, selectedItems, type, handl
   )
 }
 
-function AddButton({ handleClick, label, small, component: Component, open }) {
+function AddButton({ nested, handleClick, label, small, component: Component, open }) {
   const classes = useStyles();
-  let className;
+  let avatarClassName;
   if (small) {
-    className = classes.avatarPlusSmall
+    avatarClassName = classes.avatarPlusSmall
   } else {
-    className = classes.avatarPlus
+    avatarClassName = classes.avatarPlus
   }
 
   return (
     <React.Fragment>
     <Tooltip title={label} placement="bottom">
-      <ListItem button onClick={handleClick}>
+      <ListItem button className={nested ? classes.nested : null} onClick={handleClick}>
         <ListItemAvatar>
-          <Avatar variant='rounded' className={className}>
+          <Avatar variant='rounded' className={avatarClassName}>
             <AddIcon/>
           </Avatar>
         </ListItemAvatar>
