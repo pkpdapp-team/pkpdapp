@@ -4,7 +4,8 @@
 # copyright notice and full license details.
 #
 from rest_framework import serializers
-from pkpdapp.models import (Dataset, BiomarkerType, Subject, Protocol)
+from pkpdapp.models import (Dataset, BiomarkerType, Subject, Protocol, Project)
+from django.contrib.auth.models import User
 
 
 # all serializers that get used by the dataset serializer
@@ -47,3 +48,21 @@ class DatasetSerializer(serializers.ModelSerializer):
         model = Dataset
         fields = ('name', 'datetime', 'description', 'subjects',
                   'biomarkertypes', 'protocols')
+
+
+class ProjectSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Project
+        fields = ('name', 'description', 'datasets', 'protocols')
+
+
+class UserSerializer(serializers.ModelSerializer):
+    projects = serializers.SerializerMethodField('find_projects')
+
+    def find_projects(self, user):
+        projects = Project.objects.filter(users=user)
+        return [ProjectSerializer(pj).data for pj in projects]
+
+    class Meta:
+        model = User
+        fields = ('id', 'projects')

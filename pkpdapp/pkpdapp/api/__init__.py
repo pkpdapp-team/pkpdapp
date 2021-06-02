@@ -5,4 +5,4 @@
 #
 # flake8: noqa F401
 
-from .views import DatasetView
+from .views import DatasetView, UserView
