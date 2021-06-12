@@ -16,20 +16,36 @@ from . import views
 from . import api
 from rest_framework import routers
 
+# TODO: added s to dataset and project basename as they conflict with
+# existing views
 router = routers.DefaultRouter()
-router.register('datasets', api.DatasetView, 'user')
-
-router1 = routers.DefaultRouter()
-router1.register('projects', api.UserView, 'user')
+router.register('datasets', api.DatasetView, basename='datasets')
+router.register('users', api.UserView, basename='user')
+router.register('projects', api.ProjectView, basename='projects')
+router.register(
+    'pharmacokinetic', api.PharmacokineticView,
+    basename='pharmacokinetic'
+)
+router.register(
+    'pharmacodynamic', api.PharmacodynamicView,
+    basename='pharmacodynamic'
+)
+router.register(
+    'dosed_pharmacokinetic', api.DosedPharmacokineticView,
+    basename='dosed_pharmacodynamic'
+)
+router.register(
+    'pkpd_model', api.PkpdView,
+    basename='pkpd_model'
+)
 
 # TODO: Move django_plotly_dash to the app that is actually using it!
 urlpatterns = [
     path('', views.IndexView.as_view(), name='index'),
     path('admin/doc/', include('django.contrib.admindocs.urls')),
     path('admin/', admin.site.urls),
-    path('api/', include(router1.urls), name='api-project'),
-    path('api/', include(router.urls), name='api-main'),
-    path('api/dataset/', include(router.urls), name='api-main'),
+
+
     path('accounts/', include('django.contrib.auth.urls')),
     path('dataset/<int:pk>/',
          views.DatasetDetailView.as_view(), name='dataset-detail'),
@@ -125,4 +141,7 @@ urlpatterns = [
     path('nca/', views.Nca.as_view(), name='nca'),
 
     path('django_plotly_dash/', include('django_plotly_dash.urls')),
+
+    path('api/', include(router.urls), name='api'),
+    path('api-auth/', include('rest_framework.urls')),
 ]

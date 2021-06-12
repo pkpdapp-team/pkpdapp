@@ -25,6 +25,7 @@ class Protocol(models.Model):
     dataset = models.ForeignKey(
         Dataset, on_delete=models.CASCADE,
         blank=True, null=True,
+        related_name='protocols',
         help_text='dataset containing this protocol'
     )
     subject = models.ForeignKey(
