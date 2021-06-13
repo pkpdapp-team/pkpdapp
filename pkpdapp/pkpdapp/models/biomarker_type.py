@@ -28,6 +28,7 @@ class BiomarkerType(models.Model):
     )
     dataset = models.ForeignKey(
         Dataset, on_delete=models.CASCADE,
+        related_name='biomarker_types',
         help_text='dataset containing this biomarker measurement'
     )
 

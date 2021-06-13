@@ -17,6 +17,7 @@ class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     selected_project = models.ForeignKey(
         Project,
+        related_name='projects',
         help_text='currently selected project for user',
         null=True, on_delete=models.SET_NULL
     )

@@ -20,6 +20,6 @@ class DatasetTestCase(APITestCase):
 
         keys = response_data.keys()
         present_keys = ['name', 'datetime', 'description', 'subjects',
-                        'biomarkertypes', 'protocols']
+                        'biomarker_types', 'protocols']
         for k in present_keys:
             self.assertTrue(k in keys)
