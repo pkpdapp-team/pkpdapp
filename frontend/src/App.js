@@ -7,6 +7,7 @@ import {
   useHistory,
   useLocation,
 } from "react-router-dom";
+import Login from "./Login"
 import DatasetDetail from "./DatasetDetail"
 import Project from "./Project"
 import TableChartIcon from '@material-ui/icons/TableChart';
@@ -60,7 +61,7 @@ import CreateProjectDialog from './CreateProjectDialog'
 
 
 const PrivateRoute = ({ component: Component, ...rest }) => {
-  const logged = true;
+  const logged = api.isLoggedIn();
 
   return <Route {...rest} render={(props) => (
     logged
@@ -342,7 +343,7 @@ function ListOfProjects({ handleClickProject, project}) {
   const [newProjectOpen, setNewProjectOpen] = React.useState(false);
 
   useEffect(() => {
-    api.get("/api/project").then(setProjects);
+    api.get("/api/projects").then(setProjects);
   },[])
 
   const handleClickNewProject = () => {
@@ -380,11 +381,11 @@ function ProjectMenu({ project, selectedItems, handleClickItem }) {
   
   useEffect(() => {
     if (project) {
-      api.get(`/api/dataset?project_id=${project.id}`)
+      api.get(`/api/datasets?project_id=${project.id}`)
         .then(setDatasets);
-      api.get(`/api/pk_model?project_id=${project.id}`)
+      api.get(`/api/dosed_pharmacokinetic?project_id=${project.id}`)
         .then(setPkModels);
-      api.get(`/api/pd_model?project_id=${project.id}`)
+      api.get(`/api/pharmacodynamic?project_id=${project.id}`)
         .then(setPdModels);
       api.get(`/api/pkpd_model?project_id=${project.id}`)
         .then(setPkpdModels);
@@ -540,7 +541,8 @@ export default function App() {
         </div>
         <div className={classes.grow} />
         <Button color="inherit" onClick={() => {
-          console.log('logout');
+          api.logout()
+          history.push('/login');
         }}>
           Logout
         </Button>
@@ -601,6 +603,9 @@ export default function App() {
 
   return (
       <Switch>
+        <Route path="/login">
+          <Login />
+        </Route>
         <Route>
           {logged_in}
         </Route>
