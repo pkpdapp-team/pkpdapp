@@ -143,5 +143,6 @@ urlpatterns = [
     path('django_plotly_dash/', include('django_plotly_dash.urls')),
 
     path('api/', include(router.urls), name='api'),
-    path('api-auth/', include('rest_framework.urls')),
+    path('auth/', include('djoser.urls')),
+    path('auth/', include('djoser.urls.authtoken')),
 ]
