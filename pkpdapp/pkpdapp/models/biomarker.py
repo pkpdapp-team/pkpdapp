@@ -22,6 +22,7 @@ class Biomarker(models.Model):
     )
     biomarker_type = models.ForeignKey(
         BiomarkerType, on_delete=models.CASCADE,
+        related_name='biomarkers',
         help_text='biomarker type, for example "concentration in mg"'
     )
     value = models.FloatField(help_text='value of the measurement')

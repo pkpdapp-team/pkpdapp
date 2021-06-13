@@ -14,6 +14,7 @@ class Dose(models.Model):
     """
     protocol = models.ForeignKey(
         Protocol, on_delete=models.CASCADE,
+        related_name='doses',
         help_text='protocol containing this dose'
     )
     start_time = models.FloatField(

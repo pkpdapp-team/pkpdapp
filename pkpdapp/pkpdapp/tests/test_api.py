@@ -5,10 +5,14 @@
 #
 from rest_framework import status
 from rest_framework.test import APITestCase, APIClient
+from django.contrib.auth.models import User
 
 
 class DatasetTestCase(APITestCase):
-    client = APIClient()
+    def setUp(self):
+        user = User.objects.get(username='demo')
+        self.client = APIClient()
+        self.client.force_authenticate(user=user)
 
     def test_dataset_creation(self):
         data = {"name": "hello", "datatime": "", "description": "bye"}
@@ -20,6 +24,6 @@ class DatasetTestCase(APITestCase):
 
         keys = response_data.keys()
         present_keys = ['name', 'datetime', 'description', 'subjects',
-                        'biomarkertypes', 'protocols']
+                        'biomarker_types', 'protocols']
         for k in present_keys:
             self.assertTrue(k in keys)

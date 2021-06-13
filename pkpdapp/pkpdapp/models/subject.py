@@ -16,6 +16,7 @@ class Subject(models.Model):
     id_in_dataset = models.IntegerField(help_text='unique id in the dataset')
     dataset = models.ForeignKey(
         Dataset, on_delete=models.CASCADE,
+        related_name='subjects',
         help_text='dataset containing this subject'
     )
     dose_group = models.CharField(
