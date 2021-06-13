@@ -48,6 +48,7 @@ def test_file_upload_error(cls, filename, error_message, ending=".csv"):
     cls.assertContains(response, error_message)
 
 
+@unittest.skip("swapping to rest api views")
 class TestIndexView(SimpleTestCase):
     """
     Tests the index view.
@@ -77,6 +78,7 @@ class TestIndexView(SimpleTestCase):
         self.assertContains(response, contents[0])
 
 
+@unittest.skip("swapping to rest api views")
 class TestGenericView(SimpleTestCase):
     """
     Tests the generic view.
@@ -100,6 +102,7 @@ class TestGenericView(SimpleTestCase):
         self.assertContains(response, contents)
 
 
+@unittest.skip("swapping to rest api views")
 class TestDatasetView(TestCase):
     """
     Tests the dataset views.
@@ -116,7 +119,6 @@ class TestDatasetView(TestCase):
             description='description for my cool dataset',
         )
 
-    @unittest.skip("this is part of dataset upload (ongoing - #98)")
     def test_create_form(self):
         response = self.client.get(reverse('dataset-create'))
         self.assertEquals(response.status_code, HTTPStatus.OK)
@@ -265,6 +267,7 @@ class TestDatasetView(TestCase):
         self.assertContains(response, self.test_dataset.description)
 
 
+@unittest.skip("swapping to rest api views")
 class TestPharmodynamicModelView(TestCase):
     """
     Tests the pd_model view.
@@ -438,6 +441,7 @@ class TestPharmodynamicModelView(TestCase):
         self.assertContains(response, self.test_model.description)
 
 
+@unittest.skip("swapping to rest api views")
 class TestProjectView(TestCase):
     """
     Tests the project view.
@@ -592,6 +596,7 @@ class TestProjectView(TestCase):
         self.assertContains(response, self.test_project.name)
 
 
+@unittest.skip("swapping to rest api views")
 class TestRegistrationViews(TestCase):
     """
     Tests the login/logout templates and functionality
