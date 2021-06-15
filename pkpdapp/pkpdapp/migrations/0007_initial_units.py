@@ -78,13 +78,6 @@ def load_units(apps, schema_editor):
         )
 
 
-def delete_units(apps, schema_editor):
-    Unit = apps.get_model("pkpdapp", "Unit")
-    StandardUnit = apps.get_model("pkpdapp", "StandardUnit")
-    Unit.objects.all().delete()
-    StandardUnit.objects.all().delete()
-
-
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -92,5 +85,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(load_units, delete_units),
+        migrations.RunPython(load_units),
     ]

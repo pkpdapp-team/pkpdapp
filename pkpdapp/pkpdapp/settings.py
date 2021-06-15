@@ -55,7 +55,6 @@ INSTALLED_APPS = [
     'djoser',
 
     # internal apps
-    'explore_data.apps.ExploreDataConfig',
     'pkpdapp',
 ]
 

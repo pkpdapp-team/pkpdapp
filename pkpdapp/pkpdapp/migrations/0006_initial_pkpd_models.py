@@ -166,13 +166,6 @@ Description of a three compartment PK model here.
             pkpd_model.save()
 
 
-def delete_pkpd_models(apps, schema_editor):
-    PharmacodynamicModel = apps.get_model("pkpdapp", "PharmacodynamicModel")
-    PharmacodynamicModel.objects.all().delete()
-    PharmacokineticModel = apps.get_model("pkpdapp", "PharmacokineticModel")
-    PharmacokineticModel.objects.all().delete()
-
-
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -180,5 +173,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(load_pkpd_models, delete_pkpd_models),
+        migrations.RunPython(load_pkpd_models),
     ]

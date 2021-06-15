@@ -48,13 +48,6 @@ def load_users_and_projects(apps, schema_editor):
         profile.save()
 
 
-def delete_users_and_projects(apps, schema_editor):
-    Project = apps.get_model("pkpdapp", "Project")
-    Project.objects.all().delete()
-    User = apps.get_model("auth", "User")
-    User.objects.filter(is_superuser=False).delete()
-
-
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -62,6 +55,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(load_users_and_projects,
-                             delete_users_and_projects),
+        migrations.RunPython(load_users_and_projects),
     ]
