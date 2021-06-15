@@ -56,6 +56,7 @@ setup(
         'jsonfield==3.1.0',
         'django-crispy-forms==1.11.2',
         'djangorestframework>=3.12.4',
+        'djoser==2.1.0',
     ],
     dependency_links=[
         "git+git://github.com/DavAug/erlotinib.git#egg=erlotinib-latest",

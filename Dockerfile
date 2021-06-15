@@ -24,7 +24,6 @@ RUN pip install --upgrade pip
 COPY ./ /pkpdapp
 RUN cd /pkpdapp && pip install --no-cache-dir -r requirements.txt 
 RUN python /pkpdapp/pkpdapp/manage.py migrate --noinput
-RUN python /pkpdapp/pkpdapp/manage.py collectstatic --noinput
 
 WORKDIR /pkpdapp
 

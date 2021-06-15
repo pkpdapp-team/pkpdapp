@@ -43,10 +43,6 @@ jobs:
           python -m pip install --upgrade pip setuptools wheel
           python -m pip install .
       
-      - name: build pkpdapp
-        run: |
-          python pkpdapp/manage.py collectstatic
-      
       - name: run unit tests
         run: |
           cd pkpdapp && python manage.py test

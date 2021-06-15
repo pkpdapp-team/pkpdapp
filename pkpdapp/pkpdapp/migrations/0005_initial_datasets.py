@@ -395,11 +395,6 @@ def load_datasets(apps, schema_editor):
                     )
 
 
-def delete_datasets(apps, schema_editor):
-    Dataset = apps.get_model("pkpdapp", "Dataset")
-    Dataset.objects.all().delete()
-
-
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -408,5 +403,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(load_datasets, delete_datasets),
+        migrations.RunPython(load_datasets),
     ]

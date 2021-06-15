@@ -51,11 +51,24 @@ INSTALLED_APPS = [
     'django_extensions',
     'crispy_forms',
     'rest_framework',
+    'rest_framework.authtoken',
+    'djoser',
 
     # internal apps
-    'explore_data.apps.ExploreDataConfig',
     'pkpdapp',
 ]
+
+
+# django rest framework library
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.TokenAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ]
+}
+
 
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
 
@@ -188,7 +201,6 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'pkpdapp', 'static'),
 ]
 
 # Staticfiles finders for locating dash app assets and related files

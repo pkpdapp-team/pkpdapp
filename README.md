@@ -39,18 +39,13 @@ $ cd pkpdapp
 $ python manage.py migrate
 ```
 
-4. Collect static files
-```bash
-$ python manage.py collectstatic
-```
-
-5. Run local server
+4. Run local server
 
 ```bash
 $ python manage.py runserver
 ```
 
-6. (Optional) Create admin user
+5. (Optional) Create admin user
 
 ```bash
 $ python manage.py createsuperuser
