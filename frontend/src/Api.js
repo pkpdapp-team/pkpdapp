@@ -1,4 +1,5 @@
 let authToken;
+let _loggedInUser;
 
 const isEmpty = value =>
   value === undefined ||
@@ -11,12 +12,17 @@ if (!isEmpty(localStorage.getItem("authToken"))) {
   authToken = localStorage.getItem("authToken")
 }
 
+if (!isEmpty(localStorage.getItem("loggedInUser"))) {
+  _loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
+}
+
 
 // derived from https://jasonwatmore.com/post/2020/04/18/fetch-a-lightweight-fetch-wrapper-to-simplify-http-requests
 export const api = {
     login,
     logout,
     isLoggedIn,
+    loggedInUser,
     get,
     post,
     put,
@@ -36,19 +42,30 @@ function login(username, password) {
     ).then(handleResponse).then((data) => {
       authToken = data.auth_token;
       localStorage.setItem("authToken", authToken);
-      return data;
-    });
+      return api.get('auth/users/me/').then((data) => {
+        _loggedInUser = data;
+        localStorage.setItem(
+          "loggedInUser", 
+          JSON.stringify(_loggedInUser),
+        );
+      });
+    })
 }
 
 function logout() {
   return post('auth/token/logout').then(() => {
     authToken = null;
     localStorage.removeItem("authToken");
+    localStorage.removeItem("loggedInUser");
   });
 }
 
 function isLoggedIn() {
   return !isEmpty(authToken);
+}
+
+function loggedInUser() {
+  return _loggedInUser;
 }
 
 function get(url) {
@@ -103,8 +120,8 @@ function handleResponse(response) {
         const data = text && JSON.parse(text);
         
         if (!response.ok) {
-            const error = (data && data.message) || response.statusText;
-            return Promise.reject(error);
+            console.log('API error:', response.statusText, data)
+            return Promise.reject(data);
         }
 
         return data;

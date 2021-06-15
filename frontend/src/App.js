@@ -266,15 +266,16 @@ function AvatarListItem({ nested, item, selected, handleClick, small }) {
 function ExpandableListItem({icon: Icon, items, text, selectedItems, type, handleClickItem}) {
   const classes = useStyles();
   const [open, setOpen] = React.useState(false);
-  const [openCreateNew, setOpenCreatNew] = React.useState(false);
+  const [openCreateNew, setOpenCreateNew] = React.useState(false);
 
   const handleClick = () => {
     setOpen(!open);
   };
 
-  const handleNewClick = () => {
-    setOpenCreatNew((open) => !open);
+  const handleNewOpenClose = () => {
+    setOpenCreateNew((open) => !open);
   }
+
 
   return (
     <React.Fragment>
@@ -301,7 +302,8 @@ function ExpandableListItem({icon: Icon, items, text, selectedItems, type, handl
         ))}
         <AddButton 
           nested={true}
-          handleClick={handleNewClick} component={CreateProjectDialog} 
+          handleOpenClose={handleNewOpenClose} 
+          component={CreateProjectDialog} 
           open={openCreateNew}
           label={`create ${text}`} small={true}
         />
@@ -311,7 +313,7 @@ function ExpandableListItem({icon: Icon, items, text, selectedItems, type, handl
   )
 }
 
-function AddButton({ nested, handleClick, label, small, component: Component, open }) {
+function AddButton({ nested, handleOpenClose, handleSave, label, small, component: Component, open }) {
   const classes = useStyles();
   let avatarClassName;
   if (small) {
@@ -323,7 +325,7 @@ function AddButton({ nested, handleClick, label, small, component: Component, op
   return (
     <React.Fragment>
     <Tooltip title={label} placement="bottom">
-      <ListItem button className={nested ? classes.nested : null} onClick={handleClick}>
+      <ListItem button className={nested ? classes.nested : null} onClick={handleOpenClose}>
         <ListItemAvatar>
           <Avatar variant='rounded' className={avatarClassName}>
             <AddIcon/>
@@ -331,7 +333,11 @@ function AddButton({ nested, handleClick, label, small, component: Component, op
         </ListItemAvatar>
       </ListItem>
       </Tooltip>
-      <Component open={open} handleClose={handleClick} />
+      <Component 
+        open={open}
+        handleClose={handleOpenClose}
+        handleSave={handleSave}
+      />
     </React.Fragment>
   )
 }
@@ -343,11 +349,18 @@ function ListOfProjects({ handleClickProject, project}) {
   const [newProjectOpen, setNewProjectOpen] = React.useState(false);
 
   useEffect(() => {
-    api.get("/api/projects").then(setProjects);
+    api.get("/api/project").then(setProjects);
   },[])
 
-  const handleClickNewProject = () => {
+  const handleOpenCloseNewProject = () => {
     setNewProjectOpen((open) => !open);
+  };
+
+  const handleSaveNewProject = (data) => {
+    handleOpenCloseNewProject(); 
+    api.post('api/project/', data).then(() => {
+      api.get("api/project").then(setProjects);
+    });
   };
 
   return (
@@ -361,7 +374,9 @@ function ListOfProjects({ handleClickProject, project}) {
         />
       ))}
       <AddButton 
-        handleClick={handleClickNewProject} component={CreateProjectDialog} 
+        handleOpenClose={handleOpenCloseNewProject}             
+        handleSave={handleSaveNewProject}             
+        component={CreateProjectDialog} 
         open={newProjectOpen} label='create project'
       />
     </List>
@@ -381,7 +396,7 @@ function ProjectMenu({ project, selectedItems, handleClickItem }) {
   
   useEffect(() => {
     if (project) {
-      api.get(`/api/datasets?project_id=${project.id}`)
+      api.get(`/api/dataset?project_id=${project.id}`)
         .then(setDatasets);
       api.get(`/api/dosed_pharmacokinetic?project_id=${project.id}`)
         .then(setPkModels);
