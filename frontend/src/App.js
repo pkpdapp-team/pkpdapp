@@ -14,6 +14,7 @@ import TableChartIcon from '@material-ui/icons/TableChart';
 import BatteryUnknownIcon from '@material-ui/icons/BatteryUnknown';
 import CheckBoxOutlineBlankIcon from '@material-ui/icons/CheckBoxOutlineBlank';
 import BackupIcon from '@material-ui/icons/Backup';
+import DateRangeIcon from '@material-ui/icons/DateRange';
 import { makeStyles, fade } from '@material-ui/core/styles';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import SettingsBackupRestoreIcon from '@material-ui/icons/SettingsBackupRestore';
@@ -56,6 +57,7 @@ import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import { api } from './Api'
 import CreateProjectDialog from './CreateProjectDialog'
+import CreatePkModelDialog from './CreatePkModelDialog'
 
 
 
@@ -263,7 +265,8 @@ function AvatarListItem({ nested, item, selected, handleClick, small }) {
   )
 }
 
-function ExpandableListItem({icon: Icon, items, text, selectedItems, type, handleClickItem}) {
+function ExpandableListItem({project, icon: Icon, items, text, selectedItems, apiId, type, handleClickItem, createNewComponent: CreateNewComponent}) {
+
   const classes = useStyles();
   const [open, setOpen] = React.useState(false);
   const [openCreateNew, setOpenCreateNew] = React.useState(false);
@@ -276,6 +279,10 @@ function ExpandableListItem({icon: Icon, items, text, selectedItems, type, handl
     setOpenCreateNew((open) => !open);
   }
 
+  const handleNewSave = (data) => {
+    handleNewOpenClose(); 
+    project.refresh(project.id);
+  }
 
   return (
     <React.Fragment>
@@ -301,9 +308,11 @@ function ExpandableListItem({icon: Icon, items, text, selectedItems, type, handl
           />
         ))}
         <AddButton 
+          project={project}
           nested={true}
           handleOpenClose={handleNewOpenClose} 
-          component={CreateProjectDialog} 
+          handleSave={handleNewSave} 
+          component={CreateNewComponent} 
           open={openCreateNew}
           label={`create ${text}`} small={true}
         />
@@ -313,7 +322,7 @@ function ExpandableListItem({icon: Icon, items, text, selectedItems, type, handl
   )
 }
 
-function AddButton({ nested, handleOpenClose, handleSave, label, small, component: Component, open }) {
+function AddButton({ project, nested, handleOpenClose, handleSave, label, small, component: Component, open }) {
   const classes = useStyles();
   let avatarClassName;
   if (small) {
@@ -334,6 +343,7 @@ function AddButton({ nested, handleOpenClose, handleSave, label, small, componen
       </ListItem>
       </Tooltip>
       <Component 
+        project={project}
         open={open}
         handleClose={handleOpenClose}
         handleSave={handleSave}
@@ -358,9 +368,7 @@ function ListOfProjects({ handleClickProject, project}) {
 
   const handleSaveNewProject = (data) => {
     handleOpenCloseNewProject(); 
-    api.post('api/project/', data).then(() => {
-      api.get("api/project").then(setProjects);
-    });
+    api.get("api/project").then(setProjects);
   };
 
   return (
@@ -385,29 +393,15 @@ function ListOfProjects({ handleClickProject, project}) {
 
 function ProjectMenu({ project, selectedItems, handleClickItem }) {
   const classes = useStyles();
-  const [datasets, setDatasets] = React.useState([]);
-  const [pkModels, setPkModels] = React.useState([]);
-  const [pdModels, setPdModels] = React.useState([]);
-  const [pkpdModels, setPkpdModels] = React.useState([]);
+  const datasets = project.datasets;
+  const pkModels = project.pk_models;
+  const pdModels = project.pd_models;
+  const pkpdModels = project.pkpd_models;
   const [dataAnalysisOpen, setDataAnalysisOpen] = React.useState(false);
   const handleDataAnalysisClick = () => {
     setDataAnalysisOpen((open) => !open);
   };
   
-  useEffect(() => {
-    if (project) {
-      api.get(`/api/dataset?project_id=${project.id}`)
-        .then(setDatasets);
-      api.get(`/api/dosed_pharmacokinetic?project_id=${project.id}`)
-        .then(setPkModels);
-      api.get(`/api/pharmacodynamic?project_id=${project.id}`)
-        .then(setPdModels);
-      api.get(`/api/pkpd_model?project_id=${project.id}`)
-        .then(setPkpdModels);
-    }
-  },[project]);
-
-
   return (
     <List>
       <ListItem button >
@@ -449,42 +443,54 @@ function ProjectMenu({ project, selectedItems, handleClickItem }) {
       <Divider />
 
       <ExpandableListItem 
+        project={project}
         items={datasets} 
         text="Datasets" 
         type='dataset'
+        apiId='dataset'
         icon={TableChartIcon}
         handleClickItem={handleClickItem}
+        createNewComponent={CreatePkModelDialog}
         selectedItems={
           selectedItems.filter((i) => i.type === 'dataset')
         }
       />
 
       <ExpandableListItem 
+        project={project}
         items={pkModels} 
         text="PK Models" 
         type='pk_model'
+        apiId='dosed_pharmacokinetic'
         icon={AccessibilityIcon}
         handleClickItem={handleClickItem}
+        createNewComponent={CreatePkModelDialog}
         selectedItems={
           selectedItems.filter((i) => i.type === 'pk_model')
         }
       />
       <ExpandableListItem 
+        project={project}
         items={pdModels} 
         text="PD Models" 
         type='pd_model'
+        apiId='pharmacodynamic'
         icon={FunctionsIcon}
         handleClickItem={handleClickItem}
+        createNewComponent={CreatePkModelDialog}
         selectedItems={
           selectedItems.filter((i) => i.type === 'pd_model')
         }
       />
       <ExpandableListItem 
+        project={project}
         items={pkpdModels} 
         text="PKPD Models" 
         type='pkd_model'
+        apiId='pkpd_model'
         icon={AllInboxIcon}
         handleClickItem={handleClickItem}
+        createNewComponent={CreatePkModelDialog}
         selectedItems={
           selectedItems.filter((i) => i.type === 'pkpd_model')
         }
@@ -516,12 +522,21 @@ export default function App() {
     });
   };
 
+  const loadProject = (id) => {
+    console.log('setting project', id);
+    api.get(`/api/project/${id}`).then(data => {
+      setProject({
+        ...data,
+        refresh: loadProject,
+      });
+    });
+  };
+
   const handleClickProject = (project) => {
-    setProject(project);
+    loadProject(project.id);
     setSelectedItems([]);
   };
 
-  
   let history = useHistory();
 
   const logged_in = (

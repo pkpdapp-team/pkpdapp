@@ -95,17 +95,10 @@ class DatasetSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class ProjectSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Project
-        fields = '__all__'
-
-
 class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = '__all__'
-
 
 class UserSerializer(serializers.ModelSerializer):
     profile = ProfileSerializer(read_only=True)
@@ -119,3 +112,59 @@ class UserSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'first_name', 'last_name', 'email', 'profile', 'project_set'
         )
+
+class ProjectSerializer(serializers.ModelSerializer):
+    datasets = DatasetSerializer(
+        many=True, read_only=True
+    )
+    dataset_ids = serializers.PrimaryKeyRelatedField(
+        queryset=Dataset.objects.all(), source='datasets',
+        many=True, write_only=True,
+    )
+    pk_models = DosedPharmacokineticSerializer(
+        many=True, read_only=True
+    )
+    pk_model_ids = serializers.PrimaryKeyRelatedField(
+        queryset=DosedPharmacokineticModel.objects.all(),
+        source='pk_models',
+        many=True, write_only=True,
+    )
+    pd_models = PharmacodynamicSerializer(
+        many=True, read_only=True
+    )
+    pd_model_ids = serializers.PrimaryKeyRelatedField(
+        queryset=PharmacodynamicModel.objects.all(),
+        source='pd_models',
+        many=True, write_only=True,
+    )
+    pkpd_models = PkpdSerializer(
+        many=True, read_only=True
+    )
+    pkpd_model_ids = serializers.PrimaryKeyRelatedField(
+        queryset=PkpdModel.objects.all(),
+        source='pkpd_models',
+        many=True, write_only=True,
+    )
+    protocols = ProtocolSerializer(
+        many=True, read_only=True
+    )
+    protocol_ids = serializers.PrimaryKeyRelatedField(
+        queryset=Protocol.objects.all(),
+        source='protocols',
+        many=True, write_only=True,
+    )
+    users = UserSerializer(
+        many=True, read_only=True
+    )
+    user_ids = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.all(),
+        source='users',
+        many=True, write_only=True,
+    )
+
+    class Meta:
+        model = Project
+        fields = '__all__'
+
+
+

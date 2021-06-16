@@ -8,42 +8,11 @@ import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import { useForm, Controller  } from "react-hook-form";
 import { makeStyles } from '@material-ui/core/styles';
+import { FormTextField } from './FormComponents';
 import { api } from './Api'
-
-const useStyles = makeStyles((theme) => ({
-  container: {
-    paddingTop: theme.spacing(4),
-    paddingBottom: theme.spacing(4),
-    height: '100%',
-  },
-  formInput: {
-    margin: theme.spacing(1),
-  },
-}));
-
-
-function FormTextField({control, name, defaultValue, classes, label, multiline}) {
-  return (
-    <Controller
-        control={control}
-        defaultValue={defaultValue}
-        name={name}
-        render={({ field }) => (
-          <TextField 
-            className={classes.formInput} 
-            style={{ width: 320 }}
-            {...field} 
-            label={label}
-            multiline={multiline}
-          />
-        )}
-      />
-  )
-}
 
 
 export default function CreateProjectDialog({project, open, handleClose, handleSave}) {
-  const classes = useStyles();
   const { control, handleSubmit, reset } = useForm();
 
   const defaultProject = {
@@ -56,8 +25,8 @@ export default function CreateProjectDialog({project, open, handleClose, handleS
       ...values,
       users: [api.loggedInUser().id],
     }
+    api.post('api/project/', data).then(handleSave);
     reset(defaultProject);
-    handleSave(data);
   };
 
   return (
@@ -72,14 +41,12 @@ export default function CreateProjectDialog({project, open, handleClose, handleS
           control={control} 
           defaultValue={defaultProject.name} 
           name="name" label="Name"
-          classes={classes}
         />
         <FormTextField 
           control={control} 
           defaultValue={defaultProject.description} 
           name="description" label="Description"
           multiline
-          classes={classes}
         />
       </DialogContent>
       <DialogActions>

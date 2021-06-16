@@ -25,6 +25,7 @@ export const api = {
     loggedInUser,
     get,
     post,
+    patch,
     put,
     delete: _delete
 };
@@ -102,6 +103,18 @@ function put(url, body) {
     return fetch(url, requestOptions).then(handleResponse);    
 }
 
+function patch(url, body) {
+    const requestOptions = {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Token ${authToken}`,
+        },
+        body: JSON.stringify(body)
+    };
+    return fetch(url, requestOptions).then(handleResponse);    
+}
+
 // prefixed with underscored because delete is a reserved word in javascript
 function _delete(url) {
     const requestOptions = {
@@ -118,7 +131,6 @@ function _delete(url) {
 function handleResponse(response) {
     return response.text().then(text => {
         const data = text && JSON.parse(text);
-        
         if (!response.ok) {
             console.log('API error:', response.statusText, data)
             return Promise.reject(data);

@@ -21,6 +21,11 @@ from pkpdapp.models import (
 )
 from django.contrib.auth.models import User
 
+class EnablePartialUpdateMixin:
+    """Enable partial updates"""
+    def update(self, request, *args, **kwargs):
+        kwargs['partial'] = True
+        return super().update(request, *args, **kwargs)
 
 class ProjectFilter(filters.BaseFilterBackend):
     """
@@ -79,7 +84,7 @@ class DatasetView(viewsets.ModelViewSet):
     filter_backends = [ProjectFilter]
 
 
-class ProjectView(viewsets.ModelViewSet):
+class ProjectView(EnablePartialUpdateMixin, viewsets.ModelViewSet):
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
 
