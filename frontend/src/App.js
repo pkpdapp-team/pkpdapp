@@ -7,6 +7,13 @@ import {
   useHistory,
   useLocation,
 } from "react-router-dom";
+
+
+import classNames from 'classnames';
+import Checkbox from '@material-ui/core/Checkbox';
+import Box from '@material-ui/core/Box';
+
+import Container from '@material-ui/core/Container';
 import Login from "./Login"
 import DatasetDetail from "./DatasetDetail"
 import Project from "./Project"
@@ -58,6 +65,7 @@ import ListItemText from '@material-ui/core/ListItemText';
 import { api } from './Api'
 import CreateProjectDialog from './CreateProjectDialog'
 import CreatePkModelDialog from './CreatePkModelDialog'
+import Modelling from './Modelling'
 
 
 
@@ -168,6 +176,7 @@ const useStyles = makeStyles((theme) => ({
       duration: theme.transitions.duration.enteringScreen,
     }),
   },
+  
   drawerPaperClose: {
     overflowX: 'hidden',
     transition: theme.transitions.create('width', {
@@ -211,20 +220,14 @@ const useStyles = makeStyles((theme) => ({
     height: theme.spacing(5),
     backgroundColor: theme.palette.primary.main,
   },
+  colorSelected: {
+    backgroundColor: theme.palette.secondary.main,
+  },
   avatarSmall: {
     width: theme.spacing(3),
     height: theme.spacing(3),
   },
   avatar: {
-    width: theme.spacing(5),
-    height: theme.spacing(5),
-  },
-  avatarSmallSelected: {
-    width: theme.spacing(3),
-    height: theme.spacing(3),
-    backgroundColor: theme.palette.secondary.main,
-  },
-  avatarSelected: {
     width: theme.spacing(5),
     height: theme.spacing(5),
     backgroundColor: theme.palette.secondary.main,
@@ -233,39 +236,68 @@ const useStyles = makeStyles((theme) => ({
     width: theme.spacing(7),
     height: theme.spacing(7),
   },
+  noPadding: {
+    margin: 0,
+    marginRight: 0,
+    marginLeft: 0,
+    padding: 0,
+  },
 }));
 
 
-function AvatarListItem({ nested, item, selected, handleClick, small }) {
+function AvatarListItem({ nested, item, checked, selected, handleClick, handleClickChecked, small }) {
   const classes = useStyles();
-  let itemClassName;
-  if (small) {
-    if (selected) {
-      itemClassName = classes.avatarSmallSelected;
-    } else {
-      itemClassName = classes.avatarSmall;
-    }
-  } else {
-    if (selected) {
-      itemClassName = classes.avatarSelected;
-    } else {
-      itemClassName = classes.avatar;
-    }
-  }
+  const avatarClassName = classNames(
+    (small ? classes.avatarSmall: null),
+    (selected ? classes.colorSelected: null),
+  );
+  const itemClassName = classNames(
+    (nested ? classes.nested : null),
+  );
+
+  const marginAdjust = small ? -3.5 : 0;
+
   return (
     <Tooltip title={item.name} placement="right" arrow>
-      <ListItem button className={nested ? classes.nested : null} onClick={handleClick}>
-      <ListItemAvatar>
-        <Avatar  className={itemClassName}>{item.name[0]}</Avatar>
-      </ListItemAvatar>
-      <ListItemText primary={item.name} />
-    </ListItem>
+      
+      <ListItem button className={itemClassName} 
+        onClick={handleClick}
+      >
+        {checked !== undefined &&
+        <Box mr={marginAdjust}>
+        <ListItemIcon >
+          <Checkbox
+            onClick={event => {
+              handleClickChecked();
+              event.stopPropagation();
+            }}
+            edge="start"
+            checked={checked}
+            tabIndex={-1}
+            disableRipple
+          />
+        </ListItemIcon>
+        </Box>
+        }
+        <Box mr={marginAdjust}>
+        <ListItemAvatar>
+          <Avatar  
+            className={avatarClassName}
+          >
+            {item.name[0]}
+          </Avatar>
+        </ListItemAvatar>
+        </Box>
+        <ListItemText 
+          primary={item.name} 
+        />
+      </ListItem>
     </Tooltip>
 
   )
 }
 
-function ExpandableListItem({project, icon: Icon, items, text, selectedItems, apiId, type, handleClickItem, createNewComponent: CreateNewComponent}) {
+function ExpandableListItem({project, icon: Icon, items, text, selected, selectedItems, apiId, type, handleClickItem, handleClickCheckedItem, createNewComponent: CreateNewComponent}) {
 
   const classes = useStyles();
   const [open, setOpen] = React.useState(false);
@@ -284,6 +316,8 @@ function ExpandableListItem({project, icon: Icon, items, text, selectedItems, ap
     project.refresh(project.id);
   }
 
+  console.log('expandable', selected);
+
   return (
     <React.Fragment>
       <ListItem button onClick={handleClick}>
@@ -296,20 +330,25 @@ function ExpandableListItem({project, icon: Icon, items, text, selectedItems, ap
       <Collapse in={open} timeout="auto" unmountOnExit>
       <List component="div" disablePadding>
         {items.map((item) => (
+          <React.Fragment>
+          
           <AvatarListItem
-            nested={true}
             key={item.id}
+            checked={selectedItems.find((i) => i.id === item.id) !== undefined}
             item={item} 
-            selected={selectedItems.find((i) => i.id === item.id) !== undefined}
+            selected={selected ? selected.id === item.id : false}
             small={true}
+            handleClickChecked={() => {
+              handleClickCheckedItem({...item, type: type});
+            }}
             handleClick={() => {
               handleClickItem({...item, type: type});
             }}
           />
+          </React.Fragment>
         ))}
         <AddButton 
           project={project}
-          nested={true}
           handleOpenClose={handleNewOpenClose} 
           handleSave={handleNewSave} 
           component={CreateNewComponent} 
@@ -391,7 +430,7 @@ function ListOfProjects({ handleClickProject, project}) {
   )
 }
 
-function ProjectMenu({ project, selectedItems, handleClickItem }) {
+function ProjectMenu({ project, selected, selectedItems, handleClickCheckedItem, handleClickItem }) {
   const classes = useStyles();
   const datasets = project.datasets;
   const pkModels = project.pk_models;
@@ -404,11 +443,11 @@ function ProjectMenu({ project, selectedItems, handleClickItem }) {
   
   return (
     <List>
-      <ListItem button >
+      <ListItem button component={Link} to="/modelling">
         <ListItemIcon>
           <VisibilityIcon />
         </ListItemIcon>
-        <ListItemText primary='Explore' />
+        <ListItemText primary='Modelling' />
       </ListItem>
       <ListItem button onClick={handleDataAnalysisClick}>
         <ListItemIcon>
@@ -450,7 +489,9 @@ function ProjectMenu({ project, selectedItems, handleClickItem }) {
         apiId='dataset'
         icon={TableChartIcon}
         handleClickItem={handleClickItem}
+        handleClickCheckedItem={handleClickCheckedItem}
         createNewComponent={CreatePkModelDialog}
+        selected={selected}
         selectedItems={
           selectedItems.filter((i) => i.type === 'dataset')
         }
@@ -464,7 +505,9 @@ function ProjectMenu({ project, selectedItems, handleClickItem }) {
         apiId='dosed_pharmacokinetic'
         icon={AccessibilityIcon}
         handleClickItem={handleClickItem}
+        handleClickCheckedItem={handleClickCheckedItem}
         createNewComponent={CreatePkModelDialog}
+        selected={selected}
         selectedItems={
           selectedItems.filter((i) => i.type === 'pk_model')
         }
@@ -477,7 +520,9 @@ function ProjectMenu({ project, selectedItems, handleClickItem }) {
         apiId='pharmacodynamic'
         icon={FunctionsIcon}
         handleClickItem={handleClickItem}
+        handleClickCheckedItem={handleClickCheckedItem}
         createNewComponent={CreatePkModelDialog}
+        selected={selected}
         selectedItems={
           selectedItems.filter((i) => i.type === 'pd_model')
         }
@@ -490,7 +535,9 @@ function ProjectMenu({ project, selectedItems, handleClickItem }) {
         apiId='pkpd_model'
         icon={AllInboxIcon}
         handleClickItem={handleClickItem}
+        handleClickCheckedItem={handleClickCheckedItem}
         createNewComponent={CreatePkModelDialog}
+        selected={selected}
         selectedItems={
           selectedItems.filter((i) => i.type === 'pkpd_model')
         }
@@ -503,6 +550,7 @@ function ProjectMenu({ project, selectedItems, handleClickItem }) {
 export default function App() {
   const classes = useStyles();
   const [project, setProject] = React.useState(null);
+  const [selected, setSelected] = React.useState(null);
   const [selectedItems, setSelectedItems] = React.useState([]);
   const [open, setOpen] = React.useState(true);
 
@@ -511,6 +559,10 @@ export default function App() {
   };
 
   const handleClickItem = (item) => {
+    setSelected(item);
+  };
+
+  const handleClickCheckedItem = (item) => {
     setSelectedItems((prevSelected) => {
       let newSelected = prevSelected.filter((s) => 
         s.type !== item.type || s.id !== item.id
@@ -581,7 +633,7 @@ export default function App() {
     <Drawer
       variant="permanent"
       classes={{
-        paper: clsx(classes.drawerPaper,  classes.drawerPaperClose),
+        paper: clsx(classes.drawerPaper,  !open && classes.drawerPaperClose),
       }}
       open={open}
     >
@@ -614,7 +666,9 @@ export default function App() {
       {project && <ProjectMenu 
         project={project} 
         selectedItems={selectedItems}
+        selected={selected}
         handleClickItem={handleClickItem}
+        handleClickCheckedItem={handleClickCheckedItem}
       />
       }
     </Drawer>
@@ -622,10 +676,19 @@ export default function App() {
       <div className={classes.appBarSpacer} />
         {/* A <Switch> looks through its children <Route>s and
               renders the first one that matches the current URL. */}
+
+        <Container maxWidth="false">
         <Switch>
           <PrivateRoute path="/dataset/:id" component={DatasetDetail} />
+          <PrivateRoute path="/modelling" 
+            component={Modelling} 
+            selectedItems={selectedItems} 
+            project={project} 
+            selected={selected}
+          />
           <PrivateRoute path="/" component={Project} />
         </Switch>
+        </Container>
     </main>
     </div>
   );
