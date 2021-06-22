@@ -4,6 +4,7 @@ import Grid from '@material-ui/core/Grid';
 import PkDetail from './PkDetail'
 import PkpdDetail from './PkDetail'
 import PdDetail from './PdDetail'
+import ProtocolDetail from './ProtocolDetail'
 import DatasetDetail from './DatasetDetail'
 import Chart from './Chart'
 import ChartController from './ChartController'
@@ -16,14 +17,19 @@ const useStyles = makeStyles((theme) => ({
   },
   paper: {
     padding: theme.spacing(2),
-    textAlign: 'center',
-    color: theme.palette.text.secondary,
+    textAlign: 'left',
   },
 }));
 
 export default function Modelling({selected, selectedItems, project}) {
   const classes = useStyles();
-  console.log(selected);
+  if (!project) {
+    return ('Select a project')
+  }
+  if (!selected) {
+    return ('Select something')
+  }
+  console.log('Modelling', selected);
   const selectedIsDataset = selected ? selected.type === 'dataset' : false;
   console.log(selected);
   const selectedIsPkModel= selected ? selected.type === 'pk_model' : false;
@@ -42,22 +48,42 @@ export default function Modelling({selected, selectedItems, project}) {
             <ChartController />
           </Paper>
         </Grid>
+        {selectedIsDataset &&
         <Grid item xs={12}>
-          <Paper className={classes.paper}>
-            {selectedIsDataset &&
-            <DatasetDetail />
-            }
-            {selectedIsPkModel &&
-            <PkDetail />
-            }
-            {selectedIsPdModel &&
-            <PdDetail />
-            }
-            {selectedIsPkpdModel &&
-            <PkpdDetail />
-            }
-          </Paper>
+        <Paper className={classes.paper}>
+          <DatasetDetail />
+        </Paper>
         </Grid>
+        }
+        {selectedIsPkModel &&
+        <React.Fragment>
+        <Grid item xs={12}>
+        <Paper className={classes.paper}>
+          <PkDetail project={project} pk_model={selected} />
+        </Paper>
+        </Grid>
+
+          { selected.protocol &&
+          <Grid item xs={12}>
+          <Paper className={classes.paper}>
+            <ProtocolDetail project={project} protocol={selected.protocol} />
+          </Paper>
+          </Grid>
+          }
+        </React.Fragment>
+        }
+        {selectedIsPdModel &&
+        <Grid item xs={12}>
+        <Paper className={classes.paper}>
+        <PdDetail />
+        </Paper>
+        </Grid>
+        }
+        {selectedIsPkpdModel &&
+        <Paper className={classes.paper}>
+        <PkpdDetail />
+        </Paper>
+        }
       </Grid>
     </div>
   )

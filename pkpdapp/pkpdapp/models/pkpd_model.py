@@ -15,6 +15,12 @@ class MechanisticModel(models.Model):
     """
     A PK or PD model, represented using SBML
     """
+    DEFAULT_SBML = (
+        '<?xml version="1.0" encoding="UTF-8"?>'
+        '<sbml xmlns="http://www.sbml.org/sbml/level3/version2/core" level="3" version="2">'
+        '</sbml>'
+    )
+
 
     name = models.CharField(max_length=100, help_text='name of the model')
     description = models.TextField(
@@ -22,7 +28,8 @@ class MechanisticModel(models.Model):
         blank=True, default=''
     )
     sbml = models.TextField(
-        help_text='the model represented using SBML (see http://sbml.org)'
+        help_text='the model represented using SBML (see http://sbml.org)',
+        default=DEFAULT_SBML,
     )
     time_max = models.FloatField(
         default=30,
@@ -52,20 +59,24 @@ class DosedPharmacokineticModel(models.Model):
     """
     PK model plus dosing and protocol information
     """
+    DEFAULT_PK_MODEL = 1
     name = models.CharField(max_length=100, help_text='name of the model')
     pharmacokinetic_model = models.ForeignKey(
         PharmacokineticModel,
+        default=DEFAULT_PK_MODEL,
         on_delete=models.CASCADE,
         help_text='pharmacokinetic model'
     )
     dose_compartment = models.CharField(
         max_length=100,
         default='central',
+        blank=True, null=True,
         help_text='compartment name to be dosed'
     )
     protocol = models.ForeignKey(
         Protocol,
         on_delete=models.CASCADE,
+        blank=True, null=True,
         help_text='dosing protocol'
     )
     time_max = models.FloatField(

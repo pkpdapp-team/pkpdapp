@@ -130,7 +130,12 @@ function _delete(url) {
 
 function handleResponse(response) {
     return response.text().then(text => {
-        const data = text && JSON.parse(text);
+        let data = {};
+        try {
+          data = text && JSON.parse(text);
+        } catch(e) {
+            alert(text);
+        }
         if (!response.ok) {
             console.log('API error:', response.statusText, data)
             return Promise.reject(data);

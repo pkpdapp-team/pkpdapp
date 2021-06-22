@@ -8,8 +8,10 @@ from .serializers import (
     DatasetSerializer, UserSerializer, ProjectSerializer,
     PharmacokineticSerializer,
     PharmacodynamicSerializer,
+    DoseSerializer,
     DosedPharmacokineticSerializer,
     PkpdSerializer,
+    ProtocolSerializer,
 )
 
 from pkpdapp.models import (
@@ -17,6 +19,8 @@ from pkpdapp.models import (
     PharmacokineticModel,
     PharmacodynamicModel,
     DosedPharmacokineticModel,
+    Protocol,
+    Dose,
     PkpdModel,
 )
 from django.contrib.auth.models import User
@@ -54,6 +58,13 @@ class ProjectFilter(filters.BaseFilterBackend):
 
         return queryset
 
+class ProtocolView(viewsets.ModelViewSet):
+    queryset = Protocol.objects.all()
+    serializer_class = ProtocolSerializer
+
+class DoseView(viewsets.ModelViewSet):
+    queryset = Dose.objects.all()
+    serializer_class = DoseSerializer
 
 class PharmacokineticView(viewsets.ModelViewSet):
     queryset = PharmacokineticModel.objects.all()

@@ -8,10 +8,28 @@ from pkpdapp.models import (
     Dataset, BiomarkerType, Subject, Protocol, Project,
     PharmacokineticModel, PharmacodynamicModel,
     DosedPharmacokineticModel, PkpdModel,
-    StandardUnit, Profile,
+    StandardUnit, Profile, Dose,
 )
 from django.contrib.auth.models import User
 
+class DoseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Dose
+        fields = '__all__'
+
+
+class ProtocolSerializer(serializers.ModelSerializer):
+    doses = DoseSerializer(
+        many=True, read_only=True
+    )
+    dose_ids = serializers.PrimaryKeyRelatedField(
+        queryset=Dose.objects.all(),
+        source='doses',
+        many=True, write_only=True,
+    )
+    class Meta:
+        model = Protocol
+        fields = '__all__'
 
 class PharmacokineticSerializer(serializers.ModelSerializer):
     class Meta:
@@ -25,7 +43,18 @@ class DosedPharmacokineticSerializer(serializers.ModelSerializer):
     )
     pharmacokinetic_model_id = serializers.PrimaryKeyRelatedField(
         queryset=PharmacokineticModel.objects.all(),
+        default=PharmacokineticModel.objects.first(),
         source='pharmacokinetic_model', write_only=True
+    )
+
+    protocol = ProtocolSerializer(
+        read_only=True
+    )
+    protocol_id = serializers.PrimaryKeyRelatedField(
+        queryset=Protocol.objects.all(),
+        source='protocol',
+        allow_null=True,
+        write_only=True,
     )
 
     class Meta:
@@ -66,11 +95,6 @@ class BiomarkerTypeSerializer(serializers.ModelSerializer):
         model = BiomarkerType
         fields = '__all__'
 
-
-class ProtocolSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Protocol
-        fields = '__all__'
 
 
 class SubjectSerializer(serializers.ModelSerializer):

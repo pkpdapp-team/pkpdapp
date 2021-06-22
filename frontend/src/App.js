@@ -64,18 +64,19 @@ import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import { api } from './Api'
 import CreateProjectDialog from './CreateProjectDialog'
-import CreatePkModelDialog from './CreatePkModelDialog'
 import Modelling from './Modelling'
 
 
 
 
-const PrivateRoute = ({ component: Component, ...rest }) => {
+const PrivateRoute = ({ component: Component, componentProps, ...rest }) => {
   const logged = api.isLoggedIn();
+
+  console.log('rending private route with props', componentProps);
 
   return <Route {...rest} render={(props) => (
     logged
-      ? <Component {...props} />
+      ? <Component {...props} {...componentProps}/>
       : <Redirect to='/login' />
   )} />
 }
@@ -297,7 +298,7 @@ function AvatarListItem({ nested, item, checked, selected, handleClick, handleCl
   )
 }
 
-function ExpandableListItem({project, icon: Icon, items, text, selected, selectedItems, apiId, type, handleClickItem, handleClickCheckedItem, createNewComponent: CreateNewComponent}) {
+function ExpandableListItem({project, icon: Icon, items, text, selected, selectedItems, apiId, type, handleClickItem, handleClickCheckedItem, handleNewItem}) {
 
   const classes = useStyles();
   const [open, setOpen] = React.useState(false);
@@ -347,50 +348,20 @@ function ExpandableListItem({project, icon: Icon, items, text, selected, selecte
           />
           </React.Fragment>
         ))}
-        <AddButton 
-          project={project}
-          handleOpenClose={handleNewOpenClose} 
-          handleSave={handleNewSave} 
-          component={CreateNewComponent} 
-          open={openCreateNew}
-          label={`create ${text}`} small={true}
-        />
+        <Tooltip title={`create ${text}`} placement="bottom">
+        <ListItem button onClick={handleNewItem}>
+          <ListItemAvatar>
+            <Avatar variant='rounded' className={classes.avatarPlusSmall}>
+              <AddIcon/>
+            </Avatar>
+          </ListItemAvatar>
+        </ListItem>
+        </Tooltip>
       </List>
       </Collapse>
     </React.Fragment>
   )
 }
-
-function AddButton({ project, nested, handleOpenClose, handleSave, label, small, component: Component, open }) {
-  const classes = useStyles();
-  let avatarClassName;
-  if (small) {
-    avatarClassName = classes.avatarPlusSmall
-  } else {
-    avatarClassName = classes.avatarPlus
-  }
-
-  return (
-    <React.Fragment>
-    <Tooltip title={label} placement="bottom">
-      <ListItem button className={nested ? classes.nested : null} onClick={handleOpenClose}>
-        <ListItemAvatar>
-          <Avatar variant='rounded' className={avatarClassName}>
-            <AddIcon/>
-          </Avatar>
-        </ListItemAvatar>
-      </ListItem>
-      </Tooltip>
-      <Component 
-        project={project}
-        open={open}
-        handleClose={handleOpenClose}
-        handleSave={handleSave}
-      />
-    </React.Fragment>
-  )
-}
-
 
 function ListOfProjects({ handleClickProject, project}) {
   const classes = useStyles();
@@ -420,11 +391,20 @@ function ListOfProjects({ handleClickProject, project}) {
           handleClick={() => handleClickProject(p)}
         />
       ))}
-      <AddButton 
-        handleOpenClose={handleOpenCloseNewProject}             
-        handleSave={handleSaveNewProject}             
-        component={CreateProjectDialog} 
-        open={newProjectOpen} label='create project'
+      <Tooltip title='create project' placement="bottom">
+      <ListItem button onClick={handleOpenCloseNewProject}>
+        <ListItemAvatar>
+          <Avatar variant='rounded' className={classes.avatarPlus}>
+            <AddIcon/>
+          </Avatar>
+        </ListItemAvatar>
+      </ListItem>
+      </Tooltip>
+      <CreateProjectDialog
+        project={project}
+        open={newProjectOpen}
+        handleClose={handleOpenCloseNewProject}
+        handleSave={handleSaveNewProject}
       />
     </List>
   )
@@ -440,7 +420,37 @@ function ProjectMenu({ project, selected, selectedItems, handleClickCheckedItem,
   const handleDataAnalysisClick = () => {
     setDataAnalysisOpen((open) => !open);
   };
-  
+
+  const newItem = (type) => {
+    const type_to_field = {
+      dataset: 'dataset',
+      dosed_pharmacokinetic: 'pk_model',
+      pharmacodynamic: 'pd_model',
+      pkpd_models: 'pkpd_model',
+    }
+    const project_field = `${type_to_field[type]}s`
+    const project_ids_field = `${type_to_field[type]}_ids`
+    return () => {
+      api.post(`api/${type}/`, {name: 'new'})
+        .then(new_item => {
+          handleClickItem(new_item);
+          const existing_ids = project[project_field].map(item => item.id)
+          const new_ids = [
+            ...existing_ids,
+            new_item.id,
+          ];
+          let new_data = {
+            id: project.id
+          }
+          new_data[project_ids_field] = new_ids;
+          return api.patch(`api/project/${project.id}/`, new_data);
+        })
+        .then(new_project => {
+          return project.refresh(project.id);
+        });
+    };
+  };
+
   return (
     <List>
       <ListItem button component={Link} to="/modelling">
@@ -490,7 +500,7 @@ function ProjectMenu({ project, selected, selectedItems, handleClickCheckedItem,
         icon={TableChartIcon}
         handleClickItem={handleClickItem}
         handleClickCheckedItem={handleClickCheckedItem}
-        createNewComponent={CreatePkModelDialog}
+        handleNewItem={newItem('dataset')}
         selected={selected}
         selectedItems={
           selectedItems.filter((i) => i.type === 'dataset')
@@ -506,7 +516,7 @@ function ProjectMenu({ project, selected, selectedItems, handleClickCheckedItem,
         icon={AccessibilityIcon}
         handleClickItem={handleClickItem}
         handleClickCheckedItem={handleClickCheckedItem}
-        createNewComponent={CreatePkModelDialog}
+        handleNewItem={newItem('dosed_pharmacokinetic')}
         selected={selected}
         selectedItems={
           selectedItems.filter((i) => i.type === 'pk_model')
@@ -521,7 +531,7 @@ function ProjectMenu({ project, selected, selectedItems, handleClickCheckedItem,
         icon={FunctionsIcon}
         handleClickItem={handleClickItem}
         handleClickCheckedItem={handleClickCheckedItem}
-        createNewComponent={CreatePkModelDialog}
+        handleNewItem={newItem('pharmacodynamic')}
         selected={selected}
         selectedItems={
           selectedItems.filter((i) => i.type === 'pd_model')
@@ -536,7 +546,7 @@ function ProjectMenu({ project, selected, selectedItems, handleClickCheckedItem,
         icon={AllInboxIcon}
         handleClickItem={handleClickItem}
         handleClickCheckedItem={handleClickCheckedItem}
-        createNewComponent={CreatePkModelDialog}
+        handleNewItem={newItem('pkpd_model')}
         selected={selected}
         selectedItems={
           selectedItems.filter((i) => i.type === 'pkpd_model')
@@ -574,9 +584,33 @@ export default function App() {
     });
   };
 
+  const type_to_field = {
+    dataset: 'dataset',
+    dosed_pharmacokinetic: 'pk_model',
+    pharmacodynamic: 'pd_model',
+    pkpd_models: 'pkpd_model',
+  }
+
   const loadProject = (id) => {
     console.log('setting project', id);
-    api.get(`/api/project/${id}`).then(data => {
+    return api.get(`/api/project/${id}`).then(data => {
+      setSelected(oldSelected => {
+        if (oldSelected) {
+          const selected_options = data[`${oldSelected.type}s`];
+          console.log('updated api', oldSelected, selected_options, data);
+          let newItem = selected_options.find(x => x.id === oldSelected.id);
+          newItem['type'] = oldSelected.type;
+          return newItem;
+        }
+      });
+      setSelectedItems(oldSelectedItems => 
+        oldSelectedItems.map(item => {
+          const selected_options = data[type_to_field[item.type]];
+          let newItem  = selected_options.find(x => x.id === item.id);
+          newItem['type'] = item.type;
+          return newItem;
+        })
+      );
       setProject({
         ...data,
         refresh: loadProject,
@@ -682,9 +716,11 @@ export default function App() {
           <PrivateRoute path="/dataset/:id" component={DatasetDetail} />
           <PrivateRoute path="/modelling" 
             component={Modelling} 
-            selectedItems={selectedItems} 
-            project={project} 
-            selected={selected}
+            componentProps={{
+              selectedItems: selectedItems,
+              project: project,
+              selected: selected,
+            }}
           />
           <PrivateRoute path="/" component={Project} />
         </Switch>
