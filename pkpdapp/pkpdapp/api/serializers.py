@@ -144,6 +144,7 @@ class ProjectSerializer(serializers.ModelSerializer):
     dataset_ids = serializers.PrimaryKeyRelatedField(
         queryset=Dataset.objects.all(), source='datasets',
         many=True, write_only=True,
+        required=False,
     )
     pk_models = DosedPharmacokineticSerializer(
         many=True, read_only=True
@@ -152,6 +153,7 @@ class ProjectSerializer(serializers.ModelSerializer):
         queryset=DosedPharmacokineticModel.objects.all(),
         source='pk_models',
         many=True, write_only=True,
+        required=False,
     )
     pd_models = PharmacodynamicSerializer(
         many=True, read_only=True
@@ -160,6 +162,7 @@ class ProjectSerializer(serializers.ModelSerializer):
         queryset=PharmacodynamicModel.objects.all(),
         source='pd_models',
         many=True, write_only=True,
+        required=False,
     )
     pkpd_models = PkpdSerializer(
         many=True, read_only=True
@@ -168,6 +171,7 @@ class ProjectSerializer(serializers.ModelSerializer):
         queryset=PkpdModel.objects.all(),
         source='pkpd_models',
         many=True, write_only=True,
+        required=False,
     )
     protocols = ProtocolSerializer(
         many=True, read_only=True
@@ -176,6 +180,7 @@ class ProjectSerializer(serializers.ModelSerializer):
         queryset=Protocol.objects.all(),
         source='protocols',
         many=True, write_only=True,
+        required=False,
     )
     users = UserSerializer(
         many=True, read_only=True

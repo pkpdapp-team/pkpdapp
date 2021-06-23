@@ -18,7 +18,6 @@ import Box from '@material-ui/core/Box';
 import Container from '@material-ui/core/Container';
 import Login from "./Login"
 import DatasetDetail from "./DatasetDetail"
-import Project from "./Project"
 import TableChartIcon from '@material-ui/icons/TableChart';
 import BatteryUnknownIcon from '@material-ui/icons/BatteryUnknown';
 import CheckBoxOutlineBlankIcon from '@material-ui/icons/CheckBoxOutlineBlank';
@@ -65,7 +64,6 @@ import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import { api } from './Api'
-import CreateProjectDialog from './CreateProjectDialog'
 import Modelling from './Modelling'
 
 
@@ -373,10 +371,11 @@ function ListOfProjects({ handleClickProject, project}) {
   const handleNewProject = () => {
     const data = {
       name: 'new',
-      users: [api.loggedInUser().id],
+      user_ids: [api.loggedInUser().id],
     }
     api.post('api/project/', data).then(project => {
-      api.get("api/project/").then(setProjects);
+      api.get("api/project/").then(setProjects)
+      project.refresh(project.id);
     });
   };
 
@@ -385,7 +384,7 @@ function ListOfProjects({ handleClickProject, project}) {
     <List>
       {projects.map((p) => (
         <AvatarListItem
-          item={p} 
+          item={project ? (p.id === project.id ? project : p) : p} 
           key={p.id}
           selected={project ? p.id === project.id : false}
           handleClick={() => handleClickProject(p)}
@@ -587,11 +586,10 @@ export default function App() {
 
   const loadProject = (id) => {
     console.log('setting project', id);
-    return api.get(`/api/project/${id}`).then(data => {
+    return api.get(`/api/project/${id}/`).then(data => {
       setSelected(oldSelected => {
         if (oldSelected) {
           const selected_options = data[`${oldSelected.type}s`];
-          console.log('updated api', oldSelected, selected_options, data);
           let newItem = selected_options.find(x => x.id === oldSelected.id);
           newItem['type'] = oldSelected.type;
           return newItem;
