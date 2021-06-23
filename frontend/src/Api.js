@@ -1,4 +1,5 @@
 let authToken;
+let _loggedInUser;
 
 const isEmpty = value =>
   value === undefined ||
@@ -11,14 +12,20 @@ if (!isEmpty(localStorage.getItem("authToken"))) {
   authToken = localStorage.getItem("authToken")
 }
 
+if (!isEmpty(localStorage.getItem("loggedInUser"))) {
+  _loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
+}
+
 
 // derived from https://jasonwatmore.com/post/2020/04/18/fetch-a-lightweight-fetch-wrapper-to-simplify-http-requests
 export const api = {
     login,
     logout,
     isLoggedIn,
+    loggedInUser,
     get,
     post,
+    patch,
     put,
     delete: _delete
 };
@@ -36,19 +43,30 @@ function login(username, password) {
     ).then(handleResponse).then((data) => {
       authToken = data.auth_token;
       localStorage.setItem("authToken", authToken);
-      return data;
-    });
+      return api.get('auth/users/me/').then((data) => {
+        _loggedInUser = data;
+        localStorage.setItem(
+          "loggedInUser", 
+          JSON.stringify(_loggedInUser),
+        );
+      });
+    })
 }
 
 function logout() {
   return post('auth/token/logout').then(() => {
     authToken = null;
     localStorage.removeItem("authToken");
+    localStorage.removeItem("loggedInUser");
   });
 }
 
 function isLoggedIn() {
   return !isEmpty(authToken);
+}
+
+function loggedInUser() {
+  return _loggedInUser;
 }
 
 function get(url) {
@@ -85,6 +103,18 @@ function put(url, body) {
     return fetch(url, requestOptions).then(handleResponse);    
 }
 
+function patch(url, body) {
+    const requestOptions = {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Token ${authToken}`,
+        },
+        body: JSON.stringify(body)
+    };
+    return fetch(url, requestOptions).then(handleResponse);    
+}
+
 // prefixed with underscored because delete is a reserved word in javascript
 function _delete(url) {
     const requestOptions = {
@@ -100,11 +130,15 @@ function _delete(url) {
 
 function handleResponse(response) {
     return response.text().then(text => {
-        const data = text && JSON.parse(text);
-        
+        let data = {};
+        try {
+          data = text && JSON.parse(text);
+        } catch(e) {
+            alert(text);
+        }
         if (!response.ok) {
-            const error = (data && data.message) || response.statusText;
-            return Promise.reject(error);
+            console.log('API error:', response.statusText, data)
+            return Promise.reject(data);
         }
 
         return data;

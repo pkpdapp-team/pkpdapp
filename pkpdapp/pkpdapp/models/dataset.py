@@ -12,7 +12,10 @@ class Dataset(models.Model):
     """
     A PKPD dataset containing one or more :model:`pkpdapp.Biomarker`.
     """
-    name = models.CharField(max_length=100, help_text='name of the dataset')
+    name = models.CharField(
+        max_length=100,
+        help_text='name of the dataset'
+    )
     datetime = models.DateTimeField(
         help_text=(
             'date/time the experiment was conducted. '

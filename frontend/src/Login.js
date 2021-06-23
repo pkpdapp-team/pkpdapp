@@ -65,6 +65,7 @@ export default function Login() {
         <Typography component="h1" variant="h5">
           Sign in
         </Typography>
+        <form onSubmit={onSubmitClick}>
         <TextField
           variant="outlined"
           margin="normal"
@@ -95,10 +96,10 @@ export default function Login() {
           variant="contained"
           color="primary"
           className={classes.submit}
-          onClick={onSubmitClick}
         >
           Sign In
         </Button>
+        </form>
       </div>
     </Container>
   )

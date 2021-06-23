@@ -16,9 +16,11 @@ from . import api
 from rest_framework import routers
 
 router = routers.DefaultRouter()
-router.register('datasets', api.DatasetView, basename='dataset')
+router.register('dataset', api.DatasetView, basename='dataset')
 router.register('users', api.UserView, basename='user')
-router.register('projects', api.ProjectView, basename='project')
+router.register('project', api.ProjectView, basename='project')
+router.register('dose', api.DoseView, basename='dose')
+router.register('protocol', api.ProtocolView, basename='protocol')
 router.register(
     'pharmacokinetic', api.PharmacokineticView,
     basename='pharmacokinetic'
@@ -44,4 +46,5 @@ urlpatterns = [
     path('api/', include(router.urls), name='api'),
     path('auth/', include('djoser.urls')),
     path('auth/', include('djoser.urls.authtoken')),
+    path('api-auth/', include('rest_framework.urls'))
 ]

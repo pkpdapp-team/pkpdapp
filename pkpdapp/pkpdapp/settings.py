@@ -45,11 +45,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     # external apps
-    'django_plotly_dash.apps.DjangoPlotlyDashConfig',
     'dpd_static_support',
-    'markdownify',
     'django_extensions',
-    'crispy_forms',
     'rest_framework',
     'rest_framework.authtoken',
     'djoser',
@@ -62,6 +59,7 @@ INSTALLED_APPS = [
 # django rest framework library
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.TokenAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': [
@@ -115,9 +113,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-
-    'django_plotly_dash.middleware.BaseMiddleware',
-    'django_plotly_dash.middleware.ExternalRedirectionMiddleware',
 ]
 
 ROOT_URLCONF = 'pkpdapp.urls'
@@ -208,73 +203,11 @@ STATICFILES_FINDERS = [
     # Django default finders
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-
-    # Dash default finders
-    'django_plotly_dash.finders.DashAssetFinder',
-    'django_plotly_dash.finders.DashComponentFinder',
-    'django_plotly_dash.finders.DashAppDirectoryFinder',
 ]
 
 # Forever cachable files and compression support
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-PLOTLY_DASH = {
-
-    # Route used for the message pipe websocket connection
-    "ws_route": "dpd/ws/channel",
-
-    # Route used for direct http insertion of pipe messages
-    "http_route": "dpd/views",
-
-    # Flag controlling existince of http poke endpoint
-    "http_poke_enabled": True,
-
-    # Insert data for the demo when migrating
-    "insert_demo_migrations": False,
-
-    # Timeout for caching of initial arguments in seconds
-    "cache_timeout_initial_arguments": 60,
-
-    # Name of view wrapping function
-    "view_decorator": None,
-
-    # Flag to control location of initial argument storage
-    "cache_arguments": True,
-
-    # Flag controlling local serving of assets
-    "serve_locally": False,
-}
-
-# Staticfiles finders for locating dash app assets and related files
-
-STATICFILES_FINDERS = [
-
-    'django.contrib.staticfiles.finders.FileSystemFinder',
-    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-
-    'django_plotly_dash.finders.DashAssetFinder',
-    'django_plotly_dash.finders.DashComponentFinder',
-    'django_plotly_dash.finders.DashAppDirectoryFinder',
-]
-
-# Plotly components containing static content that should
-# be handled by the Django staticfiles infrastructure
-
-PLOTLY_COMPONENTS = [
-
-    # Common components
-    'dash_core_components',
-    'dash_html_components',
-    'dash_renderer',
-
-    # django-plotly-dash components
-    'dpd_components',
-    # static support if serving local assets
-    'dpd_static_support',
-
-    # Other components, as needed
-    'dash_bootstrap_components',
-]
 
 # Redirect to home URL after login (Default redirects to /accounts/profile/)
 LOGIN_REDIRECT_URL = '/'

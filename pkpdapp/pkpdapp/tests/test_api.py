@@ -16,7 +16,7 @@ class DatasetTestCase(APITestCase):
 
     def test_dataset_creation(self):
         data = {"name": "hello", "datatime": "", "description": "bye"}
-        response = self.client.post("/api/datasets/", data)
+        response = self.client.post("/api/dataset/", data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         response_data = response.data
         self.assertEqual(response_data["name"], data["name"])

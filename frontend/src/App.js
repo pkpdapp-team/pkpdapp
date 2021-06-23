@@ -7,13 +7,22 @@ import {
   useHistory,
   useLocation,
 } from "react-router-dom";
+
+
+import { MuiPickersUtilsProvider } from '@material-ui/pickers';
+import DateFnsUtils from '@date-io/date-fns';
+import classNames from 'classnames';
+import Checkbox from '@material-ui/core/Checkbox';
+import Box from '@material-ui/core/Box';
+
+import Container from '@material-ui/core/Container';
 import Login from "./Login"
 import DatasetDetail from "./DatasetDetail"
-import Project from "./Project"
 import TableChartIcon from '@material-ui/icons/TableChart';
 import BatteryUnknownIcon from '@material-ui/icons/BatteryUnknown';
 import CheckBoxOutlineBlankIcon from '@material-ui/icons/CheckBoxOutlineBlank';
 import BackupIcon from '@material-ui/icons/Backup';
+import DateRangeIcon from '@material-ui/icons/DateRange';
 import { makeStyles, fade } from '@material-ui/core/styles';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import SettingsBackupRestoreIcon from '@material-ui/icons/SettingsBackupRestore';
@@ -55,17 +64,17 @@ import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import { api } from './Api'
-import CreateProjectDialog from './CreateProjectDialog'
+import Modelling from './Modelling'
 
 
 
 
-const PrivateRoute = ({ component: Component, ...rest }) => {
+const PrivateRoute = ({ component: Component, componentProps, ...rest }) => {
   const logged = api.isLoggedIn();
 
   return <Route {...rest} render={(props) => (
     logged
-      ? <Component {...props} />
+      ? <Component {...props} {...componentProps}/>
       : <Redirect to='/login' />
   )} />
 }
@@ -166,6 +175,7 @@ const useStyles = makeStyles((theme) => ({
       duration: theme.transitions.duration.enteringScreen,
     }),
   },
+  
   drawerPaperClose: {
     overflowX: 'hidden',
     transition: theme.transitions.create('width', {
@@ -209,20 +219,14 @@ const useStyles = makeStyles((theme) => ({
     height: theme.spacing(5),
     backgroundColor: theme.palette.primary.main,
   },
+  colorSelected: {
+    backgroundColor: theme.palette.secondary.main,
+  },
   avatarSmall: {
     width: theme.spacing(3),
     height: theme.spacing(3),
   },
   avatar: {
-    width: theme.spacing(5),
-    height: theme.spacing(5),
-  },
-  avatarSmallSelected: {
-    width: theme.spacing(3),
-    height: theme.spacing(3),
-    backgroundColor: theme.palette.secondary.main,
-  },
-  avatarSelected: {
     width: theme.spacing(5),
     height: theme.spacing(5),
     backgroundColor: theme.palette.secondary.main,
@@ -231,49 +235,85 @@ const useStyles = makeStyles((theme) => ({
     width: theme.spacing(7),
     height: theme.spacing(7),
   },
+  noPadding: {
+    margin: 0,
+    marginRight: 0,
+    marginLeft: 0,
+    padding: 0,
+  },
 }));
 
 
-function AvatarListItem({ nested, item, selected, handleClick, small }) {
+function AvatarListItem({ nested, item, checked, selected, handleClick, handleClickChecked, small }) {
   const classes = useStyles();
-  let itemClassName;
-  if (small) {
-    if (selected) {
-      itemClassName = classes.avatarSmallSelected;
-    } else {
-      itemClassName = classes.avatarSmall;
-    }
-  } else {
-    if (selected) {
-      itemClassName = classes.avatarSelected;
-    } else {
-      itemClassName = classes.avatar;
-    }
-  }
+  const avatarClassName = classNames(
+    (small ? classes.avatarSmall: null),
+    (selected ? classes.colorSelected: null),
+  );
+  const itemClassName = classNames(
+    (nested ? classes.nested : null),
+  );
+
+  const marginAdjust = small ? -3.5 : 0;
+
   return (
     <Tooltip title={item.name} placement="right" arrow>
-      <ListItem button className={nested ? classes.nested : null} onClick={handleClick}>
-      <ListItemAvatar>
-        <Avatar  className={itemClassName}>{item.name[0]}</Avatar>
-      </ListItemAvatar>
-      <ListItemText primary={item.name} />
-    </ListItem>
+      
+      <ListItem button className={itemClassName} 
+        onClick={handleClick}
+      >
+        {checked !== undefined &&
+        <Box mr={marginAdjust}>
+        <ListItemIcon >
+          <Checkbox
+            onClick={event => {
+              handleClickChecked();
+              event.stopPropagation();
+            }}
+            edge="start"
+            checked={checked}
+            tabIndex={-1}
+            disableRipple
+          />
+        </ListItemIcon>
+        </Box>
+        }
+        <Box mr={marginAdjust}>
+        <ListItemAvatar>
+          <Avatar  
+            className={avatarClassName}
+          >
+            {item.name[0]}
+          </Avatar>
+        </ListItemAvatar>
+        </Box>
+        <ListItemText 
+          primary={item.name} 
+        />
+      </ListItem>
     </Tooltip>
 
   )
 }
 
-function ExpandableListItem({icon: Icon, items, text, selectedItems, type, handleClickItem}) {
+function ExpandableListItem({project, icon: Icon, items, text, selected, selectedItems, apiId, type, handleClickItem, handleClickCheckedItem, handleNewItem}) {
+
+  console.log('expand', items);
   const classes = useStyles();
   const [open, setOpen] = React.useState(false);
-  const [openCreateNew, setOpenCreatNew] = React.useState(false);
+  const [openCreateNew, setOpenCreateNew] = React.useState(false);
 
   const handleClick = () => {
     setOpen(!open);
   };
 
-  const handleNewClick = () => {
-    setOpenCreatNew((open) => !open);
+  const handleNewOpenClose = () => {
+    setOpenCreateNew((open) => !open);
+  }
+
+  const handleNewSave = (data) => {
+    handleNewOpenClose(); 
+    project.refresh(project.id);
   }
 
   return (
@@ -286,56 +326,38 @@ function ExpandableListItem({icon: Icon, items, text, selectedItems, type, handl
         {open ? <ExpandLess /> : <ExpandMore />}
       </ListItem>
       <Collapse in={open} timeout="auto" unmountOnExit>
-      <List component="div" disablePadding>
+      <List component="div" dense disablePadding>
         {items.map((item) => (
           <AvatarListItem
-            nested={true}
             key={item.id}
+            checked={selectedItems.find((i) => i.id === item.id) !== undefined}
             item={item} 
-            selected={selectedItems.find((i) => i.id === item.id) !== undefined}
+            selected={selected ? 
+                        selected.id === item.id && 
+                        selected.type === type : false}
             small={true}
+            handleClickChecked={() => {
+              handleClickCheckedItem({...item, type: type});
+            }}
             handleClick={() => {
               handleClickItem({...item, type: type});
             }}
           />
         ))}
-        <AddButton 
-          nested={true}
-          handleClick={handleNewClick} component={CreateProjectDialog} 
-          open={openCreateNew}
-          label={`create ${text}`} small={true}
-        />
+        <Tooltip title={`create ${text}`} placement="bottom">
+        <ListItem button onClick={handleNewItem}>
+          <ListItemAvatar>
+            <Avatar variant='rounded' className={classes.avatarPlusSmall}>
+              <AddIcon/>
+            </Avatar>
+          </ListItemAvatar>
+        </ListItem>
+        </Tooltip>
       </List>
       </Collapse>
     </React.Fragment>
   )
 }
-
-function AddButton({ nested, handleClick, label, small, component: Component, open }) {
-  const classes = useStyles();
-  let avatarClassName;
-  if (small) {
-    avatarClassName = classes.avatarPlusSmall
-  } else {
-    avatarClassName = classes.avatarPlus
-  }
-
-  return (
-    <React.Fragment>
-    <Tooltip title={label} placement="bottom">
-      <ListItem button className={nested ? classes.nested : null} onClick={handleClick}>
-        <ListItemAvatar>
-          <Avatar variant='rounded' className={avatarClassName}>
-            <AddIcon/>
-          </Avatar>
-        </ListItemAvatar>
-      </ListItem>
-      </Tooltip>
-      <Component open={open} handleClose={handleClick} />
-    </React.Fragment>
-  )
-}
-
 
 function ListOfProjects({ handleClickProject, project}) {
   const classes = useStyles();
@@ -343,63 +365,94 @@ function ListOfProjects({ handleClickProject, project}) {
   const [newProjectOpen, setNewProjectOpen] = React.useState(false);
 
   useEffect(() => {
-    api.get("/api/projects").then(setProjects);
+    api.get("/api/project").then(setProjects);
   },[])
 
-  const handleClickNewProject = () => {
-    setNewProjectOpen((open) => !open);
+  const handleNewProject = () => {
+    const data = {
+      name: 'new',
+      user_ids: [api.loggedInUser().id],
+    }
+    api.post('api/project/', data).then(new_project => {
+      api.get("api/project/").then(setProjects)
+      if (project) {
+        project.refresh(new_project.id);
+      }
+    });
   };
+
 
   return (
     <List>
       {projects.map((p) => (
         <AvatarListItem
-          item={p} 
+          item={project ? (p.id === project.id ? project : p) : p} 
           key={p.id}
           selected={project ? p.id === project.id : false}
           handleClick={() => handleClickProject(p)}
         />
       ))}
-      <AddButton 
-        handleClick={handleClickNewProject} component={CreateProjectDialog} 
-        open={newProjectOpen} label='create project'
-      />
+      <Tooltip title='create project' placement="bottom">
+      <ListItem button onClick={handleNewProject}>
+        <ListItemAvatar>
+          <Avatar variant='rounded' className={classes.avatarPlus}>
+            <AddIcon/>
+          </Avatar>
+        </ListItemAvatar>
+      </ListItem>
+      </Tooltip>
     </List>
   )
 }
 
-function ProjectMenu({ project, selectedItems, handleClickItem }) {
+function ProjectMenu({ project, selected, selectedItems, handleClickCheckedItem, handleClickItem }) {
   const classes = useStyles();
-  const [datasets, setDatasets] = React.useState([]);
-  const [pkModels, setPkModels] = React.useState([]);
-  const [pdModels, setPdModels] = React.useState([]);
-  const [pkpdModels, setPkpdModels] = React.useState([]);
+  const datasets = project.datasets;
+  const pkModels = project.pk_models;
+  const pdModels = project.pd_models;
+  const pkpdModels = project.pkpd_models;
   const [dataAnalysisOpen, setDataAnalysisOpen] = React.useState(false);
   const handleDataAnalysisClick = () => {
     setDataAnalysisOpen((open) => !open);
   };
-  
-  useEffect(() => {
-    if (project) {
-      api.get(`/api/datasets?project_id=${project.id}`)
-        .then(setDatasets);
-      api.get(`/api/dosed_pharmacokinetic?project_id=${project.id}`)
-        .then(setPkModels);
-      api.get(`/api/pharmacodynamic?project_id=${project.id}`)
-        .then(setPdModels);
-      api.get(`/api/pkpd_model?project_id=${project.id}`)
-        .then(setPkpdModels);
-    }
-  },[project]);
 
+  const newItem = (type) => {
+    const type_to_api = {
+      dataset: 'dataset',
+      pk_model: 'dosed_pharmacokinetic',
+      pd_model: 'pharmacodynamic',
+      pkpd_model: 'pkpd_model',
+    }
+    const project_field = `${type}s`
+    const project_ids_field = `${type}_ids`
+    return () => {
+      api.post(`api/${type_to_api[type]}/`, {name: 'new'})
+        .then(new_item => {
+          handleClickItem({...new_item, type: type});
+          const existing_ids = project[project_field].map(item => item.id)
+          const new_ids = [
+            ...existing_ids,
+            new_item.id,
+          ];
+          let new_data = {
+            id: project.id
+          }
+          new_data[project_ids_field] = new_ids;
+          return api.patch(`api/project/${project.id}/`, new_data);
+        })
+        .then(new_project => {
+          return project.refresh(project.id);
+        });
+    };
+  };
 
   return (
     <List>
-      <ListItem button >
+      <ListItem button component={Link} to="/">
         <ListItemIcon>
           <VisibilityIcon />
         </ListItemIcon>
-        <ListItemText primary='Explore' />
+        <ListItemText primary='Modelling' />
       </ListItem>
       <ListItem button onClick={handleDataAnalysisClick}>
         <ListItemIcon>
@@ -434,42 +487,62 @@ function ProjectMenu({ project, selectedItems, handleClickItem }) {
       <Divider />
 
       <ExpandableListItem 
+        project={project}
         items={datasets} 
         text="Datasets" 
         type='dataset'
+        apiId='dataset'
         icon={TableChartIcon}
         handleClickItem={handleClickItem}
+        handleClickCheckedItem={handleClickCheckedItem}
+        handleNewItem={newItem('dataset')}
+        selected={selected}
         selectedItems={
           selectedItems.filter((i) => i.type === 'dataset')
         }
       />
 
       <ExpandableListItem 
+        project={project}
         items={pkModels} 
         text="PK Models" 
         type='pk_model'
+        apiId='dosed_pharmacokinetic'
         icon={AccessibilityIcon}
         handleClickItem={handleClickItem}
+        handleClickCheckedItem={handleClickCheckedItem}
+        handleNewItem={newItem('pk_model')}
+        selected={selected}
         selectedItems={
           selectedItems.filter((i) => i.type === 'pk_model')
         }
       />
       <ExpandableListItem 
+        project={project}
         items={pdModels} 
         text="PD Models" 
         type='pd_model'
+        apiId='pharmacodynamic'
         icon={FunctionsIcon}
         handleClickItem={handleClickItem}
+        handleClickCheckedItem={handleClickCheckedItem}
+        handleNewItem={newItem('pd_model')}
+        selected={selected}
         selectedItems={
           selectedItems.filter((i) => i.type === 'pd_model')
         }
       />
       <ExpandableListItem 
+        project={project}
         items={pkpdModels} 
         text="PKPD Models" 
         type='pkd_model'
+        apiId='pkpd_model'
         icon={AllInboxIcon}
         handleClickItem={handleClickItem}
+        handleClickCheckedItem={handleClickCheckedItem}
+        handleNewItem={newItem('pkpd_model')}
+        selected={selected}
         selectedItems={
           selectedItems.filter((i) => i.type === 'pkpd_model')
         }
@@ -482,6 +555,7 @@ function ProjectMenu({ project, selectedItems, handleClickItem }) {
 export default function App() {
   const classes = useStyles();
   const [project, setProject] = React.useState(null);
+  const [selected, setSelected] = React.useState(null);
   const [selectedItems, setSelectedItems] = React.useState([]);
   const [open, setOpen] = React.useState(true);
 
@@ -490,6 +564,11 @@ export default function App() {
   };
 
   const handleClickItem = (item) => {
+    console.log('handleClickItem', item);
+    setSelected(item);
+  };
+
+  const handleClickCheckedItem = (item) => {
     setSelectedItems((prevSelected) => {
       let newSelected = prevSelected.filter((s) => 
         s.type !== item.type || s.id !== item.id
@@ -501,12 +580,41 @@ export default function App() {
     });
   };
 
+  const loadProject = (id) => {
+    console.log('setting project', id);
+    return api.get(`/api/project/${id}/`).then(data => {
+      setSelected(oldSelected => {
+        if (oldSelected) {
+          const selected_options = data[`${oldSelected.type}s`];
+          let newItem = selected_options.find(x => x.id === oldSelected.id);
+          if (newItem) {
+            newItem['type'] = oldSelected.type;
+          }
+          return newItem;
+        }
+      });
+      setSelectedItems(oldSelectedItems => 
+        oldSelectedItems.map(item => {
+          const selected_options = data[`${item.type}s`];
+          let newItem  = selected_options.find(x => x.id === item.id);
+          if (newItem) {
+            newItem['type'] = item.type;
+          }
+          return newItem;
+        })
+      );
+      setProject({
+        ...data,
+        refresh: loadProject,
+      });
+    });
+  };
+
   const handleClickProject = (project) => {
-    setProject(project);
+    loadProject(project.id);
     setSelectedItems([]);
   };
 
-  
   let history = useHistory();
 
   const logged_in = (
@@ -551,7 +659,7 @@ export default function App() {
     <Drawer
       variant="permanent"
       classes={{
-        paper: clsx(classes.drawerPaper,  classes.drawerPaperClose),
+        paper: clsx(classes.drawerPaper, classes.drawerPaperClose),
       }}
       open={open}
     >
@@ -584,19 +692,32 @@ export default function App() {
       {project && <ProjectMenu 
         project={project} 
         selectedItems={selectedItems}
+        selected={selected}
         handleClickItem={handleClickItem}
+        handleClickCheckedItem={handleClickCheckedItem}
       />
       }
     </Drawer>
+    <MuiPickersUtilsProvider utils={DateFnsUtils}>
     <main className={classes.content}>
       <div className={classes.appBarSpacer} />
         {/* A <Switch> looks through its children <Route>s and
               renders the first one that matches the current URL. */}
+
+        <Container maxWidth="false">
         <Switch>
           <PrivateRoute path="/dataset/:id" component={DatasetDetail} />
-          <PrivateRoute path="/" component={Project} />
+          <PrivateRoute path="/" component={Modelling} 
+            componentProps={{
+              selectedItems: selectedItems,
+              project: project,
+              selected: selected,
+            }}
+          />
         </Switch>
+        </Container>
     </main>
+    </MuiPickersUtilsProvider>
     </div>
   );
 
