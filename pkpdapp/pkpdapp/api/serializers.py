@@ -12,6 +12,7 @@ from pkpdapp.models import (
 )
 from django.contrib.auth.models import User
 
+
 class DoseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Dose
@@ -27,9 +28,11 @@ class ProtocolSerializer(serializers.ModelSerializer):
         source='doses',
         many=True, write_only=True,
     )
+
     class Meta:
         model = Protocol
         fields = '__all__'
+
 
 class PharmacokineticSerializer(serializers.ModelSerializer):
     class Meta:
@@ -96,7 +99,6 @@ class BiomarkerTypeSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-
 class SubjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Subject
@@ -124,6 +126,7 @@ class ProfileSerializer(serializers.ModelSerializer):
         model = Profile
         fields = '__all__'
 
+
 class UserSerializer(serializers.ModelSerializer):
     profile = ProfileSerializer(read_only=True)
     project_set = serializers.PrimaryKeyRelatedField(
@@ -134,8 +137,10 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = '__all__'
         fields = (
-            'id', 'username', 'first_name', 'last_name', 'email', 'profile', 'project_set'
+            'id', 'username', 'first_name',
+            'last_name', 'email', 'profile', 'project_set'
         )
+
 
 class ProjectSerializer(serializers.ModelSerializer):
     datasets = DatasetSerializer(
@@ -194,6 +199,3 @@ class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
         fields = '__all__'
-
-
-

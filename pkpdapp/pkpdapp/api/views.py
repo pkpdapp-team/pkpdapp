@@ -25,11 +25,14 @@ from pkpdapp.models import (
 )
 from django.contrib.auth.models import User
 
+
 class EnablePartialUpdateMixin:
     """Enable partial updates"""
+
     def update(self, request, *args, **kwargs):
         kwargs['partial'] = True
         return super().update(request, *args, **kwargs)
+
 
 class ProjectFilter(filters.BaseFilterBackend):
     """
@@ -58,13 +61,16 @@ class ProjectFilter(filters.BaseFilterBackend):
 
         return queryset
 
+
 class ProtocolView(viewsets.ModelViewSet):
     queryset = Protocol.objects.all()
     serializer_class = ProtocolSerializer
 
+
 class DoseView(viewsets.ModelViewSet):
     queryset = Dose.objects.all()
     serializer_class = DoseSerializer
+
 
 class PharmacokineticView(viewsets.ModelViewSet):
     queryset = PharmacokineticModel.objects.all()

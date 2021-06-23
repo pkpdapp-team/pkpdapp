@@ -17,10 +17,12 @@ class MechanisticModel(models.Model):
     """
     DEFAULT_SBML = (
         '<?xml version="1.0" encoding="UTF-8"?>'
-        '<sbml xmlns="http://www.sbml.org/sbml/level3/version2/core" level="3" version="2">'
+        '<sbml '
+        'xmlns="http://www.sbml.org/sbml/level3/version2/core" '
+        'level="3" version="2"'
+        '>'
         '</sbml>'
     )
-
 
     name = models.CharField(max_length=100, help_text='name of the model')
     description = models.TextField(
