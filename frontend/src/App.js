@@ -370,14 +370,16 @@ function ListOfProjects({ handleClickProject, project}) {
     api.get("/api/project").then(setProjects);
   },[])
 
-  const handleOpenCloseNewProject = () => {
-    setNewProjectOpen((open) => !open);
+  const handleNewProject = () => {
+    const data = {
+      name: 'new',
+      users: [api.loggedInUser().id],
+    }
+    api.post('api/project/', data).then(project => {
+      api.get("api/project/").then(setProjects);
+    });
   };
 
-  const handleSaveNewProject = (data) => {
-    handleOpenCloseNewProject(); 
-    api.get("api/project").then(setProjects);
-  };
 
   return (
     <List>
@@ -390,7 +392,7 @@ function ListOfProjects({ handleClickProject, project}) {
         />
       ))}
       <Tooltip title='create project' placement="bottom">
-      <ListItem button onClick={handleOpenCloseNewProject}>
+      <ListItem button onClick={handleNewProject}>
         <ListItemAvatar>
           <Avatar variant='rounded' className={classes.avatarPlus}>
             <AddIcon/>
@@ -398,12 +400,6 @@ function ListOfProjects({ handleClickProject, project}) {
         </ListItemAvatar>
       </ListItem>
       </Tooltip>
-      <CreateProjectDialog
-        project={project}
-        open={newProjectOpen}
-        handleClose={handleOpenCloseNewProject}
-        handleSave={handleSaveNewProject}
-      />
     </List>
   )
 }
