@@ -298,6 +298,7 @@ function AvatarListItem({ nested, item, checked, selected, handleClick, handleCl
 
 function ExpandableListItem({project, icon: Icon, items, text, selected, selectedItems, apiId, type, handleClickItem, handleClickCheckedItem, handleNewItem}) {
 
+  console.log('expand', items);
   const classes = useStyles();
   const [open, setOpen] = React.useState(false);
   const [openCreateNew, setOpenCreateNew] = React.useState(false);
@@ -325,15 +326,15 @@ function ExpandableListItem({project, icon: Icon, items, text, selected, selecte
         {open ? <ExpandLess /> : <ExpandMore />}
       </ListItem>
       <Collapse in={open} timeout="auto" unmountOnExit>
-      <List component="div" dense='true' disablePadding>
+      <List component="div" dense disablePadding>
         {items.map((item) => (
-          <React.Fragment>
-          
           <AvatarListItem
             key={item.id}
             checked={selectedItems.find((i) => i.id === item.id) !== undefined}
             item={item} 
-            selected={selected ? selected.id === item.id : false}
+            selected={selected ? 
+                        selected.id === item.id && 
+                        selected.type === type : false}
             small={true}
             handleClickChecked={() => {
               handleClickCheckedItem({...item, type: type});
@@ -342,7 +343,6 @@ function ExpandableListItem({project, icon: Icon, items, text, selected, selecte
               handleClickItem({...item, type: type});
             }}
           />
-          </React.Fragment>
         ))}
         <Tooltip title={`create ${text}`} placement="bottom">
         <ListItem button onClick={handleNewItem}>
@@ -373,9 +373,11 @@ function ListOfProjects({ handleClickProject, project}) {
       name: 'new',
       user_ids: [api.loggedInUser().id],
     }
-    api.post('api/project/', data).then(project => {
+    api.post('api/project/', data).then(new_project => {
       api.get("api/project/").then(setProjects)
-      project.refresh(project.id);
+      if (project) {
+        project.refresh(new_project.id);
+      }
     });
   };
 
@@ -415,18 +417,18 @@ function ProjectMenu({ project, selected, selectedItems, handleClickCheckedItem,
   };
 
   const newItem = (type) => {
-    const type_to_field = {
+    const type_to_api = {
       dataset: 'dataset',
-      dosed_pharmacokinetic: 'pk_model',
-      pharmacodynamic: 'pd_model',
-      pkpd_models: 'pkpd_model',
+      pk_model: 'dosed_pharmacokinetic',
+      pd_model: 'pharmacodynamic',
+      pkpd_model: 'pkpd_model',
     }
-    const project_field = `${type_to_field[type]}s`
-    const project_ids_field = `${type_to_field[type]}_ids`
+    const project_field = `${type}s`
+    const project_ids_field = `${type}_ids`
     return () => {
-      api.post(`api/${type}/`, {name: 'new'})
+      api.post(`api/${type_to_api[type]}/`, {name: 'new'})
         .then(new_item => {
-          handleClickItem(new_item);
+          handleClickItem({...new_item, type: type});
           const existing_ids = project[project_field].map(item => item.id)
           const new_ids = [
             ...existing_ids,
@@ -509,7 +511,7 @@ function ProjectMenu({ project, selected, selectedItems, handleClickCheckedItem,
         icon={AccessibilityIcon}
         handleClickItem={handleClickItem}
         handleClickCheckedItem={handleClickCheckedItem}
-        handleNewItem={newItem('dosed_pharmacokinetic')}
+        handleNewItem={newItem('pk_model')}
         selected={selected}
         selectedItems={
           selectedItems.filter((i) => i.type === 'pk_model')
@@ -524,7 +526,7 @@ function ProjectMenu({ project, selected, selectedItems, handleClickCheckedItem,
         icon={FunctionsIcon}
         handleClickItem={handleClickItem}
         handleClickCheckedItem={handleClickCheckedItem}
-        handleNewItem={newItem('pharmacodynamic')}
+        handleNewItem={newItem('pd_model')}
         selected={selected}
         selectedItems={
           selectedItems.filter((i) => i.type === 'pd_model')
@@ -562,6 +564,7 @@ export default function App() {
   };
 
   const handleClickItem = (item) => {
+    console.log('handleClickItem', item);
     setSelected(item);
   };
 
@@ -577,13 +580,6 @@ export default function App() {
     });
   };
 
-  const type_to_field = {
-    dataset: 'dataset',
-    dosed_pharmacokinetic: 'pk_model',
-    pharmacodynamic: 'pd_model',
-    pkpd_models: 'pkpd_model',
-  }
-
   const loadProject = (id) => {
     console.log('setting project', id);
     return api.get(`/api/project/${id}/`).then(data => {
@@ -591,15 +587,19 @@ export default function App() {
         if (oldSelected) {
           const selected_options = data[`${oldSelected.type}s`];
           let newItem = selected_options.find(x => x.id === oldSelected.id);
-          newItem['type'] = oldSelected.type;
+          if (newItem) {
+            newItem['type'] = oldSelected.type;
+          }
           return newItem;
         }
       });
       setSelectedItems(oldSelectedItems => 
         oldSelectedItems.map(item => {
-          const selected_options = data[type_to_field[item.type]];
+          const selected_options = data[`${item.type}s`];
           let newItem  = selected_options.find(x => x.id === item.id);
-          newItem['type'] = item.type;
+          if (newItem) {
+            newItem['type'] = item.type;
+          }
           return newItem;
         })
       );

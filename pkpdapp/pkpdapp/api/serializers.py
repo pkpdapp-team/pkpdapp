@@ -46,7 +46,7 @@ class DosedPharmacokineticSerializer(serializers.ModelSerializer):
     )
     pharmacokinetic_model_id = serializers.PrimaryKeyRelatedField(
         queryset=PharmacokineticModel.objects.all(),
-        default=PharmacokineticModel.objects.first(),
+        required=False,
         source='pharmacokinetic_model', write_only=True
     )
 
@@ -56,6 +56,7 @@ class DosedPharmacokineticSerializer(serializers.ModelSerializer):
     protocol_id = serializers.PrimaryKeyRelatedField(
         queryset=Protocol.objects.all(),
         source='protocol',
+        required=False,
         allow_null=True,
         write_only=True,
     )
