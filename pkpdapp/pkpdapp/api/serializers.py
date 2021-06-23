@@ -134,7 +134,7 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = '__all__'
         fields = (
-            'id', 'first_name', 'last_name', 'email', 'profile', 'project_set'
+            'id', 'username', 'first_name', 'last_name', 'email', 'profile', 'project_set'
         )
 
 class ProjectSerializer(serializers.ModelSerializer):

@@ -8,6 +8,7 @@ import Select from '@material-ui/core/Select';
 import { Controller  } from "react-hook-form";
 import DateFnsUtils from '@date-io/date-fns'; // choose your lib
 import { DateTimePicker } from '@material-ui/pickers';
+import Chip from '@material-ui/core/Chip';
 
 const useStyles = makeStyles((theme) => ({
   container: {
@@ -18,6 +19,13 @@ const useStyles = makeStyles((theme) => ({
   formInput: {
     margin: theme.spacing(1),
     width: '100%',
+  },
+  chips: {
+    display: 'flex',
+    flexWrap: 'wrap',
+  },
+  chip: {
+    margin: 2,
   },
 }));
 
@@ -57,6 +65,44 @@ export function FormTextField({control, name, defaultValue, label, ...rest}) {
           />
         )}
       />
+  )
+}
+
+export function FormMultiSelectField({control, name, defaultValue, label, options, ...rest}) {
+  const classes = useStyles();
+  return (
+    <FormControl className={classes.formInput}>
+    <InputLabel id={name.concat('-select-label')}>
+      {label}
+    </InputLabel>
+    <Controller
+        control={control}
+        defaultValue={defaultValue}
+        name={name}
+        render={({ field }) => (
+        <Select
+          labelId={name.concat('-select-label')}
+          multiple
+          renderValue={(selected) => (
+            <div className={classes.chips}>
+              {selected.map((value, index) => (
+                <Chip key={value} label={options[index].key} 
+                      className={classes.chip} />
+              ))}
+            </div>
+          )}
+          {...rest}
+          {...field}
+        >
+          {options.map(option => {
+            return (
+              <MenuItem key={option.value} value={option.value}>{option.key}</MenuItem>
+            )
+          })}
+        </Select>
+        )}
+      />
+      </FormControl>
   )
 }
 
