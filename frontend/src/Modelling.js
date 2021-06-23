@@ -11,6 +11,7 @@ import ChartController from './ChartController'
 
 import { makeStyles } from '@material-ui/core/styles';
 
+
 const useStyles = makeStyles((theme) => ({
   root: {
     flexGrow: 1,
@@ -51,7 +52,7 @@ export default function Modelling({selected, selectedItems, project}) {
         {selectedIsDataset &&
         <Grid item xs={12}>
         <Paper className={classes.paper}>
-          <DatasetDetail />
+          <DatasetDetail  project={project} dataset={selected} />
         </Paper>
         </Grid>
         }
@@ -75,7 +76,7 @@ export default function Modelling({selected, selectedItems, project}) {
         {selectedIsPdModel &&
         <Grid item xs={12}>
         <Paper className={classes.paper}>
-        <PdDetail />
+        <PdDetail project={project} pd_model={selected} />
         </Paper>
         </Grid>
         }

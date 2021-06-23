@@ -6,6 +6,8 @@ import MenuItem from '@material-ui/core/MenuItem';
 import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
 import { Controller  } from "react-hook-form";
+import DateFnsUtils from '@date-io/date-fns'; // choose your lib
+import { DateTimePicker } from '@material-ui/pickers';
 
 const useStyles = makeStyles((theme) => ({
   container: {
@@ -19,6 +21,25 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
+export function FormDateTimeField({control, name, defaultValue, label, ...rest}) {
+  const classes = useStyles();
+  return (
+    <Controller
+        control={control}
+        defaultValue={defaultValue}
+        name={name}
+        render={({ field }) => (
+          <DateTimePicker
+            className={classes.formInput} 
+            format="dd/MM/yyyy HH:mm"
+            {...rest} 
+            {...field} 
+            label={label}
+          />
+        )}
+      />
+  )
+}
 
 export function FormTextField({control, name, defaultValue, label, ...rest}) {
   const classes = useStyles();

@@ -17,22 +17,17 @@ export default function PkDetail({project, pk_model}) {
 
   const [basePkModels, setBasePkModels] = React.useState([]);
 
-  console.log('pkdetail', pk_model);
-
   useEffect(() => {
     api.get("/api/pharmacokinetic").then(setBasePkModels);
   },[])
 
   useEffect(() => {
-    console.log('reset', pk_model);
     reset({
       ...pk_model,
       protocol_id: pk_model.protocol ? pk_model.protocol.id : '',
       pharmacokinetic_model_id: pk_model.pharmacokinetic_model.id,
     });
   }, [pk_model]);
-
-  console.log('rending with', project, pk_model);
 
   const onSubmit = (values) => {
     const data = {

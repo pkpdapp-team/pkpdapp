@@ -20,7 +20,7 @@ router.register('dataset', api.DatasetView, basename='dataset')
 router.register('users', api.UserView, basename='user')
 router.register('project', api.ProjectView, basename='project')
 router.register('dose', api.DoseView, basename='dose')
-router.register('protocol', api.DoseView, basename='protocol')
+router.register('protocol', api.ProtocolView, basename='protocol')
 router.register(
     'pharmacokinetic', api.PharmacokineticView,
     basename='pharmacokinetic'

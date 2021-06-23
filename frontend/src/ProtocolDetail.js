@@ -60,8 +60,10 @@ export default function ProtocolDetail({project, protocol}) {
         return api.post(`api/dose/`, data)
       }
     })).then(doses => {
+      const dose_ids = doses.map(x => x.id);
       const data = {
-        ...doses,
+        ...values,
+        dose_ids: dose_ids,
       }
       console.log('submitting protocol', data);
       api.put(`api/protocol/${protocol.id}/`, data)
@@ -108,23 +110,9 @@ export default function ProtocolDetail({project, protocol}) {
         </TableHead>
         <TableBody>
           {fields.map((dose, index) => (
-            <TableRow key={dose.keyName}>
+            <TableRow key={dose.keyId}>
               <TableCell>
-              {index > 0 &&
-              <IconButton 
-                onClick={() => swap(index, index-1)}
-              >
-                <ArrowUpwardIcon/>
-              </IconButton>
-              }
-              {index < protocol.doses.length-1 &&
-              <IconButton 
-                onClick={() => swap(index, index+1)}
-              >
-                <ArrowDownwardIcon/>
-              </IconButton>
-              }
-              <IconButton 
+              <IconButton size='small'
                 onClick={() => remove(index)}
               >
                 <DeleteIcon />
@@ -135,7 +123,8 @@ export default function ProtocolDetail({project, protocol}) {
                 <FormTextField 
                   control={control} 
                   defaultValue={dose[col.field]}
-                  name={`dose[${index}].${col.field}`}
+                  name={`doses[${index}].${col.field}`}
+                  type="number"
                 />
               </TableCell>
               ))}

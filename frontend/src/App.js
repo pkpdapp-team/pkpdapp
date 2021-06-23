@@ -9,6 +9,8 @@ import {
 } from "react-router-dom";
 
 
+import { MuiPickersUtilsProvider } from '@material-ui/pickers';
+import DateFnsUtils from '@date-io/date-fns';
 import classNames from 'classnames';
 import Checkbox from '@material-ui/core/Checkbox';
 import Box from '@material-ui/core/Box';
@@ -71,8 +73,6 @@ import Modelling from './Modelling'
 
 const PrivateRoute = ({ component: Component, componentProps, ...rest }) => {
   const logged = api.isLoggedIn();
-
-  console.log('rending private route with props', componentProps);
 
   return <Route {...rest} render={(props) => (
     logged
@@ -317,8 +317,6 @@ function ExpandableListItem({project, icon: Icon, items, text, selected, selecte
     project.refresh(project.id);
   }
 
-  console.log('expandable', selected);
-
   return (
     <React.Fragment>
       <ListItem button onClick={handleClick}>
@@ -329,7 +327,7 @@ function ExpandableListItem({project, icon: Icon, items, text, selected, selecte
         {open ? <ExpandLess /> : <ExpandMore />}
       </ListItem>
       <Collapse in={open} timeout="auto" unmountOnExit>
-      <List component="div" disablePadding>
+      <List component="div" dense='true' disablePadding>
         {items.map((item) => (
           <React.Fragment>
           
@@ -453,7 +451,7 @@ function ProjectMenu({ project, selected, selectedItems, handleClickCheckedItem,
 
   return (
     <List>
-      <ListItem button component={Link} to="/modelling">
+      <ListItem button component={Link} to="/">
         <ListItemIcon>
           <VisibilityIcon />
         </ListItemIcon>
@@ -667,7 +665,7 @@ export default function App() {
     <Drawer
       variant="permanent"
       classes={{
-        paper: clsx(classes.drawerPaper,  !open && classes.drawerPaperClose),
+        paper: clsx(classes.drawerPaper, classes.drawerPaperClose),
       }}
       open={open}
     >
@@ -706,6 +704,7 @@ export default function App() {
       />
       }
     </Drawer>
+    <MuiPickersUtilsProvider utils={DateFnsUtils}>
     <main className={classes.content}>
       <div className={classes.appBarSpacer} />
         {/* A <Switch> looks through its children <Route>s and
@@ -714,18 +713,17 @@ export default function App() {
         <Container maxWidth="false">
         <Switch>
           <PrivateRoute path="/dataset/:id" component={DatasetDetail} />
-          <PrivateRoute path="/modelling" 
-            component={Modelling} 
+          <PrivateRoute path="/" component={Modelling} 
             componentProps={{
               selectedItems: selectedItems,
               project: project,
               selected: selected,
             }}
           />
-          <PrivateRoute path="/" component={Project} />
         </Switch>
         </Container>
     </main>
+    </MuiPickersUtilsProvider>
     </div>
   );
 
