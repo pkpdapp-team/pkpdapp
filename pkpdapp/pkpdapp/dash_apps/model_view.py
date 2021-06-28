@@ -162,6 +162,8 @@ class ModelViewState:
         self._model_names = []
         self._parameters = []
         self._parameter_names = []
+        self._parameters_min_bounds = []
+        self._parameters_max_bounds = []
         self._n_states = []
         self._times = np.array([0.0])
 
@@ -184,6 +186,8 @@ class ModelViewState:
             '_model_names': self._model_names,
             '_parameters': self._parameters,
             '_parameter_names': self._parameter_names,
+            '_parameters_min_bounds':self._parameters_min_bounds,
+            '_parameters_max_bounds': self._parameters_max_bounds,
             '_n_states': self._n_states,
             '_times': self._times.tolist(),
             '_direct': self._direct,
@@ -207,6 +211,8 @@ class ModelViewState:
         o._model_names = data_dict['_model_names']
         o._parameters = data_dict['_parameters']
         o._parameter_names = data_dict['_parameter_names']
+        o._parameters_min_bounds = data_dict['_parameters_min_bounds']
+        o._parameters_max_bounds = data_dict['_parameters_max_bounds']
         o._n_states = data_dict['_n_states']
         o._times = np.array(data_dict['_times'])
         o._direct = data_dict['_direct']
@@ -287,6 +293,9 @@ class ModelViewState:
             self._parameters[i] = [
                 erlo_m._default_values[n] for n in parameters
             ]
+
+
+
             self._n_states[i] = erlo_m._n_states
 
     def set_dosing_events(self, dosing_events, time_max=None):
@@ -466,20 +475,22 @@ class ModelViewState:
         sliders = _SlidersComponent()
         parameters = self._parameter_names[model_index]
         parameter_values = self._parameters[model_index]
+        parameters_min_bounds = self._parameters_min_bounds[model_index]
+        parameters_max_bounds = self._parameters_max_bounds[model_index]
         is_pk = self._is_pk[model_index]
         n_states = self._n_states[model_index]
         # Add one slider for each parameter
         for i, parameter in enumerate(parameters):
-            min_value = 0
-            max_value = 2
-            if parameter_values[i] < min_value:
-                min_value = 2 * parameter_values[i]
-            if parameter_values[i] > max_value:
-                max_value = 2 * parameter_values[i]
+
+            if parameter_values[i]<parameters_min_bounds[i]:
+                parameter_values[i] = parameters_min_bounds[i]
+                
+            if parameter_values[i]>parameters_max_bounds[i]:
+                parameter_values[i] = parameters_max_bounds[i]
 
             sliders.add_slider(i, parameter,
-                               min_value=min_value,
-                               max_value=max_value,
+                               min_value=parameters_min_bounds[i],
+                               max_value=parameters_max_bounds[i],
                                value=parameter_values[i])
 
         # Split parameters into initial values and parameters
