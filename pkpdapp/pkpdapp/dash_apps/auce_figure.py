@@ -50,8 +50,11 @@ class AuceFigure():
         self._class2_plot_selection = None
         self._class3_plot_selection = None
         self._concentration_plot_selection = None
+        self._sigma_tops = []
+        self._sigma_bottoms = []
+        self._sigma_EC50s = []
 
-        self._auce_vs_concentration_fig = compute_auce_vs_concentration(
+        self._auce_vs_concentration_fig,self._sigma_tops, self._sigma_bottoms, self._sigma_EC50s = compute_auce_vs_concentration(
             self._dataset, self._auce_vs_concentration_fig,
             self._time_key, self._auce_fit_type, self._obs_key,
             self._class1_selection,
@@ -70,6 +73,10 @@ class AuceFigure():
 
     def figures(self):
         return self._fig, self._auce_vs_concentration_fig
+
+    def get_auce_fit(self):
+
+        return self._sigma_tops, self._sigma_bottoms, self._sigma_EC50s
 
 
 def fsigmoid(concentration, top, bottom, EC50):
@@ -242,6 +249,10 @@ def compute_auce_vs_concentration(dataset,
     auce_vs_concentration_fig.layout = {}
     data = dataset.loc[dataset[class1_selection] == class1_plot_selection]
 
+    sigma_tops = []
+    sigma_bottoms = []
+    sigma_EC50s = []
+
     if class2_plot_selection:
         class2 = [class2_plot_selection]
     else:
@@ -266,10 +277,14 @@ def compute_auce_vs_concentration(dataset,
             )
 
         if not (auce_conc_fit_type == 'None'):
-            auce_fit(auce_vs_concentration_fig, auce_conc_fit_type,
+            sigma_top, sigma_bottom, sigma_EC50= auce_fit(auce_vs_concentration_fig, auce_conc_fit_type,
                      class2_selection,
                      class2_selected, index_class2, concentrations,
                      auce_vs_concentration_data)
+
+            sigma_tops.append(sigma_top)
+            sigma_bottoms.append(sigma_bottom)
+            sigma_EC50s.append(sigma_EC50)
 
         auce_vs_concentration_fig.add_trace(go.Scatter(
             x=concentrations,
@@ -331,15 +346,20 @@ def compute_auce_vs_concentration(dataset,
         xaxis_title='Concentration',
         xaxis_type='log',
         yaxis_title='AUCE',
-        yaxis_type='log',
+        yaxis_type='linear',
         template="plotly_white",
     )
-    return auce_vs_concentration_fig
+
+    return auce_vs_concentration_fig,sigma_tops, sigma_bottoms, sigma_EC50s
 
 
 def auce_fit(auce_vs_concentration_fig, auce_conc_fit_type,
              class2_selection, class2_selected,
              index_class2, concentrations, auce_vs_concentration_data):
+
+    sigma_top=0
+    sigma_bottom=0
+    sigma_EC50=0
 
     if auce_conc_fit_type == 'Sigmoid' and len(concentrations) >= 4:
         p0 = [
@@ -428,3 +448,5 @@ def auce_fit(auce_vs_concentration_fig, auce_conc_fit_type,
                 x=0.05, y=1 - index_class2 * 0.1,
                 showarrow=False, font=dict(color=colors[index_class2])
             )
+            
+    return sigma_top, sigma_bottom, sigma_EC50

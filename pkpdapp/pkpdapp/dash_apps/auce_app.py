@@ -7,7 +7,7 @@
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_bootstrap_components as dbc
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, State
 import plotly.graph_objects as go
 from .auce_figure import AuceFigure
 import pandas as pd
@@ -17,7 +17,7 @@ import json
 # Create data view
 app = dpd.DjangoDash(
     name='auce_view',
-    add_bootstrap_links=True
+    add_bootstrap_links=True,
 )
 
 # Create dash app
@@ -52,7 +52,24 @@ app.layout = dbc.Container([
                     id='auce-dashboard',
                     figure=go.Figure(),
                     style={'width': '100%'}
-                )
+                ),
+                dbc.Col(width=5, children=[
+                    html.Br(),
+                    html.Br(),
+                    html.Label("Download AUCE results:"),
+                    html.Br(),
+                    html.Br(),
+                    dcc.Input(
+                        id="filename-auce",
+                        type='text',
+                        placeholder="File name, no extension",
+                    ),
+                    html.Br(),
+                    html.Br(),
+                    html.Button("Download AUCE data", id="btn"), dcc.Download(id="download")
+                ])
+
+                
             ],
         ),
     ]),
@@ -69,6 +86,24 @@ def rehydrate_state(session_state):
         raise NotImplementedError('AuceState missing in session state')
 
     return AuceState.from_json(state)
+
+@app.callback(
+    Output("download", "data"), 
+    Input("btn", "n_clicks"),
+    [State('dataset-dropdown', 'value'),
+    State('auce-biomarker-dropdown', 'value'),
+    State('filename-auce', 'value')
+    ]
+)
+def generate_csv(n_nlicks,dataset_dropdown,biomarker_dropdown, filename_auce,session_state=None):
+    state = rehydrate_state(session_state)
+
+    state._selected_dataset = dataset_dropdown
+    state._auce_biomarker = biomarker_dropdown
+
+    sigma_top, sigma_bottom, sigma_EC50 = state._get_auce_fit_values()
+    computed_values = sigma_top, sigma_bottom, sigma_EC50
+    return dict(content=computed_values, filename=str(filename_auce)+'.txt')
 
 
 @app.callback(
@@ -171,6 +206,7 @@ class AuceState:
         return o
 
     def generate_auce_figures(self, new_biomarker=None):
+
         if not self._datasets:
             return go.Figure(), go.Figure()
         if new_biomarker:
@@ -187,3 +223,11 @@ class AuceState:
             self._biomarker_key
         ].unique().tolist()
         return [{'label': str(i), 'value': i} for i in biomarkers]
+
+    def _get_auce_fit_values(self):
+ 
+        self._auce_figure = AuceFigure(
+            self._datasets[self._selected_dataset],
+            self._auce_biomarker
+        )
+        return self._auce_figure.get_auce_fit()
