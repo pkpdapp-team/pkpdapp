@@ -481,10 +481,13 @@ class ModelViewState:
         n_states = self._n_states[model_index]
         # Add one slider for each parameter
         for i, parameter in enumerate(parameters):
-
+            print('BOUNDS ---------------')
+            print(parameters_min_bounds)
+            print('VALUES ---------------')
+            print(parameter_values)
             if parameter_values[i]<parameters_min_bounds[i]:
                 parameter_values[i] = parameters_min_bounds[i]
-                
+
             if parameter_values[i]>parameters_max_bounds[i]:
                 parameter_values[i] = parameters_max_bounds[i]
 
@@ -728,7 +731,7 @@ class ModelViewState:
 
         return param_names
 
-    def add_model(self, sbml, name, time_max=30, is_pk=False, use=False):
+    def add_model(self, sbml, name, time_max=30, is_pk=False, use=False, parameters_min_bounds=[], parameters_max_bounds=[]):
         """
         Adds a sbml model to the application.
 
@@ -764,6 +767,17 @@ class ModelViewState:
             self._convert_parameter_names(erlo_m, parameters)
         )
         self._n_states.append(erlo_m._n_states)
+        if not parameters_min_bounds:
+            self._parameters_min_bounds.append([0 for i in parameters])
+        else :
+            self._parameters_min_bounds.append(parameters_min_bounds)
+
+        if not parameters_max_bounds:
+            self._parameters_max_bounds.append([10 for i in parameters])
+        else:
+            self._parameters_max_bounds.append(parameters_max_bounds)
+
+
         if use:
             self._use_models.append(len(self._models))
         self._models.append(sbml)
