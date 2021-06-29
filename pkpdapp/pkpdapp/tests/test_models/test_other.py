@@ -7,8 +7,8 @@
 from django.test import TestCase
 from pkpdapp.models import (
     Dataset, Project, Biomarker, BiomarkerType,
-    PharmacodynamicModel, Protocol, PharmacokineticModel,
-    PkpdModel, Compound, DosedPharmacokineticModel,
+    PharmacodynamicModel, Protocol,
+    Compound,
     Subject
 )
 from django.contrib.auth.models import User
@@ -145,61 +145,6 @@ class TestProtocolModel(TestCase):
             dataset=d,
             subject_id=1
         )
-
-
-class TestPharmodynamicModel(TestCase):
-    def test_model_creation(self):
-        m = PharmacodynamicModel.objects.create(
-            name='my_cool_model',
-            description='description for my cool model',
-            sbml='sbml_here',
-        )
-        self.assertTrue(isinstance(m, PharmacodynamicModel))
-
-
-class TestDosedPharmokineticModel(TestCase):
-    def test_model_creation(self):
-        pk = PharmacokineticModel.objects\
-            .get(name='one_compartment_pk_model')
-
-        c = Compound.objects.create(
-            name='test_dosed_pk_model',
-            description='placebo',
-        )
-
-        p = Protocol.objects.create(
-            name='my_cool_protocol',
-            compound=c,
-            subject_id=1
-        )
-
-        m = DosedPharmacokineticModel.objects.create(
-            pharmacokinetic_model=pk,
-            dose_compartment='central',
-            protocol=p,
-        )
-        self.assertTrue(isinstance(m, DosedPharmacokineticModel))
-
-
-class TestPkpdModel(TestCase):
-    def test_pkpd_model_creation(self):
-        c = Compound.objects.create(
-            name='test_pkpd_model_creation',
-            description='placebo',
-        )
-
-        p = Protocol.objects.create(
-            name='my_cool_protocol',
-            compound=c,
-            subject_id=1
-        )
-        m = PkpdModel.objects.create(
-            name='my_cool_model',
-            sbml='sbml_here',
-            dose_compartment='central',
-            protocol=p,
-        )
-        self.assertTrue(isinstance(m, PkpdModel))
 
 
 class TestProfileModel(TestCase):
