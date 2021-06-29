@@ -2,7 +2,7 @@ FROM python:3.8-slim
 
 # install libsundials-dev
 RUN apt-get update && apt-get upgrade -y
-RUN apt-get install -y libsundials-dev
+RUN apt-get install -y libsundials-dev memcached
 
 # install nginx
 RUN apt-get install nginx vim -y --no-install-recommends
