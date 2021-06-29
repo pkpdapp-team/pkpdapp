@@ -9,11 +9,13 @@ from .compound import Compound
 from .dataset import Dataset
 from .subject import Subject
 from .protocol import Protocol
-from .pkpd_model import (
-    MechanisticModel,
+from .mechanistic_model import (MechanisticModel, MyokitModelMixin)
+from .pharmacokinetic_model import (
     PharmacokineticModel,
-    PharmacodynamicModel,
     DosedPharmacokineticModel,
+)
+from .pkpd_model import (
+    PharmacodynamicModel,
     PkpdModel,
 )
 from .units import StandardUnit, Unit

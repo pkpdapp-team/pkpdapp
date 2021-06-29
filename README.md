@@ -90,5 +90,19 @@ a file (say) called `test_models.py` use
 `python manage.py test pkpdapp.tests.test_models`
 - code coverage tests: can't be done locally
 
+# Running the cache
+
+Install the cache using
+
+```bash
+$ sudo apt install memcached
+```
+
+Run memcached using
+
+```bash
+$ memcached -p 11211
+```
+
 ## License
 PKPDApp is fully open source. For more information about its license, see [LICENSE.md](LICENSE.md).
