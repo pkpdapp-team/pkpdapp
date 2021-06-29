@@ -6,7 +6,7 @@
 
 from django.db import models
 from django.urls import reverse
-from pkpdapp.models import Compound, Dataset, Subject
+from pkpdapp.models import Compound, Dataset, Subject, Unit
 
 
 class Protocol(models.Model):
@@ -42,6 +42,18 @@ class Protocol(models.Model):
         max_length=1,
         choices=DoseType.choices,
         default=DoseType.DIRECT,
+    )
+
+    time_unit = models.ForeignKey(
+        Unit, on_delete=models.CASCADE,
+        help_text=(
+            'unit for the start_time and duration values stored in each dose'
+        )
+    )
+
+    amount_unit = models.ForeignKey(
+        Unit, on_delete=models.CASCADE,
+        help_text='unit for the amount value stored in each dose'
     )
 
     def get_absolute_url(self):
