@@ -4,18 +4,12 @@
 # copyright notice and full license details.
 #
 
-from django.test import SimpleTestCase, TestCase
+from django.test import TestCase
 from pkpdapp.models import (
-    Dataset, Project, Biomarker, BiomarkerType,
     PharmacodynamicModel, Protocol, PharmacokineticModel,
-    PkpdModel, Compound, DosedPharmacokineticModel,
-    Subject, Dose
+    Compound, DosedPharmacokineticModel,
+    Dose, PkpdModel
 )
-from django.contrib.auth.models import User
-from django.utils import timezone
-from django.db.utils import IntegrityError
-import urllib.request
-import codecs
 from django.core.cache import cache
 import numpy as np
 
@@ -44,6 +38,7 @@ class TestPharmodynamicModel(TestCase):
             'kappa', 'drug_concentration', 'time'
         ]
         self.assertCountEqual(model_variables, test_model_variables)
+
 
 class TestDosedPharmokineticModel(TestCase):
     def setUp(self):
@@ -113,7 +108,8 @@ class TestDosedPharmokineticModel(TestCase):
             amount=1,
         )
 
-        # dosed model should have a concentration at t ~ 0.5 of greater than 0.01
+        # dosed model should have a concentration at t ~ 0.5
+        # of greater than 0.01
         sim = m.get_myokit_simulator()
         output = sim.run(m.time_max)
         index = np.where(np.array(output['myokit.time']) > 0.5)[0][0]
@@ -124,7 +120,6 @@ class TestDosedPharmokineticModel(TestCase):
         output = pk_sim.run(pk.time_max)
         index = np.where(np.array(output['myokit.time']) > 0.5)[0][0]
         self.assertLess(output['central.drug_concentration'][index], 1e-6)
-
 
 
 class TestPkpdModel(TestCase):
@@ -146,5 +141,3 @@ class TestPkpdModel(TestCase):
             protocol=p,
         )
         self.assertTrue(isinstance(m, PkpdModel))
-
-

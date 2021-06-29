@@ -48,7 +48,7 @@ setup(
         'jsonfield==3.1.0',
         'djangorestframework>=3.12.4',
         'djoser==2.1.0',
-        'python-memcached==1.16.0',
+        'python-memcached',
     ],
     dependency_links=[
         "git+git://github.com/DavAug/erlotinib.git#egg=erlotinib-latest",

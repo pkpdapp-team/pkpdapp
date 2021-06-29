@@ -12,7 +12,6 @@ from pkpdapp.models import (
     Protocol,
 )
 import myokit
-import time
 
 
 class PharmacokineticModel(MechanisticModel):

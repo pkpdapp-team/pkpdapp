@@ -7,8 +7,8 @@
 from django.test import TestCase
 from pkpdapp.models import (
     Dataset, Project, Biomarker, BiomarkerType,
-    PharmacodynamicModel, Protocol, PharmacokineticModel,
-    PkpdModel, Compound, DosedPharmacokineticModel,
+    PharmacodynamicModel, Protocol,
+    Compound,
     Subject
 )
 from django.contrib.auth.models import User

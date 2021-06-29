@@ -5,19 +5,19 @@
 #
 
 from django.db import models
-from django.urls import reverse
 from django.core.cache import cache
 import myokit
 from myokit.formats.sbml import SBMLParser
 
+
 class MyokitModelMixin:
     def _get_myokit_model_cache_key(self):
-        return  'myokit_model_{}_{}'.format(
+        return 'myokit_model_{}_{}'.format(
             self._meta.db_table, self.id
         )
 
     def _get_myokit_simulator_cache_key(self):
-        return  'myokit_simulator_{}_{}'.format(
+        return 'myokit_simulator_{}_{}'.format(
             self._meta.db_table, self.id
         )
 
