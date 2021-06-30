@@ -7,6 +7,7 @@
 from django.db import models
 import myokit
 
+
 class Unit(models.Model):
     """
     Model replicating the Unit class from myokit
@@ -23,7 +24,9 @@ class Unit(models.Model):
       use the multiplier log10(2.54).
     """
 
-    symbol = models.CharField(max_length=10, help_text='symbol for unit display')
+    symbol = models.CharField(
+        max_length=10, help_text='symbol for unit display'
+    )
     g = models.FloatField(default=0, help_text='grams exponent')
     m = models.FloatField(default=0, help_text='meters exponent')
     s = models.FloatField(default=0, help_text='seconds exponent')

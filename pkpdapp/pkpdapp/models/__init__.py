@@ -5,6 +5,7 @@
 #
 # flake8: noqa f401
 
+from .units import Unit
 from .compound import Compound
 from .dataset import Dataset
 from .subject import Subject
@@ -18,7 +19,6 @@ from .pkpd_model import (
     PharmacodynamicModel,
     PkpdModel,
 )
-from .units import StandardUnit, Unit
 from .biomarker_type import BiomarkerType
 from .biomarker import Biomarker
 from .project import Project

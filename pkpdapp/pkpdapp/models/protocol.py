@@ -46,6 +46,7 @@ class Protocol(models.Model):
 
     time_unit = models.ForeignKey(
         Unit, on_delete=models.CASCADE,
+        related_name='protocols_time',
         help_text=(
             'unit for the start_time and duration values stored in each dose'
         )
@@ -53,6 +54,7 @@ class Protocol(models.Model):
 
     amount_unit = models.ForeignKey(
         Unit, on_delete=models.CASCADE,
+        related_name='protocols_amount',
         help_text='unit for the amount value stored in each dose'
     )
 

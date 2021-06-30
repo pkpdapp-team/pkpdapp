@@ -11,6 +11,7 @@ from django.conf import settings
 from django.db import migrations, models
 import django.db.models.deletion
 import jsonfield.fields
+import pkpdapp.models.mechanistic_model
 
 
 class Migration(migrations.Migration):
@@ -47,6 +48,7 @@ class Migration(migrations.Migration):
                 ('dose_compartment', models.CharField(blank=True, default='central', help_text='compartment name to be dosed', max_length=100, null=True)),
                 ('time_max', models.FloatField(default=30, help_text='suggested time to simulate after the last dose (in the time units specified by the sbml model)')),
             ],
+            bases=(models.Model, pkpdapp.models.mechanistic_model.MyokitModelMixin),
         ),
         migrations.CreateModel(
             name='PharmacodynamicModel',
@@ -60,6 +62,7 @@ class Migration(migrations.Migration):
             options={
                 'abstract': False,
             },
+            bases=(models.Model, pkpdapp.models.mechanistic_model.MyokitModelMixin),
         ),
         migrations.CreateModel(
             name='PharmacokineticModel',
@@ -73,6 +76,7 @@ class Migration(migrations.Migration):
             options={
                 'abstract': False,
             },
+            bases=(models.Model, pkpdapp.models.mechanistic_model.MyokitModelMixin),
         ),
         migrations.CreateModel(
             name='PkpdModel',
@@ -87,38 +91,33 @@ class Migration(migrations.Migration):
             options={
                 'abstract': False,
             },
-        ),
-        migrations.CreateModel(
-            name='StandardUnit',
-            fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('symbol', models.CharField(help_text='unit symbol (e.g. "mg")', max_length=20)),
-            ],
-            options={
-                'abstract': False,
-            },
+            bases=(models.Model, pkpdapp.models.mechanistic_model.MyokitModelMixin),
         ),
         migrations.CreateModel(
             name='Unit',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('symbol', models.CharField(help_text='unit symbol (e.g. "mg")', max_length=20)),
-                ('multiplier', models.FloatField(help_text='multiplier to convert to standard unit')),
-                ('standard_unit', models.ForeignKey(help_text='standard unit associated with this unit', on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.standardunit')),
+                ('symbol', models.CharField(help_text='symbol for unit display', max_length=10)),
+                ('g', models.FloatField(default=0, help_text='grams exponent')),
+                ('m', models.FloatField(default=0, help_text='meters exponent')),
+                ('s', models.FloatField(default=0, help_text='seconds exponent')),
+                ('A', models.FloatField(default=0, help_text='ampere exponent')),
+                ('K', models.FloatField(default=0, help_text='kelvin exponent')),
+                ('cd', models.FloatField(default=0, help_text='candela exponent')),
+                ('mol', models.FloatField(default=0, help_text='mole exponent')),
+                ('multiplier', models.FloatField(default=0, help_text='multiplier')),
             ],
-            options={
-                'abstract': False,
-            },
         ),
         migrations.CreateModel(
             name='Subject',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('id_in_dataset', models.IntegerField(help_text='unique id in the dataset')),
-                ('dose_group', models.CharField(blank=True, help_text='dosing group for this subject', max_length=100)),
+                ('dose_group_amount', models.FloatField(blank=True, help_text='dosing amount for this subject (for constant dosing)', null=True)),
                 ('group', models.CharField(blank=True, help_text='dataset specific grouping for this subject', max_length=100)),
                 ('metadata', jsonfield.fields.JSONField(help_text='subject metadata')),
                 ('dataset', models.ForeignKey(help_text='dataset containing this subject', on_delete=django.db.models.deletion.CASCADE, related_name='subjects', to='pkpdapp.dataset')),
+                ('dose_group_unit', models.ForeignKey(blank=True, help_text='unit for dose_group_amount', null=True, on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.unit')),
             ],
         ),
         migrations.CreateModel(
@@ -127,9 +126,11 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(help_text='name of the protocol', max_length=100)),
                 ('dose_type', models.CharField(choices=[('D', 'IV'), ('I', 'Extravascular')], default='D', max_length=1)),
+                ('amount_unit', models.ForeignKey(help_text='unit for the amount value stored in each dose', on_delete=django.db.models.deletion.CASCADE, related_name='protocols_amount', to='pkpdapp.unit')),
                 ('compound', models.ForeignKey(blank=True, help_text='drug compound', null=True, on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.compound')),
                 ('dataset', models.ForeignKey(blank=True, help_text='dataset containing this protocol', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='protocols', to='pkpdapp.dataset')),
                 ('subject', models.ForeignKey(blank=True, help_text='subject associated with protocol', null=True, on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.subject')),
+                ('time_unit', models.ForeignKey(help_text='unit for the start_time and duration values stored in each dose', on_delete=django.db.models.deletion.CASCADE, related_name='protocols_time', to='pkpdapp.unit')),
             ],
         ),
         migrations.CreateModel(
@@ -173,9 +174,9 @@ class Migration(migrations.Migration):
             name='Dose',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('start_time', models.FloatField(help_text='starting time point of dose, in hours')),
-                ('amount', models.FloatField(help_text='amount of compound administered, in micro grams')),
-                ('duration', models.FloatField(default=0.0, help_text='Duration of dose administration in hours. For a bolus injection, set a dose duration of 0.')),
+                ('start_time', models.FloatField(help_text='starting time point of dose, see protocol for units')),
+                ('amount', models.FloatField(help_text='amount of compound administered, see protocol for units')),
+                ('duration', models.FloatField(default=0.0, help_text='Duration of dose administration, see protocol for units. For a bolus injection, set a dose duration of 0.')),
                 ('protocol', models.ForeignKey(help_text='protocol containing this dose', on_delete=django.db.models.deletion.CASCADE, related_name='doses', to='pkpdapp.protocol')),
             ],
         ),
@@ -186,7 +187,7 @@ class Migration(migrations.Migration):
                 ('name', models.CharField(help_text='name of the biomarker type', max_length=100)),
                 ('description', models.TextField(blank=True, help_text='short description of the biomarker type', null=True)),
                 ('dataset', models.ForeignKey(help_text='dataset containing this biomarker measurement', on_delete=django.db.models.deletion.CASCADE, related_name='biomarker_types', to='pkpdapp.dataset')),
-                ('unit', models.ForeignKey(blank=True, help_text='unit for the value stored in :model:`pkpdapp.Biomarker`', null=True, on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.standardunit')),
+                ('unit', models.ForeignKey(help_text='unit for the value stored in :model:`pkpdapp.Biomarker`', on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.unit')),
             ],
         ),
         migrations.CreateModel(
@@ -202,5 +203,9 @@ class Migration(migrations.Migration):
         migrations.AddConstraint(
             model_name='subject',
             constraint=models.UniqueConstraint(fields=('id_in_dataset', 'dataset'), name='subject_dataset_unique'),
+        ),
+        migrations.AddConstraint(
+            model_name='subject',
+            constraint=models.CheckConstraint(check=models.Q(models.Q(('dose_group_unit__isnull', True), ('dose_group_unit__isnull', True)), models.Q(('dose_group_unit__isnull', False), ('dose_group_unit__isnull', False)), _connector='OR'), name='amount must have a unit and visa versa'),
         ),
     ]

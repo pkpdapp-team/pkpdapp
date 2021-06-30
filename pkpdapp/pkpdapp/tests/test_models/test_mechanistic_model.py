@@ -8,7 +8,7 @@ from django.test import TestCase
 from pkpdapp.models import (
     PharmacodynamicModel, Protocol, PharmacokineticModel,
     Compound, DosedPharmacokineticModel,
-    Dose, PkpdModel
+    Dose, PkpdModel, Unit
 )
 from django.core.cache import cache
 import numpy as np
@@ -56,7 +56,9 @@ class TestDosedPharmokineticModel(TestCase):
         p = Protocol.objects.create(
             name='my_cool_protocol',
             compound=c,
-            subject_id=1
+            subject_id=1,
+            amount_unit=Unit.objects.get(symbol='mg'),
+            time_unit=Unit.objects.get(symbol='h'),
         )
 
         m = DosedPharmacokineticModel.objects.create(
@@ -71,6 +73,8 @@ class TestDosedPharmokineticModel(TestCase):
             name='one_compartment_pk_model',
         )
         p = Protocol.objects.create(
+            amount_unit=Unit.objects.get(symbol='mg'),
+            time_unit=Unit.objects.get(symbol='h'),
             name='my_cool_protocol',
             dose_type=Protocol.DoseType.INDIRECT,
         )
@@ -132,7 +136,9 @@ class TestPkpdModel(TestCase):
         p = Protocol.objects.create(
             name='my_cool_protocol',
             compound=c,
-            subject_id=1
+            subject_id=1,
+            amount_unit=Unit.objects.get(symbol='mg'),
+            time_unit=Unit.objects.get(symbol='h'),
         )
         m = PkpdModel.objects.create(
             name='my_cool_model',

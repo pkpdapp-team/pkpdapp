@@ -6,7 +6,8 @@
 
 from django.db import models
 from jsonfield import JSONField
-from pkpdapp.models import Dataset
+from pkpdapp.models import Dataset, Unit
+from django.db.models import Q
 
 
 class Subject(models.Model):
@@ -19,9 +20,16 @@ class Subject(models.Model):
         related_name='subjects',
         help_text='dataset containing this subject'
     )
-    dose_group = models.CharField(
-        max_length=100, help_text='dosing group for this subject',
-        blank=True
+    dose_group_amount = models.FloatField(
+        help_text='dosing amount for this subject (for constant dosing)',
+        blank=True, null=True,
+    )
+    dose_group_unit = models.ForeignKey(
+        Unit, on_delete=models.CASCADE,
+        blank=True, null=True,
+        help_text=(
+            'unit for dose_group_amount'
+        )
     )
     group = models.CharField(
         max_length=100,
@@ -33,7 +41,16 @@ class Subject(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(fields=['id_in_dataset', 'dataset'],
-                                    name='subject_dataset_unique')
+                                    name='subject_dataset_unique'),
+            models.CheckConstraint(
+                check=(
+                    (Q(dose_group_unit__isnull=True) &
+                        Q(dose_group_unit__isnull=True)) |
+                    (Q(dose_group_unit__isnull=False) &
+                        Q(dose_group_unit__isnull=False))
+                ),
+                name='amount must have a unit and visa versa'
+            )
         ]
 
     def __str__(self):
