@@ -6,6 +6,7 @@
 # flake8: noqa f401
 
 from .units import Unit
+from .variable import Variable
 from .compound import Compound
 from .dataset import Dataset
 from .subject import Subject

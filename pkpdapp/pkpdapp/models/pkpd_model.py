@@ -8,7 +8,7 @@ from django.db import models
 from django.urls import reverse
 from pkpdapp.models import (
     MechanisticModel,
-    Protocol,
+    Protocol, Variable
 )
 
 
@@ -17,6 +17,16 @@ class PharmacodynamicModel(MechanisticModel):
     def get_absolute_url(self):
         return reverse('pd_model-detail', kwargs={'pk': self.pk})
 
+
+class PdVariable(Variable):
+    """
+    variables for pk models
+    """
+    pd_model = models.ForeignKey(
+        PharmacodynamicModel,
+        on_delete=models.CASCADE,
+        help_text='pharmacodynamic model'
+    )
 
 class PkpdModel(MechanisticModel):
     dose_compartment = models.CharField(
