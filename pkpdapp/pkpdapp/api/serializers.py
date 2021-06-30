@@ -8,7 +8,7 @@ from pkpdapp.models import (
     Dataset, BiomarkerType, Subject, Protocol, Project,
     PharmacokineticModel, PharmacodynamicModel,
     DosedPharmacokineticModel, PkpdModel,
-    StandardUnit, Profile, Dose,
+    Profile, Dose, Unit,
 )
 from django.contrib.auth.models import User
 
@@ -80,18 +80,18 @@ class PkpdSerializer(serializers.ModelSerializer):
 
 # all serializers that get used by the dataset serializer
 
-class StandardUnitSerializer(serializers.ModelSerializer):
+class UnitSerializer(serializers.ModelSerializer):
     class Meta:
-        model = StandardUnit
+        model = Unit
         fields = '__all__'
 
 
 class BiomarkerTypeSerializer(serializers.ModelSerializer):
-    unit = StandardUnitSerializer(
+    unit = UnitSerializer(
         read_only=True
     )
     unit_id = serializers.PrimaryKeyRelatedField(
-        queryset=StandardUnit.objects.all(),
+        queryset=Unit.objects.all(),
         source='unit', write_only=True
     )
 

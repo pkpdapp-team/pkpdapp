@@ -5,7 +5,7 @@
 #
 
 from django.db import models
-from pkpdapp.models import Dataset, StandardUnit
+from pkpdapp.models import Dataset, Unit
 
 
 class BiomarkerType(models.Model):
@@ -18,8 +18,7 @@ class BiomarkerType(models.Model):
         max_length=100, help_text='name of the biomarker type'
     )
     unit = models.ForeignKey(
-        StandardUnit, on_delete=models.CASCADE,
-        blank=True, null=True,
+        Unit, on_delete=models.CASCADE,
         help_text='unit for the value stored in :model:`pkpdapp.Biomarker`'
     )
     description = models.TextField(
