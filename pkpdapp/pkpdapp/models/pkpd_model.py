@@ -18,16 +18,6 @@ class PharmacodynamicModel(MechanisticModel):
         return reverse('pd_model-detail', kwargs={'pk': self.pk})
 
 
-class PdVariable(Variable):
-    """
-    variables for pk models
-    """
-    pd_model = models.ForeignKey(
-        PharmacodynamicModel,
-        on_delete=models.CASCADE,
-        help_text='pharmacodynamic model'
-    )
-
 class PkpdModel(MechanisticModel):
     dose_compartment = models.CharField(
         max_length=100,

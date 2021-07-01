@@ -9,7 +9,7 @@ from django.urls import reverse
 from pkpdapp.models import (
     MyokitModelMixin,
     MechanisticModel,
-    Protocol, Variable
+    Protocol
 )
 import myokit
 
@@ -22,15 +22,6 @@ class PharmacokineticModel(MechanisticModel):
     def get_absolute_url(self):
         return reverse('pk_model-detail', kwargs={'pk': self.pk})
 
-class PkVariable(Variable):
-    """
-    variables for pk models
-    """
-    pk_model = models.ForeignKey(
-        PharmacokineticModel,
-        on_delete=models.CASCADE,
-        help_text='pharmacokinetic model'
-    )
 
 class DosedPharmacokineticModel(models.Model, MyokitModelMixin):
     """
@@ -93,16 +84,6 @@ class DosedPharmacokineticModel(models.Model, MyokitModelMixin):
 
     def get_absolute_url(self):
         return reverse('dosed_pk_model-detail', kwargs={'pk': self.pk})
-
-class DosedPkVariable(Variable):
-    """
-    variables for pk models
-    """
-    dosed_pk_model = models.ForeignKey(
-        DosedPharmacokineticModel,
-        on_delete=models.CASCADE,
-        help_text='dosed pharmacokinetic model'
-    )
 
 
 def _add_dose_compartment(model, drug_amount, time_unit):
