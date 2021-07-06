@@ -3,7 +3,8 @@
 # is released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-from rest_framework import viewsets, filters
+from rest_framework import views, viewsets, filters, status
+from rest_framework.response import Response
 from .serializers import (
     DatasetSerializer, UserSerializer, ProjectSerializer,
     PharmacokineticSerializer,
@@ -24,6 +25,7 @@ from pkpdapp.models import (
     PkpdModel,
 )
 from django.contrib.auth.models import User
+import json
 
 
 class EnablePartialUpdateMixin:
@@ -83,10 +85,33 @@ class DosedPharmacokineticView(viewsets.ModelViewSet):
     filter_backends = [ProjectFilter]
 
 
+class SimulateBaseView(views.APIView):
+    def post(self, request, pk, format=None):
+        try:
+            m = self.model.objects.get(pk=pk)
+        except self.model.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        outputs = json.loads(request.data.get('outputs', '[]'))
+        initial_conditions = json.loads(
+            request.data.get('initial_conditions', '{}')
+        )
+        variables = json.loads(request.data.get('variables', '{}'))
+        result = m.simulate(outputs, initial_conditions, variables)
+        return Response(result)
+
+
+class SimulatePkView(SimulateBaseView):
+    model = DosedPharmacokineticModel
+
+
 class PharmacodynamicView(viewsets.ModelViewSet):
     queryset = PharmacodynamicModel.objects.all()
     serializer_class = PharmacodynamicSerializer
     filter_backends = [ProjectFilter]
+
+
+class SimulatePdView(SimulateBaseView):
+    model = PharmacodynamicModel
 
 
 class PkpdView(viewsets.ModelViewSet):

@@ -9,5 +9,5 @@ from .views import (
     DatasetView, UserView, ProjectView,
     PharmacokineticView, DosedPharmacokineticView,
     PharmacodynamicView, PkpdView, DoseView,
-    ProtocolView,
+    ProtocolView, SimulatePkView, SimulatePdView
 )

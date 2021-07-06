@@ -14,6 +14,7 @@ from django.urls import include, path
 from django.contrib import admin
 from . import api
 from rest_framework import routers
+from rest_framework.urlpatterns import format_suffix_patterns
 
 router = routers.DefaultRouter()
 router.register('dataset', api.DatasetView, basename='dataset')
@@ -44,7 +45,13 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('django.contrib.auth.urls')),
     path('api/', include(router.urls), name='api'),
+    path('api/dosed_pharmacokinetic/<int:pk>/simulate',
+         api.SimulatePkView.as_view()),
+    path('api/pharmacodynamic/<int:pk>/simulate',
+         api.SimulatePdView.as_view()),
     path('auth/', include('djoser.urls')),
     path('auth/', include('djoser.urls.authtoken')),
     path('api-auth/', include('rest_framework.urls'))
 ]
+
+urlpatterns = format_suffix_patterns(urlpatterns)
