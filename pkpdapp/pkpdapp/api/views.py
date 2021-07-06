@@ -86,18 +86,20 @@ class DosedPharmacokineticView(viewsets.ModelViewSet):
 
 
 class SimulateBaseView(views.APIView):
+    @staticmethod
+    def serialize_datalog(datalog):
+        return {k: v.tolist() for k, v in datalog.items()}
+
     def post(self, request, pk, format=None):
         try:
             m = self.model.objects.get(pk=pk)
         except self.model.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
-        outputs = json.loads(request.data.get('outputs', '[]'))
-        initial_conditions = json.loads(
-            request.data.get('initial_conditions', '{}')
-        )
-        variables = json.loads(request.data.get('variables', '{}'))
+        outputs = request.data.get('outputs', [])
+        initial_conditions = request.data.get('initial_conditions', {})
+        variables = request.data.get('variables', {})
         result = m.simulate(outputs, initial_conditions, variables)
-        return Response(result)
+        return Response(self.serialize_datalog(result))
 
 
 class SimulatePkView(SimulateBaseView):
