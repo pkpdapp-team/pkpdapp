@@ -39,6 +39,33 @@ class TestPharmodynamicModel(TestCase):
         ]
         self.assertCountEqual(model_variables, test_model_variables)
 
+    def test_simulate(self):
+        m = PharmacodynamicModel.objects.get(
+            name='tumour_growth_inhibition_model_koch',
+        )
+
+        variables = [v['name'] for v in m.variables()]
+        test_model_variables = [
+            'myokit.lambda_0', 'myokit.lambda_1',
+            'myokit.kappa', 'myokit.drug_concentration'
+        ]
+        self.assertCountEqual(variables, test_model_variables)
+
+        states = [s['name'] for s in m.states()]
+        test_model_states = ['myokit.tumour_volume']
+        self.assertCountEqual(states, test_model_states)
+
+        outpts = [o['name'] for o in m.outputs()]
+        test_model_outputs = ['myokit.tumour_volume', 'myokit.time']
+        self.assertCountEqual(outpts, test_model_outputs)
+
+        outputs = outpts
+        initial_conditions = {s: 1.1 for s in test_model_states}
+        variables = {v: 0.5 for v in test_model_variables}
+        result = m.simulate(outputs, initial_conditions, variables)
+        self.assertEqual(result[test_model_outputs[0]][0], 1.1)
+        self.assertEqual(result[test_model_outputs[1]][0], 0.0)
+
 
 class TestDosedPharmokineticModel(TestCase):
     def setUp(self):
@@ -72,6 +99,7 @@ class TestDosedPharmokineticModel(TestCase):
         pk = PharmacokineticModel.objects.get(
             name='one_compartment_pk_model',
         )
+
         p = Protocol.objects.create(
             amount_unit=Unit.objects.get(symbol='mg'),
             time_unit=Unit.objects.get(symbol='h'),
@@ -124,6 +152,56 @@ class TestDosedPharmokineticModel(TestCase):
         output = pk_sim.run(pk.time_max)
         index = np.where(np.array(output['myokit.time']) > 0.5)[0][0]
         self.assertLess(output['central.drug_concentration'][index], 1e-6)
+
+    def test_simulate(self):
+        pk = PharmacokineticModel.objects.get(
+            name='one_compartment_pk_model',
+        )
+
+        p = Protocol.objects.create(
+            amount_unit=Unit.objects.get(symbol='mg'),
+            time_unit=Unit.objects.get(symbol='h'),
+            name='my_cool_protocol',
+            dose_type=Protocol.DoseType.INDIRECT,
+        )
+
+        m = DosedPharmacokineticModel.objects.create(
+            pharmacokinetic_model=pk,
+            dose_compartment='central',
+            protocol=p,
+        )
+
+        Dose.objects.create(
+            protocol=p,
+            start_time=0,
+            duration=0.1,
+            amount=1,
+        )
+
+        variables = [v['name'] for v in m.variables()]
+        test_model_variables = [
+            'central.size', 'dose.absorption_rate',
+            'myokit.clearance'
+        ]
+        self.assertCountEqual(variables, test_model_variables)
+
+        states = [s['name'] for s in m.states()]
+        test_model_states = ['central.drug_amount', 'dose.drug_amount']
+        self.assertCountEqual(states, test_model_states)
+
+        outpts = [o['name'] for o in m.outputs()]
+        test_model_outputs = [
+            'central.drug_amount', 'central.drug_concentration',
+            'dose.dose_rate', 'dose.drug_amount', 'myokit.time'
+        ]
+        self.assertCountEqual(outpts, test_model_outputs)
+
+        outputs = test_model_outputs
+        initial_conditions = {s: 1.1 for s in test_model_states}
+        variables = {v: 0.5 for v in test_model_variables}
+        result = m.simulate(outputs, initial_conditions, variables)
+        self.assertEqual(result[test_model_outputs[0]][0], 1.1)
+        self.assertEqual(result[test_model_outputs[-1]][0], 0.0)
 
 
 class TestPkpdModel(TestCase):

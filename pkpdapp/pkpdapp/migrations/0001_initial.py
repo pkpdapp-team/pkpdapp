@@ -109,6 +109,21 @@ class Migration(migrations.Migration):
             ],
         ),
         migrations.CreateModel(
+            name='Variable',
+            fields=[
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('name', models.CharField(help_text='name of the variable', max_length=20)),
+                ('lower_bound', models.FloatField(default=1e-06, help_text='lowest possible value for this variable')),
+                ('upper_bound', models.FloatField(default=2, help_text='largest possible value for this variable')),
+                ('default_value', models.FloatField(default=1, help_text='default value for this variable')),
+                ('scale', models.CharField(choices=[('LN', 'Linear'), ('LG', 'Log')], default='LN', max_length=2)),
+                ('dosed_pk_model', models.ForeignKey(blank=True, help_text='dosed pharmacokinetic model', null=True, on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.dosedpharmacokineticmodel')),
+                ('pd_model', models.ForeignKey(blank=True, help_text='pharmacodynamic model', null=True, on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.pharmacodynamicmodel')),
+                ('pk_model', models.ForeignKey(blank=True, help_text='pharmacokinetic model', null=True, on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.pharmacokineticmodel')),
+                ('unit', models.ForeignKey(help_text='variable values are in this unit', on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.unit')),
+            ],
+        ),
+        migrations.CreateModel(
             name='Subject',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
@@ -199,6 +214,14 @@ class Migration(migrations.Migration):
                 ('biomarker_type', models.ForeignKey(help_text='biomarker type, for example "concentration in mg"', on_delete=django.db.models.deletion.CASCADE, related_name='biomarkers', to='pkpdapp.biomarkertype')),
                 ('subject', models.ForeignKey(help_text='subject associated with this biomarker', on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.subject')),
             ],
+        ),
+        migrations.AddConstraint(
+            model_name='variable',
+            constraint=models.CheckConstraint(check=models.Q(models.Q(('pk_model__isnull', True), ('pd_model__isnull', False), ('pd_model__isnull', False)), models.Q(('pk_model__isnull', False), ('pd_model__isnull', True), ('pd_model__isnull', False)), models.Q(('pk_model__isnull', False), ('pd_model__isnull', False), ('pd_model__isnull', True)), _connector='OR'), name='variable must belong to a model'),
+        ),
+        migrations.AddConstraint(
+            model_name='variable',
+            constraint=models.CheckConstraint(check=models.Q(models.Q(('scale', 'LG'), ('lower_bound__gt', 0)), ('scale', 'LN'), _connector='OR'), name='log scale must have a lower bound greater than zero'),
         ),
         migrations.AddConstraint(
             model_name='subject',

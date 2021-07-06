@@ -54,6 +54,81 @@ class MyokitModelMixin:
         super().save(*args, **kwargs)
 
 
+    @staticmethod
+    def _serialise_variable(var):
+        return {
+            'name': var.qname(),
+            'unit': str(var.unit()),
+            'default_value': float(var.value()),
+            'lower_bound': 0.0,
+            'upper_bound': 2.0,
+            'scale': 'LN',
+        }
+
+    def states(self):
+        """ states are dependent variables of the model to be solved """
+        model = self.get_myokit_model()
+        states = model.variables(state=True, sort=True)
+        return [
+            self._serialise_variable(s) for s in states
+        ]
+
+    def outputs(self):
+        """
+        outputs are dependent (e.g. y) and independent (e.g. time)
+        variables of the model to be solved
+        """
+        model = self.get_myokit_model()
+        outpts = model.variables(const=False, sort=True)
+        return [
+            self._serialise_variable(o) for o in outpts
+        ]
+
+    def variables(self):
+        """
+        variables are independent variables of the model that are constant
+        over time. aka parameters of the model
+        """
+        model = self.get_myokit_model()
+        variables = model.variables(const=True, sort=True)
+        return [
+            self._serialise_variable(v) for v in variables
+        ]
+
+    def simulate(self, outputs, initial_conditions, variables):
+        """
+        Arguments
+        ---------
+        outputs: list
+            list of output names to return
+        initial_conditions: dict
+            dict mapping state names to values for initial conditions
+        variables: dict
+            dict mapping variable names to values for model parameters
+
+        Returns
+        -------
+        output: myokit.DataLog
+            a DataLog containing the solution, which is effectivly a dict
+            mapping output names to arrays of values
+        """
+        sim = self.get_myokit_simulator()
+
+        # Set initial conditions
+        sim.set_default_state(initial_conditions)
+
+        # Set constants in model
+        for var_name, var_value in variables.items():
+            sim.set_constant(var_name, float(var_value))
+
+        # Reset simulation back to t=0, the state will be set to the default
+        # state (set above)
+        sim.reset()
+
+        # Simulate, logging only state variables given by `outputs`
+        return sim.run(self.time_max, log=outputs)
+
+
 class MechanisticModel(models.Model, MyokitModelMixin):
     """
     A PK or PD model, represented using SBML

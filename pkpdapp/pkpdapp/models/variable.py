@@ -62,7 +62,7 @@ class Variable(models.Model):
     scale = models.CharField(
         max_length=2,
         choices=Scale.choices,
-        default=Scale.LN,
+        default=Scale.LINEAR,
     )
 
     class Meta:
