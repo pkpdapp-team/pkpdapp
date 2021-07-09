@@ -1,8 +1,8 @@
 import React from "react";
+import { useSelector } from 'react-redux'
 import Paper from '@material-ui/core/Paper';
 import Grid from '@material-ui/core/Grid';
 import PkDetail from './PkDetail'
-import PkpdDetail from './PkDetail'
 import PdDetail from './PdDetail'
 import ProjectDetail from './ProjectDetail'
 import ProtocolDetail from './ProtocolDetail'
@@ -11,6 +11,24 @@ import Chart from './Chart'
 import ChartController from './ChartController'
 
 import { makeStyles } from '@material-ui/core/styles';
+
+import {
+  selectChosenProject
+} from './features/projects/projectsSlice.js'
+
+import {
+  selectChosenDatasets
+} from './features/datasets/datasetsSlice.js'
+
+import {
+  selectChosenPdModels
+} from './features/pdModels/pdModelsSlice.js'
+
+import {
+  selectChosenPkModels
+} from './features/pkModels/pkModelsSlice.js'
+
+
 
 
 const useStyles = makeStyles((theme) => ({
@@ -24,71 +42,17 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 
-function Selected({selected, selectedItems, project}) {
+export default function Modelling() {
   const classes = useStyles();
-  const selectedIsDataset = selected ? selected.type === 'dataset' : false;
-  console.log(selected);
-  const selectedIsPkModel= selected ? selected.type === 'pk_model' : false;
-  const selectedIsPdModel= selected ? selected.type === 'pd_model' : false;
-  const selectedIsPkpdModel= selected ? selected.type === 'pkpd_model' : false;
-  return (
-    <React.Fragment>
-    <Grid item xs={8}>
-      <Paper className={classes.paper}>
-        <Chart />
-      </Paper>
-    </Grid>
-    <Grid item xs={4}>
-      <Paper className={classes.paper}>
-        <ChartController />
-      </Paper>
-    </Grid>
-    {selectedIsDataset &&
-    <Grid item xs={12}>
-    <Paper className={classes.paper}>
-      <DatasetDetail  project={project} dataset={selected} />
-    </Paper>
-    </Grid>
-    }
-    {selectedIsPkModel &&
-    <React.Fragment>
-    <Grid item xs={12}>
-    <Paper className={classes.paper}>
-      <PkDetail project={project} pk_model={selected} />
-    </Paper>
-    </Grid>
+  const project = useSelector(selectChosenProject);
+  const chosenDatasets = useSelector(selectChosenDatasets);
+  const chosenPkModels = useSelector(selectChosenPkModels);
+  const chosenPdModels = useSelector(selectChosenPdModels);
 
-      { selected.protocol &&
-      <Grid item xs={12}>
-      <Paper className={classes.paper}>
-        <ProtocolDetail project={project} protocol={selected.protocol} />
-      </Paper>
-      </Grid>
-      }
-    </React.Fragment>
-    }
-    {selectedIsPdModel &&
-    <Grid item xs={12}>
-    <Paper className={classes.paper}>
-    <PdDetail project={project} pd_model={selected} />
-    </Paper>
-    </Grid>
-    }
-    {selectedIsPkpdModel &&
-    <Paper className={classes.paper}>
-    <PkpdDetail />
-    </Paper>
-    }
-    </React.Fragment>
-  )
-}
-
-export default function Modelling({selected, selectedItems, project}) {
-  const classes = useStyles();
   if (!project) {
     return ('Select a project')
   }
-  console.log('selected', selected);
+
   return (
     <div className={classes.root}>
       <Grid container spacing={3}>
@@ -97,9 +61,46 @@ export default function Modelling({selected, selectedItems, project}) {
             <ProjectDetail project={project}/>
           </Paper>
         </Grid>
-        {selected &&
-        <Selected selected={selected} project={project}/>
-        }
+          <Grid item xs={8}>
+            <Paper className={classes.paper}>
+              <Chart />
+            </Paper>
+          </Grid>
+          <Grid item xs={4}>
+            <Paper className={classes.paper}>
+              <ChartController />
+            </Paper>
+          </Grid>
+          {chosenDatasets.map(dataset => (
+            <Grid item xs={12}>
+            <Paper className={classes.paper}>
+              <DatasetDetail  dataset={dataset} />
+            </Paper>
+            </Grid>
+          ))}
+          {chosenPkModels.map(pkModel => (
+            <React.Fragment>
+            <Grid item xs={12}>
+            <Paper className={classes.paper}>
+              <PkDetail pk_model={pkModel} />
+            </Paper>
+            </Grid>
+            { pkModel.protocol &&
+            <Grid item xs={12}>
+            <Paper className={classes.paper}>
+              <ProtocolDetail protocol={pkModel.protocol} />
+            </Paper>
+            </Grid>
+            }
+          </React.Fragment>
+          ))}
+          {chosenPdModels.map(pdModel => (
+            <Grid item xs={12}>
+            <Paper className={classes.paper}>
+            <PdDetail project={project} pd_model={pdModel} />
+            </Paper>
+            </Grid>
+          ))}
       </Grid>
     </div>
   )
