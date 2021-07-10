@@ -3,6 +3,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import {
   Link,
 } from "react-router-dom";
+import { useSelector } from 'react-redux'
 
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
@@ -36,6 +37,12 @@ import Datasets from './Datasets'
 import PkModels from './PkModels' 
 import PdModels from './PdModels' 
 
+import {
+  selectChosenProject, 
+} from './features/projects/projectsSlice.js'
+
+
+
 const useStyles = makeStyles((theme) => ({
   nested: {
     paddingLeft: theme.spacing(4),
@@ -49,6 +56,8 @@ export default function ProjectMenu() {
   const handleDataAnalysisClick = () => {
     setDataAnalysisOpen((open) => !open);
   };
+  const project = useSelector(selectChosenProject);
+  console.log('got project', project)
 
   return (
     <List>
@@ -90,11 +99,11 @@ export default function ProjectMenu() {
 
       <Divider />
 
-      <Datasets />
+      <Datasets project={project}/>
 
-      <PkModels />
+      <PkModels project={project}/>
 
-      <PdModels />
+      <PdModels project={project}/>
     </List>
   )
 }

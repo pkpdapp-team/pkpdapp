@@ -74,7 +74,7 @@ export default function Modelling() {
           {chosenDatasets.map(dataset => (
             <Grid item xs={12}>
             <Paper className={classes.paper}>
-              <DatasetDetail  dataset={dataset} />
+              <DatasetDetail  dataset={dataset} project={project}/>
             </Paper>
             </Grid>
           ))}
@@ -82,13 +82,13 @@ export default function Modelling() {
             <React.Fragment>
             <Grid item xs={12}>
             <Paper className={classes.paper}>
-              <PkDetail pk_model={pkModel} />
+              <PkDetail pk_model={pkModel} project={project} />
             </Paper>
             </Grid>
             { pkModel.protocol &&
             <Grid item xs={12}>
             <Paper className={classes.paper}>
-              <ProtocolDetail protocol={pkModel.protocol} />
+              <ProtocolDetail protocol={pkModel.protocol} project={project} />
             </Paper>
             </Grid>
             }

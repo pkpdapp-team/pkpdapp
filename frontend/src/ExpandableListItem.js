@@ -32,7 +32,7 @@ export default function ExpandableListItem(
 ) {
   const classes = useStyles();
   console.log('expand', items);
-  const [open, setOpen] = React.useState(false);
+  const [open, setOpen] = React.useState(true);
 
   const handleClick = () => {
     setOpen(!open);

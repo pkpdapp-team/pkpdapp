@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useSelector, useDispatch } from 'react-redux'
 import Button from '@material-ui/core/Button';
 import Dialog from '@material-ui/core/Dialog';
 import DialogActions from '@material-ui/core/DialogActions';
@@ -10,26 +11,20 @@ import { makeStyles } from '@material-ui/core/styles';
 import {FormTextField, FormSelectField} from './FormComponents';
 import Typography from '@material-ui/core/Typography';
 
-import { api } from './Api'
+import {updatePdModel} from './features/pdModels/pdModelsSlice'
 
 export default function PdDetail({project, pd_model}) {
   const { control, handleSubmit, reset } = useForm();
+  const dispatch = useDispatch();
 
   console.log('pddetail', pd_model);
 
   useEffect(() => {
-    console.log('reset', pd_model);
-    reset({
-      ...pd_model,
-    });
+    reset(pd_model);
   }, [reset, pd_model]);
 
   const onSubmit = (values) => {
-    const data = {
-      ...values,
-    }
-    api.put(`api/pharmacodynamic/${pd_model.id}/`, data)
-      .then(project.refresh(project.id));
+    dispatch(updatePdModel(values))
   };
 
   return (

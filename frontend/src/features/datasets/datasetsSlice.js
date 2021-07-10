@@ -1,6 +1,7 @@
 import { 
   createSlice, createEntityAdapter, createAsyncThunk,
 } from '@reduxjs/toolkit'
+import { updateProject } from '../projects/projectsSlice'
 import { api } from '../../Api'
 
 const datasetsAdapter = createEntityAdapter({
@@ -12,19 +13,33 @@ const initialState = datasetsAdapter.getInitialState({
   error: null,
 })
 
-export const fetchDatasets = createAsyncThunk('datasets/fetchDatasets', async ({ getState }) => {
-  const projectId = getState().projects.selected;
+export const fetchDatasets = createAsyncThunk('datasets/fetchDatasets', async (project, { getState }) => {
   const response = await api.get(
-    `/api/dataset?project_id=${projectId}`
+    `/api/dataset/?project_id=${project.id}`
   )
-  return response.datasets
+  return response
 })
 
 export const addNewDataset = createAsyncThunk(
   'datasets/addNewDataset',
-  async initialDataset => {
-    const response = await api.post('/api/dataset', { initialDataset })
-    return response.dataset
+  async (project, { dispatch }) => {
+    const initialDataset = {
+      name: 'new',
+    }
+    const dataset = await api.post('/api/dataset/', initialDataset)
+    if (dataset) {
+      project.dataset_ids.push(dataset.id)
+      await dispatch(updateProject(project))
+    }
+    return dataset
+  }
+)
+
+export const updateDataset = createAsyncThunk(
+  'datasets/updateDataset',
+  async (dataset) => {
+    const response = await api.put(`/api/dataset/${dataset.id}/`, dataset)
+    return response
   }
 )
 
@@ -47,9 +62,10 @@ export const datasetsSlice = createSlice({
     },
     [fetchDatasets.fulfilled]: (state, action) => {
       state.status = 'succeeded'
-      datasetsAdapter.upsertMany(state, action.payload)
+      datasetsAdapter.setAll(state, action.payload)
     },
-    [addNewDataset.fulfilled]: datasetsAdapter.addOne
+    [addNewDataset.fulfilled]: datasetsAdapter.addOne,
+    [updateDataset.fulfilled]: datasetsAdapter.upsertOne
   }
 })
 

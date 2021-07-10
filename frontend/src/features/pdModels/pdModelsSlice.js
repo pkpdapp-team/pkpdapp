@@ -1,6 +1,7 @@
 import { 
   createSlice, createEntityAdapter, createAsyncThunk,
 } from '@reduxjs/toolkit'
+import { updateProject } from '../projects/projectsSlice'
 import { api } from '../../Api'
 
 const pdModelsAdapter = createEntityAdapter({
@@ -12,19 +13,37 @@ const initialState = pdModelsAdapter.getInitialState({
   error: null,
 })
 
-export const fetchPdModels = createAsyncThunk('pdModels/fetchPdModels', async ({ getState }) => {
-  const projectId = getState().projects.selected;
+export const fetchPdModels = createAsyncThunk('pdModels/fetchPdModels', async (project) => {
   const response = await api.get(
-    `/api/pdModel?project_id=${projectId}`
+    `/api/pharmacodynamic/?project_id=${project.id}`
   )
-  return response.pdModels
+  return response
 })
 
 export const addNewPdModel = createAsyncThunk(
   'pdModels/addNewPdModel',
-  async initialPdModel => {
-    const response = await api.post('/api/pdModel', { initialPdModel })
-    return response.pdModel
+  async (project, { dispatch }) => {
+    const initialPdModel = {
+      name: 'new',
+    }
+    const pdModel = await api.post(
+      '/api/pharmacodynamic/', initialPdModel
+    )
+    if (pdModel) {
+      project.pd_model_ids.push(pdModel.id)
+      await dispatch(updateProject(project))
+    }
+    return pdModel
+  }
+)
+
+export const updatePdModel = createAsyncThunk(
+  'pdModels/updatePdModel',
+  async (pdModel) => {
+    const response = await api.put(
+      `/api/pharmacodynamic/${pdModel.id}/`, pdModel
+    )
+    return response
   }
 )
 
@@ -47,9 +66,10 @@ export const pdModelsSlice = createSlice({
     },
     [fetchPdModels.fulfilled]: (state, action) => {
       state.status = 'succeeded'
-      pdModelsAdapter.upsertMany(state, action.payload)
+      pdModelsAdapter.setAll(state, action.payload)
     },
-    [addNewPdModel.fulfilled]: pdModelsAdapter.addOne
+    [addNewPdModel.fulfilled]: pdModelsAdapter.addOne,
+    [updatePdModel.fulfilled]: pdModelsAdapter.upsertOne
   }
 })
 

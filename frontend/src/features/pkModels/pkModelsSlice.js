@@ -2,6 +2,8 @@ import {
   createSlice, createEntityAdapter, createAsyncThunk,
 } from '@reduxjs/toolkit'
 
+import { updateProject } from '../projects/projectsSlice'
+
 import { api } from '../../Api'
 
 const pkModelsAdapter = createEntityAdapter({
@@ -13,19 +15,37 @@ const initialState = pkModelsAdapter.getInitialState({
   error: null,
 })
 
-export const fetchPkModels = createAsyncThunk('pkModels/fetchPkModels', async ({ getState }) => {
-  const projectId = getState().projects.selected;
+export const fetchPkModels = createAsyncThunk('pkModels/fetchPkModels', async (project) => {
   const response = await api.get(
-    `/api/pkModel?project_id=${projectId}`
+    `/api/dosed_pharmacokinetic/?project_id=${project.id}`
   )
-  return response.pkModels
+  return response
 })
 
 export const addNewPkModel = createAsyncThunk(
   'pkModels/addNewPkModel',
-  async initialPkModel => {
-    const response = await api.post('/api/pkModel', { initialPkModel })
-    return response.pkModel
+  async (project, { dispatch }) => {
+    const initialPkModel = {
+      name: 'new',
+    }
+    const pkModel = await api.post(
+      '/api/dosed_pharmacokinetic/', initialPkModel
+    )
+    if (pkModel) {
+      project.pk_model_ids.push(pkModel.id)
+      await dispatch(updateProject(project))
+    }
+    return pkModel
+  }
+)
+
+export const updatePkModel = createAsyncThunk(
+  'pkModels/updatePkModel',
+  async (pkModel) => {
+    const response = await api.put(
+      `/api/dosed_pharmacokinetic/${pkModel.id}/`, pkModel
+    )
+    return response
   }
 )
 
@@ -48,9 +68,10 @@ export const pkModelsSlice = createSlice({
     },
     [fetchPkModels.fulfilled]: (state, action) => {
       state.status = 'succeeded'
-      pkModelsAdapter.upsertMany(state, action.payload)
+      pkModelsAdapter.setAll(state, action.payload)
     },
-    [addNewPkModel.fulfilled]: pkModelsAdapter.addOne
+    [addNewPkModel.fulfilled]: pkModelsAdapter.addOne,
+    [updatePkModel.fulfilled]: pkModelsAdapter.upsertOne
   }
 })
 

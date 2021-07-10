@@ -23,6 +23,10 @@ import {
   chooseProject, addNewProject, fetchProjects,
 } from './features/projects/projectsSlice.js'
 
+import {
+  fetchUsers,
+} from './features/projects/usersSlice.js'
+
 
 const useStyles = makeStyles((theme) => ({
   avatarPlus: {
@@ -40,12 +44,14 @@ export default function ListOfProjects() {
   const dispatch = useDispatch()
 
   useEffect(() => {
+    console.log('dispatch fetchProjects')
     dispatch(fetchProjects())
+    dispatch(fetchUsers())
     //const interval = setInterval(() => {
     //  refreshHarvesters();
     //}, 5000);
     //return () => clearInterval(interval);
-  }, []);
+  }, [dispatch]);
 
   return (
     <List>
@@ -54,11 +60,11 @@ export default function ListOfProjects() {
           item={p} 
           key={p.id}
           selected={project ? p.id === project.id: false}
-          handleClick={() => chooseProject(p)}
+          handleClick={() => dispatch(chooseProject(p))}
         />
       ))}
       <Tooltip title='create project' placement="bottom">
-        <ListItem button onClick={() => addNewProject()}>
+        <ListItem button onClick={() => dispatch(addNewProject())}>
         <ListItemAvatar>
           <Avatar variant='rounded' className={classes.avatarPlus}>
             <AddIcon/>

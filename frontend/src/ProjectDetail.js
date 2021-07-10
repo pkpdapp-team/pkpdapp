@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useSelector, useDispatch } from 'react-redux'
 import Button from '@material-ui/core/Button';
 import Dialog from '@material-ui/core/Dialog';
 import DialogActions from '@material-ui/core/DialogActions';
@@ -10,37 +11,31 @@ import { makeStyles } from '@material-ui/core/styles';
 import {FormTextField, FormMultiSelectField} from './FormComponents';
 import Typography from '@material-ui/core/Typography';
 
-import { api } from './Api'
+import {
+  selectAllUsers
+} from './features/projects/usersSlice.js'
+
+import {
+  updateProject
+} from './features/projects/projectsSlice.js'
+
 
 export default function ProjectDetail({project}) {
   const { control, handleSubmit, reset } = useForm();
+  const dispatch = useDispatch()
+  const users = useSelector(selectAllUsers);
 
   useEffect(() => {
-    reset({
-      ...project,
-      user_ids: project.users.map(x => x.id),
-    });
+    reset(project);
   }, [reset, project]);
 
-
-  const [users, setUsers] = React.useState([]);
-
-  useEffect(() => {
-    api.get("/api/users").then(setUsers);
-  },[])
 
   const user_options = users.map(user => (
     { key: user.username, value: user.id } 
   ));
 
   const onSubmit = (values) => {
-    const data = {
-      ...values,
-    }
-    api.put(`api/project/${project.id}/`, data)
-      .then(data => {
-        project.refresh(project.id)
-      });
+    dispatch(updateProject(values))
   };
 
   return (

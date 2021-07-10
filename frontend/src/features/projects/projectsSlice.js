@@ -14,9 +14,8 @@ const initialState = projectsAdapter.getInitialState({
   error: null,
 })
 
-export const fetchProjects = createAsyncThunk('projects/fetchProjects', async ({ getState }) => {
-  const response = await api.get(`/api/project`)
-  return response.projects
+export const fetchProjects = createAsyncThunk('projects/fetchProjects', async () => {
+  return await api.get(`/api/project/`)
 })
 
 export const addNewProject = createAsyncThunk(
@@ -26,8 +25,14 @@ export const addNewProject = createAsyncThunk(
       name: 'new',
       user_ids: [api.loggedInUser().id],
     }
-    const response = await api.post('/api/project', initialProject)
-    return response.project
+    return await api.post('/api/project/', initialProject)
+  }
+)
+
+export const updateProject = createAsyncThunk(
+  'projects/updateProject',
+  async (project) => {
+    return await api.put(`/api/project/${project.id}/`, project)
   }
 )
 
@@ -36,20 +41,23 @@ export const projectsSlice = createSlice({
   initialState, 
   reducers: {
     chooseProject(state, action) {
+      console.log('choose project', action)
       state.selected = action.payload.id
     },
   },
   extraReducers: {
     [fetchProjects.pending]: (state, action) => {
+      console.log('pending')
       state.status = 'loading'
     },
     [fetchProjects.rejected]: (state, action) => {
+      console.log('rejected', action.error.message)
       state.status = 'failed'
       state.error = action.error.message
     },
     [fetchProjects.fulfilled]: (state, action) => {
       state.status = 'succeeded'
-      projectsAdapter.upsertMany(state, action.payload)
+      projectsAdapter.setAll(state, action.payload)
     },
     [addNewProject.fulfilled]: projectsAdapter.addOne
   }
@@ -63,7 +71,7 @@ export const selectChosenProject = state => {
   if (!state.projects.selected) {
     return null
   }
-  return state.entities[state.projects.selected]
+  return state.projects.entities[state.projects.selected]
 }
 
 export const {

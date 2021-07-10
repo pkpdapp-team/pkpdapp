@@ -57,28 +57,29 @@ class DosedPharmacokineticModel(models.Model, MyokitModelMixin):
 
     def create_myokit_model(self):
         pk_model = self.pharmacokinetic_model.create_myokit_model()
-        compartment = self.dose_compartment
-        amount_var = 'central.drug_amount'
-        for v in pk_model.variables(state=True):
-            if compartment + '.' in v.qname():
-                amount_var = v
+        if self.protocol:
+            compartment = self.dose_compartment
+            amount_var = 'central.drug_amount'
+            for v in pk_model.variables(state=True):
+                if compartment + '.' in v.qname():
+                    amount_var = v
 
-        direct = self.protocol.dose_type == Protocol.DoseType.DIRECT
+            direct = self.protocol.dose_type == Protocol.DoseType.DIRECT
 
-        set_administration(
-            pk_model, compartment, direct=direct,
-            amount_var=amount_var.name()
-        )
+            set_administration(
+                pk_model, compartment, direct=direct,
+                amount_var=amount_var.name()
+            )
 
         return pk_model
 
     def create_myokit_simulator(self):
         sim = myokit.Simulation(self.get_myokit_model())
+        if self.protocol:
+            dosing_events = [(d.amount, d.start_time, d.duration)
+                             for d in self.protocol.doses.all()]
 
-        dosing_events = [(d.amount, d.start_time, d.duration)
-                         for d in self.protocol.doses.all()]
-
-        set_dosing_events(sim, dosing_events)
+            set_dosing_events(sim, dosing_events)
 
         return sim
 
