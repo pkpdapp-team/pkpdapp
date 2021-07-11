@@ -28,8 +28,10 @@ export const addNewDataset = createAsyncThunk(
     }
     const dataset = await api.post('/api/dataset/', initialDataset)
     if (dataset) {
-      project.dataset_ids.push(dataset.id)
-      await dispatch(updateProject(project))
+      await dispatch(updateProject({
+        ...project, 
+        datasets: [...project.datasets, dataset.id] 
+      }))
     }
     return dataset
   }

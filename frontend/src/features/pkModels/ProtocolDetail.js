@@ -12,7 +12,6 @@ import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import { useForm, useFieldArray, Controller  } from "react-hook-form";
 import { makeStyles } from '@material-ui/core/styles';
-import {FormTextField, FormSelectField} from './FormComponents';
 import DeleteIcon from '@material-ui/icons/Delete';
 import AddIcon from '@material-ui/icons/Add';
 import Typography from '@material-ui/core/Typography';
@@ -23,7 +22,8 @@ import TableContainer from '@material-ui/core/TableContainer';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 
-import { api } from './Api'
+import { api } from '../../Api'
+import {FormTextField, FormSelectField} from '../forms/FormComponents';
 
 const useStyles = makeStyles({
   table: {

@@ -8,24 +8,25 @@ import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import { useForm, Controller  } from "react-hook-form";
 import { makeStyles } from '@material-ui/core/styles';
-import {FormTextField, FormSelectField} from './FormComponents';
 import Typography from '@material-ui/core/Typography';
+
+import {FormTextField, FormSelectField} from '../forms/FormComponents';
 
 import {
   selectAllBasePkModels
-} from './features/pkModels/basePkModelsSlice.js'
+} from '../pkModels/basePkModelsSlice.js'
 
 import {
   selectAllDatasets
-} from './features/datasets/datasetsSlice.js'
+} from '../datasets/datasetsSlice.js'
 
 import {
   selectAllProtocols
-} from './features/pkModels/protocolsSlice.js'
+} from '../pkModels/protocolsSlice.js'
 
 import {
   updatePkModel
-} from './features/pkModels/pkModelsSlice.js'
+} from '../pkModels/pkModelsSlice.js'
 
 export default function PkDetail({project, pk_model}) {
   const { control, handleSubmit, reset } = useForm();
@@ -76,9 +77,9 @@ export default function PkDetail({project, pk_model}) {
       />
       <FormSelectField 
         control={control} 
-        defaultValue={pk_model.pharmacokinetic_model.id}
+        defaultValue={pk_model.pharmacokinetic_model}
         options={base_pk_model_options}
-        name="pharmacokinetic_model_id" label="Base Pharmacokinetic Model"
+        name="pharmacokinetic_model" label="Base Pharmacokinetic Model"
       />
       <FormSelectField 
         control={control} 
@@ -88,9 +89,9 @@ export default function PkDetail({project, pk_model}) {
       />
       <FormSelectField 
         control={control} 
-        defaultValue={pk_model.protocol ? pk_model.protocol.id : ''}
+        defaultValue={pk_model.protocol}
         options={protocol_options}
-        name="protocol_id" label="Protocol"
+        name="protocol" label="Protocol"
       />
       <FormTextField 
         control={control} 
@@ -99,7 +100,10 @@ export default function PkDetail({project, pk_model}) {
         type="number"
       />
 
-      <Button type="submit" color="primary">
+      <Button 
+        type="submit" 
+        variant="contained"
+      >
         Save
       </Button>
     </form>

@@ -31,9 +31,12 @@ export const addNewPkModel = createAsyncThunk(
     const pkModel = await api.post(
       '/api/dosed_pharmacokinetic/', initialPkModel
     )
+    console.log('got pkmodel = =', pkModel)
     if (pkModel) {
-      project.pk_model_ids.push(pkModel.id)
-      await dispatch(updateProject(project))
+      await dispatch(updateProject({
+        ...project, 
+        pk_models: [...project.pk_models, pkModel.id] 
+      }))
     }
     return pkModel
   }
@@ -70,6 +73,7 @@ export const pkModelsSlice = createSlice({
       state.status = 'succeeded'
       pkModelsAdapter.setAll(state, action.payload)
     },
+    [addNewPkModel.rejected]: (state, action) => console.log(action.error.message),
     [addNewPkModel.fulfilled]: pkModelsAdapter.addOne,
     [updatePkModel.fulfilled]: pkModelsAdapter.upsertOne
   }

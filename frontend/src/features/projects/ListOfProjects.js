@@ -17,15 +17,15 @@ import ExpandMore from '@material-ui/icons/ExpandMore';
 import ListItemAvatar from '@material-ui/core/ListItemAvatar';
 import Avatar from '@material-ui/core/Avatar';
 
-import AvatarListItem from './AvatarListItem'
+import AvatarListItem from '../menu/AvatarListItem'
 import {
   selectAllProjects, selectChosenProject, 
   chooseProject, addNewProject, fetchProjects,
-} from './features/projects/projectsSlice.js'
+} from '../projects/projectsSlice.js'
 
 import {
   fetchUsers,
-} from './features/projects/usersSlice.js'
+} from '../projects/usersSlice.js'
 
 
 const useStyles = makeStyles((theme) => ({

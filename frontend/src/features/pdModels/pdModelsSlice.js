@@ -30,8 +30,10 @@ export const addNewPdModel = createAsyncThunk(
       '/api/pharmacodynamic/', initialPdModel
     )
     if (pdModel) {
-      project.pd_model_ids.push(pdModel.id)
-      await dispatch(updateProject(project))
+      await dispatch(updateProject({
+        ...project, 
+        pd_models: [...project.pd_models, pdModel.id] 
+      }))
     }
     return pdModel
   }
@@ -69,6 +71,7 @@ export const pdModelsSlice = createSlice({
       pdModelsAdapter.setAll(state, action.payload)
     },
     [addNewPdModel.fulfilled]: pdModelsAdapter.addOne,
+    [addNewPdModel.rejected]: (state, action) => console.log(action.error.message),
     [updatePdModel.fulfilled]: pdModelsAdapter.upsertOne
   }
 })

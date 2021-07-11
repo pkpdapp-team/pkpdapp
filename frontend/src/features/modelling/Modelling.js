@@ -2,11 +2,11 @@ import React from "react";
 import { useSelector } from 'react-redux'
 import Paper from '@material-ui/core/Paper';
 import Grid from '@material-ui/core/Grid';
-import PkDetail from './PkDetail'
-import PdDetail from './PdDetail'
-import ProjectDetail from './ProjectDetail'
-import ProtocolDetail from './ProtocolDetail'
-import DatasetDetail from './DatasetDetail'
+import PkDetail from '../pkModels/PkDetail'
+import PdDetail from '../pdModels/PdDetail'
+import ProjectDetail from '../projects/ProjectDetail'
+import ProtocolDetail from '../pkModels/ProtocolDetail'
+import DatasetDetail from '../datasets/DatasetDetail'
 import Chart from './Chart'
 import ChartController from './ChartController'
 
@@ -14,19 +14,19 @@ import { makeStyles } from '@material-ui/core/styles';
 
 import {
   selectChosenProject
-} from './features/projects/projectsSlice.js'
+} from '../projects/projectsSlice.js'
 
 import {
   selectChosenDatasets
-} from './features/datasets/datasetsSlice.js'
+} from '../datasets/datasetsSlice.js'
 
 import {
   selectChosenPdModels
-} from './features/pdModels/pdModelsSlice.js'
+} from '../pdModels/pdModelsSlice.js'
 
 import {
   selectChosenPkModels
-} from './features/pkModels/pkModelsSlice.js'
+} from '../pkModels/pkModelsSlice.js'
 
 
 
@@ -72,14 +72,14 @@ export default function Modelling() {
             </Paper>
           </Grid>
           {chosenDatasets.map(dataset => (
-            <Grid item xs={12}>
+            <Grid item xs={12} key={dataset.id}>
             <Paper className={classes.paper}>
               <DatasetDetail  dataset={dataset} project={project}/>
             </Paper>
             </Grid>
           ))}
           {chosenPkModels.map(pkModel => (
-            <React.Fragment>
+            <React.Fragment key={pkModel.id}>
             <Grid item xs={12}>
             <Paper className={classes.paper}>
               <PkDetail pk_model={pkModel} project={project} />
@@ -95,7 +95,7 @@ export default function Modelling() {
           </React.Fragment>
           ))}
           {chosenPdModels.map(pdModel => (
-            <Grid item xs={12}>
+            <Grid item xs={12} key={pdModel.id}>
             <Paper className={classes.paper}>
             <PdDetail project={project} pd_model={pdModel} />
             </Paper>

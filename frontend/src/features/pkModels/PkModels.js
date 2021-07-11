@@ -3,25 +3,25 @@ import { useSelector, useDispatch } from 'react-redux'
 
 import AccessibilityIcon from '@material-ui/icons/Accessibility';
 
-import ExpandableListItem from './ExpandableListItem'
+import ExpandableListItem from '../menu/ExpandableListItem'
 
 import {
   selectAllPkModels, togglePkModel, addNewPkModel, fetchPkModels
-} from './features/pkModels/pkModelsSlice.js'
+} from '../pkModels/pkModelsSlice.js'
 
 import {
   fetchBasePkModels
-} from './features/pkModels/basePkModelsSlice.js'
+} from '../pkModels/basePkModelsSlice.js'
 
 import {
   fetchProtocols 
-} from './features/pkModels/protocolsSlice.js'
+} from '../pkModels/protocolsSlice.js'
 
 export default function PkModels({project}) {
   const pkModels = useSelector(selectAllPkModels);
   const dispatch = useDispatch()
   const handleClickItem = (item) => dispatch(togglePkModel(item))
-  const handleNewItem = () => dispatch(addNewPkModel())
+  const handleNewItem = () => dispatch(addNewPkModel(project))
 
   useEffect(() => {
     console.log(project)

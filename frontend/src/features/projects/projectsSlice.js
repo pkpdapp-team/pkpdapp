@@ -32,7 +32,10 @@ export const addNewProject = createAsyncThunk(
 export const updateProject = createAsyncThunk(
   'projects/updateProject',
   async (project) => {
-    return await api.put(`/api/project/${project.id}/`, project)
+    console.log('updating project', project)
+    const new_project = await api.put(`/api/project/${project.id}/`, project)
+    console.log('got project', new_project)
+    return project
   }
 )
 
@@ -59,7 +62,8 @@ export const projectsSlice = createSlice({
       state.status = 'succeeded'
       projectsAdapter.setAll(state, action.payload)
     },
-    [addNewProject.fulfilled]: projectsAdapter.addOne
+    [addNewProject.fulfilled]: projectsAdapter.addOne,
+    [updateProject.fulfilled]: projectsAdapter.upsertOne
   }
 })
 

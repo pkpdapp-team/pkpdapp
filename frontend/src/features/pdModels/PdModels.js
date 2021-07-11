@@ -3,18 +3,18 @@ import { useSelector, useDispatch } from 'react-redux'
 
 import FunctionsIcon from '@material-ui/icons/Functions';
 
-import ExpandableListItem from './ExpandableListItem'
+import ExpandableListItem from '../menu/ExpandableListItem'
 
 import {
   selectAllPdModels, togglePdModel, addNewPdModel, fetchPdModels
-} from './features/pdModels/pdModelsSlice.js'
+} from '../pdModels/pdModelsSlice.js'
 
 
 export default function PdModels({project}) {
   const pdModels = useSelector(selectAllPdModels);
   const dispatch = useDispatch()
   const handleClickItem = (item) => dispatch(togglePdModel(item))
-  const handleNewItem = () => dispatch(addNewPdModel())
+  const handleNewItem = () => dispatch(addNewPdModel(project))
 
   useEffect(() => {
     console.log(project)
@@ -27,8 +27,8 @@ export default function PdModels({project}) {
   return (
     <ExpandableListItem 
       items={pdModels} 
-      text="PK Models" 
-      type='pk_model'
+      text="PD Models" 
+      type='pd_model'
       icon={FunctionsIcon}
       handleClickItem={handleClickItem}
       handleNewItem={handleNewItem}

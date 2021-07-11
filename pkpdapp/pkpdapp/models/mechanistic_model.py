@@ -139,6 +139,8 @@ class MechanisticModel(models.Model, MyokitModelMixin):
         'xmlns="http://www.sbml.org/sbml/level3/version2/core" '
         'level="3" version="2"'
         '>'
+        '<model id="default">'
+        '</model>'
         '</sbml>'
     )
 

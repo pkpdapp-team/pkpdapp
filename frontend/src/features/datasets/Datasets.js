@@ -3,18 +3,18 @@ import { useSelector, useDispatch } from 'react-redux'
 
 import TableChartIcon from '@material-ui/icons/TableChart';
 
-import ExpandableListItem from './ExpandableListItem'
+import ExpandableListItem from '../menu/ExpandableListItem'
 
 import {
   fetchDatasets, selectAllDatasets, toggleDataset, addNewDataset
-} from './features/datasets/datasetsSlice.js'
+} from '../datasets/datasetsSlice.js'
 
 
 export default function Datasets({project}) {
   const datasets = useSelector(selectAllDatasets);
   const dispatch = useDispatch()
   const handleClickItem = (item) => dispatch(toggleDataset(item))
-  const handleNewItem = () => dispatch(addNewDataset())
+  const handleNewItem = () => dispatch(addNewDataset(project))
 
   useEffect(() => {
     console.log(project)

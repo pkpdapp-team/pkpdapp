@@ -8,16 +8,16 @@ import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import { useForm, Controller  } from "react-hook-form";
 import { makeStyles } from '@material-ui/core/styles';
-import {FormTextField, FormMultiSelectField} from './FormComponents';
 import Typography from '@material-ui/core/Typography';
 
+import {FormTextField, FormMultiSelectField} from '../forms/FormComponents';
 import {
   selectAllUsers
-} from './features/projects/usersSlice.js'
+} from '../projects/usersSlice.js'
 
 import {
   updateProject
-} from './features/projects/projectsSlice.js'
+} from '..//projects/projectsSlice.js'
 
 
 export default function ProjectDetail({project}) {
@@ -49,12 +49,15 @@ export default function ProjectDetail({project}) {
       { user_options.length > 0 &&
       <FormMultiSelectField 
         control={control} 
-        defaultValue={project.users.map(x => x.id)}
+        defaultValue={project.users}
         options={user_options}
-        name="user_ids" label="Users"
+        name="users" label="Users"
       />
       }
-      <Button type="submit" color="primary">
+      <Button 
+        type="submit" 
+        variant="contained"
+      >
         Save
       </Button>
     </form>

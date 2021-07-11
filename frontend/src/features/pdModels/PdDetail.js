@@ -8,10 +8,10 @@ import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import { useForm, Controller  } from "react-hook-form";
 import { makeStyles } from '@material-ui/core/styles';
-import {FormTextField, FormSelectField} from './FormComponents';
 import Typography from '@material-ui/core/Typography';
 
-import {updatePdModel} from './features/pdModels/pdModelsSlice'
+import {updatePdModel} from '../pdModels/pdModelsSlice'
+import {FormTextField, FormSelectField} from '../forms/FormComponents';
 
 export default function PdDetail({project, pd_model}) {
   const { control, handleSubmit, reset } = useForm();
@@ -42,7 +42,10 @@ export default function PdDetail({project, pd_model}) {
         type="number"
       />
 
-      <Button type="submit" color="primary">
+      <Button 
+        type="submit" 
+        variant="contained"
+      >
         Save
       </Button>
     </form>

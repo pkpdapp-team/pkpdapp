@@ -33,13 +33,13 @@ import BackupIcon from '@material-ui/icons/Backup';
 import DateRangeIcon from '@material-ui/icons/DateRange';
 import AllInboxIcon from '@material-ui/icons/AllInbox';
 
-import Datasets from './Datasets' 
-import PkModels from './PkModels' 
-import PdModels from './PdModels' 
+import Datasets from '../datasets/Datasets' 
+import PkModels from '../pkModels/PkModels' 
+import PdModels from '../pdModels/PdModels' 
 
 import {
   selectChosenProject, 
-} from './features/projects/projectsSlice.js'
+} from '../projects/projectsSlice.js'
 
 
 

@@ -18,7 +18,6 @@ import Box from '@material-ui/core/Box';
 
 import Container from '@material-ui/core/Container';
 import Login from "./Login"
-import DatasetDetail from "./DatasetDetail"
 
 import { makeStyles, fade } from '@material-ui/core/styles';
 import CssBaseline from '@material-ui/core/CssBaseline';
@@ -47,14 +46,13 @@ import ListItemAvatar from '@material-ui/core/ListItemAvatar';
 
 
 import { api } from './Api'
-import Modelling from './Modelling'
-import ListOfProjects from './ListOfProjects'
-import ProjectMenu from './ProjectMenu'
+import Modelling from './features/modelling/Modelling'
+import ListOfProjects from './features/projects/ListOfProjects'
+import ProjectMenu from './features/menu/ProjectMenu'
 
 import {
   fetchProjects, 
 } from './features/projects/projectsSlice.js'
-
 
 
 
@@ -323,7 +321,6 @@ export default function App() {
 
         <Container maxWidth="false">
         <Switch>
-          <PrivateRoute path="/dataset/:id" component={DatasetDetail} />
           <PrivateRoute path="/" component={Modelling} />
         </Switch>
         </Container>
