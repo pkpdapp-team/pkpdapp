@@ -5,7 +5,7 @@ import Grid from '@material-ui/core/Grid';
 import PkDetail from '../pkModels/PkDetail'
 import PdDetail from '../pdModels/PdDetail'
 import ProjectDetail from '../projects/ProjectDetail'
-import ProtocolDetail from '../pkModels/ProtocolDetail'
+import ProtocolDetail from '../protocols/ProtocolDetail'
 import DatasetDetail from '../datasets/DatasetDetail'
 import Chart from './Chart'
 import ChartController from './ChartController'
@@ -28,7 +28,9 @@ import {
   selectChosenPkModels
 } from '../pkModels/pkModelsSlice.js'
 
-
+import {
+  selectChosenProtocols
+} from '../protocols/protocolsSlice.js'
 
 
 const useStyles = makeStyles((theme) => ({
@@ -48,6 +50,7 @@ export default function Modelling() {
   const chosenDatasets = useSelector(selectChosenDatasets);
   const chosenPkModels = useSelector(selectChosenPkModels);
   const chosenPdModels = useSelector(selectChosenPdModels);
+  const chosenProtocols = useSelector(selectChosenProtocols);
 
   if (!project) {
     return ('Select a project')
@@ -79,20 +82,18 @@ export default function Modelling() {
             </Grid>
           ))}
           {chosenPkModels.map(pkModel => (
-            <React.Fragment key={pkModel.id}>
             <Grid item xs={6}>
             <Paper className={classes.paper}>
               <PkDetail pk_model={pkModel} project={project} />
             </Paper>
             </Grid>
-            { pkModel.protocol &&
+          ))}
+          {chosenProtocols.map(protocol => (
             <Grid item xs={6}>
             <Paper className={classes.paper}>
-              <ProtocolDetail protocol_id={pkModel.protocol} project={project} />
+              <ProtocolDetail protocol={protocol} project={project} />
             </Paper>
             </Grid>
-            }
-          </React.Fragment>
           ))}
           {chosenDatasets.map(dataset => (
             <Grid item xs={6} key={dataset.id}>

@@ -36,6 +36,7 @@ import AllInboxIcon from '@material-ui/icons/AllInbox';
 import Datasets from '../datasets/Datasets' 
 import PkModels from '../pkModels/PkModels' 
 import PdModels from '../pdModels/PdModels' 
+import Protocols from '../protocols/Protocols' 
 
 import {
   selectChosenProject, 
@@ -100,10 +101,10 @@ export default function ProjectMenu() {
       <Divider />
 
       <Datasets project={project}/>
-
-      <PkModels project={project}/>
-
       <PdModels project={project}/>
+      <PkModels project={project}/>
+      <Protocols project={project}/>
+
     </List>
   )
 }

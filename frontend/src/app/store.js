@@ -4,7 +4,7 @@ import datasetsReducer from '../features/datasets/datasetsSlice'
 import pdModelsReducer from '../features/pdModels/pdModelsSlice'
 import pkModelsReducer from '../features/pkModels/pkModelsSlice'
 import basePkModelsReducer from '../features/pkModels/basePkModelsSlice'
-import protocolsReducer from '../features/pkModels/protocolsSlice'
+import protocolsReducer from '../features/protocols/protocolsSlice'
 import usersReducer from '../features/projects/usersSlice'
 
 

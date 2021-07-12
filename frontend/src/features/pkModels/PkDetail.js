@@ -28,8 +28,8 @@ import {
 } from '../datasets/datasetsSlice.js'
 
 import {
-  selectAllProtocols, addNewProtocol,
-} from '../pkModels/protocolsSlice.js'
+  selectAllProtocols
+} from '../protocols/protocolsSlice.js'
 
 import {
   updatePkModel
@@ -188,14 +188,6 @@ export default function PkDetail({project, pk_model}) {
         variant="contained"
       >
         Save
-      </Button>
-      <Button 
-        variant="contained"
-        onClick={() => { 
-          dispatch(addNewProtocol({project, pk_model}))
-        }}
-      >
-        New Protocol
       </Button>
 
       </div>

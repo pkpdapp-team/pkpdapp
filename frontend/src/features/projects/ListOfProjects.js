@@ -49,7 +49,7 @@ import {
 
 import {
   fetchProtocols 
-} from '../pkModels/protocolsSlice.js'
+} from '../protocols/protocolsSlice.js'
 
 
 const useStyles = makeStyles((theme) => ({
