@@ -27,6 +27,30 @@ import {
   fetchUsers,
 } from '../projects/usersSlice.js'
 
+import {
+  fetchUnits,
+} from '../projects/unitsSlice.js'
+
+import {
+  fetchDatasets,
+} from '../datasets/datasetsSlice.js'
+
+import {
+  fetchPkModels,
+} from '../pkModels/pkModelsSlice.js'
+
+import {
+  fetchPdModels,
+} from '../pdModels/pdModelsSlice.js'
+
+import {
+  fetchBasePkModels
+} from '../pkModels/basePkModelsSlice.js'
+
+import {
+  fetchProtocols 
+} from '../pkModels/protocolsSlice.js'
+
 
 const useStyles = makeStyles((theme) => ({
   avatarPlus: {
@@ -47,6 +71,7 @@ export default function ListOfProjects() {
     console.log('dispatch fetchProjects')
     dispatch(fetchProjects())
     dispatch(fetchUsers())
+    dispatch(fetchUnits())
     //const interval = setInterval(() => {
     //  refreshHarvesters();
     //}, 5000);
@@ -60,7 +85,15 @@ export default function ListOfProjects() {
           item={p} 
           key={p.id}
           selected={project ? p.id === project.id: false}
-          handleClick={() => dispatch(chooseProject(p))}
+          handleClick={() => {
+            dispatch(chooseProject(p))
+            dispatch(fetchDatasets(p))
+            dispatch(fetchPkModels(p))
+            dispatch(fetchPdModels(p))
+            dispatch(fetchPkModels(p))
+            dispatch(fetchBasePkModels(p))
+            dispatch(fetchProtocols(p))
+          }}
         />
       ))}
       <Tooltip title='create project' placement="bottom">

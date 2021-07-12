@@ -71,33 +71,33 @@ export default function Modelling() {
               <ChartController />
             </Paper>
           </Grid>
-          {chosenDatasets.map(dataset => (
-            <Grid item xs={12} key={dataset.id}>
+          {chosenPdModels.map(pdModel => (
+            <Grid item xs={6} key={pdModel.id}>
             <Paper className={classes.paper}>
-              <DatasetDetail  dataset={dataset} project={project}/>
+            <PdDetail project={project} pd_model={pdModel} />
             </Paper>
             </Grid>
           ))}
           {chosenPkModels.map(pkModel => (
             <React.Fragment key={pkModel.id}>
-            <Grid item xs={12}>
+            <Grid item xs={6}>
             <Paper className={classes.paper}>
               <PkDetail pk_model={pkModel} project={project} />
             </Paper>
             </Grid>
             { pkModel.protocol &&
-            <Grid item xs={12}>
+            <Grid item xs={6}>
             <Paper className={classes.paper}>
-              <ProtocolDetail protocol={pkModel.protocol} project={project} />
+              <ProtocolDetail protocol_id={pkModel.protocol} project={project} />
             </Paper>
             </Grid>
             }
           </React.Fragment>
           ))}
-          {chosenPdModels.map(pdModel => (
-            <Grid item xs={12} key={pdModel.id}>
+          {chosenDatasets.map(dataset => (
+            <Grid item xs={6} key={dataset.id}>
             <Paper className={classes.paper}>
-            <PdDetail project={project} pd_model={pdModel} />
+              <DatasetDetail  dataset={dataset} project={project}/>
             </Paper>
             </Grid>
           ))}

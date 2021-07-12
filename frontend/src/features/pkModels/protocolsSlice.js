@@ -3,6 +3,9 @@ import {
 } from '@reduxjs/toolkit'
 import { api } from '../../Api'
 
+import { updatePkModel} from './pkModelsSlice'
+import { updateProject } from '../projects/projectsSlice'
+
 const protocolsAdapter = createEntityAdapter({
   sortComparer: (a, b) => b.id < a.id
 })
@@ -21,20 +24,56 @@ export const fetchProtocols = createAsyncThunk('protocols/fetchProtocols', async
 
 export const addNewProtocol = createAsyncThunk(
   'protocols/addNewProtocol',
-  async () => {
+  async ({project, pk_model}, { dispatch }) => {
     const initialProtocol = {
       name: 'new',
+      dose_ids: [],
     }
-    const response = await api.post('/api/protocol/', initialProtocol)
-    return response
+    const protocol = await api.post('/api/protocol/', initialProtocol)
+    console.log('added protocol', protocol)
+    if (protocol) {
+      dispatch(updatePkModel({
+        ...pk_model, 
+        protocol: protocol.id, 
+      }))
+      console.log('updated pk_model ')
+      dispatch(updateProject({
+        ...project, 
+        protocols: [...project.protocols, protocol.id] 
+      }))
+    }
+    return protocol
   }
 )
 
 export const updateProtocol = createAsyncThunk(
   'protocols/updateProtocol',
-  async (protocol) => {
-    const response = await api.put(`/api/protocol/${protocol.id}/`, protocol)
-    return response
+  async (protocol, { getState }) => {
+    const dosePromises = protocol.doses.map(dose => {
+      // add or update doses
+      const data = {
+        protocol: protocol.id,
+        ...dose,
+      };
+      if (dose.id) {
+        return api.put(`api/dose/${dose.id}/`, data)
+      } else {
+        return api.post(`api/dose/`, data)
+      }
+    });
+    const dose_ids = await Promise.all(dosePromises).then(doses => doses.map(x => x.id))
+
+    // delete removed doses
+    const toDelete = getState().protocols.entities[protocol.id].doses.map(x=>x.id).filter(x => !dose_ids.includes(x) );
+    await Promise.all(
+      toDelete.map(id => {
+        return api.delete(`api/dose/${id}/`)
+      })
+    );
+
+    console.log('have dose_ids', dose_ids, toDelete)
+    const updatedProtocol = {...protocol, dose_ids}
+    return await api.put(`/api/protocol/${protocol.id}/`, updatedProtocol)
   }
 )
 
@@ -60,7 +99,16 @@ export const protocolsSlice = createSlice({
       protocolsAdapter.setAll(state, action.payload)
     },
     [addNewProtocol.fulfilled]: protocolsAdapter.addOne,
-    [updateProtocol.fulfilled]: protocolsAdapter.upsertOne
+    [addNewProtocol.rejected]: (state, action) => {
+      state.status = 'failed'
+      state.error = action.error.message
+    },
+    [addNewProtocol.ref]: protocolsAdapter.addOne,
+    [updateProtocol.fulfilled]: protocolsAdapter.upsertOne,
+    [updateProtocol.rejected]: (state, action) => {
+      state.status = 'failed'
+      state.error = action.error.message
+    },
   }
 })
 

@@ -16,10 +16,10 @@ const initialState = pkModelsAdapter.getInitialState({
 })
 
 export const fetchPkModels = createAsyncThunk('pkModels/fetchPkModels', async (project) => {
-  const response = await api.get(
+  const pkModels = await api.get(
     `/api/dosed_pharmacokinetic/?project_id=${project.id}`
   )
-  return response
+  return pkModels
 })
 
 export const addNewPkModel = createAsyncThunk(
@@ -31,7 +31,6 @@ export const addNewPkModel = createAsyncThunk(
     const pkModel = await api.post(
       '/api/dosed_pharmacokinetic/', initialPkModel
     )
-    console.log('got pkmodel = =', pkModel)
     if (pkModel) {
       await dispatch(updateProject({
         ...project, 
@@ -45,10 +44,10 @@ export const addNewPkModel = createAsyncThunk(
 export const updatePkModel = createAsyncThunk(
   'pkModels/updatePkModel',
   async (pkModel) => {
-    const response = await api.put(
+    const newPkModel = await api.put(
       `/api/dosed_pharmacokinetic/${pkModel.id}/`, pkModel
     )
-    return response
+    return {...newPkModel, chosen: pkModel.chosen}
   }
 )
 

@@ -13,6 +13,7 @@ from .serializers import (
     DosedPharmacokineticSerializer,
     PkpdSerializer,
     ProtocolSerializer,
+    UnitSerializer,
 )
 
 from pkpdapp.models import (
@@ -22,6 +23,7 @@ from pkpdapp.models import (
     DosedPharmacokineticModel,
     Protocol,
     Dose,
+    Unit,
     PkpdModel,
 )
 from django.contrib.auth.models import User
@@ -56,6 +58,8 @@ class ProjectFilter(filters.BaseFilterBackend):
                     queryset = project.pk_models
                 elif queryset.model == PkpdModel:
                     queryset = project.pkpd_models
+                elif queryset.model == Protocol:
+                    queryset = project.protocols
                 else:
                     raise RuntimeError('queryset model {} not recognised')
             except Project.DoesNotExist:
@@ -67,7 +71,11 @@ class ProjectFilter(filters.BaseFilterBackend):
 class ProtocolView(viewsets.ModelViewSet):
     queryset = Protocol.objects.all()
     serializer_class = ProtocolSerializer
+    filter_backends = [ProjectFilter]
 
+class UnitView(viewsets.ModelViewSet):
+    queryset = Unit.objects.all()
+    serializer_class = UnitSerializer
 
 class DoseView(viewsets.ModelViewSet):
     queryset = Dose.objects.all()

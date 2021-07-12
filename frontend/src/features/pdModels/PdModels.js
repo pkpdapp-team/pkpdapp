@@ -6,7 +6,7 @@ import FunctionsIcon from '@material-ui/icons/Functions';
 import ExpandableListItem from '../menu/ExpandableListItem'
 
 import {
-  selectAllPdModels, togglePdModel, addNewPdModel, fetchPdModels
+  selectAllPdModels, togglePdModel, addNewPdModel,
 } from '../pdModels/pdModelsSlice.js'
 
 
@@ -16,15 +16,7 @@ export default function PdModels({project}) {
   const handleClickItem = (item) => dispatch(togglePdModel(item))
   const handleNewItem = () => dispatch(addNewPdModel(project))
 
-  useEffect(() => {
-    console.log(project)
-    if (project) {
-      dispatch(fetchPdModels(project))
-    }
-  }, [dispatch, project]);
-
-
-  return (
+    return (
     <ExpandableListItem 
       items={pdModels} 
       text="PD Models" 

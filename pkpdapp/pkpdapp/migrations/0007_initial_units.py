@@ -19,13 +19,18 @@ def load_units(apps, schema_editor):
 
     units = [
         {
-            'symbol': 'hours',
-            'unit': h,
-        },
-        {
             'symbol': 'h',
             'unit': h,
         },
+        {
+            'symbol': 'mg',
+            'unit': 1e-3 * g,
+        },
+        {
+            'symbol': 'hours',
+            'unit': h,
+        },
+
         {
             'symbol': 'd',
             'unit': 24 * h,
@@ -41,10 +46,6 @@ def load_units(apps, schema_editor):
         {
             'symbol': 'g',
             'unit': g,
-        },
-        {
-            'symbol': 'mg',
-            'unit': 1e-3 * g,
         },
         {
             'symbol': 'ng/mL',

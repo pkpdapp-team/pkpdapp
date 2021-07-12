@@ -6,11 +6,18 @@ import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
+import Grid from '@material-ui/core/Grid';
+import List from '@material-ui/core/List';
+import ListItem from '@material-ui/core/ListItem';
+import ListItemIcon from '@material-ui/core/ListItemIcon';
+import ListItemText from '@material-ui/core/ListItemText';
+
 import { useForm, Controller  } from "react-hook-form";
 import { makeStyles } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
+import Checkbox from '@material-ui/core/Checkbox';
 
-import {FormTextField, FormSelectField} from '../forms/FormComponents';
+import {FormTextField, FormSelectField, FormSliderField, FormCheckboxField} from '../forms/FormComponents';
 
 import {
   selectAllBasePkModels
@@ -21,14 +28,28 @@ import {
 } from '../datasets/datasetsSlice.js'
 
 import {
-  selectAllProtocols
+  selectAllProtocols, addNewProtocol,
 } from '../pkModels/protocolsSlice.js'
 
 import {
   updatePkModel
 } from '../pkModels/pkModelsSlice.js'
 
+const useStyles = makeStyles((theme) => ({
+  controls: {
+    display: 'flex',
+    alignItems: 'center',
+    paddingLeft: theme.spacing(1),
+    paddingBottom: theme.spacing(1),
+    '& > *': {
+      margin: theme.spacing(1),
+    },
+  },
+}));
+
+
 export default function PkDetail({project, pk_model}) {
+  const classes = useStyles();
   const { control, handleSubmit, reset } = useForm();
   const dispatch = useDispatch();
 
@@ -48,7 +69,9 @@ export default function PkDetail({project, pk_model}) {
     {key: pk.name, value: pk.id}
   ));
 
-  let protocol_options = [{key: 'None', value: ''}];
+  let protocol_options = [
+    {key: 'None', value: ''},
+  ];
   protocol_options = protocol_options.concat(
     protocols.map(protocol => (
       {key: protocol.name, value: protocol.id}
@@ -75,6 +98,65 @@ export default function PkDetail({project, pk_model}) {
         control={control} 
         name="name" label="Name"
       />
+      <Grid container item xs={12} spacing={2}>
+      <Grid item xs={4}>
+      <Typography>Initial Conditions</Typography>
+      <List>
+      {pk_model.states.map((state, index) => {
+        return (
+          <ListItem key={index} role={undefined} dense >
+            <FormSliderField
+              control={control} 
+              defaultValue={state.default_value}
+              name={`states[${index}].default_value`} 
+              label={`${state.name} ${state.unit}`}
+              min={state.lower_bound} max={state.upper_bound}
+            />
+          </ListItem>
+        );
+      })}
+      </List>
+      </Grid>
+      <Grid item xs={4}>
+      <Typography>Variables</Typography>
+      <List>
+      {pk_model.variables.map((variable, index) => {
+        return (
+          <ListItem key={index} role={undefined} dense >
+            <FormSliderField
+              control={control} 
+              defaultValue={variable.default_value}
+              name={`variables[${index}].default_value`} 
+              label={`${variable.name} ${variable.unit}`}
+              min={variable.lower_bound} max={variable.upper_bound}
+            />
+          </ListItem>
+        );
+      })}
+      </List>
+      </Grid>
+
+      <Grid item xs={4}>
+      <Typography>Outputs</Typography>
+      <List>
+      {pk_model.outputs.map((output, index) => {
+        return (
+          <ListItem key={index} role={undefined} dense>
+            <FormCheckboxField
+              control={control} 
+              defaultValue={output.default_value}
+              name={`outputs[${index}].default_value`} 
+              label={`${output.name} ${output.unit}`}
+            />
+          </ListItem>
+        );
+      })}
+      </List>
+
+      </Grid>
+      </Grid>
+
+
       <FormSelectField 
         control={control} 
         defaultValue={pk_model.pharmacokinetic_model}
@@ -100,12 +182,23 @@ export default function PkDetail({project, pk_model}) {
         type="number"
       />
 
+      <div className={classes.controls}>
       <Button 
         type="submit" 
         variant="contained"
       >
         Save
       </Button>
+      <Button 
+        variant="contained"
+        onClick={() => { 
+          dispatch(addNewProtocol({project, pk_model}))
+        }}
+      >
+        New Protocol
+      </Button>
+
+      </div>
     </form>
   )
 }

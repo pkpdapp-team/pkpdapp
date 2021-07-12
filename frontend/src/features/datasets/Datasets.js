@@ -6,7 +6,7 @@ import TableChartIcon from '@material-ui/icons/TableChart';
 import ExpandableListItem from '../menu/ExpandableListItem'
 
 import {
-  fetchDatasets, selectAllDatasets, toggleDataset, addNewDataset
+  selectAllDatasets, toggleDataset, addNewDataset
 } from '../datasets/datasetsSlice.js'
 
 
@@ -15,13 +15,6 @@ export default function Datasets({project}) {
   const dispatch = useDispatch()
   const handleClickItem = (item) => dispatch(toggleDataset(item))
   const handleNewItem = () => dispatch(addNewDataset(project))
-
-  useEffect(() => {
-    console.log(project)
-    if (project) {
-      dispatch(fetchDatasets(project))
-    }
-  }, [dispatch, project]);
 
   return (
     <ExpandableListItem 

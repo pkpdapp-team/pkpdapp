@@ -93,14 +93,6 @@ class UnitSerializer(serializers.ModelSerializer):
 
 
 class BiomarkerTypeSerializer(serializers.ModelSerializer):
-    unit = UnitSerializer(
-        read_only=True
-    )
-    unit_id = serializers.PrimaryKeyRelatedField(
-        queryset=Unit.objects.all(),
-        source='unit', write_only=True
-    )
-
     class Meta:
         model = BiomarkerType
         fields = '__all__'

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useSelector, useDispatch } from 'react-redux'
 import TextField from '@material-ui/core/TextField';
 import Paper from '@material-ui/core/Paper';
 import Button from '@material-ui/core/Button';
@@ -22,17 +23,31 @@ import TableContainer from '@material-ui/core/TableContainer';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 
-import { api } from '../../Api'
 import {FormTextField, FormSelectField} from '../forms/FormComponents';
 
-const useStyles = makeStyles({
-  table: {
-    minWidth: 650,
-  },
-});
+import {
+  selectProtocolById, updateProtocol,
+} from '../pkModels/protocolsSlice.js'
 
-export default function ProtocolDetail({project, protocol}) {
+const useStyles = makeStyles((theme) => ({
+  table: {
+    width: '100%',
+  },
+  tableCell: {
+    width: '100pt',
+  },
+  controls: {
+    display: 'flex',
+    alignItems: 'center',
+    paddingLeft: theme.spacing(1),
+    paddingBottom: theme.spacing(1),
+  },
+}));
+
+export default function ProtocolDetail({project, protocol_id}) {
   const classes = useStyles();
+  const protocol = useSelector(state => selectProtocolById(state, protocol_id))
+  const dispatch = useDispatch();
   console.log('protocol', protocol);
   const { control, handleSubmit, register, reset } = useForm(protocol);
   const { fields, append, remove, swap } = useFieldArray(
@@ -45,33 +60,12 @@ export default function ProtocolDetail({project, protocol}) {
 
   useEffect(() => {
     reset(protocol);
-  }, [protocol]);
+  }, [reset, protocol]);
 
   const onSubmit = (values) => {
-    console.log('submitting ', values, values.doses);
-    Promise.all(values.doses.map(dose => {
-      const data = {
-        protocol: protocol.id,
-        ...dose,
-      };
-      if (dose.id) {
-        return api.put(`api/dose/${dose.id}/`, data)
-      } else {
-        return api.post(`api/dose/`, data)
-      }
-    })).then(doses => {
-      const dose_ids = doses.map(x => x.id);
-      const data = {
-        ...values,
-        dose_ids: dose_ids,
-      }
-      console.log('submitting protocol', data);
-      api.put(`api/protocol/${protocol.id}/`, data)
-        .then(project.refresh(project.id));
-
-    });
-    
+    dispatch(updateProtocol(values));
   };
+
 
   const dose_type_options = [
     {key: 'IV', value: 'D'},
@@ -99,7 +93,7 @@ export default function ProtocolDetail({project, protocol}) {
       />
       <Typography>Doses</Typography>
       <TableContainer component={Paper} variant='outlined'>
-      <Table size="small" aria-label="a dense table">
+      <Table className={classes.table} size="small" >
         <TableHead>
           <TableRow>
             <TableCell>Actions</TableCell>
@@ -121,6 +115,7 @@ export default function ProtocolDetail({project, protocol}) {
               {dose_columns.map(col => (
               <TableCell>
                 <FormTextField 
+                  className={classes.tableCell}
                   control={control} 
                   defaultValue={dose[col.field]}
                   name={`doses[${index}].${col.field}`}
@@ -139,7 +134,10 @@ export default function ProtocolDetail({project, protocol}) {
         <AddIcon />
       </IconButton>
     </TableContainer>
-      <Button type="submit" color="primary">
+      <Button 
+        className={classes.controls} 
+        variant="contained"
+        type="submit" >
         Save
       </Button>
     </form>

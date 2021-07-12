@@ -19,8 +19,25 @@ import {
   updateProject
 } from '..//projects/projectsSlice.js'
 
+const useStyles = makeStyles((theme) => ({
+  table: {
+    width: '100%',
+  },
+  tableCell: {
+    width: '100pt',
+  },
+  controls: {
+    display: 'flex',
+    alignItems: 'center',
+    paddingLeft: theme.spacing(1),
+    paddingBottom: theme.spacing(1),
+  },
+}));
+
+
 
 export default function ProjectDetail({project}) {
+  const classes = useStyles();
   const { control, handleSubmit, reset } = useForm();
   const dispatch = useDispatch()
   const users = useSelector(selectAllUsers);
@@ -57,6 +74,7 @@ export default function ProjectDetail({project}) {
       <Button 
         type="submit" 
         variant="contained"
+        className={classes.controls} 
       >
         Save
       </Button>
