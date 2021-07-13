@@ -3,7 +3,8 @@
 # is released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-from rest_framework import viewsets, filters
+from rest_framework import views, viewsets, filters, status
+from rest_framework.response import Response
 from .serializers import (
     DatasetSerializer, UserSerializer, ProjectSerializer,
     PharmacokineticSerializer,
@@ -12,6 +13,7 @@ from .serializers import (
     DosedPharmacokineticSerializer,
     PkpdSerializer,
     ProtocolSerializer,
+    UnitSerializer,
 )
 
 from pkpdapp.models import (
@@ -21,6 +23,7 @@ from pkpdapp.models import (
     DosedPharmacokineticModel,
     Protocol,
     Dose,
+    Unit,
     PkpdModel,
 )
 from django.contrib.auth.models import User
@@ -54,6 +57,8 @@ class ProjectFilter(filters.BaseFilterBackend):
                     queryset = project.pk_models
                 elif queryset.model == PkpdModel:
                     queryset = project.pkpd_models
+                elif queryset.model == Protocol:
+                    queryset = project.protocols
                 else:
                     raise RuntimeError('queryset model {} not recognised')
             except Project.DoesNotExist:
@@ -65,6 +70,12 @@ class ProjectFilter(filters.BaseFilterBackend):
 class ProtocolView(viewsets.ModelViewSet):
     queryset = Protocol.objects.all()
     serializer_class = ProtocolSerializer
+    filter_backends = [ProjectFilter]
+
+
+class UnitView(viewsets.ModelViewSet):
+    queryset = Unit.objects.all()
+    serializer_class = UnitSerializer
 
 
 class DoseView(viewsets.ModelViewSet):
@@ -83,10 +94,31 @@ class DosedPharmacokineticView(viewsets.ModelViewSet):
     filter_backends = [ProjectFilter]
 
 
+class SimulateBaseView(views.APIView):
+    def post(self, request, pk, format=None):
+        try:
+            m = self.model.objects.get(pk=pk)
+        except self.model.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        outputs = request.data.get('outputs', [])
+        initial_conditions = request.data.get('initial_conditions', {})
+        variables = request.data.get('variables', {})
+        result = m.simulate(outputs, initial_conditions, variables)
+        return Response(result)
+
+
+class SimulatePkView(SimulateBaseView):
+    model = DosedPharmacokineticModel
+
+
 class PharmacodynamicView(viewsets.ModelViewSet):
     queryset = PharmacodynamicModel.objects.all()
     serializer_class = PharmacodynamicSerializer
     filter_backends = [ProjectFilter]
+
+
+class SimulatePdView(SimulateBaseView):
+    model = PharmacodynamicModel
 
 
 class PkpdView(viewsets.ModelViewSet):

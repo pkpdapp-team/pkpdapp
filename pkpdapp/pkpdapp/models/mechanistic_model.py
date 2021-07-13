@@ -8,6 +8,9 @@ from django.db import models
 from django.core.cache import cache
 import myokit
 from myokit.formats.sbml import SBMLParser
+import threading
+
+lock = threading.Lock()
 
 
 class MyokitModelMixin:
@@ -22,16 +25,22 @@ class MyokitModelMixin:
         )
 
     def create_myokit_model(self):
-        return SBMLParser().parse_string(
-            str.encode(self.sbml)
-        ).myokit_model()
+        with lock:
+            model = SBMLParser().parse_string(
+                str.encode(self.sbml)
+            ).myokit_model()
+        return model
 
     def create_myokit_simulator(self):
-        return myokit.Simulation(self.get_myokit_model())
+        model = self.get_myokit_model()
+        with lock:
+            sim = myokit.Simulation(model)
+        return sim
 
     def get_myokit_simulator(self):
         key = self._get_myokit_simulator_cache_key()
-        myokit_simulator = cache.get(key)
+        # myokit_simulator = cache.get(key)
+        myokit_simulator = None
         if myokit_simulator is None:
             myokit_simulator = self.create_myokit_simulator()
             cache.set(
@@ -41,7 +50,8 @@ class MyokitModelMixin:
 
     def get_myokit_model(self):
         key = self._get_myokit_model_cache_key()
-        myokit_model = cache.get(key)
+        # myokit_model = cache.get(key)
+        myokit_model = None
         if myokit_model is None:
             myokit_model = self.create_myokit_model()
             cache.set(
@@ -52,6 +62,99 @@ class MyokitModelMixin:
     def save(self, *args, **kwargs):
         cache.delete(self._get_cache_key())
         super().save(*args, **kwargs)
+
+    @staticmethod
+    def _serialise_variable(var):
+        return {
+            'name': var.qname(),
+            'unit': str(var.unit()),
+            'default_value': float(var.value()),
+            'lower_bound': 0.0,
+            'upper_bound': 2.0,
+            'scale': 'LN',
+        }
+
+    def states(self):
+        """ states are dependent variables of the model to be solved """
+        model = self.get_myokit_model()
+        states = model.variables(state=True, sort=True)
+        return [
+            self._serialise_variable(s) for s in states
+        ]
+
+    def outputs(self):
+        """
+        outputs are dependent (e.g. y) and independent (e.g. time)
+        variables of the model to be solved
+        """
+        model = self.get_myokit_model()
+        outpts = model.variables(const=False, sort=True)
+        return [
+            self._serialise_variable(o) for o in outpts
+        ]
+
+    def variables(self):
+        """
+        variables are independent variables of the model that are constant
+        over time. aka parameters of the model
+        """
+        model = self.get_myokit_model()
+        variables = model.variables(const=True, sort=True)
+        return [
+            self._serialise_variable(v) for v in variables
+        ]
+
+    @staticmethod
+    def serialize_datalog(datalog):
+        return {k: v.tolist() for k, v in datalog.items()}
+
+    def simulate(self, outputs=None, initial_conditions=None, variables=None):
+        """
+        Arguments
+        ---------
+        outputs: list
+            list of output names to return
+        initial_conditions: dict
+            dict mapping state names to values for initial conditions
+        variables: dict
+            dict mapping variable names to values for model parameters
+
+        Returns
+        -------
+        output: myokit.DataLog
+            a DataLog containing the solution, which is effectivly a dict
+            mapping output names to arrays of values
+        """
+        if outputs is None:
+            outputs = [o['name'] for o in self.outputs()]
+        if initial_conditions is None:
+            initial_conditions = {
+                s['name']: s['default_value']
+                for s in self.states()
+            }
+        if variables is None:
+            variables = {
+                v['name']: v['default_value']
+                for v in self.variables()
+            }
+
+        sim = self.get_myokit_simulator()
+
+        # Set initial conditions
+        sim.set_default_state(initial_conditions)
+
+        # Set constants in model
+        for var_name, var_value in variables.items():
+            sim.set_constant(var_name, float(var_value))
+
+        # Reset simulation back to t=0, the state will be set to the default
+        # state (set above)
+        sim.reset()
+
+        # Simulate, logging only state variables given by `outputs`
+        return self.serialize_datalog(
+            sim.run(self.time_max, log=outputs)
+        )
 
 
 class MechanisticModel(models.Model, MyokitModelMixin):
@@ -64,6 +167,8 @@ class MechanisticModel(models.Model, MyokitModelMixin):
         'xmlns="http://www.sbml.org/sbml/level3/version2/core" '
         'level="3" version="2"'
         '>'
+        '<model id="default">'
+        '</model>'
         '</sbml>'
     )
 

@@ -17,9 +17,10 @@ from rest_framework import routers
 
 router = routers.DefaultRouter()
 router.register('dataset', api.DatasetView, basename='dataset')
-router.register('users', api.UserView, basename='user')
+router.register('user', api.UserView, basename='user')
 router.register('project', api.ProjectView, basename='project')
 router.register('dose', api.DoseView, basename='dose')
+router.register('unit', api.UnitView, basename='unit')
 router.register('protocol', api.ProtocolView, basename='protocol')
 router.register(
     'pharmacokinetic', api.PharmacokineticView,
@@ -44,6 +45,10 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('django.contrib.auth.urls')),
     path('api/', include(router.urls), name='api'),
+    path('api/dosed_pharmacokinetic/<int:pk>/simulate',
+         api.SimulatePkView.as_view(), name='simulate-dosed-pharmacokinetic'),
+    path('api/pharmacodynamic/<int:pk>/simulate',
+         api.SimulatePdView.as_view(), name='simulate-pharmacodynamic'),
     path('auth/', include('djoser.urls')),
     path('auth/', include('djoser.urls.authtoken')),
     path('api-auth/', include('rest_framework.urls'))

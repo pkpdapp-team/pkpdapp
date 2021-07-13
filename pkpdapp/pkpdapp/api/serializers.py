@@ -41,25 +41,22 @@ class PharmacokineticSerializer(serializers.ModelSerializer):
 
 
 class DosedPharmacokineticSerializer(serializers.ModelSerializer):
-    pharmacokinetic_model = PharmacokineticSerializer(
-        read_only=True
-    )
-    pharmacokinetic_model_id = serializers.PrimaryKeyRelatedField(
-        queryset=PharmacokineticModel.objects.all(),
-        required=False,
-        source='pharmacokinetic_model', write_only=True
-    )
+    states = serializers.SerializerMethodField('get_states')
+    outputs = serializers.SerializerMethodField('get_outputs')
+    variables = serializers.SerializerMethodField('get_variables')
+    simulate = serializers.SerializerMethodField('get_simulate')
 
-    protocol = ProtocolSerializer(
-        read_only=True
-    )
-    protocol_id = serializers.PrimaryKeyRelatedField(
-        queryset=Protocol.objects.all(),
-        source='protocol',
-        required=False,
-        allow_null=True,
-        write_only=True,
-    )
+    def get_states(self, m):
+        return m.states()
+
+    def get_outputs(self, m):
+        return m.outputs()
+
+    def get_variables(self, m):
+        return m.variables()
+
+    def get_simulate(self, m):
+        return m.simulate()
 
     class Meta:
         model = DosedPharmacokineticModel
@@ -67,6 +64,23 @@ class DosedPharmacokineticSerializer(serializers.ModelSerializer):
 
 
 class PharmacodynamicSerializer(serializers.ModelSerializer):
+    states = serializers.SerializerMethodField('get_states')
+    outputs = serializers.SerializerMethodField('get_outputs')
+    variables = serializers.SerializerMethodField('get_variables')
+    simulate = serializers.SerializerMethodField('get_simulate')
+
+    def get_states(self, m):
+        return m.states()
+
+    def get_outputs(self, m):
+        return m.outputs()
+
+    def get_variables(self, m):
+        return m.variables()
+
+    def get_simulate(self, m):
+        return m.simulate()
+
     class Meta:
         model = PharmacodynamicModel
         fields = '__all__'
@@ -87,14 +101,6 @@ class UnitSerializer(serializers.ModelSerializer):
 
 
 class BiomarkerTypeSerializer(serializers.ModelSerializer):
-    unit = UnitSerializer(
-        read_only=True
-    )
-    unit_id = serializers.PrimaryKeyRelatedField(
-        queryset=Unit.objects.all(),
-        source='unit', write_only=True
-    )
-
     class Meta:
         model = BiomarkerType
         fields = '__all__'
@@ -144,58 +150,37 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class ProjectSerializer(serializers.ModelSerializer):
-    datasets = DatasetSerializer(
-        many=True, read_only=True
-    )
-    dataset_ids = serializers.PrimaryKeyRelatedField(
-        queryset=Dataset.objects.all(), source='datasets',
-        many=True, write_only=True,
-        required=False,
-    )
-    pk_models = DosedPharmacokineticSerializer(
-        many=True, read_only=True
-    )
-    pk_model_ids = serializers.PrimaryKeyRelatedField(
-        queryset=DosedPharmacokineticModel.objects.all(),
-        source='pk_models',
-        many=True, write_only=True,
-        required=False,
-    )
-    pd_models = PharmacodynamicSerializer(
-        many=True, read_only=True
-    )
-    pd_model_ids = serializers.PrimaryKeyRelatedField(
-        queryset=PharmacodynamicModel.objects.all(),
-        source='pd_models',
-        many=True, write_only=True,
-        required=False,
-    )
-    pkpd_models = PkpdSerializer(
-        many=True, read_only=True
-    )
-    pkpd_model_ids = serializers.PrimaryKeyRelatedField(
-        queryset=PkpdModel.objects.all(),
-        source='pkpd_models',
-        many=True, write_only=True,
-        required=False,
-    )
-    protocols = ProtocolSerializer(
-        many=True, read_only=True
-    )
-    protocol_ids = serializers.PrimaryKeyRelatedField(
-        queryset=Protocol.objects.all(),
-        source='protocols',
-        many=True, write_only=True,
-        required=False,
-    )
-    users = UserSerializer(
-        many=True, read_only=True
-    )
-    user_ids = serializers.PrimaryKeyRelatedField(
-        queryset=User.objects.all(),
-        source='users',
-        many=True, write_only=True,
-    )
+    # dataset_ids = serializers.PrimaryKeyRelatedField(
+    #     queryset=Dataset.objects.all(), source='datasets',
+    #     many=True, required=False,
+    # )
+    # pk_model_ids = serializers.PrimaryKeyRelatedField(
+    #     queryset=DosedPharmacokineticModel.objects.all(),
+    #     source='pk_models',
+    #     many=True, required=False,
+    # )
+    # pd_model_ids = serializers.PrimaryKeyRelatedField(
+    #     queryset=PharmacodynamicModel.objects.all(),
+    #     source='pd_models',
+    #     many=True, required=False,
+    # )
+    # pkpd_model_ids = serializers.PrimaryKeyRelatedField(
+    #     queryset=PkpdModel.objects.all(),
+    #     source='pkpd_models',
+    #     many=True,
+    #     required=False,
+    # )
+    # protocol_ids = serializers.PrimaryKeyRelatedField(
+    #     queryset=Protocol.objects.all(),
+    #     source='protocols',
+    #     many=True,
+    #     required=False,
+    # )
+    # user_ids = serializers.PrimaryKeyRelatedField(
+    #     queryset=User.objects.all(),
+    #     source='users',
+    #     many=True,
+    # )
 
     class Meta:
         model = Project

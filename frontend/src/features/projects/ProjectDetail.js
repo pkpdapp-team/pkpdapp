@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useSelector, useDispatch } from 'react-redux'
 import Button from '@material-ui/core/Button';
 import Dialog from '@material-ui/core/Dialog';
 import DialogActions from '@material-ui/core/DialogActions';
@@ -7,40 +8,51 @@ import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import { useForm, Controller  } from "react-hook-form";
 import { makeStyles } from '@material-ui/core/styles';
-import {FormTextField, FormMultiSelectField} from './FormComponents';
 import Typography from '@material-ui/core/Typography';
 
-import { api } from './Api'
+import {FormTextField, FormMultiSelectField} from '../forms/FormComponents';
+import {
+  selectAllUsers
+} from '../projects/usersSlice.js'
+
+import {
+  updateProject
+} from '..//projects/projectsSlice.js'
+
+const useStyles = makeStyles((theme) => ({
+  table: {
+    width: '100%',
+  },
+  tableCell: {
+    width: '100pt',
+  },
+  controls: {
+    display: 'flex',
+    alignItems: 'center',
+    paddingLeft: theme.spacing(1),
+    paddingBottom: theme.spacing(1),
+  },
+}));
+
+
 
 export default function ProjectDetail({project}) {
+  const classes = useStyles();
   const { control, handleSubmit, reset } = useForm();
+  const dispatch = useDispatch()
+  const users = useSelector(selectAllUsers);
 
   useEffect(() => {
-    reset({
-      ...project,
-      user_ids: project.users.map(x => x.id),
-    });
+    reset(project);
   }, [reset, project]);
 
-
-  const [users, setUsers] = React.useState([]);
-
-  useEffect(() => {
-    api.get("/api/users").then(setUsers);
-  },[])
 
   const user_options = users.map(user => (
     { key: user.username, value: user.id } 
   ));
 
   const onSubmit = (values) => {
-    const data = {
-      ...values,
-    }
-    api.put(`api/project/${project.id}/`, data)
-      .then(data => {
-        project.refresh(project.id)
-      });
+    dispatch(updateProject(values))
   };
 
   return (
@@ -54,12 +66,16 @@ export default function ProjectDetail({project}) {
       { user_options.length > 0 &&
       <FormMultiSelectField 
         control={control} 
-        defaultValue={project.users.map(x => x.id)}
+        defaultValue={project.users}
         options={user_options}
-        name="user_ids" label="Users"
+        name="users" label="Users"
       />
       }
-      <Button type="submit" color="primary">
+      <Button 
+        type="submit" 
+        variant="contained"
+        className={classes.controls} 
+      >
         Save
       </Button>
     </form>
