@@ -44,3 +44,7 @@ class TestSimulateView(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertCountEqual(list(response.data.keys()), data['outputs'])
+
+        url = reverse('simulate-pharmacodynamic', args=(123,))
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
