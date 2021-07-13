@@ -8,6 +8,7 @@ import FormControl from '@material-ui/core/FormControl';
 import Grid from '@material-ui/core/Grid';
 import Input from '@material-ui/core/Input';
 import Slider from '@material-ui/core/Slider';
+import Button from '@material-ui/core/Button';
 import Select from '@material-ui/core/Select';
 import { Controller  } from "react-hook-form";
 import DateFnsUtils from '@date-io/date-fns'; // choose your lib
@@ -15,6 +16,8 @@ import { DateTimePicker } from '@material-ui/pickers';
 import Chip from '@material-ui/core/Chip';
 import Checkbox from '@material-ui/core/Checkbox';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
+import Box from "@material-ui/core/Box";
+import ButtonBase from "@material-ui/core/ButtonBase";
 
 const useStyles = makeStyles((theme) => ({
   container: {
@@ -33,12 +36,28 @@ const useStyles = makeStyles((theme) => ({
   chip: {
     margin: 2,
   },
+  fileFieldBox: {
+    margin: theme.spacing(1),
+    width: '200pt',
+    display: 'inline-block'
+  },
+  fileFieldField: {
+    "& .MuiFormLabel-root.Mui-disabled": {
+      color: theme.palette.text.secondary,
+    },
+  },
+  fileFieldButton: {
+    width: "100%",
+    height: "100%",
+    overflow: "hidden",
+  },
 }));
 
 export function FormCheckboxField({control, name, defaultValue, label, ...rest}) {
   const classes = useStyles();
   return (
   <div className={classes.formInput}>
+
     <Controller
         control={control}
         defaultValue={defaultValue}
@@ -129,6 +148,63 @@ export function FormDateTimeField({control, name, defaultValue, label, ...rest})
             label={label}
           />
         )}
+      />
+  )
+}
+
+
+export function FormFileField({control, name, defaultValue, label, ...rest}) {
+  const classes = useStyles();
+ 
+  return (
+    <Controller
+        control={control}
+        defaultValue={defaultValue}
+        name={name}
+        render={({ 
+          field: { onChange, onBlur, value, name, ref },
+          fieldState: { invalid, isTouched, isDirty, error },
+          formState,
+        }) => {
+          const handleChange = (event) => {
+            const files = Array.from(event.target.files);
+            const [file] = files;
+            if (!!onChange) onChange({ target: { value: file } });
+          };
+          return (
+           
+        <Box
+          className={classes.fileFieldBox}
+          component="span"
+          position="relative"
+          height={58}
+        >
+        <Box position="absolute" top={-16} bottom={0} left={0} right={0} mx={2}>
+          <TextField
+            className={classes.fileFieldField}
+            margin="normal"
+            fullWidth
+            disabled
+            label={label}
+            value={value?.name || ""}
+            error={!!error}
+            helperText={error?.message || " "}
+          />
+        </Box>
+        <Button
+          className={classes.fileFieldButton}
+          component="label"
+        >
+          <input
+            type="file"
+            hidden
+            onChange={handleChange}
+            {...rest}
+          />
+        </Button>
+        </Box>
+        )
+        }}
       />
   )
 }

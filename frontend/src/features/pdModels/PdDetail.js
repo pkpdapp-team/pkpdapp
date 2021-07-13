@@ -17,14 +17,15 @@ import ListItemText from '@material-ui/core/ListItemText';
 
 
 import {updatePdModel} from '../pdModels/pdModelsSlice'
-import {FormCheckboxField, FormTextField, FormSelectField, FormSliderField} from '../forms/FormComponents';
+import {FormCheckboxField, FormTextField, FormSelectField, FormSliderField, FormFileField} from '../forms/FormComponents';
 
 const useStyles = makeStyles((theme) => ({
-  controls: {
+  controlsRoot: {
     display: 'flex',
     alignItems: 'center',
-    paddingLeft: theme.spacing(1),
-    paddingBottom: theme.spacing(1),
+  },
+  controls: {
+    margin: theme.spacing(1),
   },
 }));
 
@@ -32,17 +33,51 @@ const useStyles = makeStyles((theme) => ({
 
 export default function PdDetail({project, pd_model}) {
   const classes = useStyles();
-  const { control, handleSubmit, reset } = useForm();
+  const { register, control, handleSubmit, reset } = useForm();
   const dispatch = useDispatch();
 
   console.log('pddetail', pd_model);
+
+  const handleFileUpload = (file) => {
+    let reader = new FileReader();
+
+    reader.onload = function() {
+      console.log(reader.result);
+    };
+
+    reader.onerror = function() {
+      console.log(reader.error);
+    };
+
+    reader.readAsText(file);
+    
+  };
 
   useEffect(() => {
     reset(pd_model);
   }, [reset, pd_model]);
 
   const onSubmit = (values) => {
-    dispatch(updatePdModel(values))
+    if (values.sbml_file) {
+      console.log('there is a file');
+      let reader = new FileReader();
+
+      reader.onload = function() {
+        console.log('reader result is ', reader.result)
+        values.sbml = reader.result
+        console.log('updating pd model with', values);
+        dispatch(updatePdModel(values))
+      };
+
+      reader.onerror = function() {
+        console.log(reader.error);
+      };
+
+      reader.readAsText(values.sbml_file);
+    } else {
+      console.log('submi', values)
+      dispatch(updatePdModel(values))
+    }
   };
 
   return (
@@ -120,6 +155,14 @@ export default function PdDetail({project, pd_model}) {
         type="number"
       />
 
+      <FormFileField 
+        control={control} 
+        defaultValue={''}
+        name="sbml_file" label="Upload SBML file"
+        accept=".xml,.sbml"
+      />
+
+      <div  className={classes.controlsRoot}>
       <Button 
         className={classes.controls}
         type="submit" 
@@ -127,6 +170,10 @@ export default function PdDetail({project, pd_model}) {
       >
         Save
       </Button>
+
+      
+      </div>
+
     </form>
   )
 }
