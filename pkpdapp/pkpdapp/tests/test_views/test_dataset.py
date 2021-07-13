@@ -27,3 +27,9 @@ class DatasetTestCase(APITestCase):
                         'biomarker_types', 'protocols']
         for k in present_keys:
             self.assertTrue(k in keys)
+
+    def test_dataset_project_filter(self):
+        response = self.client.get("/api/dataset/?project_id=1")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response_data = response.data
+        self.assertGreater(len(response_data), 0)
