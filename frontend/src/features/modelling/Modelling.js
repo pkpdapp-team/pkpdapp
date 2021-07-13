@@ -51,11 +51,10 @@ export default function Modelling() {
   const chosenPkModels = useSelector(selectChosenPkModels);
   const chosenPdModels = useSelector(selectChosenPdModels);
   const chosenProtocols = useSelector(selectChosenProtocols);
-
   if (!project) {
     return ('Select a project')
   }
-
+  
   return (
     <div className={classes.root}>
       <Grid container spacing={3}>
@@ -64,14 +63,9 @@ export default function Modelling() {
             <ProjectDetail project={project}/>
           </Paper>
         </Grid>
-          <Grid item xs={8}>
+          <Grid item xs={12}>
             <Paper className={classes.paper}>
-              <Chart />
-            </Paper>
-          </Grid>
-          <Grid item xs={4}>
-            <Paper className={classes.paper}>
-              <ChartController />
+              <Chart datasets={chosenDatasets} pkModels={chosenPkModels} pdModels={chosenPdModels} />
             </Paper>
           </Grid>
           {chosenPdModels.map(pdModel => (
@@ -82,14 +76,14 @@ export default function Modelling() {
             </Grid>
           ))}
           {chosenPkModels.map(pkModel => (
-            <Grid item xs={6}>
+            <Grid item xs={6} key={pkModel.id}>
             <Paper className={classes.paper}>
               <PkDetail pk_model={pkModel} project={project} />
             </Paper>
             </Grid>
           ))}
           {chosenProtocols.map(protocol => (
-            <Grid item xs={6}>
+            <Grid item xs={6} key={protocol.id}>
             <Paper className={classes.paper}>
               <ProtocolDetail protocol={protocol} project={project} />
             </Paper>

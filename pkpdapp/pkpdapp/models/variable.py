@@ -69,12 +69,15 @@ class Variable(models.Model):
         constraints = [
             models.CheckConstraint(
                 check=(
-                    (Q(pk_model__isnull=True) & Q(pd_model__isnull=False)
-                     & Q(pd_model__isnull=False)) |
-                    (Q(pk_model__isnull=False) & Q(pd_model__isnull=True)
-                     & Q(pd_model__isnull=False)) |
-                    (Q(pk_model__isnull=False) & Q(pd_model__isnull=False)
-                     & Q(pd_model__isnull=True))
+                    (Q(pk_model__isnull=True) &
+                     Q(pd_model__isnull=False) &
+                     Q(pd_model__isnull=False)) |
+                    (Q(pk_model__isnull=False) &
+                     Q(pd_model__isnull=True) &
+                     Q(pd_model__isnull=False)) |
+                    (Q(pk_model__isnull=False) &
+                     Q(pd_model__isnull=False) &
+                     Q(pd_model__isnull=True))
                 ),
                 name='variable must belong to a model'
             ),

@@ -83,7 +83,6 @@ export default function PkDetail({project, pk_model}) {
     ));
     protocol_options = protocol_options.concat(dataset_protocols);
   }
-  console.log(base_pk_model_options);
 
   const dose_compartment_options = [
     {key: 'central', value: 'central'},
@@ -96,6 +95,7 @@ export default function PkDetail({project, pk_model}) {
       <Typography>PK Model</Typography>
       <FormTextField 
         control={control} 
+        defaultValue={pk_model.name}
         name="name" label="Name"
       />
       <Grid container item xs={12} spacing={2}>
@@ -104,7 +104,7 @@ export default function PkDetail({project, pk_model}) {
       <List>
       {pk_model.states.map((state, index) => {
         return (
-          <ListItem key={index} role={undefined} dense >
+          <ListItem key={index} dense >
             <FormSliderField
               control={control} 
               defaultValue={state.default_value}
@@ -122,7 +122,7 @@ export default function PkDetail({project, pk_model}) {
       <List>
       {pk_model.variables.map((variable, index) => {
         return (
-          <ListItem key={index} role={undefined} dense >
+          <ListItem key={index} dense >
             <FormSliderField
               control={control} 
               defaultValue={variable.default_value}
@@ -141,7 +141,7 @@ export default function PkDetail({project, pk_model}) {
       <List>
       {pk_model.outputs.map((output, index) => {
         return (
-          <ListItem key={index} role={undefined} dense>
+          <ListItem key={index} dense>
             <FormCheckboxField
               control={control} 
               defaultValue={output.default_value}
@@ -155,7 +155,6 @@ export default function PkDetail({project, pk_model}) {
 
       </Grid>
       </Grid>
-
 
       <FormSelectField 
         control={control} 

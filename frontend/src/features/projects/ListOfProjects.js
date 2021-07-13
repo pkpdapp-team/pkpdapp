@@ -96,15 +96,15 @@ export default function ListOfProjects() {
           }}
         />
       ))}
-      <Tooltip title='create project' placement="bottom">
-        <ListItem button onClick={() => dispatch(addNewProject())}>
+      <ListItem button onClick={() => dispatch(addNewProject())}>
         <ListItemAvatar>
+          <Tooltip title='create project' placement="bottom">
           <Avatar variant='rounded' className={classes.avatarPlus}>
             <AddIcon/>
           </Avatar>
+          </Tooltip>
         </ListItemAvatar>
       </ListItem>
-      </Tooltip>
     </List>
   )
 }

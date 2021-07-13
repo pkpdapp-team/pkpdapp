@@ -44,6 +44,7 @@ class DosedPharmacokineticSerializer(serializers.ModelSerializer):
     states = serializers.SerializerMethodField('get_states')
     outputs = serializers.SerializerMethodField('get_outputs')
     variables = serializers.SerializerMethodField('get_variables')
+    simulate = serializers.SerializerMethodField('get_simulate')
 
     def get_states(self, m):
         return m.states()
@@ -53,6 +54,9 @@ class DosedPharmacokineticSerializer(serializers.ModelSerializer):
 
     def get_variables(self, m):
         return m.variables()
+
+    def get_simulate(self, m):
+        return m.simulate()
 
     class Meta:
         model = DosedPharmacokineticModel
@@ -63,6 +67,7 @@ class PharmacodynamicSerializer(serializers.ModelSerializer):
     states = serializers.SerializerMethodField('get_states')
     outputs = serializers.SerializerMethodField('get_outputs')
     variables = serializers.SerializerMethodField('get_variables')
+    simulate = serializers.SerializerMethodField('get_simulate')
 
     def get_states(self, m):
         return m.states()
@@ -72,6 +77,9 @@ class PharmacodynamicSerializer(serializers.ModelSerializer):
 
     def get_variables(self, m):
         return m.variables()
+
+    def get_simulate(self, m):
+        return m.simulate()
 
     class Meta:
         model = PharmacodynamicModel

@@ -47,7 +47,16 @@ export const updatePkModel = createAsyncThunk(
     const newPkModel = await api.put(
       `/api/dosed_pharmacokinetic/${pkModel.id}/`, pkModel
     )
-    return {...newPkModel, chosen: pkModel.chosen}
+    //const simulateData = {
+    //  outputs: pkModel.outputs.filter(x => x.default_value).map(x => x.name),
+    //  initial_conditions: pkModel.outputs.reduce((o, x) => ({...o, x.name: x.default_value}), {}),
+    //  variables: pkModel.variables.reduce((o, x) => ({...o, x.name: x.default_value}), {}),
+    //}
+    //const result = await api.post(
+    //  `/api/dosed_pharmacokinetic/${pkModel.id}/simulate`, simulateData
+    //)
+    //return { ...newPkModel, simulate: result }
+    return newPkModel
   }
 )
 

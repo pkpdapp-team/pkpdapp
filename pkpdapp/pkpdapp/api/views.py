@@ -27,7 +27,6 @@ from pkpdapp.models import (
     PkpdModel,
 )
 from django.contrib.auth.models import User
-import json
 
 
 class EnablePartialUpdateMixin:
@@ -73,9 +72,11 @@ class ProtocolView(viewsets.ModelViewSet):
     serializer_class = ProtocolSerializer
     filter_backends = [ProjectFilter]
 
+
 class UnitView(viewsets.ModelViewSet):
     queryset = Unit.objects.all()
     serializer_class = UnitSerializer
+
 
 class DoseView(viewsets.ModelViewSet):
     queryset = Dose.objects.all()
@@ -94,10 +95,6 @@ class DosedPharmacokineticView(viewsets.ModelViewSet):
 
 
 class SimulateBaseView(views.APIView):
-    @staticmethod
-    def serialize_datalog(datalog):
-        return {k: v.tolist() for k, v in datalog.items()}
-
     def post(self, request, pk, format=None):
         try:
             m = self.model.objects.get(pk=pk)
@@ -107,7 +104,7 @@ class SimulateBaseView(views.APIView):
         initial_conditions = request.data.get('initial_conditions', {})
         variables = request.data.get('variables', {})
         result = m.simulate(outputs, initial_conditions, variables)
-        return Response(self.serialize_datalog(result))
+        return Response(result)
 
 
 class SimulatePkView(SimulateBaseView):

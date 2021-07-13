@@ -155,8 +155,10 @@ const useStyles = makeStyles((theme) => ({
   
   drawerPaper: {
     position: 'relative',
+    overflowX: 'hidden',
     whiteSpace: 'nowrap',
     width: drawerWidth,
+    height: '100%',
     transition: theme.transitions.create('width', {
       easing: theme.transitions.easing.sharp,
       duration: theme.transitions.duration.enteringScreen,
@@ -170,6 +172,7 @@ const useStyles = makeStyles((theme) => ({
       duration: theme.transitions.duration.leavingScreen,
     }),
     width: theme.spacing(7),
+    height: '100%',
     [theme.breakpoints.up('sm')]: {
       width: theme.spacing(9),
     },
@@ -177,7 +180,6 @@ const useStyles = makeStyles((theme) => ({
   appBarSpacer: theme.mixins.toolbar,
   content: {
     flexGrow: 1,
-    height: '100vh',
     overflow: 'auto',
   },
   container: {
@@ -314,17 +316,15 @@ export default function App() {
       <ProjectMenu />
     </Drawer>
     <MuiPickersUtilsProvider utils={DateFnsUtils}>
-    <main className={classes.content}>
       <div className={classes.appBarSpacer} />
         {/* A <Switch> looks through its children <Route>s and
               renders the first one that matches the current URL. */}
 
-        <Container maxWidth="false">
+        <Container maxWidth={false}>
         <Switch>
           <PrivateRoute path="/" component={Modelling} />
         </Switch>
         </Container>
-    </main>
     </MuiPickersUtilsProvider>
     </div>
   );

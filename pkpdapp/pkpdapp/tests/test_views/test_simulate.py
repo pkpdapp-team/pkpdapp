@@ -4,13 +4,11 @@
 # copyright notice and full license details.
 #
 
-from django.test import TestCase
 from pkpdapp.models import (
     PharmacodynamicModel
 )
 from django.contrib.auth.models import User
 
-from rest_framework.test import APITestCase
 from rest_framework import status
 from django.urls import reverse
 
@@ -46,5 +44,3 @@ class TestSimulateView(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertCountEqual(list(response.data.keys()), data['outputs'])
-
-

@@ -30,10 +30,8 @@ export default function DatasetDetail({project, dataset}) {
   const { control, handleSubmit, reset } = useForm();
   const dispatch = useDispatch();
 
-  console.log('dataset', dataset);
 
   useEffect(() => {
-    console.log('reset', dataset);
     reset(dataset);
   }, [reset, dataset]);
 

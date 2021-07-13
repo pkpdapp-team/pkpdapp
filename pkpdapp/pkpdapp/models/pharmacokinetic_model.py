@@ -12,6 +12,7 @@ from pkpdapp.models import (
     Protocol
 )
 import myokit
+from .mechanistic_model import lock
 
 
 class PharmacokineticModel(MechanisticModel):
@@ -59,26 +60,31 @@ class DosedPharmacokineticModel(models.Model, MyokitModelMixin):
         pk_model = self.pharmacokinetic_model.create_myokit_model()
         if self.protocol:
             compartment = self.dose_compartment
-            amount_var = 'central.drug_amount'
+            amount_var = None
             for v in pk_model.variables(state=True):
                 if compartment + '.' in v.qname():
                     amount_var = v
 
             direct = self.protocol.dose_type == Protocol.DoseType.DIRECT
 
-            set_administration(
-                pk_model, compartment, direct=direct,
-                amount_var=amount_var.name()
-            )
+            if amount_var is not None:
+                set_administration(
+                    pk_model, compartment, direct=direct,
+                    amount_var=amount_var.name()
+                )
 
         return pk_model
 
     def create_myokit_simulator(self):
-        sim = myokit.Simulation(self.get_myokit_model())
+        print('creating simulation for ', self.name)
+        model = self.get_myokit_model()
+        with lock:
+            sim = myokit.Simulation(model)
         if self.protocol:
             dosing_events = [(d.amount, d.start_time, d.duration)
                              for d in self.protocol.doses.all()]
 
+            print('adding odsing events', dosing_events)
             set_dosing_events(sim, dosing_events)
 
         return sim
@@ -247,6 +253,6 @@ def set_dosing_events(simulator, events):
     """
     myokit_protocol = myokit.Protocol()
     for e in events:
-        myokit_protocol.schedule(e[0], e[1], e[2])
+        myokit_protocol.schedule(e[0], e[1], e[2] if e[2] != 0.0 else 0.01)
 
     simulator.set_protocol(myokit_protocol)
