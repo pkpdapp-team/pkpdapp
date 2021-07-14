@@ -316,11 +316,11 @@ export default function App() {
       <ProjectMenu />
     </Drawer>
     <MuiPickersUtilsProvider utils={DateFnsUtils}>
-      <div className={classes.appBarSpacer} />
         {/* A <Switch> looks through its children <Route>s and
               renders the first one that matches the current URL. */}
 
         <Container maxWidth={false}>
+        <div className={classes.appBarSpacer} />
         <Switch>
           <PrivateRoute path="/" component={Modelling} />
         </Switch>
