@@ -153,7 +153,7 @@ export function FormDateTimeField({control, name, defaultValue, label, ...rest})
 }
 
 
-export function FormFileField({control, name, defaultValue, label, ...rest}) {
+export function FormFileField({control, name, defaultValue, label, clearErrors, ...rest}) {
   const classes = useStyles();
  
   return (
@@ -167,6 +167,7 @@ export function FormFileField({control, name, defaultValue, label, ...rest}) {
           formState,
         }) => {
           const handleChange = (event) => {
+            clearErrors(name)
             const files = Array.from(event.target.files);
             const [file] = files;
             if (!!onChange) onChange({ target: { value: file } });

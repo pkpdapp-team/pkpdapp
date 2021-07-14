@@ -37,6 +37,19 @@ export const addNewDataset = createAsyncThunk(
   }
 )
 
+export const uploadDatasetCsv = createAsyncThunk(
+  'pdModels/uploadDatasetCsv',
+  async ({id, csv}, {rejectWithValue}) => {
+    const dataset = await api.putMultiPart(
+      `/api/dataset/${id}/csv`, {csv}
+    ).then(() => {
+      return api.get(`/api/dataset/${id}`) 
+    }).catch(err => rejectWithValue(err))
+
+    return dataset
+  }
+)
+
 export const updateDataset = createAsyncThunk(
   'datasets/updateDataset',
   async (dataset) => {
@@ -67,7 +80,19 @@ export const datasetsSlice = createSlice({
       datasetsAdapter.setAll(state, action.payload)
     },
     [addNewDataset.fulfilled]: datasetsAdapter.addOne,
-    [updateDataset.fulfilled]: datasetsAdapter.upsertOne
+    [updateDataset.fulfilled]: datasetsAdapter.upsertOne,
+    [uploadDatasetCsv.pending]: (state, action) => {
+      console.log('uploadcsv pending', action)
+      state.entities[action.meta.arg.id].errors = []
+    },
+    [uploadDatasetCsv.rejected]: (state, action) => {
+      console.log('upload csv rejected', action)
+      state.entities[action.meta.arg.id].errors = action.payload.sbml
+    },
+    [uploadDatasetCsv.fulfilled]: (state, action) => {
+      console.log('uploadcsv fulfilled', action)
+      datasetsAdapter.upsertOne(state, action)
+    },
   }
 })
 

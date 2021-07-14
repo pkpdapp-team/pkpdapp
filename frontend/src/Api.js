@@ -27,6 +27,7 @@ export const api = {
     post,
     patch,
     put,
+    putMultiPart,
     delete: _delete
 };
 
@@ -99,6 +100,22 @@ function put(url, body) {
           Authorization: `Token ${authToken}`,
         },
         body: JSON.stringify(body)
+    };
+    return fetch(url, requestOptions).then(handleResponse);    
+}
+
+function putMultiPart(url, data) {
+    const formData  = new FormData();
+
+    for(const name in data) {
+      formData.append(name, data[name]);
+    }
+    const requestOptions = {
+        method: 'PUT',
+        headers: {
+          Authorization: `Token ${authToken}`,
+        },
+        body: formData,
     };
     return fetch(url, requestOptions).then(handleResponse);    
 }

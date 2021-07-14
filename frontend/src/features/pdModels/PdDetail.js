@@ -5,6 +5,7 @@ import Dialog from '@material-ui/core/Dialog';
 import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
+import Alert from '@material-ui/lab/Alert';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import { useForm, Controller  } from "react-hook-form";
 import { makeStyles } from '@material-ui/core/styles';
@@ -16,7 +17,7 @@ import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 
 
-import {updatePdModel} from '../pdModels/pdModelsSlice'
+import {updatePdModel, uploadPdSbml} from '../pdModels/pdModelsSlice'
 import {FormCheckboxField, FormTextField, FormSelectField, FormSliderField, FormFileField} from '../forms/FormComponents';
 
 const useStyles = makeStyles((theme) => ({
@@ -33,16 +34,18 @@ const useStyles = makeStyles((theme) => ({
 
 export default function PdDetail({project, pd_model}) {
   const classes = useStyles();
-  const { register, control, handleSubmit, reset } = useForm();
+  const { control, clearErrors, handleSubmit, reset } = useForm();
   const dispatch = useDispatch();
 
   console.log('pddetail', pd_model);
 
-  const handleFileUpload = (file) => {
+  const handleFileUpload = (event) => {
+    const files = Array.from(event.target.files);
+    const [file] = files;
     let reader = new FileReader();
 
     reader.onload = function() {
-      console.log(reader.result);
+      dispatch(uploadPdSbml({id: pd_model.id, sbml: reader.result}))
     };
 
     reader.onerror = function() {
@@ -50,7 +53,6 @@ export default function PdDetail({project, pd_model}) {
     };
 
     reader.readAsText(file);
-    
   };
 
   useEffect(() => {
@@ -58,26 +60,7 @@ export default function PdDetail({project, pd_model}) {
   }, [reset, pd_model]);
 
   const onSubmit = (values) => {
-    if (values.sbml_file) {
-      console.log('there is a file');
-      let reader = new FileReader();
-
-      reader.onload = function() {
-        console.log('reader result is ', reader.result)
-        values.sbml = reader.result
-        console.log('updating pd model with', values);
-        dispatch(updatePdModel(values))
-      };
-
-      reader.onerror = function() {
-        console.log(reader.error);
-      };
-
-      reader.readAsText(values.sbml_file);
-    } else {
-      console.log('submi', values)
-      dispatch(updatePdModel(values))
-    }
+    dispatch(updatePdModel(values))
   };
 
   return (
@@ -155,12 +138,6 @@ export default function PdDetail({project, pd_model}) {
         type="number"
       />
 
-      <FormFileField 
-        control={control} 
-        defaultValue={''}
-        name="sbml_file" label="Upload SBML file"
-        accept=".xml,.sbml"
-      />
 
       <div  className={classes.controlsRoot}>
       <Button 
@@ -171,8 +148,26 @@ export default function PdDetail({project, pd_model}) {
         Save
       </Button>
 
-      
-      </div>
+      <Button
+          className={classes.controls}
+          component="label"
+          variant="contained"
+        >
+          Upload SBML file
+          <input
+            type="file"
+            hidden
+            onChange={handleFileUpload}
+          />
+     </Button>
+
+    </div>
+
+    {pd_model.errors && pd_model.errors.map((error, index) => (
+      <Alert key={index} severity="error">
+        {error}
+      </Alert>
+    ))}
 
     </form>
   )
