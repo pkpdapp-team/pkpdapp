@@ -153,7 +153,7 @@ class DatasetView(viewsets.ModelViewSet):
 
     @decorators.action(
         detail=True,
-        serializer_class = DatasetCsvSerializer
+        serializer_class = DatasetCsvSerializer,
         methods=['PUT'],
         parser_classes=[parsers.MultiPartParser],
     )

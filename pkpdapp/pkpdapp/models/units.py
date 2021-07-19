@@ -46,3 +46,11 @@ class Unit(models.Model):
                        self.A, self.K, self.cd, self.mol],
             multiplier=self.multiplier
         )
+
+    def is_time_unit(self):
+        return (
+            self.s == 1 and
+            self.g == 0 and self.m == 0 and self.A == 0 and
+            self.K == 0 and self.cd == 0 and self.mol == 0
+        )
+
