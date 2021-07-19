@@ -3,7 +3,9 @@
 # is released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-from rest_framework import views, viewsets, filters, status, decorators, response
+from rest_framework import (
+    views, viewsets, filters, status, decorators, response
+)
 from rest_framework import parsers
 from rest_framework.response import Response
 from .serializers import (
@@ -153,7 +155,7 @@ class DatasetView(viewsets.ModelViewSet):
 
     @decorators.action(
         detail=True,
-        serializer_class = DatasetCsvSerializer,
+        serializer_class=DatasetCsvSerializer,
         methods=['PUT'],
         parser_classes=[parsers.MultiPartParser],
     )
@@ -167,7 +169,6 @@ class DatasetView(viewsets.ModelViewSet):
             return response.Response(dataset_serializer.data)
         return response.Response(serializer.errors,
                                  status.HTTP_400_BAD_REQUEST)
-
 
 
 class ProjectView(EnablePartialUpdateMixin, viewsets.ModelViewSet):

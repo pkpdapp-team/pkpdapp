@@ -5,6 +5,7 @@ import Dialog from '@material-ui/core/Dialog';
 import Grid from '@material-ui/core/Grid';
 import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
+import Alert from '@material-ui/lab/Alert';
 import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import { useForm, Controller  } from "react-hook-form";
@@ -42,17 +43,7 @@ export default function DatasetDetail({project, dataset}) {
   const handleFileUpload = (event) => {
     const files = Array.from(event.target.files);
     const [file] = files;
-    let reader = new FileReader();
-
-    reader.onload = function() {
-      dispatch(uploadDatasetCsv({id: dataset.id, csv: reader.result}))
-    };
-
-    reader.onerror = function() {
-      console.log(reader.error);
-    };
-
-    reader.readAsText(file);
+    dispatch(uploadDatasetCsv({id: dataset.id, csv: file}))
   };
 
   const onSubmit = (values) => {
@@ -140,6 +131,11 @@ export default function DatasetDetail({project, dataset}) {
             onChange={handleFileUpload}
           />
      </Button>
+    {dataset.errors && dataset.errors.map((error, index) => (
+      <Alert key={index} severity="error">
+        {error}
+      </Alert>
+    ))}
     </form>
   )
 }

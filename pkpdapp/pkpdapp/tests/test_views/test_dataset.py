@@ -8,7 +8,6 @@ from rest_framework.test import APITestCase, APIClient
 from django.contrib.auth.models import User
 from urllib.request import urlretrieve
 from django.core.files import File
-from django.urls import reverse
 from http import HTTPStatus
 from django.utils import timezone
 from pkpdapp.models import Dataset
