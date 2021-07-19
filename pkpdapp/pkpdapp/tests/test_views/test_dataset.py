@@ -60,8 +60,8 @@ class DatasetTestCase(APITestCase):
                 'csv': file
             },
         )
-        self.assertEquals(response.status_code, HTTPStatus.OK)
-        self.assertContains(response, error_message)
+        self.assertEquals(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertIn(error_message, str(response.data['csv'][0]))
 
     def test_create_dataset_from_csv(self):
         dataset = Dataset.objects.create(
@@ -72,59 +72,66 @@ class DatasetTestCase(APITestCase):
         # test incorrect file format
         self._assert_file_upload_error(
             dataset.pk,
-            filename='test_data_incorrect.xls',
-            error_message='THIS IS NOT A CSV FILE.',
+            filename='TCB4dataset.xls',
+            error_message='invalid continuation byte',
             ending='.xls'
         )
 
         # incorrect cols
-        base = 'time_data_incorrect'
-        for i in range(5):
-            if i == 0:
-                filename_t = base
-            else:
-                filename_t = base + str(i)
-            self._assert_file_upload_error(
-                dataset.pk,
-                filename=filename_t + '.csv',
-                error_message='FILE DOES NOT CONTAIN'
-            )
         self._assert_file_upload_error(
             dataset.pk,
-            filename='time_data_incorrect5.csv',
-            error_message='THIS FILE HAS TOO MANY COLUMNS'
+            filename='TCB4dataset_without_dose_group.csv',
+            error_message='does not have the following columns'
         )
 
         # test works correctly when file of right format
-        file = faux_test_file(BASE_URL_DATASETS + 'test_data.csv')
+        file = faux_test_file(BASE_URL_DATASETS + 'TCB4dataset.csv')
         response = self.client.put(
-            '/api/dataset/{}/csv'.format(dataset.pk),
+            '/api/dataset/{}/csv/'.format(dataset.pk),
             data={
                 'csv': file
             },
-            follow=True
-        )
-        self.assertCountEqual(
-            dataset.biomarker_types.values_list('name', flat=True),
-            ['Tumour volume', 'Body weight']
         )
         self.assertEquals(response.status_code, HTTPStatus.OK)
+        biomarker_types_in_file = [
+            'IL2', 'IL10', 'IL6', 'IFNg', 'TNFa', 'Cells'
+        ]
+        biomarker_types_in_response = [
+            bt['name'] for bt in response.data['biomarker_types']
+        ]
+        self.assertCountEqual(
+            biomarker_types_in_file,
+            biomarker_types_in_response,
+        )
+        # check they are in the database as as well
+        self.assertCountEqual(
+            biomarker_types_in_file,
+            dataset.biomarker_types.values_list('name', flat=True),
+        )
 
-        # make sure if we do it again it doesn't add extra biomarker_types
-        file = faux_test_file(BASE_URL_DATASETS + 'test_data.csv')
+        # check with another file
+        file = faux_test_file(BASE_URL_DATASETS + 'demo_pk_data_upload.csv')
         response = self.client.put(
-            '/api/dataset/{}/csv'.format(dataset.pk),
+            '/api/dataset/{}/csv/'.format(dataset.pk),
             data={
                 'csv': file
             },
-            follow=True
-        )
-        self.assertCountEqual(
-            dataset.biomarker_types.values_list('name', flat=True),
-            ['Tumour volume', 'Body weight']
         )
         self.assertEquals(response.status_code, HTTPStatus.OK)
 
+        # check the right biomarker_types are there
+        biomarker_types_in_file = [
+            'Docetaxel', 'Red blood cells', 'Hemoglobin',
+            'Platelets ', 'White blood cells',
+            'Neutrophiles absolute', 'Lymphocytes absolute',
+            'Monocytes absolute', 'Eosinophils absolute',
+            'Basophils absolute',
+        ]
+        self.assertCountEqual(
+            dataset.biomarker_types.values_list('name', flat=True),
+            biomarker_types_in_file
+        )
 
-
-
+        # check the right number of subjects and protocols added
+        self.assertEqual(dataset.subjects.count(), 66)
+        self.assertEqual(dataset.protocols.count(), 54)

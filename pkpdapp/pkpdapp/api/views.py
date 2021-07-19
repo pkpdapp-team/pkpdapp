@@ -163,7 +163,8 @@ class DatasetView(viewsets.ModelViewSet):
                                            partial=True)
         if serializer.is_valid():
             serializer.save()
-            return response.Response(serializer.data)
+            dataset_serializer = DatasetSerializer(obj)
+            return response.Response(dataset_serializer.data)
         return response.Response(serializer.errors,
                                  status.HTTP_400_BAD_REQUEST)
 

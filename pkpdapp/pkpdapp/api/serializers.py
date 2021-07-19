@@ -19,7 +19,6 @@ import pandas as pd
 
 class ValidSbml:
     def __call__(self, value):
-        print('testing value')
         try:
             MyokitModelMixin.parse_sbml_string(value)
         except SBMLParsingError as e:
@@ -157,7 +156,6 @@ class DatasetCsvSerializer(serializers.ModelSerializer):
         fields = ['csv']
 
     def validate_csv(self, csv):
-        print('validate_csv', csv, type(csv), str(csv.read()))
         utf8_file = codecs.EncodedFile(csv.open(), "utf-8")
 
         # error in columns
@@ -165,12 +163,7 @@ class DatasetCsvSerializer(serializers.ModelSerializer):
             data = pd.read_csv(utf8_file)
         except UnicodeDecodeError as err:
             raise serializers.ValidationError(
-                (
-                    'Error parsing file, '
-                    '%(error_cols)s'
-                ),
-                code='invalid',
-                params={'error_cols': err},
+                'Error parsing file: {}'.format(err)
             )
 
         colnames = list(data.columns)
@@ -188,19 +181,15 @@ class DatasetCsvSerializer(serializers.ModelSerializer):
                          'UNIT',
                          'SUBJECT_GROUP',
                          'DOSE_GROUP']  # not in Roche list but seems needed]
-        error_cols = []
-        for col in required_cols:
-            if col not in colnames:
-                error_cols.append(col)
+        error_cols = [
+            col for col in required_cols if col not in colnames
+        ]
         if len(error_cols) > 0:
             raise serializers.ValidationError(
-                _((
+                (
                     'Error parsing file, '
-                    'does not have the following columns: '
-                    '%(error_cols)s'
-                )),
-                code='invalid',
-                params={'error_cols': error_cols},
+                    'does not have the following columns: {}'
+                ).format(error_cols)
             )
 
         # check that time unit is only h or d
@@ -221,11 +210,8 @@ class DatasetCsvSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 (
                     'Error parsing file, '
-                    'contains the following unknown time units: '
-                    '%(error_tunits)s'
-                ),
-                code='invalid',
-                params={'error_tunits': error_tunits},
+                    'contains the following unknown time units: {}'
+                ).format(error_tunits)
             )
 
         # check whether biomarker units are in list of standard units
@@ -240,31 +226,27 @@ class DatasetCsvSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 (
                     'Error parsing file, '
-                    'contains the following unknown units: '
-                    '%(error_bunits)s'
-                ),
-                code='invalid',
-                params={'error_bunits': error_bunits},
+                    'contains the following unknown units: {}'
+                ).format(error_bunits)
             )
 
         # check for missing data and drop any rows where data are missing
         num_missing = data.isna().sum().sum()
         if num_missing > 0:
             data = data.dropna()
-        self._data = data
         return data
 
     def update(self, instance, validated_data):
         # remove existing dataset
-        instance.biomarker_types.delete()
-        instance.protocols.delete()
-        instance.subjects.delete()
+        BiomarkerType.objects.filter(dataset=instance).delete()
+        Protocol.objects.filter(dataset=instance).delete()
+        Subject.objects.filter(dataset=instance).delete()
 
         # save default biomarker types
-        data = self._data
+        data = validated_data['csv']
         data_without_dose = data.query('DV != "."')
         bts_unique = data_without_dose[['YDESC', 'UNIT']].drop_duplicates()
-        for row in bts_unique.rows():
+        for _, row in bts_unique.iterrows():
             unit = Unit.objects.get(symbol=row['UNIT'])
             BiomarkerType.objects.create(
                 name=row['YDESC'],
@@ -277,7 +259,7 @@ class DatasetCsvSerializer(serializers.ModelSerializer):
         for i, b in enumerate(bts_unique):
             biomarker_index[b] = i
         # save each row of data as either biomarker or dose
-        for row in data.rows():
+        for _, row in data.iterrows():
             time_unit = Unit.objects.get(symbol=row['TIME_UNIT'])
             value_unit = Unit.objects.get(symbol=row['UNIT'])
             value = row['DV']
@@ -290,14 +272,25 @@ class DatasetCsvSerializer(serializers.ModelSerializer):
                     dataset=instance,
                 )
             except Subject.DoesNotExist:
-                group = row['SUBJECT_GROUP']
                 dose_group = row['DOSE_GROUP']
+
+                # handle if dose group is '.'
+                try:
+                    dose_group_value = float(dose_group)
+                    # TODO: put it in as dimensionless for now
+                    dose_group_unit = Unit.objects.get(symbol='')
+                except ValueError:
+                    dose_group_value = None
+                    dose_group_unit = None
+
+                group = row['SUBJECT_GROUP']
 
                 subject = Subject.objects.create(
                     id_in_dataset=subject_id,
                     dataset=instance,
                     group=group,
-                    dose_group=dose_group,
+                    dose_group_amount=dose_group_value,
+                    dose_group_unit=dose_group_unit,
                 )
             if value != ".":  # measurement observation
                 Biomarker.objects.create(
