@@ -5,6 +5,7 @@ import Dialog from '@material-ui/core/Dialog';
 import Grid from '@material-ui/core/Grid';
 import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
+import Alert from '@material-ui/lab/Alert';
 import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import { useForm, Controller  } from "react-hook-form";
@@ -16,11 +17,15 @@ import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import Checkbox from '@material-ui/core/Checkbox';
 
-import {updateDataset} from '../datasets/datasetsSlice'
+import {updateDataset, uploadDatasetCsv} from '../datasets/datasetsSlice'
 import {FormTextField, FormDateTimeField, FormSelectField} from '../forms/FormComponents';
 
 const useStyles = makeStyles((theme) => ({
-  button: {
+  controlsRoot: {
+    display: 'flex',
+    alignItems: 'center',
+  },
+  controls: {
     margin: theme.spacing(1),
   },
 }));
@@ -35,6 +40,12 @@ export default function DatasetDetail({project, dataset}) {
     reset(dataset);
   }, [reset, dataset]);
 
+  const handleFileUpload = (event) => {
+    const files = Array.from(event.target.files);
+    const [file] = files;
+    dispatch(uploadDatasetCsv({id: dataset.id, csv: file}))
+  };
+
   const onSubmit = (values) => {
     dispatch(updateDataset(values))
   };
@@ -42,10 +53,6 @@ export default function DatasetDetail({project, dataset}) {
   const subject_groups = [
     ...new Set(dataset.subjects.map(s => s.group || 'None'))
   ];
-
-  const handleFileUpload = (file) => {
-    alert('file upload not yet implemented');
-  };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
@@ -104,20 +111,6 @@ export default function DatasetDetail({project, dataset}) {
 
       </Grid>
       </Grid>
-      <Button
-        variant="contained"
-        component="label"
-        className={classes.button}
-      >
-        Upload CSV File
-        <input
-          type="file"
-          onChange={
-            (evnt) => handleFileUpload(evnt.target.files[0])
-          }
-          hidden
-        />
-      </Button>
       <Button 
         type="submit" 
         variant="contained"
@@ -125,6 +118,24 @@ export default function DatasetDetail({project, dataset}) {
       >
         Save
       </Button>
+      <Button
+          className={classes.controls}
+          component="label"
+          variant="contained"
+        >
+          Upload CSV file
+          <input
+            type="file"
+            hidden
+            accept=".csv"
+            onChange={handleFileUpload}
+          />
+     </Button>
+    {dataset.errors && dataset.errors.map((error, index) => (
+      <Alert key={index} severity="error">
+        {error}
+      </Alert>
+    ))}
     </form>
   )
 }

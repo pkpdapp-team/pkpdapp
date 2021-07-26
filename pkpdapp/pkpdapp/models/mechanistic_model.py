@@ -6,6 +6,7 @@
 
 from django.db import models
 from django.core.cache import cache
+from django.core.exceptions import ValidationError
 import myokit
 from myokit.formats.sbml import SBMLParser
 import threading
@@ -24,12 +25,16 @@ class MyokitModelMixin:
             self._meta.db_table, self.id
         )
 
-    def create_myokit_model(self):
+    @staticmethod
+    def parse_sbml_string(sbml):
         with lock:
             model = SBMLParser().parse_string(
-                str.encode(self.sbml)
+                str.encode(sbml)
             ).myokit_model()
         return model
+
+    def create_myokit_model(self):
+        return self.parse_sbml_string(self.sbml)
 
     def create_myokit_simulator(self):
         model = self.get_myokit_model()
@@ -194,3 +199,10 @@ class MechanisticModel(models.Model, MyokitModelMixin):
 
     def __str__(self):
         return str(self.name)
+
+    def clean(self):
+        try:
+            print('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX')
+            self.create_myokit_model()
+        except Exception as e:
+            raise ValidationError({'sbml': str(e)})

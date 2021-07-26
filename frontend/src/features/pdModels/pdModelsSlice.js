@@ -10,7 +10,7 @@ const pdModelsAdapter = createEntityAdapter({
 
 const initialState = pdModelsAdapter.getInitialState({
   status: 'idle',
-  error: null,
+  errorFetch: null,
 })
 
 export const fetchPdModels = createAsyncThunk('pdModels/fetchPdModels', async (project) => {
@@ -39,13 +39,26 @@ export const addNewPdModel = createAsyncThunk(
   }
 )
 
+export const uploadPdSbml = createAsyncThunk(
+  'pdModels/uploadPdSbml',
+  async ({id, sbml}, {rejectWithValue}) => {
+    const newPdModel = await api.putMultiPart(
+      `/api/pharmacodynamic/${id}/sbml`, {sbml}
+    ).then(() => {
+      return api.get(`/api/pharmacodynamic/${id}`) 
+    }).catch(err => rejectWithValue(err))
+
+    return newPdModel
+  }
+)
+
 export const updatePdModel = createAsyncThunk(
   'pdModels/updatePdModel',
   async (pdModel) => {
-    const response = await api.put(
+    const newPdModel = await api.put(
       `/api/pharmacodynamic/${pdModel.id}/`, pdModel
     )
-    return response
+    return newPdModel
   }
 )
 
@@ -57,6 +70,10 @@ export const pdModelsSlice = createSlice({
       let pdModel = state.entities[action.payload.id]
       pdModel.chosen = !pdModel.chosen
     },
+    setPdModelError(state, action) {
+      let pdModel = state.entities[action.payload.id]
+      pdModel.error = action.payload.error 
+    },
   },
   extraReducers: {
     [fetchPdModels.pending]: (state, action) => {
@@ -64,15 +81,26 @@ export const pdModelsSlice = createSlice({
     },
     [fetchPdModels.rejected]: (state, action) => {
       state.status = 'failed'
-      state.error = action.error.message
+      state.errorFetch = action.error.message
     },
     [fetchPdModels.fulfilled]: (state, action) => {
       state.status = 'succeeded'
       pdModelsAdapter.setAll(state, action.payload)
     },
     [addNewPdModel.fulfilled]: pdModelsAdapter.addOne,
-    [addNewPdModel.rejected]: (state, action) => console.log(action.error.message),
-    [updatePdModel.fulfilled]: pdModelsAdapter.upsertOne
+    [updatePdModel.fulfilled]: pdModelsAdapter.upsertOne,
+    [uploadPdSbml.pending]: (state, action) => {
+      console.log('uploadpdsml pending', action)
+      state.entities[action.meta.arg.id].errors = []
+    },
+    [uploadPdSbml.rejected]: (state, action) => {
+      console.log('uploadpdsml rejected', action)
+      state.entities[action.meta.arg.id].errors = action.payload.sbml
+    },
+    [uploadPdSbml.fulfilled]: (state, action) => {
+      console.log('uploadpdsml fulfilled', action)
+      pdModelsAdapter.upsertOne(state, action)
+    },
   }
 })
 

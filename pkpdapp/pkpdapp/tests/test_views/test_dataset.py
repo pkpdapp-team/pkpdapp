@@ -6,6 +6,21 @@
 from rest_framework import status
 from rest_framework.test import APITestCase, APIClient
 from django.contrib.auth.models import User
+from urllib.request import urlretrieve
+from django.core.files import File
+from http import HTTPStatus
+from django.utils import timezone
+from pkpdapp.models import Dataset
+
+BASE_URL_DATASETS = 'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/datasets/'   # noqa: E501
+BASE_URL_MODELS = 'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/models/'   # noqa: E501
+
+
+def faux_test_file(url, ending='.csv'):
+    tempname, _ = urlretrieve(url)
+    file = File(open(tempname, 'rb'))
+    file.name = 'test' + ending
+    return(file)
 
 
 class DatasetTestCase(APITestCase):
@@ -33,3 +48,89 @@ class DatasetTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_data = response.data
         self.assertGreater(len(response_data), 0)
+
+    def _assert_file_upload_error(
+            self, pk, filename, error_message, ending=".csv"
+    ):
+        file = faux_test_file(BASE_URL_DATASETS + filename, ending)
+        response = self.client.put(
+            '/api/dataset/{}/csv/'.format(pk),
+            data={
+                'csv': file
+            },
+        )
+        self.assertEquals(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertIn(error_message, str(response.data['csv'][0]))
+
+    def test_create_dataset_from_csv(self):
+        dataset = Dataset.objects.create(
+            name='dataset_for_csv',
+            datetime=timezone.now(),
+        )
+
+        # test incorrect file format
+        self._assert_file_upload_error(
+            dataset.pk,
+            filename='TCB4dataset.xls',
+            error_message='invalid continuation byte',
+            ending='.xls'
+        )
+
+        # incorrect cols
+        self._assert_file_upload_error(
+            dataset.pk,
+            filename='TCB4dataset_without_dose_group.csv',
+            error_message='does not have the following columns'
+        )
+
+        # test works correctly when file of right format
+        file = faux_test_file(BASE_URL_DATASETS + 'TCB4dataset.csv')
+        response = self.client.put(
+            '/api/dataset/{}/csv/'.format(dataset.pk),
+            data={
+                'csv': file
+            },
+        )
+        self.assertEquals(response.status_code, HTTPStatus.OK)
+        biomarker_types_in_file = [
+            'IL2', 'IL10', 'IL6', 'IFNg', 'TNFa', 'Cells'
+        ]
+        biomarker_types_in_response = [
+            bt['name'] for bt in response.data['biomarker_types']
+        ]
+        self.assertCountEqual(
+            biomarker_types_in_file,
+            biomarker_types_in_response,
+        )
+        # check they are in the database as as well
+        self.assertCountEqual(
+            biomarker_types_in_file,
+            dataset.biomarker_types.values_list('name', flat=True),
+        )
+
+        # check with another file
+        file = faux_test_file(BASE_URL_DATASETS + 'demo_pk_data_upload.csv')
+        response = self.client.put(
+            '/api/dataset/{}/csv/'.format(dataset.pk),
+            data={
+                'csv': file
+            },
+        )
+        self.assertEquals(response.status_code, HTTPStatus.OK)
+
+        # check the right biomarker_types are there
+        biomarker_types_in_file = [
+            'Docetaxel', 'Red blood cells', 'Hemoglobin',
+            'Platelets ', 'White blood cells',
+            'Neutrophiles absolute', 'Lymphocytes absolute',
+            'Monocytes absolute', 'Eosinophils absolute',
+            'Basophils absolute',
+        ]
+        self.assertCountEqual(
+            dataset.biomarker_types.values_list('name', flat=True),
+            biomarker_types_in_file
+        )
+
+        # check the right number of subjects and protocols added
+        self.assertEqual(dataset.subjects.count(), 66)
+        self.assertEqual(dataset.protocols.count(), 54)

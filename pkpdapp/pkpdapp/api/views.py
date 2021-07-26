@@ -3,17 +3,22 @@
 # is released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-from rest_framework import views, viewsets, filters, status
+from rest_framework import (
+    views, viewsets, filters, status, decorators, response
+)
+from rest_framework import parsers
 from rest_framework.response import Response
 from .serializers import (
     DatasetSerializer, UserSerializer, ProjectSerializer,
     PharmacokineticSerializer,
     PharmacodynamicSerializer,
+    PharmacodynamicSbmlSerializer,
     DoseSerializer,
     DosedPharmacokineticSerializer,
     PkpdSerializer,
     ProtocolSerializer,
     UnitSerializer,
+    DatasetCsvSerializer,
 )
 
 from pkpdapp.models import (
@@ -116,6 +121,22 @@ class PharmacodynamicView(viewsets.ModelViewSet):
     serializer_class = PharmacodynamicSerializer
     filter_backends = [ProjectFilter]
 
+    @decorators.action(
+        detail=True,
+        methods=['PUT'],
+        serializer_class=PharmacodynamicSbmlSerializer,
+        parser_classes=[parsers.MultiPartParser],
+    )
+    def sbml(self, request, pk):
+        obj = self.get_object()
+        serializer = self.serializer_class(obj, data=request.data,
+                                           partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return response.Response(serializer.data)
+        return response.Response(serializer.errors,
+                                 status.HTTP_400_BAD_REQUEST)
+
 
 class SimulatePdView(SimulateBaseView):
     model = PharmacodynamicModel
@@ -131,6 +152,23 @@ class DatasetView(viewsets.ModelViewSet):
     queryset = Dataset.objects.all()
     serializer_class = DatasetSerializer
     filter_backends = [ProjectFilter]
+
+    @decorators.action(
+        detail=True,
+        serializer_class=DatasetCsvSerializer,
+        methods=['PUT'],
+        parser_classes=[parsers.MultiPartParser],
+    )
+    def csv(self, request, pk):
+        obj = self.get_object()
+        serializer = self.serializer_class(obj, data=request.data,
+                                           partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            dataset_serializer = DatasetSerializer(obj)
+            return response.Response(dataset_serializer.data)
+        return response.Response(serializer.errors,
+                                 status.HTTP_400_BAD_REQUEST)
 
 
 class ProjectView(EnablePartialUpdateMixin, viewsets.ModelViewSet):
