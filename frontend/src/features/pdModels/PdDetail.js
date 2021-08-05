@@ -1,30 +1,22 @@
-import React, { useEffect, useState } from "react";
-import { useSelector, useDispatch } from 'react-redux'
+import React, { useEffect } from "react";
+import { useDispatch } from 'react-redux'
 import Button from '@material-ui/core/Button';
-import Dialog from '@material-ui/core/Dialog';
-import DialogActions from '@material-ui/core/DialogActions';
-import DialogContent from '@material-ui/core/DialogContent';
-import DialogContentText from '@material-ui/core/DialogContentText';
 import Alert from '@material-ui/lab/Alert';
-import DialogTitle from '@material-ui/core/DialogTitle';
-import { useForm, Controller  } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { makeStyles } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
-import Grid from '@material-ui/core/Grid';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
-import ListItemIcon from '@material-ui/core/ListItemIcon';
-import ListItemText from '@material-ui/core/ListItemText';
-import ExpansionPanel from '@material-ui/core/ExpansionPanel';
-import ExpansionPanelSummary from '@material-ui/core/ExpansionPanelSummary';
-import ExpansionPanelDetails from '@material-ui/core/ExpansionPanelDetails';
+import Accordion from '@material-ui/core/Accordion';
+import AccordionSummary from '@material-ui/core/AccordionSummary';
+import AccordionDetails from '@material-ui/core/AccordionDetails';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 
 
 
 import ComponentForm from '../forms/ComponentForm'
 import {updatePdModel, uploadPdSbml} from '../pdModels/pdModelsSlice'
-import {FormCheckboxField, FormTextField, FormSelectField, FormSliderField, FormFileField} from '../forms/FormComponents';
+import {FormTextField} from '../forms/FormComponents';
 
 const useStyles = makeStyles((theme) => ({
   controlsRoot: {
@@ -43,7 +35,7 @@ const useStyles = makeStyles((theme) => ({
 
 export default function PdDetail({project, pd_model}) {
   const classes = useStyles();
-  const { control, clearErrors, handleSubmit, reset } = useForm();
+  const { control, handleSubmit, reset } = useForm();
   const dispatch = useDispatch();
 
   console.log('pddetail', pd_model);
@@ -74,8 +66,6 @@ export default function PdDetail({project, pd_model}) {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
-      <Typography>PD Model</Typography>
-
       <FormTextField 
         control={control} 
         defaultValue={pd_model.name}
@@ -88,14 +78,14 @@ export default function PdDetail({project, pd_model}) {
         return (
           <ListItem key={index} role={undefined} dense >
             <div className={classes.components}>
-            <ExpansionPanel >
-              <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
+            <Accordion >
+              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                 <Typography className={classes.heading}>{component.name}</Typography>
-              </ExpansionPanelSummary>
-              <ExpansionPanelDetails>
+              </AccordionSummary>
+              <AccordionDetails>
                 <ComponentForm control={control} component={component}/>
-              </ExpansionPanelDetails>
-            </ExpansionPanel>
+              </AccordionDetails>
+            </Accordion>
             </div>
           </ListItem>
         );

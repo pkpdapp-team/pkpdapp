@@ -1,14 +1,9 @@
-import React, { useEffect, useState } from "react";
-import { useSelector, useDispatch } from 'react-redux'
+import React, { useEffect } from "react";
+import { useDispatch } from 'react-redux'
 import Button from '@material-ui/core/Button';
-import Dialog from '@material-ui/core/Dialog';
 import Grid from '@material-ui/core/Grid';
-import DialogActions from '@material-ui/core/DialogActions';
-import DialogContent from '@material-ui/core/DialogContent';
 import Alert from '@material-ui/lab/Alert';
-import DialogContentText from '@material-ui/core/DialogContentText';
-import DialogTitle from '@material-ui/core/DialogTitle';
-import { useForm, Controller  } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { makeStyles } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
 import List from '@material-ui/core/List';
@@ -18,7 +13,7 @@ import ListItemText from '@material-ui/core/ListItemText';
 import Checkbox from '@material-ui/core/Checkbox';
 
 import {updateDataset, uploadDatasetCsv} from '../datasets/datasetsSlice'
-import {FormTextField, FormDateTimeField, FormSelectField} from '../forms/FormComponents';
+import {FormTextField, FormDateTimeField} from '../forms/FormComponents';
 
 const useStyles = makeStyles((theme) => ({
   controlsRoot: {
@@ -56,7 +51,6 @@ export default function DatasetDetail({project, dataset}) {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
-      <Typography>Dataset</Typography>
       <FormTextField 
         control={control} 
         defaultValue={dataset.name}

@@ -3,8 +3,6 @@ import Grid from '@material-ui/core/Grid';
 import Typography from '@material-ui/core/Typography';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
-import ListItemIcon from '@material-ui/core/ListItemIcon';
-import ListItemText from '@material-ui/core/ListItemText';
 import {FormCheckboxField, FormSliderField } from '../forms/FormComponents';
 
 import MathJax from 'react-mathjax-preview'
