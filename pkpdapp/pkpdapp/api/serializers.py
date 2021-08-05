@@ -8,7 +8,7 @@ from pkpdapp.models import (
     Dataset, BiomarkerType, Subject, Protocol, Project,
     PharmacokineticModel, PharmacodynamicModel,
     DosedPharmacokineticModel, PkpdModel,
-    Profile, Dose, Unit, Variable,
+    Profile, Dose, Unit, Biomarker, Compound, Variable,
 )
 from django.contrib.auth.models import User
 
