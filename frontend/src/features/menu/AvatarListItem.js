@@ -1,6 +1,4 @@
-import React, { useEffect, useState } from "react";
-
-import { useSelector } from 'react-redux'
+import React from "react";
 
 import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';

@@ -3,7 +3,6 @@ import {
 } from '@reduxjs/toolkit'
 import { api } from '../../Api'
 
-import { updatePkModel} from '../pkModels/pkModelsSlice'
 import { updateProject } from '../projects/projectsSlice'
 
 const protocolsAdapter = createEntityAdapter({

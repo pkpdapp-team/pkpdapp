@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { makeStyles } from '@material-ui/core/styles';
 import {
   Link,
@@ -11,27 +11,18 @@ import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 
 import Divider from '@material-ui/core/Divider';
-import Tooltip from '@material-ui/core/Tooltip';
 
 import Collapse from '@material-ui/core/Collapse';
 import ExpandLess from '@material-ui/icons/ExpandLess';
 import ExpandMore from '@material-ui/icons/ExpandMore';
 
-import Avatar from '@material-ui/core/Avatar';
-import ListItemAvatar from '@material-ui/core/ListItemAvatar';
-
-import AvatarListItem from './AvatarListItem'
-
+import ListIcon from '@material-ui/icons/List';
 
 import VisibilityIcon from '@material-ui/icons/Visibility';
 import TimelineIcon from '@material-ui/icons/Timeline';
 import CheckBoxOutlineBlankIcon from '@material-ui/icons/CheckBoxOutlineBlank';
 import BubbleChartIcon from '@material-ui/icons/BubbleChart';
 import SettingsBackupRestoreIcon from '@material-ui/icons/SettingsBackupRestore';
-import BatteryUnknownIcon from '@material-ui/icons/BatteryUnknown';
-import BackupIcon from '@material-ui/icons/Backup';
-import DateRangeIcon from '@material-ui/icons/DateRange';
-import AllInboxIcon from '@material-ui/icons/AllInbox';
 
 import Datasets from '../datasets/Datasets' 
 import PkModels from '../pkModels/PkModels' 
@@ -63,6 +54,12 @@ export default function ProjectMenu() {
   return (
     <List>
       <ListItem button component={Link} to="/">
+        <ListItemIcon>
+          <ListIcon />
+        </ListItemIcon>
+        <ListItemText primary='Projects' />
+      </ListItem>
+      <ListItem button component={Link} to="/modelling">
         <ListItemIcon>
           <VisibilityIcon />
         </ListItemIcon>

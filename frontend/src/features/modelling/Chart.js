@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { ResponsiveLine, ResponsiveLineCanvas } from '@nivo/line'
+import React from "react";
+import { ResponsiveLine } from '@nivo/line'
 
 export default function Chart({datasets, pkModels, pdModels}) {
   let renderChart = true;
@@ -10,6 +10,7 @@ export default function Chart({datasets, pkModels, pdModels}) {
         data: data.map((y, i) => ({x: simulate['myokit.time'][i], y: y}))
       }
     }
+    return null
   }).filter(x => x)
   const chart_data = [
     ...pkModels.map(m => getChartData(m.simulate)).flat(),

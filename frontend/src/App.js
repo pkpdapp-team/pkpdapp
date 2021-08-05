@@ -1,30 +1,20 @@
-import React, {useEffect} from "react";
+import React from "react";
 import {
   Switch,
   Route,
   Redirect,
-  Link,
   useHistory,
-  useLocation,
 } from "react-router-dom";
 
 
-import { useSelector } from 'react-redux'
 import { MuiPickersUtilsProvider } from '@material-ui/pickers';
 import DateFnsUtils from '@date-io/date-fns';
-import classNames from 'classnames';
-import Checkbox from '@material-ui/core/Checkbox';
-import Box from '@material-ui/core/Box';
-
 import Container from '@material-ui/core/Container';
 import Login from "./Login"
 
 import { makeStyles, fade } from '@material-ui/core/styles';
 import CssBaseline from '@material-ui/core/CssBaseline';
 
-import { green, pink } from '@material-ui/core/colors';
-
-import Tooltip from '@material-ui/core/Tooltip';
 import SearchIcon from '@material-ui/icons/Search';
 
 import InputBase from '@material-ui/core/InputBase';
@@ -39,22 +29,12 @@ import IconButton from '@material-ui/core/IconButton';
 import Button from '@material-ui/core/Button';
 import MenuIcon from '@material-ui/icons/Menu';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
-import LabelIcon from '@material-ui/icons/Label';
-
-import Avatar from '@material-ui/core/Avatar';
-import ListItemAvatar from '@material-ui/core/ListItemAvatar';
-
 
 import { api } from './Api'
 import Modelling from './features/modelling/Modelling'
+import Projects from './features/projects/Projects'
 import ListOfProjects from './features/projects/ListOfProjects'
 import ProjectMenu from './features/menu/ProjectMenu'
-
-import {
-  fetchProjects, 
-} from './features/projects/projectsSlice.js'
-
-
 
 const PrivateRoute = ({ component: Component, componentProps, ...rest }) => {
   const logged = api.isLoggedIn();
@@ -322,7 +302,8 @@ export default function App() {
         <Container maxWidth={false}>
         <div className={classes.appBarSpacer} />
         <Switch>
-          <PrivateRoute path="/" component={Modelling} />
+          <PrivateRoute path="/modelling" component={Modelling} />
+          <PrivateRoute path="/" component={Projects} />
         </Switch>
         </Container>
     </MuiPickersUtilsProvider>

@@ -1,14 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { useSelector, useDispatch } from 'react-redux'
 import Button from '@material-ui/core/Button';
-import Dialog from '@material-ui/core/Dialog';
-import DialogActions from '@material-ui/core/DialogActions';
-import DialogContent from '@material-ui/core/DialogContent';
-import DialogContentText from '@material-ui/core/DialogContentText';
-import DialogTitle from '@material-ui/core/DialogTitle';
-import { useForm, Controller  } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { makeStyles } from '@material-ui/core/styles';
-import Typography from '@material-ui/core/Typography';
 
 import {FormTextField, FormMultiSelectField} from '../forms/FormComponents';
 import {
@@ -26,9 +20,13 @@ const useStyles = makeStyles((theme) => ({
   tableCell: {
     width: '100pt',
   },
+  description: {
+    width: '100%',
+  },
   controls: {
     display: 'flex',
     alignItems: 'center',
+    marginTop: theme.spacing(1),
     paddingLeft: theme.spacing(1),
     paddingBottom: theme.spacing(1),
   },
@@ -57,7 +55,6 @@ export default function ProjectDetail({project}) {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
-      <Typography>Project</Typography>
       <FormTextField 
         control={control} 
         defaultValue={project.name}
@@ -71,6 +68,13 @@ export default function ProjectDetail({project}) {
         name="users" label="Users"
       />
       }
+      <FormTextField 
+        control={control} 
+        className={classes.description}
+        defaultValue={project.description}
+        multiline
+        name="description" label="Description"
+      />
       <Button 
         type="submit" 
         variant="contained"
