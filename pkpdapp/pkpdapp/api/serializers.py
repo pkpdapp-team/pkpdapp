@@ -17,7 +17,6 @@ import codecs
 import pandas as pd
 
 
-
 class ValidSbml:
     def __call__(self, value):
         try:
