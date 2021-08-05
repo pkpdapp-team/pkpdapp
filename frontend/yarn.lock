@@ -4590,6 +4590,11 @@ domhandler@^2.3.0:
   dependencies:
     domelementtype "1"
 
+dompurify@^2.0.8:
+  version "2.3.0"
+  resolved "https://registry.yarnpkg.com/dompurify/-/dompurify-2.3.0.tgz#07bb39515e491588e5756b1d3e8375b5964814e2"
+  integrity sha512-VV5C6Kr53YVHGOBKO/F86OYX6/iLTw2yVSI721gKetxpHCK/V5TaLEf9ODjRgl1KLSWRMY6cUhAbv/c+IUnwQw==
+
 domutils@^1.5.1, domutils@^1.7.0:
   version "1.7.0"
   resolved "https://registry.yarnpkg.com/domutils/-/domutils-1.7.0.tgz#56ea341e834e06e6748af7a1cb25da67ea9f8c2a"
@@ -9622,6 +9627,13 @@ react-lifecycles-compat@^3.0.4:
   version "3.0.4"
   resolved "https://registry.yarnpkg.com/react-lifecycles-compat/-/react-lifecycles-compat-3.0.4.tgz#4f1a273afdfc8f3488a8c516bfda78f872352362"
   integrity sha512-fBASbA6LnOU9dOU2eW7aQ8xmYBSXUIWr+UmF9b1efZBazGNO+rcXT/icdKnYm2pTwcRylVUYwW7H1PHfLekVzA==
+
+react-mathjax-preview@^2.2.3:
+  version "2.2.3"
+  resolved "https://registry.yarnpkg.com/react-mathjax-preview/-/react-mathjax-preview-2.2.3.tgz#1fec78210eaa497adcaff58bde7fdfb97c71d8ac"
+  integrity sha512-amy4enem2CMVH7crEGe3bfzrc22v6lAAXgKePI5SKvVedsSboDW81H5BycaO5oUgpc3gX1Kw5iJI32bXm7DGCQ==
+  dependencies:
+    dompurify "^2.0.8"
 
 react-motion@^0.5.2:
   version "0.5.2"

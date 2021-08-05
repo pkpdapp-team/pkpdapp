@@ -15,8 +15,14 @@ import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
+import ExpansionPanel from '@material-ui/core/ExpansionPanel';
+import ExpansionPanelSummary from '@material-ui/core/ExpansionPanelSummary';
+import ExpansionPanelDetails from '@material-ui/core/ExpansionPanelDetails';
+import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 
 
+
+import ComponentForm from '../forms/ComponentForm'
 import {updatePdModel, uploadPdSbml} from '../pdModels/pdModelsSlice'
 import {FormCheckboxField, FormTextField, FormSelectField, FormSliderField, FormFileField} from '../forms/FormComponents';
 
@@ -28,6 +34,9 @@ const useStyles = makeStyles((theme) => ({
   controls: {
     margin: theme.spacing(1),
   },
+  components: {
+    width: '100%',
+  }
 }));
 
 
@@ -73,63 +82,25 @@ export default function PdDetail({project, pd_model}) {
         name="name" label="Name"
       />
 
-      <Grid container item xs={12} spacing={3}>
-      <Grid item xs={4}>
-      <Typography>Initial Conditions</Typography>
+      <Typography>Components</Typography>
       <List>
-      {pd_model.states.map((state, index) => {
+      {pd_model.components.map((component, index) => {
         return (
           <ListItem key={index} role={undefined} dense >
-            <FormSliderField
-              control={control} 
-              defaultValue={state.default_value}
-              name={`states[${index}].default_value`} 
-              label={`${state.name} ${state.unit}`}
-              min={state.lower_bound} max={state.upper_bound}
-            />
+            <div className={classes.components}>
+            <ExpansionPanel >
+              <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
+                <Typography className={classes.heading}>{component.name}</Typography>
+              </ExpansionPanelSummary>
+              <ExpansionPanelDetails>
+                <ComponentForm control={control} component={component}/>
+              </ExpansionPanelDetails>
+            </ExpansionPanel>
+            </div>
           </ListItem>
         );
       })}
       </List>
-      </Grid>
-      <Grid item xs={4}>
-      <Typography>Variables</Typography>
-      <List>
-      {pd_model.variables.map((variable, index) => {
-        return (
-          <ListItem key={index} role={undefined} dense >
-            <FormSliderField
-              control={control} 
-              defaultValue={variable.default_value}
-              name={`variables[${index}].default_value`} 
-              label={`${variable.name} ${variable.unit}`}
-              min={variable.lower_bound} max={variable.upper_bound}
-            />
-          </ListItem>
-        );
-      })}
-      </List>
-      </Grid>
-
-      <Grid item xs={4}>
-      <Typography>Outputs</Typography>
-      <List>
-      {pd_model.outputs.map((output, index) => {
-        return (
-          <ListItem key={index} role={undefined} dense button >
-            <FormCheckboxField
-              control={control} 
-              defaultValue={output.default_value}
-              name={`outputs[${index}].default_value`} 
-              label={`${output.name} ${output.unit}`}
-            />
-          </ListItem>
-        );
-      })}
-      </List>
-
-      </Grid>
-      </Grid>
 
       <FormTextField 
         control={control} 
