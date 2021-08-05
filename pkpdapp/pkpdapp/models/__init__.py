@@ -19,6 +19,7 @@ from .pkpd_model import (
     PharmacodynamicModel,
     PkpdModel,
 )
+from .variable import Variable
 from .biomarker_type import BiomarkerType
 from .biomarker import Biomarker
 from .project import Project

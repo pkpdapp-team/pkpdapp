@@ -56,7 +56,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(help_text='name of the model', max_length=100)),
                 ('description', models.TextField(blank=True, default='', help_text='short description of the model')),
-                ('sbml', models.TextField(default='<?xml version="1.0" encoding="UTF-8"?><sbml xmlns="http://www.sbml.org/sbml/level3/version2/core" level="3" version="2"></sbml>', help_text='the model represented using SBML (see http://sbml.org)')),
+                ('sbml', models.TextField(default='<?xml version="1.0" encoding="UTF-8"?><sbml xmlns="http://www.sbml.org/sbml/level3/version2/core" level="3" version="2"><model id="default"></model></sbml>', help_text='the model represented using SBML (see http://sbml.org)')),
                 ('time_max', models.FloatField(default=30, help_text='suggested maximum time to simulate for this model (in the time units specified by the sbml model)')),
             ],
             options={
@@ -70,7 +70,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(help_text='name of the model', max_length=100)),
                 ('description', models.TextField(blank=True, default='', help_text='short description of the model')),
-                ('sbml', models.TextField(default='<?xml version="1.0" encoding="UTF-8"?><sbml xmlns="http://www.sbml.org/sbml/level3/version2/core" level="3" version="2"></sbml>', help_text='the model represented using SBML (see http://sbml.org)')),
+                ('sbml', models.TextField(default='<?xml version="1.0" encoding="UTF-8"?><sbml xmlns="http://www.sbml.org/sbml/level3/version2/core" level="3" version="2"><model id="default"></model></sbml>', help_text='the model represented using SBML (see http://sbml.org)')),
                 ('time_max', models.FloatField(default=30, help_text='suggested maximum time to simulate for this model (in the time units specified by the sbml model)')),
             ],
             options={
@@ -84,7 +84,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(help_text='name of the model', max_length=100)),
                 ('description', models.TextField(blank=True, default='', help_text='short description of the model')),
-                ('sbml', models.TextField(default='<?xml version="1.0" encoding="UTF-8"?><sbml xmlns="http://www.sbml.org/sbml/level3/version2/core" level="3" version="2"></sbml>', help_text='the model represented using SBML (see http://sbml.org)')),
+                ('sbml', models.TextField(default='<?xml version="1.0" encoding="UTF-8"?><sbml xmlns="http://www.sbml.org/sbml/level3/version2/core" level="3" version="2"><model id="default"></model></sbml>', help_text='the model represented using SBML (see http://sbml.org)')),
                 ('time_max', models.FloatField(default=30, help_text='suggested maximum time to simulate for this model (in the time units specified by the sbml model)')),
                 ('dose_compartment', models.CharField(blank=True, default='central', help_text='compartment name to be dosed', max_length=100, null=True)),
             ],
@@ -109,6 +109,21 @@ class Migration(migrations.Migration):
             ],
         ),
         migrations.CreateModel(
+            name='Variable',
+            fields=[
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('name', models.CharField(help_text='name of the variable', max_length=20)),
+                ('lower_bound', models.FloatField(default=1e-06, help_text='lowest possible value for this variable')),
+                ('upper_bound', models.FloatField(default=2, help_text='largest possible value for this variable')),
+                ('default_value', models.FloatField(default=1, help_text='default value for this variable')),
+                ('scale', models.CharField(choices=[('LN', 'Linear'), ('LG', 'Log')], default='LN', max_length=2)),
+                ('dosed_pk_model', models.ForeignKey(blank=True, help_text='dosed pharmacokinetic model', null=True, on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.dosedpharmacokineticmodel')),
+                ('pd_model', models.ForeignKey(blank=True, help_text='pharmacodynamic model', null=True, on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.pharmacodynamicmodel')),
+                ('pk_model', models.ForeignKey(blank=True, help_text='pharmacokinetic model', null=True, on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.pharmacokineticmodel')),
+                ('unit', models.ForeignKey(help_text='variable values are in this unit', on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.unit')),
+            ],
+        ),
+        migrations.CreateModel(
             name='Subject',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
@@ -126,11 +141,11 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(help_text='name of the protocol', max_length=100)),
                 ('dose_type', models.CharField(choices=[('D', 'IV'), ('I', 'Extravascular')], default='D', max_length=1)),
-                ('amount_unit', models.ForeignKey(help_text='unit for the amount value stored in each dose', on_delete=django.db.models.deletion.CASCADE, related_name='protocols_amount', to='pkpdapp.unit')),
+                ('amount_unit', models.ForeignKey(default=2, help_text='unit for the amount value stored in each dose', on_delete=django.db.models.deletion.CASCADE, related_name='protocols_amount', to='pkpdapp.unit')),
                 ('compound', models.ForeignKey(blank=True, help_text='drug compound', null=True, on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.compound')),
                 ('dataset', models.ForeignKey(blank=True, help_text='dataset containing this protocol', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='protocols', to='pkpdapp.dataset')),
                 ('subject', models.ForeignKey(blank=True, help_text='subject associated with protocol', null=True, on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.subject')),
-                ('time_unit', models.ForeignKey(help_text='unit for the start_time and duration values stored in each dose', on_delete=django.db.models.deletion.CASCADE, related_name='protocols_time', to='pkpdapp.unit')),
+                ('time_unit', models.ForeignKey(default=1, help_text='unit for the start_time and duration values stored in each dose', on_delete=django.db.models.deletion.CASCADE, related_name='protocols_time', to='pkpdapp.unit')),
             ],
         ),
         migrations.CreateModel(
@@ -199,6 +214,14 @@ class Migration(migrations.Migration):
                 ('biomarker_type', models.ForeignKey(help_text='biomarker type, for example "concentration in mg"', on_delete=django.db.models.deletion.CASCADE, related_name='biomarkers', to='pkpdapp.biomarkertype')),
                 ('subject', models.ForeignKey(help_text='subject associated with this biomarker', on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.subject')),
             ],
+        ),
+        migrations.AddConstraint(
+            model_name='variable',
+            constraint=models.CheckConstraint(check=models.Q(models.Q(('pk_model__isnull', True), ('pd_model__isnull', False), ('pd_model__isnull', False)), models.Q(('pk_model__isnull', False), ('pd_model__isnull', True), ('pd_model__isnull', False)), models.Q(('pk_model__isnull', False), ('pd_model__isnull', False), ('pd_model__isnull', True)), _connector='OR'), name='variable must belong to a model'),
+        ),
+        migrations.AddConstraint(
+            model_name='variable',
+            constraint=models.CheckConstraint(check=models.Q(models.Q(('scale', 'LG'), ('lower_bound__gt', 0)), ('scale', 'LN'), _connector='OR'), name='log scale must have a lower bound greater than zero'),
         ),
         migrations.AddConstraint(
             model_name='subject',
