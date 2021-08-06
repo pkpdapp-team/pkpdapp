@@ -36,6 +36,7 @@ setup(
     install_requires=[
         'dash-bootstrap-components>=0.10',
         'Django==3.1.9',
+        'django-cors-headers>=3.7.0',
         'dpd-static-support>=0.0.5',
         'numpy>=1.8',
         'pandas>=1.0',

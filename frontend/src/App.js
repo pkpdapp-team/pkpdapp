@@ -10,7 +10,15 @@ import {
 import { MuiPickersUtilsProvider } from '@material-ui/pickers';
 import DateFnsUtils from '@date-io/date-fns';
 import Container from '@material-ui/core/Container';
-import Login from "./Login"
+import Login from "./features/login/Login"
+import Register from "./features/login/Register"
+import RegisterSuccess from "./features/login/RegisterSuccess"
+import ActivateUser from "./features/login/ActivateUser"
+import ActivateUserSuccess from "./features/login/ActivateUserSuccess"
+import ResetPasswordRequest from "./features/login/ResetPasswordRequest"
+import ResetPasswordRequestSuccess from "./features/login/ResetPasswordRequestSuccess"
+import ResetPassword from "./features/login/ResetPassword"
+import ResetPasswordSuccess from "./features/login/ResetPasswordSuccess"
 
 import { makeStyles, fade } from '@material-ui/core/styles';
 import CssBaseline from '@material-ui/core/CssBaseline';
@@ -225,7 +233,6 @@ export default function App() {
 
   const logged_in = (
     <div className={classes.root}>
-    <CssBaseline />
     <AppBar position="absolute" className={clsx(classes.appBar)}>
       <Toolbar className={classes.toolbar}>
         <IconButton
@@ -312,14 +319,41 @@ export default function App() {
 
 
   return (
+    <React.Fragment>
+    <CssBaseline />
       <Switch>
         <Route path="/login">
           <Login />
         </Route>
+        <Route path="/reset-password-request">
+          <ResetPasswordRequest/>
+        </Route>
+        <Route path="/reset-password-request-success">
+          <ResetPasswordRequestSuccess/>
+        </Route>
+        <Route path="/reset-password/:uid/:token">
+          <ResetPassword />
+        </Route>
+        <Route path="/reset-password-success">
+          <ResetPasswordSuccess/>
+        </Route>
+        <Route path="/register">
+          <Register />
+        </Route>
+        <Route path="/activate/:uid/:token">
+          <ActivateUser />
+        </Route>
+        <Route path="/activate-success">
+          <ActivateUserSuccess />
+        </Route>
+        <Route path="/register-success">
+          <RegisterSuccess />
+        </Route>
         <Route>
           {logged_in}
         </Route>
-    </Switch>
+      </Switch>
+    </React.Fragment>
   );
 }
  
