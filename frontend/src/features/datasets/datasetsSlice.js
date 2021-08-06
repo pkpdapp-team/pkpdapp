@@ -75,6 +75,14 @@ export const datasetsSlice = createSlice({
     },
     [fetchDatasets.fulfilled]: (state, action) => {
       state.status = 'succeeded'
+
+      // add toggle switches for all biomarker types
+      action.payload.forEach((d, i) => {
+        d.biomarker_types.forEach((bt, j) => {
+          bt['chosen'] = false
+        })
+      })
+
       datasetsAdapter.setAll(state, action.payload)
     },
     [addNewDataset.fulfilled]: datasetsAdapter.addOne,

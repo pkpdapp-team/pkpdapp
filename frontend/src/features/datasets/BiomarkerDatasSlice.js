@@ -14,7 +14,7 @@ const initialState = biomarkerDatasAdapter.getInitialState({
 
 export const fetchBiomarkerData = createAsyncThunk('biomarkerDatas/fetchBiomarkerData', async (biomarkerTypeId, { getState }) => {
   const response = await api.get(
-    `/api/biomarker-type/${biomarkerTypeId}/data`
+    `/api/biomarker-data/${biomarkerTypeId}/`
   )
   return response
 })
