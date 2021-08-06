@@ -80,15 +80,17 @@ function get(url) {
     return fetch(url, requestOptions).then(handleResponse);
 }
 
-function post(url, body) {
-    const requestOptions = {
+function post(url, body, useToken=true) {
+    let requestOptions = {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Token ${authToken}`,
         },
         body: JSON.stringify(body)
     };
+    if (useToken) {
+      requestOptions.headers['Authorization'] = `Token ${authToken}`
+    }
     return fetch(url, requestOptions).then(handleResponse);
 }
 

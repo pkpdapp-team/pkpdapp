@@ -38,18 +38,18 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 
-export default function Login() {
+export default function ResetPasswordRequest() {
   const classes = useStyles();
   const { control, handleSubmit } = useForm();
 
   const history = useHistory();
 
   const onSubmit = (values)=>{
-    console.log("You pressed login")
-    api.login(values.username, values.password).then(data => {
-        console.log('login success', data);          
-        history.push('/');
-    });
+    api.post(
+      '/auth/users/reset_password/', values, false
+    ).then(data => {
+      history.push('/reset-password-request-success')
+    })
   }
 
   return (
@@ -57,24 +57,15 @@ export default function Login() {
       <div className={classes.paper}>
         <PkpdAppIcon className={classes.icon}/>
         <Typography component="h1" variant="h5">
-          Sign in
+          Password Reset Request
         </Typography>
         <form onSubmit={handleSubmit(onSubmit)}>
         <FormTextField 
           variant="outlined"
           fullWidth
-          autoFocus
           control={control} 
           defaultValue={''}
-          name="username" label="Username"
-        />
-        <FormTextField 
-          variant="outlined"
-          fullWidth
-          control={control} 
-          defaultValue={''}
-          name="password" label="Password"
-          autoComplete="current-password"
+          name="email" label="Email"
         />
         <Button
           type="submit"
@@ -83,12 +74,11 @@ export default function Login() {
           color="primary"
           className={classes.submit}
         >
-          Sign In
+          Submit
         </Button>
         </form>
         <div className={classes.links}>
-        <Link to="/register">Register new user</Link>
-        <Link to="/reset-password-request">Password reset</Link>
+        <Link to="/login">Back to login</Link>
         </div>
       </div>
     </Container>

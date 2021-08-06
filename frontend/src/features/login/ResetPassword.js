@@ -6,7 +6,7 @@ import Button from '@material-ui/core/Button';
 import { useForm } from "react-hook-form";
 import Typography from '@material-ui/core/Typography';
 import Container from '@material-ui/core/Container';
-import { useHistory } from "react-router-dom";
+import { useHistory, useParams } from "react-router-dom";
 import {FormTextField} from '../forms/FormComponents';
 import { ReactComponent as PkpdAppIcon} from '../../logo_pkpdapp_with_text.svg';
 
@@ -38,18 +38,22 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 
-export default function Login() {
+export default function ResetPassword() {
   const classes = useStyles();
   const { control, handleSubmit } = useForm();
 
+  let { uid, token } = useParams();
   const history = useHistory();
 
   const onSubmit = (values)=>{
-    console.log("You pressed login")
-    api.login(values.username, values.password).then(data => {
-        console.log('login success', data);          
-        history.push('/');
-    });
+    values = {
+      uid, token, ...values
+    }
+    api.post(
+      '/auth/users/reset_password_confirm/', values, false
+    ).then(data => {
+      history.push('/reset-password-success')
+    })
   }
 
   return (
@@ -57,24 +61,22 @@ export default function Login() {
       <div className={classes.paper}>
         <PkpdAppIcon className={classes.icon}/>
         <Typography component="h1" variant="h5">
-          Sign in
+          Register new user
         </Typography>
         <form onSubmit={handleSubmit(onSubmit)}>
         <FormTextField 
           variant="outlined"
           fullWidth
-          autoFocus
           control={control} 
           defaultValue={''}
-          name="username" label="Username"
+          name="new_password" label="Password"
         />
         <FormTextField 
           variant="outlined"
           fullWidth
           control={control} 
           defaultValue={''}
-          name="password" label="Password"
-          autoComplete="current-password"
+          name="re_new_password" label="Verify password"
         />
         <Button
           type="submit"
@@ -83,12 +85,11 @@ export default function Login() {
           color="primary"
           className={classes.submit}
         >
-          Sign In
+          Submit
         </Button>
         </form>
         <div className={classes.links}>
-        <Link to="/register">Register new user</Link>
-        <Link to="/reset-password-request">Password reset</Link>
+        <Link to="/login">Back to login</Link>
         </div>
       </div>
     </Container>

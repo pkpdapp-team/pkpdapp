@@ -45,11 +45,11 @@ export default function Register() {
   const history = useHistory();
 
   const onSubmit = (values)=>{
-    console.log("You pressed login")
-    api.login(values.username, values.password).then(data => {
-        console.log('login success', data);          
-        history.push('/');
-    });
+    api.post(
+      '/auth/users/', values, false
+    ).then(data => {
+      history.push('/register-success')
+    })
   }
 
   return (
@@ -57,13 +57,27 @@ export default function Register() {
       <div className={classes.paper}>
         <PkpdAppIcon className={classes.icon}/>
         <Typography component="h1" variant="h5">
-          Register
+          Register new user
         </Typography>
         <form onSubmit={handleSubmit(onSubmit)}>
         <FormTextField 
           variant="outlined"
           fullWidth
           autoFocus
+          control={control} 
+          defaultValue={''}
+          name="firstName" label="First name"
+        />
+        <FormTextField 
+          variant="outlined"
+          fullWidth
+          control={control} 
+          defaultValue={''}
+          name="lastName" label="Last name"
+        />
+        <FormTextField 
+          variant="outlined"
+          fullWidth
           control={control} 
           defaultValue={''}
           name="username" label="Username"
@@ -89,7 +103,6 @@ export default function Register() {
           defaultValue={''}
           name="repeat-password" label="Verify password"
         />
-
         <Button
           type="submit"
           fullWidth
@@ -97,12 +110,11 @@ export default function Register() {
           color="primary"
           className={classes.submit}
         >
-          Sign In
+          Submit
         </Button>
         </form>
         <div className={classes.links}>
-        <Link to="/register">Register new user</Link>
-        <Link to="/reset">Password reset</Link>
+        <Link to="/login">Back to login</Link>
         </div>
       </div>
     </Container>
