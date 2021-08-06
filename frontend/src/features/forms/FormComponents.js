@@ -23,7 +23,6 @@ const useStyles = makeStyles((theme) => ({
   },
   formInput: {
     margin: theme.spacing(1),
-    width: '200pt',
   },
   chips: {
     display: 'flex',

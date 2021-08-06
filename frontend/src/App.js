@@ -10,7 +10,7 @@ import {
 import { MuiPickersUtilsProvider } from '@material-ui/pickers';
 import DateFnsUtils from '@date-io/date-fns';
 import Container from '@material-ui/core/Container';
-import Login from "./Login"
+import Login from "./features/login/Login"
 
 import { makeStyles, fade } from '@material-ui/core/styles';
 import CssBaseline from '@material-ui/core/CssBaseline';
@@ -225,7 +225,6 @@ export default function App() {
 
   const logged_in = (
     <div className={classes.root}>
-    <CssBaseline />
     <AppBar position="absolute" className={clsx(classes.appBar)}>
       <Toolbar className={classes.toolbar}>
         <IconButton
@@ -312,6 +311,8 @@ export default function App() {
 
 
   return (
+    <React.Fragment>
+    <CssBaseline />
       <Switch>
         <Route path="/login">
           <Login />
@@ -319,7 +320,8 @@ export default function App() {
         <Route>
           {logged_in}
         </Route>
-    </Switch>
+      </Switch>
+    </React.Fragment>
   );
 }
  

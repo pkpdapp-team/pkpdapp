@@ -1,13 +1,15 @@
-import {api} from "./Api"
+import {api} from "../../Api"
 import { makeStyles } from '@material-ui/core/styles';
-import React, { useState } from "react";
+import React from "react";
+import { Link } from "react-router-dom";
 import Button from '@material-ui/core/Button';
-import CssBaseline from '@material-ui/core/CssBaseline';
-import TextField from '@material-ui/core/TextField';
+import { useForm } from "react-hook-form";
 import Typography from '@material-ui/core/Typography';
 import Container from '@material-ui/core/Container';
 import { useHistory } from "react-router-dom";
-import { ReactComponent as PkpdAppIcon} from './logo_pkpdapp_with_text.svg';
+import {FormTextField} from '../forms/FormComponents';
+import { ReactComponent as PkpdAppIcon} from '../../logo_pkpdapp_with_text.svg';
+
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -26,68 +28,68 @@ const useStyles = makeStyles((theme) => ({
     marginTop: theme.spacing(1),
   },
   submit: {
-    margin: theme.spacing(3, 0, 2),
+    margin: theme.spacing(3, 1, 2),
+  },
+  links : {
+    '& > *': {
+      margin: theme.spacing(1),
+    }
   },
 }));
 
 
-export default function Login() {
+export default function Register() {
   const classes = useStyles();
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
+  const { control, handleSubmit } = useForm();
 
   const history = useHistory();
 
-  const onSubmitClick = (e)=>{
-    e.preventDefault()
+  const onSubmit = (values)=>{
     console.log("You pressed login")
-    api.login(username, password).then(data => {
+    api.login(values.username, values.password).then(data => {
         console.log('login success', data);          
         history.push('/');
     });
   }
 
-  const handleUsernameChange = (e) => {
-    setUsername(e.target.value)
-  }
-
-  const handlePasswordChange = (e) => {
-    setPassword(e.target.value)
-  }
-
   return (
     <Container component="main" maxWidth="xs">
-      <CssBaseline />
       <div className={classes.paper}>
         <PkpdAppIcon className={classes.icon}/>
         <Typography component="h1" variant="h5">
-          Sign in
+          Register
         </Typography>
-        <form onSubmit={onSubmitClick}>
-        <TextField
+        <form onSubmit={handleSubmit(onSubmit)}>
+        <FormTextField 
           variant="outlined"
-          margin="normal"
-          required
           fullWidth
-          id="username"
-          label="Username"
-          name="username"
-          autoComplete="username"
-          onChange={handleUsernameChange}
           autoFocus
+          control={control} 
+          defaultValue={''}
+          name="username" label="Username"
         />
-        <TextField
+        <FormTextField 
           variant="outlined"
-          margin="normal"
-          required
           fullWidth
-          name="password"
-          label="Password"
-          type="password"
-          onChange={handlePasswordChange}
-          id="password"
-          autoComplete="current-password"
+          control={control} 
+          defaultValue={''}
+          name="email" label="Email"
         />
+        <FormTextField 
+          variant="outlined"
+          fullWidth
+          control={control} 
+          defaultValue={''}
+          name="password" label="Password"
+        />
+        <FormTextField 
+          variant="outlined"
+          fullWidth
+          control={control} 
+          defaultValue={''}
+          name="repeat-password" label="Verify password"
+        />
+
         <Button
           type="submit"
           fullWidth
@@ -98,6 +100,10 @@ export default function Login() {
           Sign In
         </Button>
         </form>
+        <div className={classes.links}>
+        <Link to="/register">Register new user</Link>
+        <Link to="/reset">Password reset</Link>
+        </div>
       </div>
     </Container>
   )

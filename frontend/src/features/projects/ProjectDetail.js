@@ -20,9 +20,6 @@ const useStyles = makeStyles((theme) => ({
   tableCell: {
     width: '100pt',
   },
-  description: {
-    width: '100%',
-  },
   controls: {
     display: 'flex',
     alignItems: 'center',
@@ -71,7 +68,7 @@ export default function ProjectDetail({project}) {
       <FormTextField 
         control={control} 
         className={classes.description}
-        defaultValue={project.description}
+        fullWidth
         multiline
         name="description" label="Description"
       />
