@@ -104,6 +104,17 @@ class UnitSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class BiomarkerDataSerializer(serializers.ModelSerializer):
+    biomarkers = serializers.SerializerMethodField('get_biomarkers')
+
+    class Meta:
+        model = BiomarkerType
+        fields = '__all__'
+
+    def get_biomarkers(self):
+        return self.as_pandas.as_dict()
+
+
 class BiomarkerTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = BiomarkerType

@@ -6,6 +6,7 @@
 
 from django.db import models
 from django.urls import reverse
+import pandas as pd
 
 
 class Dataset(models.Model):

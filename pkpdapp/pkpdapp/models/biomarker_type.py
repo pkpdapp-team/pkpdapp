@@ -6,7 +6,7 @@
 
 from django.db import models
 from pkpdapp.models import Dataset, Unit
-
+import pandas as pd
 
 class BiomarkerType(models.Model):
     """
@@ -30,6 +30,23 @@ class BiomarkerType(models.Model):
         related_name='biomarker_types',
         help_text='dataset containing this biomarker measurement'
     )
+
+    def _get_values_and_times(self):
+        values_and_times = \
+            self.biomarkers.values_list('value', 'time')
+        return list(zip(*values_and_times))
+
+    def as_pandas(self):
+        times_subjects_values = \
+            self.biomarkers.values_list(
+                'time', 'subject__id_in_dataset', 'value'
+            )
+        times, subjects, values = list(zip(*times_subjects_values))
+        return pd.DataFrame.from_dict({
+            'times': times,
+            'subjects': subjects,
+            'values': values,
+        })
 
     def __str__(self):
         return str(self.name)
