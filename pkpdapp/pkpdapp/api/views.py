@@ -149,7 +149,6 @@ class PkpdView(viewsets.ModelViewSet):
     serializer_class = PkpdSerializer
     filter_backends = [ProjectFilter]
 
-
 class BiomarkerDataView(generics.RetrieveAPIView):
     queryset = BiomarkerType.objects.all()
     serializer_class = BiomarkerDataSerializer

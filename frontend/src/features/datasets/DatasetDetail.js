@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { useDispatch } from 'react-redux'
+import { useSelector, useDispatch } from 'react-redux'
 import Button from '@material-ui/core/Button';
 import Grid from '@material-ui/core/Grid';
 import Alert from '@material-ui/lab/Alert';
@@ -14,6 +14,10 @@ import Checkbox from '@material-ui/core/Checkbox';
 
 import {updateDataset, uploadDatasetCsv} from '../datasets/datasetsSlice'
 import {FormTextField, FormDateTimeField} from '../forms/FormComponents';
+import { 
+  selectBiomarkerDatasByDatasetId, 
+  toggleBiomarkerDataDisplay 
+} from './biomarkerDatasSlice'
 
 const useStyles = makeStyles((theme) => ({
   controlsRoot: {
@@ -30,6 +34,24 @@ export default function DatasetDetail({project, dataset}) {
   const { control, handleSubmit, reset } = useForm();
   const dispatch = useDispatch();
 
+  console.log('dataset detail', dataset)
+  const biomarkerDatas = useSelector((state) => selectBiomarkerDatasByDatasetId(state, dataset.id))
+  
+  const isChecked = (bt) => {
+    const biomarkerData = biomarkerDatas.find(bd => bd.id === bt.id)
+    return (biomarkerData !== undefined) && biomarkerData.display
+  }
+
+  const isLoaded = (bt) => {
+    const biomarkerData = biomarkerDatas.find(bd => bd.id === bt.id)
+    return (biomarkerData !== undefined)
+  }
+
+  const handleBiomarkerChange = (bt) => {
+    return () => {
+      dispatch(toggleBiomarkerDataDisplay(bt.id)) 
+    }
+  }
 
   useEffect(() => {
     reset(dataset);
@@ -68,11 +90,14 @@ export default function DatasetDetail({project, dataset}) {
       <List>
       {dataset.biomarker_types.map((biomarker) => {
         return (
-          <ListItem key={biomarker.id} role={undefined} dense button >
+          <ListItem key={biomarker.id} 
+            onClick={handleBiomarkerChange(biomarker)} 
+            role={undefined} dense button >
             <ListItemIcon>
               <Checkbox
                 edge="start"
-                checked={false}
+                checked={isChecked(biomarker)}
+                disabled={!isLoaded(biomarker)}
                 tabIndex={-1}
                 disableRipple
               />
