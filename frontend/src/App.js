@@ -1,10 +1,12 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   Switch,
   Route,
   Redirect,
   useHistory,
 } from "react-router-dom";
+
+import { useDispatch } from 'react-redux'
 
 
 import { MuiPickersUtilsProvider } from '@material-ui/pickers';
@@ -41,8 +43,20 @@ import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import { api } from './Api'
 import Modelling from './features/modelling/Modelling'
 import Projects from './features/projects/Projects'
-import ListOfProjects from './features/projects/ListOfProjects'
 import ProjectMenu from './features/menu/ProjectMenu'
+
+import {
+  fetchProjects,
+} from './features/projects/projectsSlice.js'
+
+import {
+  fetchUsers,
+} from './features/projects/usersSlice.js'
+
+import {
+  fetchUnits,
+} from './features/projects/unitsSlice.js'
+
 
 const PrivateRoute = ({ component: Component, componentProps, ...rest }) => {
   const logged = api.isLoggedIn();
@@ -223,6 +237,7 @@ const useStyles = makeStyles((theme) => ({
 
 export default function App() {
   const classes = useStyles();
+  const dispatch = useDispatch();
   const [open, setOpen] = React.useState(true);
 
   const handleDrawerOpenClose = () => {
@@ -230,6 +245,17 @@ export default function App() {
   };
 
   let history = useHistory();
+
+  useEffect(() => {
+    console.log('dispatch fetchProjects')
+    dispatch(fetchProjects())
+    dispatch(fetchUsers())
+    dispatch(fetchUnits())
+    //const interval = setInterval(() => {
+    //  refreshHarvesters();
+    //}, 5000);
+    //return () => clearInterval(interval);
+  }, [dispatch]);
 
   const logged_in = (
     <div className={classes.root}>
@@ -269,24 +295,6 @@ export default function App() {
         </Button>
       </Toolbar>
     </AppBar>
-    <Drawer
-      variant="permanent"
-      classes={{
-        paper: clsx(classes.drawerPaper, classes.drawerPaperClose),
-      }}
-      open={open}
-    >
-      <div className={classes.toolbarIcon}>
-        <IconButton>
-          <ChevronLeftIcon />
-        </IconButton>
-      </div>
-      <Divider />
-      <Typography align='center'>
-        Projects
-      </Typography>
-      <ListOfProjects />
-    </Drawer>
     <Drawer
       variant="permanent"
       classes={{
