@@ -26,6 +26,14 @@ export const fetchDatasets = createAsyncThunk('datasets/fetchDatasets', async (p
     }
   }
 
+  // set display groups
+  for (const d of response) {
+    const groups = [
+      ...new Set(d.subjects.map(s => s.group))
+    ];
+    d.displayGroups = groups;
+  }
+
   return response
 })
 
@@ -41,6 +49,7 @@ export const addNewDataset = createAsyncThunk(
         ...project, 
         datasets: [...project.datasets, dataset.id] 
       }))
+      dataset.displayGroups = []
     }
     return dataset
   }
@@ -52,6 +61,12 @@ export const uploadDatasetCsv = createAsyncThunk(
     const dataset = await api.putMultiPart(
       `/api/dataset/${id}/csv/`, {csv}
     ).catch(err => rejectWithValue(err))
+
+    // set display groups
+    const groups = [
+      ...new Set(dataset.subjects.map(s => s.group || 'None'))
+    ];
+    dataset.displayGroups = groups;
 
     return dataset
   }
@@ -73,6 +88,21 @@ export const datasetsSlice = createSlice({
       let dataset = state.entities[action.payload.id]
       dataset.chosen = !dataset.chosen
     },
+    toggleDisplayGroup(state, action) {
+      const group = action.payload.group
+      const id = action.payload.id
+      const displayGroups = state.entities[id].displayGroups
+      console.log('toggleDisplayGroup', group, id, displayGroups)
+      
+      let newDisplayGroups = displayGroups.filter(
+        x => x !== group
+      )
+      if (newDisplayGroups.length === displayGroups.length) {
+        newDisplayGroups.push(group)
+      }
+      const changes = { displayGroups: newDisplayGroups}
+      datasetsAdapter.updateOne(state, {id, changes}) 
+    },
   },
   extraReducers: {
     [fetchDatasets.pending]: (state, action) => {
@@ -84,14 +114,6 @@ export const datasetsSlice = createSlice({
     },
     [fetchDatasets.fulfilled]: (state, action) => {
       state.status = 'succeeded'
-
-      // add toggle switches for all biomarker types
-      action.payload.forEach((d, i) => {
-        d.biomarker_types.forEach((bt, j) => {
-          bt['chosen'] = false
-        })
-      })
-
       datasetsAdapter.setAll(state, action.payload)
     },
     [addNewDataset.fulfilled]: datasetsAdapter.addOne,
@@ -111,7 +133,12 @@ export const datasetsSlice = createSlice({
   }
 })
 
-export const { toggleDataset } = datasetsSlice.actions
+export const { 
+  toggleDataset,
+  toggleDisplayGroup: toggleDatasetDisplayGroup
+} = datasetsSlice.actions
+
+
 
 export default datasetsSlice.reducer
 

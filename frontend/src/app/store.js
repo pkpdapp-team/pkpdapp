@@ -1,6 +1,7 @@
 import { configureStore } from '@reduxjs/toolkit'
 import projectsReducer from '../features/projects/projectsSlice'
 import datasetsReducer from '../features/datasets/datasetsSlice'
+import subjectsReducer from '../features/datasets/subjectsSlice'
 import biomarkerDatasReducer from '../features/datasets/biomarkerDatasSlice'
 import pdModelsReducer from '../features/pdModels/pdModelsSlice'
 import pkModelsReducer from '../features/pkModels/pkModelsSlice'
@@ -14,6 +15,7 @@ export default configureStore({
     projects: projectsReducer,
     datasets: datasetsReducer,
     biomarkerDatas: biomarkerDatasReducer,
+    subjects: subjectsReducer,
     pkModels: pkModelsReducer,
     basePkModels: basePkModelsReducer,
     protocols: protocolsReducer,

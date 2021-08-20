@@ -24,6 +24,7 @@ function hexToRGB(hex, alpha) {
     }
 }
 
+
 export default function ModellingChart({datasets, pkModels, pdModels}) {
   let renderChart = true;
 
@@ -41,6 +42,25 @@ export default function ModellingChart({datasets, pkModels, pdModels}) {
     }
   }
 
+  const pointStyles = [
+    'cross',
+    'triangle',
+    'star',
+    'crossRot',
+    'dash',
+    'line',
+    'rect',
+    'rectRounded',
+    'rectRot',
+    'circle'
+  ]
+  let pointStyleIndex = 0;
+  const incrementPointStyleIndex = () => {
+    pointStyleIndex += 1;
+    if (pointStyleIndex >= pointStyles.length) {
+      pointStyleIndex = 0;
+    }
+  }
 
   const datasetBiomarkers = useSelector((state) =>
     selectBiomarkerDatasByDatasetIds(
@@ -67,31 +87,52 @@ export default function ModellingChart({datasets, pkModels, pdModels}) {
     return null
   }).filter(x => x);
 
+  
+
   const getChartDataDataset = (dataset) => {
     const biomarkers = datasetBiomarkers[dataset.id];
-    console.log('for dataset', dataset, 'got biomarkers', biomarkers)
-    return biomarkers
-      .filter(biomarker => biomarker.display)
-      .map(biomarker => {
-        console.log('doing biomarker', biomarker);
-        const color = colors[colorIndex];
-        incrementColorIndex()
-        return {
-          label: dataset.name + '.' + biomarker.name,
-          borderColor: color,
-          backgroundColor: color,
-          data: biomarker.data.values.map((y, i) => ({x: biomarker.data.times[i], y: y}))
-        }
-    });
+    const savedColorIndex = colorIndex;
+
+    // for each subject, we generate a dataset for each biomarker
+    return dataset.subjects.map(subject => {
+      const pointStyle = pointStyles[pointStyleIndex];
+      incrementPointStyleIndex()
+      colorIndex = savedColorIndex;
+      if (!dataset.displayGroups.includes(subject.group)) {
+        return null
+      }
+      return biomarkers
+        .filter(biomarker => biomarker.display)
+        .map(biomarker => {
+          const filterBySubject = (y, i) => 
+            biomarker.data.subjects[i] === subject.id_in_dataset;
+          const times = biomarker.data.times.filter(filterBySubject)
+          const values = biomarker.data.values.filter(filterBySubject)
+          const color = colors[colorIndex];
+          incrementColorIndex()
+            
+          if (values.length === 0) {
+            return null
+          }
+          return {
+            label: dataset.name + '.' + subject.id_in_dataset +  '.' + biomarker.name,
+            pointStyle: pointStyle,
+            borderColor: color,
+            backgroundColor: color,
+            data: values.map((y, i) => ({x: times[i], y: y}))
+          }
+        }).filter(x => x);
+    }).filter(x => x);
   }
 
   const data = {
     datasets: [
+      ...datasets.map(d => getChartDataDataset(d)).flat().flat(),
       ...pkModels.map(m => getChartData(m.simulate)).flat(),
       ...pdModels.map(m => getChartData(m.simulate)).flat(),
-      ...datasets.map(d => getChartDataDataset(d)).flat()
     ]
   }
+  console.log('chart data', data)
 
   const options = {
     aspectRatio: 4,
@@ -101,6 +142,11 @@ export default function ModellingChart({datasets, pkModels, pdModels}) {
       }
     },
     plugins: {
+      legend: {
+        labels: {
+          usePointStyle: true,
+        },
+      },
       tooltip: {
         mode: 'interpolate',
         intersect: false,

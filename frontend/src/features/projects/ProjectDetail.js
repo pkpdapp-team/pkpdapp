@@ -10,8 +10,30 @@ import {
 } from '../projects/usersSlice.js'
 
 import {
-  updateProject
-} from '..//projects/projectsSlice.js'
+  updateProject, chooseProject
+} from '../projects/projectsSlice.js'
+
+import {
+  fetchDatasets,
+} from '../datasets/datasetsSlice.js'
+
+import {
+  fetchPkModels,
+} from '../pkModels/pkModelsSlice.js'
+
+import {
+  fetchPdModels,
+} from '../pdModels/pdModelsSlice.js'
+
+import {
+  fetchBasePkModels
+} from '../pkModels/basePkModelsSlice.js'
+
+import {
+  fetchProtocols 
+} from '../protocols/protocolsSlice.js'
+
+
 
 const useStyles = makeStyles((theme) => ({
   table: {
@@ -21,11 +43,8 @@ const useStyles = makeStyles((theme) => ({
     width: '100pt',
   },
   controls: {
-    display: 'flex',
-    alignItems: 'center',
-    marginTop: theme.spacing(1),
-    paddingLeft: theme.spacing(1),
-    paddingBottom: theme.spacing(1),
+    marginTop: theme.spacing(2),
+    marginRight: theme.spacing(2),
   },
 }));
 
@@ -49,6 +68,16 @@ export default function ProjectDetail({project}) {
   const onSubmit = (values) => {
     dispatch(updateProject(values))
   };
+
+  const handleSelectProject = () => {
+    dispatch(chooseProject(project))
+    dispatch(fetchDatasets(project))
+    dispatch(fetchPkModels(project))
+    dispatch(fetchPdModels(project))
+    dispatch(fetchPkModels(project))
+    dispatch(fetchBasePkModels(project))
+    dispatch(fetchProtocols(project))
+  }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
@@ -79,6 +108,14 @@ export default function ProjectDetail({project}) {
       >
         Save
       </Button>
+      <Button 
+        variant="contained"
+        className={classes.controls} 
+        onClick={handleSelectProject}
+      >
+        Select Project
+      </Button>
+
     </form>
   )
 }

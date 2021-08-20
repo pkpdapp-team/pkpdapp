@@ -12,7 +12,7 @@ import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import Checkbox from '@material-ui/core/Checkbox';
 
-import {updateDataset, uploadDatasetCsv} from '../datasets/datasetsSlice'
+import {toggleDatasetDisplayGroup, updateDataset, uploadDatasetCsv} from '../datasets/datasetsSlice'
 import {FormTextField, FormDateTimeField} from '../forms/FormComponents';
 import { 
   selectBiomarkerDatasByDatasetId, 
@@ -36,7 +36,17 @@ export default function DatasetDetail({project, dataset}) {
 
   console.log('dataset detail', dataset)
   const biomarkerDatas = useSelector((state) => selectBiomarkerDatasByDatasetId(state, dataset.id))
+
+  const isGroupChecked = (group) => {
+    return dataset.displayGroups.includes(group)
+  }
   
+  const handleGroupChange = (group) => {
+    return () => {
+      dispatch(toggleDatasetDisplayGroup({id: dataset.id, group})) 
+    }
+  }
+
   const isChecked = (bt) => {
     const biomarkerData = biomarkerDatas.find(bd => bd.id === bt.id)
     return (biomarkerData !== undefined) && biomarkerData.display
@@ -68,7 +78,7 @@ export default function DatasetDetail({project, dataset}) {
   };
 
   const subject_groups = [
-    ...new Set(dataset.subjects.map(s => s.group || 'None'))
+    ...new Set(dataset.subjects.map(s => s.group))
   ];
 
   return (
@@ -112,12 +122,17 @@ export default function DatasetDetail({project, dataset}) {
       <Typography>Subject Groups</Typography>
       <List>
       {subject_groups.map((group, index) => {
+        if (!group) {
+          return null;
+        }
         return (
-          <ListItem key={index} role={undefined} dense button >
+          <ListItem key={index} 
+            onClick={handleGroupChange(group)} 
+            role={undefined} dense button >
             <ListItemIcon>
               <Checkbox
                 edge="start"
-                checked={false}
+                checked={isGroupChecked(group)}
                 tabIndex={-1}
                 disableRipple
               />
