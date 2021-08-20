@@ -14,14 +14,16 @@ PKPDApp is an open source web-based application to explore, analyse and model th
 
 If you are interested in developing PKPDApp with us, or just run the app locally, you can clone the repository and follow the installation instructions below.
 
+### Django backend
+
 1. Install sundials
     - Ubuntu-latest:
     ```bash
-    $ apt-get install libsundials-dev
+    apt-get install libsundials-dev
     ```
     - MacOS-latest:
     ```bash
-    $ brew install sundials
+    brew install sundials
     ```
     - Windows-latest:
     Sundials will be installed automatically by installing the app.
@@ -29,29 +31,57 @@ If you are interested in developing PKPDApp with us, or just run the app locally
 2. Install app and requirements
 
 ```bash
-$ pip install -e .
+pip install -e .
 ```
 
 3. Create database
 
 ```bash
-$ cd pkpdapp
-$ python manage.py migrate
+cd pkpdapp
+python manage.py migrate
 ```
 
 4. Run local server
 
 ```bash
-$ python manage.py runserver
+python manage.py runserver
 ```
 
 5. (Optional) Create admin user
 
 ```bash
-$ python manage.py createsuperuser
+python manage.py createsuperuser
 ```
 
-You should be able to see the pkpd web app at [127.0.0.1:8000](127.0.0.1:8000).
+### React frontend
+
+Running the frontend will require a local installation of Node.js. On Ubuntu 20.04 LTS, 
+for example, you can install using `snap`
+
+```bash
+sudo snap install node --classic
+```
+
+It is also useful to install the `yarn` package manager
+
+```bash
+npm install --global yarn
+```
+
+Navigate to the `frontend/` directory and install the Node.js dependencies
+
+```bash
+cd frontend
+yarn install
+```
+
+You can run the frontend using 
+
+```bash
+yarn start
+```
+
+You should be able to see the pkpd web app at [127.0.0.1:3000](127.0.0.1:3000).
 
 
 ## Installation - docker with nginx and gunicorn

@@ -25,8 +25,8 @@ setup(
     license='BSD 3-clause license',
 
     # Maintainer information
-    maintainer='David Augustin',
-    maintainer_email='david.augustin@cs.ox.ac.uk',
+    maintainer='Martin Robinson',
+    maintainer_email='martin.robinson@cs.ox.ac.uk',
     url='https://github.com/pkpdapp-team/pkpdapp',
 
     # Packages to include
@@ -34,7 +34,6 @@ setup(
 
     # List of dependencies
     install_requires=[
-        'dash-bootstrap-components>=0.10',
         'Django==3.1.9',
         'django-cors-headers>=3.7.0',
         'dpd-static-support>=0.0.5',

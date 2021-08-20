@@ -1,3 +1,17 @@
+# Using a 2-stage build. This is the builder for javascript frontend
+
+FROM node:latest as build
+RUN mkdir -p /app/frontend
+WORKDIR /app/frontend
+COPY frontend/package.json /app/frontend
+
+RUN npm install --legacy-peer-deps
+
+COPY frontend /app/frontend/
+RUN npm run build
+
+# Now pull the python image and we will simply copy the build result to here
+
 FROM python:3.8-slim
 
 # install libsundials-dev
@@ -19,16 +33,20 @@ RUN apt-get autoclean
 RUN apt-get autoremove
 RUN rm -rf /var/lib/apt/lists/*
 
-# install app and dependencies
-RUN pip install --upgrade pip 
-COPY ./ /pkpdapp
-RUN cd /pkpdapp && pip install --no-cache-dir -r requirements.txt 
-RUN python /pkpdapp/pkpdapp/manage.py migrate --noinput
+# copy the built frontend (needs to be after we install nginx)
+COPY --from=build /app/frontend/build /usr/share/nginx/html
 
-WORKDIR /pkpdapp
+# install backend and dependencies
+RUN mkdir -p /app/pkpdapp
+COPY . /app/pkpdapp
+WORKDIR /app/pkpdapp
+RUN pip install --upgrade pip 
+RUN pip install --no-cache-dir -r requirements.txt 
+
+RUN python pkpdapp/manage.py migrate --noinput
 
 # we're running as the www-data user, so make the files owned by this user
-RUN chown -R www-data:www-data /pkpdapp
+RUN chown -R www-data:www-data /app/pkpdapp
 
 # make /var/www/.config dir and make it writable (myokit writes to it)
 RUN mkdir -p /var/www/.config
@@ -44,4 +62,4 @@ USER www-data
 # nginx config files don't support env variables so have to do it manually
 # using envsubst
 STOPSIGNAL SIGTERM
-CMD /bin/bash -c "envsubst '\$PORT' < /pkpdapp/nginx.default.template > /etc/nginx/sites-available/default" && "/pkpdapp/start-server.sh"
+CMD /bin/bash -c "envsubst '\$PORT' < /app/pkpdapp/nginx.default.template > /etc/nginx/sites-available/default" && "/app/pkpdapp/start-server.sh"
