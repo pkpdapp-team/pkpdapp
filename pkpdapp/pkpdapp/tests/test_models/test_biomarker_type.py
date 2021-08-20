@@ -53,6 +53,11 @@ class TestBiomarkerTypeModel(TestCase):
             isinstance(self.biomarker_type, BiomarkerType)
         )
 
+    def test_str(self):
+        self.assertEqual(
+            str(self.biomarker_type), "my_cool_biomarker_type"
+        )
+
     def test_requires_a_unit(self):
         with self.assertRaises(IntegrityError):
             BiomarkerType.objects.create(
@@ -72,5 +77,3 @@ class TestBiomarkerTypeModel(TestCase):
         np.testing.assert_array_equal(
             df['subjects'], np.array(self.subjects)
         )
-
-

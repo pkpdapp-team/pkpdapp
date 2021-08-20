@@ -8,6 +8,7 @@ from django.db import models
 from pkpdapp.models import Dataset, Unit
 import pandas as pd
 
+
 class BiomarkerType(models.Model):
     """
     A type of biomarker measurement associated with a particular dataset, for
@@ -30,11 +31,6 @@ class BiomarkerType(models.Model):
         related_name='biomarker_types',
         help_text='dataset containing this biomarker measurement'
     )
-
-    def _get_values_and_times(self):
-        values_and_times = \
-            self.biomarkers.values_list('value', 'time')
-        return list(zip(*values_and_times))
 
     def as_pandas(self):
         times_subjects_values = \
