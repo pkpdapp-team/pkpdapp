@@ -41,7 +41,7 @@ jobs:
         run: |
           python --version
           python -m pip install --upgrade pip setuptools wheel
-          python -m pip install .
+          python -m pip install -r requirements.txt
       
       - name: run unit tests
         run: |
