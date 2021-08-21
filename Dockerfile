@@ -36,12 +36,16 @@ RUN rm -rf /var/lib/apt/lists/*
 # copy the built frontend (needs to be after we install nginx)
 COPY --from=build /app/frontend/build /usr/share/nginx/html
 
-# install backend and dependencies
+# install dependencies
 RUN mkdir -p /app/pkpdapp
-COPY . /app/pkpdapp
+COPY requirements.txt /app/pkpdapp
 WORKDIR /app/pkpdapp
 RUN pip install --upgrade pip 
 RUN pip install --no-cache-dir -r requirements.txt 
+
+# install backend
+RUN mkdir -p /app/pkpdapp/pkpdapp
+COPY pkpdapp /app/pkpdapp/pkpdapp
 
 RUN python pkpdapp/manage.py migrate --noinput
 
@@ -57,6 +61,10 @@ RUN chown -R www-data:www-data /var/lib/nginx /run /tmp
 
 # run as www-data
 USER www-data
+
+# server setup files
+COPY nginx.default.template /app/pkpdapp
+COPY start-server.sh /app/pkpdapp
 
 # start server using the port given by the environment variable $PORT
 # nginx config files don't support env variables so have to do it manually
