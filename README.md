@@ -28,10 +28,10 @@ If you are interested in developing PKPDApp with us, or just run the app locally
     - Windows-latest:
     Sundials will be installed automatically by installing the app.
 
-2. Install app and requirements
+2. Install requirements
 
 ```bash
-pip install -e .
+pip install -r requirements.txt
 ```
 
 3. Create database
