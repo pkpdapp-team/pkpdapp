@@ -61,16 +61,7 @@ export default function ListOfProjects() {
   const project = useSelector(selectChosenProject);
   const dispatch = useDispatch()
 
-  useEffect(() => {
-    console.log('dispatch fetchProjects')
-    dispatch(fetchProjects())
-    dispatch(fetchUsers())
-    dispatch(fetchUnits())
-    //const interval = setInterval(() => {
-    //  refreshHarvesters();
-    //}, 5000);
-    //return () => clearInterval(interval);
-  }, [dispatch]);
+  
 
   return (
     <List>

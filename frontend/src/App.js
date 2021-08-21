@@ -1,13 +1,10 @@
-import React, { useEffect } from "react";
+import React from "react";
 import {
   Switch,
   Route,
   Redirect,
   useHistory,
 } from "react-router-dom";
-
-import { useDispatch } from 'react-redux'
-
 
 import { MuiPickersUtilsProvider } from '@material-ui/pickers';
 import DateFnsUtils from '@date-io/date-fns';
@@ -45,21 +42,10 @@ import Modelling from './features/modelling/Modelling'
 import Projects from './features/projects/Projects'
 import ProjectMenu from './features/menu/ProjectMenu'
 
-import {
-  fetchProjects,
-} from './features/projects/projectsSlice.js'
-
-import {
-  fetchUsers,
-} from './features/projects/usersSlice.js'
-
-import {
-  fetchUnits,
-} from './features/projects/unitsSlice.js'
-
 
 const PrivateRoute = ({ component: Component, componentProps, ...rest }) => {
   const logged = api.isLoggedIn();
+  console.log('logged', logged)
 
   return <Route {...rest} render={(props) => (
     logged
@@ -237,7 +223,6 @@ const useStyles = makeStyles((theme) => ({
 
 export default function App() {
   const classes = useStyles();
-  const dispatch = useDispatch();
   const [open, setOpen] = React.useState(true);
 
   const handleDrawerOpenClose = () => {
@@ -245,17 +230,6 @@ export default function App() {
   };
 
   let history = useHistory();
-
-  useEffect(() => {
-    console.log('dispatch fetchProjects')
-    dispatch(fetchProjects())
-    dispatch(fetchUsers())
-    dispatch(fetchUnits())
-    //const interval = setInterval(() => {
-    //  refreshHarvesters();
-    //}, 5000);
-    //return () => clearInterval(interval);
-  }, [dispatch]);
 
   const logged_in = (
     <div className={classes.root}>

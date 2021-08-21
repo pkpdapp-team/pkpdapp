@@ -55,14 +55,15 @@ function login(username, password) {
 }
 
 function logout() {
-  return post('auth/token/logout').then(() => {
-    authToken = null;
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("loggedInUser");
-  });
+  post('auth/token/logout')
+  authToken = null;
+  localStorage.removeItem("authToken");
+  localStorage.removeItem("loggedInUser");
+  console.log('logout authToken', authToken)
 }
 
 function isLoggedIn() {
+  console.log('authToken', authToken)
   return !isEmpty(authToken);
 }
 

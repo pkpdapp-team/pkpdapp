@@ -33,9 +33,6 @@ RUN apt-get autoclean
 RUN apt-get autoremove
 RUN rm -rf /var/lib/apt/lists/*
 
-# copy the built frontend (needs to be after we install nginx)
-COPY --from=build /app/frontend/build /usr/share/nginx/html
-
 # install dependencies
 RUN mkdir -p /app/pkpdapp
 COPY requirements.txt /app/pkpdapp
@@ -48,6 +45,9 @@ RUN mkdir -p /app/pkpdapp/pkpdapp
 COPY pkpdapp /app/pkpdapp/pkpdapp
 
 RUN python pkpdapp/manage.py migrate --noinput
+
+# copy the built frontend (needs to be after we install nginx)
+COPY --from=build /app/frontend/build /usr/share/nginx/html
 
 # we're running as the www-data user, so make the files owned by this user
 RUN chown -R www-data:www-data /app/pkpdapp
