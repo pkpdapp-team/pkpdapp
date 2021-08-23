@@ -89,4 +89,3 @@ class Variable(models.Model):
                 name='log scale must have a lower bound greater than zero'
             )
         ]
-        
