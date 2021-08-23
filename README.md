@@ -106,6 +106,7 @@ $ docker run -it -p 8020:8020 \
                  -e EMAIL_PORT=25 \
                  -e EMAIL_HOST_USER=email_username \
                  -e EMAIL_HOST_PASSWORD=email_password \
+                 -e DEFAULT_FROM_EMAIL=sender@mydomain.com \
                  pkpdapp
 ```
 

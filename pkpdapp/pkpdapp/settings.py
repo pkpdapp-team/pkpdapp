@@ -251,6 +251,8 @@ else:
 EMAIL_PORT = os.environ.get("EMAIL_PORT", default='foo')
 EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", default='foo')
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", default='foo')
+DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL",
+                                    default='webmaster@localhost')
 
 CACHES = {
     'default': {
