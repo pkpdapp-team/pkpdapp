@@ -102,6 +102,11 @@ $ docker run -it -p 8020:8020 \
                  -e DJANGO_SUPERUSER_USERNAME=admin \
                  -e DJANGO_SUPERUSER_PASSWORD=sekret1 \
                  -e DJANGO_SUPERUSER_EMAIL=admin@example.com \
+                 -e EMAIL_HOST=in-v3.mailjet.com \
+                 -e EMAIL_PORT=25 \
+                 -e EMAIL_HOST_USER=email_username \
+                 -e EMAIL_HOST_PASSWORD=email_password \
+                 -e DEFAULT_FROM_EMAIL=sender@mydomain.com \
                  pkpdapp
 ```
 
