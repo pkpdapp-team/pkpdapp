@@ -26,4 +26,3 @@ from .project import Project
 from .profile import Profile
 from .dose import Dose
 from .variable import Variable
-
