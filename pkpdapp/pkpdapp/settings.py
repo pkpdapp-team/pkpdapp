@@ -169,11 +169,14 @@ WSGI_APPLICATION = 'pkpdapp.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
-
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.postgresql',
+        'HOST': os.environ.get('POSTGRES_HOST', default='127.0.0.1'),
+        'NAME': os.environ.get('POSTGRES_DB', default='pkpdapp'),
+        'USER': os.environ.get('POSTGRES_USER', default='postgres'),
+        'PASSWORD': os.environ.get('POSTGRES_PASSWORD', default='postgres'),
+        'PORT': os.environ.get('POSTGRES_PORT', default=5432),
     }
 }
 

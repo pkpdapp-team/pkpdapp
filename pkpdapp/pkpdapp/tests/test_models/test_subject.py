@@ -55,8 +55,6 @@ class TestSubjectModel(TestCase):
                 id_in_dataset=2, dataset=self.dataset, metadata=metadata
             )
 
-        self.assertTrue('UNIQUE constraint failed' in str(context.exception))
-
     def test_subject_dose_group_constraint(self):
 
         au = Unit.objects.get(symbol='mg')
