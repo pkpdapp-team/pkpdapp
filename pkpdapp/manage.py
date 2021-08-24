@@ -7,6 +7,7 @@
 import os
 import sys
 
+
 def main():
     """
     This function makes Django's core app management features accessible from

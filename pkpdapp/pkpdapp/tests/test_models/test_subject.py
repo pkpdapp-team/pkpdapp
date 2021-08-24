@@ -50,7 +50,7 @@ class TestSubjectModel(TestCase):
         )
 
         # this should raise error
-        with self.assertRaises(IntegrityError) as context:
+        with self.assertRaises(IntegrityError):
             Subject.objects.create(
                 id_in_dataset=2, dataset=self.dataset, metadata=metadata
             )
