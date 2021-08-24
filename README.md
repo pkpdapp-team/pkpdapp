@@ -28,50 +28,11 @@ If you are interested in developing PKPDApp with us, or just run the app locally
     - Windows-latest:
     Sundials will be installed automatically by installing the app.
 
-2. Install Postgres 
-  - see [here](https://www.postgresql.org/download/) for instructions for
-  your OS
-  - For Ubuntu, you can use:
-```bash
-# Create the file repository configuration:
-sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
-
-# Import the repository signing key:
-wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
-
-# Update the package lists:
-sudo apt-get update
-
-# Install the latest version of PostgreSQL.
-# If you want a specific version, use 'postgresql-12' or similar instead of 'postgresql':
-sudo apt-get -y install postgresql
-```
-
-4. Create database
-
-  - Connect to postgres database
-
-```bash
-sudo -u postgres psql
-```
-
-  - You will see the psql prompt. First set the user `postgres` password
-
-```psql
-\password postgres
-```
-  - Then create the database
-
-```psql
-CREATE DATABASE pkpdapp;
-```
 
 5. Set environment variables
 
-  - Open the `.env` file in the root of the repository and edit the environment
-  variables to correspond to your particular setup. In particular, change the
-  `POSTGRES_DB` variable to match the name of the database you have created, and the
-  `POSTGRES_PASSWORD` to match the password you have chosen in the previous step.
+  - Edit the `.env` file in the root of the repository and edit the environment
+  variables to correspond to your particular setup.
 
 6. Install requirements
 

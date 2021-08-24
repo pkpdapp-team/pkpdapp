@@ -7,11 +7,6 @@
 import os
 import sys
 
-# load environment variables from `.env` file
-from dotenv import load_dotenv
-load_dotenv()
-
-
 def main():
     """
     This function makes Django's core app management features accessible from

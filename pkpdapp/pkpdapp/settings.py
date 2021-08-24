@@ -17,6 +17,7 @@ https://docs.djangoproject.com/en/3.0/ref/settings/.
 """
 
 import os
+import dj_database_url
 
 # Set BASE_DIR to two directories up
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -171,14 +172,16 @@ WSGI_APPLICATION = 'pkpdapp.wsgi.application'
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'HOST': os.environ.get('POSTGRES_HOST', default='127.0.0.1'),
-        'NAME': os.environ.get('POSTGRES_DB', default='pkpdapp'),
-        'USER': os.environ.get('POSTGRES_USER', default='postgres'),
-        'PASSWORD': os.environ.get('POSTGRES_PASSWORD', default='postgres'),
-        'PORT': os.environ.get('POSTGRES_PORT', default=5432),
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
 }
+
+DATABASE_URL = os.environ.get('DATABASE_URL')
+db_from_env = dj_database_url.config(
+    default=DATABASE_URL, conn_max_age=500, ssl_require=True
+)
+DATABASES['default'].update(db_from_env)
 
 
 # Password validation
