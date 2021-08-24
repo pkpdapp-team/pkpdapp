@@ -31,8 +31,10 @@ If you are interested in developing PKPDApp with us, or just run the app locally
 
 5. Set environment variables
 
-  - Edit the `.env` file in the root of the repository and edit the environment
-  variables to correspond to your particular setup.
+  - Edit the `.env` file in the root of the repository and edit the following environment
+  variables to correspond to your particular setup. The most important
+  variables to alter are those corresponding to secret keys and passwords, others
+  you can probably leave as-is.
 
 6. Install requirements
 
@@ -94,33 +96,16 @@ yarn start
 You should be able to see the pkpd web app at [127.0.0.1:3000](127.0.0.1:3000).
 
 
-## Installation - docker with nginx and gunicorn
+## Installation - production
 
 Alternatively you can build a docker image and run the image inside the container with commands below.
 
 ```bash
-$ docker build -t pkpdapp .
+$ docker-compose build
+$ docker-compose up
 ```
 
-Run the server
-
-```bash
-$ docker run -it -p 8020:8020 \
-                 -e PORT=8020 \
-                 -e DEBUG=1 \
-                 -e SECRET_KEY=aLargeRandomSecretKey \
-                 -e DJANGO_SUPERUSER_USERNAME=admin \
-                 -e DJANGO_SUPERUSER_PASSWORD=sekret1 \
-                 -e DJANGO_SUPERUSER_EMAIL=admin@example.com \
-                 -e EMAIL_HOST=in-v3.mailjet.com \
-                 -e EMAIL_PORT=25 \
-                 -e EMAIL_HOST_USER=email_username \
-                 -e EMAIL_HOST_PASSWORD=email_password \
-                 -e DEFAULT_FROM_EMAIL=sender@mydomain.com \
-                 pkpdapp
-```
-
-You should be able to see the pkpd web app at [127.0.0.1:8020](127.0.0.1:8020).
+You should be able to see the web application at [127.0.0.1](127.0.0.1).
 
 ## Code testing
 

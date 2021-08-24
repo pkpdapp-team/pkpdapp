@@ -19,5 +19,3 @@ db.sqlite3
 
 # static files
 pkpdapp/static
-
-.env

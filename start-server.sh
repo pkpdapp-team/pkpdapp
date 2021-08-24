@@ -1,3 +1,8 @@
 #!/usr/bin/env bash
 # start-server.sh
-cd pkpdapp; gunicorn pkpdapp.wsgi:application --bind :8000 --workers 3
+if [ -n "$DJANGO_SUPERUSER_USERNAME" ] && [ -n "$DJANGO_SUPERUSER_PASSWORD" ] ; then
+    (python manage.py createsuperuser --no-input)
+fi
+(python manage.py migrate --no-input)
+(gunicorn pkpdapp.wsgi:application --bind unix:/run/gunicorn.socket --workers 3) &
+nginx -g "daemon off;"
