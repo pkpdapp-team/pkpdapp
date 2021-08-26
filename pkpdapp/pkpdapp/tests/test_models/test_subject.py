@@ -50,12 +50,10 @@ class TestSubjectModel(TestCase):
         )
 
         # this should raise error
-        with self.assertRaises(IntegrityError) as context:
+        with self.assertRaises(IntegrityError):
             Subject.objects.create(
                 id_in_dataset=2, dataset=self.dataset, metadata=metadata
             )
-
-        self.assertTrue('UNIQUE constraint failed' in str(context.exception))
 
     def test_subject_dose_group_constraint(self):
 

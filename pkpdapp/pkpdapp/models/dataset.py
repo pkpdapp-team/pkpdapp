@@ -5,7 +5,6 @@
 #
 
 from django.db import models
-from django.urls import reverse
 
 
 class Dataset(models.Model):
@@ -29,9 +28,6 @@ class Dataset(models.Model):
         help_text='short description of the dataset',
         blank=True, default=''
     )
-
-    def get_absolute_url(self):
-        return reverse('dataset-detail', kwargs={'pk': self.pk})
 
     def __str__(self):
         return self.name

@@ -1,23 +1,19 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { useSelector, useDispatch } from 'react-redux'
 import Button from '@material-ui/core/Button';
-import Dialog from '@material-ui/core/Dialog';
-import DialogActions from '@material-ui/core/DialogActions';
-import DialogContent from '@material-ui/core/DialogContent';
-import DialogContentText from '@material-ui/core/DialogContentText';
-import DialogTitle from '@material-ui/core/DialogTitle';
-import Grid from '@material-ui/core/Grid';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
-import ListItemIcon from '@material-ui/core/ListItemIcon';
-import ListItemText from '@material-ui/core/ListItemText';
+import Accordion from '@material-ui/core/Accordion';
+import AccordionSummary from '@material-ui/core/AccordionSummary';
+import AccordionDetails from '@material-ui/core/AccordionDetails';
+import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 
-import { useForm, Controller  } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { makeStyles } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
-import Checkbox from '@material-ui/core/Checkbox';
 
-import {FormTextField, FormSelectField, FormSliderField, FormCheckboxField} from '../forms/FormComponents';
+import ComponentForm from '../forms/ComponentForm'
+import {FormTextField, FormSelectField} from '../forms/FormComponents';
 
 import {
   selectAllBasePkModels
@@ -36,6 +32,9 @@ import {
 } from '../pkModels/pkModelsSlice.js'
 
 const useStyles = makeStyles((theme) => ({
+  components: {
+    width: '100%',
+  },
   controls: {
     display: 'flex',
     alignItems: 'center',
@@ -92,69 +91,30 @@ export default function PkDetail({project, pk_model}) {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
-      <Typography>PK Model</Typography>
       <FormTextField 
         control={control} 
         defaultValue={pk_model.name}
         name="name" label="Name"
       />
-      <Grid container item xs={12} spacing={2}>
-      <Grid item xs={4}>
-      <Typography>Initial Conditions</Typography>
+      <Typography>Components</Typography>
       <List>
-      {pk_model.states.map((state, index) => {
+      {pk_model.components.map((component, index) => {
         return (
-          <ListItem key={index} dense >
-            <FormSliderField
-              control={control} 
-              defaultValue={state.default_value}
-              name={`states[${index}].default_value`} 
-              label={`${state.name} ${state.unit}`}
-              min={state.lower_bound} max={state.upper_bound}
-            />
+          <ListItem key={index} role={undefined} dense >
+            <div className={classes.components}>
+            <Accordion>
+              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                <Typography className={classes.heading}>{component.name}</Typography>
+              </AccordionSummary>
+              <AccordionDetails>
+                <ComponentForm control={control} component={component}/>
+              </AccordionDetails>
+            </Accordion>
+            </div>
           </ListItem>
         );
       })}
       </List>
-      </Grid>
-      <Grid item xs={4}>
-      <Typography>Variables</Typography>
-      <List>
-      {pk_model.variables.map((variable, index) => {
-        return (
-          <ListItem key={index} dense >
-            <FormSliderField
-              control={control} 
-              defaultValue={variable.default_value}
-              name={`variables[${index}].default_value`} 
-              label={`${variable.name} ${variable.unit}`}
-              min={variable.lower_bound} max={variable.upper_bound}
-            />
-          </ListItem>
-        );
-      })}
-      </List>
-      </Grid>
-
-      <Grid item xs={4}>
-      <Typography>Outputs</Typography>
-      <List>
-      {pk_model.outputs.map((output, index) => {
-        return (
-          <ListItem key={index} dense>
-            <FormCheckboxField
-              control={control} 
-              defaultValue={output.default_value}
-              name={`outputs[${index}].default_value`} 
-              label={`${output.name} ${output.unit}`}
-            />
-          </ListItem>
-        );
-      })}
-      </List>
-
-      </Grid>
-      </Grid>
 
       <FormSelectField 
         control={control} 

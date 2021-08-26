@@ -14,68 +14,98 @@ PKPDApp is an open source web-based application to explore, analyse and model th
 
 If you are interested in developing PKPDApp with us, or just run the app locally, you can clone the repository and follow the installation instructions below.
 
+### Django backend
+
 1. Install sundials
     - Ubuntu-latest:
     ```bash
-    $ apt-get install libsundials-dev
+    apt-get install libsundials-dev
     ```
     - MacOS-latest:
     ```bash
-    $ brew install sundials
+    brew install sundials
     ```
     - Windows-latest:
     Sundials will be installed automatically by installing the app.
 
-2. Install app and requirements
+
+5. Set environment variables
+
+  - Edit the `.env` file in the root of the repository and edit the following environment
+  variables to correspond to your particular setup. The most important
+  variables to alter are those corresponding to secret keys and passwords, others
+  you can probably leave as-is.
+
+6. Install requirements
+
+  - Create a new virtual environment (optional) then install the requirements
 
 ```bash
-$ pip install -e .
+python3 -m venv env
+source env/bin/activate
+pip install -r requirements.txt
 ```
 
-3. Create database
+5. Create database
 
 ```bash
-$ cd pkpdapp
-$ python manage.py migrate
+cd pkpdapp
+python manage.py migrate
 ```
 
-4. Run local server
+5. Run local server
 
 ```bash
-$ python manage.py runserver
+python manage.py runserver
 ```
 
-5. (Optional) Create admin user
+6. (Optional) Create admin user
 
 ```bash
-$ python manage.py createsuperuser
+python manage.py createsuperuser
 ```
 
-You should be able to see the pkpd web app at [127.0.0.1:8000](127.0.0.1:8000).
+### React frontend
+
+Running the frontend will require a local installation of Node.js. On Ubuntu 20.04 LTS, 
+for example, you can install using `snap`
+
+```bash
+sudo snap install node --classic
+```
+
+It is also useful to install the `yarn` package manager
+
+```bash
+npm install --global yarn
+```
+
+Navigate to the `frontend/` directory and install the Node.js dependencies
+
+```bash
+cd frontend
+yarn install
+```
+
+You can run the frontend using 
+
+```bash
+yarn start
+```
+
+You should be able to see the pkpd web app at [127.0.0.1:3000](127.0.0.1:3000).
 
 
-## Installation - docker with nginx and gunicorn
+## Installation - production
 
 Alternatively you can build a docker image and run the image inside the container with commands below.
 
 ```bash
-$ docker build -t pkpdapp .
+$ docker-compose build
+$ docker-compose up
 ```
 
-Run the server
-
-```bash
-$ docker run -it -p 8020:8020 \
-                 -e PORT=8020 \
-                 -e DEBUG=1 \
-                 -e SECRET_KEY=aLargeRandomSecretKey \
-                 -e DJANGO_SUPERUSER_USERNAME=admin \
-                 -e DJANGO_SUPERUSER_PASSWORD=sekret1 \
-                 -e DJANGO_SUPERUSER_EMAIL=admin@example.com \
-                 pkpdapp
-```
-
-You should be able to see the pkpd web app at [127.0.0.1:8020](127.0.0.1:8020).
+You should be able to see the web application at [127.0.0.1](127.0.0.1).
 
 ## Code testing
 

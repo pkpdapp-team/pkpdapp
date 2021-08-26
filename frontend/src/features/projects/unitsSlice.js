@@ -1,7 +1,6 @@
 import { 
   createSlice, createEntityAdapter, createAsyncThunk,
 } from '@reduxjs/toolkit'
-import { updateProject } from '../projects/projectsSlice'
 import { api } from '../../Api'
 
 const unitsAdapter = createEntityAdapter({

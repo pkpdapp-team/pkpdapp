@@ -1,17 +1,9 @@
-import React, { useEffect, useState } from "react";
-import { useSelector, useDispatch } from 'react-redux'
-import TextField from '@material-ui/core/TextField';
+import React, { useEffect } from "react";
+import { useDispatch } from 'react-redux'
 import Paper from '@material-ui/core/Paper';
 import Button from '@material-ui/core/Button';
-import ArrowUpwardIcon from '@material-ui/icons/ArrowUpward';
-import ArrowDownwardIcon from '@material-ui/icons/ArrowDownward';
 import IconButton from '@material-ui/core/IconButton';
-import Dialog from '@material-ui/core/Dialog';
-import DialogActions from '@material-ui/core/DialogActions';
-import DialogContent from '@material-ui/core/DialogContent';
-import DialogContentText from '@material-ui/core/DialogContentText';
-import DialogTitle from '@material-ui/core/DialogTitle';
-import { useForm, useFieldArray, Controller  } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import { makeStyles } from '@material-ui/core/styles';
 import DeleteIcon from '@material-ui/icons/Delete';
 import AddIcon from '@material-ui/icons/Add';
@@ -26,7 +18,7 @@ import TableRow from '@material-ui/core/TableRow';
 import {FormTextField, FormSelectField} from '../forms/FormComponents';
 
 import {
-  selectProtocolById, updateProtocol,
+  updateProtocol,
 } from '../protocols/protocolsSlice.js'
 
 const useStyles = makeStyles((theme) => ({
@@ -48,8 +40,8 @@ export default function ProtocolDetail({project, protocol}) {
   const classes = useStyles();
   const dispatch = useDispatch();
   console.log('protocol', protocol);
-  const { control, handleSubmit, register, reset } = useForm(protocol);
-  const { fields, append, remove, swap } = useFieldArray(
+  const { control, handleSubmit, reset } = useForm(protocol);
+  const { fields, append, remove } = useFieldArray(
     {
       control,
       name: "doses",

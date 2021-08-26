@@ -1,14 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { useSelector, useDispatch } from 'react-redux'
 import Button from '@material-ui/core/Button';
-import Dialog from '@material-ui/core/Dialog';
-import DialogActions from '@material-ui/core/DialogActions';
-import DialogContent from '@material-ui/core/DialogContent';
-import DialogContentText from '@material-ui/core/DialogContentText';
-import DialogTitle from '@material-ui/core/DialogTitle';
-import { useForm, Controller  } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { makeStyles } from '@material-ui/core/styles';
-import Typography from '@material-ui/core/Typography';
 
 import {FormTextField, FormMultiSelectField} from '../forms/FormComponents';
 import {
@@ -16,8 +10,30 @@ import {
 } from '../projects/usersSlice.js'
 
 import {
-  updateProject
-} from '..//projects/projectsSlice.js'
+  updateProject, chooseProject
+} from '../projects/projectsSlice.js'
+
+import {
+  fetchDatasets,
+} from '../datasets/datasetsSlice.js'
+
+import {
+  fetchPkModels,
+} from '../pkModels/pkModelsSlice.js'
+
+import {
+  fetchPdModels,
+} from '../pdModels/pdModelsSlice.js'
+
+import {
+  fetchBasePkModels
+} from '../pkModels/basePkModelsSlice.js'
+
+import {
+  fetchProtocols 
+} from '../protocols/protocolsSlice.js'
+
+
 
 const useStyles = makeStyles((theme) => ({
   table: {
@@ -27,10 +43,8 @@ const useStyles = makeStyles((theme) => ({
     width: '100pt',
   },
   controls: {
-    display: 'flex',
-    alignItems: 'center',
-    paddingLeft: theme.spacing(1),
-    paddingBottom: theme.spacing(1),
+    marginTop: theme.spacing(2),
+    marginRight: theme.spacing(2),
   },
 }));
 
@@ -55,9 +69,18 @@ export default function ProjectDetail({project}) {
     dispatch(updateProject(values))
   };
 
+  const handleSelectProject = () => {
+    dispatch(chooseProject(project))
+    dispatch(fetchDatasets(project))
+    dispatch(fetchPkModels(project))
+    dispatch(fetchPdModels(project))
+    dispatch(fetchPkModels(project))
+    dispatch(fetchBasePkModels(project))
+    dispatch(fetchProtocols(project))
+  }
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
-      <Typography>Project</Typography>
       <FormTextField 
         control={control} 
         defaultValue={project.name}
@@ -71,6 +94,13 @@ export default function ProjectDetail({project}) {
         name="users" label="Users"
       />
       }
+      <FormTextField 
+        control={control} 
+        className={classes.description}
+        fullWidth
+        multiline
+        name="description" label="Description"
+      />
       <Button 
         type="submit" 
         variant="contained"
@@ -78,6 +108,14 @@ export default function ProjectDetail({project}) {
       >
         Save
       </Button>
+      <Button 
+        variant="contained"
+        className={classes.controls} 
+        onClick={handleSelectProject}
+      >
+        Select Project
+      </Button>
+
     </form>
   )
 }

@@ -1,30 +1,27 @@
-import React, {useEffect} from "react";
+import React from "react";
 import {
   Switch,
   Route,
   Redirect,
-  Link,
   useHistory,
-  useLocation,
 } from "react-router-dom";
 
-
-import { useSelector } from 'react-redux'
 import { MuiPickersUtilsProvider } from '@material-ui/pickers';
 import DateFnsUtils from '@date-io/date-fns';
-import classNames from 'classnames';
-import Checkbox from '@material-ui/core/Checkbox';
-import Box from '@material-ui/core/Box';
-
 import Container from '@material-ui/core/Container';
-import Login from "./Login"
+import Login from "./features/login/Login"
+import Register from "./features/login/Register"
+import RegisterSuccess from "./features/login/RegisterSuccess"
+import ActivateUser from "./features/login/ActivateUser"
+import ActivateUserSuccess from "./features/login/ActivateUserSuccess"
+import ResetPasswordRequest from "./features/login/ResetPasswordRequest"
+import ResetPasswordRequestSuccess from "./features/login/ResetPasswordRequestSuccess"
+import ResetPassword from "./features/login/ResetPassword"
+import ResetPasswordSuccess from "./features/login/ResetPasswordSuccess"
 
 import { makeStyles, fade } from '@material-ui/core/styles';
 import CssBaseline from '@material-ui/core/CssBaseline';
 
-import { green, pink } from '@material-ui/core/colors';
-
-import Tooltip from '@material-ui/core/Tooltip';
 import SearchIcon from '@material-ui/icons/Search';
 
 import InputBase from '@material-ui/core/InputBase';
@@ -39,25 +36,16 @@ import IconButton from '@material-ui/core/IconButton';
 import Button from '@material-ui/core/Button';
 import MenuIcon from '@material-ui/icons/Menu';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
-import LabelIcon from '@material-ui/icons/Label';
-
-import Avatar from '@material-ui/core/Avatar';
-import ListItemAvatar from '@material-ui/core/ListItemAvatar';
-
 
 import { api } from './Api'
 import Modelling from './features/modelling/Modelling'
-import ListOfProjects from './features/projects/ListOfProjects'
+import Projects from './features/projects/Projects'
 import ProjectMenu from './features/menu/ProjectMenu'
-
-import {
-  fetchProjects, 
-} from './features/projects/projectsSlice.js'
-
 
 
 const PrivateRoute = ({ component: Component, componentProps, ...rest }) => {
   const logged = api.isLoggedIn();
+  console.log('logged', logged)
 
   return <Route {...rest} render={(props) => (
     logged
@@ -245,7 +233,6 @@ export default function App() {
 
   const logged_in = (
     <div className={classes.root}>
-    <CssBaseline />
     <AppBar position="absolute" className={clsx(classes.appBar)}>
       <Toolbar className={classes.toolbar}>
         <IconButton
@@ -285,24 +272,6 @@ export default function App() {
     <Drawer
       variant="permanent"
       classes={{
-        paper: clsx(classes.drawerPaper, classes.drawerPaperClose),
-      }}
-      open={open}
-    >
-      <div className={classes.toolbarIcon}>
-        <IconButton>
-          <ChevronLeftIcon />
-        </IconButton>
-      </div>
-      <Divider />
-      <Typography align='center'>
-        Projects
-      </Typography>
-      <ListOfProjects />
-    </Drawer>
-    <Drawer
-      variant="permanent"
-      classes={{
         paper: clsx(classes.drawerPaper, !open && classes.drawerPaperClose),
       }}
       open={open}
@@ -322,7 +291,8 @@ export default function App() {
         <Container maxWidth={false}>
         <div className={classes.appBarSpacer} />
         <Switch>
-          <PrivateRoute path="/" component={Modelling} />
+          <PrivateRoute path="/modelling" component={Modelling} />
+          <PrivateRoute path="/" component={Projects} />
         </Switch>
         </Container>
     </MuiPickersUtilsProvider>
@@ -331,14 +301,41 @@ export default function App() {
 
 
   return (
+    <React.Fragment>
+    <CssBaseline />
       <Switch>
         <Route path="/login">
           <Login />
         </Route>
+        <Route path="/reset-password-request">
+          <ResetPasswordRequest/>
+        </Route>
+        <Route path="/reset-password-request-success">
+          <ResetPasswordRequestSuccess/>
+        </Route>
+        <Route path="/reset-password/:uid/:token">
+          <ResetPassword />
+        </Route>
+        <Route path="/reset-password-success">
+          <ResetPasswordSuccess/>
+        </Route>
+        <Route path="/register">
+          <Register />
+        </Route>
+        <Route path="/activate/:uid/:token">
+          <ActivateUser />
+        </Route>
+        <Route path="/activate-success">
+          <ActivateUserSuccess />
+        </Route>
+        <Route path="/register-success">
+          <RegisterSuccess />
+        </Route>
         <Route>
           {logged_in}
         </Route>
-    </Switch>
+      </Switch>
+    </React.Fragment>
   );
 }
  

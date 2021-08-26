@@ -9,6 +9,7 @@ from django.core.cache import cache
 from django.core.exceptions import ValidationError
 import myokit
 from myokit.formats.sbml import SBMLParser
+from myokit.formats.mathml import MathMLExpressionWriter
 import threading
 
 lock = threading.Lock()
@@ -69,14 +70,47 @@ class MyokitModelMixin:
         super().save(*args, **kwargs)
 
     @staticmethod
+    def _serialise_equation(equ):
+        writer = MathMLExpressionWriter()
+        writer.set_mode(presentation=True)
+        return writer.eq(equ)
+
+    @staticmethod
     def _serialise_variable(var):
         return {
-            'name': var.qname(),
+            'name': var.name(),
+            'qname': var.qname(),
             'unit': str(var.unit()),
             'default_value': float(var.value()),
             'lower_bound': 0.0,
             'upper_bound': 2.0,
             'scale': 'LN',
+        }
+
+    @classmethod
+    def _serialise_component(cls, c):
+        states = [
+            cls._serialise_variable(s)
+            for s in c.variables(state=True, sort=True)
+        ]
+        variables = [
+            cls._serialise_variable(v)
+            for v in c.variables(const=True, sort=True)
+        ]
+        outputs = [
+            cls._serialise_variable(o)
+            for o in c.variables(const=False, sort=True)
+        ]
+        equations = [
+            cls._serialise_equation(e)
+            for e in c.equations(bound=False, const=False)
+        ]
+        return {
+            'name': c.name(),
+            'states': states,
+            'variables': variables,
+            'outputs': outputs,
+            'equations': equations,
         }
 
     def states(self):
@@ -85,6 +119,17 @@ class MyokitModelMixin:
         states = model.variables(state=True, sort=True)
         return [
             self._serialise_variable(s) for s in states
+        ]
+
+    def components(self):
+        """
+        outputs are dependent (e.g. y) and independent (e.g. time)
+        variables of the model to be solved
+        """
+        model = self.get_myokit_model()
+        return [
+            self._serialise_component(c)
+            for c in model.components(sort=True)
         ]
 
     def outputs(self):
@@ -131,15 +176,15 @@ class MyokitModelMixin:
             mapping output names to arrays of values
         """
         if outputs is None:
-            outputs = [o['name'] for o in self.outputs()]
+            outputs = [o['qname'] for o in self.outputs()]
         if initial_conditions is None:
             initial_conditions = {
-                s['name']: s['default_value']
+                s['qname']: s['default_value']
                 for s in self.states()
             }
         if variables is None:
             variables = {
-                v['name']: v['default_value']
+                v['qname']: v['default_value']
                 for v in self.variables()
             }
 
@@ -202,7 +247,6 @@ class MechanisticModel(models.Model, MyokitModelMixin):
 
     def clean(self):
         try:
-            print('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX')
             self.create_myokit_model()
         except Exception as e:
             raise ValidationError({'sbml': str(e)})

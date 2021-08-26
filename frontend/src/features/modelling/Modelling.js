@@ -4,11 +4,16 @@ import Paper from '@material-ui/core/Paper';
 import Grid from '@material-ui/core/Grid';
 import PkDetail from '../pkModels/PkDetail'
 import PdDetail from '../pdModels/PdDetail'
-import ProjectDetail from '../projects/ProjectDetail'
 import ProtocolDetail from '../protocols/ProtocolDetail'
 import DatasetDetail from '../datasets/DatasetDetail'
 import Chart from './Chart'
-import ChartController from './ChartController'
+import Accordion from '@material-ui/core/Accordion';
+import AccordionSummary from '@material-ui/core/AccordionSummary';
+import AccordionDetails from '@material-ui/core/AccordionDetails';
+import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
+import Typography from '@material-ui/core/Typography';
+
+
 
 import { makeStyles } from '@material-ui/core/styles';
 
@@ -35,6 +40,7 @@ import {
 
 const useStyles = makeStyles((theme) => ({
   root: {
+    marginTop: theme.spacing(2),
     flexGrow: 1,
   },
   paper: {
@@ -60,42 +66,59 @@ export default function Modelling() {
       <Grid container spacing={3}>
         <Grid item xs={12}>
           <Paper className={classes.paper}>
-            <ProjectDetail project={project}/>
+            <Chart datasets={chosenDatasets} pkModels={chosenPkModels} pdModels={chosenPdModels} />
           </Paper>
         </Grid>
-          <Grid item xs={12}>
-            <Paper className={classes.paper}>
-              <Chart datasets={chosenDatasets} pkModels={chosenPkModels} pdModels={chosenPdModels} />
-            </Paper>
-          </Grid>
-          {chosenPdModels.map(pdModel => (
-            <Grid item xs={6} key={pdModel.id}>
-            <Paper className={classes.paper}>
-            <PdDetail project={project} pd_model={pdModel} />
-            </Paper>
-            </Grid>
-          ))}
-          {chosenPkModels.map(pkModel => (
-            <Grid item xs={6} key={pkModel.id}>
-            <Paper className={classes.paper}>
-              <PkDetail pk_model={pkModel} project={project} />
-            </Paper>
-            </Grid>
-          ))}
-          {chosenProtocols.map(protocol => (
-            <Grid item xs={6} key={protocol.id}>
-            <Paper className={classes.paper}>
-              <ProtocolDetail protocol={protocol} project={project} />
-            </Paper>
-            </Grid>
-          ))}
-          {chosenDatasets.map(dataset => (
-            <Grid item xs={6} key={dataset.id}>
-            <Paper className={classes.paper}>
+        <Grid item xs={12} >
+        {chosenDatasets.map(dataset => (
+          <Accordion key={dataset.id}>
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <Typography className={classes.heading}>
+                Dataset - {dataset.name}
+              </Typography>
+            </AccordionSummary>
+            <AccordionDetails>
               <DatasetDetail  dataset={dataset} project={project}/>
-            </Paper>
-            </Grid>
-          ))}
+            </AccordionDetails>
+          </Accordion>
+        ))}
+        {chosenPdModels.map(pdModel => (
+          <Accordion key={pdModel.id}>
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <Typography className={classes.heading}>
+                PD Model - {pdModel.name}
+              </Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <PdDetail project={project} pd_model={pdModel} />
+            </AccordionDetails>
+          </Accordion>
+        ))}
+        {chosenPkModels.map(pkModel => (
+          <Accordion key={pkModel.id}>
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <Typography className={classes.heading}>
+                PK Model - {pkModel.name}
+              </Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <PkDetail project={project} pk_model={pkModel} />
+            </AccordionDetails>
+          </Accordion>
+        ))}
+        {chosenProtocols.map(protocol => (
+          <Accordion key={protocol.id}>
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <Typography className={classes.heading}>
+                Protocol - {protocol.name}
+              </Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <ProtocolDetail protocol={protocol} project={project} />
+            </AccordionDetails>
+          </Accordion>
+        ))}
+        </Grid>
       </Grid>
     </div>
   )

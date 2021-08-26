@@ -17,6 +17,7 @@ https://docs.djangoproject.com/en/3.0/ref/settings/.
 """
 
 import os
+import dj_database_url
 
 # Set BASE_DIR to two directories up
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -47,19 +48,43 @@ INSTALLED_APPS = [
     # external apps
     'dpd_static_support',
     'django_extensions',
+    'djoser',
     'rest_framework',
     'rest_framework.authtoken',
-    'djoser',
 
     # internal apps
     'pkpdapp',
 ]
 
 
+DJOSER = {
+    'PASSWORD_RESET_CONFIRM_URL': 'reset-password/{uid}/{token}',
+    'ACTIVATION_URL': 'activate/{uid}/{token}',
+    'SEND_ACTIVATION_EMAIL': True,
+    'SEND_CONFIRMATION_EMAIL': True,
+    'PASSWORD_CHANGED_EMAIL_CONFIRMATION': True,
+    'SERIALIZERS': {},
+    'PERMISSIONS': {
+        'activation': ['rest_framework.permissions.AllowAny'],
+        'password_reset': ['rest_framework.permissions.AllowAny'],
+        'password_reset_confirm': ['rest_framework.permissions.AllowAny'],
+        'set_password': ['djoser.permissions.CurrentUserOrAdmin'],
+        'username_reset': ['rest_framework.permissions.AllowAny'],
+        'username_reset_confirm': ['rest_framework.permissions.AllowAny'],
+        'set_username': ['djoser.permissions.CurrentUserOrAdmin'],
+        'user_create': ['rest_framework.permissions.AllowAny'],
+        'user_delete': ['djoser.permissions.CurrentUserOrAdmin'],
+        'user': ['djoser.permissions.CurrentUserOrAdmin'],
+        'user_list': ['djoser.permissions.CurrentUserOrAdmin'],
+        'token_create': ['rest_framework.permissions.AllowAny'],
+        'token_destroy': ['rest_framework.permissions.IsAuthenticated'],
+    },
+}
+
+
 # django rest framework library
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.TokenAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': [
@@ -104,6 +129,7 @@ MARKDOWNIFY_WHITELIST_STYLES = [
 ]
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
 
@@ -113,6 +139,10 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
+
+CORS_ALLOWED_ORIGINS = [
+    "http://127.0.0.1:3000",
 ]
 
 ROOT_URLCONF = 'pkpdapp.urls'
@@ -140,13 +170,18 @@ WSGI_APPLICATION = 'pkpdapp.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
 }
+
+DATABASE_URL = os.environ.get('DATABASE_URL')
+db_from_env = dj_database_url.config(
+    default=DATABASE_URL, conn_max_age=500, ssl_require=False
+)
+DATABASES['default'].update(db_from_env)
 
 
 # Password validation
@@ -212,7 +247,18 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 # Redirect to home URL after login (Default redirects to /accounts/profile/)
 LOGIN_REDIRECT_URL = '/'
 
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+EMAIL_HOST = os.environ.get("EMAIL_HOST", default=None)
+if EMAIL_HOST is None:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+else:
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+
+EMAIL_PORT = os.environ.get("EMAIL_PORT", default='foo')
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", default='foo')
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", default='foo')
+DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL",
+                                    default='webmaster@localhost')
 
 CACHES = {
     'default': {

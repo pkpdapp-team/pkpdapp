@@ -55,14 +55,15 @@ function login(username, password) {
 }
 
 function logout() {
-  return post('auth/token/logout').then(() => {
-    authToken = null;
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("loggedInUser");
-  });
+  post('auth/token/logout')
+  authToken = null;
+  localStorage.removeItem("authToken");
+  localStorage.removeItem("loggedInUser");
+  console.log('logout authToken', authToken)
 }
 
 function isLoggedIn() {
+  console.log('authToken', authToken)
   return !isEmpty(authToken);
 }
 
@@ -80,15 +81,17 @@ function get(url) {
     return fetch(url, requestOptions).then(handleResponse);
 }
 
-function post(url, body) {
-    const requestOptions = {
+function post(url, body, useToken=true) {
+    let requestOptions = {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Token ${authToken}`,
         },
         body: JSON.stringify(body)
     };
+    if (useToken) {
+      requestOptions.headers['Authorization'] = `Token ${authToken}`
+    }
     return fetch(url, requestOptions).then(handleResponse);
 }
 

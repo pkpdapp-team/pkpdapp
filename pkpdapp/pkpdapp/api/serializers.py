@@ -53,19 +53,11 @@ class PharmacokineticSerializer(serializers.ModelSerializer):
 
 
 class DosedPharmacokineticSerializer(serializers.ModelSerializer):
-    states = serializers.SerializerMethodField('get_states')
-    outputs = serializers.SerializerMethodField('get_outputs')
-    variables = serializers.SerializerMethodField('get_variables')
+    components = serializers.SerializerMethodField('get_components')
     simulate = serializers.SerializerMethodField('get_simulate')
 
-    def get_states(self, m):
-        return m.states()
-
-    def get_outputs(self, m):
-        return m.outputs()
-
-    def get_variables(self, m):
-        return m.variables()
+    def get_components(self, m):
+        return m.components()
 
     def get_simulate(self, m):
         return m.simulate()
@@ -76,19 +68,11 @@ class DosedPharmacokineticSerializer(serializers.ModelSerializer):
 
 
 class PharmacodynamicSerializer(serializers.ModelSerializer):
-    states = serializers.SerializerMethodField('get_states')
-    outputs = serializers.SerializerMethodField('get_outputs')
-    variables = serializers.SerializerMethodField('get_variables')
+    components = serializers.SerializerMethodField('get_components')
     simulate = serializers.SerializerMethodField('get_simulate')
 
-    def get_states(self, m):
-        return m.states()
-
-    def get_outputs(self, m):
-        return m.outputs()
-
-    def get_variables(self, m):
-        return m.variables()
+    def get_components(self, m):
+        return m.components()
 
     def get_simulate(self, m):
         return m.simulate()
@@ -124,6 +108,17 @@ class VariableSerializer(serializers.ModelSerializer):
     class Meta:
         model = Variable
         fields = '__all__'
+
+
+class BiomarkerDataSerializer(serializers.ModelSerializer):
+    data = serializers.SerializerMethodField('get_data')
+
+    class Meta:
+        model = BiomarkerType
+        fields = '__all__'
+
+    def get_data(self, bt):
+        return bt.as_pandas().to_dict(orient='list')
 
 
 class BiomarkerTypeSerializer(serializers.ModelSerializer):

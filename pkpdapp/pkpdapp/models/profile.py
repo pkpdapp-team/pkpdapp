@@ -5,7 +5,6 @@
 #
 
 from django.db import models
-from pkpdapp.models import Project
 from django.contrib.auth.models import User
 
 
@@ -15,9 +14,3 @@ class Profile(models.Model):
     :model:`auth.User`.
     """
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    selected_project = models.ForeignKey(
-        Project,
-        related_name='projects',
-        help_text='currently selected project for user',
-        null=True, on_delete=models.SET_NULL
-    )

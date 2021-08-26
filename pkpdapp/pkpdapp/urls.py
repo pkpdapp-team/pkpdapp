@@ -39,12 +39,13 @@ router.register(
     basename='pkpd_model'
 )
 
-# TODO: Move django_plotly_dash to the app that is actually using it!
 urlpatterns = [
     path('admin/doc/', include('django.contrib.admindocs.urls')),
     path('admin/', admin.site.urls),
     path('accounts/', include('django.contrib.auth.urls')),
     path('api/', include(router.urls), name='api'),
+    path('api/biomarker-data/<int:pk>/',
+         api.BiomarkerDataView.as_view(), name='biomarker-data'),
     path('api/dosed_pharmacokinetic/<int:pk>/simulate',
          api.SimulatePkView.as_view(), name='simulate-dosed-pharmacokinetic'),
     path('api/pharmacodynamic/<int:pk>/simulate',

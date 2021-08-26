@@ -39,23 +39,36 @@ class TestPharmodynamicModel(TestCase):
         ]
         self.assertCountEqual(model_variables, test_model_variables)
 
+    def test_component_serialisation(self):
+        m = PharmacodynamicModel.objects.get(
+            name='tumour_growth_inhibition_model_koch',
+        )
+        components = m.components()
+        print(components)
+        self.assertEqual(len(components), 1)
+        self.assertIn('name', components[0])
+        self.assertIn('states', components[0])
+        self.assertIn('variables', components[0])
+        self.assertIn('outputs', components[0])
+        self.assertIn('equations', components[0])
+
     def test_simulate(self):
         m = PharmacodynamicModel.objects.get(
             name='tumour_growth_inhibition_model_koch',
         )
 
-        variables = [v['name'] for v in m.variables()]
+        variables = [v['qname'] for v in m.variables()]
         test_model_variables = [
             'myokit.lambda_0', 'myokit.lambda_1',
             'myokit.kappa', 'myokit.drug_concentration'
         ]
         self.assertCountEqual(variables, test_model_variables)
 
-        states = [s['name'] for s in m.states()]
+        states = [s['qname'] for s in m.states()]
         test_model_states = ['myokit.tumour_volume']
         self.assertCountEqual(states, test_model_states)
 
-        outpts = [o['name'] for o in m.outputs()]
+        outpts = [o['qname'] for o in m.outputs()]
         test_model_outputs = ['myokit.tumour_volume', 'myokit.time']
         self.assertCountEqual(outpts, test_model_outputs)
 
@@ -178,18 +191,18 @@ class TestDosedPharmokineticModel(TestCase):
             amount=1,
         )
 
-        variables = [v['name'] for v in m.variables()]
+        variables = [v['qname'] for v in m.variables()]
         test_model_variables = [
             'central.size', 'dose.absorption_rate',
             'myokit.clearance'
         ]
         self.assertCountEqual(variables, test_model_variables)
 
-        states = [s['name'] for s in m.states()]
+        states = [s['qname'] for s in m.states()]
         test_model_states = ['central.drug_amount', 'dose.drug_amount']
         self.assertCountEqual(states, test_model_states)
 
-        outpts = [o['name'] for o in m.outputs()]
+        outpts = [o['qname'] for o in m.outputs()]
         test_model_outputs = [
             'central.drug_amount', 'central.drug_concentration',
             'dose.dose_rate', 'dose.drug_amount', 'myokit.time'
