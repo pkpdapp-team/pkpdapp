@@ -8,7 +8,7 @@ from pkpdapp.models import (
     Dataset, BiomarkerType, Subject, Protocol, Project,
     PharmacokineticModel, PharmacodynamicModel,
     DosedPharmacokineticModel, PkpdModel,
-    Profile, Dose, Unit, Biomarker, Compound
+    Profile, Dose, Unit, Biomarker, Compound, Variable,
 )
 from django.contrib.auth.models import User
 from pkpdapp.models.mechanistic_model import MyokitModelMixin
@@ -101,6 +101,12 @@ class PkpdSerializer(serializers.ModelSerializer):
 class UnitSerializer(serializers.ModelSerializer):
     class Meta:
         model = Unit
+        fields = '__all__'
+
+
+class VariableSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Variable
         fields = '__all__'
 
 
@@ -383,9 +389,13 @@ class ProjectSerializer(serializers.ModelSerializer):
     # )
     # user_ids = serializers.PrimaryKeyRelatedField(
     #     queryset=User.objects.all(),
-    #     source='users',
+    #     source='users', # noqa: E251
     #     many=True,
     # )
+
+    variables = VariableSerializer(
+        read_only=True
+    )
 
     class Meta:
         model = Project
