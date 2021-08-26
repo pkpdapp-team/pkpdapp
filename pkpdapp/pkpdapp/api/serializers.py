@@ -101,7 +101,6 @@ class PharmacodynamicSerializer(serializers.ModelSerializer):
 class PharmacodynamicSbmlSerializer(serializers.ModelSerializer):
     sbml = serializers.CharField(validators=[ValidSbml()])
 
-
     class Meta:
         model = PharmacodynamicModel
         fields = ['sbml']
@@ -119,6 +118,7 @@ class UnitSerializer(serializers.ModelSerializer):
     class Meta:
         model = Unit
         fields = '__all__'
+
 
 class VariableSerializer(serializers.ModelSerializer):
     class Meta:
@@ -399,7 +399,7 @@ class ProjectSerializer(serializers.ModelSerializer):
     # )
 
     variables = VariableSerializer(
-        read_only = True
+        read_only=True
     )
 
     class Meta:
