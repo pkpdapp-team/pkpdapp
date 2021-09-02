@@ -10,7 +10,7 @@ from django.db.models import Q
 
 class InferenceResults(models.Model):
     """
-    Results of an inference process.
+    Results of an inference process. 
     """
     inference = models.ForeignKey(
         Inference,
