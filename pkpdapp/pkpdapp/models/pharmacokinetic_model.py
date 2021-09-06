@@ -9,7 +9,8 @@ from django.urls import reverse
 from pkpdapp.models import (
     MyokitModelMixin,
     MechanisticModel,
-    Protocol
+    Protocol,
+    Project,
 )
 import myokit
 from .mechanistic_model import lock
@@ -19,7 +20,6 @@ class PharmacokineticModel(MechanisticModel):
     """
     this just creates a concrete table for PK models without dosing
     """
-
     def get_absolute_url(self):
         return reverse('pk_model-detail', kwargs={'pk': self.pk})
 
@@ -30,6 +30,12 @@ class DosedPharmacokineticModel(models.Model, MyokitModelMixin):
     """
     DEFAULT_PK_MODEL = 1
     name = models.CharField(max_length=100, help_text='name of the model')
+    project = models.ForeignKey(
+        Project, on_delete=models.CASCADE,
+        related_name='pk_models',
+        blank=True, null=True,
+        help_text='Project that "owns" this model'
+    )
     pharmacokinetic_model = models.ForeignKey(
         PharmacokineticModel,
         default=DEFAULT_PK_MODEL,
