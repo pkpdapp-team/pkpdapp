@@ -5,6 +5,7 @@
 #
 
 from django.db import models
+from pkpdapp.models import Project
 
 
 class Dataset(models.Model):
@@ -27,6 +28,12 @@ class Dataset(models.Model):
     description = models.TextField(
         help_text='short description of the dataset',
         blank=True, default=''
+    )
+    project = models.ForeignKey(
+        Project, on_delete=models.CASCADE,
+        related_name='datasets',
+        blank=True, null=True,
+        help_text='Project that "owns" this model'
     )
 
     def __str__(self):

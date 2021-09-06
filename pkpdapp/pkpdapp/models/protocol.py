@@ -6,7 +6,10 @@
 
 from django.db import models
 from django.urls import reverse
-from pkpdapp.models import Compound, Dataset, Subject, Unit
+from pkpdapp.models import (
+    Compound, Dataset, Subject, Unit,
+    Project,
+)
 
 
 class Protocol(models.Model):
@@ -17,6 +20,12 @@ class Protocol(models.Model):
 
     name = models.CharField(
         max_length=100, help_text='name of the protocol'
+    )
+    project = models.ForeignKey(
+        Project, on_delete=models.CASCADE,
+        related_name='protocols',
+        blank=True, null=True,
+        help_text='Project that "owns" this protocol.'
     )
     compound = models.ForeignKey(
         Compound, on_delete=models.CASCADE,

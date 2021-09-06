@@ -264,6 +264,7 @@ def load_datasets(apps, schema_editor):
     Unit = apps.get_model("pkpdapp", "Unit")
     Protocol = apps.get_model("pkpdapp", "Protocol")
 
+    demo_project = Project.objects.get(name='demo')
     for (datafile_name, datafile_url, datafile_description,
          biomarkers, protocol_unit) \
             in zip(datafile_names, datafile_urls, datafile_descriptions,
@@ -273,12 +274,9 @@ def load_datasets(apps, schema_editor):
             name=datafile_name,
             description=datafile_description,
             datetime=make_aware(datetime.today()),
+            project=demo_project
         )
         dataset.save()
-
-        # add to demo project
-        demo_project = Project.objects.get(name='demo')
-        demo_project.datasets.add(dataset)
 
         # find the index of the biomarker type, so we don't have to keep
         # looking it up
@@ -423,6 +421,7 @@ def load_datasets(apps, schema_editor):
                             dataset=dataset,
                             subject=subject,
                             time_unit=time_unit,
+                            project=demo_project,
                             amount_unit=unit,
                         )
                     Dose.objects.create(

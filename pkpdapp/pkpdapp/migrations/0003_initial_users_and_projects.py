@@ -43,7 +43,6 @@ def load_users_and_projects(apps, schema_editor):
         project = Project.objects.get(name=u['selected_project'])
         profile = Profile(
             user=user,
-            selected_project=project
         )
         profile.save()
 

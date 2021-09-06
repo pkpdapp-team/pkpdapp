@@ -79,19 +79,13 @@ class Migration(migrations.Migration):
             bases=(models.Model, pkpdapp.models.mechanistic_model.MyokitModelMixin),
         ),
         migrations.CreateModel(
-            name='PkpdModel',
+            name='Project',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(help_text='name of the model', max_length=100)),
-                ('description', models.TextField(blank=True, default='', help_text='short description of the model')),
-                ('sbml', models.TextField(default='<?xml version="1.0" encoding="UTF-8"?><sbml xmlns="http://www.sbml.org/sbml/level3/version2/core" level="3" version="2"><model id="default"></model></sbml>', help_text='the model represented using SBML (see http://sbml.org)')),
-                ('time_max', models.FloatField(default=30, help_text='suggested maximum time to simulate for this model (in the time units specified by the sbml model)')),
-                ('dose_compartment', models.CharField(blank=True, default='central', help_text='compartment name to be dosed', max_length=100, null=True)),
+                ('name', models.CharField(help_text='name of the project', max_length=100)),
+                ('description', models.TextField(blank=True, default='', help_text='short description of the project')),
+                ('users', models.ManyToManyField(help_text='users with access to this project', to=settings.AUTH_USER_MODEL)),
             ],
-            options={
-                'abstract': False,
-            },
-            bases=(models.Model, pkpdapp.models.mechanistic_model.MyokitModelMixin),
         ),
         migrations.CreateModel(
             name='Unit',
@@ -144,41 +138,49 @@ class Migration(migrations.Migration):
                 ('amount_unit', models.ForeignKey(default=2, help_text='unit for the amount value stored in each dose', on_delete=django.db.models.deletion.CASCADE, related_name='protocols_amount', to='pkpdapp.unit')),
                 ('compound', models.ForeignKey(blank=True, help_text='drug compound', null=True, on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.compound')),
                 ('dataset', models.ForeignKey(blank=True, help_text='dataset containing this protocol', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='protocols', to='pkpdapp.dataset')),
+                ('project', models.ForeignKey(blank=True, help_text='Project that "owns" this protocol.', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='protocols', to='pkpdapp.project')),
                 ('subject', models.ForeignKey(blank=True, help_text='subject associated with protocol', null=True, on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.subject')),
                 ('time_unit', models.ForeignKey(default=1, help_text='unit for the start_time and duration values stored in each dose', on_delete=django.db.models.deletion.CASCADE, related_name='protocols_time', to='pkpdapp.unit')),
-            ],
-        ),
-        migrations.CreateModel(
-            name='Project',
-            fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(help_text='name of the project', max_length=100)),
-                ('description', models.TextField(blank=True, default='', help_text='short description of the project')),
-                ('datasets', models.ManyToManyField(blank=True, help_text='datasets referenced by this project', to='pkpdapp.Dataset')),
-                ('pd_models', models.ManyToManyField(blank=True, help_text='PD models referenced by this project', to='pkpdapp.PharmacodynamicModel')),
-                ('pk_models', models.ManyToManyField(blank=True, help_text='PK models referenced by this project', to='pkpdapp.DosedPharmacokineticModel')),
-                ('pkpd_models', models.ManyToManyField(blank=True, help_text='PKPD models referenced by this project', to='pkpdapp.PkpdModel')),
-                ('protocols', models.ManyToManyField(blank=True, help_text='Protocols referenced by this project', to='pkpdapp.Protocol')),
-                ('users', models.ManyToManyField(help_text='users with access to this project', to=settings.AUTH_USER_MODEL)),
             ],
         ),
         migrations.CreateModel(
             name='Profile',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('selected_project', models.ForeignKey(help_text='currently selected project for user', null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='projects', to='pkpdapp.project')),
                 ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
         ),
+        migrations.CreateModel(
+            name='PkpdModel',
+            fields=[
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('name', models.CharField(help_text='name of the model', max_length=100)),
+                ('description', models.TextField(blank=True, default='', help_text='short description of the model')),
+                ('sbml', models.TextField(default='<?xml version="1.0" encoding="UTF-8"?><sbml xmlns="http://www.sbml.org/sbml/level3/version2/core" level="3" version="2"><model id="default"></model></sbml>', help_text='the model represented using SBML (see http://sbml.org)')),
+                ('time_max', models.FloatField(default=30, help_text='suggested maximum time to simulate for this model (in the time units specified by the sbml model)')),
+                ('dose_compartment', models.CharField(blank=True, default='central', help_text='compartment name to be dosed', max_length=100, null=True)),
+                ('project', models.ForeignKey(blank=True, help_text='Project that "owns" this model', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='pkpd_models', to='pkpdapp.project')),
+                ('protocol', models.ForeignKey(blank=True, help_text='dosing protocol', null=True, on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.protocol')),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=(models.Model, pkpdapp.models.mechanistic_model.MyokitModelMixin),
+        ),
         migrations.AddField(
-            model_name='pkpdmodel',
-            name='protocol',
-            field=models.ForeignKey(blank=True, help_text='dosing protocol', null=True, on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.protocol'),
+            model_name='pharmacodynamicmodel',
+            name='project',
+            field=models.ForeignKey(blank=True, help_text='Project that "owns" this model', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='pd_models', to='pkpdapp.project'),
         ),
         migrations.AddField(
             model_name='dosedpharmacokineticmodel',
             name='pharmacokinetic_model',
             field=models.ForeignKey(default=1, help_text='pharmacokinetic model', on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.pharmacokineticmodel'),
+        ),
+        migrations.AddField(
+            model_name='dosedpharmacokineticmodel',
+            name='project',
+            field=models.ForeignKey(blank=True, help_text='Project that "owns" this model', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='pk_models', to='pkpdapp.project'),
         ),
         migrations.AddField(
             model_name='dosedpharmacokineticmodel',
@@ -194,6 +196,11 @@ class Migration(migrations.Migration):
                 ('duration', models.FloatField(default=0.0, help_text='Duration of dose administration, see protocol for units. For a bolus injection, set a dose duration of 0.')),
                 ('protocol', models.ForeignKey(help_text='protocol containing this dose', on_delete=django.db.models.deletion.CASCADE, related_name='doses', to='pkpdapp.protocol')),
             ],
+        ),
+        migrations.AddField(
+            model_name='dataset',
+            name='project',
+            field=models.ForeignKey(blank=True, help_text='Project that "owns" this model', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='datasets', to='pkpdapp.project'),
         ),
         migrations.CreateModel(
             name='BiomarkerType',

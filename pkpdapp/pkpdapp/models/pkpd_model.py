@@ -8,11 +8,18 @@ from django.db import models
 from django.urls import reverse
 from pkpdapp.models import (
     MechanisticModel,
-    Protocol
+    Protocol,
+    Project,
 )
 
 
 class PharmacodynamicModel(MechanisticModel):
+    project = models.ForeignKey(
+        Project, on_delete=models.CASCADE,
+        related_name='pd_models',
+        blank=True, null=True,
+        help_text='Project that "owns" this model'
+    )
 
     def get_absolute_url(self):
         return reverse('pd_model-detail', kwargs={'pk': self.pk})
@@ -24,6 +31,12 @@ class PkpdModel(MechanisticModel):
         default='central',
         help_text='compartment name to be dosed',
         blank=True, null=True,
+    )
+    project = models.ForeignKey(
+        Project, on_delete=models.CASCADE,
+        related_name='pkpd_models',
+        blank=True, null=True,
+        help_text='Project that "owns" this model'
     )
     protocol = models.ForeignKey(
         Protocol,
