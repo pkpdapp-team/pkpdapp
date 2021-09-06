@@ -41,11 +41,7 @@ jobs:
         run: |
           python --version
           python -m pip install --upgrade pip setuptools wheel
-          python -m pip install .
-      
-      - name: build pkpdapp
-        run: |
-          python pkpdapp/manage.py collectstatic
+          python -m pip install -r requirements.txt
       
       - name: run unit tests
         run: |

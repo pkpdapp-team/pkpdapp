@@ -1,0 +1,20 @@
+version: "2"
+services:
+  pkpdapp:
+    image: pkpdapp
+    build:
+      dockerfile: Dockerfile
+      context: .
+    ports:
+      - "80:${PORT}"
+    restart: unless-stopped
+    env_file:
+     - ./.env
+  pkpdapp_postgres:
+    image: "postgres"
+    stop_signal: SIGINT                 # Fast Shutdown mode
+    command: -p 5432
+    env_file:
+      - ./.env
+    restart: unless-stopped
+  

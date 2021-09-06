@@ -6,7 +6,7 @@
 
 from django.db import models
 from django.urls import reverse
-from pkpdapp.models import Compound, Dataset, Subject
+from pkpdapp.models import Compound, Dataset, Subject, Unit
 
 
 class Protocol(models.Model):
@@ -14,6 +14,7 @@ class Protocol(models.Model):
     Multiple doses forming a single protocol. Can optionally be associated with
     a compound, dataset and subject.
     """
+
     name = models.CharField(
         max_length=100, help_text='name of the protocol'
     )
@@ -42,6 +43,24 @@ class Protocol(models.Model):
         max_length=1,
         choices=DoseType.choices,
         default=DoseType.DIRECT,
+    )
+
+    DEFAULT_TIME_UNIT = 1
+    time_unit = models.ForeignKey(
+        Unit, on_delete=models.CASCADE,
+        default=DEFAULT_TIME_UNIT,
+        related_name='protocols_time',
+        help_text=(
+            'unit for the start_time and duration values stored in each dose'
+        )
+    )
+
+    DEFAULT_AMOUNT_UNIT = 2
+    amount_unit = models.ForeignKey(
+        Unit, on_delete=models.CASCADE,
+        default=DEFAULT_AMOUNT_UNIT,
+        related_name='protocols_amount',
+        help_text='unit for the amount value stored in each dose'
     )
 
     def get_absolute_url(self):

@@ -17,6 +17,7 @@ https://docs.djangoproject.com/en/3.0/ref/settings/.
 """
 
 import os
+import dj_database_url
 
 # Set BASE_DIR to two directories up
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -45,17 +46,52 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     # external apps
-    'django_plotly_dash.apps.DjangoPlotlyDashConfig',
     'dpd_static_support',
-    'markdownify',
     'django_extensions',
-    'crispy_forms',
+    'djoser',
     'rest_framework',
+    'rest_framework.authtoken',
 
     # internal apps
-    'explore_data.apps.ExploreDataConfig',
     'pkpdapp',
 ]
+
+
+DJOSER = {
+    'PASSWORD_RESET_CONFIRM_URL': 'reset-password/{uid}/{token}',
+    'ACTIVATION_URL': 'activate/{uid}/{token}',
+    'SEND_ACTIVATION_EMAIL': True,
+    'SEND_CONFIRMATION_EMAIL': True,
+    'PASSWORD_CHANGED_EMAIL_CONFIRMATION': True,
+    'SERIALIZERS': {},
+    'PERMISSIONS': {
+        'activation': ['rest_framework.permissions.AllowAny'],
+        'password_reset': ['rest_framework.permissions.AllowAny'],
+        'password_reset_confirm': ['rest_framework.permissions.AllowAny'],
+        'set_password': ['djoser.permissions.CurrentUserOrAdmin'],
+        'username_reset': ['rest_framework.permissions.AllowAny'],
+        'username_reset_confirm': ['rest_framework.permissions.AllowAny'],
+        'set_username': ['djoser.permissions.CurrentUserOrAdmin'],
+        'user_create': ['rest_framework.permissions.AllowAny'],
+        'user_delete': ['djoser.permissions.CurrentUserOrAdmin'],
+        'user': ['djoser.permissions.CurrentUserOrAdmin'],
+        'user_list': ['djoser.permissions.CurrentUserOrAdmin'],
+        'token_create': ['rest_framework.permissions.AllowAny'],
+        'token_destroy': ['rest_framework.permissions.IsAuthenticated'],
+    },
+}
+
+
+# django rest framework library
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.TokenAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ]
+}
+
 
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
 
@@ -93,6 +129,7 @@ MARKDOWNIFY_WHITELIST_STYLES = [
 ]
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
 
@@ -102,9 +139,10 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
 
-    'django_plotly_dash.middleware.BaseMiddleware',
-    'django_plotly_dash.middleware.ExternalRedirectionMiddleware',
+CORS_ALLOWED_ORIGINS = [
+    "http://127.0.0.1:3000",
 ]
 
 ROOT_URLCONF = 'pkpdapp.urls'
@@ -132,13 +170,18 @@ WSGI_APPLICATION = 'pkpdapp.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
 }
+
+DATABASE_URL = os.environ.get('DATABASE_URL')
+db_from_env = dj_database_url.config(
+    default=DATABASE_URL, conn_max_age=500, ssl_require=False
+)
+DATABASES['default'].update(db_from_env)
 
 
 # Password validation
@@ -188,7 +231,6 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'pkpdapp', 'static'),
 ]
 
 # Staticfiles finders for locating dash app assets and related files
@@ -196,75 +238,31 @@ STATICFILES_FINDERS = [
     # Django default finders
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-
-    # Dash default finders
-    'django_plotly_dash.finders.DashAssetFinder',
-    'django_plotly_dash.finders.DashComponentFinder',
-    'django_plotly_dash.finders.DashAppDirectoryFinder',
 ]
 
 # Forever cachable files and compression support
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-PLOTLY_DASH = {
-
-    # Route used for the message pipe websocket connection
-    "ws_route": "dpd/ws/channel",
-
-    # Route used for direct http insertion of pipe messages
-    "http_route": "dpd/views",
-
-    # Flag controlling existince of http poke endpoint
-    "http_poke_enabled": True,
-
-    # Insert data for the demo when migrating
-    "insert_demo_migrations": False,
-
-    # Timeout for caching of initial arguments in seconds
-    "cache_timeout_initial_arguments": 60,
-
-    # Name of view wrapping function
-    "view_decorator": None,
-
-    # Flag to control location of initial argument storage
-    "cache_arguments": True,
-
-    # Flag controlling local serving of assets
-    "serve_locally": False,
-}
-
-# Staticfiles finders for locating dash app assets and related files
-
-STATICFILES_FINDERS = [
-
-    'django.contrib.staticfiles.finders.FileSystemFinder',
-    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-
-    'django_plotly_dash.finders.DashAssetFinder',
-    'django_plotly_dash.finders.DashComponentFinder',
-    'django_plotly_dash.finders.DashAppDirectoryFinder',
-]
-
-# Plotly components containing static content that should
-# be handled by the Django staticfiles infrastructure
-
-PLOTLY_COMPONENTS = [
-
-    # Common components
-    'dash_core_components',
-    'dash_html_components',
-    'dash_renderer',
-
-    # django-plotly-dash components
-    'dpd_components',
-    # static support if serving local assets
-    'dpd_static_support',
-
-    # Other components, as needed
-    'dash_bootstrap_components',
-]
 
 # Redirect to home URL after login (Default redirects to /accounts/profile/)
 LOGIN_REDIRECT_URL = '/'
 
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+EMAIL_HOST = os.environ.get("EMAIL_HOST", default=None)
+if EMAIL_HOST is None:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+else:
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+
+EMAIL_PORT = os.environ.get("EMAIL_PORT", default='foo')
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", default='foo')
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", default='foo')
+DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL",
+                                    default='webmaster@localhost')
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
+        'LOCATION': '127.0.0.1:11211',
+    }
+}

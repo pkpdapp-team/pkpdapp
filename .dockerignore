@@ -1,0 +1,4 @@
+frontend/node_modules
+env
+*.egg-info
+pkpdapp/db.sqlite3

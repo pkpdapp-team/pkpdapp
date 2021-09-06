@@ -18,15 +18,15 @@ class Dose(models.Model):
         help_text='protocol containing this dose'
     )
     start_time = models.FloatField(
-        help_text='starting time point of dose, in hours'
+        help_text='starting time point of dose, see protocol for units'
     )
     amount = models.FloatField(
-        help_text='amount of compound administered, in micro grams'
+        help_text='amount of compound administered, see protocol for units'
     )
     duration = models.FloatField(
         default=0.0,
         help_text=(
-            'Duration of dose administration in hours. '
+            'Duration of dose administration, see protocol for units. '
             'For a bolus injection, set a dose duration of 0.'
         )
     )

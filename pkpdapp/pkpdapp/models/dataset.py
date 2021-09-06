@@ -5,14 +5,16 @@
 #
 
 from django.db import models
-from django.urls import reverse
 
 
 class Dataset(models.Model):
     """
     A PKPD dataset containing one or more :model:`pkpdapp.Biomarker`.
     """
-    name = models.CharField(max_length=100, help_text='name of the dataset')
+    name = models.CharField(
+        max_length=100,
+        help_text='name of the dataset'
+    )
     datetime = models.DateTimeField(
         help_text=(
             'date/time the experiment was conducted. '
@@ -26,9 +28,6 @@ class Dataset(models.Model):
         help_text='short description of the dataset',
         blank=True, default=''
     )
-
-    def get_absolute_url(self):
-        return reverse('dataset-detail', kwargs={'pk': self.pk})
 
     def __str__(self):
         return self.name

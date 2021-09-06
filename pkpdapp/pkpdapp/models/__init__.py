@@ -5,21 +5,24 @@
 #
 # flake8: noqa f401
 
+from .units import Unit
 from .compound import Compound
 from .dataset import Dataset
 from .subject import Subject
 from .protocol import Protocol
-from .pkpd_model import (
-    MechanisticModel,
+from .mechanistic_model import (MechanisticModel, MyokitModelMixin)
+from .pharmacokinetic_model import (
     PharmacokineticModel,
-    PharmacodynamicModel,
     DosedPharmacokineticModel,
+)
+from .pkpd_model import (
+    PharmacodynamicModel,
     PkpdModel,
 )
-from .units import StandardUnit, Unit
+from .variable import Variable
 from .biomarker_type import BiomarkerType
 from .biomarker import Biomarker
 from .project import Project
 from .profile import Profile
 from .dose import Dose
-
+from .variable import Variable

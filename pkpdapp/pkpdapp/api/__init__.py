@@ -8,5 +8,7 @@
 from .views import (
     DatasetView, UserView, ProjectView,
     PharmacokineticView, DosedPharmacokineticView,
-    PharmacodynamicView, PkpdView,
+    PharmacodynamicView, PkpdView, DoseView,
+    ProtocolView, SimulatePkView, SimulatePdView,
+    UnitView, BiomarkerDataView
 )

@@ -10,6 +10,7 @@ import csv
 import codecs
 from datetime import datetime
 from django.utils.timezone import make_aware
+import myokit
 
 datafile_urls = [
     'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/datasets/lxf_control_growth.csv',  # noqa: E501
@@ -29,6 +30,37 @@ datafile_names = [
     'lxf_single_erlotinib_dose',
     'demo_pk_data',
     'TCB4dataset',
+]
+
+protocol_units = [
+    {
+        'time': None,
+        'amount': None,
+    },
+    {
+        'time': None,
+        'amount': None,
+    },
+    {
+        'time': None,
+        'amount': None,
+    },
+    {
+        'time': None,
+        'amount': None,
+    },
+    {
+        'time': None,
+        'amount': None,
+    },
+    {
+        'time': myokit.Unit.parse_simple('h'),
+        'amount': myokit.Unit.parse_simple('mg'),
+    },
+    {
+        'time': None,
+        'amount': myokit.Unit.parse_simple('ng'),
+    },
 ]
 
 datafile_descriptions = [
@@ -232,9 +264,10 @@ def load_datasets(apps, schema_editor):
     Unit = apps.get_model("pkpdapp", "Unit")
     Protocol = apps.get_model("pkpdapp", "Protocol")
 
-    for datafile_name, datafile_url, datafile_description, biomarkers \
+    for (datafile_name, datafile_url, datafile_description,
+         biomarkers, protocol_unit) \
             in zip(datafile_names, datafile_urls, datafile_descriptions,
-                   biomarkers_for_datasets):
+                   biomarkers_for_datasets, protocol_units):
         # create the dataset
         dataset = Dataset(
             name=datafile_name,
@@ -260,7 +293,7 @@ def load_datasets(apps, schema_editor):
                 description=b['name'],
                 unit=Unit.objects.get(
                     symbol=b['unit']
-                ).standard_unit,
+                ),
                 dataset=dataset
             ) for b in biomarkers
         ]
@@ -314,6 +347,7 @@ def load_datasets(apps, schema_editor):
                 if biomarker_type_str not in biomarker_index:
                     continue
                 index = biomarker_index[biomarker_type_str]
+                bt = biomarker_types[index]
                 value = row[VALUE_COLUMN]
 
                 subject_id = row[SUBJECT_ID_COLUMN]
@@ -324,22 +358,26 @@ def load_datasets(apps, schema_editor):
                     )
                 except Subject.DoesNotExist:
                     group = ''
-                    dose_group = ''
+                    dose_group_amount = None
+                    dose_group_unit = None
                     if SUBJECT_GROUP_COLUMN:
                         group = row[SUBJECT_GROUP_COLUMN]
                     if DOSE_GROUP_COLUMN:
-                        dose_group = row[DOSE_GROUP_COLUMN]
+                        dose_group_amount = row[DOSE_GROUP_COLUMN]
+                        dose_group_unit = Unit.objects.get(symbol='')
 
                     subject = Subject.objects.create(
                         id_in_dataset=subject_id,
                         dataset=dataset,
                         group=group,
-                        dose_group=dose_group,
+                        dose_group_amount=dose_group_amount,
+                        dose_group_unit=dose_group_unit,
                     )
                 if UNIT_COLUMN is None:
                     unit = Unit.objects.get(symbol='')
                 else:
                     unit = Unit.objects.get(symbol=row[UNIT_COLUMN])
+                    unit == bt.unit
                 if TIME_UNIT_COLUMN is None:
                     time_unit = Unit.objects.get(symbol='h')
                 else:
@@ -350,11 +388,10 @@ def load_datasets(apps, schema_editor):
                 except ValueError:
                     is_number = False
                 if is_number:
-                    bt = biomarker_types[index]
                     Biomarker.objects.create(
-                        time=time_unit.multiplier * float(row[TIME_COLUMN]),
+                        time=row[TIME_COLUMN],
                         subject=subject,
-                        value=unit.multiplier * value,
+                        value=value,
                         biomarker_type=bt
                     )
                 elif (
@@ -385,19 +422,14 @@ def load_datasets(apps, schema_editor):
                             compound=compound,
                             dataset=dataset,
                             subject=subject,
+                            time_unit=time_unit,
+                            amount_unit=unit,
                         )
-                    start_time = time_unit.multiplier * float(row[TIME_COLUMN])
-                    amount = unit.multiplier * float(row[DOSE_COLUMN])
                     Dose.objects.create(
-                        start_time=start_time,
-                        amount=amount,
+                        start_time=row[TIME_COLUMN],
+                        amount=row[DOSE_COLUMN],
                         protocol=protocol,
                     )
-
-
-def delete_datasets(apps, schema_editor):
-    Dataset = apps.get_model("pkpdapp", "Dataset")
-    Dataset.objects.all().delete()
 
 
 class Migration(migrations.Migration):
@@ -408,5 +440,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(load_datasets, delete_datasets),
+        migrations.RunPython(load_datasets),
     ]
