@@ -1,9 +1,11 @@
 import React from "react";
 import { makeStyles } from '@material-ui/core/styles';
 import {
-  Link,
+  Link, matchPath, useLocation
 } from "react-router-dom";
+
 import { useSelector } from 'react-redux'
+import AccountTreeIcon from '@material-ui/icons/AccountTree';
 
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
@@ -43,6 +45,7 @@ const useStyles = makeStyles((theme) => ({
 
 
 export default function ProjectMenu() {
+  const { pathname } = useLocation();
   const classes = useStyles();
   const [dataAnalysisOpen, setDataAnalysisOpen] = React.useState(false);
   const handleDataAnalysisClick = () => {
@@ -51,15 +54,28 @@ export default function ProjectMenu() {
   const project = useSelector(selectChosenProject);
   console.log('got project', project)
 
+  const modellingPath ="/modelling"
+  const isModellingPath = matchPath(pathname, 
+    {path: modellingPath, exact:true}
+  )
+  const rootPath = "/"
+  const isRootPath= matchPath(pathname, 
+    {path: rootPath, exact:true}
+  )
+
   return (
     <List>
-      <ListItem button component={Link} to="/">
+      <ListItem button 
+        selected={isRootPath} 
+        component={Link} to={rootPath}>
         <ListItemIcon>
           <ListIcon />
         </ListItemIcon>
         <ListItemText primary='Projects' />
       </ListItem>
-      <ListItem button component={Link} to="/modelling">
+      <ListItem button 
+        selected={isModellingPath} 
+        component={Link} to={modellingPath}>
         <ListItemIcon>
           <VisibilityIcon />
         </ListItemIcon>
@@ -96,11 +112,20 @@ export default function ProjectMenu() {
       </ListItem>
 
       <Divider />
-
-      <Datasets project={project}/>
-      <PdModels project={project}/>
-      <PkModels project={project}/>
-      <Protocols project={project}/>
+      {project &&
+      <React.Fragment>
+        <ListItem button >
+          <ListItemIcon>
+            <AccountTreeIcon/>
+          </ListItemIcon>
+          <ListItemText primary={"Project: " + project.name} />
+        </ListItem>
+        <Datasets project={project}/>
+        <PdModels project={project}/>
+        <PkModels project={project}/>
+        <Protocols project={project}/>
+      </React.Fragment>
+      }
 
     </List>
   )

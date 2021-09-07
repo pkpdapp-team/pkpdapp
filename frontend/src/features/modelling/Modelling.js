@@ -43,9 +43,8 @@ const useStyles = makeStyles((theme) => ({
     marginTop: theme.spacing(2),
     flexGrow: 1,
   },
-  paper: {
+  chartPaper: {
     padding: theme.spacing(2),
-    textAlign: 'left',
   },
 }));
 
@@ -60,16 +59,32 @@ export default function Modelling() {
   if (!project) {
     return ('Select a project')
   }
+  let showChart = true
+  console.log("chosen", chosenDatasets, chosenPkModels, chosenPdModels)
+  if (
+    chosenDatasets.length === 0 && 
+    chosenPkModels.length === 0 && 
+    chosenPdModels.length === 0
+  ) {
+    showChart = false
+  }
   
   return (
     <div className={classes.root}>
       <Grid container spacing={3}>
-        <Grid item xs={12}>
-          <Paper className={classes.paper}>
+        <Grid item xs={12} md={6}>
+          <Paper className={classes.chartPaper}>
+            {showChart &&
             <Chart datasets={chosenDatasets} pkModels={chosenPkModels} pdModels={chosenPdModels} />
+            }
+            {!showChart &&
+              <Typography>
+                Choose a dataset or model to visualise
+              </Typography>
+            }
           </Paper>
         </Grid>
-        <Grid item xs={12} >
+        <Grid item xs={12} md={6} >
         {chosenDatasets.map(dataset => (
           <Accordion key={dataset.id}>
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
@@ -119,6 +134,7 @@ export default function Modelling() {
           </Accordion>
         ))}
         </Grid>
+        
       </Grid>
     </div>
   )

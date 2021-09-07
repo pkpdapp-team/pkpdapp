@@ -3,6 +3,7 @@ import { useSelector } from 'react-redux'
 import { selectBiomarkerDatasByDatasetIds } from '../datasets/biomarkerDatasSlice'
 
 import ColorScheme from 'color-scheme'
+import { makeStyles } from '@material-ui/core/styles';
 
 import { Scatter } from 'react-chartjs-2';
 
@@ -24,9 +25,17 @@ function hexToRGB(hex, alpha) {
     }
 }
 
+const useStyles = makeStyles((theme) => ({
+  root: {
+    height: '85vh',
+    width: '100%',
+  },
+}));
+
 
 export default function ModellingChart({datasets, pkModels, pdModels}) {
   let renderChart = true;
+  const classes = useStyles();
 
   var scheme = new ColorScheme();
   scheme.from_hue(21)         
@@ -135,7 +144,8 @@ export default function ModellingChart({datasets, pkModels, pdModels}) {
   console.log('chart data', data)
 
   const options = {
-    aspectRatio: 4,
+    responsive: true,
+    maintainAspectRatio: false,
     scales: {
       x: {
         type: 'linear'
@@ -170,7 +180,7 @@ export default function ModellingChart({datasets, pkModels, pdModels}) {
   }
 
   return (
-    <div>
+    <div className={classes.root}>
       {renderChart &&
         <Scatter data={data} options={options}/>
       }
