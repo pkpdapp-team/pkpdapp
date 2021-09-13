@@ -45,8 +45,8 @@ class MyokitModelMixin:
 
     def get_myokit_simulator(self):
         key = self._get_myokit_simulator_cache_key()
-        # myokit_simulator = cache.get(key)
-        myokit_simulator = None
+        with lock:
+            myokit_simulator = cache.get(key)
         if myokit_simulator is None:
             myokit_simulator = self.create_myokit_simulator()
             cache.set(
@@ -56,8 +56,8 @@ class MyokitModelMixin:
 
     def get_myokit_model(self):
         key = self._get_myokit_model_cache_key()
-        # myokit_model = cache.get(key)
-        myokit_model = None
+        with lock:
+            myokit_model = cache.get(key)
         if myokit_model is None:
             myokit_model = self.create_myokit_model()
             cache.set(

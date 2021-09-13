@@ -16,15 +16,19 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 function VariableSlider({control, variable, type}) {
+  const name = `${type}[${variable.qname}].default_value`
   return (
+    <React.Fragment>
+    
     <Box
       component="span"
       position="relative"
       height={120}
-      width={300}
+      width='100%'
+      minWidth={200}
       mx={1}
     >
-      <Box position="absolute" top={50} bottom={0} left={0} right={170}>
+      <Box position="absolute" top={50} bottom={0} left={0} right={'60%'}>
         <FormTextField 
           control={control} 
           defaultValue={variable.lower_bound}
@@ -35,7 +39,7 @@ function VariableSlider({control, variable, type}) {
           size="small"
         />
       </Box>
-      <Box position="absolute" top={50} bottom={0} left={170} right={0} >
+      <Box position="absolute" top={50} bottom={0} left={'60%'} right={0} >
         <FormTextField 
           control={control} 
           defaultValue={variable.upper_bound}
@@ -54,6 +58,7 @@ function VariableSlider({control, variable, type}) {
         min={variable.lower_bound} max={variable.upper_bound}
       />
       </Box>
+    </React.Fragment>
   )
 }
 
