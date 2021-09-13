@@ -67,6 +67,7 @@ export default function Login() {
           control={control} 
           defaultValue={''}
           name="username" label="Username"
+          autoComplete="username"
         />
         <FormTextField 
           variant="outlined"
@@ -74,6 +75,7 @@ export default function Login() {
           control={control} 
           defaultValue={''}
           name="password" label="Password"
+          type="password"
           autoComplete="current-password"
         />
         <Button

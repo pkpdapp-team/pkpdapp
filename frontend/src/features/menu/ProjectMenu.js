@@ -120,6 +120,7 @@ export default function ProjectMenu() {
           </ListItemIcon>
           <ListItemText primary={"Project: " + project.name} />
         </ListItem>
+        <Divider />
         <Datasets project={project}/>
         <PdModels project={project}/>
         <PkModels project={project}/>
