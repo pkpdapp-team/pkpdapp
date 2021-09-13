@@ -50,7 +50,7 @@ class Unit(models.Model):
     @staticmethod
     def get_unit_from_variable(v):
         unit = v.unit()
-        exponents = unit.list_exponents()
+        exponents = unit.exponents()
         multiplier = unit.multiplier()
         close_enough = 1e-9
         close_enough_units = Unit.objects.filter(

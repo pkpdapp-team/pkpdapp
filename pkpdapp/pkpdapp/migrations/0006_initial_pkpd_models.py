@@ -144,29 +144,29 @@ Description of a three compartment PK model here.
 
     PharmacodynamicModel = apps.get_model("pkpdapp", "PharmacodynamicModel")
     PharmacokineticModel = apps.get_model("pkpdapp", "PharmacokineticModel")
+    Unit = apps.get_model("pkpdapp", "Unit")
+    Variable = apps.get_model("pkpdapp", "Variable")
     Project = apps.get_model("pkpdapp", "Project")
     demo_project = Project.objects.get(name='demo')
     for m in models_pd:
         with urllib.request.urlopen(m['sbml_url']) as f:
             sbml_string = codecs.decode(f.read(), 'utf-8')
-            pkpd_model = PharmacodynamicModel(
+            model = PharmacodynamicModel.objects.create(
                 name=m['name'],
                 description=m['description'],
                 sbml=sbml_string,
                 project=demo_project
             )
-            pkpd_model.save()
 
     for m in models_pk:
         with urllib.request.urlopen(m['sbml_url']) as f:
             # parse as csv file
             sbml_string = codecs.decode(f.read(), 'utf-8')
-            pkpd_model = PharmacokineticModel(
+            model = PharmacokineticModel.objects.create(
                 name=m['name'],
                 description=m['description'],
                 sbml=sbml_string,
             )
-            pkpd_model.save()
 
 
 class Migration(migrations.Migration):

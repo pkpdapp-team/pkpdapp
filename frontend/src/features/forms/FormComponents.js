@@ -77,6 +77,7 @@ export function FormCheckboxField({control, name, defaultValue, label, ...rest})
 export function FormSliderField({control, name, defaultValue, min, max, label}) {
   const classes = useStyles();
 
+  console.log('rendering slider field with ', defaultValue)
   const marks = [
     {
       value: min,

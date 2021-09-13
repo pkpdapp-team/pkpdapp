@@ -5,3 +5,4 @@
 #
 
 from .add_profile_on_user_save import add_profile_on_user_save  # noqa: F401
+from .model_post_save import pd_post_save, pk_post_save

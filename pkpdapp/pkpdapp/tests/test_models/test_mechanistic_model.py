@@ -27,7 +27,6 @@ class TestPharmodynamicModel(TestCase):
         self.assertTrue(isinstance(m, PharmacodynamicModel))
 
     def test_myokit_model(self):
-
         m = PharmacodynamicModel.objects.get(
             name='tumour_growth_inhibition_model_koch',
         )
@@ -39,18 +38,15 @@ class TestPharmodynamicModel(TestCase):
         ]
         self.assertCountEqual(model_variables, test_model_variables)
 
-    def test_variable_creation(self):
+    def test_update_model(self):
         m = PharmacodynamicModel.objects.get(
             name='tumour_growth_inhibition_model_koch',
         )
         m.save()
-        m = PharmacodynamicModel.objects.get(
-            name='tumour_growth_inhibition_model_koch',
-        )
         model_variables = m.variables.values_list('name', flat=True)
         test_model_variables = [
-            'tumour_volume', 'lambda_0', 'lambda_1',
-            'kappa', 'drug_concentration', 'time'
+            'lambda_0', 'lambda_1',
+            'kappa', 'drug_concentration'
         ]
         self.assertCountEqual(model_variables, test_model_variables)
 
@@ -72,7 +68,7 @@ class TestPharmodynamicModel(TestCase):
             name='tumour_growth_inhibition_model_koch',
         )
 
-        variables = [v['qname'] for v in m.variables()]
+        variables = [v['qname'] for v in m.myokit_variables()]
         test_model_variables = [
             'myokit.lambda_0', 'myokit.lambda_1',
             'myokit.kappa', 'myokit.drug_concentration'
@@ -206,7 +202,7 @@ class TestDosedPharmokineticModel(TestCase):
             amount=1,
         )
 
-        variables = [v['qname'] for v in m.variables()]
+        variables = [v['qname'] for v in m.myokit_variables()]
         test_model_variables = [
             'central.size', 'dose.absorption_rate',
             'myokit.clearance'

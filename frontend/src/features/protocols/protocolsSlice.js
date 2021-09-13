@@ -3,8 +3,6 @@ import {
 } from '@reduxjs/toolkit'
 import { api } from '../../Api'
 
-import { updateProject } from '../projects/projectsSlice'
-
 const protocolsAdapter = createEntityAdapter({
   sortComparer: (a, b) => b.id < a.id
 })
@@ -27,15 +25,11 @@ export const addNewProtocol = createAsyncThunk(
     const initialProtocol = {
       name: 'new',
       dose_ids: [],
+      project: project.id,
     }
+    console.log('adding protocol', initialProtocol)
     const protocol = await api.post('/api/protocol/', initialProtocol)
     console.log('added protocol', protocol)
-    if (protocol) {
-      dispatch(updateProject({
-        ...project, 
-        protocols: [...project.protocols, protocol.id] 
-      }))
-    }
     return protocol
   }
 )
@@ -97,7 +91,6 @@ export const protocolsSlice = createSlice({
       state.status = 'failed'
       state.error = action.error.message
     },
-    [addNewProtocol.ref]: protocolsAdapter.addOne,
     [updateProtocol.fulfilled]: protocolsAdapter.upsertOne,
     [updateProtocol.rejected]: (state, action) => {
       state.status = 'failed'

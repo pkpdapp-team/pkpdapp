@@ -52,12 +52,49 @@ class PharmacokineticSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+
+def _serialize_component(model, component, myokit_model):
+    states = [
+        MyokitModelMixin._serialise_variable(s)
+        for s in component.variables(state=True, sort=True)
+    ]
+
+    variables = [
+        VariableSerializer(v).data
+        for v in model.variables.all()
+        if v.qname.startswith(component.name())
+    ]
+
+    outputs = [
+        MyokitModelMixin._serialise_variable(o)
+        for o in component.variables(const=False, sort=True)
+    ]
+    equations = [
+        MyokitModelMixin._serialise_equation(e)
+        for e in component.equations(bound=False, const=False)
+    ]
+    return {
+        'name': component.name(),
+        'states': states,
+        'variables': variables,
+        'outputs': outputs,
+        'equations': equations,
+    }
+
+
 class DosedPharmacokineticSerializer(serializers.ModelSerializer):
     components = serializers.SerializerMethodField('get_components')
     simulate = serializers.SerializerMethodField('get_simulate')
 
     def get_components(self, m):
-        return m.components()
+        if m.is_variables_out_of_date():
+            m.update_model()
+
+        model = m.get_myokit_model()
+        return [
+            _serialize_component(m, c, model)
+            for c in model.components(sort=True)
+        ]
 
     def get_simulate(self, m):
         return m.simulate()
@@ -72,7 +109,14 @@ class PharmacodynamicSerializer(serializers.ModelSerializer):
     simulate = serializers.SerializerMethodField('get_simulate')
 
     def get_components(self, m):
-        return m.components()
+        if m.is_variables_out_of_date():
+            m.update_model()
+
+        model = m.get_myokit_model()
+        return [
+            _serialize_component(m, c, model)
+            for c in model.components(sort=True)
+        ]
 
     def get_simulate(self, m):
         return m.simulate()
@@ -392,10 +436,6 @@ class ProjectSerializer(serializers.ModelSerializer):
     #     source='users', # noqa: E251
     #     many=True,
     # )
-
-    variables = VariableSerializer(
-        read_only=True
-    )
 
     class Meta:
         model = Project

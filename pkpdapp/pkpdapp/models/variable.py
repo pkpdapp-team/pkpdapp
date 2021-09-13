@@ -18,6 +18,7 @@ class Variable(models.Model):
     """
 
     name = models.CharField(max_length=20, help_text='name of the variable')
+    qname = models.CharField(max_length=20, help_text='fully qualitifed name of the variable')
     pd_model = models.ForeignKey(
         PharmacodynamicModel,
         blank=True, null=True,
@@ -73,13 +74,13 @@ class Variable(models.Model):
             models.CheckConstraint(
                 check=(
                     (Q(pk_model__isnull=True) &
-                     Q(pd_model__isnull=False) &
+                     Q(dosed_pk_model__isnull=True) &
                      Q(pd_model__isnull=False)) |
-                    (Q(pk_model__isnull=False) &
-                     Q(pd_model__isnull=True) &
+                    (Q(pk_model__isnull=True) &
+                     Q(dosed_pk_model__isnull=True) &
                      Q(pd_model__isnull=False)) |
-                    (Q(pk_model__isnull=False) &
-                     Q(pd_model__isnull=False) &
+                    (Q(pk_model__isnull=True) &
+                     Q(dosed_pk_model__isnull=False) &
                      Q(pd_model__isnull=True))
                 ),
                 name='variable must belong to a model'
@@ -93,36 +94,69 @@ class Variable(models.Model):
             )
         ]
 
+
     @staticmethod
-    def create_variable(model, myokit_variable):
-        if model == PharmacokineticModel:
+    def get_variable_pk(model, myokit_variable):
+        variables = Variable.objects.filter(
+            qname=myokit_variable.qname(),
+            pk_model=model,
+        )
+        if variables.count() > 0:
+            return variables[0]
+        else:
             return Variable.objects.create(
-                name=myokit_variable.qname(),
+                name=myokit_variable.name(),
+                qname=myokit_variable.qname(),
                 unit=Unit.get_unit_from_variable(myokit_variable),
                 pk_model=model,
             )
-        elif model == DosedPharmacokineticModel:
+
+
+    @staticmethod
+    def get_variable_pd(model, myokit_variable):
+        variables = Variable.objects.filter(
+            qname=myokit_variable.qname(),
+            pd_model=model,
+        )
+        if variables.count() > 0:
+            return variables[0]
+        else:
             return Variable.objects.create(
-                name=myokit_variable.qname(),
-                unit=Unit.get_unit_from_variable(myokit_variable),
-                dosed_pk_model=model,
-            )
-        elif model == PharmacodynamicModel:
-            return Variable.objects.create(
-                name=myokit_variable.qname(),
+                name=myokit_variable.name(),
+                qname=myokit_variable.qname(),
                 unit=Unit.get_unit_from_variable(myokit_variable),
                 pd_model=model,
             )
+
+    @staticmethod
+    def get_variable_dosed_pk(model, myokit_variable):
+        variables = Variable.objects.filter(
+            qname=myokit_variable.qname(),
+            dosed_pk_model=model,
+        )
+        if variables.count() > 0:
+            return variables[0]
         else:
-            raise RuntimeError(
-                'create_variable got unexpected model type {}'
-                .format(model.__name__),
+            return Variable.objects.create(
+                name=myokit_variable.name(),
+                qname=myokit_variable.qname(),
+                unit=Unit.get_unit_from_variable(myokit_variable),
+                dosed_pk_model=model,
             )
 
     @staticmethod
     def get_variable(model, myokit_variable):
-        variables = Variable.objects.filter(name=myokit_variable.qname())
-        if variables.count() > 0:
-            return variables[0]
+        if isinstance(model, PharmacokineticModel):
+            return Variable.get_variable_pk(model, myokit_variable)
+        elif isinstance(model, DosedPharmacokineticModel):
+            return Variable.get_variable_dosed_pk(model, myokit_variable)
+        elif isinstance(model, PharmacodynamicModel):
+            return Variable.get_variable_pd(model, myokit_variable)
         else:
-            return Variable.create_variable(model, myokit_variable)
+            raise RuntimeError(
+                'create_variable got unexpected model type {}'
+                .format(type(model)),
+            )
+
+
+

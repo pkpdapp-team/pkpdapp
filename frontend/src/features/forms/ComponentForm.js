@@ -1,15 +1,23 @@
 import React from "react";
 import Grid from '@material-ui/core/Grid';
 import Typography from '@material-ui/core/Typography';
+import { makeStyles } from '@material-ui/core/styles';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import {FormCheckboxField, FormSliderField } from '../forms/FormComponents';
 
 import MathJax from 'react-mathjax-preview'
 
+const useStyles = makeStyles((theme) => ({
+  root: {
+    width: '100%',
+  }
+}));
 
 export default function ComponentForm({control, component}) {
+  const classes = useStyles();
   return (
+    <div className={classes.root}>
     <Grid container item xs={12} spacing={3}>
     <Grid item xs={4}>
     <Typography>Initial Conditions</Typography>
@@ -77,6 +85,7 @@ export default function ComponentForm({control, component}) {
     })}
     </List>
     </Grid>
+    </div>
 
     
   )

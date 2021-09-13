@@ -2,8 +2,6 @@ import {
   createSlice, createEntityAdapter, createAsyncThunk,
 } from '@reduxjs/toolkit'
 
-import { updateProject } from '../projects/projectsSlice'
-
 import { api } from '../../Api'
 
 const pkModelsAdapter = createEntityAdapter({
@@ -27,16 +25,11 @@ export const addNewPkModel = createAsyncThunk(
   async (project, { dispatch }) => {
     const initialPkModel = {
       name: 'new',
+      project: project.id,
     }
     const pkModel = await api.post(
       '/api/dosed_pharmacokinetic/', initialPkModel
     )
-    if (pkModel) {
-      await dispatch(updateProject({
-        ...project, 
-        pk_models: [...project.pk_models, pkModel.id] 
-      }))
-    }
     return pkModel
   }
 )

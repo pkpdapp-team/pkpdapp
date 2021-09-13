@@ -13,7 +13,7 @@ from pkpdapp.models import (
     Project,
 )
 import myokit
-from .mechanistic_model import lock
+from .myokit_model_mixin import lock
 
 
 class PharmacokineticModel(MechanisticModel):

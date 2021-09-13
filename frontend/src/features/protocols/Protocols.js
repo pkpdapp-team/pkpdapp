@@ -10,7 +10,7 @@ import {
 } from '../protocols/protocolsSlice.js'
 
 
-export default function PkModels({project}) {
+export default function Protocols({project}) {
   const pkModels = useSelector(selectAllProtocols);
   const dispatch = useDispatch()
   const handleClickItem = (item) => dispatch(toggleProtocol(item))
