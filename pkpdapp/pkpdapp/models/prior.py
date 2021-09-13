@@ -44,6 +44,11 @@ class PriorParameter(models.Model):
         help_text='prior defined by this parameter'
     )
 
+    parameter_type = models.TextField(
+        help_text='kind of parameter',
+        blank=True, default=''
+    )
+
     value = models.FloatField(
         default=1,
         help_text='value of this parameter'
