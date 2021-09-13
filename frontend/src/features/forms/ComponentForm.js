@@ -28,22 +28,22 @@ function VariableSlider({control, variable, type}) {
       minWidth={200}
       mx={1}
     >
-      <Box position="absolute" top={50} bottom={0} left={0} right={'60%'}>
+      <Box position="absolute" top={50} bottom={0} left={0} right={'55%'}>
         <FormTextField 
           control={control} 
           defaultValue={variable.lower_bound}
-          inputProps={{step: 'any', style: { textAlign: 'left' }}} 
+          inputProps={{step: 'any', style: { fontSize: 13,textAlign: 'left' }}} 
           name={`${type}[${variable.qname}].lower_bound`} 
           type="number"
           helperText="lower bound"
           size="small"
         />
       </Box>
-      <Box position="absolute" top={50} bottom={0} left={'60%'} right={0} >
+      <Box position="absolute" top={50} bottom={0} left={'55%'} right={-15} >
         <FormTextField 
           control={control} 
           defaultValue={variable.upper_bound}
-          inputProps={{step: 'any', style: { textAlign: 'right' }}} 
+          inputProps={{step: 'any', style: { fontSize: 13, textAlign: 'right' }}} 
           name={`${type}[${variable.qname}].upper_bound`} 
           helperText="upper bound"
           type="number"
