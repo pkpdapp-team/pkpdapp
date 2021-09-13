@@ -81,18 +81,18 @@ export function FormSliderField({control, name, defaultValue, min, max, label}) 
   const marks = [
     {
       value: min,
-      label: min,
     },
     {
       value: max,
-      label: max,
     },
   ];
   return (
   <div className={classes.formInput}>
+    {label && 
     <Typography id={`input-slider-${name}`} gutterBottom>
       {label}
     </Typography>
+    }
     <Controller
         control={control}
         defaultValue={defaultValue}
