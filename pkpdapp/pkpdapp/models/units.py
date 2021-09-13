@@ -47,6 +47,61 @@ class Unit(models.Model):
             multiplier=self.multiplier
         )
 
+    @staticmethod
+    def get_unit_from_variable(v):
+        unit = v.unit()
+        exponents = unit.list_exponents()
+        multiplier = unit.multiplier()
+        close_enough = 1e-9
+        close_enough_units = Unit.objects.filter(
+            g__range=(
+                exponents[0] - close_enough,
+                exponents[0] + close_enough,
+            ),
+            m__range=(
+                exponents[1] - close_enough,
+                exponents[1] + close_enough,
+            ),
+            s__range=(
+                exponents[2] - close_enough,
+                exponents[2] + close_enough,
+            ),
+            A__range=(
+                exponents[3] - close_enough,
+                exponents[3] + close_enough,
+            ),
+            K__range=(
+                exponents[4] - close_enough,
+                exponents[4] + close_enough,
+            ),
+            cd__range=(
+                exponents[5] - close_enough,
+                exponents[5] + close_enough,
+            ),
+            mol__range=(
+                exponents[6] - close_enough,
+                exponents[6] + close_enough,
+            ),
+            multiplier__range=(
+                multiplier - close_enough,
+                multiplier + close_enough,
+            ),
+        )
+        if close_enough_units.count() > 0:
+            return close_enough_units[0]
+        else:
+            return Unit.objects.create(
+                symbol=str(unit),
+                g=exponents[0],
+                m=exponents[1],
+                s=exponents[2],
+                A=exponents[3],
+                K=exponents[4],
+                cd=exponents[5],
+                mol=exponents[6],
+                multiplier=multiplier
+            )
+
     def is_time_unit(self):
         return (
             self.s == 1 and

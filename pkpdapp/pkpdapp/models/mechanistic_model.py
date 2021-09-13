@@ -66,7 +66,15 @@ class MyokitModelMixin:
         return myokit_model
 
     def save(self, *args, **kwargs):
+        print('IM SAVING A MODEL', self.__name__)
         cache.delete(self._get_cache_key())
+
+        # update the variables of the model
+        self.variables.set([
+            self.variables.model.get_variable(self, v)
+            for v in self.myokit_variables()
+        ])
+
         super().save(*args, **kwargs)
 
     @staticmethod
@@ -143,7 +151,7 @@ class MyokitModelMixin:
             self._serialise_variable(o) for o in outpts
         ]
 
-    def variables(self):
+    def myokit_variables(self):
         """
         variables are independent variables of the model that are constant
         over time. aka parameters of the model

@@ -22,18 +22,21 @@ class Variable(models.Model):
         PharmacodynamicModel,
         blank=True, null=True,
         on_delete=models.CASCADE,
+        related_name='variables',
         help_text='pharmacodynamic model'
     )
     pk_model = models.ForeignKey(
         PharmacokineticModel,
         blank=True, null=True,
         on_delete=models.CASCADE,
+        related_name='variables',
         help_text='pharmacokinetic model'
     )
     dosed_pk_model = models.ForeignKey(
         DosedPharmacokineticModel,
         blank=True, null=True,
         on_delete=models.CASCADE,
+        related_name='variables',
         help_text='dosed pharmacokinetic model'
     )
     unit = models.ForeignKey(
@@ -89,3 +92,37 @@ class Variable(models.Model):
                 name='log scale must have a lower bound greater than zero'
             )
         ]
+
+    @staticmethod
+    def create_variable(model, myokit_variable):
+        if model == PharmacokineticModel:
+            return Variable.objects.create(
+                name=myokit_variable.qname(),
+                unit=Unit.get_unit_from_variable(myokit_variable),
+                pk_model=model,
+            )
+        elif model == DosedPharmacokineticModel:
+            return Variable.objects.create(
+                name=myokit_variable.qname(),
+                unit=Unit.get_unit_from_variable(myokit_variable),
+                dosed_pk_model=model,
+            )
+        elif model == PharmacodynamicModel:
+            return Variable.objects.create(
+                name=myokit_variable.qname(),
+                unit=Unit.get_unit_from_variable(myokit_variable),
+                pd_model=model,
+            )
+        else:
+            raise RuntimeError(
+                'create_variable got unexpected model type {}'
+                .format(model.__name__),
+            )
+
+    @staticmethod
+    def get_variable(model, myokit_variable):
+        variables = Variable.objects.filter(name=myokit_variable.qname())
+        if variables.count() > 0:
+            return variables[0]
+        else:
+            return Variable.create_variable(model, myokit_variable)

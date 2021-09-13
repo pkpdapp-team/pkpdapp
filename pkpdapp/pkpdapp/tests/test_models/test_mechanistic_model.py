@@ -39,6 +39,21 @@ class TestPharmodynamicModel(TestCase):
         ]
         self.assertCountEqual(model_variables, test_model_variables)
 
+    def test_variable_creation(self):
+        m = PharmacodynamicModel.objects.get(
+            name='tumour_growth_inhibition_model_koch',
+        )
+        m.save()
+        m = PharmacodynamicModel.objects.get(
+            name='tumour_growth_inhibition_model_koch',
+        )
+        model_variables = m.variables.values_list('name', flat=True)
+        test_model_variables = [
+            'tumour_volume', 'lambda_0', 'lambda_1',
+            'kappa', 'drug_concentration', 'time'
+        ]
+        self.assertCountEqual(model_variables, test_model_variables)
+
     def test_component_serialisation(self):
         m = PharmacodynamicModel.objects.get(
             name='tumour_growth_inhibition_model_koch',

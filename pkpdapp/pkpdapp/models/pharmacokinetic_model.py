@@ -20,6 +20,7 @@ class PharmacokineticModel(MechanisticModel):
     """
     this just creates a concrete table for PK models without dosing
     """
+
     def get_absolute_url(self):
         return reverse('pk_model-detail', kwargs={'pk': self.pk})
 
