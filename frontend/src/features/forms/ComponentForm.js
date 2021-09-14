@@ -1,5 +1,6 @@
 import React from "react";
 import Grid from '@material-ui/core/Grid';
+import { useSelector } from 'react-redux'
 import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
 import List from '@material-ui/core/List';
@@ -8,6 +9,7 @@ import {FormCheckboxField, FormSliderField, FormTextField } from '../forms/FormC
 import Box from "@material-ui/core/Box";
 
 import MathJax from 'react-mathjax-preview'
+import selectUnitById from '../projects/unitsSlice'
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -16,7 +18,9 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 function VariableSlider({control, variable, type}) {
-  const name = `${type}[${variable.qname}].default_value`
+  const unit_id = variable.unit
+  const unit = useSelector(state => selectUnitById(state, unit_id));
+
   return (
     <React.Fragment>
     
@@ -54,7 +58,7 @@ function VariableSlider({control, variable, type}) {
         control={control} 
         defaultValue={variable.default_value}
         name={`${type}[${variable.qname}].default_value`} 
-        label={`${variable.name} ${variable.unit}`}
+        label={`${variable.name} ${unit.symbol}`}
         min={variable.lower_bound} max={variable.upper_bound}
       />
       </Box>

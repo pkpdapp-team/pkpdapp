@@ -15,6 +15,7 @@ import AvatarListItem from '../menu/AvatarListItem'
 import {
   selectAllProjects, selectChosenProject, 
   chooseProject, addNewProject, fetchProjects,
+  fetchUnits,
 } from '../projects/projectsSlice.js'
 
 import {
@@ -78,6 +79,7 @@ export default function ListOfProjects() {
             dispatch(fetchPkModels(p))
             dispatch(fetchBasePkModels(p))
             dispatch(fetchProtocols(p))
+            dispatch(fetchUnits(p))
           }}
         />
       ))}
