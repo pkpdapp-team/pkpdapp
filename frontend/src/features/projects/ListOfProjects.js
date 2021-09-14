@@ -46,6 +46,11 @@ import {
   fetchProtocols 
 } from '../protocols/protocolsSlice.js'
 
+import {
+  fetchVariables
+} from '../variables/variablesSlice.js'
+
+
 
 const useStyles = makeStyles((theme) => ({
   avatarPlus: {
@@ -78,6 +83,7 @@ export default function ListOfProjects() {
             dispatch(fetchPdModels(p))
             dispatch(fetchPkModels(p))
             dispatch(fetchBasePkModels(p))
+            dispatch(fetchVariables(p))
             dispatch(fetchProtocols(p))
             dispatch(fetchUnits(p))
           }}

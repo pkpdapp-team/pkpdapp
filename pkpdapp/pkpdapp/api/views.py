@@ -20,6 +20,7 @@ from .serializers import (
     UnitSerializer,
     DatasetCsvSerializer,
     BiomarkerDataSerializer,
+    VariableSerializer,
 )
 
 from pkpdapp.models import (
@@ -32,8 +33,10 @@ from pkpdapp.models import (
     Unit,
     PkpdModel,
     BiomarkerType,
+    Variable,
 )
 from django.contrib.auth.models import User
+from django.db.models import Q
 
 
 class EnablePartialUpdateMixin:
@@ -66,6 +69,12 @@ class ProjectFilter(filters.BaseFilterBackend):
                     queryset = project.pkpd_models
                 elif queryset.model == Protocol:
                     queryset = project.protocols
+                elif queryset.model == Variable:
+                    queryset = queryset.filter(
+                        Q(pd_model__project=project) |
+                        Q(dosed_pk_model__project=project)
+                    )
+                    print('doing it!', queryset)
                 else:
                     raise RuntimeError('queryset model {} not recognised')
             except Project.DoesNotExist:
@@ -93,6 +102,12 @@ class DoseView(viewsets.ModelViewSet):
 class PharmacokineticView(viewsets.ModelViewSet):
     queryset = PharmacokineticModel.objects.all()
     serializer_class = PharmacokineticSerializer
+
+
+class VariableView(viewsets.ModelViewSet):
+    queryset = Variable.objects.all()
+    serializer_class = VariableSerializer
+    filter_backends = [ProjectFilter]
 
 
 class DosedPharmacokineticView(viewsets.ModelViewSet):

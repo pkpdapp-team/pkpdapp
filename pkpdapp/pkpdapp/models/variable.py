@@ -18,7 +18,8 @@ class Variable(models.Model):
     """
 
     name = models.CharField(max_length=20, help_text='name of the variable')
-    qname = models.CharField(max_length=20, help_text='fully qualitifed name of the variable')
+    qname = models.CharField(
+        max_length=20, help_text='fully qualitifed name of the variable')
     pd_model = models.ForeignKey(
         PharmacodynamicModel,
         blank=True, null=True,
@@ -45,6 +46,18 @@ class Variable(models.Model):
         help_text=(
             'variable values are in this unit'
         )
+    )
+    constant = models.BooleanField(
+        default=True,
+        help_text=(
+            'True for a constant variable of the model, '
+            'i.e. a parameter. False if non-constant, '
+            'i.e. an output of the model (default is True)'
+        )
+    )
+    state = models.BooleanField(
+        default=False,
+        help_text='True for a state variable of the model (default is False)'
     )
     lower_bound = models.FloatField(
         default=1e-6,
@@ -94,7 +107,6 @@ class Variable(models.Model):
             )
         ]
 
-
     @staticmethod
     def get_variable_pk(model, myokit_variable):
         variables = Variable.objects.filter(
@@ -107,10 +119,11 @@ class Variable(models.Model):
             return Variable.objects.create(
                 name=myokit_variable.name(),
                 qname=myokit_variable.qname(),
+                constant=myokit_variable.is_constant(),
+                state=myokit_variable.is_state(),
                 unit=Unit.get_unit_from_variable(myokit_variable),
                 pk_model=model,
             )
-
 
     @staticmethod
     def get_variable_pd(model, myokit_variable):
@@ -124,6 +137,8 @@ class Variable(models.Model):
             return Variable.objects.create(
                 name=myokit_variable.name(),
                 qname=myokit_variable.qname(),
+                constant=myokit_variable.is_constant(),
+                state=myokit_variable.is_state(),
                 unit=Unit.get_unit_from_variable(myokit_variable),
                 pd_model=model,
             )
@@ -140,6 +155,8 @@ class Variable(models.Model):
             return Variable.objects.create(
                 name=myokit_variable.name(),
                 qname=myokit_variable.qname(),
+                constant=myokit_variable.is_constant(),
+                state=myokit_variable.is_state(),
                 unit=Unit.get_unit_from_variable(myokit_variable),
                 dosed_pk_model=model,
             )
@@ -157,6 +174,3 @@ class Variable(models.Model):
                 'create_variable got unexpected model type {}'
                 .format(type(model)),
             )
-
-
-

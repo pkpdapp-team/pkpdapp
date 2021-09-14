@@ -33,6 +33,12 @@ import {
   fetchProtocols 
 } from '../protocols/protocolsSlice.js'
 
+import {
+  fetchVariables
+} from '../variables/variablesSlice.js'
+
+
+
 
 
 const useStyles = makeStyles((theme) => ({
@@ -75,6 +81,7 @@ export default function ProjectDetail({project}) {
     dispatch(fetchPkModels(project))
     dispatch(fetchPdModels(project))
     dispatch(fetchPkModels(project))
+    dispatch(fetchVariables(project))
     dispatch(fetchBasePkModels(project))
     dispatch(fetchProtocols(project))
   }

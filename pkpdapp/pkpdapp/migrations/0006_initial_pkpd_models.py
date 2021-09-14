@@ -149,24 +149,30 @@ Description of a three compartment PK model here.
     Project = apps.get_model("pkpdapp", "Project")
     demo_project = Project.objects.get(name='demo')
     for m in models_pd:
-        with urllib.request.urlopen(m['sbml_url']) as f:
-            sbml_string = codecs.decode(f.read(), 'utf-8')
-            model = PharmacodynamicModel.objects.create(
-                name=m['name'],
-                description=m['description'],
-                sbml=sbml_string,
-                project=demo_project
-            )
+        try:
+            with urllib.request.urlopen(m['sbml_url'], timeout=1) as f:
+                sbml_string = codecs.decode(f.read(), 'utf-8')
+                model = PharmacodynamicModel.objects.create(
+                    name=m['name'],
+                    description=m['description'],
+                    sbml=sbml_string,
+                    project=demo_project
+                )
+        except urllib.error.URLError:
+            print('WARNING: urlopen timed-out, no data loaded')
 
     for m in models_pk:
-        with urllib.request.urlopen(m['sbml_url']) as f:
-            # parse as csv file
-            sbml_string = codecs.decode(f.read(), 'utf-8')
-            model = PharmacokineticModel.objects.create(
-                name=m['name'],
-                description=m['description'],
-                sbml=sbml_string,
-            )
+        try:
+            with urllib.request.urlopen(m['sbml_url'], timeout=1) as f:
+                # parse as csv file
+                sbml_string = codecs.decode(f.read(), 'utf-8')
+                model = PharmacokineticModel.objects.create(
+                    name=m['name'],
+                    description=m['description'],
+                    sbml=sbml_string,
+                )
+        except urllib.error.URLError:
+            print('WARNING: urlopen timed-out, no data loaded')
 
 
 class Migration(migrations.Migration):

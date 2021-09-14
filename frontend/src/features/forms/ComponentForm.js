@@ -9,7 +9,9 @@ import {FormCheckboxField, FormSliderField, FormTextField } from '../forms/FormC
 import Box from "@material-ui/core/Box";
 
 import MathJax from 'react-mathjax-preview'
-import selectUnitById from '../projects/unitsSlice'
+import { selectUnitById } from '../projects/unitsSlice'
+
+import VariableSlider from '../variables/VariableForm'
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -17,54 +19,19 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
-function VariableSlider({control, variable, type}) {
-  const unit_id = variable.unit
+function OutputCheckbox({control, output}) {
+  const unit_id = output.unit
   const unit = useSelector(state => selectUnitById(state, unit_id));
-
   return (
-    <React.Fragment>
-    
-    <Box
-      component="span"
-      position="relative"
-      height={120}
-      width='100%'
-      minWidth={200}
-      mx={1}
-    >
-      <Box position="absolute" top={50} bottom={0} left={0} right={'55%'}>
-        <FormTextField 
-          control={control} 
-          defaultValue={variable.lower_bound}
-          inputProps={{step: 'any', style: { fontSize: 13,textAlign: 'left' }}} 
-          name={`${type}[${variable.qname}].lower_bound`} 
-          type="number"
-          helperText="lower bound"
-          size="small"
-        />
-      </Box>
-      <Box position="absolute" top={50} bottom={0} left={'55%'} right={-15} >
-        <FormTextField 
-          control={control} 
-          defaultValue={variable.upper_bound}
-          inputProps={{step: 'any', style: { fontSize: 13, textAlign: 'right' }}} 
-          name={`${type}[${variable.qname}].upper_bound`} 
-          helperText="upper bound"
-          type="number"
-          size="small"
-        />
-      </Box>
-      <FormSliderField
-        control={control} 
-        defaultValue={variable.default_value}
-        name={`${type}[${variable.qname}].default_value`} 
-        label={`${variable.name} ${unit.symbol}`}
-        min={variable.lower_bound} max={variable.upper_bound}
-      />
-      </Box>
-    </React.Fragment>
+    <FormCheckboxField
+      control={control} 
+      defaultValue={output.default_value}
+      name={`outputs[${output.qname}].default_value`} 
+      label={`${output.name} ${unit.symbol}`}
+    />
   )
 }
+ 
 
 export default function ComponentForm({control, component}) {
   const classes = useStyles();
@@ -105,11 +72,8 @@ export default function ComponentForm({control, component}) {
     {component.outputs.map((output, index) => {
       return (
         <ListItem key={index} role={undefined} dense button >
-          <FormCheckboxField
-            control={control} 
-            defaultValue={output.default_value}
-            name={`outputs[${output.qname}].default_value`} 
-            label={`${output.name} ${output.unit}`}
+          <OutputCheckbox
+            control={control} output={output}
           />
         </ListItem>
       );

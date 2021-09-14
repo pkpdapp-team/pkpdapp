@@ -67,12 +67,16 @@ class MyokitModelMixin:
 
     def is_variables_out_of_date(self):
         model = self.get_myokit_model()
-        all_variables = self.variables.all()
+
+        # just check if the number of const variables is right
+        # TODO: is this sufficient, we are also updating on save
+        # so I think it should be ok....?
+        all_const_variables = self.variables.filter(constant=True)
         myokit_variable_count = sum(
             1 for _ in model.variables(const=True, sort=True)
         )
         # check if variables need updating
-        return len(all_variables) != myokit_variable_count
+        return len(all_const_variables) != myokit_variable_count
 
     def update_model(self):
         print('UOPDATE MODELK')
@@ -87,8 +91,15 @@ class MyokitModelMixin:
             Variable.get_variable(self, v)
             for v in self.get_myokit_model().variables(const=True, sort=True)
         ]
-        print('adding', new_variables)
-        self.variables.set(new_variables)
+        new_states = [
+            Variable.get_variable(self, v)
+            for v in self.get_myokit_model().variables(state=True, sort=True)
+        ]
+        new_outputs = [
+            Variable.get_variable(self, v)
+            for v in self.get_myokit_model().variables(const=False, sort=True)
+        ]
+        self.variables.set(new_variables + new_states + new_outputs)
 
     @staticmethod
     def _serialise_equation(equ):

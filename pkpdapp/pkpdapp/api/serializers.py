@@ -17,6 +17,7 @@ import codecs
 import pandas as pd
 
 
+
 class ValidSbml:
     def __call__(self, value):
         try:
@@ -51,24 +52,39 @@ class PharmacokineticSerializer(serializers.ModelSerializer):
         model = PharmacokineticModel
         fields = '__all__'
 
+class ComponentSerializerField(serializers.Field):
 
+    VALUE_MAP = {
+        'M': 'Male',
+        'F': 'Female'
+    }
+
+    def to_representation(self, obj):
+        return self.VALUE_MAP[obj]
+
+    def to_internal_value(self, data):
+        return {k:v for v,k in self.VALUE_MAP.items()}[data]
 
 def _serialize_component(model, component, myokit_model):
+
     states = [
-        MyokitModelMixin._serialise_variable(s)
-        for s in component.variables(state=True, sort=True)
+        v.pk
+        for v in model.variables.filter(state=True)
+        if v.qname.startswith(component.name())
     ]
 
     variables = [
-        VariableSerializer(v).data
-        for v in model.variables.all()
+        v.pk
+        for v in model.variables.filter(constant=True)
         if v.qname.startswith(component.name())
     ]
 
     outputs = [
-        MyokitModelMixin._serialise_variable(o)
-        for o in component.variables(const=False, sort=True)
+        v.pk
+        for v in model.variables.filter(constant=False)
+        if v.qname.startswith(component.name())
     ]
+
     equations = [
         MyokitModelMixin._serialise_equation(e)
         for e in component.equations(bound=False, const=False)
@@ -107,6 +123,9 @@ class DosedPharmacokineticSerializer(serializers.ModelSerializer):
 class PharmacodynamicSerializer(serializers.ModelSerializer):
     components = serializers.SerializerMethodField('get_components')
     simulate = serializers.SerializerMethodField('get_simulate')
+    variables = serializers.PrimaryKeyRelatedField(
+        many=True, read_only=True
+    )
 
     def get_components(self, m):
         if m.is_variables_out_of_date():

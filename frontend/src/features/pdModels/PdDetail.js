@@ -61,6 +61,7 @@ export default function PdDetail({project, pd_model}) {
   }, [reset, pd_model]);
 
   const onSubmit = (values) => {
+    console.log('submit', values)
     dispatch(updatePdModel(values))
   };
 
