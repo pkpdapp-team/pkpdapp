@@ -2,6 +2,7 @@ import {
   createSlice, createEntityAdapter, createAsyncThunk,
 } from '@reduxjs/toolkit'
 import { api } from '../../Api'
+import {fetchPkModelById} from '../pkModels/pkModelsSlice'
 
 const protocolsAdapter = createEntityAdapter({
   sortComparer: (a, b) => b.id < a.id
@@ -36,7 +37,7 @@ export const addNewProtocol = createAsyncThunk(
 
 export const updateProtocol = createAsyncThunk(
   'protocols/updateProtocol',
-  async (protocol, { getState }) => {
+  async (protocol, { getState, dispatch }) => {
     const dosePromises = protocol.doses.map(dose => {
       // add or update doses
       const data = {
@@ -61,7 +62,13 @@ export const updateProtocol = createAsyncThunk(
 
     console.log('have dose_ids', dose_ids, toDelete)
     const updatedProtocol = {...protocol, dose_ids}
-    return await api.put(`/api/protocol/${protocol.id}/`, updatedProtocol)
+    const newProtocol = await api.put(`/api/protocol/${protocol.id}/`, updatedProtocol)
+    console.log('got new protocol', newProtocol)
+    for (const pkModelId of newProtocol.dosed_pk_models) {
+      console.log('fetching', pkModelId)
+      dispatch(fetchPkModelById(pkModelId))
+    }
+    return newProtocol
   }
 )
 

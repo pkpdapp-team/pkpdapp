@@ -40,10 +40,18 @@ class ProtocolSerializer(serializers.ModelSerializer):
         source='doses',
         many=True, write_only=True,
     )
+    dosed_pk_models = serializers.PrimaryKeyRelatedField(
+        many=True, read_only=True
+    )
 
     class Meta:
         model = Protocol
         fields = '__all__'
+
+    def update(self, instance, validated_data):
+        for dosed_pk_model in instance.dosed_pk_models.all():
+            dosed_pk_model.update_model()
+        return super().update(instance, validated_data)
 
 
 class PharmacokineticSerializer(serializers.ModelSerializer):

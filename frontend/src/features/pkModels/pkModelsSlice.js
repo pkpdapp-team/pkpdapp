@@ -21,11 +21,14 @@ export const fetchPkModels = createAsyncThunk('pkModels/fetchPkModels', async (p
   return pkModels
 })
 
-export const fetchPkModelById = createAsyncThunk('pkModels/fetchPkModelById', async (model_id) => {
-  const response = await api.get(
+export const fetchPkModelById = createAsyncThunk('pkModels/fetchPkModelById', async (model_id, {dispatch}) => {
+  const pkModel = await api.get(
     `/api/dosed_pharmacokinetic/${model_id}/`
   )
-  return response
+  for (const variable_id of pkModel.variables) {
+      dispatch(fetchVariableById(variable_id))
+    }
+  return pkModel
 })
 
 export const addNewPkModel = createAsyncThunk(

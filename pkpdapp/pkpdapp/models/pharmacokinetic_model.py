@@ -52,6 +52,7 @@ class DosedPharmacokineticModel(models.Model, MyokitModelMixin):
     protocol = models.ForeignKey(
         Protocol,
         on_delete=models.CASCADE,
+        related_name='dosed_pk_models',
         blank=True, null=True,
         help_text='dosing protocol'
     )
