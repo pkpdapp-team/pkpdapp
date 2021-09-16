@@ -2,6 +2,8 @@ import {
   createSlice, createEntityAdapter, createAsyncThunk,
 } from '@reduxjs/toolkit'
 import { api } from '../../Api'
+import {fetchPdModelById} from '../pdModels/pdModelsSlice'
+import {fetchPkModelById} from '../pkModels/pkModelsSlice'
 
 const variablesAdapter = createEntityAdapter({
   sortComparer: (a, b) => b.id < a.id
@@ -34,8 +36,14 @@ export const addNewVariable = createAsyncThunk(
 
 export const updateVariable = createAsyncThunk(
   'variables/updateVariable',
-  async (variable) => {
-    const response = await api.put(`/api/variable/${variable.id}/`, variable)
+  async (variable, thunkAPI) => {
+    const response = await api.patch(`/api/variable/${variable.id}/`, variable)
+    if (response.pd_model) {
+      thunkAPI.dispatch(fetchPdModelById(response.pd_model))
+    }
+    if (response.dosed_pk_model) {
+      thunkAPI.dispatch(fetchPkModelById(response.dosed_pk_model))
+    }
     return response
   }
 )
@@ -58,7 +66,7 @@ export const variablesSlice = createSlice({
       variablesAdapter.setAll(state, action.payload)
     },
     [addNewVariable.fulfilled]: variablesAdapter.addOne,
-    [updateVariable.fulfilled]: variablesAdapter.upsertOne
+    [updateVariable.fulfilled]: variablesAdapter.upsertOne,
   }
 })
 

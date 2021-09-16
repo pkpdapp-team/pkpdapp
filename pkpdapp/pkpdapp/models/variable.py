@@ -19,7 +19,7 @@ class Variable(models.Model):
 
     name = models.CharField(max_length=20, help_text='name of the variable')
     qname = models.CharField(
-        max_length=20, help_text='fully qualitifed name of the variable')
+        max_length=100, help_text='fully qualitifed name of the variable')
     pd_model = models.ForeignKey(
         PharmacodynamicModel,
         blank=True, null=True,

@@ -1,17 +1,14 @@
 import React from "react";
 import Grid from '@material-ui/core/Grid';
-import { useSelector } from 'react-redux'
 import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
-import {FormCheckboxField, FormSliderField, FormTextField } from '../forms/FormComponents';
-import Box from "@material-ui/core/Box";
 
 import MathJax from 'react-mathjax-preview'
-import { selectUnitById } from '../projects/unitsSlice'
 
-import VariableSlider from '../variables/VariableForm'
+import VariableSubform from '../variables/VariableSubform'
+import OutputSubform from '../variables/OutputSubform'
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -19,19 +16,6 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
-function OutputCheckbox({control, output}) {
-  const unit_id = output.unit
-  const unit = useSelector(state => selectUnitById(state, unit_id));
-  return (
-    <FormCheckboxField
-      control={control} 
-      defaultValue={output.default_value}
-      name={`outputs[${output.qname}].default_value`} 
-      label={`${output.name} ${unit.symbol}`}
-    />
-  )
-}
- 
 
 export default function ComponentForm({control, component}) {
   const classes = useStyles();
@@ -44,8 +28,8 @@ export default function ComponentForm({control, component}) {
     {component.variables.map((variable, index) => {
       return (
         <ListItem key={index} role={undefined} dense >
-        <VariableSlider 
-          control={control} variable={variable} type={'variable'}
+        <VariableSubform
+          control={control} variable_id={variable}
         />
         </ListItem>
       );
@@ -58,8 +42,8 @@ export default function ComponentForm({control, component}) {
     {component.states.map((state, index) => {
       return (
         <ListItem key={index} role={undefined} dense >
-          <VariableSlider 
-            control={control} variable={state} type={'state'}
+          <VariableSubform
+            control={control} variable_id={state}
           />
         </ListItem>
       );
@@ -72,8 +56,8 @@ export default function ComponentForm({control, component}) {
     {component.outputs.map((output, index) => {
       return (
         <ListItem key={index} role={undefined} dense button >
-          <OutputCheckbox
-            control={control} output={output}
+          <OutputSubform
+            control={control} variable_id={output}
           />
         </ListItem>
       );

@@ -87,7 +87,7 @@ class MyokitModelMixin:
         # update the variables of the model
         from pkpdapp.models import Variable
         self.variables.all().delete()
-        new_variables  = [
+        new_variables = [
             Variable.get_variable(self, v)
             for v in self.get_myokit_model().variables(const=True, sort=True)
         ]
@@ -208,17 +208,25 @@ class MyokitModelMixin:
             mapping output names to arrays of values
         """
         if outputs is None:
-            outputs = [o['qname'] for o in self.outputs()]
+            outputs = [
+                o.qname
+                for o in self.variables.filter(constant=False)
+            ]
         if initial_conditions is None:
             initial_conditions = {
-                s['qname']: s['default_value']
-                for s in self.states()
+                s.qname: s.default_value
+                for s in self.variables.filter(state=True)
             }
         if variables is None:
             variables = {
-                v['qname']: v['default_value']
-                for v in self.myokit_variables()
+                v.qname: v.default_value
+                for v in self.variables.filter(constant=True)
             }
+
+        print('simulating with:')
+        print('outputs', outputs)
+        print('initial_conditions', initial_conditions)
+        print('variables', variables)
 
         sim = self.get_myokit_simulator()
 

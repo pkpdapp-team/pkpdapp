@@ -17,7 +17,6 @@ import codecs
 import pandas as pd
 
 
-
 class ValidSbml:
     def __call__(self, value):
         try:
@@ -52,6 +51,7 @@ class PharmacokineticSerializer(serializers.ModelSerializer):
         model = PharmacokineticModel
         fields = '__all__'
 
+
 class ComponentSerializerField(serializers.Field):
 
     VALUE_MAP = {
@@ -63,7 +63,8 @@ class ComponentSerializerField(serializers.Field):
         return self.VALUE_MAP[obj]
 
     def to_internal_value(self, data):
-        return {k:v for v,k in self.VALUE_MAP.items()}[data]
+        return {k: v for v, k in self.VALUE_MAP.items()}[data]
+
 
 def _serialize_component(model, component, myokit_model):
 
@@ -101,11 +102,11 @@ def _serialize_component(model, component, myokit_model):
 class DosedPharmacokineticSerializer(serializers.ModelSerializer):
     components = serializers.SerializerMethodField('get_components')
     simulate = serializers.SerializerMethodField('get_simulate')
+    variables = serializers.PrimaryKeyRelatedField(
+        many=True, read_only=True
+    )
 
     def get_components(self, m):
-        if m.is_variables_out_of_date():
-            m.update_model()
-
         model = m.get_myokit_model()
         return [
             _serialize_component(m, c, model)
@@ -119,6 +120,25 @@ class DosedPharmacokineticSerializer(serializers.ModelSerializer):
         model = DosedPharmacokineticModel
         fields = '__all__'
 
+    def create(self, validated_data):
+        print('creating dosed pk model', validated_data)
+        instance = DosedPharmacokineticModel.objects.create(
+            **validated_data
+        )
+        print('updating pk model', instance)
+        instance.update_model()
+        return instance
+
+    def update(self, instance, validated_data):
+        if 'pharmacokinetic_model' in validated_data:
+            print('update pk: have',
+                  instance.pharmacokinetic_model,
+                  validated_data['pharmacokinetic_model'])
+            instance.pharmacokinetic_model = \
+                validated_data['pharmacokinetic_model']
+            instance.update_model()
+        return super().update(self, instance, validated_data)
+
 
 class PharmacodynamicSerializer(serializers.ModelSerializer):
     components = serializers.SerializerMethodField('get_components')
@@ -128,9 +148,6 @@ class PharmacodynamicSerializer(serializers.ModelSerializer):
     )
 
     def get_components(self, m):
-        if m.is_variables_out_of_date():
-            m.update_model()
-
         model = m.get_myokit_model()
         return [
             _serialize_component(m, c, model)
@@ -151,6 +168,13 @@ class PharmacodynamicSbmlSerializer(serializers.ModelSerializer):
     class Meta:
         model = PharmacodynamicModel
         fields = ['sbml']
+
+    def update(self, instance, validated_data):
+        if 'sbml' in validated_data:
+            instance.sbml = validated_data['sbml']
+            instance.update_model()
+        instance.save()
+        return instance
 
 
 class PkpdSerializer(serializers.ModelSerializer):
