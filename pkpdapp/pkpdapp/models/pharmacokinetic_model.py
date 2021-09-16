@@ -65,6 +65,7 @@ class DosedPharmacokineticModel(models.Model, MyokitModelMixin):
     )
 
     def create_myokit_model(self):
+        print('CREATING MYOKIT MIODE')
         pk_model = self.pharmacokinetic_model.create_myokit_model()
         if self.protocol:
             compartment = self.dose_compartment

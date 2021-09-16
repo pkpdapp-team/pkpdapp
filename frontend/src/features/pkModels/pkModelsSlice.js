@@ -92,6 +92,7 @@ export const pkModelsSlice = createSlice({
       state.status = 'succeeded'
       pkModelsAdapter.setAll(state, action.payload)
     },
+    [fetchPkModelById.fulfilled]: pkModelsAdapter.upsertOne,
     [addNewPkModel.rejected]: (state, action) => console.log(action.error.message),
     [addNewPkModel.fulfilled]: pkModelsAdapter.addOne,
     [updatePkModel.fulfilled]: pkModelsAdapter.upsertOne
