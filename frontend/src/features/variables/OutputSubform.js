@@ -6,11 +6,21 @@ import { selectUnitById } from '../projects/unitsSlice'
 import { selectVariableById } from './variablesSlice'
 
 export default function OutputSubform({control, variable_id}) {
-  const variable = useSelector(
+  let variable = useSelector(
     state => selectVariableById(state, variable_id)
   );
-  const unit_id = variable.unit
-  const unit = useSelector(state => selectUnitById(state, unit_id));
+  if (!variable) {
+    variable = {
+      default_value: false,
+    }
+  }
+  const unit_id = variable ? variable.unit : 1
+  let unit = useSelector(state => selectUnitById(state, unit_id));
+  if (!unit) {
+    unit  = {
+      symbol: 'X'
+    }
+  }
   return (
     <FormCheckboxField
       control={control} 

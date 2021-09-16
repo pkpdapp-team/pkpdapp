@@ -78,7 +78,6 @@ export function FormCheckboxField({control, name, defaultValue, label, ...rest})
 export function FormSliderField({control, name, defaultValue, min, max, label, tooltip}) {
   const classes = useStyles();
   const roundNumber = (x) => {
-    console.log('roundNumber', x, typeof(x))
     if ((x < 0.01) || (x >= 10.0)) {
       const [coefficient, exponent] = x 
         .toExponential()

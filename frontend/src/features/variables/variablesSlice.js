@@ -23,6 +23,16 @@ export const fetchVariables = createAsyncThunk('variables/fetchVariables', async
   return response
 })
 
+export const fetchVariableById = createAsyncThunk('variables/fetchVariableById', async (variable_id, { getState }) => {
+
+  const response = await api.get(
+    `/api/variable/${variable_id}/`
+  )
+  return response
+})
+
+
+
 export const addNewVariable = createAsyncThunk(
   'variables/addNewVariable',
   async () => {
@@ -65,6 +75,7 @@ export const variablesSlice = createSlice({
       state.status = 'succeeded'
       variablesAdapter.setAll(state, action.payload)
     },
+    [fetchVariableById.fulfilled]: variablesAdapter.upsertOne,
     [addNewVariable.fulfilled]: variablesAdapter.addOne,
     [updateVariable.fulfilled]: variablesAdapter.upsertOne,
   }

@@ -2,6 +2,7 @@ import {
   createSlice, createEntityAdapter, createAsyncThunk,
 } from '@reduxjs/toolkit'
 import { api } from '../../Api'
+import {fetchVariableById} from '../variables/variablesSlice'
 
 const pdModelsAdapter = createEntityAdapter({
   sortComparer: (a, b) => b.id < a.id
@@ -36,20 +37,25 @@ export const addNewPdModel = createAsyncThunk(
     const pdModel = await api.post(
       '/api/pharmacodynamic/', initialPdModel
     )
+    for (const variable_id of pdModel.variables) {
+      dispatch(fetchVariableById(variable_id))
+    }
     return pdModel
   }
 )
 
 export const uploadPdSbml = createAsyncThunk(
   'pdModels/uploadPdSbml',
-  async ({id, sbml}, {rejectWithValue}) => {
-    const newPdModel = await api.putMultiPart(
+  async ({id, sbml}, {rejectWithValue, dispatch}) => {
+    await api.putMultiPart(
       `/api/pharmacodynamic/${id}/sbml`, {sbml}
-    ).then(() => {
-      return api.get(`/api/pharmacodynamic/${id}`) 
-    }).catch(err => rejectWithValue(err))
-
-    return newPdModel
+    )
+    const pdModel = await api.get(`/api/pharmacodynamic/${id}`)
+    console.log('got pdModel', pdModel)
+    for (const variable_id of pdModel.variables) {
+      dispatch(fetchVariableById(variable_id))
+    }
+    return pdModel
   }
 )
 

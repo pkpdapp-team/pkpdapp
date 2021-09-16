@@ -131,13 +131,12 @@ class DosedPharmacokineticSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         if 'pharmacokinetic_model' in validated_data:
-            print('update pk: have',
-                  instance.pharmacokinetic_model,
-                  validated_data['pharmacokinetic_model'])
-            instance.pharmacokinetic_model = \
-                validated_data['pharmacokinetic_model']
-            instance.update_model()
-        return super().update(self, instance, validated_data)
+            if instance.pharmacokinetic_model != \
+                    validated_data['pharmacokinetic_model']:
+                instance.pharmacokinetic_model = \
+                    validated_data['pharmacokinetic_model']
+                instance.update_model()
+        return super().update(instance, validated_data)
 
 
 class PharmacodynamicSerializer(serializers.ModelSerializer):

@@ -207,6 +207,12 @@ class MyokitModelMixin:
             a DataLog containing the solution, which is effectivly a dict
             mapping output names to arrays of values
         """
+
+        # make sure that model variables are up to date
+        if self.is_variables_out_of_date():
+            print('UNEXPECTED UPDATE')
+            self.update_model()
+
         if outputs is None:
             outputs = [
                 o.qname

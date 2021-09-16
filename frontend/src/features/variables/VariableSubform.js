@@ -12,9 +12,16 @@ import { selectVariableById, updateVariable } from './variablesSlice'
 
 export default function VariableSubform({variable_id}) {
   const dispatch = useDispatch();
-  const variable = useSelector(
+  let variable = useSelector(
     state => selectVariableById(state, variable_id)
   );
+  if (!variable) {
+    variable = {
+      default_value: 0,
+      lower_bound: -1,
+      upper_bound: 1,
+    }
+  }
   const { control, handleSubmit, getValues, reset } = useForm({
     defaultValues: {
       id: variable.id,
@@ -28,8 +35,13 @@ export default function VariableSubform({variable_id}) {
     reset(variable);
   }, [reset, variable]);
 
-  const unit_id = variable.unit
-  const unit = useSelector(state => selectUnitById(state, unit_id));
+  const unit_id = variable ? variable.unit : 1
+  let unit = useSelector(state => selectUnitById(state, unit_id));
+  if (!unit) {
+    unit = {
+      symbol: 'X'
+    }
+  }
   const label = `${variable.name} ${unit.symbol}`
   let truncatedLabel = label
   const maxLength = 22

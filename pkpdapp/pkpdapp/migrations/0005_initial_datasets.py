@@ -270,172 +270,166 @@ def load_datasets(apps, schema_editor):
             in zip(datafile_names, datafile_urls, datafile_descriptions,
                    biomarkers_for_datasets, protocol_units):
 
-        # create all the biomarker measurements for that dataset
-        try:
-            f = urllib.request.urlopen(datafile_url, timeout=1)
-        except urllib.error.URLError:
-            f = None
-            print('WARNING: urlopen timed-out, no data loaded')
-            continue
+        with urllib.request.urlopen(datafile_url) as f:
+            # create all the biomarker measurements for that dataset
+            # create the dataset
+            dataset = Dataset(
+                name=datafile_name,
+                description=datafile_description,
+                datetime=make_aware(datetime.today()),
+                project=demo_project
+            )
+            dataset.save()
 
-        # create the dataset
-        dataset = Dataset(
-            name=datafile_name,
-            description=datafile_description,
-            datetime=make_aware(datetime.today()),
-            project=demo_project
-        )
-        dataset.save()
+            # find the index of the biomarker type, so we don't have to keep
+            # looking it up
+            biomarker_index = {}
+            for i, b in enumerate(biomarkers):
+                biomarker_index[b['name']] = i
 
-        # find the index of the biomarker type, so we don't have to keep
-        # looking it up
-        biomarker_index = {}
-        for i, b in enumerate(biomarkers):
-            biomarker_index[b['name']] = i
+            # create all the biomarker types for that dataset
+            biomarker_types = [
+                BiomarkerType.objects.create(
+                    name=b['name'],
+                    description=b['name'],
+                    unit=Unit.objects.get(
+                        symbol=b['unit']
+                    ),
+                    dataset=dataset
+                ) for b in biomarkers
+            ]
 
-        # create all the biomarker types for that dataset
-        biomarker_types = [
-            BiomarkerType.objects.create(
-                name=b['name'],
-                description=b['name'],
-                unit=Unit.objects.get(
-                    symbol=b['unit']
-                ),
-                dataset=dataset
-            ) for b in biomarkers
-        ]
+            # parse as csv file
+            data_reader = csv.reader(codecs.iterdecode(f, 'utf-8'))
 
-        # parse as csv file
-        data_reader = csv.reader(codecs.iterdecode(f, 'utf-8'))
+            # skip the header
+            next(data_reader)
 
-        # skip the header
-        next(data_reader)
-
-        # create entries
-        if datafile_name == 'TCB4dataset':
-            TIME_COLUMN = 0
-            TIME_UNIT_COLUMN = 10
-            VALUE_COLUMN = 1
-            UNIT_COLUMN = 11
-            BIOMARKER_TYPE_COLUMN = 2
-            SUBJECT_ID_COLUMN = 8
-            DOSE_COLUMN = None
-            DOSE_GROUP_COLUMN = 4
-            COMPOUND_COLUMN = None
-            SUBJECT_GROUP_COLUMN = 3
-        elif datafile_name == 'demo_pk_data':
-            TIME_COLUMN = 4
-            TIME_UNIT_COLUMN = 5
-            VALUE_COLUMN = 3
-            UNIT_COLUMN = 11
-            BIOMARKER_TYPE_COLUMN = 13
-            SUBJECT_ID_COLUMN = 2
-            DOSE_GROUP_COLUMN = None
-            DOSE_COLUMN = 8
-            COMPOUND_COLUMN = 0
-            SUBJECT_GROUP_COLUMN = None
-        else:
-            TIME_COLUMN = 1
-            TIME_UNIT_COLUMN = 2
-            VALUE_COLUMN = 4
-            UNIT_COLUMN = 5
-            BIOMARKER_TYPE_COLUMN = 3
-            DOSE_GROUP_COLUMN = None
-            SUBJECT_ID_COLUMN = 0
-            DOSE_COLUMN = None
-            COMPOUND_COLUMN = None
-            SUBJECT_GROUP_COLUMN = None
-        for row in data_reader:
-            biomarker_type_str = row[BIOMARKER_TYPE_COLUMN]
-            if not biomarker_type_str:
-                continue
-            if biomarker_type_str not in biomarker_index:
-                continue
-            index = biomarker_index[biomarker_type_str]
-            bt = biomarker_types[index]
-            value = row[VALUE_COLUMN]
-
-            subject_id = row[SUBJECT_ID_COLUMN]
-            try:
-                subject = Subject.objects.get(
-                    id_in_dataset=subject_id,
-                    dataset=dataset,
-                )
-            except Subject.DoesNotExist:
-                group = ''
-                dose_group_amount = None
-                dose_group_unit = None
-                if SUBJECT_GROUP_COLUMN:
-                    group = row[SUBJECT_GROUP_COLUMN]
-                if DOSE_GROUP_COLUMN:
-                    dose_group_amount = row[DOSE_GROUP_COLUMN]
-                    dose_group_unit = Unit.objects.get(symbol='')
-
-                subject = Subject.objects.create(
-                    id_in_dataset=subject_id,
-                    dataset=dataset,
-                    group=group,
-                    dose_group_amount=dose_group_amount,
-                    dose_group_unit=dose_group_unit,
-                )
-            if UNIT_COLUMN is None:
-                unit = Unit.objects.get(symbol='')
+            # create entries
+            if datafile_name == 'TCB4dataset':
+                TIME_COLUMN = 0
+                TIME_UNIT_COLUMN = 10
+                VALUE_COLUMN = 1
+                UNIT_COLUMN = 11
+                BIOMARKER_TYPE_COLUMN = 2
+                SUBJECT_ID_COLUMN = 8
+                DOSE_COLUMN = None
+                DOSE_GROUP_COLUMN = 4
+                COMPOUND_COLUMN = None
+                SUBJECT_GROUP_COLUMN = 3
+            elif datafile_name == 'demo_pk_data':
+                TIME_COLUMN = 4
+                TIME_UNIT_COLUMN = 5
+                VALUE_COLUMN = 3
+                UNIT_COLUMN = 11
+                BIOMARKER_TYPE_COLUMN = 13
+                SUBJECT_ID_COLUMN = 2
+                DOSE_GROUP_COLUMN = None
+                DOSE_COLUMN = 8
+                COMPOUND_COLUMN = 0
+                SUBJECT_GROUP_COLUMN = None
             else:
-                unit = Unit.objects.get(symbol=row[UNIT_COLUMN])
-                unit == bt.unit
-            if TIME_UNIT_COLUMN is None:
-                time_unit = Unit.objects.get(symbol='h')
-            else:
-                time_unit = Unit.objects.get(symbol=row[TIME_UNIT_COLUMN])
-            try:
-                value = float(value)
-                is_number = True
-            except ValueError:
-                is_number = False
-            if is_number:
-                Biomarker.objects.create(
-                    time=row[TIME_COLUMN],
-                    subject=subject,
-                    value=value,
-                    biomarker_type=bt
-                )
-            elif (
-                DOSE_COLUMN and
-                row[VALUE_COLUMN] == '.' and
-                row[DOSE_COLUMN] != '.'
-            ):
-                compound_str = row[COMPOUND_COLUMN]
+                TIME_COLUMN = 1
+                TIME_UNIT_COLUMN = 2
+                VALUE_COLUMN = 4
+                UNIT_COLUMN = 5
+                BIOMARKER_TYPE_COLUMN = 3
+                DOSE_GROUP_COLUMN = None
+                SUBJECT_ID_COLUMN = 0
+                DOSE_COLUMN = None
+                COMPOUND_COLUMN = None
+                SUBJECT_GROUP_COLUMN = None
+            for row in data_reader:
+                biomarker_type_str = row[BIOMARKER_TYPE_COLUMN]
+                if not biomarker_type_str:
+                    continue
+                if biomarker_type_str not in biomarker_index:
+                    continue
+                index = biomarker_index[biomarker_type_str]
+                bt = biomarker_types[index]
+                value = row[VALUE_COLUMN]
+
+                subject_id = row[SUBJECT_ID_COLUMN]
                 try:
-                    compound = Compound.objects.get(name=compound_str)
-                except Compound.DoesNotExist:
-                    compound = Compound.objects.create(
-                        name=compound_str
+                    subject = Subject.objects.get(
+                        id_in_dataset=subject_id,
+                        dataset=dataset,
                     )
+                except Subject.DoesNotExist:
+                    group = ''
+                    dose_group_amount = None
+                    dose_group_unit = None
+                    if SUBJECT_GROUP_COLUMN:
+                        group = row[SUBJECT_GROUP_COLUMN]
+                    if DOSE_GROUP_COLUMN:
+                        dose_group_amount = row[DOSE_GROUP_COLUMN]
+                        dose_group_unit = Unit.objects.get(symbol='')
+
+                    subject = Subject.objects.create(
+                        id_in_dataset=subject_id,
+                        dataset=dataset,
+                        group=group,
+                        dose_group_amount=dose_group_amount,
+                        dose_group_unit=dose_group_unit,
+                    )
+                if UNIT_COLUMN is None:
+                    unit = Unit.objects.get(symbol='')
+                else:
+                    unit = Unit.objects.get(symbol=row[UNIT_COLUMN])
+                    unit == bt.unit
+                if TIME_UNIT_COLUMN is None:
+                    time_unit = Unit.objects.get(symbol='h')
+                else:
+                    time_unit = Unit.objects.get(symbol=row[TIME_UNIT_COLUMN])
                 try:
-                    protocol = Protocol.objects.get(
-                        dataset=dataset,
+                    value = float(value)
+                    is_number = True
+                except ValueError:
+                    is_number = False
+                if is_number:
+                    Biomarker.objects.create(
+                        time=row[TIME_COLUMN],
                         subject=subject,
-                        compound=compound
+                        value=value,
+                        biomarker_type=bt
                     )
-                except Protocol.DoesNotExist:
-                    protocol = Protocol.objects.create(
-                        name='{}-{}-{}'.format(
-                            dataset.name,
-                            compound.name,
-                            subject_id
-                        ),
-                        compound=compound,
-                        dataset=dataset,
-                        subject=subject,
-                        time_unit=time_unit,
-                        project=demo_project,
-                        amount_unit=unit,
+                elif (
+                    DOSE_COLUMN and
+                    row[VALUE_COLUMN] == '.' and
+                    row[DOSE_COLUMN] != '.'
+                ):
+                    compound_str = row[COMPOUND_COLUMN]
+                    try:
+                        compound = Compound.objects.get(name=compound_str)
+                    except Compound.DoesNotExist:
+                        compound = Compound.objects.create(
+                            name=compound_str
+                        )
+                    try:
+                        protocol = Protocol.objects.get(
+                            dataset=dataset,
+                            subject=subject,
+                            compound=compound
+                        )
+                    except Protocol.DoesNotExist:
+                        protocol = Protocol.objects.create(
+                            name='{}-{}-{}'.format(
+                                dataset.name,
+                                compound.name,
+                                subject_id
+                            ),
+                            compound=compound,
+                            dataset=dataset,
+                            subject=subject,
+                            time_unit=time_unit,
+                            project=demo_project,
+                            amount_unit=unit,
+                        )
+                    Dose.objects.create(
+                        start_time=row[TIME_COLUMN],
+                        amount=row[DOSE_COLUMN],
+                        protocol=protocol,
                     )
-                Dose.objects.create(
-                    start_time=row[TIME_COLUMN],
-                    amount=row[DOSE_COLUMN],
-                    protocol=protocol,
-                )
 
 
 class Migration(migrations.Migration):
