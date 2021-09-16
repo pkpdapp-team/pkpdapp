@@ -143,7 +143,13 @@ class DosedPharmacokineticSerializer(serializers.ModelSerializer):
                     validated_data['pharmacokinetic_model']:
                 instance.pharmacokinetic_model = \
                     validated_data['pharmacokinetic_model']
-                instance.update_model()
+                update_model = True
+        if 'protocol' in validated_data:
+            if instance.protocol != validated_data['protocol']:
+                instance.protocol = validated_data['protocol']
+                update_model = True
+        if update_model:
+            instance.update_model()
         return super().update(instance, validated_data)
 
 
