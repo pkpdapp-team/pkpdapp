@@ -81,12 +81,16 @@ export function FormSliderField({control, name, defaultValue, min, max, label, t
     if (x === 0 || x === 0.0) {
       return x
     }
-    else if ((x < 0.01) || (x >= 10.0)) {
+    else if ((Math.abs(x) < 0.01) || (Math.abs(x) >= 1000.0)) {
       const [coefficient, exponent] = x 
         .toExponential()
         .split('e')
         .map((item) => Number(item));
       return `${Math.round(coefficient)}e^${exponent}`;
+    } else if (Math.abs(x) >= 100.0) {
+      return x.toFixed(0)
+    } else if (Math.abs(x) >= 10.0) {
+      return x.toFixed(1)
     } else {
       return x.toFixed(2)
     }
