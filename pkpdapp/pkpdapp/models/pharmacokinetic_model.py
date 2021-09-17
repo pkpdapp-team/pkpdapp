@@ -74,7 +74,6 @@ class DosedPharmacokineticModel(models.Model, MyokitModelMixin):
         self.__original_dose_compartment = self.dose_compartment
 
     def create_myokit_model(self):
-        print('CREATING MYOKIT MIODE')
         pk_model = self.pharmacokinetic_model.create_myokit_model()
         if self.protocol:
             compartment = self.dose_compartment
@@ -94,7 +93,6 @@ class DosedPharmacokineticModel(models.Model, MyokitModelMixin):
         return pk_model
 
     def create_myokit_simulator(self):
-        print('creating simulation for ', self.name)
         model = self.get_myokit_model()
         with lock:
             sim = myokit.Simulation(model)
@@ -102,7 +100,6 @@ class DosedPharmacokineticModel(models.Model, MyokitModelMixin):
             dosing_events = [(d.amount, d.start_time, d.duration)
                              for d in self.protocol.doses.all()]
 
-            print('adding odsing events', dosing_events)
             set_dosing_events(sim, dosing_events)
 
         return sim
@@ -118,17 +115,14 @@ class DosedPharmacokineticModel(models.Model, MyokitModelMixin):
         if (
             created or
             self.protocol != self.__original_protocol or
-            self.pharmacokinetic_model !=
-                self.__original_pk_model or
-            self.dose_compartment !=
-                self.__original_dose_compartment
+            self.pharmacokinetic_model != self.__original_pk_model or
+            self.dose_compartment != self.__original_dose_compartment
         ):
             self.update_model()
 
         self.__original_pk_model = self.pharmacokinetic_model
         self.__original_protocol = self.protocol
         self.__original_dose_compartment = self.dose_compartment
-
 
 
 def _add_dose_compartment(model, drug_amount, time_unit):

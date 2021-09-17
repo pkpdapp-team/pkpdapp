@@ -22,7 +22,6 @@ class TestPharmodynamicModel(TestCase):
         m = PharmacodynamicModel.objects.create(
             name='my_cool_model',
             description='description for my cool model',
-            sbml='sbml_here',
         )
         self.assertTrue(isinstance(m, PharmacodynamicModel))
 
@@ -45,6 +44,7 @@ class TestPharmodynamicModel(TestCase):
         m.save()
         model_variables = m.variables.values_list('name', flat=True)
         test_model_variables = [
+            'tumour_volume', 'time',
             'lambda_0', 'lambda_1',
             'kappa', 'drug_concentration'
         ]

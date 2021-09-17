@@ -4,13 +4,11 @@
 # copyright notice and full license details.
 #
 
-from django.db import models
+import threading
 from django.core.cache import cache
-from django.core.exceptions import ValidationError
 import myokit
 from myokit.formats.sbml import SBMLParser
 from myokit.formats.mathml import MathMLExpressionWriter
-import threading
 
 lock = threading.Lock()
 
@@ -83,7 +81,7 @@ class MyokitModelMixin:
         cache.delete(self._get_myokit_simulator_cache_key())
 
     def update_model(self):
-        print('UOPDATE MODELK')
+        print('UPDATE MODEL')
         # delete model and simulators from cache
         cache.delete(self._get_myokit_simulator_cache_key())
         cache.delete(self._get_myokit_model_cache_key())
@@ -219,11 +217,6 @@ class MyokitModelMixin:
             mapping output names to arrays of values
         """
 
-        # make sure that model variables are up to date
-        # if self.is_variables_out_of_date():
-        #    print('UNEXPECTED UPDATE')
-        #    self.update_model()
-
         if outputs is None:
             outputs = [
                 o.qname
@@ -240,17 +233,12 @@ class MyokitModelMixin:
                 for v in self.variables.filter(constant=True)
             }
 
-        print('simulating with:')
-        print('outputs', outputs)
-        print('initial_conditions', initial_conditions)
-        print('variables', variables)
-
         sim = self.get_myokit_simulator()
 
         # Set initial conditions
         try:
             sim.set_default_state(initial_conditions)
-        except ValueError as e:
+        except ValueError:
             print('WARNING: in simulate: '
                   'sim.set_default_state returned ValueError')
             return {}

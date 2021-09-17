@@ -5,12 +5,7 @@
 #
 
 from django.db import models
-from django.core.cache import cache
 from django.core.exceptions import ValidationError
-import myokit
-from myokit.formats.sbml import SBMLParser
-from myokit.formats.mathml import MathMLExpressionWriter
-import threading
 from pkpdapp.models import MyokitModelMixin
 
 

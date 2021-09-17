@@ -74,7 +74,6 @@ class ProjectFilter(filters.BaseFilterBackend):
                         Q(pd_model__project=project) |
                         Q(dosed_pk_model__project=project)
                     )
-                    print('doing it!', queryset)
                 else:
                     raise RuntimeError('queryset model {} not recognised')
             except Project.DoesNotExist:

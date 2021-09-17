@@ -191,7 +191,6 @@ Description of a three compartment PK model here.
                         pd_model=model,
                     )
 
-
         except urllib.error.URLError:
             print('WARNING: urlopen timed-out, no data loaded')
 
