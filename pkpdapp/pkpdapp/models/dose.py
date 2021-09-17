@@ -30,3 +30,9 @@ class Dose(models.Model):
             'For a bolus injection, set a dose duration of 0.'
         )
     )
+
+    def save(self, force_insert=False, force_update=False, *args, **kwargs):
+        super().save(force_insert, force_update, *args, **kwargs)
+
+        for dosed_pk_model in self.protocol.dosed_pk_models.all():
+            dosed_pk_model.update_simulator()

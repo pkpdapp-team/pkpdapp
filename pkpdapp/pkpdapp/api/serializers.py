@@ -48,11 +48,6 @@ class ProtocolSerializer(serializers.ModelSerializer):
         model = Protocol
         fields = '__all__'
 
-    def update(self, instance, validated_data):
-        for dosed_pk_model in instance.dosed_pk_models.all():
-            dosed_pk_model.update_model()
-        return super().update(instance, validated_data)
-
 
 class PharmacokineticSerializer(serializers.ModelSerializer):
     class Meta:
@@ -128,30 +123,6 @@ class DosedPharmacokineticSerializer(serializers.ModelSerializer):
         model = DosedPharmacokineticModel
         fields = '__all__'
 
-    def create(self, validated_data):
-        print('creating dosed pk model', validated_data)
-        instance = DosedPharmacokineticModel.objects.create(
-            **validated_data
-        )
-        print('updating pk model', instance)
-        instance.update_model()
-        return instance
-
-    def update(self, instance, validated_data):
-        if 'pharmacokinetic_model' in validated_data:
-            if instance.pharmacokinetic_model != \
-                    validated_data['pharmacokinetic_model']:
-                instance.pharmacokinetic_model = \
-                    validated_data['pharmacokinetic_model']
-                update_model = True
-        if 'protocol' in validated_data:
-            if instance.protocol != validated_data['protocol']:
-                instance.protocol = validated_data['protocol']
-                update_model = True
-        if update_model:
-            instance.update_model()
-        return super().update(instance, validated_data)
-
 
 class PharmacodynamicSerializer(serializers.ModelSerializer):
     components = serializers.SerializerMethodField('get_components')
@@ -181,14 +152,6 @@ class PharmacodynamicSbmlSerializer(serializers.ModelSerializer):
     class Meta:
         model = PharmacodynamicModel
         fields = ['sbml']
-
-    def update(self, instance, validated_data):
-        if 'sbml' in validated_data:
-            instance.sbml = validated_data['sbml']
-            instance.update_model()
-        instance.save()
-        return instance
-
 
 class PkpdSerializer(serializers.ModelSerializer):
     class Meta:

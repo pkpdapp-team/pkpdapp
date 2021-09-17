@@ -72,8 +72,23 @@ class Protocol(models.Model):
         help_text='unit for the amount value stored in each dose'
     )
 
+    __original_dose_type = None
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.__original_dose_type = self.dose_type
+
     def get_absolute_url(self):
         return reverse('protocol-detail', kwargs={'pk': self.pk})
 
     def __str__(self):
         return str(self.name)
+
+    def save(self, force_insert=False, force_update=False, *args, **kwargs):
+        super().save(force_insert, force_update, *args, **kwargs)
+
+        if self.dose_type != self.__original_dose_type:
+            for dosed_pk_model in self.dosed_pk_models.all():
+                dosed_pk_model.update_model()
+
+        self.__original_dose_type = self.dose_type

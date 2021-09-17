@@ -78,6 +78,10 @@ class MyokitModelMixin:
         # check if variables need updating
         return len(all_const_variables) != myokit_variable_count
 
+    def update_simulator(self):
+        # delete simulator from cache
+        cache.delete(self._get_myokit_simulator_cache_key())
+
     def update_model(self):
         print('UOPDATE MODELK')
         # delete model and simulators from cache
@@ -86,7 +90,6 @@ class MyokitModelMixin:
 
         # update the variables of the model
         from pkpdapp.models import Variable
-        self.variables.all().delete()
         new_variables = [
             Variable.get_variable(self, v)
             for v in self.get_myokit_model().variables(const=True, sort=True)
@@ -99,7 +102,15 @@ class MyokitModelMixin:
             Variable.get_variable(self, v)
             for v in self.get_myokit_model().variables(const=False, sort=True)
         ]
-        self.variables.set(new_variables + new_states + new_outputs)
+        all_new_variables = new_variables + new_states + new_outputs
+
+        # delete all variables that are not in new
+        for variable in self.variables.all():
+            if variable not in all_new_variables:
+                print('DELETING VARIABLE', variable.qname)
+                variable.delete()
+
+        self.variables.set(all_new_variables)
 
     @staticmethod
     def _serialise_equation(equ):
@@ -209,9 +220,9 @@ class MyokitModelMixin:
         """
 
         # make sure that model variables are up to date
-        if self.is_variables_out_of_date():
-            print('UNEXPECTED UPDATE')
-            self.update_model()
+        # if self.is_variables_out_of_date():
+        #    print('UNEXPECTED UPDATE')
+        #    self.update_model()
 
         if outputs is None:
             outputs = [
@@ -237,7 +248,12 @@ class MyokitModelMixin:
         sim = self.get_myokit_simulator()
 
         # Set initial conditions
-        sim.set_default_state(initial_conditions)
+        try:
+            sim.set_default_state(initial_conditions)
+        except ValueError as e:
+            print('WARNING: in simulate: '
+                  'sim.set_default_state returned ValueError')
+            return {}
 
         # Set constants in model
         for var_name, var_value in variables.items():
