@@ -13,8 +13,6 @@ import AccordionDetails from '@material-ui/core/AccordionDetails';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import Typography from '@material-ui/core/Typography';
 
-
-
 import { makeStyles } from '@material-ui/core/styles';
 
 import {
@@ -60,7 +58,6 @@ export default function Modelling() {
     return ('Select a project')
   }
   let showChart = true
-  console.log("chosen", chosenDatasets, chosenPkModels, chosenPdModels)
   if (
     chosenDatasets.length === 0 && 
     chosenPkModels.length === 0 && 

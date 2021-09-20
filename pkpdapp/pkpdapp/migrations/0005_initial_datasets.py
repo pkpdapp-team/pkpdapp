@@ -269,35 +269,36 @@ def load_datasets(apps, schema_editor):
          biomarkers, protocol_unit) \
             in zip(datafile_names, datafile_urls, datafile_descriptions,
                    biomarkers_for_datasets, protocol_units):
-        # create the dataset
-        dataset = Dataset(
-            name=datafile_name,
-            description=datafile_description,
-            datetime=make_aware(datetime.today()),
-            project=demo_project
-        )
-        dataset.save()
 
-        # find the index of the biomarker type, so we don't have to keep
-        # looking it up
-        biomarker_index = {}
-        for i, b in enumerate(biomarkers):
-            biomarker_index[b['name']] = i
-
-        # create all the biomarker types for that dataset
-        biomarker_types = [
-            BiomarkerType.objects.create(
-                name=b['name'],
-                description=b['name'],
-                unit=Unit.objects.get(
-                    symbol=b['unit']
-                ),
-                dataset=dataset
-            ) for b in biomarkers
-        ]
-
-        # create all the biomarker measurements for that dataset
         with urllib.request.urlopen(datafile_url) as f:
+            # create all the biomarker measurements for that dataset
+            # create the dataset
+            dataset = Dataset(
+                name=datafile_name,
+                description=datafile_description,
+                datetime=make_aware(datetime.today()),
+                project=demo_project
+            )
+            dataset.save()
+
+            # find the index of the biomarker type, so we don't have to keep
+            # looking it up
+            biomarker_index = {}
+            for i, b in enumerate(biomarkers):
+                biomarker_index[b['name']] = i
+
+            # create all the biomarker types for that dataset
+            biomarker_types = [
+                BiomarkerType.objects.create(
+                    name=b['name'],
+                    description=b['name'],
+                    unit=Unit.objects.get(
+                        symbol=b['unit']
+                    ),
+                    dataset=dataset
+                ) for b in biomarkers
+            ]
+
             # parse as csv file
             data_reader = csv.reader(codecs.iterdecode(f, 'utf-8'))
 

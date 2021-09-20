@@ -1,8 +1,8 @@
 import { 
   createSlice, createEntityAdapter, createAsyncThunk,
 } from '@reduxjs/toolkit'
-import { updateProject } from '../projects/projectsSlice'
 import { api } from '../../Api'
+import {fetchVariableById} from '../variables/variablesSlice'
 
 const pdModelsAdapter = createEntityAdapter({
   sortComparer: (a, b) => b.id < a.id
@@ -20,20 +20,25 @@ export const fetchPdModels = createAsyncThunk('pdModels/fetchPdModels', async (p
   return response
 })
 
+export const fetchPdModelById = createAsyncThunk('pdModels/fetchPdModelById', async (model_id) => {
+  const response = await api.get(
+    `/api/pharmacodynamic/${model_id}/`
+  )
+  return response
+})
+
 export const addNewPdModel = createAsyncThunk(
   'pdModels/addNewPdModel',
   async (project, { dispatch }) => {
     const initialPdModel = {
       name: 'new',
+      project: project.id,
     }
     const pdModel = await api.post(
       '/api/pharmacodynamic/', initialPdModel
     )
-    if (pdModel) {
-      await dispatch(updateProject({
-        ...project, 
-        pd_models: [...project.pd_models, pdModel.id] 
-      }))
+    for (const variable_id of pdModel.variables) {
+      dispatch(fetchVariableById(variable_id))
     }
     return pdModel
   }
@@ -41,20 +46,23 @@ export const addNewPdModel = createAsyncThunk(
 
 export const uploadPdSbml = createAsyncThunk(
   'pdModels/uploadPdSbml',
-  async ({id, sbml}, {rejectWithValue}) => {
-    const newPdModel = await api.putMultiPart(
+  async ({id, sbml}, {rejectWithValue, dispatch}) => {
+    await api.putMultiPart(
       `/api/pharmacodynamic/${id}/sbml`, {sbml}
-    ).then(() => {
-      return api.get(`/api/pharmacodynamic/${id}`) 
-    }).catch(err => rejectWithValue(err))
-
-    return newPdModel
+    )
+    const pdModel = await api.get(`/api/pharmacodynamic/${id}`)
+    console.log('got pdModel', pdModel)
+    for (const variable_id of pdModel.variables) {
+      dispatch(fetchVariableById(variable_id))
+    }
+    return pdModel
   }
 )
 
 export const updatePdModel = createAsyncThunk(
   'pdModels/updatePdModel',
   async (pdModel) => {
+    console.log('update pd model', pdModel)
     const newPdModel = await api.put(
       `/api/pharmacodynamic/${pdModel.id}/`, pdModel
     )
@@ -87,18 +95,16 @@ export const pdModelsSlice = createSlice({
       state.status = 'succeeded'
       pdModelsAdapter.setAll(state, action.payload)
     },
+    [fetchPdModelById.fulfilled]: pdModelsAdapter.upsertOne,
     [addNewPdModel.fulfilled]: pdModelsAdapter.addOne,
     [updatePdModel.fulfilled]: pdModelsAdapter.upsertOne,
     [uploadPdSbml.pending]: (state, action) => {
-      console.log('uploadpdsml pending', action)
       state.entities[action.meta.arg.id].errors = []
     },
     [uploadPdSbml.rejected]: (state, action) => {
-      console.log('uploadpdsml rejected', action)
       state.entities[action.meta.arg.id].errors = action.payload.sbml
     },
     [uploadPdSbml.fulfilled]: (state, action) => {
-      console.log('uploadpdsml fulfilled', action)
       pdModelsAdapter.upsertOne(state, action)
     },
   }

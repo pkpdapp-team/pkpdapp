@@ -13,15 +13,31 @@ from pkpdapp.models import (
     Project,
 )
 import myokit
-from .mechanistic_model import lock
+from .myokit_model_mixin import lock
 
 
 class PharmacokineticModel(MechanisticModel):
     """
     this just creates a concrete table for PK models without dosing
     """
+    __original_sbml = None
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.__original_sbml = self.sbml
+
     def get_absolute_url(self):
         return reverse('pk_model-detail', kwargs={'pk': self.pk})
+
+    def save(self, force_insert=False, force_update=False, *args, **kwargs):
+        created = not self.pk
+
+        super().save(force_insert, force_update, *args, **kwargs)
+
+        if created or self.sbml != self.__original_sbml:
+            self.update_model()
+
+        self.__original_sbml = self.sbml
 
 
 class DosedPharmacokineticModel(models.Model, MyokitModelMixin):
@@ -51,6 +67,7 @@ class DosedPharmacokineticModel(models.Model, MyokitModelMixin):
     protocol = models.ForeignKey(
         Protocol,
         on_delete=models.CASCADE,
+        related_name='dosed_pk_models',
         blank=True, null=True,
         help_text='dosing protocol'
     )
@@ -61,6 +78,15 @@ class DosedPharmacokineticModel(models.Model, MyokitModelMixin):
             'units specified by the sbml model)'
         )
     )
+    __original_pk_model = None
+    __original_protocol = None
+    __original_dose_compartment = None
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.__original_pk_model = self.pharmacokinetic_model
+        self.__original_protocol = self.protocol
+        self.__original_dose_compartment = self.dose_compartment
 
     def create_myokit_model(self):
         pk_model = self.pharmacokinetic_model.create_myokit_model()
@@ -82,7 +108,6 @@ class DosedPharmacokineticModel(models.Model, MyokitModelMixin):
         return pk_model
 
     def create_myokit_simulator(self):
-        print('creating simulation for ', self.name)
         model = self.get_myokit_model()
         with lock:
             sim = myokit.Simulation(model)
@@ -90,13 +115,29 @@ class DosedPharmacokineticModel(models.Model, MyokitModelMixin):
             dosing_events = [(d.amount, d.start_time, d.duration)
                              for d in self.protocol.doses.all()]
 
-            print('adding odsing events', dosing_events)
             set_dosing_events(sim, dosing_events)
 
         return sim
 
     def get_absolute_url(self):
         return reverse('dosed_pk_model-detail', kwargs={'pk': self.pk})
+
+    def save(self, force_insert=False, force_update=False, *args, **kwargs):
+        created = not self.pk
+
+        super().save(force_insert, force_update, *args, **kwargs)
+
+        if (
+            created or
+            self.protocol != self.__original_protocol or
+            self.pharmacokinetic_model != self.__original_pk_model or
+            self.dose_compartment != self.__original_dose_compartment
+        ):
+            self.update_model()
+
+        self.__original_pk_model = self.pharmacokinetic_model
+        self.__original_protocol = self.protocol
+        self.__original_dose_compartment = self.dose_compartment
 
 
 def _add_dose_compartment(model, drug_amount, time_unit):

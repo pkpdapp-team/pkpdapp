@@ -15,6 +15,7 @@ import AvatarListItem from '../menu/AvatarListItem'
 import {
   selectAllProjects, selectChosenProject, 
   chooseProject, addNewProject, fetchProjects,
+  fetchUnits,
 } from '../projects/projectsSlice.js'
 
 import {
@@ -44,6 +45,11 @@ import {
 import {
   fetchProtocols 
 } from '../protocols/protocolsSlice.js'
+
+import {
+  fetchVariables
+} from '../variables/variablesSlice.js'
+
 
 
 const useStyles = makeStyles((theme) => ({
@@ -77,7 +83,9 @@ export default function ListOfProjects() {
             dispatch(fetchPdModels(p))
             dispatch(fetchPkModels(p))
             dispatch(fetchBasePkModels(p))
+            dispatch(fetchVariables(p))
             dispatch(fetchProtocols(p))
+            dispatch(fetchUnits(p))
           }}
         />
       ))}

@@ -2,9 +2,8 @@ import {
   createSlice, createEntityAdapter, createAsyncThunk,
 } from '@reduxjs/toolkit'
 
-import { updateProject } from '../projects/projectsSlice'
-
 import { api } from '../../Api'
+import {fetchVariableById} from '../variables/variablesSlice'
 
 const pkModelsAdapter = createEntityAdapter({
   sortComparer: (a, b) => b.id < a.id
@@ -22,20 +21,28 @@ export const fetchPkModels = createAsyncThunk('pkModels/fetchPkModels', async (p
   return pkModels
 })
 
+export const fetchPkModelById = createAsyncThunk('pkModels/fetchPkModelById', async (model_id, {dispatch}) => {
+  const pkModel = await api.get(
+    `/api/dosed_pharmacokinetic/${model_id}/`
+  )
+  for (const variable_id of pkModel.variables) {
+      dispatch(fetchVariableById(variable_id))
+    }
+  return pkModel
+})
+
 export const addNewPkModel = createAsyncThunk(
   'pkModels/addNewPkModel',
   async (project, { dispatch }) => {
     const initialPkModel = {
       name: 'new',
+      project: project.id,
     }
     const pkModel = await api.post(
       '/api/dosed_pharmacokinetic/', initialPkModel
     )
-    if (pkModel) {
-      await dispatch(updateProject({
-        ...project, 
-        pk_models: [...project.pk_models, pkModel.id] 
-      }))
+    for (const variable_id of pkModel.variables) {
+      dispatch(fetchVariableById(variable_id))
     }
     return pkModel
   }
@@ -43,10 +50,14 @@ export const addNewPkModel = createAsyncThunk(
 
 export const updatePkModel = createAsyncThunk(
   'pkModels/updatePkModel',
-  async (pkModel) => {
+  async (pkModel, {dispatch}) => {
     const newPkModel = await api.put(
       `/api/dosed_pharmacokinetic/${pkModel.id}/`, pkModel
     )
+    // an update could create new variables
+    for (const variable_id of newPkModel.variables) {
+      dispatch(fetchVariableById(variable_id))
+    }
     //const simulateData = {
     //  outputs: pkModel.outputs.filter(x => x.default_value).map(x => x.name),
     //  initial_conditions: pkModel.outputs.reduce((o, x) => ({...o, x.name: x.default_value}), {}),
@@ -81,6 +92,7 @@ export const pkModelsSlice = createSlice({
       state.status = 'succeeded'
       pkModelsAdapter.setAll(state, action.payload)
     },
+    [fetchPkModelById.fulfilled]: pkModelsAdapter.upsertOne,
     [addNewPkModel.rejected]: (state, action) => console.log(action.error.message),
     [addNewPkModel.fulfilled]: pkModelsAdapter.addOne,
     [updatePkModel.fulfilled]: pkModelsAdapter.upsertOne

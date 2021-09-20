@@ -8,6 +8,8 @@ import pkModelsReducer from '../features/pkModels/pkModelsSlice'
 import basePkModelsReducer from '../features/pkModels/basePkModelsSlice'
 import protocolsReducer from '../features/protocols/protocolsSlice'
 import usersReducer from '../features/projects/usersSlice'
+import unitsReducer from '../features/projects/unitsSlice'
+import variablesReducer from '../features/variables/variablesSlice'
 
 
 export default configureStore({
@@ -21,5 +23,7 @@ export default configureStore({
     protocols: protocolsReducer,
     pdModels: pdModelsReducer,
     users: usersReducer,
+    units: unitsReducer,
+    variables: variablesReducer,
   },
 })

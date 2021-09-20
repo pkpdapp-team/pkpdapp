@@ -36,6 +36,8 @@ const useStyles = makeStyles((theme) => ({
 export default function ModellingChart({datasets, pkModels, pdModels}) {
   let renderChart = true;
   const classes = useStyles();
+  
+  console.log('chart re-render', pdModels)
 
   var scheme = new ColorScheme();
   scheme.from_hue(21)         
@@ -144,6 +146,9 @@ export default function ModellingChart({datasets, pkModels, pdModels}) {
   console.log('chart data', data)
 
   const options = {
+    animation: {
+        duration: 0
+    },
     responsive: true,
     maintainAspectRatio: false,
     scales: {

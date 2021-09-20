@@ -10,6 +10,8 @@ from pkpdapp.models import (
     Compound, DosedPharmacokineticModel,
     Dose, PkpdModel, Unit
 )
+from myokit.formats.sbml._parser import SBMLParsingError
+from django.core.exceptions import ValidationError
 from django.core.cache import cache
 import numpy as np
 
@@ -18,16 +20,31 @@ class TestPharmodynamicModel(TestCase):
     def setUp(self):
         cache.clear()
 
+    def test_model_bad_sbml(self):
+        with self.assertRaises(SBMLParsingError):
+            PharmacodynamicModel.objects.create(
+                name='my_cool_model',
+                description='description for my cool model',
+                sbml='this is not xml'
+            )
+
+    def test_model_clean(self):
+        m = PharmacodynamicModel(
+            name='my_cool_model',
+            description='description for my cool model',
+            sbml='this is not xml'
+        )
+        with self.assertRaises(ValidationError):
+            m.clean()
+
     def test_model_creation(self):
         m = PharmacodynamicModel.objects.create(
             name='my_cool_model',
             description='description for my cool model',
-            sbml='sbml_here',
         )
         self.assertTrue(isinstance(m, PharmacodynamicModel))
 
     def test_myokit_model(self):
-
         m = PharmacodynamicModel.objects.get(
             name='tumour_growth_inhibition_model_koch',
         )
@@ -36,6 +53,19 @@ class TestPharmodynamicModel(TestCase):
         test_model_variables = [
             'tumour_volume', 'lambda_0', 'lambda_1',
             'kappa', 'drug_concentration', 'time'
+        ]
+        self.assertCountEqual(model_variables, test_model_variables)
+
+    def test_update_model(self):
+        m = PharmacodynamicModel.objects.get(
+            name='tumour_growth_inhibition_model_koch',
+        )
+        m.save()
+        model_variables = m.variables.values_list('name', flat=True)
+        test_model_variables = [
+            'tumour_volume', 'time',
+            'lambda_0', 'lambda_1',
+            'kappa', 'drug_concentration'
         ]
         self.assertCountEqual(model_variables, test_model_variables)
 
@@ -57,7 +87,7 @@ class TestPharmodynamicModel(TestCase):
             name='tumour_growth_inhibition_model_koch',
         )
 
-        variables = [v['qname'] for v in m.variables()]
+        variables = [v['qname'] for v in m.myokit_variables()]
         test_model_variables = [
             'myokit.lambda_0', 'myokit.lambda_1',
             'myokit.kappa', 'myokit.drug_concentration'
@@ -78,6 +108,23 @@ class TestPharmodynamicModel(TestCase):
         result = m.simulate(outputs, initial_conditions, variables)
         self.assertEqual(result[test_model_outputs[0]][0], 1.1)
         self.assertEqual(result[test_model_outputs[1]][0], 0.0)
+
+
+class TestPharmokineticModel(TestCase):
+    def setUp(self):
+        cache.clear()
+
+    def test_model_creation(self):
+        one_pk = PharmacokineticModel.objects\
+            .get(name='one_compartment_pk_model')
+
+        newl_pk = PharmacokineticModel.objects\
+            .create(
+                name='one_compartment_pk_model_v2',
+                sbml=one_pk.sbml
+            )
+        self.assertTrue(isinstance(newl_pk, PharmacokineticModel))
+        self.assertGreater(len(newl_pk.variables.all()), 0)
 
 
 class TestDosedPharmokineticModel(TestCase):
@@ -191,7 +238,7 @@ class TestDosedPharmokineticModel(TestCase):
             amount=1,
         )
 
-        variables = [v['qname'] for v in m.variables()]
+        variables = [v['qname'] for v in m.myokit_variables()]
         test_model_variables = [
             'central.size', 'dose.absorption_rate',
             'myokit.clearance'

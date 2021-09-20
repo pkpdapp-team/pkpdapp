@@ -11,7 +11,8 @@ from .project import Project
 from .dataset import Dataset
 from .subject import Subject
 from .protocol import Protocol
-from .mechanistic_model import (MechanisticModel, MyokitModelMixin)
+from .myokit_model_mixin import MyokitModelMixin
+from .mechanistic_model import MechanisticModel
 from .pharmacokinetic_model import (
     PharmacokineticModel,
     DosedPharmacokineticModel,

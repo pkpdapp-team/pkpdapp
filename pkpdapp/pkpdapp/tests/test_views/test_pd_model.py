@@ -19,3 +19,9 @@ class PdModelTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_data = response.data
         self.assertGreater(len(response_data), 0)
+
+    def test_pd_serializer(self):
+        response = self.client.get("/api/pharmacodynamic/1/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response_data = response.data
+        print(response_data)

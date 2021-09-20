@@ -2,8 +2,7 @@ import {
   createSlice, createEntityAdapter, createAsyncThunk,
 } from '@reduxjs/toolkit'
 import { api } from '../../Api'
-
-import { updateProject } from '../projects/projectsSlice'
+import {fetchPkModelById} from '../pkModels/pkModelsSlice'
 
 const protocolsAdapter = createEntityAdapter({
   sortComparer: (a, b) => b.id < a.id
@@ -27,22 +26,18 @@ export const addNewProtocol = createAsyncThunk(
     const initialProtocol = {
       name: 'new',
       dose_ids: [],
+      project: project.id,
     }
+    console.log('adding protocol', initialProtocol)
     const protocol = await api.post('/api/protocol/', initialProtocol)
     console.log('added protocol', protocol)
-    if (protocol) {
-      dispatch(updateProject({
-        ...project, 
-        protocols: [...project.protocols, protocol.id] 
-      }))
-    }
     return protocol
   }
 )
 
 export const updateProtocol = createAsyncThunk(
   'protocols/updateProtocol',
-  async (protocol, { getState }) => {
+  async (protocol, { getState, dispatch }) => {
     const dosePromises = protocol.doses.map(dose => {
       // add or update doses
       const data = {
@@ -67,7 +62,13 @@ export const updateProtocol = createAsyncThunk(
 
     console.log('have dose_ids', dose_ids, toDelete)
     const updatedProtocol = {...protocol, dose_ids}
-    return await api.put(`/api/protocol/${protocol.id}/`, updatedProtocol)
+    const newProtocol = await api.put(`/api/protocol/${protocol.id}/`, updatedProtocol)
+    console.log('got new protocol', newProtocol)
+    for (const pkModelId of newProtocol.dosed_pk_models) {
+      console.log('fetching', pkModelId)
+      dispatch(fetchPkModelById(pkModelId))
+    }
+    return newProtocol
   }
 )
 
@@ -97,7 +98,6 @@ export const protocolsSlice = createSlice({
       state.status = 'failed'
       state.error = action.error.message
     },
-    [addNewProtocol.ref]: protocolsAdapter.addOne,
     [updateProtocol.fulfilled]: protocolsAdapter.upsertOne,
     [updateProtocol.rejected]: (state, action) => {
       state.status = 'failed'

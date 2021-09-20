@@ -20,9 +20,24 @@ class PharmacodynamicModel(MechanisticModel):
         blank=True, null=True,
         help_text='Project that "owns" this model'
     )
+    __original_sbml = None
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.__original_sbml = self.sbml
 
     def get_absolute_url(self):
         return reverse('pd_model-detail', kwargs={'pk': self.pk})
+
+    def save(self, force_insert=False, force_update=False, *args, **kwargs):
+        created = not self.pk
+
+        super().save(force_insert, force_update, *args, **kwargs)
+
+        if created or self.sbml != self.__original_sbml:
+            self.update_model()
+
+        self.__original_sbml = self.sbml
 
 
 class PkpdModel(MechanisticModel):

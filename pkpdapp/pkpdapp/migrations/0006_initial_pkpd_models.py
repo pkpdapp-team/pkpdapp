@@ -7,6 +7,7 @@
 from django.db import migrations
 import urllib.request
 import codecs
+from myokit.formats.sbml import SBMLParser
 
 
 def load_pkpd_models(apps, schema_editor):
@@ -144,29 +145,67 @@ Description of a three compartment PK model here.
 
     PharmacodynamicModel = apps.get_model("pkpdapp", "PharmacodynamicModel")
     PharmacokineticModel = apps.get_model("pkpdapp", "PharmacokineticModel")
+    Unit = apps.get_model("pkpdapp", "Unit")
+    Variable = apps.get_model("pkpdapp", "Variable")
     Project = apps.get_model("pkpdapp", "Project")
     demo_project = Project.objects.get(name='demo')
     for m in models_pd:
-        with urllib.request.urlopen(m['sbml_url']) as f:
-            sbml_string = codecs.decode(f.read(), 'utf-8')
-            pkpd_model = PharmacodynamicModel(
-                name=m['name'],
-                description=m['description'],
-                sbml=sbml_string,
-                project=demo_project
-            )
-            pkpd_model.save()
+        try:
+            with urllib.request.urlopen(m['sbml_url'], timeout=5) as f:
+                sbml_string = codecs.decode(f.read(), 'utf-8')
+                model = PharmacodynamicModel.objects.create(
+                    name=m['name'],
+                    description=m['description'],
+                    sbml=sbml_string,
+                    project=demo_project
+                )
+
+                myokit_model = SBMLParser().parse_string(
+                    str.encode(sbml_string)
+                ).myokit_model()
+
+                for v in myokit_model.variables():
+                    try:
+                        unit = Unit.objects.get(
+                            symbol=str(v.unit())
+                        )
+                    except Unit.DoesNotExist:
+                        unit = Unit.objects.create(
+                            symbol=str(v.unit()),
+                            g=v.unit().exponents()[0],
+                            m=v.unit().exponents()[1],
+                            s=v.unit().exponents()[2],
+                            A=v.unit().exponents()[3],
+                            K=v.unit().exponents()[4],
+                            cd=v.unit().exponents()[5],
+                            mol=v.unit().exponents()[6],
+                            multiplier=v.unit().multiplier()
+                        )
+
+                    Variable.objects.create(
+                        name=v.name(),
+                        qname=v.qname(),
+                        constant=v.is_constant(),
+                        state=v.is_state(),
+                        unit=unit,
+                        pd_model=model,
+                    )
+
+        except urllib.error.URLError:
+            print('WARNING: urlopen timed-out, no data loaded')
 
     for m in models_pk:
-        with urllib.request.urlopen(m['sbml_url']) as f:
-            # parse as csv file
-            sbml_string = codecs.decode(f.read(), 'utf-8')
-            pkpd_model = PharmacokineticModel(
-                name=m['name'],
-                description=m['description'],
-                sbml=sbml_string,
-            )
-            pkpd_model.save()
+        try:
+            with urllib.request.urlopen(m['sbml_url'], timeout=5) as f:
+                # parse as csv file
+                sbml_string = codecs.decode(f.read(), 'utf-8')
+                model = PharmacokineticModel.objects.create(
+                    name=m['name'],
+                    description=m['description'],
+                    sbml=sbml_string,
+                )
+        except urllib.error.URLError:
+            print('WARNING: urlopen timed-out, no data loaded')
 
 
 class Migration(migrations.Migration):

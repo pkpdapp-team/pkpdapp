@@ -71,7 +71,6 @@ class TestProjectModel(TestCase):
         m = PharmacodynamicModel.objects.create(
             name='my_cool_model',
             description='description for my cool model',
-            sbml='sbml_here',
         )
         p.pd_models.add(m)
         self.assertQuerysetEqual(p.pd_models.all(), [repr(m)])

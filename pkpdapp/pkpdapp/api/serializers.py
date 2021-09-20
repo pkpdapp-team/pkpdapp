@@ -40,6 +40,9 @@ class ProtocolSerializer(serializers.ModelSerializer):
         source='doses',
         many=True, write_only=True,
     )
+    dosed_pk_models = serializers.PrimaryKeyRelatedField(
+        many=True, read_only=True
+    )
 
     class Meta:
         model = Protocol
@@ -52,12 +55,66 @@ class PharmacokineticSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class ComponentSerializerField(serializers.Field):
+
+    VALUE_MAP = {
+        'M': 'Male',
+        'F': 'Female'
+    }
+
+    def to_representation(self, obj):
+        return self.VALUE_MAP[obj]
+
+    def to_internal_value(self, data):
+        return {k: v for v, k in self.VALUE_MAP.items()}[data]
+
+
+def _serialize_component(model, component, myokit_model):
+
+    states = [
+        v.pk
+        for v in model.variables.filter(state=True)
+        if v.qname.startswith(component.name())
+    ]
+
+    variables = [
+        v.pk
+        for v in model.variables.filter(constant=True)
+        if v.qname.startswith(component.name())
+    ]
+
+    outputs = [
+        v.pk
+        for v in model.variables.filter(constant=False)
+        if v.qname.startswith(component.name())
+    ]
+
+    equations = [
+        MyokitModelMixin._serialise_equation(e)
+        for e in component.equations(bound=False, const=False)
+    ]
+    return {
+        'name': component.name(),
+        'states': states,
+        'variables': variables,
+        'outputs': outputs,
+        'equations': equations,
+    }
+
+
 class DosedPharmacokineticSerializer(serializers.ModelSerializer):
     components = serializers.SerializerMethodField('get_components')
     simulate = serializers.SerializerMethodField('get_simulate')
+    variables = serializers.PrimaryKeyRelatedField(
+        many=True, read_only=True
+    )
 
     def get_components(self, m):
-        return m.components()
+        model = m.get_myokit_model()
+        return [
+            _serialize_component(m, c, model)
+            for c in model.components(sort=True)
+        ]
 
     def get_simulate(self, m):
         return m.simulate()
@@ -70,9 +127,16 @@ class DosedPharmacokineticSerializer(serializers.ModelSerializer):
 class PharmacodynamicSerializer(serializers.ModelSerializer):
     components = serializers.SerializerMethodField('get_components')
     simulate = serializers.SerializerMethodField('get_simulate')
+    variables = serializers.PrimaryKeyRelatedField(
+        many=True, read_only=True
+    )
 
     def get_components(self, m):
-        return m.components()
+        model = m.get_myokit_model()
+        return [
+            _serialize_component(m, c, model)
+            for c in model.components(sort=True)
+        ]
 
     def get_simulate(self, m):
         return m.simulate()
@@ -392,10 +456,6 @@ class ProjectSerializer(serializers.ModelSerializer):
     #     source='users', # noqa: E251
     #     many=True,
     # )
-
-    variables = VariableSerializer(
-        read_only=True
-    )
 
     class Meta:
         model = Project

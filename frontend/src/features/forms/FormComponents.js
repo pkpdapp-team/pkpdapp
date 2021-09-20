@@ -2,6 +2,7 @@ import React from "react";
 import TextField from '@material-ui/core/TextField';
 import { makeStyles } from '@material-ui/core/styles';
 import InputLabel from '@material-ui/core/InputLabel';
+import Tooltip from '@material-ui/core/Tooltip';
 import MenuItem from '@material-ui/core/MenuItem';
 import Typography from '@material-ui/core/Typography';
 import FormControl from '@material-ui/core/FormControl';
@@ -74,24 +75,44 @@ export function FormCheckboxField({control, name, defaultValue, label, ...rest})
   )
 }
 
-export function FormSliderField({control, name, defaultValue, min, max, label}) {
+export function FormSliderField({control, name, defaultValue, min, max, label, tooltip}) {
   const classes = useStyles();
+  const roundNumber = (x) => {
+    if (x === 0 || x === 0.0) {
+      return x
+    }
+    else if ((Math.abs(x) < 0.01) || (Math.abs(x) >= 1000.0)) {
+      const [coefficient, exponent] = x 
+        .toExponential()
+        .split('e')
+        .map((item) => Number(item));
+      return `${Math.round(coefficient)}e^${exponent}`;
+    } else if (Math.abs(x) >= 100.0) {
+      return x.toFixed(0)
+    } else if (Math.abs(x) >= 10.0) {
+      return x.toFixed(1)
+    } else {
+      return x.toFixed(2)
+    }
+  }
 
   const marks = [
     {
       value: min,
-      label: min,
     },
     {
       value: max,
-      label: max,
     },
   ];
   return (
   <div className={classes.formInput}>
+    {label && 
+    <Tooltip title={tooltip} placement="top">
     <Typography id={`input-slider-${name}`} gutterBottom>
       {label}
     </Typography>
+    </Tooltip>
+    }
     <Controller
         control={control}
         defaultValue={defaultValue}
@@ -104,6 +125,7 @@ export function FormSliderField({control, name, defaultValue, min, max, label}) 
           return (
           <Slider
             valueLabelDisplay="auto"
+            valueLabelFormat={roundNumber}
             value={value}
             step={(max-min)/100.0}
             min={min}
