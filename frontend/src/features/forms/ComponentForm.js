@@ -19,6 +19,11 @@ const useStyles = makeStyles((theme) => ({
 
 export default function ComponentForm({control, component}) {
   const classes = useStyles();
+  const mathjaxConfig = {
+    chtml: {
+      scale: 0.5, 
+    },
+  }
   return (
     <div className={classes.root}>
     <Grid container item xs={12} spacing={3}>
@@ -69,7 +74,10 @@ export default function ComponentForm({control, component}) {
     {component.equations.map((eq, index) => {
       return (
         <ListItem key={index}>
-          <MathJax math={eq} />
+          <MathJax 
+              math={eq} 
+              config={mathjaxConfig}
+          />
         </ListItem>
       );
     })}
