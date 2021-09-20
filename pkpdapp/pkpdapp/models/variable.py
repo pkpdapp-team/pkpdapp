@@ -89,9 +89,9 @@ class Variable(models.Model):
                     (Q(pk_model__isnull=True) &
                      Q(dosed_pk_model__isnull=True) &
                      Q(pd_model__isnull=False)) |
-                    (Q(pk_model__isnull=True) &
+                    (Q(pk_model__isnull=False) &
                      Q(dosed_pk_model__isnull=True) &
-                     Q(pd_model__isnull=False)) |
+                     Q(pd_model__isnull=True)) |
                     (Q(pk_model__isnull=True) &
                      Q(dosed_pk_model__isnull=False) &
                      Q(pd_model__isnull=True))

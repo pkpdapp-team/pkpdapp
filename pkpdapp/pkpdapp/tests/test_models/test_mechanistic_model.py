@@ -10,6 +10,8 @@ from pkpdapp.models import (
     Compound, DosedPharmacokineticModel,
     Dose, PkpdModel, Unit
 )
+from myokit.formats.sbml._parser import SBMLParsingError
+from django.core.exceptions import ValidationError
 from django.core.cache import cache
 import numpy as np
 
@@ -17,6 +19,23 @@ import numpy as np
 class TestPharmodynamicModel(TestCase):
     def setUp(self):
         cache.clear()
+
+    def test_model_bad_sbml(self):
+        with self.assertRaises(SBMLParsingError):
+            PharmacodynamicModel.objects.create(
+                name='my_cool_model',
+                description='description for my cool model',
+                sbml='this is not xml'
+            )
+
+    def test_model_clean(self):
+        m = PharmacodynamicModel(
+            name='my_cool_model',
+            description='description for my cool model',
+            sbml='this is not xml'
+        )
+        with self.assertRaises(ValidationError):
+            m.clean()
 
     def test_model_creation(self):
         m = PharmacodynamicModel.objects.create(
@@ -89,6 +108,23 @@ class TestPharmodynamicModel(TestCase):
         result = m.simulate(outputs, initial_conditions, variables)
         self.assertEqual(result[test_model_outputs[0]][0], 1.1)
         self.assertEqual(result[test_model_outputs[1]][0], 0.0)
+
+
+class TestPharmokineticModel(TestCase):
+    def setUp(self):
+        cache.clear()
+
+    def test_model_creation(self):
+        one_pk = PharmacokineticModel.objects\
+            .get(name='one_compartment_pk_model')
+
+        newl_pk = PharmacokineticModel.objects\
+            .create(
+                name='one_compartment_pk_model_v2',
+                sbml=one_pk.sbml
+            )
+        self.assertTrue(isinstance(newl_pk, PharmacokineticModel))
+        self.assertGreater(len(newl_pk.variables.all()), 0)
 
 
 class TestDosedPharmokineticModel(TestCase):
