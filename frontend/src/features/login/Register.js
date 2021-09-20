@@ -94,6 +94,8 @@ export default function Register() {
           fullWidth
           control={control} 
           defaultValue={''}
+          autoComplete="new-password"
+          type="password"
           name="password" label="Password"
         />
         <FormTextField 
@@ -101,6 +103,8 @@ export default function Register() {
           fullWidth
           control={control} 
           defaultValue={''}
+          autoComplete="new-password"
+          type="password"
           name="repeat-password" label="Verify password"
         />
         <Button
