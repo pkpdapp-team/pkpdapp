@@ -23,6 +23,7 @@ export const updateBiomarkerType = createAsyncThunk(
   'biomarkerTypes/updateBiomarkerType',
   async (biomarker_type) => {
     const response = await api.put(`/api/biomarker_type/${biomarker_type.id}/`, biomarker_type)
+    console.log('updateBiomarkerType response', response)
     return response
   }
 )
@@ -31,6 +32,7 @@ export const biomarkerTypesSlice = createSlice({
   name: 'biomarkerTypes',
   initialState, 
   reducers: {
+    updateOne: biomarkerTypesAdapter.updateOne,
   },
   extraReducers: {
     [fetchBiomarkerType.pending]: (state, action) => {
@@ -44,8 +46,13 @@ export const biomarkerTypesSlice = createSlice({
       state.status = 'succeeded'
       biomarkerTypesAdapter.addOne(state, action.payload)
     },
+    [updateBiomarkerType.fulfilled]: biomarkerTypesAdapter.upsertOne,
   }
 })
+
+export const { 
+  updateOne: updateBiomarkerTypeById
+} = biomarkerTypesSlice.actions
 
 export default biomarkerTypesSlice.reducer
 

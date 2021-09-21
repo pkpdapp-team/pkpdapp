@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { useSelector, useDispatch } from 'react-redux'
+import { useDispatch } from 'react-redux'
 import Button from '@material-ui/core/Button';
 import Grid from '@material-ui/core/Grid';
 import Alert from '@material-ui/lab/Alert';
@@ -12,7 +12,14 @@ import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import Checkbox from '@material-ui/core/Checkbox';
 
+import Accordion from '@material-ui/core/Accordion';
+import AccordionSummary from '@material-ui/core/AccordionSummary';
+import AccordionDetails from '@material-ui/core/AccordionDetails';
+import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
+
+import SubjectSubform from './SubjectSubform'
 import BiomarkerTypeSubform from './BiomarkerTypeSubform'
+
 import {toggleDatasetDisplayGroup, updateDataset, uploadDatasetCsv} from '../datasets/datasetsSlice'
 import {FormTextField, FormDateTimeField} from '../forms/FormComponents';
 
@@ -38,11 +45,6 @@ export default function DatasetDetail({project, dataset}) {
     return dataset.displayGroups.includes(group)
   }
   
-  const handleGroupChange = (group) => {
-    return () => {
-      dispatch(toggleDatasetDisplayGroup({id: dataset.id, group})) 
-    }
-  }
 
   useEffect(() => {
     reset(dataset);
@@ -57,10 +59,6 @@ export default function DatasetDetail({project, dataset}) {
   const onSubmit = (values) => {
     dispatch(updateDataset(values))
   };
-
-  const subject_groups = [
-    ...new Set(dataset.subjects.map(s => s.group))
-  ];
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
@@ -94,23 +92,20 @@ export default function DatasetDetail({project, dataset}) {
       <Grid item xs={6}>
       <Typography>Subject Groups</Typography>
       <List>
-      {subject_groups.map((group, index) => {
-        if (!group) {
-          return null;
-        }
+      {Object.keys(dataset.subject_groups).map((group, index) => {
         return (
-          <ListItem key={index} 
-            onClick={handleGroupChange(group)} 
-            role={undefined} dense button >
-            <ListItemIcon>
-              <Checkbox
-                edge="start"
-                checked={isGroupChecked(group)}
-                tabIndex={-1}
-                disableRipple
-              />
-            </ListItemIcon>
-            <ListItemText primary={group} />
+          <ListItem key={index} dense >
+            <Accordion >
+              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                <Typography className={classes.heading}>{group}</Typography>
+              </AccordionSummary>
+              <AccordionDetails>
+                {dataset.subject_groups[group].map((subject_id, sindex) => { 
+                return (
+                  <SubjectSubform key={sindex} subject_id={subject_id}/>
+                )})}
+              </AccordionDetails>
+            </Accordion>
           </ListItem>
         );
       })}

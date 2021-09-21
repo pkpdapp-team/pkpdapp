@@ -198,13 +198,22 @@ class DatasetSerializer(serializers.ModelSerializer):
     protocols = ProtocolSerializer(
         many=True, read_only=True
     )
-    subjects = SubjectSerializer(
+    subjects = serializers.PrimaryKeyRelatedField(
         many=True, read_only=True
     )
+    subject_groups = serializers.SerializerMethodField('get_groups')
 
     class Meta:
         model = Dataset
         fields = '__all__'
+
+    def get_groups(self, dataset):
+        groups = {}
+        for s in dataset.subjects.all():
+            if s.group not in groups:
+                groups[s.group] = []
+            groups[s.group].append(s.pk)
+        return groups
 
 
 class DatasetCsvSerializer(serializers.ModelSerializer):

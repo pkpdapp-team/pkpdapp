@@ -21,6 +21,7 @@ from .serializers import (
     DatasetCsvSerializer,
     BiomarkerTypeSerializer,
     VariableSerializer,
+    SubjectSerializer,
 )
 
 from pkpdapp.models import (
@@ -34,6 +35,7 @@ from pkpdapp.models import (
     PkpdModel,
     BiomarkerType,
     Variable,
+    Subject,
 )
 from django.contrib.auth.models import User
 from django.db.models import Q
@@ -162,6 +164,11 @@ class PkpdView(viewsets.ModelViewSet):
     queryset = PkpdModel.objects.all()
     serializer_class = PkpdSerializer
     filter_backends = [ProjectFilter]
+
+
+class SubjectView(viewsets.ModelViewSet):
+    queryset = Subject.objects.all()
+    serializer_class = SubjectSerializer
 
 
 class BiomarkerTypeView(viewsets.ModelViewSet):

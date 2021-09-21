@@ -3,6 +3,7 @@ import {
 } from '@reduxjs/toolkit'
 import { updateProject } from '../projects/projectsSlice'
 import { fetchBiomarkerType } from './biomarkerTypesSlice'
+import { fetchSubject } from './subjectsSlice'
 import { api } from '../../Api'
 
 const datasetsAdapter = createEntityAdapter({
@@ -26,12 +27,11 @@ export const fetchDatasets = createAsyncThunk('datasets/fetchDatasets', async (p
     }
   }
 
-  // set display groups
+  // fetch subjects async
   for (const d of response) {
-    const groups = [
-      ...new Set(d.subjects.map(s => s.group))
-    ];
-    d.displayGroups = groups;
+    for (const s of d.subjects) {
+      dispatch(fetchSubject(s))
+    }
   }
 
   return response
@@ -49,7 +49,6 @@ export const addNewDataset = createAsyncThunk(
         ...project, 
         datasets: [...project.datasets, dataset.id] 
       }))
-      dataset.displayGroups = []
     }
     return dataset
   }
@@ -61,12 +60,6 @@ export const uploadDatasetCsv = createAsyncThunk(
     const dataset = await api.putMultiPart(
       `/api/dataset/${id}/csv/`, {csv}
     ).catch(err => rejectWithValue(err))
-
-    // set display groups
-    const groups = [
-      ...new Set(dataset.subjects.map(s => s.group || 'None'))
-    ];
-    dataset.displayGroups = groups;
 
     return dataset
   }
