@@ -43,6 +43,13 @@ class Subject(models.Model):
             'For plotting purposes in the frontend'
         )
     )
+    display = models.BooleanField(
+        default=True,
+        help_text=(
+            'True if this subject will be displayed in the '
+            'frontend, False otherwise'
+        )
+    )
     metadata = JSONField(help_text='subject metadata')
 
     class Meta:

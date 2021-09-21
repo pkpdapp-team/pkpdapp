@@ -2,7 +2,7 @@ import {
   createSlice, createEntityAdapter, createAsyncThunk,
 } from '@reduxjs/toolkit'
 import { updateProject } from '../projects/projectsSlice'
-import { fetchBiomarkerData } from './biomarkerDatasSlice'
+import { fetchBiomarkerType } from './biomarkerTypesSlice'
 import { api } from '../../Api'
 
 const datasetsAdapter = createEntityAdapter({
@@ -22,7 +22,7 @@ export const fetchDatasets = createAsyncThunk('datasets/fetchDatasets', async (p
   // fetch biomarker types async
   for (const d of response) {
     for (const bt of d.biomarker_types) {
-      dispatch(fetchBiomarkerData(bt.id))
+      dispatch(fetchBiomarkerType(bt))
     }
   }
 

@@ -12,12 +12,9 @@ import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import Checkbox from '@material-ui/core/Checkbox';
 
+import BiomarkerTypeSubform from './BiomarkerTypeSubform'
 import {toggleDatasetDisplayGroup, updateDataset, uploadDatasetCsv} from '../datasets/datasetsSlice'
 import {FormTextField, FormDateTimeField} from '../forms/FormComponents';
-import { 
-  selectBiomarkerDatasByDatasetId, 
-  toggleBiomarkerDataDisplay 
-} from './biomarkerDatasSlice'
 
 const useStyles = makeStyles((theme) => ({
   controlsRoot: {
@@ -29,14 +26,14 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
+
+
 export default function DatasetDetail({project, dataset}) {
   const classes = useStyles();
   const { control, handleSubmit, reset } = useForm();
   const dispatch = useDispatch();
 
   console.log('dataset detail', dataset)
-  const biomarkerDatas = useSelector((state) => selectBiomarkerDatasByDatasetId(state, dataset.id))
-
   const isGroupChecked = (group) => {
     return dataset.displayGroups.includes(group)
   }
@@ -44,22 +41,6 @@ export default function DatasetDetail({project, dataset}) {
   const handleGroupChange = (group) => {
     return () => {
       dispatch(toggleDatasetDisplayGroup({id: dataset.id, group})) 
-    }
-  }
-
-  const isChecked = (bt) => {
-    const biomarkerData = biomarkerDatas.find(bd => bd.id === bt.id)
-    return (biomarkerData !== undefined) && biomarkerData.display
-  }
-
-  const isLoaded = (bt) => {
-    const biomarkerData = biomarkerDatas.find(bd => bd.id === bt.id)
-    return (biomarkerData !== undefined)
-  }
-
-  const handleBiomarkerChange = (bt) => {
-    return () => {
-      dispatch(toggleBiomarkerDataDisplay(bt.id)) 
     }
   }
 
@@ -98,22 +79,14 @@ export default function DatasetDetail({project, dataset}) {
       <Grid item xs={6}>
       <Typography>Variables</Typography>
       <List>
-      {dataset.biomarker_types.map((biomarker) => {
+      {dataset.biomarker_types.map((biomarker_id, index) => {
         return (
-          <ListItem key={biomarker.id} 
-            onClick={handleBiomarkerChange(biomarker)} 
-            role={undefined} dense button >
-            <ListItemIcon>
-              <Checkbox
-                edge="start"
-                checked={isChecked(biomarker)}
-                disabled={!isLoaded(biomarker)}
-                tabIndex={-1}
-                disableRipple
-              />
-            </ListItemIcon>
-            <ListItemText primary={biomarker.name} />
+          <ListItem key={index} role={undefined} dense >
+          <BiomarkerTypeSubform
+            biomarker_id={biomarker_id}
+          />
           </ListItem>
+          
         );
       })}
       </List>

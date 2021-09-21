@@ -340,6 +340,7 @@ def load_datasets(apps, schema_editor):
                 DOSE_COLUMN = None
                 COMPOUND_COLUMN = None
                 SUBJECT_GROUP_COLUMN = None
+            subject_index = 0
             for row in data_reader:
                 biomarker_type_str = row[BIOMARKER_TYPE_COLUMN]
                 if not biomarker_type_str:
@@ -372,7 +373,9 @@ def load_datasets(apps, schema_editor):
                         group=group,
                         dose_group_amount=dose_group_amount,
                         dose_group_unit=dose_group_unit,
+                        shape=subject_index,
                     )
+                    subject_index += 1
                 if UNIT_COLUMN is None:
                     unit = Unit.objects.get(symbol='')
                 else:

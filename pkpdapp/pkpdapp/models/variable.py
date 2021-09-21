@@ -78,6 +78,13 @@ class Variable(models.Model):
             'For display purposes in the frontend'
         )
     )
+    display = models.BooleanField(
+        default=True,
+        help_text=(
+            'True if this variable will be displayed in the '
+            'frontend, False otherwise'
+        )
+    )
 
     class Scale(models.TextChoices):
         LINEAR = 'LN', 'Linear'

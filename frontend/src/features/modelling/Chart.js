@@ -1,6 +1,6 @@
 import React from "react";
 import { useSelector } from 'react-redux'
-import { selectBiomarkerDatasByDatasetIds } from '../datasets/biomarkerDatasSlice'
+import { selectBiomarkerTypesByDatasetIds } from '../datasets/biomarkerTypesSlice'
 
 import { makeStyles } from '@material-ui/core/styles';
 
@@ -48,7 +48,7 @@ export default function ModellingChart({datasets, pkModels, pdModels}) {
   }
 
   const datasetBiomarkers = useSelector((state) =>
-    selectBiomarkerDatasByDatasetIds(
+    selectBiomarkerTypesByDatasetIds(
       state, datasets.map(d => d.id)
     )
   )

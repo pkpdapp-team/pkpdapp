@@ -19,7 +19,7 @@ from .serializers import (
     ProtocolSerializer,
     UnitSerializer,
     DatasetCsvSerializer,
-    BiomarkerDataSerializer,
+    BiomarkerTypeSerializer,
     VariableSerializer,
 )
 
@@ -164,9 +164,9 @@ class PkpdView(viewsets.ModelViewSet):
     filter_backends = [ProjectFilter]
 
 
-class BiomarkerDataView(generics.RetrieveAPIView):
+class BiomarkerTypeView(viewsets.ModelViewSet):
     queryset = BiomarkerType.objects.all()
-    serializer_class = BiomarkerDataSerializer
+    serializer_class = BiomarkerTypeSerializer
 
 
 class DatasetView(viewsets.ModelViewSet):

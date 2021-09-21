@@ -174,7 +174,7 @@ class VariableSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class BiomarkerDataSerializer(serializers.ModelSerializer):
+class BiomarkerTypeSerializer(serializers.ModelSerializer):
     data = serializers.SerializerMethodField('get_data')
 
     class Meta:
@@ -185,12 +185,6 @@ class BiomarkerDataSerializer(serializers.ModelSerializer):
         return bt.as_pandas().to_dict(orient='list')
 
 
-class BiomarkerTypeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = BiomarkerType
-        fields = '__all__'
-
-
 class SubjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Subject
@@ -198,7 +192,7 @@ class SubjectSerializer(serializers.ModelSerializer):
 
 
 class DatasetSerializer(serializers.ModelSerializer):
-    biomarker_types = BiomarkerTypeSerializer(
+    biomarker_types = serializers.PrimaryKeyRelatedField(
         many=True, read_only=True
     )
     protocols = ProtocolSerializer(
@@ -325,6 +319,7 @@ class DatasetCsvSerializer(serializers.ModelSerializer):
         for i, b in enumerate(bts_unique):
             biomarker_index[b] = i
         # save each row of data as either biomarker or dose
+        subject_index = 0
         for _, row in data.iterrows():
             time_unit = Unit.objects.get(symbol=row['TIME_UNIT'])
             value_unit = Unit.objects.get(symbol=row['UNIT'])
@@ -357,7 +352,9 @@ class DatasetCsvSerializer(serializers.ModelSerializer):
                     group=group,
                     dose_group_amount=dose_group_value,
                     dose_group_unit=dose_group_unit,
+                    shape=subject_index,
                 )
+                subject_index += 1
             if value != ".":  # measurement observation
                 Biomarker.objects.create(
                     time=row['TIME'],
