@@ -90,7 +90,7 @@ class Migration(migrations.Migration):
             name='Unit',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('symbol', models.CharField(help_text='symbol for unit display', max_length=30)),
+                ('symbol', models.CharField(help_text='symbol for unit display', max_length=50)),
                 ('g', models.FloatField(default=0, help_text='grams exponent')),
                 ('m', models.FloatField(default=0, help_text='meters exponent')),
                 ('s', models.FloatField(default=0, help_text='seconds exponent')),
