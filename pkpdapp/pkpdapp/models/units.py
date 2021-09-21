@@ -25,7 +25,7 @@ class Unit(models.Model):
     """
 
     symbol = models.CharField(
-        max_length=10, help_text='symbol for unit display'
+        max_length=30, help_text='symbol for unit display'
     )
     g = models.FloatField(default=0, help_text='grams exponent')
     m = models.FloatField(default=0, help_text='meters exponent')
