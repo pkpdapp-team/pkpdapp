@@ -5,9 +5,9 @@ scheme.from_hue(21)
       .scheme('tetrade')   
       .variation('hard');
 
-export const colors = scheme.colors().map(hexToRGB);
+const colors = scheme.colors().map(hexToRGB);
 
-export const shapes = [
+const shapes = [
     'cross',
     'triangle',
     'star',
@@ -19,6 +19,16 @@ export const shapes = [
     'rectRot',
     'circle'
   ]
+
+export function getShape(i) {
+  const index = i % shapes.length
+  return shapes[index]
+}
+
+export function getColor(i) {
+  const index = i % colors.length
+  return colors[index]
+}
 
 
 // https://stackoverflow.com/questions/21646738/convert-hex-to-rgba
