@@ -14,6 +14,7 @@ export default function SubjectSubform({subject_id}) {
   let subject = useSelector(
     state => selectSubjectById(state, subject_id)
   );
+  console.log('rendering subject', subject_id, subject)
   if (!subject) {
     subject = {
       display: false,
@@ -45,7 +46,7 @@ export default function SubjectSubform({subject_id}) {
         control={control} 
         name={'display'}
         defaultValue={subject.display}
-        label={subject.name}
+        label={subject.id_in_dataset}
       />
       {isDirty &&
         <IconButton

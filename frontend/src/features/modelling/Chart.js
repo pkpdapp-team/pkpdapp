@@ -2,7 +2,7 @@ import React from "react";
 import { useSelector } from 'react-redux'
 import { selectAllBiomarkerTypes } from '../datasets/biomarkerTypesSlice'
 import { selectAllSubjects } from '../datasets/subjectsSlice'
-import { selectAllVariables } from '../datasets/variablesSlice'
+import { selectAllVariables } from '../variables/variablesSlice'
 
 import { makeStyles } from '@material-ui/core/styles';
 
@@ -31,49 +31,49 @@ export default function ModellingChart({datasets, pkModels, pdModels}) {
   
   console.log('chart re-render', pdModels)
 
-  const biomarkers = useSelector(selectAllBiomarkerTypes)
-  const subjects = useSelector(selectAllSubjects)
-  const variables = useSelector(selectAllVariables)
+  const biomarkers = useSelector((state) => state.biomarkerTypes.entities)
+  const subjects = useSelector((state) => state.subjects.entities)
+  const variables = useSelector((state) => state.variables.entities)
 
   const getChartData = (model) => {
-
-
-  }Object.entries(simulate).map(([key, data]) => {
-    if (key !== 'myokit.time') {
-      const color = colors[colorIndex];
-      incrementColorIndex()
+    const time_id = variables.filter(v => v.name === 'time')[0].id
+    return Object.entries(model.simulate).map(([variable_id, data]) => {
+      const variable = variables[variable_id]
+      const color = getColor(variable.color)
       return {
         type: 'line',
-        label: key,
+        label: variable.name,
         borderColor: color,
         backgroundColor: color,
         showLine: true,
         fill: false,
         lineTension: 0,
         interpolate: true,
-        data: data.map((y, i) => ({x: simulate['myokit.time'][i], y: y}))
+        data: data.map((y, i) => ({x: model.simulate[time_id][i], y: y}))
       }
-    }
-    return null
-  }).filter(x => x);
-
-  
+    }).filter(x => x);
+  }
+  console.log('biomarkers', biomarkers)
 
   const getChartDataDataset = (dataset) => {
     return dataset.biomarker_types
-      .filter(id => biomarkers[id].display).map(id => {
+      .map(id => {
         const biomarker = biomarkers[id]
+        console.log('rendering d=',dataset.id,'bt=',id, biomarker)
         const times = biomarker.data.times
         const values = biomarker.data.values
         const color = getColor(biomarker.color);
-        const pointStyle = biomarker.data.subject.map(
+        const pointStyle = biomarker.data.subjects.map(
           id => getShape(subjects[id].shape)
         )
+        if (!biomarker.display) {
+          return null
+        }
         if (values.length === 0) {
           return null
         }
         return {
-          label: dataset.name + biomarker.name,
+          label: dataset.name + '.' + biomarker.name,
           pointStyle: pointStyle,
           borderColor: color,
           backgroundColor: color,

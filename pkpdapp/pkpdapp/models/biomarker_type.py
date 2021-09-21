@@ -49,7 +49,7 @@ class BiomarkerType(models.Model):
     def as_pandas(self):
         times_subjects_values = \
             self.biomarkers.order_by('time').values_list(
-                'time', 'subject__id_in_dataset', 'value'
+                'time', 'subject__id', 'value'
             )
         times, subjects, values = list(zip(*times_subjects_values))
         return pd.DataFrame.from_dict({
