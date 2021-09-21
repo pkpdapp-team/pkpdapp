@@ -70,8 +70,15 @@ class Inference(models.Model):
         help_text='dosed pharmacokinetic model'
     )
 
-#
-# TO DO :   Check if a log-LL or a score function has been set
-#           Check if a model was defined
-#           Check if parameters have been defined
-#
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                check=(
+                    (Q(log_likelihood__isnull=True) &
+                     Q(score_function__isnull=False)) |
+                    (Q(log_likelihood__isnull=False) &
+                     Q(score_function__isnull=True))
+                ),
+                name='inference must have to a log-likelihood or a score function'
+            ),
+        ]
