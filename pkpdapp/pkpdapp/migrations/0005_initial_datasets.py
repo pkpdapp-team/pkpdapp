@@ -295,8 +295,9 @@ def load_datasets(apps, schema_editor):
                     unit=Unit.objects.get(
                         symbol=b['unit']
                     ),
-                    dataset=dataset
-                ) for b in biomarkers
+                    dataset=dataset,
+                    color=i,
+                ) for i, b in enumerate(biomarkers)
             ]
 
             # parse as csv file

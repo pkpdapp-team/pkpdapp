@@ -71,6 +71,13 @@ class Variable(models.Model):
         default=1,
         help_text='default value for this variable'
     )
+    color = models.IntegerField(
+        default=0,
+        help_text=(
+            'Color index associated with this variable. '
+            'For display purposes in the frontend'
+        )
+    )
 
     class Scale(models.TextChoices):
         LINEAR = 'LN', 'Linear'
@@ -109,6 +116,9 @@ class Variable(models.Model):
 
     @staticmethod
     def get_variable_pk(model, myokit_variable):
+        num_variables = Variable.objects.filter(
+            pk_model=model,
+        ).count()
         variables = Variable.objects.filter(
             qname=myokit_variable.qname(),
             pk_model=model,
@@ -123,10 +133,14 @@ class Variable(models.Model):
                 state=myokit_variable.is_state(),
                 unit=Unit.get_unit_from_variable(myokit_variable),
                 pk_model=model,
+                color=num_variables,
             )
 
     @staticmethod
     def get_variable_pd(model, myokit_variable):
+        num_variables = Variable.objects.filter(
+            pk_model=model,
+        ).count()
         variables = Variable.objects.filter(
             qname=myokit_variable.qname(),
             pd_model=model,
@@ -141,10 +155,14 @@ class Variable(models.Model):
                 state=myokit_variable.is_state(),
                 unit=Unit.get_unit_from_variable(myokit_variable),
                 pd_model=model,
+                color=num_variables,
             )
 
     @staticmethod
     def get_variable_dosed_pk(model, myokit_variable):
+        num_variables = Variable.objects.filter(
+            dosed_pk_model=model,
+        ).count()
         variables = Variable.objects.filter(
             qname=myokit_variable.qname(),
             dosed_pk_model=model,
@@ -159,6 +177,7 @@ class Variable(models.Model):
                 state=myokit_variable.is_state(),
                 unit=Unit.get_unit_from_variable(myokit_variable),
                 dosed_pk_model=model,
+                color=num_variables,
             )
 
     @staticmethod

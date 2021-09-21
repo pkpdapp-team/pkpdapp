@@ -36,6 +36,13 @@ class Subject(models.Model):
         help_text='dataset specific grouping for this subject',
         blank=True
     )
+    shape = models.IntegerField(
+        default=0,
+        help_text=(
+            'Shape index associated with this subject. '
+            'For plotting purposes in the frontend'
+        )
+    )
     metadata = JSONField(help_text='subject metadata')
 
     class Meta:

@@ -2,28 +2,18 @@ import React from "react";
 import { useSelector } from 'react-redux'
 import { selectBiomarkerDatasByDatasetIds } from '../datasets/biomarkerDatasSlice'
 
-import ColorScheme from 'color-scheme'
 import { makeStyles } from '@material-ui/core/styles';
 
 import { Scatter } from 'react-chartjs-2';
 
 import { Chart, registerables, Interaction } from 'chart.js';
 import { CrosshairPlugin, Interpolate } from 'chartjs-plugin-crosshair';
+import {colors, shapes} from './ShapesAndColors'
+
 Chart.register(...registerables, CrosshairPlugin);
 Interaction.modes.interpolate = Interpolate;
 
-// https://stackoverflow.com/questions/21646738/convert-hex-to-rgba
-function hexToRGB(hex, alpha) {
-    var r = parseInt(hex.slice(1, 3), 16),
-        g = parseInt(hex.slice(3, 5), 16),
-        b = parseInt(hex.slice(5, 7), 16);
 
-    if (alpha) {
-        return "rgba(" + r + ", " + g + ", " + b + ", " + alpha + ")";
-    } else {
-        return "rgb(" + r + ", " + g + ", " + b + ")";
-    }
-}
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -39,12 +29,7 @@ export default function ModellingChart({datasets, pkModels, pdModels}) {
   
   console.log('chart re-render', pdModels)
 
-  var scheme = new ColorScheme();
-  scheme.from_hue(21)         
-        .scheme('tetrade')   
-        .variation('hard');
-
-  const colors = scheme.colors().map(hexToRGB);
+  
   let colorIndex = 0;
   const incrementColorIndex = () => {
     colorIndex += 1;
@@ -53,22 +38,11 @@ export default function ModellingChart({datasets, pkModels, pdModels}) {
     }
   }
 
-  const pointStyles = [
-    'cross',
-    'triangle',
-    'star',
-    'crossRot',
-    'dash',
-    'line',
-    'rect',
-    'rectRounded',
-    'rectRot',
-    'circle'
-  ]
+  
   let pointStyleIndex = 0;
   const incrementPointStyleIndex = () => {
     pointStyleIndex += 1;
-    if (pointStyleIndex >= pointStyles.length) {
+    if (pointStyleIndex >= shapes.length) {
       pointStyleIndex = 0;
     }
   }
@@ -106,7 +80,7 @@ export default function ModellingChart({datasets, pkModels, pdModels}) {
 
     // for each subject, we generate a dataset for each biomarker
     return dataset.subjects.map(subject => {
-      const pointStyle = pointStyles[pointStyleIndex];
+      const pointStyle = shapes[pointStyleIndex];
       incrementPointStyleIndex()
       colorIndex = savedColorIndex;
       if (!dataset.displayGroups.includes(subject.group)) {

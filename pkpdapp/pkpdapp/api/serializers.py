@@ -311,13 +311,14 @@ class DatasetCsvSerializer(serializers.ModelSerializer):
         data = validated_data['csv']
         data_without_dose = data.query('DV != "."')
         bts_unique = data_without_dose[['YDESC', 'UNIT']].drop_duplicates()
-        for _, row in bts_unique.iterrows():
+        for i, row in bts_unique.iterrows():
             unit = Unit.objects.get(symbol=row['UNIT'])
             BiomarkerType.objects.create(
                 name=row['YDESC'],
                 description="",
                 unit=unit,
-                dataset=instance
+                dataset=instance,
+                color=i,
             )
 
         biomarker_index = {}
