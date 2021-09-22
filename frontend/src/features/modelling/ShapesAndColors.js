@@ -30,6 +30,14 @@ export function getColor(i) {
   return colors[index]
 }
 
+export function numShapes() {
+  return shapes.length
+}
+
+export function numColors() {
+  return shapes.colors
+}
+
 
 // https://stackoverflow.com/questions/21646738/convert-hex-to-rgba
 function hexToRGB(hex, alpha) {

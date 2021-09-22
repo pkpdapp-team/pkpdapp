@@ -50,7 +50,10 @@ class Subject(models.Model):
             'frontend, False otherwise'
         )
     )
-    metadata = JSONField(help_text='subject metadata')
+    metadata = JSONField(
+        default=dict,
+        help_text='subject metadata',
+    )
 
     class Meta:
         constraints = [

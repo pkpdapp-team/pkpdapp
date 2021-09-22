@@ -190,6 +190,7 @@ Description of a three compartment PK model here.
                         unit=unit,
                         pd_model=model,
                         color=i,
+                        display=v.name() != 'time',
                     )
 
         except urllib.error.URLError:

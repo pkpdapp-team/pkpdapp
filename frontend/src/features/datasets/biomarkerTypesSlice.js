@@ -23,7 +23,6 @@ export const updateBiomarkerType = createAsyncThunk(
   'biomarkerTypes/updateBiomarkerType',
   async (biomarker_type) => {
     const response = await api.put(`/api/biomarker_type/${biomarker_type.id}/`, biomarker_type)
-    console.log('updateBiomarkerType response', response)
     return response
   }
 )

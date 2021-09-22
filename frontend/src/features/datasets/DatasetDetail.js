@@ -90,20 +90,24 @@ export default function DatasetDetail({project, dataset}) {
       </List>
       </Grid>
       <Grid item xs={6}>
-      <Typography>Subject Groups</Typography>
+      <Typography>Subjects</Typography>
       <List>
       {Object.keys(dataset.subject_groups).map((group, index) => {
         return (
           <ListItem key={index} dense >
             <Accordion >
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Typography className={classes.heading}>{group}</Typography>
+                <Typography className={classes.heading}>{group || 'No group'}</Typography>
               </AccordionSummary>
               <AccordionDetails>
+                <List>
                 {dataset.subject_groups[group].map((subject_id, sindex) => { 
                 return (
-                  <SubjectSubform key={sindex} subject_id={subject_id}/>
+                  <ListItem key={`s${sindex}`} role={undefined} dense button >
+                    <SubjectSubform subject_id={subject_id}/>
+                  </ListItem>
                 )})}
+                </List>
               </AccordionDetails>
             </Accordion>
           </ListItem>

@@ -4,9 +4,8 @@ import IconButton from '@material-ui/core/IconButton';
 import { useForm, useFormState } from "react-hook-form";
 import SaveIcon from '@material-ui/icons/Save';
 
-import {FormCheckboxField} from '../forms/FormComponents'
+import {FormCheckboxField, FormTextField} from '../forms/FormComponents'
 import { selectSubjectById, updateSubject} from './subjectsSlice'
-
 
 
 export default function SubjectSubform({subject_id}) {
@@ -14,7 +13,6 @@ export default function SubjectSubform({subject_id}) {
   let subject = useSelector(
     state => selectSubjectById(state, subject_id)
   );
-  console.log('rendering subject', subject_id, subject)
   if (!subject) {
     subject = {
       display: false,
@@ -25,7 +23,8 @@ export default function SubjectSubform({subject_id}) {
     defaultValues: {
       id: subject.id,
       display: subject.display,
-      name: subject.name
+      name: subject.name,
+      shape: subject.shape,
     }
   });
 
@@ -47,6 +46,12 @@ export default function SubjectSubform({subject_id}) {
         name={'display'}
         defaultValue={subject.display}
         label={subject.id_in_dataset}
+      />
+      <FormTextField
+        control={control} 
+        name={'shape'}
+        label={'Shape'}
+        type="number"
       />
       {isDirty &&
         <IconButton

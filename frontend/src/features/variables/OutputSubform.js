@@ -1,6 +1,6 @@
 import React, {useEffect} from "react";
 import { useSelector } from 'react-redux'
-import {FormCheckboxField } from '../forms/FormComponents';
+import {FormCheckboxField, FormTextField} from '../forms/FormComponents'
 import { useForm, useFormState } from "react-hook-form";
 import SaveIcon from '@material-ui/icons/Save';
 import IconButton from '@material-ui/core/IconButton';
@@ -24,6 +24,7 @@ export default function OutputSubform({variable_id}) {
     defaultValues: {
       id: variable.id,
       display: variable.display,
+      color: variable.color,
     }
   });
 
@@ -53,6 +54,12 @@ export default function OutputSubform({variable_id}) {
         control={control} 
         name={`display`} 
         label={label}
+      />
+      <FormTextField
+        control={control} 
+        name={'color'}
+        label={'Color'}
+        type="number"
       />
       {isDirty &&
           <IconButton

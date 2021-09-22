@@ -21,7 +21,7 @@ export default function ComponentForm({control, component}) {
   const classes = useStyles();
   const mathjaxConfig = {
     chtml: {
-      scale: 0.5, 
+      scale: 0.3, 
     },
   }
   return (

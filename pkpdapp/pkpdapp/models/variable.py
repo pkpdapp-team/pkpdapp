@@ -141,12 +141,13 @@ class Variable(models.Model):
                 unit=Unit.get_unit_from_variable(myokit_variable),
                 pk_model=model,
                 color=num_variables,
+                display=myokit_variable.name() != 'time',
             )
 
     @staticmethod
     def get_variable_pd(model, myokit_variable):
         num_variables = Variable.objects.filter(
-            pk_model=model,
+            pd_model=model,
         ).count()
         variables = Variable.objects.filter(
             qname=myokit_variable.qname(),
@@ -163,6 +164,7 @@ class Variable(models.Model):
                 unit=Unit.get_unit_from_variable(myokit_variable),
                 pd_model=model,
                 color=num_variables,
+                display=myokit_variable.name() != 'time',
             )
 
     @staticmethod
@@ -185,6 +187,7 @@ class Variable(models.Model):
                 unit=Unit.get_unit_from_variable(myokit_variable),
                 dosed_pk_model=model,
                 color=num_variables,
+                display=myokit_variable.name() != 'time',
             )
 
     @staticmethod

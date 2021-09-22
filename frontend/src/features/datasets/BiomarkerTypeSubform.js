@@ -4,7 +4,7 @@ import IconButton from '@material-ui/core/IconButton';
 import { useForm, useFormState } from "react-hook-form";
 import SaveIcon from '@material-ui/icons/Save';
 
-import {FormCheckboxField} from '../forms/FormComponents'
+import {FormCheckboxField, FormTextField} from '../forms/FormComponents'
 import { selectUnitById } from '../projects/unitsSlice'
 import { selectBiomarkerTypeById, updateBiomarkerType } from './biomarkerTypesSlice'
 
@@ -32,7 +32,8 @@ export default function BiomarkerTypeSubform({biomarker_id}) {
     defaultValues: {
       id: biomarker_type.id,
       display: biomarker_type.display,
-      name: biomarker_type.name
+      name: biomarker_type.name,
+      color: biomarker_type.color,
     }
   });
 
@@ -47,15 +48,18 @@ export default function BiomarkerTypeSubform({biomarker_id}) {
     dispatch(updateBiomarkerType(values))
   };
 
-  console.log('bt subform', biomarker_type)
-
   return (
     <React.Fragment>
       <FormCheckboxField
         control={control} 
         name={'display'}
-        defaultValue={biomarker_type.display}
         label={`${biomarker_type.name} ${unit.symbol}`}
+      />
+      <FormTextField
+        control={control} 
+        name={'color'}
+        label={'Color'}
+        type="number"
       />
       {isDirty &&
         <IconButton

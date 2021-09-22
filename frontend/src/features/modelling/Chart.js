@@ -36,10 +36,21 @@ export default function ModellingChart({datasets, pkModels, pdModels}) {
   const variables = useSelector((state) => state.variables.entities)
 
   const getChartData = (model) => {
-    const time_id = variables.filter(v => v.name === 'time')[0].id
+    const have_all_variables = Object.keys(model.simulate)
+      .filter(id => id in variables).length === Object.keys(model.simulate).length 
+    if (!have_all_variables) {
+      return {}
+    }
+    const time_id = Object.keys(model.simulate)
+      .filter(id => variables[id].name === 'time')[0]
+
     return Object.entries(model.simulate).map(([variable_id, data]) => {
       const variable = variables[variable_id]
       const color = getColor(variable.color)
+      console.log('doing variable_id', variable_id, time_id, Object.keys(model.simulate).filter(id => variables[id].name))
+      if (!variable.display) {
+        return null;
+      }
       return {
         type: 'line',
         label: variable.name,
@@ -60,12 +71,17 @@ export default function ModellingChart({datasets, pkModels, pdModels}) {
       .map(id => {
         const biomarker = biomarkers[id]
         console.log('rendering d=',dataset.id,'bt=',id, biomarker)
-        const times = biomarker.data.times
-        const values = biomarker.data.values
-        const color = getColor(biomarker.color);
-        const pointStyle = biomarker.data.subjects.map(
-          id => getShape(subjects[id].shape)
+        const subjectsDisplay = biomarker.data.subjects.map(
+          id => subjects[id].display
         )
+        const subjectsDisplayFilter = (_, i) => subjectsDisplay[i]
+        const times = biomarker.data.times.filter(subjectsDisplayFilter)
+        const values = biomarker.data.values.filter(subjectsDisplayFilter)
+        const color = getColor(biomarker.color);
+        const pointStyle = biomarker.data.subjects
+          .filter(subjectsDisplayFilter).map(
+            id => getShape(subjects[id].shape)
+          )
         if (!biomarker.display) {
           return null
         }

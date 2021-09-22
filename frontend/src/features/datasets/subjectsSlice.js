@@ -23,7 +23,7 @@ export const fetchSubject = createAsyncThunk('subjects/fetchSubject', async (sub
 export const updateSubject = createAsyncThunk(
   'subjects/updateSubject',
   async (subject) => {
-    const response = await api.put(`/api/subject/${subject.id}/`, subject)
+    const response = await api.patch(`/api/subject/${subject.id}/`, subject)
     return response
   }
 )
