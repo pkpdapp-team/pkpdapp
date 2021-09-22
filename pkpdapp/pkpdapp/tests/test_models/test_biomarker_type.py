@@ -38,7 +38,7 @@ class TestBiomarkerTypeModel(TestCase):
         )
         self.values = [0, 1, 2]
         self.times = [0, 2, 4]
-        self.subjects = [1, 1, 1]
+        self.subjects = [self.subject.id, self.subject.id, self.subject.id]
         self.biomarkers = [
             Biomarker.objects.create(
                 time=time,

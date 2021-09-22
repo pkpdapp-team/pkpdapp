@@ -5,7 +5,7 @@
 #
 
 from pkpdapp.models import (
-    PharmacodynamicModel
+    PharmacodynamicModel, Variable
 )
 from django.contrib.auth.models import User
 
@@ -43,7 +43,13 @@ class TestSimulateView(APITestCase):
         response = self.client.post(url, data, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertCountEqual(list(response.data.keys()), data['outputs'])
+        self.assertCountEqual(
+            list(response.data.keys()),
+            [
+                Variable.objects.get(qname=qname, pd_model=m).id
+                for qname in data['outputs']
+            ]
+        )
 
         url = reverse('simulate-pharmacodynamic', args=(123,))
         response = self.client.post(url, data, format='json')

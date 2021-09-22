@@ -1,8 +1,5 @@
 import React from "react";
 import { useSelector } from 'react-redux'
-import { selectAllBiomarkerTypes } from '../datasets/biomarkerTypesSlice'
-import { selectAllSubjects } from '../datasets/subjectsSlice'
-import { selectAllVariables } from '../variables/variablesSlice'
 
 import { makeStyles } from '@material-ui/core/styles';
 
@@ -29,8 +26,6 @@ export default function ModellingChart({datasets, pkModels, pdModels}) {
   let renderChart = true;
   const classes = useStyles();
   
-  console.log('chart re-render', pdModels)
-
   const biomarkers = useSelector((state) => state.biomarkerTypes.entities)
   const subjects = useSelector((state) => state.subjects.entities)
   const variables = useSelector((state) => state.variables.entities)
@@ -47,7 +42,6 @@ export default function ModellingChart({datasets, pkModels, pdModels}) {
     return Object.entries(model.simulate).map(([variable_id, data]) => {
       const variable = variables[variable_id]
       const color = getColor(variable.color)
-      console.log('doing variable_id', variable_id, time_id, Object.keys(model.simulate).filter(id => variables[id].name))
       if (!variable.display) {
         return null;
       }
@@ -64,13 +58,11 @@ export default function ModellingChart({datasets, pkModels, pdModels}) {
       }
     }).filter(x => x);
   }
-  console.log('biomarkers', biomarkers)
 
   const getChartDataDataset = (dataset) => {
     return dataset.biomarker_types
       .map(id => {
         const biomarker = biomarkers[id]
-        console.log('rendering d=',dataset.id,'bt=',id, biomarker)
         const subjectsDisplay = biomarker.data.subjects.map(
           id => subjects[id].display
         )
@@ -105,7 +97,6 @@ export default function ModellingChart({datasets, pkModels, pdModels}) {
       ...pdModels.map(m => getChartData(m)).flat(),
     ]
   }
-  console.log('chart data', data)
 
   const options = {
     animation: {

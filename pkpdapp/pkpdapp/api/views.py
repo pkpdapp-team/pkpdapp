@@ -6,7 +6,7 @@
 from rest_framework import (
     views, viewsets, filters, status, decorators, response
 )
-from rest_framework import parsers, generics
+from rest_framework import parsers
 from rest_framework.response import Response
 from .serializers import (
     DatasetSerializer, UserSerializer, ProjectSerializer,

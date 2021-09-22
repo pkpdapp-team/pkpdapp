@@ -8,9 +8,6 @@ import { makeStyles } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
-import ListItemIcon from '@material-ui/core/ListItemIcon';
-import ListItemText from '@material-ui/core/ListItemText';
-import Checkbox from '@material-ui/core/Checkbox';
 
 import Accordion from '@material-ui/core/Accordion';
 import AccordionSummary from '@material-ui/core/AccordionSummary';
@@ -20,7 +17,7 @@ import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import SubjectSubform from './SubjectSubform'
 import BiomarkerTypeSubform from './BiomarkerTypeSubform'
 
-import {toggleDatasetDisplayGroup, updateDataset, uploadDatasetCsv} from '../datasets/datasetsSlice'
+import {updateDataset, uploadDatasetCsv} from '../datasets/datasetsSlice'
 import {FormTextField, FormDateTimeField} from '../forms/FormComponents';
 
 const useStyles = makeStyles((theme) => ({
@@ -39,12 +36,6 @@ export default function DatasetDetail({project, dataset}) {
   const classes = useStyles();
   const { control, handleSubmit, reset } = useForm();
   const dispatch = useDispatch();
-
-  console.log('dataset detail', dataset)
-  const isGroupChecked = (group) => {
-    return dataset.displayGroups.includes(group)
-  }
-  
 
   useEffect(() => {
     reset(dataset);

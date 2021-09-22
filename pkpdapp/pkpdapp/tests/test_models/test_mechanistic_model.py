@@ -8,7 +8,7 @@ from django.test import TestCase
 from pkpdapp.models import (
     PharmacodynamicModel, Protocol, PharmacokineticModel,
     Compound, DosedPharmacokineticModel,
-    Dose, PkpdModel, Unit
+    Dose, PkpdModel, Unit, Variable
 )
 from myokit.formats.sbml._parser import SBMLParsingError
 from django.core.exceptions import ValidationError
@@ -106,8 +106,12 @@ class TestPharmodynamicModel(TestCase):
         initial_conditions = {s: 1.1 for s in test_model_states}
         variables = {v: 0.5 for v in test_model_variables}
         result = m.simulate(outputs, initial_conditions, variables)
-        self.assertEqual(result[test_model_outputs[0]][0], 1.1)
-        self.assertEqual(result[test_model_outputs[1]][0], 0.0)
+        test_model_output_ids = [
+            Variable.objects.get(qname=qname, pd_model=m).id
+            for qname in test_model_outputs
+        ]
+        self.assertEqual(result[test_model_output_ids[0]][0], 1.1)
+        self.assertEqual(result[test_model_output_ids[1]][0], 0.0)
 
 
 class TestPharmokineticModel(TestCase):
@@ -260,8 +264,13 @@ class TestDosedPharmokineticModel(TestCase):
         initial_conditions = {s: 1.1 for s in test_model_states}
         variables = {v: 0.5 for v in test_model_variables}
         result = m.simulate(outputs, initial_conditions, variables)
-        self.assertEqual(result[test_model_outputs[0]][0], 1.1)
-        self.assertEqual(result[test_model_outputs[-1]][0], 0.0)
+
+        test_model_output_ids = [
+            Variable.objects.get(qname=qname, dosed_pk_model=m).id
+            for qname in test_model_outputs
+        ]
+        self.assertEqual(result[test_model_output_ids[0]][0], 1.1)
+        self.assertEqual(result[test_model_output_ids[-1]][0], 0.0)
 
 
 class TestPkpdModel(TestCase):

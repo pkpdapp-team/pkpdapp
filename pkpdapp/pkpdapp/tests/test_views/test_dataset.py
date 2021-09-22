@@ -10,7 +10,7 @@ from urllib.request import urlretrieve
 from django.core.files import File
 from http import HTTPStatus
 from django.utils import timezone
-from pkpdapp.models import Dataset
+from pkpdapp.models import Dataset, BiomarkerType
 
 BASE_URL_DATASETS = 'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/datasets/'   # noqa: E501
 BASE_URL_MODELS = 'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/models/'   # noqa: E501
@@ -96,7 +96,8 @@ class DatasetTestCase(APITestCase):
             'IL2', 'IL10', 'IL6', 'IFNg', 'TNFa', 'Cells'
         ]
         biomarker_types_in_response = [
-            bt['name'] for bt in response.data['biomarker_types']
+            BiomarkerType.objects.get(id=bt_id).name
+            for bt_id in response.data['biomarker_types']
         ]
         self.assertCountEqual(
             biomarker_types_in_file,
