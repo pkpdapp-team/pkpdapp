@@ -24,13 +24,17 @@ export default function ComponentForm({control, component}) {
       scale: 0.3, 
     },
   }
+  const sortedVariables = [...(component.variables)].sort()
+  const sortedStates = [...(component.states)].sort()
+  const sortedOutputs= [...(component.outputs)].sort()
+
   return (
     <div className={classes.root}>
     <Grid container item xs={12} spacing={3}>
     <Grid item xs={6}>
     <Typography>Variables</Typography>
     <List>
-    {component.variables.map((variable, index) => {
+    {sortedVariables.map((variable, index) => {
       return (
         <ListItem key={index} role={undefined} dense >
         <VariableSubform
@@ -44,7 +48,7 @@ export default function ComponentForm({control, component}) {
     <Grid item xs={6}>
     <Typography>Initial Conditions</Typography>
     <List>
-    {component.states.map((state, index) => {
+    {sortedStates.map((state, index) => {
       return (
         <ListItem key={index} role={undefined} dense >
           <VariableSubform
@@ -58,7 +62,7 @@ export default function ComponentForm({control, component}) {
     </Grid>
     <Typography>Outputs</Typography>
     <List>
-    {component.outputs.map((output, index) => {
+    {sortedOutputs.map((output, index) => {
       return (
         <ListItem key={index} role={undefined} dense button >
           <OutputSubform
