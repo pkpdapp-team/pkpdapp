@@ -21,7 +21,7 @@ export default function ComponentForm({control, component}) {
   const classes = useStyles();
   const mathjaxConfig = {
     chtml: {
-      scale: 0.5, 
+      scale: 0.3, 
     },
   }
   return (
@@ -34,7 +34,7 @@ export default function ComponentForm({control, component}) {
       return (
         <ListItem key={index} role={undefined} dense >
         <VariableSubform
-          control={control} variable_id={variable}
+          variable_id={variable}
         />
         </ListItem>
       );
@@ -48,7 +48,7 @@ export default function ComponentForm({control, component}) {
       return (
         <ListItem key={index} role={undefined} dense >
           <VariableSubform
-            control={control} variable_id={state}
+            variable_id={state}
           />
         </ListItem>
       );
@@ -62,7 +62,7 @@ export default function ComponentForm({control, component}) {
       return (
         <ListItem key={index} role={undefined} dense button >
           <OutputSubform
-            control={control} variable_id={output}
+            variable_id={output}
           />
         </ListItem>
       );

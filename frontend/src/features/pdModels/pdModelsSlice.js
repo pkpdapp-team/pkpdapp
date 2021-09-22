@@ -48,7 +48,7 @@ export const uploadPdSbml = createAsyncThunk(
   'pdModels/uploadPdSbml',
   async ({id, sbml}, {rejectWithValue, dispatch}) => {
     await api.putMultiPart(
-      `/api/pharmacodynamic/${id}/sbml`, {sbml}
+      `/api/pharmacodynamic/${id}/sbml/`, {sbml}
     )
     const pdModel = await api.get(`/api/pharmacodynamic/${id}`)
     console.log('got pdModel', pdModel)

@@ -18,11 +18,14 @@ from rest_framework import routers
 router = routers.DefaultRouter()
 router.register('dataset', api.DatasetView, basename='dataset')
 router.register('user', api.UserView, basename='user')
+router.register('subject', api.SubjectView, basename='subject')
 router.register('project', api.ProjectView, basename='project')
 router.register('dose', api.DoseView, basename='dose')
 router.register('unit', api.UnitView, basename='unit')
 router.register('variable', api.VariableView, basename='variable')
 router.register('protocol', api.ProtocolView, basename='protocol')
+router.register('biomarker_type', api.BiomarkerTypeView,
+                basename='biomarker_type')
 router.register(
     'pharmacokinetic', api.PharmacokineticView,
     basename='pharmacokinetic'
@@ -45,8 +48,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('django.contrib.auth.urls')),
     path('api/', include(router.urls), name='api'),
-    path('api/biomarker-data/<int:pk>/',
-         api.BiomarkerDataView.as_view(), name='biomarker-data'),
     path('api/dosed_pharmacokinetic/<int:pk>/simulate',
          api.SimulatePkView.as_view(), name='simulate-dosed-pharmacokinetic'),
     path('api/pharmacodynamic/<int:pk>/simulate',

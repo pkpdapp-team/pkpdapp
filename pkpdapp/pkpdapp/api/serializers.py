@@ -174,7 +174,7 @@ class VariableSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class BiomarkerDataSerializer(serializers.ModelSerializer):
+class BiomarkerTypeSerializer(serializers.ModelSerializer):
     data = serializers.SerializerMethodField('get_data')
 
     class Meta:
@@ -185,12 +185,6 @@ class BiomarkerDataSerializer(serializers.ModelSerializer):
         return bt.as_pandas().to_dict(orient='list')
 
 
-class BiomarkerTypeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = BiomarkerType
-        fields = '__all__'
-
-
 class SubjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Subject
@@ -198,19 +192,28 @@ class SubjectSerializer(serializers.ModelSerializer):
 
 
 class DatasetSerializer(serializers.ModelSerializer):
-    biomarker_types = BiomarkerTypeSerializer(
+    biomarker_types = serializers.PrimaryKeyRelatedField(
         many=True, read_only=True
     )
     protocols = ProtocolSerializer(
         many=True, read_only=True
     )
-    subjects = SubjectSerializer(
+    subjects = serializers.PrimaryKeyRelatedField(
         many=True, read_only=True
     )
+    subject_groups = serializers.SerializerMethodField('get_groups')
 
     class Meta:
         model = Dataset
         fields = '__all__'
+
+    def get_groups(self, dataset):
+        groups = {}
+        for s in dataset.subjects.all():
+            if s.group not in groups:
+                groups[s.group] = []
+            groups[s.group].append(s.pk)
+        return groups
 
 
 class DatasetCsvSerializer(serializers.ModelSerializer):
@@ -311,19 +314,21 @@ class DatasetCsvSerializer(serializers.ModelSerializer):
         data = validated_data['csv']
         data_without_dose = data.query('DV != "."')
         bts_unique = data_without_dose[['YDESC', 'UNIT']].drop_duplicates()
-        for _, row in bts_unique.iterrows():
+        for i, row in bts_unique.iterrows():
             unit = Unit.objects.get(symbol=row['UNIT'])
             BiomarkerType.objects.create(
                 name=row['YDESC'],
                 description="",
                 unit=unit,
-                dataset=instance
+                dataset=instance,
+                color=i,
             )
 
         biomarker_index = {}
         for i, b in enumerate(bts_unique):
             biomarker_index[b] = i
         # save each row of data as either biomarker or dose
+        subject_index = 0
         for _, row in data.iterrows():
             time_unit = Unit.objects.get(symbol=row['TIME_UNIT'])
             value_unit = Unit.objects.get(symbol=row['UNIT'])
@@ -356,7 +361,9 @@ class DatasetCsvSerializer(serializers.ModelSerializer):
                     group=group,
                     dose_group_amount=dose_group_value,
                     dose_group_unit=dose_group_unit,
+                    shape=subject_index,
                 )
+                subject_index += 1
             if value != ".":  # measurement observation
                 Biomarker.objects.create(
                     time=row['TIME'],

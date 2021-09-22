@@ -58,13 +58,22 @@ export function FormCheckboxField({control, name, defaultValue, label, ...rest})
         control={control}
         defaultValue={defaultValue}
         name={name}
-        render={({ field }) => (
+        render={({
+            field: { onChange, onBlur, value, name, ref },
+            fieldState: { invalid, isTouched, isDirty, error },
+            formState,
+          }) => (
           <FormControlLabel
             control={
               <Checkbox
+                onBlur={onBlur}
+                onChange={(e, v) => {
+                  onChange(e)
+                }}
+                checked={value}
+                inputRef={ref}
                 {...rest} 
-                {...field} 
-                label={label}
+                defaultChecked={defaultValue}
               />
             }
             label={label}

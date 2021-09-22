@@ -31,11 +31,25 @@ class BiomarkerType(models.Model):
         related_name='biomarker_types',
         help_text='dataset containing this biomarker measurement'
     )
+    display = models.BooleanField(
+        default=True,
+        help_text=(
+            'True if this biomarker type will be displayed in the '
+            'frontend, False otherwise'
+        )
+    )
+    color = models.IntegerField(
+        default=0,
+        help_text=(
+            'Color index associated with this biomarker type. '
+            'For plotting purposes in the frontend'
+        )
+    )
 
     def as_pandas(self):
         times_subjects_values = \
             self.biomarkers.order_by('time').values_list(
-                'time', 'subject__id_in_dataset', 'value'
+                'time', 'subject__id', 'value'
             )
         times, subjects, values = list(zip(*times_subjects_values))
         return pd.DataFrame.from_dict({

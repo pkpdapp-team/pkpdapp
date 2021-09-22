@@ -6,7 +6,7 @@
 from rest_framework import (
     views, viewsets, filters, status, decorators, response
 )
-from rest_framework import parsers, generics
+from rest_framework import parsers
 from rest_framework.response import Response
 from .serializers import (
     DatasetSerializer, UserSerializer, ProjectSerializer,
@@ -19,8 +19,9 @@ from .serializers import (
     ProtocolSerializer,
     UnitSerializer,
     DatasetCsvSerializer,
-    BiomarkerDataSerializer,
+    BiomarkerTypeSerializer,
     VariableSerializer,
+    SubjectSerializer,
 )
 
 from pkpdapp.models import (
@@ -34,6 +35,7 @@ from pkpdapp.models import (
     PkpdModel,
     BiomarkerType,
     Variable,
+    Subject,
 )
 from django.contrib.auth.models import User
 from django.db.models import Q
@@ -164,9 +166,14 @@ class PkpdView(viewsets.ModelViewSet):
     filter_backends = [ProjectFilter]
 
 
-class BiomarkerDataView(generics.RetrieveAPIView):
+class SubjectView(viewsets.ModelViewSet):
+    queryset = Subject.objects.all()
+    serializer_class = SubjectSerializer
+
+
+class BiomarkerTypeView(viewsets.ModelViewSet):
     queryset = BiomarkerType.objects.all()
-    serializer_class = BiomarkerDataSerializer
+    serializer_class = BiomarkerTypeSerializer
 
 
 class DatasetView(viewsets.ModelViewSet):

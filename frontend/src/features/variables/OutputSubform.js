@@ -1,33 +1,75 @@
-import React from "react";
+import React, {useEffect} from "react";
 import { useSelector } from 'react-redux'
-import {FormCheckboxField } from '../forms/FormComponents';
-
+import {FormCheckboxField, FormTextField} from '../forms/FormComponents'
+import { useForm, useFormState } from "react-hook-form";
+import SaveIcon from '@material-ui/icons/Save';
+import IconButton from '@material-ui/core/IconButton';
+import { useDispatch } from 'react-redux'
 import { selectUnitById } from '../projects/unitsSlice'
-import { selectVariableById } from './variablesSlice'
+import { selectVariableById, updateVariable } from './variablesSlice'
 
-export default function OutputSubform({control, variable_id}) {
+export default function OutputSubform({variable_id}) {
+  const dispatch = useDispatch();
   let variable = useSelector(
     state => selectVariableById(state, variable_id)
   );
   if (!variable) {
     variable = {
-      default_value: false,
+      default_value: 0,
+      lower_bound: -1,
+      upper_bound: 1,
     }
   }
+  const { control, handleSubmit, reset } = useForm({
+    defaultValues: {
+      id: variable.id,
+      display: variable.display,
+      color: variable.color,
+    }
+  });
+
+  useEffect(() => {
+    reset(variable);
+  }, [reset, variable]);
+
   const unit_id = variable ? variable.unit : 1
   let unit = useSelector(state => selectUnitById(state, unit_id));
   if (!unit) {
-    unit  = {
+    unit = {
       symbol: 'X'
     }
   }
+  const label = `${variable.name} ${unit.symbol}`
+
+  const onSubmit = (values) => {
+    console.log('submit output variable', values)
+    dispatch(updateVariable(values))
+  };
+
+  const { isDirty } = useFormState({ control });
+  
   return (
-    <FormCheckboxField
-      control={control} 
-      defaultValue={variable.default_value}
-      name={`outputs[${variable.id}].default_value`} 
-      label={`${variable.name} ${unit.symbol}`}
-    />
+    <React.Fragment>
+      <FormCheckboxField
+        control={control} 
+        name={`display`} 
+        label={label}
+      />
+      <FormTextField
+        control={control} 
+        name={'color'}
+        label={'Color'}
+        type="number"
+      />
+      {isDirty &&
+          <IconButton
+            onClick={handleSubmit(onSubmit)}
+            size='small'
+          >
+            <SaveIcon/>
+          </IconButton>
+        }
+    </React.Fragment>
   )
 }
 

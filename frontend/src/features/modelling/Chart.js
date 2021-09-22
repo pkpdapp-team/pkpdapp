@@ -1,29 +1,18 @@
 import React from "react";
 import { useSelector } from 'react-redux'
-import { selectBiomarkerDatasByDatasetIds } from '../datasets/biomarkerDatasSlice'
 
-import ColorScheme from 'color-scheme'
 import { makeStyles } from '@material-ui/core/styles';
 
 import { Scatter } from 'react-chartjs-2';
 
 import { Chart, registerables, Interaction } from 'chart.js';
 import { CrosshairPlugin, Interpolate } from 'chartjs-plugin-crosshair';
+import {getColor, getShape} from './ShapesAndColors'
+
 Chart.register(...registerables, CrosshairPlugin);
 Interaction.modes.interpolate = Interpolate;
 
-// https://stackoverflow.com/questions/21646738/convert-hex-to-rgba
-function hexToRGB(hex, alpha) {
-    var r = parseInt(hex.slice(1, 3), 16),
-        g = parseInt(hex.slice(3, 5), 16),
-        b = parseInt(hex.slice(5, 7), 16);
 
-    if (alpha) {
-        return "rgba(" + r + ", " + g + ", " + b + ", " + alpha + ")";
-    } else {
-        return "rgb(" + r + ", " + g + ", " + b + ")";
-    }
-}
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -37,113 +26,77 @@ export default function ModellingChart({datasets, pkModels, pdModels}) {
   let renderChart = true;
   const classes = useStyles();
   
-  console.log('chart re-render', pdModels)
+  const biomarkers = useSelector((state) => state.biomarkerTypes.entities)
+  const subjects = useSelector((state) => state.subjects.entities)
+  const variables = useSelector((state) => state.variables.entities)
 
-  var scheme = new ColorScheme();
-  scheme.from_hue(21)         
-        .scheme('tetrade')   
-        .variation('hard');
-
-  const colors = scheme.colors().map(hexToRGB);
-  let colorIndex = 0;
-  const incrementColorIndex = () => {
-    colorIndex += 1;
-    if (colorIndex >= colors.length) {
-      colorIndex = 0;
+  const getChartData = (model) => {
+    const have_all_variables = Object.keys(model.simulate)
+      .filter(id => id in variables).length === Object.keys(model.simulate).length 
+    if (!have_all_variables) {
+      return {}
     }
-  }
+    const time_id = Object.keys(model.simulate)
+      .filter(id => variables[id].name === 'time')[0]
 
-  const pointStyles = [
-    'cross',
-    'triangle',
-    'star',
-    'crossRot',
-    'dash',
-    'line',
-    'rect',
-    'rectRounded',
-    'rectRot',
-    'circle'
-  ]
-  let pointStyleIndex = 0;
-  const incrementPointStyleIndex = () => {
-    pointStyleIndex += 1;
-    if (pointStyleIndex >= pointStyles.length) {
-      pointStyleIndex = 0;
-    }
-  }
-
-  const datasetBiomarkers = useSelector((state) =>
-    selectBiomarkerDatasByDatasetIds(
-      state, datasets.map(d => d.id)
-    )
-  )
-
-  const getChartData = (simulate) => Object.entries(simulate).map(([key, data]) => {
-    if (key !== 'myokit.time') {
-      const color = colors[colorIndex];
-      incrementColorIndex()
+    return Object.entries(model.simulate).map(([variable_id, data]) => {
+      const variable = variables[variable_id]
+      const color = getColor(variable.color)
+      if (!variable.display) {
+        return null;
+      }
       return {
         type: 'line',
-        label: key,
+        label: variable.name,
         borderColor: color,
         backgroundColor: color,
         showLine: true,
         fill: false,
         lineTension: 0,
         interpolate: true,
-        data: data.map((y, i) => ({x: simulate['myokit.time'][i], y: y}))
+        data: data.map((y, i) => ({x: model.simulate[time_id][i], y: y}))
       }
-    }
-    return null
-  }).filter(x => x);
-
-  
+    }).filter(x => x);
+  }
 
   const getChartDataDataset = (dataset) => {
-    const biomarkers = datasetBiomarkers[dataset.id];
-    const savedColorIndex = colorIndex;
-
-    // for each subject, we generate a dataset for each biomarker
-    return dataset.subjects.map(subject => {
-      const pointStyle = pointStyles[pointStyleIndex];
-      incrementPointStyleIndex()
-      colorIndex = savedColorIndex;
-      if (!dataset.displayGroups.includes(subject.group)) {
-        return null
-      }
-      return biomarkers
-        .filter(biomarker => biomarker.display)
-        .map(biomarker => {
-          const filterBySubject = (y, i) => 
-            biomarker.data.subjects[i] === subject.id_in_dataset;
-          const times = biomarker.data.times.filter(filterBySubject)
-          const values = biomarker.data.values.filter(filterBySubject)
-          const color = colors[colorIndex];
-          incrementColorIndex()
-            
-          if (values.length === 0) {
-            return null
-          }
-          return {
-            label: dataset.name + '.' + subject.id_in_dataset +  '.' + biomarker.name,
-            pointStyle: pointStyle,
-            borderColor: color,
-            backgroundColor: color,
-            data: values.map((y, i) => ({x: times[i], y: y}))
-          }
-        }).filter(x => x);
+    return dataset.biomarker_types
+      .map(id => {
+        const biomarker = biomarkers[id]
+        const subjectsDisplay = biomarker.data.subjects.map(
+          id => subjects[id].display
+        )
+        const subjectsDisplayFilter = (_, i) => subjectsDisplay[i]
+        const times = biomarker.data.times.filter(subjectsDisplayFilter)
+        const values = biomarker.data.values.filter(subjectsDisplayFilter)
+        const color = getColor(biomarker.color);
+        const pointStyle = biomarker.data.subjects
+          .filter(subjectsDisplayFilter).map(
+            id => getShape(subjects[id].shape)
+          )
+        if (!biomarker.display) {
+          return null
+        }
+        if (values.length === 0) {
+          return null
+        }
+        return {
+          label: dataset.name + '.' + biomarker.name,
+          pointStyle: pointStyle,
+          borderColor: color,
+          backgroundColor: color,
+          data: values.map((y, i) => ({x: times[i], y: y}))
+        }
     }).filter(x => x);
   }
 
   const data = {
     datasets: [
       ...datasets.map(d => getChartDataDataset(d)).flat().flat(),
-      ...pkModels.map(m => getChartData(m.simulate)).flat(),
-      ...pdModels.map(m => getChartData(m.simulate)).flat(),
+      ...pkModels.map(m => getChartData(m)).flat(),
+      ...pdModels.map(m => getChartData(m)).flat(),
     ]
   }
-  console.log('chart data', data)
 
   const options = {
     animation: {

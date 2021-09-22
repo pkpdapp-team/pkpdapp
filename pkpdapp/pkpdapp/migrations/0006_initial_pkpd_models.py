@@ -164,7 +164,7 @@ Description of a three compartment PK model here.
                     str.encode(sbml_string)
                 ).myokit_model()
 
-                for v in myokit_model.variables():
+                for i, v in enumerate(myokit_model.variables()):
                     try:
                         unit = Unit.objects.get(
                             symbol=str(v.unit())
@@ -189,6 +189,8 @@ Description of a three compartment PK model here.
                         state=v.is_state(),
                         unit=unit,
                         pd_model=model,
+                        color=i,
+                        display=v.name() != 'time',
                     )
 
         except urllib.error.URLError:

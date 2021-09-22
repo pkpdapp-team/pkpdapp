@@ -12,14 +12,21 @@ const initialState = subjectsAdapter.getInitialState({
   error: null,
 })
 
-export const fetchSubject = createAsyncThunk('subjects/fetchSubject', async (biomarkerTypeId, { getState }) => {
-  console.log('fetchSubject', biomarkerTypeId)
+export const fetchSubject = createAsyncThunk('subjects/fetchSubject', async (subjectId, { getState }) => {
+  console.log('fetchSubject', subjectId)
   const response = await api.get(
-    `/api/biomarker-data/${biomarkerTypeId}/`
+    `/api/subject/${subjectId}/`
   )
-  response.display = true
   return response
 })
+
+export const updateSubject = createAsyncThunk(
+  'subjects/updateSubject',
+  async (subject) => {
+    const response = await api.patch(`/api/subject/${subject.id}/`, subject)
+    return response
+  }
+)
 
 export const subjectsSlice = createSlice({
   name: 'subjects',
@@ -38,6 +45,7 @@ export const subjectsSlice = createSlice({
       state.status = 'succeeded'
       subjectsAdapter.addOne(state, action.payload)
     },
+    [updateSubject.fulfilled]: subjectsAdapter.upsertOne,
   }
 })
 

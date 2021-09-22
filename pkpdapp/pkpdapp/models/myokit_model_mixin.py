@@ -195,9 +195,11 @@ class MyokitModelMixin:
             self._serialise_variable(v) for v in variables
         ]
 
-    @staticmethod
-    def serialize_datalog(datalog):
-        return {k: v.tolist() for k, v in datalog.items()}
+    def serialize_datalog(self, datalog):
+        return {
+            self.variables.get(qname=k).pk: v.tolist()
+            for k, v in datalog.items()
+        }
 
     def simulate(self, outputs=None, initial_conditions=None, variables=None):
         """

@@ -36,7 +36,24 @@ class Subject(models.Model):
         help_text='dataset specific grouping for this subject',
         blank=True
     )
-    metadata = JSONField(help_text='subject metadata')
+    shape = models.IntegerField(
+        default=0,
+        help_text=(
+            'Shape index associated with this subject. '
+            'For plotting purposes in the frontend'
+        )
+    )
+    display = models.BooleanField(
+        default=True,
+        help_text=(
+            'True if this subject will be displayed in the '
+            'frontend, False otherwise'
+        )
+    )
+    metadata = JSONField(
+        default=dict,
+        help_text='subject metadata',
+    )
 
     class Meta:
         constraints = [
