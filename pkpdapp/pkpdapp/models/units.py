@@ -102,6 +102,12 @@ class Unit(models.Model):
                 multiplier=multiplier
             )
 
+    def convert_to(self, unit):
+        return myokit.Unit.conversion_factor(
+            self.get_myokit_unit(),
+            unit.get_myokit_unit()
+        )
+
     def is_time_unit(self):
         return (
             self.s == 1 and

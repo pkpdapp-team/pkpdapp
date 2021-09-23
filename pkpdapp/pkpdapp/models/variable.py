@@ -41,10 +41,12 @@ class Variable(models.Model):
         related_name='variables',
         help_text='dosed pharmacokinetic model'
     )
-    unit = models.ForeignKey(
+    _unit = models.ForeignKey(
         Unit, on_delete=models.CASCADE,
         help_text=(
-            'variable values are in this unit'
+            'variable values are in this unit '
+            '(note this might be different from the unit '
+            'in the stored sbml)'
         )
     )
     constant = models.BooleanField(

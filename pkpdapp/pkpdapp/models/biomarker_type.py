@@ -18,7 +18,7 @@ class BiomarkerType(models.Model):
     name = models.CharField(
         max_length=100, help_text='name of the biomarker type'
     )
-    unit = models.ForeignKey(
+    stored_unit = models.ForeignKey(
         Unit, on_delete=models.CASCADE,
         help_text='unit for the value stored in :model:`pkpdapp.Biomarker`'
     )
@@ -38,6 +38,10 @@ class BiomarkerType(models.Model):
             'frontend, False otherwise'
         )
     )
+    display_unit = models.ForeignKey(
+        Unit, on_delete=models.CASCADE,
+        help_text='unit to use when sending or displaying biomarker values'
+    )
     color = models.IntegerField(
         default=0,
         help_text=(
@@ -52,11 +56,17 @@ class BiomarkerType(models.Model):
                 'time', 'subject__id', 'value'
             )
         times, subjects, values = list(zip(*times_subjects_values))
-        return pd.DataFrame.from_dict({
+        df = pd.DataFrame.from_dict({
             'times': times,
             'subjects': subjects,
             'values': values,
         })
+
+        conversion_factor = self.stored_unit.convert_to(
+            self.display_unit
+        )
+        df.values *= conversion_factor
+        return df
 
     def __str__(self):
         return str(self.name)

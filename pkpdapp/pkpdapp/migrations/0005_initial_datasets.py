@@ -292,7 +292,10 @@ def load_datasets(apps, schema_editor):
                 BiomarkerType.objects.create(
                     name=b['name'],
                     description=b['name'],
-                    unit=Unit.objects.get(
+                    stored_unit=Unit.objects.get(
+                        symbol=b['unit']
+                    ),
+                    display_unit=Unit.objects.get(
                         symbol=b['unit']
                     ),
                     dataset=dataset,
