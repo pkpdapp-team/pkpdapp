@@ -12,8 +12,6 @@ import {getColor, getShape} from './ShapesAndColors'
 Chart.register(...registerables, CrosshairPlugin);
 Interaction.modes.interpolate = Interpolate;
 
-
-
 const useStyles = makeStyles((theme) => ({
   root: {
     height: '85vh',
@@ -25,7 +23,7 @@ const useStyles = makeStyles((theme) => ({
 export default function ModellingChart({datasets, pkModels, pdModels}) {
   let renderChart = true;
   const classes = useStyles();
-  
+
   const biomarkers = useSelector((state) => state.biomarkerTypes.entities)
   const subjects = useSelector((state) => state.subjects.entities)
   const variables = useSelector((state) => state.variables.entities)
