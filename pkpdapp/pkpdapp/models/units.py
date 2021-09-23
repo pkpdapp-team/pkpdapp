@@ -108,9 +108,3 @@ class Unit(models.Model):
             self.g == 0 and self.m == 0 and self.A == 0 and
             self.K == 0 and self.cd == 0 and self.mol == 0
         )
-
-    def convert_to(self, unit):
-        return myokit.conversion_factor(
-            self.get_myokit_unit(),
-            unit.get_myokit_unit()
-        )

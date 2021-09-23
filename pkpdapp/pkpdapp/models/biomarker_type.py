@@ -8,6 +8,7 @@ from django.db import models
 from pkpdapp.models import Dataset, Unit
 import pandas as pd
 
+
 class BiomarkerType(models.Model):
     """
     A type of biomarker measurement associated with a particular dataset, for
@@ -44,11 +45,6 @@ class BiomarkerType(models.Model):
             'For plotting purposes in the frontend'
         )
     )
-    __original_unit= None
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.__original_unit = self.unit
 
     def as_pandas(self):
         times_subjects_values = \
@@ -64,18 +60,3 @@ class BiomarkerType(models.Model):
 
     def __str__(self):
         return str(self.name)
-
-    def save(self, force_insert=False, force_update=False, *args, **kwargs):
-        created = not self.pk
-
-        super().save(force_insert, force_update, *args, **kwargs)
-
-        if not created and self.unit != self.__original_unit:
-            conversion_factor = \
-                self.__original_unit.convert_to(self.unit)
-
-            for biomarker in self.biomarkers.all():
-                biomarker.value *= conversion_factor
-
-        self.__original_unit = self.unit
-
