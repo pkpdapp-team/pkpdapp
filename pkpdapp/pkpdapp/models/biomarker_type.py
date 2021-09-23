@@ -76,7 +76,6 @@ class BiomarkerType(models.Model):
 
             for biomarker in self.biomarkers.all():
                 biomarker.value *= conversion_factor
-                biomarker.save()
 
         self.__original_unit = self.unit
 

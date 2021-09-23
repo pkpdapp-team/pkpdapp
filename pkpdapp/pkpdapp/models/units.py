@@ -110,7 +110,7 @@ class Unit(models.Model):
         )
 
     def convert_to(self, unit):
-        return myokit.Unit.conversion_factor(
+        return myokit.conversion_factor(
             self.get_myokit_unit(),
             unit.get_myokit_unit()
         )
