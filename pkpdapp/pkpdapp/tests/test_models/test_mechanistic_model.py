@@ -265,12 +265,30 @@ class TestDosedPharmokineticModel(TestCase):
         variables = {v: 0.5 for v in test_model_variables}
         result = m.simulate(outputs, initial_conditions, variables)
 
-        test_model_output_ids = [
-            Variable.objects.get(qname=qname, dosed_pk_model=m).id
+        test_model_variables = [
+            Variable.objects.get(qname=qname, dosed_pk_model=m)
             for qname in test_model_outputs
+        ]
+        test_model_output_ids = [
+            v.id
+            for v in test_model_variables
         ]
         self.assertEqual(result[test_model_output_ids[0]][0], 1.1)
         self.assertEqual(result[test_model_output_ids[-1]][0], 0.0)
+
+        first_drug_concentration = \
+            result[test_model_output_ids[1]][0]
+
+        new_unit = Unit.objects.get(symbol='ng/L')
+        test_model_variables[1].unit = new_unit
+        test_model_variables[1].save()
+
+        result = m.simulate(outputs, initial_conditions, variables)
+        self.assertEqual(
+            result[test_model_output_ids[1]][0],
+            1e9 * first_drug_concentration,
+        )
+
 
 
 class TestPkpdModel(TestCase):

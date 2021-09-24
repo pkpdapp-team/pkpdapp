@@ -383,7 +383,7 @@ def load_datasets(apps, schema_editor):
                     unit = Unit.objects.get(symbol='')
                 else:
                     unit = Unit.objects.get(symbol=row[UNIT_COLUMN])
-                    unit == bt.unit
+                    unit == bt.stored_unit
                 if TIME_UNIT_COLUMN is None:
                     time_unit = Unit.objects.get(symbol='h')
                 else:

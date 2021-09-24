@@ -41,7 +41,7 @@ class Variable(models.Model):
         related_name='variables',
         help_text='dosed pharmacokinetic model'
     )
-    _unit = models.ForeignKey(
+    unit = models.ForeignKey(
         Unit, on_delete=models.CASCADE,
         help_text=(
             'variable values are in this unit '

@@ -52,6 +52,10 @@ def load_units(apps, schema_editor):
             'unit': 1e-9 * g / (1e-3 * L),
         },
         {
+            'symbol': 'ng/L',
+            'unit': 1e-9 * g / L,
+        },
+        {
             'symbol': '10^6/mcL',
             'unit': 1e6 / (1e-3 * cL),
         },
@@ -79,7 +83,7 @@ def load_units(apps, schema_editor):
             K=u['unit'].exponents()[4],
             cd=u['unit'].exponents()[5],
             mol=u['unit'].exponents()[6],
-            multiplier=u['unit'].multiplier(),
+            multiplier=u['unit'].multiplier_log_10(),
         )
 
 

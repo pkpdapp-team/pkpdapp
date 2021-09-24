@@ -20,6 +20,7 @@ class BiomarkerType(models.Model):
     )
     stored_unit = models.ForeignKey(
         Unit, on_delete=models.CASCADE,
+        related_name='biomarker_types_stored',
         help_text='unit for the value stored in :model:`pkpdapp.Biomarker`'
     )
     description = models.TextField(
@@ -40,6 +41,7 @@ class BiomarkerType(models.Model):
     )
     display_unit = models.ForeignKey(
         Unit, on_delete=models.CASCADE,
+        related_name='biomarker_types_display',
         help_text='unit to use when sending or displaying biomarker values'
     )
     color = models.IntegerField(

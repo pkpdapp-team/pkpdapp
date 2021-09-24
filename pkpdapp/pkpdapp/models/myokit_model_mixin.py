@@ -9,6 +9,7 @@ from django.core.cache import cache
 import myokit
 from myokit.formats.sbml import SBMLParser
 from myokit.formats.mathml import MathMLExpressionWriter
+import numpy as np
 
 lock = threading.Lock()
 
@@ -195,11 +196,23 @@ class MyokitModelMixin:
             self._serialise_variable(v) for v in variables
         ]
 
-    def serialize_datalog(self, datalog):
-        return {
-            self.variables.get(qname=k).pk: v.tolist()
-            for k, v in datalog.items()
-        }
+
+    def serialize_datalog(self, datalog, myokit_model):
+        result = {}
+        for k, v in datalog.items():
+            variable = self.variables.get(qname=k)
+            myokit_variable_sbml = myokit_model.get(k)
+
+            conversion_factor = myokit.Unit.conversion_factor(
+                myokit_variable_sbml.unit(),
+                variable.unit.get_myokit_unit()
+            ).value()
+            result[variable.id] = (
+                conversion_factor * np.frombuffer(v)
+            ).tolist()
+
+        return result
+
 
     def simulate(self, outputs=None, initial_conditions=None, variables=None):
         """
@@ -235,6 +248,7 @@ class MyokitModelMixin:
                 for v in self.variables.filter(constant=True)
             }
 
+        model = self.get_myokit_model()
         sim = self.get_myokit_simulator()
 
         # Set initial conditions
@@ -255,5 +269,5 @@ class MyokitModelMixin:
 
         # Simulate, logging only state variables given by `outputs`
         return self.serialize_datalog(
-            sim.run(self.time_max, log=outputs)
+            sim.run(self.time_max, log=outputs), model
         )

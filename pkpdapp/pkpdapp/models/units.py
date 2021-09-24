@@ -34,7 +34,10 @@ class Unit(models.Model):
     K = models.FloatField(default=0, help_text='kelvin exponent')
     cd = models.FloatField(default=0, help_text='candela exponent')
     mol = models.FloatField(default=0, help_text='mole exponent')
-    multiplier = models.FloatField(default=0, help_text='multiplier')
+    multiplier = models.FloatField(
+        default=0,
+        help_text='multiplier in powers of 10'
+    )
 
     constraints = [
         models.UniqueConstraint(fields=['symbol'], name='unique unit symbol')
@@ -51,7 +54,7 @@ class Unit(models.Model):
     def get_unit_from_variable(v):
         unit = v.unit()
         exponents = unit.exponents()
-        multiplier = unit.multiplier()
+        multiplier = unit.multiplier_log_10()
         close_enough = 1e-9
         close_enough_units = Unit.objects.filter(
             g__range=(
@@ -106,7 +109,7 @@ class Unit(models.Model):
         return myokit.Unit.conversion_factor(
             self.get_myokit_unit(),
             unit.get_myokit_unit()
-        )
+        ).value()
 
     def is_time_unit(self):
         return (
