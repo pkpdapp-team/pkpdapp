@@ -31,6 +31,17 @@ export default function BiomarkerTypeSubform({biomarker_id}) {
     u => { return {key: u.symbol, value: u.id}}
   )
 
+  const time_unit_id = biomarker_type ? biomarker_type.display_time_unit : 1
+  let time_unit = useSelector(state => selectUnitById(state, time_unit_id));
+  if (!time_unit) {
+    time_unit  = {
+      symbol: 'X'
+    }
+  }
+  const timeUnitOptions = time_unit.compatible_units.map(
+    u => { return {key: u.symbol, value: u.id}}
+  )
+
   const { control, handleSubmit, reset } = useForm({
     defaultValues: {
       id: biomarker_type.id,
@@ -38,6 +49,7 @@ export default function BiomarkerTypeSubform({biomarker_id}) {
       name: biomarker_type.name,
       color: biomarker_type.color,
       display_unit: biomarker_type.display_unit,
+      display_time_unit: biomarker_type.display_time_unit,
     }
   });
 
@@ -64,6 +76,12 @@ export default function BiomarkerTypeSubform({biomarker_id}) {
         name={'display_unit'}
         label={'Unit'}
         options={unitOptions}
+      />
+      <FormSelectField
+        control={control} 
+        name={'display_time_unit'}
+        label={'Time Unit'}
+        options={timeUnitOptions}
       />
       <FormTextField
         control={control} 

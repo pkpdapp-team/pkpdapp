@@ -47,7 +47,10 @@ class BiomarkerType(models.Model):
     stored_time_unit = models.ForeignKey(
         Unit, on_delete=models.CASCADE,
         related_name='biomarker_types_time_stored',
-        help_text='unit for the time values stored in :model:`pkpdapp.Biomarker`'
+        help_text=(
+            'unit for the time values stored in '
+            ':model:`pkpdapp.Biomarker`'
+        )
     )
     display_time_unit = models.ForeignKey(
         Unit, on_delete=models.CASCADE,

@@ -144,7 +144,6 @@ class Unit(models.Model):
             ),
         )
 
-
     def is_time_unit(self):
         return (
             self.s == 1 and

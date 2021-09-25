@@ -25,6 +25,7 @@ export default function OutputSubform({variable_id}) {
       id: variable.id,
       display: variable.display,
       color: variable.color,
+      unit: variable.unit,
     }
   });
 

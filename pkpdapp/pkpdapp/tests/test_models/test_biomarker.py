@@ -15,6 +15,7 @@ from django.utils import timezone
 class TestBiomarkerModel(TestCase):
     def test_biomarker_creation(self):
         u = Unit.objects.get(symbol='mg')
+        time_unit = Unit.objects.get(symbol='h')
         d = Dataset.objects.create(
             name='my_cool_dataset',
             datetime=timezone.now(),
@@ -23,7 +24,10 @@ class TestBiomarkerModel(TestCase):
 
         b = BiomarkerType.objects.create(
             name='my type',
-            unit=u,
+            stored_unit=u,
+            display_unit=u,
+            stored_time_unit=time_unit,
+            display_time_unit=time_unit,
             dataset=d,
         )
         b = Biomarker.objects.create(

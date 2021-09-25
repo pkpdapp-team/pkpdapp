@@ -207,10 +207,12 @@ biomarkers_for_datasets = [
         {
             'name': 'Body weight',
             'unit': 'g',
+            'time': 'd',
         },
         {
             'name': 'Plasma concentration',
             'unit': 'ng/mL',
+            'time': 'd',
         },
     ],
     [

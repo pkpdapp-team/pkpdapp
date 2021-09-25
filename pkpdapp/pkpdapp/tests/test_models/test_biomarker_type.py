@@ -26,12 +26,15 @@ class TestBiomarkerTypeModel(TestCase):
         )
 
         self.unit = Unit.objects.get(symbol='mg')
+        self.time_unit = Unit.objects.get(symbol='h')
         self.biomarker_type = BiomarkerType.objects.create(
             name='my_cool_biomarker_type',
             description='description for my cool biomarker_type',
             dataset=self.dataset,
             stored_unit=self.unit,
             display_unit=self.unit,
+            stored_time_unit=self.time_unit,
+            display_time_unit=self.time_unit,
         )
         self.subject = Subject.objects.create(
             id_in_dataset=1,
@@ -69,10 +72,10 @@ class TestBiomarkerTypeModel(TestCase):
 
     def test_unit_conversion(self):
         new_unit = Unit.objects.get(symbol='g')
-        old_values = self.biomarker_type.as_pandas().values
+        old_values = self.biomarker_type.as_pandas()['values']
         self.biomarker_type.display_unit = new_unit
         self.biomarker_type.save()
-        new_values = self.biomarker_type.as_pandas().values
+        new_values = self.biomarker_type.as_pandas()['values']
         np.testing.assert_array_equal(
             old_values, 1e3 * new_values
         )

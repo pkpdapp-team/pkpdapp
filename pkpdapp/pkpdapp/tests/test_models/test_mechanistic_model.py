@@ -290,7 +290,6 @@ class TestDosedPharmokineticModel(TestCase):
         )
 
 
-
 class TestPkpdModel(TestCase):
     def test_pkpd_model_creation(self):
         c = Compound.objects.create(
