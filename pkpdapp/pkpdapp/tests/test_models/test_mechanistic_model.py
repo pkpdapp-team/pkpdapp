@@ -201,7 +201,7 @@ class TestDosedPharmokineticModel(TestCase):
             protocol=p,
             start_time=0,
             duration=0.1,
-            amount=1,
+            amount=1000,
         )
 
         # dosed model should have a concentration at t ~ 0.5

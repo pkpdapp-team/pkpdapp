@@ -88,7 +88,7 @@ export default function ProtocolDetail({project, protocol}) {
 
   const dose_columns = [
     { title: "Start Time", field: "start_time" },
-    { title: "Amount", field: "amount" },
+    { title: "Amount rate", field: "amount" },
     { title: "Duration", field: "duration" },
   ];
 
@@ -109,7 +109,7 @@ export default function ProtocolDetail({project, protocol}) {
         control={control} 
         options={amount_unit_options}
         defaultValue={protocol.amount_unit}
-        name="amount_unit" label="Unit"
+        name="amount_unit" label="Amount Unit"
       />
       <FormSelectField 
         control={control} 

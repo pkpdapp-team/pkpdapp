@@ -134,7 +134,8 @@ class DosedPharmacokineticModel(models.Model, MyokitModelMixin):
 
             dosing_events = [
                 (
-                    amount_conversion_factor * d.amount,
+                    amount_conversion_factor * d.amount /
+                    time_conversion_factor,
                     time_conversion_factor * d.start_time,
                     time_conversion_factor * d.duration
                 )
@@ -327,7 +328,7 @@ def set_dosing_events(simulator, events):
     myokit_protocol = myokit.Protocol()
     for e in events:
         myokit_protocol.schedule(
-            e[0], e[1], e[2] if e[2] != 0.0 else 0.01
+            e[0], e[1], e[2]
         )
 
     simulator.set_protocol(myokit_protocol)
