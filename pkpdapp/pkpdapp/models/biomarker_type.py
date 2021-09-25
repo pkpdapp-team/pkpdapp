@@ -44,6 +44,16 @@ class BiomarkerType(models.Model):
         related_name='biomarker_types_display',
         help_text='unit to use when sending or displaying biomarker values'
     )
+    stored_time_unit = models.ForeignKey(
+        Unit, on_delete=models.CASCADE,
+        related_name='biomarker_types_time_stored',
+        help_text='unit for the time values stored in :model:`pkpdapp.Biomarker`'
+    )
+    display_time_unit = models.ForeignKey(
+        Unit, on_delete=models.CASCADE,
+        related_name='biomarker_types_time_display',
+        help_text='unit to use when sending or displaying time values'
+    )
     color = models.IntegerField(
         default=0,
         help_text=(
@@ -67,7 +77,13 @@ class BiomarkerType(models.Model):
         conversion_factor = self.stored_unit.convert_to(
             self.display_unit
         )
-        df.values *= conversion_factor
+        time_conversion_factor = self.stored_time_unit.convert_to(
+            self.display_time_unit
+        )
+
+        df['values'] *= conversion_factor
+        df['times'] *= time_conversion_factor
+
         return df
 
     def __str__(self):

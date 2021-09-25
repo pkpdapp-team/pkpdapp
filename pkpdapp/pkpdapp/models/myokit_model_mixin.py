@@ -196,6 +196,16 @@ class MyokitModelMixin:
             self._serialise_variable(v) for v in variables
         ]
 
+    def _convert_unit(self, qname, value, myokit_model):
+        variable = self.variables.get(qname=qname)
+        myokit_variable_sbml = myokit_model.get(qname)
+
+        conversion_factor = myokit.Unit.conversion_factor(
+            variable.unit.get_myokit_unit(),
+            myokit_variable_sbml.unit()
+        ).value()
+
+        return conversion_factor * value
 
     def serialize_datalog(self, datalog, myokit_model):
         result = {}
@@ -212,7 +222,6 @@ class MyokitModelMixin:
             ).tolist()
 
         return result
-
 
     def simulate(self, outputs=None, initial_conditions=None, variables=None):
         """
@@ -251,6 +260,22 @@ class MyokitModelMixin:
         model = self.get_myokit_model()
         sim = self.get_myokit_simulator()
 
+        # convert units for variables, initial_conditions
+        # and time_max
+        initial_conditions = {
+            qname: self._convert_unit(qname, value, model)
+            for qname, value in initial_conditions.items()
+        }
+
+        variables = {
+            qname: self._convert_unit(qname, value, model)
+            for qname, value in variables.items()
+        }
+
+        time_max = self._convert_unit(
+            'myokit.time', self.time_max, model
+        )
+
         # Set initial conditions
         try:
             sim.set_default_state(initial_conditions)
@@ -269,5 +294,5 @@ class MyokitModelMixin:
 
         # Simulate, logging only state variables given by `outputs`
         return self.serialize_datalog(
-            sim.run(self.time_max, log=outputs), model
+            sim.run(time_max, log=outputs), model
         )

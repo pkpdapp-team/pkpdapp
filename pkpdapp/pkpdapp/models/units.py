@@ -111,6 +111,40 @@ class Unit(models.Model):
             unit.get_myokit_unit()
         ).value()
 
+    def get_compatible_units(self):
+        close_enough = 1e-9
+        return Unit.objects.filter(
+            g__range=(
+                self.g - close_enough,
+                self.g + close_enough,
+            ),
+            m__range=(
+                self.m - close_enough,
+                self.m + close_enough,
+            ),
+            s__range=(
+                self.s - close_enough,
+                self.s + close_enough,
+            ),
+            A__range=(
+                self.A - close_enough,
+                self.A + close_enough,
+            ),
+            K__range=(
+                self.K - close_enough,
+                self.K + close_enough,
+            ),
+            cd__range=(
+                self.cd - close_enough,
+                self.cd + close_enough,
+            ),
+            mol__range=(
+                self.mol - close_enough,
+                self.mol + close_enough,
+            ),
+        )
+
+
     def is_time_unit(self):
         return (
             self.s == 1 and

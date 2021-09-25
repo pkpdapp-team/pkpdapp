@@ -1,6 +1,6 @@
 import React, {useEffect} from "react";
 import { useSelector } from 'react-redux'
-import {FormCheckboxField, FormTextField} from '../forms/FormComponents'
+import {FormCheckboxField, FormTextField, FormSelectField} from '../forms/FormComponents'
 import { useForm, useFormState } from "react-hook-form";
 import SaveIcon from '@material-ui/icons/Save';
 import IconButton from '@material-ui/core/IconButton';
@@ -39,7 +39,10 @@ export default function OutputSubform({variable_id}) {
       symbol: 'X'
     }
   }
-  const label = `${variable.name} ${unit.symbol}`
+  const unitOptions = unit.compatible_units.map(
+    u => { return {key: u.symbol, value: u.id}}
+  )
+  const label = `${variable.name}`
 
   const onSubmit = (values) => {
     console.log('submit output variable', values)
@@ -54,6 +57,12 @@ export default function OutputSubform({variable_id}) {
         control={control} 
         name={`display`} 
         label={label}
+      />
+      <FormSelectField
+        control={control} 
+        name={'unit'}
+        label={'Unit'}
+        options={unitOptions}
       />
       <FormTextField
         control={control} 
