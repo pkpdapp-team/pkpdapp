@@ -49,6 +49,56 @@ class EnablePartialUpdateMixin:
         return super().update(request, *args, **kwargs)
 
 
+class DosedPkModelFilter(filters.BaseFilterBackend):
+    """
+    Filter that only allows users to filter by dosed_pk_model.
+    """
+
+    def filter_queryset(self, request, queryset, view):
+        dosed_pk_model_id = \
+            request.query_params.get('dosed_pk_model_id')
+        if dosed_pk_model_id is not None:
+            try:
+                dosed_pk_model = DosedPharmacokineticModel.objects.get(
+                    id=dosed_pk_model_id
+                )
+                if queryset.model == Variable:
+                    queryset = dosed_pk_model.variables
+                elif queryset.model == Unit:
+                    queryset = dosed_pk_model.variables.select_related('unit')
+                else:
+                    raise RuntimeError('queryset model {} not recognised')
+            except DosedPharmacokineticModel.DoesNotExist:
+                queryset = queryset.model.objects.none()
+
+        return queryset
+
+
+class PdModelFilter(filters.BaseFilterBackend):
+    """
+    Filter that only allows users to filter by dosed_pk_model.
+    """
+
+    def filter_queryset(self, request, queryset, view):
+        pd_model_id = \
+            request.query_params.get('pd_model_id')
+        if pd_model_id is not None:
+            try:
+                pd_model = DosedPharmacokineticModel.objects.get(
+                    id=pd_model_id
+                )
+                if queryset.model == Variable:
+                    queryset = pd_model.variables
+                elif queryset.model == Unit:
+                    queryset = pd_model.variables.select_related('unit')
+                else:
+                    raise RuntimeError('queryset model {} not recognised')
+            except PharmacodynamicModel.DoesNotExist:
+                queryset = queryset.model.objects.none()
+
+        return queryset
+
+
 class ProjectFilter(filters.BaseFilterBackend):
     """
     Filter that only allows users to filter by project.
@@ -93,6 +143,7 @@ class ProtocolView(viewsets.ModelViewSet):
 class UnitView(viewsets.ModelViewSet):
     queryset = Unit.objects.all()
     serializer_class = UnitSerializer
+    filter_backends = [DosedPkModelFilter, PdModelFilter]
 
 
 class DoseView(viewsets.ModelViewSet):
@@ -108,7 +159,7 @@ class PharmacokineticView(viewsets.ModelViewSet):
 class VariableView(viewsets.ModelViewSet):
     queryset = Variable.objects.all()
     serializer_class = VariableSerializer
-    filter_backends = [ProjectFilter]
+    filter_backends = [ProjectFilter, DosedPkModelFilter, PdModelFilter]
 
 
 class DosedPharmacokineticView(viewsets.ModelViewSet):

@@ -25,9 +25,8 @@ export const fetchPkModelById = createAsyncThunk('pkModels/fetchPkModelById', as
   const pkModel = await api.get(
     `/api/dosed_pharmacokinetic/${model_id}/`
   )
-  for (const variable_id of pkModel.variables) {
-      dispatch(fetchVariableById(variable_id))
-    }
+  dispatch(fetchVariablesByPkModel(pkModel.id))
+  dispatch(fetchUnitsByPkModel(pkModel.id))
   return pkModel
 })
 
