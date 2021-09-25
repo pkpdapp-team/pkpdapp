@@ -112,8 +112,34 @@ class DosedPharmacokineticModel(models.Model, MyokitModelMixin):
         with lock:
             sim = myokit.Simulation(model)
         if self.protocol:
-            dosing_events = [(d.amount, d.start_time, d.duration)
-                             for d in self.protocol.doses.all()]
+            compartment = self.dose_compartment
+            amount_var = None
+            for v in model.variables(state=True):
+                if compartment + '.' in v.qname():
+                    amount_var = v
+
+            time_var = model.get('myokit.time')
+
+            amount_conversion_factor = \
+                myokit.Unit.conversion_factor(
+                    self.protocol.amount_unit.get_myokit_unit(),
+                    amount_var.unit(),
+                ).value()
+
+            time_conversion_factor = \
+                myokit.Unit.conversion_factor(
+                    self.protocol.time_unit.get_myokit_unit(),
+                    time_var.unit(),
+                ).value()
+
+            dosing_events = [
+                (
+                    amount_conversion_factor * d.amount,
+                    time_conversion_factor * d.start_time,
+                    time_conversion_factor * d.duration
+                )
+                for d in self.protocol.doses.all()
+            ]
 
             set_dosing_events(sim, dosing_events)
 
@@ -300,6 +326,8 @@ def set_dosing_events(simulator, events):
     """
     myokit_protocol = myokit.Protocol()
     for e in events:
-        myokit_protocol.schedule(e[0], e[1], e[2] if e[2] != 0.0 else 0.01)
+        myokit_protocol.schedule(
+            e[0], e[1], e[2] if e[2] != 0.0 else 0.01
+        )
 
     simulator.set_protocol(myokit_protocol)

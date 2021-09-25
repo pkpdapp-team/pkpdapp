@@ -54,20 +54,18 @@ class Protocol(models.Model):
         default=DoseType.DIRECT,
     )
 
-    DEFAULT_TIME_UNIT = 1
     time_unit = models.ForeignKey(
         Unit, on_delete=models.CASCADE,
-        default=DEFAULT_TIME_UNIT,
+        default=lambda: Unit.objects.get(symbol='h'),
         related_name='protocols_time',
         help_text=(
             'unit for the start_time and duration values stored in each dose'
         )
     )
 
-    DEFAULT_AMOUNT_UNIT = 2
     amount_unit = models.ForeignKey(
         Unit, on_delete=models.CASCADE,
-        default=DEFAULT_AMOUNT_UNIT,
+        default=lambda: Unit.objects.get(symbol='mg'),
         related_name='protocols_amount',
         help_text='unit for the amount value stored in each dose'
     )

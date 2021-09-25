@@ -37,7 +37,8 @@ export default function OutputSubform({variable_id}) {
   let unit = useSelector(state => selectUnitById(state, unit_id));
   if (!unit) {
     unit = {
-      symbol: 'X'
+      symbol: 'X',
+      compatible_units: []
     }
   }
   const unitOptions = unit.compatible_units.map(
