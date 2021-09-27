@@ -4,7 +4,7 @@ import IconButton from '@material-ui/core/IconButton';
 import { useForm, useFormState } from "react-hook-form";
 import SaveIcon from '@material-ui/icons/Save';
 
-import {FormCheckboxField, FormTextField} from '../forms/FormComponents'
+import {FormCheckboxField, FormTextField, FormSelectField} from '../forms/FormComponents'
 import { selectUnitById } from '../projects/unitsSlice'
 import { selectBiomarkerTypeById, updateBiomarkerType } from './biomarkerTypesSlice'
 
@@ -20,13 +20,27 @@ export default function BiomarkerTypeSubform({biomarker_id}) {
       default_value: false,
     }
   }
-  const unit_id = biomarker_type ? biomarker_type.unit : 1
+  const unit_id = biomarker_type ? biomarker_type.display_unit : 1
   let unit = useSelector(state => selectUnitById(state, unit_id));
   if (!unit) {
     unit  = {
       symbol: 'X'
     }
   }
+  const unitOptions = unit.compatible_units.map(
+    u => { return {key: u.symbol, value: u.id}}
+  )
+
+  const time_unit_id = biomarker_type ? biomarker_type.display_time_unit : 1
+  let time_unit = useSelector(state => selectUnitById(state, time_unit_id));
+  if (!time_unit) {
+    time_unit  = {
+      symbol: 'X'
+    }
+  }
+  const timeUnitOptions = time_unit.compatible_units.map(
+    u => { return {key: u.symbol, value: u.id}}
+  )
 
   const { control, handleSubmit, reset } = useForm({
     defaultValues: {
@@ -34,6 +48,8 @@ export default function BiomarkerTypeSubform({biomarker_id}) {
       display: biomarker_type.display,
       name: biomarker_type.name,
       color: biomarker_type.color,
+      display_unit: biomarker_type.display_unit,
+      display_time_unit: biomarker_type.display_time_unit,
     }
   });
 
@@ -54,6 +70,18 @@ export default function BiomarkerTypeSubform({biomarker_id}) {
         control={control} 
         name={'display'}
         label={`${biomarker_type.name} ${unit.symbol}`}
+      />
+      <FormSelectField
+        control={control} 
+        name={'display_unit'}
+        label={'Unit'}
+        options={unitOptions}
+      />
+      <FormSelectField
+        control={control} 
+        name={'display_time_unit'}
+        label={'Time Unit'}
+        options={timeUnitOptions}
       />
       <FormTextField
         control={control} 

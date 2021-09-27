@@ -28,7 +28,7 @@ import {
 } from '../protocols/protocolsSlice.js'
 
 import {
-  updatePkModel
+  updatePkModel, deletePkModel
 } from '../pkModels/pkModelsSlice.js'
 
 const useStyles = makeStyles((theme) => ({
@@ -56,11 +56,13 @@ export default function PkDetail({project, pk_model}) {
   const protocols = useSelector(selectAllProtocols);
   const datasets = useSelector(selectAllDatasets);
 
-  console.log('rendering pk model', pk_model)
-
   useEffect(() => {
     reset(pk_model);
   }, [reset, pk_model]);
+
+  const handlePkDelete = () => {
+    dispatch(deletePkModel(pk_model.id))
+  }
 
   const onSubmit = (values) => {
     dispatch(updatePkModel(values));
@@ -150,6 +152,13 @@ export default function PkDetail({project, pk_model}) {
       >
         Save
       </Button>
+      <Button 
+        variant="contained"
+        onClick={handlePkDelete}
+      >
+        Delete 
+      </Button>
+
 
       </div>
     </form>

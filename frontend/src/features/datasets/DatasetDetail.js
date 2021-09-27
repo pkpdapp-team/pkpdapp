@@ -17,7 +17,7 @@ import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import SubjectSubform from './SubjectSubform'
 import BiomarkerTypeSubform from './BiomarkerTypeSubform'
 
-import {updateDataset, uploadDatasetCsv} from '../datasets/datasetsSlice'
+import {updateDataset, uploadDatasetCsv, deleteDataset} from '../datasets/datasetsSlice'
 import {FormTextField, FormDateTimeField} from '../forms/FormComponents';
 
 const useStyles = makeStyles((theme) => ({
@@ -40,6 +40,10 @@ export default function DatasetDetail({project, dataset}) {
   useEffect(() => {
     reset(dataset);
   }, [reset, dataset]);
+
+  const handleDatasetDelete = () => {
+    dispatch(deleteDataset(dataset.id))
+  }
 
   const handleFileUpload = (event) => {
     const files = Array.from(event.target.files);
@@ -115,6 +119,14 @@ export default function DatasetDetail({project, dataset}) {
       >
         Save
       </Button>
+      <Button 
+        className={classes.controls}
+        variant="contained"
+        onClick={handleDatasetDelete}
+      >
+        Delete 
+      </Button>
+
       <Button
           className={classes.controls}
           component="label"

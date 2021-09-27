@@ -19,6 +19,22 @@ export const fetchUnits = createAsyncThunk('units/fetchUnits', async (project, {
   return response
 })
 
+export const fetchUnitsByPdModel= createAsyncThunk('units/fetchUnitsByPdModel', async (pd_model_id, { getState }) => {
+
+  const response = await api.get(
+    `/api/unit/?pd_model_id=${pd_model_id}`
+  )
+  return response
+})
+
+export const fetchUnitsByPkModel= createAsyncThunk('units/fetchUnitsByPkModel', async (pk_model_id, { getState }) => {
+
+  const response = await api.get(
+    `/api/unit/?dosed_pk_model_id=${pk_model_id}`
+  )
+  return response
+})
+
 export const addNewUnit = createAsyncThunk(
   'units/addNewUnit',
   async () => {
@@ -55,6 +71,8 @@ export const unitsSlice = createSlice({
       state.status = 'succeeded'
       unitsAdapter.setAll(state, action.payload)
     },
+    [fetchUnitsByPdModel.fulfilled]: unitsAdapter.upsertMany,
+    [fetchUnitsByPkModel.fulfilled]: unitsAdapter.upsertMany,
     [addNewUnit.fulfilled]: unitsAdapter.addOne,
     [updateUnit.fulfilled]: unitsAdapter.upsertOne
   }

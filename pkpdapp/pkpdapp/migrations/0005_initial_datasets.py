@@ -144,110 +144,134 @@ biomarkers_for_datasets = [
         {
             'name': 'Tumour volume',
             'unit': 'cm^3',
+            'time': 'd',
         },
         {
             'name': 'Body weight',
             'unit': 'g',
+            'time': 'd',
         },
     ],
     [
         {
             'name': 'Tumour volume',
             'unit': 'cm^3',
+            'time': 'd',
         },
         {
             'name': 'Body weight',
             'unit': 'g',
+            'time': 'd',
         },
         {
             'name': 'Plasma concentration',
             'unit': 'ng/mL',
+            'time': 'd',
         },
     ],
     [
         {
             'name': 'Tumour volume',
             'unit': 'cm^3',
+            'time': 'd',
         },
         {
             'name': 'Body weight',
             'unit': 'g',
+            'time': 'd',
         },
         {
             'name': 'Plasma concentration',
             'unit': 'ng/mL',
+            'time': 'd',
         },
     ],
     [
         {
             'name': 'Tumour volume',
             'unit': 'cm^3',
+            'time': 'd',
         },
         {
             'name': 'Body weight',
             'unit': 'g',
+            'time': 'd',
         },
         {
             'name': 'Plasma concentration',
             'unit': 'ng/mL',
+            'time': 'd',
         },
     ],
     [
         {
             'name': 'Body weight',
             'unit': 'g',
+            'time': 'd',
         },
         {
             'name': 'Plasma concentration',
             'unit': 'ng/mL',
+            'time': 'd',
         },
     ],
     [
         {
             'name': 'Docetaxel',
             'unit': 'ng/mL',
+            'time': 'hours',
         },
         {
             'name': 'Red blood cells',
             'unit': '10^6/mcL',
+            'time': 'hours',
         },
         {
             'name': 'Hemoglobin',
             'unit': 'g/dL',
+            'time': 'hours',
         },
         {
             'name': 'Platelets ',
             'unit': '10^3/mcL',
+            'time': 'hours',
         },
         {
             'name': 'White blood cells',
             'unit': '10^3/mcL',
+            'time': 'hours',
         },
     ],
     [
         {
             'name': 'IL2',
             'unit': 'ng/mL',
+            'time': 'h',
         },
         {
             'name': 'IL10',
             'unit': 'ng/mL',
+            'time': 'h',
         },
         {
             'name': 'IL6',
             'unit': 'ng/mL',
+            'time': 'h',
         },
         {
             'name': 'IFNg',
             'unit': 'ng/mL',
+            'time': 'h',
         },
         {
             'name': 'TNFa',
             'unit': 'ng/mL',
+            'time': 'h',
         },
         {
             'name': 'Cells',
             'unit': 'ng/mL',
+            'time': 'h',
         },
     ],
 ]
@@ -292,8 +316,17 @@ def load_datasets(apps, schema_editor):
                 BiomarkerType.objects.create(
                     name=b['name'],
                     description=b['name'],
-                    unit=Unit.objects.get(
+                    stored_unit=Unit.objects.get(
                         symbol=b['unit']
+                    ),
+                    display_unit=Unit.objects.get(
+                        symbol=b['unit']
+                    ),
+                    stored_time_unit=Unit.objects.get(
+                        symbol=b['time']
+                    ),
+                    display_time_unit=Unit.objects.get(
+                        symbol=b['time']
                     ),
                     dataset=dataset,
                     color=i,
@@ -380,7 +413,7 @@ def load_datasets(apps, schema_editor):
                     unit = Unit.objects.get(symbol='')
                 else:
                     unit = Unit.objects.get(symbol=row[UNIT_COLUMN])
-                    unit == bt.unit
+                    unit == bt.stored_unit
                 if TIME_UNIT_COLUMN is None:
                     time_unit = Unit.objects.get(symbol='h')
                 else:

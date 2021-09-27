@@ -15,7 +15,7 @@ import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 
 
 import ComponentForm from '../forms/ComponentForm'
-import {updatePdModel, uploadPdSbml} from '../pdModels/pdModelsSlice'
+import {updatePdModel, uploadPdSbml, deletePdModel} from '../pdModels/pdModelsSlice'
 import {FormTextField} from '../forms/FormComponents';
 
 const useStyles = makeStyles((theme) => ({
@@ -38,7 +38,10 @@ export default function PdDetail({project, pd_model}) {
   const { control, handleSubmit, reset } = useForm();
   const dispatch = useDispatch();
 
-  console.log('pddetail', pd_model);
+
+  const handlePdDelete= () => {
+    dispatch(deletePdModel(pd_model.id))
+  }
 
   const handleFileUpload = (event) => {
     const files = Array.from(event.target.files);
@@ -61,7 +64,6 @@ export default function PdDetail({project, pd_model}) {
   }, [reset, pd_model]);
 
   const onSubmit = (values) => {
-    console.log('submit', values)
     dispatch(updatePdModel(values))
   };
 
@@ -109,6 +111,14 @@ export default function PdDetail({project, pd_model}) {
       >
         Save
       </Button>
+      <Button 
+        className={classes.controls}
+        variant="contained"
+        onClick={handlePdDelete}
+      >
+        Delete 
+      </Button>
+
 
       <Button
           className={classes.controls}

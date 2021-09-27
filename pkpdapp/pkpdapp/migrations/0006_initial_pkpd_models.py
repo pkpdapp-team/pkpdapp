@@ -179,7 +179,7 @@ Description of a three compartment PK model here.
                             K=v.unit().exponents()[4],
                             cd=v.unit().exponents()[5],
                             mol=v.unit().exponents()[6],
-                            multiplier=v.unit().multiplier()
+                            multiplier=v.unit().multiplier_log_10()
                         )
 
                     Variable.objects.create(

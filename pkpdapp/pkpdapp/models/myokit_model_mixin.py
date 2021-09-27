@@ -9,6 +9,7 @@ from django.core.cache import cache
 import myokit
 from myokit.formats.sbml import SBMLParser
 from myokit.formats.mathml import MathMLExpressionWriter
+import numpy as np
 
 lock = threading.Lock()
 
@@ -195,11 +196,32 @@ class MyokitModelMixin:
             self._serialise_variable(v) for v in variables
         ]
 
-    def serialize_datalog(self, datalog):
-        return {
-            self.variables.get(qname=k).pk: v.tolist()
-            for k, v in datalog.items()
-        }
+    def _convert_unit(self, qname, value, myokit_model):
+        variable = self.variables.get(qname=qname)
+        myokit_variable_sbml = myokit_model.get(qname)
+
+        conversion_factor = myokit.Unit.conversion_factor(
+            variable.unit.get_myokit_unit(),
+            myokit_variable_sbml.unit()
+        ).value()
+
+        return conversion_factor * value
+
+    def serialize_datalog(self, datalog, myokit_model):
+        result = {}
+        for k, v in datalog.items():
+            variable = self.variables.get(qname=k)
+            myokit_variable_sbml = myokit_model.get(k)
+
+            conversion_factor = myokit.Unit.conversion_factor(
+                myokit_variable_sbml.unit(),
+                variable.unit.get_myokit_unit()
+            ).value()
+            result[variable.id] = (
+                conversion_factor * np.frombuffer(v)
+            ).tolist()
+
+        return result
 
     def simulate(self, outputs=None, initial_conditions=None, variables=None):
         """
@@ -235,7 +257,24 @@ class MyokitModelMixin:
                 for v in self.variables.filter(constant=True)
             }
 
+        model = self.get_myokit_model()
         sim = self.get_myokit_simulator()
+
+        # convert units for variables, initial_conditions
+        # and time_max
+        initial_conditions = {
+            qname: self._convert_unit(qname, value, model)
+            for qname, value in initial_conditions.items()
+        }
+
+        variables = {
+            qname: self._convert_unit(qname, value, model)
+            for qname, value in variables.items()
+        }
+
+        time_max = self._convert_unit(
+            'myokit.time', self.time_max, model
+        )
 
         # Set initial conditions
         try:
@@ -255,5 +294,5 @@ class MyokitModelMixin:
 
         # Simulate, logging only state variables given by `outputs`
         return self.serialize_datalog(
-            sim.run(self.time_max, log=outputs)
+            sim.run(time_max, log=outputs), model
         )

@@ -163,9 +163,20 @@ class PkpdSerializer(serializers.ModelSerializer):
 # all serializers that get used by the dataset serializer
 
 class UnitSerializer(serializers.ModelSerializer):
+    compatible_units = \
+        serializers.SerializerMethodField('get_compatible_units')
+
     class Meta:
         model = Unit
         fields = '__all__'
+
+    def get_compatible_units(self, unit):
+        return [
+            {
+                'id': u.id,
+                'symbol': u.symbol,
+            } for u in unit.get_compatible_units()
+        ]
 
 
 class VariableSerializer(serializers.ModelSerializer):
@@ -313,13 +324,21 @@ class DatasetCsvSerializer(serializers.ModelSerializer):
         # save default biomarker types
         data = validated_data['csv']
         data_without_dose = data.query('DV != "."')
-        bts_unique = data_without_dose[['YDESC', 'UNIT']].drop_duplicates()
+
+        # TODO: assumes UNIT and TIME_UNIT are constant for each bt
+        bts_unique = data_without_dose[
+            ['YDESC', 'UNIT', 'TIME_UNIT']
+        ].drop_duplicates()
         for i, row in bts_unique.iterrows():
             unit = Unit.objects.get(symbol=row['UNIT'])
+            time_unit = Unit.objects.get(symbol=row['TIME_UNIT'])
             BiomarkerType.objects.create(
                 name=row['YDESC'],
                 description="",
-                unit=unit,
+                stored_unit=unit,
+                display_unit=unit,
+                stored_time_unit=time_unit,
+                display_time_unit=time_unit,
                 dataset=instance,
                 color=i,
             )

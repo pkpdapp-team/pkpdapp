@@ -13,8 +13,6 @@ from pkpdapp.models import (
     Subject,
 )
 from django.utils import timezone
-from django.db.utils import IntegrityError
-import numpy as np
 
 
 class TestBiomarkerTypeModel(TestCase):
@@ -52,42 +50,14 @@ class TestBiomarkerTypeModel(TestCase):
             ) for value, time in zip(self.values, self.times)
         ]
 
-    def test_biomarker_type_creation(self):
+    def test_dataset_creation(self):
         self.assertTrue(
-            isinstance(self.biomarker_type, BiomarkerType)
+            isinstance(self.dataset, Dataset)
         )
 
-    def test_str(self):
-        self.assertEqual(
-            str(self.biomarker_type), "my_cool_biomarker_type"
-        )
-
-    def test_requires_a_unit(self):
-        with self.assertRaises(IntegrityError):
-            BiomarkerType.objects.create(
-                name='my_cool_biomarker_type2',
-                description='description',
-                dataset=self.dataset,
-            )
-
-    def test_unit_conversion(self):
-        new_unit = Unit.objects.get(symbol='g')
-        old_values = self.biomarker_type.as_pandas()['values']
-        self.biomarker_type.display_unit = new_unit
-        self.biomarker_type.save()
-        new_values = self.biomarker_type.as_pandas()['values']
-        np.testing.assert_array_equal(
-            old_values, 1e3 * new_values
-        )
-
-    def test_as_pandas(self):
-        df = self.biomarker_type.as_pandas()
-        np.testing.assert_array_equal(
-            df['values'], np.array(self.values)
-        )
-        np.testing.assert_array_equal(
-            df['times'], np.array(self.times)
-        )
-        np.testing.assert_array_equal(
-            df['subjects'], np.array(self.subjects)
-        )
+    def test_dataset_deletion(self):
+        self.dataset.delete()
+        with self.assertRaises(BiomarkerType.DoesNotExist):
+            BiomarkerType.objects.get(id=self.biomarker_type.id)
+        with self.assertRaises(Biomarker.DoesNotExist):
+            Biomarker.objects.get(id=self.biomarkers[0].id)
