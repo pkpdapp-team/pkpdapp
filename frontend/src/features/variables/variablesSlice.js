@@ -31,7 +31,21 @@ export const fetchVariableById = createAsyncThunk('variables/fetchVariableById',
   return response
 })
 
+export const fetchVariablesByPdModel= createAsyncThunk('variables/fetchVariablesByPdModel', async (pd_model_id, { getState }) => {
 
+  const response = await api.get(
+    `/api/variable/?pd_model_id=${pd_model_id}`
+  )
+  return response
+})
+
+export const fetchVariablesByPkModel= createAsyncThunk('variables/fetchVariablesByPkModel', async (pk_model_id, { getState }) => {
+
+  const response = await api.get(
+    `/api/variable/?dosed_pk_model_id=${pk_model_id}`
+  )
+  return response
+})
 
 export const addNewVariable = createAsyncThunk(
   'variables/addNewVariable',
@@ -76,6 +90,8 @@ export const variablesSlice = createSlice({
       variablesAdapter.setAll(state, action.payload)
     },
     [fetchVariableById.fulfilled]: variablesAdapter.upsertOne,
+    [fetchVariablesByPdModel.fulfilled]: variablesAdapter.upsertMany,
+    [fetchVariablesByPkModel.fulfilled]: variablesAdapter.upsertMany,
     [addNewVariable.fulfilled]: variablesAdapter.addOne,
     [updateVariable.fulfilled]: variablesAdapter.upsertOne,
   }

@@ -3,7 +3,8 @@ import {
 } from '@reduxjs/toolkit'
 
 import { api } from '../../Api'
-import {fetchVariableById} from '../variables/variablesSlice'
+import {fetchVariableById, fetchVariablesByPkModel} from '../variables/variablesSlice'
+import {fetchUnitsByPkModel} from '../projects/unitsSlice'
 
 const pkModelsAdapter = createEntityAdapter({
   sortComparer: (a, b) => b.id < a.id
@@ -25,9 +26,8 @@ export const fetchPkModelById = createAsyncThunk('pkModels/fetchPkModelById', as
   const pkModel = await api.get(
     `/api/dosed_pharmacokinetic/${model_id}/`
   )
-  for (const variable_id of pkModel.variables) {
-      dispatch(fetchVariableById(variable_id))
-    }
+  dispatch(fetchVariablesByPkModel(pkModel.id))
+  dispatch(fetchUnitsByPkModel(pkModel.id))
   return pkModel
 })
 
@@ -41,9 +41,8 @@ export const addNewPkModel = createAsyncThunk(
     const pkModel = await api.post(
       '/api/dosed_pharmacokinetic/', initialPkModel
     )
-    for (const variable_id of pkModel.variables) {
-      dispatch(fetchVariableById(variable_id))
-    }
+    dispatch(fetchVariablesByPkModel(pkModel.id))
+    dispatch(fetchUnitsByPkModel(pkModel.id))
     return pkModel
   }
 )
@@ -55,9 +54,8 @@ export const updatePkModel = createAsyncThunk(
       `/api/dosed_pharmacokinetic/${pkModel.id}/`, pkModel
     )
     // an update could create new variables
-    for (const variable_id of newPkModel.variables) {
-      dispatch(fetchVariableById(variable_id))
-    }
+    dispatch(fetchVariablesByPkModel(pkModel.id))
+    dispatch(fetchUnitsByPkModel(pkModel.id))
     //const simulateData = {
     //  outputs: pkModel.outputs.filter(x => x.default_value).map(x => x.name),
     //  initial_conditions: pkModel.outputs.reduce((o, x) => ({...o, x.name: x.default_value}), {}),

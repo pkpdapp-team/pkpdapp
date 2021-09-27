@@ -56,8 +56,6 @@ export default function PkDetail({project, pk_model}) {
   const protocols = useSelector(selectAllProtocols);
   const datasets = useSelector(selectAllDatasets);
 
-  console.log('rendering pk model', pk_model)
-
   useEffect(() => {
     reset(pk_model);
   }, [reset, pk_model]);

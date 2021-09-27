@@ -38,7 +38,6 @@ export default function PdDetail({project, pd_model}) {
   const { control, handleSubmit, reset } = useForm();
   const dispatch = useDispatch();
 
-  console.log('pddetail', pd_model);
 
   const handleFileUpload = (event) => {
     const files = Array.from(event.target.files);
@@ -61,7 +60,6 @@ export default function PdDetail({project, pd_model}) {
   }, [reset, pd_model]);
 
   const onSubmit = (values) => {
-    console.log('submit', values)
     dispatch(updatePdModel(values))
   };
 

@@ -34,7 +34,10 @@ class Unit(models.Model):
     K = models.FloatField(default=0, help_text='kelvin exponent')
     cd = models.FloatField(default=0, help_text='candela exponent')
     mol = models.FloatField(default=0, help_text='mole exponent')
-    multiplier = models.FloatField(default=0, help_text='multiplier')
+    multiplier = models.FloatField(
+        default=0,
+        help_text='multiplier in powers of 10'
+    )
 
     constraints = [
         models.UniqueConstraint(fields=['symbol'], name='unique unit symbol')
@@ -51,7 +54,7 @@ class Unit(models.Model):
     def get_unit_from_variable(v):
         unit = v.unit()
         exponents = unit.exponents()
-        multiplier = unit.multiplier()
+        multiplier = unit.multiplier_log_10()
         close_enough = 1e-9
         close_enough_units = Unit.objects.filter(
             g__range=(
@@ -101,6 +104,45 @@ class Unit(models.Model):
                 mol=exponents[6],
                 multiplier=multiplier
             )
+
+    def convert_to(self, unit):
+        return myokit.Unit.conversion_factor(
+            self.get_myokit_unit(),
+            unit.get_myokit_unit()
+        ).value()
+
+    def get_compatible_units(self):
+        close_enough = 1e-9
+        return Unit.objects.filter(
+            g__range=(
+                self.g - close_enough,
+                self.g + close_enough,
+            ),
+            m__range=(
+                self.m - close_enough,
+                self.m + close_enough,
+            ),
+            s__range=(
+                self.s - close_enough,
+                self.s + close_enough,
+            ),
+            A__range=(
+                self.A - close_enough,
+                self.A + close_enough,
+            ),
+            K__range=(
+                self.K - close_enough,
+                self.K + close_enough,
+            ),
+            cd__range=(
+                self.cd - close_enough,
+                self.cd + close_enough,
+            ),
+            mol__range=(
+                self.mol - close_enough,
+                self.mol + close_enough,
+            ),
+        )
 
     def is_time_unit(self):
         return (

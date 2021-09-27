@@ -104,7 +104,17 @@ export default function ModellingChart({datasets, pkModels, pdModels}) {
     maintainAspectRatio: false,
     scales: {
       x: {
-        type: 'linear'
+        type: 'linear',
+        title: {
+          text: 'Time (units defined in detail panels)',
+          display: true,
+        }
+      },
+      y: {
+        title: {
+          text: 'Data Variable / Model Output (units defined in detail panels)',
+          display: true,
+        }
       }
     },
     plugins: {
