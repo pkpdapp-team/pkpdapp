@@ -14,16 +14,6 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 
 
-class TestDatasetModel(TestCase):
-    def test_dataset_creation(self):
-        d = Dataset.objects.create(
-            name='my_cool_dataset',
-            datetime=timezone.now(),
-            description='description for my cool dataset',
-        )
-        self.assertTrue(isinstance(d, Dataset))
-
-
 class TestCompoundModel(TestCase):
     def test_model_creation(self):
         c = Compound.objects.create(

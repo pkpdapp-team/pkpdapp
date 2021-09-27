@@ -3,7 +3,7 @@ import {
 } from '@reduxjs/toolkit'
 
 import { api } from '../../Api'
-import {fetchVariableById, fetchVariablesByPkModel} from '../variables/variablesSlice'
+import {fetchVariablesByPkModel} from '../variables/variablesSlice'
 import {fetchUnitsByPkModel} from '../projects/unitsSlice'
 
 const pkModelsAdapter = createEntityAdapter({
@@ -30,6 +30,16 @@ export const fetchPkModelById = createAsyncThunk('pkModels/fetchPkModelById', as
   dispatch(fetchUnitsByPkModel(pkModel.id))
   return pkModel
 })
+
+export const deletePkModel = createAsyncThunk(
+  'pkModels/deletePkModel',
+  async (pkModelId, { dispatch }) => {
+    await api.delete(
+      `/api/dosed_pharmacokinetic/${pkModelId}`
+    )
+    return pkModelId
+  }
+)
 
 export const addNewPkModel = createAsyncThunk(
   'pkModels/addNewPkModel',
@@ -90,6 +100,7 @@ export const pkModelsSlice = createSlice({
       state.status = 'succeeded'
       pkModelsAdapter.setAll(state, action.payload)
     },
+    [deletePkModel.fulfilled]: pkModelsAdapter.removeOne,
     [fetchPkModelById.fulfilled]: pkModelsAdapter.upsertOne,
     [addNewPkModel.rejected]: (state, action) => console.log(action.error.message),
     [addNewPkModel.fulfilled]: pkModelsAdapter.addOne,

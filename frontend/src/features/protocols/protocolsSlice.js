@@ -35,6 +35,16 @@ export const addNewProtocol = createAsyncThunk(
   }
 )
 
+export const deleteProtocol = createAsyncThunk(
+  'protocols/deleteProtocol',
+  async (protocolId, { dispatch }) => {
+    await api.delete(
+      `/api/protocol/${protocolId}`
+    )
+    return protocolId
+  }
+)
+
 export const updateProtocol = createAsyncThunk(
   'protocols/updateProtocol',
   async (protocol, { getState, dispatch }) => {
@@ -93,6 +103,7 @@ export const protocolsSlice = createSlice({
       state.status = 'succeeded'
       protocolsAdapter.setAll(state, action.payload)
     },
+    [deleteProtocol.fulfilled]: protocolsAdapter.removeOne,
     [addNewProtocol.fulfilled]: protocolsAdapter.addOne,
     [addNewProtocol.rejected]: (state, action) => {
       state.status = 'failed'

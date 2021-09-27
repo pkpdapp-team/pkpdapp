@@ -19,7 +19,7 @@ import { selectUnitById } from '../projects/unitsSlice'
 import {FormTextField, FormSelectField} from '../forms/FormComponents';
 
 import {
-  updateProtocol,
+  updateProtocol, deleteProtocol
 } from '../protocols/protocolsSlice.js'
 
 const useStyles = makeStyles((theme) => ({
@@ -34,6 +34,9 @@ const useStyles = makeStyles((theme) => ({
     alignItems: 'center',
     paddingLeft: theme.spacing(1),
     paddingBottom: theme.spacing(1),
+    '& > *': {
+      margin: theme.spacing(1),
+    },
   },
 }));
 
@@ -53,6 +56,10 @@ export default function ProtocolDetail({project, protocol}) {
   useEffect(() => {
     reset(protocol);
   }, [reset, protocol]);
+
+  const handleProtocolDelete = () => {
+    dispatch(deleteProtocol(protocol.id))
+  }
 
   const onSubmit = (values) => {
     dispatch(updateProtocol(values));
@@ -160,12 +167,19 @@ export default function ProtocolDetail({project, protocol}) {
         <AddIcon />
       </IconButton>
     </TableContainer>
+    <div className={classes.controls}>
       <Button 
-        className={classes.controls} 
         variant="contained"
         type="submit" >
         Save
       </Button>
+      <Button 
+        variant="contained"
+        onClick={handleProtocolDelete}
+      >
+        Delete 
+      </Button>
+      </div>
     </form>
   )
 }

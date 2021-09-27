@@ -1,7 +1,6 @@
 import { 
   createSlice, createEntityAdapter, createAsyncThunk,
 } from '@reduxjs/toolkit'
-import { updateProject } from '../projects/projectsSlice'
 import { fetchBiomarkerType } from './biomarkerTypesSlice'
 import { fetchSubject } from './subjectsSlice'
 import { api } from '../../Api'
@@ -37,29 +36,44 @@ export const fetchDatasets = createAsyncThunk('datasets/fetchDatasets', async (p
   return response
 })
 
+export const deleteDataset = createAsyncThunk(
+  'datasets/deleteDataset',
+  async (datasetId, { dispatch }) => {
+    await api.delete(
+      `/api/dataset/${datasetId}`
+    )
+    return datasetId
+  }
+)
+
 export const addNewDataset = createAsyncThunk(
   'datasets/addNewDataset',
   async (project, { dispatch }) => {
     const initialDataset = {
       name: 'new',
+      project: project.id,
     }
     const dataset = await api.post('/api/dataset/', initialDataset)
-    if (dataset) {
-      await dispatch(updateProject({
-        ...project, 
-        datasets: [...project.datasets, dataset.id] 
-      }))
-    }
     return dataset
   }
 )
 
 export const uploadDatasetCsv = createAsyncThunk(
   'pdModels/uploadDatasetCsv',
-  async ({id, csv}, {rejectWithValue}) => {
+  async ({id, csv}, {dispatch, rejectWithValue}) => {
     const dataset = await api.putMultiPart(
       `/api/dataset/${id}/csv/`, {csv}
     ).catch(err => rejectWithValue(err))
+
+    // fetch biomarker types async
+    for (const bt of dataset.biomarker_types) {
+      dispatch(fetchBiomarkerType(bt))
+    }
+
+    // fetch subjects async
+    for (const s of dataset.subjects) {
+      dispatch(fetchSubject(s))
+    }
 
     return dataset
   }
@@ -109,6 +123,7 @@ export const datasetsSlice = createSlice({
       state.status = 'succeeded'
       datasetsAdapter.setAll(state, action.payload)
     },
+    [deleteDataset.fulfilled]: datasetsAdapter.removeOne,
     [addNewDataset.fulfilled]: datasetsAdapter.addOne,
     [updateDataset.fulfilled]: datasetsAdapter.upsertOne,
     [uploadDatasetCsv.pending]: (state, action) => {

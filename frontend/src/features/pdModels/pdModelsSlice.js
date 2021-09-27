@@ -46,6 +46,16 @@ export const addNewPdModel = createAsyncThunk(
   }
 )
 
+export const deletePdModel = createAsyncThunk(
+  'pdModels/deletePdModel',
+  async (pdModelId, { dispatch }) => {
+    await api.delete(
+      `/api/pharmacodynamic/${pdModelId}`
+    )
+    return pdModelId
+  }
+)
+
 export const uploadPdSbml = createAsyncThunk(
   'pdModels/uploadPdSbml',
   async ({id, sbml}, {rejectWithValue, dispatch}) => {
@@ -100,6 +110,7 @@ export const pdModelsSlice = createSlice({
     [fetchPdModelById.fulfilled]: pdModelsAdapter.upsertOne,
     [addNewPdModel.fulfilled]: pdModelsAdapter.addOne,
     [updatePdModel.fulfilled]: pdModelsAdapter.upsertOne,
+    [deletePdModel.fulfilled]: pdModelsAdapter.removeOne,
     [uploadPdSbml.pending]: (state, action) => {
       state.entities[action.meta.arg.id].errors = []
     },
