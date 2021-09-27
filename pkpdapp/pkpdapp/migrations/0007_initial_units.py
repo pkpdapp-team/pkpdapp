@@ -41,7 +41,7 @@ def load_units(apps, schema_editor):
         },
         {
             'symbol': 'cm^3',
-            'unit': (100 * m)**3,
+            'unit': (1e-2 * m)**3,
         },
         {
             'symbol': 'g',
