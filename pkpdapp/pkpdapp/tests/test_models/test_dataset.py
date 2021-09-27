@@ -13,8 +13,6 @@ from pkpdapp.models import (
     Subject,
 )
 from django.utils import timezone
-from django.db.utils import IntegrityError
-import numpy as np
 
 
 class TestBiomarkerTypeModel(TestCase):
