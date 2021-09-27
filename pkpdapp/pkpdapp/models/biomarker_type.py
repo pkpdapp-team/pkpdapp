@@ -64,6 +64,12 @@ class BiomarkerType(models.Model):
             'For plotting purposes in the frontend'
         )
     )
+    axis = models.BooleanField(
+        default=False,
+        help_text=(
+            'True/False if biomarker type displayed on LHS/RHS axis'
+        )
+    )
 
     def as_pandas(self):
         times_subjects_values = \

@@ -88,6 +88,13 @@ class Variable(models.Model):
             'frontend, False otherwise'
         )
     )
+    axis = models.BooleanField(
+        default=False,
+        help_text=(
+            'False/True if biomarker type displayed on LHS/RHS axis'
+        )
+    )
+
 
     class Scale(models.TextChoices):
         LINEAR = 'LN', 'Linear'

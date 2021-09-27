@@ -12,6 +12,7 @@ from django.db import migrations, models
 import django.db.models.deletion
 import jsonfield.fields
 import pkpdapp.models.myokit_model_mixin
+import pkpdapp.models.protocol
 
 
 class Migration(migrations.Migration):
@@ -115,6 +116,7 @@ class Migration(migrations.Migration):
                 ('default_value', models.FloatField(default=1, help_text='default value for this variable')),
                 ('color', models.IntegerField(default=0, help_text='Color index associated with this variable. For display purposes in the frontend')),
                 ('display', models.BooleanField(default=True, help_text='True if this variable will be displayed in the frontend, False otherwise')),
+                ('axis', models.BooleanField(default=False, help_text='False/True if biomarker type displayed on LHS/RHS axis')),
                 ('scale', models.CharField(choices=[('LN', 'Linear'), ('LG', 'Log')], default='LN', max_length=2)),
                 ('dosed_pk_model', models.ForeignKey(blank=True, help_text='dosed pharmacokinetic model', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='variables', to='pkpdapp.dosedpharmacokineticmodel')),
                 ('pd_model', models.ForeignKey(blank=True, help_text='pharmacodynamic model', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='variables', to='pkpdapp.pharmacodynamicmodel')),
@@ -142,12 +144,12 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(help_text='name of the protocol', max_length=100)),
                 ('dose_type', models.CharField(choices=[('D', 'IV'), ('I', 'Extravascular')], default='D', max_length=1)),
-                ('amount_unit', models.ForeignKey(default=2, help_text='unit for the amount value stored in each dose', on_delete=django.db.models.deletion.CASCADE, related_name='protocols_amount', to='pkpdapp.unit')),
+                ('amount_unit', models.ForeignKey(default=pkpdapp.models.protocol.get_mg_unit, help_text='unit for the amount value stored in each dose', on_delete=django.db.models.deletion.CASCADE, related_name='protocols_amount', to='pkpdapp.unit')),
                 ('compound', models.ForeignKey(blank=True, help_text='drug compound', null=True, on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.compound')),
                 ('dataset', models.ForeignKey(blank=True, help_text='dataset containing this protocol', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='protocols', to='pkpdapp.dataset')),
                 ('project', models.ForeignKey(blank=True, help_text='Project that "owns" this protocol.', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='protocols', to='pkpdapp.project')),
                 ('subject', models.ForeignKey(blank=True, help_text='subject associated with protocol', null=True, on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.subject')),
-                ('time_unit', models.ForeignKey(default=1, help_text='unit for the start_time and duration values stored in each dose', on_delete=django.db.models.deletion.CASCADE, related_name='protocols_time', to='pkpdapp.unit')),
+                ('time_unit', models.ForeignKey(default=pkpdapp.models.protocol.get_h_unit, help_text='unit for the start_time and duration values stored in each dose', on_delete=django.db.models.deletion.CASCADE, related_name='protocols_time', to='pkpdapp.unit')),
             ],
         ),
         migrations.CreateModel(
@@ -199,7 +201,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('start_time', models.FloatField(help_text='starting time point of dose, see protocol for units')),
-                ('amount', models.FloatField(help_text='amount of compound administered, see protocol for units')),
+                ('amount', models.FloatField(help_text='amount rate of compound administered, see protocol for units')),
                 ('duration', models.FloatField(default=0.0, help_text='Duration of dose administration, see protocol for units. For a bolus injection, set a dose duration of 0.')),
                 ('protocol', models.ForeignKey(help_text='protocol containing this dose', on_delete=django.db.models.deletion.CASCADE, related_name='doses', to='pkpdapp.protocol')),
             ],
@@ -217,6 +219,7 @@ class Migration(migrations.Migration):
                 ('description', models.TextField(blank=True, help_text='short description of the biomarker type', null=True)),
                 ('display', models.BooleanField(default=True, help_text='True if this biomarker type will be displayed in the frontend, False otherwise')),
                 ('color', models.IntegerField(default=0, help_text='Color index associated with this biomarker type. For plotting purposes in the frontend')),
+                ('axis', models.BooleanField(default=False, help_text='True/False if biomarker type displayed on LHS/RHS axis')),
                 ('dataset', models.ForeignKey(help_text='dataset containing this biomarker measurement', on_delete=django.db.models.deletion.CASCADE, related_name='biomarker_types', to='pkpdapp.dataset')),
                 ('display_time_unit', models.ForeignKey(help_text='unit to use when sending or displaying time values', on_delete=django.db.models.deletion.CASCADE, related_name='biomarker_types_time_display', to='pkpdapp.unit')),
                 ('display_unit', models.ForeignKey(help_text='unit to use when sending or displaying biomarker values', on_delete=django.db.models.deletion.CASCADE, related_name='biomarker_types_display', to='pkpdapp.unit')),

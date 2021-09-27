@@ -12,6 +12,14 @@ from pkpdapp.models import (
 )
 
 
+def get_h_unit():
+    return Unit.objects.get(symbol='h'),
+
+
+def get_mg_unit():
+    return Unit.objects.get(symbol='mg'),
+
+
 class Protocol(models.Model):
     """
     Multiple doses forming a single protocol. Can optionally be associated with
@@ -56,7 +64,7 @@ class Protocol(models.Model):
 
     time_unit = models.ForeignKey(
         Unit, on_delete=models.CASCADE,
-        default=lambda: Unit.objects.get(symbol='h'),
+        default=get_h_unit,
         related_name='protocols_time',
         help_text=(
             'unit for the start_time and duration values stored in each dose'
@@ -65,7 +73,7 @@ class Protocol(models.Model):
 
     amount_unit = models.ForeignKey(
         Unit, on_delete=models.CASCADE,
-        default=lambda: Unit.objects.get(symbol='mg'),
+        default=get_mg_unit,
         related_name='protocols_amount',
         help_text='unit for the amount value stored in each dose'
     )
