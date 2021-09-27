@@ -20,6 +20,7 @@ export default function VariableSubform({variable_id}) {
       default_value: 0,
       lower_bound: -1,
       upper_bound: 1,
+      unit: 0,
     }
   }
   const { control, handleSubmit, getValues, reset } = useForm({
@@ -50,7 +51,6 @@ export default function VariableSubform({variable_id}) {
   }
 
   const onSubmit = (values) => {
-    console.log('submit variable', values)
     dispatch(updateVariable(values))
   };
 

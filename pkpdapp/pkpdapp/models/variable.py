@@ -9,6 +9,7 @@ from pkpdapp.models import (
     Unit, DosedPharmacokineticModel,
     PharmacokineticModel, PharmacodynamicModel,
 )
+import myokit
 from django.db.models import Q
 
 
@@ -132,7 +133,10 @@ class Variable(models.Model):
             qname=myokit_variable.qname(),
             pk_model=model,
         )
-        if variables.count() > 0:
+        found_variable = Variable._find_close_variable(
+            myokit_variable, variables
+        )
+        if found_variable is not None:
             return variables[0]
         else:
             return Variable.objects.create(
@@ -147,6 +151,19 @@ class Variable(models.Model):
             )
 
     @staticmethod
+    def _find_close_variable(myokit_variable, variables):
+        found = None
+        for i, v in enumerate(variables):
+            if myokit.Unit.close(
+                    v.unit.get_myokit_unit(),
+                    myokit_variable.unit()
+            ):
+                found = i
+        if found is not None:
+            return variables[found]
+        return None
+
+    @staticmethod
     def get_variable_pd(model, myokit_variable):
         num_variables = Variable.objects.filter(
             pd_model=model,
@@ -155,7 +172,10 @@ class Variable(models.Model):
             qname=myokit_variable.qname(),
             pd_model=model,
         )
-        if variables.count() > 0:
+        found_variable = Variable._find_close_variable(
+            myokit_variable, variables
+        )
+        if found_variable is not None:
             return variables[0]
         else:
             return Variable.objects.create(
@@ -178,7 +198,10 @@ class Variable(models.Model):
             qname=myokit_variable.qname(),
             dosed_pk_model=model,
         )
-        if variables.count() > 0:
+        found_variable = Variable._find_close_variable(
+            myokit_variable, variables
+        )
+        if found_variable is not None:
             return variables[0]
         else:
             return Variable.objects.create(

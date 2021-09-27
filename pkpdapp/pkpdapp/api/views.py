@@ -63,9 +63,13 @@ class DosedPkModelFilter(filters.BaseFilterBackend):
                     id=dosed_pk_model_id
                 )
                 if queryset.model == Variable:
-                    queryset = dosed_pk_model.variables
+                    queryset = dosed_pk_model.variables.all()
                 elif queryset.model == Unit:
-                    queryset = dosed_pk_model.variables.select_related('unit')
+                    unit_ids = (
+                        dosed_pk_model.variables
+                        .values_list('unit', flat=True)
+                    )
+                    queryset = Unit.objects.filter(id__in=unit_ids)
                 else:
                     raise RuntimeError('queryset model {} not recognised')
             except DosedPharmacokineticModel.DoesNotExist:
@@ -84,13 +88,17 @@ class PdModelFilter(filters.BaseFilterBackend):
             request.query_params.get('pd_model_id')
         if pd_model_id is not None:
             try:
-                pd_model = DosedPharmacokineticModel.objects.get(
+                pd_model = PharmacodynamicModel.objects.get(
                     id=pd_model_id
                 )
                 if queryset.model == Variable:
-                    queryset = pd_model.variables
+                    queryset = pd_model.variables.all()
                 elif queryset.model == Unit:
-                    queryset = pd_model.variables.select_related('unit')
+                    unit_ids = (
+                        pd_model.variables
+                        .values_list('unit', flat=True)
+                    )
+                    queryset = Unit.objects.filter(id__in=unit_ids)
                 else:
                     raise RuntimeError('queryset model {} not recognised')
             except PharmacodynamicModel.DoesNotExist:

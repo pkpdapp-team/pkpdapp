@@ -15,9 +15,12 @@ export default function OutputSubform({variable_id}) {
   );
   if (!variable) {
     variable = {
+      display: 0,
       default_value: 0,
       lower_bound: -1,
       upper_bound: 1,
+      unit: 1,
+      color: 0
     }
   }
   const { control, handleSubmit, reset } = useForm({
@@ -47,7 +50,6 @@ export default function OutputSubform({variable_id}) {
   const label = `${variable.name}`
 
   const onSubmit = (values) => {
-    console.log('submit output variable', values)
     dispatch(updateVariable(values))
   };
 
@@ -57,7 +59,7 @@ export default function OutputSubform({variable_id}) {
     <React.Fragment>
       <FormCheckboxField
         control={control} 
-        name={`display`} 
+        name={'display'} 
         label={label}
       />
       <FormSelectField
