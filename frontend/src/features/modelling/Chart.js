@@ -43,7 +43,9 @@ export default function ModellingChart({datasets, pkModels, pdModels}) {
       if (!variable.display) {
         return null;
       }
+      const yAxisID = variable.axis ? 'yRhs' : 'yLhs'
       return {
+        yAxisID: yAxisID,
         type: 'line',
         label: variable.name,
         borderColor: color,
@@ -78,7 +80,9 @@ export default function ModellingChart({datasets, pkModels, pdModels}) {
         if (values.length === 0) {
           return null
         }
+        const yAxisID = biomarker.axis ? 'yRhs' : 'yLhs'
         return {
+          yAxisID: yAxisID,
           label: dataset.name + '.' + biomarker.name,
           pointStyle: pointStyle,
           borderColor: color,
@@ -110,7 +114,15 @@ export default function ModellingChart({datasets, pkModels, pdModels}) {
           display: true,
         }
       },
-      y: {
+      yLhs: {
+        position: 'left',
+        title: {
+          text: 'Data Variable / Model Output (units defined in detail panels)',
+          display: true,
+        }
+      },
+      yRhs: {
+        position: 'right',
         title: {
           text: 'Data Variable / Model Output (units defined in detail panels)',
           display: true,

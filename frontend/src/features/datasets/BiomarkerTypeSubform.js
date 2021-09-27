@@ -67,8 +67,8 @@ export default function BiomarkerTypeSubform({biomarker_id}) {
   };
 
   const axisOptions = [
-    {key: false, label: 'LHS'}, 
-    {key: true, label: 'RHS'}, 
+    {value: false, key: 'LHS'}, 
+    {value: true, key: 'RHS'}, 
   ]
 
   return (
@@ -76,7 +76,7 @@ export default function BiomarkerTypeSubform({biomarker_id}) {
       <FormCheckboxField
         control={control} 
         name={'display'}
-        label={`${biomarker_type.name} ${unit.symbol}`}
+        label={biomarker_type.name}
       />
       <FormSelectField
         control={control} 

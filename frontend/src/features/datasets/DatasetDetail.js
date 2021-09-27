@@ -69,7 +69,7 @@ export default function DatasetDetail({project, dataset}) {
       />
 
       <Grid container item xs={12} spacing={3}>
-      <Grid item xs={6}>
+      <Grid item xs={12}>
       <Typography>Variables</Typography>
       <List>
       {dataset.biomarker_types.map((biomarker_id, index) => {
@@ -84,7 +84,7 @@ export default function DatasetDetail({project, dataset}) {
       })}
       </List>
       </Grid>
-      <Grid item xs={6}>
+      <Grid item xs={12}>
       <Typography>Subjects</Typography>
       <List>
       {Object.keys(dataset.subject_groups).map((group, index) => {

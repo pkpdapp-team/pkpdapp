@@ -58,8 +58,8 @@ export default function OutputSubform({variable_id}) {
   const { isDirty } = useFormState({ control });
 
   const axisOptions = [
-    {key: false, label: 'LHS'}, 
-    {key: true, label: 'RHS'}, 
+    {value: false, key: 'LHS'}, 
+    {value: true, key: 'RHS'}, 
   ]
   
   return (
