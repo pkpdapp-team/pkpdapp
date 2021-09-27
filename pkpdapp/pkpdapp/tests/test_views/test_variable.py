@@ -9,8 +9,9 @@ from django.contrib.auth.models import User
 from pkpdapp.models import (
     PharmacodynamicModel, Protocol, PharmacokineticModel,
     Compound, DosedPharmacokineticModel,
-    Dose, PkpdModel, Unit, Variable
+    Unit
 )
+
 
 class VariableTestCase(APITestCase):
     def setUp(self):
