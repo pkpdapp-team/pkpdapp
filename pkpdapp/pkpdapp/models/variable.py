@@ -95,7 +95,6 @@ class Variable(models.Model):
         )
     )
 
-
     class Scale(models.TextChoices):
         LINEAR = 'LN', 'Linear'
         LOG = 'LG', 'Log'

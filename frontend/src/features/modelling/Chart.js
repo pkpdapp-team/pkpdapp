@@ -24,6 +24,8 @@ export default function ModellingChart({datasets, pkModels, pdModels}) {
   let renderChart = true;
   const classes = useStyles();
 
+  let showRhsAxis = false;
+
   const biomarkers = useSelector((state) => state.biomarkerTypes.entities)
   const subjects = useSelector((state) => state.subjects.entities)
   const variables = useSelector((state) => state.variables.entities)
@@ -44,6 +46,9 @@ export default function ModellingChart({datasets, pkModels, pdModels}) {
         return null;
       }
       const yAxisID = variable.axis ? 'yRhs' : 'yLhs'
+      if (variable.axis) {
+        showRhsAxis = true
+      }
       return {
         yAxisID: yAxisID,
         type: 'line',
@@ -81,6 +86,9 @@ export default function ModellingChart({datasets, pkModels, pdModels}) {
           return null
         }
         const yAxisID = biomarker.axis ? 'yRhs' : 'yLhs'
+        if (biomarker.axis) {
+          showRhsAxis = true
+        }
         return {
           yAxisID: yAxisID,
           label: dataset.name + '.' + biomarker.name,
@@ -99,8 +107,9 @@ export default function ModellingChart({datasets, pkModels, pdModels}) {
       ...pdModels.map(m => getChartData(m)).flat(),
     ]
   }
+  
 
-  const options = {
+  let options = {
     animation: {
         duration: 0
     },
@@ -121,13 +130,6 @@ export default function ModellingChart({datasets, pkModels, pdModels}) {
           display: true,
         }
       },
-      yRhs: {
-        position: 'right',
-        title: {
-          text: 'Data Variable / Model Output (units defined in detail panels)',
-          display: true,
-        }
-      }
     },
     plugins: {
       legend: {
@@ -153,6 +155,16 @@ export default function ModellingChart({datasets, pkModels, pdModels}) {
         sync: {
           enabled: false
         }
+      }
+    }
+  }
+
+  if (showRhsAxis) {
+    options.scales['yRhs'] = {
+      position: 'right',
+      title: {
+        text: 'Data Variable / Model Output (units defined in detail panels)',
+        display: true,
       }
     }
   }

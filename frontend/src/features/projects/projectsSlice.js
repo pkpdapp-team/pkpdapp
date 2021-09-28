@@ -25,7 +25,18 @@ export const addNewProject = createAsyncThunk(
       name: 'new',
       users: [api.loggedInUser().id],
     }
+    console.log('addNewProject', initialProject)
     return await api.post('/api/project/', initialProject)
+  }
+)
+
+export const deleteProject = createAsyncThunk(
+  'projects/deleteProject',
+  async (projectId, { dispatch }) => {
+    await api.delete(
+      `/api/project/${projectId}`
+    )
+    return projectId
   }
 )
 
@@ -62,6 +73,7 @@ export const projectsSlice = createSlice({
       state.status = 'succeeded'
       projectsAdapter.setAll(state, action.payload)
     },
+    [deleteProject.fulfilled]: projectsAdapter.removeOne,
     [addNewProject.fulfilled]: projectsAdapter.addOne,
     [updateProject.fulfilled]: projectsAdapter.upsertOne
   }

@@ -37,7 +37,7 @@ export default function AvatarListItem({ nested, item, selected, handleClick, ha
     (nested ? classes.nested : null),
   );
 
-  const marginAdjust = small ? -3.5 : 0;
+  const marginAdjust = small ? 0 : 0;
 
   return (
     <Tooltip title={item.name} placement="right" arrow>

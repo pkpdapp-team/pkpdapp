@@ -49,6 +49,24 @@ class EnablePartialUpdateMixin:
         return super().update(request, *args, **kwargs)
 
 
+class UserAccessFilter(filters.BaseFilterBackend):
+    """
+    Filter that allows filtering by user.
+    """
+
+    def filter_queryset(self, request, queryset, view):
+
+        if request.user.is_superuser:
+            return queryset
+
+        user = request.user
+        if queryset.model == Project:
+            queryset = queryset.filter(users=user)
+        else:
+            raise RuntimeError('queryset model {} not recognised')
+        return queryset
+
+
 class DosedPkModelFilter(filters.BaseFilterBackend):
     """
     Filter that only allows users to filter by dosed_pk_model.
@@ -261,6 +279,7 @@ class DatasetView(viewsets.ModelViewSet):
 class ProjectView(EnablePartialUpdateMixin, viewsets.ModelViewSet):
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
+    filter_backends = [UserAccessFilter]
 
 
 class UserView(viewsets.ModelViewSet):
