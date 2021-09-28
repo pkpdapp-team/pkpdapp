@@ -5,6 +5,7 @@
 #
 
 from django.test import TestCase
+from django.db.utils import IntegrityError
 from pkpdapp.models import (
     Inference, Dataset, PharmacodynamicModel
 )
@@ -37,3 +38,13 @@ class TestInference(TestCase):
             pd_model=m
         )
         self.assertTrue(isinstance(i, Inference))
+
+        with self.assertRaises(IntegrityError) as context:
+            i=Inference.objects.create(
+                description=d,
+                inference_type=it,
+                algorithm=a,
+                dataset=d,
+                pd_model=m
+            )
+        self.assertTrue('inference must have to a log-likelihood or a score function' in str(context.exception))
