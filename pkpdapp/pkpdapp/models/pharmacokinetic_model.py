@@ -134,8 +134,9 @@ class DosedPharmacokineticModel(models.Model, MyokitModelMixin):
 
             dosing_events = [
                 (
-                    amount_conversion_factor * d.amount /
-                    time_conversion_factor,
+                    (amount_conversion_factor /
+                     time_conversion_factor) *
+                    (d.amount / d.duration),
                     time_conversion_factor * d.start_time,
                     time_conversion_factor * d.duration
                 )
