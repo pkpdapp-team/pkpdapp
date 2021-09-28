@@ -25,4 +25,6 @@ from .biomarker import Biomarker
 from .project import Project
 from .profile import Profile
 from .dose import Dose
-from .variable import Variable
+from .inference import Inference
+from .inference_results import InferenceResults
+from .prior import Prior
