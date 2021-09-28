@@ -13,11 +13,11 @@ from pkpdapp.models import (
 
 
 def get_h_unit():
-    return Unit.objects.get(symbol='h'),
+    return Unit.objects.get(symbol='h')
 
 
 def get_mg_unit():
-    return Unit.objects.get(symbol='mg'),
+    return Unit.objects.get(symbol='mg')
 
 
 class Protocol(models.Model):
