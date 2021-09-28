@@ -3,9 +3,13 @@ import { useSelector } from 'react-redux'
 import Paper from '@material-ui/core/Paper';
 import Grid from '@material-ui/core/Grid';
 import ProjectDetail from '../projects/ProjectDetail'
+import Tooltip from '@material-ui/core/Tooltip';
 import { useTheme } from '@material-ui/core/styles';
 import { useDispatch } from 'react-redux'
 
+import AddIcon from '@material-ui/icons/Add';
+
+import IconButton from '@material-ui/core/IconButton';
 import { makeStyles } from '@material-ui/core/styles';
 
 import {
@@ -22,7 +26,7 @@ import {
 
 
 import {
-  selectAllProjects, selectChosenProject
+  selectAllProjects, selectChosenProject, addNewProject
 } from './projectsSlice.js'
 
 const useStyles = makeStyles((theme) => ({
@@ -34,8 +38,14 @@ const useStyles = makeStyles((theme) => ({
     padding: theme.spacing(2),
     textAlign: 'left',
   },
+  controlsRoot: {
+    display: 'flex',
+    alignItems: 'center',
+  },
+  controls: {
+    margin: theme.spacing(1),
+  },
 }));
-
 
 export default function Projects() {
   const classes = useStyles();
@@ -53,6 +63,11 @@ export default function Projects() {
     //return () => clearInterval(interval);
   }, [dispatch]);
   
+  const handleNewProject = () => {
+    console.log('handleNewProject')
+    dispatch(addNewProject())
+  }
+
   const projects = useSelector(selectAllProjects);
   const chosenProject = useSelector(selectChosenProject);
   console.log(projects)
@@ -68,6 +83,18 @@ export default function Projects() {
             </Paper>
           </Grid>
         ))}
+        <div  className={classes.controlsRoot}>
+        <Tooltip title={`create new project`} placement="right">
+          <IconButton
+            variant='rounded' 
+            className={classes.controls}
+            onClick={handleNewProject}
+          >
+            <AddIcon/>
+          </IconButton>
+        </Tooltip>
+        </div>
+
       </Grid>
     </div>
   )

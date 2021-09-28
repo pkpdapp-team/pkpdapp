@@ -20,7 +20,8 @@ export default function OutputSubform({variable_id}) {
       lower_bound: -1,
       upper_bound: 1,
       unit: 1,
-      color: 0
+      color: 0,
+      axis: false,
     }
   }
   const { control, handleSubmit, reset } = useForm({
@@ -29,6 +30,7 @@ export default function OutputSubform({variable_id}) {
       display: variable.display,
       color: variable.color,
       unit: variable.unit,
+      axis: variable.axis,
     }
   });
 
@@ -54,6 +56,11 @@ export default function OutputSubform({variable_id}) {
   };
 
   const { isDirty } = useFormState({ control });
+
+  const axisOptions = [
+    {value: false, key: 'LHS'}, 
+    {value: true, key: 'RHS'}, 
+  ]
   
   return (
     <React.Fragment>
@@ -73,6 +80,12 @@ export default function OutputSubform({variable_id}) {
         name={'color'}
         label={'Color'}
         type="number"
+      />
+      <FormSelectField
+        control={control} 
+        name={'axis'}
+        label={'Axis'}
+        options={axisOptions}
       />
       {isDirty &&
           <IconButton

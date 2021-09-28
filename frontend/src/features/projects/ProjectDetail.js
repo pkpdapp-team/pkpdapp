@@ -10,7 +10,7 @@ import {
 } from '../projects/usersSlice.js'
 
 import {
-  updateProject, chooseProject
+  updateProject, chooseProject, deleteProject
 } from '../projects/projectsSlice.js'
 
 import {
@@ -48,10 +48,14 @@ const useStyles = makeStyles((theme) => ({
   tableCell: {
     width: '100pt',
   },
-  controls: {
-    marginTop: theme.spacing(2),
-    marginRight: theme.spacing(2),
+  controlsRoot: {
+    display: 'flex',
+    alignItems: 'center',
   },
+  controls: {
+    margin: theme.spacing(1),
+  },
+
 }));
 
 
@@ -86,6 +90,10 @@ export default function ProjectDetail({project}) {
     dispatch(fetchProtocols(project))
   }
 
+  const handleDeleteProject = () => {
+    dispatch(deleteProject(project.id))
+  }
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
       <FormTextField 
@@ -108,6 +116,7 @@ export default function ProjectDetail({project}) {
         multiline
         name="description" label="Description"
       />
+      <div  className={classes.controlsRoot}>
       <Button 
         type="submit" 
         variant="contained"
@@ -118,10 +127,19 @@ export default function ProjectDetail({project}) {
       <Button 
         variant="contained"
         className={classes.controls} 
+        onClick={handleDeleteProject}
+      >
+        Delete 
+      </Button>
+
+      <Button 
+        variant="contained"
+        className={classes.controls} 
         onClick={handleSelectProject}
       >
         Select Project
       </Button>
+      </div>
 
     </form>
   )
