@@ -185,9 +185,19 @@ class UnitView(viewsets.ModelViewSet):
     filter_backends = [DosedPkModelFilter, PdModelFilter]
 
 
+class NotADatasetDose(BasePermission):
+    def has_object_permission(self, request, view, obj):
+        is_update_method = \
+            request.method == 'PUT' or request.method == 'PATCH'
+        if is_update_method and obj.protocol.dataset:
+            return False
+        return True
+
+
 class DoseView(viewsets.ModelViewSet):
     queryset = Dose.objects.all()
     serializer_class = DoseSerializer
+    permission_classes = [IsAuthenticated & NotADatasetDose]
 
 
 class PharmacokineticView(viewsets.ModelViewSet):
