@@ -421,9 +421,11 @@ class DatasetCsvSerializer(serializers.ModelSerializer):
                     )
                 start_time = float(row['TIME'])
                 amount = float(row['AMT'])
+                infusion_time = float(row['TINF'])
                 Dose.objects.create(
                     start_time=start_time,
                     amount=amount,
+                    duration=infusion_time,
                     protocol=protocol,
                 )
         return instance

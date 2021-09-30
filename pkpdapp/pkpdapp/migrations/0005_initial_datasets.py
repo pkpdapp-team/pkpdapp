@@ -344,6 +344,7 @@ def load_datasets(apps, schema_editor):
                 TIME_COLUMN = 0
                 TIME_UNIT_COLUMN = 10
                 VALUE_COLUMN = 1
+                TINF_COLUMN = None
                 UNIT_COLUMN = 11
                 BIOMARKER_TYPE_COLUMN = 2
                 SUBJECT_ID_COLUMN = 8
@@ -354,6 +355,7 @@ def load_datasets(apps, schema_editor):
             elif datafile_name == 'demo_pk_data':
                 TIME_COLUMN = 4
                 TIME_UNIT_COLUMN = 5
+                TINF_COLUMN = 9
                 VALUE_COLUMN = 3
                 UNIT_COLUMN = 11
                 BIOMARKER_TYPE_COLUMN = 13
@@ -365,6 +367,7 @@ def load_datasets(apps, schema_editor):
             else:
                 TIME_COLUMN = 1
                 TIME_UNIT_COLUMN = 2
+                TINF_COLUMN = None
                 VALUE_COLUMN = 4
                 UNIT_COLUMN = 5
                 BIOMARKER_TYPE_COLUMN = 3
@@ -462,9 +465,11 @@ def load_datasets(apps, schema_editor):
                             project=demo_project,
                             amount_unit=unit,
                         )
+
                     Dose.objects.create(
                         start_time=row[TIME_COLUMN],
                         amount=row[DOSE_COLUMN],
+                        duration=row[TINF_COLUMN],
                         protocol=protocol,
                     )
 

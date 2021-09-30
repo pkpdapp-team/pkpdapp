@@ -7,6 +7,9 @@ from rest_framework import (
     views, viewsets, filters, status, decorators, response
 )
 from rest_framework import parsers
+from rest_framework.permissions import (
+    BasePermission, IsAuthenticated
+)
 from rest_framework.response import Response
 from .serializers import (
     DatasetSerializer, UserSerializer, ProjectSerializer,
@@ -160,10 +163,20 @@ class ProjectFilter(filters.BaseFilterBackend):
         return queryset
 
 
+class NotADatasetProtocol(BasePermission):
+    def has_object_permission(self, request, view, obj):
+        is_update_method = \
+            request.method == 'PUT' or request.method == 'PATCH'
+        if is_update_method and obj.dataset:
+            return False
+        return True
+
+
 class ProtocolView(viewsets.ModelViewSet):
     queryset = Protocol.objects.all()
     serializer_class = ProtocolSerializer
     filter_backends = [ProjectFilter]
+    permission_classes = [IsAuthenticated & NotADatasetProtocol]
 
 
 class UnitView(viewsets.ModelViewSet):
@@ -172,9 +185,19 @@ class UnitView(viewsets.ModelViewSet):
     filter_backends = [DosedPkModelFilter, PdModelFilter]
 
 
+class NotADatasetDose(BasePermission):
+    def has_object_permission(self, request, view, obj):
+        is_update_method = \
+            request.method == 'PUT' or request.method == 'PATCH'
+        if is_update_method and obj.protocol.dataset:
+            return False
+        return True
+
+
 class DoseView(viewsets.ModelViewSet):
     queryset = Dose.objects.all()
     serializer_class = DoseSerializer
+    permission_classes = [IsAuthenticated & NotADatasetDose]
 
 
 class PharmacokineticView(viewsets.ModelViewSet):

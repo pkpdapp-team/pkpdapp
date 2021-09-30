@@ -25,8 +25,9 @@ class Dose(models.Model):
     )
     amount = models.FloatField(
         help_text=(
-            'amount rate of compound administered, '
-            'see protocol for units'
+            'amount of compound administered over the duration, '
+            'see protocol for units. Rate of administration is '
+            'assumed constant'
         )
     )
     duration = models.FloatField(

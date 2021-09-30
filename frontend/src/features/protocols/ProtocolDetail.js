@@ -95,7 +95,7 @@ export default function ProtocolDetail({project, protocol}) {
 
   const dose_columns = [
     { title: "Start Time", field: "start_time" },
-    { title: "Amount rate", field: "amount" },
+    { title: "Amount", field: "amount" },
     { title: "Duration", field: "duration" },
   ];
 
