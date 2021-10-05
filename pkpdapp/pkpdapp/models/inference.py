@@ -83,6 +83,24 @@ class Inference(models.Model):
     )
 
 
+class StoredPharmacodynamicModel(PharmacodynamicModel):
+    """
+    Stored PD model.
+    """
+
+
+class StoredPharmacokineticModel(PharmacokineticModel):
+    """
+    Stored PK model.
+    """
+
+
+class DosedPharmacokineticModel(DosedPharmacokineticModel):
+    """
+    Stored dosed PK model.
+    """
+
+
 class ObjectiveFunction(Variable):
     """
     Abstract model class for objective functions.
@@ -91,6 +109,25 @@ class ObjectiveFunction(Variable):
         BiomarkerType,
         on_delete=models.CASCADE,
         blank=True, null=False)
+    pd_model = models.ForeignKey(
+        StoredPharmacodynamicModel,
+        blank=True, null=True,
+        on_delete=models.CASCADE,
+        help_text='pharmacodynamic model'
+    )
+    pk_model = models.ForeignKey(
+        StoredPharmacokineticModel,
+        blank=True, null=True,
+        on_delete=models.CASCADE,
+        help_text='pharmacokinetic model'
+    )
+    dosed_pk_model = models.ForeignKey(
+        StoredDosedPharmacokineticModel,
+        blank=True, null=True,
+        on_delete=models.CASCADE,
+        help_text='dosed pharmacokinetic model'
+    )
+    inference = models.ForeignKey(Inference, blank=True, null=False)
 
 
 class LogLikelihoodNormal(ObjectiveFunction):
@@ -117,13 +154,38 @@ class SumOfSquaredErrorsScoreFunction(ObjectiveFunction):
     """
 
 
-class PriorUniform(Variable):
+class InferenceParameterProperties(Variable):
+    """
+    Abstract model that points to inference model.
+    """
+    pd_model = models.ForeignKey(
+        StoredPharmacodynamicModel,
+        blank=True, null=True,
+        on_delete=models.CASCADE,
+        help_text='pharmacodynamic model'
+    )
+    pk_model = models.ForeignKey(
+        StoredPharmacokineticModel,
+        blank=True, null=True,
+        on_delete=models.CASCADE,
+        help_text='pharmacokinetic model'
+    )
+    dosed_pk_model = models.ForeignKey(
+        StoredDosedPharmacokineticModel,
+        blank=True, null=True,
+        on_delete=models.CASCADE,
+        help_text='dosed pharmacokinetic model'
+    )
+    inference = models.ForeignKey(Inference, blank=True, null=False)
+
+
+class PriorUniform(InferenceParameterProperties):
     """
     Model for a uniform prior.
     """
 
 
-class PriorNormal(Variable):
+class PriorNormal(InferenceParameterProperties):
     """
     Model for a normal prior.
     """
@@ -136,7 +198,7 @@ class PriorNormal(Variable):
     )
 
 
-class Boundary(Variable):
+class Boundary(InferenceParameterProperties):
     """
     Model for a single parameter boundary for use in optimisation.
     """
@@ -163,6 +225,9 @@ class InferenceResults(models.Model):
         blank=True, null=True,
         on_delete=models.CASCADE,
         help_text='parameter boundary'
+    )
+    value = models.FloatField(
+        help_text='estimated parameter value'
     )
     chain = models.IntegerField(
         default=1,
@@ -201,4 +266,3 @@ class MCMCDiagnostic(models.Model):
 class Rhat(MCMCDiagnostic):
 
 class ESS(MCMCDiagnostic):
-    
