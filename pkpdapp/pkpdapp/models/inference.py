@@ -7,8 +7,9 @@
 from django.db import models
 from django.db.models import Q
 from pkpdapp.models import (
-    Variable, Dataset,PharmacodynamicModel,
-    PharmacokineticModel,DosedPharmacokineticModel)
+    Variable, Dataset, PharmacodynamicModel,
+    PharmacokineticModel, DosedPharmacokineticModel,
+    BiomarkerType)
 
 
 class Inference(models.Model):
@@ -20,15 +21,15 @@ class Inference(models.Model):
         blank=True, default=''
     )
 
-    score_function = models.CharField(
-        max_length=40,
-        blank=True, null=True,
-        help_text='score function')
-
-    log_likelihood = models.CharField(
-        max_length=40, 
-        blank=True, null=True,
-        help_text='log likelihood type')
+    datetime = models.DateTimeField(
+        help_text=(
+            'date/time the experiment was conducted. '
+            'All time measurements are relative to this date/time, ' +
+            'which is in YYYY-MM-DD HH:MM:SS format. For example, ' +
+            '2020-07-18 14:30:59'
+        ),
+        null=True, blank=True
+    )
 
     class InferenceType(models.TextChoices):
         SAMPLING = 'SA', 'Sampling'
@@ -40,45 +41,164 @@ class Inference(models.Model):
         default=InferenceType.OPTIMISATION,
     )
 
-    algorithm = models.CharField(max_length=40, help_text='algorithm to use for inference')
+    class SamplingAlgorithm(models.TextChoices):
+        HB = 'HB', 'Haario-Bardenet'
+        DE = 'DE', 'Differential evolution'
+        DR = 'DR', 'DREAM'
+        PO = 'PO', 'Population MCMC'
 
-    variables = models.ManyToManyField(Variable)
+    sampling_algorithm = models.CharField(
+        choices=SamplingAlgorithm.choices,
+        default=SamplingAlgorithm.HB,
+        help_text='sampling algorithm to use for inference')
 
-    dataset = models.ForeignKey(
-        Dataset,
+    class OptimisationAlgorithm(models.TextChoices):
+        CMAES = 'CMAES', 'CMAES'
+        XNES = 'XNES', 'XNES'
+        SNES = 'SNES', 'SNES'
+        PSO = 'PSO', 'PSO'
+        NM = 'NM', 'Nelder-Mead'
+
+    optimisation_algorithm = models.CharField(
+        choices=OptimisationAlgorithm.choices,
+        default=OptimisationAlgorithm.CMAES,
+        help_text='optimisation algorithm to use for inference')
+
+    number_of_iterations = models.IntegerField(
+        help_text='number of iterations'
+    )
+
+    time_elapsed = models.IntegerField(
+        default=0,
+        help_text='Elapsed run time for inference in seconds'
+    )
+
+    # potentially for optimisation too (as in number of starting points)
+    number_of_chains = models.IntegerField(
+        help_text='number of chains'
+    )
+
+    number_of_function_evals = models.IntegerField(
+        help_text='number of function evaluations'
+    )
+
+
+class ObjectiveFunction(Variable):
+    """
+    Abstract model class for objective functions.
+    """
+    biomarker_type = models.OnetoOne(
+        BiomarkerType,
+        on_delete=models.CASCADE,
+        blank=True, null=False)
+
+
+class LogLikelihoodNormal(ObjectiveFunction):
+    """
+    Model for the normal log-likelihood.
+    """
+    sd = models.FloatField(
+        help_text='sd of normal prior distribution.'
+    )
+
+
+class LogLikelihoodLogNormal(ObjectiveFunction):
+    """
+    Model for the log-normal log-likelihood.
+    """
+    sigma = models.FloatField(
+        help_text='sigma of log-normal prior distribution.'
+    )
+
+
+class SumOfSquaredErrorsScoreFunction(ObjectiveFunction):
+    """
+    Model for sum of squared errors score function.
+    """
+
+
+class PriorUniform(Variable):
+    """
+    Model for a uniform prior.
+    """
+
+
+class PriorNormal(Variable):
+    """
+    Model for a normal prior.
+    """
+    mean = models.FloatField(
+        help_text='mean of normal prior distribution.'
+    )
+
+    sd = models.FloatField(
+        help_text='sd of normal prior distribution.'
+    )
+
+
+class Boundary(Variable):
+    """
+    Model for a single parameter boundary for use in optimisation.
+    """
+
+
+class InferenceResults(models.Model):
+    """
+    Abstract class for inference results.
+    """
+    prior_uniform = models.OneToOne(
+        PriorUniform,
         blank=True, null=True,
         on_delete=models.CASCADE,
-        help_text='Dataset to fit the model on'
+        help_text='uniform prior'
     )
+    prior_normal = models.OneToOne(
+        PriorUniform,
+        blank=True, null=True,
+        on_delete=models.CASCADE,
+        help_text='normal prior'
+    )
+    boundary = models.OnetoOne(
+        Boundary,
+        blank=True, null=True,
+        on_delete=models.CASCADE,
+        help_text='parameter boundary'
+    )
+    chain = models.IntegerField(
+        default=1,
+        help_text='Chain related to the row'
+    )
+    iteration = models.IntegerField(
+        default=1,
+        help_text='Iteration'
+    )
+
+
+class MCMCDiagnostic(models.Model):
+    prior_uniform = models.OneToOne(
+        PriorUniform,
+        blank=True, null=True,
+        on_delete=models.CASCADE,
+        help_text='uniform prior'
+    )
+    prior_normal = models.OneToOne(
+        PriorUniform,
+        blank=True, null=True,
+        on_delete=models.CASCADE,
+        help_text='normal prior'
+    )
+    boundary = models.OnetoOne(
+        Boundary,
+        blank=True, null=True,
+        on_delete=models.CASCADE,
+        help_text='parameter boundary'
+    )
+    value = models.FloatField(
+        help_text='rhat diagnostic statistic'
+    )
+
+
+class Rhat(MCMCDiagnostic):
+
+class ESS(MCMCDiagnostic):
     
-    pd_model = models.ForeignKey(
-        PharmacodynamicModel,
-        blank=True, null=True,
-        on_delete=models.CASCADE,
-        help_text='pharmacodynamic model'
-    )
-    pk_model = models.ForeignKey(
-        PharmacokineticModel,
-        blank=True, null=True,
-        on_delete=models.CASCADE,
-        help_text='pharmacokinetic model'
-    )
-    dosed_pk_model = models.ForeignKey(
-        DosedPharmacokineticModel,
-        blank=True, null=True,
-        on_delete=models.CASCADE,
-        help_text='dosed pharmacokinetic model'
-    )
-
-    class Meta:
-        constraints = [
-            models.CheckConstraint(
-                check=(
-                    (Q(log_likelihood__isnull=True) &
-                     Q(score_function__isnull=False)) |
-                    (Q(log_likelihood__isnull=False) &
-                     Q(score_function__isnull=True))
-                ),
-                name='inference must have to a log-likelihood or a score function'
-            ),
-        ]
