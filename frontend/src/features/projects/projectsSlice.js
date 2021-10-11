@@ -95,3 +95,5 @@ export const {
   selectById: selectProjectById,
   selectIds: selectProjectIds
 } = projectsAdapter.getSelectors(state => state.projects)
+
+export const selectMyProjects = state => selectAllProjects(state).filter(p => p.users.includes(api.loggedInUser().id));
