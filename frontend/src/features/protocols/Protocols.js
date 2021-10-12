@@ -10,7 +10,7 @@ import {
 } from '../protocols/protocolsSlice.js'
 
 
-export default function Protocols({project}) {
+export default function Protocols({project, disableSave}) {
   const pkModels = useSelector(selectAllProtocols);
   const dispatch = useDispatch()
   const handleClickItem = (item) => dispatch(toggleProtocol(item))
@@ -22,6 +22,7 @@ export default function Protocols({project}) {
       text="Protocols" 
       type='protocol'
       icon={AccessibilityIcon}
+      disableSave={disableSave}
       handleClickItem={handleClickItem}
       handleNewItem={handleNewItem}
     />

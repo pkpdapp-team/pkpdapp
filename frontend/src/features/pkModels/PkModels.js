@@ -10,7 +10,7 @@ import {
 } from '../pkModels/pkModelsSlice.js'
 
 
-export default function PkModels({project}) {
+export default function PkModels({project, disableSave}) {
   const pkModels = useSelector(selectAllPkModels);
   const dispatch = useDispatch()
   const handleClickItem = (item) => dispatch(togglePkModel(item))
@@ -23,6 +23,7 @@ export default function PkModels({project}) {
       type='pk_model'
       icon={AccessibilityIcon}
       handleClickItem={handleClickItem}
+      disableSave={disableSave}
       handleNewItem={handleNewItem}
     />
   )

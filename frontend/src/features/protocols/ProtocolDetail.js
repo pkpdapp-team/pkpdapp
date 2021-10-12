@@ -18,6 +18,8 @@ import TableRow from '@material-ui/core/TableRow';
 import { selectUnitById } from '../projects/unitsSlice'
 import {FormTextField, FormSelectField} from '../forms/FormComponents';
 
+import {userHasReadOnlyAccess} from '../projects/projectsSlice';
+
 import {
   updateProtocol, deleteProtocol
 } from '../protocols/protocolsSlice.js'
@@ -99,6 +101,8 @@ export default function ProtocolDetail({project, protocol}) {
     { title: "Duration", field: "duration" },
   ];
 
+  const disableSave = userHasReadOnlyAccess(project)
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
       <Typography>Protocol</Typography>
@@ -170,11 +174,13 @@ export default function ProtocolDetail({project, protocol}) {
     <div className={classes.controls}>
       <Button 
         variant="contained"
+        disabled={disableSave}
         type="submit" >
         Save
       </Button>
       <Button 
         variant="contained"
+        disabled={disableSave}
         onClick={handleProtocolDelete}
       >
         Delete 

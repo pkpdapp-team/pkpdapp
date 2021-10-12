@@ -8,7 +8,7 @@ import {FormCheckboxField, FormTextField} from '../forms/FormComponents'
 import { selectSubjectById, updateSubject} from './subjectsSlice'
 
 
-export default function SubjectSubform({subject_id}) {
+export default function SubjectSubform({subject_id, disableSave}) {
   const dispatch = useDispatch();
   let subject = useSelector(
     state => selectSubjectById(state, subject_id)
@@ -56,6 +56,7 @@ export default function SubjectSubform({subject_id}) {
       {isDirty &&
         <IconButton
           onClick={handleSubmit(onSubmit)}
+          disabled={disableSave}
           size='small'
         >
           <SaveIcon/>

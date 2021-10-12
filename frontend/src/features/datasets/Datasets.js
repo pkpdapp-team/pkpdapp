@@ -10,7 +10,7 @@ import {
 } from '../datasets/datasetsSlice.js'
 
 
-export default function Datasets({project}) {
+export default function Datasets({project, disableSave}) {
   const datasets = useSelector(selectAllDatasets);
   const dispatch = useDispatch()
   const handleClickItem = (item) => dispatch(toggleDataset(item))
@@ -22,6 +22,7 @@ export default function Datasets({project}) {
       text="Datasets" 
       type='dataset'
       icon={TableChartIcon}
+      disableSave={disableSave}
       handleClickItem={handleClickItem}
       handleNewItem={handleNewItem}
     />

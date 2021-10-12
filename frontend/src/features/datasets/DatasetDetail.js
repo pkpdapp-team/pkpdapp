@@ -17,6 +17,8 @@ import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import SubjectSubform from './SubjectSubform'
 import BiomarkerTypeSubform from './BiomarkerTypeSubform'
 
+import {userHasReadOnlyAccess} from '../projects/projectsSlice';
+
 import {updateDataset, uploadDatasetCsv, deleteDataset} from '../datasets/datasetsSlice'
 import {FormTextField, FormDateTimeField} from '../forms/FormComponents';
 
@@ -55,6 +57,8 @@ export default function DatasetDetail({project, dataset}) {
     dispatch(updateDataset(values))
   };
 
+  const disableSave = userHasReadOnlyAccess(project)
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
       <FormTextField 
@@ -77,6 +81,7 @@ export default function DatasetDetail({project, dataset}) {
           <ListItem key={index} role={undefined} dense >
           <BiomarkerTypeSubform
             biomarker_id={biomarker_id}
+            disableSave={disableSave}
           />
           </ListItem>
           
@@ -99,7 +104,10 @@ export default function DatasetDetail({project, dataset}) {
                 {dataset.subject_groups[group].map((subject_id, sindex) => { 
                 return (
                   <ListItem key={`s${sindex}`} role={undefined} dense button >
-                    <SubjectSubform subject_id={subject_id}/>
+                    <SubjectSubform 
+                      subject_id={subject_id}
+                      disableSave={disableSave}
+                    />
                   </ListItem>
                 )})}
                 </List>
@@ -115,6 +123,7 @@ export default function DatasetDetail({project, dataset}) {
       <Button 
         type="submit" 
         variant="contained"
+        disabled={disableSave}
         className={classes.button}
       >
         Save
@@ -123,6 +132,7 @@ export default function DatasetDetail({project, dataset}) {
         className={classes.controls}
         variant="contained"
         onClick={handleDatasetDelete}
+        disabled={disableSave}
       >
         Delete 
       </Button>
@@ -131,6 +141,7 @@ export default function DatasetDetail({project, dataset}) {
           className={classes.controls}
           component="label"
           variant="contained"
+          disabled={disableSave}
         >
           Upload CSV file
           <input

@@ -97,3 +97,10 @@ export const {
 } = projectsAdapter.getSelectors(state => state.projects)
 
 export const selectMyProjects = state => selectAllProjects(state).filter(p => p.users.includes(api.loggedInUser().id));
+
+export const userHasReadOnlyAccess = (project) => {
+  const access = project.user_access.find(
+    x => x.user === api.loggedInUser().id
+  )
+  return access.read_only
+}

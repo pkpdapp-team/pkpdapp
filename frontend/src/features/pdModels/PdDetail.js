@@ -17,6 +17,7 @@ import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import ComponentForm from '../forms/ComponentForm'
 import {updatePdModel, uploadPdSbml, deletePdModel} from '../pdModels/pdModelsSlice'
 import {FormTextField} from '../forms/FormComponents';
+import {userHasReadOnlyAccess} from '../projects/projectsSlice';
 
 const useStyles = makeStyles((theme) => ({
   controlsRoot: {
@@ -67,6 +68,8 @@ export default function PdDetail({project, pd_model}) {
     dispatch(updatePdModel(values))
   };
 
+  const disableSave = userHasReadOnlyAccess(project)
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
       <FormTextField 
@@ -86,7 +89,10 @@ export default function PdDetail({project, pd_model}) {
                 <Typography className={classes.heading}>{component.name}</Typography>
               </AccordionSummary>
               <AccordionDetails>
-                <ComponentForm control={control} component={component}/>
+                <ComponentForm 
+                  control={control} component={component}
+                  disableSave={disableSave}
+                />
               </AccordionDetails>
             </Accordion>
             </div>
@@ -107,6 +113,7 @@ export default function PdDetail({project, pd_model}) {
       <Button 
         className={classes.controls}
         type="submit" 
+        disabled={disableSave}
         variant="contained"
       >
         Save
@@ -115,6 +122,7 @@ export default function PdDetail({project, pd_model}) {
         className={classes.controls}
         variant="contained"
         onClick={handlePdDelete}
+        disabled={disableSave}
       >
         Delete 
       </Button>
@@ -124,11 +132,13 @@ export default function PdDetail({project, pd_model}) {
           className={classes.controls}
           component="label"
           variant="contained"
+          disabled={disableSave}
         >
           Upload SBML file
           <input
             type="file"
             hidden
+            disabled={disableSave}
             onChange={handleFileUpload}
           />
      </Button>

@@ -32,7 +32,7 @@ import PdModels from '../pdModels/PdModels'
 import Protocols from '../protocols/Protocols' 
 
 import {
-  selectChosenProject, 
+  selectChosenProject, userHasReadOnlyAccess
 } from '../projects/projectsSlice.js'
 
 
@@ -62,6 +62,8 @@ export default function ProjectMenu() {
   const isRootPath= matchPath(pathname, 
     {path: rootPath, exact:true}
   )
+
+  const disableSave = userHasReadOnlyAccess(project)
 
   return (
     <List>
@@ -121,10 +123,10 @@ export default function ProjectMenu() {
           <ListItemText primary={"Project: " + project.name} />
         </ListItem>
         <Divider />
-        <Datasets project={project}/>
-        <PdModels project={project}/>
-        <PkModels project={project}/>
-        <Protocols project={project}/>
+        <Datasets project={project} disableSave={disableSave}/>
+        <PdModels project={project} disableSave={disableSave}/>
+        <PkModels project={project} disableSave={disableSave}/>
+        <Protocols project={project} disableSave={disableSave}/>
       </React.Fragment>
       }
 

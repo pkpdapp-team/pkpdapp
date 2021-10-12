@@ -17,7 +17,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 
-export default function ComponentForm({control, component}) {
+export default function ComponentForm({control, component, disableSave}) {
   const classes = useStyles();
 
   const mathjaxConfig = {
@@ -40,6 +40,7 @@ export default function ComponentForm({control, component}) {
         <ListItem key={index} role={undefined} dense >
         <VariableSubform
           variable_id={variable}
+          disableSave={disableSave}
         />
         </ListItem>
       );
@@ -68,6 +69,7 @@ export default function ComponentForm({control, component}) {
         <ListItem key={index} role={undefined} dense button >
           <OutputSubform
             variable_id={output}
+            disableSave={disableSave}
           />
         </ListItem>
       );
