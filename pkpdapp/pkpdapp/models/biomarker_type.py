@@ -71,6 +71,9 @@ class BiomarkerType(models.Model):
         )
     )
 
+    def get_project(self):
+        return self.dataset.get_project()
+
     def as_pandas(self):
         times_subjects_values = \
             self.biomarkers.order_by('time').values_list(

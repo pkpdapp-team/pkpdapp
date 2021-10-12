@@ -55,6 +55,9 @@ class Subject(models.Model):
         help_text='subject metadata',
     )
 
+    def get_project(self):
+        return self.dataset.get_project()
+
     class Meta:
         constraints = [
             models.UniqueConstraint(fields=['id_in_dataset', 'dataset'],

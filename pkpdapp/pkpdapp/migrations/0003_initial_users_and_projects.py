@@ -13,12 +13,24 @@ def load_users_and_projects(apps, schema_editor):
         {
             'username': 'demo',
             'password': '12345',
-            'selected_project': 'demo',
             'projects': [
                 {
                     'name': 'demo',
                     'description': '''This is an example project demonstrating some of the
                     capabilities of pkpdapp''',
+                    'read_only': False,
+                },
+            ]
+        },
+        {
+            'username': 'demo2',
+            'password': '12345',
+            'projects': [
+                {
+                    'name': 'demo',
+                    'description': '''This is an example project demonstrating some of the
+                    capabilities of pkpdapp''',
+                    'read_only': True,
                 },
             ]
         }
@@ -34,13 +46,20 @@ def load_users_and_projects(apps, schema_editor):
         )
 
         for p in u['projects']:
-            project = Project.objects.create(
-                name=p['name'],
-                description=p['description'],
+            try:
+                project = Project.objects.get(
+                    name=p['name']
+                )
+            except Project.DoesNotExist:
+                project = Project.objects.create(
+                    name=p['name'],
+                    description=p['description'],
+                )
+            project.users.add(
+                user,
+                through_defaults={'read_only': p['read_only']}
             )
-            project.users.add(user)
 
-        project = Project.objects.get(name=u['selected_project'])
         profile = Profile(
             user=user,
         )

@@ -39,6 +39,9 @@ class Dose(models.Model):
         )
     )
 
+    def get_project(self):
+        return self.protocol.get_project()
+
     def save(self, force_insert=False, force_update=False, *args, **kwargs):
         super().save(force_insert, force_update, *args, **kwargs)
 

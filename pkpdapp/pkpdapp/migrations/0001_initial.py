@@ -85,7 +85,6 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(help_text='name of the project', max_length=100)),
                 ('description', models.TextField(blank=True, default='', help_text='short description of the project')),
-                ('users', models.ManyToManyField(help_text='users with access to this project', to=settings.AUTH_USER_MODEL)),
             ],
         ),
         migrations.CreateModel(
@@ -153,6 +152,20 @@ class Migration(migrations.Migration):
             ],
         ),
         migrations.CreateModel(
+            name='ProjectAccess',
+            fields=[
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('read_only', models.BooleanField(default=False, help_text='True if user has read access only')),
+                ('project', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.project')),
+                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+            ],
+        ),
+        migrations.AddField(
+            model_name='project',
+            name='users',
+            field=models.ManyToManyField(help_text='users with access to this project', through='pkpdapp.ProjectAccess', to=settings.AUTH_USER_MODEL),
+        ),
+        migrations.CreateModel(
             name='Profile',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
@@ -201,7 +214,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('start_time', models.FloatField(help_text='starting time point of dose, see protocol for units')),
-                ('amount', models.FloatField(help_text='amount rate of compound administered, see protocol for units')),
+                ('amount', models.FloatField(help_text='amount of compound administered over the duration, see protocol for units. Rate of administration is assumed constant')),
                 ('duration', models.FloatField(default=0.0, help_text='Duration of dose administration, see protocol for units. For a bolus injection, set a dose duration of 0.')),
                 ('protocol', models.ForeignKey(help_text='protocol containing this dose', on_delete=django.db.models.deletion.CASCADE, related_name='doses', to='pkpdapp.protocol')),
             ],

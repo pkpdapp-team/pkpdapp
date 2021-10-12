@@ -130,6 +130,17 @@ class Variable(models.Model):
             )
         ]
 
+
+    def get_project(self):
+        if self.pd_model:
+            return self.pd_model.get_project()
+        elif self.dosed_pk_model:
+            return self.dosed_pk_model.get_project()
+        elif self.pkpd_model:
+            return self.pkpd_model.get_project()
+        else:
+            return None
+
     @staticmethod
     def get_variable_pk(model, myokit_variable):
         num_variables = Variable.objects.filter(

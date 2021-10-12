@@ -50,6 +50,10 @@ class Unit(models.Model):
             multiplier=self.multiplier
         )
 
+
+    def get_project(self):
+        return None
+
     @staticmethod
     def get_unit_from_variable(v):
         unit = v.unit()

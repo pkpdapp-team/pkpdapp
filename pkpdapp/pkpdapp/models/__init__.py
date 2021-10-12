@@ -7,7 +7,7 @@
 
 from .units import Unit
 from .compound import Compound
-from .project import Project
+from .project import Project, ProjectAccess
 from .dataset import Dataset
 from .subject import Subject
 from .protocol import Protocol

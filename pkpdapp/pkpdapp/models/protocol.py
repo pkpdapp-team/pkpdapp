@@ -87,6 +87,12 @@ class Protocol(models.Model):
     def get_absolute_url(self):
         return reverse('protocol-detail', kwargs={'pk': self.pk})
 
+    def get_project(self):
+        if self.project:
+            return self.project
+        else:
+            return self.dataset.get_project()
+
     def __str__(self):
         return str(self.name)
 

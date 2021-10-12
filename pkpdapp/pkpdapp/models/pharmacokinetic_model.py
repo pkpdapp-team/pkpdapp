@@ -26,6 +26,9 @@ class PharmacokineticModel(MechanisticModel):
         super().__init__(*args, **kwargs)
         self.__original_sbml = self.sbml
 
+    def get_project(self):
+        return None
+
     def get_absolute_url(self):
         return reverse('pk_model-detail', kwargs={'pk': self.pk})
 
@@ -87,6 +90,9 @@ class DosedPharmacokineticModel(models.Model, MyokitModelMixin):
         self.__original_pk_model = self.pharmacokinetic_model
         self.__original_protocol = self.protocol
         self.__original_dose_compartment = self.dose_compartment
+
+    def get_project(self):
+        return self.project
 
     def create_myokit_model(self):
         pk_model = self.pharmacokinetic_model.create_myokit_model()
