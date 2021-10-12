@@ -9,6 +9,7 @@ from pkpdapp.models import (
     PharmacokineticModel, PharmacodynamicModel,
     DosedPharmacokineticModel, PkpdModel,
     Profile, Dose, Unit, Biomarker, Compound, Variable,
+    ProjectAccess,
 )
 from django.contrib.auth.models import User
 from pkpdapp.models.mechanistic_model import MyokitModelMixin
@@ -452,6 +453,12 @@ class UserSerializer(serializers.ModelSerializer):
         )
 
 
+class ProjectAccessSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProjectAccess
+        fields = ('user', 'read_only')
+
+
 class ProjectSerializer(serializers.ModelSerializer):
     # dataset_ids = serializers.PrimaryKeyRelatedField(
     #     queryset=Dataset.objects.all(), source='datasets',
@@ -484,6 +491,10 @@ class ProjectSerializer(serializers.ModelSerializer):
     #     source='users', # noqa: E251
     #     many=True,
     # )
+
+    user_access = ProjectAccessSerializer(
+        source='projectaccess_set', many=True
+    )
 
     class Meta:
         model = Project
