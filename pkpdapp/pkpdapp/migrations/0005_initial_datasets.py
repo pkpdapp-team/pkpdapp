@@ -219,27 +219,27 @@ biomarkers_for_datasets = [
         {
             'name': 'Docetaxel',
             'unit': 'ng/mL',
-            'time': 'hours',
+            'time': 'h',
         },
         {
             'name': 'Red blood cells',
             'unit': '10^6/mcL',
-            'time': 'hours',
+            'time': 'h',
         },
         {
             'name': 'Hemoglobin',
             'unit': 'g/dL',
-            'time': 'hours',
+            'time': 'h',
         },
         {
             'name': 'Platelets ',
             'unit': '10^3/mcL',
-            'time': 'hours',
+            'time': 'h',
         },
         {
             'name': 'White blood cells',
             'unit': '10^3/mcL',
-            'time': 'hours',
+            'time': 'h',
         },
     ],
     [

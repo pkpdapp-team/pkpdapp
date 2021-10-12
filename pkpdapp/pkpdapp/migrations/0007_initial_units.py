@@ -27,11 +27,6 @@ def load_units(apps, schema_editor):
             'unit': 1e-3 * g,
         },
         {
-            'symbol': 'hours',
-            'unit': h,
-        },
-
-        {
             'symbol': 'd',
             'unit': 24 * h,
         },
