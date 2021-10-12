@@ -20,6 +20,8 @@ router.register('dataset', api.DatasetView, basename='dataset')
 router.register('user', api.UserView, basename='user')
 router.register('subject', api.SubjectView, basename='subject')
 router.register('project', api.ProjectView, basename='project')
+router.register('project_access', api.ProjectAccessView,
+                basename='project_access')
 router.register('dose', api.DoseView, basename='dose')
 router.register('unit', api.UnitView, basename='unit')
 router.register('variable', api.VariableView, basename='variable')

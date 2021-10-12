@@ -27,7 +27,8 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 export default function ExpandableListItem(
-  {icon: Icon, items, text, type, handleClickItem, handleNewItem}
+  {icon: Icon, items, text, type, disableSave,
+    handleClickItem, handleNewItem}
 ) {
   const classes = useStyles();
   const [open, setOpen] = React.useState(true);
@@ -57,7 +58,11 @@ export default function ExpandableListItem(
           />
         ))}
         <Tooltip title={`create ${text}`} placement="bottom">
-        <ListItem button onClick={handleNewItem}>
+        <ListItem 
+          button 
+          onClick={handleNewItem}
+          disabled={disableSave}
+        >
           <ListItemAvatar>
             <Avatar variant='rounded' className={classes.avatarPlusSmall}>
               <AddIcon/>

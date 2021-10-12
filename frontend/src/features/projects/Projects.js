@@ -26,7 +26,7 @@ import {
 
 
 import {
-  selectAllProjects, selectChosenProject, addNewProject
+  selectMyProjects, selectChosenProject, addNewProject
 } from './projectsSlice.js'
 
 const useStyles = makeStyles((theme) => ({
@@ -68,8 +68,9 @@ export default function Projects() {
     dispatch(addNewProject())
   }
 
-  const projects = useSelector(selectAllProjects);
+  const projects = useSelector(selectMyProjects);
   const chosenProject = useSelector(selectChosenProject);
+
   console.log(projects)
   return (
     <div className={classes.root}>

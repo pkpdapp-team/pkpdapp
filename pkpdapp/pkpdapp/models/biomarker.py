@@ -26,3 +26,6 @@ class Biomarker(models.Model):
         help_text='biomarker type, for example "concentration in mg"'
     )
     value = models.FloatField(help_text='value of the measurement')
+
+    def get_project(self):
+        return self.biomarker_type.get_project()

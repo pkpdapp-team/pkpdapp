@@ -10,7 +10,7 @@ import { selectBiomarkerTypeById, updateBiomarkerType } from './biomarkerTypesSl
 
 
 
-export default function BiomarkerTypeSubform({biomarker_id}) {
+export default function BiomarkerTypeSubform({biomarker_id, disableSave}) {
   const dispatch = useDispatch();
   let biomarker_type = useSelector(
     state => selectBiomarkerTypeById(state, biomarker_id)
@@ -106,6 +106,7 @@ export default function BiomarkerTypeSubform({biomarker_id}) {
         <IconButton
           onClick={handleSubmit(onSubmit)}
           size='small'
+          disabled={disableSave}
         >
           <SaveIcon/>
         </IconButton>

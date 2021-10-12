@@ -31,6 +31,8 @@ import {
   updatePkModel, deletePkModel
 } from '../pkModels/pkModelsSlice.js'
 
+import {userHasReadOnlyAccess} from '../projects/projectsSlice';
+
 const useStyles = makeStyles((theme) => ({
   components: {
     width: '100%',
@@ -93,6 +95,8 @@ export default function PkDetail({project, pk_model}) {
     {key: 'peripheral2', value: 'peripheral2'},
   ];
 
+  const disableSave = userHasReadOnlyAccess(project)
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
       <FormTextField 
@@ -111,7 +115,10 @@ export default function PkDetail({project, pk_model}) {
                 <Typography className={classes.heading}>{component.name}</Typography>
               </AccordionSummary>
               <AccordionDetails>
-                <ComponentForm control={control} component={component}/>
+                <ComponentForm 
+                  control={control} component={component}
+                  disableSave={disableSave}
+                />
               </AccordionDetails>
             </Accordion>
             </div>
@@ -149,12 +156,14 @@ export default function PkDetail({project, pk_model}) {
       <Button 
         type="submit" 
         variant="contained"
+        disabled={disableSave}
       >
         Save
       </Button>
       <Button 
         variant="contained"
         onClick={handlePkDelete}
+        disabled={disableSave}
       >
         Delete 
       </Button>

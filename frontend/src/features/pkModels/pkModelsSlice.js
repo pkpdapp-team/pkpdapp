@@ -104,7 +104,7 @@ export const pkModelsSlice = createSlice({
     [fetchPkModelById.fulfilled]: pkModelsAdapter.upsertOne,
     [addNewPkModel.rejected]: (state, action) => console.log(action.error.message),
     [addNewPkModel.fulfilled]: pkModelsAdapter.addOne,
-    [updatePkModel.fulfilled]: pkModelsAdapter.upsertOne
+    [updatePkModel.fulfilled]: pkModelsAdapter.upsertOne,
   }
 })
 

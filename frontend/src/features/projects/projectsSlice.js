@@ -43,12 +43,27 @@ export const deleteProject = createAsyncThunk(
 export const updateProject = createAsyncThunk(
   'projects/updateProject',
   async (project) => {
-    console.log('updating project', project)
+    for (const access of project.user_access) { 
+      if (project.users.includes(access.user)) {
+        await api.put(`/api/project_access/${access.id}/`, access)
+      } else {
+        await api.delete(`/api/project_access/${access.id}/`)
+      }
+    }
+    for (const user_id of project.users) { 
+      if (!project.user_access.find(access => access.user === user_id)) {
+        const new_access = {
+          project: project.id,
+          user: user_id,
+        }
+        await api.post(`/api/project_access/`, new_access)
+      }
+    }
     const new_project = await api.put(`/api/project/${project.id}/`, project)
-    console.log('got project', new_project)
-    return project
+    return new_project
   }
 )
+
 
 export const projectsSlice = createSlice({
   name: 'projects',
@@ -95,3 +110,12 @@ export const {
   selectById: selectProjectById,
   selectIds: selectProjectIds
 } = projectsAdapter.getSelectors(state => state.projects)
+
+export const selectMyProjects = state => selectAllProjects(state).filter(p => p.users.includes(api.loggedInUser().id));
+
+export const userHasReadOnlyAccess = (project) => {
+  const access = project.user_access.find(
+    x => x.user === api.loggedInUser().id
+  )
+  return access.read_only
+}

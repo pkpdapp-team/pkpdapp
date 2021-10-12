@@ -67,7 +67,8 @@ export default function ListOfProjects() {
   const project = useSelector(selectChosenProject);
   const dispatch = useDispatch()
 
-  
+  const myUserId
+  const myProjects = projects.filter(p => p.users.includes(myUserId))
 
   return (
     <List>

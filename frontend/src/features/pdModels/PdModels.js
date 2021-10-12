@@ -10,7 +10,7 @@ import {
 } from '../pdModels/pdModelsSlice.js'
 
 
-export default function PdModels({project}) {
+export default function PdModels({project, disableSave}) {
   const pdModels = useSelector(selectAllPdModels);
   const dispatch = useDispatch()
   const handleClickItem = (item) => dispatch(togglePdModel(item))
@@ -22,6 +22,7 @@ export default function PdModels({project}) {
       text="PD Models" 
       type='pd_model'
       icon={FunctionsIcon}
+      disableSave={disableSave}
       handleClickItem={handleClickItem}
       handleNewItem={handleNewItem}
     />

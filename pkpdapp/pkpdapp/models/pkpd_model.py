@@ -29,6 +29,9 @@ class PharmacodynamicModel(MechanisticModel):
     def get_absolute_url(self):
         return reverse('pd_model-detail', kwargs={'pk': self.pk})
 
+    def get_project(self):
+        return self.project
+
     def save(self, force_insert=False, force_update=False, *args, **kwargs):
         created = not self.pk
 
@@ -59,6 +62,9 @@ class PkpdModel(MechanisticModel):
         help_text='dosing protocol',
         blank=True, null=True,
     )
+
+    def get_project(self):
+        return self.project
 
     def get_absolute_url(self):
         return reverse('pkpd_model-detail', kwargs={'pk': self.pk})

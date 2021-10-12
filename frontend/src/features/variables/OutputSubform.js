@@ -8,7 +8,7 @@ import { useDispatch } from 'react-redux'
 import { selectUnitById } from '../projects/unitsSlice'
 import { selectVariableById, updateVariable } from './variablesSlice'
 
-export default function OutputSubform({variable_id}) {
+export default function OutputSubform({variable_id, disableSave}) {
   const dispatch = useDispatch();
   let variable = useSelector(
     state => selectVariableById(state, variable_id)
@@ -90,6 +90,7 @@ export default function OutputSubform({variable_id}) {
       {isDirty &&
           <IconButton
             onClick={handleSubmit(onSubmit)}
+            disabled={disableSave}
             size='small'
           >
             <SaveIcon/>

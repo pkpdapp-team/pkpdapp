@@ -25,6 +25,7 @@ from .serializers import (
     BiomarkerTypeSerializer,
     VariableSerializer,
     SubjectSerializer,
+    ProjectAccessSerializer,
 )
 
 from pkpdapp.models import (
@@ -39,6 +40,7 @@ from pkpdapp.models import (
     BiomarkerType,
     Variable,
     Subject,
+    ProjectAccess,
 )
 from django.contrib.auth.models import User
 from django.db.models import Q
@@ -172,11 +174,77 @@ class NotADatasetProtocol(BasePermission):
         return True
 
 
+class CheckAccessToProject(BasePermission):
+    def has_permission(self, request, view):
+        if request.user.is_superuser:
+            return True
+
+        is_create_method = (
+            request.method == 'POST'
+        )
+
+        if isinstance(request.data, list):
+            project_id = request.data[0].get('project', None)
+        else:
+            project_id = request.data.get('project', None)
+
+        if project_id is None:
+            return True
+
+        project = Project.objects.get(id=project_id)
+
+        if project is None:
+            return True
+
+        try:
+            access = ProjectAccess.objects.get(
+                project=project,
+                user=request.user,
+            )
+        except ProjectAccess.DoesNotExist:
+            return False
+
+        if is_create_method:
+            return not access.read_only
+
+        return True
+
+    def has_object_permission(self, request, view, obj):
+        if request.user.is_superuser:
+            return True
+
+        is_update_method = (
+            request.method == 'PUT' or
+            request.method == 'PATCH'
+        )
+
+        project = obj.get_project()
+
+        if project is None:
+            return True
+
+        try:
+            access = ProjectAccess.objects.get(
+                project=project,
+                user=request.user,
+            )
+        except ProjectAccess.DoesNotExist:
+            return False
+
+        if is_update_method:
+            return not access.read_only
+
+        return True
+
+
 class ProtocolView(viewsets.ModelViewSet):
     queryset = Protocol.objects.all()
     serializer_class = ProtocolSerializer
     filter_backends = [ProjectFilter]
     permission_classes = [IsAuthenticated & NotADatasetProtocol]
+    permission_classes = [
+        IsAuthenticated & NotADatasetProtocol & CheckAccessToProject
+    ]
 
 
 class UnitView(viewsets.ModelViewSet):
@@ -197,24 +265,35 @@ class NotADatasetDose(BasePermission):
 class DoseView(viewsets.ModelViewSet):
     queryset = Dose.objects.all()
     serializer_class = DoseSerializer
-    permission_classes = [IsAuthenticated & NotADatasetDose]
+    permission_classes = [
+        IsAuthenticated & NotADatasetDose & CheckAccessToProject
+    ]
 
 
 class PharmacokineticView(viewsets.ModelViewSet):
     queryset = PharmacokineticModel.objects.all()
     serializer_class = PharmacokineticSerializer
+    permission_classes = [
+        IsAuthenticated & CheckAccessToProject
+    ]
 
 
 class VariableView(viewsets.ModelViewSet):
     queryset = Variable.objects.all()
     serializer_class = VariableSerializer
     filter_backends = [ProjectFilter, DosedPkModelFilter, PdModelFilter]
+    permission_classes = [
+        IsAuthenticated & CheckAccessToProject
+    ]
 
 
 class DosedPharmacokineticView(viewsets.ModelViewSet):
     queryset = DosedPharmacokineticModel.objects.all()
     serializer_class = DosedPharmacokineticSerializer
     filter_backends = [ProjectFilter]
+    permission_classes = [
+        IsAuthenticated & CheckAccessToProject
+    ]
 
 
 class SimulateBaseView(views.APIView):
@@ -238,6 +317,9 @@ class PharmacodynamicView(viewsets.ModelViewSet):
     queryset = PharmacodynamicModel.objects.all()
     serializer_class = PharmacodynamicSerializer
     filter_backends = [ProjectFilter]
+    permission_classes = [
+        IsAuthenticated & CheckAccessToProject
+    ]
 
     @decorators.action(
         detail=True,
@@ -297,6 +379,14 @@ class DatasetView(viewsets.ModelViewSet):
             return response.Response(dataset_serializer.data)
         return response.Response(serializer.errors,
                                  status.HTTP_400_BAD_REQUEST)
+
+
+class ProjectAccessView(viewsets.ModelViewSet):
+    queryset = ProjectAccess.objects.all()
+    serializer_class = ProjectAccessSerializer
+    permission_classes = [
+        IsAuthenticated & CheckAccessToProject
+    ]
 
 
 class ProjectView(EnablePartialUpdateMixin, viewsets.ModelViewSet):

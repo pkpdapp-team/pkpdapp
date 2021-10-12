@@ -21,6 +21,7 @@ class Project(models.Model):
     )
     users = models.ManyToManyField(
         User,
+        through='ProjectAccess',
         help_text='users with access to this project'
     )
 
@@ -29,3 +30,15 @@ class Project(models.Model):
 
     def __str__(self):
         return str(self.name)
+
+
+class ProjectAccess(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE)
+    read_only = models.BooleanField(
+        default=False,
+        help_text='True if user has read access only'
+    )
+
+    def get_project(self):
+        return self.project

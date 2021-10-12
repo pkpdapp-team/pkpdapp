@@ -9,6 +9,7 @@ from pkpdapp.models import (
     PharmacokineticModel, PharmacodynamicModel,
     DosedPharmacokineticModel, PkpdModel,
     Profile, Dose, Unit, Biomarker, Compound, Variable,
+    ProjectAccess,
 )
 from django.contrib.auth.models import User
 from pkpdapp.models.mechanistic_model import MyokitModelMixin
@@ -452,38 +453,16 @@ class UserSerializer(serializers.ModelSerializer):
         )
 
 
+class ProjectAccessSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProjectAccess
+        fields = '__all__'
+
+
 class ProjectSerializer(serializers.ModelSerializer):
-    # dataset_ids = serializers.PrimaryKeyRelatedField(
-    #     queryset=Dataset.objects.all(), source='datasets',
-    #     many=True, required=False,
-    # )
-    # pk_model_ids = serializers.PrimaryKeyRelatedField(
-    #     queryset=DosedPharmacokineticModel.objects.all(),
-    #     source='pk_models',
-    #     many=True, required=False,
-    # )
-    # pd_model_ids = serializers.PrimaryKeyRelatedField(
-    #     queryset=PharmacodynamicModel.objects.all(),
-    #     source='pd_models',
-    #     many=True, required=False,
-    # )
-    # pkpd_model_ids = serializers.PrimaryKeyRelatedField(
-    #     queryset=PkpdModel.objects.all(),
-    #     source='pkpd_models',
-    #     many=True,
-    #     required=False,
-    # )
-    # protocol_ids = serializers.PrimaryKeyRelatedField(
-    #     queryset=Protocol.objects.all(),
-    #     source='protocols',
-    #     many=True,
-    #     required=False,
-    # )
-    # user_ids = serializers.PrimaryKeyRelatedField(
-    #     queryset=User.objects.all(),
-    #     source='users', # noqa: E251
-    #     many=True,
-    # )
+    user_access = ProjectAccessSerializer(
+        source='projectaccess_set', many=True, read_only=True
+    )
 
     class Meta:
         model = Project

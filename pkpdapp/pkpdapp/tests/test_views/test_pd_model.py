@@ -6,6 +6,7 @@
 from rest_framework import status
 from rest_framework.test import APITestCase, APIClient
 from django.contrib.auth.models import User
+from pkpdapp.models import Project
 
 
 class PdModelTestCase(APITestCase):
@@ -23,5 +24,31 @@ class PdModelTestCase(APITestCase):
     def test_pd_serializer(self):
         response = self.client.get("/api/pharmacodynamic/1/")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_data = response.data
-        print(response_data)
+
+    def test_cannot_edit_read_only_project(self):
+        user = User.objects.get(username='demo2')
+        self.client = APIClient()
+        self.client.force_authenticate(user=user)
+
+        project = Project.objects.get(name='demo')
+        response = self.client.post(
+            "/api/pharmacodynamic/",
+            data={
+                'name': 'test',
+                'project': project.id
+            }
+        )
+        self.assertEqual(
+            response.status_code, status.HTTP_403_FORBIDDEN
+        )
+
+        response = self.client.put(
+            "/api/pharmacodynamic/1/",
+            data={
+                'name': 'test',
+                'project': project.id
+            }
+        )
+        self.assertEqual(
+            response.status_code, status.HTTP_403_FORBIDDEN
+        )
