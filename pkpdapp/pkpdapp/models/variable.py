@@ -130,7 +130,6 @@ class Variable(models.Model):
             )
         ]
 
-
     def get_project(self):
         if self.pd_model:
             return self.pd_model.get_project()

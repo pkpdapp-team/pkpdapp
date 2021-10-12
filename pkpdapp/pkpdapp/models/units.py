@@ -50,7 +50,6 @@ class Unit(models.Model):
             multiplier=self.multiplier
         )
 
-
     def get_project(self):
         return None
 
