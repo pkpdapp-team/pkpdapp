@@ -39,3 +39,6 @@ class ProjectAccess(models.Model):
         default=False,
         help_text='True if user has read access only'
     )
+
+    def get_project(self):
+        return self.project

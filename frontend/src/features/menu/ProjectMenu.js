@@ -55,15 +55,15 @@ export default function ProjectMenu() {
   console.log('got project', project)
 
   const modellingPath ="/modelling"
-  const isModellingPath = matchPath(pathname, 
+  const isModellingPath = !!matchPath(pathname, 
     {path: modellingPath, exact:true}
   )
   const rootPath = "/"
-  const isRootPath= matchPath(pathname, 
+  const isRootPath = !!matchPath(pathname, 
     {path: rootPath, exact:true}
   )
 
-  const disableSave = userHasReadOnlyAccess(project)
+  const disableSave = project ? userHasReadOnlyAccess(project) : true
 
   return (
     <List>

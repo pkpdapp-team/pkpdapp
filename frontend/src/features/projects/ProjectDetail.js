@@ -3,14 +3,17 @@ import { useSelector, useDispatch } from 'react-redux'
 import Button from '@material-ui/core/Button';
 import { useForm } from "react-hook-form";
 import { makeStyles } from '@material-ui/core/styles';
+import List from '@material-ui/core/List';
+import ListItem from '@material-ui/core/ListItem';
 
-import {FormTextField, FormMultiSelectField} from '../forms/FormComponents';
+import {FormTextField, FormMultiSelectField, FormCheckboxField} from '../forms/FormComponents';
 import {
   selectAllUsers
 } from '../projects/usersSlice.js'
 
 import {
-  updateProject, chooseProject, deleteProject
+  updateProject, chooseProject, deleteProject, 
+  userHasReadOnlyAccess,
 } from '../projects/projectsSlice.js'
 
 import {
@@ -65,6 +68,7 @@ export default function ProjectDetail({project}) {
   const { control, handleSubmit, reset } = useForm();
   const dispatch = useDispatch()
   const users = useSelector(selectAllUsers);
+  const userEntities = useSelector(state => state.users.entities);
 
   useEffect(() => {
     reset(project);
@@ -76,6 +80,7 @@ export default function ProjectDetail({project}) {
   ));
 
   const onSubmit = (values) => {
+    console.log('project detail submit', values)
     dispatch(updateProject(values))
   };
 
@@ -94,6 +99,9 @@ export default function ProjectDetail({project}) {
     dispatch(deleteProject(project.id))
   }
 
+
+  const disableSave = userHasReadOnlyAccess(project)
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
       <FormTextField 
@@ -109,6 +117,25 @@ export default function ProjectDetail({project}) {
         name="users" label="Users"
       />
       }
+      <List dense>
+      {project.user_access.map((ua, i) => {
+        const user = userEntities[ua.user]
+        if (!user) {
+          return null
+        }
+        const read_only = ua.read_only
+        return (
+          <ListItem key={user.username}>
+            <FormCheckboxField
+              control={control} 
+              defaultValue={read_only}
+              name={`user_access[${i}].read_only`} 
+              label={`${user.username} is read-only`}
+            />
+          </ListItem>
+        )
+      })}
+      </List>
       <FormTextField 
         control={control} 
         className={classes.description}
@@ -121,6 +148,7 @@ export default function ProjectDetail({project}) {
         type="submit" 
         variant="contained"
         className={classes.controls} 
+        disabled={disableSave}
       >
         Save
       </Button>
@@ -128,6 +156,7 @@ export default function ProjectDetail({project}) {
         variant="contained"
         className={classes.controls} 
         onClick={handleDeleteProject}
+        disabled={disableSave}
       >
         Delete 
       </Button>

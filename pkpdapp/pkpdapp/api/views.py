@@ -25,6 +25,7 @@ from .serializers import (
     BiomarkerTypeSerializer,
     VariableSerializer,
     SubjectSerializer,
+    ProjectAccessSerializer,
 )
 
 from pkpdapp.models import (
@@ -182,7 +183,11 @@ class CheckAccessToProject(BasePermission):
             request.method == 'POST'
         )
 
-        project_id = request.data.get('project', None)
+        if isinstance(request.data, list):
+            project_id = request.data[0].get('project', None)
+        else:
+            project_id = request.data.get('project', None)
+
         if project_id is None:
             return True
 
@@ -198,13 +203,6 @@ class CheckAccessToProject(BasePermission):
             )
         except ProjectAccess.DoesNotExist:
             return False
-
-        print(
-            'CheckAccessToProject',
-            request.method,
-            project,
-            access,
-        )
 
         if is_create_method:
             return not access.read_only
@@ -232,13 +230,6 @@ class CheckAccessToProject(BasePermission):
             )
         except ProjectAccess.DoesNotExist:
             return False
-
-        print(
-            'CheckAccessToProject',
-            request.method,
-            project,
-            access,
-        )
 
         if is_update_method:
             return not access.read_only
@@ -388,6 +379,14 @@ class DatasetView(viewsets.ModelViewSet):
             return response.Response(dataset_serializer.data)
         return response.Response(serializer.errors,
                                  status.HTTP_400_BAD_REQUEST)
+
+
+class ProjectAccessView(viewsets.ModelViewSet):
+    queryset = ProjectAccess.objects.all()
+    serializer_class = ProjectAccessSerializer
+    permission_classes = [
+        IsAuthenticated & CheckAccessToProject
+    ]
 
 
 class ProjectView(EnablePartialUpdateMixin, viewsets.ModelViewSet):

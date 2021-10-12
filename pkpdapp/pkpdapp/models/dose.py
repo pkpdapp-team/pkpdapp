@@ -6,6 +6,14 @@
 
 from django.db import models
 from pkpdapp.models import Protocol
+from django.core.exceptions import ValidationError
+
+
+def validate_duration(value):
+    if value <= 0:
+        raise ValidationError(
+            'Duration should be greater than 0'
+        )
 
 
 class Dose(models.Model):
@@ -31,13 +39,22 @@ class Dose(models.Model):
         )
     )
     duration = models.FloatField(
-        default=0.0,
+        default=1.0,
         help_text=(
             'Duration of dose administration, '
             'see protocol for units. '
-            'For a bolus injection, set a dose duration of 0.'
-        )
+            'Duration must be greater than 0.'
+        ),
+        validators=[validate_duration]
     )
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                name="Duration must be greater than 0",
+                check=models.Q(duration__gt=0),
+            ),
+        ]
 
     def get_project(self):
         return self.protocol.get_project()

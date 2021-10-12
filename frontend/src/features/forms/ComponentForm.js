@@ -84,7 +84,7 @@ export default function ComponentForm({control, component, disableSave}) {
           <MathJaxPreview 
               math={eq} 
               style={{
-                "max-width": 600,
+                "maxWidth": 600,
               }}
               config={mathjaxConfig}
           />

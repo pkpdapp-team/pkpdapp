@@ -73,7 +73,6 @@ export function FormCheckboxField({control, name, defaultValue, label, ...rest})
                 checked={value}
                 inputRef={ref}
                 {...rest} 
-                defaultChecked={defaultValue}
               />
             }
             label={label}
@@ -320,9 +319,9 @@ export function FormSelectField({control, name, defaultValue, label, options, ..
           {...rest}
           {...field}
         >
-          {options.map(option => {
+          {options.map((option, i) => {
             return (
-              <MenuItem key={option.value} value={option.value}>{option.key}</MenuItem>
+              <MenuItem key={i} value={option.value}>{option.key}</MenuItem>
             )
           })}
         </Select>

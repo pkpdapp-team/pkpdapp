@@ -108,6 +108,7 @@ export default function ProtocolDetail({project, protocol}) {
       <Typography>Protocol</Typography>
       <FormTextField 
         control={control} 
+        defaultValue={protocol.name}
         name="name" label="Name"
       />
       <FormSelectField 
@@ -166,7 +167,7 @@ export default function ProtocolDetail({project, protocol}) {
       </Table>
       <IconButton aria-label="add" 
         onClick={() => append( 
-          { id: null, start_time: 0, amount: 0, duration: 0 }
+          { id: null, start_time: 0, amount: 0, duration: 1.0 }
         )}>
         <AddIcon />
       </IconButton>
