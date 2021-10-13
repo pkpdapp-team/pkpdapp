@@ -208,7 +208,8 @@ Description of a three compartment PK model here.
                     else:
                         raise RuntimeError(
                             'Unit {} {} ({}) does not exist'.format(
-                                unit, unit.exponents(), unit.multiplier_log_10()
+                                unit, unit.exponents(),
+                                unit.multiplier_log_10()
                             )
                         )
 
