@@ -239,7 +239,7 @@ export default function App() {
 
 
   const { pathname } = useLocation();
-  const modellingPath ="/modelling"
+  const modellingPath ="/simulation"
   const isModellingPath = !!matchPath(pathname, 
     {path: modellingPath, exact:true}
   )
@@ -290,7 +290,7 @@ export default function App() {
           component={Link} to={modellingPath} variant="contained"
           color={isModellingPath ? "secondary" : "primary"}
         >
-          Modelling
+          Simulation 
         </Button>
         </ButtonGroup>
 
@@ -326,7 +326,7 @@ export default function App() {
         <Container maxWidth={false}>
         <div className={classes.appBarSpacer} />
         <Switch>
-          <PrivateRoute path="/modelling" component={Modelling} />
+          <PrivateRoute path="/simulation" component={Modelling} />
           <PrivateRoute path="/" component={Projects} />
         </Switch>
         </Container>
