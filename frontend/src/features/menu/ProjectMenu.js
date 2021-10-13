@@ -45,7 +45,6 @@ const useStyles = makeStyles((theme) => ({
 
 
 export default function ProjectMenu() {
-  const { pathname } = useLocation();
   const classes = useStyles();
   const [dataAnalysisOpen, setDataAnalysisOpen] = React.useState(false);
   const handleDataAnalysisClick = () => {
@@ -54,74 +53,20 @@ export default function ProjectMenu() {
   const project = useSelector(selectChosenProject);
   console.log('got project', project)
 
-  const modellingPath ="/modelling"
-  const isModellingPath = !!matchPath(pathname, 
-    {path: modellingPath, exact:true}
-  )
-  const rootPath = "/"
-  const isRootPath = !!matchPath(pathname, 
-    {path: rootPath, exact:true}
-  )
-
   const disableSave = project ? userHasReadOnlyAccess(project) : true
+
+  const projectName = project ? project.name : "None";
 
   return (
     <List>
-      <ListItem button 
-        selected={isRootPath} 
-        component={Link} to={rootPath}>
-        <ListItemIcon>
-          <ListIcon />
-        </ListItemIcon>
-        <ListItemText primary='Projects' />
-      </ListItem>
-      <ListItem button 
-        selected={isModellingPath} 
-        component={Link} to={modellingPath}>
-        <ListItemIcon>
-          <VisibilityIcon />
-        </ListItemIcon>
-        <ListItemText primary='Modelling' />
-      </ListItem>
-      <ListItem button onClick={handleDataAnalysisClick}>
-        <ListItemIcon>
-          <TimelineIcon/>
-        </ListItemIcon>
-        <ListItemText primary='Data Analysis' />
-        {dataAnalysisOpen ? <ExpandLess /> : <ExpandMore />}
-      </ListItem>
-      <Collapse in={dataAnalysisOpen} timeout="auto" unmountOnExit>
-      <List component="div" disablePadding>
-       <ListItem button className={classes.nested}>
-        <ListItemIcon>
-          <CheckBoxOutlineBlankIcon />
-        </ListItemIcon>
-        <ListItemText primary='NCA' />
-       </ListItem>
-        <ListItem button className={classes.nested}>
-        <ListItemIcon>
-          <BubbleChartIcon />
-        </ListItemIcon>
-        <ListItemText primary='AUCE' />
-       </ListItem>
-      </List>
-      </Collapse>
-      <ListItem button >
-        <ListItemIcon>
-          <SettingsBackupRestoreIcon/>
-        </ListItemIcon>
-        <ListItemText primary='Inference' />
-      </ListItem>
-
-      <Divider />
-      {project &&
-      <React.Fragment>
         <ListItem button >
           <ListItemIcon>
             <AccountTreeIcon/>
           </ListItemIcon>
-          <ListItemText primary={"Project: " + project.name} />
+          <ListItemText primary={"Project: " + projectName} />
         </ListItem>
+      {project &&
+      <React.Fragment>
         <Divider />
         <Datasets project={project} disableSave={disableSave}/>
         <PdModels project={project} disableSave={disableSave}/>
