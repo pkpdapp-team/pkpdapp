@@ -28,9 +28,8 @@ export const addNewProtocol = createAsyncThunk(
       dose_ids: [],
       project: project.id,
     }
-    console.log('adding protocol', initialProtocol)
-    const protocol = await api.post('/api/protocol/', initialProtocol)
-    console.log('added protocol', protocol)
+    let protocol = await api.post('/api/protocol/', initialProtocol)
+    protocol.chosen = true
     return protocol
   }
 )
