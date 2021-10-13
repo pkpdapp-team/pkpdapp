@@ -86,7 +86,9 @@ export default function PdDetail({project, pd_model}) {
             <div className={classes.components}>
             <Accordion >
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Typography className={classes.heading}>{component.name}</Typography>
+                <Typography className={classes.heading}>
+                  {component.name === 'myokit' ? 'root' : component.name}
+                </Typography>
               </AccordionSummary>
               <AccordionDetails>
                 <ComponentForm 

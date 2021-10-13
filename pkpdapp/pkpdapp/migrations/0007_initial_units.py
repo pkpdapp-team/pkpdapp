@@ -31,24 +31,60 @@ def load_units(apps, schema_editor):
             'unit': 24 * h,
         },
         {
+            'symbol': '1/d',
+            'unit': 1 / (24 * h),
+        },
+        {
+            'symbol': '1/h',
+            'unit': 1 / h,
+        },
+        {
+            'symbol': 'L/mg/d',
+            'unit': L / (1e-3 * g * 24 * h),
+        },
+        {
             'symbol': 'L',
             'unit': L
+        },
+        {
+            'symbol': 'L/h',
+            'unit': L / h
+        },
+        {
+            'symbol': '1/L',
+            'unit': 1 / L
         },
         {
             'symbol': 'cm^3',
             'unit': (1e-2 * m)**3,
         },
         {
+            'symbol': 'cm^3/d',
+            'unit': (1e-2 * m)**3 / (24 * h),
+        },
+        {
             'symbol': 'g',
             'unit': g,
+        },
+        {
+            'symbol': 'ng',
+            'unit': 1e-9 * g,
         },
         {
             'symbol': 'ng/mL',
             'unit': 1e-9 * g / (1e-3 * L),
         },
         {
+            'symbol': 'mg/L',
+            'unit': 1e-3 * g / L,
+        },
+        {
             'symbol': 'ng/L',
             'unit': 1e-9 * g / L,
+        },
+        {
+            'symbol': 'g/L',
+            'unit': g / L,
         },
         {
             'symbol': '10^6/mcL',

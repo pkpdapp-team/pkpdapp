@@ -165,21 +165,51 @@ Description of a three compartment PK model here.
                 ).myokit_model()
 
                 for i, v in enumerate(myokit_model.variables()):
-                    try:
-                        unit = Unit.objects.get(
-                            symbol=str(v.unit())
-                        )
-                    except Unit.DoesNotExist:
-                        unit = Unit.objects.create(
-                            symbol=str(v.unit()),
-                            g=v.unit().exponents()[0],
-                            m=v.unit().exponents()[1],
-                            s=v.unit().exponents()[2],
-                            A=v.unit().exponents()[3],
-                            K=v.unit().exponents()[4],
-                            cd=v.unit().exponents()[5],
-                            mol=v.unit().exponents()[6],
-                            multiplier=v.unit().multiplier_log_10()
+                    unit = v.unit()
+                    exponents = unit.exponents()
+                    multiplier = unit.multiplier_log_10()
+                    close_enough = 1e-9
+                    close_enough_units = Unit.objects.filter(
+                        g__range=(
+                            exponents[0] - close_enough,
+                            exponents[0] + close_enough,
+                        ),
+                        m__range=(
+                            exponents[1] - close_enough,
+                            exponents[1] + close_enough,
+                        ),
+                        s__range=(
+                            exponents[2] - close_enough,
+                            exponents[2] + close_enough,
+                        ),
+                        A__range=(
+                            exponents[3] - close_enough,
+                            exponents[3] + close_enough,
+                        ),
+                        K__range=(
+                            exponents[4] - close_enough,
+                            exponents[4] + close_enough,
+                        ),
+                        cd__range=(
+                            exponents[5] - close_enough,
+                            exponents[5] + close_enough,
+                        ),
+                        mol__range=(
+                            exponents[6] - close_enough,
+                            exponents[6] + close_enough,
+                        ),
+                        multiplier__range=(
+                            multiplier - close_enough,
+                            multiplier + close_enough,
+                        ),
+                    )
+                    if close_enough_units.count() > 0:
+                        stored_unit = close_enough_units[0]
+                    else:
+                        raise RuntimeError(
+                            'Unit {} {} ({}) does not exist'.format(
+                                unit, unit.exponents(), unit.multiplier_log_10()
+                            )
                         )
 
                     Variable.objects.create(
@@ -187,7 +217,7 @@ Description of a three compartment PK model here.
                         qname=v.qname(),
                         constant=v.is_constant(),
                         state=v.is_state(),
-                        unit=unit,
+                        unit=stored_unit,
                         pd_model=model,
                         color=i,
                         display=v.name() != 'time',
@@ -214,6 +244,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('pkpdapp', '0003_initial_users_and_projects'),
+        ('pkpdapp', '0007_initial_units'),
     ]
 
     operations = [
