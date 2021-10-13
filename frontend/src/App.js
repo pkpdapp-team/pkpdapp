@@ -2,7 +2,10 @@ import React from "react";
 import {
   Switch,
   Route,
+  Link,
+  matchPath,
   Redirect,
+  useLocation,
   useHistory,
 } from "react-router-dom";
 
@@ -34,6 +37,7 @@ import Typography from '@material-ui/core/Typography';
 import Divider from '@material-ui/core/Divider';
 import IconButton from '@material-ui/core/IconButton';
 import Button from '@material-ui/core/Button';
+import ButtonGroup from '@material-ui/core/ButtonGroup';
 import MenuIcon from '@material-ui/icons/Menu';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 
@@ -41,6 +45,8 @@ import { api } from './Api'
 import Modelling from './features/modelling/Modelling'
 import Projects from './features/projects/Projects'
 import ProjectMenu from './features/menu/ProjectMenu'
+
+
 
 
 const PrivateRoute = ({ component: Component, componentProps, ...rest }) => {
@@ -231,6 +237,17 @@ export default function App() {
 
   let history = useHistory();
 
+
+  const { pathname } = useLocation();
+  const modellingPath ="/simulation"
+  const isModellingPath = !!matchPath(pathname, 
+    {path: modellingPath, exact:true}
+  )
+  const rootPath = "/"
+  const isRootPath = !!matchPath(pathname, 
+    {path: rootPath, exact:true}
+  )
+
   const logged_in = (
     <div className={classes.root}>
     <AppBar position="absolute" className={clsx(classes.appBar)}>
@@ -260,6 +277,24 @@ export default function App() {
             inputProps={{ 'aria-label': 'search' }}
           />
         </div>
+
+
+        <ButtonGroup variant="contained">
+        <Button 
+          component={Link} to={rootPath} variant="contained"
+          color={isRootPath ? "secondary" : "primary"}
+        >
+          Projects
+        </Button>
+        <Button 
+          component={Link} to={modellingPath} variant="contained"
+          color={isModellingPath ? "secondary" : "primary"}
+        >
+          Simulation 
+        </Button>
+        </ButtonGroup>
+
+
         <div className={classes.grow} />
         <Button color="inherit" onClick={() => {
           api.logout()
@@ -291,7 +326,7 @@ export default function App() {
         <Container maxWidth={false}>
         <div className={classes.appBarSpacer} />
         <Switch>
-          <PrivateRoute path="/modelling" component={Modelling} />
+          <PrivateRoute path="/simulation" component={Modelling} />
           <PrivateRoute path="/" component={Projects} />
         </Switch>
         </Container>

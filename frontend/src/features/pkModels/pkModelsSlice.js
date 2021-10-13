@@ -48,11 +48,12 @@ export const addNewPkModel = createAsyncThunk(
       name: 'new',
       project: project.id,
     }
-    const pkModel = await api.post(
+    let pkModel = await api.post(
       '/api/dosed_pharmacokinetic/', initialPkModel
     )
     dispatch(fetchVariablesByPkModel(pkModel.id))
     dispatch(fetchUnitsByPkModel(pkModel.id))
+    pkModel.chosen = true;
     return pkModel
   }
 )

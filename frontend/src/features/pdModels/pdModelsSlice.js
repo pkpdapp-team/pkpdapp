@@ -35,12 +35,14 @@ export const addNewPdModel = createAsyncThunk(
       name: 'new',
       project: project.id,
     }
-    const pdModel = await api.post(
+    let pdModel = await api.post(
       '/api/pharmacodynamic/', initialPdModel
     )
 
     dispatch(fetchVariablesByPdModel(pdModel.id))
     dispatch(fetchUnitsByPdModel(pdModel.id))
+
+    pdModel.chosen = true;
 
     return pdModel
   }

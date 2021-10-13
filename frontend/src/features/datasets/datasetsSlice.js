@@ -53,7 +53,8 @@ export const addNewDataset = createAsyncThunk(
       name: 'new',
       project: project.id,
     }
-    const dataset = await api.post('/api/dataset/', initialDataset)
+    let dataset = await api.post('/api/dataset/', initialDataset)
+    dataset.chosen = true
     return dataset
   }
 )

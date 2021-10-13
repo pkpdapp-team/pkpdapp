@@ -43,9 +43,9 @@ export default function VariableSubform({variable_id, disableSave}) {
       symbol: 'X'
     }
   }
-  const label = `${variable.name} ${unit.symbol}`
+  const label = `${variable.name} [${unit.symbol}]`
   let truncatedLabel = label
-  const maxLength = 22
+  const maxLength = 28
   if (label.length > maxLength) {
     truncatedLabel = label.slice(0, maxLength-2) + '...'
   }
