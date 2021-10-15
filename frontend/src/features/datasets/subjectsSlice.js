@@ -28,6 +28,14 @@ export const updateSubject = createAsyncThunk(
   }
 )
 
+export const fetchSubjectByProject = createAsyncThunk('subjects/fetchSubjectByProject', async (project_id, { getState }) => {
+
+  const response = await api.get(
+    `/api/subject/?project_id=${project_id}`
+  )
+  return response
+})
+
 export const subjectsSlice = createSlice({
   name: 'subjects',
   initialState, 
@@ -45,6 +53,7 @@ export const subjectsSlice = createSlice({
       state.status = 'succeeded'
       subjectsAdapter.addOne(state, action.payload)
     },
+    [fetchSubjectByProject.fulfilled]: subjectsAdapter.upsertMany,
     [updateSubject.fulfilled]: subjectsAdapter.upsertOne,
   }
 })

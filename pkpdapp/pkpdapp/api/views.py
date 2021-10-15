@@ -152,6 +152,14 @@ class ProjectFilter(filters.BaseFilterBackend):
                     queryset = project.pkpd_models
                 elif queryset.model == Protocol:
                     queryset = project.protocols
+                elif queryset.model == BiomarkerType:
+                    queryset = BiomarkerType.objects.filter(
+                        dataset__project=project
+                    )
+                elif queryset.model == Subject:
+                    queryset = Subject.objects.filter(
+                        dataset__project=project
+                    )
                 elif queryset.model == Variable:
                     queryset = queryset.filter(
                         Q(pd_model__project=project) |
@@ -351,11 +359,13 @@ class PkpdView(viewsets.ModelViewSet):
 class SubjectView(viewsets.ModelViewSet):
     queryset = Subject.objects.all()
     serializer_class = SubjectSerializer
+    filter_backends = [ProjectFilter]
 
 
 class BiomarkerTypeView(viewsets.ModelViewSet):
     queryset = BiomarkerType.objects.all()
     serializer_class = BiomarkerTypeSerializer
+    filter_backends = [ProjectFilter]
 
 
 class DatasetView(viewsets.ModelViewSet):
