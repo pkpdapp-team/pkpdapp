@@ -30,9 +30,9 @@ export default function SubjectSubform({subject_id, disableSave}) {
 
   const { isDirty } = useFormState({ control });
 
-  useEffect(() => {
-    reset(subject);
-  }, [reset, subject]);
+  //useEffect(() => {
+  //  reset(subject);
+  //}, [reset, subject]);
 
   const onSubmit = (values) => {
     console.log('submit subject', values)

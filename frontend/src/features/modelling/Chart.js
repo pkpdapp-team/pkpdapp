@@ -68,8 +68,11 @@ export default function ModellingChart({datasets, pkModels, pdModels}) {
     return dataset.biomarker_types
       .map(id => {
         const biomarker = biomarkers[id]
+        if (!biomarker) {
+          return null
+        }
         const subjectsDisplay = biomarker.data.subjects.map(
-          id => subjects[id].display
+          id => subjects[id] ? subjects[id].display : false
         )
         const subjectsDisplayFilter = (_, i) => subjectsDisplay[i]
         const times = biomarker.data.times.filter(subjectsDisplayFilter)

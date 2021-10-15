@@ -2,7 +2,7 @@ import {
   createSlice, createEntityAdapter, createAsyncThunk,
 } from '@reduxjs/toolkit'
 import { fetchBiomarkerTypesByProject } from './biomarkerTypesSlice'
-import { fetchSubjectByProject } from './subjectsSlice'
+import { fetchSubjectByProject, fetchSubjectByDataset } from './subjectsSlice'
 import { api } from '../../Api'
 
 const datasetsAdapter = createEntityAdapter({
@@ -49,14 +49,14 @@ export const addNewDataset = createAsyncThunk(
 )
 
 export const uploadDatasetCsv = createAsyncThunk(
-  'pdModels/uploadDatasetCsv',
+  'datasets/uploadDatasetCsv',
   async ({id, csv}, {dispatch, rejectWithValue}) => {
     const dataset = await api.putMultiPart(
       `/api/dataset/${id}/csv/`, {csv}
     ).catch(err => rejectWithValue(err))
 
-    dispatch(fetchBiomarkerTypesByProject(dataset.project))
-    dispatch(fetchSubjectByProject(dataset.project))
+    await dispatch(fetchBiomarkerTypesByProject(dataset.project))
+    await dispatch(fetchSubjectByDataset(dataset))
 
     return dataset
   }
@@ -111,14 +111,17 @@ export const datasetsSlice = createSlice({
     [updateDataset.fulfilled]: datasetsAdapter.upsertOne,
     [uploadDatasetCsv.pending]: (state, action) => {
       console.log('uploadcsv pending', action)
+      state.entities[action.meta.arg.id].status = 'loading'
       state.entities[action.meta.arg.id].errors = []
     },
     [uploadDatasetCsv.rejected]: (state, action) => {
       console.log('upload csv rejected', action)
+      state.entities[action.meta.arg.id].status = 'rejected'
       state.entities[action.meta.arg.id].errors = action.payload.csv
     },
     [uploadDatasetCsv.fulfilled]: (state, action) => {
       console.log('uploadcsv fulfilled', action)
+      state.entities[action.meta.arg.id].status = 'succeeded'
       datasetsAdapter.upsertOne(state, action)
     },
   }

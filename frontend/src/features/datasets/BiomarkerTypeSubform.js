@@ -25,7 +25,8 @@ export default function BiomarkerTypeSubform({biomarker_id, disableSave}) {
   let unit = useSelector(state => selectUnitById(state, unit_id));
   if (!unit) {
     unit  = {
-      symbol: 'X'
+      symbol: 'X',
+      compatible_units: [],
     }
   }
   const unitOptions = unit.compatible_units.map(
@@ -36,7 +37,8 @@ export default function BiomarkerTypeSubform({biomarker_id, disableSave}) {
   let time_unit = useSelector(state => selectUnitById(state, time_unit_id));
   if (!time_unit) {
     time_unit  = {
-      symbol: 'X'
+      symbol: 'X',
+      compatible_units: [],
     }
   }
   const timeUnitOptions = time_unit.compatible_units.map(
