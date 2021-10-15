@@ -15,21 +15,11 @@ const initialState = pkModelsAdapter.getInitialState({
   error: null,
 })
 
-function initSimulate(pdModel) {
-  pdModel['simulate'] = {
-    times: [],
-    subjects: [],
-    values: []
-  }
-  return pdModel
-}
-
 export const fetchPkModels = createAsyncThunk('pkModels/fetchPkModels', async (project, { dispatch }) => {
   const response = await api.get(
     `/api/dosed_pharmacokinetic/?project_id=${project.id}`
   )
   for (var i = 0; i < response.length; i++) { 
-    response[i] = initSimulate(response[i])
     dispatch(fetchPkModelSimulateById(response[i].id))
   }
   return response
@@ -41,7 +31,6 @@ export const fetchPkModelById = createAsyncThunk('pkModels/fetchPkModelById', as
   )
   dispatch(fetchVariablesByPkModel(response.id))
   dispatch(fetchUnitsByPkModel(response.id))
-  response = initSimulate(response)
   dispatch(fetchPkModelSimulateById(response.id))
   return response
 })
@@ -73,9 +62,9 @@ export const addNewPkModel = createAsyncThunk(
     let pkModel = await api.post(
       '/api/dosed_pharmacokinetic/', initialPkModel
     )
-    pkModel = initSimulate(pkModel)
     dispatch(fetchVariablesByPkModel(pkModel.id))
     dispatch(fetchUnitsByPkModel(pkModel.id))
+    dispatch(fetchPkModelSimulateById(pkModel.id))
     pkModel.chosen = true;
     return pkModel
   }
@@ -90,7 +79,6 @@ export const updatePkModel = createAsyncThunk(
     // an update could create new variables
     dispatch(fetchVariablesByPkModel(newPkModel.id))
     dispatch(fetchUnitsByPkModel(newPkModel.id))
-    newPkModel = initSimulate(newPkModel)
     dispatch(fetchPkModelSimulateById(newPkModel.id))
     //const simulateData = {
     //  outputs: pkModel.outputs.filter(x => x.default_value).map(x => x.name),
@@ -128,7 +116,6 @@ export const pkModelsSlice = createSlice({
     },
     [deletePkModel.fulfilled]: pkModelsAdapter.removeOne,
     [fetchPkModelById.fulfilled]: pkModelsAdapter.upsertOne,
-    [fetchPkModelSimulateById.fulfilled]: pkModelsAdapter.upsertOne,
     [fetchPkModelSimulateById.pending]: (state, action) => {
       if (state.ids.includes(action.meta.arg)) {
         state.entities[action.meta.arg].simulate = {

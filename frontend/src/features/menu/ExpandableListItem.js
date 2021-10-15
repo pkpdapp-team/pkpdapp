@@ -49,18 +49,15 @@ export default function ExpandableListItem(
       <Collapse in={open} timeout="auto" unmountOnExit>
       <List component="div" dense disablePadding>
         {items.map((item) => {
-          const 
-          const expandIcon = loading | simulateLoading ? 
-            (<CircularProgress size={20}/>)
-            : (<ExpandMoreIcon />)
+          const loading = item.status ? item.status === 'loading' : false
+          const simulateLoading = item.simulate ? item.simulate.status === 'loading' : type === 'pd_model' || type === 'pk_model'
 
-
-          if 
           return (
             <AvatarListItem
               key={item.id}
               item={item} 
               selected={item.chosen}
+              loading={loading | simulateLoading}
               small={true}
               handleClick={() => handleClickItem(item)}
             />

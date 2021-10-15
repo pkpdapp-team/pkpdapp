@@ -7,6 +7,7 @@ import Checkbox from '@material-ui/core/Checkbox';
 import Box from '@material-ui/core/Box';
 import classNames from 'classnames';
 import Tooltip from '@material-ui/core/Tooltip';
+import CircularProgress from '@material-ui/core/CircularProgress'
 import ListItemAvatar from '@material-ui/core/ListItemAvatar';
 import Avatar from '@material-ui/core/Avatar';
 import { makeStyles } from '@material-ui/core/styles';
@@ -27,7 +28,7 @@ const useStyles = makeStyles((theme) => ({
 
 
 
-export default function AvatarListItem({ nested, item, selected, handleClick, handleClickChecked, small, checked}) {
+export default function AvatarListItem({ nested, item, selected, handleClick, handleClickChecked, small, checked, loading}) {
   const classes = useStyles();
   const avatarClassName = classNames(
     (small ? classes.avatarSmall: null),
@@ -38,6 +39,26 @@ export default function AvatarListItem({ nested, item, selected, handleClick, ha
   );
 
   const marginAdjust = small ? 0 : 0;
+
+  let avatar = (
+    <ListItemAvatar>
+      <Avatar  
+        className={avatarClassName}
+      >
+      {item.name[0]}
+      </Avatar>
+    </ListItemAvatar>
+  )
+  if (loading) {
+    avatar = (
+      <ListItemAvatar>
+      <CircularProgress
+        size={23}
+      />
+      </ListItemAvatar>
+    )
+  }
+
 
   return (
     <Tooltip title={item.name} placement="right" arrow>
@@ -62,13 +83,7 @@ export default function AvatarListItem({ nested, item, selected, handleClick, ha
         </Box>
         }
         <Box mr={marginAdjust}>
-        <ListItemAvatar>
-          <Avatar  
-            className={avatarClassName}
-          >
-            {item.name[0]}
-          </Avatar>
-        </ListItemAvatar>
+          {avatar} 
         </Box>
         <ListItemText 
           primary={item.name} 
