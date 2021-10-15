@@ -104,30 +104,50 @@ export default function Modelling() {
           </Accordion>
           )
         })}
-        {chosenPdModels.map(pdModel => (
+        {chosenPdModels.map(pdModel => {
+          const loading = pdModel.status ? pdModel.status === 'loading' : false
+          const simulateLoading = pdModel.simulate ? pdModel.simulate.status === 'loading' : true
+          const expandIcon = loading | simulateLoading ? 
+            (<CircularProgress size={20}/>)
+            : (<ExpandMoreIcon />)
+
+          return (
           <Accordion key={pdModel.id}>
-            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <AccordionSummary expandIcon={expandIcon}>
               <Typography className={classes.heading}>
                 PD Model - {pdModel.name}
               </Typography>
             </AccordionSummary>
             <AccordionDetails>
+              {!loading &&
               <PdDetail project={project} pd_model={pdModel} />
+              }
             </AccordionDetails>
           </Accordion>
-        ))}
-        {chosenPkModels.map(pkModel => (
+          )
+        })}
+        {chosenPkModels.map(pkModel => {
+          const loading = pkModel.status ? pkModel.status === 'loading' : false
+          const simulateLoading = pkModel.simulate ? pkModel.simulate.status === 'loading' : true
+          const expandIcon = loading | simulateLoading ? 
+            (<CircularProgress size={20}/>)
+            : (<ExpandMoreIcon />)
+
+          return (
           <Accordion key={pkModel.id}>
-            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <AccordionSummary expandIcon={expandIcon}>
               <Typography className={classes.heading}>
                 PK Model - {pkModel.name}
               </Typography>
             </AccordionSummary>
             <AccordionDetails>
+              {!loading &&
               <PkDetail project={project} pk_model={pkModel} />
+              }
             </AccordionDetails>
           </Accordion>
-        ))}
+          )
+        })}
         {chosenProtocols.map(protocol => (
           <Accordion key={protocol.id}>
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>

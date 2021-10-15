@@ -48,15 +48,25 @@ export default function ExpandableListItem(
       </ListItem>
       <Collapse in={open} timeout="auto" unmountOnExit>
       <List component="div" dense disablePadding>
-        {items.map((item) => (
-          <AvatarListItem
-            key={item.id}
-            item={item} 
-            selected={item.chosen}
-            small={true}
-            handleClick={() => handleClickItem(item)}
-          />
-        ))}
+        {items.map((item) => {
+          const 
+          const expandIcon = loading | simulateLoading ? 
+            (<CircularProgress size={20}/>)
+            : (<ExpandMoreIcon />)
+
+
+          if 
+          return (
+            <AvatarListItem
+              key={item.id}
+              item={item} 
+              selected={item.chosen}
+              small={true}
+              handleClick={() => handleClickItem(item)}
+            />
+          )
+        }
+        )}
         <Tooltip title={`create ${text}`} placement="bottom">
         <ListItem 
           button 

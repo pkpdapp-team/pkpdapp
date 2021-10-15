@@ -310,9 +310,9 @@ class SimulateBaseView(views.APIView):
             m = self.model.objects.get(pk=pk)
         except self.model.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
-        outputs = request.data.get('outputs', [])
-        initial_conditions = request.data.get('initial_conditions', {})
-        variables = request.data.get('variables', {})
+        outputs = request.data.get('outputs', None)
+        initial_conditions = request.data.get('initial_conditions', None)
+        variables = request.data.get('variables', None)
         result = m.simulate(outputs, initial_conditions, variables)
         return Response(result)
 
