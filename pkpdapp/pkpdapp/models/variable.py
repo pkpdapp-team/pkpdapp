@@ -13,7 +13,29 @@ import myokit
 from django.db.models import Q
 
 
-class Variable(models.Model):
+class BaseVariable(models.Model):
+    """
+    An abstract base class for variable.
+    """
+    is_public = models.BooleanField(default=False)
+    lower_bound = models.FloatField(
+        default=1e-6,
+        help_text='lowest possible value for this variable'
+    )
+    upper_bound = models.FloatField(
+        default=2,
+        help_text='largest possible value for this variable'
+    )
+    default_value = models.FloatField(
+        default=1,
+        help_text='default value for this variable'
+    )
+
+    class Meta:
+        abstract = True
+
+
+class Variable(BaseVariable):
     """
     A single variable for a mechanistic model.
     """
@@ -62,18 +84,7 @@ class Variable(models.Model):
         default=False,
         help_text='True for a state variable of the model (default is False)'
     )
-    lower_bound = models.FloatField(
-        default=1e-6,
-        help_text='lowest possible value for this variable'
-    )
-    upper_bound = models.FloatField(
-        default=2,
-        help_text='largest possible value for this variable'
-    )
-    default_value = models.FloatField(
-        default=1,
-        help_text='default value for this variable'
-    )
+
     color = models.IntegerField(
         default=0,
         help_text=(
