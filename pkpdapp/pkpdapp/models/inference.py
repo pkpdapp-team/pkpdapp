@@ -65,20 +65,23 @@ class Inference(models.Model):
         help_text='optimisation algorithm to use for inference')
 
     number_of_iterations = models.IntegerField(
+        default=1000,
         help_text='number of iterations'
     )
 
     time_elapsed = models.IntegerField(
-        default=0,
+        blank=True, null=True,
         help_text='Elapsed run time for inference in seconds'
     )
 
     # potentially for optimisation too (as in number of starting points)
     number_of_chains = models.IntegerField(
+        default=4,
         help_text='number of chains'
     )
 
     number_of_function_evals = models.IntegerField(
+        blank=True, null=True,
         help_text='number of function evaluations'
     )
 
@@ -89,12 +92,6 @@ class StoredVariable(BaseVariable):
         blank=True, null=True,
         on_delete=models.CASCADE,
         help_text='pharmacodynamic model'
-    )
-    pk_model = models.ForeignKey(
-        StoredPharmacokineticModel,
-        blank=True, null=True,
-        on_delete=models.CASCADE,
-        help_text='pharmacokinetic model'
     )
     dosed_pk_model = models.ForeignKey(
         StoredDosedPharmacokineticModel,
@@ -108,12 +105,6 @@ class StoredVariable(BaseVariable):
 class StoredPharmacodynamicModel(PharmacodynamicModel):
     """
     Stored PD model.
-    """
-
-
-class StoredPharmacokineticModel(PharmacokineticModel):
-    """
-    Stored PK model.
     """
 
 

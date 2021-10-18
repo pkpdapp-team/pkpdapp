@@ -31,15 +31,6 @@ class BaseVariable(models.Model):
         help_text='default value for this variable'
     )
 
-    class Meta:
-        abstract = True
-
-
-class Variable(BaseVariable):
-    """
-    A single variable for a mechanistic model.
-    """
-
     name = models.CharField(max_length=20, help_text='name of the variable')
     qname = models.CharField(
         max_length=100, help_text='fully qualitifed name of the variable')
@@ -117,6 +108,7 @@ class Variable(BaseVariable):
     )
 
     class Meta:
+        abstract = True
         constraints = [
             models.CheckConstraint(
                 check=(
@@ -255,3 +247,9 @@ class Variable(BaseVariable):
                 'create_variable got unexpected model type {}'
                 .format(type(model)),
             )
+
+
+class Variable(BaseVariable):
+    """
+    A single variable for a mechanistic model.
+    """
