@@ -249,15 +249,6 @@ class NcaView(views.APIView):
     def get(self, request, format=None):
         errors = {
         }
-        subject_id = request.data.get('subject_id', None)
-        if subject_id is None:
-            errors['subject_id'] = "This field is required"
-        else:
-            try:
-                subject = Subject.objects.get(id=subject_id)
-            except Subject.DoesNotExist:
-                errors['subject_id'] = \
-                    "Subject id {} not found".format(subject_id)
 
         protocol_id = request.data.get('protocol_id', None)
         if protocol_id is None:
@@ -273,7 +264,7 @@ class NcaView(views.APIView):
                     "Protocol id {} does not have a subject"
                     .format(protocol_id)
                 )
-            if protocol.dose_type != DoseType.DIRECT:
+            if protocol.dose_type != Dose.DoseType.DIRECT:
                 errors['protocol_id'] = \
                     "Protocol is required to have an IV dose type"
 
@@ -285,8 +276,10 @@ class NcaView(views.APIView):
                 biomarker_type = \
                     BiomarkerType.objects.get(id=biomarker_type_id)
             except BiomarkerType.DoesNotExist:
-                errors['biomarker_type_id'] = \
-                    "BiomarkerType id {} no found".format(biomarker_type_id)
+                errors['biomarker_type_id'] = (
+                    "BiomarkerType id {} not found"
+                    .format(biomarker_type_id)
+                )
 
         if errors:
             return Response(
@@ -301,7 +294,7 @@ class NcaView(views.APIView):
             errors['biomarker_type'] = (
                 "BiomarkerType {} does not have measurements "
                 "for subject id {}."
-                .format(biomarker_type.id, subject.id)
+                .format(biomarker_type.id, protocol.subject.id)
             )
 
 

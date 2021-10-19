@@ -40,7 +40,7 @@ class NcaSerializer(serializers.Serializer):
        child=serializers.FloatField()
     )
     dose_amount = serializers.FloatField()
-    administration_route = serializers.StringField()
+    administration_route = serializers.CharField()
     auc_0_last = serializers.FloatField()
     aumc_0_last = serializers.FloatField()
     lambda_z = serializers.FloatField()
