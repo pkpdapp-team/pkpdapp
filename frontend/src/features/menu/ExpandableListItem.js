@@ -48,15 +48,22 @@ export default function ExpandableListItem(
       </ListItem>
       <Collapse in={open} timeout="auto" unmountOnExit>
       <List component="div" dense disablePadding>
-        {items.map((item) => (
-          <AvatarListItem
-            key={item.id}
-            item={item} 
-            selected={item.chosen}
-            small={true}
-            handleClick={() => handleClickItem(item)}
-          />
-        ))}
+        {items.map((item) => {
+          const loading = item.status ? item.status === 'loading' : false
+          const simulateLoading = item.simulate ? item.simulate.status === 'loading' : type === 'pd_model' || type === 'pk_model'
+
+          return (
+            <AvatarListItem
+              key={item.id}
+              item={item} 
+              selected={item.chosen}
+              loading={loading | simulateLoading}
+              small={true}
+              handleClick={() => handleClickItem(item)}
+            />
+          )
+        }
+        )}
         <Tooltip title={`create ${text}`} placement="bottom">
         <ListItem 
           button 

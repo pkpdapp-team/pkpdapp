@@ -10,6 +10,7 @@ import Chart from './Chart'
 import Accordion from '@material-ui/core/Accordion';
 import AccordionSummary from '@material-ui/core/AccordionSummary';
 import AccordionDetails from '@material-ui/core/AccordionDetails';
+import CircularProgress from '@material-ui/core/CircularProgress'
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import Typography from '@material-ui/core/Typography';
 
@@ -82,42 +83,70 @@ export default function Modelling() {
           </Paper>
         </Grid>
         <Grid item xs={12} md={6} >
-        {chosenDatasets.map(dataset => (
+        {chosenDatasets.map(dataset => {
+          const loading = dataset.status ? dataset.status === 'loading' : false
+          const expandIcon = loading ? 
+            (<CircularProgress size={20}/>)
+            : (<ExpandMoreIcon />)
+          return (
           <Accordion key={dataset.id}>
-            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <AccordionSummary expandIcon={expandIcon}>
               <Typography className={classes.heading}>
                 Dataset - {dataset.name}
               </Typography>
             </AccordionSummary>
             <AccordionDetails>
+              {!loading &&
               <DatasetDetail  dataset={dataset} project={project}/>
+              }
             </AccordionDetails>
           </Accordion>
-        ))}
-        {chosenPdModels.map(pdModel => (
+          )
+        })}
+        {chosenPdModels.map(pdModel => {
+          const loading = pdModel.status ? pdModel.status === 'loading' : false
+          const simulateLoading = pdModel.simulate ? pdModel.simulate.status === 'loading' : true
+          const expandIcon = loading | simulateLoading ? 
+            (<CircularProgress size={20}/>)
+            : (<ExpandMoreIcon />)
+
+          return (
           <Accordion key={pdModel.id}>
-            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <AccordionSummary expandIcon={expandIcon}>
               <Typography className={classes.heading}>
                 PD Model - {pdModel.name}
               </Typography>
             </AccordionSummary>
             <AccordionDetails>
+              {!loading &&
               <PdDetail project={project} pd_model={pdModel} />
+              }
             </AccordionDetails>
           </Accordion>
-        ))}
-        {chosenPkModels.map(pkModel => (
+          )
+        })}
+        {chosenPkModels.map(pkModel => {
+          const loading = pkModel.status ? pkModel.status === 'loading' : false
+          const simulateLoading = pkModel.simulate ? pkModel.simulate.status === 'loading' : true
+          const expandIcon = loading | simulateLoading ? 
+            (<CircularProgress size={20}/>)
+            : (<ExpandMoreIcon />)
+
+          return (
           <Accordion key={pkModel.id}>
-            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <AccordionSummary expandIcon={expandIcon}>
               <Typography className={classes.heading}>
                 PK Model - {pkModel.name}
               </Typography>
             </AccordionSummary>
             <AccordionDetails>
+              {!loading &&
               <PkDetail project={project} pk_model={pkModel} />
+              }
             </AccordionDetails>
           </Accordion>
-        ))}
+          )
+        })}
         {chosenProtocols.map(protocol => (
           <Accordion key={protocol.id}>
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>

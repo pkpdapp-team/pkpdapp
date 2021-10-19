@@ -105,7 +105,6 @@ def _serialize_component(model, component, myokit_model):
 
 class DosedPharmacokineticSerializer(serializers.ModelSerializer):
     components = serializers.SerializerMethodField('get_components')
-    simulate = serializers.SerializerMethodField('get_simulate')
     variables = serializers.PrimaryKeyRelatedField(
         many=True, read_only=True
     )
@@ -116,9 +115,6 @@ class DosedPharmacokineticSerializer(serializers.ModelSerializer):
             _serialize_component(m, c, model)
             for c in model.components(sort=True)
         ]
-
-    def get_simulate(self, m):
-        return m.simulate()
 
     class Meta:
         model = DosedPharmacokineticModel
@@ -127,7 +123,6 @@ class DosedPharmacokineticSerializer(serializers.ModelSerializer):
 
 class PharmacodynamicSerializer(serializers.ModelSerializer):
     components = serializers.SerializerMethodField('get_components')
-    simulate = serializers.SerializerMethodField('get_simulate')
     variables = serializers.PrimaryKeyRelatedField(
         many=True, read_only=True
     )
@@ -138,9 +133,6 @@ class PharmacodynamicSerializer(serializers.ModelSerializer):
             _serialize_component(m, c, model)
             for c in model.components(sort=True)
         ]
-
-    def get_simulate(self, m):
-        return m.simulate()
 
     class Meta:
         model = PharmacodynamicModel

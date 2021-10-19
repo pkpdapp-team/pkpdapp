@@ -1,6 +1,7 @@
 let authToken;
 let _loggedInUser;
 
+
 const isEmpty = value =>
   value === undefined ||
   value === null ||
@@ -156,9 +157,14 @@ function handleResponse(response) {
         } catch(e) {
             alert(text);
         }
+        if (response.status === 401) {
+          authToken = null;
+          localStorage.removeItem("authToken");
+          localStorage.removeItem("loggedInUser");
+        }
         if (!response.ok) {
-            console.log('API error:', response.statusText, data)
-            return Promise.reject(data);
+          console.log('API error:', response, response.statusText, data)
+          return Promise.reject(data);
         }
 
         return data;

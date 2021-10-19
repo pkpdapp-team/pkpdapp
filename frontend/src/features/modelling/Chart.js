@@ -31,16 +31,23 @@ export default function ModellingChart({datasets, pkModels, pdModels}) {
   const variables = useSelector((state) => state.variables.entities)
 
   const getChartData = (model) => {
-    const have_all_variables = Object.keys(model.simulate)
-      .filter(id => id in variables).length === Object.keys(model.simulate).length 
+    console.log('getChartData')
+    if (!model.simulate) {
+      return {}
+    }
+    let model_simulate = {...model.simulate}
+    delete model_simulate.status
+    const have_all_variables = Object.keys(model_simulate)
+      .filter(id => id in variables).length === Object.keys(model_simulate).length 
     if (!have_all_variables) {
       return {}
     }
-    const time_id = Object.keys(model.simulate)
+    const time_id = Object.keys(model_simulate)
       .filter(id => variables[id].name === 'time')[0]
 
-    return Object.entries(model.simulate).map(([variable_id, data]) => {
+    return Object.entries(model_simulate).map(([variable_id, data]) => {
       const variable = variables[variable_id]
+      console.log('doing variable', variable, variable_id)
       const color = getColor(variable.color)
       if (!variable.display) {
         return null;
@@ -59,7 +66,7 @@ export default function ModellingChart({datasets, pkModels, pdModels}) {
         fill: false,
         lineTension: 0,
         interpolate: true,
-        data: data.map((y, i) => ({x: model.simulate[time_id][i], y: y}))
+        data: data.map((y, i) => ({x: model_simulate[time_id][i], y: y}))
       }
     }).filter(x => x);
   }
@@ -68,8 +75,11 @@ export default function ModellingChart({datasets, pkModels, pdModels}) {
     return dataset.biomarker_types
       .map(id => {
         const biomarker = biomarkers[id]
+        if (!biomarker) {
+          return null
+        }
         const subjectsDisplay = biomarker.data.subjects.map(
-          id => subjects[id].display
+          id => subjects[id] ? subjects[id].display : false
         )
         const subjectsDisplayFilter = (_, i) => subjectsDisplay[i]
         const times = biomarker.data.times.filter(subjectsDisplayFilter)
