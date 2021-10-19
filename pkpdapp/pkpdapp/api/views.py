@@ -245,61 +245,145 @@ class CheckAccessToProject(BasePermission):
         return True
 
 
+class NcaView(views.APIView):
+    def get(self, request, format=None):
+        errors = {
+        }
+        subject_id = request.data.get('subject_id', None)
+        if subject_id is None:
+            errors['subject_id'] = "This field is required"
+        else:
+            try:
+                subject = Subject.objects.get(id=subject_id)
+            except Subject.DoesNotExist:
+                errors['subject_id'] = \
+                    "Subject id {} not found".format(subject_id)
+
+        protocol_id = request.data.get('protocol_id', None)
+        if protocol_id is None:
+            errors['protocol_id'] = "This field is required"
+        else:
+            try:
+                protocol = Protocol.objects.get(id=protocol_id)
+            except Protocol.DoesNotExist:
+                errors['protocol_id'] = \
+                    "Protocol id {} not found".format(protocol_id)
+            if not protocol.subject:
+                errors['protocol_id'] = (
+                    "Protocol id {} does not have a subject"
+                    .format(protocol_id)
+                )
+            if protocol.dose_type != DoseType.DIRECT:
+                errors['protocol_id'] = \
+                    "Protocol is required to have an IV dose type"
+
+        biomarker_type_id = request.data.get('biomarker_type_id', None)
+        if biomarker_type_id is None:
+            errors['biomarker_type_id'] = "This field is required"
+        else:
+            try:
+                biomarker_type = \
+                    BiomarkerType.objects.get(id=biomarker_type_id)
+            except BiomarkerType.DoesNotExist:
+                errors['biomarker_type_id'] = \
+                    "BiomarkerType id {} no found".format(biomarker_type_id)
+
+        if errors:
+            return Response(
+                errors, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        df = biomarker_type.as_pandas().filter(
+            items=[protocol.subject.id],
+            axis='subjects'
+        )
+        if df.shape[0] == 0:
+            errors['biomarker_type'] = (
+                "BiomarkerType {} does not have measurements "
+                "for subject id {}."
+                .format(biomarker_type.id, subject.id)
+            )
+
+
+        doses = Dose.objects.filter(
+            protocol=protocol
+        ).all()
+
+        if len(doses) != 1:
+            errors['protocol_id'] = (
+                "Protocol id {} has {} doses, only a single dose. "
+                "Please choose a protocol with only one dose."
+                .format(protocol.id, len(doses))
+            )
+
+        if errors:
+            return Response(
+                errors, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        times = df['times'].tolist()
+        concentrations = df['values'].tolist()
+        dose_amount = doses[0].amount
+
+        nca = NCA(times, concentrations, dose_amount)
+        serializer = NcaSerializer(nca)
+        return Response(serializer.data)
+
+
 class ProtocolView(viewsets.ModelViewSet):
-    queryset = Protocol.objects.all()
-    serializer_class = ProtocolSerializer
-    filter_backends = [ProjectFilter]
-    permission_classes = [IsAuthenticated & NotADatasetProtocol]
-    permission_classes = [
+    queryset=Protocol.objects.all()
+    serializer_class=ProtocolSerializer
+    filter_backends=[ProjectFilter]
+    permission_classes=[IsAuthenticated & NotADatasetProtocol]
+    permission_classes=[
         IsAuthenticated & NotADatasetProtocol & CheckAccessToProject
     ]
 
 
 class UnitView(viewsets.ModelViewSet):
-    queryset = Unit.objects.all()
-    serializer_class = UnitSerializer
-    filter_backends = [DosedPkModelFilter, PdModelFilter]
+    queryset=Unit.objects.all()
+    serializer_class=UnitSerializer
+    filter_backends=[DosedPkModelFilter, PdModelFilter]
 
 
 class NotADatasetDose(BasePermission):
     def has_object_permission(self, request, view, obj):
-        is_update_method = \
-            request.method == 'PUT' or request.method == 'PATCH'
+        is_update_method=request.method == 'PUT' or request.method == 'PATCH'
         if is_update_method and obj.protocol.dataset:
             return False
         return True
 
 
 class DoseView(viewsets.ModelViewSet):
-    queryset = Dose.objects.all()
-    serializer_class = DoseSerializer
-    permission_classes = [
+    queryset=Dose.objects.all()
+    serializer_class=DoseSerializer
+    permission_classes=[
         IsAuthenticated & NotADatasetDose & CheckAccessToProject
     ]
 
 
 class PharmacokineticView(viewsets.ModelViewSet):
-    queryset = PharmacokineticModel.objects.all()
-    serializer_class = PharmacokineticSerializer
-    permission_classes = [
+    queryset=PharmacokineticModel.objects.all()
+    serializer_class=PharmacokineticSerializer
+    permission_classes=[
         IsAuthenticated & CheckAccessToProject
     ]
 
 
 class VariableView(viewsets.ModelViewSet):
-    queryset = Variable.objects.all()
-    serializer_class = VariableSerializer
-    filter_backends = [ProjectFilter, DosedPkModelFilter, PdModelFilter]
-    permission_classes = [
+    queryset=Variable.objects.all()
+    serializer_class=VariableSerializer
+    filter_backends=[ProjectFilter, DosedPkModelFilter, PdModelFilter]
+    permission_classes=[
         IsAuthenticated & CheckAccessToProject
     ]
 
 
 class DosedPharmacokineticView(viewsets.ModelViewSet):
-    queryset = DosedPharmacokineticModel.objects.all()
-    serializer_class = DosedPharmacokineticSerializer
-    filter_backends = [ProjectFilter]
-    permission_classes = [
+    queryset=DosedPharmacokineticModel.objects.all()
+    serializer_class=DosedPharmacokineticSerializer
+    filter_backends=[ProjectFilter]
+    permission_classes=[
         IsAuthenticated & CheckAccessToProject
     ]
 
@@ -307,37 +391,37 @@ class DosedPharmacokineticView(viewsets.ModelViewSet):
 class SimulateBaseView(views.APIView):
     def post(self, request, pk, format=None):
         try:
-            m = self.model.objects.get(pk=pk)
+            m=self.model.objects.get(pk=pk)
         except self.model.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
-        outputs = request.data.get('outputs', None)
-        initial_conditions = request.data.get('initial_conditions', None)
-        variables = request.data.get('variables', None)
-        result = m.simulate(outputs, initial_conditions, variables)
+        outputs=request.data.get('outputs', None)
+        initial_conditions=request.data.get('initial_conditions', None)
+        variables=request.data.get('variables', None)
+        result=m.simulate(outputs, initial_conditions, variables)
         return Response(result)
 
 
 class SimulatePkView(SimulateBaseView):
-    model = DosedPharmacokineticModel
+    model=DosedPharmacokineticModel
 
 
 class PharmacodynamicView(viewsets.ModelViewSet):
-    queryset = PharmacodynamicModel.objects.all()
-    serializer_class = PharmacodynamicSerializer
-    filter_backends = [ProjectFilter]
-    permission_classes = [
+    queryset=PharmacodynamicModel.objects.all()
+    serializer_class=PharmacodynamicSerializer
+    filter_backends=[ProjectFilter]
+    permission_classes=[
         IsAuthenticated & CheckAccessToProject
     ]
 
-    @decorators.action(
+    @ decorators.action(
         detail=True,
         methods=['PUT'],
         serializer_class=PharmacodynamicSbmlSerializer,
         parser_classes=[parsers.MultiPartParser],
     )
     def sbml(self, request, pk):
-        obj = self.get_object()
-        serializer = self.serializer_class(obj, data=request.data,
+        obj=self.get_object()
+        serializer=self.serializer_class(obj, data=request.data,
                                            partial=True)
         if serializer.is_valid():
             serializer.save()
@@ -347,64 +431,64 @@ class PharmacodynamicView(viewsets.ModelViewSet):
 
 
 class SimulatePdView(SimulateBaseView):
-    model = PharmacodynamicModel
+    model=PharmacodynamicModel
 
 
 class PkpdView(viewsets.ModelViewSet):
-    queryset = PkpdModel.objects.all()
-    serializer_class = PkpdSerializer
-    filter_backends = [ProjectFilter]
+    queryset=PkpdModel.objects.all()
+    serializer_class=PkpdSerializer
+    filter_backends=[ProjectFilter]
 
 
 class SubjectView(viewsets.ModelViewSet):
-    queryset = Subject.objects.all()
-    serializer_class = SubjectSerializer
-    filter_backends = [ProjectFilter]
+    queryset=Subject.objects.all()
+    serializer_class=SubjectSerializer
+    filter_backends=[ProjectFilter]
 
 
 class BiomarkerTypeView(viewsets.ModelViewSet):
-    queryset = BiomarkerType.objects.all()
-    serializer_class = BiomarkerTypeSerializer
-    filter_backends = [ProjectFilter]
+    queryset=BiomarkerType.objects.all()
+    serializer_class=BiomarkerTypeSerializer
+    filter_backends=[ProjectFilter]
 
 
 class DatasetView(viewsets.ModelViewSet):
-    queryset = Dataset.objects.all()
-    serializer_class = DatasetSerializer
-    filter_backends = [ProjectFilter]
+    queryset=Dataset.objects.all()
+    serializer_class=DatasetSerializer
+    filter_backends=[ProjectFilter]
 
-    @decorators.action(
+    @ decorators.action(
         detail=True,
         serializer_class=DatasetCsvSerializer,
         methods=['PUT'],
         parser_classes=[parsers.MultiPartParser],
     )
     def csv(self, request, pk):
-        obj = self.get_object()
-        serializer = self.serializer_class(obj, data=request.data,
+        obj=self.get_object()
+        serializer=self.serializer_class(obj, data=request.data,
                                            partial=True)
         if serializer.is_valid():
             serializer.save()
-            dataset_serializer = DatasetSerializer(obj)
+            dataset_serializer=DatasetSerializer(obj)
             return response.Response(dataset_serializer.data)
         return response.Response(serializer.errors,
                                  status.HTTP_400_BAD_REQUEST)
 
 
 class ProjectAccessView(viewsets.ModelViewSet):
-    queryset = ProjectAccess.objects.all()
-    serializer_class = ProjectAccessSerializer
-    permission_classes = [
+    queryset=ProjectAccess.objects.all()
+    serializer_class=ProjectAccessSerializer
+    permission_classes=[
         IsAuthenticated & CheckAccessToProject
     ]
 
 
 class ProjectView(EnablePartialUpdateMixin, viewsets.ModelViewSet):
-    queryset = Project.objects.all()
-    serializer_class = ProjectSerializer
-    filter_backends = [UserAccessFilter]
+    queryset=Project.objects.all()
+    serializer_class=ProjectSerializer
+    filter_backends=[UserAccessFilter]
 
 
 class UserView(viewsets.ModelViewSet):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
+    queryset=User.objects.all()
+    serializer_class=UserSerializer
