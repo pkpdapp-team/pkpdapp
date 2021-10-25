@@ -215,7 +215,6 @@ export function NcaChart({nca, biomarker_type, subject, mode}) {
       "AUMC = " + nca.aumc.toPrecision(rounding),
       "AUMC_extrap_percent = " + nca.aumc_extrap_percent.toPrecision(rounding)
     ]
-    console.log('aumc', aumcHoverPoint, aumcInfHoverPoint)
 
     datasets.push({
       borderColor: getColor(8),
@@ -281,10 +280,6 @@ export function NcaChart({nca, biomarker_type, subject, mode}) {
       ]
     })
   }
-
-
-
-  console.log(datasets)
 
   const data = { datasets }
 
