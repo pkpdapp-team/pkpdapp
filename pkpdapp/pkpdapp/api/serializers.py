@@ -41,6 +41,7 @@ class NcaSerializer(serializers.Serializer):
     )
     dose_amount = serializers.FloatField()
     administration_route = serializers.CharField()
+    c_0 = serializers.FloatField()
     auc_0_last = serializers.FloatField()
     aumc_0_last = serializers.FloatField()
     lambda_z = serializers.FloatField()

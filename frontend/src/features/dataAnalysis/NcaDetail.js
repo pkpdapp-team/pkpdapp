@@ -13,13 +13,22 @@ import MenuItem from '@material-ui/core/MenuItem';
 import FormControl from '@material-ui/core/FormControl';
 
 
-import {selectDatasetProtocols} from '../protocols/protocolsSlice';
-import {selectBiomarkerTypesByDatasetId} from '../datasets/biomarkerTypesSlice';
+import { NcaChart } from './NcaChart'
+import {selectDatasetProtocols, selectProtocolById} from '../protocols/protocolsSlice';
+import {
+  selectBiomarkerTypesByDatasetId, selectBiomarkerTypeById
+} from '../datasets/biomarkerTypesSlice';
+
+import { selectSubjectById } from '../datasets/subjectsSlice'
 
 
 import { api } from '../../Api'
 
 const useStyles = makeStyles((theme) => ({
+  root: {
+    marginTop: theme.spacing(2),
+    flexGrow: 1,
+  },
   formControl: {
     margin: theme.spacing(1),
     minWidth: 120,
@@ -33,7 +42,30 @@ export default function NcaDetail({project, dataset}) {
   const classes = useStyles();
   const [nca, setNca] = useState(null);
   const [protocolId, setProtocolId] = useState(null);
+  const [mode, setMode] = useState('data');
+  const modeOptions = [
+    {key: 'Data', value: 'data'},
+    {key: 'Maximum and Extrapolation', value: 'extrapolation'},
+    {key: 'Area Under the Curve', value: 'auc'},
+    {key: 'Area Under the First Moment', value: 'aucm'},
+  ]
+
   const [biomarkerTypeId, setBiomarkerTypeId] = useState(null);
+  const biomarker_type = useSelector(
+    (state) => biomarkerTypeId ?
+      selectBiomarkerTypeById(state, biomarkerTypeId) : null
+  )
+  const protocol = useSelector(
+    (state) => protocolId ?
+      selectProtocolById(state, protocolId) : null
+  )
+
+  const subject = useSelector(
+    (state) => protocol ?
+      selectSubjectById(state, protocol.subject) : null
+  )
+
+  console.log('biomarker_type', biomarker_type)
 
   const protocols = useSelector(
     state => selectDatasetProtocols(state, dataset)
@@ -43,9 +75,18 @@ export default function NcaDetail({project, dataset}) {
     state => selectBiomarkerTypesByDatasetId(state, dataset.id)
   );
 
+  const subjectsInBiomarkerType = biomarkerTypeId ? 
+    biomarker_type.data.subjects : null
+
+  const filteredProtocols = subjectsInBiomarkerType ? 
+    protocols.filter(
+      protocol => subjectsInBiomarkerType.includes(protocol.subject)
+    )
+    : protocols
+
   useEffect(() => {
     if (biomarkerTypeId != null && protocolId != null) {
-      api.get(
+      api.post(
         `/api/nca/`, {
           biomarker_type_id: biomarkerTypeId, 
           protocol_id: protocolId
@@ -60,30 +101,15 @@ export default function NcaDetail({project, dataset}) {
   const handleBiomarkerTypeChange = (event) => {
     setBiomarkerTypeId(event.target.value)
   }
+  const handleModeChange = (event) => {
+    setMode(event.target.value)
+  }
 
   console.log('nca', nca)
 
   return (
-    <div>
-
-    <FormControl className={classes.formControl}>
-    <InputLabel id="protocol-label">
-      Protocol
-    </InputLabel>
-    <Select
-      onChange={handleProtocolChange}
-      labelId="protocol-label"
-      value={protocolId || ''}
-    >
-      {protocols.map((protocol, i) => {
-        return (
-          <MenuItem key={protocol.id} value={protocol.id}>
-            {protocol.name}
-          </MenuItem>
-        )
-      })}
-    </Select>
-    </FormControl>
+    <div className={classes.root}>
+    
     <FormControl className={classes.formControl}>
     <InputLabel id="biomarker-type-label">
       Variable 
@@ -102,6 +128,57 @@ export default function NcaDetail({project, dataset}) {
       })}
     </Select>
     </FormControl>
+
+    <FormControl className={classes.formControl}>
+    <InputLabel id="protocol-label">
+      Protocol
+    </InputLabel>
+    <Select
+      onChange={handleProtocolChange}
+      labelId="protocol-label"
+      value={protocolId || ''}
+    >
+      {filteredProtocols.map((protocol, i) => {
+        return (
+          <MenuItem key={protocol.id} value={protocol.id}>
+            {protocol.name}
+          </MenuItem>
+        )
+      })}
+    </Select>
+    </FormControl>
+
+    {nca &&
+      <FormControl className={classes.formControl}>
+      <InputLabel id="mode-label">
+        Show
+      </InputLabel>
+      <Select
+        onChange={handleModeChange}
+        labelId="mode-label"
+        value={mode || ''}
+      >
+        {modeOptions.map((mode, i) => {
+          return (
+            <MenuItem key={mode.value} value={mode.value}>
+              {mode.key}
+            </MenuItem>
+          )
+        })}
+      </Select>
+      </FormControl>
+    }
+
+
+    { nca &&
+    <NcaChart 
+      nca={nca} 
+      biomarker_type={biomarker_type}
+      subject={subject}
+      mode={mode}
+    />
+    }
+
     </div>
 
   )

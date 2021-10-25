@@ -149,7 +149,6 @@ export default function ModellingChart({datasets, pkModels, pdModels}) {
       },
       tooltip: {
         mode: 'interpolate',
-        intersect: false,
         callbacks: {
           title: function(a, d) {
             return a[0].element.x.toPrecision(4);

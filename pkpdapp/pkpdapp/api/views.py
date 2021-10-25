@@ -26,6 +26,7 @@ from .serializers import (
     VariableSerializer,
     SubjectSerializer,
     ProjectAccessSerializer,
+    NcaSerializer,
 )
 
 from pkpdapp.models import (
@@ -42,6 +43,9 @@ from pkpdapp.models import (
     Subject,
     ProjectAccess,
 )
+
+from pkpdapp.utils import NCA
+
 from django.contrib.auth.models import User
 from django.db.models import Q
 
@@ -246,10 +250,9 @@ class CheckAccessToProject(BasePermission):
 
 
 class NcaView(views.APIView):
-    def get(self, request, format=None):
+    def post(self, request, format=None):
         errors = {
         }
-
         protocol_id = request.data.get('protocol_id', None)
         if protocol_id is None:
             errors['protocol_id'] = "This field is required"
@@ -264,7 +267,7 @@ class NcaView(views.APIView):
                     "Protocol id {} does not have a subject"
                     .format(protocol_id)
                 )
-            if protocol.dose_type != Dose.DoseType.DIRECT:
+            if protocol.dose_type != Protocol.DoseType.DIRECT:
                 errors['protocol_id'] = \
                     "Protocol is required to have an IV dose type"
 
@@ -285,11 +288,9 @@ class NcaView(views.APIView):
             return Response(
                 errors, status=status.HTTP_400_BAD_REQUEST
             )
+        df = biomarker_type.as_pandas()
+        df = df.loc[df['subjects'] == protocol.subject.id]
 
-        df = biomarker_type.as_pandas().filter(
-            items=[protocol.subject.id],
-            axis='subjects'
-        )
         if df.shape[0] == 0:
             errors['biomarker_type'] = (
                 "BiomarkerType {} does not have measurements "
@@ -319,6 +320,7 @@ class NcaView(views.APIView):
         dose_amount = doses[0].amount
 
         nca = NCA(times, concentrations, dose_amount)
+        nca.calculate_nca()
         serializer = NcaSerializer(nca)
         return Response(serializer.data)
 
