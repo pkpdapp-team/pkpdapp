@@ -34,10 +34,10 @@ class DoseSerializer(serializers.ModelSerializer):
 
 class NcaSerializer(serializers.Serializer):
     times = serializers.ListField(
-       child=serializers.FloatField()
+        child=serializers.FloatField()
     )
     concentrations = serializers.ListField(
-       child=serializers.FloatField()
+        child=serializers.FloatField()
     )
     dose_amount = serializers.FloatField()
     administration_route = serializers.CharField()

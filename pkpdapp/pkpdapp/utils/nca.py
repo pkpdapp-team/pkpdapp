@@ -153,7 +153,8 @@ class NCA():
         Returns:
         :return aumc {float} -- aumc
         """
-        y = self.concentrations * self.times  # conc * time for first moment curve
+        # conc * time for first moment curve
+        y = self.concentrations * self.times
         x = self.times
         aumc = self.linlog_trapz(y, x, linlog=linlog)
         return aumc
@@ -280,7 +281,10 @@ class NCA():
         doses only).
         :return: {float} -- apparent volume of distribution
         """
-        return (self.dose_amount * self.aumc) / (self.auc_infinity * self.lambda_z)
+        return (
+            (self.dose_amount * self.aumc) /
+            (self.auc_infinity * self.lambda_z)
+        )
 
     def _V_z(self):
         """
