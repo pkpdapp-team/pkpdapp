@@ -50,6 +50,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('django.contrib.auth.urls')),
     path('api/', include(router.urls), name='api'),
+    path('api/nca/', api.NcaView.as_view(), name='nca'),
     path('api/dosed_pharmacokinetic/<int:pk>/simulate',
          api.SimulatePkView.as_view(), name='simulate-dosed-pharmacokinetic'),
     path('api/pharmacodynamic/<int:pk>/simulate',
