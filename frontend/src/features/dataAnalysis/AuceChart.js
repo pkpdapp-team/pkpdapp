@@ -292,3 +292,49 @@ export function NcaChart({nca, biomarker_type, subject, mode}) {
   )
 
 }
+
+export function NcaAucChart({nca, biomarker_type, subject}) {
+  let renderChart = true;
+  const classes = useStyles();
+
+  const first_point = [nca.times[0], nca.concentrations[0]];
+  const last_point = [
+    nca.times[nca.times.length-1], 
+    nca.concentrations[nca.concentrations.length-1]
+  ];
+
+  const max_point = [nca.t_max, nca.c_max]
+
+  
+
+  const after = [
+    last_point, 
+    [last_point[0] + 0.5  * nca.t_half, last_point[1] * 0.75],
+    [last_point[0] + nca.t_half, last_point[1] * 0.5],
+  ]
+
+
+  // main scatter plot
+  let datasets = [{
+    label: biomarker_type.name + 
+           " Concentration for ID " + 
+           subject.id_in_dataset,
+    data: nca.concentrations.map((y, i) => ({
+      x: nca.times[i], y: y
+    }))
+  }]
+
+
+       
+
+  const data = { datasets }
+
+  return (
+    <div className={classes.root}>
+      {renderChart &&
+        <Scatter data={data} options={options}/>
+      }
+    </div>
+  )
+ 
+}
