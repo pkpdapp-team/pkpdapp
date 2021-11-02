@@ -28,4 +28,17 @@ class NcaTestCase(APITestCase):
         self.assertEqual(
             response.status_code, status.HTTP_200_OK
         )
-        print(response.data)
+
+    def test_auce_no_dose_group_amount(self):
+        biomarker_type = BiomarkerType.objects.get(
+            name='Docetaxel'
+        )
+        data = {
+            'biomarker_type_id': biomarker_type.id,
+        }
+        response = self.client.post(
+            "/api/auce/", data
+        )
+        self.assertEqual(
+            response.status_code, status.HTTP_200_OK
+        )

@@ -45,7 +45,21 @@ class Auce():
         for values, times in zip(subject_data, subject_times):
             self.auce.append(self.calculate_auce(values, times))
 
-        self.fit = self.auce_fit(
+        self.x = None
+        self.y = None
+        self.y_upper = None
+        self.y_lower = None
+        self.fit_EC50 = None
+        self.sigma_EC50 = None
+        self.fit_EC50_y = None
+        self.fitted_params = None
+        self.covariates = None
+        self.fit_top = None
+        self.sigma_top = None
+        self.fit_bottom = None
+        self.sigma_bottom = None
+
+        self.auce_fit(
             self.concentrations, self.auce
         )
 
@@ -98,18 +112,13 @@ class Auce():
             fit_EC50 + abs(sigma_EC50)
         )
 
-        return {
-            'x': x,
-            'y': y,
-            'y_upper': y_upper,
-            'y_lower': y_lower,
-            'fit_EC50': fit_EC50,
-            'sigma_EC50': sigma_EC50,
-            'fit_EC50_y': fsigmoid(fit_EC50, *fitted_params),
-            'fitted_params': fitted_params,
-            'covariates': covariates,
-            'fit_top': fit_top,
-            'sigma_top': sigma_top,
-            'fit_bottom': fit_top,
-            'sigma_bottom': sigma_bottom,
-        }
+        self.x = x
+        self.y = y
+        self.y_upper = y_upper
+        self.y_lower = y_lower
+        self.fit_EC50 = fit_EC50
+        self.sigma_EC50 = sigma_EC50
+        self.fit_top = fit_top
+        self.sigma_top = sigma_top
+        self.fit_bottom = fit_bottom
+        self.sigma_bottom = sigma_bottom

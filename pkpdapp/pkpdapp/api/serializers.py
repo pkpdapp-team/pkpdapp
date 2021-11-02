@@ -38,49 +38,30 @@ class AuceSerializer(serializers.Serializer):
         child=serializers.IntegerField()
     )
     concentrations = serializers.ListField(
-        child=serializers.IntegerField()
-    )
-    subject_times = serializers.ListField(
-        serializers.ListField(
-            child=serializers.FloatField()
-        )
-    )
-    subject_data = serializers.ListField(
-        serializers.ListField(
-            child=serializers.FloatField()
-        )
+        child=serializers.FloatField()
     )
     auce = serializers.ListField(
         child=serializers.FloatField()
     )
-    times = serializers.ListField(
-        child=serializers.FloatField()
-    )
-    concentrations = serializers.ListField(
-        child=serializers.FloatField()
-    )
-    dose_amount = serializers.FloatField()
-    administration_route = serializers.CharField()
-    c_0 = serializers.FloatField()
-    auc_0_last = serializers.FloatField()
-    aumc_0_last = serializers.FloatField()
-    lambda_z = serializers.FloatField()
-    r2 = serializers.FloatField()
-    num_points = serializers.IntegerField(min_value=0)
-    auc_infinity = serializers.FloatField()
-    auc_infinity_dose = serializers.FloatField()
-    auc_extrap_percent = serializers.FloatField()
-    cl = serializers.FloatField()
-    c_max = serializers.FloatField()
-    t_max = serializers.FloatField()
-    c_max_dose = serializers.FloatField()
-    aumc = serializers.FloatField()
-    aumc_extrap_percent = serializers.FloatField()
-    mrt = serializers.FloatField()
-    tlast = serializers.FloatField()
-    t_half = serializers.FloatField()
-    v_ss = serializers.FloatField()
 
+    x = serializers.ListField(
+        child=serializers.FloatField()
+    )
+    y = serializers.ListField(
+        child=serializers.FloatField()
+    )
+    y_upper = serializers.ListField(
+        child=serializers.FloatField()
+    )
+    y_lower = serializers.ListField(
+        child=serializers.FloatField()
+    )
+    fit_EC50 = serializers.FloatField()
+    sigma_EC50 = serializers.FloatField()
+    fit_top = serializers.FloatField()
+    sigma_top = serializers.FloatField()
+    fit_bottom = serializers.FloatField()
+    sigma_bottom = serializers.FloatField()
 
 class NcaSerializer(serializers.Serializer):
     times = serializers.ListField(

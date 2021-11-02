@@ -295,7 +295,7 @@ class AuceView(views.APIView):
             for subject in group_subjects:
                 times_and_values = (
                     Biomarker.objects
-                    .filter(subject=subject['id'])
+                    .filter(subject=subject.id)
                     .order_by('time')
                     .values_list('time', 'value')
                 )
