@@ -93,14 +93,14 @@ export default function AuceDetail({project, dataset}) {
 
     { auce &&
     <AuceChartDataVsTime
-      auce={auce} 
+      auces={auce} 
       biomarker_type={biomarker_type}
     />
     }
 
     { auce &&
     <AuceChartFitsVsConcentration
-      auce={auce} 
+      auces={auce} 
       biomarker_type={biomarker_type}
     />
     }

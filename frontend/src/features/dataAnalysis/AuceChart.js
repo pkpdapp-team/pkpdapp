@@ -96,25 +96,35 @@ export function AuceChartFitsVsConcentration({auces, biomarker_type}) {
   const renderChart = true;
 
   let datasets = auces.map((auce, i) => {
+    console.log('doing auce', auce)
+    const data = auce.x ? 
+      auce.x.map((x, i) => ({x: x, y: auce.y[i]})) :
+      [];
     return {
       borderColor: getColor(i),
       backgroundColor: getColorBackground(i),
       label: auce.name,
-      data: auce.x.map((x, i) => ({x: x, y: auce.y[i]})),
+      data: data,
     }
   }).concat(auces.map((auce, i) => {
+    const data = auce.x ? 
+      auce.x.map((x, i) => ({x: x, y: auce.y_upper[i]})) :
+      [];
     return {
       borderColor: getColor(i),
       backgroundColor: getColorBackground(i),
       label: auce.name,
-      data: auce.x.map((x, i) => ({x: x, y: auce.y_upper[i]})),
+      data: data,
     }
   })).concat(auces.map((auce, i) => {
+    const data = auce.x ? 
+      auce.x.map((x, i) => ({x: x, y: auce.y_lower[i]})) :
+      [];
     return {
       borderColor: getColor(i),
       backgroundColor: getColorBackground(i),
       label: auce.name,
-      data: auce.x.map((x, i) => ({x: x, y: auce.y_lower[i]})),
+      data: data,
     }
   }))
   const data = { datasets }

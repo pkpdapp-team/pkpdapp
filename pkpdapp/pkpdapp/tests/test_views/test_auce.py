@@ -40,5 +40,13 @@ class NcaTestCase(APITestCase):
             "/api/auce/", data
         )
         self.assertEqual(
-            response.status_code, status.HTTP_200_OK
+            response.status_code, status.HTTP_400_BAD_REQUEST
+        )
+        self.assertRegex(
+            response.data['biomarker_type_id'],
+            (
+                "BiomarkerType id {} has a subject "
+                "with no dose group amount"
+                .format(biomarker_type.id)
+            )
         )

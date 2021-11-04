@@ -281,12 +281,20 @@ class AuceView(views.APIView):
         )
 
         auces = []
-        groups = subjects.values_list('group', flat=True).distinct()
+        groups = subjects.order_by('group').values_list('group', flat=True).distinct()
         for group in groups:
             group_subjects = subjects.filter(group=group)
             concentrations = group_subjects.values_list(
                 'dose_group_amount', flat=True
             )
+            if None in concentrations:
+                errors['biomarker_type_id'] = (
+                    "BiomarkerType id {} has a subject "
+                    "with no dose group amount"
+                    .format(biomarker_type_id)
+                )
+                break
+
             subject_ids = group_subjects.values_list(
                 'id', flat=True
             )
@@ -307,6 +315,12 @@ class AuceView(views.APIView):
             ))
 
         serializers = [AuceSerializer(auce) for auce in auces]
+
+        if errors:
+            return Response(
+                errors, status=status.HTTP_400_BAD_REQUEST
+            )
+
 
         return Response([serializer.data for serializer in serializers])
 
