@@ -1,11 +1,8 @@
 import React from "react";
-import { useSelector } from 'react-redux'
 
 import { makeStyles } from '@material-ui/core/styles';
 
 import { Scatter } from 'react-chartjs-2';
-
-import { Chart, registerables, Interaction } from 'chart.js';
 
 import {getColor, getColorBackground} from '../modelling/ShapesAndColors'
 
@@ -43,11 +40,11 @@ let options = {
       legend: {
         labels: {
           usePointStyle: true,
+          filter: function(item, chart) {
+            return !item.text.includes('noLabel');
+          }
         },
-        filter: function(item, chart) {
-          console.log('running filter', item.text)
-          return !item.text.includes('noLabel');
-        }
+        
       },
       tooltip: {
         mode: 'interpolate',
@@ -128,47 +125,63 @@ export function AuceChartFitsVsConcentration({auces, biomarker_type}) {
   const classes = useStyles();
   const renderChart = true;
 
-  let datasets = auces.map((auce, i) => {
-    console.log('doing auce', auce)
-    const data = auce.x ? 
-      auce.x.map((x, i) => ({x: x, y: auce.y[i]})) :
-      [];
-    return {
-      borderColor: getColor(i),
-      backgroundColor: getColorBackground(i),
-      label: auce.name,
-      pointRadius: 0,
-      fill: false,
-      type: 'line',
-      data: data,
-    }
-  })
+  let datasets = []
   var i = 0
   for (const auce of auces) {
+    const data = auce.x ? 
+      auce.x.map((x, i) => ({x: x, y: auce.y[i]})) :
+      null;
     const dataLower = auce.x ? 
       auce.x.map((x, i) => ({x: x, y: auce.y_lower[i]})) :
-      [];
-    const dataUpper= auce.x ? 
-      auce.x.map((x, i) => ({x: x, y: auce.y_lower[i]})) :
-      [];
-    datasets.push({
-      borderColor: getColor(i),
-      backgroundColor: getColorBackground(i),
-      type: 'line',
-      pointRadius: 0,
-      fill: false,
-      label: auce.name + 'noLabel',
-      data: dataLower,
-    })
-    datasets.push({
-      borderColor: getColor(i),
-      backgroundColor: getColorBackground(i),
-      type: 'line',
-      pointRadius: 0,
-      fill: '-1', // fill to previous dataset
-      label: auce.name + 'noLabel',
-      data: dataUpper,
-    })
+      null;
+    const dataUpper = auce.x ? 
+      auce.x.map((x, i) => ({x: x, y: auce.y_upper[i]})) :
+      null;
+    const dataPoints = auce.auce ? 
+      auce.concentrations.map((x, i) => ({x: x, y: auce.auce[i]})) :
+      null;
+    if (data) {
+     datasets.push({
+        borderColor: getColor(i),
+        backgroundColor: getColorBackground(i),
+        label: 'noLabel' + auce.name + 'Fit',
+        pointRadius: 0,
+        fill: false,
+        type: 'line',
+        data: data,
+      })
+    }
+    if (dataLower) {
+      datasets.push({
+        borderColor: getColorBackground(i),
+        backgroundColor: getColorBackground(i),
+        type: 'line',
+        pointRadius: 0,
+        fill: false,
+        label: 'noLabel' + auce.name + 'Lower',
+        data: dataLower,
+      })
+    }
+    if (dataUpper) {
+      datasets.push({
+        borderColor: getColorBackground(i),
+        backgroundColor: getColorBackground(i),
+        type: 'line',
+        pointRadius: 0,
+        fill: '-1', // fill to previous dataset
+        //fill: false,
+        label: 'noLabel' + auce.name + 'Upper',
+        data: dataUpper,
+      })
+    }
+    if (dataPoints) {
+      datasets.push({
+        borderColor: getColor(i),
+        backgroundColor: getColor(i),
+        label: auce.name,
+        data: dataPoints,
+      })
+    }
     i += 1
   }
 

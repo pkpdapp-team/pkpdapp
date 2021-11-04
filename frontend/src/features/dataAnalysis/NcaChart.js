@@ -1,11 +1,7 @@
 import React from "react";
-import { useSelector } from 'react-redux'
-
 import { makeStyles } from '@material-ui/core/styles';
 
 import { Scatter } from 'react-chartjs-2';
-
-import { Chart, registerables, Interaction } from 'chart.js';
 
 import {getColor, getColorBackground} from '../modelling/ShapesAndColors'
 
@@ -73,7 +69,7 @@ export function NcaChart({nca, biomarker_type, subject, mode}) {
   const max_point = [nca.t_max, nca.c_max]
 
   let before = [first_point, [0.0, nca.c_0]]
-  if (before[0][0] == 0.0) {
+  if (before[0][0] === 0.0) {
     before = [before[1]]
   }
 

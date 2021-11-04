@@ -283,31 +283,34 @@ class AuceView(views.APIView):
         auces = []
         groups = subjects.order_by('group').values_list('group', flat=True).distinct()
         for group in groups:
-            group_subjects = subjects.filter(group=group)
-            concentrations = group_subjects.values_list(
-                'dose_group_amount', flat=True
-            )
-            if None in concentrations:
-                errors['biomarker_type_id'] = (
-                    "BiomarkerType id {} has a subject "
-                    "with no dose group amount"
-                    .format(biomarker_type_id)
-                )
-                break
-
-            subject_ids = group_subjects.values_list(
-                'id', flat=True
-            )
             subject_times = []
             subject_data = []
-            for subject in group_subjects:
+            subject_ids = []
+            concentrations = []
+            for subject in subjects.filter(group=group):
                 times_and_values = (
                     Biomarker.objects
-                    .filter(subject=subject.id)
+                    .filter(
+                        biomarker_type=biomarker_type,
+                        subject=subject.id
+                    )
                     .order_by('time')
                     .values_list('time', 'value')
                 )
+                if not times_and_values:
+                    continue
+
+                if subject.dose_group_amount is None:
+                    errors['biomarker_type_id'] = (
+                        "BiomarkerType id {} has a subject "
+                        "with no dose group amount"
+                        .format(biomarker_type_id)
+                    )
+                    break
+
                 times, values = list(zip(*times_and_values))
+                concentrations.append(subject.dose_group_amount)
+                subject_ids.append(subject.id)
                 subject_times.append(times)
                 subject_data.append(values)
             auces.append(Auce(

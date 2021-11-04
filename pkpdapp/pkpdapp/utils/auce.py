@@ -77,6 +77,7 @@ class Auce():
         fitted_params, covariates = curve_fit(
             fsigmoid, concentrations, auce, p0=p0
         )
+
         fit_top, fit_bottom, fit_EC50 = fitted_params
 
         sigma_top, sigma_bottom, sigma_EC50 = np.sqrt(
