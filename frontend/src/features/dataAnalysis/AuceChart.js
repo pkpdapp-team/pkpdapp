@@ -31,6 +31,7 @@ let options = {
         }
       },
       y: {
+        type: 'linear',
         position: 'left',
         title: {
           text: 'Data Variable / Model Output (units defined in detail panels)',
@@ -43,21 +44,32 @@ let options = {
         labels: {
           usePointStyle: true,
         },
+        filter: function(item, chart) {
+          console.log('running filter', item.text)
+          return !item.text.includes('noLabel');
+        }
       },
       tooltip: {
         mode: 'interpolate',
         callbacks: {
-          label: function(context) {
-            const tooltipText = context.dataset.tooltipText
-            if (tooltipText) {
-              return tooltipText
-            }
-            return `(${context.parsed.x}, ${context.parsed.y})`
+          title: function(a, d) {
+            return a[0].element.x.toPrecision(4);
+          },
+          label: function(d) {
+            return (
+              d.dataset.label + ": " + d.element.y.toPrecision(4)
+            );
           }
-        },
+        }
       },
+      crosshair: {
+        sync: {
+          enabled: false
+        }
+      }
     }
   }
+
 
 
 export function AuceChartDataVsTime({auces, biomarker_type}) {
@@ -81,10 +93,31 @@ export function AuceChartDataVsTime({auces, biomarker_type}) {
 
   const data = { datasets }
 
+  const optionsVsTime = {
+    ...options,
+    scales: {
+      x: {
+        type: 'linear',
+        title: {
+          text: 'Time ',
+          display: true,
+        }
+      },
+      y: {
+        type: 'linear',
+        position: 'left',
+        title: {
+          text: 'Data Variable',
+          display: true,
+        }
+      },
+    },
+  }
+
   return (
     <div className={classes.root}>
       {renderChart &&
-        <Scatter data={data} options={options}/>
+        <Scatter data={data} options={optionsVsTime}/>
       }
     </div>
   )
@@ -104,35 +137,68 @@ export function AuceChartFitsVsConcentration({auces, biomarker_type}) {
       borderColor: getColor(i),
       backgroundColor: getColorBackground(i),
       label: auce.name,
+      pointRadius: 0,
+      fill: false,
+      type: 'line',
       data: data,
     }
-  }).concat(auces.map((auce, i) => {
-    const data = auce.x ? 
-      auce.x.map((x, i) => ({x: x, y: auce.y_upper[i]})) :
-      [];
-    return {
-      borderColor: getColor(i),
-      backgroundColor: getColorBackground(i),
-      label: auce.name,
-      data: data,
-    }
-  })).concat(auces.map((auce, i) => {
-    const data = auce.x ? 
+  })
+  var i = 0
+  for (const auce of auces) {
+    const dataLower = auce.x ? 
       auce.x.map((x, i) => ({x: x, y: auce.y_lower[i]})) :
       [];
-    return {
+    const dataUpper= auce.x ? 
+      auce.x.map((x, i) => ({x: x, y: auce.y_lower[i]})) :
+      [];
+    datasets.push({
       borderColor: getColor(i),
       backgroundColor: getColorBackground(i),
-      label: auce.name,
-      data: data,
-    }
-  }))
+      type: 'line',
+      pointRadius: 0,
+      fill: false,
+      label: auce.name + 'noLabel',
+      data: dataLower,
+    })
+    datasets.push({
+      borderColor: getColor(i),
+      backgroundColor: getColorBackground(i),
+      type: 'line',
+      pointRadius: 0,
+      fill: '-1', // fill to previous dataset
+      label: auce.name + 'noLabel',
+      data: dataUpper,
+    })
+    i += 1
+  }
+
   const data = { datasets }
+
+  const optionsVsConcentration = {
+    ...options,
+    scales: {
+      x: {
+        type: 'logarithmic',
+        title: {
+          text: 'Concentration',
+          display: true,
+        }
+      },
+      y: {
+        type: 'logarithmic',
+        position: 'left',
+        title: {
+          text: 'AUCE',
+          display: true,
+        }
+      },
+    },
+  }
 
   return (
     <div className={classes.root}>
       {renderChart &&
-        <Scatter data={data} options={options}/>
+        <Scatter data={data} options={optionsVsConcentration}/>
       }
     </div>
   )
