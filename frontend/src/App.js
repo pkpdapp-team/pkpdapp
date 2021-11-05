@@ -44,6 +44,7 @@ import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import { api } from './Api'
 import Modelling from './features/modelling/Modelling'
 import Nca from './features/dataAnalysis/Nca'
+import Auce from './features/dataAnalysis/Auce'
 import Projects from './features/projects/Projects'
 import ProjectMenu from './features/menu/ProjectMenu'
 
@@ -248,6 +249,10 @@ export default function App() {
   const isNcaPath = !!matchPath(pathname, 
     {path: ncaPath, exact:true}
   )
+  const aucePath ="/auce"
+  const isAucePath = !!matchPath(pathname, 
+    {path: aucePath, exact:true}
+  )
   const rootPath = "/"
   const isRootPath = !!matchPath(pathname, 
     {path: rootPath, exact:true}
@@ -299,6 +304,13 @@ export default function App() {
         </Button>
 
         <Button 
+          component={Link} to={aucePath} variant="contained"
+          color={isAucePath? "secondary" : "primary"}
+        >
+          AUCE
+        </Button>
+
+        <Button 
           component={Link} to={modellingPath} variant="contained"
           color={isModellingPath ? "secondary" : "primary"}
         >
@@ -340,6 +352,7 @@ export default function App() {
         <Switch>
           <PrivateRoute path="/simulation" component={Modelling} />
           <PrivateRoute path="/nca" component={Nca} />
+          <PrivateRoute path="/auce" component={Auce} />
           <PrivateRoute path="/" component={Projects} />
         </Switch>
         </Container>
