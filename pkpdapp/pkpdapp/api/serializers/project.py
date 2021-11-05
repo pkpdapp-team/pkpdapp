@@ -7,7 +7,6 @@ from rest_framework import serializers
 from pkpdapp.models import (
     ProjectAccess, Project
 )
-from pkpdapp.api.serializers import ProjectAccessSerializer
 
 
 class ProjectAccessSerializer(serializers.ModelSerializer):

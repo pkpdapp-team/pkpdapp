@@ -26,4 +26,4 @@ from .biomarker_type import BiomarkerType
 from .biomarker import Biomarker
 from .profile import Profile
 from .dose import Dose
-from .variable import Variable
+from .variable import Variable, StoredVariable

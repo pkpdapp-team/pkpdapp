@@ -9,6 +9,7 @@ from pkpdapp.models import (
     DosedPharmacokineticModel, PkpdModel,
     PharmacodynamicModel
 )
+from pkpdapp.api.serializers import ValidSbml
 
 class PkpdSerializer(serializers.ModelSerializer):
     class Meta:
