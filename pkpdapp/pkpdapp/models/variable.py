@@ -8,6 +8,7 @@ from django.db import models
 from pkpdapp.models import (
     Unit, DosedPharmacokineticModel,
     PharmacokineticModel, PharmacodynamicModel,
+    StoredPkpdModel, StoredPharmacodynamicModel, StoredDosedPharmacokineticModel,
 )
 import myokit
 from django.db.models import Q
@@ -34,27 +35,7 @@ class BaseVariable(models.Model):
     name = models.CharField(max_length=20, help_text='name of the variable')
     qname = models.CharField(
         max_length=100, help_text='fully qualitifed name of the variable')
-    pd_model = models.ForeignKey(
-        PharmacodynamicModel,
-        blank=True, null=True,
-        on_delete=models.CASCADE,
-        related_name='variables',
-        help_text='pharmacodynamic model'
-    )
-    pk_model = models.ForeignKey(
-        PharmacokineticModel,
-        blank=True, null=True,
-        on_delete=models.CASCADE,
-        related_name='variables',
-        help_text='pharmacokinetic model'
-    )
-    dosed_pk_model = models.ForeignKey(
-        DosedPharmacokineticModel,
-        blank=True, null=True,
-        on_delete=models.CASCADE,
-        related_name='variables',
-        help_text='dosed pharmacokinetic model'
-    )
+
     unit = models.ForeignKey(
         Unit, on_delete=models.CASCADE,
         help_text=(
@@ -132,6 +113,7 @@ class BaseVariable(models.Model):
                 name='log scale must have a lower bound greater than zero'
             )
         ]
+
 
     def get_project(self):
         if self.pd_model:
@@ -248,8 +230,57 @@ class BaseVariable(models.Model):
                 .format(type(model)),
             )
 
-
 class Variable(BaseVariable):
     """
     A single variable for a mechanistic model.
     """
+
+    pd_model = models.ForeignKey(
+        PharmacodynamicModel,
+        blank=True, null=True,
+        on_delete=models.CASCADE,
+        related_name='variables',
+        help_text='pharmacodynamic model'
+    )
+    pk_model = models.ForeignKey(
+        PharmacokineticModel,
+        blank=True, null=True,
+        on_delete=models.CASCADE,
+        related_name='variables',
+        help_text='pharmacokinetic model'
+    )
+    dosed_pk_model = models.ForeignKey(
+        DosedPharmacokineticModel,
+        blank=True, null=True,
+        on_delete=models.CASCADE,
+        related_name='variables',
+        help_text='dosed pharmacokinetic model'
+    )
+
+
+class StoredVariable(BaseVariable):
+    pd_model = models.ForeignKey(
+        StoredPharmacodynamicModel,
+        blank=True, null=True,
+        on_delete=models.CASCADE,
+        help_text='pharmacodynamic model'
+    )
+    dosed_pk_model = models.ForeignKey(
+        StoredDosedPharmacokineticModel,
+        blank=True, null=True,
+        on_delete=models.CASCADE,
+        help_text='dosed pharmacokinetic model'
+    )
+    pkpd_model = models.ForeignKey(
+        StoredPkpdModel,
+        blank=True, null=True,
+        on_delete=models.CASCADE,
+        help_text='pharmacokinetic/pharmacokinetic model'
+    )
+    inference = models.ForeignKey(
+        'Inference',
+        on_delete=models.CASCADE,
+        help_text='inference that this variable is stored for'
+    )
+
+
