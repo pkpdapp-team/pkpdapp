@@ -80,4 +80,3 @@ class StoredPkpdModel(PharmacodynamicModel):
     """
     Stored PKPD model.
     """
-

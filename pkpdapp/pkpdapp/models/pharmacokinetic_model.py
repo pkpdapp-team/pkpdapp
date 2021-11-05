@@ -345,4 +345,3 @@ class StoredDosedPharmacokineticModel(DosedPharmacokineticModel):
     """
     Stored dosed PK model.
     """
-

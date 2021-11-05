@@ -5,13 +5,14 @@
 #
 
 from django.db import models
+from django.db.models import Q
+import myokit
 from pkpdapp.models import (
     Unit, DosedPharmacokineticModel,
     PharmacokineticModel, PharmacodynamicModel,
-    StoredPkpdModel, StoredPharmacodynamicModel, StoredDosedPharmacokineticModel,
+    StoredPharmacodynamicModel,
+    StoredDosedPharmacokineticModel,
 )
-import myokit
-from django.db.models import Q
 
 
 class BaseVariable(models.Model):
@@ -93,27 +94,15 @@ class BaseVariable(models.Model):
         constraints = [
             models.CheckConstraint(
                 check=(
-                    (Q(pk_model__isnull=True) &
-                     Q(dosed_pk_model__isnull=True) &
-                     Q(pd_model__isnull=False)) |
-                    (Q(pk_model__isnull=False) &
-                     Q(dosed_pk_model__isnull=True) &
-                     Q(pd_model__isnull=True)) |
-                    (Q(pk_model__isnull=True) &
-                     Q(dosed_pk_model__isnull=False) &
-                     Q(pd_model__isnull=True))
-                ),
-                name='%(class)s: variable must belong to a model'
-            ),
-            models.CheckConstraint(
-                check=(
                     (Q(scale='LG') & Q(lower_bound__gt=0)) |
                     Q(scale='LN')
                 ),
-                name='%(class)s: log scale must have a lower bound greater than zero'
+                name=(
+                    '%(class)s: log scale must have a lower '
+                    'bound greater than zero'
+                )
             )
         ]
-
 
     def get_project(self):
         if self.pd_model:
@@ -230,6 +219,7 @@ class BaseVariable(models.Model):
                 .format(type(model)),
             )
 
+
 class Variable(BaseVariable):
     """
     A single variable for a mechanistic model.
@@ -257,6 +247,24 @@ class Variable(BaseVariable):
         help_text='dosed pharmacokinetic model'
     )
 
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                check=(
+                    (Q(pk_model__isnull=True) &
+                     Q(dosed_pk_model__isnull=True) &
+                     Q(pd_model__isnull=False)) |
+                    (Q(pk_model__isnull=False) &
+                     Q(dosed_pk_model__isnull=True) &
+                     Q(pd_model__isnull=True)) |
+                    (Q(pk_model__isnull=True) &
+                     Q(dosed_pk_model__isnull=False) &
+                     Q(pd_model__isnull=True))
+                ),
+                name='%(class)s: variable must belong to a model'
+            ),
+        ]
+
 
 class StoredVariable(BaseVariable):
     pd_model = models.ForeignKey(
@@ -271,16 +279,16 @@ class StoredVariable(BaseVariable):
         on_delete=models.CASCADE,
         help_text='dosed pharmacokinetic model'
     )
-    pkpd_model = models.ForeignKey(
-        StoredPkpdModel,
-        blank=True, null=True,
-        on_delete=models.CASCADE,
-        help_text='pharmacokinetic/pharmacokinetic model'
-    )
-    inference = models.ForeignKey(
-        'Inference',
-        on_delete=models.CASCADE,
-        help_text='inference that this variable is stored for'
-    )
 
-
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                check=(
+                    (Q(dosed_pk_model__isnull=True) &
+                     Q(pd_model__isnull=False)) |
+                    (Q(dosed_pk_model__isnull=False) &
+                     Q(pd_model__isnull=True))
+                ),
+                name='%(class)s: stored variable must belong to a model'
+            ),
+        ]

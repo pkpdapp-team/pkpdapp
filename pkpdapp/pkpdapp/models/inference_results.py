@@ -5,7 +5,6 @@
 #
 
 from django.db import models
-from django.db.models import Q
 from pkpdapp.models import (
     PriorUniform, PriorNormal, Boundary
 )

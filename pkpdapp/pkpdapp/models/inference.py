@@ -7,9 +7,9 @@
 from django.db import models
 from django.db.models import Q
 from pkpdapp.models import (
-    Variable, Dataset, PharmacodynamicModel,
-    PharmacokineticModel, DosedPharmacokineticModel,
-    BiomarkerType)
+    StoredPkpdModel, StoredPharmacodynamicModel,
+    StoredDosedPharmacokineticModel,
+)
 
 
 class Inference(models.Model):
@@ -87,3 +87,39 @@ class Inference(models.Model):
         blank=True, null=True,
         help_text='number of function evaluations'
     )
+
+    pd_model = models.ForeignKey(
+        StoredPharmacodynamicModel,
+        blank=True, null=True,
+        on_delete=models.CASCADE,
+        help_text='pharmacodynamic model'
+    )
+    dosed_pk_model = models.ForeignKey(
+        StoredDosedPharmacokineticModel,
+        blank=True, null=True,
+        on_delete=models.CASCADE,
+        help_text='dosed pharmacokinetic model'
+    )
+    pkpd_model = models.ForeignKey(
+        StoredPkpdModel,
+        blank=True, null=True,
+        on_delete=models.CASCADE,
+        help_text='pharmacokinetic/pharmacokinetic model'
+    )
+
+    constraints = [
+        models.CheckConstraint(
+            check=(
+                (Q(pk_model__isnull=True) &
+                 Q(dosed_pk_model__isnull=True) &
+                 Q(pd_model__isnull=False)) |
+                (Q(pk_model__isnull=False) &
+                 Q(dosed_pk_model__isnull=True) &
+                 Q(pd_model__isnull=True)) |
+                (Q(pk_model__isnull=True) &
+                 Q(dosed_pk_model__isnull=False) &
+                 Q(pd_model__isnull=True))
+            ),
+            name='%(class)s: inference must belong to a model'
+        ),
+    ]

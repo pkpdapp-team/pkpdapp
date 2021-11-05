@@ -5,7 +5,6 @@
 #
 
 from django.db import models
-from django.db.models import Q
 from pkpdapp.models import (
     StoredVariable
 )
@@ -20,6 +19,7 @@ class Prior(models.Model):
         on_delete=models.CASCADE,
         primary_key=True,
     )
+
     class Meta:
         abstract = True
 
@@ -35,6 +35,7 @@ class PriorUniform(Prior):
         help_text='upper bound of the uniform distribution.'
     )
 
+
 class PriorNormal(Prior):
     """
     Model for a normal prior.
@@ -47,8 +48,8 @@ class PriorNormal(Prior):
         help_text='sd of normal prior distribution.'
     )
 
+
 class Boundary(Prior):
     """
     Model for a single parameter boundary for use in optimisation.
     """
-
