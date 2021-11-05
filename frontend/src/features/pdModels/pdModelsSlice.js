@@ -14,16 +14,28 @@ const initialState = pdModelsAdapter.getInitialState({
   errorFetch: null,
 })
 
-export const fetchPdModels = createAsyncThunk('pdModels/fetchPdModels', async (project) => {
-  const response = await api.get(
+
+export const fetchPdModels = createAsyncThunk('pdModels/fetchPdModels', async (project, { dispatch }) => {
+  let response = await api.get(
     `/api/pharmacodynamic/?project_id=${project.id}`
   )
+  for (var i = 0; i < response.length; i++) { 
+    dispatch(fetchPdModelSimulateById(response[i].id))
+  }
   return response
 })
 
-export const fetchPdModelById = createAsyncThunk('pdModels/fetchPdModelById', async (model_id) => {
-  const response = await api.get(
+export const fetchPdModelById = createAsyncThunk('pdModels/fetchPdModelById', async (model_id, { dispatch }) => {
+  let response = await api.get(
     `/api/pharmacodynamic/${model_id}/`
+  )
+  dispatch(fetchPdModelSimulateById(response.id))
+  return response
+})
+
+export const fetchPdModelSimulateById = createAsyncThunk('pdModels/fetchPdModelSimulateById', async (model_id) => {
+  const response = await api.post(
+    `/api/pharmacodynamic/${model_id}/simulate`
   )
   return response
 })
@@ -41,7 +53,6 @@ export const addNewPdModel = createAsyncThunk(
 
     dispatch(fetchVariablesByPdModel(pdModel.id))
     dispatch(fetchUnitsByPdModel(pdModel.id))
-
     pdModel.chosen = true;
 
     return pdModel
@@ -64,22 +75,21 @@ export const uploadPdSbml = createAsyncThunk(
     await api.putMultiPart(
       `/api/pharmacodynamic/${id}/sbml/`, {sbml}
     )
-    const pdModel = await api.get(`/api/pharmacodynamic/${id}`)
-    console.log('got pdModel', pdModel)
-
+    let pdModel = await api.get(`/api/pharmacodynamic/${id}`)
     dispatch(fetchVariablesByPdModel(pdModel.id))
     dispatch(fetchUnitsByPdModel(pdModel.id))
+    dispatch(fetchPdModelSimulateById(pdModel.id))
     return pdModel
   }
 )
 
 export const updatePdModel = createAsyncThunk(
   'pdModels/updatePdModel',
-  async (pdModel) => {
-    console.log('update pd model', pdModel)
-    const newPdModel = await api.put(
+  async (pdModel, { dispatch }) => {
+    let newPdModel = await api.put(
       `/api/pharmacodynamic/${pdModel.id}/`, pdModel
     )
+    dispatch(fetchPdModelSimulateById(newPdModel.id))
     return newPdModel
   }
 )
@@ -110,16 +120,42 @@ export const pdModelsSlice = createSlice({
       pdModelsAdapter.setAll(state, action.payload)
     },
     [fetchPdModelById.fulfilled]: pdModelsAdapter.upsertOne,
+    [fetchPdModelSimulateById.fulfilled]: pdModelsAdapter.upsertOne,
+    [fetchPdModelSimulateById.pending]: (state, action) => {
+      if (state.ids.includes(action.meta.arg)) {
+        state.entities[action.meta.arg]['simulate'] = {
+          status: 'loading'
+        }
+      }
+    },
+    [fetchPdModelSimulateById.fulfilled]: (state, action) => {
+      if (state.ids.includes(action.meta.arg)) {
+        state.entities[action.meta.arg].simulate =  {
+          ...action.payload,
+          status: 'succeeded'
+        }
+      }
+    },
+    [fetchPdModelSimulateById.rejected]: (state, action) => {
+      if (state.ids.includes(action.meta.arg)) {
+        state.entities[action.meta.arg].simulate = {
+          status: 'failed'
+        }
+      }
+    },
     [addNewPdModel.fulfilled]: pdModelsAdapter.addOne,
     [updatePdModel.fulfilled]: pdModelsAdapter.upsertOne,
     [deletePdModel.fulfilled]: pdModelsAdapter.removeOne,
     [uploadPdSbml.pending]: (state, action) => {
+      state.entities[action.meta.arg.id].status = 'loading'
       state.entities[action.meta.arg.id].errors = []
     },
     [uploadPdSbml.rejected]: (state, action) => {
+      state.entities[action.meta.arg.id].status = 'failed'
       state.entities[action.meta.arg.id].errors = action.payload.sbml
     },
     [uploadPdSbml.fulfilled]: (state, action) => {
+      state.entities[action.meta.arg.id].status = 'failed'
       pdModelsAdapter.upsertOne(state, action)
     },
   }

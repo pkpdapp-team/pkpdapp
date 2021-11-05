@@ -6,6 +6,7 @@ scheme.from_hue(21)
       .variation('hard');
 
 const colors = scheme.colors().map(hexToRGB);
+const colorsBackground = scheme.colors().map(c => hexToRGB(c, 0.2));
 
 const shapes = [
     'cross',
@@ -28,6 +29,11 @@ export function getShape(i) {
 export function getColor(i) {
   const index = i % colors.length
   return colors[index]
+}
+
+export function getColorBackground(i) {
+  const index = i % colors.length
+  return colorsBackground[index]
 }
 
 export function numShapes() {

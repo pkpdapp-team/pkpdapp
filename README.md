@@ -16,10 +16,10 @@ If you are interested in developing PKPDApp with us, or just run the app locally
 
 ### Django backend
 
-1. Install sundials
+1. Install sundials and python dev libraries
     - Ubuntu-latest:
     ```bash
-    apt-get install libsundials-dev
+    apt-get install libsundials-dev python3-dev
     ```
     - MacOS-latest:
     ```bash

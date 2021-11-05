@@ -19,6 +19,22 @@ export const fetchBiomarkerType = createAsyncThunk('biomarkerTypes/fetchBiomarke
   return response
 })
 
+export const fetchBiomarkerTypesByProject = createAsyncThunk('biomarkerTypes/fetchBiomarkerTypesByProject', async (project_id, { getState }) => {
+
+  const response = await api.get(
+    `/api/biomarker_type/?project_id=${project_id}`
+  )
+  return response
+})
+
+export const fetchBiomarkerTypesByDataset = createAsyncThunk('subjects/fetchBiomarkerTypeByDataset', async (dataset, { getState }) => {
+
+  const response = await api.get(
+    `/api/biomarker_type/`, dataset.biomarker_types
+  )
+  return response
+})
+
 export const updateBiomarkerType = createAsyncThunk(
   'biomarkerTypes/updateBiomarkerType',
   async (biomarker_type) => {
@@ -45,6 +61,8 @@ export const biomarkerTypesSlice = createSlice({
       state.status = 'succeeded'
       biomarkerTypesAdapter.addOne(state, action.payload)
     },
+    [fetchBiomarkerTypesByProject.fulfilled]: biomarkerTypesAdapter.upsertMany,
+    [fetchBiomarkerTypesByDataset.fulfilled]: biomarkerTypesAdapter.upsertMany,
     [updateBiomarkerType.fulfilled]: biomarkerTypesAdapter.upsertOne,
   }
 })

@@ -26,6 +26,8 @@ from .serializers import (
     VariableSerializer,
     SubjectSerializer,
     ProjectAccessSerializer,
+    NcaSerializer,
+    AuceSerializer,
 )
 
 from pkpdapp.models import (
@@ -41,7 +43,11 @@ from pkpdapp.models import (
     Variable,
     Subject,
     ProjectAccess,
+    Biomarker,
 )
+
+from pkpdapp.utils import NCA, Auce
+
 from django.contrib.auth.models import User
 from django.db.models import Q
 
@@ -152,6 +158,14 @@ class ProjectFilter(filters.BaseFilterBackend):
                     queryset = project.pkpd_models
                 elif queryset.model == Protocol:
                     queryset = project.protocols
+                elif queryset.model == BiomarkerType:
+                    queryset = BiomarkerType.objects.filter(
+                        dataset__project=project
+                    )
+                elif queryset.model == Subject:
+                    queryset = Subject.objects.filter(
+                        dataset__project=project
+                    )
                 elif queryset.model == Variable:
                     queryset = queryset.filter(
                         Q(pd_model__project=project) |
@@ -237,6 +251,161 @@ class CheckAccessToProject(BasePermission):
         return True
 
 
+class AuceView(views.APIView):
+    def post(self, request, format=None):
+        errors = {
+        }
+
+        biomarker_type_id = request.data.get('biomarker_type_id', None)
+        if biomarker_type_id is None:
+            errors['biomarker_type_id'] = "This field is required"
+        else:
+            try:
+                biomarker_type = \
+                    BiomarkerType.objects.get(id=biomarker_type_id)
+            except BiomarkerType.DoesNotExist:
+                errors['biomarker_type_id'] = (
+                    "BiomarkerType id {} not found"
+                    .format(biomarker_type_id)
+                )
+
+        if errors:
+            return Response(
+                errors, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        subjects = Subject.objects.filter(
+            dataset=biomarker_type.dataset
+        ).order_by(
+            'group', 'dose_group_amount'
+        )
+
+        auces = []
+        groups = subjects.order_by(
+            'group'
+        ).values_list(
+            'group', flat=True
+        ).distinct()
+        for group in groups:
+            subject_times = []
+            subject_data = []
+            subject_ids = []
+            concentrations = []
+            for subject in subjects.filter(group=group):
+                times_and_values = (
+                    Biomarker.objects
+                    .filter(
+                        biomarker_type=biomarker_type,
+                        subject=subject.id
+                    )
+                    .order_by('time')
+                    .values_list('time', 'value')
+                )
+                if not times_and_values:
+                    continue
+
+                if subject.dose_group_amount is None:
+                    errors['biomarker_type_id'] = (
+                        "BiomarkerType id {} has a subject "
+                        "with no dose group amount"
+                        .format(biomarker_type_id)
+                    )
+                    break
+
+                times, values = list(zip(*times_and_values))
+                concentrations.append(subject.dose_group_amount)
+                subject_ids.append(subject.id)
+                subject_times.append(times)
+                subject_data.append(values)
+            auces.append(Auce(
+                group, subject_ids, concentrations, subject_times, subject_data
+            ))
+
+        serializers = [AuceSerializer(auce) for auce in auces]
+
+        if errors:
+            return Response(
+                errors, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        return Response([serializer.data for serializer in serializers])
+
+
+class NcaView(views.APIView):
+    def post(self, request, format=None):
+        errors = {
+        }
+        protocol_id = request.data.get('protocol_id', None)
+        if protocol_id is None:
+            errors['protocol_id'] = "This field is required"
+        else:
+            try:
+                protocol = Protocol.objects.get(id=protocol_id)
+            except Protocol.DoesNotExist:
+                errors['protocol_id'] = \
+                    "Protocol id {} not found".format(protocol_id)
+            if not protocol.subject:
+                errors['protocol_id'] = (
+                    "Protocol id {} does not have a subject"
+                    .format(protocol_id)
+                )
+            if protocol.dose_type != Protocol.DoseType.DIRECT:
+                errors['protocol_id'] = \
+                    "Protocol is required to have an IV dose type"
+
+        biomarker_type_id = request.data.get('biomarker_type_id', None)
+        if biomarker_type_id is None:
+            errors['biomarker_type_id'] = "This field is required"
+        else:
+            try:
+                biomarker_type = \
+                    BiomarkerType.objects.get(id=biomarker_type_id)
+            except BiomarkerType.DoesNotExist:
+                errors['biomarker_type_id'] = (
+                    "BiomarkerType id {} not found"
+                    .format(biomarker_type_id)
+                )
+
+        if errors:
+            return Response(
+                errors, status=status.HTTP_400_BAD_REQUEST
+            )
+        df = biomarker_type.as_pandas()
+        df = df.loc[df['subjects'] == protocol.subject.id]
+
+        if df.shape[0] == 0:
+            errors['biomarker_type'] = (
+                "BiomarkerType {} does not have measurements "
+                "for subject id {}."
+                .format(biomarker_type.id, protocol.subject.id)
+            )
+
+        doses = Dose.objects.filter(
+            protocol=protocol
+        ).all()
+
+        if len(doses) != 1:
+            errors['protocol_id'] = (
+                "Protocol id {} has {} doses, only a single dose. "
+                "Please choose a protocol with only one dose."
+                .format(protocol.id, len(doses))
+            )
+
+        if errors:
+            return Response(
+                errors, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        times = df['times'].tolist()
+        concentrations = df['values'].tolist()
+        dose_amount = doses[0].amount
+
+        nca = NCA(times, concentrations, dose_amount)
+        nca.calculate_nca()
+        serializer = NcaSerializer(nca)
+        return Response(serializer.data)
+
+
 class ProtocolView(viewsets.ModelViewSet):
     queryset = Protocol.objects.all()
     serializer_class = ProtocolSerializer
@@ -255,8 +424,7 @@ class UnitView(viewsets.ModelViewSet):
 
 class NotADatasetDose(BasePermission):
     def has_object_permission(self, request, view, obj):
-        is_update_method = \
-            request.method == 'PUT' or request.method == 'PATCH'
+        is_update_method = request.method == 'PUT' or request.method == 'PATCH'
         if is_update_method and obj.protocol.dataset:
             return False
         return True
@@ -302,9 +470,9 @@ class SimulateBaseView(views.APIView):
             m = self.model.objects.get(pk=pk)
         except self.model.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
-        outputs = request.data.get('outputs', [])
-        initial_conditions = request.data.get('initial_conditions', {})
-        variables = request.data.get('variables', {})
+        outputs = request.data.get('outputs', None)
+        initial_conditions = request.data.get('initial_conditions', None)
+        variables = request.data.get('variables', None)
         result = m.simulate(outputs, initial_conditions, variables)
         return Response(result)
 
@@ -321,7 +489,7 @@ class PharmacodynamicView(viewsets.ModelViewSet):
         IsAuthenticated & CheckAccessToProject
     ]
 
-    @decorators.action(
+    @ decorators.action(
         detail=True,
         methods=['PUT'],
         serializer_class=PharmacodynamicSbmlSerializer,
@@ -351,11 +519,13 @@ class PkpdView(viewsets.ModelViewSet):
 class SubjectView(viewsets.ModelViewSet):
     queryset = Subject.objects.all()
     serializer_class = SubjectSerializer
+    filter_backends = [ProjectFilter]
 
 
 class BiomarkerTypeView(viewsets.ModelViewSet):
     queryset = BiomarkerType.objects.all()
     serializer_class = BiomarkerTypeSerializer
+    filter_backends = [ProjectFilter]
 
 
 class DatasetView(viewsets.ModelViewSet):
@@ -363,7 +533,7 @@ class DatasetView(viewsets.ModelViewSet):
     serializer_class = DatasetSerializer
     filter_backends = [ProjectFilter]
 
-    @decorators.action(
+    @ decorators.action(
         detail=True,
         serializer_class=DatasetCsvSerializer,
         methods=['PUT'],

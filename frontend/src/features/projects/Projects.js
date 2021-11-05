@@ -53,7 +53,6 @@ export default function Projects() {
   const dispatch = useDispatch()
 
   useEffect(() => {
-    console.log('dispatch fetchProjects')
     dispatch(fetchProjects())
     dispatch(fetchUsers())
     dispatch(fetchUnits())
@@ -64,14 +63,12 @@ export default function Projects() {
   }, [dispatch]);
   
   const handleNewProject = () => {
-    console.log('handleNewProject')
     dispatch(addNewProject())
   }
 
   const projects = useSelector(selectMyProjects);
   const chosenProject = useSelector(selectChosenProject);
 
-  console.log(projects)
   return (
     <div className={classes.root}>
       <Grid container spacing={3}>

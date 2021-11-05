@@ -15,20 +15,31 @@ const initialState = pkModelsAdapter.getInitialState({
   error: null,
 })
 
-export const fetchPkModels = createAsyncThunk('pkModels/fetchPkModels', async (project) => {
-  const pkModels = await api.get(
+export const fetchPkModels = createAsyncThunk('pkModels/fetchPkModels', async (project, { dispatch }) => {
+  const response = await api.get(
     `/api/dosed_pharmacokinetic/?project_id=${project.id}`
   )
-  return pkModels
+  for (var i = 0; i < response.length; i++) { 
+    dispatch(fetchPkModelSimulateById(response[i].id))
+  }
+  return response
 })
 
 export const fetchPkModelById = createAsyncThunk('pkModels/fetchPkModelById', async (model_id, {dispatch}) => {
-  const pkModel = await api.get(
+  let response = await api.get(
     `/api/dosed_pharmacokinetic/${model_id}/`
   )
-  dispatch(fetchVariablesByPkModel(pkModel.id))
-  dispatch(fetchUnitsByPkModel(pkModel.id))
-  return pkModel
+  dispatch(fetchVariablesByPkModel(response.id))
+  dispatch(fetchUnitsByPkModel(response.id))
+  dispatch(fetchPkModelSimulateById(response.id))
+  return response
+})
+
+export const fetchPkModelSimulateById = createAsyncThunk('pkModels/fetchPkModelSimulateById', async (model_id, {dispatch}) => {
+  const response = await api.post(
+    `/api/dosed_pharmacokinetic/${model_id}/simulate`
+  )
+  return response
 })
 
 export const deletePkModel = createAsyncThunk(
@@ -53,6 +64,7 @@ export const addNewPkModel = createAsyncThunk(
     )
     dispatch(fetchVariablesByPkModel(pkModel.id))
     dispatch(fetchUnitsByPkModel(pkModel.id))
+    dispatch(fetchPkModelSimulateById(pkModel.id))
     pkModel.chosen = true;
     return pkModel
   }
@@ -61,12 +73,13 @@ export const addNewPkModel = createAsyncThunk(
 export const updatePkModel = createAsyncThunk(
   'pkModels/updatePkModel',
   async (pkModel, {dispatch}) => {
-    const newPkModel = await api.put(
+    let newPkModel = await api.put(
       `/api/dosed_pharmacokinetic/${pkModel.id}/`, pkModel
     )
     // an update could create new variables
-    dispatch(fetchVariablesByPkModel(pkModel.id))
-    dispatch(fetchUnitsByPkModel(pkModel.id))
+    dispatch(fetchVariablesByPkModel(newPkModel.id))
+    dispatch(fetchUnitsByPkModel(newPkModel.id))
+    dispatch(fetchPkModelSimulateById(newPkModel.id))
     //const simulateData = {
     //  outputs: pkModel.outputs.filter(x => x.default_value).map(x => x.name),
     //  initial_conditions: pkModel.outputs.reduce((o, x) => ({...o, x.name: x.default_value}), {}),
@@ -103,6 +116,28 @@ export const pkModelsSlice = createSlice({
     },
     [deletePkModel.fulfilled]: pkModelsAdapter.removeOne,
     [fetchPkModelById.fulfilled]: pkModelsAdapter.upsertOne,
+    [fetchPkModelSimulateById.pending]: (state, action) => {
+      if (state.ids.includes(action.meta.arg)) {
+        state.entities[action.meta.arg].simulate = {
+          status: 'loading'
+        }
+      }
+    },
+    [fetchPkModelSimulateById.fulfilled]: (state, action) => {
+      if (state.ids.includes(action.meta.arg)) {
+        state.entities[action.meta.arg].simulate =  {
+          ...action.payload,
+          status: 'succeeded'
+        }
+      }
+    },
+    [fetchPkModelSimulateById.rejected]: (state, action) => {
+      if (state.ids.includes(action.meta.arg)) {
+        state.entities[action.meta.arg].simulate = {
+          status: 'failed'
+        }
+      }
+    },
     [addNewPkModel.rejected]: (state, action) => console.log(action.error.message),
     [addNewPkModel.fulfilled]: pkModelsAdapter.addOne,
     [updatePkModel.fulfilled]: pkModelsAdapter.upsertOne,

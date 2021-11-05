@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { useSelector, useDispatch } from 'react-redux'
 import IconButton from '@material-ui/core/IconButton';
 import { useForm, useFormState } from "react-hook-form";
@@ -19,7 +19,7 @@ export default function SubjectSubform({subject_id, disableSave}) {
     }
   }
 
-  const { control, handleSubmit, reset } = useForm({
+  const { control, handleSubmit } = useForm({
     defaultValues: {
       id: subject.id,
       display: subject.display,
@@ -29,10 +29,6 @@ export default function SubjectSubform({subject_id, disableSave}) {
   });
 
   const { isDirty } = useFormState({ control });
-
-  useEffect(() => {
-    reset(subject);
-  }, [reset, subject]);
 
   const onSubmit = (values) => {
     console.log('submit subject', values)
