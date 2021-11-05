@@ -6,16 +6,22 @@
 # flake8: noqa F401
 
 
-from .auce import AuceView
-from .biomarker_type import BiomarkerTypeView
-from .dataset import DatasetSerializer
-from .dose import DoseView
 from .filters import (
     UserAccessFilter,
     DosedPkModelFilter,
     PdModelFilter,
     ProjectFilter
 )
+from .permissions import (
+    NotADatasetDose,
+    NotADatasetProtocol,
+    CheckAccessToProject,
+)
+from .auce import AuceView
+from .biomarker_type import BiomarkerTypeView
+from .dataset import DatasetView
+from .dose import DoseView
+
 from .models import (
     PharmacokineticView,
     PharmacodynamicView,
@@ -23,12 +29,7 @@ from .models import (
     PkpdView,
 )
 from .nca import NcaView
-from .permissions import (
-    NotADatasetDose,
-    NotADatasetProtocol,
-    CheckAccessToProject,
-)
-from .project import ProjectView
+from .project import ProjectView, ProjectAccessView
 from .protocol import ProtocolView
 from .simulate import (
     SimulatePkView,
