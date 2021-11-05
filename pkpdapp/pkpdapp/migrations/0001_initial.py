@@ -11,6 +11,7 @@ from django.conf import settings
 from django.db import migrations, models
 import django.db.models.deletion
 import jsonfield.fields
+import pkpdapp.models.dose
 import pkpdapp.models.myokit_model_mixin
 import pkpdapp.models.protocol
 
@@ -52,6 +53,27 @@ class Migration(migrations.Migration):
             bases=(models.Model, pkpdapp.models.myokit_model_mixin.MyokitModelMixin),
         ),
         migrations.CreateModel(
+            name='Inference',
+            fields=[
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('description', models.TextField(blank=True, default='', help_text='short description of what this inference does')),
+                ('datetime', models.DateTimeField(blank=True, help_text='date/time the experiment was conducted. All time measurements are relative to this date/time, which is in YYYY-MM-DD HH:MM:SS format. For example, 2020-07-18 14:30:59', null=True)),
+                ('inference_type', models.CharField(choices=[('SA', 'Sampling'), ('OP', 'Optimisation')], default='OP', max_length=10)),
+                ('sampling_algorithm', models.CharField(choices=[('HB', 'Haario-Bardenet'), ('DE', 'Differential evolution'), ('DR', 'DREAM'), ('PO', 'Population MCMC')], default='HB', help_text='sampling algorithm to use for inference', max_length=10)),
+                ('optimisation_algorithm', models.CharField(choices=[('CMAES', 'CMAES'), ('XNES', 'XNES'), ('SNES', 'SNES'), ('PSO', 'PSO'), ('NM', 'Nelder-Mead')], default='CMAES', help_text='optimisation algorithm to use for inference', max_length=10)),
+                ('number_of_iterations', models.IntegerField(default=1000, help_text='number of iterations')),
+                ('time_elapsed', models.IntegerField(blank=True, help_text='Elapsed run time for inference in seconds', null=True)),
+                ('number_of_chains', models.IntegerField(default=4, help_text='number of chains')),
+                ('number_of_function_evals', models.IntegerField(blank=True, help_text='number of function evaluations', null=True)),
+            ],
+        ),
+        migrations.CreateModel(
+            name='InferenceChain',
+            fields=[
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+            ],
+        ),
+        migrations.CreateModel(
             name='PharmacodynamicModel',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
@@ -88,6 +110,24 @@ class Migration(migrations.Migration):
             ],
         ),
         migrations.CreateModel(
+            name='StoredVariable',
+            fields=[
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('is_public', models.BooleanField(default=False)),
+                ('lower_bound', models.FloatField(default=1e-06, help_text='lowest possible value for this variable')),
+                ('upper_bound', models.FloatField(default=2, help_text='largest possible value for this variable')),
+                ('default_value', models.FloatField(default=1, help_text='default value for this variable')),
+                ('name', models.CharField(help_text='name of the variable', max_length=20)),
+                ('qname', models.CharField(help_text='fully qualitifed name of the variable', max_length=100)),
+                ('constant', models.BooleanField(default=True, help_text='True for a constant variable of the model, i.e. a parameter. False if non-constant, i.e. an output of the model (default is True)')),
+                ('state', models.BooleanField(default=False, help_text='True for a state variable of the model (default is False)')),
+                ('color', models.IntegerField(default=0, help_text='Color index associated with this variable. For display purposes in the frontend')),
+                ('display', models.BooleanField(default=True, help_text='True if this variable will be displayed in the frontend, False otherwise')),
+                ('axis', models.BooleanField(default=False, help_text='False/True if biomarker type displayed on LHS/RHS axis')),
+                ('scale', models.CharField(choices=[('LN', 'Linear'), ('LG', 'Log')], default='LN', max_length=2)),
+            ],
+        ),
+        migrations.CreateModel(
             name='Unit',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
@@ -103,16 +143,104 @@ class Migration(migrations.Migration):
             ],
         ),
         migrations.CreateModel(
+            name='Boundary',
+            fields=[
+                ('variable', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, primary_key=True, serialize=False, to='pkpdapp.storedvariable')),
+            ],
+            options={
+                'abstract': False,
+            },
+        ),
+        migrations.CreateModel(
+            name='LogLikelihoodLogNormal',
+            fields=[
+                ('variable', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, primary_key=True, serialize=False, to='pkpdapp.storedvariable')),
+                ('sigma', models.FloatField(help_text='sigma of log-normal prior distribution.')),
+            ],
+            options={
+                'abstract': False,
+            },
+        ),
+        migrations.CreateModel(
+            name='LogLikelihoodNormal',
+            fields=[
+                ('variable', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, primary_key=True, serialize=False, to='pkpdapp.storedvariable')),
+                ('sd', models.FloatField(help_text='sd of normal prior distribution.')),
+            ],
+            options={
+                'abstract': False,
+            },
+        ),
+        migrations.CreateModel(
+            name='PriorNormal',
+            fields=[
+                ('variable', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, primary_key=True, serialize=False, to='pkpdapp.storedvariable')),
+                ('mean', models.FloatField(help_text='mean of normal prior distribution.')),
+                ('sd', models.FloatField(help_text='sd of normal prior distribution.')),
+            ],
+            options={
+                'abstract': False,
+            },
+        ),
+        migrations.CreateModel(
+            name='PriorUniform',
+            fields=[
+                ('variable', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, primary_key=True, serialize=False, to='pkpdapp.storedvariable')),
+                ('lower', models.FloatField(help_text='lower bound of the uniform distribution.')),
+                ('upper', models.FloatField(help_text='upper bound of the uniform distribution.')),
+            ],
+            options={
+                'abstract': False,
+            },
+        ),
+        migrations.CreateModel(
+            name='StoredDosedPharmacokineticModel',
+            fields=[
+                ('dosedpharmacokineticmodel_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='pkpdapp.dosedpharmacokineticmodel')),
+            ],
+            bases=('pkpdapp.dosedpharmacokineticmodel',),
+        ),
+        migrations.CreateModel(
+            name='StoredPharmacodynamicModel',
+            fields=[
+                ('pharmacodynamicmodel_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='pkpdapp.pharmacodynamicmodel')),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=('pkpdapp.pharmacodynamicmodel',),
+        ),
+        migrations.CreateModel(
+            name='StoredPkpdModel',
+            fields=[
+                ('pharmacodynamicmodel_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='pkpdapp.pharmacodynamicmodel')),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=('pkpdapp.pharmacodynamicmodel',),
+        ),
+        migrations.CreateModel(
+            name='SumOfSquaredErrorsScoreFunction',
+            fields=[
+                ('variable', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, primary_key=True, serialize=False, to='pkpdapp.storedvariable')),
+            ],
+            options={
+                'abstract': False,
+            },
+        ),
+        migrations.CreateModel(
             name='Variable',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('is_public', models.BooleanField(default=False)),
+                ('lower_bound', models.FloatField(default=1e-06, help_text='lowest possible value for this variable')),
+                ('upper_bound', models.FloatField(default=2, help_text='largest possible value for this variable')),
+                ('default_value', models.FloatField(default=1, help_text='default value for this variable')),
                 ('name', models.CharField(help_text='name of the variable', max_length=20)),
                 ('qname', models.CharField(help_text='fully qualitifed name of the variable', max_length=100)),
                 ('constant', models.BooleanField(default=True, help_text='True for a constant variable of the model, i.e. a parameter. False if non-constant, i.e. an output of the model (default is True)')),
                 ('state', models.BooleanField(default=False, help_text='True for a state variable of the model (default is False)')),
-                ('lower_bound', models.FloatField(default=1e-06, help_text='lowest possible value for this variable')),
-                ('upper_bound', models.FloatField(default=2, help_text='largest possible value for this variable')),
-                ('default_value', models.FloatField(default=1, help_text='default value for this variable')),
                 ('color', models.IntegerField(default=0, help_text='Color index associated with this variable. For display purposes in the frontend')),
                 ('display', models.BooleanField(default=True, help_text='True if this variable will be displayed in the frontend, False otherwise')),
                 ('axis', models.BooleanField(default=False, help_text='False/True if biomarker type displayed on LHS/RHS axis')),
@@ -136,6 +264,11 @@ class Migration(migrations.Migration):
                 ('dataset', models.ForeignKey(help_text='dataset containing this subject', on_delete=django.db.models.deletion.CASCADE, related_name='subjects', to='pkpdapp.dataset')),
                 ('dose_group_unit', models.ForeignKey(blank=True, help_text='unit for dose_group_amount', null=True, on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.unit')),
             ],
+        ),
+        migrations.AddField(
+            model_name='storedvariable',
+            name='unit',
+            field=models.ForeignKey(help_text='variable values are in this unit (note this might be different from the unit in the stored sbml)', on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.unit'),
         ),
         migrations.CreateModel(
             name='Protocol',
@@ -194,6 +327,15 @@ class Migration(migrations.Migration):
             name='project',
             field=models.ForeignKey(blank=True, help_text='Project that "owns" this model', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='pd_models', to='pkpdapp.project'),
         ),
+        migrations.CreateModel(
+            name='InferenceResult',
+            fields=[
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('iteration', models.IntegerField(help_text='Iteration')),
+                ('value', models.FloatField(help_text='estimated parameter value')),
+                ('chain', models.ForeignKey(help_text='Chain related to the row', on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.inferencechain')),
+            ],
+        ),
         migrations.AddField(
             model_name='dosedpharmacokineticmodel',
             name='pharmacokinetic_model',
@@ -215,7 +357,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('start_time', models.FloatField(help_text='starting time point of dose, see protocol for units')),
                 ('amount', models.FloatField(help_text='amount of compound administered over the duration, see protocol for units. Rate of administration is assumed constant')),
-                ('duration', models.FloatField(default=0.0, help_text='Duration of dose administration, see protocol for units. For a bolus injection, set a dose duration of 0.')),
+                ('duration', models.FloatField(default=1.0, help_text='Duration of dose administration, see protocol for units. Duration must be greater than 0.', validators=[pkpdapp.models.dose.validate_duration])),
                 ('protocol', models.ForeignKey(help_text='protocol containing this dose', on_delete=django.db.models.deletion.CASCADE, related_name='doses', to='pkpdapp.protocol')),
             ],
         ),
@@ -252,11 +394,12 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='variable',
-            constraint=models.CheckConstraint(check=models.Q(models.Q(('pk_model__isnull', True), ('dosed_pk_model__isnull', True), ('pd_model__isnull', False)), models.Q(('pk_model__isnull', False), ('dosed_pk_model__isnull', True), ('pd_model__isnull', True)), models.Q(('pk_model__isnull', True), ('dosed_pk_model__isnull', False), ('pd_model__isnull', True)), _connector='OR'), name='variable must belong to a model'),
+            constraint=models.CheckConstraint(check=models.Q(models.Q(('pk_model__isnull', True), ('dosed_pk_model__isnull', True), ('pd_model__isnull', False)), models.Q(('pk_model__isnull', False), ('dosed_pk_model__isnull', True), ('pd_model__isnull', True)), models.Q(('pk_model__isnull', True), ('dosed_pk_model__isnull', False), ('pd_model__isnull', True)), _connector='OR'), name='variable: variable must belong to a model'),
         ),
-        migrations.AddConstraint(
-            model_name='variable',
-            constraint=models.CheckConstraint(check=models.Q(models.Q(('scale', 'LG'), ('lower_bound__gt', 0)), ('scale', 'LN'), _connector='OR'), name='log scale must have a lower bound greater than zero'),
+        migrations.AddField(
+            model_name='sumofsquarederrorsscorefunction',
+            name='biomarker_type',
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.biomarkertype'),
         ),
         migrations.AddConstraint(
             model_name='subject',
@@ -265,5 +408,67 @@ class Migration(migrations.Migration):
         migrations.AddConstraint(
             model_name='subject',
             constraint=models.CheckConstraint(check=models.Q(models.Q(('dose_group_unit__isnull', True), ('dose_group_unit__isnull', True)), models.Q(('dose_group_unit__isnull', False), ('dose_group_unit__isnull', False)), _connector='OR'), name='amount must have a unit and visa versa'),
+        ),
+        migrations.AddField(
+            model_name='storedvariable',
+            name='dosed_pk_model',
+            field=models.ForeignKey(blank=True, help_text='dosed pharmacokinetic model', null=True, on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.storeddosedpharmacokineticmodel'),
+        ),
+        migrations.AddField(
+            model_name='storedvariable',
+            name='pd_model',
+            field=models.ForeignKey(blank=True, help_text='pharmacodynamic model', null=True, on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.storedpharmacodynamicmodel'),
+        ),
+        migrations.AddField(
+            model_name='loglikelihoodnormal',
+            name='biomarker_type',
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.biomarkertype'),
+        ),
+        migrations.AddField(
+            model_name='loglikelihoodlognormal',
+            name='biomarker_type',
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.biomarkertype'),
+        ),
+        migrations.AddField(
+            model_name='inferencechain',
+            name='boundary',
+            field=models.ForeignKey(blank=True, help_text='parameter boundary', null=True, on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.boundary'),
+        ),
+        migrations.AddField(
+            model_name='inferencechain',
+            name='prior_normal',
+            field=models.ForeignKey(blank=True, help_text='normal prior', null=True, on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.priornormal'),
+        ),
+        migrations.AddField(
+            model_name='inferencechain',
+            name='prior_uniform',
+            field=models.ForeignKey(blank=True, help_text='uniform prior', null=True, on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.prioruniform'),
+        ),
+        migrations.AddField(
+            model_name='inference',
+            name='dosed_pk_model',
+            field=models.ForeignKey(blank=True, help_text='dosed pharmacokinetic model', null=True, on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.storeddosedpharmacokineticmodel'),
+        ),
+        migrations.AddField(
+            model_name='inference',
+            name='pd_model',
+            field=models.ForeignKey(blank=True, help_text='pharmacodynamic model', null=True, on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.storedpharmacodynamicmodel'),
+        ),
+        migrations.AddField(
+            model_name='inference',
+            name='pkpd_model',
+            field=models.ForeignKey(blank=True, help_text='pharmacokinetic/pharmacokinetic model', null=True, on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.storedpkpdmodel'),
+        ),
+        migrations.AddConstraint(
+            model_name='dose',
+            constraint=models.CheckConstraint(check=models.Q(duration__gt=0), name='Duration must be greater than 0'),
+        ),
+        migrations.AddConstraint(
+            model_name='storedvariable',
+            constraint=models.CheckConstraint(check=models.Q(models.Q(('dosed_pk_model__isnull', True), ('pd_model__isnull', False)), models.Q(('dosed_pk_model__isnull', False), ('pd_model__isnull', True)), _connector='OR'), name='storedvariable: stored variable must belong to a model'),
+        ),
+        migrations.AddConstraint(
+            model_name='inferencechain',
+            constraint=models.CheckConstraint(check=models.Q(models.Q(('prior_uniform__isnull', True), ('prior_uniform__isnull', True), ('boundary__isnull', False)), models.Q(('prior_uniform__isnull', True), ('prior_uniform__isnull', False), ('boundary__isnull', True)), models.Q(('prior_uniform__isnull', False), ('prior_uniform__isnull', True), ('boundary__isnull', True)), _connector='OR'), name='inference chain must belong to a prior'),
         ),
     ]

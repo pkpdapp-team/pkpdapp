@@ -339,3 +339,9 @@ def set_dosing_events(simulator, events):
         )
 
     simulator.set_protocol(myokit_protocol)
+
+
+class StoredDosedPharmacokineticModel(DosedPharmacokineticModel):
+    """
+    Stored dosed PK model.
+    """

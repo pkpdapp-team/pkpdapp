@@ -43,6 +43,12 @@ class PharmacodynamicModel(MechanisticModel):
         self.__original_sbml = self.sbml
 
 
+class StoredPharmacodynamicModel(PharmacodynamicModel):
+    """
+    Stored PD model.
+    """
+
+
 class PkpdModel(MechanisticModel):
     dose_compartment = models.CharField(
         max_length=100,
@@ -68,3 +74,9 @@ class PkpdModel(MechanisticModel):
 
     def get_absolute_url(self):
         return reverse('pkpd_model-detail', kwargs={'pk': self.pk})
+
+
+class StoredPkpdModel(PharmacodynamicModel):
+    """
+    Stored PKPD model.
+    """

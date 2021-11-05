@@ -5,43 +5,38 @@
 #
 
 from django.db import models
+from django.db.models import Q
+import myokit
 from pkpdapp.models import (
     Unit, DosedPharmacokineticModel,
     PharmacokineticModel, PharmacodynamicModel,
+    StoredPharmacodynamicModel,
+    StoredDosedPharmacokineticModel,
 )
-import myokit
-from django.db.models import Q
 
 
-class Variable(models.Model):
+class BaseVariable(models.Model):
     """
-    A single variable for a mechanistic model.
+    An abstract base class for variable.
     """
+    is_public = models.BooleanField(default=False)
+    lower_bound = models.FloatField(
+        default=1e-6,
+        help_text='lowest possible value for this variable'
+    )
+    upper_bound = models.FloatField(
+        default=2,
+        help_text='largest possible value for this variable'
+    )
+    default_value = models.FloatField(
+        default=1,
+        help_text='default value for this variable'
+    )
 
     name = models.CharField(max_length=20, help_text='name of the variable')
     qname = models.CharField(
         max_length=100, help_text='fully qualitifed name of the variable')
-    pd_model = models.ForeignKey(
-        PharmacodynamicModel,
-        blank=True, null=True,
-        on_delete=models.CASCADE,
-        related_name='variables',
-        help_text='pharmacodynamic model'
-    )
-    pk_model = models.ForeignKey(
-        PharmacokineticModel,
-        blank=True, null=True,
-        on_delete=models.CASCADE,
-        related_name='variables',
-        help_text='pharmacokinetic model'
-    )
-    dosed_pk_model = models.ForeignKey(
-        DosedPharmacokineticModel,
-        blank=True, null=True,
-        on_delete=models.CASCADE,
-        related_name='variables',
-        help_text='dosed pharmacokinetic model'
-    )
+
     unit = models.ForeignKey(
         Unit, on_delete=models.CASCADE,
         help_text=(
@@ -62,18 +57,7 @@ class Variable(models.Model):
         default=False,
         help_text='True for a state variable of the model (default is False)'
     )
-    lower_bound = models.FloatField(
-        default=1e-6,
-        help_text='lowest possible value for this variable'
-    )
-    upper_bound = models.FloatField(
-        default=2,
-        help_text='largest possible value for this variable'
-    )
-    default_value = models.FloatField(
-        default=1,
-        help_text='default value for this variable'
-    )
+
     color = models.IntegerField(
         default=0,
         help_text=(
@@ -106,27 +90,17 @@ class Variable(models.Model):
     )
 
     class Meta:
+        abstract = True
         constraints = [
-            models.CheckConstraint(
-                check=(
-                    (Q(pk_model__isnull=True) &
-                     Q(dosed_pk_model__isnull=True) &
-                     Q(pd_model__isnull=False)) |
-                    (Q(pk_model__isnull=False) &
-                     Q(dosed_pk_model__isnull=True) &
-                     Q(pd_model__isnull=True)) |
-                    (Q(pk_model__isnull=True) &
-                     Q(dosed_pk_model__isnull=False) &
-                     Q(pd_model__isnull=True))
-                ),
-                name='variable must belong to a model'
-            ),
             models.CheckConstraint(
                 check=(
                     (Q(scale='LG') & Q(lower_bound__gt=0)) |
                     Q(scale='LN')
                 ),
-                name='log scale must have a lower bound greater than zero'
+                name=(
+                    '%(class)s: log scale must have a lower '
+                    'bound greater than zero'
+                )
             )
         ]
 
@@ -244,3 +218,77 @@ class Variable(models.Model):
                 'create_variable got unexpected model type {}'
                 .format(type(model)),
             )
+
+
+class Variable(BaseVariable):
+    """
+    A single variable for a mechanistic model.
+    """
+
+    pd_model = models.ForeignKey(
+        PharmacodynamicModel,
+        blank=True, null=True,
+        on_delete=models.CASCADE,
+        related_name='variables',
+        help_text='pharmacodynamic model'
+    )
+    pk_model = models.ForeignKey(
+        PharmacokineticModel,
+        blank=True, null=True,
+        on_delete=models.CASCADE,
+        related_name='variables',
+        help_text='pharmacokinetic model'
+    )
+    dosed_pk_model = models.ForeignKey(
+        DosedPharmacokineticModel,
+        blank=True, null=True,
+        on_delete=models.CASCADE,
+        related_name='variables',
+        help_text='dosed pharmacokinetic model'
+    )
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                check=(
+                    (Q(pk_model__isnull=True) &
+                     Q(dosed_pk_model__isnull=True) &
+                     Q(pd_model__isnull=False)) |
+                    (Q(pk_model__isnull=False) &
+                     Q(dosed_pk_model__isnull=True) &
+                     Q(pd_model__isnull=True)) |
+                    (Q(pk_model__isnull=True) &
+                     Q(dosed_pk_model__isnull=False) &
+                     Q(pd_model__isnull=True))
+                ),
+                name='%(class)s: variable must belong to a model'
+            ),
+        ]
+
+
+class StoredVariable(BaseVariable):
+    pd_model = models.ForeignKey(
+        StoredPharmacodynamicModel,
+        blank=True, null=True,
+        on_delete=models.CASCADE,
+        help_text='pharmacodynamic model'
+    )
+    dosed_pk_model = models.ForeignKey(
+        StoredDosedPharmacokineticModel,
+        blank=True, null=True,
+        on_delete=models.CASCADE,
+        help_text='dosed pharmacokinetic model'
+    )
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                check=(
+                    (Q(dosed_pk_model__isnull=True) &
+                     Q(pd_model__isnull=False)) |
+                    (Q(dosed_pk_model__isnull=False) &
+                     Q(pd_model__isnull=True))
+                ),
+                name='%(class)s: stored variable must belong to a model'
+            ),
+        ]
