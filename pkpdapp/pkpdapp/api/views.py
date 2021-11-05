@@ -11,7 +11,7 @@ from rest_framework.permissions import (
     BasePermission, IsAuthenticated
 )
 from rest_framework.response import Response
-from .serializers import (
+from pkpdapp.api.serializers import (
     DatasetSerializer, UserSerializer, ProjectSerializer,
     PharmacokineticSerializer,
     PharmacodynamicSerializer,
@@ -23,12 +23,12 @@ from .serializers import (
     UnitSerializer,
     DatasetCsvSerializer,
     BiomarkerTypeSerializer,
-    VariableSerializer,
     SubjectSerializer,
     ProjectAccessSerializer,
     NcaSerializer,
     AuceSerializer,
 )
+
 
 from pkpdapp.models import (
     Dataset, Project,
