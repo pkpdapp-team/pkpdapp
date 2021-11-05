@@ -281,7 +281,11 @@ class AuceView(views.APIView):
         )
 
         auces = []
-        groups = subjects.order_by('group').values_list('group', flat=True).distinct()
+        groups = subjects.order_by(
+            'group'
+        ).values_list(
+            'group', flat=True
+        ).distinct()
         for group in groups:
             subject_times = []
             subject_data = []
@@ -324,9 +328,7 @@ class AuceView(views.APIView):
                 errors, status=status.HTTP_400_BAD_REQUEST
             )
 
-
         return Response([serializer.data for serializer in serializers])
-
 
 
 class NcaView(views.APIView):

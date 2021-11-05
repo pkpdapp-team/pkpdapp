@@ -5,7 +5,6 @@
 #
 
 import numpy as np
-import scipy.stats as stats
 from scipy.optimize import curve_fit
 
 
@@ -21,7 +20,10 @@ def fsigmoid(concentration, top, bottom, EC50):
 
 
 class Auce():
-    def __init__(self, name, subject_ids, concentrations, subject_times, subject_data):
+    def __init__(
+            self, name, subject_ids, concentrations,
+            subject_times, subject_data
+    ):
         """
         Initialise AUCE class for calculating and storing
         AUCE data and fits

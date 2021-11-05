@@ -31,6 +31,7 @@ class DoseSerializer(serializers.ModelSerializer):
         model = Dose
         fields = '__all__'
 
+
 class AuceSerializer(serializers.Serializer):
     name = serializers.CharField()
     fit_type = serializers.CharField()
@@ -62,6 +63,7 @@ class AuceSerializer(serializers.Serializer):
     sigma_top = serializers.FloatField()
     fit_bottom = serializers.FloatField()
     sigma_bottom = serializers.FloatField()
+
 
 class NcaSerializer(serializers.Serializer):
     times = serializers.ListField(

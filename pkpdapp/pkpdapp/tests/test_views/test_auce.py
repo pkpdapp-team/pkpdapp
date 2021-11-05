@@ -6,7 +6,7 @@
 from rest_framework import status
 from rest_framework.test import APITestCase, APIClient
 from django.contrib.auth.models import User
-from pkpdapp.models import BiomarkerType, Protocol
+from pkpdapp.models import BiomarkerType
 
 
 class NcaTestCase(APITestCase):
