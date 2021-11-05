@@ -7,7 +7,7 @@
 from django.db import models
 from django.db.models import Q
 from pkpdapp.models import (
-    StoredVariable
+    StoredVariable, BiomarkerType
 )
 
 class ObjectiveFunction(models.Model):

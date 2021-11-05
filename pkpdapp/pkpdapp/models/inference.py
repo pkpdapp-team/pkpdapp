@@ -7,9 +7,10 @@
 from django.db import models
 from django.db.models import Q
 from pkpdapp.models import (
-    Variable, BaseVariable, Dataset, PharmacodynamicModel,
+    Variable, Dataset, PharmacodynamicModel,
     PharmacokineticModel, DosedPharmacokineticModel,
     BiomarkerType)
+
 
 class Inference(models.Model):
     """
@@ -23,8 +24,8 @@ class Inference(models.Model):
     datetime = models.DateTimeField(
         help_text=(
             'date/time the experiment was conducted. '
-            'All time measurements are relative to this date/time, ' +
-            'which is in YYYY-MM-DD HH:MM:SS format. For example, ' +
+            'All time measurements are relative to this date/time, '
+            'which is in YYYY-MM-DD HH:MM:SS format. For example, '
             '2020-07-18 14:30:59'
         ),
         null=True, blank=True
@@ -35,7 +36,7 @@ class Inference(models.Model):
         OPTIMISATION = 'OP', 'Optimisation'
 
     inference_type = models.CharField(
-        max_length=2,
+        max_length=10,
         choices=InferenceType.choices,
         default=InferenceType.OPTIMISATION,
     )
@@ -47,6 +48,7 @@ class Inference(models.Model):
         PO = 'PO', 'Population MCMC'
 
     sampling_algorithm = models.CharField(
+        max_length=10,
         choices=SamplingAlgorithm.choices,
         default=SamplingAlgorithm.HB,
         help_text='sampling algorithm to use for inference')
@@ -59,9 +61,11 @@ class Inference(models.Model):
         NM = 'NM', 'Nelder-Mead'
 
     optimisation_algorithm = models.CharField(
+        max_length=10,
         choices=OptimisationAlgorithm.choices,
         default=OptimisationAlgorithm.CMAES,
-        help_text='optimisation algorithm to use for inference')
+        help_text='optimisation algorithm to use for inference'
+    )
 
     number_of_iterations = models.IntegerField(
         default=1000,

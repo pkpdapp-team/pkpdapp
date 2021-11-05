@@ -30,7 +30,7 @@ from .biomarker import Biomarker
 from .profile import Profile
 from .dose import Dose
 from .variable import Variable
-from .priors import PriorNormal, PriorUniform
+from .priors import PriorNormal, PriorUniform, Boundary
 from .likelihoods import (
     SumOfSquaredErrorsScoreFunction, LogLikelihoodNormal,
     LogLikelihoodLogNormal

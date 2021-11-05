@@ -10,32 +10,35 @@ from pkpdapp.models import (
     PriorUniform, PriorNormal, Boundary
 )
 
+
 class InferenceChain(models.Model):
-    prior_uniform = models.OneToOne(
+    prior_uniform = models.OneToOneField(
         PriorUniform,
         blank=True, null=True,
         on_delete=models.CASCADE,
         help_text='uniform prior'
     )
-    prior_normal = models.OneToOne(
+    prior_normal = models.OneToOneField(
         PriorNormal,
         blank=True, null=True,
         on_delete=models.CASCADE,
         help_text='normal prior'
     )
-    boundary = models.OnetoOne(
+    boundary = models.OneToOneField(
         Boundary,
         blank=True, null=True,
         on_delete=models.CASCADE,
         help_text='parameter boundary'
     )
 
+
 class InferenceResult(models.Model):
     """
     Abstract class for inference results.
     """
     chain = models.ForeignKey(
-        InferenceChain
+        InferenceChain,
+        on_delete=models.CASCADE,
         help_text='Chain related to the row'
     )
     iteration = models.IntegerField(

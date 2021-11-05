@@ -103,14 +103,14 @@ class BaseVariable(models.Model):
                      Q(dosed_pk_model__isnull=False) &
                      Q(pd_model__isnull=True))
                 ),
-                name='variable must belong to a model'
+                name='%(class)s: variable must belong to a model'
             ),
             models.CheckConstraint(
                 check=(
                     (Q(scale='LG') & Q(lower_bound__gt=0)) |
                     Q(scale='LN')
                 ),
-                name='log scale must have a lower bound greater than zero'
+                name='%(class)s: log scale must have a lower bound greater than zero'
             )
         ]
 
