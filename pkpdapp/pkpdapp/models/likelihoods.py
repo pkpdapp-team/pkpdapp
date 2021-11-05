@@ -19,7 +19,7 @@ class ObjectiveFunction(models.Model):
         on_delete=models.CASCADE,
         primary_key=True,
     )
-    biomarker_type = models.OneToOneField(
+    biomarker_type = models.ForeignKey(
         BiomarkerType,
         on_delete=models.CASCADE,
     )

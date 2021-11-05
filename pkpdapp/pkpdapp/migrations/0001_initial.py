@@ -399,7 +399,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='sumofsquarederrorsscorefunction',
             name='biomarker_type',
-            field=models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.biomarkertype'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.biomarkertype'),
         ),
         migrations.AddConstraint(
             model_name='subject',
@@ -422,27 +422,27 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='loglikelihoodnormal',
             name='biomarker_type',
-            field=models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.biomarkertype'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.biomarkertype'),
         ),
         migrations.AddField(
             model_name='loglikelihoodlognormal',
             name='biomarker_type',
-            field=models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.biomarkertype'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.biomarkertype'),
         ),
         migrations.AddField(
             model_name='inferencechain',
             name='boundary',
-            field=models.OneToOneField(blank=True, help_text='parameter boundary', null=True, on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.boundary'),
+            field=models.ForeignKey(blank=True, help_text='parameter boundary', null=True, on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.boundary'),
         ),
         migrations.AddField(
             model_name='inferencechain',
             name='prior_normal',
-            field=models.OneToOneField(blank=True, help_text='normal prior', null=True, on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.priornormal'),
+            field=models.ForeignKey(blank=True, help_text='normal prior', null=True, on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.priornormal'),
         ),
         migrations.AddField(
             model_name='inferencechain',
             name='prior_uniform',
-            field=models.OneToOneField(blank=True, help_text='uniform prior', null=True, on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.prioruniform'),
+            field=models.ForeignKey(blank=True, help_text='uniform prior', null=True, on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.prioruniform'),
         ),
         migrations.AddField(
             model_name='inference',
@@ -466,5 +466,9 @@ class Migration(migrations.Migration):
         migrations.AddConstraint(
             model_name='storedvariable',
             constraint=models.CheckConstraint(check=models.Q(models.Q(('dosed_pk_model__isnull', True), ('pd_model__isnull', False)), models.Q(('dosed_pk_model__isnull', False), ('pd_model__isnull', True)), _connector='OR'), name='storedvariable: stored variable must belong to a model'),
+        ),
+        migrations.AddConstraint(
+            model_name='inferencechain',
+            constraint=models.CheckConstraint(check=models.Q(models.Q(('prior_uniform__isnull', True), ('prior_uniform__isnull', True), ('boundary__isnull', False)), models.Q(('prior_uniform__isnull', True), ('prior_uniform__isnull', False), ('boundary__isnull', True)), models.Q(('prior_uniform__isnull', False), ('prior_uniform__isnull', True), ('boundary__isnull', True)), _connector='OR'), name='inference chain must belong to a prior'),
         ),
     ]
