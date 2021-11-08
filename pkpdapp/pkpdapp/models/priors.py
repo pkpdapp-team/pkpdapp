@@ -16,6 +16,7 @@ class Prior(models.Model):
     """
     variable = models.OneToOneField(
         StoredVariable,
+        related_name='%(class)s',
         on_delete=models.CASCADE,
         primary_key=True,
     )

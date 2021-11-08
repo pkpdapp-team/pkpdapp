@@ -17,6 +17,15 @@ from .models import (
     PkpdSerializer,
     PharmacodynamicSbmlSerializer,
 )
+from .inference import InferenceSerializer
+from .priors import (
+    PriorNormalSerializer, PriorUniformSerializer
+)
+from .likelihoods import (
+    LogLikelihoodNormalSerializer,
+    LogLikelihoodLogNormalSerializer,
+    SumOfSquaredErrorsScoreFunctionSerializer,
+)
 from .nca import NcaSerializer
 from .project import ProjectSerializer, ProjectAccessSerializer
 from .protocol import ProtocolSerializer

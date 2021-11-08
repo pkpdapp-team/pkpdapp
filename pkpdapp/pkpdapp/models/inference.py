@@ -9,6 +9,7 @@ from django.db.models import Q
 from pkpdapp.models import (
     StoredPkpdModel, StoredPharmacodynamicModel,
     StoredDosedPharmacokineticModel,
+    Project, InferenceChain, InferenceResult,
 )
 
 
@@ -19,6 +20,12 @@ class Inference(models.Model):
     description = models.TextField(
         help_text='short description of what this inference does',
         blank=True, default=''
+    )
+
+    project = models.ForeignKey(
+        Project, on_delete=models.CASCADE,
+        related_name='inferences',
+        help_text='Project that "owns" this inference object'
     )
 
     datetime = models.DateTimeField(
@@ -88,22 +95,25 @@ class Inference(models.Model):
         help_text='number of function evaluations'
     )
 
-    pd_model = models.ForeignKey(
+    pd_model = models.OneToOneField(
         StoredPharmacodynamicModel,
         blank=True, null=True,
         on_delete=models.CASCADE,
+        related_name='inference',
         help_text='pharmacodynamic model'
     )
-    dosed_pk_model = models.ForeignKey(
+    dosed_pk_model = models.OneToOneField(
         StoredDosedPharmacokineticModel,
         blank=True, null=True,
         on_delete=models.CASCADE,
+        related_name='inference',
         help_text='dosed pharmacokinetic model'
     )
-    pkpd_model = models.ForeignKey(
+    pkpd_model = models.OneToOneField(
         StoredPkpdModel,
         blank=True, null=True,
         on_delete=models.CASCADE,
+        related_name='inference',
         help_text='pharmacokinetic/pharmacokinetic model'
     )
 
@@ -123,3 +133,35 @@ class Inference(models.Model):
             name='%(class)s: inference must belong to a model'
         ),
     ]
+
+    def get_project(self):
+        return self.project
+
+    def as_pandas(self):
+        chains = InferenceChain.objects.filter(
+                Q(prior_uniform__variable__=owner) | Q(moderated=False)
+        )
+        self.
+        times_subjects_values = \
+            self.biomarkers.order_by('time').values_list(
+                'time', 'subject__id', 'value'
+            )
+        times, subjects, values = list(zip(*times_subjects_values))
+        df = pd.DataFrame.from_dict({
+            'times': times,
+            'subjects': subjects,
+            'values': values,
+        })
+
+        conversion_factor = self.stored_unit.convert_to(
+            self.display_unit
+        )
+        time_conversion_factor = self.stored_time_unit.convert_to(
+            self.display_time_unit
+        )
+
+        df['values'] *= conversion_factor
+        df['times'] *= time_conversion_factor
+
+        return df
+

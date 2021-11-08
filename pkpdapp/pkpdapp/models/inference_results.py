@@ -7,28 +7,16 @@
 from django.db import models
 from django.db.models import Q
 from pkpdapp.models import (
-    PriorUniform, PriorNormal, Boundary
+    Inference
 )
 
 
 class InferenceChain(models.Model):
-    prior_uniform = models.ForeignKey(
-        PriorUniform,
-        blank=True, null=True,
+    inference = models.ForeignKey(
+        Inference,
         on_delete=models.CASCADE,
+        related_name='chains',
         help_text='uniform prior'
-    )
-    prior_normal = models.ForeignKey(
-        PriorNormal,
-        blank=True, null=True,
-        on_delete=models.CASCADE,
-        help_text='normal prior'
-    )
-    boundary = models.ForeignKey(
-        Boundary,
-        blank=True, null=True,
-        on_delete=models.CASCADE,
-        help_text='parameter boundary'
     )
 
     class Meta:
@@ -49,6 +37,12 @@ class InferenceChain(models.Model):
             ),
         ]
 
+    def as_list(self):
+        return \
+            self.inference_results.order_by('iteration').values_list(
+                'value', flat=True
+            )
+
 
 class InferenceResult(models.Model):
     """
@@ -57,6 +51,7 @@ class InferenceResult(models.Model):
     chain = models.ForeignKey(
         InferenceChain,
         on_delete=models.CASCADE,
+        related_name='inference_results',
         help_text='Chain related to the row'
     )
     iteration = models.IntegerField(
