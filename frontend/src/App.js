@@ -43,6 +43,7 @@ import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 
 import { api } from './Api'
 import Modelling from './features/modelling/Modelling'
+import Inference from './features/inference/Inference'
 import Nca from './features/dataAnalysis/Nca'
 import Auce from './features/dataAnalysis/Auce'
 import Projects from './features/projects/Projects'
@@ -245,6 +246,10 @@ export default function App() {
   const isModellingPath = !!matchPath(pathname, 
     {path: modellingPath, exact:true}
   )
+  const inferencePath ="/inference"
+  const isInferencePath = !!matchPath(pathname, 
+    {path: inferencePath, exact:true}
+  )
   const ncaPath ="/nca"
   const isNcaPath = !!matchPath(pathname, 
     {path: ncaPath, exact:true}
@@ -316,6 +321,13 @@ export default function App() {
         >
           Simulation 
         </Button>
+        <Button 
+          component={Link} to={inferencePath} variant="contained"
+          color={isInferencePath ? "secondary" : "primary"}
+        >
+          Inference 
+        </Button>
+
         </ButtonGroup>
 
 
