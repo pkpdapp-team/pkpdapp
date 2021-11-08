@@ -6,6 +6,16 @@
 # flake8: noqa F401
 
 
+from .priors import (
+    PriorNormalSerializer,
+    PriorUniformSerializer,
+    BoundarySerializer
+)
+from .likelihoods import (
+    LogLikelihoodNormalSerializer,
+    LogLikelihoodLogNormalSerializer,
+    SumOfSquaredErrorsScoreFunctionSerializer,
+)
 from .validators import ValidSbml
 from .auce import AuceSerializer
 from .biomarker_type import BiomarkerTypeSerializer
@@ -17,15 +27,7 @@ from .models import (
     PkpdSerializer,
     PharmacodynamicSbmlSerializer,
 )
-from .inference import InferenceSerializer
-from .priors import (
-    PriorNormalSerializer, PriorUniformSerializer
-)
-from .likelihoods import (
-    LogLikelihoodNormalSerializer,
-    LogLikelihoodLogNormalSerializer,
-    SumOfSquaredErrorsScoreFunctionSerializer,
-)
+from .inference import InferenceSerializer, InferenceChainSerializer
 from .nca import NcaSerializer
 from .project import ProjectSerializer, ProjectAccessSerializer
 from .protocol import ProtocolSerializer

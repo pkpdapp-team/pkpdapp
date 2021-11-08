@@ -35,5 +35,8 @@ from .likelihoods import (
     SumOfSquaredErrorsScoreFunction, LogLikelihoodNormal,
     LogLikelihoodLogNormal
 )
-from .inference import Inference
-from .inference_results import InferenceChain, InferenceResult
+from .inference import (
+    Inference,
+    InferenceChain,
+    InferenceResult
+)

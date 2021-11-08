@@ -9,7 +9,7 @@ from django.db.models import Q
 from pkpdapp.models import (
     StoredPkpdModel, StoredPharmacodynamicModel,
     StoredDosedPharmacokineticModel,
-    Project, InferenceChain, InferenceResult,
+    Project
 )
 
 
@@ -137,31 +137,35 @@ class Inference(models.Model):
     def get_project(self):
         return self.project
 
-    def as_pandas(self):
-        chains = InferenceChain.objects.filter(
-                Q(prior_uniform__variable__=owner) | Q(moderated=False)
-        )
-        self.
-        times_subjects_values = \
-            self.biomarkers.order_by('time').values_list(
-                'time', 'subject__id', 'value'
+
+class InferenceChain(models.Model):
+    inference = models.ForeignKey(
+        Inference,
+        on_delete=models.CASCADE,
+        related_name='chains',
+        help_text='uniform prior'
+    )
+
+    def as_list(self):
+        return \
+            self.inference_results.order_by('iteration').values_list(
+                'value', flat=True
             )
-        times, subjects, values = list(zip(*times_subjects_values))
-        df = pd.DataFrame.from_dict({
-            'times': times,
-            'subjects': subjects,
-            'values': values,
-        })
 
-        conversion_factor = self.stored_unit.convert_to(
-            self.display_unit
-        )
-        time_conversion_factor = self.stored_time_unit.convert_to(
-            self.display_time_unit
-        )
 
-        df['values'] *= conversion_factor
-        df['times'] *= time_conversion_factor
-
-        return df
-
+class InferenceResult(models.Model):
+    """
+    Abstract class for inference results.
+    """
+    chain = models.ForeignKey(
+        InferenceChain,
+        on_delete=models.CASCADE,
+        related_name='inference_results',
+        help_text='Chain related to the row'
+    )
+    iteration = models.IntegerField(
+        help_text='Iteration'
+    )
+    value = models.FloatField(
+        help_text='estimated parameter value'
+    )

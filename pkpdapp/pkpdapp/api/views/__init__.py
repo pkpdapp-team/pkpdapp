@@ -10,7 +10,8 @@ from .filters import (
     UserAccessFilter,
     DosedPkModelFilter,
     PdModelFilter,
-    ProjectFilter
+    ProjectFilter,
+    InferenceFilter
 )
 from .permissions import (
     NotADatasetDose,
