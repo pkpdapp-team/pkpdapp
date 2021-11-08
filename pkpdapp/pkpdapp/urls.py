@@ -25,6 +25,10 @@ router.register('project_access', api.ProjectAccessView,
 router.register('dose', api.DoseView, basename='dose')
 router.register('unit', api.UnitView, basename='unit')
 router.register('variable', api.VariableView, basename='variable')
+router.register(
+    'stored_variable', api.StoredVariableView,
+    basename='stored_variable'
+)
 router.register('protocol', api.ProtocolView, basename='protocol')
 router.register('biomarker_type', api.BiomarkerTypeView,
                 basename='biomarker_type')
@@ -43,6 +47,14 @@ router.register(
 router.register(
     'pkpd_model', api.PkpdView,
     basename='pkpd_model'
+)
+router.register(
+    'inference', api.InferenceView,
+    basename='inference'
+)
+router.register(
+    'inference_chain', api.InferenceChainView,
+    basename='inference_chain'
 )
 
 urlpatterns = [

@@ -11,5 +11,6 @@ from .views import (
     PharmacodynamicView, PkpdView, DoseView,
     ProtocolView, SimulatePkView, SimulatePdView,
     UnitView, BiomarkerTypeView, VariableView, SubjectView,
-    ProjectAccessView, NcaView, AuceView
+    ProjectAccessView, NcaView, AuceView, StoredVariableView,
+    InferenceView, InferenceChainView
 )

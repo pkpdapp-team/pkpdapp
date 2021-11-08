@@ -9,6 +9,7 @@ from django.db.models import Q
 from pkpdapp.models import (
     StoredPkpdModel, StoredPharmacodynamicModel,
     StoredDosedPharmacokineticModel,
+    Project
 )
 
 
@@ -19,6 +20,12 @@ class Inference(models.Model):
     description = models.TextField(
         help_text='short description of what this inference does',
         blank=True, default=''
+    )
+
+    project = models.ForeignKey(
+        Project, on_delete=models.CASCADE,
+        related_name='inferences',
+        help_text='Project that "owns" this inference object'
     )
 
     datetime = models.DateTimeField(
@@ -88,22 +95,25 @@ class Inference(models.Model):
         help_text='number of function evaluations'
     )
 
-    pd_model = models.ForeignKey(
+    pd_model = models.OneToOneField(
         StoredPharmacodynamicModel,
         blank=True, null=True,
         on_delete=models.CASCADE,
+        related_name='inference',
         help_text='pharmacodynamic model'
     )
-    dosed_pk_model = models.ForeignKey(
+    dosed_pk_model = models.OneToOneField(
         StoredDosedPharmacokineticModel,
         blank=True, null=True,
         on_delete=models.CASCADE,
+        related_name='inference',
         help_text='dosed pharmacokinetic model'
     )
-    pkpd_model = models.ForeignKey(
+    pkpd_model = models.OneToOneField(
         StoredPkpdModel,
         blank=True, null=True,
         on_delete=models.CASCADE,
+        related_name='inference',
         help_text='pharmacokinetic/pharmacokinetic model'
     )
 
@@ -123,3 +133,39 @@ class Inference(models.Model):
             name='%(class)s: inference must belong to a model'
         ),
     ]
+
+    def get_project(self):
+        return self.project
+
+
+class InferenceChain(models.Model):
+    inference = models.ForeignKey(
+        Inference,
+        on_delete=models.CASCADE,
+        related_name='chains',
+        help_text='uniform prior'
+    )
+
+    def as_list(self):
+        return \
+            self.inference_results.order_by('iteration').values_list(
+                'value', flat=True
+            )
+
+
+class InferenceResult(models.Model):
+    """
+    Abstract class for inference results.
+    """
+    chain = models.ForeignKey(
+        InferenceChain,
+        on_delete=models.CASCADE,
+        related_name='inference_results',
+        help_text='Chain related to the row'
+    )
+    iteration = models.IntegerField(
+        help_text='Iteration'
+    )
+    value = models.FloatField(
+        help_text='estimated parameter value'
+    )
