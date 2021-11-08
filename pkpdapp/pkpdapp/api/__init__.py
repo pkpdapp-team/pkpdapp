@@ -12,5 +12,6 @@ from .views import (
     ProtocolView, SimulatePkView, SimulatePdView,
     UnitView, BiomarkerTypeView, VariableView, SubjectView,
     ProjectAccessView, NcaView, AuceView, StoredVariableView,
-    InferenceView, InferenceChainView
+    InferenceView, InferenceChainView, CopyPkView, CopyPdView,
+    CopyPkpdView,
 )

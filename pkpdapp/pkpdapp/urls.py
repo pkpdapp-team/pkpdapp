@@ -66,6 +66,16 @@ urlpatterns = [
     path('api/auce/', api.AuceView.as_view(), name='auce'),
     path('api/dosed_pharmacokinetic/<int:pk>/simulate',
          api.SimulatePkView.as_view(), name='simulate-dosed-pharmacokinetic'),
+    path(
+        'api/dosed_pharmacokinetic/<int:pk>/copy',
+        api.CopyPkView.as_view(),
+        name='copy-dosed-pharmacokinetic'
+    ),
+    path(
+        'api/pharmacodynamic/<int:pk>/copy',
+        api.CopyPdView.as_view(),
+        name='copy-pharmacodynamic'
+    ),
     path('api/pharmacodynamic/<int:pk>/simulate',
          api.SimulatePdView.as_view(), name='simulate-pharmacodynamic'),
     path('auth/', include('djoser.urls')),

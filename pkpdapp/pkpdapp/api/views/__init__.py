@@ -29,6 +29,11 @@ from .models import (
     DosedPharmacokineticView,
     PkpdView,
 )
+from .model_copy import (
+    CopyPkView,
+    CopyPdView,
+    CopyPkpdView,
+)
 from .nca import NcaView
 from .project import ProjectView, ProjectAccessView
 from .protocol import ProtocolView
