@@ -4,7 +4,6 @@
 # copyright notice and full license details.
 #
 from rest_framework import viewsets
-from rest_framework.permissions import IsAuthenticated
 from pkpdapp.api.views import (
     DosedPkModelFilter,
     PdModelFilter,
@@ -17,6 +16,3 @@ class UnitView(viewsets.ModelViewSet):
     queryset = Unit.objects.all()
     serializer_class = UnitSerializer
     filter_backends = [DosedPkModelFilter, PdModelFilter]
-
-
-

@@ -31,7 +31,7 @@ class VariableView(viewsets.ModelViewSet):
 
 class StoredVariableView(viewsets.ModelViewSet):
     queryset = StoredVariable.objects.all()
-    serializer_class = VariableSerializer
+    serializer_class = StoredVariableSerializer
     filter_backends = [
         ProjectFilter, InferenceFilter
     ]

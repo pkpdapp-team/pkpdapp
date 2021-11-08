@@ -6,6 +6,7 @@
 from rest_framework import (
     filters
 )
+from django.db.models import Q
 
 from pkpdapp.models import (
     Dataset, Project,
@@ -97,6 +98,7 @@ class PdModelFilter(filters.BaseFilterBackend):
 
         return queryset
 
+
 class InferenceFilter(filters.BaseFilterBackend):
     """
     Filter that only allows users to filter by inference.
@@ -120,7 +122,6 @@ class InferenceFilter(filters.BaseFilterBackend):
                 queryset = queryset.model.objects.none()
 
         return queryset
-
 
 
 class ProjectFilter(filters.BaseFilterBackend):

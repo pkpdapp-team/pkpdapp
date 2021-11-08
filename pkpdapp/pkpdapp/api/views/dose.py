@@ -13,12 +13,9 @@ from pkpdapp.api.serializers import DoseSerializer
 from pkpdapp.models import Dose
 
 
-
 class DoseView(viewsets.ModelViewSet):
     queryset = Dose.objects.all()
     serializer_class = DoseSerializer
     permission_classes = [
         IsAuthenticated & NotADatasetDose & CheckAccessToProject
     ]
-
-

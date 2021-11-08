@@ -12,6 +12,7 @@ from pkpdapp.models import (
     Project, ProjectAccess
 )
 
+
 class NotADatasetDose(BasePermission):
     def has_object_permission(self, request, view, obj):
         is_update_method = request.method == 'PUT' or request.method == 'PATCH'
@@ -90,5 +91,3 @@ class CheckAccessToProject(BasePermission):
             return not access.read_only
 
         return True
-
-

@@ -4,17 +4,9 @@
 # copyright notice and full license details.
 #
 from rest_framework import views, status
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from pkpdapp.api.views import (
-    ProjectFilter,
-    DosedPkModelFilter,
-    PdModelFilter,
-    CheckAccessToProject,
-)
-from pkpdapp.api.serializers import VariableSerializer
 from pkpdapp.models import (
-    Variable, DosedPharmacokineticModel, PharmacodynamicModel
+    DosedPharmacokineticModel, PharmacodynamicModel
 )
 
 

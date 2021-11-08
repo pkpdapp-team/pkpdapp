@@ -9,6 +9,7 @@ from pkpdapp.models import (
 )
 from pkpdapp.api.serializers import DoseSerializer
 
+
 class ProtocolSerializer(serializers.ModelSerializer):
     doses = DoseSerializer(
         many=True, read_only=True

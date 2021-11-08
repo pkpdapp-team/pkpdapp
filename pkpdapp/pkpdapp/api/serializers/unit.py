@@ -8,6 +8,7 @@ from pkpdapp.models import (
     Unit
 )
 
+
 class UnitSerializer(serializers.ModelSerializer):
     compatible_units = \
         serializers.SerializerMethodField('get_compatible_units')
@@ -23,5 +24,3 @@ class UnitSerializer(serializers.ModelSerializer):
                 'symbol': u.symbol,
             } for u in unit.get_compatible_units()
         ]
-
-

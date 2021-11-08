@@ -10,7 +10,6 @@ from rest_framework.response import Response
 from pkpdapp.models import (
     BiomarkerType,
     Protocol,
-    Subject,
     Dose,
 )
 from pkpdapp.api.serializers import NcaSerializer
@@ -90,5 +89,3 @@ class NcaView(views.APIView):
         nca.calculate_nca()
         serializer = NcaSerializer(nca)
         return Response(serializer.data)
-
-

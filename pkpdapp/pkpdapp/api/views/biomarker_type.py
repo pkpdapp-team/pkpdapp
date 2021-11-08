@@ -6,7 +6,6 @@
 from rest_framework import viewsets
 from pkpdapp.api.views import (
     ProjectFilter,
-    PdModelFilter,
 )
 from pkpdapp.api.serializers import BiomarkerTypeSerializer
 from pkpdapp.models import BiomarkerType

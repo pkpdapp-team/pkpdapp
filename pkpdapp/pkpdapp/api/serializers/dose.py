@@ -9,6 +9,7 @@ from pkpdapp.models import (
     Dose
 )
 
+
 class DoseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Dose

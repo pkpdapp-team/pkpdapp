@@ -10,6 +10,7 @@ from rest_framework.response import Response
 from pkpdapp.models import (
     BiomarkerType,
     Subject,
+    Biomarker,
 )
 from pkpdapp.api.serializers import AuceSerializer
 from pkpdapp.utils import Auce

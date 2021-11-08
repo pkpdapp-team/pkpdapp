@@ -5,6 +5,7 @@
 #
 from rest_framework import serializers
 
+
 class NcaSerializer(serializers.Serializer):
     times = serializers.ListField(
         child=serializers.FloatField()
@@ -34,6 +35,3 @@ class NcaSerializer(serializers.Serializer):
     t_half = serializers.FloatField()
     v_ss = serializers.FloatField()
     v_z = serializers.FloatField()
-
-
-

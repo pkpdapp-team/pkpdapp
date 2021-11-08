@@ -14,5 +14,3 @@ class ValidSbml:
             MyokitModelMixin.parse_sbml_string(value)
         except SBMLParsingError as e:
             raise serializers.ValidationError(e)
-
-

@@ -11,6 +11,7 @@ from pkpdapp.models import (
 )
 from pkpdapp.api.serializers import ValidSbml
 
+
 class PkpdSerializer(serializers.ModelSerializer):
     class Meta:
         model = PkpdModel
@@ -98,5 +99,3 @@ class PharmacodynamicSbmlSerializer(serializers.ModelSerializer):
     class Meta:
         model = PharmacodynamicModel
         fields = ['sbml']
-
-
