@@ -271,11 +271,13 @@ class StoredVariable(BaseVariable):
         StoredPharmacodynamicModel,
         blank=True, null=True,
         on_delete=models.CASCADE,
+        related_name='stored_variables',
         help_text='pharmacodynamic model'
     )
     dosed_pk_model = models.ForeignKey(
         StoredDosedPharmacokineticModel,
         blank=True, null=True,
+        related_name='stored_variables',
         on_delete=models.CASCADE,
         help_text='dosed pharmacokinetic model'
     )

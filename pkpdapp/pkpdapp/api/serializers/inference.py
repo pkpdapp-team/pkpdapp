@@ -20,7 +20,6 @@ class InferenceSerializer(serializers.ModelSerializer):
     dosed_pk_model_detail = StoredDosedPharmacokineticSerializer(
         source='dosed_pk_model', read_only=True
     )
-
     pkpd_model_detail = StoredPkpdSerializer(
         source='pkpd_model', read_only=True
     )

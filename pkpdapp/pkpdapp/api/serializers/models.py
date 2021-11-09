@@ -86,8 +86,20 @@ class DosedPharmacokineticSerializer(serializers.ModelSerializer):
 
 
 class StoredDosedPharmacokineticSerializer(
-    DosedPharmacokineticModel
+    serializers.ModelSerializer
 ):
+    components = serializers.SerializerMethodField('get_components')
+    stored_variables = serializers.PrimaryKeyRelatedField(
+        many=True, read_only=True
+    )
+
+    def get_components(self, m):
+        model = m.get_myokit_model()
+        return [
+            _serialize_component(m, c, model)
+            for c in model.components(sort=True)
+        ]
+
     class Meta:
         model = StoredDosedPharmacokineticModel
         fields = '__all__'
@@ -112,8 +124,21 @@ class PharmacodynamicSerializer(serializers.ModelSerializer):
 
 
 class StoredPharmacodynamicSerializer(
-    PharmacodynamicSerializer
+    serializers.ModelSerializer
 ):
+    components = serializers.SerializerMethodField('get_components')
+    stored_variables = serializers.PrimaryKeyRelatedField(
+        many=True, read_only=True
+    )
+
+    def get_components(self, m):
+        model = m.get_myokit_model()
+        return [
+            _serialize_component(m, c, model)
+            for c in model.components(sort=True)
+        ]
+
+
     class Meta:
         model = StoredDosedPharmacokineticModel
         fields = '__all__'
