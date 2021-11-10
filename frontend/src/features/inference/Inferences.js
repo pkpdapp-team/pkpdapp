@@ -10,7 +10,7 @@ import {
 } from '../inference/inferenceSlice.js'
 
 
-export default function Datasets({project, disableSave}) {
+export default function Inferences({project, disableSave}) {
   const inferences = useSelector(selectAllInferences);
   const dispatch = useDispatch()
   const handleClickItem = (item) => dispatch(toggleInference(item))

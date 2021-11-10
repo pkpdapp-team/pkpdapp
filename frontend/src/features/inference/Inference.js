@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux'
 import Paper from '@material-ui/core/Paper';
 import Grid from '@material-ui/core/Grid';
 import InferenceDetail from './InferenceDetail'
-import Chart from './Chart'
+import InferenceChart from './InferenceChart'
 import Accordion from '@material-ui/core/Accordion';
 import AccordionSummary from '@material-ui/core/AccordionSummary';
 import AccordionDetails from '@material-ui/core/AccordionDetails';
@@ -19,7 +19,7 @@ import {
 
 import {
   selectChosenInferences
-} from './inferencesSlice.js'
+} from './inferenceSlice.js'
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -52,7 +52,7 @@ export default function Modelling() {
         <Grid item xs={12} md={6}>
           <Paper className={classes.chartPaper}>
             {showChart &&
-            <Chart inference={chosenInferences} />
+            <InferenceChart inference={chosenInferences} />
             }
             {!showChart &&
               <Typography>
@@ -63,7 +63,7 @@ export default function Modelling() {
         </Grid>
         <Grid item xs={12} md={6} >
         {chosenInferences.map(inference => {
-          const loading = dataset.status ? dataset.status === 'loading' : false
+          const loading = inference.status ? inference.status === 'loading' : false
           const expandIcon = loading ? 
             (<CircularProgress size={20}/>)
             : (<ExpandMoreIcon />)

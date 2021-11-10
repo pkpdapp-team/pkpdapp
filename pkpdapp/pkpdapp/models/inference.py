@@ -17,6 +17,10 @@ class Inference(models.Model):
     """
     An inference process.
     """
+    name = models.CharField(
+        max_length=100,
+        help_text='name of the dataset'
+    )
     description = models.TextField(
         help_text='short description of what this inference does',
         blank=True, default=''
@@ -120,13 +124,13 @@ class Inference(models.Model):
     constraints = [
         models.CheckConstraint(
             check=(
-                (Q(pk_model__isnull=True) &
+                (Q(pkpd_model__isnull=True) &
                  Q(dosed_pk_model__isnull=True) &
                  Q(pd_model__isnull=False)) |
-                (Q(pk_model__isnull=False) &
+                (Q(pkpd_model__isnull=False) &
                  Q(dosed_pk_model__isnull=True) &
                  Q(pd_model__isnull=True)) |
-                (Q(pk_model__isnull=True) &
+                (Q(pkpd_model__isnull=True) &
                  Q(dosed_pk_model__isnull=False) &
                  Q(pd_model__isnull=True))
             ),
@@ -136,6 +140,16 @@ class Inference(models.Model):
 
     def get_project(self):
         return self.project
+
+    def get_model(self):
+        model = None
+        if self.pd_model:
+            model = self.pd_model
+        if self.dosed_pk_model:
+            model = self.dosed_pk_model
+        if self.pkpd_model:
+            model = self.pkpd_model
+        return model
 
 
 class InferenceChain(models.Model):

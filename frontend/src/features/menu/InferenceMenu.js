@@ -10,7 +10,7 @@ import ListItemText from '@material-ui/core/ListItemText';
 
 import Divider from '@material-ui/core/Divider';
 
-import Inferences from '../datasets/Inferences' 
+import Inferences from '../inference/Inferences' 
 
 import {
   selectChosenProject, userHasReadOnlyAccess

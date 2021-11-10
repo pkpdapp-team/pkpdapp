@@ -47,6 +47,7 @@ export const addNewInference = createAsyncThunk(
     let inference = await api.post(
       '/api/inference/', initialInference
     )
+    console.log('got new inference', inference)
 
     dispatch(fetchChainsByInference(inference))
     dispatch(fetchStoredVariablesByInference(inference))
@@ -54,6 +55,14 @@ export const addNewInference = createAsyncThunk(
     inference.chosen = true;
 
     return inference
+  }
+)
+
+export const updateInference = createAsyncThunk(
+  'inferences/updateInference',
+  async (inference) => {
+    const response = await api.put(`/api/inference/${inference.id}/`, inference)
+    return response
   }
 )
 

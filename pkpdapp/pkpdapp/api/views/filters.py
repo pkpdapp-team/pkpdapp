@@ -113,7 +113,11 @@ class InferenceFilter(filters.BaseFilterBackend):
                     id=inference_id
                 )
                 if queryset.model == StoredVariable:
-                    queryset = inference.variables.all()
+                    model = inference.get_model()
+                    if model:
+                        queryset = model.stored_variables.all()
+                    else:
+                        queryset = queryset.model.objects.none()
                 elif queryset.model == InferenceChain:
                     queryset = inference.chains.all()
                 else:

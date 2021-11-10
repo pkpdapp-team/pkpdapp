@@ -14,21 +14,21 @@ const initialState = storedVariablesAdapter.getInitialState({
 
 export const fetchStoredVariables = createAsyncThunk('storedVariables/fetchStoredVariables', async (project, { dispatch }) => {
   let response = await api.get(
-    `/api/storedVariable/?project_id=${project.id}`
+    `/api/stored_variable/?project_id=${project.id}`
   )
   return response
 })
 
 export const fetchStoredVariableById = createAsyncThunk('storedVariables/fetchStoredVariableById', async (model_id, { dispatch }) => {
   let response = await api.get(
-    `/api/storedVariable/${model_id}/`
+    `/api/stored_variable/${model_id}/`
   )
   return response
 })
 
 export const fetchStoredVariablesByInference = createAsyncThunk('storedVariables/fetchStoredVariableById', async (inference, { dispatch }) => {
   let response = await api.get(
-    `/api/storedVariable/?inference_id=${inference.id}`
+    `/api/stored_variable/?inference_id=${inference.id}`
   )
   return response
 })

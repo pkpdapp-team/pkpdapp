@@ -14,21 +14,21 @@ const initialState = chainsAdapter.getInitialState({
 
 export const fetchChains = createAsyncThunk('chains/fetchChains', async (project, { dispatch }) => {
   let response = await api.get(
-    `/api/chain/?project_id=${project.id}`
+    `/api/inference_chain/?project_id=${project.id}`
   )
   return response
 })
 
 export const fetchChainById = createAsyncThunk('chains/fetchChainById', async (model_id, { dispatch }) => {
   let response = await api.get(
-    `/api/chain/${model_id}/`
+    `/api/inference_chain/${model_id}/`
   )
   return response
 })
 
 export const fetchChainsByInference = createAsyncThunk('chains/fetchChainById', async (inference, { dispatch }) => {
   let response = await api.get(
-    `/api/chain/?inference_id=${inference.id}`
+    `/api/inference_chain/?inference_id=${inference.id}`
   )
   return response
 })
