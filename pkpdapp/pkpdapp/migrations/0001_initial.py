@@ -7,6 +7,7 @@
 # flake8: noqa
 
 
+
 from django.conf import settings
 from django.db import migrations, models
 import django.db.models.deletion
@@ -56,6 +57,7 @@ class Migration(migrations.Migration):
             name='Inference',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('name', models.CharField(help_text='name of the dataset', max_length=100)),
                 ('description', models.TextField(blank=True, default='', help_text='short description of what this inference does')),
                 ('datetime', models.DateTimeField(blank=True, help_text='date/time the experiment was conducted. All time measurements are relative to this date/time, which is in YYYY-MM-DD HH:MM:SS format. For example, 2020-07-18 14:30:59', null=True)),
                 ('inference_type', models.CharField(choices=[('SA', 'Sampling'), ('OP', 'Optimisation')], default='OP', max_length=10)),
@@ -418,12 +420,12 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='storedvariable',
             name='dosed_pk_model',
-            field=models.ForeignKey(blank=True, help_text='dosed pharmacokinetic model', null=True, on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.storeddosedpharmacokineticmodel'),
+            field=models.ForeignKey(blank=True, help_text='dosed pharmacokinetic model', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='stored_variables', to='pkpdapp.storeddosedpharmacokineticmodel'),
         ),
         migrations.AddField(
             model_name='storedvariable',
             name='pd_model',
-            field=models.ForeignKey(blank=True, help_text='pharmacodynamic model', null=True, on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.storedpharmacodynamicmodel'),
+            field=models.ForeignKey(blank=True, help_text='pharmacodynamic model', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='stored_variables', to='pkpdapp.storedpharmacodynamicmodel'),
         ),
         migrations.AddField(
             model_name='loglikelihoodnormal',
