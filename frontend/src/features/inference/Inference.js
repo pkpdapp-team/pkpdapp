@@ -32,7 +32,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 
-export default function Modelling() {
+export default function Inference() {
   const classes = useStyles();
   const project = useSelector(selectChosenProject);
   const chosenInferences = useSelector(selectChosenInferences);

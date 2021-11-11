@@ -2,5 +2,5 @@ import React from "react";
 
 
 export default function InferenceChart() {
-  return (null)
+  return ("nothing here yet")
 }
