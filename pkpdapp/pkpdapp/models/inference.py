@@ -84,7 +84,7 @@ class Inference(models.Model):
     )
 
     time_elapsed = models.IntegerField(
-        blank=True, null=True,
+        default=0,
         help_text='Elapsed run time for inference in seconds'
     )
 
@@ -95,7 +95,7 @@ class Inference(models.Model):
     )
 
     number_of_function_evals = models.IntegerField(
-        blank=True, null=True,
+        default=0,
         help_text='number of function evaluations'
     )
 

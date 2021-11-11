@@ -302,7 +302,7 @@ export function FormMultiSelectField({control, name, defaultValue, label, option
   )
 }
 
-export function FormSelectField({control, name, defaultValue, label, options, ...rest}) {
+export function FormSelectField({control, name, defaultValue, label, options, onChangeUser, ...rest}) {
   const classes = useStyles();
   return (
     <FormControl className={classes.formInput}>
@@ -313,11 +313,25 @@ export function FormSelectField({control, name, defaultValue, label, options, ..
         control={control}
         defaultValue={defaultValue}
         name={name}
-        render={({ field }) => (
+        render={({
+          field: { onChange, onBlur, value, name, ref },
+          fieldState: { invalid, isTouched, isDirty, error },
+          formState,
+        }) => (
         <Select
           labelId={name.concat('-select-label')}
+          value={value}
+          error={error}
+          onBlur={onBlur}
+          checked={value}
+          inputRef={ref}
+          onChange={(value) => {
+            if (onChangeUser) {
+              onChangeUser(value);
+            }
+            return onChange(value)
+          }}
           {...rest}
-          {...field}
         >
           {options.map((option, i) => {
             return (
