@@ -9,7 +9,6 @@ from pkpdapp.models import (
     DosedPharmacokineticModel, PkpdModel,
     PharmacodynamicModel,
     StoredPkpdModel, StoredDosedPharmacokineticModel,
-    StoredPharmacodynamicModel,
 )
 from pkpdapp.api.serializers import ValidSbml
 
@@ -137,7 +136,6 @@ class StoredPharmacodynamicSerializer(
             _serialize_component(m, c, model)
             for c in model.components(sort=True)
         ]
-
 
     class Meta:
         model = StoredDosedPharmacokineticModel
