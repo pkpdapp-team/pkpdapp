@@ -46,9 +46,15 @@ const useStyles = makeStyles((theme) => ({
   controls: {
     margin: theme.spacing(1),
   },
+  modelSelect: {
+    display: 'flex',
+  },
   components: {
     width: '100%',
-  }
+  },
+  formInput: {
+    margin: theme.spacing(1),
+  },
 }));
 
 
@@ -150,7 +156,9 @@ export default function InferenceDetail({project, inference}) {
         multiline
         name="description" label="Description"
       />
-
+      <div
+        className={classes.modelSelect}
+      >
       <FormControl className={classes.formInput}>
       <InputLabel id="model-type-label">Model Type</InputLabel>
       <Select
@@ -168,6 +176,7 @@ export default function InferenceDetail({project, inference}) {
       </FormControl>
 
       {modelType === 'PK' &&
+      
       <FormSelectField 
         control={control} 
         defaultValue={inference.dosed_pk_model || ''}
@@ -184,6 +193,7 @@ export default function InferenceDetail({project, inference}) {
         name="pd_model" label="Pharmacodynamic Model"
       />
       }
+      </div>
 
       <FormSelectField 
         control={control} 

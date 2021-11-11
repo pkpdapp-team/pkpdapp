@@ -7,7 +7,6 @@
 # flake8: noqa
 
 
-
 from django.conf import settings
 from django.db import migrations, models
 import django.db.models.deletion
@@ -64,9 +63,9 @@ class Migration(migrations.Migration):
                 ('sampling_algorithm', models.CharField(choices=[('HB', 'Haario-Bardenet'), ('DE', 'Differential evolution'), ('DR', 'DREAM'), ('PO', 'Population MCMC')], default='HB', help_text='sampling algorithm to use for inference', max_length=10)),
                 ('optimisation_algorithm', models.CharField(choices=[('CMAES', 'CMAES'), ('XNES', 'XNES'), ('SNES', 'SNES'), ('PSO', 'PSO'), ('NM', 'Nelder-Mead')], default='CMAES', help_text='optimisation algorithm to use for inference', max_length=10)),
                 ('number_of_iterations', models.IntegerField(default=1000, help_text='number of iterations')),
-                ('time_elapsed', models.IntegerField(blank=True, help_text='Elapsed run time for inference in seconds', null=True)),
+                ('time_elapsed', models.IntegerField(default=0, help_text='Elapsed run time for inference in seconds')),
                 ('number_of_chains', models.IntegerField(default=4, help_text='number of chains')),
-                ('number_of_function_evals', models.IntegerField(blank=True, help_text='number of function evaluations', null=True)),
+                ('number_of_function_evals', models.IntegerField(default=0, help_text='number of function evaluations')),
             ],
         ),
         migrations.CreateModel(
