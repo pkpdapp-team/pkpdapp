@@ -10,8 +10,14 @@ from pkpdapp.api.views import (
 from pkpdapp.api.serializers import (
     InferenceSerializer,
     InferenceChainSerializer,
+    AlgorithmSerializer,
 )
-from pkpdapp.models import Inference, InferenceChain
+from pkpdapp.models import Inference, InferenceChain, Algorithm
+
+
+class AlgorithmView(viewsets.ModelViewSet):
+    queryset = Algorithm.objects.all()
+    serializer_class = AlgorithmSerializer
 
 
 class InferenceView(viewsets.ModelViewSet):

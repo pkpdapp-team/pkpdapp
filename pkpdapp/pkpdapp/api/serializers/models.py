@@ -7,7 +7,8 @@ from rest_framework import serializers
 from pkpdapp.models import (
     PharmacokineticModel, MyokitModelMixin,
     DosedPharmacokineticModel, PkpdModel,
-    PharmacodynamicModel
+    PharmacodynamicModel,
+    StoredPkpdModel, StoredDosedPharmacokineticModel,
 )
 from pkpdapp.api.serializers import ValidSbml
 
@@ -15,6 +16,14 @@ from pkpdapp.api.serializers import ValidSbml
 class PkpdSerializer(serializers.ModelSerializer):
     class Meta:
         model = PkpdModel
+        fields = '__all__'
+
+
+class StoredPkpdSerializer(
+    PkpdSerializer
+):
+    class Meta:
+        model = StoredPkpdModel
         fields = '__all__'
 
 
@@ -75,6 +84,26 @@ class DosedPharmacokineticSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class StoredDosedPharmacokineticSerializer(
+    serializers.ModelSerializer
+):
+    components = serializers.SerializerMethodField('get_components')
+    stored_variables = serializers.PrimaryKeyRelatedField(
+        many=True, read_only=True
+    )
+
+    def get_components(self, m):
+        model = m.get_myokit_model()
+        return [
+            _serialize_component(m, c, model)
+            for c in model.components(sort=True)
+        ]
+
+    class Meta:
+        model = StoredDosedPharmacokineticModel
+        fields = '__all__'
+
+
 class PharmacodynamicSerializer(serializers.ModelSerializer):
     components = serializers.SerializerMethodField('get_components')
     variables = serializers.PrimaryKeyRelatedField(
@@ -91,6 +120,26 @@ class PharmacodynamicSerializer(serializers.ModelSerializer):
     class Meta:
         model = PharmacodynamicModel
         exclude = ['sbml']
+
+
+class StoredPharmacodynamicSerializer(
+    serializers.ModelSerializer
+):
+    components = serializers.SerializerMethodField('get_components')
+    stored_variables = serializers.PrimaryKeyRelatedField(
+        many=True, read_only=True
+    )
+
+    def get_components(self, m):
+        model = m.get_myokit_model()
+        return [
+            _serialize_component(m, c, model)
+            for c in model.components(sort=True)
+        ]
+
+    class Meta:
+        model = StoredDosedPharmacokineticModel
+        fields = '__all__'
 
 
 class PharmacodynamicSbmlSerializer(serializers.ModelSerializer):

@@ -43,6 +43,8 @@ import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 
 import { api } from './Api'
 import Modelling from './features/modelling/Modelling'
+import Inference from './features/inference/Inference'
+import InferenceMenu from './features/menu/InferenceMenu'
 import Nca from './features/dataAnalysis/Nca'
 import Auce from './features/dataAnalysis/Auce'
 import Projects from './features/projects/Projects'
@@ -245,6 +247,10 @@ export default function App() {
   const isModellingPath = !!matchPath(pathname, 
     {path: modellingPath, exact:true}
   )
+  const inferencePath ="/inference"
+  const isInferencePath = !!matchPath(pathname, 
+    {path: inferencePath, exact:true}
+  )
   const ncaPath ="/nca"
   const isNcaPath = !!matchPath(pathname, 
     {path: ncaPath, exact:true}
@@ -316,6 +322,13 @@ export default function App() {
         >
           Simulation 
         </Button>
+        <Button 
+          component={Link} to={inferencePath} variant="contained"
+          color={isInferencePath ? "secondary" : "primary"}
+        >
+          Inference 
+        </Button>
+
         </ButtonGroup>
 
 
@@ -341,7 +354,13 @@ export default function App() {
         </IconButton>
       </div>
       <Divider />
-      <ProjectMenu />
+      <Switch>
+          <PrivateRoute path="/simulation" component={ProjectMenu} />
+          <PrivateRoute path="/nca" component={ProjectMenu} />
+          <PrivateRoute path="/inference" component={InferenceMenu} />
+          <PrivateRoute path="/auce" component={ProjectMenu} />
+          <PrivateRoute path="/" component={ProjectMenu} />
+        </Switch>
     </Drawer>
     <MuiPickersUtilsProvider utils={DateFnsUtils}>
         {/* A <Switch> looks through its children <Route>s and
@@ -353,6 +372,7 @@ export default function App() {
           <PrivateRoute path="/simulation" component={Modelling} />
           <PrivateRoute path="/nca" component={Nca} />
           <PrivateRoute path="/auce" component={Auce} />
+          <PrivateRoute path="/inference" component={Inference} />
           <PrivateRoute path="/" component={Projects} />
         </Switch>
         </Container>

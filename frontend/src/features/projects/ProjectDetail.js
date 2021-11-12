@@ -40,6 +40,11 @@ import {
   fetchVariables
 } from '../variables/variablesSlice.js'
 
+import {
+  fetchInferences
+} from '../inference/inferenceSlice.js'
+
+
 
 
 
@@ -93,6 +98,7 @@ export default function ProjectDetail({project}) {
     dispatch(fetchVariables(project))
     dispatch(fetchBasePkModels(project))
     dispatch(fetchProtocols(project))
+    dispatch(fetchInferences(project))
   }
 
   const handleDeleteProject = () => {

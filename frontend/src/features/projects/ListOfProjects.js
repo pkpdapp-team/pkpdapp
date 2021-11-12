@@ -50,6 +50,10 @@ import {
   fetchVariables
 } from '../variables/variablesSlice.js'
 
+import {
+  fetchInferences
+} from '../inference/inferenceSlice.js'
+
 
 
 const useStyles = makeStyles((theme) => ({
@@ -87,6 +91,7 @@ export default function ListOfProjects() {
             dispatch(fetchVariables(p))
             dispatch(fetchProtocols(p))
             dispatch(fetchUnits(p))
+            dispatch(fetchInferences(p))
           }}
         />
       ))}

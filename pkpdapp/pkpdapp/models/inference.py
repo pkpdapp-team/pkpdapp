@@ -13,10 +13,34 @@ from pkpdapp.models import (
 )
 
 
+class Algorithm(models.Model):
+    name = models.CharField(
+        max_length=100,
+        help_text='name of the algorithm'
+    )
+
+    class Category(models.TextChoices):
+        SAMPLING = 'SA', 'Sampling'
+        OPTIMISATION = 'OP', 'Optimisation'
+
+    category = models.CharField(
+        max_length=10,
+        choices=Category.choices
+    )
+
+
+def get_default_optimisation_algorithm():
+    return Algorithm.objects.get(name='CMAES')
+
+
 class Inference(models.Model):
     """
     An inference process.
     """
+    name = models.CharField(
+        max_length=100,
+        help_text='name of the dataset'
+    )
     description = models.TextField(
         help_text='short description of what this inference does',
         blank=True, default=''
@@ -38,40 +62,12 @@ class Inference(models.Model):
         null=True, blank=True
     )
 
-    class InferenceType(models.TextChoices):
-        SAMPLING = 'SA', 'Sampling'
-        OPTIMISATION = 'OP', 'Optimisation'
-
-    inference_type = models.CharField(
-        max_length=10,
-        choices=InferenceType.choices,
-        default=InferenceType.OPTIMISATION,
-    )
-
-    class SamplingAlgorithm(models.TextChoices):
-        HB = 'HB', 'Haario-Bardenet'
-        DE = 'DE', 'Differential evolution'
-        DR = 'DR', 'DREAM'
-        PO = 'PO', 'Population MCMC'
-
-    sampling_algorithm = models.CharField(
-        max_length=10,
-        choices=SamplingAlgorithm.choices,
-        default=SamplingAlgorithm.HB,
-        help_text='sampling algorithm to use for inference')
-
-    class OptimisationAlgorithm(models.TextChoices):
-        CMAES = 'CMAES', 'CMAES'
-        XNES = 'XNES', 'XNES'
-        SNES = 'SNES', 'SNES'
-        PSO = 'PSO', 'PSO'
-        NM = 'NM', 'Nelder-Mead'
-
-    optimisation_algorithm = models.CharField(
-        max_length=10,
-        choices=OptimisationAlgorithm.choices,
-        default=OptimisationAlgorithm.CMAES,
-        help_text='optimisation algorithm to use for inference'
+    algorithm = models.ForeignKey(
+        Algorithm,
+        on_delete=models.CASCADE,
+        related_name='inferences',
+        default=get_default_optimisation_algorithm,
+        help_text='algorithm used to perform the inference'
     )
 
     number_of_iterations = models.IntegerField(
@@ -80,7 +76,7 @@ class Inference(models.Model):
     )
 
     time_elapsed = models.IntegerField(
-        blank=True, null=True,
+        default=0,
         help_text='Elapsed run time for inference in seconds'
     )
 
@@ -91,7 +87,7 @@ class Inference(models.Model):
     )
 
     number_of_function_evals = models.IntegerField(
-        blank=True, null=True,
+        default=0,
         help_text='number of function evaluations'
     )
 
@@ -138,16 +134,13 @@ class Inference(models.Model):
         return self.project
 
     def get_model(self):
-        pkpd_model = self.pkpd_model.first()
-        dosed_pk_model = self.dosed_pk_model.first()
-        pd_model = self.pd_model.first()
-
-        if pkpd_model is None and dosed_pk_model is None:
-            model = pd_model
-        elif pkpd_model is None and pd_model is None:
-            model = dosed_pk_model
-        else:
-            model = pkpd_model
+        model = None
+        if self.pd_model:
+            model = self.pd_model
+        if self.dosed_pk_model:
+            model = self.dosed_pk_model
+        if self.pkpd_model:
+            model = self.pkpd_model
         return model
 
 
