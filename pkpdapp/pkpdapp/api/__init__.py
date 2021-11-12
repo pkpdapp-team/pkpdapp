@@ -13,5 +13,5 @@ from .views import (
     UnitView, BiomarkerTypeView, VariableView, SubjectView,
     ProjectAccessView, NcaView, AuceView, StoredVariableView,
     InferenceView, InferenceChainView, CopyPkView, CopyPdView,
-    CopyPkpdView,
+    CopyPkpdView, AlgorithmView
 )

@@ -27,6 +27,11 @@ import {
 import {
   selectAllPdModels
 } from '../pdModels/pdModelsSlice'
+import {
+  selectAllAlgorithms
+} from '../inference/algorithmsSlice'
+
+
 
 
 
@@ -106,19 +111,17 @@ export default function InferenceDetail({project, inference}) {
     {key: 'Optimisation', value: 'OP'}, 
   ]
 
-  const sampling_algorithm_options = [
-    {key: 'Haario-Bardenet', value: 'HB'},
-    {key: 'Differential evolution', value: 'DE'},
-    {key: 'DREAM', value: 'DR'}, 
-    {key: 'Population MCMC', value: 'PO'}, 
-  ]
-
-  const optimisation_algorithm_options = [
-    {key: 'CMAES', value: 'CMAES'},
-    {key: 'XNES', value: 'XNES'},
-    {key: 'SNES', value: 'SNES'}, 
-    {key: 'Nelder-Mead', value: 'NM'}, 
-  ]
+  const algorithms = useSelector(selectAllAlgorithms)
+  const algorithm_options = algorithms ? 
+    algorithms.map(algorithm => (
+      {
+        key: algorithm.name, 
+        value: algorithm.id, 
+        group: algorithm.category == 'SA' ?
+        'Sampling': 'Optimisation'
+      }
+    ))  
+    : [{key: 'Loading...', value: null, group: null}]
 
 
   const model_type_options = [
@@ -197,23 +200,10 @@ export default function InferenceDetail({project, inference}) {
 
       <FormSelectField 
         control={control} 
-        defaultValue={inference.inference_type}
-        options={inference_type_options}
-        name="inference_type" label="Inference Type"
-      />
-
-      <FormSelectField 
-        control={control} 
-        defaultValue={inference.sampling_algorithm}
-        options={sampling_algorithm_options}
-        name="sampling_algorithm" label="Sampling Algorithm"
-      />
-
-      <FormSelectField 
-        control={control} 
-        defaultValue={inference.optimisation_algorithm}
-        options={optimisation_algorithm_options}
-        name="optimisation_algorithm" label="Optimisation Algorithm"
+        defaultValue={inference.algorithm}
+        useGroups
+        options={algorithm_options}
+        name="algorithm" label="Algorithm"
       />
 
       <FormTextField 

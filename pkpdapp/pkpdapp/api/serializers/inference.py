@@ -5,12 +5,18 @@
 #
 from rest_framework import serializers
 from pkpdapp.models import (
-    Inference, InferenceChain
+    Inference, InferenceChain, Algorithm
 )
 from pkpdapp.api.serializers import (
     StoredPkpdSerializer, StoredPharmacodynamicSerializer,
     StoredDosedPharmacokineticSerializer,
 )
+
+
+class AlgorithmSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Algorithm
+        fields = '__all__'
 
 
 class InferenceSerializer(serializers.ModelSerializer):

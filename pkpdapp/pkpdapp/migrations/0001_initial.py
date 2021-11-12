@@ -26,6 +26,14 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
+            name='Algorithm',
+            fields=[
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('name', models.CharField(help_text='name of the algorithm', max_length=100)),
+                ('category', models.CharField(choices=[('SA', 'Sampling'), ('OP', 'Optimisation')], max_length=10)),
+            ],
+        ),
+        migrations.CreateModel(
             name='Compound',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
@@ -59,13 +67,11 @@ class Migration(migrations.Migration):
                 ('name', models.CharField(help_text='name of the dataset', max_length=100)),
                 ('description', models.TextField(blank=True, default='', help_text='short description of what this inference does')),
                 ('datetime', models.DateTimeField(blank=True, help_text='date/time the experiment was conducted. All time measurements are relative to this date/time, which is in YYYY-MM-DD HH:MM:SS format. For example, 2020-07-18 14:30:59', null=True)),
-                ('inference_type', models.CharField(choices=[('SA', 'Sampling'), ('OP', 'Optimisation')], default='OP', max_length=10)),
-                ('sampling_algorithm', models.CharField(choices=[('HB', 'Haario-Bardenet'), ('DE', 'Differential evolution'), ('DR', 'DREAM'), ('PO', 'Population MCMC')], default='HB', help_text='sampling algorithm to use for inference', max_length=10)),
-                ('optimisation_algorithm', models.CharField(choices=[('CMAES', 'CMAES'), ('XNES', 'XNES'), ('SNES', 'SNES'), ('PSO', 'PSO'), ('NM', 'Nelder-Mead')], default='CMAES', help_text='optimisation algorithm to use for inference', max_length=10)),
                 ('number_of_iterations', models.IntegerField(default=1000, help_text='number of iterations')),
                 ('time_elapsed', models.IntegerField(default=0, help_text='Elapsed run time for inference in seconds')),
                 ('number_of_chains', models.IntegerField(default=4, help_text='number of chains')),
                 ('number_of_function_evals', models.IntegerField(default=0, help_text='number of function evaluations')),
+                ('algorithm', models.ForeignKey(help_text='algorithm used to perform the inference', on_delete=django.db.models.deletion.CASCADE, related_name='inferences', to='pkpdapp.algorithm')),
             ],
         ),
         migrations.CreateModel(

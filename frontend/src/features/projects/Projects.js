@@ -24,6 +24,10 @@ import {
   fetchUnits,
 } from './unitsSlice.js'
 
+import {
+  fetchAlgorithms,
+} from '../inference/algorithmsSlice.js'
+
 
 import {
   selectMyProjects, selectChosenProject, addNewProject
@@ -56,6 +60,7 @@ export default function Projects() {
     dispatch(fetchProjects())
     dispatch(fetchUsers())
     dispatch(fetchUnits())
+    dispatch(fetchAlgorithms())
     //const interval = setInterval(() => {
     //  refreshHarvesters();
     //}, 5000);

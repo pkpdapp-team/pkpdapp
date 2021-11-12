@@ -7,6 +7,7 @@ import MenuItem from '@material-ui/core/MenuItem';
 import Typography from '@material-ui/core/Typography';
 import FormControl from '@material-ui/core/FormControl';
 import Slider from '@material-ui/core/Slider';
+import ListSubheader from '@material-ui/core/ListSubheader';
 import Button from '@material-ui/core/Button';
 import Select from '@material-ui/core/Select';
 import { Controller  } from "react-hook-form";
@@ -302,8 +303,17 @@ export function FormMultiSelectField({control, name, defaultValue, label, option
   )
 }
 
-export function FormSelectField({control, name, defaultValue, label, options, onChangeUser, ...rest}) {
+export function FormSelectField({control, name, defaultValue, label, options, useGroups, onChangeUser, ...rest}) {
   const classes = useStyles();
+  let groups = {}
+  if (useGroups) {
+    for (const option of options) {
+      if (!(option.group in groups)) {
+        groups[option.group] = []
+      }
+      groups[option.group].push(option)
+    }
+  }
   return (
     <FormControl className={classes.formInput}>
     <InputLabel id={name.concat('-select-label')}>
@@ -333,11 +343,21 @@ export function FormSelectField({control, name, defaultValue, label, options, on
           }}
           {...rest}
         >
-          {options.map((option, i) => {
-            return (
+          {useGroups ? Object.keys(groups).map((group, i) => (
+            [
+              <ListSubheader>{group}</ListSubheader>,
+              groups[group].map((option, j) => {
+                return (
+                  <MenuItem key={`${i}_${j}`} value={option.value}>
+                    {option.key}
+                  </MenuItem>
+                )
+              })
+            ]
+          ))
+          : options.map((option, i) => (
               <MenuItem key={i} value={option.value}>{option.key}</MenuItem>
-            )
-          })}
+          ))}
         </Select>
         )}
       />

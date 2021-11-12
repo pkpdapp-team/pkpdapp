@@ -38,5 +38,6 @@ from .likelihoods import (
 from .inference import (
     Inference,
     InferenceChain,
-    InferenceResult
+    InferenceResult,
+    Algorithm,
 )

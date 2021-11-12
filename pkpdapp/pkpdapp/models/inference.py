@@ -13,6 +13,26 @@ from pkpdapp.models import (
 )
 
 
+class Algorithm(models.Model):
+    name = models.CharField(
+        max_length=100,
+        help_text='name of the algorithm'
+    )
+
+    class Category(models.TextChoices):
+        SAMPLING = 'SA', 'Sampling'
+        OPTIMISATION = 'OP', 'Optimisation'
+
+    category = models.CharField(
+        max_length=10,
+        choices=Category.choices
+    )
+
+
+def get_default_optimisation_algorithm():
+    return Algorithm.objects.get(name='CMAES')
+
+
 class Inference(models.Model):
     """
     An inference process.
@@ -42,40 +62,12 @@ class Inference(models.Model):
         null=True, blank=True
     )
 
-    class InferenceType(models.TextChoices):
-        SAMPLING = 'SA', 'Sampling'
-        OPTIMISATION = 'OP', 'Optimisation'
-
-    inference_type = models.CharField(
-        max_length=10,
-        choices=InferenceType.choices,
-        default=InferenceType.OPTIMISATION,
-    )
-
-    class SamplingAlgorithm(models.TextChoices):
-        HB = 'HB', 'Haario-Bardenet'
-        DE = 'DE', 'Differential evolution'
-        DR = 'DR', 'DREAM'
-        PO = 'PO', 'Population MCMC'
-
-    sampling_algorithm = models.CharField(
-        max_length=10,
-        choices=SamplingAlgorithm.choices,
-        default=SamplingAlgorithm.HB,
-        help_text='sampling algorithm to use for inference')
-
-    class OptimisationAlgorithm(models.TextChoices):
-        CMAES = 'CMAES', 'CMAES'
-        XNES = 'XNES', 'XNES'
-        SNES = 'SNES', 'SNES'
-        PSO = 'PSO', 'PSO'
-        NM = 'NM', 'Nelder-Mead'
-
-    optimisation_algorithm = models.CharField(
-        max_length=10,
-        choices=OptimisationAlgorithm.choices,
-        default=OptimisationAlgorithm.CMAES,
-        help_text='optimisation algorithm to use for inference'
+    algorithm = models.ForeignKey(
+        Algorithm,
+        on_delete=models.CASCADE,
+        related_name='inferences',
+        default=get_default_optimisation_algorithm,
+        help_text='algorithm used to perform the inference'
     )
 
     number_of_iterations = models.IntegerField(

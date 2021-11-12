@@ -53,6 +53,10 @@ router.register(
     basename='inference'
 )
 router.register(
+    'algorithm', api.AlgorithmView,
+    basename='algorithm'
+)
+router.register(
     'inference_chain', api.InferenceChainView,
     basename='inference_chain'
 )
