@@ -137,6 +137,19 @@ class Inference(models.Model):
     def get_project(self):
         return self.project
 
+    def get_model(self):
+        pkpd_model = self.pkpd_model.first()
+        dosed_pk_model = self.dosed_pk_model.first()
+        pd_model = self.pd_model.first()
+
+        if pkpd_model is None and dosed_pk_model is None:
+            model = pd_model
+        elif pkpd_model is None and pd_model is None:
+            model = dosed_pk_model
+        else:
+            model = pkpd_model
+        return model
+
 
 class InferenceChain(models.Model):
     inference = models.ForeignKey(
