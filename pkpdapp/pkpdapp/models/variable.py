@@ -12,6 +12,7 @@ from pkpdapp.models import (
     PharmacokineticModel, PharmacodynamicModel,
     StoredPharmacodynamicModel,
     StoredDosedPharmacokineticModel,
+    StoredPkpdModel
 )
 
 
@@ -206,6 +207,32 @@ class BaseVariable(models.Model):
             )
 
     @staticmethod
+    def get_variable_pkpd(model, myokit_variable):
+        num_variables = Variable.objects.filter(
+            pkpd_model=model,
+        ).count()
+        variables = Variable.objects.filter(
+            qname=myokit_variable.qname(),
+            pkpd_model=model,
+        )
+        found_variable = Variable._find_close_variable(
+            myokit_variable, variables
+        )
+        if found_variable is not None:
+            return variables[0]
+        else:
+            return Variable.objects.create(
+                name=myokit_variable.name(),
+                qname=myokit_variable.qname(),
+                constant=myokit_variable.is_constant(),
+                state=myokit_variable.is_state(),
+                unit=Unit.get_unit_from_variable(myokit_variable),
+                pkpd_model=model,
+                color=num_variables,
+                display=myokit_variable.name() != 'time',
+            )
+
+    @staticmethod
     def get_variable(model, myokit_variable):
         if isinstance(model, PharmacokineticModel):
             return Variable.get_variable_pk(model, myokit_variable)
@@ -275,6 +302,12 @@ class StoredVariable(BaseVariable):
     )
     dosed_pk_model = models.ForeignKey(
         StoredDosedPharmacokineticModel,
+        blank=True, null=True,
+        on_delete=models.CASCADE,
+        help_text='dosed pharmacokinetic model'
+    )
+    pkpd_model = models.ForeignKey(
+        StoredPkpdModel,
         blank=True, null=True,
         on_delete=models.CASCADE,
         help_text='dosed pharmacokinetic model'
