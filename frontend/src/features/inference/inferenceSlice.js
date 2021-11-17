@@ -60,7 +60,16 @@ export const addNewInference = createAsyncThunk(
 
 export const updateInference = createAsyncThunk(
   'inferences/updateInference',
-  async (inference) => {
+  async (inference, { getState }) => {
+    const oldInference = selectInferenceById(getState(), inference.id);
+
+    // if a model has changed, then need to delete the old stored model and create a new one
+    if (oldInference.pd_model !== inference.pd_model) {
+      const storedModel = await api.post(`/api/pharmacodynamic/${inference.id}/copy`)
+
+    } else if (oldInference.dosed_pk_model !== inference.dosed_pk_model) {
+    } else if (oldInference.pkpd_model !== inference.pkpd_model) {
+    }
     const response = await api.put(`/api/inference/${inference.id}/`, inference)
     return response
   }

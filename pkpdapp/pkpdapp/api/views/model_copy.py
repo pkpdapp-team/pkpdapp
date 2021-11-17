@@ -19,7 +19,7 @@ class CopyBaseView(views.APIView):
         except self.model.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        result = self.stored_model(m)
+        result = self.stored_model.objects.create(m)
 
         return Response(result)
 
