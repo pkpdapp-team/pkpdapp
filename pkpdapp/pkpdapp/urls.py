@@ -41,8 +41,16 @@ router.register(
     basename='pharmacodynamic'
 )
 router.register(
+    'stored_pharmacodynamic', api.StoredPharmacodynamicView,
+    basename='stored_pharmacodynamic'
+)
+router.register(
     'dosed_pharmacokinetic', api.DosedPharmacokineticView,
     basename='dosed_pharmacodynamic'
+)
+router.register(
+    'stored_dosed_pharmacokinetic', api.StoredDosedPharmacokineticView,
+    basename='stored_dosed_pharmacodynamic'
 )
 router.register(
     'pkpd_model', api.PkpdView,
@@ -51,6 +59,10 @@ router.register(
 router.register(
     'inference', api.InferenceView,
     basename='inference'
+)
+router.register(
+    'draft_inference', api.DraftInferenceView,
+    basename='draft_inference'
 )
 router.register(
     'algorithm', api.AlgorithmView,

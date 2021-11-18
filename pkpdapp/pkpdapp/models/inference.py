@@ -33,7 +33,7 @@ def get_default_optimisation_algorithm():
     return Algorithm.objects.get(name='CMAES')
 
 
-class Inference(models.Model):
+class BaseInference(models.Model):
     """
     An inference process.
     """
@@ -52,16 +52,6 @@ class Inference(models.Model):
         help_text='Project that "owns" this inference object'
     )
 
-    datetime = models.DateTimeField(
-        help_text=(
-            'date/time the experiment was conducted. '
-            'All time measurements are relative to this date/time, '
-            'which is in YYYY-MM-DD HH:MM:SS format. For example, '
-            '2020-07-18 14:30:59'
-        ),
-        null=True, blank=True
-    )
-
     algorithm = models.ForeignKey(
         Algorithm,
         on_delete=models.CASCADE,
@@ -70,47 +60,15 @@ class Inference(models.Model):
         help_text='algorithm used to perform the inference'
     )
 
-    number_of_iterations = models.IntegerField(
-        default=1000,
-        help_text='number of iterations'
-    )
-
-    time_elapsed = models.IntegerField(
-        default=0,
-        help_text='Elapsed run time for inference in seconds'
-    )
-
     # potentially for optimisation too (as in number of starting points)
     number_of_chains = models.IntegerField(
         default=4,
         help_text='number of chains'
     )
 
-    number_of_function_evals = models.IntegerField(
-        default=0,
-        help_text='number of function evaluations'
-    )
-
-    pd_model = models.OneToOneField(
-        StoredPharmacodynamicModel,
-        blank=True, null=True,
-        on_delete=models.CASCADE,
-        related_name='inference',
-        help_text='pharmacodynamic model'
-    )
-    dosed_pk_model = models.OneToOneField(
-        StoredDosedPharmacokineticModel,
-        blank=True, null=True,
-        on_delete=models.CASCADE,
-        related_name='inference',
-        help_text='dosed pharmacokinetic model'
-    )
-    pkpd_model = models.OneToOneField(
-        StoredPkpdModel,
-        blank=True, null=True,
-        on_delete=models.CASCADE,
-        related_name='inference',
-        help_text='pharmacokinetic/pharmacokinetic model'
+    max_number_of_iterations = models.IntegerField(
+        default=1000,
+        help_text='maximum number of iterations'
     )
 
     constraints = [
@@ -142,6 +100,77 @@ class Inference(models.Model):
         if self.pkpd_model:
             model = self.pkpd_model
         return model
+
+class DraftInference(BaseInference):
+    pd_model = models.OneToOneField(
+        PharmacodynamicModel,
+        blank=True, null=True,
+        on_delete=models.CASCADE,
+        related_name='inference',
+        help_text='pharmacodynamic model'
+    )
+    dosed_pk_model = models.OneToOneField(
+        PharmacokineticModel,
+        blank=True, null=True,
+        on_delete=models.CASCADE,
+        related_name='draft_inference',
+        help_text='dosed pharmacokinetic model'
+    )
+    pkpd_model = models.OneToOneField(
+        PkpdModel,
+        blank=True, null=True,
+        on_delete=models.CASCADE,
+        related_name='draft_inference',
+        help_text='pharmacokinetic/pharmacokinetic model'
+    )
+
+class Inference(BaseInference):
+    pd_model = models.OneToOneField(
+        StoredPharmacodynamicModel,
+        blank=True, null=True,
+        on_delete=models.CASCADE,
+        related_name='inference',
+        help_text='pharmacodynamic model'
+    )
+    dosed_pk_model = models.OneToOneField(
+        StoredDosedPharmacokineticModel,
+        blank=True, null=True,
+        on_delete=models.CASCADE,
+        related_name='inference',
+        help_text='dosed pharmacokinetic model'
+    )
+    pkpd_model = models.OneToOneField(
+        StoredPkpdModel,
+        blank=True, null=True,
+        on_delete=models.CASCADE,
+        related_name='inference',
+        help_text='pharmacokinetic/pharmacokinetic model'
+    )
+
+    number_of_iterations = models.IntegerField(
+        default=1000,
+        help_text='number of iterations calculated'
+    )
+
+    time_elapsed = models.IntegerField(
+        default=0,
+        help_text='Elapsed run time for inference in seconds'
+    )
+
+    number_of_function_evals = models.IntegerField(
+        default=0,
+        help_text='number of function evaluations'
+    )
+
+    datetime = models.DateTimeField(
+        help_text=(
+            'date/time the experiment was conducted. '
+            'All time measurements are relative to this date/time, '
+            'which is in YYYY-MM-DD HH:MM:SS format. For example, '
+            '2020-07-18 14:30:59'
+        ),
+        null=True, blank=True
+    )
 
 
 class InferenceChain(models.Model):

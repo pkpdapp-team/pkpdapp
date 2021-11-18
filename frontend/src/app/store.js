@@ -12,6 +12,7 @@ import unitsReducer from '../features/projects/unitsSlice'
 import variablesReducer from '../features/variables/variablesSlice'
 import storedVariablesReducer from '../features/inference/storedVariableSlice'
 import inferensesReducer from '../features/inference/inferenceSlice'
+import draftInferensesReducer from '../features/inference/draftInferenceSlice'
 import algorithmsReducer from '../features/inference/algorithmsSlice'
 
 
@@ -30,6 +31,7 @@ export default configureStore({
     variables: variablesReducer,
     storedVariables: storedVariablesReducer,
     inferences: inferensesReducer,
+    draftInferences: draftInferensesReducer,
     algorithms: algorithmsReducer, 
   },
 })

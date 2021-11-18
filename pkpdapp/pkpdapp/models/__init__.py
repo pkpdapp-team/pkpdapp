@@ -36,6 +36,7 @@ from .likelihoods import (
     LogLikelihoodLogNormal
 )
 from .inference import (
+    DraftInference,
     Inference,
     InferenceChain,
     InferenceResult,

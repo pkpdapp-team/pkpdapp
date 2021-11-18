@@ -31,6 +31,7 @@ from .models import (
     StoredDosedPharmacokineticSerializer,
 )
 from .inference import (
+    DraftInferenceSerializer,
     InferenceSerializer,
     InferenceChainSerializer,
     AlgorithmSerializer,

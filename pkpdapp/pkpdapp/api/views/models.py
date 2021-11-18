@@ -14,6 +14,8 @@ from pkpdapp.api.serializers import (
     DosedPharmacokineticSerializer,
     PharmacodynamicSbmlSerializer,
     PkpdSerializer,
+    StoredDosedPharmacokineticSerializer,
+    StoredPharmacodynamicSerializer,
 )
 from pkpdapp.api.views import (
     ProjectFilter,
@@ -23,7 +25,9 @@ from pkpdapp.models import (
     PharmacokineticModel,
     PharmacodynamicModel,
     DosedPharmacokineticModel,
-    PkpdModel
+    PkpdModel,
+    StoredPharmacodynamicModel,
+    StoredDosedPharmacokineticModel,
 )
 
 
@@ -43,6 +47,14 @@ class DosedPharmacokineticView(viewsets.ModelViewSet):
         IsAuthenticated & CheckAccessToProject
     ]
 
+
+class StoredDosedPharmacokineticView(viewsets.ModelViewSet):
+    queryset = StoredDosedPharmacokineticModel.objects.all()
+    serializer_class = StoredDosedPharmacokineticSerializer
+    filter_backends = [ProjectFilter]
+    permission_classes = [
+        IsAuthenticated & CheckAccessToProject
+    ]
 
 class PharmacodynamicView(viewsets.ModelViewSet):
     queryset = PharmacodynamicModel.objects.all()
@@ -67,6 +79,15 @@ class PharmacodynamicView(viewsets.ModelViewSet):
             return response.Response(serializer.data)
         return response.Response(serializer.errors,
                                  status.HTTP_400_BAD_REQUEST)
+
+
+class StoredPharmacodynamicView(viewsets.ModelViewSet):
+    queryset = StoredPharmacodynamicModel.objects.all()
+    serializer_class = StoredPharmacodynamicSerializer
+    filter_backends = [ProjectFilter]
+    permission_classes = [
+        IsAuthenticated & CheckAccessToProject
+    ]
 
 
 class PkpdView(viewsets.ModelViewSet):

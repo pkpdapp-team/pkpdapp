@@ -9,10 +9,13 @@ from pkpdapp.api.views import (
 )
 from pkpdapp.api.serializers import (
     InferenceSerializer,
+    DraftInferenceSerializer,
     InferenceChainSerializer,
     AlgorithmSerializer,
 )
-from pkpdapp.models import Inference, InferenceChain, Algorithm
+from pkpdapp.models import (
+    Inference, InferenceChain, Algorithm, DraftInference
+)
 
 
 class AlgorithmView(viewsets.ModelViewSet):
@@ -23,6 +26,12 @@ class AlgorithmView(viewsets.ModelViewSet):
 class InferenceView(viewsets.ModelViewSet):
     queryset = Inference.objects.all()
     serializer_class = InferenceSerializer
+    filter_backends = [ProjectFilter]
+
+
+class DraftInferenceView(viewsets.ModelViewSet):
+    queryset = DraftInference.objects.all()
+    serializer_class = DraftInferenceSerializer
     filter_backends = [ProjectFilter]
 
 
