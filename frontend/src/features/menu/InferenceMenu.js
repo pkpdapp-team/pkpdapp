@@ -41,10 +41,7 @@ export default function ProjectMenu() {
       </React.Fragment>
       }
       {project &&
-      <React.Fragment>
-        <Divider />
         <Inferences project={project} disableSave={disableSave}/>
-      </React.Fragment>
       }
 
     </List>

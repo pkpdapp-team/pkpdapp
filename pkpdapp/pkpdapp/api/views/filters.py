@@ -20,6 +20,7 @@ from pkpdapp.models import (
     Subject,
     Inference, InferenceChain,
     StoredVariable,
+    DraftInference,
 )
 
 
@@ -151,7 +152,9 @@ class ProjectFilter(filters.BaseFilterBackend):
                 elif queryset.model == Protocol:
                     queryset = project.protocols
                 elif queryset.model == Inference:
-                    queryset = project.inferences
+                    queryset = project.inference_set
+                elif queryset.model == DraftInference:
+                    queryset = project.draftinference_set
                 elif queryset.model == BiomarkerType:
                     queryset = BiomarkerType.objects.filter(
                         dataset__project=project

@@ -19,7 +19,7 @@ export default function Inferences({project, disableSave}) {
   return (
     <ExpandableListItem 
       items={inferences} 
-      text="Inference" 
+      text="Draft Inference" 
       type='inference'
       icon={TableChartIcon}
       disableSave={disableSave}

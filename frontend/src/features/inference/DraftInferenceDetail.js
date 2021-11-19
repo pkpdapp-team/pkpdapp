@@ -216,27 +216,6 @@ export default function DraftInferenceDetail({project, inference}) {
         type="number"
       />
 
-      <FormTextField 
-        control={control} 
-        name="time_elapsed" label="Elapsed computational run time (sec)"
-        disabled
-        type="number"
-      />
-
-      <FormDateTimeField 
-        control={control} 
-        disabled
-        name="datetime" label="DateTime"
-      />
-
-      <FormTextField 
-        control={control} 
-        name="number_of_function_evals" label="Number of function evaluations"
-        disabled
-        type="number"
-      />
-
-      
       <div  className={classes.controlsRoot}>
       <Button 
         className={classes.controls}

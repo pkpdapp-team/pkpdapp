@@ -3,7 +3,7 @@
 # is released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-from rest_framework import viewsets
+from rest_framework import viewsets, views
 from pkpdapp.api.views import (
     ProjectFilter, InferenceFilter
 )
@@ -14,7 +14,10 @@ from pkpdapp.api.serializers import (
     AlgorithmSerializer,
 )
 from pkpdapp.models import (
-    Inference, InferenceChain, Algorithm, DraftInference
+    Inference, InferenceChain, Algorithm, DraftInference,
+    StoredDosedPharmacokineticModel,
+    StoredPharmacodynamicModel,
+    StoredPkpdModel,
 )
 
 
@@ -33,6 +36,28 @@ class DraftInferenceView(viewsets.ModelViewSet):
     queryset = DraftInference.objects.all()
     serializer_class = DraftInferenceSerializer
     filter_backends = [ProjectFilter]
+
+
+class RunInferenceView(views.APIView):
+
+    def post(self, request, pk, format=None):
+        try:
+            draft_inference = DraftInference.objects.get(pk=pk)
+        except DraftInference.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        model = inference.get_model()
+        inference = Inference.objects.create(draft_inference)
+
+        if isinstance(model, PharmacodynamicModel):
+            inference.pd_model = StoredPharmacodynamicModel.objects.create(model)
+        elif isinstance(model, DosedPharmacodynamicModel):
+            inference.dosed_pk_model = StoredDosedPharmacokineticModel.objects.create(model)
+        elif isinstance(model, PkpdModel):
+            inference.pkpd_model = StoredPkpdModel.objects.create(model)
+
+        return Response(InferenceSerializer(inference))
+
 
 
 class InferenceChainView(viewsets.ModelViewSet):

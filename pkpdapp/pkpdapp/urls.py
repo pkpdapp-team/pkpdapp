@@ -83,6 +83,11 @@ urlpatterns = [
     path('api/dosed_pharmacokinetic/<int:pk>/simulate',
          api.SimulatePkView.as_view(), name='simulate-dosed-pharmacokinetic'),
     path(
+        'api/draft_inference/<int:pk>/run',
+        api.RunInferenceView.as_view(),
+        name='run-inference'
+    ),
+    path(
         'api/dosed_pharmacokinetic/<int:pk>/copy',
         api.CopyPkView.as_view(),
         name='copy-dosed-pharmacokinetic'

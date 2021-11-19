@@ -14,7 +14,6 @@ export default function Inferences({project, disableSave}) {
   const inferences = useSelector(selectAllInferences);
   const dispatch = useDispatch()
   const handleClickItem = (item) => dispatch(toggleInference(item))
-  const handleNewItem = () => dispatch(addNewInference(project))
 
   return (
     <ExpandableListItem 
@@ -24,7 +23,6 @@ export default function Inferences({project, disableSave}) {
       icon={TableChartIcon}
       disableSave={disableSave}
       handleClickItem={handleClickItem}
-      handleNewItem={handleNewItem}
     />
   )
 }
