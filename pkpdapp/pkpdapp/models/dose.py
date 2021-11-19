@@ -5,7 +5,7 @@
 #
 
 from django.db import models
-from pkpdapp.models import Protocol
+from pkpdapp.models import Protocol, StoredProtocol
 from django.core.exceptions import ValidationError
 
 
@@ -15,16 +15,11 @@ def validate_duration(value):
             'Duration should be greater than 0'
         )
 
-
-class Dose(models.Model):
+class DoseBase(models.Model):
     """
     A single dose event.
     """
-    protocol = models.ForeignKey(
-        Protocol, on_delete=models.CASCADE,
-        related_name='doses',
-        help_text='protocol containing this dose'
-    )
+
     start_time = models.FloatField(
         help_text=(
             'starting time point of dose, '
@@ -64,3 +59,27 @@ class Dose(models.Model):
 
         for dosed_pk_model in self.protocol.dosed_pk_models.all():
             dosed_pk_model.update_simulator()
+
+class Dose(DoseBase):
+    protocol = models.ForeignKey(
+        Protocol, on_delete=models.CASCADE,
+        related_name='doses',
+        help_text='protocol containing this dose'
+    )
+    def create_stored_dose(self, stored_protocol):
+        stored_dose_kwargs = {
+            'protocol': stored_protocol,
+            'start_time': self.start_time,
+            'amount': self.amount,
+            'duration': self.duration,
+        }
+        return StoredDose.objects.create(**stored_dose_kwargs)
+
+
+class StoredDose(DoseBase):
+    protocol = models.ForeignKey(
+        StoredProtocol, on_delete=models.CASCADE,
+        related_name='doses',
+        help_text='protocol containing this dose'
+    )
+

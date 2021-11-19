@@ -83,6 +83,14 @@ export const updateInference = createAsyncThunk(
   }
 )
 
+export const runInference = createAsyncThunk(
+  'inferences/runInference',
+  async (inferenceId, { getState }) => {
+    const newInference = await api.post(`/api/draft_inference/${inferenceId}/run`)
+    return newInference
+  }
+)
+
 export const deleteInference = createAsyncThunk(
   'inferences/deleteInference',
   async (inferenceId, { dispatch }) => {

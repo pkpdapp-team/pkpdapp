@@ -127,6 +127,25 @@ class DraftInference(BaseInference):
         help_text='pharmacokinetic/pharmacokinetic model'
     )
 
+    def create_inference(self):
+        inference_kwargs = {
+            'name': self.name,
+            'description': self.description,
+            'project': self.project,
+            'algorithm': self.algorithm,
+            'number_of_chains': self.number_of_chains,
+            'max_number_of_iterations': self.max_number_of_iterations,
+        }
+        if self.pd_model:
+            inference_kwargs['pd_model'] = self.pd_model.create_stored_model()
+        if self.dosed_pk_model:
+            inference_kwargs['dosed_pk_model'] = self.dosed_pk_model.create_stored_model()
+        if self.pkpd_model:
+            inference_kwargs['pkpd_model'] = self.pkpd_model.create_stored_model()
+
+        return Inference.objects.create(**inference_kwargs)
+
+
 class Inference(BaseInference):
     pd_model = models.OneToOneField(
         StoredPharmacodynamicModel,

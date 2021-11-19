@@ -106,3 +106,25 @@ class Protocol(models.Model):
                 dosed_pk_model.update_model()
 
         self.__original_dose_type = self.dose_type
+
+    def create_stored_protocol(self):
+        stored_protocol_kwargs = {
+            'name': self.name,
+            'project': self.project,
+            'compound': self.compound,
+            'dataset': self.dataset,
+            'subject': self.subject,
+            'dose_type': self.dose_type,
+            'time_unit': self.time_unit,
+            'amount_unit': self.amount_unit,
+        }
+        stored_protocol = StoredProtocol.objects.create(**stored_protocol_kwargs)
+        for dose in self.doses:
+            dose.create_stored_dose(stored_protocol)
+
+
+class StoredProtocol(Protocol):
+    """
+    Stored protocol.
+    """
+

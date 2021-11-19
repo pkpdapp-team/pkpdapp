@@ -36,8 +36,9 @@ import {
 
 
 import {
-  updateDraftInference, deleteDraftInference, selectAllDraftInferences
+  updateDraftInference, deleteDraftInference, selectAllDraftInferences,
 } from '../inference/draftInferenceSlice'
+import { runInference } from './inferenceSlice'
 import {
   FormTextField, FormDateTimeField, FormSelectField
 } from '../forms/FormComponents';
@@ -77,6 +78,10 @@ export default function DraftInferenceDetail({project, inference}) {
   
   const handleDelete= () => {
     dispatch(deleteDraftInference(inference.id))
+  }
+
+  const handleRun = () => {
+    dispatch(runInference(inference.id))
   }
 
   useEffect(() => {
@@ -206,7 +211,7 @@ export default function DraftInferenceDetail({project, inference}) {
 
       <FormTextField 
         control={control} 
-        name="number_of_iterations" label="Maximum iterations"
+        name="max_number_of_iterations" label="Maximum iterations"
         type="number"
       />
 
@@ -224,6 +229,14 @@ export default function DraftInferenceDetail({project, inference}) {
         variant="contained"
       >
         Save
+      </Button>
+      <Button 
+        className={classes.controls}
+        disabled={disableSave}
+        onClick={handleRun}
+        variant="contained"
+      >
+        Run
       </Button>
       <Button 
         className={classes.controls}

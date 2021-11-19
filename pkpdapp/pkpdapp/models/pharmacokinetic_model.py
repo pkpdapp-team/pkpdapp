@@ -94,6 +94,19 @@ class DosedPharmacokineticModel(models.Model, MyokitModelMixin):
     def get_project(self):
         return self.project
 
+    def create_stored_model(self):
+        stored_model_kwargs = {
+            'name': self.name,
+            'project': self.project,
+            'pharmacokinetic_model': self.pharmacokinetic_model,
+            'dose_compartment': self.dose_compartment,
+            'protocol': self.protocol.create_stored_protocol(),
+            'time_max': self.time_max,
+        }
+        stored_model = StoredDosedPharmacokineticModel.objects.create(stored_model_kwargs)
+        for variable in self.variables:
+            variable.create_stored_variable(stored_model)
+
     def create_myokit_model(self):
         pk_model = self.pharmacokinetic_model.create_myokit_model()
         if self.protocol:
