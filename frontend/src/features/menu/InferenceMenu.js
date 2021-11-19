@@ -11,6 +11,7 @@ import ListItemText from '@material-ui/core/ListItemText';
 import Divider from '@material-ui/core/Divider';
 
 import Inferences from '../inference/Inferences' 
+import DraftInferences from '../inference/DraftInferences' 
 
 import {
   selectChosenProject, userHasReadOnlyAccess
@@ -33,6 +34,12 @@ export default function ProjectMenu() {
           </ListItemIcon>
           <ListItemText primary={"Project: " + projectName} />
         </ListItem>
+      {project &&
+      <React.Fragment>
+        <Divider />
+        <DraftInferences project={project} disableSave={disableSave}/>
+      </React.Fragment>
+      }
       {project &&
       <React.Fragment>
         <Divider />

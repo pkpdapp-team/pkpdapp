@@ -14,5 +14,5 @@ from .views import (
     ProjectAccessView, NcaView, AuceView, StoredVariableView,
     InferenceView, InferenceChainView, CopyPkView, CopyPdView,
     CopyPkpdView, AlgorithmView, StoredPharmacodynamicView,
-    StoredDosedPharmacokineticView, DraftInference
+    StoredDosedPharmacokineticView, DraftInferenceView,
 )

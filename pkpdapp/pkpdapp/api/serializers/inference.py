@@ -5,7 +5,7 @@
 #
 from rest_framework import serializers
 from pkpdapp.models import (
-    Inference, InferenceChain, Algorithm
+    Inference, InferenceChain, Algorithm, DraftInference
 )
 from pkpdapp.api.serializers import (
     StoredPkpdSerializer, StoredPharmacodynamicSerializer,

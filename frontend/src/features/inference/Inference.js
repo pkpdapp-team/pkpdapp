@@ -3,6 +3,7 @@ import { useSelector } from 'react-redux'
 import Paper from '@material-ui/core/Paper';
 import Grid from '@material-ui/core/Grid';
 import InferenceDetail from './InferenceDetail'
+import DraftInferenceDetail from './DraftInferenceDetail'
 import InferenceChart from './InferenceChart'
 import Accordion from '@material-ui/core/Accordion';
 import AccordionSummary from '@material-ui/core/AccordionSummary';
@@ -21,6 +22,11 @@ import {
   selectChosenInferences
 } from './inferenceSlice.js'
 
+import {
+  selectChosenDraftInferences
+} from './draftInferenceSlice.js'
+
+
 const useStyles = makeStyles((theme) => ({
   root: {
     marginTop: theme.spacing(2),
@@ -36,6 +42,7 @@ export default function Inference() {
   const classes = useStyles();
   const project = useSelector(selectChosenProject);
   const chosenInferences = useSelector(selectChosenInferences);
+  const chosenDraftInferences = useSelector(selectChosenDraftInferences);
   if (!project) {
     return ('Select a project')
   }
@@ -60,6 +67,28 @@ export default function Inference() {
               </Typography>
             }
           </Paper>
+        </Grid>
+        <Grid item xs={12} md={6} >
+        {chosenDraftInferences.map(inference => {
+          const loading = inference.status ? inference.status === 'loading' : false
+          const expandIcon = loading ? 
+            (<CircularProgress size={20}/>)
+            : (<ExpandMoreIcon />)
+          return (
+          <Accordion key={inference.id}>
+            <AccordionSummary expandIcon={expandIcon}>
+              <Typography className={classes.heading}>
+                Draft Inference - {inference.name}
+              </Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              {!loading &&
+              <DraftInferenceDetail  inference={inference} project={project}/>
+              }
+            </AccordionDetails>
+          </Accordion>
+          )
+        })}
         </Grid>
         <Grid item xs={12} md={6} >
         {chosenInferences.map(inference => {

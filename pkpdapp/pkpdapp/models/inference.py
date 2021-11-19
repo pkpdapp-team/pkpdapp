@@ -9,7 +9,9 @@ from django.db.models import Q
 from pkpdapp.models import (
     StoredPkpdModel, StoredPharmacodynamicModel,
     StoredDosedPharmacokineticModel,
-    Project
+    Project, PharmacodynamicModel,
+    DosedPharmacokineticModel,
+    PkpdModel,
 )
 
 
@@ -48,14 +50,12 @@ class BaseInference(models.Model):
 
     project = models.ForeignKey(
         Project, on_delete=models.CASCADE,
-        related_name='inferences',
         help_text='Project that "owns" this inference object'
     )
 
     algorithm = models.ForeignKey(
         Algorithm,
         on_delete=models.CASCADE,
-        related_name='inferences',
         default=get_default_optimisation_algorithm,
         help_text='algorithm used to perform the inference'
     )
@@ -88,6 +88,9 @@ class BaseInference(models.Model):
         ),
     ]
 
+    class Meta:
+        abstract = True
+
     def get_project(self):
         return self.project
 
@@ -106,11 +109,11 @@ class DraftInference(BaseInference):
         PharmacodynamicModel,
         blank=True, null=True,
         on_delete=models.CASCADE,
-        related_name='inference',
+        related_name='draft_inference',
         help_text='pharmacodynamic model'
     )
     dosed_pk_model = models.OneToOneField(
-        PharmacokineticModel,
+        DosedPharmacokineticModel,
         blank=True, null=True,
         on_delete=models.CASCADE,
         related_name='draft_inference',

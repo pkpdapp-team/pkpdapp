@@ -40,8 +40,8 @@ from .nca import NcaView
 from .project import ProjectView, ProjectAccessView
 from .protocol import ProtocolView
 from .inference import (
-    InferenceView, InferenceChainView, AlgorithmView
-    DraftInference,
+    InferenceView, InferenceChainView, AlgorithmView,
+    DraftInferenceView,
 )
 from .simulate import (
     SimulatePkView,
