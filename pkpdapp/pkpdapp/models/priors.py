@@ -10,7 +10,7 @@ from pkpdapp.models import (
 )
 
 
-class Prior(models.Model):
+class ParameterConcentration(models.Model):
     """
     Model for a generic prior.
     """
@@ -23,6 +23,12 @@ class Prior(models.Model):
 
     class Meta:
         abstract = True
+
+
+class Prior(ParameterConcentration):
+    """
+    Abstract prior.
+    """
 
 
 class PriorUniform(Prior):
@@ -50,7 +56,13 @@ class PriorNormal(Prior):
     )
 
 
-class Boundary(Prior):
+class Boundary(ParameterConcentration):
     """
     Model for a single parameter boundary for use in optimisation.
     """
+    lower = models.FloatField(
+        help_text='lower boundary for optimisation.'
+    )
+    upper = models.FloatField(
+        help_text='upper boundary for optimisation.'
+    )
