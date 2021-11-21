@@ -12,7 +12,7 @@ from pkpdapp.models import (
 
 class ParameterConcentration(models.Model):
     """
-    Model for a generic prior.
+    Model for a generic prior or parameter boundary.
     """
     variable = models.OneToOneField(
         StoredVariable,
