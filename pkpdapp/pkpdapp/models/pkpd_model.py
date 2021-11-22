@@ -42,6 +42,20 @@ class PharmacodynamicModel(MechanisticModel):
 
         self.__original_sbml = self.sbml
 
+    def create_stored_model(self):
+        stored_model_kwargs = {
+            'name': self.name,
+            'description': self.description,
+            'project': self.project,
+            'sbml': self.sbml,
+            'time_max': self.time_max,
+        }
+        stored_model = StoredPharmacodynamicModel.objects.create(**stored_model_kwargs)
+        for variable in self.variables.all():
+            variable.create_stored_variable(stored_model)
+        return stored_model
+
+
 
 class StoredPharmacodynamicModel(PharmacodynamicModel):
     """

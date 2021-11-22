@@ -13,11 +13,16 @@ from pkpdapp.models import (
 
 
 def get_h_unit():
-    return Unit.objects.get(symbol='h')
-
+    try:
+        Unit.objects.get(symbol='h')
+    except Unit.DoesNotExist:
+        return None
 
 def get_mg_unit():
-    return Unit.objects.get(symbol='mg')
+    try:
+        return Unit.objects.get(symbol='mg')
+    except Unit.DoesNotExist:
+        return None
 
 
 class Protocol(models.Model):

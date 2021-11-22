@@ -266,6 +266,56 @@ class Variable(BaseVariable):
         ]
 
 
+    is_public = models.BooleanField(default=False)
+    lower_bound = models.FloatField(
+        default=1e-6,
+        help_text='lowest possible value for this variable'
+    )
+    upper_bound = models.FloatField(
+        default=2,
+        help_text='largest possible value for this variable'
+    )
+    default_value = models.FloatField(
+        default=1,
+        help_text='default value for this variable'
+    )
+
+    name = models.CharField(max_length=20, help_text='name of the variable')
+    qname = models.CharField(
+        max_length=100, help_text='fully qualitifed name of the variable')
+
+    unit = models.ForeignKey(
+        Unit, on_delete=models.CASCADE,
+        help_text=(
+            'variable values are in this unit '
+            '(note this might be different from the unit '
+            'in the stored sbml)'
+        )
+    )
+
+    def create_stored_variable(self, stored_model):
+        stored_variable_kwargs = {
+            'name': self.name,
+            'qname': self.qname,
+            'unit': self.unit,
+            'is_public': self.is_public,
+            'lower_bound': self.lower_bound,
+            'upper_bound': self.upper_bound,
+            'default_value': self.default_value,
+            'scale': self.scale,
+            'axis': self.axis,
+            'display': self.display,
+            'color': self.color,
+            'state': self.state,
+            'constant': self.constant,
+        }
+        if isinstance(stored_model, StoredPharmacodynamicModel):
+            stored_variable_kwargs['pd_model'] = stored_model
+        elif isinstance(stored_model, StoredDosedPharmacokineticModel):
+            stored_variable_kwargs['dosed_pk_model'] = stored_model
+        return StoredVariable.objects.create(**stored_variable_kwargs)
+
+
 class StoredVariable(BaseVariable):
     pd_model = models.ForeignKey(
         StoredPharmacodynamicModel,

@@ -79,7 +79,7 @@ class Dose(DoseBase):
 class StoredDose(DoseBase):
     protocol = models.ForeignKey(
         StoredProtocol, on_delete=models.CASCADE,
-        related_name='doses',
+        related_name='stored_doses',
         help_text='protocol containing this dose'
     )
 

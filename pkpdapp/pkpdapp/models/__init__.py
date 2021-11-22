@@ -10,7 +10,7 @@ from .compound import Compound
 from .project import Project, ProjectAccess
 from .dataset import Dataset
 from .subject import Subject
-from .protocol import Protocol
+from .protocol import Protocol, StoredProtocol
 from .myokit_model_mixin import MyokitModelMixin
 from .mechanistic_model import MechanisticModel
 from .pharmacokinetic_model import (

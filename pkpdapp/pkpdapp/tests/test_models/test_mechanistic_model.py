@@ -8,7 +8,8 @@ from django.test import TestCase
 from pkpdapp.models import (
     PharmacodynamicModel, Protocol, PharmacokineticModel,
     Compound, DosedPharmacokineticModel,
-    Dose, PkpdModel, Unit, Variable
+    Dose, PkpdModel, Unit, Variable, StoredPharmacodynamicModel,
+    StoredDosedPharmacokineticModel
 )
 from myokit.formats.sbml._parser import SBMLParsingError
 from django.core.exceptions import ValidationError
@@ -55,6 +56,15 @@ class TestPharmodynamicModel(TestCase):
             'kappa', 'drug_concentration', 'time'
         ]
         self.assertCountEqual(model_variables, test_model_variables)
+
+    def test_store_model(self):
+        model = PharmacodynamicModel.objects.get(
+            name='tumour_growth_inhibition_model_koch',
+        )
+        stored_model = model.create_stored_model()
+        self.assertTrue(isinstance(stored_model, StoredPharmacodynamicModel))
+        self.assertEqual(len(stored_model.variables.all()), 6)
+
 
     def test_update_model(self):
         m = PharmacodynamicModel.objects.get(
@@ -158,6 +168,30 @@ class TestDosedPharmokineticModel(TestCase):
             protocol=p,
         )
         self.assertTrue(isinstance(m, DosedPharmacokineticModel))
+
+    def test_store_model(self):
+        pk = PharmacokineticModel.objects.get(
+            name='one_compartment_pk_model',
+        )
+
+        p = Protocol.objects.create(
+            amount_unit=Unit.objects.get(symbol='mg'),
+            time_unit=Unit.objects.get(symbol='h'),
+            name='my_cool_protocol',
+            dose_type=Protocol.DoseType.INDIRECT,
+        )
+
+        m = DosedPharmacokineticModel.objects.create(
+            pharmacokinetic_model=pk,
+            dose_compartment='central',
+            protocol=p,
+        )
+        model = DosedPharmacokineticModel.objects.get(
+            name='tumour_growth_inhibition_model_koch',
+        )
+        stored_model = model.create_stored_model()
+        self.assertTrue(isinstance(stored_model, StoredDosedPharmacokineticModel))
+        self.assertEqual(len(stored_model.variables.all()), 6)
 
     def test_myokit_model(self):
         pk = PharmacokineticModel.objects.get(
