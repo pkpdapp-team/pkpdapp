@@ -6,7 +6,7 @@
 
 from django.db import models
 from pkpdapp.models import (
-    StoredVariable, BiomarkerType
+    Variable, BiomarkerType, DraftInference
 )
 
 
@@ -14,10 +14,15 @@ class ObjectiveFunction(models.Model):
     """
     Abstract model class for objective functions.
     """
-    variable = models.OneToOneField(
-        StoredVariable,
+    variable = models.ForeignKey(
+        Variable,
+        related_name='%(class)ss',
         on_delete=models.CASCADE,
-        primary_key=True,
+    )
+    inference = models.ForeignKey(
+        DraftInference,
+        related_name='%(class)ss',
+        on_delete=models.CASCADE,
     )
     biomarker_type = models.ForeignKey(
         BiomarkerType,

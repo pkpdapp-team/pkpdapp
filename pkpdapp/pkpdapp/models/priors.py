@@ -6,7 +6,7 @@
 
 from django.db import models
 from pkpdapp.models import (
-    StoredVariable
+    Variable, DraftInference
 )
 
 
@@ -14,11 +14,15 @@ class Prior(models.Model):
     """
     Model for a generic prior.
     """
-    variable = models.OneToOneField(
-        StoredVariable,
-        related_name='%(class)s',
+    variable = models.ForeignKey(
+        Variable,
+        related_name='%(class)ss',
         on_delete=models.CASCADE,
-        primary_key=True,
+    )
+    inference = models.ForeignKey(
+        DraftInference,
+        related_name='%(class)ss',
+        on_delete=models.CASCADE,
     )
 
     class Meta:
