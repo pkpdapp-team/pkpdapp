@@ -5,9 +5,11 @@
 #
 from rest_framework import serializers
 from pkpdapp.models import (
+    ObjectiveFunction,
     LogLikelihoodNormal, LogLikelihoodLogNormal,
     SumOfSquaredErrorsScoreFunction,
 )
+from pkpdapp.serializers import PolymorphicSerializer
 
 
 class LogLikelihoodNormalSerializer(serializers.ModelSerializer):
@@ -28,3 +30,18 @@ class SumOfSquaredErrorsScoreFunctionSerializer(
     class Meta:
         model = SumOfSquaredErrorsScoreFunction
         fields = '__all__'
+
+
+class ObjectiveFunctionSerializer(PolymorphicSerializer):
+    class Meta:
+        model = ObjectiveFunction
+
+    def get_serializer_map(self):
+        return {
+            LogLikelihoodLogNormalSerializer.__class__:
+            LogLikelihoodLogNormalSerializer,
+            LogLikelihoodLogNormalSerializer.__class__:
+            LogLikelihoodLogNormalSerializer,
+            SumOfSquaredErrorsScoreFunctionSerializer.__class__:
+            SumOfSquaredErrorsScoreFunctionSerializer
+        }

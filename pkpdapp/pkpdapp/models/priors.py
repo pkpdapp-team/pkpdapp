@@ -25,9 +25,6 @@ class Prior(models.Model):
         on_delete=models.CASCADE,
     )
 
-    class Meta:
-        abstract = True
-
 
 class PriorUniform(Prior):
     """

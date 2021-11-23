@@ -15,4 +15,5 @@ from .views import (
     InferenceView, InferenceChainView, CopyPkView, CopyPdView,
     CopyPkpdView, AlgorithmView, StoredPharmacodynamicView,
     StoredDosedPharmacokineticView, DraftInferenceView, RunInferenceView,
+    PriorView, ObjectiveFunctionView,
 )

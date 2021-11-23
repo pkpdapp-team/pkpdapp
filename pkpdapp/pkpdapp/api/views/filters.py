@@ -21,6 +21,7 @@ from pkpdapp.models import (
     Inference, InferenceChain,
     StoredVariable,
     DraftInference,
+    Prior, ObjectiveFunction,
 )
 
 
@@ -121,6 +122,10 @@ class InferenceFilter(filters.BaseFilterBackend):
                         queryset = queryset.model.objects.none()
                 elif queryset.model == InferenceChain:
                     queryset = inference.chains.all()
+                elif queryset.model == Prior:
+                    queryset = inference.priors
+                elif queryset.model == ObjectiveFunction:
+                    queryset = inference.objectivefunctions
                 else:
                     raise RuntimeError('queryset model {} not recognised')
             except Inference.DoesNotExist:

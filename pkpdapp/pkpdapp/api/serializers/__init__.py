@@ -6,12 +6,15 @@
 # flake8: noqa F401
 
 
+from .polymorphicserializer import PolymorphicSerializer
 from .priors import (
+    PriorSerializer,
     PriorNormalSerializer,
     PriorUniformSerializer,
     BoundarySerializer
 )
 from .likelihoods import (
+    ObjectiveFunctionSerializer,
     LogLikelihoodNormalSerializer,
     LogLikelihoodLogNormalSerializer,
     SumOfSquaredErrorsScoreFunctionSerializer,
@@ -44,3 +47,5 @@ from .subject import SubjectSerializer
 from .unit import UnitSerializer
 from .user import UserSerializer
 from .variables import VariableSerializer, StoredVariableSerializer
+
+

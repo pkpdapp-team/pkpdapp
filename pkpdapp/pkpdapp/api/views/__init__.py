@@ -51,3 +51,5 @@ from .subject import SubjectView
 from .unit import UnitView
 from .user import UserView
 from .variable import VariableView, StoredVariableView
+from .likelihoods import ObjectiveFunctionView
+from .priors import PriorView
