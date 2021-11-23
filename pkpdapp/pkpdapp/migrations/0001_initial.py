@@ -90,6 +90,21 @@ class Migration(migrations.Migration):
             bases=(models.Model, pkpdapp.models.myokit_model_mixin.MyokitModelMixin),
         ),
         migrations.CreateModel(
+            name='DraftInference',
+            fields=[
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('name', models.CharField(help_text='name of the dataset', max_length=100)),
+                ('description', models.TextField(blank=True, default='', help_text='short description of what this inference does')),
+                ('number_of_chains', models.IntegerField(default=4, help_text='number of chains')),
+                ('max_number_of_iterations', models.IntegerField(default=1000, help_text='maximum number of iterations')),
+                ('algorithm', models.ForeignKey(default=pkpdapp.models.inference.get_default_optimisation_algorithm, help_text='algorithm used to perform the inference', on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.algorithm')),
+                ('dosed_pk_model', models.OneToOneField(blank=True, help_text='dosed pharmacokinetic model', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='draft_inference', to='pkpdapp.dosedpharmacokineticmodel')),
+            ],
+            options={
+                'abstract': False,
+            },
+        ),
+        migrations.CreateModel(
             name='Inference',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
@@ -112,6 +127,14 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('inference', models.ForeignKey(help_text='uniform prior', on_delete=django.db.models.deletion.CASCADE, related_name='chains', to='pkpdapp.inference')),
+            ],
+        ),
+        migrations.CreateModel(
+            name='ObjectiveFunction',
+            fields=[
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('biomarker_type', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.biomarkertype')),
+                ('inference', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='objectivefunctions', to='pkpdapp.draftinference')),
             ],
         ),
         migrations.CreateModel(
@@ -156,6 +179,13 @@ class Migration(migrations.Migration):
                 'abstract': False,
             },
             bases=(models.Model, pkpdapp.models.myokit_model_mixin.MyokitModelMixin),
+        ),
+        migrations.CreateModel(
+            name='Prior',
+            fields=[
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('inference', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='priors', to='pkpdapp.draftinference')),
+            ],
         ),
         migrations.CreateModel(
             name='Project',
@@ -211,11 +241,52 @@ class Migration(migrations.Migration):
             ],
         ),
         migrations.CreateModel(
+            name='Boundary',
+            fields=[
+                ('prior_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='pkpdapp.prior')),
+            ],
+            bases=('pkpdapp.prior',),
+        ),
+        migrations.CreateModel(
             name='Dose',
             fields=[
                 ('dosebase_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='pkpdapp.dosebase')),
             ],
             bases=('pkpdapp.dosebase',),
+        ),
+        migrations.CreateModel(
+            name='LogLikelihoodLogNormal',
+            fields=[
+                ('objectivefunction_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='pkpdapp.objectivefunction')),
+                ('sigma', models.FloatField(help_text='sigma of log-normal prior distribution.')),
+            ],
+            bases=('pkpdapp.objectivefunction',),
+        ),
+        migrations.CreateModel(
+            name='LogLikelihoodNormal',
+            fields=[
+                ('objectivefunction_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='pkpdapp.objectivefunction')),
+                ('sd', models.FloatField(help_text='sd of normal prior distribution.')),
+            ],
+            bases=('pkpdapp.objectivefunction',),
+        ),
+        migrations.CreateModel(
+            name='PriorNormal',
+            fields=[
+                ('prior_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='pkpdapp.prior')),
+                ('mean', models.FloatField(help_text='mean of normal prior distribution.')),
+                ('sd', models.FloatField(help_text='sd of normal prior distribution.')),
+            ],
+            bases=('pkpdapp.prior',),
+        ),
+        migrations.CreateModel(
+            name='PriorUniform',
+            fields=[
+                ('prior_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='pkpdapp.prior')),
+                ('lower', models.FloatField(help_text='lower bound of the uniform distribution.')),
+                ('upper', models.FloatField(help_text='upper bound of the uniform distribution.')),
+            ],
+            bases=('pkpdapp.prior',),
         ),
         migrations.CreateModel(
             name='StoredDose',
@@ -274,6 +345,13 @@ class Migration(migrations.Migration):
                 ('variable_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='pkpdapp.variable')),
             ],
             bases=('pkpdapp.variable',),
+        ),
+        migrations.CreateModel(
+            name='SumOfSquaredErrorsScoreFunction',
+            fields=[
+                ('objectivefunction_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='pkpdapp.objectivefunction')),
+            ],
+            bases=('pkpdapp.objectivefunction',),
         ),
         migrations.CreateModel(
             name='Subject',
@@ -341,6 +419,11 @@ class Migration(migrations.Migration):
             ],
         ),
         migrations.AddField(
+            model_name='prior',
+            name='variable',
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='priors', to='pkpdapp.variable'),
+        ),
+        migrations.AddField(
             model_name='pkpdmodel',
             name='project',
             field=models.ForeignKey(blank=True, help_text='Project that "owns" this model', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='pkpd_models', to='pkpdapp.project'),
@@ -354,6 +437,11 @@ class Migration(migrations.Migration):
             model_name='pharmacodynamicmodel',
             name='project',
             field=models.ForeignKey(blank=True, help_text='Project that "owns" this model', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='pd_models', to='pkpdapp.project'),
+        ),
+        migrations.AddField(
+            model_name='objectivefunction',
+            name='variable',
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='objectivefunctions', to='pkpdapp.variable'),
         ),
         migrations.CreateModel(
             name='InferenceResult',
@@ -369,23 +457,20 @@ class Migration(migrations.Migration):
             name='project',
             field=models.ForeignKey(help_text='Project that "owns" this inference object', on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.project'),
         ),
-        migrations.CreateModel(
-            name='DraftInference',
-            fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(help_text='name of the dataset', max_length=100)),
-                ('description', models.TextField(blank=True, default='', help_text='short description of what this inference does')),
-                ('number_of_chains', models.IntegerField(default=4, help_text='number of chains')),
-                ('max_number_of_iterations', models.IntegerField(default=1000, help_text='maximum number of iterations')),
-                ('algorithm', models.ForeignKey(default=pkpdapp.models.inference.get_default_optimisation_algorithm, help_text='algorithm used to perform the inference', on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.algorithm')),
-                ('dosed_pk_model', models.OneToOneField(blank=True, help_text='dosed pharmacokinetic model', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='draft_inference', to='pkpdapp.dosedpharmacokineticmodel')),
-                ('pd_model', models.OneToOneField(blank=True, help_text='pharmacodynamic model', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='draft_inference', to='pkpdapp.pharmacodynamicmodel')),
-                ('pkpd_model', models.OneToOneField(blank=True, help_text='pharmacokinetic/pharmacokinetic model', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='draft_inference', to='pkpdapp.pkpdmodel')),
-                ('project', models.ForeignKey(help_text='Project that "owns" this inference object', on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.project')),
-            ],
-            options={
-                'abstract': False,
-            },
+        migrations.AddField(
+            model_name='draftinference',
+            name='pd_model',
+            field=models.OneToOneField(blank=True, help_text='pharmacodynamic model', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='draft_inference', to='pkpdapp.pharmacodynamicmodel'),
+        ),
+        migrations.AddField(
+            model_name='draftinference',
+            name='pkpd_model',
+            field=models.OneToOneField(blank=True, help_text='pharmacokinetic/pharmacokinetic model', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='draft_inference', to='pkpdapp.pkpdmodel'),
+        ),
+        migrations.AddField(
+            model_name='draftinference',
+            name='project',
+            field=models.ForeignKey(help_text='Project that "owns" this inference object', on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.project'),
         ),
         migrations.AddField(
             model_name='dosedpharmacokineticmodel',
@@ -446,66 +531,6 @@ class Migration(migrations.Migration):
             name='subject',
             field=models.ForeignKey(help_text='subject associated with this biomarker', on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.subject'),
         ),
-        migrations.CreateModel(
-            name='Boundary',
-            fields=[
-                ('variable', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, primary_key=True, related_name='boundary', serialize=False, to='pkpdapp.storedvariable')),
-            ],
-            options={
-                'abstract': False,
-            },
-        ),
-        migrations.CreateModel(
-            name='LogLikelihoodLogNormal',
-            fields=[
-                ('variable', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, primary_key=True, serialize=False, to='pkpdapp.storedvariable')),
-                ('sigma', models.FloatField(help_text='sigma of log-normal prior distribution.')),
-            ],
-            options={
-                'abstract': False,
-            },
-        ),
-        migrations.CreateModel(
-            name='LogLikelihoodNormal',
-            fields=[
-                ('variable', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, primary_key=True, serialize=False, to='pkpdapp.storedvariable')),
-                ('sd', models.FloatField(help_text='sd of normal prior distribution.')),
-            ],
-            options={
-                'abstract': False,
-            },
-        ),
-        migrations.CreateModel(
-            name='PriorNormal',
-            fields=[
-                ('variable', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, primary_key=True, related_name='priornormal', serialize=False, to='pkpdapp.storedvariable')),
-                ('mean', models.FloatField(help_text='mean of normal prior distribution.')),
-                ('sd', models.FloatField(help_text='sd of normal prior distribution.')),
-            ],
-            options={
-                'abstract': False,
-            },
-        ),
-        migrations.CreateModel(
-            name='PriorUniform',
-            fields=[
-                ('variable', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, primary_key=True, related_name='prioruniform', serialize=False, to='pkpdapp.storedvariable')),
-                ('lower', models.FloatField(help_text='lower bound of the uniform distribution.')),
-                ('upper', models.FloatField(help_text='upper bound of the uniform distribution.')),
-            ],
-            options={
-                'abstract': False,
-            },
-        ),
-        migrations.CreateModel(
-            name='SumOfSquaredErrorsScoreFunction',
-            fields=[
-                ('variable', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, primary_key=True, serialize=False, to='pkpdapp.storedvariable')),
-            ],
-            options={
-                'abstract': False,
-            },
-        ),
         migrations.AddConstraint(
             model_name='variable',
             constraint=models.CheckConstraint(check=models.Q(models.Q(('pk_model__isnull', True), ('dosed_pk_model__isnull', True), ('pd_model__isnull', False)), models.Q(('pk_model__isnull', False), ('dosed_pk_model__isnull', True), ('pd_model__isnull', True)), models.Q(('pk_model__isnull', True), ('dosed_pk_model__isnull', False), ('pd_model__isnull', True)), _connector='OR'), name='variable: variable must belong to a model'),
@@ -542,20 +567,5 @@ class Migration(migrations.Migration):
             model_name='dose',
             name='protocol',
             field=models.ForeignKey(help_text='protocol containing this dose', on_delete=django.db.models.deletion.CASCADE, related_name='doses', to='pkpdapp.protocol'),
-        ),
-        migrations.AddField(
-            model_name='sumofsquarederrorsscorefunction',
-            name='biomarker_type',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.biomarkertype'),
-        ),
-        migrations.AddField(
-            model_name='loglikelihoodnormal',
-            name='biomarker_type',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.biomarkertype'),
-        ),
-        migrations.AddField(
-            model_name='loglikelihoodlognormal',
-            name='biomarker_type',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.biomarkertype'),
         ),
     ]

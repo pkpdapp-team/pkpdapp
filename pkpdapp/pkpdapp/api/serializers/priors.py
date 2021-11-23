@@ -7,7 +7,7 @@ from rest_framework import serializers
 from pkpdapp.models import (
     PriorNormal, PriorUniform, Boundary, Prior
 )
-from pkpdapp.serializers import PolymorphicSerializer
+from pkpdapp.api.serializers import PolymorphicSerializer
 
 
 class PriorNormalSerializer(serializers.ModelSerializer):

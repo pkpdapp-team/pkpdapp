@@ -9,7 +9,7 @@ from pkpdapp.models import (
     LogLikelihoodNormal, LogLikelihoodLogNormal,
     SumOfSquaredErrorsScoreFunction,
 )
-from pkpdapp.serializers import PolymorphicSerializer
+from pkpdapp.api.serializers import PolymorphicSerializer
 
 
 class LogLikelihoodNormalSerializer(serializers.ModelSerializer):

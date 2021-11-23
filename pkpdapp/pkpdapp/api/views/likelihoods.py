@@ -10,7 +10,7 @@ from pkpdapp.api.views import (
     CheckAccessToProject,
 )
 from pkpdapp.api.serializers import (
-    ObjectiveSerializer
+    ObjectiveFunctionSerializer
 )
 from pkpdapp.models import (
     ObjectiveFunction
@@ -19,7 +19,7 @@ from pkpdapp.models import (
 
 class ObjectiveFunctionView(viewsets.ModelViewSet):
     queryset = ObjectiveFunction.objects.all()
-    serializer_class = ObjectiveSerializer
+    serializer_class = ObjectiveFunctionSerializer
     filter_backends = [
         InferenceFilter
     ]

@@ -31,11 +31,6 @@ from .biomarker import Biomarker
 from .profile import Profile
 from .dose import Dose
 from .variable import Variable, StoredVariable
-from .priors import PriorNormal, PriorUniform, Boundary
-from .likelihoods import (
-    SumOfSquaredErrorsScoreFunction, LogLikelihoodNormal,
-    LogLikelihoodLogNormal
-)
 from .inference import (
     DraftInference,
     Inference,
@@ -43,3 +38,9 @@ from .inference import (
     InferenceResult,
     Algorithm,
 )
+from .priors import PriorNormal, PriorUniform, Boundary, Prior
+from .likelihoods import (
+    SumOfSquaredErrorsScoreFunction, LogLikelihoodNormal,
+    LogLikelihoodLogNormal, ObjectiveFunction
+)
+
