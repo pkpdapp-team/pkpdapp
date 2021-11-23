@@ -63,15 +63,7 @@ class RunInferenceView(views.APIView):
             return Response(InferenceSerializer(inference))
 
         inference = draft_inference.create_inference()
-
-        if isinstance(model, PharmacodynamicModel):
-            inference.pd_model = StoredPharmacodynamicModel.objects.create(model)
-        elif isinstance(model, DosedPharmacodynamicModel):
-            inference.dosed_pk_model = StoredDosedPharmacokineticModel.objects.create(model)
-        elif isinstance(model, PkpdModel):
-            inference.pkpd_model = StoredPkpdModel.objects.create(model)
-
-        return Response(InferenceSerializer(inference))
+        return Response(InferenceSerializer(inference).data)
 
 
 

@@ -124,8 +124,9 @@ class Protocol(models.Model):
             'amount_unit': self.amount_unit,
         }
         stored_protocol = StoredProtocol.objects.create(**stored_protocol_kwargs)
-        for dose in self.doses:
+        for dose in self.doses.all():
             dose.create_stored_dose(stored_protocol)
+        return stored_protocol
 
 
 class StoredProtocol(Protocol):

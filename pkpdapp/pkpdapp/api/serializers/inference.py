@@ -38,15 +38,6 @@ class DraftInferenceSerializer(serializers.ModelSerializer):
 
 
 class InferenceSerializer(serializers.ModelSerializer):
-    pd_model_detail = StoredPharmacodynamicSerializer(
-        source='pd_model', read_only=True
-    )
-    dosed_pk_model_detail = StoredDosedPharmacokineticSerializer(
-        source='dosed_pk_model', read_only=True
-    )
-    pkpd_model_detail = StoredPkpdSerializer(
-        source='pkpd_model', read_only=True
-    )
 
     class Meta:
         model = Inference

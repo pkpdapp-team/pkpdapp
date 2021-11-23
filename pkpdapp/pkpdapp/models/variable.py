@@ -15,9 +15,9 @@ from pkpdapp.models import (
 )
 
 
-class BaseVariable(models.Model):
+class Variable(models.Model):
     """
-    An abstract base class for variable.
+    A single variable for a mechanistic model.
     """
     is_public = models.BooleanField(default=False)
     lower_bound = models.FloatField(
@@ -102,6 +102,46 @@ class BaseVariable(models.Model):
                     'bound greater than zero'
                 )
             )
+        ]
+
+    pd_model = models.ForeignKey(
+        PharmacodynamicModel,
+        blank=True, null=True,
+        on_delete=models.CASCADE,
+        related_name='variables',
+        help_text='pharmacodynamic model'
+    )
+    pk_model = models.ForeignKey(
+        PharmacokineticModel,
+        blank=True, null=True,
+        on_delete=models.CASCADE,
+        related_name='variables',
+        help_text='pharmacokinetic model'
+    )
+    dosed_pk_model = models.ForeignKey(
+        DosedPharmacokineticModel,
+        blank=True, null=True,
+        on_delete=models.CASCADE,
+        related_name='variables',
+        help_text='dosed pharmacokinetic model'
+    )
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                check=(
+                    (Q(pk_model__isnull=True) &
+                     Q(dosed_pk_model__isnull=True) &
+                     Q(pd_model__isnull=False)) |
+                    (Q(pk_model__isnull=False) &
+                     Q(dosed_pk_model__isnull=True) &
+                     Q(pd_model__isnull=True)) |
+                    (Q(pk_model__isnull=True) &
+                     Q(dosed_pk_model__isnull=False) &
+                     Q(pd_model__isnull=True))
+                ),
+                name='%(class)s: variable must belong to a model'
+            ),
         ]
 
     def get_project(self):
@@ -219,80 +259,6 @@ class BaseVariable(models.Model):
                 .format(type(model)),
             )
 
-
-class Variable(BaseVariable):
-    """
-    A single variable for a mechanistic model.
-    """
-
-    pd_model = models.ForeignKey(
-        PharmacodynamicModel,
-        blank=True, null=True,
-        on_delete=models.CASCADE,
-        related_name='variables',
-        help_text='pharmacodynamic model'
-    )
-    pk_model = models.ForeignKey(
-        PharmacokineticModel,
-        blank=True, null=True,
-        on_delete=models.CASCADE,
-        related_name='variables',
-        help_text='pharmacokinetic model'
-    )
-    dosed_pk_model = models.ForeignKey(
-        DosedPharmacokineticModel,
-        blank=True, null=True,
-        on_delete=models.CASCADE,
-        related_name='variables',
-        help_text='dosed pharmacokinetic model'
-    )
-
-    class Meta:
-        constraints = [
-            models.CheckConstraint(
-                check=(
-                    (Q(pk_model__isnull=True) &
-                     Q(dosed_pk_model__isnull=True) &
-                     Q(pd_model__isnull=False)) |
-                    (Q(pk_model__isnull=False) &
-                     Q(dosed_pk_model__isnull=True) &
-                     Q(pd_model__isnull=True)) |
-                    (Q(pk_model__isnull=True) &
-                     Q(dosed_pk_model__isnull=False) &
-                     Q(pd_model__isnull=True))
-                ),
-                name='%(class)s: variable must belong to a model'
-            ),
-        ]
-
-
-    is_public = models.BooleanField(default=False)
-    lower_bound = models.FloatField(
-        default=1e-6,
-        help_text='lowest possible value for this variable'
-    )
-    upper_bound = models.FloatField(
-        default=2,
-        help_text='largest possible value for this variable'
-    )
-    default_value = models.FloatField(
-        default=1,
-        help_text='default value for this variable'
-    )
-
-    name = models.CharField(max_length=20, help_text='name of the variable')
-    qname = models.CharField(
-        max_length=100, help_text='fully qualitifed name of the variable')
-
-    unit = models.ForeignKey(
-        Unit, on_delete=models.CASCADE,
-        help_text=(
-            'variable values are in this unit '
-            '(note this might be different from the unit '
-            'in the stored sbml)'
-        )
-    )
-
     def create_stored_variable(self, stored_model):
         stored_variable_kwargs = {
             'name': self.name,
@@ -316,31 +282,8 @@ class Variable(BaseVariable):
         return StoredVariable.objects.create(**stored_variable_kwargs)
 
 
-class StoredVariable(BaseVariable):
-    pd_model = models.ForeignKey(
-        StoredPharmacodynamicModel,
-        blank=True, null=True,
-        on_delete=models.CASCADE,
-        related_name='stored_variables',
-        help_text='pharmacodynamic model'
-    )
-    dosed_pk_model = models.ForeignKey(
-        StoredDosedPharmacokineticModel,
-        blank=True, null=True,
-        related_name='stored_variables',
-        on_delete=models.CASCADE,
-        help_text='dosed pharmacokinetic model'
-    )
+class StoredVariable(Variable):
+    """
+    A stored variable
+    """
 
-    class Meta:
-        constraints = [
-            models.CheckConstraint(
-                check=(
-                    (Q(dosed_pk_model__isnull=True) &
-                     Q(pd_model__isnull=False)) |
-                    (Q(dosed_pk_model__isnull=False) &
-                     Q(pd_model__isnull=True))
-                ),
-                name='%(class)s: stored variable must belong to a model'
-            ),
-        ]

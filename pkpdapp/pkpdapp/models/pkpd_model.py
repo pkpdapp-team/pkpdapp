@@ -37,6 +37,10 @@ class PharmacodynamicModel(MechanisticModel):
 
         super().save(force_insert, force_update, *args, **kwargs)
 
+        # don't update a stored model
+        if hasattr(self, 'storedpharmacodynamicmodel'):
+            return
+
         if created or self.sbml != self.__original_sbml:
             self.update_model()
 
@@ -61,7 +65,6 @@ class StoredPharmacodynamicModel(PharmacodynamicModel):
     """
     Stored PD model.
     """
-
 
 class PkpdModel(MechanisticModel):
     dose_compartment = models.CharField(
@@ -90,7 +93,7 @@ class PkpdModel(MechanisticModel):
         return reverse('pkpd_model-detail', kwargs={'pk': self.pk})
 
 
-class StoredPkpdModel(PharmacodynamicModel):
+class StoredPkpdModel(PkpdModel):
     """
     Stored PKPD model.
     """

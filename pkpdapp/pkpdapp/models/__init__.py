@@ -15,6 +15,7 @@ from .myokit_model_mixin import MyokitModelMixin
 from .mechanistic_model import MechanisticModel
 from .pharmacokinetic_model import (
     PharmacokineticModel,
+    StoredPharmacokineticModel,
     DosedPharmacokineticModel,
     StoredDosedPharmacokineticModel
 )

@@ -21,7 +21,6 @@ export const fetchInferences = createAsyncThunk('inferences/fetchInferences', as
   )
   for (const inference of response) {
     dispatch(fetchChainsByInference(inference))
-    dispatch(fetchStoredVariablesByInference(inference))
   }
   return response
 })
@@ -32,7 +31,6 @@ export const fetchInferenceById = createAsyncThunk('inferences/fetchInferenceByI
   )
 
   dispatch(fetchChainsByInference(inference))
-  dispatch(fetchStoredVariablesByInference(inference))
 
   return inference
 })
@@ -50,7 +48,6 @@ export const addNewInference = createAsyncThunk(
     console.log('got new inference', inference)
 
     dispatch(fetchChainsByInference(inference))
-    dispatch(fetchStoredVariablesByInference(inference))
 
     inference.chosen = true;
 
@@ -127,6 +124,7 @@ export const inferencesSlice = createSlice({
       inferencesAdapter.setAll(state, action.payload)
     },
     [fetchInferenceById.fulfilled]: inferencesAdapter.upsertOne,
+    [runInference.fulfilled]: inferencesAdapter.addOne,
     [addNewInference.fulfilled]: inferencesAdapter.addOne,
     [updateInference.fulfilled]: inferencesAdapter.upsertOne,
     [deleteInference.fulfilled]: inferencesAdapter.removeOne,

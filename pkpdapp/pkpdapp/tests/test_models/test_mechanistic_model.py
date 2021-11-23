@@ -181,17 +181,16 @@ class TestDosedPharmokineticModel(TestCase):
             dose_type=Protocol.DoseType.INDIRECT,
         )
 
-        m = DosedPharmacokineticModel.objects.create(
+        model = DosedPharmacokineticModel.objects.create(
             pharmacokinetic_model=pk,
             dose_compartment='central',
             protocol=p,
         )
-        model = DosedPharmacokineticModel.objects.get(
-            name='tumour_growth_inhibition_model_koch',
-        )
         stored_model = model.create_stored_model()
         self.assertTrue(isinstance(stored_model, StoredDosedPharmacokineticModel))
-        self.assertEqual(len(stored_model.variables.all()), 6)
+        self.assertEqual(len(stored_model.variables.all()), 8)
+        self.assertEqual(stored_model.protocol.name, 'my_cool_protocol')
+        self.assertNotEqual(stored_model.protocol.id, p.id)
 
     def test_myokit_model(self):
         pk = PharmacokineticModel.objects.get(

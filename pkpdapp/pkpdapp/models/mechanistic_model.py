@@ -52,3 +52,4 @@ class MechanisticModel(models.Model, MyokitModelMixin):
             self.create_myokit_model()
         except Exception as e:
             raise ValidationError({'sbml': str(e)})
+

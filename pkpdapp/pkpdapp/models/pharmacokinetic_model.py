@@ -37,11 +37,32 @@ class PharmacokineticModel(MechanisticModel):
 
         super().save(force_insert, force_update, *args, **kwargs)
 
+        # don't update a stored model
+        if hasattr(self, 'storedpharmacokineticmodel'):
+            return
+
         if created or self.sbml != self.__original_sbml:
             self.update_model()
 
         self.__original_sbml = self.sbml
 
+
+    def create_stored_model(self):
+        stored_model_kwargs = {
+            'name': self.name,
+            'description': self.description,
+            'sbml': self.sbml,
+            'time_max': self.time_max,
+        }
+        stored_model = StoredPharmacokineticModel.objects.create(**stored_model_kwargs)
+        # no need to store variables as they will be stored with the dosed pk model
+        return stored_model
+
+
+class StoredPharmacokineticModel(PharmacokineticModel):
+    """
+    Stored PK model.
+    """
 
 class DosedPharmacokineticModel(models.Model, MyokitModelMixin):
     """
@@ -98,14 +119,15 @@ class DosedPharmacokineticModel(models.Model, MyokitModelMixin):
         stored_model_kwargs = {
             'name': self.name,
             'project': self.project,
-            'pharmacokinetic_model': self.pharmacokinetic_model,
+            'pharmacokinetic_model': self.pharmacokinetic_model.create_stored_model(),
             'dose_compartment': self.dose_compartment,
             'protocol': self.protocol.create_stored_protocol(),
             'time_max': self.time_max,
         }
-        stored_model = StoredDosedPharmacokineticModel.objects.create(stored_model_kwargs)
-        for variable in self.variables:
+        stored_model = StoredDosedPharmacokineticModel.objects.create(**stored_model_kwargs)
+        for variable in self.variables.all():
             variable.create_stored_variable(stored_model)
+        return stored_model
 
     def create_myokit_model(self):
         pk_model = self.pharmacokinetic_model.create_myokit_model()
@@ -173,6 +195,10 @@ class DosedPharmacokineticModel(models.Model, MyokitModelMixin):
         created = not self.pk
 
         super().save(force_insert, force_update, *args, **kwargs)
+
+        # don't update a stored model
+        if hasattr(self, 'storeddosedpharmacokineticmodel'):
+            return
 
         if (
             created or
