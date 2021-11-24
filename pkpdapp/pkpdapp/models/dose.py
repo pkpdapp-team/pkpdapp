@@ -5,7 +5,7 @@
 #
 
 from django.db import models
-from pkpdapp.models import Protocol, StoredProtocol
+from pkpdapp.models import Protocol, StoredModel
 from django.core.exceptions import ValidationError
 
 
@@ -60,7 +60,7 @@ class DoseBase(models.Model):
         for dosed_pk_model in self.protocol.dosed_pk_models.all():
             dosed_pk_model.update_simulator()
 
-class Dose(DoseBase):
+class Dose(DoseBase, StoredModel):
     protocol = models.ForeignKey(
         Protocol, on_delete=models.CASCADE,
         related_name='doses',
@@ -72,14 +72,7 @@ class Dose(DoseBase):
             'start_time': self.start_time,
             'amount': self.amount,
             'duration': self.duration,
+            'read_only': True,
         }
-        return StoredDose.objects.create(**stored_dose_kwargs)
-
-
-class StoredDose(DoseBase):
-    protocol = models.ForeignKey(
-        StoredProtocol, on_delete=models.CASCADE,
-        related_name='stored_doses',
-        help_text='protocol containing this dose'
-    )
+        return Dose.objects.create(**stored_dose_kwargs)
 

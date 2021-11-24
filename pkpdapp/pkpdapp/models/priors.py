@@ -7,7 +7,7 @@
 from django.db import models
 from polymorphic.models import PolymorphicModel
 from pkpdapp.models import (
-    Variable, DraftInference
+    Variable, Inference
 )
 
 
@@ -21,7 +21,7 @@ class Prior(PolymorphicModel):
         on_delete=models.CASCADE,
     )
     inference = models.ForeignKey(
-        DraftInference,
+        Inference,
         related_name='%(class)ss',
         on_delete=models.CASCADE,
     )

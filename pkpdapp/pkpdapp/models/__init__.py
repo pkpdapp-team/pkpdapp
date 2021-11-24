@@ -5,40 +5,39 @@
 #
 # flake8: noqa f401
 
+from .stored import StoredModel
 from .units import Unit
 from .compound import Compound
 from .project import Project, ProjectAccess
 from .dataset import Dataset
 from .subject import Subject
-from .protocol import Protocol, StoredProtocol
+from .protocol import Protocol
 from .myokit_model_mixin import MyokitModelMixin
 from .mechanistic_model import MechanisticModel
 from .pharmacokinetic_model import (
     PharmacokineticModel,
-    StoredPharmacokineticModel,
     DosedPharmacokineticModel,
-    StoredDosedPharmacokineticModel
 )
 from .pkpd_model import (
-    StoredPharmacodynamicModel,
     PharmacodynamicModel,
     PkpdModel,
-    StoredPkpdModel,
 )
-from .variable import Variable, StoredVariable
+from .variable import Variable
 from .biomarker_type import BiomarkerType
 from .biomarker import Biomarker
 from .profile import Profile
 from .dose import Dose
-from .variable import Variable, StoredVariable
 from .inference import (
-    DraftInference,
     Inference,
-    InferenceChain,
-    InferenceResult,
     Algorithm,
 )
-from .priors import PriorNormal, PriorUniform, Boundary, Prior
+from .priors import (
+    PriorNormal, PriorUniform, Boundary, Prior,
+)
+from .inference_results import (
+    InferenceChain,
+    InferenceResult,
+)
 from .likelihoods import (
     SumOfSquaredErrorsScoreFunction, LogLikelihoodNormal,
     LogLikelihoodLogNormal, ObjectiveFunction

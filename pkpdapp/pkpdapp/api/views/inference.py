@@ -10,15 +10,11 @@ from pkpdapp.api.views import (
 )
 from pkpdapp.api.serializers import (
     InferenceSerializer,
-    DraftInferenceSerializer,
     InferenceChainSerializer,
     AlgorithmSerializer,
 )
 from pkpdapp.models import (
-    Inference, InferenceChain, Algorithm, DraftInference,
-    StoredDosedPharmacokineticModel,
-    StoredPharmacodynamicModel,
-    StoredPkpdModel,
+    Inference, InferenceChain, Algorithm,
     PharmacodynamicModel, DosedPharmacokineticModel,
     PkpdModel,
 )
@@ -35,21 +31,15 @@ class InferenceView(viewsets.ModelViewSet):
     filter_backends = [ProjectFilter]
 
 
-class DraftInferenceView(viewsets.ModelViewSet):
-    queryset = DraftInference.objects.all()
-    serializer_class = DraftInferenceSerializer
-    filter_backends = [ProjectFilter]
-
-
 class RunInferenceView(views.APIView):
 
     def post(self, request, pk, format=None):
         try:
-            draft_inference = DraftInference.objects.get(pk=pk)
-        except DraftInference.DoesNotExist:
+            inference = Inference.objects.get(pk=pk)
+        except Inference.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        model = draft_inference.get_model()
+        model = inference.get_model()
         if model is None:
             errors = {
                 'pd_model': 'Inference must have a model',
@@ -60,11 +50,8 @@ class RunInferenceView(views.APIView):
                 errors, status=status.HTTP_400_BAD_REQUEST
             )
 
-            return Response(InferenceSerializer(inference))
-
-        inference = draft_inference.create_inference()
-        return Response(InferenceSerializer(inference).data)
-
+        stored_inference = inference.run_inference()
+        return Response(InferenceSerializer(stored_inference).data)
 
 
 class InferenceChainView(viewsets.ModelViewSet):

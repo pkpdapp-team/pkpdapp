@@ -28,20 +28,13 @@ from .models import (
     PharmacodynamicView,
     DosedPharmacokineticView,
     PkpdView,
-    StoredPharmacodynamicView,
-    StoredDosedPharmacokineticView,
-)
-from .model_copy import (
-    CopyPkView,
-    CopyPdView,
-    CopyPkpdView,
 )
 from .nca import NcaView
 from .project import ProjectView, ProjectAccessView
 from .protocol import ProtocolView
 from .inference import (
     InferenceView, InferenceChainView, AlgorithmView,
-    DraftInferenceView, RunInferenceView,
+    RunInferenceView,
 )
 from .simulate import (
     SimulatePkView,
@@ -50,6 +43,6 @@ from .simulate import (
 from .subject import SubjectView
 from .unit import UnitView
 from .user import UserView
-from .variable import VariableView, StoredVariableView
+from .variable import VariableView
 from .likelihoods import ObjectiveFunctionView
 from .priors import PriorView

@@ -19,8 +19,6 @@ from pkpdapp.models import (
     Variable,
     Subject,
     Inference, InferenceChain,
-    StoredVariable,
-    DraftInference,
     Prior, ObjectiveFunction,
 )
 
@@ -114,10 +112,10 @@ class InferenceFilter(filters.BaseFilterBackend):
                 inference = Inference.objects.get(
                     id=inference_id
                 )
-                if queryset.model == StoredVariable:
+                if queryset.model == Variable:
                     model = inference.get_model()
                     if model:
-                        queryset = model.stored_variables.all()
+                        queryset = model.variables.all()
                     else:
                         queryset = queryset.model.objects.none()
                 elif queryset.model == InferenceChain:
@@ -158,8 +156,6 @@ class ProjectFilter(filters.BaseFilterBackend):
                     queryset = project.protocols
                 elif queryset.model == Inference:
                     queryset = project.inference_set
-                elif queryset.model == DraftInference:
-                    queryset = project.draftinference_set
                 elif queryset.model == BiomarkerType:
                     queryset = BiomarkerType.objects.filter(
                         dataset__project=project

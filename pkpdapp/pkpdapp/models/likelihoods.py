@@ -7,7 +7,7 @@
 from django.db import models
 from polymorphic.models import PolymorphicModel
 from pkpdapp.models import (
-    Variable, BiomarkerType, DraftInference
+    Variable, BiomarkerType, Inference
 )
 
 
@@ -22,7 +22,7 @@ class ObjectiveFunction(PolymorphicModel):
         on_delete=models.CASCADE,
     )
     inference = models.ForeignKey(
-        DraftInference,
+        Inference,
         related_name='%(class)ss',
         on_delete=models.CASCADE,
     )

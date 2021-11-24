@@ -10,10 +10,11 @@ from pkpdapp.models import (
     MechanisticModel,
     Protocol,
     Project,
+    StoredModel,
 )
 
 
-class PharmacodynamicModel(MechanisticModel):
+class PharmacodynamicModel(MechanisticModel, StoredModel):
     project = models.ForeignKey(
         Project, on_delete=models.CASCADE,
         related_name='pd_models',
@@ -53,20 +54,15 @@ class PharmacodynamicModel(MechanisticModel):
             'project': self.project,
             'sbml': self.sbml,
             'time_max': self.time_max,
+            'read_only': True,
         }
-        stored_model = StoredPharmacodynamicModel.objects.create(**stored_model_kwargs)
+        stored_model = PharmacodynamicModel.objects.create(**stored_model_kwargs)
         for variable in self.variables.all():
             variable.create_stored_variable(stored_model)
         return stored_model
 
 
-
-class StoredPharmacodynamicModel(PharmacodynamicModel):
-    """
-    Stored PD model.
-    """
-
-class PkpdModel(MechanisticModel):
+class PkpdModel(MechanisticModel, StoredModel):
     dose_compartment = models.CharField(
         max_length=100,
         default='central',
@@ -92,8 +88,3 @@ class PkpdModel(MechanisticModel):
     def get_absolute_url(self):
         return reverse('pkpd_model-detail', kwargs={'pk': self.pk})
 
-
-class StoredPkpdModel(PkpdModel):
-    """
-    Stored PKPD model.
-    """

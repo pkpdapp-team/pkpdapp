@@ -8,8 +8,7 @@ from django.test import TestCase
 from pkpdapp.models import (
     PharmacodynamicModel, Protocol, PharmacokineticModel,
     Compound, DosedPharmacokineticModel,
-    Dose, PkpdModel, Unit, Variable, StoredPharmacodynamicModel,
-    StoredDosedPharmacokineticModel
+    Dose, PkpdModel, Unit, Variable,
 )
 from myokit.formats.sbml._parser import SBMLParsingError
 from django.core.exceptions import ValidationError
@@ -62,7 +61,8 @@ class TestPharmodynamicModel(TestCase):
             name='tumour_growth_inhibition_model_koch',
         )
         stored_model = model.create_stored_model()
-        self.assertTrue(isinstance(stored_model, StoredPharmacodynamicModel))
+        self.assertTrue(isinstance(stored_model, PharmacodynamicModel))
+        self.assertTrue(stored_model.read_only)
         self.assertEqual(len(stored_model.variables.all()), 6)
 
 
@@ -187,7 +187,8 @@ class TestDosedPharmokineticModel(TestCase):
             protocol=p,
         )
         stored_model = model.create_stored_model()
-        self.assertTrue(isinstance(stored_model, StoredDosedPharmacokineticModel))
+        self.assertTrue(isinstance(stored_model, DosedPharmacokineticModel))
+        self.assertTrue(stored_model.read_only)
         self.assertEqual(len(stored_model.variables.all()), 8)
         self.assertEqual(stored_model.protocol.name, 'my_cool_protocol')
         self.assertNotEqual(stored_model.protocol.id, p.id)

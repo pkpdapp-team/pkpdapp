@@ -10,12 +10,11 @@ import myokit
 from pkpdapp.models import (
     Unit, DosedPharmacokineticModel,
     PharmacokineticModel, PharmacodynamicModel,
-    StoredPharmacodynamicModel,
-    StoredDosedPharmacokineticModel,
+    StoredModel,
 )
 
 
-class Variable(models.Model):
+class Variable(StoredModel):
     """
     A single variable for a mechanistic model.
     """
@@ -274,16 +273,10 @@ class Variable(models.Model):
             'color': self.color,
             'state': self.state,
             'constant': self.constant,
+            'read_only': True,
         }
-        if isinstance(stored_model, StoredPharmacodynamicModel):
+        if isinstance(stored_model, PharmacodynamicModel):
             stored_variable_kwargs['pd_model'] = stored_model
-        elif isinstance(stored_model, StoredDosedPharmacokineticModel):
+        elif isinstance(stored_model, DosedPharmacokineticModel):
             stored_variable_kwargs['dosed_pk_model'] = stored_model
-        return StoredVariable.objects.create(**stored_variable_kwargs)
-
-
-class StoredVariable(Variable):
-    """
-    A stored variable
-    """
-
+        return Variable.objects.create(**stored_variable_kwargs)

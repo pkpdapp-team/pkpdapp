@@ -8,7 +8,7 @@ from django.db import models
 from django.urls import reverse
 from pkpdapp.models import (
     Compound, Dataset, Subject, Unit,
-    Project,
+    Project, StoredModel,
 )
 
 
@@ -25,7 +25,7 @@ def get_mg_unit():
         return None
 
 
-class Protocol(models.Model):
+class Protocol(StoredModel):
     """
     Multiple doses forming a single protocol. Can optionally be associated with
     a compound, dataset and subject.
@@ -122,15 +122,9 @@ class Protocol(models.Model):
             'dose_type': self.dose_type,
             'time_unit': self.time_unit,
             'amount_unit': self.amount_unit,
+            'read_only': True,
         }
-        stored_protocol = StoredProtocol.objects.create(**stored_protocol_kwargs)
+        stored_protocol = Protocol.objects.create(**stored_protocol_kwargs)
         for dose in self.doses.all():
             dose.create_stored_dose(stored_protocol)
         return stored_protocol
-
-
-class StoredProtocol(Protocol):
-    """
-    Stored protocol.
-    """
-

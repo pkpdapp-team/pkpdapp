@@ -5,11 +5,9 @@
 #
 from rest_framework import serializers
 from pkpdapp.models import (
-    Inference, InferenceChain, Algorithm, DraftInference
+    Inference, InferenceChain, Algorithm
 )
 from pkpdapp.api.serializers import (
-    StoredPkpdSerializer, StoredPharmacodynamicSerializer,
-    StoredDosedPharmacokineticSerializer,
     PkpdSerializer, PharmacodynamicSerializer,
     DosedPharmacokineticSerializer,
 )
@@ -21,7 +19,7 @@ class AlgorithmSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class DraftInferenceSerializer(serializers.ModelSerializer):
+class InferenceSerializer(serializers.ModelSerializer):
     pd_model_detail = PharmacodynamicSerializer(
         source='pd_model', read_only=True
     )
@@ -33,16 +31,8 @@ class DraftInferenceSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        model = DraftInference
-        fields = '__all__'
-
-
-class InferenceSerializer(serializers.ModelSerializer):
-
-    class Meta:
         model = Inference
         fields = '__all__'
-
 
 
 class InferenceChainSerializer(serializers.ModelSerializer):

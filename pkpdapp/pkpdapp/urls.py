@@ -25,10 +25,6 @@ router.register('project_access', api.ProjectAccessView,
 router.register('dose', api.DoseView, basename='dose')
 router.register('unit', api.UnitView, basename='unit')
 router.register('variable', api.VariableView, basename='variable')
-router.register(
-    'stored_variable', api.StoredVariableView,
-    basename='stored_variable'
-)
 router.register('protocol', api.ProtocolView, basename='protocol')
 router.register('biomarker_type', api.BiomarkerTypeView,
                 basename='biomarker_type')
@@ -40,18 +36,12 @@ router.register(
     'pharmacodynamic', api.PharmacodynamicView,
     basename='pharmacodynamic'
 )
-router.register(
-    'stored_pharmacodynamic', api.StoredPharmacodynamicView,
-    basename='stored_pharmacodynamic'
-)
+
 router.register(
     'dosed_pharmacokinetic', api.DosedPharmacokineticView,
     basename='dosed_pharmacodynamic'
 )
-router.register(
-    'stored_dosed_pharmacokinetic', api.StoredDosedPharmacokineticView,
-    basename='stored_dosed_pharmacodynamic'
-)
+
 router.register(
     'pkpd_model', api.PkpdView,
     basename='pkpd_model'
@@ -59,10 +49,6 @@ router.register(
 router.register(
     'inference', api.InferenceView,
     basename='inference'
-)
-router.register(
-    'draft_inference', api.DraftInferenceView,
-    basename='draft_inference'
 )
 router.register(
     'algorithm', api.AlgorithmView,
@@ -91,19 +77,9 @@ urlpatterns = [
     path('api/dosed_pharmacokinetic/<int:pk>/simulate',
          api.SimulatePkView.as_view(), name='simulate-dosed-pharmacokinetic'),
     path(
-        'api/draft_inference/<int:pk>/run',
+        'api/inference/<int:pk>/run',
         api.RunInferenceView.as_view(),
         name='run-inference'
-    ),
-    path(
-        'api/dosed_pharmacokinetic/<int:pk>/copy',
-        api.CopyPkView.as_view(),
-        name='copy-dosed-pharmacokinetic'
-    ),
-    path(
-        'api/pharmacodynamic/<int:pk>/copy',
-        api.CopyPdView.as_view(),
-        name='copy-pharmacodynamic'
     ),
     path('api/pharmacodynamic/<int:pk>/simulate',
          api.SimulatePdView.as_view(), name='simulate-pharmacodynamic'),

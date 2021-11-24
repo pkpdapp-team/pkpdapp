@@ -7,11 +7,10 @@
 from django.db import models
 from django.db.models import Q
 from pkpdapp.models import (
-    StoredPkpdModel, StoredPharmacodynamicModel,
-    StoredDosedPharmacokineticModel,
     Project, PharmacodynamicModel,
     DosedPharmacokineticModel,
     PkpdModel,
+    StoredModel,
 )
 
 
@@ -35,7 +34,7 @@ def get_default_optimisation_algorithm():
     return Algorithm.objects.get(name='CMAES')
 
 
-class Inference(models.Model):
+class Inference(StoredModel):
     """
     An inference process.
     """
@@ -53,21 +52,21 @@ class Inference(models.Model):
         PharmacodynamicModel,
         blank=True, null=True,
         on_delete=models.CASCADE,
-        related_name='draft_inferences',
+        related_name='inferences',
         help_text='pharmacodynamic model'
     )
     dosed_pk_model = models.ForeignKey(
         DosedPharmacokineticModel,
         blank=True, null=True,
         on_delete=models.CASCADE,
-        related_name='draft_inferences',
+        related_name='inferences',
         help_text='dosed pharmacokinetic model'
     )
-    pkpd_model = models.(
+    pkpd_model = models.ForeignKey(
         PkpdModel,
         blank=True, null=True,
         on_delete=models.CASCADE,
-        related_name='draft_inference',
+        related_name='inferences',
         help_text='pharmacokinetic/pharmacokinetic model'
     )
 
@@ -94,24 +93,6 @@ class Inference(models.Model):
         help_text='maximum number of iterations'
     )
 
-    constraints = [
-        models.CheckConstraint(
-            check=(
-                (Q(pkpd_model__isnull=True) &
-                 Q(dosed_pk_model__isnull=True) &
-                 Q(pd_model__isnull=False)) |
-                (Q(pkpd_model__isnull=False) &
-                 Q(dosed_pk_model__isnull=True) &
-                 Q(pd_model__isnull=True)) |
-                (Q(pkpd_model__isnull=True) &
-                 Q(dosed_pk_model__isnull=False) &
-                 Q(pd_model__isnull=True))
-            ),
-            name='%(class)s: inference must belong to a model'
-        ),
-    ]
-
-
     number_of_iterations = models.IntegerField(
         default=0,
         help_text='number of iterations calculated'
@@ -127,15 +108,22 @@ class Inference(models.Model):
         help_text='number of function evaluations'
     )
 
-    datetime = models.DateTimeField(
-        help_text=(
-            'date/time the experiment was conducted. '
-            'All time measurements are relative to this date/time, '
-            'which is in YYYY-MM-DD HH:MM:SS format. For example, '
-            '2020-07-18 14:30:59'
+    constraints = [
+        models.CheckConstraint(
+            check=(
+                (Q(pkpd_model__isnull=True) &
+                 Q(dosed_pk_model__isnull=True) &
+                 Q(pd_model__isnull=False)) |
+                (Q(pkpd_model__isnull=False) &
+                 Q(dosed_pk_model__isnull=True) &
+                 Q(pd_model__isnull=True)) |
+                (Q(pkpd_model__isnull=True) &
+                 Q(dosed_pk_model__isnull=False) &
+                 Q(pd_model__isnull=True))
+            ),
+            name='inference must belong to a model'
         ),
-        null=True, blank=True
-    )
+    ]
 
     def get_project(self):
         return self.project
@@ -162,6 +150,7 @@ class Inference(models.Model):
             'algorithm': self.algorithm,
             'number_of_chains': self.number_of_chains,
             'max_number_of_iterations': self.max_number_of_iterations,
+            'read_only': True,
         }
         if self.pd_model:
             inference_kwargs['pd_model'] = self.pd_model.create_stored_model()
@@ -173,34 +162,4 @@ class Inference(models.Model):
         return Inference.objects.create(**inference_kwargs)
 
 
-class InferenceChain(models.Model):
-    inference = models.ForeignKey(
-        Inference,
-        on_delete=models.CASCADE,
-        related_name='chains',
-        help_text='uniform prior'
-    )
 
-    def as_list(self):
-        return \
-            self.inference_results.order_by('iteration').values_list(
-                'value', flat=True
-            )
-
-
-class InferenceResult(models.Model):
-    """
-    Abstract class for inference results.
-    """
-    chain = models.ForeignKey(
-        InferenceChain,
-        on_delete=models.CASCADE,
-        related_name='inference_results',
-        help_text='Chain related to the row'
-    )
-    iteration = models.IntegerField(
-        help_text='Iteration'
-    )
-    value = models.FloatField(
-        help_text='estimated parameter value'
-    )

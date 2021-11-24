@@ -10,13 +10,13 @@ from pkpdapp.models import (
     MyokitModelMixin,
     MechanisticModel,
     Protocol,
-    Project,
+    Project, StoredModel,
 )
 import myokit
 from .myokit_model_mixin import lock
 
 
-class PharmacokineticModel(MechanisticModel):
+class PharmacokineticModel(MechanisticModel, StoredModel):
     """
     this just creates a concrete table for PK models without dosing
     """
@@ -53,18 +53,14 @@ class PharmacokineticModel(MechanisticModel):
             'description': self.description,
             'sbml': self.sbml,
             'time_max': self.time_max,
+            'read_only': True,
         }
-        stored_model = StoredPharmacokineticModel.objects.create(**stored_model_kwargs)
+        stored_model = PharmacokineticModel.objects.create(**stored_model_kwargs)
         # no need to store variables as they will be stored with the dosed pk model
         return stored_model
 
 
-class StoredPharmacokineticModel(PharmacokineticModel):
-    """
-    Stored PK model.
-    """
-
-class DosedPharmacokineticModel(models.Model, MyokitModelMixin):
+class DosedPharmacokineticModel(MyokitModelMixin, StoredModel):
     """
     PK model plus dosing and protocol information
     """
@@ -123,8 +119,9 @@ class DosedPharmacokineticModel(models.Model, MyokitModelMixin):
             'dose_compartment': self.dose_compartment,
             'protocol': self.protocol.create_stored_protocol(),
             'time_max': self.time_max,
+            'read_only': True,
         }
-        stored_model = StoredDosedPharmacokineticModel.objects.create(**stored_model_kwargs)
+        stored_model = DosedPharmacokineticModel.objects.create(**stored_model_kwargs)
         for variable in self.variables.all():
             variable.create_stored_variable(stored_model)
         return stored_model
@@ -379,8 +376,3 @@ def set_dosing_events(simulator, events):
 
     simulator.set_protocol(myokit_protocol)
 
-
-class StoredDosedPharmacokineticModel(DosedPharmacokineticModel):
-    """
-    Stored dosed PK model.
-    """
