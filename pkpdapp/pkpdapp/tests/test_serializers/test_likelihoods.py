@@ -7,9 +7,9 @@
 from django.test import TestCase
 from pkpdapp.models import (
     DraftInference, PharmacodynamicModel, LogLikelihoodNormal,
-    LogLikelihoodLogNormal,
+    LogLikelihoodLogNormal, Project
 )
-from pkpdapp.serializers import (
+from pkpdapp.api.serializers import (
     ObjectiveFunctionSerializer
 )
 from django.utils import timezone
@@ -17,12 +17,16 @@ from django.db.utils import IntegrityError
 
 class TestObjectiveFunctionSerializer(TestCase):
     def setUp(self):
+        project = Project.objects.get(
+            name='demo',
+        )
         model = PharmacodynamicModel.objects.get(
             name='tumour_growth_inhibition_model_koch',
         )
         variables = model.variables.all()
         self.inference = DraftInference.objects.create(
-            pd_model=model
+            pd_model=model,
+            project=project,
         )
         LogLikelihoodNormal.objects.create(
             sd=1.0,
