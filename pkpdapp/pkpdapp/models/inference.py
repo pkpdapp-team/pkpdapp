@@ -35,10 +35,11 @@ def get_default_optimisation_algorithm():
     return Algorithm.objects.get(name='CMAES')
 
 
-class BaseInference(models.Model):
+class Inference(models.Model):
     """
     An inference process.
     """
+
     name = models.CharField(
         max_length=100,
         help_text='name of the dataset'
@@ -46,6 +47,28 @@ class BaseInference(models.Model):
     description = models.TextField(
         help_text='short description of what this inference does',
         blank=True, default=''
+    )
+
+    pd_model = models.ForeignKey(
+        PharmacodynamicModel,
+        blank=True, null=True,
+        on_delete=models.CASCADE,
+        related_name='draft_inferences',
+        help_text='pharmacodynamic model'
+    )
+    dosed_pk_model = models.ForeignKey(
+        DosedPharmacokineticModel,
+        blank=True, null=True,
+        on_delete=models.CASCADE,
+        related_name='draft_inferences',
+        help_text='dosed pharmacokinetic model'
+    )
+    pkpd_model = models.(
+        PkpdModel,
+        blank=True, null=True,
+        on_delete=models.CASCADE,
+        related_name='draft_inference',
+        help_text='pharmacokinetic/pharmacokinetic model'
     )
 
     project = models.ForeignKey(
@@ -88,89 +111,9 @@ class BaseInference(models.Model):
         ),
     ]
 
-    class Meta:
-        abstract = True
-
-    def get_project(self):
-        return self.project
-
-    def get_model(self):
-        model = None
-        if self.pd_model:
-            model = self.pd_model
-        if self.dosed_pk_model:
-            model = self.dosed_pk_model
-        if self.pkpd_model:
-            model = self.pkpd_model
-        return model
-
-class DraftInference(BaseInference):
-    pd_model = models.OneToOneField(
-        PharmacodynamicModel,
-        blank=True, null=True,
-        on_delete=models.CASCADE,
-        related_name='draft_inference',
-        help_text='pharmacodynamic model'
-    )
-    dosed_pk_model = models.OneToOneField(
-        DosedPharmacokineticModel,
-        blank=True, null=True,
-        on_delete=models.CASCADE,
-        related_name='draft_inference',
-        help_text='dosed pharmacokinetic model'
-    )
-    pkpd_model = models.OneToOneField(
-        PkpdModel,
-        blank=True, null=True,
-        on_delete=models.CASCADE,
-        related_name='draft_inference',
-        help_text='pharmacokinetic/pharmacokinetic model'
-    )
-
-    def create_inference(self):
-        inference_kwargs = {
-            'name': self.name,
-            'description': self.description,
-            'project': self.project,
-            'algorithm': self.algorithm,
-            'number_of_chains': self.number_of_chains,
-            'max_number_of_iterations': self.max_number_of_iterations,
-        }
-        if self.pd_model:
-            inference_kwargs['pd_model'] = self.pd_model.create_stored_model()
-        if self.dosed_pk_model:
-            inference_kwargs['dosed_pk_model'] = self.dosed_pk_model.create_stored_model()
-        if self.pkpd_model:
-            inference_kwargs['pkpd_model'] = self.pkpd_model.create_stored_model()
-
-        return Inference.objects.create(**inference_kwargs)
-
-
-class Inference(BaseInference):
-    pd_model = models.OneToOneField(
-        StoredPharmacodynamicModel,
-        blank=True, null=True,
-        on_delete=models.CASCADE,
-        related_name='inference',
-        help_text='pharmacodynamic model'
-    )
-    dosed_pk_model = models.OneToOneField(
-        StoredDosedPharmacokineticModel,
-        blank=True, null=True,
-        on_delete=models.CASCADE,
-        related_name='inference',
-        help_text='dosed pharmacokinetic model'
-    )
-    pkpd_model = models.OneToOneField(
-        StoredPkpdModel,
-        blank=True, null=True,
-        on_delete=models.CASCADE,
-        related_name='inference',
-        help_text='pharmacokinetic/pharmacokinetic model'
-    )
 
     number_of_iterations = models.IntegerField(
-        default=1000,
+        default=0,
         help_text='number of iterations calculated'
     )
 
@@ -193,6 +136,41 @@ class Inference(BaseInference):
         ),
         null=True, blank=True
     )
+
+    def get_project(self):
+        return self.project
+
+    def get_model(self):
+        model = None
+        if self.pd_model:
+            model = self.pd_model
+        if self.dosed_pk_model:
+            model = self.dosed_pk_model
+        if self.pkpd_model:
+            model = self.pkpd_model
+        return model
+
+    def run_inference(self):
+        """
+        when an inference is run, a new model is created (a copy),
+        and the model and all its variables are stored
+        """
+        inference_kwargs = {
+            'name': self.name,
+            'description': self.description,
+            'project': self.project,
+            'algorithm': self.algorithm,
+            'number_of_chains': self.number_of_chains,
+            'max_number_of_iterations': self.max_number_of_iterations,
+        }
+        if self.pd_model:
+            inference_kwargs['pd_model'] = self.pd_model.create_stored_model()
+        if self.dosed_pk_model:
+            inference_kwargs['dosed_pk_model'] = self.dosed_pk_model.create_stored_model()
+        if self.pkpd_model:
+            inference_kwargs['pkpd_model'] = self.pkpd_model.create_stored_model()
+
+        return Inference.objects.create(**inference_kwargs)
 
 
 class InferenceChain(models.Model):
