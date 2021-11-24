@@ -39,7 +39,7 @@ class PharmacodynamicModel(MechanisticModel, StoredModel):
         super().save(force_insert, force_update, *args, **kwargs)
 
         # don't update a stored model
-        if hasattr(self, 'storedpharmacodynamicmodel'):
+        if self.read_only:
             return
 
         if created or self.sbml != self.__original_sbml:

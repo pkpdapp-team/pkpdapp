@@ -38,7 +38,7 @@ class PharmacokineticModel(MechanisticModel, StoredModel):
         super().save(force_insert, force_update, *args, **kwargs)
 
         # don't update a stored model
-        if hasattr(self, 'storedpharmacokineticmodel'):
+        if self.read_only:
             return
 
         if created or self.sbml != self.__original_sbml:
@@ -194,7 +194,7 @@ class DosedPharmacokineticModel(MyokitModelMixin, StoredModel):
         super().save(force_insert, force_update, *args, **kwargs)
 
         # don't update a stored model
-        if hasattr(self, 'storeddosedpharmacokineticmodel'):
+        if self.read_only:
             return
 
         if (
