@@ -7,6 +7,7 @@
 # flake8: noqa
 
 
+
 from django.conf import settings
 from django.db import migrations, models
 import django.db.models.deletion
@@ -23,6 +24,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
+        ('contenttypes', '0002_remove_content_type_name'),
     ]
 
     operations = [
@@ -135,7 +137,12 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('biomarker_type', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.biomarkertype')),
                 ('inference', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='objectivefunctions', to='pkpdapp.draftinference')),
+                ('polymorphic_ctype', models.ForeignKey(editable=False, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='polymorphic_pkpdapp.objectivefunction_set+', to='contenttypes.contenttype')),
             ],
+            options={
+                'abstract': False,
+                'base_manager_name': 'objects',
+            },
         ),
         migrations.CreateModel(
             name='PharmacodynamicModel',
@@ -185,7 +192,12 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('inference', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='priors', to='pkpdapp.draftinference')),
+                ('polymorphic_ctype', models.ForeignKey(editable=False, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='polymorphic_pkpdapp.prior_set+', to='contenttypes.contenttype')),
             ],
+            options={
+                'abstract': False,
+                'base_manager_name': 'objects',
+            },
         ),
         migrations.CreateModel(
             name='Project',
@@ -245,6 +257,10 @@ class Migration(migrations.Migration):
             fields=[
                 ('prior_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='pkpdapp.prior')),
             ],
+            options={
+                'abstract': False,
+                'base_manager_name': 'objects',
+            },
             bases=('pkpdapp.prior',),
         ),
         migrations.CreateModel(
@@ -260,6 +276,10 @@ class Migration(migrations.Migration):
                 ('objectivefunction_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='pkpdapp.objectivefunction')),
                 ('sigma', models.FloatField(help_text='sigma of log-normal prior distribution.')),
             ],
+            options={
+                'abstract': False,
+                'base_manager_name': 'objects',
+            },
             bases=('pkpdapp.objectivefunction',),
         ),
         migrations.CreateModel(
@@ -268,6 +288,10 @@ class Migration(migrations.Migration):
                 ('objectivefunction_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='pkpdapp.objectivefunction')),
                 ('sd', models.FloatField(help_text='sd of normal prior distribution.')),
             ],
+            options={
+                'abstract': False,
+                'base_manager_name': 'objects',
+            },
             bases=('pkpdapp.objectivefunction',),
         ),
         migrations.CreateModel(
@@ -277,6 +301,10 @@ class Migration(migrations.Migration):
                 ('mean', models.FloatField(help_text='mean of normal prior distribution.')),
                 ('sd', models.FloatField(help_text='sd of normal prior distribution.')),
             ],
+            options={
+                'abstract': False,
+                'base_manager_name': 'objects',
+            },
             bases=('pkpdapp.prior',),
         ),
         migrations.CreateModel(
@@ -286,6 +314,10 @@ class Migration(migrations.Migration):
                 ('lower', models.FloatField(help_text='lower bound of the uniform distribution.')),
                 ('upper', models.FloatField(help_text='upper bound of the uniform distribution.')),
             ],
+            options={
+                'abstract': False,
+                'base_manager_name': 'objects',
+            },
             bases=('pkpdapp.prior',),
         ),
         migrations.CreateModel(
@@ -351,6 +383,10 @@ class Migration(migrations.Migration):
             fields=[
                 ('objectivefunction_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='pkpdapp.objectivefunction')),
             ],
+            options={
+                'abstract': False,
+                'base_manager_name': 'objects',
+            },
             bases=('pkpdapp.objectivefunction',),
         ),
         migrations.CreateModel(

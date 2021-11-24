@@ -5,12 +5,14 @@
 #
 
 from django.db import models
+from polymorphic.models import PolymorphicModel
 from pkpdapp.models import (
     Variable, BiomarkerType, DraftInference
 )
 
 
-class ObjectiveFunction(models.Model):
+
+class ObjectiveFunction(PolymorphicModel):
     """
     Abstract model class for objective functions.
     """

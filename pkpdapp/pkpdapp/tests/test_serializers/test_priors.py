@@ -6,16 +6,16 @@
 
 from django.test import TestCase
 from pkpdapp.models import (
-    DraftInference, PharmacodynamicModel, LogLikelihoodNormal,
-    LogLikelihoodLogNormal, Project, BiomarkerType
+    DraftInference, PharmacodynamicModel, Project, BiomarkerType,
+    Prior, PriorNormal, PriorUniform,
 )
 from pkpdapp.api.serializers import (
-    ObjectiveFunctionSerializer
+    PriorSerializer
 )
 from django.utils import timezone
 from django.db.utils import IntegrityError
 
-class TestObjectiveFunctionSerializer(TestCase):
+class TestPriorSerializer(TestCase):
     def setUp(self):
         project = Project.objects.get(
             name='demo',
@@ -32,33 +32,33 @@ class TestObjectiveFunctionSerializer(TestCase):
             pd_model=model,
             project=project,
         )
-        LogLikelihoodNormal.objects.create(
+        PriorNormal.objects.create(
+            mean=1.0,
             sd=1.0,
             variable=variables[0],
             inference=self.inference,
-            biomarker_type=biomarker_type
         )
-        LogLikelihoodLogNormal.objects.create(
-            sigma=2.0,
-            variable=variables[1],
+        PriorUniform.objects.create(
+            lower=1.0,
+            upper=2.0,
+            variable=variables[0],
             inference=self.inference,
-            biomarker_type=biomarker_type
         )
 
     def test_serialize(self):
-        serializer = ObjectiveFunctionSerializer(
-            self.inference.objectivefunctions.all(),
+        serializer = PriorSerializer(
+            self.inference.priors.all(),
             many=True
         )
         data = serializer.data
         self.assertEqual(len(data), 2)
         self.assertTrue(
-            data[0]['type'] == 'LogLikelihoodNormal' or
-            data[0]['type'] == 'LogLikelihoodLogNormal'
+            data[0]['type'] == 'PriorNormal' or
+            data[0]['type'] == 'PriorUniform'
         )
         self.assertTrue(
-            data[1]['type'] == 'LogLikelihoodNormal' or
-            data[1]['type'] == 'LogLikelihoodLogNormal'
+            data[1]['type'] == 'PriorUniform' or
+            data[1]['type'] == 'PriorNormal'
         )
         self.assertNotEqual(
             data[0]['type'], data[1]['type']

@@ -11,21 +11,34 @@ from pkpdapp.api.serializers import PolymorphicSerializer
 
 
 class PriorNormalSerializer(serializers.ModelSerializer):
+    type = serializers.SerializerMethodField()
+
     class Meta:
         model = PriorNormal
         fields = '__all__'
 
+    def get_type(self, obj):
+        return 'PriorNormal'
+
 
 class PriorUniformSerializer(serializers.ModelSerializer):
+    type = serializers.SerializerMethodField()
     class Meta:
         model = PriorUniform
         fields = '__all__'
 
+    def get_type(self, obj):
+        return 'PriorUniform'
+
 
 class BoundarySerializer(serializers.ModelSerializer):
+    type = serializers.SerializerMethodField()
     class Meta:
         model = Boundary
         fields = '__all__'
+
+    def get_type(self, obj):
+        return 'Boundary'
 
 
 class PriorSerializer(PolymorphicSerializer):
@@ -34,10 +47,6 @@ class PriorSerializer(PolymorphicSerializer):
 
     def get_serializer_map(self):
         return {
-            PriorNormalSerializer.__class__:
-            PriorNormalSerializer,
-            PriorUniformSerializer.__class__:
-            PriorUniformSerializer,
-            BoundarySerializer.__class__:
-            BoundarySerializer,
+            'PriorNormal': PriorNormalSerializer,
+            'PriorUniform': PriorUniformSerializer,
         }

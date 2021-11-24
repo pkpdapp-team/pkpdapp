@@ -36,9 +36,12 @@ class PolymorphicSerializer(serializers.Serializer):
         Override to allow polymorphism
         """
         if hasattr(obj, 'get_type'):
-            type_str = obj.get_type()
-            if isinstance(type_str, Enum):
+            type_ = obj.get_type()
+            if isinstance(type_, Enum):
                 type_str = type_str.value
+            else:
+                type_str = type_.__name__
+
         else:
             type_str = obj.__class__.__name__
 

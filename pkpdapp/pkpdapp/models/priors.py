@@ -5,12 +5,13 @@
 #
 
 from django.db import models
+from polymorphic.models import PolymorphicModel
 from pkpdapp.models import (
     Variable, DraftInference
 )
 
 
-class Prior(models.Model):
+class Prior(PolymorphicModel):
     """
     Model for a generic prior.
     """
