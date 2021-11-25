@@ -3,6 +3,8 @@ import {
 } from '@reduxjs/toolkit'
 import { api } from '../../Api'
 import {fetchChainsByInference} from './chainSlice'
+import {fetchPriorsByInference} from './priorsSlice'
+import {fetchObjectiveFunctionsByInference} from './objectiveFunctionsSlice'
 
 const inferencesAdapter = createEntityAdapter({
   sortComparer: (a, b) => b.id < a.id
@@ -20,6 +22,8 @@ export const fetchInferences = createAsyncThunk('inferences/fetchInferences', as
   )
   for (const inference of response) {
     dispatch(fetchChainsByInference(inference))
+    dispatch(fetchPriorsByInference(inference))
+    dispatch(fetchObjectiveFunctionsByInference(inference))
   }
   return response
 })
@@ -30,6 +34,8 @@ export const fetchInferenceById = createAsyncThunk('inferences/fetchInferenceByI
   )
 
   dispatch(fetchChainsByInference(inference))
+  dispatch(fetchPriorsByInference(inference))
+  dispatch(fetchObjectiveFunctionsByInference(inference))
 
   return inference
 })
@@ -40,6 +46,8 @@ export const addNewInference = createAsyncThunk(
     const initialInference = {
       name: 'new',
       project: project.id,
+      priors: [],
+      objective_functions: [],
     }
     let inference = await api.post(
       '/api/inference/', initialInference
@@ -47,6 +55,8 @@ export const addNewInference = createAsyncThunk(
     console.log('got new inference', inference)
 
     dispatch(fetchChainsByInference(inference))
+    dispatch(fetchPriorsByInference(inference))
+    dispatch(fetchObjectiveFunctionsByInference(inference))
 
     inference.chosen = true;
 
@@ -123,4 +133,12 @@ export const {
   selectIds: selectInferenceIds
 } = inferencesAdapter.getSelectors(state => state.inferences)
 
-export const selectChosenInferences = state => selectAllInferences(state).filter(inference => inference.chosen);
+export const selectChosenRunningInferences = state => selectAllInferences(state).filter(inference => inference.chosen && inference.read_only);
+
+export const selectChosenDraftInferences = state => selectAllInferences(state).filter(inference => inference.chosen && !inference.read_only);
+
+export const selectAllDraftInferences = state => selectAllInferences(state).filter(inference => !inference.read_only);
+
+export const selectAllRunningInferences = state => selectAllInferences(state).filter(inference => inference.read_only);
+
+

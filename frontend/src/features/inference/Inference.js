@@ -19,12 +19,8 @@ import {
 } from '../projects/projectsSlice.js'
 
 import {
-  selectChosenInferences
+  selectChosenRunningInferences, selectChosenDraftInferences
 } from './inferenceSlice.js'
-
-import {
-  selectChosenDraftInferences
-} from './draftInferenceSlice.js'
 
 
 const useStyles = makeStyles((theme) => ({
@@ -41,7 +37,7 @@ const useStyles = makeStyles((theme) => ({
 export default function Inference() {
   const classes = useStyles();
   const project = useSelector(selectChosenProject);
-  const chosenInferences = useSelector(selectChosenInferences);
+  const chosenInferences = useSelector(selectChosenRunningInferences);
   const chosenDraftInferences = useSelector(selectChosenDraftInferences);
   if (!project) {
     return ('Select a project')

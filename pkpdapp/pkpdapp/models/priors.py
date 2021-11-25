@@ -17,12 +17,13 @@ class Prior(PolymorphicModel):
     """
     variable = models.ForeignKey(
         Variable,
-        related_name='%(class)ss',
+        related_name='priors',
+        blank=True, null=True,
         on_delete=models.CASCADE,
     )
     inference = models.ForeignKey(
         Inference,
-        related_name='%(class)ss',
+        related_name='priors',
         on_delete=models.CASCADE,
     )
 

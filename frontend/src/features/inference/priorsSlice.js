@@ -2,7 +2,6 @@ import {
   createSlice, createEntityAdapter, createAsyncThunk,
 } from '@reduxjs/toolkit'
 import { api } from '../../Api'
-import {fetchChainsByPrior} from './chainSlice'
 
 const priorsAdapter = createEntityAdapter({
   sortComparer: (a, b) => b.id < a.id
@@ -18,9 +17,6 @@ export const fetchPriorsByInference = createAsyncThunk('priors/fetchPriors', asy
   let response = await api.get(
     `/api/prior/?inference_id=${inference.id}`
   )
-  for (const prior of response) {
-    dispatch(fetchChainsByPrior(prior))
-  }
   return response
 })
 
@@ -28,9 +24,6 @@ export const fetchPriorById = createAsyncThunk('priors/fetchPriorById', async (p
   let prior = await api.get(
     `/api/prior/${priorId}/`
   )
-
-  dispatch(fetchChainsByPrior(prior))
-
   return prior
 })
 
@@ -44,11 +37,6 @@ export const addNewPrior = createAsyncThunk(
     let prior = await api.post(
       '/api/prior/', initialPrior
     )
-    console.log('got new prior', prior)
-
-    dispatch(fetchChainsByPrior(prior))
-
-    prior.chosen = true;
 
     return prior
   }
@@ -59,14 +47,6 @@ export const updatePrior = createAsyncThunk(
   async (prior, { getState }) => {
     const response = await api.put(`/api/prior/${prior.id}/`, prior)
     return response
-  }
-)
-
-export const runPrior = createAsyncThunk(
-  'priors/runPrior',
-  async (priorId, { getState }) => {
-    const newPrior = await api.post(`/api/draft_prior/${priorId}/run`)
-    return newPrior
   }
 )
 
@@ -84,29 +64,10 @@ export const priorsSlice = createSlice({
   name: 'priors',
   initialState, 
   reducers: {
-    togglePrior(state, action) {
-      let prior = state.entities[action.payload.id]
-      prior.chosen = !prior.chosen
-    },
-    setPriorError(state, action) {
-      let prior = state.entities[action.payload.id]
-      prior.error = action.payload.error 
-    },
   },
   extraReducers: {
-    [fetchPriors.pending]: (state, action) => {
-      state.status = 'loading'
-    },
-    [fetchPriors.rejected]: (state, action) => {
-      state.status = 'failed'
-      state.errorFetch = action.error.message
-    },
-    [fetchPriors.fulfilled]: (state, action) => {
-      state.status = 'succeeded'
-      priorsAdapter.setAll(state, action.payload)
-    },
     [fetchPriorById.fulfilled]: priorsAdapter.upsertOne,
-    [runPrior.fulfilled]: priorsAdapter.addOne,
+    [fetchPriorsByInference.fulfilled]: priorsAdapter.upsertMany,
     [addNewPrior.fulfilled]: priorsAdapter.addOne,
     [updatePrior.fulfilled]: priorsAdapter.upsertOne,
     [deletePrior.fulfilled]: priorsAdapter.removeOne,
@@ -123,4 +84,5 @@ export const {
   selectIds: selectPriorIds
 } = priorsAdapter.getSelectors(state => state.priors)
 
-export const selectChosenPriors = state => selectAllPriors(state).filter(prior => prior.chosen);
+export const selectPriorsByInference = (state, inference) => selectAllPriors(state).filter(prior => prior.inference === inference.id);
+

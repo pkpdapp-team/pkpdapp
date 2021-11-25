@@ -18,12 +18,12 @@ class ObjectiveFunction(PolymorphicModel):
     """
     variable = models.ForeignKey(
         Variable,
-        related_name='%(class)ss',
+        related_name='objective_functions',
         on_delete=models.CASCADE,
     )
     inference = models.ForeignKey(
         Inference,
-        related_name='%(class)ss',
+        related_name='objective_functions',
         on_delete=models.CASCADE,
     )
     biomarker_type = models.ForeignKey(

@@ -6,15 +6,15 @@ import TableChartIcon from '@material-ui/icons/TableChart';
 import ExpandableListItem from '../menu/ExpandableListItem'
 
 import {
-  selectAllDraftInferences, toggleDraftInference, addNewDraftInference
-} from '../inference/draftInferenceSlice.js'
+  selectAllDraftInferences, toggleInference, addNewInference
+} from '../inference/inferenceSlice.js'
 
 
 export default function Inferences({project, disableSave}) {
   const inferences = useSelector(selectAllDraftInferences);
   const dispatch = useDispatch()
-  const handleClickItem = (item) => dispatch(toggleDraftInference(item))
-  const handleNewItem = () => dispatch(addNewDraftInference(project))
+  const handleClickItem = (item) => dispatch(toggleInference(item))
+  const handleNewItem = () => dispatch(addNewInference(project))
 
   return (
     <ExpandableListItem 

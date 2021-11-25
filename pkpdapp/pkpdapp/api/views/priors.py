@@ -19,7 +19,7 @@ from pkpdapp.models import (
 
 class PriorView(viewsets.ModelViewSet):
     queryset = Prior.objects.all()
-    serializer_class = Prior
+    serializer_class = PriorSerializer
     filter_backends = [
         InferenceFilter
     ]

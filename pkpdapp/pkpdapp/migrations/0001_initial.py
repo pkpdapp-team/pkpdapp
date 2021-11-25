@@ -22,8 +22,8 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        migrations.swappable_dependency(settings.AUTH_USER_MODEL),
         ('contenttypes', '0002_remove_content_type_name'),
+        migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
@@ -84,7 +84,7 @@ class Migration(migrations.Migration):
             name='DosedPharmacokineticModel',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('read_only', models.BooleanField(default=True, help_text='true if object has been stored')),
+                ('read_only', models.BooleanField(default=False, help_text='true if object has been stored')),
                 ('datetime', models.DateTimeField(blank=True, help_text='datetime the object was stored.', null=True)),
                 ('name', models.CharField(help_text='name of the model', max_length=100)),
                 ('dose_compartment', models.CharField(blank=True, default='central', help_text='compartment name to be dosed', max_length=100, null=True)),
@@ -99,7 +99,7 @@ class Migration(migrations.Migration):
             name='Inference',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('read_only', models.BooleanField(default=True, help_text='true if object has been stored')),
+                ('read_only', models.BooleanField(default=False, help_text='true if object has been stored')),
                 ('datetime', models.DateTimeField(blank=True, help_text='datetime the object was stored.', null=True)),
                 ('name', models.CharField(help_text='name of the dataset', max_length=100)),
                 ('description', models.TextField(blank=True, default='', help_text='short description of what this inference does')),
@@ -127,7 +127,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('biomarker_type', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.biomarkertype')),
-                ('inference', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='objectivefunctions', to='pkpdapp.inference')),
+                ('inference', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='objective_functions', to='pkpdapp.inference')),
                 ('polymorphic_ctype', models.ForeignKey(editable=False, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='polymorphic_pkpdapp.objectivefunction_set+', to='contenttypes.contenttype')),
             ],
             options={
@@ -139,7 +139,7 @@ class Migration(migrations.Migration):
             name='PharmacodynamicModel',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('read_only', models.BooleanField(default=True, help_text='true if object has been stored')),
+                ('read_only', models.BooleanField(default=False, help_text='true if object has been stored')),
                 ('datetime', models.DateTimeField(blank=True, help_text='datetime the object was stored.', null=True)),
                 ('name', models.CharField(help_text='name of the model', max_length=100)),
                 ('description', models.TextField(blank=True, default='', help_text='short description of the model')),
@@ -155,7 +155,7 @@ class Migration(migrations.Migration):
             name='PharmacokineticModel',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('read_only', models.BooleanField(default=True, help_text='true if object has been stored')),
+                ('read_only', models.BooleanField(default=False, help_text='true if object has been stored')),
                 ('datetime', models.DateTimeField(blank=True, help_text='datetime the object was stored.', null=True)),
                 ('name', models.CharField(help_text='name of the model', max_length=100)),
                 ('description', models.TextField(blank=True, default='', help_text='short description of the model')),
@@ -217,7 +217,7 @@ class Migration(migrations.Migration):
             name='Dose',
             fields=[
                 ('dosebase_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='pkpdapp.dosebase')),
-                ('read_only', models.BooleanField(default=True, help_text='true if object has been stored')),
+                ('read_only', models.BooleanField(default=False, help_text='true if object has been stored')),
                 ('datetime', models.DateTimeField(blank=True, help_text='datetime the object was stored.', null=True)),
             ],
             options={
@@ -290,7 +290,7 @@ class Migration(migrations.Migration):
             name='Variable',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('read_only', models.BooleanField(default=True, help_text='true if object has been stored')),
+                ('read_only', models.BooleanField(default=False, help_text='true if object has been stored')),
                 ('datetime', models.DateTimeField(blank=True, help_text='datetime the object was stored.', null=True)),
                 ('is_public', models.BooleanField(default=False)),
                 ('lower_bound', models.FloatField(default=1e-06, help_text='lowest possible value for this variable')),
@@ -328,7 +328,7 @@ class Migration(migrations.Migration):
             name='Protocol',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('read_only', models.BooleanField(default=True, help_text='true if object has been stored')),
+                ('read_only', models.BooleanField(default=False, help_text='true if object has been stored')),
                 ('datetime', models.DateTimeField(blank=True, help_text='datetime the object was stored.', null=True)),
                 ('name', models.CharField(help_text='name of the protocol', max_length=100)),
                 ('dose_type', models.CharField(choices=[('D', 'IV'), ('I', 'Extravascular')], default='D', max_length=1)),
@@ -367,13 +367,13 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='prior',
             name='variable',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='priors', to='pkpdapp.variable'),
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='priors', to='pkpdapp.variable'),
         ),
         migrations.CreateModel(
             name='PkpdModel',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('read_only', models.BooleanField(default=True, help_text='true if object has been stored')),
+                ('read_only', models.BooleanField(default=False, help_text='true if object has been stored')),
                 ('datetime', models.DateTimeField(blank=True, help_text='datetime the object was stored.', null=True)),
                 ('name', models.CharField(help_text='name of the model', max_length=100)),
                 ('description', models.TextField(blank=True, default='', help_text='short description of the model')),
@@ -396,7 +396,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='objectivefunction',
             name='variable',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='objectivefunctions', to='pkpdapp.variable'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='objective_functions', to='pkpdapp.variable'),
         ),
         migrations.CreateModel(
             name='InferenceResult',

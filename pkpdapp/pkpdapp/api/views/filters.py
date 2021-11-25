@@ -121,9 +121,9 @@ class InferenceFilter(filters.BaseFilterBackend):
                 elif queryset.model == InferenceChain:
                     queryset = inference.chains.all()
                 elif queryset.model == Prior:
-                    queryset = inference.priors
+                    queryset = inference.priors.all()
                 elif queryset.model == ObjectiveFunction:
-                    queryset = inference.objectivefunctions
+                    queryset = inference.objective_functions.all()
                 else:
                     raise RuntimeError('queryset model {} not recognised')
             except Inference.DoesNotExist:

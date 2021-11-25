@@ -11,12 +11,15 @@ import { makeStyles } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
+import Tooltip from '@material-ui/core/Tooltip';
 import Select from '@material-ui/core/Select';
 import Accordion from '@material-ui/core/Accordion';
 import AccordionSummary from '@material-ui/core/AccordionSummary';
+import IconButton from '@material-ui/core/IconButton';
 import AccordionDetails from '@material-ui/core/AccordionDetails';
 import MenuItem from '@material-ui/core/MenuItem';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
+import AddIcon from '@material-ui/icons/Add';
 
 
 
@@ -32,12 +35,23 @@ import {
 } from '../inference/algorithmsSlice'
 
 
+import {
+  selectPriorsByInference
+} from './priorsSlice'
+
+import {
+  selectObjectiveFunctionsByInference
+} from './objectiveFunctionsSlice'
+
+import {
+  selectVariablesByInference
+} from '../variables/variablesSlice'
 
 
 
 import {
-  updateDraftInference, deleteDraftInference, selectAllDraftInferences,
-} from '../inference/draftInferenceSlice'
+  updateInference, deleteInference
+} from '../inference/inferenceSlice'
 import { runInference } from './inferenceSlice'
 import {
   FormTextField, FormDateTimeField, FormSelectField
@@ -64,8 +78,84 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 
+function PriorSubform({control, prior, variables}) {
+  const baseName = `priors. ${prior.id}`
+  const variable_options = variables.filter(
+    variable => variable.is_constant
+  ).map(variable => 
+    ({ key: variable.name, value:variable.id })
+  );
+  const type_options = [
+    { key: 'Normal', value: 'PriorNormal'},
+    { key: 'Uniform', value: 'PriorUniform'},
+    { key: 'Boundary', value: 'Boundary'},
+  ]
+  return (
+    <React.Fragment>
+    <FormSelectField 
+      control={control} 
+      defaultValue={prior.variable || ''}
+      options={variable_options}
+      name={`${baseName}.variable`}
+      label="Variable"
+    />
+    <FormSelectField 
+      control={control} 
+      defaultValue={prior.type || ''}
+      options={type_options}
+      name={`${baseName}.type`}
+      label="Type"
+    />
+    <Typography>{prior.type}</Typography>
+    </React.Fragment>
+  )
+}
+
+function ObjectiveFunctionSubform({control, objectiveFunction, variables}) {
+  const baseName = `objective_functions. ${objectiveFunction.id}`
+  const variable_options = variables.filter(
+    variable => variable.is_state
+  ).map(variable => 
+    ({ key: variable.name, value:variable.id })
+  );
+  const type_options = [
+    { key: 'LogLikelihoodNormal', value: 'LogLikelihoodNormal'},
+    { key: 'LogLikelihoodLogNormal', value: 'LogLikelihoodLogNormal'},
+    { key: 'SumOfSquaredErrorsScoreFunction', value: 'SumOfSquaredErrorsScoreFunction'},
+  ]
+  return (
+    <React.Fragment>
+    <FormSelectField 
+      control={control} 
+      defaultValue={objectiveFunction.variable || ''}
+      options={variable_options}
+      name={`${baseName}.variable`}
+      label="Variable"
+    />
+    <FormSelectField 
+      control={control} 
+      defaultValue={objectiveFunction.type || ''}
+      options={type_options}
+      name={`${baseName}.type`}
+      label="Type"
+    />
+    <Typography>{objectiveFunction.type}</Typography>
+    </React.Fragment>
+  )
+}
+
+
 
 export default function DraftInferenceDetail({project, inference}) {
+  const priors = useSelector((state) =>
+    selectPriorsByInference(state, inference)
+  );
+  const objectiveFunctions = useSelector((state) =>
+    selectObjectiveFunctionsByInference(state, inference)
+  );
+  const variables = useSelector((state) =>
+    selectVariablesByInference(state, inference)
+  )
   const classes = useStyles();
   const { control, handleSubmit, reset } = useForm();
   const dispatch = useDispatch();
@@ -77,7 +167,7 @@ export default function DraftInferenceDetail({project, inference}) {
   }
   
   const handleDelete= () => {
-    dispatch(deleteDraftInference(inference.id))
+    dispatch(deleteInference(inference.id))
   }
 
   const handleRun = () => {
@@ -92,7 +182,7 @@ export default function DraftInferenceDetail({project, inference}) {
     }
   }, [inference.pd_model, inference.dosed_pk_model]);
 
-
+  
   useEffect(() => {
     console.log('reseting form', inference)
     reset({
@@ -104,15 +194,27 @@ export default function DraftInferenceDetail({project, inference}) {
 
   const onSubmit = (values) => {
     console.log('submit with values', values)
-    dispatch(updateDraftInference(values))
+    dispatch(updateInference(values))
   };
 
-  const disableSave = userHasReadOnlyAccess(project)
+  const handleNewPrior = () => {
+    const values = {
+      ...inference,
+      priors: [
+        ...inference.priors,
+        { 
+          inference: inference.id, 
+          type: 'PriorUniform',
+          lower: 0,
+          upper: 1,
+        }
+      ],
+    }
+    console.log('new prior', values)
+    dispatch(updateInference(values))
+  }
 
-  const inference_type_options = [
-    {key: 'Sampling', value: 'SA'},
-    {key: 'Optimisation', value: 'OP'}, 
-  ]
+  const disableSave = userHasReadOnlyAccess(project)
 
   const algorithms = useSelector(selectAllAlgorithms)
   const algorithm_options = algorithms ? 
@@ -200,6 +302,46 @@ export default function DraftInferenceDetail({project, inference}) {
       />
       }
       </div>
+
+      <Typography>Parameter Priors</Typography>
+      <List>
+      {priors.map((prior, index) => {
+        return (
+          <ListItem key={index} role={undefined} dense >
+          <PriorSubform
+            control={control}
+            prior={prior}
+            variables={variables}
+          />
+          </ListItem>
+        );
+      })}
+        <ListItem key={-1} role={undefined} dense >
+          <Tooltip title={`create new prior`} placement="right">
+          <IconButton
+            variant='rounded' 
+            className={classes.controls}
+            onClick={handleNewPrior}
+          >
+            <AddIcon/>
+          </IconButton>
+        </Tooltip>
+        </ListItem>
+      </List>
+      <Typography>Objective Functions</Typography>
+      <List>
+      {objectiveFunctions.map((objectiveFunction, index) => {
+        return (
+          <ListItem key={index} role={undefined} dense >
+            <ObjectiveFunctionSubform
+              control={control}
+              prior={objectiveFunction}
+              variables={variables}
+            />
+          </ListItem>
+        );
+      })}
+      </List>
 
       <FormSelectField 
         control={control} 

@@ -4,12 +4,15 @@
 # copyright notice and full license details.
 #
 from rest_framework import serializers
+from drf_writable_nested.serializers import WritableNestedModelSerializer
 from pkpdapp.models import (
     Inference, InferenceChain, Algorithm
 )
 from pkpdapp.api.serializers import (
     PkpdSerializer, PharmacodynamicSerializer,
     DosedPharmacokineticSerializer,
+    PriorSerializer,
+    ObjectiveFunctionSerializer,
 )
 
 
@@ -19,7 +22,7 @@ class AlgorithmSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class InferenceSerializer(serializers.ModelSerializer):
+class InferenceSerializer(WritableNestedModelSerializer):
     pd_model_detail = PharmacodynamicSerializer(
         source='pd_model', read_only=True
     )
@@ -29,6 +32,8 @@ class InferenceSerializer(serializers.ModelSerializer):
     pkpd_model_detail = PkpdSerializer(
         source='pkpd_model', read_only=True
     )
+    priors = PriorSerializer(many=True)
+    objective_functions = ObjectiveFunctionSerializer(many=True)
 
     class Meta:
         model = Inference

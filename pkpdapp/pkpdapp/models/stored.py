@@ -7,7 +7,7 @@ from django.db import models
 
 class StoredModel(models.Model):
     read_only = models.BooleanField(
-        default=True,
+        default=False,
         help_text='true if object has been stored'
     )
     datetime = models.DateTimeField(

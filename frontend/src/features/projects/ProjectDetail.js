@@ -102,7 +102,6 @@ export default function ProjectDetail({project}) {
     dispatch(fetchVariables(project))
     dispatch(fetchBasePkModels(project))
     dispatch(fetchProtocols(project))
-    dispatch(fetchDraftInferences(project))
     dispatch(fetchInferences(project))
   }
 
