@@ -6,27 +6,46 @@
 
 from django.test import TestCase
 from pkpdapp.models import (
-    Inference, PharmacodynamicModel, Project, BiomarkerType,
-    Prior, PriorNormal, PriorUniform,
+    Inference, PharmacodynamicModel, LogLikelihoodNormal,
+    LogLikelihoodLogNormal, Project, BiomarkerType,
+    PriorNormal, PriorUniform,
 )
 from pkpdapp.api.serializers import (
-    PriorSerializer
+    ObjectiveFunctionSerializer, InferenceSerializer
 )
 from django.utils import timezone
 from django.db.utils import IntegrityError
 
-class TestPriorSerializer(TestCase):
+
+class TestObjectiveFunctionSerializer(TestCase):
     def setUp(self):
         project = Project.objects.get(
             name='demo',
+        )
+        biomarker_type = BiomarkerType.objects.get(
+            name='Tumour volume',
+            dataset__name='lxf_control_growth'
         )
         model = PharmacodynamicModel.objects.get(
             name='tumour_growth_inhibition_model_koch',
         )
         variables = model.variables.all()
         self.inference = Inference.objects.create(
+            name='bob',
             pd_model=model,
             project=project,
+        )
+        LogLikelihoodNormal.objects.create(
+            sd=1.0,
+            variable=variables[0],
+            inference=self.inference,
+            biomarker_type=biomarker_type
+        )
+        LogLikelihoodLogNormal.objects.create(
+            sigma=2.0,
+            variable=variables[1],
+            inference=self.inference,
+            biomarker_type=biomarker_type
         )
         PriorNormal.objects.create(
             mean=1.0,
@@ -34,49 +53,19 @@ class TestPriorSerializer(TestCase):
             variable=variables[0],
             inference=self.inference,
         )
-        self.prior_uniform = PriorUniform.objects.create(
+        PriorUniform.objects.create(
             lower=1.0,
             upper=2.0,
             variable=variables[0],
             inference=self.inference,
         )
 
-    def test_serialize(self):
-        serializer = PriorSerializer(
-            self.inference.priors.all(),
-            many=True
-        )
-        data = serializer.data
-        self.assertEqual(len(data), 2)
-        self.assertTrue(
-            data[0]['type'] == 'PriorNormal' or
-            data[0]['type'] == 'PriorUniform'
-        )
-        self.assertTrue(
-            data[1]['type'] == 'PriorUniform' or
-            data[1]['type'] == 'PriorNormal'
-        )
-        self.assertNotEqual(
-            data[0]['type'], data[1]['type']
-        )
-
     def test_update(self):
-        serializer = PriorSerializer(
-            self.prior_uniform
+        serializer = InferenceSerializer(
+            self.inference
         )
         data = serializer.data
-        data['lower'] = 0.0
-
+        data['name'] = 'fred'
         validated_data = serializer.to_internal_value(data)
-        serializer.update(self.prior_uniform, validated_data)
-        self.assertEqual(self.prior_uniform.lower, 0.0)
-
-
-
-
-
-
-
-
-
-
+        serializer.update(self.inference, validated_data)
+        self.assertEqual(self.inference.name, 'fred')

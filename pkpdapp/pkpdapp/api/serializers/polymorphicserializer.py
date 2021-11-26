@@ -8,6 +8,7 @@
 from enum import Enum
 
 from rest_framework import serializers
+from django.contrib.contenttypes.models import ContentType
 
 
 class PolymorphicSerializer(serializers.Serializer):
@@ -93,6 +94,7 @@ class PolymorphicSerializer(serializers.Serializer):
     def update(self, instance, validated_data):
         serializer = self.get_serializer_map()[validated_data['type']]
         validated_data.pop('type')
+
         return serializer(context=self.context).update(
             instance, validated_data
         )
