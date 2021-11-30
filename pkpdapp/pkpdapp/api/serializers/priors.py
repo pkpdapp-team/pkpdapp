@@ -5,12 +5,16 @@
 #
 from rest_framework import serializers
 from pkpdapp.models import (
-    PriorNormal, PriorUniform, Boundary, Prior
+    PriorNormal, PriorUniform, Boundary, Prior, Inference
 )
 from pkpdapp.api.serializers import PolymorphicSerializer
 
 
 class PriorNormalSerializer(serializers.ModelSerializer):
+    inference = serializers.PrimaryKeyRelatedField(
+        queryset=Inference.objects.all(),
+        required=False
+    )
     type = serializers.SerializerMethodField()
 
     class Meta:
@@ -22,6 +26,10 @@ class PriorNormalSerializer(serializers.ModelSerializer):
 
 
 class PriorUniformSerializer(serializers.ModelSerializer):
+    inference = serializers.PrimaryKeyRelatedField(
+        queryset=Inference.objects.all(),
+        required=False
+    )
     type = serializers.SerializerMethodField()
     class Meta:
         model = PriorUniform
@@ -32,6 +40,10 @@ class PriorUniformSerializer(serializers.ModelSerializer):
 
 
 class BoundarySerializer(serializers.ModelSerializer):
+    inference = serializers.PrimaryKeyRelatedField(
+        queryset=Inference.objects.all(),
+        required=False
+    )
     type = serializers.SerializerMethodField()
     class Meta:
         model = Boundary

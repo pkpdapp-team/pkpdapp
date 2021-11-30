@@ -39,31 +39,37 @@ class InferenceSerializer(serializers.ModelSerializer):
         model = Inference
         fields = '__all__'
 
+
     def create(self, validated_data):
+        priors_data = validated_data.pop('priors')
+        objective_functions_data = validated_data.pop('objective_functions')
         new_inference = BaseInferenceSerializer().create(
             validated_data
         )
-        for name, Serializer in [
-                ('priors', PriorSerializer),
-                ('objective_functions', ObjectiveFunctionSerializer)
+        for field_datas, Serializer in [
+                (priors_data, PriorSerializer),
+                (objective_functions_data, ObjectiveFunctionSerializer),
         ]:
-            field_datas = validated_data.pop(name)
             for field_data in field_datas:
                 serializer = Serializer()
+                field_data['inference'] = new_inference
                 new_model = serializer.create(field_data)
-                new_model.save()
 
-        return
+        return new_inference
 
 
     def update(self, instance, validated_data):
-        for name, Serializer in [
-                ('priors', PriorSerializer),
-                ('objective_functions', ObjectiveFunctionSerializer)
+        priors_data = validated_data.pop('priors')
+        objective_functions_data = validated_data.pop('objective_functions')
+        old_priors = list((instance.priors).all())
+        old_objective_functions = list((instance.objective_functions).all())
+        new_inference = BaseInferenceSerializer().update(
+            instance, validated_data
+        )
+        for field_datas, old_models, Serializer in [
+                (priors_data, old_priors, PriorSerializer),
+                (objective_functions_data, old_objective_functions, ObjectiveFunctionSerializer)
         ]:
-            field_datas = validated_data.pop(name)
-            old_models = list((instance.priors).all())
-
             for field_data in field_datas:
                 serializer = Serializer()
                 try:
@@ -72,12 +78,11 @@ class InferenceSerializer(serializers.ModelSerializer):
                         old_model, field_data
                     )
                 except IndexError:
+                    field_data['inference'] = new_inference
                     new_model = serializer.create(field_data)
                 new_model.save()
 
-        return BaseInferenceSerializer().update(
-            instance, validated_data
-        )
+        return new_inference
 
 
 class InferenceChainSerializer(serializers.ModelSerializer):

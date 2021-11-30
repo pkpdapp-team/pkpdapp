@@ -7,12 +7,16 @@ from rest_framework import serializers
 from pkpdapp.models import (
     ObjectiveFunction,
     LogLikelihoodNormal, LogLikelihoodLogNormal,
-    SumOfSquaredErrorsScoreFunction,
+    SumOfSquaredErrorsScoreFunction, Inference,
 )
 from pkpdapp.api.serializers import PolymorphicSerializer
 
 
 class LogLikelihoodNormalSerializer(serializers.ModelSerializer):
+    inference = serializers.PrimaryKeyRelatedField(
+        queryset=Inference.objects.all(),
+        required=False
+    )
     type = serializers.SerializerMethodField()
 
     class Meta:
@@ -24,6 +28,10 @@ class LogLikelihoodNormalSerializer(serializers.ModelSerializer):
 
 
 class LogLikelihoodLogNormalSerializer(serializers.ModelSerializer):
+    inference = serializers.PrimaryKeyRelatedField(
+        queryset=Inference.objects.all(),
+        required=False
+    )
     type = serializers.SerializerMethodField()
 
     class Meta:
@@ -37,6 +45,10 @@ class LogLikelihoodLogNormalSerializer(serializers.ModelSerializer):
 class SumOfSquaredErrorsScoreFunctionSerializer(
         serializers.ModelSerializer
 ):
+    inference = serializers.PrimaryKeyRelatedField(
+        queryset=Inference.objects.all(),
+        required=False
+    )
     type = serializers.SerializerMethodField()
 
     class Meta:

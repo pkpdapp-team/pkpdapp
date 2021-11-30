@@ -93,10 +93,18 @@ class TestObjectiveFunctionSerializer(TestCase):
         else:
             index = 1
         data['priors'][index]['mean'] = 3.0
+        data['objective_functions'].append({
+            'type': 'LogLikelihoodNormal',
+            'sd': 2.0,
+            'variable': self.inference.objective_functions.first().variable.id,
+            'biomarker_type': self.inference.objective_functions.first().biomarker_type.id,
+        })
         validated_data = serializer.to_internal_value(data)
         serializer.update(self.inference, validated_data)
         self.assertEqual(self.inference.name, 'fred')
         new_priors = list(self.inference.priors.all())
         self.assertEqual(new_priors[index].mean, 3.0)
+        self.assertEqual(len(self.inference.priors.all()), 2)
+        self.assertEqual(len(self.inference.objective_functions.all()), 3)
 
 

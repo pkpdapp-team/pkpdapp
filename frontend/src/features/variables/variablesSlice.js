@@ -109,10 +109,6 @@ export const {
 } = variablesAdapter.getSelectors(state => state.variables)
 
 
-export const selectVariablesByInference = (state, inference) => selectAllVariables(state).filter(variable => {
-    return (
-      variable.pd_model === inference.pd_model
-    ) || (
-      variable.dosed_pd_model === inference.dosed_pd_model
-    )
-})
+export const selectVariablesByPdModel = (state, model_id, model_type) => selectAllVariables(state).filter(variable => variable.pd_model === model_id)
+
+export const selectVariablesByDosedPkModel = (state, model_id, model_type) => selectAllVariables(state).filter(variable => variable.dosed_pk_model === model_id)

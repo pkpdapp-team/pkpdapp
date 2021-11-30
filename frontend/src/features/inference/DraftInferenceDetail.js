@@ -6,7 +6,7 @@ import Button from '@material-ui/core/Button';
 import FormControl from '@material-ui/core/FormControl';
 import InputLabel from '@material-ui/core/InputLabel';
 import Alert from '@material-ui/lab/Alert';
-import { useForm } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import { makeStyles } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
 import List from '@material-ui/core/List';
@@ -20,6 +20,7 @@ import AccordionDetails from '@material-ui/core/AccordionDetails';
 import MenuItem from '@material-ui/core/MenuItem';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import AddIcon from '@material-ui/icons/Add';
+import DeleteIcon from '@material-ui/icons/Delete';
 
 
 
@@ -36,6 +37,11 @@ import {
 
 
 import {
+  selectBiomarkerTypesByDatasetId
+} from '../datasets/biomarkerTypesSlice'
+
+
+import {
   selectPriorsByInference
 } from './priorsSlice'
 
@@ -44,9 +50,13 @@ import {
 } from './objectiveFunctionsSlice'
 
 import {
-  selectVariablesByInference
+  selectVariablesByPdModel, selectVariablesByDosedPkModel
 } from '../variables/variablesSlice'
 
+
+import {
+  selectAllDatasets
+} from '../datasets/datasetsSlice'
 
 
 import {
@@ -78,68 +88,151 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 
-function PriorSubform({control, prior, variables}) {
-  const baseName = `priors. ${prior.id}`
+function PriorSubform({control, objects, variables, append, remove}) {
+  
   const variable_options = variables.filter(
-    variable => variable.is_constant
+    variable => variable.constant
   ).map(variable => 
     ({ key: variable.name, value:variable.id })
   );
+  if (variable_options.length === 0) {
+    return (null)
+  }
   const type_options = [
     { key: 'Normal', value: 'PriorNormal'},
     { key: 'Uniform', value: 'PriorUniform'},
     { key: 'Boundary', value: 'Boundary'},
   ]
+  const handleNewPrior = () => 
+    append({ 
+      type: 'PriorNormal',
+      mean: 1.0,
+      sd: 1.0,
+      variable: variable_options[0].value,
+    })
+  
   return (
     <React.Fragment>
-    <FormSelectField 
-      control={control} 
-      defaultValue={prior.variable || ''}
-      options={variable_options}
-      name={`${baseName}.variable`}
-      label="Variable"
-    />
-    <FormSelectField 
-      control={control} 
-      defaultValue={prior.type || ''}
-      options={type_options}
-      name={`${baseName}.type`}
-      label="Type"
-    />
-    <Typography>{prior.type}</Typography>
+    <Typography>Parameter Priors</Typography>
+    <List>
+      {objects.map((prior, index) => {
+        const baseName = `priors.${index}`
+        return (
+          <ListItem key={index} role={undefined} dense >
+            <FormSelectField 
+              control={control} 
+              defaultValue={prior.variable || ''}
+              options={variable_options}
+              name={`${baseName}.variable`}
+              label="Variable"
+            />
+            <FormSelectField 
+              control={control} 
+              defaultValue={prior.type || ''}
+              options={type_options}
+              name={`${baseName}.type`}
+              label="Type"
+            />
+            <Typography>{prior.type}</Typography>
+            <Tooltip title={`delete prior`} placement="right">
+              <IconButton
+                variant='rounded' 
+                onClick={ remove(index) }
+              >
+                <DeleteIcon/>
+              </IconButton>
+            </Tooltip>
+          </ListItem>
+        );
+      })}
+        <ListItem key={-1} role={undefined} dense >
+          <Tooltip title={`create new prior`} placement="right">
+          <IconButton
+            variant='rounded' 
+            onClick={handleNewPrior}
+          >
+            <AddIcon/>
+          </IconButton>
+        </Tooltip>
+        </ListItem>
+      </List>
     </React.Fragment>
   )
 }
 
-function ObjectiveFunctionSubform({control, objectiveFunction, variables}) {
-  const baseName = `objective_functions. ${objectiveFunction.id}`
+function ObjectiveFunctionSubform({control, objects, variables, biomarker_types, append, remove }) {
+  if (! biomarker_types || biomarker_types.length == 0) {
+    return (null)
+  }
   const variable_options = variables.filter(
-    variable => variable.is_state
+    variable => variable.state
   ).map(variable => 
     ({ key: variable.name, value:variable.id })
+  );
+  if (variable_options.length == 0) {
+    return (null)
+  }
+  const biomarker_type_options = biomarker_types.map(biomarker_type => 
+    ({ key: biomarker_type.name, value: biomarker_type.id })
   );
   const type_options = [
     { key: 'LogLikelihoodNormal', value: 'LogLikelihoodNormal'},
     { key: 'LogLikelihoodLogNormal', value: 'LogLikelihoodLogNormal'},
     { key: 'SumOfSquaredErrorsScoreFunction', value: 'SumOfSquaredErrorsScoreFunction'},
   ]
+  const handleNewObjectiveFunction = () => 
+    append({ 
+      type: 'LogLikelihoodNormal',
+      sd: 1.0,
+      variable: variable_options[0].value,
+      biomarker_type: biomarker_type_options[0].value,
+    })
+  
   return (
     <React.Fragment>
-    <FormSelectField 
-      control={control} 
-      defaultValue={objectiveFunction.variable || ''}
-      options={variable_options}
-      name={`${baseName}.variable`}
-      label="Variable"
-    />
-    <FormSelectField 
-      control={control} 
-      defaultValue={objectiveFunction.type || ''}
-      options={type_options}
-      name={`${baseName}.type`}
-      label="Type"
-    />
-    <Typography>{objectiveFunction.type}</Typography>
+    <Typography>Objective Functions</Typography>
+    <List>
+    {objects.map((objectiveFunction, index) => {
+      const baseName = `objective_functions.${index}`
+      return (
+        <ListItem key={index} role={undefined} dense >
+          <FormSelectField 
+            control={control} 
+            defaultValue={objectiveFunction.variable || ''}
+            options={variable_options}
+            name={`${baseName}.variable`}
+            label="Variable"
+          />
+          <FormSelectField 
+            control={control} 
+            defaultValue={objectiveFunction.type || ''}
+            options={type_options}
+            name={`${baseName}.type`}
+            label="Type"
+          />
+          <Typography>{objectiveFunction.type}</Typography>
+          <Tooltip title={`delete objective function`} placement="right">
+            <IconButton
+              variant='rounded' 
+              onClick={ remove(index) }
+            >
+              <DeleteIcon/>
+            </IconButton>
+          </Tooltip>
+        </ListItem>
+      );
+    })}
+      <ListItem key={-1} role={undefined} dense >
+        <Tooltip title={`create new objective function`} placement="right">
+        <IconButton
+          variant='rounded' 
+          onClick={handleNewObjectiveFunction}
+        >
+          <AddIcon/>
+        </IconButton>
+      </Tooltip>
+      </ListItem>
+    </List>
     </React.Fragment>
   )
 }
@@ -147,17 +240,38 @@ function ObjectiveFunctionSubform({control, objectiveFunction, variables}) {
 
 
 export default function DraftInferenceDetail({project, inference}) {
-  const priors = useSelector((state) =>
-    selectPriorsByInference(state, inference)
-  );
-  const objectiveFunctions = useSelector((state) =>
-    selectObjectiveFunctionsByInference(state, inference)
-  );
-  const variables = useSelector((state) =>
-    selectVariablesByInference(state, inference)
+  
+  const datasets = useSelector(selectAllDatasets)
+  const datasets_options = datasets.map(dataset => (
+    { key: dataset.name, value: dataset.id }
+  ))
+  const [dataset, setDataset] = useState();
+  const handleDatasetChange = (event) => {
+    const value = event.target.value
+    setDataset(value)
+  }
+  console.log('dataset', dataset)
+  const biomarker_types = useSelector((state) =>
+    dataset ? selectBiomarkerTypesByDatasetId(state, dataset) : []
   )
   const classes = useStyles();
-  const { control, handleSubmit, reset } = useForm();
+  const { control, handleSubmit, reset, watch } = useForm({defaultValues: inference});
+
+  const { 
+    fields: priors, append: priorsAppend, 
+    remove: priorsRemove 
+  } = useFieldArray({
+    control,
+    name: "priors"
+  });
+  const { 
+    fields: objectiveFunctions, 
+    append: objectiveFunctionsAppend, 
+    remove: objectiveFunctionsRemove 
+  } = useFieldArray({
+    control,
+    name: "objective_functions"
+  });
   const dispatch = useDispatch();
 
   const [modelType, setModelType] = useState('PD');
@@ -165,7 +279,19 @@ export default function DraftInferenceDetail({project, inference}) {
     const value = event.target.value
     setModelType(value)
   }
-  
+  const watchPdModel = watch("pd_model");
+  const watchPkModel = watch("dosed_pk_model");
+
+  const variables = useSelector((state) => {
+    if (modelType === 'PD') {
+      return selectVariablesByPdModel(state, watchPdModel)
+    } else if (modelType === 'PK') {
+      return selectVariablesByDosedPkModel(state, watchPkModel)
+    }
+  })
+  console.log('variables', variables)
+  console.log('biomarker_types', biomarker_types)
+
   const handleDelete= () => {
     dispatch(deleteInference(inference.id))
   }
@@ -197,22 +323,6 @@ export default function DraftInferenceDetail({project, inference}) {
     dispatch(updateInference(values))
   };
 
-  const handleNewPrior = () => {
-    const values = {
-      ...inference,
-      priors: [
-        ...inference.priors,
-        { 
-          inference: inference.id, 
-          type: 'PriorUniform',
-          lower: 0,
-          upper: 1,
-        }
-      ],
-    }
-    console.log('new prior', values)
-    dispatch(updateInference(values))
-  }
 
   const disableSave = userHasReadOnlyAccess(project)
 
@@ -264,6 +374,23 @@ export default function DraftInferenceDetail({project, inference}) {
         multiline
         name="description" label="Description"
       />
+
+      <FormControl className={classes.formInput}>
+      <InputLabel id="dataset-label">Dataset</InputLabel>
+      <Select
+        labelId="model-type-label"
+        onChange={handleDatasetChange}
+        value={dataset}
+
+        >
+        {datasets_options.map((option, i) => {
+          return (
+            <MenuItem key={i} value={option.value}>{option.key}</MenuItem>
+          )
+        })}
+      </Select>
+      </FormControl>
+      
       <div
         className={classes.modelSelect}
       >
@@ -303,46 +430,23 @@ export default function DraftInferenceDetail({project, inference}) {
       }
       </div>
 
-      <Typography>Parameter Priors</Typography>
-      <List>
-      {priors.map((prior, index) => {
-        return (
-          <ListItem key={index} role={undefined} dense >
-          <PriorSubform
-            control={control}
-            prior={prior}
-            variables={variables}
-          />
-          </ListItem>
-        );
-      })}
-        <ListItem key={-1} role={undefined} dense >
-          <Tooltip title={`create new prior`} placement="right">
-          <IconButton
-            variant='rounded' 
-            className={classes.controls}
-            onClick={handleNewPrior}
-          >
-            <AddIcon/>
-          </IconButton>
-        </Tooltip>
-        </ListItem>
-      </List>
-      <Typography>Objective Functions</Typography>
-      <List>
-      {objectiveFunctions.map((objectiveFunction, index) => {
-        return (
-          <ListItem key={index} role={undefined} dense >
-            <ObjectiveFunctionSubform
-              control={control}
-              prior={objectiveFunction}
-              variables={variables}
-            />
-          </ListItem>
-        );
-      })}
-      </List>
-
+      <PriorSubform
+        control={control}
+        objects={priors}
+        variables={variables}
+        append={priorsAppend} 
+        remove={priorsRemove} 
+      />
+      
+      <ObjectiveFunctionSubform
+        control={control}
+        objects={objectiveFunctions}
+        variables={variables}
+        append={objectiveFunctionsAppend} 
+        remove={objectiveFunctionsRemove} 
+        biomarker_types={biomarker_types}
+      />
+      
       <FormSelectField 
         control={control} 
         defaultValue={inference.algorithm}
