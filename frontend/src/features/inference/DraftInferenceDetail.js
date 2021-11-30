@@ -88,7 +88,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 
-function PriorSubform({control, objects, variables, append, remove}) {
+function PriorSubform({control, objects, variables, append, remove, watch}) {
   
   const variable_options = variables.filter(
     variable => variable.constant
@@ -110,15 +110,18 @@ function PriorSubform({control, objects, variables, append, remove}) {
       sd: 1.0,
       variable: variable_options[0].value,
     })
+  console.log('priors', objects)
   
   return (
     <React.Fragment>
     <Typography>Parameter Priors</Typography>
     <List>
       {objects.map((prior, index) => {
-        const baseName = `priors.${index}`
+        const baseName = `priors[${index}]`
+        const watchType = watch[index].type;
+        console.log('watchType', watchType)
         return (
-          <ListItem key={index} role={undefined} dense >
+          <ListItem key={prior.id} role={undefined} dense >
             <FormSelectField 
               control={control} 
               defaultValue={prior.variable || ''}
@@ -133,11 +136,10 @@ function PriorSubform({control, objects, variables, append, remove}) {
               name={`${baseName}.type`}
               label="Type"
             />
-            <Typography>{prior.type}</Typography>
             <Tooltip title={`delete prior`} placement="right">
               <IconButton
                 variant='rounded' 
-                onClick={ remove(index) }
+                onClick={ () => remove(index) }
               >
                 <DeleteIcon/>
               </IconButton>
@@ -160,8 +162,8 @@ function PriorSubform({control, objects, variables, append, remove}) {
   )
 }
 
-function ObjectiveFunctionSubform({control, objects, variables, biomarker_types, append, remove }) {
-  if (! biomarker_types || biomarker_types.length == 0) {
+function ObjectiveFunctionSubform({control, objects, variables, biomarker_types, append, remove, watch }) {
+  if (! biomarker_types || biomarker_types.length === 0) {
     return (null)
   }
   const variable_options = variables.filter(
@@ -169,7 +171,7 @@ function ObjectiveFunctionSubform({control, objects, variables, biomarker_types,
   ).map(variable => 
     ({ key: variable.name, value:variable.id })
   );
-  if (variable_options.length == 0) {
+  if (variable_options.length === 0) {
     return (null)
   }
   const biomarker_type_options = biomarker_types.map(biomarker_type => 
@@ -187,13 +189,14 @@ function ObjectiveFunctionSubform({control, objects, variables, biomarker_types,
       variable: variable_options[0].value,
       biomarker_type: biomarker_type_options[0].value,
     })
+
   
   return (
     <React.Fragment>
     <Typography>Objective Functions</Typography>
     <List>
     {objects.map((objectiveFunction, index) => {
-      const baseName = `objective_functions.${index}`
+      const baseName = `objective_functions[${index}]`
       return (
         <ListItem key={index} role={undefined} dense >
           <FormSelectField 
@@ -210,11 +213,10 @@ function ObjectiveFunctionSubform({control, objects, variables, biomarker_types,
             name={`${baseName}.type`}
             label="Type"
           />
-          <Typography>{objectiveFunction.type}</Typography>
           <Tooltip title={`delete objective function`} placement="right">
             <IconButton
               variant='rounded' 
-              onClick={ remove(index) }
+              onClick={ () => remove(index) }
             >
               <DeleteIcon/>
             </IconButton>
@@ -245,7 +247,7 @@ export default function DraftInferenceDetail({project, inference}) {
   const datasets_options = datasets.map(dataset => (
     { key: dataset.name, value: dataset.id }
   ))
-  const [dataset, setDataset] = useState();
+  const [dataset, setDataset] = useState('');
   const handleDatasetChange = (event) => {
     const value = event.target.value
     setDataset(value)
@@ -255,7 +257,15 @@ export default function DraftInferenceDetail({project, inference}) {
     dataset ? selectBiomarkerTypesByDatasetId(state, dataset) : []
   )
   const classes = useStyles();
-  const { control, handleSubmit, reset, watch } = useForm({defaultValues: inference});
+  const inferenceNoNull = Object.keys(inference).reduce((obj, key) => {
+    if (inference[key] === null) {
+      obj[key] = '';
+    } else {
+      obj[key] = inference[key]
+    }
+    return obj
+  }, {})
+  const { control, handleSubmit, reset, watch } = useForm({defaultValues: inferenceNoNull});
 
   const { 
     fields: priors, append: priorsAppend, 
@@ -281,6 +291,7 @@ export default function DraftInferenceDetail({project, inference}) {
   }
   const watchPdModel = watch("pd_model");
   const watchPkModel = watch("dosed_pk_model");
+  const watchPriors = watch("priors")
 
   const variables = useSelector((state) => {
     if (modelType === 'PD') {
@@ -301,6 +312,7 @@ export default function DraftInferenceDetail({project, inference}) {
   }
 
   useEffect(() => {
+    console.log('setting model type')
     if (inference.pd_model) {
       setModelType('PD')
     } else if (inference.dosed_pk_model) {
@@ -309,14 +321,7 @@ export default function DraftInferenceDetail({project, inference}) {
   }, [inference.pd_model, inference.dosed_pk_model]);
 
   
-  useEffect(() => {
-    console.log('reseting form', inference)
-    reset({
-      ...inference,
-      pd_model: inference.pd_model || '',
-      dosed_pk_model: inference.dosed_pk_model || '',
-    });
-  }, [reset, inference]);
+  
 
   const onSubmit = (values) => {
     console.log('submit with values', values)
@@ -381,7 +386,6 @@ export default function DraftInferenceDetail({project, inference}) {
         labelId="model-type-label"
         onChange={handleDatasetChange}
         value={dataset}
-
         >
         {datasets_options.map((option, i) => {
           return (
@@ -436,6 +440,7 @@ export default function DraftInferenceDetail({project, inference}) {
         variables={variables}
         append={priorsAppend} 
         remove={priorsRemove} 
+        watch={watchPriors}
       />
       
       <ObjectiveFunctionSubform
@@ -445,6 +450,7 @@ export default function DraftInferenceDetail({project, inference}) {
         append={objectiveFunctionsAppend} 
         remove={objectiveFunctionsRemove} 
         biomarker_types={biomarker_types}
+        watch={watch}
       />
       
       <FormSelectField 

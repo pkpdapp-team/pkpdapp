@@ -315,7 +315,9 @@ export function FormSelectField({control, name, defaultValue, label, options, us
     }
   }
   return (
-    <FormControl className={classes.formInput}>
+    <FormControl 
+      className={classes.formInput}
+    >
     <InputLabel id={name.concat('-select-label')}>
       {label}
     </InputLabel>
@@ -323,6 +325,13 @@ export function FormSelectField({control, name, defaultValue, label, options, us
         control={control}
         defaultValue={defaultValue}
         name={name}
+        onFocus={() => {
+          const inputEl = document.querySelector(
+            `input[name="${name}"]`
+          );
+          inputEl.focus()
+        }}
+        
         render={({
           field: { onChange, onBlur, value, name, ref },
           fieldState: { invalid, isTouched, isDirty, error },
