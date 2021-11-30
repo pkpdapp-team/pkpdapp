@@ -136,6 +136,43 @@ function PriorSubform({control, objects, variables, append, remove, watch}) {
               name={`${baseName}.type`}
               label="Type"
             />
+            { watchType === 'PriorNormal' &&
+              <React.Fragment>
+              <FormTextField 
+                control={control} 
+                name={`${baseName}.mean`}
+                defaultValue={prior.mean}
+                label="Mean"
+                type="number"
+              />
+              <FormTextField 
+                control={control} 
+                name={`${baseName}.sd`}
+                defaultValue={prior.sd}
+                label="Standard Deviation"
+                type="number"
+              />
+              </React.Fragment>
+            }
+            { watchType === 'PriorUniform' &&
+              <React.Fragment>
+              <FormTextField 
+                control={control} 
+                name={`${baseName}.lower`}
+                defaultValue={prior.lower}
+                label="Lower"
+                type="number"
+              />
+              <FormTextField 
+                control={control} 
+                name={`${baseName}.upper`}
+                defaultValue={prior.upper}
+                label="Upper"
+                type="number"
+              />
+              </React.Fragment>
+            }
+
             <Tooltip title={`delete prior`} placement="right">
               <IconButton
                 variant='rounded' 
