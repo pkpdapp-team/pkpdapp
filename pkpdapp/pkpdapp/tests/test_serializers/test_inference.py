@@ -60,12 +60,43 @@ class TestObjectiveFunctionSerializer(TestCase):
             inference=self.inference,
         )
 
+    def test_create(self):
+        serializer = InferenceSerializer()
+        data = {
+            'name': 'test',
+            'priors': [
+                {
+                    'type': 'PriorNormal',
+                    'mean': 2.0,
+                    'sd': 2.0,
+                    'variable': self.inference.priors.first().variable.id,
+                },
+            ],
+            'objective_functions': [],
+            'project': self.inference.project.id,
+        }
+        validated_data = serializer.to_internal_value(data)
+        new_inference = serializer.create(validated_data)
+        self.assertEqual(new_inference.name, 'test')
+        self.assertEqual(len(new_inference.objective_functions.all()), 0)
+        self.assertEqual(len(new_inference.priors.all()), 1)
+
+
     def test_update(self):
         serializer = InferenceSerializer(
             self.inference
         )
         data = serializer.data
         data['name'] = 'fred'
+        if data['priors'][0]['type'] == 'PriorNormal':
+            index = 0
+        else:
+            index = 1
+        data['priors'][index]['mean'] = 3.0
         validated_data = serializer.to_internal_value(data)
         serializer.update(self.inference, validated_data)
         self.assertEqual(self.inference.name, 'fred')
+        new_priors = list(self.inference.priors.all())
+        self.assertEqual(new_priors[index].mean, 3.0)
+
+
