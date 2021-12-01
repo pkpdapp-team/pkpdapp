@@ -88,7 +88,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 
-function PriorSubform({control, objects, variables, append, remove, watch}) {
+function PriorSubform({control, objects, variables, append, remove, watch, setValue}) {
   
   const variable_options = variables.filter(
     variable => variable.constant
@@ -106,10 +106,37 @@ function PriorSubform({control, objects, variables, append, remove, watch}) {
   const handleNewPrior = () => 
     append({ 
       type: 'PriorNormal',
-      mean: 1.0,
-      sd: 1.0,
-      variable: variable_options[0].value,
+      sd: '',
+      mean: '',
+      lower: '',
+      upper: '',
+      variable: '',
     })
+  const setDefaults = (type, variable, baseName) => {
+    console.log('setDefaults', type, variable, baseName)
+    if (type === 'PriorNormal') {
+      setValue(`${baseName}.mean`, variable.default_value)
+      const standardDeviation = Math.sqrt(
+        Math.pow(variable.upper_bound - variable.lower_bound, 2)/12
+      )
+      setValue(`${baseName}.sd`, standardDeviation)
+    } else if (type === 'PriorUniform') {
+      setValue(`${baseName}.lower`, variable.lower_bound)
+      setValue(`${baseName}.upper`, variable.upper_bound)
+    }
+  }
+  const handleTypeChange = (oldType, oldVar, baseName) => (event) => {
+    const newType = event.target.value
+    const variable = variables.find(v => v.id === oldVar)
+    setDefaults(newType, variable, baseName)
+    console.log('type change', oldType, oldVar, newType)
+  }
+  const handleVariableChange = (oldType, oldVar, baseName) => (event) => {
+    const newVariable = event.target.value
+    const variable = variables.find(v => v.id === newVariable)
+    setDefaults(oldType, variable, baseName)
+    console.log('variable change', oldType, oldVar, newVariable)
+  }
   console.log('priors', objects)
   
   return (
@@ -119,23 +146,27 @@ function PriorSubform({control, objects, variables, append, remove, watch}) {
       {objects.map((prior, index) => {
         const baseName = `priors[${index}]`
         const watchType = watch[index].type;
+        const watchVariable = watch[index].variable;
         console.log('watchType', watchType)
         return (
           <ListItem key={prior.id} role={undefined} dense >
             <FormSelectField 
               control={control} 
-              defaultValue={prior.variable || ''}
-              options={variable_options}
-              name={`${baseName}.variable`}
-              label="Variable"
-            />
-            <FormSelectField 
-              control={control} 
               defaultValue={prior.type || ''}
               options={type_options}
+              onChangeUser={handleTypeChange(watchType, watchVariable, baseName)}
               name={`${baseName}.type`}
               label="Type"
             />
+            <FormSelectField 
+              control={control} 
+              defaultValue={prior.variable || ''}
+              options={variable_options}
+              onChangeUser={handleVariableChange(watchType, watchVariable, baseName)}
+              name={`${baseName}.variable`}
+              label="Variable"
+            />
+            
             { watchType === 'PriorNormal' &&
               <React.Fragment>
               <FormTextField 
@@ -199,7 +230,7 @@ function PriorSubform({control, objects, variables, append, remove, watch}) {
   )
 }
 
-function ObjectiveFunctionSubform({control, objects, variables, biomarker_types, append, remove, watch }) {
+function ObjectiveFunctionSubform({control, objects, variables, biomarker_types, append, remove, watch, setValue }) {
   if (! biomarker_types || biomarker_types.length === 0) {
     return (null)
   }
@@ -226,6 +257,31 @@ function ObjectiveFunctionSubform({control, objects, variables, biomarker_types,
       variable: variable_options[0].value,
       biomarker_type: biomarker_type_options[0].value,
     })
+  const setDefaults = (type, variable, baseName) => {
+    console.log('setDefaults', type, variable, baseName)
+    if (type === 'PriorNormal') {
+      setValue(`${baseName}.mean`, variable.default_value)
+      const standardDeviation = Math.sqrt(
+        Math.pow(variable.upper_bound - variable.lower_bound, 2)/12
+      )
+      setValue(`${baseName}.sd`, standardDeviation)
+    } else if (type === 'PriorUniform') {
+      setValue(`${baseName}.lower`, variable.lower_bound)
+      setValue(`${baseName}.upper`, variable.upper_bound)
+    }
+  }
+  const handleTypeChange = (oldType, oldVar, baseName) => (event) => {
+    const newType = event.target.value
+    const variable = variables.find(v => v.id === oldVar)
+    setDefaults(newType, variable, baseName)
+    console.log('type change', oldType, oldVar, newType)
+  }
+  const handleVariableChange = (oldType, oldVar, baseName) => (event) => {
+    const newVariable = event.target.value
+    const variable = variables.find(v => v.id === newVariable)
+    setDefaults(oldType, variable, baseName)
+    console.log('variable change', oldType, oldVar, newVariable)
+  }
 
   
   return (
@@ -234,21 +290,25 @@ function ObjectiveFunctionSubform({control, objects, variables, biomarker_types,
     <List>
     {objects.map((objectiveFunction, index) => {
       const baseName = `objective_functions[${index}]`
+      const watchType = watch[index].type;
+      const watchVariable = watch[index].variable;
       return (
         <ListItem key={index} role={undefined} dense >
           <FormSelectField 
             control={control} 
-            defaultValue={objectiveFunction.variable || ''}
-            options={variable_options}
-            name={`${baseName}.variable`}
-            label="Variable"
-          />
-          <FormSelectField 
-            control={control} 
             defaultValue={objectiveFunction.type || ''}
+            onChangeUser={handleTypeChange(watchType, watchVariable, baseName)}
             options={type_options}
             name={`${baseName}.type`}
             label="Type"
+          />
+          <FormSelectField 
+            control={control} 
+            defaultValue={objectiveFunction.variable || ''}
+            onChangeUser={handleVariableChange(watchType, watchVariable, baseName)}
+            options={variable_options}
+            name={`${baseName}.variable`}
+            label="Variable"
           />
           <Tooltip title={`delete objective function`} placement="right">
             <IconButton
@@ -302,7 +362,7 @@ export default function DraftInferenceDetail({project, inference}) {
     }
     return obj
   }, {})
-  const { control, handleSubmit, reset, watch } = useForm({defaultValues: inferenceNoNull});
+  const { control, handleSubmit, reset, watch, setValue } = useForm({defaultValues: inferenceNoNull});
 
   const { 
     fields: priors, append: priorsAppend, 
@@ -478,6 +538,7 @@ export default function DraftInferenceDetail({project, inference}) {
         append={priorsAppend} 
         remove={priorsRemove} 
         watch={watchPriors}
+        setValue={setValue}
       />
       
       <ObjectiveFunctionSubform
@@ -488,6 +549,7 @@ export default function DraftInferenceDetail({project, inference}) {
         remove={objectiveFunctionsRemove} 
         biomarker_types={biomarker_types}
         watch={watch}
+        setValue={setValue}
       />
       
       <FormSelectField 
