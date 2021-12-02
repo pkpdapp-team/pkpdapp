@@ -37,7 +37,7 @@ import {
 
 
 import {
-  selectBiomarkerTypesByDatasetId
+  selectBiomarkerTypesByDatasetId, selectBiomarkerTypeById
 } from '../datasets/biomarkerTypesSlice'
 
 
@@ -115,12 +115,14 @@ function PriorSubform({control, objects, variables, append, remove, watch, setVa
   const setDefaults = (type, variable, baseName) => {
     console.log('setDefaults', type, variable, baseName)
     if (type === 'PriorNormal') {
+      console.log('setDefaults XXXX', type, variable, baseName)
       setValue(`${baseName}.mean`, variable.default_value)
       const standardDeviation = Math.sqrt(
         Math.pow(variable.upper_bound - variable.lower_bound, 2)/12
       )
       setValue(`${baseName}.sd`, standardDeviation)
     } else if (type === 'PriorUniform') {
+      console.log('setDefaults XXXX', type, variable, baseName)
       setValue(`${baseName}.lower`, variable.lower_bound)
       setValue(`${baseName}.upper`, variable.upper_bound)
     }
@@ -128,13 +130,17 @@ function PriorSubform({control, objects, variables, append, remove, watch, setVa
   const handleTypeChange = (oldType, oldVar, baseName) => (event) => {
     const newType = event.target.value
     const variable = variables.find(v => v.id === oldVar)
-    setDefaults(newType, variable, baseName)
+    if (variable) {
+      setDefaults(newType, variable, baseName)
+    }
     console.log('type change', oldType, oldVar, newType)
   }
   const handleVariableChange = (oldType, oldVar, baseName) => (event) => {
     const newVariable = event.target.value
     const variable = variables.find(v => v.id === newVariable)
-    setDefaults(oldType, variable, baseName)
+    if (variable) {
+      setDefaults(oldType, variable, baseName)
+    }
     console.log('variable change', oldType, oldVar, newVariable)
   }
   console.log('priors', objects)
@@ -254,32 +260,38 @@ function ObjectiveFunctionSubform({control, objects, variables, biomarker_types,
     append({ 
       type: 'LogLikelihoodNormal',
       sd: 1.0,
-      variable: variable_options[0].value,
-      biomarker_type: biomarker_type_options[0].value,
+      sigma: 1.0,
+      variable: '',
+      biomarker_type: '',
     })
   const setDefaults = (type, variable, baseName) => {
     console.log('setDefaults', type, variable, baseName)
-    if (type === 'PriorNormal') {
-      setValue(`${baseName}.mean`, variable.default_value)
+    if (type === 'LogLikelihoodNormal') {
       const standardDeviation = Math.sqrt(
         Math.pow(variable.upper_bound - variable.lower_bound, 2)/12
       )
       setValue(`${baseName}.sd`, standardDeviation)
-    } else if (type === 'PriorUniform') {
-      setValue(`${baseName}.lower`, variable.lower_bound)
-      setValue(`${baseName}.upper`, variable.upper_bound)
+    } else if (type === 'LogLikelihoodLogNormal') {
+      const standardDeviation = Math.sqrt(
+        Math.pow(variable.upper_bound - variable.lower_bound, 2)/12
+      )
+      setValue(`${baseName}.sigma`, standardDeviation)
     }
   }
   const handleTypeChange = (oldType, oldVar, baseName) => (event) => {
     const newType = event.target.value
     const variable = variables.find(v => v.id === oldVar)
-    setDefaults(newType, variable, baseName)
+    if (variable) {
+      setDefaults(newType, variable, baseName)
+    }
     console.log('type change', oldType, oldVar, newType)
   }
   const handleVariableChange = (oldType, oldVar, baseName) => (event) => {
     const newVariable = event.target.value
     const variable = variables.find(v => v.id === newVariable)
-    setDefaults(oldType, variable, baseName)
+    if (variable) {
+      setDefaults(oldType, variable, baseName)
+    }
     console.log('variable change', oldType, oldVar, newVariable)
   }
 
@@ -310,6 +322,35 @@ function ObjectiveFunctionSubform({control, objects, variables, biomarker_types,
             name={`${baseName}.variable`}
             label="Variable"
           />
+          <FormSelectField 
+            control={control} 
+            defaultValue={objectiveFunction.biomarker_type || ''}
+            options={biomarker_type_options}
+            name={`${baseName}.biomarker_type`}
+            label="Biomarker Type"
+          />
+          { watchType === 'LogLikelihoodNormal' &&
+              <React.Fragment>
+              <FormTextField 
+                control={control} 
+                name={`${baseName}.sd`}
+                defaultValue={objectiveFunction.sd}
+                label="Standard Deviation"
+                type="number"
+              />
+              </React.Fragment>
+            }
+            { watchType === 'LogLikelihoodLogNormal' &&
+              <React.Fragment>
+              <FormTextField 
+                control={control} 
+                name={`${baseName}.sigma`}
+                defaultValue={objectiveFunction.sigma}
+                label="Sigma"
+                type="number"
+              />
+              </React.Fragment>
+            }
           <Tooltip title={`delete objective function`} placement="right">
             <IconButton
               variant='rounded' 
@@ -339,21 +380,6 @@ function ObjectiveFunctionSubform({control, objects, variables, biomarker_types,
 
 
 export default function DraftInferenceDetail({project, inference}) {
-  
-  const datasets = useSelector(selectAllDatasets)
-  const datasets_options = datasets.map(dataset => (
-    { key: dataset.name, value: dataset.id }
-  ))
-  const [dataset, setDataset] = useState('');
-  const handleDatasetChange = (event) => {
-    const value = event.target.value
-    setDataset(value)
-  }
-  console.log('dataset', dataset)
-  const biomarker_types = useSelector((state) =>
-    dataset ? selectBiomarkerTypesByDatasetId(state, dataset) : []
-  )
-  const classes = useStyles();
   const inferenceNoNull = Object.keys(inference).reduce((obj, key) => {
     if (inference[key] === null) {
       obj[key] = '';
@@ -362,7 +388,31 @@ export default function DraftInferenceDetail({project, inference}) {
     }
     return obj
   }, {})
-  const { control, handleSubmit, reset, watch, setValue } = useForm({defaultValues: inferenceNoNull});
+  const { control, handleSubmit, reset, resetField, watch, setValue } = useForm({defaultValues: inference});
+  
+  const datasets = useSelector(selectAllDatasets)
+  const datasets_options = datasets.map(dataset => (
+    { key: dataset.name, value: dataset.id }
+  ))
+  const defaultBiomarkerType = useSelector((state) =>
+    inference.objective_functions.length > 0 ?
+      selectBiomarkerTypeById(state, inference.objective_functions[0].biomarker_type ) 
+      : undefined 
+  )
+  const defaultDataset = defaultBiomarkerType ? defaultBiomarkerType.dataset : ''
+  console.log('defaultDataset', defaultDataset, inference.objective_functions)
+  const [dataset, setDataset] = useState(defaultDataset);
+  const handleDatasetChange = (event) => {
+    const value = event.target.value
+    setDataset(value)
+    setValue('objective_functions', inference.objective_functions)
+  }
+  console.log('dataset', dataset)
+  const biomarker_types = useSelector((state) =>
+    dataset ? selectBiomarkerTypesByDatasetId(state, dataset) : []
+  )
+  const classes = useStyles();
+  
 
   const { 
     fields: priors, append: priorsAppend, 
@@ -385,10 +435,18 @@ export default function DraftInferenceDetail({project, inference}) {
   const handleModelTypeChange = (event) => {
     const value = event.target.value
     setModelType(value)
+    setValue('objective_functions', inference.objective_functions)
+    setValue('priors', inference.priors)
+  }
+  const handleModelChange = (event) => {
+    const value = event.target.value
+    setValue('objective_functions', inference.objective_functions)
+    setValue('priors', inference.priors)
   }
   const watchPdModel = watch("pd_model");
   const watchPkModel = watch("dosed_pk_model");
   const watchPriors = watch("priors")
+  const watchObjectiveFunctions = watch("objective_functions")
 
   const variables = useSelector((state) => {
     if (modelType === 'PD') {
@@ -516,6 +574,7 @@ export default function DraftInferenceDetail({project, inference}) {
       <FormSelectField 
         control={control} 
         defaultValue={inference.dosed_pk_model || ''}
+        onChangeUser={handleModelChange}
         options={dosed_pk_model_options}
         name="dosed_pk_model" label="Dosed Pharmacokinetic Model"
       />
@@ -525,6 +584,7 @@ export default function DraftInferenceDetail({project, inference}) {
       <FormSelectField 
         control={control} 
         defaultValue={inference.pd_model || ''}
+        onChangeUser={handleModelChange}
         options={pd_model_options}
         name="pd_model" label="Pharmacodynamic Model"
       />
@@ -548,7 +608,7 @@ export default function DraftInferenceDetail({project, inference}) {
         append={objectiveFunctionsAppend} 
         remove={objectiveFunctionsRemove} 
         biomarker_types={biomarker_types}
-        watch={watch}
+        watch={watchObjectiveFunctions}
         setValue={setValue}
       />
       

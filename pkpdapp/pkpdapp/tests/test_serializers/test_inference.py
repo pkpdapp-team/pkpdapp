@@ -99,6 +99,7 @@ class TestObjectiveFunctionSerializer(TestCase):
             'variable': self.inference.objective_functions.first().variable.id,
             'biomarker_type': self.inference.objective_functions.first().biomarker_type.id,
         })
+        data['datetime'] = ''
         validated_data = serializer.to_internal_value(data)
         serializer.update(self.inference, validated_data)
         self.assertEqual(self.inference.name, 'fred')
