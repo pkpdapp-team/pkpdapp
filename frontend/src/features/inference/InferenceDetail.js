@@ -88,7 +88,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 
-function PriorSubform({control, objects, variables, append, remove, watch, setValue}) {
+function PriorSubform({control, objects, variables, append, remove, watch, setValue, disabled}) {
   
   const variable_options = variables.filter(
     variable => variable.constant
@@ -159,6 +159,7 @@ function PriorSubform({control, objects, variables, append, remove, watch, setVa
             <FormSelectField 
               control={control} 
               defaultValue={prior.type || ''}
+              disabled={disabled}
               options={type_options}
               onChangeUser={handleTypeChange(watchType, watchVariable, baseName)}
               name={`${baseName}.type`}
@@ -167,6 +168,7 @@ function PriorSubform({control, objects, variables, append, remove, watch, setVa
             <FormSelectField 
               control={control} 
               defaultValue={prior.variable || ''}
+              disabled={disabled}
               options={variable_options}
               onChangeUser={handleVariableChange(watchType, watchVariable, baseName)}
               name={`${baseName}.variable`}
@@ -179,12 +181,14 @@ function PriorSubform({control, objects, variables, append, remove, watch, setVa
                 control={control} 
                 name={`${baseName}.mean`}
                 defaultValue={prior.mean}
+                disabled={disabled}
                 label="Mean"
                 type="number"
               />
               <FormTextField 
                 control={control} 
                 name={`${baseName}.sd`}
+                disabled={disabled}
                 defaultValue={prior.sd}
                 label="Standard Deviation"
                 type="number"
@@ -196,6 +200,7 @@ function PriorSubform({control, objects, variables, append, remove, watch, setVa
               <FormTextField 
                 control={control} 
                 name={`${baseName}.lower`}
+                disabled={disabled}
                 defaultValue={prior.lower}
                 label="Lower"
                 type="number"
@@ -204,6 +209,7 @@ function PriorSubform({control, objects, variables, append, remove, watch, setVa
                 control={control} 
                 name={`${baseName}.upper`}
                 defaultValue={prior.upper}
+                disabled={disabled}
                 label="Upper"
                 type="number"
               />
@@ -213,6 +219,7 @@ function PriorSubform({control, objects, variables, append, remove, watch, setVa
             <Tooltip title={`delete prior`} placement="right">
               <IconButton
                 variant='rounded' 
+                disabled={disabled}
                 onClick={ () => remove(index) }
               >
                 <DeleteIcon/>
@@ -225,6 +232,7 @@ function PriorSubform({control, objects, variables, append, remove, watch, setVa
           <Tooltip title={`create new prior`} placement="right">
           <IconButton
             variant='rounded' 
+            disabled={disabled}
             onClick={handleNewPrior}
           >
             <AddIcon/>
@@ -236,7 +244,7 @@ function PriorSubform({control, objects, variables, append, remove, watch, setVa
   )
 }
 
-function ObjectiveFunctionSubform({control, objects, variables, biomarker_types, append, remove, watch, setValue }) {
+function ObjectiveFunctionSubform({control, objects, variables, biomarker_types, append, remove, watch, setValue, disabled }) {
   if (! biomarker_types || biomarker_types.length === 0) {
     return (null)
   }
@@ -310,6 +318,7 @@ function ObjectiveFunctionSubform({control, objects, variables, biomarker_types,
             control={control} 
             defaultValue={objectiveFunction.type || ''}
             onChangeUser={handleTypeChange(watchType, watchVariable, baseName)}
+            disabled={disabled}
             options={type_options}
             name={`${baseName}.type`}
             label="Type"
@@ -318,6 +327,7 @@ function ObjectiveFunctionSubform({control, objects, variables, biomarker_types,
             control={control} 
             defaultValue={objectiveFunction.variable || ''}
             onChangeUser={handleVariableChange(watchType, watchVariable, baseName)}
+            disabled={disabled}
             options={variable_options}
             name={`${baseName}.variable`}
             label="Variable"
@@ -326,6 +336,7 @@ function ObjectiveFunctionSubform({control, objects, variables, biomarker_types,
             control={control} 
             defaultValue={objectiveFunction.biomarker_type || ''}
             options={biomarker_type_options}
+            disabled={disabled}
             name={`${baseName}.biomarker_type`}
             label="Biomarker Type"
           />
@@ -335,6 +346,7 @@ function ObjectiveFunctionSubform({control, objects, variables, biomarker_types,
                 control={control} 
                 name={`${baseName}.sd`}
                 defaultValue={objectiveFunction.sd}
+                disabled={disabled}
                 label="Standard Deviation"
                 type="number"
               />
@@ -345,6 +357,7 @@ function ObjectiveFunctionSubform({control, objects, variables, biomarker_types,
               <FormTextField 
                 control={control} 
                 name={`${baseName}.sigma`}
+                disabled={disabled}
                 defaultValue={objectiveFunction.sigma}
                 label="Sigma"
                 type="number"
@@ -354,6 +367,7 @@ function ObjectiveFunctionSubform({control, objects, variables, biomarker_types,
           <Tooltip title={`delete objective function`} placement="right">
             <IconButton
               variant='rounded' 
+              disabled={disabled}
               onClick={ () => remove(index) }
             >
               <DeleteIcon/>
@@ -366,6 +380,7 @@ function ObjectiveFunctionSubform({control, objects, variables, biomarker_types,
         <Tooltip title={`create new objective function`} placement="right">
         <IconButton
           variant='rounded' 
+          disabled={disabled}
           onClick={handleNewObjectiveFunction}
         >
           <AddIcon/>

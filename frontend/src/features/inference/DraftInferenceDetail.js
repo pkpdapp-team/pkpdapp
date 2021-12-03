@@ -88,8 +88,9 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 
-function PriorSubform({control, objects, variables, append, remove, watch, setValue}) {
+function PriorSubform({control, objects, variables, append, remove, watch, setValue, disabled}) {
   
+  console.log('prior disabled', disabled)
   const variable_options = variables.filter(
     variable => variable.constant
   ).map(variable => 
@@ -160,6 +161,7 @@ function PriorSubform({control, objects, variables, append, remove, watch, setVa
               control={control} 
               defaultValue={prior.type || ''}
               options={type_options}
+              disabled={disabled}
               onChangeUser={handleTypeChange(watchType, watchVariable, baseName)}
               name={`${baseName}.type`}
               label="Type"
@@ -168,6 +170,7 @@ function PriorSubform({control, objects, variables, append, remove, watch, setVa
               control={control} 
               defaultValue={prior.variable || ''}
               options={variable_options}
+              disabled={disabled}
               onChangeUser={handleVariableChange(watchType, watchVariable, baseName)}
               name={`${baseName}.variable`}
               label="Variable"
@@ -178,6 +181,7 @@ function PriorSubform({control, objects, variables, append, remove, watch, setVa
               <FormTextField 
                 control={control} 
                 name={`${baseName}.mean`}
+                disabled={disabled}
                 defaultValue={prior.mean}
                 label="Mean"
                 type="number"
@@ -185,6 +189,7 @@ function PriorSubform({control, objects, variables, append, remove, watch, setVa
               <FormTextField 
                 control={control} 
                 name={`${baseName}.sd`}
+                disabled={disabled}
                 defaultValue={prior.sd}
                 label="Standard Deviation"
                 type="number"
@@ -197,6 +202,7 @@ function PriorSubform({control, objects, variables, append, remove, watch, setVa
                 control={control} 
                 name={`${baseName}.lower`}
                 defaultValue={prior.lower}
+                disabled={disabled}
                 label="Lower"
                 type="number"
               />
@@ -205,6 +211,7 @@ function PriorSubform({control, objects, variables, append, remove, watch, setVa
                 name={`${baseName}.upper`}
                 defaultValue={prior.upper}
                 label="Upper"
+                disabled={disabled}
                 type="number"
               />
               </React.Fragment>
@@ -236,7 +243,8 @@ function PriorSubform({control, objects, variables, append, remove, watch, setVa
   )
 }
 
-function ObjectiveFunctionSubform({control, objects, variables, biomarker_types, append, remove, watch, setValue }) {
+function ObjectiveFunctionSubform({control, objects, variables, biomarker_types, append, remove, watch, setValue, disabled }) {
+  console.log('objective_functions disabled', disabled)
   if (! biomarker_types || biomarker_types.length === 0) {
     return (null)
   }
@@ -310,6 +318,7 @@ function ObjectiveFunctionSubform({control, objects, variables, biomarker_types,
             control={control} 
             defaultValue={objectiveFunction.type || ''}
             onChangeUser={handleTypeChange(watchType, watchVariable, baseName)}
+            disabled={disabled}
             options={type_options}
             name={`${baseName}.type`}
             label="Type"
@@ -318,6 +327,7 @@ function ObjectiveFunctionSubform({control, objects, variables, biomarker_types,
             control={control} 
             defaultValue={objectiveFunction.variable || ''}
             onChangeUser={handleVariableChange(watchType, watchVariable, baseName)}
+            disabled={disabled}
             options={variable_options}
             name={`${baseName}.variable`}
             label="Variable"
@@ -326,6 +336,7 @@ function ObjectiveFunctionSubform({control, objects, variables, biomarker_types,
             control={control} 
             defaultValue={objectiveFunction.biomarker_type || ''}
             options={biomarker_type_options}
+            disabled={disabled}
             name={`${baseName}.biomarker_type`}
             label="Biomarker Type"
           />
@@ -335,6 +346,7 @@ function ObjectiveFunctionSubform({control, objects, variables, biomarker_types,
                 control={control} 
                 name={`${baseName}.sd`}
                 defaultValue={objectiveFunction.sd}
+                disabled={disabled}
                 label="Standard Deviation"
                 type="number"
               />
@@ -346,6 +358,7 @@ function ObjectiveFunctionSubform({control, objects, variables, biomarker_types,
                 control={control} 
                 name={`${baseName}.sigma`}
                 defaultValue={objectiveFunction.sigma}
+                disabled={disabled}
                 label="Sigma"
                 type="number"
               />
@@ -597,6 +610,7 @@ export default function DraftInferenceDetail({project, inference}) {
         variables={variables}
         append={priorsAppend} 
         remove={priorsRemove} 
+        disabled={disableSave}
         watch={watchPriors}
         setValue={setValue}
       />
@@ -608,6 +622,7 @@ export default function DraftInferenceDetail({project, inference}) {
         append={objectiveFunctionsAppend} 
         remove={objectiveFunctionsRemove} 
         biomarker_types={biomarker_types}
+        disabled={disableSave}
         watch={watchObjectiveFunctions}
         setValue={setValue}
       />
