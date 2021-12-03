@@ -10,11 +10,8 @@ import protocolsReducer from '../features/protocols/protocolsSlice'
 import usersReducer from '../features/projects/usersSlice'
 import unitsReducer from '../features/projects/unitsSlice'
 import variablesReducer from '../features/variables/variablesSlice'
-import storedVariablesReducer from '../features/inference/storedVariableSlice'
 import inferensesReducer from '../features/inference/inferenceSlice'
 import algorithmsReducer from '../features/inference/algorithmsSlice'
-import priorsReducer from '../features/inference/priorsSlice'
-import objectiveFunctionsReducer from '../features/inference/objectiveFunctionsSlice'
 
 
 export default configureStore({
@@ -30,10 +27,7 @@ export default configureStore({
     users: usersReducer,
     units: unitsReducer,
     variables: variablesReducer,
-    storedVariables: storedVariablesReducer,
     inferences: inferensesReducer,
     algorithms: algorithmsReducer, 
-    priors: priorsReducer, 
-    objectiveFunctions: objectiveFunctionsReducer, 
   },
 })

@@ -3,7 +3,6 @@ import { useSelector } from 'react-redux'
 import Paper from '@material-ui/core/Paper';
 import Grid from '@material-ui/core/Grid';
 import InferenceDetail from './InferenceDetail'
-import DraftInferenceDetail from './DraftInferenceDetail'
 import InferenceChart from './InferenceChart'
 import Accordion from '@material-ui/core/Accordion';
 import AccordionSummary from '@material-ui/core/AccordionSummary';

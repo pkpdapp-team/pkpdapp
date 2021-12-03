@@ -44,13 +44,6 @@ import {
   fetchInferences
 } from '../inference/inferenceSlice.js'
 
-import {
-  fetchDraftInferences
-} from '../inference/draftInferenceSlice.js'
-
-
-
-
 
 
 const useStyles = makeStyles((theme) => ({
