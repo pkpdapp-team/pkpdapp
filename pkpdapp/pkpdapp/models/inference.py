@@ -138,6 +138,7 @@ class Inference(StoredModel):
             model = self.pkpd_model
         return model
 
+
     def run_inference(self):
         """
         when an inference is run, a new model is created (a copy),
@@ -153,13 +154,35 @@ class Inference(StoredModel):
             'read_only': True,
         }
         if self.pd_model:
-            inference_kwargs['pd_model'] = self.pd_model.create_stored_model()
+            model = self.pd_model.create_stored_model()
+            inference_kwargs['pd_model'] = model
         if self.dosed_pk_model:
-            inference_kwargs['dosed_pk_model'] = self.dosed_pk_model.create_stored_model()
+            model = self.dosed_pk_model.create_stored_model()
+            inference_kwargs['dosed_pk_model'] = model
         if self.pkpd_model:
-            inference_kwargs['pkpd_model'] = self.pkpd_model.create_stored_model()
+            model = self.pkpd_model.create_stored_model()
+            inference_kwargs['pkpd_model'] = model
 
-        return Inference.objects.create(**inference_kwargs)
+        new_inference = Inference.objects.create(**inference_kwargs)
+
+        for prior in self.priors.all():
+            prior.id = None
+            prior.pk = None
+            prior.inference = new_inference
+            prior.variable = model.variables.get(qname=prior.variable.qname)
+            prior.save()
+
+        for objective_function in self.objective_functions.all():
+            objective_function.id = None
+            objective_function.pk = None
+            objective_function.inference = new_inference
+            objective_function.variable = model.variables.get(
+                qname=objective_function.variable.qname
+            )
+            objective_function.save()
+
+        new_inference.refresh_from_db()
+        return new_inference
 
 
 

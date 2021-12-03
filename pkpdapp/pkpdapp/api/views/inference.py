@@ -43,17 +43,24 @@ class RunInferenceView(views.APIView):
         except Inference.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
+        errors = {}
         model = inference.get_model()
         if model is None:
-            errors = {
-                'pd_model': 'Inference must have a model',
-                'dosed_pd_model': 'Inference must have a model',
-                'pkpd_model': 'Inference must have a model',
-            }
+            for field in ['pd_model', 'dosed_pd_model', 'pkpd_model']:
+                errors[field] = 'Inference must have a model'
+
+        if inference.priors.count() == 0:
+            errors['priors'] = 'Inference must have at least one prior'
+
+        if inference.objective_functions.count() == 0:
+            errors['objective_functions'] = (
+                'Inference must have at least one objective function'
+            )
+
+        if errors:
             return Response(
                 errors, status=status.HTTP_400_BAD_REQUEST
             )
-
         stored_inference = inference.run_inference()
         return Response(InferenceSerializer(stored_inference).data)
 

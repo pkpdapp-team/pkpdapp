@@ -19,7 +19,7 @@ import {
 } from '../projects/projectsSlice.js'
 
 import {
-  selectChosenRunningInferences, selectChosenDraftInferences
+  selectChosenInferences
 } from './inferenceSlice.js'
 
 
@@ -37,8 +37,7 @@ const useStyles = makeStyles((theme) => ({
 export default function Inference() {
   const classes = useStyles();
   const project = useSelector(selectChosenProject);
-  const chosenInferences = useSelector(selectChosenRunningInferences);
-  const chosenDraftInferences = useSelector(selectChosenDraftInferences);
+  const chosenInferences = useSelector(selectChosenInferences);
   if (!project) {
     return ('Select a project')
   }
@@ -51,21 +50,7 @@ export default function Inference() {
   
   return (
     <div className={classes.root}>
-      <Grid container spacing={3}>
-        <Grid item xs={12} md={6}>
-          <Paper className={classes.chartPaper}>
-            {showChart &&
-            <InferenceChart inference={chosenInferences} />
-            }
-            {!showChart &&
-              <Typography>
-                Choose a dataset or model to visualise
-              </Typography>
-            }
-          </Paper>
-        </Grid>
-        <Grid item xs={12} md={6} >
-        {chosenDraftInferences.map(inference => {
+        {chosenInferences.map(inference => {
           const loading = inference.status ? inference.status === 'loading' : false
           const expandIcon = loading ? 
             (<CircularProgress size={20}/>)
@@ -79,37 +64,19 @@ export default function Inference() {
             </AccordionSummary>
             <AccordionDetails>
               {!loading &&
-              <DraftInferenceDetail  inference={inference} project={project}/>
+              <Grid container spacing={3}>
+              <Grid item xs={12} md={6} >
+                <InferenceChart inference={inference} />
+              </Grid>
+              <Grid item xs={12} md={6} >
+                <InferenceDetail  inference={inference} project={project}/>
+              </Grid>
+              </Grid>
               }
             </AccordionDetails>
           </Accordion>
           )
         })}
-        </Grid>
-        <Grid item xs={12} md={6} >
-        {chosenInferences.map(inference => {
-          const loading = inference.status ? inference.status === 'loading' : false
-          const expandIcon = loading ? 
-            (<CircularProgress size={20}/>)
-            : (<ExpandMoreIcon />)
-          return (
-          <Accordion key={inference.id}>
-            <AccordionSummary expandIcon={expandIcon}>
-              <Typography className={classes.heading}>
-                Inference - {inference.name}
-              </Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-              {!loading &&
-              <InferenceDetail  inference={inference} project={project}/>
-              }
-            </AccordionDetails>
-          </Accordion>
-          )
-        })}
-        </Grid>
-        
-      </Grid>
     </div>
   )
 }

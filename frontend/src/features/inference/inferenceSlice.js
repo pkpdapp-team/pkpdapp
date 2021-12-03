@@ -2,9 +2,7 @@ import {
   createSlice, createEntityAdapter, createAsyncThunk,
 } from '@reduxjs/toolkit'
 import { api } from '../../Api'
-import {fetchChainsByInference} from './chainSlice'
-import {fetchPriorsByInference} from './priorsSlice'
-import {fetchObjectiveFunctionsByInference} from './objectiveFunctionsSlice'
+import { normalize, schema } from 'normalizr';
 
 const inferencesAdapter = createEntityAdapter({
   sortComparer: (a, b) => b.id < a.id
@@ -15,28 +13,28 @@ const initialState = inferencesAdapter.getInitialState({
   errorFetch: null,
 })
 
+const variable = new schema.Entity('variables');
+const pd_model = new schema.Entity('pd_models');
+const dosed_pk_model = new schema.Entity('dosed_pk_models');
+const inference = new schema.Entity('inferences', {
+  variables: [variable],
+  pd_model_detail: pd_model,
+  dosed_pk_model_detail: dosed_pk_model,
+});
 
 export const fetchInferences = createAsyncThunk('inferences/fetchInferences', async (project, { dispatch }) => {
   let response = await api.get(
     `/api/inference/?project_id=${project.id}`
   )
-  for (const inference of response) {
-    dispatch(fetchChainsByInference(inference))
-    dispatch(fetchPriorsByInference(inference))
-    dispatch(fetchObjectiveFunctionsByInference(inference))
-  }
-  return response
+  const normalized = normalize(response, [inference]);
+
+  return normalized.entities
 })
 
 export const fetchInferenceById = createAsyncThunk('inferences/fetchInferenceById', async (inferenceId, { dispatch }) => {
   let inference = await api.get(
     `/api/inference/${inferenceId}/`
   )
-
-  dispatch(fetchChainsByInference(inference))
-  dispatch(fetchPriorsByInference(inference))
-  dispatch(fetchObjectiveFunctionsByInference(inference))
-
   return inference
 })
 
@@ -53,10 +51,6 @@ export const addNewInference = createAsyncThunk(
       '/api/inference/', initialInference
     )
     console.log('got new inference', inference)
-
-    dispatch(fetchChainsByInference(inference))
-    dispatch(fetchPriorsByInference(inference))
-    dispatch(fetchObjectiveFunctionsByInference(inference))
 
     inference.chosen = true;
 
@@ -75,8 +69,9 @@ export const updateInference = createAsyncThunk(
 export const runInference = createAsyncThunk(
   'inferences/runInference',
   async (inferenceId, { getState }) => {
-    const newInference = await api.post(`/api/draft_inference/${inferenceId}/run`)
-    return newInference
+    const newInference = await api.post(`/api/inference/${inferenceId}/run`)
+    const normalized = normalize(newInference, inference);
+    return normalized.entities
   }
 )
 
@@ -112,11 +107,13 @@ export const inferencesSlice = createSlice({
       state.errorFetch = action.error.message
     },
     [fetchInferences.fulfilled]: (state, action) => {
+      inferencesAdapter.setAll(state, action.payload.inferences)
       state.status = 'succeeded'
-      inferencesAdapter.setAll(state, action.payload)
     },
     [fetchInferenceById.fulfilled]: inferencesAdapter.upsertOne,
-    [runInference.fulfilled]: inferencesAdapter.addOne,
+    [runInference.fulfilled]: (state, action) => {
+      inferencesAdapter.addMany(state, action.payload.inferences)
+    },
     [addNewInference.fulfilled]: inferencesAdapter.addOne,
     [updateInference.fulfilled]: inferencesAdapter.upsertOne,
     [deleteInference.fulfilled]: inferencesAdapter.removeOne,
@@ -132,6 +129,9 @@ export const {
   selectById: selectInferenceById,
   selectIds: selectInferenceIds
 } = inferencesAdapter.getSelectors(state => state.inferences)
+
+
+export const selectChosenInferences = state => selectAllInferences(state).filter(inference => inference.chosen);
 
 export const selectChosenRunningInferences = state => selectAllInferences(state).filter(inference => inference.chosen && inference.read_only);
 

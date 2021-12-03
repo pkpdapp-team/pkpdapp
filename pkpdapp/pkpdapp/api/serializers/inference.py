@@ -12,6 +12,7 @@ from pkpdapp.api.serializers import (
     DosedPharmacokineticSerializer,
     PriorSerializer,
     ObjectiveFunctionSerializer,
+    VariableSerializer,
 )
 
 
@@ -34,10 +35,26 @@ class InferenceSerializer(serializers.ModelSerializer):
     objective_functions = ObjectiveFunctionSerializer(
         many=True
     )
+    pd_model_detail = PharmacodynamicSerializer(
+        source='pd_model',
+        read_only=True
+    )
+    dosed_pk_model_detail = DosedPharmacokineticSerializer(
+        source='dosed_pk_model',
+        read_only=True
+    )
+    variables = serializers.SerializerMethodField('get_variables')
 
     class Meta:
         model = Inference
         fields = '__all__'
+
+
+    def get_variables(self, instance):
+        model = instance.get_model()
+        if model:
+            return VariableSerializer(model.variables.all(), many=True).data
+        return []
 
 
     def create(self, validated_data):

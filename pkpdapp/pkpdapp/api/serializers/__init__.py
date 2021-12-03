@@ -30,6 +30,7 @@ from .models import (
     PkpdSerializer,
     PharmacodynamicSbmlSerializer,
 )
+from .variables import VariableSerializer
 from .inference import (
     InferenceSerializer,
     InferenceChainSerializer,
@@ -42,6 +43,5 @@ from .dataset import DatasetSerializer, DatasetCsvSerializer
 from .subject import SubjectSerializer
 from .unit import UnitSerializer
 from .user import UserSerializer
-from .variables import VariableSerializer
 
 
