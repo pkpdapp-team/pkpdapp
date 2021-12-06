@@ -5,7 +5,6 @@
 #
 
 from rest_framework import status
-from django.test import TestCase
 from django.contrib.auth.models import User
 from rest_framework.test import APITestCase, APIClient
 from pkpdapp.models import (
