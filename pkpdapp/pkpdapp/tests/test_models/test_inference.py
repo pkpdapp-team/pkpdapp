@@ -10,9 +10,6 @@ from pkpdapp.models import (
     LogLikelihoodLogNormal, Project, BiomarkerType,
     PriorNormal, PriorUniform,
 )
-from pkpdapp.api.serializers import (
-    InferenceSerializer
-)
 
 
 class TestObjectiveFunctionSerializer(TestCase):
