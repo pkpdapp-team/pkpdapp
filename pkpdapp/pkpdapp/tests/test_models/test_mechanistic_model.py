@@ -65,7 +65,6 @@ class TestPharmodynamicModel(TestCase):
         self.assertTrue(stored_model.read_only)
         self.assertEqual(len(stored_model.variables.all()), 6)
 
-
     def test_update_model(self):
         m = PharmacodynamicModel.objects.get(
             name='tumour_growth_inhibition_model_koch',

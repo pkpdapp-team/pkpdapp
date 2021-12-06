@@ -138,7 +138,6 @@ class Inference(StoredModel):
             model = self.pkpd_model
         return model
 
-
     def run_inference(self):
         """
         when an inference is run, a new model is created (a copy),
@@ -183,6 +182,3 @@ class Inference(StoredModel):
 
         new_inference.refresh_from_db()
         return new_inference
-
-
-

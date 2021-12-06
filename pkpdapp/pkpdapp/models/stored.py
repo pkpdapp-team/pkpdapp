@@ -5,6 +5,7 @@
 #
 from django.db import models
 
+
 class StoredModel(models.Model):
     read_only = models.BooleanField(
         default=False,
@@ -19,5 +20,3 @@ class StoredModel(models.Model):
 
     class Meta:
         abstract = True
-
-

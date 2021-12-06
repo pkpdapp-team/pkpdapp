@@ -6,14 +6,14 @@
 
 from django.test import TestCase
 from pkpdapp.models import (
-    DraftInference, PharmacodynamicModel, LogLikelihoodNormal,
-    LogLikelihoodLogNormal, Project, BiomarkerType
+    PharmacodynamicModel, LogLikelihoodNormal,
+    LogLikelihoodLogNormal, Project, BiomarkerType,
+    Inference,
 )
 from pkpdapp.api.serializers import (
     ObjectiveFunctionSerializer
 )
-from django.utils import timezone
-from django.db.utils import IntegrityError
+
 
 class TestObjectiveFunctionSerializer(TestCase):
     def setUp(self):
@@ -28,7 +28,7 @@ class TestObjectiveFunctionSerializer(TestCase):
             name='tumour_growth_inhibition_model_koch',
         )
         variables = model.variables.all()
-        self.inference = DraftInference.objects.create(
+        self.inference = Inference.objects.create(
             pd_model=model,
             project=project,
         )
@@ -47,7 +47,7 @@ class TestObjectiveFunctionSerializer(TestCase):
 
     def test_serialize(self):
         serializer = ObjectiveFunctionSerializer(
-            self.inference.objectivefunctions.all(),
+            self.inference.objective_functions.all(),
             many=True
         )
         data = serializer.data
@@ -63,7 +63,3 @@ class TestObjectiveFunctionSerializer(TestCase):
         self.assertNotEqual(
             data[0]['type'], data[1]['type']
         )
-
-
-
-

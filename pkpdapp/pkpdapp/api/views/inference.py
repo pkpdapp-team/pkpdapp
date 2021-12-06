@@ -12,13 +12,9 @@ from pkpdapp.api.serializers import (
     InferenceSerializer,
     InferenceChainSerializer,
     AlgorithmSerializer,
-    PriorSerializer,
-    ObjectiveFunctionSerializer,
 )
 from pkpdapp.models import (
     Inference, InferenceChain, Algorithm,
-    PharmacodynamicModel, DosedPharmacokineticModel,
-    PkpdModel,
 )
 
 
@@ -31,8 +27,6 @@ class InferenceView(viewsets.ModelViewSet):
     queryset = Inference.objects.all()
     serializer_class = InferenceSerializer
     filter_backends = [ProjectFilter]
-
-
 
 
 class RunInferenceView(views.APIView):

@@ -11,10 +11,8 @@ from pkpdapp.models import (
     PriorNormal, PriorUniform,
 )
 from pkpdapp.api.serializers import (
-    ObjectiveFunctionSerializer, InferenceSerializer
+    InferenceSerializer
 )
-from django.utils import timezone
-from django.db.utils import IntegrityError
 
 
 class TestObjectiveFunctionSerializer(TestCase):
@@ -81,7 +79,6 @@ class TestObjectiveFunctionSerializer(TestCase):
         self.assertEqual(len(new_inference.objective_functions.all()), 0)
         self.assertEqual(len(new_inference.priors.all()), 1)
 
-
     def test_update(self):
         serializer = InferenceSerializer(
             self.inference
@@ -97,9 +94,10 @@ class TestObjectiveFunctionSerializer(TestCase):
             'type': 'LogLikelihoodNormal',
             'sd': 2.0,
             'variable': self.inference.objective_functions.first().variable.id,
-            'biomarker_type': self.inference.objective_functions.first().biomarker_type.id,
+            'biomarker_type': (
+                self.inference.objective_functions.first().biomarker_type.id
+            ),
         })
-        data['datetime'] = ''
         validated_data = serializer.to_internal_value(data)
         serializer.update(self.inference, validated_data)
         self.assertEqual(self.inference.name, 'fred')
@@ -107,5 +105,3 @@ class TestObjectiveFunctionSerializer(TestCase):
         self.assertEqual(new_priors[index].mean, 3.0)
         self.assertEqual(len(self.inference.priors.all()), 2)
         self.assertEqual(len(self.inference.objective_functions.all()), 3)
-
-

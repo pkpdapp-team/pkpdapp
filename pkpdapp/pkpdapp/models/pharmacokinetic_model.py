@@ -46,7 +46,6 @@ class PharmacokineticModel(MechanisticModel, StoredModel):
 
         self.__original_sbml = self.sbml
 
-
     def create_stored_model(self):
         stored_model_kwargs = {
             'name': self.name,
@@ -55,8 +54,11 @@ class PharmacokineticModel(MechanisticModel, StoredModel):
             'time_max': self.time_max,
             'read_only': True,
         }
-        stored_model = PharmacokineticModel.objects.create(**stored_model_kwargs)
-        # no need to store variables as they will be stored with the dosed pk model
+        stored_model = PharmacokineticModel.objects.create(
+            **stored_model_kwargs)
+
+        # no need to store variables as they will be stored with the dosed pk
+        # model
         return stored_model
 
 
@@ -115,13 +117,16 @@ class DosedPharmacokineticModel(MyokitModelMixin, StoredModel):
         stored_model_kwargs = {
             'name': self.name,
             'project': self.project,
-            'pharmacokinetic_model': self.pharmacokinetic_model.create_stored_model(),
+            'pharmacokinetic_model': (
+                self.pharmacokinetic_model.create_stored_model()
+            ),
             'dose_compartment': self.dose_compartment,
             'protocol': self.protocol.create_stored_protocol(),
             'time_max': self.time_max,
             'read_only': True,
         }
-        stored_model = DosedPharmacokineticModel.objects.create(**stored_model_kwargs)
+        stored_model = DosedPharmacokineticModel.objects.create(
+            **stored_model_kwargs)
         for variable in self.variables.all():
             variable.create_stored_variable(stored_model)
         return stored_model
@@ -375,4 +380,3 @@ def set_dosing_events(simulator, events):
         )
 
     simulator.set_protocol(myokit_protocol)
-

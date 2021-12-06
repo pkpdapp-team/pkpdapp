@@ -8,7 +8,7 @@ from pkpdapp.models import (
     Inference, InferenceChain, Algorithm
 )
 from pkpdapp.api.serializers import (
-    PkpdSerializer, PharmacodynamicSerializer,
+    PharmacodynamicSerializer,
     DosedPharmacokineticSerializer,
     PriorSerializer,
     ObjectiveFunctionSerializer,
@@ -49,13 +49,11 @@ class InferenceSerializer(serializers.ModelSerializer):
         model = Inference
         fields = '__all__'
 
-
     def get_variables(self, instance):
         model = instance.get_model()
         if model:
             return VariableSerializer(model.variables.all(), many=True).data
         return []
-
 
     def create(self, validated_data):
         priors_data = validated_data.pop('priors')
@@ -70,10 +68,9 @@ class InferenceSerializer(serializers.ModelSerializer):
             for field_data in field_datas:
                 serializer = Serializer()
                 field_data['inference'] = new_inference
-                new_model = serializer.create(field_data)
+                serializer.create(field_data)
 
         return new_inference
-
 
     def update(self, instance, validated_data):
         priors_data = validated_data.pop('priors')
@@ -85,7 +82,8 @@ class InferenceSerializer(serializers.ModelSerializer):
         )
         for field_datas, old_models, Serializer in [
                 (priors_data, old_priors, PriorSerializer),
-                (objective_functions_data, old_objective_functions, ObjectiveFunctionSerializer)
+                (objective_functions_data,
+                 old_objective_functions, ObjectiveFunctionSerializer)
         ]:
             for field_data in field_datas:
                 serializer = Serializer()

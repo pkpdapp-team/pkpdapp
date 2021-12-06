@@ -15,6 +15,7 @@ def validate_duration(value):
             'Duration should be greater than 0'
         )
 
+
 class DoseBase(models.Model):
     """
     A single dose event.
@@ -60,12 +61,14 @@ class DoseBase(models.Model):
         for dosed_pk_model in self.protocol.dosed_pk_models.all():
             dosed_pk_model.update_simulator()
 
+
 class Dose(DoseBase, StoredModel):
     protocol = models.ForeignKey(
         Protocol, on_delete=models.CASCADE,
         related_name='doses',
         help_text='protocol containing this dose'
     )
+
     def create_stored_dose(self, stored_protocol):
         stored_dose_kwargs = {
             'protocol': stored_protocol,
@@ -75,4 +78,3 @@ class Dose(DoseBase, StoredModel):
             'read_only': True,
         }
         return Dose.objects.create(**stored_dose_kwargs)
-

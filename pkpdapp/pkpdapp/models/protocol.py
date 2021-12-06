@@ -14,9 +14,10 @@ from pkpdapp.models import (
 
 def get_h_unit():
     try:
-        Unit.objects.get(symbol='h')
+        return Unit.objects.get(symbol='h')
     except Unit.DoesNotExist:
         return None
+
 
 def get_mg_unit():
     try:

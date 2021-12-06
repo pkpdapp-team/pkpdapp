@@ -56,7 +56,8 @@ class PharmacodynamicModel(MechanisticModel, StoredModel):
             'time_max': self.time_max,
             'read_only': True,
         }
-        stored_model = PharmacodynamicModel.objects.create(**stored_model_kwargs)
+        stored_model = PharmacodynamicModel.objects.create(
+            **stored_model_kwargs)
         for variable in self.variables.all():
             variable.create_stored_variable(stored_model)
         return stored_model
@@ -87,4 +88,3 @@ class PkpdModel(MechanisticModel, StoredModel):
 
     def get_absolute_url(self):
         return reverse('pkpd_model-detail', kwargs={'pk': self.pk})
-

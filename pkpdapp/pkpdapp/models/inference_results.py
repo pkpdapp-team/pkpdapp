@@ -6,10 +6,8 @@
 
 from django.db import models
 from pkpdapp.models import (
-    Project, PharmacodynamicModel,
-    DosedPharmacokineticModel,
-    PkpdModel, Inference,
-    Prior, StoredModel,
+    Inference,
+    Prior,
 )
 
 

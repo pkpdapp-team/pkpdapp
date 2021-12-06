@@ -7,19 +7,9 @@ from rest_framework import serializers
 from pkpdapp.models import (
     Variable,
 )
-from pkpdapp.api.serializers import (
-    LogLikelihoodNormalSerializer,
-    LogLikelihoodLogNormalSerializer,
-    SumOfSquaredErrorsScoreFunctionSerializer,
-    PriorNormalSerializer,
-    PriorUniformSerializer,
-    BoundarySerializer,
-)
 
 
 class VariableSerializer(serializers.ModelSerializer):
     class Meta:
         model = Variable
         fields = '__all__'
-
-

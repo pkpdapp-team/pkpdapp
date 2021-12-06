@@ -31,6 +31,7 @@ class PriorUniformSerializer(serializers.ModelSerializer):
         required=False
     )
     type = serializers.SerializerMethodField()
+
     class Meta:
         model = PriorUniform
         fields = '__all__'
@@ -45,6 +46,7 @@ class BoundarySerializer(serializers.ModelSerializer):
         required=False
     )
     type = serializers.SerializerMethodField()
+
     class Meta:
         model = Boundary
         fields = '__all__'

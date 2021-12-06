@@ -88,21 +88,6 @@ class Variable(StoredModel):
         default=Scale.LINEAR,
     )
 
-    class Meta:
-        abstract = True
-        constraints = [
-            models.CheckConstraint(
-                check=(
-                    (Q(scale='LG') & Q(lower_bound__gt=0)) |
-                    Q(scale='LN')
-                ),
-                name=(
-                    '%(class)s: log scale must have a lower '
-                    'bound greater than zero'
-                )
-            )
-        ]
-
     pd_model = models.ForeignKey(
         PharmacodynamicModel,
         blank=True, null=True,
@@ -129,6 +114,16 @@ class Variable(StoredModel):
         constraints = [
             models.CheckConstraint(
                 check=(
+                    (Q(scale='LG') & Q(lower_bound__gt=0)) |
+                    Q(scale='LN')
+                ),
+                name=(
+                    '%(class)s: log scale must have a lower '
+                    'bound greater than zero'
+                )
+            ),
+            models.CheckConstraint(
+                check=(
                     (Q(pk_model__isnull=True) &
                      Q(dosed_pk_model__isnull=True) &
                      Q(pd_model__isnull=False)) |
@@ -140,7 +135,7 @@ class Variable(StoredModel):
                      Q(pd_model__isnull=True))
                 ),
                 name='%(class)s: variable must belong to a model'
-            ),
+            )
         ]
 
     def get_project(self):

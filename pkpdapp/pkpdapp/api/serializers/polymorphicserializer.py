@@ -3,12 +3,12 @@
 # is released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-# This code was derived from https://stackoverflow.com/questions/48911345/drf-how-to-serialize-models-inheritance-read-write
+# This code was derived from
+# https://stackoverflow.com/questions/48911345/drf-how-to-serialize-models-inheritance-read-write
 
 from enum import Enum
 
 from rest_framework import serializers
-from django.contrib.contenttypes.models import ContentType
 
 
 class PolymorphicSerializer(serializers.Serializer):
@@ -39,7 +39,7 @@ class PolymorphicSerializer(serializers.Serializer):
         if hasattr(obj, 'get_type'):
             type_ = obj.get_type()
             if isinstance(type_, Enum):
-                type_str = type_str.value
+                type_str = type_.value
             else:
                 type_str = type_.__name__
 
@@ -49,7 +49,9 @@ class PolymorphicSerializer(serializers.Serializer):
         try:
             serializer = self.get_serializer_map()[type_str]
         except KeyError:
-            raise ValueError('Serializer for "{}" does not exist'.format(type_str), )
+            raise ValueError(
+                'Serializer for "{}" does not exist'.format(type_str),
+            )
 
         data = serializer(obj, context=self.context).to_representation(obj)
         data['type'] = type_str

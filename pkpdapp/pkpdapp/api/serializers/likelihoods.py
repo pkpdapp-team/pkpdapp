@@ -67,5 +67,7 @@ class ObjectiveFunctionSerializer(PolymorphicSerializer):
         return {
             'LogLikelihoodNormal': LogLikelihoodNormalSerializer,
             'LogLikelihoodLogNormal': LogLikelihoodLogNormalSerializer,
-            'SumOfSquaredErrorsScoreFunction':SumOfSquaredErrorsScoreFunctionSerializer
+            'SumOfSquaredErrorsScoreFunction': (
+                SumOfSquaredErrorsScoreFunctionSerializer
+            )
         }

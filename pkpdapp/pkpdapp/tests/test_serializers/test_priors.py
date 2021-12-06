@@ -6,14 +6,13 @@
 
 from django.test import TestCase
 from pkpdapp.models import (
-    Inference, PharmacodynamicModel, Project, BiomarkerType,
-    Prior, PriorNormal, PriorUniform,
+    Inference, PharmacodynamicModel, Project,
+    PriorNormal, PriorUniform,
 )
 from pkpdapp.api.serializers import (
     PriorSerializer
 )
-from django.utils import timezone
-from django.db.utils import IntegrityError
+
 
 class TestPriorSerializer(TestCase):
     def setUp(self):
@@ -70,13 +69,3 @@ class TestPriorSerializer(TestCase):
         validated_data = serializer.to_internal_value(data)
         serializer.update(self.prior_uniform, validated_data)
         self.assertEqual(self.prior_uniform.lower, 0.0)
-
-
-
-
-
-
-
-
-
-

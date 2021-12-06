@@ -11,7 +11,6 @@ from pkpdapp.models import (
 )
 
 
-
 class ObjectiveFunction(PolymorphicModel):
     """
     Abstract model class for objective functions.

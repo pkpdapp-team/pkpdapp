@@ -7,7 +7,6 @@ from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 from pkpdapp.api.views import (
     ProjectFilter,
-    InferenceFilter,
     CheckAccessToProject,
     DosedPkModelFilter,
     PdModelFilter
@@ -27,4 +26,3 @@ class VariableView(viewsets.ModelViewSet):
     permission_classes = [
         IsAuthenticated & CheckAccessToProject
     ]
-
