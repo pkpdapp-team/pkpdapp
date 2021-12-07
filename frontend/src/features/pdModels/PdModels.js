@@ -6,12 +6,12 @@ import FunctionsIcon from '@material-ui/icons/Functions';
 import ExpandableListItem from '../menu/ExpandableListItem'
 
 import {
-  selectAllPdModels, togglePdModel, addNewPdModel,
+  selectWritablePdModels, togglePdModel, addNewPdModel,
 } from '../pdModels/pdModelsSlice.js'
 
 
 export default function PdModels({project, disableSave}) {
-  const pdModels = useSelector(selectAllPdModels);
+  const pdModels = useSelector(selectWritablePdModels);
   const dispatch = useDispatch()
   const handleClickItem = (item) => dispatch(togglePdModel(item))
   const handleNewItem = () => dispatch(addNewPdModel(project))

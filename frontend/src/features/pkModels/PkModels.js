@@ -6,12 +6,12 @@ import AccessibilityIcon from '@material-ui/icons/Accessibility';
 import ExpandableListItem from '../menu/ExpandableListItem'
 
 import {
-  selectAllPkModels, togglePkModel, addNewPkModel
+  selectWritablePkModels, togglePkModel, addNewPkModel
 } from '../pkModels/pkModelsSlice.js'
 
 
 export default function PkModels({project, disableSave}) {
-  const pkModels = useSelector(selectAllPkModels);
+  const pkModels = useSelector(selectWritablePkModels);
   const dispatch = useDispatch()
   const handleClickItem = (item) => dispatch(togglePkModel(item))
   const handleNewItem = () => dispatch(addNewPkModel(project))

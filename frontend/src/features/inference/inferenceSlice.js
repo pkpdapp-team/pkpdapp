@@ -27,6 +27,7 @@ export const fetchInferences = createAsyncThunk('inferences/fetchInferences', as
     `/api/inference/?project_id=${project.id}`
   )
   const normalized = normalize(response, [inference]);
+  console.log('fetchInferences got', response, normalized)
 
   return normalized.entities
 })
@@ -107,7 +108,9 @@ export const inferencesSlice = createSlice({
       state.errorFetch = action.error.message
     },
     [fetchInferences.fulfilled]: (state, action) => {
-      inferencesAdapter.setAll(state, action.payload.inferences)
+      if (action.payload.inferences) {
+        inferencesAdapter.setAll(state, action.payload.inferences)
+      }
       state.status = 'succeeded'
     },
     [fetchInferenceById.fulfilled]: inferencesAdapter.upsertOne,

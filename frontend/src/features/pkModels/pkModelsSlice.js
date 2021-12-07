@@ -166,3 +166,7 @@ export const {
 } = pkModelsAdapter.getSelectors(state => state.pkModels)
 
 export const selectChosenPkModels = state => selectAllPkModels(state).filter(pkModel => pkModel.chosen);
+
+export const selectWritablePkModels= state => selectAllPkModels(state).filter(pkModel => !pkModel.read_only);
+
+

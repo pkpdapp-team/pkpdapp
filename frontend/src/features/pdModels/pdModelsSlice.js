@@ -183,3 +183,6 @@ export const {
 } = pdModelsAdapter.getSelectors(state => state.pdModels)
 
 export const selectChosenPdModels = state => selectAllPdModels(state).filter(pdModel => pdModel.chosen);
+
+export const selectWritablePdModels = state => selectAllPdModels(state).filter(pdModel => !pdModel.read_only);
+
