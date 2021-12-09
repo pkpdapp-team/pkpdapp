@@ -49,4 +49,5 @@ class TestObjectiveFunctionSerializer(TestCase):
             myokit_simulator=self.simulator,
             fixed_parameter_dict=self.fixed_dict)
 
-        z = forward_model.simulate(self.variable_parameter_values, times,)
+        z = forward_model.simulate(self.variable_parameter_values, times)
+        self.assertEqual(len(z), len(times))
