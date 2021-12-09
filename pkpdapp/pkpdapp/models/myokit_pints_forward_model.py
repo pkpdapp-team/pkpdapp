@@ -28,6 +28,8 @@ class MyokitForwardModel(pints.ForwardModel):
 
         # get all model states that will be used for inference
         self._n_states = model.count_states()
+
+        # get initial conditions
         self._state_names = sorted(
             [var.qname() for var in model.states()])
 
@@ -50,7 +52,8 @@ class MyokitForwardModel(pints.ForwardModel):
 
         if fixed_parameter_dict is None:
             self._fixed_parameter_dict = None
-            self._fixed_parameter_names = [None]
+            self._fixed_parameter_names = None
+            self._fixed_parameter_indices = None
             self._variable_parameter_names = self._all_parameter_names
             self._n_parameters = len(self._variable_parameter_names)
         else:
@@ -63,8 +66,7 @@ class MyokitForwardModel(pints.ForwardModel):
             self._fixed_parameter_names = list(fixed_parameter_dict.keys())
             self._variable_parameter_names = [x for x in self._all_parameter_names if x not in self._fixed_parameter_names]
             self._n_parameters = len(self._variable_parameter_names)
-
-        self._fixed_parameter_indices = [self._all_parameter_names.index(v) for v in self._fixed_parameter_names]
+            self._fixed_parameter_indices = [self._all_parameter_names.index(v) for v in self._fixed_parameter_names]
         self._variable_parameter_indices = [self._all_parameter_names.index(v) for v in self._variable_parameter_names]
 
     def n_outputs(self):
@@ -98,12 +100,13 @@ class MyokitForwardModel(pints.ForwardModel):
             raise ValueError('Number of parameters supplied must equal number of non-fixed model parameters.')
 
         if self._fixed_parameter_dict is None:
-            full_parameters = parameters
+            full_parameters = list(parameters.values())
         else:
             full_parameters = [None] * self._n_all_parameters
             vals = list(self._fixed_parameter_dict.values())
-            for count, idx in enumerate(self._fixed_parameter_indices):
-                full_parameters[idx] = vals[count]
+            if self._fixed_parameter_indices is not None:
+                for count, idx in enumerate(self._fixed_parameter_indices):
+                    full_parameters[idx] = vals[count]
             for count, idx in enumerate(self._variable_parameter_indices):
                 full_parameters[idx] = parameters[count]
 
