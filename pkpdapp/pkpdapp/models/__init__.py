@@ -43,3 +43,4 @@ from .likelihoods import (
     LogLikelihoodLogNormal, ObjectiveFunction
 )
 
+from .myokit_pints_forward_model import MyokitForwardModel

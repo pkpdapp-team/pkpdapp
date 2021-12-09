@@ -47,7 +47,7 @@ class MyokitForwardModel(pints.ForwardModel):
 
         self._all_parameter_names = self._state_names + self._const_names
         self._n_all_parameters = len(self._all_parameter_names)
-        if self._n_all_parameters >= len(fixed_parameter_dict):
+        if self._n_all_parameters < len(fixed_parameter_dict):
             raise ValueError('Number of fixed parameters must be fewer than total number of model parameters.')
 
         if fixed_parameter_dict is None:
