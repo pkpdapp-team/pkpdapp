@@ -23,20 +23,21 @@ class TestObjectiveFunctionSerializer(TestCase):
         self.simulator = m.get_myokit_simulator()
 
         parameter_dict = {
-            'myokit.tumour_volume', 1,
-            'myokit.lambda', 1,
-            'myokit.critical_volume', 1,
-            'myokit.kappa', 1,
-            'myokit.drug_concentration', 1,
+            'myokit.tumour_volume': 1,
+            'myokit.lambda_0': 1,
+            'myokit.lambda_1': 1,
+            'myokit.kappa': 1,
+            'myokit.drug_concentration': 1,
         }
 
         all_keys = list(parameter_dict.keys())
-        fixed_dict = {
-            'myokit.lambda', 3,
-            'myokit.critical_volume', 2,
+        self.fixed_dict = {
+            'myokit.tumour_volume': 1,
+            'myokit.lambda_0': 3,
+            'myokit.drug_concentration': 1,
         }
         variable_keys = (
-            [k for k in all_keys if k not in list(fixed_dict.keys())]
+            [k for k in all_keys if k not in list(self.fixed_dict.keys())]
         )
         self.variable_parameter_values = [parameter_dict[v] for v in variable_keys]
 
@@ -45,6 +46,7 @@ class TestObjectiveFunctionSerializer(TestCase):
 
         forward_model = MyokitForwardModel(
             myokit_model=self.model,
-            myokit_simulator=self.simulator)
+            myokit_simulator=self.simulator,
+            fixed_parameter_dict=self.fixed_dict)
 
-        z = forward_model.simulate(self.variable_parameter_values, times)
+        z = forward_model.simulate(self.variable_parameter_values, times,)
