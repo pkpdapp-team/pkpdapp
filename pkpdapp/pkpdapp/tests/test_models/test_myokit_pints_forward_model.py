@@ -16,13 +16,6 @@ import numpy as np
 
 class TestObjectiveFunctionSerializer(TestCase):
     def setUp(self):
-        project = Project.objects.get(
-            name='demo',
-        )
-        biomarker_type = BiomarkerType.objects.get(
-            name='Tumour volume',
-            dataset__name='lxf_control_growth'
-        )
         m = PharmacodynamicModel.objects.get(
             name='tumour_growth_inhibition_model_koch',
         )
