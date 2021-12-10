@@ -112,15 +112,13 @@ class MyokitForwardModel(pints.ForwardModel):
         parameters and times. Note, the parameter inputs should be ordered as
         in `variable_parameter_names()`.
         """
-        print(self._n_parameters)
-        print(self._variable_parameter_names)
         if len(parameters) != self._n_parameters:
             raise ValueError('Number of parameters supplied must equal ' +
                              'number of non-fixed model parameters.')
 
         # ensure order of parameters works
         if self._fixed_parameter_dict is None:
-            full_parameters = list(parameters.values())
+            full_parameters = parameters
         else:
             full_parameters = [None] * self._n_all_parameters
             vals = list(self._fixed_parameter_dict.values())
