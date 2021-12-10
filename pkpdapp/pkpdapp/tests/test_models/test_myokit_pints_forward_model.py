@@ -13,7 +13,7 @@ from pkpdapp.models import (
 import numpy as np
 
 
-class TestObjectiveFunctionSerializer(TestCase):
+class TestMyokitPintsForwardModel(TestCase):
     def setUp(self):
         m = PharmacodynamicModel.objects.get(
             name='tumour_growth_inhibition_model_koch',
