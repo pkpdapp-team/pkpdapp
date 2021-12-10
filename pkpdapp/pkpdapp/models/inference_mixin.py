@@ -7,7 +7,9 @@
 import pints
 import numpy as np
 from pkpdapp.models import (
-    MyokitForwardModel)
+    MyokitForwardModel, LogLikelihoodNormal,
+    LogLikelihoodLogNormal,
+    PriorNormal, PriorUniform)
 
 optimisers_dict = {
     'CMAES': pints.CMAES,
