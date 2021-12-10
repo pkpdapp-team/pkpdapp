@@ -6,9 +6,7 @@
 
 from django.test import TestCase
 from pkpdapp.models import (
-    Inference, PharmacodynamicModel, LogLikelihoodNormal,
-    LogLikelihoodLogNormal, Project, BiomarkerType,
-    PriorNormal, PriorUniform,
+    PharmacodynamicModel,
     MyokitForwardModel
 )
 import numpy as np
@@ -39,7 +37,8 @@ class TestObjectiveFunctionSerializer(TestCase):
         variable_keys = (
             [k for k in all_keys if k not in list(self.fixed_dict.keys())]
         )
-        self.variable_parameter_values = [self.parameter_dict[v] for v in variable_keys]
+        self.variable_parameter_values = [self.parameter_dict[v]
+                                          for v in variable_keys]
 
     def test_run_myokit_pints_forward_model(self):
         times = np.linspace(0, 100)

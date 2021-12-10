@@ -63,15 +63,26 @@ class MyokitForwardModel(pints.ForwardModel):
             if self._n_all_parameters < len(fixed_parameter_dict):
                 raise ValueError('Number of fixed parameters must be fewer' +
                                  'than total number of model parameters.')
-            fparams_not_in_model_params = [p not in self._all_parameter_names for p in fixed_parameter_dict.keys()]
+            fparams_not_in_model_params = [p not in self._all_parameter_names
+                                           for p
+                                           in fixed_parameter_dict.keys()]
             if any(fparams_not_in_model_params):
-                raise ValueError('All fixed parameter keys must correspond with model keys.')
+                raise ValueError('All fixed parameter keys must correspond ' +
+                                 'with model keys.')
             self._fixed_parameter_dict = fixed_parameter_dict
             self._fixed_parameter_names = list(fixed_parameter_dict.keys())
-            self._variable_parameter_names = [x for x in self._all_parameter_names if x not in self._fixed_parameter_names]
+            self._variable_parameter_names = [x
+                                              for x
+                                              in self._all_parameter_names
+                                              if x not
+                                              in self._fixed_parameter_names]
             self._n_parameters = len(self._variable_parameter_names)
-            self._fixed_parameter_indices = [self._all_parameter_names.index(v) for v in self._fixed_parameter_names]
-        self._variable_parameter_indices = [self._all_parameter_names.index(v) for v in self._variable_parameter_names]
+            self._fixed_parameter_indices = [self._all_parameter_names.index(v)
+                                             for v
+                                             in self._fixed_parameter_names]
+        self._variable_parameter_indices = [self._all_parameter_names.index(v)
+                                            for v
+                                            in self._variable_parameter_names]
 
     def n_outputs(self):
         """
@@ -101,7 +112,8 @@ class MyokitForwardModel(pints.ForwardModel):
         parameters and times.
         """
         if len(parameters) != self._n_parameters:
-            raise ValueError('Number of parameters supplied must equal number of non-fixed model parameters.')
+            raise ValueError('Number of parameters supplied must equal ' +
+                             'number of non-fixed model parameters.')
 
         if self._fixed_parameter_dict is None:
             full_parameters = list(parameters.values())
