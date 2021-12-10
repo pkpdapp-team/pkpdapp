@@ -37,7 +37,10 @@ class MyokitForwardModel(pints.ForwardModel):
             self._output_names = self._state_names
             self._n_outputs = self._n_states
         else:
-            outputs_not_in_states = [v not in self._state_names for v in outputs]
+            if not isinstance(outputs, list):
+                outputs = [outputs]
+            outputs_not_in_states = (
+                [v not in self._state_names for v in outputs])
             if any(outputs_not_in_states):
                 raise ValueError('All outputs must be within model states.')
             self._output_names = outputs
@@ -58,7 +61,8 @@ class MyokitForwardModel(pints.ForwardModel):
             self._n_parameters = len(self._variable_parameter_names)
         else:
             if self._n_all_parameters < len(fixed_parameter_dict):
-                raise ValueError('Number of fixed parameters must be fewer than total number of model parameters.')
+                raise ValueError('Number of fixed parameters must be fewer' +
+                                 'than total number of model parameters.')
             fparams_not_in_model_params = [p not in self._all_parameter_names for p in fixed_parameter_dict.keys()]
             if any(fparams_not_in_model_params):
                 raise ValueError('All fixed parameter keys must correspond with model keys.')

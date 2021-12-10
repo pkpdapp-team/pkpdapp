@@ -58,3 +58,11 @@ class TestObjectiveFunctionSerializer(TestCase):
             myokit_simulator=self.simulator)
         z1 = forward_model.simulate(self.parameter_dict, times)
         self.assertTrue(np.array_equal(z, z1))
+
+        # try model giving output name
+        forward_model = MyokitForwardModel(
+            myokit_model=self.model,
+            myokit_simulator=self.simulator,
+            outputs="myokit.tumour_volume")
+        z2 = forward_model.simulate(self.parameter_dict, times)
+        self.assertTrue(np.array_equal(z2, z1))
