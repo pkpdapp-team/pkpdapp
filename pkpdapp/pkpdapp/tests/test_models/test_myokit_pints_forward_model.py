@@ -139,7 +139,7 @@ class TestObjectiveFunctionSerializer(TestCase):
             myokit_model=model,
             myokit_simulator=simulator,
             outputs=desired_outputs)
-        zb = forward_model.simulate([1] * 9, times)
+        zb = forward_model.simulate(list(full_dict.values()), times)
         self.assertTrue(np.array_equal(z, zb))
 
         # only supply two outputs as expected outputs
