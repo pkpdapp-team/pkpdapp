@@ -123,3 +123,16 @@ class TestObjectiveFunctionSerializer(TestCase):
         z = forward_model.simulate(variable_parameters, times)
         expected_shape = np.array((len(times), 3))
         self.assertTrue(np.array_equal(z.shape, expected_shape))
+
+        # only supply two outputs as expected outputs
+        desired_outputs = ['central.drug_c_amount',
+                           'peripheral_2.drug_p2_amount']
+        forward_model = MyokitForwardModel(
+            myokit_model=model,
+            myokit_simulator=simulator,
+            fixed_parameter_dict=fixed_dict,
+            outputs=desired_outputs)
+        z1 = forward_model.simulate(variable_parameters, times)
+        expected_shape = np.array((len(times), 2))
+        self.assertTrue(np.array_equal(z1.shape, expected_shape))
+        self.assertTrue(np.array_equal(z[:, [0, 2]], z1))
