@@ -109,20 +109,25 @@ class MyokitForwardModel(pints.ForwardModel):
     def simulate(self, parameters, times):
         """
         Returns the numerical solution of the model outputs for specified
-        parameters and times.
+        parameters and times. Note, the parameter inputs should be ordered as
+        in `variable_parameter_names()`.
         """
+        print(self._n_parameters)
+        print(self._variable_parameter_names)
         if len(parameters) != self._n_parameters:
             raise ValueError('Number of parameters supplied must equal ' +
                              'number of non-fixed model parameters.')
 
+        # ensure order of parameters works
         if self._fixed_parameter_dict is None:
             full_parameters = list(parameters.values())
         else:
             full_parameters = [None] * self._n_all_parameters
             vals = list(self._fixed_parameter_dict.values())
-            if self._fixed_parameter_indices is not None:
-                for count, idx in enumerate(self._fixed_parameter_indices):
-                    full_parameters[idx] = vals[count]
+
+            # fill up parameter vector with fixed and variable values
+            for count, idx in enumerate(self._fixed_parameter_indices):
+                full_parameters[idx] = vals[count]
             for count, idx in enumerate(self._variable_parameter_indices):
                 full_parameters[idx] = parameters[count]
 
@@ -150,7 +155,9 @@ class MyokitForwardModel(pints.ForwardModel):
         return result
 
     def variable_parameter_names(self):
+        """ The order expected for parameter inputs to simulate. """
         return self._variable_parameter_names
 
     def fixed_parameter_names(self):
+        """ The fixed parameters of model. """
         return self._fixed_parameter_names
