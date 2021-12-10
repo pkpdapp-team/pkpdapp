@@ -33,7 +33,7 @@ class CombinedLogLikelihood(pints.LogPDF):
         log_like = 0
         k = 0
         for ll in self._log_likelihoods:
-            log_like += ll(myokit_parameters + [x[k]])
+            log_like += ll(myokit_parameters + [noise_parameters[k]])
             k += 1
         return log_like
 
