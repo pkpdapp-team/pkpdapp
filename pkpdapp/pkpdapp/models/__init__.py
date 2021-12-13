@@ -44,3 +44,4 @@ from .likelihoods import (
 )
 
 from .myokit_pints_forward_model import MyokitForwardModel
+from .inference_mixin import InferenceMixin

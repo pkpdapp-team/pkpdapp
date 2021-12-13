@@ -22,8 +22,7 @@ optimisers_dict = {
 samplers_dict = {
     'Adaptive covariance': pints.HaarioBardenetACMC,
     'Differential evolution': pints.DifferentialEvolutionMCMC,
-    'DRAM': pints.DRAM,
-    'DREAM': pints.DREAM,
+    'DREAM': pints.DreamMCMC,
     'Emcee-hammer': pints.EmceeHammerMCMC,
     'Population': pints.PopulationMCMC
 }
