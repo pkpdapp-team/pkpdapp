@@ -40,9 +40,9 @@ class InferenceMixin:
         self._biomarker_types, self._outputs = self.get_biomarker_types_and_output_variables(
             inference)
 
-        # get objectives
-        self._observed_loglikelihoods = self.get_objectives(inference)
-        #
+        # get objectives and fixed noise parameters (we assume they are fixed for now)
+        self._observed_loglikelihoods, self._noise_parameters = self.get_objectives(inference)
+
         # get priors / boundaries
         self._pints_log_priors = self.get_priors_andor_boundaries(inference)
 
@@ -125,12 +125,15 @@ class InferenceMixin:
         # to simulate
         objs = inference.objective_functions.all()
         observed_loglikelihoods = []
+        noise_parameters = []
         for obj in objs:
             if isinstance(obj, LogLikelihoodNormal):
                 observed_loglikelihoods.append(pints.GaussianLogLikelihood)
+                noise_parameters.append(obj.sd)
             elif isinstance(obj, LogLikelihoodLogNormal):
                 observed_loglikelihoods.append(pints.LogNormalLogLikelihood)
-        return observed_loglikelihoods
+                noise_parameters.append(obj.sigma)
+        return observed_loglikelihoods, noise_parameters
 
     def get_fitted_variables(self, inference):
         priors = inference.priors.all()
