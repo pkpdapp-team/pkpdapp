@@ -41,7 +41,8 @@ class InferenceMixin:
             inference)
 
         # get objectives and fixed noise parameters (we assume they are fixed for now)
-        self._observed_loglikelihoods, self._noise_parameters = self.get_objectives(inference)
+        self._observed_loglikelihoods, self._noise_parameter_values = self.get_objectives(inference)
+        print(self._noise_parameter_values)
 
         # get priors / boundaries
         self._pints_log_priors = self.get_priors_andor_boundaries(inference)
@@ -67,7 +68,7 @@ class InferenceMixin:
 
         # get data and time points as lists of lists
         dfs = [output.as_pandas() for output in self._biomarker_types]
-        self._data = [df['values'].tolist() for df in dfs]
+        self._values = [df['values'].tolist() for df in dfs]
         self._times = [df['times'].tolist() for df in dfs]
 
     def create_fixed_parameter_dictionary(self, all_myokit_parameters, fitted_parameters):
@@ -174,7 +175,10 @@ class InferenceMixin:
         for i in range(len(times)):
             model_times_values.append(times[i])
             model_times_values.append(values[i])
-        self._collection = pints.ProblemCollection(*model_times_values)
+        self._collection = pints.ProblemCollection(
+            *model_times_values,
+            self._noise_parameter_values)
+        return self._collection
 
     def create_pints_log_likelihood(self):
         collection = self._collection
@@ -212,25 +216,28 @@ class InferenceMixin:
 
 
 
-
 class CombinedLogLikelihood(pints.LogPDF):
     """
     Creates a `PINTS.LogLikelihood` object from a list of individual
     `PINTS.LogLikelihood` objects. It is assumed that each individual
     log_likelihood has a single noise parameter.
     """
-    def __init__(self, *log_likelihoods):
+    def __init__(self, *log_likelihoods, fixed_noise_parameter_values):
         self._log_likelihoods = [ll for ll in log_likelihoods]
         self._n_outputs = len(self._log_likelihoods)
 
         self._n_myokit_parameters = self._log_likelihoods[0].n_parameters() - 1
 
-        # assumes each log-likelihood has one noise parameter
-        self._n_parameters = self._n_myokit_parameters + self._n_outputs
+        # assume each log-likelihood has fixed noise parameter (later we'll want to add self._n_outputs)
+        self._n_parameters = self._n_myokit_parameters
+
+        if len(fixed_noise_parameter_values) != self._n_outputs:
+            raise ValueError("Fixed parameter values must be same length as outputs.")
+        self._fixed_noise_parameters = fixed_noise_parameter_values
 
     def __call__(self, x):
         # assumes noise parameters are at end of parameter list
-        noise_parameters = x[-self._n_outputs:]
+        noise_parameters = list(self._fixed_noise_parameters)
         myokit_parameters = x[:self._n_myokit_parameters]
 
         # create subsets for each likelihood and call each

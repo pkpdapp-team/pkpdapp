@@ -82,3 +82,4 @@ class TestInferenceMixin(TestCase):
     def test_objective_functions(self):
 
         pints_forward_model = self.inference_mixin.create_pints_forward_model()
+        problem_collection = self.inference_mixin.create_pints_problem_collection()
