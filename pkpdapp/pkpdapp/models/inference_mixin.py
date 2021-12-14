@@ -38,33 +38,33 @@ class InferenceMixin:
 
         # get biomarkers
         self._biomarker_types, self._outputs = self.get_biomarker_types_and_output_variables(
-            model)
-
-        # get objectives
-        self._observed_loglikelihoods = self.get_objectives(model)
-
-        # get priors / boundaries
-        self._pints_log_priors = self.get_priors_andor_boundaries(model)
-
-        # get fitted parameters: note this will include all parameters, including noise
-        # parameters which are not used by Myokit models
-        fitted_parameters = self.get_fitted_parameters(model)
-
-        # get all the variable names associated with the Myokit model
-        # note: this will contain both inputs and outputs
-        all_myokit_parameters = model.variable.all()
-
-        # create a dictionary of key-value pairs for fixed parameters of Myokit model
-        self._fixed_parameters_dict = self.create_fixed_parameter_dictionary(
-            all_myokit_parameters, self._fitted_parameters, self._outputs)
-
-        # select inference methods
-        inference_type, inference_method = self.get_inference_type_and_method(inference)
-
-        # get data and time points as lists of lists
-        dfs = [output.as_pandas() for output in self._biomarker_types]
-        self._data = [df['value'].tolist() for df in dfs]
-        self._times = [df['time'].tolist() for df in dfs]
+            inference)
+        #
+        # # get objectives
+        self._observed_loglikelihoods = self.get_objectives(inference)
+        #
+        # # get priors / boundaries
+        # self._pints_log_priors = self.get_priors_andor_boundaries(model)
+        #
+        # # get fitted parameters: note this will include all parameters, including noise
+        # # parameters which are not used by Myokit models
+        # fitted_parameters = self.get_fitted_parameters(model)
+        #
+        # # get all the variable names associated with the Myokit model
+        # # note: this will contain both inputs and outputs
+        # all_myokit_parameters = model.variable.all()
+        #
+        # # create a dictionary of key-value pairs for fixed parameters of Myokit model
+        # self._fixed_parameters_dict = self.create_fixed_parameter_dictionary(
+        #     all_myokit_parameters, self._fitted_parameters, self._outputs)
+        #
+        # # select inference methods
+        # inference_type, inference_method = self.get_inference_type_and_method(inference)
+        #
+        # # get data and time points as lists of lists
+        # dfs = [output.as_pandas() for output in self._biomarker_types]
+        # self._data = [df['value'].tolist() for df in dfs]
+        # self._times = [df['time'].tolist() for df in dfs]
 
     def create_fixed_parameter_dictionary(self, all_myokit_parameters, fitted_parameters,
                                           outputs):
@@ -108,8 +108,8 @@ class InferenceMixin:
         inference_method = method_dict[methodname]
         return inference_type, inference_method
 
-    def get_biomarker_types_and_output_variables(self, model):
-        objs = model.objectivefunction.all()
+    def get_biomarker_types_and_output_variables(self, inference):
+        objs = inference.objective_functions.all()
         biomarker_types = []
         output_variables = []
         for obj in objs:
@@ -117,14 +117,14 @@ class InferenceMixin:
             output_variables.append(obj.variable)
         return biomarker_types, output_variables
 
-    def get_objectives(self, model):
+    def get_objectives(self, inference):
         # determine objective function and observed biomarker types
         # to simulate
-        objs = model.objectivefunction.all()
+        objs = inference.objective_functions.all()
         observed_loglikelihoods = []
         for obj in objs:
             if isinstance(obj, LogLikelihoodNormal):
-                observed_loglikelihoods.append(pints.GaussianUnknownSigmaLogLikelihood)
+                observed_loglikelihoods.append(pints.GaussianLogLikelihood)
             elif isinstance(obj, LogLikelihoodLogNormal):
                 observed_loglikelihoods.append(pints.LogNormalLogLikelihood)
         return observed_loglikelihoods

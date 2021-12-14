@@ -152,6 +152,10 @@ class MyokitForwardModel(pints.ForwardModel):
 
         return result
 
+    def output_names(self):
+        """ Returns outputs of model. """
+        return self._output_names
+
     def variable_parameter_names(self):
         """ The order expected for parameter inputs to simulate. """
         return self._variable_parameter_names
