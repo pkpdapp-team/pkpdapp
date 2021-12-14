@@ -76,10 +76,10 @@ class InferenceMixin:
         # parameters
 
         # myokit: inputs and outputs
-        all_myokit_parameter_names = [param.name for param in all_myokit_parameters]
+        all_myokit_parameter_names = [param.qname for param in all_myokit_parameters]
 
         # parameters being fit: both Myokit parameters and noise ones
-        fitted_parameter_names = [param.name for param in fitted_parameters]
+        fitted_parameter_names = [param.qname for param in fitted_parameters]
 
         # get myokit parameters minus outputs: i.e. just input parameters
         myokit_minus_fixed = [item for item in all_myokit_parameter_names if item not in fitted_parameter_names]
@@ -93,12 +93,13 @@ class InferenceMixin:
         return fixed_parameter_dictionary
 
     def create_pints_forward_model(self):
-        output_names = [output.name for output in self._outputs]
+        output_names = [output.qname for output in self._outputs]
         model = MyokitForwardModel(self._myokit_model,
                                    self._myokit_simulator,
                                    output_names,
                                    self._fixed_parameters_dict)
         self._pints_forward_model = model
+        return self._pints_forward_model
 
     def get_inference_type_and_method(self, inference):
         inference_type = inference.algorithm.category

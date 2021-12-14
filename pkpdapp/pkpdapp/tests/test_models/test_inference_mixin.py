@@ -74,10 +74,11 @@ class TestInferenceMixin(TestCase):
                 inference=self.inference,
             )
         # 'run' inference to create copies of models
-        self.inference1 = self.inference.run_inference()
+        self.inference = self.inference.run_inference()
 
         # create mixin object
         self.inference_mixin = InferenceMixin(self.inference)
 
     def test_objective_functions(self):
-        pass
+
+        pints_forward_model = self.inference_mixin.create_pints_forward_model()
