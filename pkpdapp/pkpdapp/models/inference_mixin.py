@@ -39,13 +39,13 @@ class InferenceMixin:
         # get biomarkers
         self._biomarker_types, self._outputs = self.get_biomarker_types_and_output_variables(
             inference)
-        #
+
         # # get objectives
         self._observed_loglikelihoods = self.get_objectives(inference)
         #
         # # get priors / boundaries
-        # self._pints_log_priors = self.get_priors_andor_boundaries(model)
-        #
+        self._pints_log_priors = self.get_priors_andor_boundaries(inference)
+
         # # get fitted parameters: note this will include all parameters, including noise
         # # parameters which are not used by Myokit models
         # fitted_parameters = self.get_fitted_parameters(model)
@@ -136,9 +136,9 @@ class InferenceMixin:
             fitted_parameters.append(prior.variable)
         return fitted_parameters
 
-    def get_priors_andor_boundaries(self, model):
+    def get_priors_andor_boundaries(self, inference):
         # get all variables being fitted from priors (includes boundaries which are not priors)
-        priors = model.prior.all()
+        priors = inference.priors.all()
         pints_log_priors = []
         for prior in priors:
             if isinstance(prior, PriorUniform):
