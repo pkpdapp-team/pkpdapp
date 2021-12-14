@@ -50,24 +50,25 @@ class InferenceMixin:
         # parameters which are not used by Myokit models
         fitted_variables = self.get_fitted_variables(inference)
         print([v.name for v in fitted_variables])
-        # get all the variable names associated with the Myokit model
-        all_myokit_parameters = model.variables.all()
-        print([v.name for v in all_myokit_parameters]) # currently outputs 'time'
+        # get all the variable names associated with the Myokit model minus 'time'
+        all_myokit_variables = model.variables.exclude(name='time')
+        print([v.name for v in all_myokit_variables]) # currently outputs 'time' as well
 
-        # # create a dictionary of key-value pairs for fixed parameters of Myokit model
-        # self._fixed_parameters_dict = self.create_fixed_parameter_dictionary(
-        #     all_myokit_parameters, self._fitted_parameters, self._outputs)
-        #
+        # create a dictionary of key-value pairs for fixed parameters of Myokit model
+        print([v.name for v in self._outputs])
+        self._fixed_parameters_dict = self.create_fixed_parameter_dictionary(
+            all_myokit_variables, fitted_variables)
+        print(self._fixed_parameters_dict)
+
         # # select inference methods
-        # inference_type, inference_method = self.get_inference_type_and_method(inference)
-        #
+        inference_type, inference_method = self.get_inference_type_and_method(inference)
+
         # # get data and time points as lists of lists
         # dfs = [output.as_pandas() for output in self._biomarker_types]
         # self._data = [df['value'].tolist() for df in dfs]
         # self._times = [df['time'].tolist() for df in dfs]
 
-    def create_fixed_parameter_dictionary(self, all_myokit_parameters, fitted_parameters,
-                                          outputs):
+    def create_fixed_parameter_dictionary(self, all_myokit_parameters, fitted_parameters):
         # gets fixed parameters for Myokit model only: i.e. does not give noise parameters
         # this works because all_parameters is supposed to contain only Myokit model
         # parameters
@@ -78,15 +79,14 @@ class InferenceMixin:
         # parameters being fit: both Myokit parameters and noise ones
         fitted_parameter_names = [param.name for param in fitted_parameters]
 
-        # myokit: outputs
-        output_parameter_names = [param.name for param in outputs]
-
         # get myokit parameters minus outputs: i.e. just input parameters
-        myokit_minus_outputs = [item for item in all_myokit_parameter_names if item not in output_parameter_names]
+        myokit_minus_fixed = [item for item in all_myokit_parameter_names if item not in fitted_parameter_names]
 
-        fixed_parameters = [item for item in myokit_minus_outputs if item not in fitted_parameters_names]
-        self._fixed_parameter_dictionary = {}
-        for param in self._fixed_parameters:
+        # get index of variables in named list
+        self._fixed_variables = [all_myokit_parameters[all_myokit_parameter_names.index(v)] for v in myokit_minus_fixed]
+
+        fixed_parameter_dictionary = {}
+        for param in self._fixed_variables:
             fixed_parameter_dictionary[param.name] = param.default_value
         return fixed_parameter_dictionary
 
@@ -201,8 +201,10 @@ class InferenceMixin:
     def run_inference(self, controller):
         pass
 
-    def fixed_parameters(self):
-        return self._fixed_parameters
+    def fixed_variables(self):
+        return self._fixed_variables
+
+
 
 
 class CombinedLogLikelihood(pints.LogPDF):
