@@ -40,20 +40,20 @@ class InferenceMixin:
         self._biomarker_types, self._outputs = self.get_biomarker_types_and_output_variables(
             inference)
 
-        # # get objectives
+        # get objectives
         self._observed_loglikelihoods = self.get_objectives(inference)
         #
-        # # get priors / boundaries
+        # get priors / boundaries
         self._pints_log_priors = self.get_priors_andor_boundaries(inference)
 
-        # # get fitted parameters: note this will include all parameters, including noise
-        # # parameters which are not used by Myokit models
-        # fitted_parameters = self.get_fitted_parameters(model)
-        #
-        # # get all the variable names associated with the Myokit model
-        # # note: this will contain both inputs and outputs
-        # all_myokit_parameters = model.variable.all()
-        #
+        # get fitted parameters: note this will include all parameters, including noise
+        # parameters which are not used by Myokit models
+        fitted_variables = self.get_fitted_variables(inference)
+        print([v.name for v in fitted_variables])
+        # get all the variable names associated with the Myokit model
+        all_myokit_parameters = model.variables.all()
+        print([v.name for v in all_myokit_parameters]) # currently outputs 'time'
+
         # # create a dictionary of key-value pairs for fixed parameters of Myokit model
         # self._fixed_parameters_dict = self.create_fixed_parameter_dictionary(
         #     all_myokit_parameters, self._fitted_parameters, self._outputs)
@@ -129,8 +129,8 @@ class InferenceMixin:
                 observed_loglikelihoods.append(pints.LogNormalLogLikelihood)
         return observed_loglikelihoods
 
-    def get_fitted_parameters(self, model):
-        priors = model.prior.all()
+    def get_fitted_variables(self, inference):
+        priors = inference.priors.all()
         fitted_parameters = []
         for prior in priors:
             fitted_parameters.append(prior.variable)
