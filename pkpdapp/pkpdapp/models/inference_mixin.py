@@ -62,11 +62,13 @@ class InferenceMixin:
 
         # # select inference methods
         inference_type, inference_method = self.get_inference_type_and_method(inference)
+        print(inference_type)
+        print(inference_method)
 
-        # # get data and time points as lists of lists
-        # dfs = [output.as_pandas() for output in self._biomarker_types]
-        # self._data = [df['value'].tolist() for df in dfs]
-        # self._times = [df['time'].tolist() for df in dfs]
+        # get data and time points as lists of lists
+        dfs = [output.as_pandas() for output in self._biomarker_types]
+        self._data = [df['values'].tolist() for df in dfs]
+        self._times = [df['times'].tolist() for df in dfs]
 
     def create_fixed_parameter_dictionary(self, all_myokit_parameters, fitted_parameters):
         # gets fixed parameters for Myokit model only: i.e. does not give noise parameters
