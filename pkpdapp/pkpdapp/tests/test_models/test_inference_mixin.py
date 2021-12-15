@@ -83,3 +83,4 @@ class TestInferenceMixin(TestCase):
 
         pints_forward_model = self.inference_mixin.create_pints_forward_model()
         problem_collection = self.inference_mixin.create_pints_problem_collection()
+        log_likelihood = self.inference_mixin.create_pints_log_likelihood()

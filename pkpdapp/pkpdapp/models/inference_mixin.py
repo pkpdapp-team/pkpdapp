@@ -39,6 +39,7 @@ class InferenceMixin:
         # get biomarkers
         self._biomarker_types, self._outputs = self.get_biomarker_types_and_output_variables(
             inference)
+        self._n_outputs = len(self._outputs)
 
         # get objectives and fixed noise parameters (we assume they are fixed for now)
         self._observed_loglikelihoods, self._noise_parameter_values = self.get_objectives(inference)
@@ -181,18 +182,21 @@ class InferenceMixin:
 
     def create_pints_log_likelihood(self):
         collection = self._collection
-        problems = [collection.subproblem(i) for i in range(log_likes)]
+        problems = [collection.subproblem(i) for i in range(self._n_outputs)]
 
         # these are the PINTS methods
         log_like_methods = self._observed_loglikelihoods
 
         # instantiate PINTS log-likelihoods
         log_likes = []
-        for i in range(log_likes):
+        for i in range(self._n_outputs):
             log_likes.append(log_like_methods[i](problems[i]))
 
         # combine them
-        self._log_likelihood = CombinedLogLikelihood(*log_likes)
+        self._log_likelihood = CombinedLogLikelihood(
+            self._noise_parameter_values,
+            *log_likes)
+        return self._log_likelihood
 
     def create_pints_log_prior(self):
             self._composed_log_prior = pints.ComposedLogPrior(*self._pints_log_priors)
@@ -221,7 +225,7 @@ class CombinedLogLikelihood(pints.LogPDF):
     `PINTS.LogLikelihood` objects. It is assumed that each individual
     log_likelihood has a single noise parameter.
     """
-    def __init__(self, *log_likelihoods, fixed_noise_parameter_values):
+    def __init__(self, fixed_noise_parameter_values, *log_likelihoods):
         self._log_likelihoods = [ll for ll in log_likelihoods]
         self._n_outputs = len(self._log_likelihoods)
 
