@@ -85,3 +85,4 @@ class TestInferenceMixin(TestCase):
         problem_collection = self.inference_mixin.create_pints_problem_collection()
         log_likelihood = self.inference_mixin.create_pints_log_likelihood()
         log_prior = self.inference_mixin.create_pints_log_prior()
+        log_posterior = self.inference_mixin.create_pints_log_posterior()

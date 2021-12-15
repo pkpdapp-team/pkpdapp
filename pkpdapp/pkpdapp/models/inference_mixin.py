@@ -199,11 +199,13 @@ class InferenceMixin:
         return self._log_likelihood
 
     def create_pints_log_prior(self):
-            self._composed_log_prior = pints.ComposedLogPrior(*self._pints_log_priors)
+        self._composed_log_prior = pints.ComposedLogPrior(*self._pints_log_priors)
+        return self._composed_log_prior
 
     def create_pints_log_posterior(self):
-        self._pints_log_posterior = pints.LogPosterior(self._pints_log_likelihood,
+        self._pints_log_posterior = pints.LogPosterior(self._log_likelihood,
                                                        self._composed_log_prior)
+        return self._pints_log_posterior
 
     def create_pints_optimiser(self):
         self._optimiser = h
