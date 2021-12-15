@@ -23,7 +23,7 @@ from pkpdapp.models import (
     PharmacokineticModel,
     PharmacodynamicModel,
     DosedPharmacokineticModel,
-    PkpdModel
+    PkpdModel,
 )
 
 

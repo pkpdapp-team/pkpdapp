@@ -5,24 +5,27 @@
 #
 
 from django.db import models
+from polymorphic.models import PolymorphicModel
 from pkpdapp.models import (
-    StoredVariable
+    Variable, Inference
 )
 
 
-class Prior(models.Model):
+class Prior(PolymorphicModel):
     """
     Model for a generic prior.
     """
-    variable = models.OneToOneField(
-        StoredVariable,
-        related_name='%(class)s',
+    variable = models.ForeignKey(
+        Variable,
+        related_name='priors',
+        blank=True, null=True,
         on_delete=models.CASCADE,
-        primary_key=True,
     )
-
-    class Meta:
-        abstract = True
+    inference = models.ForeignKey(
+        Inference,
+        related_name='priors',
+        on_delete=models.CASCADE,
+    )
 
 
 class PriorUniform(Prior):

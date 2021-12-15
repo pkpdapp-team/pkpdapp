@@ -4,6 +4,8 @@ import {
 import { api } from '../../Api'
 import {fetchVariablesByPdModel} from '../variables/variablesSlice'
 import {fetchUnitsByPdModel} from '../projects/unitsSlice'
+import {fetchInferences} from '../inference/inferenceSlice'
+import {runInference} from '../inference/inferenceSlice'
 
 const pdModelsAdapter = createEntityAdapter({
   sortComparer: (a, b) => b.id < a.id
@@ -106,6 +108,7 @@ export const pdModelsSlice = createSlice({
       let pdModel = state.entities[action.payload.id]
       pdModel.error = action.payload.error 
     },
+    addPdModels: pdModelsAdapter.upsertMany, 
   },
   extraReducers: {
     [fetchPdModels.pending]: (state, action) => {
@@ -119,6 +122,14 @@ export const pdModelsSlice = createSlice({
       state.status = 'succeeded'
       pdModelsAdapter.setAll(state, action.payload)
     },
+
+    // Inferences
+    [runInference.fulfilled]: (state, action) => {
+      if (action.payload.pd_models) {
+        pdModelsAdapter.addMany(state, action.payload.pd_models)
+      }
+    },
+
     [fetchPdModelById.fulfilled]: pdModelsAdapter.upsertOne,
     [fetchPdModelSimulateById.fulfilled]: pdModelsAdapter.upsertOne,
     [fetchPdModelSimulateById.pending]: (state, action) => {
@@ -161,7 +172,7 @@ export const pdModelsSlice = createSlice({
   }
 })
 
-export const { togglePdModel } = pdModelsSlice.actions
+export const { togglePdModel, addPdModels } = pdModelsSlice.actions
 
 export default pdModelsSlice.reducer
 
@@ -172,3 +183,6 @@ export const {
 } = pdModelsAdapter.getSelectors(state => state.pdModels)
 
 export const selectChosenPdModels = state => selectAllPdModels(state).filter(pdModel => pdModel.chosen);
+
+export const selectWritablePdModels = state => selectAllPdModels(state).filter(pdModel => !pdModel.read_only);
+

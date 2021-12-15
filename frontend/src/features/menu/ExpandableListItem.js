@@ -64,6 +64,7 @@ export default function ExpandableListItem(
           )
         }
         )}
+        { handleNewItem &&
         <Tooltip title={`create ${text}`} placement="bottom">
         <ListItem 
           button 
@@ -77,6 +78,7 @@ export default function ExpandableListItem(
           </ListItemAvatar>
         </ListItem>
         </Tooltip>
+        }
       </List>
       </Collapse>
     </React.Fragment>

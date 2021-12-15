@@ -19,7 +19,7 @@ from pkpdapp.models import (
     Variable,
     Subject,
     Inference, InferenceChain,
-    StoredVariable,
+    Prior, ObjectiveFunction,
 )
 
 
@@ -112,10 +112,18 @@ class InferenceFilter(filters.BaseFilterBackend):
                 inference = Inference.objects.get(
                     id=inference_id
                 )
-                if queryset.model == StoredVariable:
-                    queryset = inference.variables.all()
+                if queryset.model == Variable:
+                    model = inference.get_model()
+                    if model:
+                        queryset = model.variables.all()
+                    else:
+                        queryset = queryset.model.objects.none()
                 elif queryset.model == InferenceChain:
                     queryset = inference.chains.all()
+                elif queryset.model == Prior:
+                    queryset = inference.priors.all()
+                elif queryset.model == ObjectiveFunction:
+                    queryset = inference.objective_functions.all()
                 else:
                     raise RuntimeError('queryset model {} not recognised')
             except Inference.DoesNotExist:
@@ -147,7 +155,7 @@ class ProjectFilter(filters.BaseFilterBackend):
                 elif queryset.model == Protocol:
                     queryset = project.protocols
                 elif queryset.model == Inference:
-                    queryset = project.inferences
+                    queryset = project.inference_set
                 elif queryset.model == BiomarkerType:
                     queryset = BiomarkerType.objects.filter(
                         dataset__project=project

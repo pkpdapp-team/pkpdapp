@@ -6,12 +6,12 @@ import AccessibilityIcon from '@material-ui/icons/Accessibility';
 import ExpandableListItem from '../menu/ExpandableListItem'
 
 import {
-  selectAllProtocols, toggleProtocol, addNewProtocol
+  selectWritableProtocols, toggleProtocol, addNewProtocol
 } from '../protocols/protocolsSlice.js'
 
 
 export default function Protocols({project, disableSave}) {
-  const pkModels = useSelector(selectAllProtocols);
+  const pkModels = useSelector(selectWritableProtocols);
   const dispatch = useDispatch()
   const handleClickItem = (item) => dispatch(toggleProtocol(item))
   const handleNewItem = () => dispatch(addNewProtocol(project))

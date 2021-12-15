@@ -4,6 +4,8 @@ import {
 import { api } from '../../Api'
 import {fetchPdModelById} from '../pdModels/pdModelsSlice'
 import {fetchPkModelById} from '../pkModels/pkModelsSlice'
+import {fetchInferences} from '../inference/inferenceSlice'
+import {runInference} from '../inference/inferenceSlice'
 
 const variablesAdapter = createEntityAdapter({
   sortComparer: (a, b) => b.id < a.id
@@ -76,8 +78,13 @@ export const variablesSlice = createSlice({
   name: 'variables',
   initialState, 
   reducers: {
+    addVariables: variablesAdapter.upsertMany, 
   },
   extraReducers: {
+    // Inferences
+    [runInference.fulfilled]: (state, action) => {
+      variablesAdapter.addMany(state, action.payload.variables)
+    },
     [fetchVariables.pending]: (state, action) => {
       state.status = 'loading'
     },
@@ -97,7 +104,8 @@ export const variablesSlice = createSlice({
   }
 })
 
-// export const {} = variablesSlice.actions
+export const { addVariables } = variablesSlice.actions
+
 
 export default variablesSlice.reducer
 
@@ -108,3 +116,7 @@ export const {
   selectIds: selectVariableIds
 } = variablesAdapter.getSelectors(state => state.variables)
 
+
+export const selectVariablesByPdModel = (state, model_id, model_type) => selectAllVariables(state).filter(variable => variable.pd_model === model_id)
+
+export const selectVariablesByDosedPkModel = (state, model_id, model_type) => selectAllVariables(state).filter(variable => variable.dosed_pk_model === model_id)

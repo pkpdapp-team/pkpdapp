@@ -8,19 +8,25 @@ from django.db import models
 from django.urls import reverse
 from pkpdapp.models import (
     Compound, Dataset, Subject, Unit,
-    Project,
+    Project, StoredModel,
 )
 
 
 def get_h_unit():
-    return Unit.objects.get(symbol='h')
+    try:
+        return Unit.objects.get(symbol='h')
+    except Unit.DoesNotExist:
+        return None
 
 
 def get_mg_unit():
-    return Unit.objects.get(symbol='mg')
+    try:
+        return Unit.objects.get(symbol='mg')
+    except Unit.DoesNotExist:
+        return None
 
 
-class Protocol(models.Model):
+class Protocol(StoredModel):
     """
     Multiple doses forming a single protocol. Can optionally be associated with
     a compound, dataset and subject.
@@ -106,3 +112,20 @@ class Protocol(models.Model):
                 dosed_pk_model.update_model()
 
         self.__original_dose_type = self.dose_type
+
+    def create_stored_protocol(self):
+        stored_protocol_kwargs = {
+            'name': self.name,
+            'project': self.project,
+            'compound': self.compound,
+            'dataset': self.dataset,
+            'subject': self.subject,
+            'dose_type': self.dose_type,
+            'time_unit': self.time_unit,
+            'amount_unit': self.amount_unit,
+            'read_only': True,
+        }
+        stored_protocol = Protocol.objects.create(**stored_protocol_kwargs)
+        for dose in self.doses.all():
+            dose.create_stored_dose(stored_protocol)
+        return stored_protocol

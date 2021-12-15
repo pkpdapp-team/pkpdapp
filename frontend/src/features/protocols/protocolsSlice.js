@@ -131,3 +131,5 @@ export const {
 export const selectChosenProtocols = state => selectAllProtocols(state).filter(protocol => protocol.chosen);
 
 export const selectDatasetProtocols = (state, dataset) => selectAllProtocols(state).filter(protocol => protocol.dataset === dataset.id);
+
+export const selectWritableProtocols = (state, dataset) => selectAllProtocols(state).filter(protocol => !protocol.read_only);

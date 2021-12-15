@@ -32,7 +32,10 @@ from .models import (
 from .nca import NcaView
 from .project import ProjectView, ProjectAccessView
 from .protocol import ProtocolView
-from .inference import InferenceView, InferenceChainView
+from .inference import (
+    InferenceView, InferenceChainView, AlgorithmView,
+    RunInferenceView,
+)
 from .simulate import (
     SimulatePkView,
     SimulatePdView
@@ -40,4 +43,6 @@ from .simulate import (
 from .subject import SubjectView
 from .unit import UnitView
 from .user import UserView
-from .variable import VariableView, StoredVariableView
+from .variable import VariableView
+from .likelihoods import ObjectiveFunctionView
+from .priors import PriorView

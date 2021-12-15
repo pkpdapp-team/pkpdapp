@@ -25,10 +25,6 @@ router.register('project_access', api.ProjectAccessView,
 router.register('dose', api.DoseView, basename='dose')
 router.register('unit', api.UnitView, basename='unit')
 router.register('variable', api.VariableView, basename='variable')
-router.register(
-    'stored_variable', api.StoredVariableView,
-    basename='stored_variable'
-)
 router.register('protocol', api.ProtocolView, basename='protocol')
 router.register('biomarker_type', api.BiomarkerTypeView,
                 basename='biomarker_type')
@@ -40,10 +36,12 @@ router.register(
     'pharmacodynamic', api.PharmacodynamicView,
     basename='pharmacodynamic'
 )
+
 router.register(
     'dosed_pharmacokinetic', api.DosedPharmacokineticView,
     basename='dosed_pharmacodynamic'
 )
+
 router.register(
     'pkpd_model', api.PkpdView,
     basename='pkpd_model'
@@ -53,8 +51,20 @@ router.register(
     basename='inference'
 )
 router.register(
+    'algorithm', api.AlgorithmView,
+    basename='algorithm'
+)
+router.register(
     'inference_chain', api.InferenceChainView,
     basename='inference_chain'
+)
+router.register(
+    'objective_function', api.ObjectiveFunctionView,
+    basename='objective_function'
+)
+router.register(
+    'prior', api.PriorView,
+    basename='prior'
 )
 
 urlpatterns = [
@@ -66,6 +76,11 @@ urlpatterns = [
     path('api/auce/', api.AuceView.as_view(), name='auce'),
     path('api/dosed_pharmacokinetic/<int:pk>/simulate',
          api.SimulatePkView.as_view(), name='simulate-dosed-pharmacokinetic'),
+    path(
+        'api/inference/<int:pk>/run',
+        api.RunInferenceView.as_view(),
+        name='run-inference'
+    ),
     path('api/pharmacodynamic/<int:pk>/simulate',
          api.SimulatePdView.as_view(), name='simulate-pharmacodynamic'),
     path('auth/', include('djoser.urls')),

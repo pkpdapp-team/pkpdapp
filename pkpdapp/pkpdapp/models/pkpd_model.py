@@ -10,10 +10,11 @@ from pkpdapp.models import (
     MechanisticModel,
     Protocol,
     Project,
+    StoredModel,
 )
 
 
-class PharmacodynamicModel(MechanisticModel):
+class PharmacodynamicModel(MechanisticModel, StoredModel):
     project = models.ForeignKey(
         Project, on_delete=models.CASCADE,
         related_name='pd_models',
@@ -37,19 +38,32 @@ class PharmacodynamicModel(MechanisticModel):
 
         super().save(force_insert, force_update, *args, **kwargs)
 
+        # don't update a stored model
+        if self.read_only:
+            return
+
         if created or self.sbml != self.__original_sbml:
             self.update_model()
 
         self.__original_sbml = self.sbml
 
+    def create_stored_model(self):
+        stored_model_kwargs = {
+            'name': self.name,
+            'description': self.description,
+            'project': self.project,
+            'sbml': self.sbml,
+            'time_max': self.time_max,
+            'read_only': True,
+        }
+        stored_model = PharmacodynamicModel.objects.create(
+            **stored_model_kwargs)
+        for variable in self.variables.all():
+            variable.create_stored_variable(stored_model)
+        return stored_model
 
-class StoredPharmacodynamicModel(PharmacodynamicModel):
-    """
-    Stored PD model.
-    """
 
-
-class PkpdModel(MechanisticModel):
+class PkpdModel(MechanisticModel, StoredModel):
     dose_compartment = models.CharField(
         max_length=100,
         default='central',
@@ -74,9 +88,3 @@ class PkpdModel(MechanisticModel):
 
     def get_absolute_url(self):
         return reverse('pkpd_model-detail', kwargs={'pk': self.pk})
-
-
-class StoredPkpdModel(PharmacodynamicModel):
-    """
-    Stored PKPD model.
-    """

@@ -6,7 +6,10 @@ import { api } from '../../Api'
 import {fetchVariablesByPkModel} from '../variables/variablesSlice'
 import {fetchUnitsByPkModel} from '../projects/unitsSlice'
 
-const pkModelsAdapter = createEntityAdapter({
+import {fetchInferences} from '../inference/inferenceSlice'
+import {runInference} from '../inference/inferenceSlice'
+
+export const pkModelsAdapter = createEntityAdapter({
   sortComparer: (a, b) => b.id < a.id
 })
 
@@ -101,8 +104,16 @@ export const pkModelsSlice = createSlice({
       let pkModel = state.entities[action.payload.id]
       pkModel.chosen = !pkModel.chosen
     },
+    addPkModels: pkModelsAdapter.upsertMany, 
   },
   extraReducers: {
+    // Inferences
+    [runInference.fulfilled]: (state, action) => {
+      if (action.payload.dosed_pk_models) {
+        pkModelsAdapter.addMany(state, action.payload.dosed_pk_models)
+      }
+    },
+
     [fetchPkModels.pending]: (state, action) => {
       state.status = 'loading'
     },
@@ -144,7 +155,7 @@ export const pkModelsSlice = createSlice({
   }
 })
 
-export const { togglePkModel } = pkModelsSlice.actions
+export const { togglePkModel, addPkModels } = pkModelsSlice.actions
 
 export default pkModelsSlice.reducer
 
@@ -155,3 +166,7 @@ export const {
 } = pkModelsAdapter.getSelectors(state => state.pkModels)
 
 export const selectChosenPkModels = state => selectAllPkModels(state).filter(pkModel => pkModel.chosen);
+
+export const selectWritablePkModels= state => selectAllPkModels(state).filter(pkModel => !pkModel.read_only);
+
+

@@ -7,7 +7,7 @@ from rest_framework import serializers
 from pkpdapp.models import (
     PharmacokineticModel, MyokitModelMixin,
     DosedPharmacokineticModel, PkpdModel,
-    PharmacodynamicModel
+    PharmacodynamicModel,
 )
 from pkpdapp.api.serializers import ValidSbml
 

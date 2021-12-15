@@ -10,14 +10,13 @@ import myokit
 from pkpdapp.models import (
     Unit, DosedPharmacokineticModel,
     PharmacokineticModel, PharmacodynamicModel,
-    StoredPharmacodynamicModel,
-    StoredDosedPharmacokineticModel,
+    StoredModel,
 )
 
 
-class BaseVariable(models.Model):
+class Variable(StoredModel):
     """
-    An abstract base class for variable.
+    A single variable for a mechanistic model.
     """
     is_public = models.BooleanField(default=False)
     lower_bound = models.FloatField(
@@ -89,8 +88,29 @@ class BaseVariable(models.Model):
         default=Scale.LINEAR,
     )
 
+    pd_model = models.ForeignKey(
+        PharmacodynamicModel,
+        blank=True, null=True,
+        on_delete=models.CASCADE,
+        related_name='variables',
+        help_text='pharmacodynamic model'
+    )
+    pk_model = models.ForeignKey(
+        PharmacokineticModel,
+        blank=True, null=True,
+        on_delete=models.CASCADE,
+        related_name='variables',
+        help_text='pharmacokinetic model'
+    )
+    dosed_pk_model = models.ForeignKey(
+        DosedPharmacokineticModel,
+        blank=True, null=True,
+        on_delete=models.CASCADE,
+        related_name='variables',
+        help_text='dosed pharmacokinetic model'
+    )
+
     class Meta:
-        abstract = True
         constraints = [
             models.CheckConstraint(
                 check=(
@@ -101,6 +121,20 @@ class BaseVariable(models.Model):
                     '%(class)s: log scale must have a lower '
                     'bound greater than zero'
                 )
+            ),
+            models.CheckConstraint(
+                check=(
+                    (Q(pk_model__isnull=True) &
+                     Q(dosed_pk_model__isnull=True) &
+                     Q(pd_model__isnull=False)) |
+                    (Q(pk_model__isnull=False) &
+                     Q(dosed_pk_model__isnull=True) &
+                     Q(pd_model__isnull=True)) |
+                    (Q(pk_model__isnull=True) &
+                     Q(dosed_pk_model__isnull=False) &
+                     Q(pd_model__isnull=True))
+                ),
+                name='%(class)s: variable must belong to a model'
             )
         ]
 
@@ -219,76 +253,25 @@ class BaseVariable(models.Model):
                 .format(type(model)),
             )
 
-
-class Variable(BaseVariable):
-    """
-    A single variable for a mechanistic model.
-    """
-
-    pd_model = models.ForeignKey(
-        PharmacodynamicModel,
-        blank=True, null=True,
-        on_delete=models.CASCADE,
-        related_name='variables',
-        help_text='pharmacodynamic model'
-    )
-    pk_model = models.ForeignKey(
-        PharmacokineticModel,
-        blank=True, null=True,
-        on_delete=models.CASCADE,
-        related_name='variables',
-        help_text='pharmacokinetic model'
-    )
-    dosed_pk_model = models.ForeignKey(
-        DosedPharmacokineticModel,
-        blank=True, null=True,
-        on_delete=models.CASCADE,
-        related_name='variables',
-        help_text='dosed pharmacokinetic model'
-    )
-
-    class Meta:
-        constraints = [
-            models.CheckConstraint(
-                check=(
-                    (Q(pk_model__isnull=True) &
-                     Q(dosed_pk_model__isnull=True) &
-                     Q(pd_model__isnull=False)) |
-                    (Q(pk_model__isnull=False) &
-                     Q(dosed_pk_model__isnull=True) &
-                     Q(pd_model__isnull=True)) |
-                    (Q(pk_model__isnull=True) &
-                     Q(dosed_pk_model__isnull=False) &
-                     Q(pd_model__isnull=True))
-                ),
-                name='%(class)s: variable must belong to a model'
-            ),
-        ]
-
-
-class StoredVariable(BaseVariable):
-    pd_model = models.ForeignKey(
-        StoredPharmacodynamicModel,
-        blank=True, null=True,
-        on_delete=models.CASCADE,
-        help_text='pharmacodynamic model'
-    )
-    dosed_pk_model = models.ForeignKey(
-        StoredDosedPharmacokineticModel,
-        blank=True, null=True,
-        on_delete=models.CASCADE,
-        help_text='dosed pharmacokinetic model'
-    )
-
-    class Meta:
-        constraints = [
-            models.CheckConstraint(
-                check=(
-                    (Q(dosed_pk_model__isnull=True) &
-                     Q(pd_model__isnull=False)) |
-                    (Q(dosed_pk_model__isnull=False) &
-                     Q(pd_model__isnull=True))
-                ),
-                name='%(class)s: stored variable must belong to a model'
-            ),
-        ]
+    def create_stored_variable(self, stored_model):
+        stored_variable_kwargs = {
+            'name': self.name,
+            'qname': self.qname,
+            'unit': self.unit,
+            'is_public': self.is_public,
+            'lower_bound': self.lower_bound,
+            'upper_bound': self.upper_bound,
+            'default_value': self.default_value,
+            'scale': self.scale,
+            'axis': self.axis,
+            'display': self.display,
+            'color': self.color,
+            'state': self.state,
+            'constant': self.constant,
+            'read_only': True,
+        }
+        if isinstance(stored_model, PharmacodynamicModel):
+            stored_variable_kwargs['pd_model'] = stored_model
+        elif isinstance(stored_model, DosedPharmacokineticModel):
+            stored_variable_kwargs['dosed_pk_model'] = stored_model
+        return Variable.objects.create(**stored_variable_kwargs)

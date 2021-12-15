@@ -7,15 +7,14 @@ from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 from pkpdapp.api.views import (
     ProjectFilter,
-    InferenceFilter,
     CheckAccessToProject,
     DosedPkModelFilter,
     PdModelFilter
 )
 from pkpdapp.api.serializers import (
-    VariableSerializer, StoredVariableSerializer
+    VariableSerializer
 )
-from pkpdapp.models import Variable, StoredVariable
+from pkpdapp.models import Variable
 
 
 class VariableView(viewsets.ModelViewSet):
@@ -23,17 +22,6 @@ class VariableView(viewsets.ModelViewSet):
     serializer_class = VariableSerializer
     filter_backends = [
         ProjectFilter, DosedPkModelFilter, PdModelFilter
-    ]
-    permission_classes = [
-        IsAuthenticated & CheckAccessToProject
-    ]
-
-
-class StoredVariableView(viewsets.ModelViewSet):
-    queryset = StoredVariable.objects.all()
-    serializer_class = StoredVariableSerializer
-    filter_backends = [
-        ProjectFilter, InferenceFilter
     ]
     permission_classes = [
         IsAuthenticated & CheckAccessToProject

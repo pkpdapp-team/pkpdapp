@@ -5,27 +5,30 @@
 #
 
 from django.db import models
+from polymorphic.models import PolymorphicModel
 from pkpdapp.models import (
-    StoredVariable, BiomarkerType
+    Variable, BiomarkerType, Inference
 )
 
 
-class ObjectiveFunction(models.Model):
+class ObjectiveFunction(PolymorphicModel):
     """
     Abstract model class for objective functions.
     """
-    variable = models.OneToOneField(
-        StoredVariable,
+    variable = models.ForeignKey(
+        Variable,
+        related_name='objective_functions',
         on_delete=models.CASCADE,
-        primary_key=True,
+    )
+    inference = models.ForeignKey(
+        Inference,
+        related_name='objective_functions',
+        on_delete=models.CASCADE,
     )
     biomarker_type = models.ForeignKey(
         BiomarkerType,
         on_delete=models.CASCADE,
     )
-
-    class Meta:
-        abstract = True
 
 
 class LogLikelihoodNormal(ObjectiveFunction):
