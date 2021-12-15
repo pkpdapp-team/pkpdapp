@@ -65,7 +65,7 @@ class TestInferenceMixin(TestCase):
         # find variables that are being estimated
         parameter_names = forward_model.variable_parameter_names()
         var_indices = [var_names.index(v) for v in parameter_names]
-
+        print(len(var_indices))
         for i in var_indices:
             PriorUniform.objects.create(
                 lower=0.0,
@@ -86,3 +86,6 @@ class TestInferenceMixin(TestCase):
         log_likelihood = self.inference_mixin.create_pints_log_likelihood()
         log_prior = self.inference_mixin.create_pints_log_prior()
         log_posterior = self.inference_mixin.create_pints_log_posterior()
+        print(self.inference_mixin._times)
+        print(log_posterior.n_parameters())
+        print("log-prob = ", log_posterior([1, 1, 1, 1, 1]))

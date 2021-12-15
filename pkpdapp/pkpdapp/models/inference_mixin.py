@@ -234,11 +234,13 @@ class CombinedLogLikelihood(pints.LogPDF):
     def __call__(self, x):
         # assumes noise parameters are at end of parameter list
         noise_parameters = list(self._fixed_noise_parameters)
-        myokit_parameters = x[:self._n_myokit_parameters]
+        myokit_parameters = x
 
         # create subsets for each likelihood and call each
         log_like = 0
         k = 0
+        print(myokit_parameters + [noise_parameters[k]])
+        print("myokit param count = ", self._n_myokit_parameters)
         for ll in self._log_likelihoods:
             log_like += ll(myokit_parameters + [noise_parameters[k]])
             k += 1
