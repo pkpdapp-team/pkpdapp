@@ -1,6 +1,6 @@
 # Using a 2-stage build. This is the builder for javascript frontend
 
-FROM node:latest as build
+FROM node:lts as build
 RUN mkdir -p /app/frontend
 WORKDIR /app/frontend
 COPY frontend/package.json /app/frontend
