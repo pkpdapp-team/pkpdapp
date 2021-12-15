@@ -12,6 +12,7 @@ from pkpdapp.models import (
     PkpdModel,
     StoredModel,
 )
+from pkpdapp.tasks import run_inference
 
 
 class Algorithm(models.Model):
@@ -181,4 +182,7 @@ class Inference(StoredModel):
             objective_function.save()
 
         new_inference.refresh_from_db()
+
+        run_inference(new_inference)
+
         return new_inference
