@@ -43,7 +43,6 @@ class InferenceMixin:
 
         # get objectives and fixed noise parameters (we assume they are fixed for now)
         self._observed_loglikelihoods, self._noise_parameter_values = self.get_objectives(inference)
-        print(self._noise_parameter_values)
 
         # get priors / boundaries
         self._pints_log_priors = self.get_priors_andor_boundaries(inference)
@@ -51,21 +50,16 @@ class InferenceMixin:
         # get fitted parameters: note this will include all parameters, including noise
         # parameters which are not used by Myokit models
         fitted_variables = self.get_fitted_variables(inference)
-        print([v.name for v in fitted_variables])
+
         # get all the variable names associated with the Myokit model minus 'time'
         all_myokit_variables = model.variables.exclude(name='time')
-        print([v.name for v in all_myokit_variables]) # currently outputs 'time' as well
 
         # create a dictionary of key-value pairs for fixed parameters of Myokit model
-        print([v.name for v in self._outputs])
         self._fixed_parameters_dict = self.create_fixed_parameter_dictionary(
             all_myokit_variables, fitted_variables)
-        print(self._fixed_parameters_dict)
 
         # # select inference methods
         inference_type, inference_method = self.get_inference_type_and_method(inference)
-        print(inference_type)
-        print(inference_method)
 
         # get data and time points as lists of lists
         dfs = [output.as_pandas() for output in self._biomarker_types]
@@ -161,9 +155,6 @@ class InferenceMixin:
 
     def get_myokit_model(self):
         return self._myokit_model
-
-    def get_parameter_bounds(self):
-        return self._bounds
 
     def create_pints_problem_collection(self):
         model = self._pints_forward_model
