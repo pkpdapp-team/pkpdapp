@@ -171,13 +171,12 @@ class InferenceMixin:
 
         # here we create a problem collection to handle the case when the
         # outputs / times are wragged
-        model_times_values = [model]
-        for i in range(len(times)):
-            model_times_values.append(times[i])
-            model_times_values.append(values[i])
-        self._collection = pints.ProblemCollection(
-            *model_times_values,
-            self._noise_parameter_values)
+        times_values = []
+        for i in range(len(self._outputs)):
+            times_values.append(times[i])
+            times_values.append(values[i])
+        self._collection = pints.ProblemCollection(model,
+                                                   *times_values)
         return self._collection
 
     def create_pints_log_likelihood(self):

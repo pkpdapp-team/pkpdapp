@@ -7,7 +7,7 @@ pandas>=1.0
 whitenoise==5.0.1
 docutils==0.16
 python-markdown-math==0.8
-pints @ git+git://github.com/pints-team/pints.git#egg=pints
+pints @ git+git://github.com/pints-team/pints@i1403-multi-outputs#egg=pints
 myokit>=1.31
 django-extensions==3.1.1
 jsonfield==3.1.0
