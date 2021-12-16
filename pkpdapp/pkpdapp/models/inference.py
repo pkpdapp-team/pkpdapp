@@ -12,7 +12,6 @@ from pkpdapp.models import (
     PkpdModel,
     StoredModel,
 )
-from pkpdapp.tasks import run_inference
 
 
 class Algorithm(models.Model):
@@ -183,6 +182,7 @@ class Inference(StoredModel):
 
         new_inference.refresh_from_db()
 
-        run_inference(new_inference)
+        from pkpdapp.tasks import run_inference
+        run_inference.delay(new_inference.id)
 
         return new_inference

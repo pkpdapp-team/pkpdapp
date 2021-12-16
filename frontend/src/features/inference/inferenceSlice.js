@@ -4,6 +4,8 @@ import {
 import { api } from '../../Api'
 import { normalize, schema } from 'normalizr';
 
+import { fetchChainsByInference } from './chainSlice'
+
 const inferencesAdapter = createEntityAdapter({
   sortComparer: (a, b) => b.id < a.id
 })
@@ -51,8 +53,6 @@ export const addNewInference = createAsyncThunk(
     let inference = await api.post(
       '/api/inference/', initialInference
     )
-    console.log('got new inference', inference)
-
     inference.chosen = true;
 
     return inference
@@ -61,7 +61,7 @@ export const addNewInference = createAsyncThunk(
 
 export const updateInference = createAsyncThunk(
   'inferences/updateInference',
-  async (inference, { getState }) => {
+  async (inference, { dispatch }) => {
     const response = await api.put(`/api/inference/${inference.id}/`, inference)
     return response
   }
@@ -69,8 +69,10 @@ export const updateInference = createAsyncThunk(
 
 export const runInference = createAsyncThunk(
   'inferences/runInference',
-  async (inferenceId, { getState }) => {
+  async (inferenceId, { dispatch }) => {
+    console.log('XXXXX running inference, id:', inferenceId)
     const newInference = await api.post(`/api/inference/${inferenceId}/run`)
+    console.log('XXXXX ran inference, new one is:', newInference)
     const normalized = normalize(newInference, inference);
     return normalized.entities
   }
@@ -109,13 +111,13 @@ export const inferencesSlice = createSlice({
     },
     [fetchInferences.fulfilled]: (state, action) => {
       if (action.payload.inferences) {
-        inferencesAdapter.setAll(state, action.payload.inferences)
+        inferencesAdapter.upsertMany(state, action.payload.inferences)
       }
       state.status = 'succeeded'
     },
     [fetchInferenceById.fulfilled]: inferencesAdapter.upsertOne,
     [runInference.fulfilled]: (state, action) => {
-      inferencesAdapter.addMany(state, action.payload.inferences)
+      inferencesAdapter.upsertMany(state, action.payload.inferences)
     },
     [addNewInference.fulfilled]: inferencesAdapter.addOne,
     [updateInference.fulfilled]: inferencesAdapter.upsertOne,

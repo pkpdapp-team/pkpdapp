@@ -156,6 +156,10 @@ class ProjectFilter(filters.BaseFilterBackend):
                     queryset = project.protocols
                 elif queryset.model == Inference:
                     queryset = project.inference_set
+                elif queryset.model == InferenceChain:
+                    queryset = InferenceChain.objects.filter(
+                        inference__in=project.inference_set.all()
+                    )
                 elif queryset.model == BiomarkerType:
                     queryset = BiomarkerType.objects.filter(
                         dataset__project=project

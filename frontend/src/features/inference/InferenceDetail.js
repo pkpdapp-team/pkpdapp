@@ -60,7 +60,7 @@ import {
 
 
 import {
-  updateInference, deleteInference
+  updateInference, deleteInference, fetchInferenceById
 } from '../inference/inferenceSlice'
 import { runInference } from './inferenceSlice'
 import {
@@ -395,6 +395,9 @@ function ObjectiveFunctionSubform({control, objects, variables, biomarker_types,
 
 
 export default function DraftInferenceDetail({project, inference}) {
+
+  const dispatch = useDispatch();
+  
   const inferenceNoNull = Object.keys(inference).reduce((obj, key) => {
     if (inference[key] === null) {
       obj[key] = '';
@@ -444,7 +447,6 @@ export default function DraftInferenceDetail({project, inference}) {
     control,
     name: "objective_functions"
   });
-  const dispatch = useDispatch();
 
   const [modelType, setModelType] = useState('PD');
   const handleModelTypeChange = (event) => {

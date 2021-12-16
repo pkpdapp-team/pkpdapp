@@ -26,7 +26,8 @@ export const fetchChainById = createAsyncThunk('chains/fetchChainById', async (m
   return response
 })
 
-export const fetchChainsByInference = createAsyncThunk('chains/fetchChainById', async (inference, { dispatch }) => {
+export const fetchChainsByInference = createAsyncThunk('chains/fetchChainByInference', async (inference, { dispatch }) => {
+  console.log('fetchChainsByInference', inference)
   let response = await api.get(
     `/api/inference_chain/?inference_id=${inference.id}`
   )

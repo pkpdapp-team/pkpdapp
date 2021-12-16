@@ -44,6 +44,10 @@ import {
   fetchInferences
 } from '../inference/inferenceSlice.js'
 
+import {
+  fetchChains
+} from '../inference/chainSlice.js'
+
 
 
 const useStyles = makeStyles((theme) => ({
@@ -96,6 +100,7 @@ export default function ProjectDetail({project}) {
     dispatch(fetchBasePkModels(project))
     dispatch(fetchProtocols(project))
     dispatch(fetchInferences(project))
+    dispatch(fetchChains(project))
   }
 
   const handleDeleteProject = () => {

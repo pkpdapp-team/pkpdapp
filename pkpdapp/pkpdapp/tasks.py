@@ -7,7 +7,13 @@ from pkpdapp.models import (
 
 
 @shared_task
-def run_inference(inference):
+def run_inference(inference_id):
+    inference = Inference.objects.get(id=inference_id)
+
+    # delete old chains
+    inference.chains.all().delete()
+    inference.number_of_iterations = 0
+
     # create new chains
     inference.chains.set([
         InferenceChain.objects.create(
@@ -28,4 +34,6 @@ def run_inference(inference):
                     iteration=iteration,
                     value=value,
                 )
+                inference.number_of_iterations = iteration
+                inference.save()
                 value += 11 / 7

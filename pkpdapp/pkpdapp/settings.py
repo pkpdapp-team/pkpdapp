@@ -266,3 +266,8 @@ CACHES = {
         'LOCATION': '127.0.0.1:11211',
     }
 }
+
+CELERY_BROKER_URL = [
+    'amqp://',
+    'amqp://guest:guest@172.26.192.1:5672'
+]

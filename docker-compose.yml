@@ -17,4 +17,23 @@ services:
     env_file:
       - ./.env
     restart: unless-stopped
+  pkpdapp_rabbitmq:
+    image: "postgres"
+    stop_signal: SIGINT                 # Fast Shutdown mode
+    command: -p 5432
+    env_file:
+      - ./.env
+    restart: unless-stopped
+  pkpdapp_rabbitmq:
+    image: rabbitmq:3-management-alpine
+    volumes:
+        - ./.docker/rabbitmq/etc/:/etc/rabbitmq/
+        - ./.docker/rabbitmq/data/:/var/lib/rabbitmq/
+        - ./.docker/rabbitmq/logs/:/var/log/rabbitmq/
+    env_file:
+      - ./.env
+    ports:
+        - 5672:5672
+        - 15672:15672
+ 
   

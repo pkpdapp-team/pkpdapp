@@ -9,6 +9,7 @@ from pkpdapp.models import (
     Inference,
     Prior,
 )
+import pandas as pd
 
 
 class InferenceChain(models.Model):
@@ -19,11 +20,18 @@ class InferenceChain(models.Model):
         help_text='inference for this chain'
     )
 
-    def as_list(self):
-        return \
+    def as_pandas(self):
+        priors_values = \
             self.inference_results.order_by('iteration').values_list(
-                'value', flat=True
+                'prior', 'value'
             )
+        priors, values = list(zip(*priors_values))
+        df = pd.DataFrame.from_dict({
+            'priors': priors,
+            'values': values,
+        })
+
+        return df
 
 
 class InferenceResult(models.Model):
