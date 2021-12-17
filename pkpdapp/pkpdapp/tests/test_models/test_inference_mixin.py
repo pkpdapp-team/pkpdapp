@@ -36,7 +36,6 @@ class TestInferenceMixinSingleOutput(TestCase):
             myokit_simulator=s,
             outputs="myokit.tumour_volume")
 
-        # generate some fake data
         output_names = forward_model.output_names()
         var_index = var_names.index(output_names[0])
 
@@ -71,10 +70,23 @@ class TestInferenceMixinSingleOutput(TestCase):
     def test_objective_functions(self):
         # Test that log-likelihood, log-prior and log-posterior work
 
+        # Test log-likelihood
         pints_forward_model = self.inference_mixin.create_pints_forward_model()
         problem_collection = self.inference_mixin.create_pints_problem_collection()
         log_likelihood = self.inference_mixin.create_pints_log_likelihood()
+        val = log_likelihood([1, 1, 1, 1, 1])
+        self.assertTrue(abs(val - -113.33099855566624) < 0.1)
+        val = log_likelihood([1, 2, 3, 4, 5])
+        self.assertTrue(abs(val - -121.32407882599529) < 0.1)
 
-
+        # Test log-prior
         log_prior = self.inference_mixin.create_pints_log_prior()
+        val = log_prior([1, 1, 1, 1, 1])
+        self.assertTrue(abs(val - -3.4657359027997265) < 0.1)
+        val = log_prior([3, 1, 1, 1, 1])
+        self.assertEqual(val, -np.inf)
+
+        # Test log-posterior
         log_posterior = self.inference_mixin.create_pints_log_posterior()
+        val = log_posterior([1, 1, 1, 1, 1])
+        self.assertTrue(abs(val - -116.79673445846596) < 0.1)
