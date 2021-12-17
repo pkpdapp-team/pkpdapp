@@ -16,11 +16,13 @@ If you are interested in developing PKPDApp with us, or just run the app locally
 
 ### Django backend
 
-1. Install sundials and python dev libraries
+1. Install sundials, python dev libraries and rabbitmq server
     - Ubuntu-latest:
     ```bash
-    apt-get install libsundials-dev python3-dev
+    apt-get install libsundials-dev python3-dev rabbitmq-server
     ```
+    Note: if you are in WSL then the rabbitmq server will not automatically start, you 
+    can start it manually using `sudo -u rabbitmq rabbitmq-server`
     - MacOS-latest:
     ```bash
     brew install sundials
@@ -51,6 +53,12 @@ pip install -r requirements.txt
 ```bash
 cd pkpdapp
 python manage.py migrate
+```
+
+5. Run RabbitMQ
+
+```bash
+celery -A pkpdapp worker --loglevel=INFO
 ```
 
 5. Run local server

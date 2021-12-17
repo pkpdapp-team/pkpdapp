@@ -56,7 +56,7 @@ class TestObjectiveFunctionSerializer(TestCase):
         )
 
     def test_run_inference(self):
-        running_inference = self.inference.run_inference()
+        running_inference = self.inference.run_inference(test=True)
         self.assertEqual(running_inference.name, self.inference.name)
         self.assertEqual(running_inference.read_only, True)
         self.assertEqual(running_inference.priors.count(),

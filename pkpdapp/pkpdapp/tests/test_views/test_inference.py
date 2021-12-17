@@ -61,15 +61,6 @@ class TestObjectiveFunctionSerializer(APITestCase):
         self.client = APIClient()
         self.client.force_authenticate(user=user)
 
-    def test_run_inference(self):
-        response = self.client.post(
-            "/api/inference/{}/run".format(self.inference.id)
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        running_inference = response.data
-        self.assertEqual(running_inference['name'], self.inference.name)
-        self.assertEqual(running_inference['read_only'], True)
-
     def test_run_inference_errors(self):
         inference_no_model = Inference.objects.create(
             name='bad bob',
