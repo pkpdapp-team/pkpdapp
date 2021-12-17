@@ -1,15 +1,5 @@
 version: "2"
 services:
-  pkpdapp:
-    image: pkpdapp
-    build:
-      dockerfile: Dockerfile
-      context: .
-    ports:
-      - "80:${PORT}"
-    restart: unless-stopped
-    env_file:
-     - ./.env
   pkpdapp_postgres:
     image: "postgres"
     stop_signal: SIGINT                 # Fast Shutdown mode
@@ -19,15 +9,24 @@ services:
     restart: unless-stopped
   pkpdapp_rabbitmq:
     image: rabbitmq:3-management-alpine
-    volumes:
-        - ./.docker/rabbitmq/etc/:/etc/rabbitmq/
-        - ./.docker/rabbitmq/data/:/var/lib/rabbitmq/
-        - ./.docker/rabbitmq/logs/:/var/log/rabbitmq/
     env_file:
       - ./.env
     ports:
         - 5672:5672
         - 15672:15672
     restart: unless-stopped
+  pkpdapp:
+    image: pkpdapp
+    depends_on:
+      - pkpdapp_postgres
+      - pkpdapp_rabbitmq
+    build:
+      dockerfile: Dockerfile
+      context: .
+    ports:
+      - "80:${PORT}"
+    restart: unless-stopped
+    env_file:
+     - ./.env
  
   

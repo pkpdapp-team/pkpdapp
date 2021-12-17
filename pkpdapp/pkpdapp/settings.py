@@ -267,7 +267,19 @@ CACHES = {
     }
 }
 
-CELERY_BROKER_URL = [
-    'amqp://',
-    'amqp://guest:guest@172.26.192.1:5672'
-]
+DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL",
+                                    default='webmaster@localhost')
+
+CLOUDAMQP_URL = os.environ.get("CLOUDAMQP_URL", default=None)
+if CLOUDAMQP_URL is None:
+    CELERY_BROKER_URL = [
+        'amqp://',
+        'amqp://{}:{}@pkpdapp_rabbitmq:5672'.format(
+            os.environ.get("RABBITMQ_DEFAULT_USER",
+                           default='guest'),
+            os.environ.get("RABBITMQ_DEFAULT_PASS",
+                           default='guest')
+        )
+    ]
+else:
+    CELERY_BROKER_URL = CLOUDAMQP_URL
