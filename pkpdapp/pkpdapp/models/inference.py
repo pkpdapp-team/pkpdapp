@@ -138,7 +138,7 @@ class Inference(StoredModel):
             model = self.pkpd_model
         return model
 
-    def run_inference(self):
+    def run_inference(self, test=False):
         """
         when an inference is run, a new model is created (a copy),
         and the model and all its variables are stored
@@ -182,7 +182,8 @@ class Inference(StoredModel):
 
         new_inference.refresh_from_db()
 
-        from pkpdapp.tasks import run_inference
-        run_inference.delay(new_inference.id)
+        if not test:
+            from pkpdapp.tasks import run_inference
+            run_inference.delay(new_inference.id)
 
         return new_inference
