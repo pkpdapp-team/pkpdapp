@@ -1,5 +1,5 @@
 gunicorn
-Django==3.1.13
+Django==3.1.14
 django-cors-headers>=3.7.0
 dpd-static-support>=0.0.5
 numpy>=1.8
