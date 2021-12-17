@@ -7,7 +7,9 @@
 from django.test import TestCase
 import numpy as np
 from pkpdapp.models import (
-    Inference, PharmacodynamicModel, LogLikelihoodNormal,
+    Inference, PharmacodynamicModel,
+    PharmacokineticModel,
+    LogLikelihoodNormal,
     Project, BiomarkerType,
     PriorUniform, MyokitForwardModel,
     InferenceMixin
@@ -90,3 +92,28 @@ class TestInferenceMixinSingleOutput(TestCase):
         log_posterior = self.inference_mixin.create_pints_log_posterior()
         val = log_posterior([1, 1, 1, 1, 1])
         self.assertTrue(abs(val - -116.79673445846596) < 0.1)
+        val = log_posterior([1.3, 0.5, 1.1, 0.9, 1.2])
+        self.assertTrue(abs(val - -149.2582993033948) < 0.1)
+        val = log_posterior([1, 3, 1, 1, 1])
+        self.assertEqual(val, -np.inf)
+
+
+class TestInferenceMixinMultipleOutput(TestCase):
+    def setUp(self):
+        project = Project.objects.get(
+            name='demo',
+        )
+        biomarker_type = BiomarkerType.objects.get(
+            name='Plasma concentration',
+            dataset__name='lxf_single_erlotinib_dose'
+        )
+        m = PharmacokineticModel.objects.get(
+            name='three_compartment_pk_model',
+        )
+        self.model = m.get_myokit_model()
+        self.simulator = m.get_myokit_simulator()
+
+        forward_model = MyokitForwardModel(
+            myokit_model=m,
+            myokit_simulator=s,
+            outputs="peripheral_1.drug_p1_amount")
