@@ -47,12 +47,12 @@ class InferenceMixin:
         # get priors / boundaries
         self._pints_log_priors = self.get_priors_andor_boundaries(inference)
 
+        # get all the variable names associated with the Myokit model minus 'time'
+        all_myokit_variables = model.variables.exclude(name='time')
+
         # get fitted parameters: note this will include all parameters, including noise
         # parameters which are not used by Myokit models
         fitted_variables = self.get_fitted_variables(inference)
-
-        # get all the variable names associated with the Myokit model minus 'time'
-        all_myokit_variables = model.variables.exclude(name='time')
 
         # create a dictionary of key-value pairs for fixed parameters of Myokit model
         self._fixed_parameters_dict = self.create_fixed_parameter_dictionary(
@@ -197,6 +197,9 @@ class InferenceMixin:
         self._pints_log_posterior = pints.LogPosterior(self._log_likelihood,
                                                        self._composed_log_prior)
         return self._pints_log_posterior
+
+    def _evaluate_pints_log_posterior(self):
+        pass
 
     def create_pints_optimiser(self):
         self._optimiser = h

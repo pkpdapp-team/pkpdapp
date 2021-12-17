@@ -14,7 +14,7 @@ from pkpdapp.models import (
 )
 
 
-class TestInferenceMixin(TestCase):
+class TestInferenceMixinSingleOutput(TestCase):
     def setUp(self):
         project = Project.objects.get(
             name='demo',
@@ -39,10 +39,10 @@ class TestInferenceMixin(TestCase):
         # generate some fake data
         parameter_dict = {
             'myokit.tumour_volume': 1,
+            'myokit.drug_concentration': 1,
+            'myokit.kappa': 0.1,
             'myokit.lambda_0': 1,
             'myokit.lambda_1': 1,
-            'myokit.kappa': 1,
-            'myokit.drug_concentration': 1,
         }
         times = np.linspace(0, 100)
         z = forward_model.simulate(list(parameter_dict.values()), times)
@@ -86,6 +86,3 @@ class TestInferenceMixin(TestCase):
         log_likelihood = self.inference_mixin.create_pints_log_likelihood()
         log_prior = self.inference_mixin.create_pints_log_prior()
         log_posterior = self.inference_mixin.create_pints_log_posterior()
-        print(self.inference_mixin._times)
-        print(log_posterior.n_parameters())
-        print("log-prob = ", log_posterior([1, 1, 1, 1, 1]))
