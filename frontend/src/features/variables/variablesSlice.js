@@ -4,7 +4,6 @@ import {
 import { api } from '../../Api'
 import {fetchPdModelById} from '../pdModels/pdModelsSlice'
 import {fetchPkModelById} from '../pkModels/pkModelsSlice'
-import {fetchInferences} from '../inference/inferenceSlice'
 import {runInference} from '../inference/inferenceSlice'
 
 const variablesAdapter = createEntityAdapter({

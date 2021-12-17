@@ -1,6 +1,5 @@
 import React, {useEffect} from "react";
 import { useSelector, useDispatch } from 'react-redux'
-import Paper from '@material-ui/core/Paper';
 import PropTypes from 'prop-types';
 import Grid from '@material-ui/core/Grid';
 import InferenceDetail from './InferenceDetail'
@@ -43,7 +42,6 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 function LinearProgressWithLabel(props) {
-  const classes = useStyles();
   return (
     <Box display="flex" alignItems="center">
       <Typography variant="body2" color="textSecondary">{`${
@@ -78,16 +76,10 @@ export default function Inference() {
     return () => {
       clearInterval(interval);
     };
-  }, []);
+  }, [dispatch, project]);
 
   if (!project) {
     return ('Select a project')
-  }
-  let showChart = true
-  if (
-    chosenInferences.length === 0
-  ) {
-    showChart = false
   }
 
   return (

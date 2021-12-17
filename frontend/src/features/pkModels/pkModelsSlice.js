@@ -6,7 +6,6 @@ import { api } from '../../Api'
 import {fetchVariablesByPkModel} from '../variables/variablesSlice'
 import {fetchUnitsByPkModel} from '../projects/unitsSlice'
 
-import {fetchInferences} from '../inference/inferenceSlice'
 import {runInference} from '../inference/inferenceSlice'
 
 export const pkModelsAdapter = createEntityAdapter({

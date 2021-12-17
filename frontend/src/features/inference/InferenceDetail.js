@@ -13,18 +13,13 @@ import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import Tooltip from '@material-ui/core/Tooltip';
 import Select from '@material-ui/core/Select';
-import Accordion from '@material-ui/core/Accordion';
-import AccordionSummary from '@material-ui/core/AccordionSummary';
 import IconButton from '@material-ui/core/IconButton';
-import AccordionDetails from '@material-ui/core/AccordionDetails';
 import MenuItem from '@material-ui/core/MenuItem';
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import AddIcon from '@material-ui/icons/Add';
 import DeleteIcon from '@material-ui/icons/Delete';
 
 
 
-import ComponentForm from '../forms/ComponentForm'
 import {
   selectAllPkModels
 } from '../pkModels/pkModelsSlice'
@@ -40,15 +35,6 @@ import {
   selectBiomarkerTypesByDatasetId, selectBiomarkerTypeById
 } from '../datasets/biomarkerTypesSlice'
 
-
-import {
-  selectPriorsByInference
-} from './priorsSlice'
-
-import {
-  selectObjectiveFunctionsByInference
-} from './objectiveFunctionsSlice'
-
 import {
   selectVariablesByPdModel, selectVariablesByDosedPkModel
 } from '../variables/variablesSlice'
@@ -58,13 +44,12 @@ import {
   selectAllDatasets
 } from '../datasets/datasetsSlice'
 
-
 import {
-  updateInference, deleteInference, fetchInferenceById
+  updateInference, deleteInference
 } from '../inference/inferenceSlice'
 import { runInference } from './inferenceSlice'
 import {
-  FormTextField, FormDateTimeField, FormSelectField
+  FormTextField, FormSelectField
 } from '../forms/FormComponents';
 import {userHasReadOnlyAccess} from '../projects/projectsSlice';
 
@@ -398,15 +383,7 @@ export default function DraftInferenceDetail({project, inference}) {
 
   const dispatch = useDispatch();
   
-  const inferenceNoNull = Object.keys(inference).reduce((obj, key) => {
-    if (inference[key] === null) {
-      obj[key] = '';
-    } else {
-      obj[key] = inference[key]
-    }
-    return obj
-  }, {})
-  const { control, handleSubmit, reset, resetField, watch, setValue } = useForm({defaultValues: inference});
+  const { control, handleSubmit, watch, setValue } = useForm({defaultValues: inference});
   
   const datasets = useSelector(selectAllDatasets)
   const datasets_options = datasets.map(dataset => (
@@ -456,7 +433,6 @@ export default function DraftInferenceDetail({project, inference}) {
     setValue('priors', inference.priors)
   }
   const handleModelChange = (event) => {
-    const value = event.target.value
     setValue('objective_functions', inference.objective_functions)
     setValue('priors', inference.priors)
   }
@@ -505,7 +481,7 @@ export default function DraftInferenceDetail({project, inference}) {
       {
         key: algorithm.name, 
         value: algorithm.id, 
-        group: algorithm.category == 'SA' ?
+        group: algorithm.category === 'SA' ?
         'Sampling': 'Optimisation'
       }
     ))  
