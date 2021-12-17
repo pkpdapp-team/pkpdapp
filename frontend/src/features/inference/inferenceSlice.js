@@ -4,8 +4,6 @@ import {
 import { api } from '../../Api'
 import { normalize, schema } from 'normalizr';
 
-import { fetchChainsByInference } from './chainSlice'
-
 const inferencesAdapter = createEntityAdapter({
   sortComparer: (a, b) => b.id < a.id
 })

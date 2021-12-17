@@ -6,7 +6,7 @@ import TableChartIcon from '@material-ui/icons/TableChart';
 import ExpandableListItem from '../menu/ExpandableListItem'
 
 import {
-  selectAllRunningInferences, toggleInference, addNewInference
+  selectAllRunningInferences, toggleInference
 } from '../inference/inferenceSlice.js'
 
 
