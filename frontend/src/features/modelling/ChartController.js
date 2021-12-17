@@ -1,4 +1,3 @@
 export default function ChartController() {
-  return (null)
+  return null;
 }
- 

@@ -1,37 +1,30 @@
 import React, { useEffect } from "react";
-import { useSelector } from 'react-redux'
-import Paper from '@material-ui/core/Paper';
-import Grid from '@material-ui/core/Grid';
-import ProjectDetail from '../projects/ProjectDetail'
-import Tooltip from '@material-ui/core/Tooltip';
-import { useTheme } from '@material-ui/core/styles';
-import { useDispatch } from 'react-redux'
+import { useSelector } from "react-redux";
+import Paper from "@material-ui/core/Paper";
+import Grid from "@material-ui/core/Grid";
+import ProjectDetail from "../projects/ProjectDetail";
+import Tooltip from "@material-ui/core/Tooltip";
+import { useTheme } from "@material-ui/core/styles";
+import { useDispatch } from "react-redux";
 
-import AddIcon from '@material-ui/icons/Add';
+import AddIcon from "@material-ui/icons/Add";
 
-import IconButton from '@material-ui/core/IconButton';
-import { makeStyles } from '@material-ui/core/styles';
+import IconButton from "@material-ui/core/IconButton";
+import { makeStyles } from "@material-ui/core/styles";
 
-import {
-  fetchProjects,
-} from './projectsSlice.js'
+import { fetchProjects } from "./projectsSlice.js";
 
-import {
-  fetchUsers,
-} from './usersSlice.js'
+import { fetchUsers } from "./usersSlice.js";
 
-import {
-  fetchUnits,
-} from './unitsSlice.js'
+import { fetchUnits } from "./unitsSlice.js";
+
+import { fetchAlgorithms } from "../inference/algorithmsSlice.js";
 
 import {
-  fetchAlgorithms,
-} from '../inference/algorithmsSlice.js'
-
-
-import {
-  selectMyProjects, selectChosenProject, addNewProject
-} from './projectsSlice.js'
+  selectMyProjects,
+  selectChosenProject,
+  addNewProject,
+} from "./projectsSlice.js";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -40,11 +33,11 @@ const useStyles = makeStyles((theme) => ({
   },
   paper: {
     padding: theme.spacing(2),
-    textAlign: 'left',
+    textAlign: "left",
   },
   controlsRoot: {
-    display: 'flex',
-    alignItems: 'center',
+    display: "flex",
+    alignItems: "center",
   },
   controls: {
     margin: theme.spacing(1),
@@ -54,22 +47,22 @@ const useStyles = makeStyles((theme) => ({
 export default function Projects() {
   const classes = useStyles();
   const theme = useTheme();
-  const dispatch = useDispatch()
+  const dispatch = useDispatch();
 
   useEffect(() => {
-    dispatch(fetchProjects())
-    dispatch(fetchUsers())
-    dispatch(fetchUnits())
-    dispatch(fetchAlgorithms())
+    dispatch(fetchProjects());
+    dispatch(fetchUsers());
+    dispatch(fetchUnits());
+    dispatch(fetchAlgorithms());
     //const interval = setInterval(() => {
     //  refreshHarvesters();
     //}, 5000);
     //return () => clearInterval(interval);
   }, [dispatch]);
-  
+
   const handleNewProject = () => {
-    dispatch(addNewProject())
-  }
+    dispatch(addNewProject());
+  };
 
   const projects = useSelector(selectMyProjects);
   const chosenProject = useSelector(selectChosenProject);
@@ -77,28 +70,33 @@ export default function Projects() {
   return (
     <div className={classes.root}>
       <Grid container spacing={3}>
-        {projects.map(project => (
+        {projects.map((project) => (
           <Grid item xs={12} key={project.id}>
-            <Paper className={classes.paper}
-              style={{'backgroundColor': ((project === chosenProject) ? theme.palette.primary.light: theme.palette.background.paper) }}
+            <Paper
+              className={classes.paper}
+              style={{
+                backgroundColor:
+                  project === chosenProject
+                    ? theme.palette.primary.light
+                    : theme.palette.background.paper,
+              }}
             >
-              <ProjectDetail project={project}/>
+              <ProjectDetail project={project} />
             </Paper>
           </Grid>
         ))}
-        <div  className={classes.controlsRoot}>
-        <Tooltip title={`create new project`} placement="right">
-          <IconButton
-            variant='rounded' 
-            className={classes.controls}
-            onClick={handleNewProject}
-          >
-            <AddIcon/>
-          </IconButton>
-        </Tooltip>
+        <div className={classes.controlsRoot}>
+          <Tooltip title={`create new project`} placement="right">
+            <IconButton
+              variant="rounded"
+              className={classes.controls}
+              onClick={handleNewProject}
+            >
+              <AddIcon />
+            </IconButton>
+          </Tooltip>
         </div>
-
       </Grid>
     </div>
-  )
+  );
 }
