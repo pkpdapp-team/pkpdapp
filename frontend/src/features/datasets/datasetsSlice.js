@@ -1,147 +1,141 @@
-import { 
-  createSlice, createEntityAdapter, createAsyncThunk,
-} from '@reduxjs/toolkit'
-import { fetchBiomarkerTypesByProject } from './biomarkerTypesSlice'
-import { fetchSubjectByProject, fetchSubjectByDataset } from './subjectsSlice'
-import { api } from '../../Api'
+import {
+  createSlice,
+  createEntityAdapter,
+  createAsyncThunk,
+} from "@reduxjs/toolkit";
+import { fetchBiomarkerTypesByProject } from "./biomarkerTypesSlice";
+import { fetchSubjectByProject, fetchSubjectByDataset } from "./subjectsSlice";
+import { api } from "../../Api";
 
 const datasetsAdapter = createEntityAdapter({
-  sortComparer: (a, b) => b.id < a.id
-})
+  sortComparer: (a, b) => b.id < a.id,
+});
 
 const initialState = datasetsAdapter.getInitialState({
-  status: 'idle',
+  status: "idle",
   error: null,
-})
+});
 
-export const fetchDatasets = createAsyncThunk('datasets/fetchDatasets', async (project, { dispatch }) => {
-  const response = await api.get(
-    `/api/dataset/?project_id=${project.id}`
-  )
+export const fetchDatasets = createAsyncThunk(
+  "datasets/fetchDatasets",
+  async (project, { dispatch }) => {
+    const response = await api.get(`/api/dataset/?project_id=${project.id}`);
 
-  dispatch(fetchBiomarkerTypesByProject(project.id))
-  dispatch(fetchSubjectByProject(project.id))
+    dispatch(fetchBiomarkerTypesByProject(project.id));
+    dispatch(fetchSubjectByProject(project.id));
 
-  return response
-})
+    return response;
+  }
+);
 
 export const deleteDataset = createAsyncThunk(
-  'datasets/deleteDataset',
+  "datasets/deleteDataset",
   async (datasetId, { dispatch }) => {
-    await api.delete(
-      `/api/dataset/${datasetId}`
-    )
-    return datasetId
+    await api.delete(`/api/dataset/${datasetId}`);
+    return datasetId;
   }
-)
+);
 
 export const addNewDataset = createAsyncThunk(
-  'datasets/addNewDataset',
+  "datasets/addNewDataset",
   async (project, { dispatch }) => {
     const initialDataset = {
-      name: 'new',
+      name: "new",
       project: project.id,
-    }
-    let dataset = await api.post('/api/dataset/', initialDataset)
-    dataset.chosen = true
-    return dataset
+    };
+    let dataset = await api.post("/api/dataset/", initialDataset);
+    dataset.chosen = true;
+    return dataset;
   }
-)
+);
 
 export const uploadDatasetCsv = createAsyncThunk(
-  'datasets/uploadDatasetCsv',
-  async ({id, csv}, {dispatch, rejectWithValue}) => {
-    const dataset = await api.putMultiPart(
-      `/api/dataset/${id}/csv/`, {csv}
-    ).catch(err => rejectWithValue(err))
+  "datasets/uploadDatasetCsv",
+  async ({ id, csv }, { dispatch, rejectWithValue }) => {
+    const dataset = await api
+      .putMultiPart(`/api/dataset/${id}/csv/`, { csv })
+      .catch((err) => rejectWithValue(err));
 
-    await dispatch(fetchBiomarkerTypesByProject(dataset.project))
-    await dispatch(fetchSubjectByDataset(dataset))
+    await dispatch(fetchBiomarkerTypesByProject(dataset.project));
+    await dispatch(fetchSubjectByDataset(dataset));
 
-    return dataset
+    return dataset;
   }
-)
+);
 
 export const updateDataset = createAsyncThunk(
-  'datasets/updateDataset',
+  "datasets/updateDataset",
   async (dataset) => {
-    const response = await api.put(`/api/dataset/${dataset.id}/`, dataset)
-    return response
+    const response = await api.put(`/api/dataset/${dataset.id}/`, dataset);
+    return response;
   }
-)
+);
 
 export const datasetsSlice = createSlice({
-  name: 'datasets',
-  initialState, 
+  name: "datasets",
+  initialState,
   reducers: {
     toggleDataset(state, action) {
-      let dataset = state.entities[action.payload.id]
-      dataset.chosen = !dataset.chosen
+      let dataset = state.entities[action.payload.id];
+      dataset.chosen = !dataset.chosen;
     },
     toggleDisplayGroup(state, action) {
-      const group = action.payload.group
-      const id = action.payload.id
-      const displayGroups = state.entities[id].displayGroups
-      console.log('toggleDisplayGroup', group, id, displayGroups)
-      
-      let newDisplayGroups = displayGroups.filter(
-        x => x !== group
-      )
+      const group = action.payload.group;
+      const id = action.payload.id;
+      const displayGroups = state.entities[id].displayGroups;
+      console.log("toggleDisplayGroup", group, id, displayGroups);
+
+      let newDisplayGroups = displayGroups.filter((x) => x !== group);
       if (newDisplayGroups.length === displayGroups.length) {
-        newDisplayGroups.push(group)
+        newDisplayGroups.push(group);
       }
-      const changes = { displayGroups: newDisplayGroups}
-      datasetsAdapter.updateOne(state, {id, changes}) 
+      const changes = { displayGroups: newDisplayGroups };
+      datasetsAdapter.updateOne(state, { id, changes });
     },
   },
   extraReducers: {
     [fetchDatasets.pending]: (state, action) => {
-      state.status = 'loading'
+      state.status = "loading";
     },
     [fetchDatasets.rejected]: (state, action) => {
-      state.status = 'failed'
-      state.error = action.error.message
+      state.status = "failed";
+      state.error = action.error.message;
     },
     [fetchDatasets.fulfilled]: (state, action) => {
-      state.status = 'succeeded'
-      datasetsAdapter.setAll(state, action.payload)
+      state.status = "succeeded";
+      datasetsAdapter.setAll(state, action.payload);
     },
     [deleteDataset.fulfilled]: datasetsAdapter.removeOne,
     [addNewDataset.fulfilled]: datasetsAdapter.addOne,
     [updateDataset.fulfilled]: datasetsAdapter.upsertOne,
     [uploadDatasetCsv.pending]: (state, action) => {
-      console.log('uploadcsv pending', action)
-      state.entities[action.meta.arg.id].status = 'loading'
-      state.entities[action.meta.arg.id].errors = []
+      console.log("uploadcsv pending", action);
+      state.entities[action.meta.arg.id].status = "loading";
+      state.entities[action.meta.arg.id].errors = [];
     },
     [uploadDatasetCsv.rejected]: (state, action) => {
-      console.log('upload csv rejected', action)
-      state.entities[action.meta.arg.id].status = 'rejected'
-      state.entities[action.meta.arg.id].errors = action.payload.csv
+      console.log("upload csv rejected", action);
+      state.entities[action.meta.arg.id].status = "rejected";
+      state.entities[action.meta.arg.id].errors = action.payload.csv;
     },
     [uploadDatasetCsv.fulfilled]: (state, action) => {
-      console.log('uploadcsv fulfilled', action)
-      state.entities[action.meta.arg.id].status = 'succeeded'
-      datasetsAdapter.upsertOne(state, action)
+      console.log("uploadcsv fulfilled", action);
+      state.entities[action.meta.arg.id].status = "succeeded";
+      datasetsAdapter.upsertOne(state, action);
     },
-  }
-})
+  },
+});
 
-export const { 
-  toggleDataset,
-  toggleDisplayGroup: toggleDatasetDisplayGroup
-} = datasetsSlice.actions
+export const { toggleDataset, toggleDisplayGroup: toggleDatasetDisplayGroup } =
+  datasetsSlice.actions;
 
-
-
-export default datasetsSlice.reducer
-
+export default datasetsSlice.reducer;
 
 export const {
   selectAll: selectAllDatasets,
   selectById: selectDatasetById,
-  selectIds: selectDatasetIds
-} = datasetsAdapter.getSelectors(state => state.datasets)
+  selectIds: selectDatasetIds,
+} = datasetsAdapter.getSelectors((state) => state.datasets);
 
-
-export const selectChosenDatasets = state => selectAllDatasets(state).filter(dataset => dataset.chosen);
+export const selectChosenDatasets = (state) =>
+  selectAllDatasets(state).filter((dataset) => dataset.chosen);

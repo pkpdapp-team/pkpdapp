@@ -1,3 +1,3 @@
 export default function PkDetail() {
-  return (null)
+  return null;
 }
