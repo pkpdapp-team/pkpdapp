@@ -37,16 +37,6 @@ class TestInferenceMixinSingleOutput(TestCase):
             outputs="myokit.tumour_volume")
 
         # generate some fake data
-        parameter_dict = {
-            'myokit.tumour_volume': 1,
-            'myokit.drug_concentration': 1,
-            'myokit.kappa': 0.1,
-            'myokit.lambda_0': 1,
-            'myokit.lambda_1': 1,
-        }
-        times = np.linspace(0, 100)
-        z = forward_model.simulate(list(parameter_dict.values()), times)
-
         output_names = forward_model.output_names()
         var_index = var_names.index(output_names[0])
 
@@ -65,7 +55,6 @@ class TestInferenceMixinSingleOutput(TestCase):
         # find variables that are being estimated
         parameter_names = forward_model.variable_parameter_names()
         var_indices = [var_names.index(v) for v in parameter_names]
-        print(len(var_indices))
         for i in var_indices:
             PriorUniform.objects.create(
                 lower=0.0,
@@ -80,9 +69,12 @@ class TestInferenceMixinSingleOutput(TestCase):
         self.inference_mixin = InferenceMixin(self.inference)
 
     def test_objective_functions(self):
+        # Test that log-likelihood, log-prior and log-posterior work
 
         pints_forward_model = self.inference_mixin.create_pints_forward_model()
         problem_collection = self.inference_mixin.create_pints_problem_collection()
         log_likelihood = self.inference_mixin.create_pints_log_likelihood()
+
+
         log_prior = self.inference_mixin.create_pints_log_prior()
         log_posterior = self.inference_mixin.create_pints_log_posterior()
