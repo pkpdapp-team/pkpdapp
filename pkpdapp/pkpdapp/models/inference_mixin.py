@@ -9,7 +9,7 @@ import numpy as np
 from pkpdapp.models import (
     MyokitForwardModel, LogLikelihoodNormal,
     LogLikelihoodLogNormal,
-    PriorNormal, PriorUniform)
+    PriorNormal, PriorUniform, InferenceResult)
 
 optimisers_dict = {
     'CMAES': pints.CMAES,
@@ -45,26 +45,29 @@ class InferenceMixin:
         self._observed_loglikelihoods, self._noise_parameter_values = self.get_objectives(inference)
 
         # get priors / boundaries
-        self._pints_log_priors = self.get_priors_andor_boundaries(inference)
+        self.priors = inference.priors.all()
+        self._pints_log_priors = self.get_priors_andor_boundaries(self.priors)
 
         # get all the variable names associated with the Myokit model minus 'time'
         all_myokit_variables = model.variables.exclude(name='time')
 
         # get fitted parameters: note this will include all parameters, including noise
         # parameters which are not used by Myokit models
-        fitted_variables = self.get_fitted_variables(inference)
+        self.fitted_variables = self.get_fitted_variables(self.priors)
 
         # create a dictionary of key-value pairs for fixed parameters of Myokit model
         self._fixed_parameters_dict = self.create_fixed_parameter_dictionary(
-            all_myokit_variables, fitted_variables)
+            all_myokit_variables, self.fitted_variables)
 
         # # select inference methods
-        inference_type, inference_method = self.get_inference_type_and_method(inference)
+        self._inference_type, self._inference_method = self.get_inference_type_and_method(inference)
 
         # get data and time points as lists of lists
         dfs = [output.as_pandas() for output in self._biomarker_types]
         self._values = [df['values'].tolist() for df in dfs]
         self._times = [df['times'].tolist() for df in dfs]
+
+        self.inference = inference
 
     def create_fixed_parameter_dictionary(self, all_myokit_parameters, fitted_parameters):
         # gets fixed parameters for Myokit model only: i.e. does not give noise parameters
@@ -74,7 +77,7 @@ class InferenceMixin:
         # myokit: inputs and outputs
         all_myokit_parameter_names = [param.qname for param in all_myokit_parameters]
 
-        # parameters being fit: both Myokit parameters and noise ones
+        # parameters being fit: currently this gets only Myokit parameters
         fitted_parameter_names = [param.qname for param in fitted_parameters]
 
         # get myokit parameters minus outputs: i.e. just input parameters
@@ -131,16 +134,14 @@ class InferenceMixin:
                 noise_parameters.append(obj.sigma)
         return observed_loglikelihoods, noise_parameters
 
-    def get_fitted_variables(self, inference):
-        priors = inference.priors.all()
+    def get_fitted_variables(self, priors):
         fitted_parameters = []
         for prior in priors:
             fitted_parameters.append(prior.variable)
         return fitted_parameters
 
-    def get_priors_andor_boundaries(self, inference):
+    def get_priors_andor_boundaries(self, priors):
         # get all variables being fitted from priors (includes boundaries which are not priors)
-        priors = inference.priors.all()
         pints_log_priors = []
         for prior in priors:
             if isinstance(prior, PriorUniform):
@@ -198,21 +199,53 @@ class InferenceMixin:
                                                        self._composed_log_prior)
         return self._pints_log_posterior
 
-    def _evaluate_pints_log_posterior(self):
-        pass
+    def create_pints_inference_object(self):
+        # Creates an initialised sampling / optimisation method that can be
+        # called by ask / tell
 
-    def create_pints_optimiser(self):
-        self._optimiser = h
+        # Create lookup for fitted variables (from priors) -> pints variables
+        pints_var_names = self._pints_forward_model.variable_parameter_names()
+        variables = self.fitted_variables
+        priors_var_names = [v.qname for v in variables]
+        self.django_to_pints_lookup = [pints_var_names.index(n) for n in priors_var_names]
 
-    def create_pints_sampler(self):
-        pass
+        # set x0 to be typical values of parameters
+        # TODO: change this to be random / other values
+        x0 = [v.default_value for v in variables]
+        x0 = [x0[i] for i in self.django_to_pints_lookup]
 
-    def run_inference(self, controller):
-        pass
+        self._inference_object = self._inference_method(x0)
+        self._iteration = 0
+        # set inference results objects for each fitted parameter to be
+        # initial values
+        # TODO: handle multiple chains
+        self.write_inference_results(x0, self._iteration)
+
+    def write_inference_results(self, values, iteration):
+        # Writes inference results
+        for i in range(len(self.priors)):
+            InferenceResult.objects.create(
+                chain=1,
+                prior=self.priors[i],
+                iteration=iteration,
+                value=values[i])
+
+    def step_inference(self):
+        # runs one set of ask / tell
+        x = self._inference_object.ask()
+        score = self._pints_log_posterior(x)
+        x = self._inference_object.tell(score)
+        self._iteration += 1
+        self.write_inference_results(x, self._iteration)
+
+    def run_inference(self):
+        # runs ask / tell
+        n_iterations = self.inference.number_of_iterations
+        for i in range(n_iterations):
+            self.step_inference()
 
     def fixed_variables(self):
         return self._fixed_variables
-
 
 
 class CombinedLogLikelihood(pints.LogPDF):
