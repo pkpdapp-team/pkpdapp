@@ -10,6 +10,7 @@ from pkpdapp.models import (
     Inference, PharmacodynamicModel,
     PharmacokineticModel,
     LogLikelihoodNormal,
+    LogLikelihoodLogNormal,
     Project, BiomarkerType,
     PriorUniform, MyokitForwardModel,
     InferenceMixin
@@ -103,8 +104,14 @@ class TestInferenceMixinMultipleOutput(TestCase):
         project = Project.objects.get(
             name='demo',
         )
-        biomarker_type = BiomarkerType.objects.get(
+        biomarker_type_1 = BiomarkerType.objects.get(
             name='Plasma concentration',
+            dataset__name='lxf_single_erlotinib_dose'
+        )
+        # this is an odd variable to test on for a pk model but couldn't find
+        # other suitable biomarkers
+        biomarker_type_2 = BiomarkerType.objects.get(
+            name='Body weight',
             dataset__name='lxf_single_erlotinib_dose'
         )
         m = PharmacokineticModel.objects.get(
@@ -113,7 +120,59 @@ class TestInferenceMixinMultipleOutput(TestCase):
         self.model = m.get_myokit_model()
         self.simulator = m.get_myokit_simulator()
 
+        output_names = ["peripheral_1.drug_p1_amount",
+                        "peripheral_2.drug_p2_amount"]
         forward_model = MyokitForwardModel(
-            myokit_model=m,
-            myokit_simulator=s,
-            outputs="peripheral_1.drug_p1_amount")
+            myokit_model=self.model,
+            myokit_simulator=self.simulator,
+            outputs=output_names)
+
+        self.inference = Inference.objects.create(
+            name='bob',
+            pd_model=m,
+            project=project,
+        )
+
+        variables = m.variables.all()
+        var_names = [v.qname for v in variables]
+        var_index_1 = var_names.index(output_names[0])
+        var_index_2 = var_names.index(output_names[1])
+
+        LogLikelihoodNormal.objects.create(
+            sd=1.5,
+            variable=variables[var_index_1],
+            inference=self.inference,
+            biomarker_type=biomarker_type_1
+        )
+
+        LogLikelihoodLogNormal.objects.create(
+            sigma=1.5,
+            variable=variables[var_index_2],
+            inference=self.inference,
+            biomarker_type=biomarker_type_2
+        )
+
+        # find variables that are being estimated
+        parameter_names = forward_model.variable_parameter_names()
+        var_indices = [var_names.index(v) for v in parameter_names]
+        for i in var_indices:
+            PriorUniform.objects.create(
+                lower=0.0,
+                upper=2.0,
+                variable=variables[i],
+                inference=self.inference,
+            )
+        # 'run' inference to create copies of models
+        self.inference = self.inference.run_inference()
+
+        # create mixin object
+        self.inference_mixin = InferenceMixin(self.inference)
+
+    def test_objective_functions(self):
+        # Test that log-likelihood, log-prior and log-posterior work
+
+        # Test log-likelihood
+        pints_forward_model = self.inference_mixin.create_pints_forward_model()
+        problem_collection = self.inference_mixin.create_pints_problem_collection()
+        log_likelihood = self.inference_mixin.create_pints_log_likelihood()
+        print(log_likelihood.n_parameters())
