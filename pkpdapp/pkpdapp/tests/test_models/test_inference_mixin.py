@@ -110,16 +110,26 @@ class TestInferenceMixinSingleOutputSampling(TestCase):
                 'value', flat=True
             )
             self.assertEqual(len(f_vals), 11)
+            p_vals_all = []
             for prior in priors:
-                results = chain.inference_results.filter(prior=prior).order_by('iteration').values_list(
+                p_vals = chain.inference_results.filter(prior=prior).order_by('iteration').values_list(
                     'value', flat=True
                 )
-                self.assertEqual(len(results), 11)
+                self.assertEqual(len(p_vals), 11)
+                p_vals_all.append(p_vals)
             iterations = chain.inference_results.filter(prior=prior).order_by('iteration').values_list(
                 'iteration', flat=True
             )
             expected = list(range(11))
             self.assertTrue(np.array_equal(iterations, expected))
+
+            # transpose list of lists
+            p_vals_all = list(map(list, zip(*p_vals_all)))
+            fn = self.inference_mixin._pints_log_posterior
+            lookup = self.inference_mixin.django_to_pints_lookup
+            for idx, params in enumerate(p_vals_all):
+                params = [params[lookup[p.variable.qname]] for p in priors]
+                self.assertTrue(abs(fn(params) - f_vals[idx]) < 0.01)
         self.assertTrue(self.inference_mixin.inference.time_elapsed > 0)
 
 
@@ -191,14 +201,17 @@ class TestInferenceMixinSingleOutputOptimisation(TestCase):
                 'value', flat=True
             )
             self.assertEqual(len(f_vals), 11)
+            p_vals_all = []
             for prior in priors:
-                results = chain.inference_results.filter(prior=prior).order_by('iteration').values_list(
+                p_vals = chain.inference_results.filter(prior=prior).order_by('iteration').values_list(
                     'value', flat=True
                 )
-                self.assertEqual(len(results), 11)
+                self.assertEqual(len(p_vals), 11)
+                p_vals_all.append(p_vals)
                 iterations = chain.inference_results.filter(prior=prior).order_by('iteration').values_list(
                     'iteration', flat=True
                 )
                 expected = list(range(11))
                 self.assertTrue(np.array_equal(iterations, expected))
+
         self.assertTrue(self.inference_mixin.inference.time_elapsed > 0)

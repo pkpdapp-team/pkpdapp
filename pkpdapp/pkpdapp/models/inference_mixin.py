@@ -220,15 +220,20 @@ class InferenceMixin:
         pints_var_names = self._pints_forward_model.variable_parameter_names()
         variables = self.fitted_variables
         priors_var_names = [v.qname for v in variables]
-        self.django_to_pints_lookup = [pints_var_names.index(n) for
-                                       n in priors_var_names]
-        self.pints_to_django_lookup = [priors_var_names.index(n) for
-                                       n in pints_var_names]
+
+        self.django_to_pints_lookup = {
+            qname: pints_var_names.index(qname)
+            for qname in priors_var_names
+        }
+        self.pints_to_django_lookup = {
+            qname: priors_var_names.index(qname)
+            for qname in pints_var_names
+        }
 
         # set x0 to be typical values of parameters
         # TODO: change this to be random / other values
         x0 = [v.default_value for v in variables]
-        x0 = [x0[i] for i in self.django_to_pints_lookup]
+        x0 = [x0[i] for i in self.django_to_pints_lookup.values()]
 
         self._inference_objects = [self._inference_method(x0) for
                                    i in range(self.inference.number_of_chains)]
@@ -251,29 +256,31 @@ class InferenceMixin:
             iteration=iteration,
             value=fn_value
         )
-        for i in range(len(self.priors)):
+        for prior in self.priors:
+            value = values[self.pints_to_django_lookup[prior.variable.qname]]
             InferenceResult.objects.create(
                 chain=chains[chain_index],
-                prior=self.priors[i],
+                prior=prior,
                 iteration=iteration,
-                value=values[self.pints_to_django_lookup[i]])
+                value=value)
 
     def step_inference(self):
         # runs one set of ask / tell
         self.inference.iteration += 1
-        for i in range(self.inference.number_of_chains):
-            x = self._inference_objects[i].ask()
+        for idx, obj in enumerate(self._inference_objects):
+            x = obj.ask()
             if self._inference_type == "SA":  # sampling
                 score = self._pints_log_posterior(x)
                 self.inference.number_of_function_evals += 1
-                x, _, _ = self._inference_objects[i].tell(score)
+                x, score, _ = obj.tell(score)
             else:
                 scores = [self._pints_log_posterior(xi) for xi in x]
                 self.inference.number_of_function_evals += len(x)
-                self._inference_objects[i].tell(scores)
-                x = self._inference_objects[i].xbest()
-                score = self._inference_objects[i].fbest()
-            self.write_inference_results(x, score, self.inference.iteration, i)
+                obj.tell(scores)
+                x = obj.xbest()
+                score = obj.fbest()
+            self.write_inference_results(x, score, self.inference.iteration,
+                                         idx)
 
     def run_inference(self):
         # runs ask / tell
