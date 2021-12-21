@@ -112,6 +112,10 @@ class TestInferenceMixinSingleOutputSampling(TestCase):
         self.assertEqual(len(chains), 4)
         for chain in chains:
             priors = self.inference_mixin.priors
+            f_vals = chain.inference_function_results.order_by('iteration').values_list(
+                'value', flat=True
+            )
+            self.assertEqual(len(f_vals), 11)
             for prior in priors:
                 results = chain.inference_results.filter(prior=prior).order_by('iteration').values_list(
                     'value', flat=True
@@ -122,6 +126,7 @@ class TestInferenceMixinSingleOutputSampling(TestCase):
             )
             expected = list(range(11))
             self.assertTrue(np.array_equal(iterations, expected))
+        self.assertTrue(self.inference_mixin.inference.time_elapsed > 0)
 
 
 class TestInferenceMixinSingleOutputOptimisation(TestCase):
@@ -194,6 +199,10 @@ class TestInferenceMixinSingleOutputOptimisation(TestCase):
         self.assertEqual(len(chains), 3)
         for chain in chains:
             priors = self.inference_mixin.priors
+            f_vals = chain.inference_function_results.order_by('iteration').values_list(
+                'value', flat=True
+            )
+            self.assertEqual(len(f_vals), 11)
             for prior in priors:
                 results = chain.inference_results.filter(prior=prior).order_by('iteration').values_list(
                     'value', flat=True
@@ -204,3 +213,4 @@ class TestInferenceMixinSingleOutputOptimisation(TestCase):
                 )
                 expected = list(range(11))
                 self.assertTrue(np.array_equal(iterations, expected))
+        self.assertTrue(self.inference_mixin.inference.time_elapsed > 0)

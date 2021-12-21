@@ -5,7 +5,7 @@
 #
 
 import pints
-import numpy as np
+import time
 from pkpdapp.models import (
     MyokitForwardModel, LogLikelihoodNormal,
     LogLikelihoodLogNormal,
@@ -19,6 +19,7 @@ optimisers_dict = {
     'SNES': pints.SNES,
     'XNES': pints.XNES
 }
+
 
 samplers_dict = {
     'Haario-Bardenet': pints.HaarioBardenetACMC,
@@ -224,6 +225,7 @@ class InferenceMixin:
         # set inference results objects for each fitted parameter to be
         # initial values
         fn_val = self._pints_log_posterior(x0)
+        self.inference.number_of_function_evals += 1
         for i in range(self.inference.number_of_chains):
             InferenceChain.objects.create(inference=self.inference)
             self.write_inference_results(x0, fn_val,
@@ -252,9 +254,11 @@ class InferenceMixin:
             x = self._inference_objects[i].ask()
             if self._inference_type == "SA":  # sampling
                 score = self._pints_log_posterior(x)
+                self.inference.number_of_function_evals += 1
                 x, _, _ = self._inference_objects[i].tell(score)
             else:
                 scores = [self._pints_log_posterior(xi) for xi in x]
+                self.inference.number_of_function_evals += len(x)
                 self._inference_objects[i].tell(scores)
                 x = self._inference_objects[i].xbest()
                 score = self._inference_objects[i].fbest()
@@ -262,9 +266,12 @@ class InferenceMixin:
 
     def run_inference(self):
         # runs ask / tell
+        time_start = time.time()
         n_iterations = self.inference.max_number_of_iterations
         for i in range(n_iterations):
             self.step_inference()
+            time_now = time.time()
+            self.inference.time_elapsed = time_now - time_start
 
     def fixed_variables(self):
         return self._fixed_variables
