@@ -80,6 +80,7 @@ class InferenceMixin:
         self.create_pints_log_likelihood()
         self.create_pints_log_prior()
         self.create_pints_log_posterior()
+        self.create_pints_inference_object()
 
     def create_fixed_parameter_dictionary(self, all_myokit_parameters, fitted_parameters):
         # gets fixed parameters for Myokit model only: i.e. does not give noise parameters

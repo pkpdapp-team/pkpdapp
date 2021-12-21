@@ -100,7 +100,6 @@ class TestInferenceMixinSingleOutputSampling(TestCase):
 
     def test_inference_runs(self):
         # tests that inference runs and writes results to db
-        self.inference_mixin.create_pints_inference_object()
         self.inference_mixin.run_inference()
 
         chains = self.inference_mixin.inference.chains.all()
@@ -182,7 +181,6 @@ class TestInferenceMixinSingleOutputOptimisation(TestCase):
 
     def test_inference_runs(self):
         # tests that inference runs and writes results to db
-        self.inference_mixin.create_pints_inference_object()
         self.inference_mixin.run_inference()
 
         chains = self.inference_mixin.inference.chains.all()
