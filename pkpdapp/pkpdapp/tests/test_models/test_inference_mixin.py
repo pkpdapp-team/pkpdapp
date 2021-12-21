@@ -109,5 +109,9 @@ class TestInferenceMixinSingleOutput(TestCase):
         self.inference_mixin.run_inference()
 
         chain = self.inference_mixin.inference.chains.all()[0]
-        draws = chain.as_list()
-        print(draws)
+        priors = self.inference_mixin.priors
+        for prior in priors:
+            results = chain.inference_results.filter(prior=prior).order_by('iteration').values_list(
+                'value', flat=True
+            )
+            self.assertEqual(len(results), 11)

@@ -22,7 +22,7 @@ class InferenceChain(models.Model):
     def as_list(self):
         return \
             self.inference_results.order_by('iteration').values_list(
-                'value', flat=True
+                'value',
             )
 
 
