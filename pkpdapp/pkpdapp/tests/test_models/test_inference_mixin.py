@@ -117,6 +117,11 @@ class TestInferenceMixinSingleOutputSampling(TestCase):
                     'value', flat=True
                 )
                 self.assertEqual(len(results), 11)
+            iterations = chain.inference_results.filter(prior=prior).order_by('iteration').values_list(
+                'iteration', flat=True
+            )
+            expected = list(range(11))
+            self.assertTrue(np.array_equal(iterations, expected))
 
 
 class TestInferenceMixinSingleOutputOptimisation(TestCase):
@@ -194,3 +199,8 @@ class TestInferenceMixinSingleOutputOptimisation(TestCase):
                     'value', flat=True
                 )
                 self.assertEqual(len(results), 11)
+                iterations = chain.inference_results.filter(prior=prior).order_by('iteration').values_list(
+                    'iteration', flat=True
+                )
+                expected = list(range(11))
+                self.assertTrue(np.array_equal(iterations, expected))
