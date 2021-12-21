@@ -217,13 +217,13 @@ class InferenceMixin:
 
         self._inference_objects = [self._inference_method(x0) for
                                    i in range(self.inference.number_of_chains)]
-        self._iteration = 0
+        self.inference.iteration = 0
         # set inference results objects for each fitted parameter to be
         # initial values
         # TODO: handle multiple chains
         for i in range(self.inference.number_of_chains):
             InferenceChain.objects.create(inference=self.inference)
-            self.write_inference_results(x0, self._iteration, i)
+            self.write_inference_results(x0, self.inference.iteration, i)
 
     def write_inference_results(self, values, iteration, chain_index):
         # Writes inference results to one chain
@@ -246,8 +246,8 @@ class InferenceMixin:
                 score = [self._pints_log_posterior(xi) for xi in x]
                 self._inference_objects[i].tell(score)
                 x = np.mean(x, axis=0).tolist()
-            self._iteration += 1
-            self.write_inference_results(x, self._iteration, i)
+            self.inference.iteration += 1
+            self.write_inference_results(x, self.inference.iteration, i)
 
     def run_inference(self):
         # runs ask / tell
