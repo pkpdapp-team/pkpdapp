@@ -215,35 +215,39 @@ class InferenceMixin:
         x0 = [v.default_value for v in variables]
         x0 = [x0[i] for i in self.django_to_pints_lookup]
 
-        self._inference_object = self._inference_method(x0)
+        self._inference_objects = [self._inference_method(x0) for
+                                   i in range(self.inference.number_of_chains)]
         self._iteration = 0
         # set inference results objects for each fitted parameter to be
         # initial values
         # TODO: handle multiple chains
-        InferenceChain.objects.create(inference=self.inference)
-        self.write_inference_results(x0, self._iteration)
+        for i in range(self.inference.number_of_chains):
+            InferenceChain.objects.create(inference=self.inference)
+            self.write_inference_results(x0, self._iteration, i)
 
-    def write_inference_results(self, values, iteration):
+    def write_inference_results(self, values, iteration, chain_index):
         # Writes inference results to one chain
+        chains = self.inference.chains.all()
         for i in range(len(self.priors)):
             InferenceResult.objects.create(
-                chain=self.inference.chains.all()[0],
+                chain=chains[chain_index],
                 prior=self.priors[i],
                 iteration=iteration,
                 value=values[i])
 
     def step_inference(self):
         # runs one set of ask / tell
-        x = self._inference_object.ask()
-        if self._inference_type == "SA":
-            score = self._pints_log_posterior(x)
-            x, _, _ = self._inference_object.tell(score)
-        else:
-            score = [self._pints_log_posterior(xi) for xi in x]
-            self._inference_object.tell(score)
-            x = np.mean(x, axis=0).tolist()
-        self._iteration += 1
-        self.write_inference_results(x, self._iteration)
+        for i in range(self.inference.number_of_chains):
+            x = self._inference_objects[i].ask()
+            if self._inference_type == "SA":
+                score = self._pints_log_posterior(x)
+                x, _, _ = self._inference_objects[i].tell(score)
+            else:
+                score = [self._pints_log_posterior(xi) for xi in x]
+                self._inference_objects[i].tell(score)
+                x = np.mean(x, axis=0).tolist()
+            self._iteration += 1
+            self.write_inference_results(x, self._iteration, i)
 
     def run_inference(self):
         # runs ask / tell

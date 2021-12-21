@@ -108,13 +108,15 @@ class TestInferenceMixinSingleOutputSampling(TestCase):
         self.inference_mixin.create_pints_inference_object()
         self.inference_mixin.run_inference()
 
-        chain = self.inference_mixin.inference.chains.all()[0]
-        priors = self.inference_mixin.priors
-        for prior in priors:
-            results = chain.inference_results.filter(prior=prior).order_by('iteration').values_list(
-                'value', flat=True
-            )
-            self.assertEqual(len(results), 11)
+        chains = self.inference_mixin.inference.chains.all()
+        self.assertEqual(len(chains), 4)
+        for chain in chains:
+            priors = self.inference_mixin.priors
+            for prior in priors:
+                results = chain.inference_results.filter(prior=prior).order_by('iteration').values_list(
+                    'value', flat=True
+                )
+                self.assertEqual(len(results), 11)
 
 
 class TestInferenceMixinSingleOutputOptimisation(TestCase):
@@ -148,6 +150,7 @@ class TestInferenceMixinSingleOutputOptimisation(TestCase):
             project=project,
             max_number_of_iterations=10,
             algorithm=Algorithm.objects.get(name='XNES'),
+            number_of_chains=3,
         )
         LogLikelihoodNormal.objects.create(
             sd=1.0,
@@ -182,10 +185,12 @@ class TestInferenceMixinSingleOutputOptimisation(TestCase):
         self.inference_mixin.create_pints_inference_object()
         self.inference_mixin.run_inference()
 
-        chain = self.inference_mixin.inference.chains.all()[0]
-        priors = self.inference_mixin.priors
-        for prior in priors:
-            results = chain.inference_results.filter(prior=prior).order_by('iteration').values_list(
-                'value', flat=True
-            )
-            self.assertEqual(len(results), 11)
+        chains = self.inference_mixin.inference.chains.all()
+        self.assertEqual(len(chains), 3)
+        for chain in chains:
+            priors = self.inference_mixin.priors
+            for prior in priors:
+                results = chain.inference_results.filter(prior=prior).order_by('iteration').values_list(
+                    'value', flat=True
+                )
+                self.assertEqual(len(results), 11)
