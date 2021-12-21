@@ -99,9 +99,10 @@ class InferenceMixin:
         # get index of variables in named list
         self._fixed_variables = [all_myokit_parameters[all_myokit_parameter_names.index(v)] for v in myokit_minus_fixed]
 
-        fixed_parameter_dictionary = {}
-        for param in self._fixed_variables:
-            fixed_parameter_dictionary[param.name] = param.default_value
+        fixed_parameter_dictionary = {
+            param.name: param.default_value
+            for param in self._fixed_variables
+        }
         return fixed_parameter_dictionary
 
     def create_pints_forward_model(self):
