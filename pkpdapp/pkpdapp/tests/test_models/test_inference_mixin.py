@@ -65,7 +65,7 @@ class TestInferenceMixinSingleOutputSampling(TestCase):
                 inference=self.inference,
             )
         # 'run' inference to create copies of models
-        self.inference = self.inference.run_inference()
+        self.inference = self.inference.run_inference(test=True)
 
         # create mixin object
         self.inference_mixin = InferenceMixin(self.inference)
@@ -186,7 +186,7 @@ class TestInferenceMixinSingleOutputOptimisation(TestCase):
                 inference=self.inference,
             )
         # 'run' inference to create copies of models
-        self.inference = self.inference.run_inference()
+        self.inference = self.inference.run_inference(test=True)
 
         # create mixin object
         self.inference_mixin = InferenceMixin(self.inference)
