@@ -130,7 +130,9 @@ class TestInferenceMixinSingleOutputSampling(TestCase):
             for idx, params in enumerate(p_vals_all):
                 params = [params[lookup[p.variable.qname]] for p in priors]
                 self.assertTrue(abs(fn(params) - f_vals[idx]) < 0.01)
-        self.assertTrue(self.inference_mixin.inference.time_elapsed > 0)
+        inference = self.inference_mixin.inference
+        self.assertTrue(inference.time_elapsed > 0)
+        self.assertTrue(inference.number_of_function_evals > 0)
 
 
 class TestInferenceMixinSingleOutputOptimisation(TestCase):
@@ -216,4 +218,9 @@ class TestInferenceMixinSingleOutputOptimisation(TestCase):
                 expected = list(range(11))
                 self.assertTrue(np.array_equal(iterations, expected))
 
-        self.assertTrue(self.inference_mixin.inference.time_elapsed > 0)
+        # don't test for inference log_posterior(param) = fn since they won't
+        # because of the way the 'best' params are picked
+
+        inference = self.inference_mixin.inference
+        self.assertTrue(inference.time_elapsed > 0)
+        self.assertTrue(inference.number_of_function_evals > 0)
