@@ -1,22 +1,19 @@
 import React from "react";
-import { useSelector, useDispatch } from 'react-redux'
-import IconButton from '@material-ui/core/IconButton';
+import { useSelector, useDispatch } from "react-redux";
+import IconButton from "@material-ui/core/IconButton";
 import { useForm, useFormState } from "react-hook-form";
-import SaveIcon from '@material-ui/icons/Save';
+import SaveIcon from "@material-ui/icons/Save";
 
-import {FormCheckboxField, FormTextField} from '../forms/FormComponents'
-import { selectSubjectById, updateSubject} from './subjectsSlice'
+import { FormCheckboxField, FormTextField } from "../forms/FormComponents";
+import { selectSubjectById, updateSubject } from "./subjectsSlice";
 
-
-export default function SubjectSubform({subject_id, disableSave}) {
+export default function SubjectSubform({ subject_id, disableSave }) {
   const dispatch = useDispatch();
-  let subject = useSelector(
-    state => selectSubjectById(state, subject_id)
-  );
+  let subject = useSelector((state) => selectSubjectById(state, subject_id));
   if (!subject) {
     subject = {
       display: false,
-    }
+    };
   }
 
   const { control, handleSubmit } = useForm({
@@ -25,39 +22,39 @@ export default function SubjectSubform({subject_id, disableSave}) {
       display: subject.display,
       name: subject.name,
       shape: subject.shape,
-    }
+    },
   });
 
   const { isDirty } = useFormState({ control });
 
   const onSubmit = (values) => {
-    console.log('submit subject', values)
-    dispatch(updateSubject(values))
+    console.log("submit subject", values);
+    dispatch(updateSubject(values));
   };
 
   return (
     <React.Fragment>
       <FormCheckboxField
-        control={control} 
-        name={'display'}
+        control={control}
+        name={"display"}
         defaultValue={subject.display}
         label={subject.id_in_dataset}
       />
       <FormTextField
-        control={control} 
-        name={'shape'}
-        label={'Shape'}
+        control={control}
+        name={"shape"}
+        label={"Shape"}
         type="number"
       />
-      {isDirty &&
+      {isDirty && (
         <IconButton
           onClick={handleSubmit(onSubmit)}
           disabled={disableSave}
-          size='small'
+          size="small"
         >
-          <SaveIcon/>
+          <SaveIcon />
         </IconButton>
-      }
+      )}
     </React.Fragment>
-  )
+  );
 }

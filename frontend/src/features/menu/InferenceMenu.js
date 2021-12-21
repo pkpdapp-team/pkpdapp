@@ -1,49 +1,46 @@
 import React from "react";
 
-import { useSelector } from 'react-redux'
-import AccountTreeIcon from '@material-ui/icons/AccountTree';
+import { useSelector } from "react-redux";
+import AccountTreeIcon from "@material-ui/icons/AccountTree";
 
-import List from '@material-ui/core/List';
-import ListItem from '@material-ui/core/ListItem';
-import ListItemIcon from '@material-ui/core/ListItemIcon';
-import ListItemText from '@material-ui/core/ListItemText';
+import List from "@material-ui/core/List";
+import ListItem from "@material-ui/core/ListItem";
+import ListItemIcon from "@material-ui/core/ListItemIcon";
+import ListItemText from "@material-ui/core/ListItemText";
 
-import Divider from '@material-ui/core/Divider';
+import Divider from "@material-ui/core/Divider";
 
-import Inferences from '../inference/Inferences' 
-import DraftInferences from '../inference/DraftInferences' 
+import Inferences from "../inference/Inferences";
+import DraftInferences from "../inference/DraftInferences";
 
 import {
-  selectChosenProject, userHasReadOnlyAccess
-} from '../projects/projectsSlice.js'
-
+  selectChosenProject,
+  userHasReadOnlyAccess,
+} from "../projects/projectsSlice.js";
 
 export default function ProjectMenu() {
   const project = useSelector(selectChosenProject);
-  console.log('got project', project)
+  console.log("got project", project);
 
-  const disableSave = project ? userHasReadOnlyAccess(project) : true
+  const disableSave = project ? userHasReadOnlyAccess(project) : true;
 
   const projectName = project ? project.name : "None";
 
   return (
     <List>
-        <ListItem button >
-          <ListItemIcon>
-            <AccountTreeIcon/>
-          </ListItemIcon>
-          <ListItemText primary={"Project: " + projectName} />
-        </ListItem>
-      {project &&
-      <React.Fragment>
-        <Divider />
-        <DraftInferences project={project} disableSave={disableSave}/>
-      </React.Fragment>
-      }
-      {project &&
-        <Inferences project={project} disableSave={disableSave}/>
-      }
-
+      <ListItem button>
+        <ListItemIcon>
+          <AccountTreeIcon />
+        </ListItemIcon>
+        <ListItemText primary={"Project: " + projectName} />
+      </ListItem>
+      {project && (
+        <React.Fragment>
+          <Divider />
+          <DraftInferences project={project} disableSave={disableSave} />
+        </React.Fragment>
+      )}
+      {project && <Inferences project={project} disableSave={disableSave} />}
     </List>
-  )
+  );
 }

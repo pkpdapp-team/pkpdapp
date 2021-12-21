@@ -1,132 +1,134 @@
-import { 
-  createSlice, createEntityAdapter, createAsyncThunk,
-} from '@reduxjs/toolkit'
-import { api } from '../../Api'
-import {fetchVariablesByPdModel} from '../variables/variablesSlice'
-import {fetchUnitsByPdModel} from '../projects/unitsSlice'
-import {fetchInferences} from '../inference/inferenceSlice'
-import {runInference} from '../inference/inferenceSlice'
+import {
+  createSlice,
+  createEntityAdapter,
+  createAsyncThunk,
+} from "@reduxjs/toolkit";
+import { api } from "../../Api";
+import { fetchVariablesByPdModel } from "../variables/variablesSlice";
+import { fetchUnitsByPdModel } from "../projects/unitsSlice";
+import { runInference } from "../inference/inferenceSlice";
 
 const pdModelsAdapter = createEntityAdapter({
-  sortComparer: (a, b) => b.id < a.id
-})
+  sortComparer: (a, b) => b.id < a.id,
+});
 
 const initialState = pdModelsAdapter.getInitialState({
-  status: 'idle',
+  status: "idle",
   errorFetch: null,
-})
+});
 
-
-export const fetchPdModels = createAsyncThunk('pdModels/fetchPdModels', async (project, { dispatch }) => {
-  let response = await api.get(
-    `/api/pharmacodynamic/?project_id=${project.id}`
-  )
-  for (var i = 0; i < response.length; i++) { 
-    dispatch(fetchPdModelSimulateById(response[i].id))
+export const fetchPdModels = createAsyncThunk(
+  "pdModels/fetchPdModels",
+  async (project, { dispatch }) => {
+    let response = await api.get(
+      `/api/pharmacodynamic/?project_id=${project.id}`
+    );
+    for (var i = 0; i < response.length; i++) {
+      dispatch(fetchPdModelSimulateById(response[i].id));
+    }
+    return response;
   }
-  return response
-})
+);
 
-export const fetchPdModelById = createAsyncThunk('pdModels/fetchPdModelById', async (model_id, { dispatch }) => {
-  let response = await api.get(
-    `/api/pharmacodynamic/${model_id}/`
-  )
-  dispatch(fetchPdModelSimulateById(response.id))
-  return response
-})
+export const fetchPdModelById = createAsyncThunk(
+  "pdModels/fetchPdModelById",
+  async (model_id, { dispatch }) => {
+    let response = await api.get(`/api/pharmacodynamic/${model_id}/`);
+    dispatch(fetchPdModelSimulateById(response.id));
+    return response;
+  }
+);
 
-export const fetchPdModelSimulateById = createAsyncThunk('pdModels/fetchPdModelSimulateById', async (model_id) => {
-  const response = await api.post(
-    `/api/pharmacodynamic/${model_id}/simulate`
-  )
-  return response
-})
+export const fetchPdModelSimulateById = createAsyncThunk(
+  "pdModels/fetchPdModelSimulateById",
+  async (model_id) => {
+    const response = await api.post(
+      `/api/pharmacodynamic/${model_id}/simulate`
+    );
+    return response;
+  }
+);
 
 export const addNewPdModel = createAsyncThunk(
-  'pdModels/addNewPdModel',
+  "pdModels/addNewPdModel",
   async (project, { dispatch }) => {
     const initialPdModel = {
-      name: 'new',
+      name: "new",
       project: project.id,
-    }
-    let pdModel = await api.post(
-      '/api/pharmacodynamic/', initialPdModel
-    )
+    };
+    let pdModel = await api.post("/api/pharmacodynamic/", initialPdModel);
 
-    dispatch(fetchVariablesByPdModel(pdModel.id))
-    dispatch(fetchUnitsByPdModel(pdModel.id))
+    dispatch(fetchVariablesByPdModel(pdModel.id));
+    dispatch(fetchUnitsByPdModel(pdModel.id));
     pdModel.chosen = true;
 
-    return pdModel
+    return pdModel;
   }
-)
+);
 
 export const deletePdModel = createAsyncThunk(
-  'pdModels/deletePdModel',
+  "pdModels/deletePdModel",
   async (pdModelId, { dispatch }) => {
-    await api.delete(
-      `/api/pharmacodynamic/${pdModelId}`
-    )
-    return pdModelId
+    await api.delete(`/api/pharmacodynamic/${pdModelId}`);
+    return pdModelId;
   }
-)
+);
 
 export const uploadPdSbml = createAsyncThunk(
-  'pdModels/uploadPdSbml',
-  async ({id, sbml}, {rejectWithValue, dispatch}) => {
-    await api.putMultiPart(
-      `/api/pharmacodynamic/${id}/sbml/`, {sbml}
-    )
-    let pdModel = await api.get(`/api/pharmacodynamic/${id}`)
-    dispatch(fetchVariablesByPdModel(pdModel.id))
-    dispatch(fetchUnitsByPdModel(pdModel.id))
-    dispatch(fetchPdModelSimulateById(pdModel.id))
-    return pdModel
+  "pdModels/uploadPdSbml",
+  async ({ id, sbml }, { rejectWithValue, dispatch }) => {
+    await api.putMultiPart(`/api/pharmacodynamic/${id}/sbml/`, { sbml });
+    let pdModel = await api.get(`/api/pharmacodynamic/${id}`);
+    dispatch(fetchVariablesByPdModel(pdModel.id));
+    dispatch(fetchUnitsByPdModel(pdModel.id));
+    dispatch(fetchPdModelSimulateById(pdModel.id));
+    return pdModel;
   }
-)
+);
 
 export const updatePdModel = createAsyncThunk(
-  'pdModels/updatePdModel',
+  "pdModels/updatePdModel",
   async (pdModel, { dispatch }) => {
     let newPdModel = await api.put(
-      `/api/pharmacodynamic/${pdModel.id}/`, pdModel
-    )
-    dispatch(fetchPdModelSimulateById(newPdModel.id))
-    return newPdModel
+      `/api/pharmacodynamic/${pdModel.id}/`,
+      pdModel
+    );
+    dispatch(fetchPdModelSimulateById(newPdModel.id));
+    return newPdModel;
   }
-)
+);
 
 export const pdModelsSlice = createSlice({
-  name: 'pdModels',
-  initialState, 
+  name: "pdModels",
+  initialState,
   reducers: {
     togglePdModel(state, action) {
-      let pdModel = state.entities[action.payload.id]
-      pdModel.chosen = !pdModel.chosen
+      let pdModel = state.entities[action.payload.id];
+      pdModel.chosen = !pdModel.chosen;
     },
     setPdModelError(state, action) {
-      let pdModel = state.entities[action.payload.id]
-      pdModel.error = action.payload.error 
+      let pdModel = state.entities[action.payload.id];
+      pdModel.error = action.payload.error;
     },
-    addPdModels: pdModelsAdapter.upsertMany, 
+    addPdModels: pdModelsAdapter.upsertMany,
   },
   extraReducers: {
     [fetchPdModels.pending]: (state, action) => {
-      state.status = 'loading'
+      state.status = "loading";
     },
     [fetchPdModels.rejected]: (state, action) => {
-      state.status = 'failed'
-      state.errorFetch = action.error.message
+      state.status = "failed";
+      state.errorFetch = action.error.message;
     },
     [fetchPdModels.fulfilled]: (state, action) => {
-      state.status = 'succeeded'
-      pdModelsAdapter.setAll(state, action.payload)
+      state.status = "succeeded";
+      pdModelsAdapter.setAll(state, action.payload);
     },
 
     // Inferences
     [runInference.fulfilled]: (state, action) => {
       if (action.payload.pd_models) {
-        pdModelsAdapter.addMany(state, action.payload.pd_models)
+        pdModelsAdapter.addMany(state, action.payload.pd_models);
       }
     },
 
@@ -134,55 +136,56 @@ export const pdModelsSlice = createSlice({
     [fetchPdModelSimulateById.fulfilled]: pdModelsAdapter.upsertOne,
     [fetchPdModelSimulateById.pending]: (state, action) => {
       if (state.ids.includes(action.meta.arg)) {
-        state.entities[action.meta.arg]['simulate'] = {
-          status: 'loading'
-        }
+        state.entities[action.meta.arg]["simulate"] = {
+          status: "loading",
+        };
       }
     },
     [fetchPdModelSimulateById.fulfilled]: (state, action) => {
       if (state.ids.includes(action.meta.arg)) {
-        state.entities[action.meta.arg].simulate =  {
+        state.entities[action.meta.arg].simulate = {
           ...action.payload,
-          status: 'succeeded'
-        }
+          status: "succeeded",
+        };
       }
     },
     [fetchPdModelSimulateById.rejected]: (state, action) => {
       if (state.ids.includes(action.meta.arg)) {
         state.entities[action.meta.arg].simulate = {
-          status: 'failed'
-        }
+          status: "failed",
+        };
       }
     },
     [addNewPdModel.fulfilled]: pdModelsAdapter.addOne,
     [updatePdModel.fulfilled]: pdModelsAdapter.upsertOne,
     [deletePdModel.fulfilled]: pdModelsAdapter.removeOne,
     [uploadPdSbml.pending]: (state, action) => {
-      state.entities[action.meta.arg.id].status = 'loading'
-      state.entities[action.meta.arg.id].errors = []
+      state.entities[action.meta.arg.id].status = "loading";
+      state.entities[action.meta.arg.id].errors = [];
     },
     [uploadPdSbml.rejected]: (state, action) => {
-      state.entities[action.meta.arg.id].status = 'failed'
-      state.entities[action.meta.arg.id].errors = action.payload.sbml
+      state.entities[action.meta.arg.id].status = "failed";
+      state.entities[action.meta.arg.id].errors = action.payload.sbml;
     },
     [uploadPdSbml.fulfilled]: (state, action) => {
-      state.entities[action.meta.arg.id].status = 'failed'
-      pdModelsAdapter.upsertOne(state, action)
+      state.entities[action.meta.arg.id].status = "failed";
+      pdModelsAdapter.upsertOne(state, action);
     },
-  }
-})
+  },
+});
 
-export const { togglePdModel, addPdModels } = pdModelsSlice.actions
+export const { togglePdModel, addPdModels } = pdModelsSlice.actions;
 
-export default pdModelsSlice.reducer
+export default pdModelsSlice.reducer;
 
 export const {
   selectAll: selectAllPdModels,
   selectById: selectPdModelById,
-  selectIds: selectPdModelIds
-} = pdModelsAdapter.getSelectors(state => state.pdModels)
+  selectIds: selectPdModelIds,
+} = pdModelsAdapter.getSelectors((state) => state.pdModels);
 
-export const selectChosenPdModels = state => selectAllPdModels(state).filter(pdModel => pdModel.chosen);
+export const selectChosenPdModels = (state) =>
+  selectAllPdModels(state).filter((pdModel) => pdModel.chosen);
 
-export const selectWritablePdModels = state => selectAllPdModels(state).filter(pdModel => !pdModel.read_only);
-
+export const selectWritablePdModels = (state) =>
+  selectAllPdModels(state).filter((pdModel) => !pdModel.read_only);

@@ -101,11 +101,11 @@ class InferenceSerializer(serializers.ModelSerializer):
 
 
 class InferenceChainSerializer(serializers.ModelSerializer):
-    values = serializers.SerializerMethodField('get_values')
+    data = serializers.SerializerMethodField('get_data')
 
     class Meta:
         model = InferenceChain
         fields = '__all__'
 
-    def get_values(self, inference_chain):
-        return inference_chain.as_list()
+    def get_data(self, inference_chain):
+        return inference_chain.as_pandas().to_dict(orient='list')
