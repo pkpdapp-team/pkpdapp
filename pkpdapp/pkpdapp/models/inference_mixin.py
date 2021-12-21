@@ -69,7 +69,17 @@ class InferenceMixin:
         self._values = [df['values'].tolist() for df in dfs]
         self._times = [df['times'].tolist() for df in dfs]
 
+        # create log-posterior
+
+        # types needed later
         self.inference = inference
+
+        # create pints classes
+        self.create_pints_forward_model()
+        self.create_pints_problem_collection()
+        self.create_pints_log_likelihood()
+        self.create_pints_log_prior()
+        self.create_pints_log_posterior()
 
     def create_fixed_parameter_dictionary(self, all_myokit_parameters, fitted_parameters):
         # gets fixed parameters for Myokit model only: i.e. does not give noise parameters
@@ -164,8 +174,8 @@ class InferenceMixin:
         times = self._times
         values = self._values
 
-        # here we create a problem collection to handle the case when the
-        # outputs / times are wragged
+        # create a problem collection to handle the case when the outputs or
+        # times are wragged
         times_values = []
         for i in range(len(self._outputs)):
             times_values.append(times[i])
@@ -187,18 +197,18 @@ class InferenceMixin:
             log_likes.append(log_like_methods[i](problems[i]))
 
         # combine them
-        self._log_likelihood = CombinedLogLikelihood(
+        self._pints_log_likelihood = CombinedLogLikelihood(
             self._noise_parameter_values,
             *log_likes)
-        return self._log_likelihood
+        return self._pints_log_likelihood
 
     def create_pints_log_prior(self):
-        self._composed_log_prior = pints.ComposedLogPrior(*self._pints_log_priors)
-        return self._composed_log_prior
+        self._pints_composed_log_prior = pints.ComposedLogPrior(*self._pints_log_priors)
+        return self._pints_composed_log_prior
 
     def create_pints_log_posterior(self):
-        self._pints_log_posterior = pints.LogPosterior(self._log_likelihood,
-                                                       self._composed_log_prior)
+        self._pints_log_posterior = pints.LogPosterior(self._pints_log_likelihood,
+                                                       self._pints_composed_log_prior)
         return self._pints_log_posterior
 
     def create_pints_inference_object(self):

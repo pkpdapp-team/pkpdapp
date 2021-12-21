@@ -100,11 +100,6 @@ class TestInferenceMixinSingleOutputSampling(TestCase):
 
     def test_inference_runs(self):
         # tests that inference runs and writes results to db
-        self.inference_mixin.create_pints_forward_model()
-        self.inference_mixin.create_pints_problem_collection()
-        self.inference_mixin.create_pints_log_likelihood()
-        self.inference_mixin.create_pints_log_prior()
-        self.inference_mixin.create_pints_log_posterior()
         self.inference_mixin.create_pints_inference_object()
         self.inference_mixin.run_inference()
 
@@ -187,11 +182,6 @@ class TestInferenceMixinSingleOutputOptimisation(TestCase):
 
     def test_inference_runs(self):
         # tests that inference runs and writes results to db
-        self.inference_mixin.create_pints_forward_model()
-        self.inference_mixin.create_pints_problem_collection()
-        self.inference_mixin.create_pints_log_likelihood()
-        self.inference_mixin.create_pints_log_prior()
-        self.inference_mixin.create_pints_log_posterior()
         self.inference_mixin.create_pints_inference_object()
         self.inference_mixin.run_inference()
 
