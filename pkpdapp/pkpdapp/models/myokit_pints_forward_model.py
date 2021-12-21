@@ -80,6 +80,7 @@ class MyokitForwardModel(pints.ForwardModel):
             self._fixed_parameter_indices = [self._all_parameter_names.index(v)
                                              for v
                                              in self._fixed_parameter_names]
+
         self._variable_parameter_indices = [self._all_parameter_names.index(v)
                                             for v
                                             in self._variable_parameter_names]
@@ -138,7 +139,7 @@ class MyokitForwardModel(pints.ForwardModel):
         # Set constant model parameters
         self._set_const(full_parameters[self._n_states:])
 
-        # Simulate
+        # Simulate: need +1 for times to ensure simulation surpasses last time
         output = self._sim.run(
             times[-1] + 1, log=self._output_names, log_times=times)
         result = [output[name] for name in self._output_names]

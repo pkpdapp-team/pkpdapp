@@ -39,30 +39,38 @@ class InferenceMixin:
         self._myokit_simulator = model.get_myokit_simulator()
 
         # get biomarkers
-        self._biomarker_types, self._outputs = self.get_biomarker_types_and_output_variables(
-            inference)
+        self._biomarker_types, self._outputs = (
+            self.get_biomarker_types_and_output_variables(inference)
+        )
         self._n_outputs = len(self._outputs)
 
-        # get objectives and fixed noise parameters (we assume they are fixed for now)
-        self._observed_loglikelihoods, self._noise_parameter_values = self.get_objectives(inference)
+        # get objectives and fixed noise parameters (we assume they are fixed
+        # for now)
+        self._observed_loglikelihoods, self._noise_parameter_values = (
+            self.get_objectives(inference)
+        )
 
         # get priors / boundaries
         self.priors = inference.priors.all()
         self._pints_log_priors = self.get_priors_andor_boundaries(self.priors)
 
-        # get all the variable names associated with the Myokit model minus 'time'
+        # get all the variable names associated with the Myokit model minus
+        # 'time'
         all_myokit_variables = model.variables.exclude(name='time')
 
-        # get fitted parameters: note this will include all parameters, including noise
-        # parameters which are not used by Myokit models
+        # get fitted parameters: note this will include all parameters,
+        # including noise parameters which are not used by Myokit models
         self.fitted_variables = self.get_fitted_variables(self.priors)
 
-        # create a dictionary of key-value pairs for fixed parameters of Myokit model
+        # create a dictionary of key-value pairs for fixed parameters of Myokit
+        # model
         self._fixed_parameters_dict = self.create_fixed_parameter_dictionary(
             all_myokit_variables, self.fitted_variables)
 
         # # select inference methods
-        self._inference_type, self._inference_method = self.get_inference_type_and_method(inference)
+        self._inference_type, self._inference_method = (
+            self.get_inference_type_and_method(inference)
+        )
 
         # get data and time points as lists of lists
         dfs = [output.as_pandas() for output in self._biomarker_types]
@@ -82,22 +90,28 @@ class InferenceMixin:
         self.create_pints_log_posterior()
         self.create_pints_inference_object()
 
-    def create_fixed_parameter_dictionary(self, all_myokit_parameters, fitted_parameters):
-        # gets fixed parameters for Myokit model only: i.e. does not give noise parameters
-        # this works because all_parameters is supposed to contain only Myokit model
-        # parameters
+    def create_fixed_parameter_dictionary(self, all_myokit_parameters,
+                                          fitted_parameters):
 
         # myokit: inputs and outputs
-        all_myokit_parameter_names = [param.qname for param in all_myokit_parameters]
+        myokit_pnames = [param.qname
+                         for
+                         param in all_myokit_parameters]
 
         # parameters being fit: currently this gets only Myokit parameters
-        fitted_parameter_names = [param.qname for param in fitted_parameters]
+        fitted_parameter_names = [param.qname
+                                  for
+                                  param in fitted_parameters]
 
         # get myokit parameters minus outputs: i.e. just input parameters
-        myokit_minus_fixed = [item for item in all_myokit_parameter_names if item not in fitted_parameter_names]
+        myokit_minus_fixed = [item
+                              for
+                              item in myokit_pnames
+                              if item not in fitted_parameter_names]
 
         # get index of variables in named list
-        self._fixed_variables = [all_myokit_parameters[all_myokit_parameter_names.index(v)] for v in myokit_minus_fixed]
+        self._fixed_variables = [all_myokit_parameters[myokit_pnames.index(v)]
+                                 for v in myokit_minus_fixed]
 
         fixed_parameter_dictionary = {
             param.name: param.default_value
@@ -155,7 +169,7 @@ class InferenceMixin:
         return fitted_parameters
 
     def get_priors_andor_boundaries(self, priors):
-        # get all variables being fitted from priors (includes boundaries which are not priors)
+        # get all variables being fitted from priors
         pints_log_priors = []
         for prior in priors:
             if isinstance(prior, PriorUniform):
@@ -205,12 +219,14 @@ class InferenceMixin:
         return self._pints_log_likelihood
 
     def create_pints_log_prior(self):
-        self._pints_composed_log_prior = pints.ComposedLogPrior(*self._pints_log_priors)
+        self._pints_composed_log_prior = pints.ComposedLogPrior(
+            *self._pints_log_priors)
         return self._pints_composed_log_prior
 
     def create_pints_log_posterior(self):
-        self._pints_log_posterior = pints.LogPosterior(self._pints_log_likelihood,
-                                                       self._pints_composed_log_prior)
+        self._pints_log_posterior = pints.LogPosterior(
+            self._pints_log_likelihood,
+            self._pints_composed_log_prior)
         return self._pints_log_posterior
 
     def create_pints_inference_object(self):
@@ -308,11 +324,13 @@ class CombinedLogLikelihood(pints.LogPDF):
 
         self._n_myokit_parameters = self._log_likelihoods[0].n_parameters() - 1
 
-        # assume each log-likelihood has fixed noise parameter (later we'll want to add self._n_outputs)
+        # assume each log-likelihood has fixed noise parameter
+        # TODO:  add self._n_outputs to this to allow noise-parameters
         self._n_parameters = self._n_myokit_parameters
 
         if len(fixed_noise_parameter_values) != self._n_outputs:
-            raise ValueError("Fixed parameter values must be same length as outputs.")
+            raise ValueError(
+                "Fixed parameter values must be same length as outputs.")
         self._fixed_noise_parameters = fixed_noise_parameter_values
 
     def __call__(self, x):
@@ -324,10 +342,8 @@ class CombinedLogLikelihood(pints.LogPDF):
 
         # create subsets for each likelihood and call each
         log_like = 0
-        k = 0
-        for ll in self._log_likelihoods:
-            log_like += ll(myokit_parameters + [noise_parameters[k]])
-            k += 1
+        for idx, ll in enumerate(self._log_likelihoods):
+            log_like += ll(myokit_parameters + [noise_parameters[idx]])
         return log_like
 
     def n_parameters(self):
