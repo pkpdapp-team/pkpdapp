@@ -8,12 +8,10 @@ from django.test import TestCase
 import numpy as np
 from pkpdapp.models import (
     Inference, PharmacodynamicModel,
-    PharmacokineticModel,
     LogLikelihoodNormal,
-    LogLikelihoodLogNormal,
     Project, BiomarkerType,
     PriorUniform, MyokitForwardModel,
-    InferenceMixin
+    InferenceMixin, Algorithm
 )
 
 
@@ -46,6 +44,8 @@ class TestInferenceMixinSingleOutput(TestCase):
             name='bob',
             pd_model=model,
             project=project,
+            max_number_of_iterations=10,
+            algorithm=Algorithm.objects.get(name='Haario-Bardenet'),
         )
         LogLikelihoodNormal.objects.create(
             sd=1.0,
@@ -97,3 +97,17 @@ class TestInferenceMixinSingleOutput(TestCase):
         self.assertTrue(abs(val - -149.2582993033948) < 0.1)
         val = log_posterior([1, 3, 1, 1, 1])
         self.assertEqual(val, -np.inf)
+
+    def test_inference_runs(self):
+        # tests that inference runs and writes results to db
+        self.inference_mixin.create_pints_forward_model()
+        self.inference_mixin.create_pints_problem_collection()
+        self.inference_mixin.create_pints_log_likelihood()
+        self.inference_mixin.create_pints_log_prior()
+        self.inference_mixin.create_pints_log_posterior()
+        self.inference_mixin.create_pints_inference_object()
+        self.inference_mixin.run_inference()
+
+        chain = self.inference_mixin.inference.chains.all()[0]
+        draws = chain.as_list()
+        print(draws)

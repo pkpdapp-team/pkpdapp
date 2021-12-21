@@ -9,7 +9,8 @@ import numpy as np
 from pkpdapp.models import (
     MyokitForwardModel, LogLikelihoodNormal,
     LogLikelihoodLogNormal,
-    PriorNormal, PriorUniform, InferenceResult)
+    PriorNormal, PriorUniform, InferenceResult,
+    InferenceChain)
 
 optimisers_dict = {
     'CMAES': pints.CMAES,
@@ -20,11 +21,11 @@ optimisers_dict = {
 }
 
 samplers_dict = {
-    'Adaptive covariance': pints.HaarioBardenetACMC,
+    'Haario-Bardenet': pints.HaarioBardenetACMC,
     'Differential evolution': pints.DifferentialEvolutionMCMC,
     'DREAM': pints.DreamMCMC,
     'Emcee-hammer': pints.EmceeHammerMCMC,
-    'Population': pints.PopulationMCMC
+    'Population MCMC': pints.PopulationMCMC
 }
 
 
@@ -103,7 +104,7 @@ class InferenceMixin:
     def get_inference_type_and_method(self, inference):
         inference_type = inference.algorithm.category
         methodname = inference.algorithm.name
-        if inference_type == 'Sampling':
+        if inference_type == 'SA':
             method_dict = samplers_dict
         else:
             method_dict = optimisers_dict
@@ -219,13 +220,14 @@ class InferenceMixin:
         # set inference results objects for each fitted parameter to be
         # initial values
         # TODO: handle multiple chains
+        InferenceChain.objects.create(inference=self.inference)
         self.write_inference_results(x0, self._iteration)
 
     def write_inference_results(self, values, iteration):
-        # Writes inference results
+        # Writes inference results to one chain
         for i in range(len(self.priors)):
             InferenceResult.objects.create(
-                chain=1,
+                chain=self.inference.chains.all()[0],
                 prior=self.priors[i],
                 iteration=iteration,
                 value=values[i])
@@ -234,13 +236,13 @@ class InferenceMixin:
         # runs one set of ask / tell
         x = self._inference_object.ask()
         score = self._pints_log_posterior(x)
-        x = self._inference_object.tell(score)
+        x, _, _ = self._inference_object.tell(score)
         self._iteration += 1
         self.write_inference_results(x, self._iteration)
 
     def run_inference(self):
         # runs ask / tell
-        n_iterations = self.inference.number_of_iterations
+        n_iterations = self.inference.max_number_of_iterations
         for i in range(n_iterations):
             self.step_inference()
 
@@ -271,6 +273,8 @@ class CombinedLogLikelihood(pints.LogPDF):
         # assumes noise parameters are at end of parameter list
         noise_parameters = list(self._fixed_noise_parameters)
         myokit_parameters = x
+        if not isinstance(myokit_parameters, list):
+            myokit_parameters = myokit_parameters.tolist()
 
         # create subsets for each likelihood and call each
         log_like = 0
