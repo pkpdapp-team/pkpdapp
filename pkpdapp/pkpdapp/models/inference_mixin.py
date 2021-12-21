@@ -10,7 +10,7 @@ from pkpdapp.models import (
     MyokitForwardModel, LogLikelihoodNormal,
     LogLikelihoodLogNormal,
     PriorNormal, PriorUniform, InferenceResult,
-    InferenceChain)
+    InferenceChain, InferenceFunctionResult)
 
 optimisers_dict = {
     'CMAES': pints.CMAES,
@@ -208,7 +208,10 @@ class InferenceMixin:
         pints_var_names = self._pints_forward_model.variable_parameter_names()
         variables = self.fitted_variables
         priors_var_names = [v.qname for v in variables]
-        self.django_to_pints_lookup = [pints_var_names.index(n) for n in priors_var_names]
+        self.django_to_pints_lookup = [pints_var_names.index(n) for
+                                       n in priors_var_names]
+        self.pints_to_django_lookup = [priors_var_names.index(n) for
+                                       n in pints_var_names]
 
         # set x0 to be typical values of parameters
         # TODO: change this to be random / other values
@@ -220,20 +223,27 @@ class InferenceMixin:
         self.inference.iteration = 0
         # set inference results objects for each fitted parameter to be
         # initial values
-        # TODO: handle multiple chains
+        fn_val = self._pints_log_posterior(x0)
         for i in range(self.inference.number_of_chains):
             InferenceChain.objects.create(inference=self.inference)
-            self.write_inference_results(x0, self.inference.iteration, i)
+            self.write_inference_results(x0, fn_val,
+                                         self.inference.iteration, i)
 
-    def write_inference_results(self, values, iteration, chain_index):
+    def write_inference_results(self, values, fn_value, iteration,
+                                chain_index):
         # Writes inference results to one chain
         chains = self.inference.chains.all()
+        InferenceFunctionResult.objects.create(
+            chain=chains[chain_index],
+            iteration=iteration,
+            value=fn_value
+        )
         for i in range(len(self.priors)):
             InferenceResult.objects.create(
                 chain=chains[chain_index],
                 prior=self.priors[i],
                 iteration=iteration,
-                value=values[i])
+                value=values[self.pints_to_django_lookup[i]])
 
     def step_inference(self):
         # runs one set of ask / tell
@@ -244,10 +254,11 @@ class InferenceMixin:
                 score = self._pints_log_posterior(x)
                 x, _, _ = self._inference_objects[i].tell(score)
             else:
-                score = [self._pints_log_posterior(xi) for xi in x]
-                self._inference_objects[i].tell(score)
+                scores = [self._pints_log_posterior(xi) for xi in x]
+                self._inference_objects[i].tell(scores)
                 x = self._inference_objects[i].xbest()
-            self.write_inference_results(x, self.inference.iteration, i)
+                score = self._inference_objects[i].fbest()
+            self.write_inference_results(x, score, self.inference.iteration, i)
 
     def run_inference(self):
         # runs ask / tell

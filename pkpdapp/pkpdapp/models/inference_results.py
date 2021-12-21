@@ -48,3 +48,21 @@ class InferenceResult(models.Model):
     value = models.FloatField(
         help_text='estimated parameter value'
     )
+
+
+class InferenceFunctionResult(models.Model):
+    """
+    Abstract class for function evaluations during inference.
+    """
+    chain = models.ForeignKey(
+        InferenceChain,
+        on_delete=models.CASCADE,
+        related_name='inference_function_results',
+        help_text='Chain related to the row'
+    )
+    iteration = models.IntegerField(
+        help_text='Iteration'
+    )
+    value = models.FloatField(
+        help_text='estimated parameter value'
+    )

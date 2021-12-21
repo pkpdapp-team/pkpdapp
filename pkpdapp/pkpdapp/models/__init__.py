@@ -37,6 +37,7 @@ from .priors import (
 from .inference_results import (
     InferenceChain,
     InferenceResult,
+    InferenceFunctionResult,
 )
 from .likelihoods import (
     SumOfSquaredErrorsScoreFunction, LogLikelihoodNormal,
