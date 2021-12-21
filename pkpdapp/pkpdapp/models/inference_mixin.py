@@ -77,12 +77,14 @@ class InferenceMixin:
         self._values = [df['values'].tolist() for df in dfs]
         self._times = [df['times'].tolist() for df in dfs]
 
-        # create log-posterior
-
         # types needed later
         self.inference = inference
 
         # create pints classes
+        self._pints_forward_model = None
+        self._pints_composed_log_prior = None
+        self._pints_log_likelihood = None
+        self._pints_log_posterior = None
         self.create_pints_forward_model()
         self.create_pints_problem_collection()
         self.create_pints_log_likelihood()

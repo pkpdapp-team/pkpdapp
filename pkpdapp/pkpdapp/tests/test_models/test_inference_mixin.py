@@ -74,8 +74,6 @@ class TestInferenceMixinSingleOutputSampling(TestCase):
         # Test that log-likelihood, log-prior and log-posterior work
 
         # Test log-likelihood
-        pints_forward_model = self.inference_mixin.create_pints_forward_model()
-        problem_collection = self.inference_mixin.create_pints_problem_collection()
         log_likelihood = self.inference_mixin.create_pints_log_likelihood()
         val = log_likelihood([1, 1, 1, 1, 1])
         self.assertTrue(abs(val - -113.33099855566624) < 0.1)
@@ -106,18 +104,20 @@ class TestInferenceMixinSingleOutputSampling(TestCase):
         self.assertEqual(len(chains), 4)
         for chain in chains:
             priors = self.inference_mixin.priors
-            f_vals = chain.inference_function_results.order_by('iteration').values_list(
+            fun_res = chain.inference_function_results
+            f_vals = fun_res.order_by('iteration').values_list(
                 'value', flat=True
             )
             self.assertEqual(len(f_vals), 11)
             p_vals_all = []
             for prior in priors:
-                p_vals = chain.inference_results.filter(prior=prior).order_by('iteration').values_list(
+                res = chain.inference_results.filter(prior=prior)
+                p_vals = res.order_by('iteration').values_list(
                     'value', flat=True
                 )
                 self.assertEqual(len(p_vals), 11)
                 p_vals_all.append(p_vals)
-            iterations = chain.inference_results.filter(prior=prior).order_by('iteration').values_list(
+            iterations = res.order_by('iteration').values_list(
                 'iteration', flat=True
             )
             expected = list(range(11))
@@ -197,18 +197,20 @@ class TestInferenceMixinSingleOutputOptimisation(TestCase):
         self.assertEqual(len(chains), 3)
         for chain in chains:
             priors = self.inference_mixin.priors
-            f_vals = chain.inference_function_results.order_by('iteration').values_list(
+            fun_res = chain.inference_function_results
+            f_vals = fun_res.order_by('iteration').values_list(
                 'value', flat=True
             )
             self.assertEqual(len(f_vals), 11)
             p_vals_all = []
             for prior in priors:
-                p_vals = chain.inference_results.filter(prior=prior).order_by('iteration').values_list(
+                res = chain.inference_results.filter(prior=prior)
+                p_vals = res.order_by('iteration').values_list(
                     'value', flat=True
                 )
                 self.assertEqual(len(p_vals), 11)
                 p_vals_all.append(p_vals)
-                iterations = chain.inference_results.filter(prior=prior).order_by('iteration').values_list(
+                iterations = res.order_by('iteration').values_list(
                     'iteration', flat=True
                 )
                 expected = list(range(11))

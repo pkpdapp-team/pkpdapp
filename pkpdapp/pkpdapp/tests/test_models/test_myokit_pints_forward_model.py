@@ -95,7 +95,6 @@ class TestMyokitPintsForwardModelSingleOutput(TestCase):
         forward_model = MyokitForwardModel(
             myokit_model=self.model,
             myokit_simulator=self.simulator)
-        #['myokit.tumour_volume', 'myokit.drug_concentration', 'myokit.kappa', 'myokit.lambda_0', 'myokit.lambda_1']
         z = forward_model.simulate([1, 1, 1, 1, 1], times)
         self.assertTrue(np.abs(z[-1] - 0.4999996148976773) < 0.01)
 
