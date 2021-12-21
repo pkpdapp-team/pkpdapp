@@ -42,7 +42,6 @@ class InferenceResult(models.Model):
         related_name='inference_results',
         help_text='prior/variable for this value'
     )
-
     iteration = models.IntegerField(
         help_text='Iteration'
     )

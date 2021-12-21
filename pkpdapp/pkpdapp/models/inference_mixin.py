@@ -246,7 +246,7 @@ class InferenceMixin:
             else:
                 score = [self._pints_log_posterior(xi) for xi in x]
                 self._inference_objects[i].tell(score)
-                x = np.mean(x, axis=0).tolist()
+                x = self._inference_objects[i].xbest()
             self.write_inference_results(x, self.inference.iteration, i)
 
     def run_inference(self):
