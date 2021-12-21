@@ -235,8 +235,13 @@ class InferenceMixin:
     def step_inference(self):
         # runs one set of ask / tell
         x = self._inference_object.ask()
-        score = self._pints_log_posterior(x)
-        x, _, _ = self._inference_object.tell(score)
+        if self._inference_type == "SA":
+            score = self._pints_log_posterior(x)
+            x, _, _ = self._inference_object.tell(score)
+        else:
+            score = [self._pints_log_posterior(xi) for xi in x]
+            self._inference_object.tell(score)
+            x = np.mean(x, axis=0).tolist()
         self._iteration += 1
         self.write_inference_results(x, self._iteration)
 
