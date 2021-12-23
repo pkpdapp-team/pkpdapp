@@ -140,10 +140,10 @@ class MyokitForwardModel(pints.ForwardModel):
         # Set constant model parameters
         self._set_const(full_parameters[self._n_states:])
 
-        # Simulate: need +10epsilon for times to ensure simulation
+        # Simulate: need +100*epsilon for times to ensure simulation
         # surpasses last time
         output = self._sim.run(
-            times[-1] + 10 * float_info.epsilon,
+            times[-1] + 1e2 * float_info.epsilon,
             log=self._output_names, log_times=times
         )
         result = [output[name] for name in self._output_names]
