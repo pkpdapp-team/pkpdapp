@@ -96,17 +96,17 @@ class TestMyokitPintsForwardModelSingleOutput(TestCase):
             myokit_model=self.model,
             myokit_simulator=self.simulator)
         z = forward_model.simulate([1, 1, 1, 1, 1], times)
-        self.assertTrue(np.abs(z[-1] - 0.4999996148976773) < 0.01)
+        self.assertAlmostEqual(z[-1], 0.4999996148976773, delta=0.1)
 
         tumour_volume = 2
         z = forward_model.simulate([tumour_volume, 1, 1, 1, 1], times)
-        self.assertTrue(np.abs(z[0] - tumour_volume) < 0.01)
+        self.assertAlmostEqual(z[0], tumour_volume, delta=0.1)
 
         z = forward_model.simulate([tumour_volume, 2, 1, 1, 1], times)
-        self.assertTrue(np.abs(z[-1] - 0.0025839360953396786) < 0.01)
+        self.assertAlmostEqual(z[-1], 0.0025839360953396786, delta=0.1)
 
         z = forward_model.simulate([tumour_volume, 2, 0.1, 1, 1], times)
-        self.assertTrue(np.abs(z[-1] - 4.499969613738243) < 0.01)
+        self.assertAlmostEqual(z[-1], 4.499969613738243, delta=0.1)
 
         # add some fixed parameters
         forward_model = MyokitForwardModel(
@@ -114,7 +114,7 @@ class TestMyokitPintsForwardModelSingleOutput(TestCase):
             myokit_simulator=self.simulator,
             fixed_parameter_dict={'myokit.tumour_volume': 2})
         z = forward_model.simulate([2, 0.1, 1, 1], times)
-        self.assertTrue(np.abs(z[-1] - 4.499969613738243) < 0.01)
+        self.assertAlmostEqual(z[-1], 4.499969613738243, delta=0.1)
 
         forward_model = MyokitForwardModel(
             myokit_model=self.model,
@@ -122,7 +122,7 @@ class TestMyokitPintsForwardModelSingleOutput(TestCase):
             fixed_parameter_dict={'myokit.tumour_volume': 4,
                                   'myokit.kappa': 0.1})
         z = forward_model.simulate([2, 1, 3], times)
-        self.assertTrue(np.abs(z[-1] - 13.500733928623417) < 0.01)
+        self.assertAlmostEqual(z[-1], 13.500733928623417, delta=0.1)
 
 
 class TestMyokitPintsForwardModelMultipleOutput(TestCase):
@@ -225,9 +225,9 @@ class TestMyokitPintsForwardModelMultipleOutput(TestCase):
         times = np.linspace(0, 100, 200)
         parameters = [100, 200, 300, 1, 0.1, 1, 2, 3, 4]
         z = forward_model.simulate(parameters, times)
-        self.assertTrue(abs(z[-1, 0] - 21.588349077913126) < 0.1)
-        self.assertTrue(abs(z[-1, 1] - 67.22027564773356) < 0.1)
-        self.assertTrue(abs(z[-1, 2] - 88.50857171407785) < 0.1)
+        self.assertAlmostEqual(z[-1, 0], 21.588349077913126, delta=0.1)
+        self.assertAlmostEqual(z[-1, 1], 67.22027564773356, delta=0.1)
+        self.assertAlmostEqual(z[-1, 2], 88.50857171407785, delta=0.1)
 
         # Tests fixing certain values
         fixed_dict = {
@@ -240,9 +240,9 @@ class TestMyokitPintsForwardModelMultipleOutput(TestCase):
             fixed_parameter_dict=fixed_dict)
         parameters = [200, 300, 1, 0.1, 1, 3, 4]
         z = forward_model.simulate(parameters, times)
-        self.assertTrue(abs(z[-1, 0] - 25.07465781951092) < 0.1)
-        self.assertTrue(abs(z[-1, 1] - 78.10130666808712) < 0.1)
-        self.assertTrue(abs(z[-1, 2] - 101.0074456243745) < 0.1)
+        self.assertAlmostEqual(z[-1, 0], 25.07465781951092, delta=0.1)
+        self.assertAlmostEqual(z[-1, 1], 78.10130666808712, delta=0.1)
+        self.assertAlmostEqual(z[-1, 2], 101.0074456243745, delta=0.1)
 
         # Same but only pulling out a few outputs
         forward_model = MyokitForwardModel(
@@ -253,5 +253,5 @@ class TestMyokitPintsForwardModelMultipleOutput(TestCase):
                      'peripheral_2.drug_p2_amount'])
         parameters = [200, 300, 1, 0.1, 1, 3, 4]
         z = forward_model.simulate(parameters, times)
-        self.assertTrue(abs(z[-1, 0] - 78.10130666808712) < 0.1)
-        self.assertTrue(abs(z[-1, 1] - 101.0074456243745) < 0.1)
+        self.assertAlmostEqual(z[-1, 0], 78.10130666808712, delta=0.1)
+        self.assertAlmostEqual(z[-1, 1], 101.0074456243745, delta=0.1)
