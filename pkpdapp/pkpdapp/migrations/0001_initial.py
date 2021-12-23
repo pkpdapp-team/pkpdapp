@@ -408,6 +408,15 @@ class Migration(migrations.Migration):
                 ('prior', models.ForeignKey(help_text='prior/variable for this value', on_delete=django.db.models.deletion.CASCADE, related_name='inference_results', to='pkpdapp.prior')),
             ],
         ),
+        migrations.CreateModel(
+            name='InferenceFunctionResult',
+            fields=[
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('iteration', models.IntegerField(help_text='Iteration')),
+                ('value', models.FloatField(help_text='Objective function value')),
+                ('chain', models.ForeignKey(help_text='Chain related to the row', on_delete=django.db.models.deletion.CASCADE, related_name='inference_function_results', to='pkpdapp.inferencechain')),
+            ],
+        ),
         migrations.AddField(
             model_name='inference',
             name='pd_model',

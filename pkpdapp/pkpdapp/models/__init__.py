@@ -37,9 +37,12 @@ from .priors import (
 from .inference_results import (
     InferenceChain,
     InferenceResult,
+    InferenceFunctionResult,
 )
 from .likelihoods import (
     SumOfSquaredErrorsScoreFunction, LogLikelihoodNormal,
     LogLikelihoodLogNormal, ObjectiveFunction
 )
 
+from .myokit_pints_forward_model import MyokitForwardModel
+from .inference_mixin import InferenceMixin

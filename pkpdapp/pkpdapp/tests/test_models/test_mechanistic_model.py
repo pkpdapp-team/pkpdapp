@@ -83,7 +83,6 @@ class TestPharmodynamicModel(TestCase):
             name='tumour_growth_inhibition_model_koch',
         )
         components = m.components()
-        print(components)
         self.assertEqual(len(components), 1)
         self.assertIn('name', components[0])
         self.assertIn('states', components[0])
