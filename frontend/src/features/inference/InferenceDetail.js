@@ -22,6 +22,8 @@ import { selectAllPkModels } from "../pkModels/pkModelsSlice";
 import { selectAllPdModels } from "../pdModels/pdModelsSlice";
 import { selectAllAlgorithms } from "../inference/algorithmsSlice";
 
+import { fetchChainsByInference } from "../inference/chainSlice";
+
 import {
   selectBiomarkerTypesByDatasetId,
   selectBiomarkerTypeById,
@@ -60,6 +62,127 @@ const useStyles = makeStyles((theme) => ({
 
 function PriorSubform({
   control,
+  prior,
+  index,
+  variables,
+  variable_options,
+  type_options,
+  remove,
+  watch,
+  setValue,
+  disabled,
+}) {
+  const [type, setType] = useState(prior.type);
+  const baseName = `priors[${index}]`
+  
+  const setDefaults = (type, variable) => {
+    if (type === "PriorNormal") {
+      setValue(`${baseName}.mean`, variable.default_value);
+      const standardDeviation = Math.sqrt(
+        Math.pow(variable.upper_bound - variable.lower_bound, 2) / 12
+      );
+      setValue(`${baseName}.sd`, standardDeviation);
+    } else if (type === "PriorUniform") {
+      setValue(`${baseName}.lower`, variable.lower_bound);
+      setValue(`${baseName}.upper`, variable.upper_bound);
+    }
+  };
+  const handleTypeChange = (event) => {
+    const oldVar = watch.variable
+    const newType = event.target.value;
+    const variable = variables.find((v) => v.id === oldVar);
+    if (variable) {
+      setDefaults(newType, variable, baseName);
+    }
+    setType(newType)
+  };
+  const handleVariableChange = (event) => {
+    const oldType = watch.type
+    const newVariable = event.target.value;
+    const variable = variables.find((v) => v.id === newVariable);
+    if (variable) {
+      setDefaults(oldType, variable, baseName);
+    }
+  };
+
+  return (
+    <ListItem key={prior.id} role={undefined} dense>
+      <FormSelectField
+        control={control}
+        defaultValue={prior.type || ""}
+        disabled={disabled}
+        options={type_options}
+        onChangeUser={handleTypeChange}
+        name={`${baseName}.type`}
+        label="Type"
+      />
+      <FormSelectField
+        control={control}
+        defaultValue={prior.variable || ""}
+        disabled={disabled}
+        options={variable_options}
+        onChangeUser={handleVariableChange}
+        name={`${baseName}.variable`}
+        label="Variable"
+      />
+
+      {type === "PriorNormal" && (
+        <React.Fragment>
+          <FormTextField
+            control={control}
+            name={`${baseName}.mean`}
+            defaultValue={prior.mean}
+            disabled={disabled}
+            label="Mean"
+            type="number"
+          />
+          <FormTextField
+            control={control}
+            name={`${baseName}.sd`}
+            disabled={disabled}
+            defaultValue={prior.sd}
+            label="Standard Deviation"
+            type="number"
+          />
+        </React.Fragment>
+      )}
+      {type === "PriorUniform" && (
+        <React.Fragment>
+          <FormTextField
+            control={control}
+            name={`${baseName}.lower`}
+            disabled={disabled}
+            defaultValue={prior.lower}
+            label="Lower"
+            type="number"
+          />
+          <FormTextField
+            control={control}
+            name={`${baseName}.upper`}
+            defaultValue={prior.upper}
+            disabled={disabled}
+            label="Upper"
+            type="number"
+          />
+        </React.Fragment>
+      )}
+
+      <Tooltip title={`delete prior`} placement="right">
+        <IconButton
+          variant="rounded"
+          disabled={disabled}
+          onClick={() => remove(index)}
+        >
+          <DeleteIcon />
+        </IconButton>
+      </Tooltip>
+    </ListItem>
+  );
+}
+
+
+function PriorsSubform({
+  control,
   objects,
   variables,
   append,
@@ -79,7 +202,7 @@ function PriorSubform({
     { key: "Uniform", value: "PriorUniform" },
     { key: "Boundary", value: "Boundary" },
   ];
-  const handleNewPrior = () =>
+  const handleNewPrior = () => {
     append({
       type: "PriorNormal",
       sd: "",
@@ -88,130 +211,27 @@ function PriorSubform({
       upper: "",
       variable: "",
     });
-  const setDefaults = (type, variable, baseName) => {
-    console.log("setDefaults", type, variable, baseName);
-    if (type === "PriorNormal") {
-      console.log("setDefaults XXXX", type, variable, baseName);
-      setValue(`${baseName}.mean`, variable.default_value);
-      const standardDeviation = Math.sqrt(
-        Math.pow(variable.upper_bound - variable.lower_bound, 2) / 12
-      );
-      setValue(`${baseName}.sd`, standardDeviation);
-    } else if (type === "PriorUniform") {
-      console.log("setDefaults XXXX", type, variable, baseName);
-      setValue(`${baseName}.lower`, variable.lower_bound);
-      setValue(`${baseName}.upper`, variable.upper_bound);
-    }
-  };
-  const handleTypeChange = (oldType, oldVar, baseName) => (event) => {
-    const newType = event.target.value;
-    const variable = variables.find((v) => v.id === oldVar);
-    if (variable) {
-      setDefaults(newType, variable, baseName);
-    }
-    console.log("type change", oldType, oldVar, newType);
-  };
-  const handleVariableChange = (oldType, oldVar, baseName) => (event) => {
-    const newVariable = event.target.value;
-    const variable = variables.find((v) => v.id === newVariable);
-    if (variable) {
-      setDefaults(oldType, variable, baseName);
-    }
-    console.log("variable change", oldType, oldVar, newVariable);
-  };
-  console.log("priors", objects);
+  }
 
   return (
     <React.Fragment>
       <Typography>Parameter Priors</Typography>
       <List>
-        {objects.map((prior, index) => {
-          const baseName = `priors[${index}]`;
-          const watchType = watch[index].type;
-          const watchVariable = watch[index].variable;
-          console.log("watchType", watchType);
-          return (
-            <ListItem key={prior.id} role={undefined} dense>
-              <FormSelectField
-                control={control}
-                defaultValue={prior.type || ""}
-                disabled={disabled}
-                options={type_options}
-                onChangeUser={handleTypeChange(
-                  watchType,
-                  watchVariable,
-                  baseName
-                )}
-                name={`${baseName}.type`}
-                label="Type"
-              />
-              <FormSelectField
-                control={control}
-                defaultValue={prior.variable || ""}
-                disabled={disabled}
-                options={variable_options}
-                onChangeUser={handleVariableChange(
-                  watchType,
-                  watchVariable,
-                  baseName
-                )}
-                name={`${baseName}.variable`}
-                label="Variable"
-              />
-
-              {watchType === "PriorNormal" && (
-                <React.Fragment>
-                  <FormTextField
-                    control={control}
-                    name={`${baseName}.mean`}
-                    defaultValue={prior.mean}
-                    disabled={disabled}
-                    label="Mean"
-                    type="number"
-                  />
-                  <FormTextField
-                    control={control}
-                    name={`${baseName}.sd`}
-                    disabled={disabled}
-                    defaultValue={prior.sd}
-                    label="Standard Deviation"
-                    type="number"
-                  />
-                </React.Fragment>
-              )}
-              {watchType === "PriorUniform" && (
-                <React.Fragment>
-                  <FormTextField
-                    control={control}
-                    name={`${baseName}.lower`}
-                    disabled={disabled}
-                    defaultValue={prior.lower}
-                    label="Lower"
-                    type="number"
-                  />
-                  <FormTextField
-                    control={control}
-                    name={`${baseName}.upper`}
-                    defaultValue={prior.upper}
-                    disabled={disabled}
-                    label="Upper"
-                    type="number"
-                  />
-                </React.Fragment>
-              )}
-
-              <Tooltip title={`delete prior`} placement="right">
-                <IconButton
-                  variant="rounded"
-                  disabled={disabled}
-                  onClick={() => remove(index)}
-                >
-                  <DeleteIcon />
-                </IconButton>
-              </Tooltip>
-            </ListItem>
-          );
-        })}
+        {objects.map((prior, index) => (
+          <PriorSubform
+            key={index}
+            control={control}
+            prior={prior}
+            index={index}
+            variable_options={variable_options}
+            variables={variables}
+            type_options={type_options}
+            remove={remove}
+            watch={watch[index]}
+            setValue={setValue}
+            disabled={disabled}
+          />
+        ))}
         <ListItem key={-1} role={undefined} dense>
           <Tooltip title={`create new prior`} placement="right">
             <IconButton
@@ -269,7 +289,6 @@ function ObjectiveFunctionSubform({
       biomarker_type: "",
     });
   const setDefaults = (type, variable, baseName) => {
-    console.log("setDefaults", type, variable, baseName);
     if (type === "LogLikelihoodNormal") {
       const standardDeviation = Math.sqrt(
         Math.pow(variable.upper_bound - variable.lower_bound, 2) / 12
@@ -287,8 +306,10 @@ function ObjectiveFunctionSubform({
     const variable = variables.find((v) => v.id === oldVar);
     if (variable) {
       setDefaults(newType, variable, baseName);
+    } else {
+      setValue(`${baseName}.sigma`, null);
+      setValue(`${baseName}.sd`, null);
     }
-    console.log("type change", oldType, oldVar, newType);
   };
   const handleVariableChange = (oldType, oldVar, baseName) => (event) => {
     const newVariable = event.target.value;
@@ -296,7 +317,6 @@ function ObjectiveFunctionSubform({
     if (variable) {
       setDefaults(oldType, variable, baseName);
     }
-    console.log("variable change", oldType, oldVar, newVariable);
   };
 
   return (
@@ -418,14 +438,12 @@ export default function DraftInferenceDetail({ project, inference }) {
   const defaultDataset = defaultBiomarkerType
     ? defaultBiomarkerType.dataset
     : "";
-  console.log("defaultDataset", defaultDataset, inference.objective_functions);
   const [dataset, setDataset] = useState(defaultDataset);
   const handleDatasetChange = (event) => {
     const value = event.target.value;
     setDataset(value);
     setValue("objective_functions", inference.objective_functions);
   };
-  console.log("dataset", dataset);
   const biomarker_types = useSelector((state) =>
     dataset ? selectBiomarkerTypesByDatasetId(state, dataset) : []
   );
@@ -471,8 +489,6 @@ export default function DraftInferenceDetail({ project, inference }) {
       return selectVariablesByDosedPkModel(state, watchPkModel);
     }
   });
-  console.log("variables", variables);
-  console.log("biomarker_types", biomarker_types);
 
   const handleDelete = () => {
     dispatch(deleteInference(inference.id));
@@ -482,8 +498,11 @@ export default function DraftInferenceDetail({ project, inference }) {
     dispatch(runInference(inference.id));
   };
 
+  const handleFetchChains = () => {
+    dispatch(fetchChainsByInference(inference));
+  };
+
   useEffect(() => {
-    console.log("setting model type");
     if (inference.pd_model) {
       setModelType("PD");
     } else if (inference.dosed_pk_model) {
@@ -492,7 +511,6 @@ export default function DraftInferenceDetail({ project, inference }) {
   }, [inference.pd_model, inference.dosed_pk_model]);
 
   const onSubmit = (values) => {
-    console.log("submit with values", values);
     dispatch(updateInference(values));
   };
 
@@ -525,8 +543,6 @@ export default function DraftInferenceDetail({ project, inference }) {
         .map((pk) => ({ key: pk.name, value: pk.id }))
         .concat([{ key: "None", value: "" }])
     : [{ key: "Loading...", value: null }];
-
-  console.log("inference detail", inference, pdModels, pkModels);
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
@@ -608,7 +624,7 @@ export default function DraftInferenceDetail({ project, inference }) {
         )}
       </div>
 
-      <PriorSubform
+      <PriorsSubform
         control={control}
         objects={priors}
         variables={variables}
@@ -673,6 +689,14 @@ export default function DraftInferenceDetail({ project, inference }) {
           variant="contained"
         >
           Run
+        </Button>
+        <Button
+          className={classes.controls}
+          disabled={!readOnly}
+          onClick={handleFetchChains}
+          variant="contained"
+        >
+          Fetch Results
         </Button>
         <Button
           className={classes.controls}

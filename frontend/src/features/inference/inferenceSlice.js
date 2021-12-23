@@ -73,9 +73,7 @@ export const updateInference = createAsyncThunk(
 export const runInference = createAsyncThunk(
   "inferences/runInference",
   async (inferenceId, { dispatch }) => {
-    console.log("XXXXX running inference, id:", inferenceId);
     const newInference = await api.post(`/api/inference/${inferenceId}/run`);
-    console.log("XXXXX ran inference, new one is:", newInference);
     const normalized = normalize(newInference, inference);
     return normalized.entities;
   }

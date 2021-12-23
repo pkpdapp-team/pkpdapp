@@ -283,3 +283,10 @@ if CLOUDAMQP_URL is None:
     ]
 else:
     CELERY_BROKER_URL = CLOUDAMQP_URL
+
+CELERY_BROKER_TRANSPORT_OPTIONS = {
+    'max_retries': 3,
+    'interval_start': 0,
+    'interval_step': 0.2,
+    'interval_max': 0.5,
+}

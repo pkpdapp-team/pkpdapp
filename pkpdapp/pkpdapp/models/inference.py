@@ -184,6 +184,9 @@ class Inference(StoredModel):
 
         if not test:
             from pkpdapp.tasks import run_inference
-            run_inference.delay(new_inference.id)
+            try:
+                run_inference.delay(new_inference.id)
+            except run_inference.OperationalError as exc:
+                print('Sending task raised: {}'.format(exc))
 
         return new_inference

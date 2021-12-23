@@ -36,6 +36,8 @@ class InferenceMixin:
         model = inference.get_model()
 
         self._myokit_model = model.get_myokit_model()
+
+        state_names = [var.qname() for var in self._myokit_model.variables()]
         self._myokit_simulator = model.get_myokit_simulator()
 
         # get biomarkers
@@ -127,6 +129,12 @@ class InferenceMixin:
                                    i in range(self.inference.number_of_chains)]
         self.inference.iteration = 0
 
+        # reset results
+        inference.chains.all().delete()
+        inference.number_of_iterations = 0
+        inference.number_of_function_evals = 0
+        inference.save()
+
         # set inference results objects for each fitted parameter to be
         # initial values
         fn_val = self._pints_log_posterior(x0)
@@ -160,7 +168,7 @@ class InferenceMixin:
                                  for v in myokit_minus_fixed]
 
         fixed_parameter_dictionary = {
-            param.name: param.default_value
+            param.qname: param.default_value
             for param in self._fixed_variables
         }
         return fixed_parameter_dictionary
@@ -170,6 +178,7 @@ class InferenceMixin:
             outputs, myokit_simulator, myokit_model, fixed_parameters_dict
     ):
         output_names = [output.qname for output in outputs]
+
         return MyokitForwardModel(myokit_simulator, myokit_model,
                                   output_names,
                                   fixed_parameters_dict)
@@ -286,7 +295,6 @@ class InferenceMixin:
 
     def step_inference(self):
         # runs one set of ask / tell
-        self.inference.iteration += 1
         for idx, obj in enumerate(self._inference_objects):
             x = obj.ask()
             if self._inference_type == "SA":  # sampling
@@ -310,6 +318,8 @@ class InferenceMixin:
             self.step_inference()
             time_now = time.time()
             self.inference.time_elapsed = time_now - time_start
+            self.inference.number_of_iterations += 1
+            self.inference.save()
 
     def fixed_variables(self):
         return self._fixed_variables

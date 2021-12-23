@@ -47,14 +47,6 @@ export const chainsSlice = createSlice({
   name: "chains",
   initialState,
   reducers: {
-    toggleChain(state, action) {
-      let chain = state.entities[action.payload.id];
-      chain.chosen = !chain.chosen;
-    },
-    setChainError(state, action) {
-      let chain = state.entities[action.payload.id];
-      chain.error = action.payload.error;
-    },
   },
   extraReducers: {
     [fetchChains.pending]: (state, action) => {
@@ -83,5 +75,7 @@ export const {
   selectIds: selectChainIds,
 } = chainsAdapter.getSelectors((state) => state.chains);
 
-export const selectChosenChains = (state) =>
-  selectAllChains(state).filter((chain) => chain.chosen);
+
+export const selectChainsByInferenceId = (state, id) => {
+  return selectAllChains(state).filter((chain) => chain.inference === id);
+};
