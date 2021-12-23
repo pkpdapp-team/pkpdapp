@@ -136,7 +136,6 @@ class InferenceMixin:
             self.write_inference_results(x0, fn_val,
                                          self.inference.iteration, i)
 
-
     def create_fixed_parameter_dictionary(self, all_myokit_parameters,
                                           fitted_parameters):
 
