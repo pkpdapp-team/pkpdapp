@@ -82,7 +82,8 @@ class InferenceMixin:
 
         # create pints classes
         self._pints_forward_model = self.create_pints_forward_model(
-            self._outputs, self._myokit_simulator, self._fixed_parameters_dict
+            self._outputs, self._myokit_simulator, self._myokit_model,
+            self._fixed_parameters_dict
         )
         self._collection = self.create_pints_problem_collection(
             self._pints_forward_model, self._times, self._values, self._outputs
@@ -167,10 +168,10 @@ class InferenceMixin:
 
     @staticmethod
     def create_pints_forward_model(
-            outputs_dict, myokit_simulator, fixed_parameters_dict
+            outputs_dict, myokit_simulator, myokit_model, fixed_parameters_dict
     ):
         output_names = [output.qname for output in outputs_dict]
-        return MyokitForwardModel(myokit_simulator,
+        return MyokitForwardModel(myokit_simulator, myokit_model,
                                   output_names,
                                   fixed_parameters_dict)
 
