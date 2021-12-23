@@ -20,7 +20,7 @@ class MyokitForwardModel(pints.ForwardModel):
         fixed_parameter_dict(=None by default) -- a dictionary
         representing key-value pairs for fixed parameters
     """
-    def __init__(self, myokit_model, myokit_simulator, outputs=None,
+    def __init__(self, myokit_simulator, myokit_model, outputs=None,
                  fixed_parameter_dict=None):
         super(MyokitForwardModel, self).__init__()
 
@@ -140,9 +140,9 @@ class MyokitForwardModel(pints.ForwardModel):
         # Set constant model parameters
         self._set_const(full_parameters[self._n_states:])
 
-        # Simulate: need +epsilon for times to ensure simulation surpasses last time
+        # Simulate: need +10epsilon for times to ensure simulation surpasses last time
         output = self._sim.run(
-            times[-1] + float_info.epsilon, log=self._output_names, log_times=times)
+            times[-1] + 10 * float_info.epsilon, log=self._output_names, log_times=times)
         result = [output[name] for name in self._output_names]
 
         # Transform shape of output to be compatible with

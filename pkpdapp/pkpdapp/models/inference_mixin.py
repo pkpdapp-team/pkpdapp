@@ -109,7 +109,7 @@ class InferenceMixin:
         variables = self.fitted_variables
         priors_var_names = [v.qname for v in variables]
 
-        django_to_pints_lookup = {
+        self._django_to_pints_lookup = {
             qname: pints_var_names.index(qname)
             for qname in priors_var_names
         }
@@ -121,7 +121,7 @@ class InferenceMixin:
         # set x0 to be typical values of parameters
         # TODO: change this to be random / other values
         x0 = [v.default_value for v in variables]
-        x0 = [x0[i] for i in django_to_pints_lookup.values()]
+        x0 = [x0[i] for i in self._django_to_pints_lookup.values()]
 
         self._inference_objects = [self._inference_method(x0) for
                                    i in range(self.inference.number_of_chains)]
@@ -168,9 +168,9 @@ class InferenceMixin:
 
     @staticmethod
     def create_pints_forward_model(
-            outputs_dict, myokit_simulator, myokit_model, fixed_parameters_dict
+            outputs, myokit_simulator, myokit_model, fixed_parameters_dict
     ):
-        output_names = [output.qname for output in outputs_dict]
+        output_names = [output.qname for output in outputs]
         return MyokitForwardModel(myokit_simulator, myokit_model,
                                   output_names,
                                   fixed_parameters_dict)

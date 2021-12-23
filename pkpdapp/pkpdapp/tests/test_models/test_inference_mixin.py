@@ -74,25 +74,26 @@ class TestInferenceMixinSingleOutputSampling(TestCase):
         # Test that log-likelihood, log-prior and log-posterior work
 
         # Test log-likelihood
-        log_likelihood = self.inference_mixin.create_pints_log_likelihood()
+        log_likelihood = self.inference_mixin._pints_log_likelihood
         val = log_likelihood([1, 1, 1, 1, 1])
-        self.assertTrue(abs(val - -113.33099855566624) < 0.1)
+        self.assertAlmostEqual(val, -113.33099855566624, delta=0.1)
         val = log_likelihood([1, 2, 3, 4, 5])
-        self.assertTrue(abs(val - -121.32407882599529) < 0.1)
+        self.assertAlmostEqual(val, -121.32407882599529, delta=0.1)
 
         # Test log-prior
-        log_prior = self.inference_mixin.create_pints_log_prior()
+        log_prior = self.inference_mixin._pints_composed_log_prior
         val = log_prior([1, 1, 1, 1, 1])
-        self.assertTrue(abs(val - -3.4657359027997265) < 0.1)
+        self.assertAlmostEqual(val, -3.4657359027997265, delta=0.1)
         val = log_prior([3, 1, 1, 1, 1])
         self.assertEqual(val, -np.inf)
 
         # Test log-posterior
-        log_posterior = self.inference_mixin.create_pints_log_posterior()
+        log_posterior = self.inference_mixin._pints_log_posterior
         val = log_posterior([1, 1, 1, 1, 1])
-        self.assertTrue(abs(val - -116.79673445846596) < 0.1)
+        self.assertAlmostEqual(val, -116.79673445846596, delta=0.1)
         val = log_posterior([1.3, 0.5, 1.1, 0.9, 1.2])
-        self.assertTrue(abs(val - -149.2582993033948) < 0.1)
+        self.assertAlmostEqual(val, -149.2582993033948, delta=0.1)
+
         val = log_posterior([1, 3, 1, 1, 1])
         self.assertEqual(val, -np.inf)
 
@@ -126,7 +127,7 @@ class TestInferenceMixinSingleOutputSampling(TestCase):
             # transpose list of lists
             p_vals_all = list(map(list, zip(*p_vals_all)))
             fn = self.inference_mixin._pints_log_posterior
-            lookup = self.inference_mixin.django_to_pints_lookup
+            lookup = self.inference_mixin._django_to_pints_lookup
             for idx, params in enumerate(p_vals_all):
                 params = [params[lookup[p.variable.qname]] for p in priors]
                 self.assertTrue(abs(fn(params) - f_vals[idx]) < 0.01)
