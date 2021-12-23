@@ -81,16 +81,60 @@ class InferenceMixin:
         self.inference = inference
 
         # create pints classes
-        self._pints_forward_model = None
-        self._pints_composed_log_prior = None
-        self._pints_log_likelihood = None
-        self._pints_log_posterior = None
-        self.create_pints_forward_model()
-        self.create_pints_problem_collection()
-        self.create_pints_log_likelihood()
-        self.create_pints_log_prior()
-        self.create_pints_log_posterior()
-        self.create_pints_inference_object()
+        self._pints_forward_model = self.create_pints_forward_model(
+            self._outputs, self._myokit_simulator, self._fixed_parameters_dict
+        )
+        self._collection = self.create_pints_problem_collection(
+            self._pints_forward_model, self._times, self._values, self._outputs
+        )
+
+        self._pints_log_likelihood = self.create_pints_log_likelihood(
+            self._collection, self._n_outputs, self._noise_parameter_values,
+            self._observed_loglikelihoods
+        )
+        self._pints_composed_log_prior = pints.ComposedLogPrior(
+            *self._pints_log_priors
+        )
+        self._pints_log_posterior = pints.LogPosterior(
+            self._pints_log_likelihood,
+            self._pints_composed_log_prior
+        )
+
+        # Creates an initialised sampling / optimisation method that can be
+        # called by ask / tell
+
+        # Create lookup for fitted variables (from priors) -> pints variables
+        pints_var_names = self._pints_forward_model.variable_parameter_names()
+        variables = self.fitted_variables
+        priors_var_names = [v.qname for v in variables]
+
+        django_to_pints_lookup = {
+            qname: pints_var_names.index(qname)
+            for qname in priors_var_names
+        }
+        self._pints_to_django_lookup = {
+            qname: priors_var_names.index(qname)
+            for qname in pints_var_names
+        }
+
+        # set x0 to be typical values of parameters
+        # TODO: change this to be random / other values
+        x0 = [v.default_value for v in variables]
+        x0 = [x0[i] for i in django_to_pints_lookup.values()]
+
+        self._inference_objects = [self._inference_method(x0) for
+                                   i in range(self.inference.number_of_chains)]
+        self.inference.iteration = 0
+
+        # set inference results objects for each fitted parameter to be
+        # initial values
+        fn_val = self._pints_log_posterior(x0)
+        self.inference.number_of_function_evals += 1
+        for i in range(self.inference.number_of_chains):
+            InferenceChain.objects.create(inference=self.inference)
+            self.write_inference_results(x0, fn_val,
+                                         self.inference.iteration, i)
+
 
     def create_fixed_parameter_dictionary(self, all_myokit_parameters,
                                           fitted_parameters):
@@ -121,16 +165,48 @@ class InferenceMixin:
         }
         return fixed_parameter_dictionary
 
-    def create_pints_forward_model(self):
-        output_names = [output.qname for output in self._outputs]
-        model = MyokitForwardModel(self._myokit_model,
-                                   self._myokit_simulator,
-                                   output_names,
-                                   self._fixed_parameters_dict)
-        self._pints_forward_model = model
-        return self._pints_forward_model
+    @staticmethod
+    def create_pints_forward_model(
+            outputs_dict, myokit_simulator, fixed_parameters_dict
+    ):
+        output_names = [output.qname for output in outputs_dict]
+        return MyokitForwardModel(myokit_simulator,
+                                  output_names,
+                                  fixed_parameters_dict)
 
-    def get_inference_type_and_method(self, inference):
+    @staticmethod
+    def create_pints_problem_collection(model, times, values, outputs):
+        # create a problem collection to handle the case when the outputs or
+        # times are wragged
+        times_values = []
+        for i in range(len(outputs)):
+            times_values.append(times[i])
+            times_values.append(values[i])
+        return pints.ProblemCollection(model, *times_values)
+
+    @staticmethod
+    def create_pints_log_likelihood(
+            collection, n_outputs, noise_parameter_values,
+            observed_loglikelihoods
+    ):
+        problems = [collection.subproblem(i) for i in range(n_outputs)]
+
+        # these are the PINTS methods
+        log_like_methods = observed_loglikelihoods
+
+        # instantiate PINTS log-likelihoods
+        log_likes = []
+        for i in range(n_outputs):
+            log_likes.append(log_like_methods[i](problems[i]))
+
+        # combine them
+        return CombinedLogLikelihood(
+            noise_parameter_values,
+            *log_likes
+        )
+
+    @staticmethod
+    def get_inference_type_and_method(inference):
         inference_type = inference.algorithm.category
         methodname = inference.algorithm.name
         if inference_type == 'SA':
@@ -140,7 +216,8 @@ class InferenceMixin:
         inference_method = method_dict[methodname]
         return inference_type, inference_method
 
-    def get_biomarker_types_and_output_variables(self, inference):
+    @staticmethod
+    def get_biomarker_types_and_output_variables(inference):
         objs = inference.objective_functions.all()
         biomarker_types = []
         output_variables = []
@@ -149,7 +226,8 @@ class InferenceMixin:
             output_variables.append(obj.variable)
         return biomarker_types, output_variables
 
-    def get_objectives(self, inference):
+    @staticmethod
+    def get_objectives(inference):
         # determine objective function and observed biomarker types
         # to simulate
         objs = inference.objective_functions.all()
@@ -164,13 +242,15 @@ class InferenceMixin:
                 noise_parameters.append(obj.sigma)
         return observed_loglikelihoods, noise_parameters
 
-    def get_fitted_variables(self, priors):
+    @staticmethod
+    def get_fitted_variables(priors):
         fitted_parameters = []
         for prior in priors:
             fitted_parameters.append(prior.variable)
         return fitted_parameters
 
-    def get_priors_andor_boundaries(self, priors):
+    @staticmethod
+    def get_priors_andor_boundaries(priors):
         # get all variables being fitted from priors
         pints_log_priors = []
         for prior in priors:
@@ -187,85 +267,6 @@ class InferenceMixin:
     def get_myokit_model(self):
         return self._myokit_model
 
-    def create_pints_problem_collection(self):
-        model = self._pints_forward_model
-        times = self._times
-        values = self._values
-
-        # create a problem collection to handle the case when the outputs or
-        # times are wragged
-        times_values = []
-        for i in range(len(self._outputs)):
-            times_values.append(times[i])
-            times_values.append(values[i])
-        self._collection = pints.ProblemCollection(model,
-                                                   *times_values)
-        return self._collection
-
-    def create_pints_log_likelihood(self):
-        collection = self._collection
-        problems = [collection.subproblem(i) for i in range(self._n_outputs)]
-
-        # these are the PINTS methods
-        log_like_methods = self._observed_loglikelihoods
-
-        # instantiate PINTS log-likelihoods
-        log_likes = []
-        for i in range(self._n_outputs):
-            log_likes.append(log_like_methods[i](problems[i]))
-
-        # combine them
-        self._pints_log_likelihood = CombinedLogLikelihood(
-            self._noise_parameter_values,
-            *log_likes)
-        return self._pints_log_likelihood
-
-    def create_pints_log_prior(self):
-        self._pints_composed_log_prior = pints.ComposedLogPrior(
-            *self._pints_log_priors)
-        return self._pints_composed_log_prior
-
-    def create_pints_log_posterior(self):
-        self._pints_log_posterior = pints.LogPosterior(
-            self._pints_log_likelihood,
-            self._pints_composed_log_prior)
-        return self._pints_log_posterior
-
-    def create_pints_inference_object(self):
-        # Creates an initialised sampling / optimisation method that can be
-        # called by ask / tell
-
-        # Create lookup for fitted variables (from priors) -> pints variables
-        pints_var_names = self._pints_forward_model.variable_parameter_names()
-        variables = self.fitted_variables
-        priors_var_names = [v.qname for v in variables]
-
-        self.django_to_pints_lookup = {
-            qname: pints_var_names.index(qname)
-            for qname in priors_var_names
-        }
-        self.pints_to_django_lookup = {
-            qname: priors_var_names.index(qname)
-            for qname in pints_var_names
-        }
-
-        # set x0 to be typical values of parameters
-        # TODO: change this to be random / other values
-        x0 = [v.default_value for v in variables]
-        x0 = [x0[i] for i in self.django_to_pints_lookup.values()]
-
-        self._inference_objects = [self._inference_method(x0) for
-                                   i in range(self.inference.number_of_chains)]
-        self.inference.iteration = 0
-        # set inference results objects for each fitted parameter to be
-        # initial values
-        fn_val = self._pints_log_posterior(x0)
-        self.inference.number_of_function_evals += 1
-        for i in range(self.inference.number_of_chains):
-            InferenceChain.objects.create(inference=self.inference)
-            self.write_inference_results(x0, fn_val,
-                                         self.inference.iteration, i)
-
     def write_inference_results(self, values, fn_value, iteration,
                                 chain_index):
         # Writes inference results to one chain
@@ -276,7 +277,7 @@ class InferenceMixin:
             value=fn_value
         )
         for prior in self.priors:
-            value = values[self.pints_to_django_lookup[prior.variable.qname]]
+            value = values[self._pints_to_django_lookup[prior.variable.qname]]
             InferenceResult.objects.create(
                 chain=chains[chain_index],
                 prior=prior,
