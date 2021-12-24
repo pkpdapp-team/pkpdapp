@@ -32,12 +32,12 @@ export const fetchChainById = createAsyncThunk(
   }
 );
 
-export const fetchChainsByInference = createAsyncThunk(
+export const fetchChainsByInferenceId = createAsyncThunk(
   "chains/fetchChainByInference",
-  async (inference, { dispatch }) => {
-    console.log("fetchChainsByInference", inference);
+  async (inferenceId, { dispatch }) => {
+    console.log("fetchChainsByInference", inferenceId);
     let response = await api.get(
-      `/api/inference_chain/?inference_id=${inference.id}`
+      `/api/inference_chain/?inference_id=${inferenceId}`
     );
     return response;
   }
@@ -60,7 +60,7 @@ export const chainsSlice = createSlice({
       state.status = "succeeded";
       chainsAdapter.setAll(state, action.payload);
     },
-    [fetchChainsByInference.fulfilled]: chainsAdapter.upsertMany,
+    [fetchChainsByInferenceId.fulfilled]: chainsAdapter.upsertMany,
     [fetchChainById.fulfilled]: chainsAdapter.upsertOne,
   },
 });

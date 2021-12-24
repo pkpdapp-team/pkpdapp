@@ -22,8 +22,6 @@ import { selectAllPkModels } from "../pkModels/pkModelsSlice";
 import { selectAllPdModels } from "../pdModels/pdModelsSlice";
 import { selectAllAlgorithms } from "../inference/algorithmsSlice";
 
-import { fetchChainsByInference } from "../inference/chainSlice";
-
 import {
   selectBiomarkerTypesByDatasetId,
   selectBiomarkerTypeById,
@@ -498,10 +496,6 @@ export default function DraftInferenceDetail({ project, inference }) {
     dispatch(runInference(inference.id));
   };
 
-  const handleFetchChains = () => {
-    dispatch(fetchChainsByInference(inference));
-  };
-
   useEffect(() => {
     if (inference.pd_model) {
       setModelType("PD");
@@ -689,14 +683,6 @@ export default function DraftInferenceDetail({ project, inference }) {
           variant="contained"
         >
           Run
-        </Button>
-        <Button
-          className={classes.controls}
-          disabled={!readOnly}
-          onClick={handleFetchChains}
-          variant="contained"
-        >
-          Fetch Results
         </Button>
         <Button
           className={classes.controls}
