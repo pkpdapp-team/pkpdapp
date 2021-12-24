@@ -190,7 +190,7 @@ function PriorsSubform({
   disabled,
 }) {
   const variable_options = variables
-    .filter((variable) => variable.constant)
+    .filter((variable) => variable.constant || variable.state)
     .map((variable) => ({ key: variable.name, value: variable.id }));
   if (variable_options.length === 0) {
     return null;
