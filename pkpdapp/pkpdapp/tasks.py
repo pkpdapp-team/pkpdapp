@@ -4,11 +4,10 @@
 # copyright notice and full license details.
 #
 
-import time
 from celery import shared_task
 
 from pkpdapp.models import (
-    Inference, InferenceChain, InferenceResult, InferenceMixin
+    Inference, InferenceMixin
 )
 
 

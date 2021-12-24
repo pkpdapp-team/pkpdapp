@@ -37,7 +37,6 @@ class InferenceMixin:
 
         self._myokit_model = model.get_myokit_model()
 
-        state_names = [var.qname() for var in self._myokit_model.variables()]
         self._myokit_simulator = model.get_myokit_simulator()
 
         # get biomarkers
@@ -331,6 +330,7 @@ class CombinedLogLikelihood(pints.LogPDF):
     `PINTS.LogLikelihood` objects. It is assumed that each individual
     log_likelihood has a single noise parameter.
     """
+
     def __init__(self, fixed_noise_parameter_values, *log_likelihoods):
         self._log_likelihoods = [ll for ll in log_likelihoods]
         self._n_outputs = len(self._log_likelihoods)
