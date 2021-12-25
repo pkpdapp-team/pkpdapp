@@ -306,18 +306,19 @@ class InferenceMixin:
                 obj.tell(scores)
                 x = obj.xbest()
                 score = obj.fbest()
-            self.write_inference_results(x, score, self.inference.iteration,
-                                         idx)
+            self.write_inference_results(
+                x, score, self.inference.number_of_iterations, idx
+            )
 
     def run_inference(self):
         # runs ask / tell
         time_start = time.time()
         n_iterations = self.inference.max_number_of_iterations
         for i in range(n_iterations):
+            self.inference.number_of_iterations += 1
             self.step_inference()
             time_now = time.time()
             self.inference.time_elapsed = time_now - time_start
-            self.inference.number_of_iterations += 1
             self.inference.save()
 
     def fixed_variables(self):
