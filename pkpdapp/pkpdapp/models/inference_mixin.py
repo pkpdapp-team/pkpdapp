@@ -36,6 +36,7 @@ class InferenceMixin:
         model = inference.get_model()
 
         self._myokit_model = model.get_myokit_model()
+
         self._myokit_simulator = model.get_myokit_simulator()
 
         # get biomarkers
@@ -127,6 +128,12 @@ class InferenceMixin:
                                    i in range(self.inference.number_of_chains)]
         self.inference.iteration = 0
 
+        # reset results
+        inference.chains.all().delete()
+        inference.number_of_iterations = 0
+        inference.number_of_function_evals = 0
+        inference.save()
+
         # set inference results objects for each fitted parameter to be
         # initial values
         fn_val = self._pints_log_posterior(x0)
@@ -160,7 +167,7 @@ class InferenceMixin:
                                  for v in myokit_minus_fixed]
 
         fixed_parameter_dictionary = {
-            param.name: param.default_value
+            param.qname: param.default_value
             for param in self._fixed_variables
         }
         return fixed_parameter_dictionary
@@ -170,6 +177,7 @@ class InferenceMixin:
             outputs, myokit_simulator, myokit_model, fixed_parameters_dict
     ):
         output_names = [output.qname for output in outputs]
+
         return MyokitForwardModel(myokit_simulator, myokit_model,
                                   output_names,
                                   fixed_parameters_dict)
@@ -286,7 +294,6 @@ class InferenceMixin:
 
     def step_inference(self):
         # runs one set of ask / tell
-        self.inference.iteration += 1
         for idx, obj in enumerate(self._inference_objects):
             x = obj.ask()
             if self._inference_type == "SA":  # sampling
@@ -299,17 +306,20 @@ class InferenceMixin:
                 obj.tell(scores)
                 x = obj.xbest()
                 score = obj.fbest()
-            self.write_inference_results(x, score, self.inference.iteration,
-                                         idx)
+            self.write_inference_results(
+                x, score, self.inference.number_of_iterations, idx
+            )
 
     def run_inference(self):
         # runs ask / tell
         time_start = time.time()
         n_iterations = self.inference.max_number_of_iterations
         for i in range(n_iterations):
+            self.inference.number_of_iterations += 1
             self.step_inference()
             time_now = time.time()
             self.inference.time_elapsed = time_now - time_start
+            self.inference.save()
 
     def fixed_variables(self):
         return self._fixed_variables
@@ -321,6 +331,7 @@ class CombinedLogLikelihood(pints.LogPDF):
     `PINTS.LogLikelihood` objects. It is assumed that each individual
     log_likelihood has a single noise parameter.
     """
+
     def __init__(self, fixed_noise_parameter_values, *log_likelihoods):
         self._log_likelihoods = [ll for ll in log_likelihoods]
         self._n_outputs = len(self._log_likelihoods)

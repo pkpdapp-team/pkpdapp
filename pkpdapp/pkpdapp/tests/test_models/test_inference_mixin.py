@@ -13,10 +13,14 @@ from pkpdapp.models import (
     PriorUniform, MyokitForwardModel,
     InferenceMixin, Algorithm
 )
+from django.core.cache import cache
 
 
 class TestInferenceMixinSingleOutputSampling(TestCase):
     def setUp(self):
+        # ensure we've got nothing in the cache
+        cache._cache.flush_all()
+
         project = Project.objects.get(
             name='demo',
         )
@@ -26,6 +30,7 @@ class TestInferenceMixinSingleOutputSampling(TestCase):
         )
         model = PharmacodynamicModel.objects.get(
             name='tumour_growth_inhibition_model_koch',
+            read_only=False,
         )
         variables = model.variables.all()
         var_names = [v.qname for v in variables]
@@ -138,6 +143,8 @@ class TestInferenceMixinSingleOutputSampling(TestCase):
 
 class TestInferenceMixinSingleOutputOptimisation(TestCase):
     def setUp(self):
+        # ensure we've got nothing in the cache
+        cache._cache.flush_all()
         project = Project.objects.get(
             name='demo',
         )
@@ -147,6 +154,7 @@ class TestInferenceMixinSingleOutputOptimisation(TestCase):
         )
         model = PharmacodynamicModel.objects.get(
             name='tumour_growth_inhibition_model_koch',
+            read_only=False,
         )
         variables = model.variables.all()
         var_names = [v.qname for v in variables]

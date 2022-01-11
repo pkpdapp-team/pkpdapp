@@ -108,4 +108,5 @@ class InferenceChainSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def get_data(self, inference_chain):
-        return inference_chain.as_pandas().to_dict(orient='list')
+        result = inference_chain.as_pandas().to_dict(orient='list')
+        return result
