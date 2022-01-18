@@ -47,7 +47,9 @@ class TestMyokitPintsForwardModelSingleOutput(TestCase):
         forward_model = MyokitForwardModel(
             myokit_model=self.model,
             myokit_simulator=self.simulator,
-            fixed_parameter_dict=self.fixed_dict)
+            fixed_parameter_dict=self.fixed_dict,
+            outputs=["myokit.tumour_volume"]
+        )
 
         z = forward_model.simulate(self.variable_parameter_values, times)
         self.assertEqual(len(z), len(times))
@@ -55,7 +57,9 @@ class TestMyokitPintsForwardModelSingleOutput(TestCase):
         # try without any fixed parameters
         forward_model = MyokitForwardModel(
             myokit_model=self.model,
-            myokit_simulator=self.simulator)
+            myokit_simulator=self.simulator,
+            outputs=["myokit.tumour_volume"]
+        )
         z1 = forward_model.simulate(list(self.parameter_dict.values()), times)
         self.assertTrue(np.array_equal(z, z1))
 
@@ -94,7 +98,9 @@ class TestMyokitPintsForwardModelSingleOutput(TestCase):
 
         forward_model = MyokitForwardModel(
             myokit_model=self.model,
-            myokit_simulator=self.simulator)
+            myokit_simulator=self.simulator,
+            outputs="myokit.tumour_volume"
+        )
         z = forward_model.simulate([1, 1, 1, 1, 1], times)
         self.assertAlmostEqual(z[-1], 0.4999996148976773, delta=0.1)
 
@@ -150,17 +156,7 @@ class TestMyokitPintsForwardModelMultipleOutput(TestCase):
             'peripheral_2.drug_p2_amount': 1
         }
         variable_parameters = [1, 1, 1, 1, 1, 1, 1]
-        forward_model = MyokitForwardModel(
-            myokit_model=self.model,
-            myokit_simulator=self.simulator,
-            fixed_parameter_dict=fixed_dict)
 
-        times = np.linspace(0, 100)
-        z = forward_model.simulate(variable_parameters, times)
-        expected_shape = np.array((len(times), 3))
-        self.assertTrue(np.array_equal(z.shape, expected_shape))
-
-        # supply all three outputs explicitly
         desired_outputs = ['central.drug_c_amount',
                            'peripheral_1.drug_p1_amount',
                            'peripheral_2.drug_p2_amount']
@@ -168,9 +164,13 @@ class TestMyokitPintsForwardModelMultipleOutput(TestCase):
             myokit_model=self.model,
             myokit_simulator=self.simulator,
             fixed_parameter_dict=fixed_dict,
-            outputs=desired_outputs)
-        za = forward_model.simulate(variable_parameters, times)
-        self.assertTrue(np.array_equal(z, za))
+            outputs=desired_outputs
+        )
+
+        times = np.linspace(0, 100)
+        z = forward_model.simulate(variable_parameters, times)
+        expected_shape = np.array((len(times), 3))
+        self.assertTrue(np.array_equal(z.shape, expected_shape))
 
         # supply no fixed dictionary
         forward_model = MyokitForwardModel(
@@ -219,9 +219,15 @@ class TestMyokitPintsForwardModelMultipleOutput(TestCase):
 
     def test_multiple_output_values(self):
         # Tests outputs versus known values
+
+        desired_outputs = ['central.drug_c_amount',
+                           'peripheral_1.drug_p1_amount',
+                           'peripheral_2.drug_p2_amount']
         forward_model = MyokitForwardModel(
             myokit_model=self.model,
-            myokit_simulator=self.simulator)
+            myokit_simulator=self.simulator,
+            outputs=desired_outputs
+        )
         times = np.linspace(0, 100, 200)
         parameters = [100, 200, 300, 1, 0.1, 1, 2, 3, 4]
         z = forward_model.simulate(parameters, times)
@@ -237,7 +243,9 @@ class TestMyokitPintsForwardModelMultipleOutput(TestCase):
         forward_model = MyokitForwardModel(
             myokit_model=self.model,
             myokit_simulator=self.simulator,
-            fixed_parameter_dict=fixed_dict)
+            fixed_parameter_dict=fixed_dict,
+            outputs=desired_outputs
+        )
         parameters = [200, 300, 1, 0.1, 1, 3, 4]
         z = forward_model.simulate(parameters, times)
         self.assertAlmostEqual(z[-1, 0], 25.07465781951092, delta=0.1)

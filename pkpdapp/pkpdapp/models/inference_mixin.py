@@ -4,6 +4,7 @@
 # copyright notice and full license details.
 #
 
+from django.db.models import Q
 import pints
 import time
 from pkpdapp.models import (
@@ -55,9 +56,10 @@ class InferenceMixin:
         self.priors = inference.priors.all()
         self._pints_log_priors = self.get_priors_andor_boundaries(self.priors)
 
-        # get all the variable names associated with the Myokit model minus
-        # 'time'
-        all_myokit_variables = model.variables.exclude(name='time')
+        # get all the constant and state variable names associated with the Myokit model
+        all_myokit_variables = model.variables.filter(
+            Q(constant=True) | Q(state=True)
+        )
 
         # get fitted parameters: note this will include all parameters,
         # including noise parameters which are not used by Myokit models

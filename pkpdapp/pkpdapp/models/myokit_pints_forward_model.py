@@ -31,19 +31,21 @@ class MyokitForwardModel(pints.ForwardModel):
         self._n_states = model.count_states()
 
         # get initial conditions
+        self._output_names = sorted(
+            [var.qname() for var in model.variables(const=False)])
         self._state_names = sorted(
             [var.qname() for var in model.states()])
 
         if outputs is None:
-            self._output_names = self._state_names
+            self._output_names = self._output_names
             self._n_outputs = self._n_states
         else:
             if not isinstance(outputs, list):
                 outputs = [outputs]
-            outputs_not_in_states = (
-                [v not in self._state_names for v in outputs])
-            if any(outputs_not_in_states):
-                raise ValueError('All outputs must be within model states.')
+            outputs_not_in_model = (
+                [v not in self._output_names for v in outputs])
+            if any(outputs_not_in_model):
+                raise ValueError('All outputs must be within model.')
             self._output_names = outputs
             self._n_outputs = len(outputs)
 
@@ -51,6 +53,8 @@ class MyokitForwardModel(pints.ForwardModel):
         self._const_names = sorted(
             [var.qname() for var in model.variables(const=True)])
 
+        # parameters are all const variables plus the number of states
+        # (for initial conditions)
         self._all_parameter_names = self._state_names + self._const_names
         self._n_all_parameters = len(self._all_parameter_names)
 
