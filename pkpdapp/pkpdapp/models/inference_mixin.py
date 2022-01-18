@@ -56,7 +56,8 @@ class InferenceMixin:
         self.priors = inference.priors.all()
         self._pints_log_priors = self.get_priors_andor_boundaries(self.priors)
 
-        # get all the constant and state variable names associated with the Myokit model
+        # get all the constant and state variable names associated with
+        # the Myokit model
         all_myokit_variables = model.variables.filter(
             Q(constant=True) | Q(state=True)
         )
