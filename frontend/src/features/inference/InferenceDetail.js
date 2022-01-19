@@ -261,7 +261,7 @@ function ObjectiveFunctionSubform({
     return null;
   }
   const variable_options = variables
-    .filter((variable) => variable.state)
+    .filter((variable) => !variable.constant)
     .map((variable) => ({ key: variable.name, value: variable.id }));
   if (variable_options.length === 0) {
     return null;
