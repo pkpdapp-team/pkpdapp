@@ -40,7 +40,10 @@ export default function VariableSubform({ variable_id, disableSave }) {
       symbol: "X",
     };
   }
-  const label = `${variable.name} [${unit.symbol}]`;
+  const label = variable.name === 'size' ? 
+    `volume [${unit.symbol}]` : 
+    `${variable.name} [${unit.symbol}]`
+    ;
   let truncatedLabel = label;
   const maxLength = 28;
   if (label.length > maxLength) {
