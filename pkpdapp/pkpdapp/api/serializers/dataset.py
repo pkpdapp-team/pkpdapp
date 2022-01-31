@@ -68,6 +68,7 @@ class DatasetCsvSerializer(serializers.ModelSerializer):
                          'TIME_UNIT',  # not in Roche list but seems needed
                          'YTYPE',
                          'YDESC',
+                         'ROUTE',
                          'DV',
                          'UNIT',
                          'SUBJECT_GROUP',
@@ -206,6 +207,12 @@ class DatasetCsvSerializer(serializers.ModelSerializer):
                 )
             elif row['AMT'] != ".":  # dose observation
                 compound_str = row['COMPOUND']
+                route_str = row['ROUTE']
+                if route_str == 'IV':
+                    route = Protocol.DoseType.DIRECT
+                else:
+                    route = Protocol.DoseType.INDIRECT
+
                 try:
                     compound = Compound.objects.get(name=compound_str)
                 except Compound.DoesNotExist:
@@ -230,6 +237,7 @@ class DatasetCsvSerializer(serializers.ModelSerializer):
                         amount_unit=value_unit,
                         dataset=instance,
                         subject=subject,
+                        dose_type=route
                     )
                 start_time = float(row['TIME'])
                 amount = float(row['AMT'])

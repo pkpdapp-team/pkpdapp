@@ -352,6 +352,7 @@ def load_datasets(apps, schema_editor):
                 DOSE_GROUP_COLUMN = 4
                 COMPOUND_COLUMN = None
                 SUBJECT_GROUP_COLUMN = 3
+                ROUTE_COLUMN = None
             elif datafile_name == 'demo_pk_data':
                 TIME_COLUMN = 4
                 TIME_UNIT_COLUMN = 5
@@ -364,6 +365,7 @@ def load_datasets(apps, schema_editor):
                 DOSE_COLUMN = 8
                 COMPOUND_COLUMN = 0
                 SUBJECT_GROUP_COLUMN = None
+                ROUTE_COLUMN = None
             else:
                 TIME_COLUMN = 1
                 TIME_UNIT_COLUMN = 2
@@ -376,6 +378,7 @@ def load_datasets(apps, schema_editor):
                 DOSE_COLUMN = None
                 COMPOUND_COLUMN = None
                 SUBJECT_GROUP_COLUMN = None
+                ROUTE_COLUMN = None
             subject_index = 0
             for row in data_reader:
                 biomarker_type_str = row[BIOMARKER_TYPE_COLUMN]
@@ -452,6 +455,10 @@ def load_datasets(apps, schema_editor):
                             compound=compound
                         )
                     except Protocol.DoesNotExist:
+                        if ROUTE_COLUMN is None or row[ROUTE_COLUMN] == 'IV':
+                            route = 'D'
+                        else:
+                            route = 'ID'
                         protocol = Protocol.objects.create(
                             name='{}-{}-{}'.format(
                                 dataset.name,
@@ -462,8 +469,9 @@ def load_datasets(apps, schema_editor):
                             dataset=dataset,
                             subject=subject,
                             time_unit=time_unit,
-                            project=demo_project,
                             amount_unit=unit,
+                            read_only=True,
+                            dose_type=route,
                         )
 
                     Dose.objects.create(

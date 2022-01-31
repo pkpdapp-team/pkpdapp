@@ -13,14 +13,14 @@ import {
 } from "../protocols/protocolsSlice.js";
 
 export default function Protocols({ project, disableSave }) {
-  const pkModels = useSelector(selectAllProtocols);
+  const protocols = useSelector(selectWritableProtocols);
   const dispatch = useDispatch();
   const handleClickItem = (item) => dispatch(toggleProtocol(item));
   const handleNewItem = () => dispatch(addNewProtocol(project));
 
   return (
     <ExpandableListItem
-      items={pkModels}
+      items={protocols}
       text="Protocols"
       type="protocol"
       icon={AccessibilityIcon}
