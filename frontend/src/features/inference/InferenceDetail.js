@@ -191,7 +191,7 @@ function PriorsSubform({
 }) {
   const variable_options = variables
     .filter((variable) => variable.constant || variable.state)
-    .map((variable) => ({ key: variable.name, value: variable.id }));
+    .map((variable) => ({ key: variable.qname, value: variable.id }));
   if (variable_options.length === 0) {
     return null;
   }
@@ -262,7 +262,7 @@ function ObjectiveFunctionSubform({
   }
   const variable_options = variables
     .filter((variable) => !variable.constant)
-    .map((variable) => ({ key: variable.name, value: variable.id }));
+    .map((variable) => ({ key: variable.qname, value: variable.id }));
   if (variable_options.length === 0) {
     return null;
   }

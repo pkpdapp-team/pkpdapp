@@ -7,12 +7,13 @@ import ExpandableListItem from "../menu/ExpandableListItem";
 
 import {
   selectWritableProtocols,
+  selectAllProtocols,
   toggleProtocol,
   addNewProtocol,
 } from "../protocols/protocolsSlice.js";
 
 export default function Protocols({ project, disableSave }) {
-  const pkModels = useSelector(selectWritableProtocols);
+  const pkModels = useSelector(selectAllProtocols);
   const dispatch = useDispatch();
   const handleClickItem = (item) => dispatch(toggleProtocol(item));
   const handleNewItem = () => dispatch(addNewProtocol(project));

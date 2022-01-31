@@ -163,9 +163,11 @@ class Variable(StoredModel):
         if found_variable is not None:
             return variables[0]
         else:
+            print('creating variable', myokit_variable.qname(), myokit_variable.value())
             return Variable.objects.create(
                 name=myokit_variable.name(),
                 qname=myokit_variable.qname(),
+                default_value=myokit_variable.value(),
                 constant=myokit_variable.is_constant(),
                 state=myokit_variable.is_state(),
                 unit=Unit.get_unit_from_variable(myokit_variable),
@@ -206,6 +208,7 @@ class Variable(StoredModel):
                 name=myokit_variable.name(),
                 qname=myokit_variable.qname(),
                 constant=myokit_variable.is_constant(),
+                default_value=myokit_variable.value(),
                 state=myokit_variable.is_state(),
                 unit=Unit.get_unit_from_variable(myokit_variable),
                 pd_model=model,
@@ -232,6 +235,7 @@ class Variable(StoredModel):
                 name=myokit_variable.name(),
                 qname=myokit_variable.qname(),
                 constant=myokit_variable.is_constant(),
+                default_value=myokit_variable.value(),
                 state=myokit_variable.is_state(),
                 unit=Unit.get_unit_from_variable(myokit_variable),
                 dosed_pk_model=model,
