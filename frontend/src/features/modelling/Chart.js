@@ -123,6 +123,7 @@ export default function ModellingChart({ datasets, pkModels, pdModels }) {
       ...pdModels.map((m) => getChartData(m)).flat(),
     ],
   };
+  console.log('data', data)
 
   let options = {
     animation: {

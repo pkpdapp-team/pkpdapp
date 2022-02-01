@@ -122,26 +122,24 @@ class InferenceMixin:
             for qname in pints_var_names
         }
 
-        # set x0 to be typical values of parameters
-        # TODO: change this to be random / other values
-        x0 = [v.default_value for v in variables]
-        x0 = [x0[i] for i in self._django_to_pints_lookup.values()]
-
-        self._inference_objects = [self._inference_method(x0) for
-                                   i in range(self.inference.number_of_chains)]
-        self.inference.iteration = 0
-
         # reset results
         inference.chains.all().delete()
         inference.number_of_iterations = 0
         inference.number_of_function_evals = 0
         inference.save()
 
+        # create sampler objects, and
         # set inference results objects for each fitted parameter to be
         # initial values
-        fn_val = self._pints_log_posterior(x0)
-        self.inference.number_of_function_evals += 1
+        self._inference_objects = []
+        self.inference.iteration = 0
         for i in range(self.inference.number_of_chains):
+            x0 = self._pints_composed_log_prior.sample().flatten()
+            self._inference_objects.append(
+                self._inference_method(x0)
+            )
+            self.inference.number_of_function_evals += 1
+            fn_val = self._pints_log_posterior(x0)
             InferenceChain.objects.create(inference=self.inference)
             self.write_inference_results(x0, fn_val,
                                          self.inference.iteration, i)
