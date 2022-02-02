@@ -18,7 +18,7 @@ import { makeStyles } from "@material-ui/core/styles";
 
 import { selectChosenProject } from "../projects/projectsSlice.js";
 
-import { selectChosenDatasets } from "../datasets/datasetsSlice.js";
+import { selectChosenDatasets, selectChosenDatasetProtocols } from "../datasets/datasetsSlice.js";
 
 import { selectChosenPdModels } from "../pdModels/pdModelsSlice.js";
 
@@ -43,6 +43,7 @@ export default function Modelling() {
   const chosenPkModels = useSelector(selectChosenPkModels);
   const chosenPdModels = useSelector(selectChosenPdModels);
   const chosenProtocols = useSelector(selectChosenProtocols);
+  const chosenDatasetProtocols = useSelector(selectChosenDatasetProtocols);
   if (!project) {
     return "Select a project";
   }
@@ -155,7 +156,7 @@ export default function Modelling() {
               </Accordion>
             );
           })}
-          {chosenProtocols.map((protocol) => (
+          {chosenProtocols.concat(chosenDatasetProtocols).map((protocol) => (
             <Accordion key={protocol.id}>
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                 <Typography className={classes.heading}>
