@@ -29,7 +29,9 @@ class InferenceView(viewsets.ModelViewSet):
     filter_backends = [ProjectFilter]
 
 
-class RunInferenceView(views.APIView):
+class InferenceOperationView(views.APIView):
+    def op(self, inference):
+        raise NotImplementedError
 
     def post(self, request, pk, format=None):
         try:
@@ -55,8 +57,20 @@ class RunInferenceView(views.APIView):
             return Response(
                 errors, status=status.HTTP_400_BAD_REQUEST
             )
-        stored_inference = inference.run_inference()
+
+        stored_inference = self.op(inference)
+
         return Response(InferenceSerializer(stored_inference).data)
+
+
+class RunInferenceView(InferenceOperationView):
+    def op(self, inference):
+        return inference.run_inference()
+
+
+class StopInferenceView(InferenceOperationView):
+    def op(self, inference):
+        return inference.stop_inference()
 
 
 class InferenceChainView(viewsets.ModelViewSet):

@@ -32,9 +32,9 @@ class Variable(StoredModel):
         help_text='default value for this variable'
     )
 
-    name = models.CharField(max_length=20, help_text='name of the variable')
+    name = models.CharField(max_length=100, help_text='name of the variable')
     qname = models.CharField(
-        max_length=100, help_text='fully qualitifed name of the variable')
+        max_length=200, help_text='fully qualitifed name of the variable')
 
     unit = models.ForeignKey(
         Unit, on_delete=models.CASCADE,

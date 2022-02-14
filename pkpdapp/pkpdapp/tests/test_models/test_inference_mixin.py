@@ -11,7 +11,8 @@ from pkpdapp.models import (
     LogLikelihoodNormal,
     Project, BiomarkerType,
     PriorUniform, MyokitForwardModel,
-    InferenceMixin, Algorithm
+    InferenceMixin, Algorithm, InferenceChain, InferenceResult,
+    InferenceFunctionResult,
 )
 from django.core.cache import cache
 
@@ -187,15 +188,18 @@ class TestInferenceMixinSingleOutputOptimisation(TestCase):
         # find variables that are being estimated
         parameter_names = forward_model.variable_parameter_names()
         var_indices = [var_names.index(v) for v in parameter_names]
-        for i in var_indices:
+        self.inference.priors.set([
             PriorUniform.objects.create(
                 lower=0.0,
                 upper=2.0,
                 variable=variables[i],
                 inference=self.inference,
             )
+            for i in var_indices
+        ])
+
         # 'run' inference to create copies of models
-        self.inference = self.inference.run_inference(test=True)
+        self.inference.run_inference(test=True)
 
         # create mixin object
         self.inference_mixin = InferenceMixin(self.inference)
@@ -233,3 +237,65 @@ class TestInferenceMixinSingleOutputOptimisation(TestCase):
         inference = self.inference_mixin.inference
         self.assertTrue(inference.time_elapsed > 0)
         self.assertTrue(inference.number_of_function_evals > 0)
+
+    def test_inference_can_be_restarted(self):
+        self.inference.chains.all().delete()
+        self.inference.chains.set([
+            InferenceChain.objects.create(inference=self.inference)
+            for i in range(self.inference.number_of_chains)
+        ])
+        for chain in self.inference.chains.all():
+            chain.inference_function_results.add(
+                InferenceFunctionResult.objects.create(
+                    chain=chain,
+                    iteration=0,
+                    value=1.4
+                ),
+                InferenceFunctionResult.objects.create(
+                    chain=chain,
+                    iteration=1,
+                    value=2.4
+                )
+            )
+            for prior in self.inference.priors.all():
+                chain.inference_results.add(
+                    InferenceResult.objects.create(
+                        chain=chain,
+                        prior=prior,
+                        iteration=0,
+                        value=0.5,
+                    ),
+                    InferenceResult.objects.create(
+                        chain=chain,
+                        prior=prior,
+                        iteration=1,
+                        value=0.4,
+                    )
+                )
+        self.inference.number_of_iterations = 1
+
+        # tests that inference runs and writes results to db
+        self.inference_mixin.run_inference()
+
+        chains = self.inference_mixin.inference.chains.all()
+        self.assertEqual(len(chains), 3)
+        for chain in chains:
+            priors = self.inference_mixin.priors
+            fun_res = chain.inference_function_results
+            f_vals = fun_res.order_by('iteration').values_list(
+                'value', flat=True
+            )
+            self.assertEqual(len(f_vals), 11)
+            p_vals_all = []
+            for prior in priors:
+                res = chain.inference_results.filter(prior=prior)
+                p_vals = res.order_by('iteration').values_list(
+                    'value', flat=True
+                )
+                self.assertEqual(len(p_vals), 11)
+                p_vals_all.append(p_vals)
+                iterations = res.order_by('iteration').values_list(
+                    'iteration', flat=True
+                )
+                expected = list(range(11))
+                self.assertTrue(np.array_equal(iterations, expected))

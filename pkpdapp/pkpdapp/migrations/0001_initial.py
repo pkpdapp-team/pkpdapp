@@ -7,6 +7,7 @@
 # flake8: noqa
 
 
+
 from django.conf import settings
 from django.db import migrations, models
 import django.db.models.deletion
@@ -108,6 +109,7 @@ class Migration(migrations.Migration):
                 ('number_of_iterations', models.IntegerField(default=0, help_text='number of iterations calculated')),
                 ('time_elapsed', models.IntegerField(default=0, help_text='Elapsed run time for inference in seconds')),
                 ('number_of_function_evals', models.IntegerField(default=0, help_text='number of function evaluations')),
+                ('task_id', models.CharField(blank=True, help_text='If executing, this is the celery task id', max_length=40, null=True)),
                 ('algorithm', models.ForeignKey(default=pkpdapp.models.inference.get_default_optimisation_algorithm, help_text='algorithm used to perform the inference', on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.algorithm')),
                 ('dosed_pk_model', models.ForeignKey(blank=True, help_text='dosed pharmacokinetic model', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='inferences', to='pkpdapp.dosedpharmacokineticmodel')),
             ],
@@ -296,8 +298,8 @@ class Migration(migrations.Migration):
                 ('lower_bound', models.FloatField(default=1e-06, help_text='lowest possible value for this variable')),
                 ('upper_bound', models.FloatField(default=2, help_text='largest possible value for this variable')),
                 ('default_value', models.FloatField(default=1, help_text='default value for this variable')),
-                ('name', models.CharField(help_text='name of the variable', max_length=20)),
-                ('qname', models.CharField(help_text='fully qualitifed name of the variable', max_length=100)),
+                ('name', models.CharField(help_text='name of the variable', max_length=100)),
+                ('qname', models.CharField(help_text='fully qualitifed name of the variable', max_length=200)),
                 ('constant', models.BooleanField(default=True, help_text='True for a constant variable of the model, i.e. a parameter. False if non-constant, i.e. an output of the model (default is True)')),
                 ('state', models.BooleanField(default=False, help_text='True for a state variable of the model (default is False)')),
                 ('color', models.IntegerField(default=0, help_text='Color index associated with this variable. For display purposes in the frontend')),
@@ -413,7 +415,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('iteration', models.IntegerField(help_text='Iteration')),
-                ('value', models.FloatField(help_text='Objective function value')),
+                ('value', models.FloatField(help_text='estimated parameter value')),
                 ('chain', models.ForeignKey(help_text='Chain related to the row', on_delete=django.db.models.deletion.CASCADE, related_name='inference_function_results', to='pkpdapp.inferencechain')),
             ],
         ),
@@ -490,6 +492,10 @@ class Migration(migrations.Migration):
             model_name='biomarker',
             name='subject',
             field=models.ForeignKey(help_text='subject associated with this biomarker', on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.subject'),
+        ),
+        migrations.AddConstraint(
+            model_name='variable',
+            constraint=models.CheckConstraint(check=models.Q(models.Q(('scale', 'LG'), ('lower_bound__gt', 0)), ('scale', 'LN'), _connector='OR'), name='variable: log scale must have a lower bound greater than zero'),
         ),
         migrations.AddConstraint(
             model_name='variable',

@@ -81,6 +81,11 @@ urlpatterns = [
         api.RunInferenceView.as_view(),
         name='run-inference'
     ),
+    path(
+        'api/inference/<int:pk>/stop',
+        api.StopInferenceView.as_view(),
+        name='stop-inference'
+    ),
     path('api/pharmacodynamic/<int:pk>/simulate',
          api.SimulatePdView.as_view(), name='simulate-pharmacodynamic'),
     path('auth/', include('djoser.urls')),

@@ -34,7 +34,7 @@ from .project import ProjectView, ProjectAccessView
 from .protocol import ProtocolView
 from .inference import (
     InferenceView, InferenceChainView, AlgorithmView,
-    RunInferenceView,
+    RunInferenceView, StopInferenceView
 )
 from .simulate import (
     SimulatePkView,

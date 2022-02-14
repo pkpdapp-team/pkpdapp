@@ -79,6 +79,15 @@ export const runInference = createAsyncThunk(
   }
 );
 
+export const stopInference = createAsyncThunk(
+  "inferences/stopInference",
+  async (inferenceId, { dispatch }) => {
+    const newInference = await api.post(`/api/inference/${inferenceId}/stop`);
+    const normalized = normalize(newInference, inference);
+    return normalized.entities;
+  }
+);
+
 export const deleteInference = createAsyncThunk(
   "inferences/deleteInference",
   async (inferenceId, { dispatch }) => {
@@ -116,6 +125,9 @@ export const inferencesSlice = createSlice({
     },
     [fetchInferenceById.fulfilled]: inferencesAdapter.upsertOne,
     [runInference.fulfilled]: (state, action) => {
+      inferencesAdapter.upsertMany(state, action.payload.inferences);
+    },
+    [stopInference.fulfilled]: (state, action) => {
       inferencesAdapter.upsertMany(state, action.payload.inferences);
     },
     [addNewInference.fulfilled]: inferencesAdapter.addOne,

@@ -9,9 +9,11 @@ import FormControl from "@material-ui/core/FormControl";
 
 import { NcaChart } from "./NcaChart";
 import {
-  selectDatasetProtocols,
   selectProtocolById,
 } from "../protocols/protocolsSlice";
+import {
+  selectDatasetById,
+} from "../datasets/datasetsSlice";
 import {
   selectBiomarkerTypesByDatasetId,
   selectBiomarkerTypeById,
@@ -48,18 +50,20 @@ export default function NcaDetail({ project, dataset }) {
   const biomarker_type = useSelector((state) =>
     biomarkerTypeId ? selectBiomarkerTypeById(state, biomarkerTypeId) : null
   );
-  const protocol = useSelector((state) =>
-    protocolId ? selectProtocolById(state, protocolId) : null
-  );
-
-  const subject = useSelector((state) =>
-    protocol ? selectSubjectById(state, protocol.subject) : null
-  );
+  
 
   console.log("biomarker_type", biomarker_type);
 
   const protocols = useSelector((state) =>
-    selectDatasetProtocols(state, dataset)
+    selectDatasetById(state, dataset.id).protocols
+  );
+
+  const protocol = (protocols && protocolId) ? 
+    protocols.find(p => p.id === protocolId)
+    : null
+
+  const subject = useSelector((state) =>
+    protocol ? selectSubjectById(state, protocol.subject) : null
   );
 
   const biomarkerTypes = useSelector((state) =>

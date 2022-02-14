@@ -5,6 +5,9 @@
 #
 
 from django.db.models import Q
+from django.db.models import Max
+from time import perf_counter
+from django.db import connection
 import pints
 import time
 from pkpdapp.models import (
@@ -54,7 +57,9 @@ class InferenceMixin:
 
         # get priors / boundaries
         self.priors = inference.priors.all()
-        self._pints_log_priors = self.get_priors_andor_boundaries(self.priors)
+        self._pints_log_priors, self._pints_boundaries = (
+            self.get_priors_andor_boundaries(self.priors)
+        )
 
         # get all the constant and state variable names associated with
         # the Myokit model
@@ -105,6 +110,13 @@ class InferenceMixin:
             self._pints_composed_log_prior
         )
 
+        # if doing an optimisation use a probability based error to maximise
+        # the posterior
+        if inference.algorithm.category == 'OP':
+            self._pints_log_posterior = (
+                pints.ProbabilityBasedError(self._pints_log_posterior)
+            )
+
         # Creates an initialised sampling / optimisation method that can be
         # called by ask / tell
 
@@ -122,27 +134,43 @@ class InferenceMixin:
             for qname in pints_var_names
         }
 
-        # reset results
-        inference.chains.all().delete()
-        inference.number_of_iterations = 0
-        inference.number_of_function_evals = 0
-        inference.save()
+        # create chains if not exist
+        if self.inference.chains.count() == 0:
+            for i in range(self.inference.number_of_chains):
+                InferenceChain.objects.create(inference=self.inference)
 
-        # create sampler objects, and
+        if self.inference.chains.count() != self.inference.number_of_chains:
+            raise RuntimeError('number of chains not equal to chains in database')
+
+        # create sampler objects
+        # If results already exist append to them, otherwise randomly
+        # sample prior for initial values.
         # set inference results objects for each fitted parameter to be
         # initial values
         self._inference_objects = []
-        self.inference.iteration = 0
-        for i in range(self.inference.number_of_chains):
-            x0 = self._pints_composed_log_prior.sample().flatten()
+        for i, chain in enumerate(inference.chains.all()):
+            x0 = []
+            if self.inference.number_of_iterations > 0:
+                for name in pints_var_names:
+                    this_chain = InferenceResult.objects.filter(
+                        prior=self.fitted_variables[
+                            self._pints_to_django_lookup(name)
+                        ],
+                        chain=chain
+                    )
+                    x0.append(this_chain.get(iteration=self.inference.number_of_iterations).value)
+            else:
+                x0 = self._pints_composed_log_prior.sample().flatten()
+
+                # write x0 to empty chain
+                self.inference.number_of_function_evals += 1
+                fn_val = self._pints_log_posterior(x0)
+                self.write_inference_results(x0, fn_val,
+                                             self.inference.number_of_iterations, i)
+
             self._inference_objects.append(
-                self._inference_method(x0)
+                self._inference_method(x0, boundaries=self._pints_boundaries)
             )
-            self.inference.number_of_function_evals += 1
-            fn_val = self._pints_log_posterior(x0)
-            InferenceChain.objects.create(inference=self.inference)
-            self.write_inference_results(x0, fn_val,
-                                         self.inference.iteration, i)
 
     def create_fixed_parameter_dictionary(self, all_myokit_parameters,
                                           fitted_parameters):
@@ -262,6 +290,11 @@ class InferenceMixin:
     def get_priors_andor_boundaries(priors):
         # get all variables being fitted from priors
         pints_log_priors = []
+        pints_boundaries = None
+        if all([isinstance(p, PriorUniform) for p in priors]):
+            lower = [p.lower for p in priors]
+            upper = [p.upper for p in priors]
+            pints_boundaries = pints.RectangularBoundaries(lower, upper)
         for prior in priors:
             if isinstance(prior, PriorUniform):
                 lower = prior.lower
@@ -271,7 +304,7 @@ class InferenceMixin:
                 mean = prior.mean
                 sd = prior.sd
                 pints_log_priors.append(pints.GaussianLogPrior(mean, sd))
-        return pints_log_priors
+        return pints_log_priors, pints_boundaries
 
     def get_myokit_model(self):
         return self._myokit_model
@@ -314,13 +347,20 @@ class InferenceMixin:
     def run_inference(self):
         # runs ask / tell
         time_start = time.time()
-        n_iterations = self.inference.max_number_of_iterations
-        for i in range(n_iterations):
+        max_iterations = self.inference.max_number_of_iterations
+        n_iterations = self.inference.number_of_iterations
+        t0 = time.perf_counter()
+        for i in range(n_iterations, max_iterations):
             self.inference.number_of_iterations += 1
             self.step_inference()
             time_now = time.time()
             self.inference.time_elapsed = time_now - time_start
             self.inference.save()
+
+            # close database connection every second
+            if time.perf_counter() - t0 > 1.0:
+                connection.close()
+                t0 = time.perf_counter()
 
     def fixed_variables(self):
         return self._fixed_variables

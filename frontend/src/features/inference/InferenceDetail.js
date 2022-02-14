@@ -35,7 +35,7 @@ import {
 import { selectAllDatasets } from "../datasets/datasetsSlice";
 
 import { updateInference, deleteInference } from "../inference/inferenceSlice";
-import { runInference } from "./inferenceSlice";
+import { runInference, stopInference } from "./inferenceSlice";
 import { FormTextField, FormSelectField } from "../forms/FormComponents";
 import { userHasReadOnlyAccess } from "../projects/projectsSlice";
 
@@ -191,18 +191,17 @@ function PriorsSubform({
 }) {
   const variable_options = variables
     .filter((variable) => variable.constant || variable.state)
-    .map((variable) => ({ key: variable.qname, value: variable.id }));
+    .map((variable) => ({ key: variable.qname.replace('.size', '.volume'), value: variable.id }));
   if (variable_options.length === 0) {
     return null;
   }
   const type_options = [
     { key: "Normal", value: "PriorNormal" },
     { key: "Uniform", value: "PriorUniform" },
-    { key: "Boundary", value: "Boundary" },
   ];
   const handleNewPrior = () => {
     append({
-      type: "PriorNormal",
+      type: "PriorUniform",
       sd: "",
       mean: "",
       lower: "",
@@ -496,6 +495,10 @@ export default function DraftInferenceDetail({ project, inference }) {
     dispatch(runInference(inference.id));
   };
 
+  const handleStop= () => {
+    dispatch(stopInference(inference.id));
+  };
+
   useEffect(() => {
     if (inference.pd_model) {
       setModelType("PD");
@@ -686,9 +689,17 @@ export default function DraftInferenceDetail({ project, inference }) {
         </Button>
         <Button
           className={classes.controls}
+          disabled={readOnly}
+          onClick={handleStop}
+          variant="contained"
+        >
+          Stop
+        </Button>
+        <Button
+          className={classes.controls}
           variant="contained"
           onClick={handleDelete}
-          disabled={readOnly}
+          disabled={false}
         >
           Delete
         </Button>

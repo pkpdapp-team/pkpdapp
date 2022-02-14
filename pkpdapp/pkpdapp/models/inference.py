@@ -6,6 +6,7 @@
 
 from django.db import models
 from django.db.models import Q
+from pkpdapp.celery import app
 from pkpdapp.models import (
     Project, PharmacodynamicModel,
     DosedPharmacokineticModel,
@@ -108,6 +109,12 @@ class Inference(StoredModel):
         help_text='number of function evaluations'
     )
 
+    task_id = models.CharField(
+        max_length=40,
+        blank=True, null=True,
+        help_text='If executing, this is the celery task id'
+    )
+
     constraints = [
         models.CheckConstraint(
             check=(
@@ -143,50 +150,55 @@ class Inference(StoredModel):
         when an inference is run, a new model is created (a copy),
         and the model and all its variables are stored
         """
-        inference_kwargs = {
-            'name': self.name,
-            'description': self.description,
-            'project': self.project,
-            'algorithm': self.algorithm,
-            'number_of_chains': self.number_of_chains,
-            'max_number_of_iterations': self.max_number_of_iterations,
-            'read_only': True,
-        }
+        # save related objects so we can recreate them
+        old_priors = self.priors.all()
+        old_objective_functions = self.objective_functions.all()
+
+        self.id = None
+        self.pk = None
+
         if self.pd_model:
-            model = self.pd_model.create_stored_model()
-            inference_kwargs['pd_model'] = model
+            self.pd_model = self.pd_model.create_stored_model()
+            model = self.pd_model
         if self.dosed_pk_model:
-            model = self.dosed_pk_model.create_stored_model()
-            inference_kwargs['dosed_pk_model'] = model
+            self.dosed_pk_model = self.dosed_pk_model.create_stored_model()
+            model = self.dosed_pk_model
         if self.pkpd_model:
-            model = self.pkpd_model.create_stored_model()
-            inference_kwargs['pkpd_model'] = model
+            self.pkpd_model = self.pkpd_model.create_stored_model()
+            model = self.pkpd_model
 
-        new_inference = Inference.objects.create(**inference_kwargs)
+        # save new as readonly
+        self.read_only = True
 
-        for prior in self.priors.all():
+        self.save()
+
+        for prior in old_priors:
             prior.id = None
             prior.pk = None
-            prior.inference = new_inference
+            prior.inference = self
             prior.variable = model.variables.get(qname=prior.variable.qname)
             prior.save()
 
-        for objective_function in self.objective_functions.all():
+        for objective_function in old_objective_functions:
             objective_function.id = None
             objective_function.pk = None
-            objective_function.inference = new_inference
+            objective_function.inference = self
             objective_function.variable = model.variables.get(
                 qname=objective_function.variable.qname
             )
             objective_function.save()
 
-        new_inference.refresh_from_db()
+        self.refresh_from_db()
 
         if not test:
             from pkpdapp.tasks import run_inference
             try:
-                run_inference.delay(new_inference.id)
+                result = run_inference.delay(self.id)
+                self.task_id = result.id
+                self.save()
             except run_inference.OperationalError as exc:
                 print('Sending task raised: {}'.format(exc))
 
-        return new_inference
+    def stop_inference(self):
+        if self.task_id is not None:
+            app.control.revoke(self.task_id, terminate=True)
