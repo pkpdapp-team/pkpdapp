@@ -58,9 +58,9 @@ class InferenceOperationView(views.APIView):
                 errors, status=status.HTTP_400_BAD_REQUEST
             )
 
-        stored_inference = self.op(inference)
+        self.op(inference)
 
-        return Response(InferenceSerializer(stored_inference).data)
+        return Response(InferenceSerializer(inference).data)
 
 
 class RunInferenceView(InferenceOperationView):

@@ -27,6 +27,7 @@ export default function VariableSubform({ variable_id, disableSave }) {
       default_value: variable.default_value,
       lower_bound: variable.lower_bound,
       upper_bound: variable.upper_bound,
+      is_log: variable.is_log,
     },
   });
 

@@ -6,6 +6,7 @@
 
 from django.db.models import Q
 from django.db.models import Max
+import matplotlib.pylab as plt
 from time import perf_counter
 from django.db import connection
 import pints
@@ -119,11 +120,12 @@ class InferenceMixin:
                 self._pints_log_posterior
             )
         )
-        self._pints_boundaries = (
-            self._pints_composed_transform.convert_boundaries(
-                self._pints_boundaries
+        if self._pints_boundaries is not None:
+            self._pints_boundaries = (
+                self._pints_composed_transform.convert_boundaries(
+                    self._pints_boundaries
+                )
             )
-        )
 
         # if doing an optimisation use a probability based error to maximise
         # the posterior
@@ -133,6 +135,9 @@ class InferenceMixin:
                     self._pints_log_posterior
                 )
             )
+        # if doing a sampler, we can't use boundaries
+        else:
+            self._pints_boundaries = None
 
         # Creates an initialised sampling / optimisation method that can be
         # called by ask / tell
@@ -179,18 +184,35 @@ class InferenceMixin:
             else:
                 x0 = self._pints_composed_log_prior.sample().flatten()
 
+                sim = self._pints_forward_model.simulate(x0, self._times[0])
+
+                plt.plot(self._times[0], sim, label='sim')
+                plt.plot(self._times[0], self._values[0], label='data')
+                plt.legend()
+                plt.savefig('test.pdf')
+
                 # write x0 to empty chain
                 self.inference.number_of_function_evals += 1
-                fn_val = self._pints_log_posterior(x0)
+                fn_val = self._pints_log_posterior(
+                    self._pints_composed_transform.to_search(x0)
+                )
+                print('starting function value', fn_val)
                 self.write_inference_results(x0, fn_val,
                                              self.inference.number_of_iterations, i)
 
-            self._inference_objects.append(
-                self._inference_method(
-                    self._pints_composed_transform.to_search(x0),
-                    boundaries=self._pints_boundaries
+            if self._pints_boundaries is None:
+                self._inference_objects.append(
+                    self._inference_method(
+                        self._pints_composed_transform.to_search(x0),
+                    )
                 )
-            )
+            else:
+                self._inference_objects.append(
+                    self._inference_method(
+                        self._pints_composed_transform.to_search(x0),
+                        boundaries=self._pints_boundaries
+                    )
+                )
 
     def create_fixed_parameter_dictionary(self, all_myokit_parameters,
                                           fitted_parameters):
@@ -315,8 +337,11 @@ class InferenceMixin:
             lower = [p.lower for p in priors]
             upper = [p.upper for p in priors]
             pints_boundaries = pints.RectangularBoundaries(lower, upper)
+        else:
+            pints_boundaries = None
         for prior in priors:
-            if prior.variable.is_log:
+            # if prior.variable.is_log:
+            if False:
                 pints_transforms.append(pints.LogTransformation(n_parameters=1))
             else:
                 pints_transforms.append(pints.IdentityTransformation(n_parameters=1))
@@ -350,6 +375,9 @@ class InferenceMixin:
                 iteration=iteration,
                 value=value)
 
+        # free up connection since this is probably going to be in a loop
+        connection.close()
+
     def step_inference(self):
         # runs one set of ask / tell
         for idx, obj in enumerate(self._inference_objects):
@@ -358,12 +386,16 @@ class InferenceMixin:
                 score = self._pints_log_posterior(x)
                 self.inference.number_of_function_evals += 1
                 x, score, _ = obj.tell(score)
+                if idx == 1:
+                    print('chain {}, x = {}, score = {}'.format(idx, x, score))
             else:
                 scores = [self._pints_log_posterior(xi) for xi in x]
                 self.inference.number_of_function_evals += len(x)
                 obj.tell(scores)
                 x = obj.xbest()
                 score = obj.fbest()
+                if idx == 1:
+                    print('chain {}, x = {}, score = {}'.format(idx, x, score, scores))
             self.write_inference_results(
                 self._pints_composed_transform.to_model(x),
                 score, self.inference.number_of_iterations, idx
@@ -374,18 +406,12 @@ class InferenceMixin:
         time_start = time.time()
         max_iterations = self.inference.max_number_of_iterations
         n_iterations = self.inference.number_of_iterations
-        t0 = time.perf_counter()
         for i in range(n_iterations, max_iterations):
             self.inference.number_of_iterations += 1
             self.step_inference()
             time_now = time.time()
             self.inference.time_elapsed = time_now - time_start
             self.inference.save()
-
-            # close database connection every second
-            if time.perf_counter() - t0 > 1.0:
-                connection.close()
-                t0 = time.perf_counter()
 
     def fixed_variables(self):
         return self._fixed_variables
