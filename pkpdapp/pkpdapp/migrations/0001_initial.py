@@ -7,7 +7,6 @@
 # flake8: noqa
 
 
-
 from django.conf import settings
 from django.db import migrations, models
 import django.db.models.deletion
@@ -298,6 +297,7 @@ class Migration(migrations.Migration):
                 ('lower_bound', models.FloatField(default=1e-06, help_text='lowest possible value for this variable')),
                 ('upper_bound', models.FloatField(default=2, help_text='largest possible value for this variable')),
                 ('default_value', models.FloatField(default=1, help_text='default value for this variable')),
+                ('is_log', models.BooleanField(default=False, help_text='True if default_value, lower_bound and upper_bound are stored as the log of these values')),
                 ('name', models.CharField(help_text='name of the variable', max_length=100)),
                 ('qname', models.CharField(help_text='fully qualitifed name of the variable', max_length=200)),
                 ('constant', models.BooleanField(default=True, help_text='True for a constant variable of the model, i.e. a parameter. False if non-constant, i.e. an output of the model (default is True)')),
@@ -305,7 +305,6 @@ class Migration(migrations.Migration):
                 ('color', models.IntegerField(default=0, help_text='Color index associated with this variable. For display purposes in the frontend')),
                 ('display', models.BooleanField(default=True, help_text='True if this variable will be displayed in the frontend, False otherwise')),
                 ('axis', models.BooleanField(default=False, help_text='False/True if biomarker type displayed on LHS/RHS axis')),
-                ('scale', models.CharField(choices=[('LN', 'Linear'), ('LG', 'Log')], default='LN', max_length=2)),
                 ('dosed_pk_model', models.ForeignKey(blank=True, help_text='dosed pharmacokinetic model', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='variables', to='pkpdapp.dosedpharmacokineticmodel')),
                 ('pd_model', models.ForeignKey(blank=True, help_text='pharmacodynamic model', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='variables', to='pkpdapp.pharmacodynamicmodel')),
                 ('pk_model', models.ForeignKey(blank=True, help_text='pharmacokinetic model', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='variables', to='pkpdapp.pharmacokineticmodel')),
@@ -495,7 +494,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='variable',
-            constraint=models.CheckConstraint(check=models.Q(models.Q(('scale', 'LG'), ('lower_bound__gt', 0)), ('scale', 'LN'), _connector='OR'), name='variable: log scale must have a lower bound greater than zero'),
+            constraint=models.CheckConstraint(check=models.Q(models.Q(('is_log', True), ('lower_bound__gt', 0)), ('is_log', False), _connector='OR'), name='variable: log scale must have a lower bound greater than zero'),
         ),
         migrations.AddConstraint(
             model_name='variable',

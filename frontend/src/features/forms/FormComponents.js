@@ -95,6 +95,7 @@ export function FormSliderField({
   defaultValue,
   min,
   max,
+  log,
   label,
   tooltip,
 }) {
@@ -117,6 +118,12 @@ export function FormSliderField({
     }
   };
 
+
+  let calculateValue = (value) => value;
+  if (log) {
+    calculateValue = (value) => Math.exp(value);
+  } 
+
   const marks = [
     {
       value: min,
@@ -125,6 +132,11 @@ export function FormSliderField({
       value: max,
     },
   ];
+
+  const internalMin = log ? Math.log(min) : min;
+  const internalMax = log ? Math.log(max) : max;
+  const internalStep = log ? (Math.log(max) - Math.log(min)) / 100.0 : (max - min) / 100.0;
+
   return (
     <div className={classes.formInput}>
       {label && (
@@ -148,9 +160,10 @@ export function FormSliderField({
               valueLabelDisplay="auto"
               valueLabelFormat={roundNumber}
               value={value}
-              step={(max - min) / 100.0}
-              min={min}
-              max={max}
+              step={internalStep}
+              min={internalMin}
+              max={internalMax}
+              scale={calculateValue}
               marks={marks}
               onChange={(e, v) => {
                 e.target.name = name;

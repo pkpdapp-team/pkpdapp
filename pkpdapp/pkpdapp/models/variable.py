@@ -7,6 +7,7 @@
 from django.db import models
 from django.db.models import Q
 import myokit
+import numpy as np
 from pkpdapp.models import (
     Unit, DosedPharmacokineticModel,
     PharmacokineticModel, PharmacodynamicModel,
@@ -30,6 +31,14 @@ class Variable(StoredModel):
     default_value = models.FloatField(
         default=1,
         help_text='default value for this variable'
+    )
+
+    is_log = models.BooleanField(
+        default=False,
+        help_text=(
+            'True if default_value is stored as '
+            'the log of this value'
+        )
     )
 
     name = models.CharField(max_length=100, help_text='name of the variable')
@@ -78,16 +87,6 @@ class Variable(StoredModel):
         )
     )
 
-    class Scale(models.TextChoices):
-        LINEAR = 'LN', 'Linear'
-        LOG = 'LG', 'Log'
-
-    scale = models.CharField(
-        max_length=2,
-        choices=Scale.choices,
-        default=Scale.LINEAR,
-    )
-
     pd_model = models.ForeignKey(
         PharmacodynamicModel,
         blank=True, null=True,
@@ -114,8 +113,8 @@ class Variable(StoredModel):
         constraints = [
             models.CheckConstraint(
                 check=(
-                    (Q(scale='LG') & Q(lower_bound__gt=0)) |
-                    Q(scale='LN')
+                    (Q(is_log=True) & Q(lower_bound__gt=0)) |
+                    Q(is_log=False)
                 ),
                 name=(
                     '%(class)s: log scale must have a lower '
@@ -137,6 +136,12 @@ class Variable(StoredModel):
                 name='%(class)s: variable must belong to a model'
             )
         ]
+
+    def get_default_value(self):
+        if self.is_log:
+            return np.exp(self.default_value)
+        else:
+            return self.default_value
 
     def get_project(self):
         if self.pd_model:
@@ -266,7 +271,7 @@ class Variable(StoredModel):
             'lower_bound': self.lower_bound,
             'upper_bound': self.upper_bound,
             'default_value': self.default_value,
-            'scale': self.scale,
+            'is_log': self.is_log,
             'axis': self.axis,
             'display': self.display,
             'color': self.color,

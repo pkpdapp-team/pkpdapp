@@ -57,8 +57,8 @@ class InferenceMixin:
 
         # get priors / boundaries
         self.priors = inference.priors.all()
-        self._pints_log_priors, self._pints_boundaries = (
-            self.get_priors_andor_boundaries(self.priors)
+        self._pints_log_priors, self._pints_boundaries, self._pints_transforms = (
+            self.get_priors_boundaries_transforms(self.priors)
         )
 
         # get all the constant and state variable names associated with
@@ -105,16 +105,33 @@ class InferenceMixin:
         self._pints_composed_log_prior = pints.ComposedLogPrior(
             *self._pints_log_priors
         )
+        self._pints_composed_transform = pints.ComposedTransformation(
+            *self._pints_transforms
+        )
         self._pints_log_posterior = pints.LogPosterior(
             self._pints_log_likelihood,
             self._pints_composed_log_prior
+        )
+
+        # transform function and boundaries
+        self._pints_log_posterior = (
+            self._pints_composed_transform.convert_log_pdf(
+                self._pints_log_posterior
+            )
+        )
+        self._pints_boundaries = (
+            self._pints_composed_transform.convert_boundaries(
+                self._pints_boundaries
+            )
         )
 
         # if doing an optimisation use a probability based error to maximise
         # the posterior
         if inference.algorithm.category == 'OP':
             self._pints_log_posterior = (
-                pints.ProbabilityBasedError(self._pints_log_posterior)
+                pints.ProbabilityBasedError(
+                    self._pints_log_posterior
+                )
             )
 
         # Creates an initialised sampling / optimisation method that can be
@@ -169,7 +186,10 @@ class InferenceMixin:
                                              self.inference.number_of_iterations, i)
 
             self._inference_objects.append(
-                self._inference_method(x0, boundaries=self._pints_boundaries)
+                self._inference_method(
+                    self._pints_composed_transform.to_search(x0),
+                    boundaries=self._pints_boundaries
+                )
             )
 
     def create_fixed_parameter_dictionary(self, all_myokit_parameters,
@@ -196,7 +216,7 @@ class InferenceMixin:
                                  for v in myokit_minus_fixed]
 
         fixed_parameter_dictionary = {
-            param.qname: param.default_value
+            param.qname: param.get_default_value()
             for param in self._fixed_variables
         }
         return fixed_parameter_dictionary
@@ -287,15 +307,19 @@ class InferenceMixin:
         return fitted_parameters
 
     @staticmethod
-    def get_priors_andor_boundaries(priors):
+    def get_priors_boundaries_transforms(priors):
         # get all variables being fitted from priors
         pints_log_priors = []
-        pints_boundaries = None
+        pints_transforms = []
         if all([isinstance(p, PriorUniform) for p in priors]):
             lower = [p.lower for p in priors]
             upper = [p.upper for p in priors]
             pints_boundaries = pints.RectangularBoundaries(lower, upper)
         for prior in priors:
+            if prior.variable.is_log:
+                pints_transforms.append(pints.LogTransformation(n_parameters=1))
+            else:
+                pints_transforms.append(pints.IdentityTransformation(n_parameters=1))
             if isinstance(prior, PriorUniform):
                 lower = prior.lower
                 upper = prior.upper
@@ -304,7 +328,7 @@ class InferenceMixin:
                 mean = prior.mean
                 sd = prior.sd
                 pints_log_priors.append(pints.GaussianLogPrior(mean, sd))
-        return pints_log_priors, pints_boundaries
+        return pints_log_priors, pints_boundaries, pints_transforms
 
     def get_myokit_model(self):
         return self._myokit_model
@@ -341,7 +365,8 @@ class InferenceMixin:
                 x = obj.xbest()
                 score = obj.fbest()
             self.write_inference_results(
-                x, score, self.inference.number_of_iterations, idx
+                self._pints_composed_transform.to_model(x),
+                score, self.inference.number_of_iterations, idx
             )
 
     def run_inference(self):
