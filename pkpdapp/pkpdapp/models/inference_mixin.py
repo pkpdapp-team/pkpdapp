@@ -13,8 +13,8 @@ from django.db import connection
 import pints
 import time
 from pkpdapp.models import (
-    MyokitForwardModel, LogLikelihoodNormal,
-    LogLikelihoodLogNormal, Inference,
+    MyokitForwardModel, LogLikelihood,
+    LogLikelihoodParameter, Inference,
     PriorNormal, PriorUniform, InferenceResult,
     InferenceChain, InferenceFunctionResult)
 
@@ -39,45 +39,11 @@ samplers_dict = {
 class InferenceMixin:
     def __init__(self, inference):
 
-        model = inference.get_model()
-
-        self._myokit_model = model.get_myokit_model()
-
-        self._myokit_simulator = model.get_myokit_simulator()
-
         # get biomarkers
         self._biomarker_types, self._outputs = (
             self.get_biomarker_types_and_output_variables(inference)
         )
         self._n_outputs = len(self._outputs)
-
-        # get objectives and fixed noise parameters (we assume they are fixed
-        # for now)
-        self._observed_loglikelihoods = (
-            self.get_objectives(inference)
-        )
-
-        # get priors / boundaries
-        self.priors = inference.priors.all()
-        self._pints_log_priors, self._pints_boundaries, self._pints_transforms = (
-            self.get_priors_boundaries_transforms(self.priors)
-        )
-
-        # get all the constant and state variable names associated with
-        # the Myokit model
-        all_myokit_variables = model.variables.filter(
-            Q(constant=True) | Q(state=True)
-        )
-
-        # get fitted parameters: note this will include all parameters,
-        # including noise parameters which are not used by Myokit models
-        self.fitted_variables = self.get_fitted_variables(self.priors)
-
-        # create a dictionary of key-value pairs for fixed parameters of Myokit
-        # model
-        self._fixed_parameters_dict = self.create_fixed_parameter_dictionary(
-            all_myokit_variables, self.fitted_variables)
-        print('fixed_parameers_dict in inference mixin', self._fixed_parameters_dict)
 
         # # select inference methods
         self._inference_type, self._inference_method = (
@@ -92,19 +58,46 @@ class InferenceMixin:
         # types needed later
         self.inference = inference
 
-        # create pints classes
+        # create a dictionary of key-value pairs for fixed parameters of Myokit
+        # model
+
+        # create pints forward model
         self._pints_forward_model = self.create_pints_forward_model(
-            self._outputs, self._myokit_simulator, self._myokit_model,
-            self._fixed_parameters_dict
+            self._outputs, inference
         )
+
         self._collection = self.create_pints_problem_collection(
             self._pints_forward_model, self._times, self._values, self._outputs
         )
 
-        self._pints_log_likelihood = self.create_pints_log_likelihood(
-            self._collection, self._n_outputs,
-            self._observed_loglikelihoods
+        # We'll use the variable ordering based on the forwards model.
+        pints_var_names = self._pints_forward_model.variable_parameter_names()
+
+        # we'll need the priors in the same order as the theta vector,
+        # so we can write back to the database
+        self.priors_in_pints_order = [
+            inference.priors.get(variable__qname=name)
+            for name in pints_var_names
+        ]
+
+        # this function returns the noise priors in the right order
+        self._pints_log_likelihood, noise_priors = \
+            self.create_pints_log_likelihood(
+                self._collection, inference
+            )
+
+        # add noise priors to the list
+        self.priors_in_pints_order += noise_priors
+
+        # get priors / boundaries, using variable ordering already established
+        (
+            self._pints_log_priors,
+            self._pints_boundaries,
+            self._pints_transforms
+        ) = self.get_priors_boundaries_transforms(
+            inference, self.priors_in_pints_order
         )
+
         self._pints_composed_log_prior = pints.ComposedLogPrior(
             *self._pints_log_priors
         )
@@ -141,23 +134,6 @@ class InferenceMixin:
         else:
             self._pints_boundaries = None
 
-        # Creates an initialised sampling / optimisation method that can be
-        # called by ask / tell
-
-        # Create lookup for fitted variables (from priors) -> pints variables
-        pints_var_names = self._pints_forward_model.variable_parameter_names()
-        variables = self.fitted_variables
-        priors_var_names = [v.qname for v in variables]
-
-        self._django_to_pints_lookup = {
-            qname: pints_var_names.index(qname)
-            for qname in priors_var_names
-        }
-        self._pints_to_django_lookup = {
-            qname: priors_var_names.index(qname)
-            for qname in pints_var_names
-        }
-
         # create chains if not exist
         if self.inference.chains.count() == 0:
             for i in range(self.inference.number_of_chains):
@@ -175,34 +151,25 @@ class InferenceMixin:
         for i, chain in enumerate(inference.chains.all()):
             x0 = []
             if self.inference.number_of_iterations > 0:
-                for name in pints_var_names:
+                for prior in self.priors_in_pints_order:
                     this_chain = InferenceResult.objects.filter(
-                        prior=self.fitted_variables[
-                            self._pints_to_django_lookup(name)
-                        ],
+                        prior=prior,
                         chain=chain
                     )
-                    x0.append(this_chain.get(
-                        iteration=self.inference.number_of_iterations).value)
+                    x0.append(
+                        this_chain.get(
+                            iteration=self.inference.number_of_iterations
+                        ).value
+                    )
             else:
+                x0 = self._pints_composed_log_prior.sample().flatten()
                 if (
-                    self.inference.initialization_strategy ==
-                    Inference.InitializationStrategy.RANDOM
-                ):
-                    x0 = self._pints_composed_log_prior.sample().flatten()
-                elif (
                     self.inference.initialization_strategy ==
                     Inference.InitializationStrategy.DEFAULT_VALUE
                 ):
-                    x0 = []
-                    for name in pints_var_names:
-                        variable = all_myokit_variables.get(qname=name)
-                        print('variable {} = {}'.format(name,
-                                                        variable.get_default_value()))
-                        x0.append(variable.get_default_value())
-                else:
-                    # TODO: from other
-                    x0 = self._pints_composed_log_prior.sample().flatten()
+                    for i, prior in enumerate(self.priors_in_pints_order):
+                        if prior.variable is not None:
+                            x0[i] = prior.variable.get_default_value()
 
                 sim = self._pints_forward_model.simulate(x0, self._times[0])
 
@@ -237,40 +204,47 @@ class InferenceMixin:
                     )
                 )
 
-    def create_fixed_parameter_dictionary(self, all_myokit_parameters,
-                                          fitted_parameters):
+    @staticmethod
+    def create_pints_forward_model(
+            outputs, inference,
+    ):
+        model = inference.get_model()
+
+        myokit_model = model.get_myokit_model()
+
+        myokit_simulator = model.get_myokit_simulator()
+
+        output_names = [output.qname for output in outputs]
+
+        # get all myokit names
+        all_myokit_variables = model.variables.filter(
+            Q(constant=True) | Q(state=True)
+        )
 
         # myokit: inputs and outputs
         myokit_pnames = [param.qname
                          for
-                         param in all_myokit_parameters]
-
-        # parameters being fit: currently this gets only Myokit parameters
-        fitted_parameter_names = [param.qname
-                                  for
-                                  param in fitted_parameters]
+                         param in all_myokit_variables]
 
         # get myokit parameters minus outputs: i.e. just input parameters
+        fitted_parameter_names = [
+            prior.variable.qname
+            for prior in inference.priors.all()
+            if prior.variable is not None
+        ]
         myokit_minus_fixed = [item
                               for
                               item in myokit_pnames
                               if item not in fitted_parameter_names]
 
         # get index of variables in named list
-        self._fixed_variables = [all_myokit_parameters[myokit_pnames.index(v)]
-                                 for v in myokit_minus_fixed]
+        fixed_variables = [all_myokit_variables[myokit_pnames.index(v)]
+                           for v in myokit_minus_fixed]
 
-        fixed_parameter_dictionary = {
+        fixed_parameters_dict = {
             param.qname: param.get_default_value()
-            for param in self._fixed_variables
+            for param in fixed_variables
         }
-        return fixed_parameter_dictionary
-
-    @staticmethod
-    def create_pints_forward_model(
-            outputs, myokit_simulator, myokit_model, fixed_parameters_dict
-    ):
-        output_names = [output.qname for output in outputs]
 
         return MyokitForwardModel(myokit_simulator, myokit_model,
                                   output_names,
@@ -288,23 +262,45 @@ class InferenceMixin:
 
     @staticmethod
     def create_pints_log_likelihood(
-            collection, n_outputs,
-            observed_loglikelihoods
+            collection, inference,
     ):
+        log_likelihoods = inference.log_likelihoods.all()
+
+        n_outputs = len(log_likelihoods)
+
         problems = [collection.subproblem(i) for i in range(n_outputs)]
 
-        # these are the PINTS methods
-        log_like_methods = observed_loglikelihoods
-
         # instantiate PINTS log-likelihoods
-        log_likes = []
-        for i in range(n_outputs):
-            log_likes.append(log_like_methods[i](problems[i]))
+        pints_log_likelihoods = []
+        priors = []
+        for problem, log_likelihood in zip(problems, log_likelihoods):
+            if log_likelihood.form == LogLikelihood.Form.NORMAL:
+                if log_likelihood.parameters.first().value is not None:
+                    value = log_likelihood.parameters.first().value
+                    pints_log_likelihoods.append(
+                        pints.GaussianKnownSigmaLogLikelihood(
+                            problem, value
+                        )
+                    )
+                else:
+                    priors.append(
+                        log_likelihood.parameters.first().priors.first()
+                    )
+                    pints_log_likelihoods.append(
+                        pints.GaussianLogLikelihood(problem)
+                    )
+            elif log_likelihood.form == LogLikelihood.Form.LOGNORMAL:
+                priors.append(
+                    log_likelihood.parameters.first().priors.first()
+                )
+                pints_log_likelihoods.append(
+                    pints.LogNormalLogLikelihood(problem)
+                )
 
         # combine them
         return CombinedLogLikelihood(
-            *log_likes
-        )
+            *pints_log_likelihoods
+        ), priors
 
     @staticmethod
     def get_inference_type_and_method(inference):
@@ -319,7 +315,7 @@ class InferenceMixin:
 
     @staticmethod
     def get_biomarker_types_and_output_variables(inference):
-        objs = inference.objective_functions.all()
+        objs = inference.log_likelihoods.all()
         biomarker_types = []
         output_variables = []
         for obj in objs:
@@ -331,21 +327,32 @@ class InferenceMixin:
     def get_objectives(inference):
         # determine objective function and observed biomarker types
         # to simulate
-        objs = inference.objective_functions.all()
+        objs = inference.log_likelihoods.all()
         observed_loglikelihoods = []
         for obj in objs:
-            if isinstance(obj, LogLikelihoodNormal):
+            if obj.form == LogLikelihood.Form.NORMAL:
+                if obj.parameters.first().value is not None:
+                    observed_loglikelihoods.append(
+                        pints.GaussianKnownSigmaLogLikelihood)
+                else:
+                    observed_loglikelihoods.append(pints.GaussianLogLikelihood)
+
                 observed_loglikelihoods.append(pints.GaussianLogLikelihood)
-            elif isinstance(obj, LogLikelihoodLogNormal):
+            elif obj.form == LogLikelihood.Form.LOGNORMAL:
                 observed_loglikelihoods.append(pints.LogNormalLogLikelihood)
         return observed_loglikelihoods
 
     @staticmethod
-    def get_fitted_variables(priors):
-        fitted_parameters = []
-        for prior in priors:
-            fitted_parameters.append(prior.variable)
-        return fitted_parameters
+    def prior_to_pints_prior(prior):
+        if isinstance(prior, PriorUniform):
+            lower = prior.lower
+            upper = prior.upper
+            pints_log_prior = pints.UniformLogPrior(lower, upper)
+        elif isinstance(prior, PriorNormal):
+            mean = prior.mean
+            sd = prior.sd
+            pints_log_prior = pints.GaussianLogPrior(mean, sd)
+        return pints_log_prior
 
     @staticmethod
     def get_priors_boundaries_transforms(priors):
@@ -364,14 +371,8 @@ class InferenceMixin:
                 pints_transforms.append(pints.LogTransformation(n_parameters=1))
             else:
                 pints_transforms.append(pints.IdentityTransformation(n_parameters=1))
-            if isinstance(prior, PriorUniform):
-                lower = prior.lower
-                upper = prior.upper
-                pints_log_priors.append(pints.UniformLogPrior(lower, upper))
-            elif isinstance(prior, PriorNormal):
-                mean = prior.mean
-                sd = prior.sd
-                pints_log_priors.append(pints.GaussianLogPrior(mean, sd))
+            pints_log_priors.append(self._prior_to_pints_prior(prior))
+
         return pints_log_priors, pints_boundaries, pints_transforms
 
     def get_myokit_model(self):
@@ -386,13 +387,12 @@ class InferenceMixin:
             iteration=iteration,
             value=fn_value
         )
-        for prior in self.priors:
-            value = values[self._pints_to_django_lookup[prior.variable.qname]]
+        for i, prior in self.priors_in_pints_order:
             InferenceResult.objects.create(
                 chain=chains[chain_index],
                 prior=prior,
                 iteration=iteration,
-                value=value)
+                value=values[i])
 
         # free up connection since this is probably going to be in a loop
         connection.close()
@@ -446,8 +446,7 @@ class CombinedLogLikelihood(pints.LogPDF):
         self._log_likelihoods = [ll for ll in log_likelihoods]
         self._n_outputs = len(self._log_likelihoods)
 
-        self._n_myokit_parameters = \
-            self._log_likelihoods[0]._problem.n_parameters()
+        self._n_myokit_parameters = self._log_likelihoods[0]._problem.n_parameters()
 
         # the myokit forwards model parameters are at the start of the
         # parameter vector

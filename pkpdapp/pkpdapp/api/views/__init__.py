@@ -44,5 +44,5 @@ from .subject import SubjectView
 from .unit import UnitView
 from .user import UserView
 from .variable import VariableView
-from .likelihoods import ObjectiveFunctionView
+from .likelihoods import LogLikelihoodView
 from .priors import PriorView

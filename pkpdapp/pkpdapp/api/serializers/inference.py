@@ -11,7 +11,7 @@ from pkpdapp.api.serializers import (
     PharmacodynamicSerializer,
     DosedPharmacokineticSerializer,
     PriorSerializer,
-    ObjectiveFunctionSerializer,
+    LogLikelihoodSerializer,
     VariableSerializer,
 )
 
@@ -32,7 +32,7 @@ class InferenceSerializer(serializers.ModelSerializer):
     priors = PriorSerializer(
         many=True
     )
-    objective_functions = ObjectiveFunctionSerializer(
+    log_likelihoods = LogLikelihoodSerializer(
         many=True
     )
     pd_model_detail = PharmacodynamicSerializer(
@@ -57,13 +57,13 @@ class InferenceSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         priors_data = validated_data.pop('priors')
-        objective_functions_data = validated_data.pop('objective_functions')
+        log_likelihood_data = validated_data.pop('log_likelihood')
         new_inference = BaseInferenceSerializer().create(
             validated_data
         )
         for field_datas, Serializer in [
                 (priors_data, PriorSerializer),
-                (objective_functions_data, ObjectiveFunctionSerializer),
+                (log_likelihood_data, LogLikelihoodSerializer),
         ]:
             for field_data in field_datas:
                 serializer = Serializer()
@@ -74,16 +74,16 @@ class InferenceSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         priors_data = validated_data.pop('priors')
-        objective_functions_data = validated_data.pop('objective_functions')
+        log_likelihood_data = validated_data.pop('log_likelihood')
         old_priors = list((instance.priors).all())
-        old_objective_functions = list((instance.objective_functions).all())
+        old_log_likelihoods = list((instance.log_likelihoods).all())
         new_inference = BaseInferenceSerializer().update(
             instance, validated_data
         )
         for field_datas, old_models, Serializer in [
                 (priors_data, old_priors, PriorSerializer),
-                (objective_functions_data,
-                 old_objective_functions, ObjectiveFunctionSerializer)
+                (log_likelihood_data,
+                 old_log_likelihoods, LogLikelihoodSerializer)
         ]:
             for field_data in field_datas:
                 serializer = Serializer()

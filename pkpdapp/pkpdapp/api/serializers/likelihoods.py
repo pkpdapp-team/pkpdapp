@@ -5,69 +5,67 @@
 #
 from rest_framework import serializers
 from pkpdapp.models import (
-    ObjectiveFunction,
-    LogLikelihoodNormal, LogLikelihoodLogNormal,
-    SumOfSquaredErrorsScoreFunction, Inference,
+    LogLikelihood, LogLikelihoodParameter,
+    Inference,
 )
-from pkpdapp.api.serializers import PolymorphicSerializer
 
 
-class LogLikelihoodNormalSerializer(serializers.ModelSerializer):
-    inference = serializers.PrimaryKeyRelatedField(
-        queryset=Inference.objects.all(),
-        required=False
-    )
-    type = serializers.SerializerMethodField()
-
+class LogLikelihoodParameterSerializer(serializers.ModelSerializer):
     class Meta:
-        model = LogLikelihoodNormal
+        model = LogLikelihoodParameter
         fields = '__all__'
 
-    def get_type(self, obj):
-        return 'LogLikelihoodNormal'
 
-
-class LogLikelihoodLogNormalSerializer(serializers.ModelSerializer):
-    inference = serializers.PrimaryKeyRelatedField(
-        queryset=Inference.objects.all(),
-        required=False
-    )
-    type = serializers.SerializerMethodField()
-
+class BaseLogLikelihoodSerializer(serializers.ModelSerializer):
     class Meta:
-        model = LogLikelihoodLogNormal
+        model = LogLikelihood
         fields = '__all__'
 
-    def get_type(self, obj):
-        return 'LogLikelihoodLogNormal'
 
-
-class SumOfSquaredErrorsScoreFunctionSerializer(
-        serializers.ModelSerializer
-):
-    inference = serializers.PrimaryKeyRelatedField(
-        queryset=Inference.objects.all(),
-        required=False
+class LogLikelihoodSerializer(serializers.ModelSerializer):
+    parameters = LogLikelihoodParameterSerializer(
+        many=True
     )
-    type = serializers.SerializerMethodField()
 
     class Meta:
-        model = SumOfSquaredErrorsScoreFunction
+        model = LogLikelihood
         fields = '__all__'
 
-    def get_type(self, obj):
-        return 'SumOfSquaredErrorsScoreFunction'
+    def create(self, validated_data):
+        # save method of log_likelihood will create its own parameters
+        validated_data.pop('parameters')
+        new_log_likelihood = BaseLogLikelihoodSerializer().create(
+            validated_data
+        )
+        return new_log_likelihood
 
+    def update(self, instance, validated_data):
+        parameters_data = validated_data.pop('parameters')
+        old_parameters = list((instance.parameters).all())
+        new_log_likelihood = BaseLogLikelihoodSerializer().create(
+            validated_data
+        )
+        for field_datas, old_models, Serializer in [
+                (parameters_data, old_parameters,
+                 LogLikelihoodParameterSerializer),
+        ]:
+            for field_data in field_datas:
+                serializer = Serializer()
+                try:
+                    old_model = [
+                        m for m in old_models
+                        if m.name == field_data['name']
+                    ][0]
 
-class ObjectiveFunctionSerializer(PolymorphicSerializer):
-    class Meta:
-        model = ObjectiveFunction
+                    # only allow updating value
+                    field_data = {
+                        'name': field_data['name']
+                    }
+                    new_model = serializer.update(
+                        old_model, field_data
+                    )
+                except IndexError:
+                    pass
+                new_model.save()
 
-    def get_serializer_map(self):
-        return {
-            'LogLikelihoodNormal': LogLikelihoodNormalSerializer,
-            'LogLikelihoodLogNormal': LogLikelihoodLogNormalSerializer,
-            'SumOfSquaredErrorsScoreFunction': (
-                SumOfSquaredErrorsScoreFunctionSerializer
-            )
-        }
+        return new_log_likelihood

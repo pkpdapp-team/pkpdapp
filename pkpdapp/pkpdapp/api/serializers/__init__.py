@@ -14,10 +14,8 @@ from .priors import (
     BoundarySerializer
 )
 from .likelihoods import (
-    ObjectiveFunctionSerializer,
-    LogLikelihoodNormalSerializer,
-    LogLikelihoodLogNormalSerializer,
-    SumOfSquaredErrorsScoreFunctionSerializer,
+    LogLikelihoodSerializer,
+    LogLikelihoodParameterSerializer,
 )
 from .validators import ValidSbml
 from .auce import AuceSerializer

@@ -10,16 +10,26 @@ from pkpdapp.api.views import (
     CheckAccessToProject,
 )
 from pkpdapp.api.serializers import (
-    ObjectiveFunctionSerializer
+    LogLikelihoodParameterSerializer, LogLikelihoodSerializer
 )
 from pkpdapp.models import (
-    ObjectiveFunction
+    LogLikelihood, LogLikelihoodParameter
 )
 
 
-class ObjectiveFunctionView(viewsets.ModelViewSet):
-    queryset = ObjectiveFunction.objects.all()
-    serializer_class = ObjectiveFunctionSerializer
+class LogLikelihoodView(viewsets.ModelViewSet):
+    queryset = LogLikelihood.objects.all()
+    serializer_class = LogLikelihoodSerializer
+    filter_backends = [
+        InferenceFilter
+    ]
+    permission_classes = [
+        IsAuthenticated & CheckAccessToProject
+    ]
+
+class LogLikelihoodParameterView(viewsets.ModelViewSet):
+    queryset = LogLikelihoodParameter.objects.all()
+    serializer_class = LogLikelihoodParameterSerializer
     filter_backends = [
         InferenceFilter
     ]

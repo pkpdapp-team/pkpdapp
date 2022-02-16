@@ -5,9 +5,10 @@
 #
 
 from django.db import models
+from django.db.models import Q
 from polymorphic.models import PolymorphicModel
 from pkpdapp.models import (
-    Variable, Inference
+    Variable, Inference, LogLikelihoodParameter
 )
 
 
@@ -21,11 +22,33 @@ class Prior(PolymorphicModel):
         blank=True, null=True,
         on_delete=models.CASCADE,
     )
+    log_likelihood_parameter = models.ForeignKey(
+        LogLikelihoodParameter,
+        related_name='priors',
+        blank=True, null=True,
+        on_delete=models.CASCADE,
+    )
     inference = models.ForeignKey(
         Inference,
         related_name='priors',
         on_delete=models.CASCADE,
     )
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                check=(
+                    (Q(variable__isnull=True) &
+                     Q(log_likelihood_parameter__isnull=False)) |
+                    (Q(variable__isnull=False) &
+                     Q(log_likelihood_parameter__isnull=True))
+                ),
+                name=(
+                    '%(class)s: prior must belong to a variable '
+                    'or log likelihood parameter'
+                )
+            )
+        ]
 
 
 class PriorUniform(Prior):

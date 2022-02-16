@@ -19,7 +19,7 @@ from pkpdapp.models import (
     Variable,
     Subject,
     Inference, InferenceChain,
-    Prior, ObjectiveFunction,
+    Prior, LogLikelihood,
 )
 
 
@@ -122,8 +122,8 @@ class InferenceFilter(filters.BaseFilterBackend):
                     queryset = inference.chains.all()
                 elif queryset.model == Prior:
                     queryset = inference.priors.all()
-                elif queryset.model == ObjectiveFunction:
-                    queryset = inference.objective_functions.all()
+                elif queryset.model == LogLikelihood:
+                    queryset = inference.log_likelihoods.all()
                 else:
                     raise RuntimeError('queryset model {} not recognised')
             except Inference.DoesNotExist:

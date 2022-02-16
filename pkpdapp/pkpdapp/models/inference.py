@@ -169,7 +169,7 @@ class Inference(StoredModel):
         """
         # save related objects so we can recreate them
         old_priors = self.priors.all()
-        old_objective_functions = self.objective_functions.all()
+        old_log_likelihoods = self.log_likelihoods.all()
 
         self.id = None
         self.pk = None
@@ -193,17 +193,22 @@ class Inference(StoredModel):
             prior.id = None
             prior.pk = None
             prior.inference = self
-            prior.variable = model.variables.get(qname=prior.variable.qname)
+            if prior.variable is not None:
+                prior.variable = model.variables.get(qname=prior.variable.qname)
             prior.save()
 
-        for objective_function in old_objective_functions:
-            objective_function.id = None
-            objective_function.pk = None
-            objective_function.inference = self
-            objective_function.variable = model.variables.get(
-                qname=objective_function.variable.qname
+        for log_likelihood in old_log_likelihoods:
+            old_priors = log_likelihood.parameters.all()
+            log_likelihood.id = None
+            log_likelihood.pk = None
+            log_likelihood.inference = self
+            log_likelihood.variable = model.variables.get(
+                qname=log_likelihood.variable.qname
             )
-            objective_function.save()
+            for param in old_parameters:
+                for prior in param.priors:
+                    prior.log
+            log_likelihood.save()
 
         self.refresh_from_db()
 
@@ -211,10 +216,10 @@ class Inference(StoredModel):
             from pkpdapp.tasks import run_inference
             try:
                 result = run_inference.delay(self.id)
-                self.task_id = result.id
-                self.save()
-            except run_inference.OperationalError as exc:
-                print('Sending task raised: {}'.format(exc))
+            self.task_id = result.id
+            self.save()
+        except run_inference.OperationalError as exc:
+            print('Sending task raised: {}'.format(exc))
 
     def stop_inference(self):
         if self.task_id is not None:

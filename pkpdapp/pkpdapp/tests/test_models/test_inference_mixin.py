@@ -8,7 +8,7 @@ from django.test import TestCase
 import numpy as np
 from pkpdapp.models import (
     Inference, PharmacodynamicModel,
-    LogLikelihoodNormal,
+    LogLikelihood,
     Project, BiomarkerType,
     PriorUniform, MyokitForwardModel,
     InferenceMixin, Algorithm, InferenceChain, InferenceResult,
@@ -53,11 +53,11 @@ class TestInferenceMixinSingleOutputSampling(TestCase):
             max_number_of_iterations=10,
             algorithm=Algorithm.objects.get(name='Haario-Bardenet'),
         )
-        LogLikelihoodNormal.objects.create(
-            sd=1.0,
+        LogLikelihood.objects.create(
             variable=variables[var_index],
             inference=self.inference,
-            biomarker_type=biomarker_type
+            biomarker_type=biomarker_type,
+            form=LogLikelihood.Form.NORMAL
         )
 
         # find variables that are being estimated
@@ -178,11 +178,11 @@ class TestInferenceMixinSingleOutputOptimisation(TestCase):
             algorithm=Algorithm.objects.get(name='XNES'),
             number_of_chains=3,
         )
-        LogLikelihoodNormal.objects.create(
-            sd=1.0,
+        LogLikelihood.objects.create(
             variable=variables[var_index],
             inference=self.inference,
-            biomarker_type=biomarker_type
+            biomarker_type=biomarker_type,
+            form=LogLikelihood.Form.NORMAL
         )
 
         # find variables that are being estimated
