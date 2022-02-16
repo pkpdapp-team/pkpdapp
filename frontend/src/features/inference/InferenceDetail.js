@@ -527,6 +527,11 @@ export default function DraftInferenceDetail({ project, inference }) {
     { key: "Pharmacokinetic", value: "PK" },
   ];
 
+  const initialization_options = [
+    { key: "Random from prior", value: "R" },
+    { key: "Default value from model", value: "D" },
+  ]
+
   const pdModels = useSelector(selectAllPdModels);
   const pd_model_options = pdModels
     ? pdModels
@@ -652,6 +657,16 @@ export default function DraftInferenceDetail({ project, inference }) {
         options={algorithm_options}
         name="algorithm"
         label="Algorithm"
+      />
+
+      <FormSelectField
+        control={control}
+        defaultValue={inference.initialization_strategy}
+        disabled={readOnly}
+        useGroups
+        options={initialization_options}
+        name="initialization_strategy"
+        label="Initialization Strategy"
       />
 
       <FormTextField

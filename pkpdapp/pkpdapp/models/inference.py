@@ -83,6 +83,23 @@ class Inference(StoredModel):
         help_text='algorithm used to perform the inference'
     )
 
+    class InitializationStrategy(models.TextChoices):
+        DEFAULT_VALUE = 'D', 'Default Value of model'
+        RANDOM = 'R', 'Random from prior'
+        FROM_OTHER = 'F', 'From other inference'
+
+    initialization_strategy = models.CharField(
+        max_length=1,
+        choices=InitializationStrategy.choices,
+        default=InitializationStrategy.RANDOM,
+    )
+
+    initialization_inference = models.ForeignKey(
+        'Inference',
+        on_delete=models.CASCADE,
+        blank=True, null=True,
+    )
+
     # potentially for optimisation too (as in number of starting points)
     number_of_chains = models.IntegerField(
         default=4,

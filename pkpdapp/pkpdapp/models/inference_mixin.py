@@ -8,12 +8,13 @@ from django.db.models import Q
 from django.db.models import Max
 import matplotlib.pylab as plt
 from time import perf_counter
+import numpy as np
 from django.db import connection
 import pints
 import time
 from pkpdapp.models import (
     MyokitForwardModel, LogLikelihoodNormal,
-    LogLikelihoodLogNormal,
+    LogLikelihoodLogNormal, Inference,
     PriorNormal, PriorUniform, InferenceResult,
     InferenceChain, InferenceFunctionResult)
 
@@ -52,7 +53,7 @@ class InferenceMixin:
 
         # get objectives and fixed noise parameters (we assume they are fixed
         # for now)
-        self._observed_loglikelihoods, self._noise_parameter_values = (
+        self._observed_loglikelihoods = (
             self.get_objectives(inference)
         )
 
@@ -76,6 +77,7 @@ class InferenceMixin:
         # model
         self._fixed_parameters_dict = self.create_fixed_parameter_dictionary(
             all_myokit_variables, self.fitted_variables)
+        print('fixed_parameers_dict in inference mixin', self._fixed_parameters_dict)
 
         # # select inference methods
         self._inference_type, self._inference_method = (
@@ -100,7 +102,7 @@ class InferenceMixin:
         )
 
         self._pints_log_likelihood = self.create_pints_log_likelihood(
-            self._collection, self._n_outputs, self._noise_parameter_values,
+            self._collection, self._n_outputs,
             self._observed_loglikelihoods
         )
         self._pints_composed_log_prior = pints.ComposedLogPrior(
@@ -180,9 +182,27 @@ class InferenceMixin:
                         ],
                         chain=chain
                     )
-                    x0.append(this_chain.get(iteration=self.inference.number_of_iterations).value)
+                    x0.append(this_chain.get(
+                        iteration=self.inference.number_of_iterations).value)
             else:
-                x0 = self._pints_composed_log_prior.sample().flatten()
+                if (
+                    self.inference.initialization_strategy ==
+                    Inference.InitializationStrategy.RANDOM
+                ):
+                    x0 = self._pints_composed_log_prior.sample().flatten()
+                elif (
+                    self.inference.initialization_strategy ==
+                    Inference.InitializationStrategy.DEFAULT_VALUE
+                ):
+                    x0 = []
+                    for name in pints_var_names:
+                        variable = all_myokit_variables.get(qname=name)
+                        print('variable {} = {}'.format(name,
+                                                        variable.get_default_value()))
+                        x0.append(variable.get_default_value())
+                else:
+                    # TODO: from other
+                    x0 = self._pints_composed_log_prior.sample().flatten()
 
                 sim = self._pints_forward_model.simulate(x0, self._times[0])
 
@@ -207,6 +227,9 @@ class InferenceMixin:
                     )
                 )
             else:
+                print('x0', x0)
+                print('transformed x0', self._pints_composed_transform.to_search(x0))
+                print('boundaries', self._pints_boundaries)
                 self._inference_objects.append(
                     self._inference_method(
                         self._pints_composed_transform.to_search(x0),
@@ -265,7 +288,7 @@ class InferenceMixin:
 
     @staticmethod
     def create_pints_log_likelihood(
-            collection, n_outputs, noise_parameter_values,
+            collection, n_outputs,
             observed_loglikelihoods
     ):
         problems = [collection.subproblem(i) for i in range(n_outputs)]
@@ -280,7 +303,6 @@ class InferenceMixin:
 
         # combine them
         return CombinedLogLikelihood(
-            noise_parameter_values,
             *log_likes
         )
 
@@ -311,15 +333,12 @@ class InferenceMixin:
         # to simulate
         objs = inference.objective_functions.all()
         observed_loglikelihoods = []
-        noise_parameters = []
         for obj in objs:
             if isinstance(obj, LogLikelihoodNormal):
                 observed_loglikelihoods.append(pints.GaussianLogLikelihood)
-                noise_parameters.append(obj.sd)
             elif isinstance(obj, LogLikelihoodLogNormal):
                 observed_loglikelihoods.append(pints.LogNormalLogLikelihood)
-                noise_parameters.append(obj.sigma)
-        return observed_loglikelihoods, noise_parameters
+        return observed_loglikelihoods
 
     @staticmethod
     def get_fitted_variables(priors):
@@ -386,7 +405,7 @@ class InferenceMixin:
                 score = self._pints_log_posterior(x)
                 self.inference.number_of_function_evals += 1
                 x, score, _ = obj.tell(score)
-                if idx == 1:
+                if idx == 0:
                     print('chain {}, x = {}, score = {}'.format(idx, x, score))
             else:
                 scores = [self._pints_log_posterior(xi) for xi in x]
@@ -394,7 +413,7 @@ class InferenceMixin:
                 obj.tell(scores)
                 x = obj.xbest()
                 score = obj.fbest()
-                if idx == 1:
+                if idx == 0:
                     print('chain {}, x = {}, score = {}'.format(idx, x, score, scores))
             self.write_inference_results(
                 self._pints_composed_transform.to_model(x),
@@ -420,37 +439,53 @@ class InferenceMixin:
 class CombinedLogLikelihood(pints.LogPDF):
     """
     Creates a `PINTS.LogLikelihood` object from a list of individual
-    `PINTS.LogLikelihood` objects. It is assumed that each individual
-    log_likelihood has a single noise parameter.
+    `PINTS.LogLikelihood` objects.
     """
 
-    def __init__(self, fixed_noise_parameter_values, *log_likelihoods):
+    def __init__(self, *log_likelihoods):
         self._log_likelihoods = [ll for ll in log_likelihoods]
         self._n_outputs = len(self._log_likelihoods)
 
-        self._n_myokit_parameters = self._log_likelihoods[0].n_parameters() - 1
+        self._n_myokit_parameters = \
+            self._log_likelihoods[0]._problem.n_parameters()
 
-        # assume each log-likelihood has fixed noise parameter
-        # TODO:  add self._n_outputs to this to allow noise-parameters
-        self._n_parameters = self._n_myokit_parameters
+        # the myokit forwards model parameters are at the start of the
+        # parameter vector
+        self._myokit_parameter_slice = slice(
+            start=0,
+            end=self._n_myokit_parameters
+        )
 
-        if len(fixed_noise_parameter_values) != self._n_outputs:
-            raise ValueError(
-                "Fixed parameter values must be same length as outputs.")
-        self._fixed_noise_parameters = fixed_noise_parameter_values
+        # we're going to put all the noise parameters for each log-likelihood
+        # at the end of the parameter vector, so loop through them all and
+        # pre-calculate the slice of the parameter vector corrseponding to
+        # the noise parameters for each log_likelihood
+        curr_index = self._n_myokit_parameters
+        self._n_noise_parameters = 0
+        self._noise_parameter_slices = []
+        for ll in self._log_likelihoods:
+            n_noise_parameters = ll.n_parameters() - self._n_myokit_parameters
+            self._noise_parameter_slices.append(
+                slice(
+                    start=curr_index,
+                    end=curr_index + n_noise_parameters
+                )
+            )
+            curr_index += n_noise_parameters
+            self._n_noise_parameters += n_noise_parameters
 
     def __call__(self, x):
-        # assumes noise parameters are at end of parameter list
-        noise_parameters = list(self._fixed_noise_parameters)
-        myokit_parameters = x
-        if not isinstance(myokit_parameters, list):
-            myokit_parameters = myokit_parameters.tolist()
-
-        # create subsets for each likelihood and call each
+        # use pre-calculated slices to get the parameter vector for each
+        # log-likelihood
         log_like = 0
-        for idx, ll in enumerate(self._log_likelihoods):
-            log_like += ll(myokit_parameters + [noise_parameters[idx]])
+        for noise_slice, ll in zip(self._noise_parameter_slices, self._log_likelihoods):
+            log_like += ll(
+                np.concatenate((
+                    x[self._myokit_parameter_slice],
+                    x[noise_slice]
+                ))
+            )
         return log_like
 
     def n_parameters(self):
-        return self._n_parameters
+        return self._n_myokit_parameters + self._n_noise_parameters
