@@ -94,9 +94,7 @@ class InferenceMixin:
             self._pints_log_priors,
             self._pints_boundaries,
             self._pints_transforms
-        ) = self.get_priors_boundaries_transforms(
-            inference, self.priors_in_pints_order
-        )
+        ) = self.get_priors_boundaries_transforms(self.priors_in_pints_order)
 
         self._pints_composed_log_prior = pints.ComposedLogPrior(
             *self._pints_log_priors
@@ -171,7 +169,7 @@ class InferenceMixin:
                         if prior.variable is not None:
                             x0[i] = prior.variable.get_default_value()
 
-                sim = self._pints_forward_model.simulate(x0, self._times[0])
+                sim = self._pints_forward_model.simulate(x0[:-1], self._times[0])
 
                 plt.plot(self._times[0], sim, label='sim')
                 plt.plot(self._times[0], self._values[0], label='data')
@@ -284,14 +282,14 @@ class InferenceMixin:
                     )
                 else:
                     priors.append(
-                        log_likelihood.parameters.first().priors.first()
+                        log_likelihood.parameters.first().prior
                     )
                     pints_log_likelihoods.append(
                         pints.GaussianLogLikelihood(problem)
                     )
             elif log_likelihood.form == LogLikelihood.Form.LOGNORMAL:
                 priors.append(
-                    log_likelihood.parameters.first().priors.first()
+                    log_likelihood.parameters.first().prior
                 )
                 pints_log_likelihoods.append(
                     pints.LogNormalLogLikelihood(problem)
@@ -343,18 +341,6 @@ class InferenceMixin:
         return observed_loglikelihoods
 
     @staticmethod
-    def prior_to_pints_prior(prior):
-        if isinstance(prior, PriorUniform):
-            lower = prior.lower
-            upper = prior.upper
-            pints_log_prior = pints.UniformLogPrior(lower, upper)
-        elif isinstance(prior, PriorNormal):
-            mean = prior.mean
-            sd = prior.sd
-            pints_log_prior = pints.GaussianLogPrior(mean, sd)
-        return pints_log_prior
-
-    @staticmethod
     def get_priors_boundaries_transforms(priors):
         # get all variables being fitted from priors
         pints_log_priors = []
@@ -371,7 +357,15 @@ class InferenceMixin:
                 pints_transforms.append(pints.LogTransformation(n_parameters=1))
             else:
                 pints_transforms.append(pints.IdentityTransformation(n_parameters=1))
-            pints_log_priors.append(self._prior_to_pints_prior(prior))
+            if isinstance(prior, PriorUniform):
+                lower = prior.lower
+                upper = prior.upper
+                pints_log_prior = pints.UniformLogPrior(lower, upper)
+            elif isinstance(prior, PriorNormal):
+                mean = prior.mean
+                sd = prior.sd
+                pints_log_prior = pints.GaussianLogPrior(mean, sd)
+            pints_log_priors.append(pints_log_prior)
 
         return pints_log_priors, pints_boundaries, pints_transforms
 
@@ -387,15 +381,13 @@ class InferenceMixin:
             iteration=iteration,
             value=fn_value
         )
-        for i, prior in self.priors_in_pints_order:
+        for i, prior in enumerate(self.priors_in_pints_order):
             InferenceResult.objects.create(
                 chain=chains[chain_index],
                 prior=prior,
                 iteration=iteration,
                 value=values[i])
 
-        # free up connection since this is probably going to be in a loop
-        connection.close()
 
     def step_inference(self):
         # runs one set of ask / tell
@@ -415,6 +407,8 @@ class InferenceMixin:
                 score = obj.fbest()
                 if idx == 0:
                     print('chain {}, x = {}, score = {}'.format(idx, x, score, scores))
+            # TODO move these writes to say, every 100 samples to reduce
+            # database traffic
             self.write_inference_results(
                 self._pints_composed_transform.to_model(x),
                 score, self.inference.number_of_iterations, idx
@@ -431,6 +425,8 @@ class InferenceMixin:
             time_now = time.time()
             self.inference.time_elapsed = time_now - time_start
             self.inference.save()
+            # free up connection
+            connection.close()
 
     def fixed_variables(self):
         return self._fixed_variables
@@ -450,10 +446,7 @@ class CombinedLogLikelihood(pints.LogPDF):
 
         # the myokit forwards model parameters are at the start of the
         # parameter vector
-        self._myokit_parameter_slice = slice(
-            start=0,
-            end=self._n_myokit_parameters
-        )
+        self._myokit_parameter_slice = slice(0, self._n_myokit_parameters)
 
         # we're going to put all the noise parameters for each log-likelihood
         # at the end of the parameter vector, so loop through them all and
@@ -465,10 +458,7 @@ class CombinedLogLikelihood(pints.LogPDF):
         for ll in self._log_likelihoods:
             n_noise_parameters = ll.n_parameters() - self._n_myokit_parameters
             self._noise_parameter_slices.append(
-                slice(
-                    start=curr_index,
-                    end=curr_index + n_noise_parameters
-                )
+                slice(curr_index, curr_index + n_noise_parameters)
             )
             curr_index += n_noise_parameters
             self._n_noise_parameters += n_noise_parameters

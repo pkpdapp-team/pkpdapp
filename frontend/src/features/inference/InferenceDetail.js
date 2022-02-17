@@ -245,7 +245,133 @@ function PriorsSubform({
   );
 }
 
-function ObjectiveFunctionSubform({
+function LogLikelihoodSubform({
+  control,
+  objects,
+  variables,
+  logLikelihood,
+  biomarker_type_options,
+  variable_options,
+  form_options,
+  append,
+  index,
+  remove,
+  watch,
+  setValue,
+  disabled,
+}) {
+
+  const baseName = `objective_functions[${index}]`;
+  const watchForm = watch[index].form;
+  const watchVariable = watch[index].variable;
+  
+  const setDefaults = (form, variable) => {
+    if (form === "N") {
+      const standardDeviation = Math.sqrt(
+        Math.pow(variable.upper_bound - variable.lower_bound, 2) / 12
+      );
+      setValue(`${baseName}.parameters[0].value`, standardDeviation);
+    } else if (form === "LN") {
+      const standardDeviation = Math.sqrt(
+        Math.pow(variable.upper_bound - variable.lower_bound, 2) / 12
+      );
+      setValue(`${baseName}.parameters[0].value`, standardDeviation);
+    }
+  };
+  const handleFormChange = (oldForm, oldVar) => (event) => {
+    const newForm = event.target.value;
+    const variable = variables.find((v) => v.id === oldVar);
+    if (variable) {
+      setDefaults(newForm, variable, baseName);
+    } else {
+      setValue(`${baseName}.parameters[0].value`, null);
+      setValue(`${baseName}.parameters[0].value`, null);
+    }
+  };
+  const handleVariableChange = (oldType, oldVar) => (event) => {
+    const newVariable = event.target.value;
+    const variable = variables.find((v) => v.id === newVariable);
+    if (variable) {
+      setDefaults(oldType, variable, baseName);
+    }
+  };
+  
+
+  return (
+    <ListItem key={index} role={undefined} dense>
+        <FormSelectField
+          control={control}
+          defaultValue={logLikelihood.form || ""}
+          onChangeUser={handleFormChange(
+            watchType,
+            watchVariable,
+            baseName
+          )}
+          disabled={disabled}
+          options={form_options}
+          name={`${baseName}.form`}
+          label="Form"
+        />
+        <FormSelectField
+          control={control}
+          defaultValue={logLikelihood.variable || ""}
+          onChangeUser={handleVariableChange(
+            watchType,
+            watchVariable,
+            baseName
+          )}
+          disabled={disabled}
+          options={variable_options}
+          name={`${baseName}.variable`}
+          label="Variable"
+        />
+        <FormSelectField
+          control={control}
+          defaultValue={logLikelihood.biomarker_type || ""}
+          options={biomarker_type_options}
+          disabled={disabled}
+          name={`${baseName}.biomarker_type`}
+          label="Biomarker Type"
+        />
+        {watchForm === "N" &&  && (
+          <React.Fragment>
+            <FormTextField
+              control={control}
+              name={`${baseName}.parameters[0].value`}
+              defaultValue={objectiveFunction.sd}
+              disabled={disabled}
+              label="Standard Deviation"
+              type="number"
+            />
+          </React.Fragment>
+        )}
+        {watchForm === "LN" && (
+          <React.Fragment>
+            <FormTextField
+              control={control}
+              name={`${baseName}.parameters[0].value`}
+              disabled={disabled}
+              defaultValue={objectiveFunction.sigma}
+              label="Sigma"
+              type="number"
+            />
+          </React.Fragment>
+        )}
+        <Tooltip title={`delete objective function`} placement="right">
+          <IconButton
+            variant="rounded"
+            disabled={disabled}
+            onClick={() => remove(index)}
+          >
+            <DeleteIcon />
+          </IconButton>
+        </Tooltip>
+      </ListItem>
+  );
+}
+
+
+function LogLikelihoodsSubform({
   control,
   objects,
   variables,
@@ -269,139 +395,43 @@ function ObjectiveFunctionSubform({
     key: biomarker_type.name,
     value: biomarker_type.id,
   }));
-  const type_options = [
-    { key: "LogLikelihoodNormal", value: "LogLikelihoodNormal" },
-    { key: "LogLikelihoodLogNormal", value: "LogLikelihoodLogNormal" },
-    {
-      key: "SumOfSquaredErrorsScoreFunction",
-      value: "SumOfSquaredErrorsScoreFunction",
-    },
+  const form_options = [
+    { key: "Normal", value: "N" },
+    { key: "LogNormal", value: "LN" },
   ];
-  const handleNewObjectiveFunction = () =>
+  
+  const handleNewLoglikelihood = () => 
     append({
-      type: "LogLikelihoodNormal",
-      sd: 1.0,
-      sigma: 1.0,
+      form: "N",
       variable: "",
       biomarker_type: "",
     });
-  const setDefaults = (type, variable, baseName) => {
-    if (type === "LogLikelihoodNormal") {
-      const standardDeviation = Math.sqrt(
-        Math.pow(variable.upper_bound - variable.lower_bound, 2) / 12
-      );
-      setValue(`${baseName}.sd`, standardDeviation);
-    } else if (type === "LogLikelihoodLogNormal") {
-      const standardDeviation = Math.sqrt(
-        Math.pow(variable.upper_bound - variable.lower_bound, 2) / 12
-      );
-      setValue(`${baseName}.sigma`, standardDeviation);
-    }
-  };
-  const handleTypeChange = (oldType, oldVar, baseName) => (event) => {
-    const newType = event.target.value;
-    const variable = variables.find((v) => v.id === oldVar);
-    if (variable) {
-      setDefaults(newType, variable, baseName);
-    } else {
-      setValue(`${baseName}.sigma`, null);
-      setValue(`${baseName}.sd`, null);
-    }
-  };
-  const handleVariableChange = (oldType, oldVar, baseName) => (event) => {
-    const newVariable = event.target.value;
-    const variable = variables.find((v) => v.id === newVariable);
-    if (variable) {
-      setDefaults(oldType, variable, baseName);
-    }
-  };
-
   return (
     <React.Fragment>
       <Typography>Objective Functions</Typography>
       <List>
-        {objects.map((objectiveFunction, index) => {
-          const baseName = `objective_functions[${index}]`;
-          const watchType = watch[index].type;
-          const watchVariable = watch[index].variable;
-          return (
-            <ListItem key={index} role={undefined} dense>
-              <FormSelectField
-                control={control}
-                defaultValue={objectiveFunction.type || ""}
-                onChangeUser={handleTypeChange(
-                  watchType,
-                  watchVariable,
-                  baseName
-                )}
-                disabled={disabled}
-                options={type_options}
-                name={`${baseName}.type`}
-                label="Type"
-              />
-              <FormSelectField
-                control={control}
-                defaultValue={objectiveFunction.variable || ""}
-                onChangeUser={handleVariableChange(
-                  watchType,
-                  watchVariable,
-                  baseName
-                )}
-                disabled={disabled}
-                options={variable_options}
-                name={`${baseName}.variable`}
-                label="Variable"
-              />
-              <FormSelectField
-                control={control}
-                defaultValue={objectiveFunction.biomarker_type || ""}
-                options={biomarker_type_options}
-                disabled={disabled}
-                name={`${baseName}.biomarker_type`}
-                label="Biomarker Type"
-              />
-              {watchType === "LogLikelihoodNormal" && (
-                <React.Fragment>
-                  <FormTextField
-                    control={control}
-                    name={`${baseName}.sd`}
-                    defaultValue={objectiveFunction.sd}
-                    disabled={disabled}
-                    label="Standard Deviation"
-                    type="number"
-                  />
-                </React.Fragment>
-              )}
-              {watchType === "LogLikelihoodLogNormal" && (
-                <React.Fragment>
-                  <FormTextField
-                    control={control}
-                    name={`${baseName}.sigma`}
-                    disabled={disabled}
-                    defaultValue={objectiveFunction.sigma}
-                    label="Sigma"
-                    type="number"
-                  />
-                </React.Fragment>
-              )}
-              <Tooltip title={`delete objective function`} placement="right">
-                <IconButton
-                  variant="rounded"
-                  disabled={disabled}
-                  onClick={() => remove(index)}
-                >
-                  <DeleteIcon />
-                </IconButton>
-              </Tooltip>
-            </ListItem>
-          );
-        })}
+        {objects.map((logLikelihood, index) => (
+          <LogLikelihoodSubform
+            key={index}
+            control={control}
+            logLikelihood={logLikelihood}
+            index={index}
+            variable_options={variable_options}
+            biomarker_type_options={biomarker_type_options}
+            variables={variables}
+            form_options={form_options}
+            remove={remove}
+            watch={watch[index]}
+            setValue={setValue}
+            disabled={disabled}
+          />
+        ))}
         <ListItem key={-1} role={undefined} dense>
           <Tooltip title={`create new objective function`} placement="right">
             <IconButton
               variant="rounded"
               disabled={disabled}
-              onClick={handleNewObjectiveFunction}
+              onClick={handleNewLoglikelihood}
             >
               <AddIcon />
             </IconButton>
@@ -637,7 +667,7 @@ export default function DraftInferenceDetail({ project, inference }) {
         setValue={setValue}
       />
 
-      <ObjectiveFunctionSubform
+      <LogLikelihoodsSubform
         control={control}
         objects={objectiveFunctions}
         variables={variables}

@@ -137,6 +137,16 @@ class Variable(StoredModel):
             )
         ]
 
+    def get_model(self):
+        model = None
+        if self.pd_model:
+            model = self.pd_model
+        if self.dosed_pk_model:
+            model = self.dosed_pk_model
+        if self.pkpd_model:
+            model = self.pkpd_model
+        return model
+
     def get_default_value(self):
         if self.is_log:
             return np.exp(self.default_value)
@@ -144,12 +154,9 @@ class Variable(StoredModel):
             return self.default_value
 
     def get_project(self):
-        if self.pd_model:
-            return self.pd_model.get_project()
-        elif self.dosed_pk_model:
-            return self.dosed_pk_model.get_project()
-        elif self.pkpd_model:
-            return self.pkpd_model.get_project()
+        model = self.get_model()
+        if model is not None:
+            return model.get_project()
         else:
             return None
 

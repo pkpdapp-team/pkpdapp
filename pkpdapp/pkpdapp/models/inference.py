@@ -49,28 +49,6 @@ class Inference(StoredModel):
         blank=True, default=''
     )
 
-    pd_model = models.ForeignKey(
-        PharmacodynamicModel,
-        blank=True, null=True,
-        on_delete=models.CASCADE,
-        related_name='inferences',
-        help_text='pharmacodynamic model'
-    )
-    dosed_pk_model = models.ForeignKey(
-        DosedPharmacokineticModel,
-        blank=True, null=True,
-        on_delete=models.CASCADE,
-        related_name='inferences',
-        help_text='dosed pharmacokinetic model'
-    )
-    pkpd_model = models.ForeignKey(
-        PkpdModel,
-        blank=True, null=True,
-        on_delete=models.CASCADE,
-        related_name='inferences',
-        help_text='pharmacokinetic/pharmacokinetic model'
-    )
-
     project = models.ForeignKey(
         Project, on_delete=models.CASCADE,
         help_text='Project that "owns" this inference object'
@@ -132,83 +110,52 @@ class Inference(StoredModel):
         help_text='If executing, this is the celery task id'
     )
 
-    constraints = [
-        models.CheckConstraint(
-            check=(
-                (Q(pkpd_model__isnull=True) &
-                 Q(dosed_pk_model__isnull=True) &
-                 Q(pd_model__isnull=False)) |
-                (Q(pkpd_model__isnull=False) &
-                 Q(dosed_pk_model__isnull=True) &
-                 Q(pd_model__isnull=True)) |
-                (Q(pkpd_model__isnull=True) &
-                 Q(dosed_pk_model__isnull=False) &
-                 Q(pd_model__isnull=True))
-            ),
-            name='inference must belong to a model'
-        ),
-    ]
-
     def get_project(self):
         return self.project
-
-    def get_model(self):
-        model = None
-        if self.pd_model:
-            model = self.pd_model
-        if self.dosed_pk_model:
-            model = self.dosed_pk_model
-        if self.pkpd_model:
-            model = self.pkpd_model
-        return model
 
     def run_inference(self, test=False):
         """
         when an inference is run, a new model is created (a copy),
         and the model and all its variables are stored
         """
-        # save related objects so we can recreate them
+        # store related objects so we can recreate them later
         old_priors = self.priors.all()
         old_log_likelihoods = self.log_likelihoods.all()
+
+        # save models used in this inference
+        old_models = PharmacodynamicModel.objects.filter(
+            variable__log_likelihood__in=old_log_likelihoods
+        ).distinct()
+
+        old_models += DosedPharmacokineticModel.objects.filter(
+            variable__log_likelihood__in=old_log_likelihoods
+        ).distinct()
+        old_models += PkpdModel.objects.filter(
+            variable__log_likelihood__in=old_log_likelihoods
+        ).distinct()
+        print('all models', old_models)
+
+        new_models = {
+            model.id: model.create_stored_model() for model in old_models
+        }
 
         self.id = None
         self.pk = None
 
-        if self.pd_model:
-            self.pd_model = self.pd_model.create_stored_model()
-            model = self.pd_model
-        if self.dosed_pk_model:
-            self.dosed_pk_model = self.dosed_pk_model.create_stored_model()
-            model = self.dosed_pk_model
-        if self.pkpd_model:
-            self.pkpd_model = self.pkpd_model.create_stored_model()
-            model = self.pkpd_model
-
         # save new as readonly
         self.read_only = True
-
         self.save()
 
-        for prior in old_priors:
-            prior.id = None
-            prior.pk = None
-            prior.inference = self
-            if prior.variable is not None:
-                prior.variable = model.variables.get(qname=prior.variable.qname)
-            prior.save()
+        new_log_likelihoods = {
+            log_likelihood.id:
+                log_likelihood.create_stored_log_likelihood(self, new_models)
+            for log_likelihood in old_log_likelihoods
+        }
 
-        for log_likelihood in old_log_likelihoods:
-            old_priors = log_likelihood.parameters.all()
-            log_likelihood.id = None
-            log_likelihood.pk = None
-            log_likelihood.inference = self
-            log_likelihood.variable = model.variables.get(
-                qname=log_likelihood.variable.qname
+        for prior in old_priors:
+            prior.create_stored_prior(
+                self, new_models, new_log_likelihoods
             )
-            for param in old_parameters:
-                for prior in param.priors:
-                    prior.log
-            log_likelihood.save()
 
         self.refresh_from_db()
 
@@ -216,10 +163,10 @@ class Inference(StoredModel):
             from pkpdapp.tasks import run_inference
             try:
                 result = run_inference.delay(self.id)
-            self.task_id = result.id
-            self.save()
-        except run_inference.OperationalError as exc:
-            print('Sending task raised: {}'.format(exc))
+                self.task_id = result.id
+                self.save()
+            except run_inference.OperationalError as exc:
+                print('Sending task raised: {}'.format(exc))
 
     def stop_inference(self):
         if self.task_id is not None:

@@ -180,7 +180,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('inference', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='priors', to='pkpdapp.inference')),
-                ('log_likelihood_parameter', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='priors', to='pkpdapp.loglikelihoodparameter')),
+                ('log_likelihood_parameter', models.OneToOneField(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='prior', to='pkpdapp.loglikelihoodparameter')),
                 ('polymorphic_ctype', models.ForeignKey(editable=False, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='polymorphic_pkpdapp.prior_set+', to='contenttypes.contenttype')),
             ],
         ),

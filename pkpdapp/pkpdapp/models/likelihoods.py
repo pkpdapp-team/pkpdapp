@@ -5,12 +5,22 @@
 #
 
 from django.db import models
+from django.db.models import Q
 from pkpdapp.models import (
-    Variable, BiomarkerType, Inference
+    Variable, BiomarkerType, Inference,
+    PharmacodynamicModel,
+    DosedPharmacokineticModel,
+    PkpdModel,
+    StoredModel,
 )
 
 
 class LogLikelihoodParameter(models.Model):
+    """
+    LogLikelihoods for ODE models have many parameters
+    which are encoded as a `pkpdapp.Variable`. This models
+    parameters of the log_likelihood itself
+    """
 
     class Name(models.TextChoices):
         SIGMA = 'SI', 'Sigma'
@@ -32,6 +42,15 @@ class LogLikelihoodParameter(models.Model):
         on_delete=models.CASCADE,
     )
 
+    def create_stored_parameter(self, log_likelihood):
+        stored_parameter_kwargs = {
+            'name': self.name,
+            'value': self.value,
+            'log_likelihood': log_likelihood,
+        }
+        return LogLikelihoodParameter.objects.create(
+            **stored_parameter_kwargs
+        )
 
 
 class LogLikelihood(models.Model):
@@ -42,12 +61,18 @@ class LogLikelihood(models.Model):
         Variable,
         related_name='log_likelihoods',
         on_delete=models.CASCADE,
+        help_text='variable for the log_likelihood.'
     )
+
     inference = models.ForeignKey(
         Inference,
         related_name='log_likelihoods',
         on_delete=models.CASCADE,
+        help_text=(
+            'Log_likelihood belongs to this inference object. '
+        )
     )
+
     biomarker_type = models.ForeignKey(
         BiomarkerType,
         on_delete=models.CASCADE,
@@ -63,25 +88,37 @@ class LogLikelihood(models.Model):
         default=Form.NORMAL,
     )
 
+    def create_stored_log_likelihood(self, inference, new_models):
+        old_parameters = self.parameters.all()
+        for parameter in old_parameters:
+            if (
+                parameter.value is None and
+                not hasattr(parameter, 'prior')
+            ):
+                raise RuntimeError(
+                    'All LogLikelihood parameters must have a '
+                    'set value or a prior'
+                )
 
-    def save(self, force_insert=False, force_update=False, *args, **kwargs):
-        created = not self.pk
+        old_model = self.variable.get_model()
+        new_model = new_models[old_model.id]
+        variable_qname = self.variable.qname
 
-        super().save(force_insert, force_update, *args, **kwargs)
+        new_variable = new_model.variables.get(
+            qname=variable_qname
+        )
 
-        # if created then add the necessary parameters
-        if created:
-            if self.form == self.Form.NORMAL:
-                self.parameters.set([
-                    LogLikelihoodParameter.objects.create(
-                        name=LogLikelihoodParameter.Name.STANDARD_DEVIATION,
-                        log_likelihood=self
-                    )
-                ])
-            elif self.form == self.Form.LOGNORMAL:
-                self.parameters.set([
-                    LogLikelihoodParameter.objects.create(
-                        name=LogLikelihoodParameter.Name.SIGMA,
-                        log_likelihood=self
-                    )
-                ])
+        stored_log_likelihood_kwargs = {
+            'variable': new_variable,
+            'inference': inference,
+            'biomarker_type': self.biomarker_type,
+            'form': self.form,
+        }
+
+        stored_log_likelihood = LogLikelihood.objects.create(
+            **stored_log_likelihood_kwargs
+        )
+        for parameter in old_parameters:
+            parameter.create_stored_parameter(stored_log_likelihood)
+
+        return stored_log_likelihood

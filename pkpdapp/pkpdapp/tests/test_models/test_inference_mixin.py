@@ -146,21 +146,21 @@ class TestInferenceMixinSingleOutputOptimisation(TestCase):
     def setUp(self):
         # ensure we've got nothing in the cache
         cache._cache.flush_all()
-        project = Project.objects.get(
+        self.project = Project.objects.get(
             name='demo',
         )
-        biomarker_type = BiomarkerType.objects.get(
+        self.biomarker_type = BiomarkerType.objects.get(
             name='Tumour volume',
             dataset__name='lxf_control_growth'
         )
-        model = PharmacodynamicModel.objects.get(
+        self.model = PharmacodynamicModel.objects.get(
             name='tumour_growth_inhibition_model_koch',
             read_only=False,
         )
-        variables = model.variables.all()
+        variables = self.model.variables.all()
         var_names = [v.qname for v in variables]
-        m = model.get_myokit_model()
-        s = model.get_myokit_simulator()
+        m = self.model.get_myokit_model()
+        s = self.model.get_myokit_simulator()
 
         forward_model = MyokitForwardModel(
             myokit_model=m,
@@ -169,34 +169,46 @@ class TestInferenceMixinSingleOutputOptimisation(TestCase):
 
         output_names = forward_model.output_names()
         var_index = var_names.index(output_names[0])
+        self.output_variable = variables[var_index]
 
         self.inference = Inference.objects.create(
             name='bob',
-            pd_model=model,
-            project=project,
+            pd_model=self.model,
+            project=self.project,
             max_number_of_iterations=10,
             algorithm=Algorithm.objects.get(name='XNES'),
             number_of_chains=3,
         )
-        LogLikelihood.objects.create(
-            variable=variables[var_index],
+        log_likelihood = LogLikelihood.objects.create(
+            variable=self.output_variable,
             inference=self.inference,
-            biomarker_type=biomarker_type,
+            biomarker_type=self.biomarker_type,
             form=LogLikelihood.Form.NORMAL
         )
 
         # find variables that are being estimated
         parameter_names = forward_model.variable_parameter_names()
         var_indices = [var_names.index(v) for v in parameter_names]
+        self.input_variables = [
+            variables[i] for i in var_indices
+        ]
         self.inference.priors.set([
             PriorUniform.objects.create(
                 lower=0.0,
                 upper=2.0,
-                variable=variables[i],
+                variable=variable,
                 inference=self.inference,
             )
-            for i in var_indices
+            for variable in self.input_variables
         ])
+        self.inference.priors.add(
+            PriorUniform.objects.create(
+                lower=0.0,
+                upper=2.0,
+                log_likelihood_parameter=log_likelihood.parameters.first(),
+                inference=self.inference,
+            )
+        )
 
         # 'run' inference to create copies of models
         self.inference.run_inference(test=True)
@@ -204,14 +216,45 @@ class TestInferenceMixinSingleOutputOptimisation(TestCase):
         # create mixin object
         self.inference_mixin = InferenceMixin(self.inference)
 
+    def test_all_parameters_need_prior_or_value(self):
+        inference = Inference.objects.create(
+            name='bad_bob',
+            pd_model=self.model,
+            project=self.project,
+            max_number_of_iterations=10,
+            algorithm=Algorithm.objects.get(name='XNES'),
+            number_of_chains=3,
+        )
+        LogLikelihood.objects.create(
+            variable=self.output_variable,
+            inference=inference,
+            biomarker_type=self.biomarker_type,
+            form=LogLikelihood.Form.NORMAL
+        )
+        inference.priors.set([
+            PriorUniform.objects.create(
+                lower=0.0,
+                upper=2.0,
+                variable=variable,
+                inference=self.inference,
+            )
+            for variable in self.input_variables
+        ])
+
+        with self.assertRaisesRegex(
+            RuntimeError,
+            'All LogLikelihood parameters must have a set value or a prior'
+        ):
+            inference.run_inference(test=True)
+
     def test_inference_runs(self):
         # tests that inference runs and writes results to db
         self.inference_mixin.run_inference()
 
         chains = self.inference_mixin.inference.chains.all()
         self.assertEqual(len(chains), 3)
+        priors = self.inference_mixin.priors_in_pints_order
         for chain in chains:
-            priors = self.inference_mixin.priors
             fun_res = chain.inference_function_results
             f_vals = fun_res.order_by('iteration').values_list(
                 'value', flat=True
@@ -280,7 +323,7 @@ class TestInferenceMixinSingleOutputOptimisation(TestCase):
         chains = self.inference_mixin.inference.chains.all()
         self.assertEqual(len(chains), 3)
         for chain in chains:
-            priors = self.inference_mixin.priors
+            priors = self.inference_mixin.priors_in_pints_order
             fun_res = chain.inference_function_results
             f_vals = fun_res.order_by('iteration').values_list(
                 'value', flat=True
