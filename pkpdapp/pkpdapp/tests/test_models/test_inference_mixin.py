@@ -67,14 +67,14 @@ class TestInferenceMixinSingleOutputSampling(TestCase):
                 lower=0.0,
                 upper=2.0,
                 variable=variables[i],
-                inference=self.inference,
+                log_likelihood=log_likelihood,
             )
-        self.inference.priors.add(
+        log_likelihood.priors.add(
             PriorUniform.objects.create(
                 lower=0.0,
                 upper=2.0,
                 log_likelihood_parameter=log_likelihood.parameters.first(),
-                inference=self.inference,
+                log_likelihood=log_likelihood,
             )
         )
         # 'run' inference to create copies of models
@@ -189,6 +189,7 @@ class TestInferenceMixinSingleOutputOptimisation(TestCase):
             biomarker_type=self.biomarker_type,
             form=LogLikelihood.Form.NORMAL
         )
+        self.inference.log_likelihoods.set([log_likelihood])
 
         # find variables that are being estimated
         parameter_names = forward_model.variable_parameter_names()
@@ -196,24 +197,23 @@ class TestInferenceMixinSingleOutputOptimisation(TestCase):
         self.input_variables = [
             variables[i] for i in var_indices
         ]
-        self.inference.priors.set([
+        log_likelihood.priors.set([
             PriorUniform.objects.create(
                 lower=0.0,
                 upper=2.0,
                 variable=variable,
-                inference=self.inference,
+                log_likelihood=log_likelihood,
             )
             for variable in self.input_variables
         ])
-        self.inference.priors.add(
+        log_likelihood.priors.add(
             PriorUniform.objects.create(
                 lower=0.0,
                 upper=2.0,
                 log_likelihood_parameter=log_likelihood.parameters.first(),
-                inference=self.inference,
+                log_likelihood=log_likelihood,
             )
         )
-
         # 'run' inference to create copies of models
         self.inference.run_inference(test=True)
 
@@ -228,18 +228,18 @@ class TestInferenceMixinSingleOutputOptimisation(TestCase):
             algorithm=Algorithm.objects.get(name='XNES'),
             number_of_chains=3,
         )
-        LogLikelihood.objects.create(
+        log_likelihood = LogLikelihood.objects.create(
             variable=self.output_variable,
             inference=inference,
             biomarker_type=self.biomarker_type,
             form=LogLikelihood.Form.NORMAL
         )
-        inference.priors.set([
+        log_likelihood.priors.set([
             PriorUniform.objects.create(
                 lower=0.0,
                 upper=2.0,
                 variable=variable,
-                inference=self.inference,
+                log_likelihood=log_likelihood,
             )
             for variable in self.input_variables
         ])
@@ -303,7 +303,8 @@ class TestInferenceMixinSingleOutputOptimisation(TestCase):
                     value=2.4
                 )
             )
-            for prior in self.inference.priors.all():
+            log_likelihood = self.inference.log_likelihoods.first()
+            for prior in log_likelihood.priors.all():
                 chain.inference_results.add(
                     InferenceResult.objects.create(
                         chain=chain,
@@ -321,12 +322,13 @@ class TestInferenceMixinSingleOutputOptimisation(TestCase):
         self.inference.number_of_iterations = 1
 
         # tests that inference runs and writes results to db
-        self.inference_mixin.run_inference()
+        inference_mixin = InferenceMixin(self.inference)
+        inference_mixin.run_inference()
 
-        chains = self.inference_mixin.inference.chains.all()
+        chains = inference_mixin.inference.chains.all()
         self.assertEqual(len(chains), 3)
         for chain in chains:
-            priors = self.inference_mixin.priors_in_pints_order
+            priors = inference_mixin.priors_in_pints_order
             fun_res = chain.inference_function_results
             f_vals = fun_res.order_by('iteration').values_list(
                 'value', flat=True

@@ -8,7 +8,7 @@ from django.db import models
 from django.db.models import Q
 from polymorphic.models import PolymorphicModel
 from pkpdapp.models import (
-    Variable, Inference, LogLikelihoodParameter
+    Variable, Inference, LogLikelihoodParameter, LogLikelihood
 )
 
 
@@ -28,12 +28,12 @@ class Prior(PolymorphicModel):
         blank=True, null=True,
         on_delete=models.CASCADE,
     )
-    inference = models.ForeignKey(
-        Inference,
+    log_likelihood = models.ForeignKey(
+        LogLikelihood,
         related_name='priors',
         on_delete=models.CASCADE,
         help_text=(
-            'Prior belongs to this inference object.'
+            'Prior belongs to this log_likelihood object.'
         )
     )
 
@@ -54,10 +54,9 @@ class Prior(PolymorphicModel):
         ]
 
     def create_stored_prior(
-            self, inference, new_models, new_log_likelihoods,
+            self, inference, new_models, new_log_likelihood,
             model, stored_prior_kwargs
     ):
-
 
         new_variable = None
         if self.variable is not None:
@@ -70,15 +69,13 @@ class Prior(PolymorphicModel):
 
         new_parameter = None
         if self.log_likelihood_parameter is not None:
-            old_log_likelihood = self.log_likelihood_parameter.log_likelihood
-            new_log_likelihood = new_log_likelihoods[old_log_likelihood.id]
             new_parameter = new_log_likelihood.parameters.get(
                 name=self.log_likelihood_parameter.name
             )
 
         stored_prior_kwargs.update({
             'variable': new_variable,
-            'inference': inference,
+            'log_likelihood': new_log_likelihood,
             'log_likelihood_parameter': new_parameter,
         })
 
@@ -101,17 +98,16 @@ class PriorUniform(Prior):
     )
 
     def create_stored_prior(
-            self, inference, new_models, new_log_likelihoods
+            self, inference, new_models, new_log_likelihood
     ):
         stored_prior_kwargs = {
             'lower': self.lower,
             'upper': self.upper,
         }
         return Prior.create_stored_prior(
-            self, inference, new_models, new_log_likelihoods,
+            self, inference, new_models, new_log_likelihood,
             PriorUniform, stored_prior_kwargs
         )
-
 
 
 class PriorNormal(Prior):
@@ -126,15 +122,14 @@ class PriorNormal(Prior):
         help_text='sd of normal prior distribution.'
     )
 
-
     def create_stored_prior(
-            self, inference, new_models, new_log_likelihoods
+            self, inference, new_models, new_log_likelihood
     ):
         stored_prior_kwargs = {
             'mean': self.mean,
             'sd': self.sd,
         }
         return Prior.create_stored_prior(
-            self, inference, new_models, new_log_likelihoods,
+            self, inference, new_models, new_log_likelihood,
             PriorNormal, stored_prior_kwargs
         )

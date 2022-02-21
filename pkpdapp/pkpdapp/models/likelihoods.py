@@ -115,6 +115,8 @@ class LogLikelihood(models.Model):
                     'set value or a prior'
                 )
 
+        old_priors = self.priors.all()
+
         old_model = self.variable.get_model()
         new_model = new_models[old_model.id]
         variable_qname = self.variable.qname
@@ -141,5 +143,11 @@ class LogLikelihood(models.Model):
                 name=parameter.name
             )
             new_parameter.value = parameter.value
+
+        # recreate priors
+        for prior in old_priors:
+            prior.create_stored_prior(
+                self, new_models, stored_log_likelihood
+            )
 
         return stored_log_likelihood

@@ -8,6 +8,9 @@ from pkpdapp.models import (
     LogLikelihood, LogLikelihoodParameter,
     Inference,
 )
+from pkpdapp.api.serializers import (
+    PriorSerializer,
+)
 
 
 class LogLikelihoodParameterSerializer(serializers.ModelSerializer):
@@ -26,6 +29,10 @@ class LogLikelihoodSerializer(serializers.ModelSerializer):
     parameters = LogLikelihoodParameterSerializer(
         many=True
     )
+    priors = PriorSerializer(
+        many=True
+    )
+
 
     class Meta:
         model = LogLikelihood

@@ -59,9 +59,11 @@ class InferenceMixin:
         self.inference = inference
 
         # get model parameters to be inferred
+        # TODO: only one log_likelihood!
+        log_likelihood = inference.log_likelihoods.first()
         fitted_parameter_names = [
             prior.variable.qname
-            for prior in inference.priors.all()
+            for prior in log_likelihood.priors.all()
             if prior.variable is not None
         ]
         print('fitted parameters', fitted_parameter_names)
@@ -69,7 +71,7 @@ class InferenceMixin:
         # create pints forward model
         # TODO: only supports a single log_likelihood
         self._pints_forward_model = self.create_pints_forward_model(
-            self._outputs, inference.log_likelihoods.first(), fitted_parameter_names
+            self._outputs, log_likelihood, fitted_parameter_names
         )
 
         self._collection = self.create_pints_problem_collection(
@@ -82,7 +84,7 @@ class InferenceMixin:
         # we'll need the priors in the same order as the theta vector,
         # so we can write back to the database
         self.priors_in_pints_order = [
-            inference.priors.get(variable__qname=name)
+            log_likelihood.priors.get(variable__qname=name)
             for name in pints_var_names
         ]
 
@@ -155,6 +157,7 @@ class InferenceMixin:
         for i, chain in enumerate(inference.chains.all()):
             x0 = []
             if self.inference.number_of_iterations > 0:
+                print('restarting chains!')
                 for prior in self.priors_in_pints_order:
                     this_chain = InferenceResult.objects.filter(
                         prior=prior,

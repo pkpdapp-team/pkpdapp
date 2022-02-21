@@ -119,7 +119,6 @@ class Inference(StoredModel):
         and the model and all its variables are stored
         """
         # store related objects so we can recreate them later
-        old_priors = self.priors.all()
         old_log_likelihoods = self.log_likelihoods.all()
 
         # save models used in this inference
@@ -130,9 +129,9 @@ class Inference(StoredModel):
         old_models += list(DosedPharmacokineticModel.objects.filter(
             variables__log_likelihoods__inference=self
         ).distinct())
-        #old_models += list(PkpdModel.objects.filter(
+        # old_models += list(PkpdModel.objects.filter(
         #    variables__log_likelihoods__in=old_log_likelihoods
-        #).distinct())
+        # ).distinct())
         print('all models', old_models)
 
         # create a map between old and new models so we can transfer
@@ -148,18 +147,9 @@ class Inference(StoredModel):
         self.read_only = True
         self.save()
 
-        # we'll also need a map for old -> new log likelihoods in order
-        # to copy priors on log_likelihood parameters
-        new_log_likelihoods = {
-            log_likelihood.id:
-                log_likelihood.create_stored_log_likelihood(self, new_models)
-            for log_likelihood in old_log_likelihoods
-        }
-
-        for prior in old_priors:
-            prior.create_stored_prior(
-                self, new_models, new_log_likelihoods
-            )
+        # recreate log_likelihoods
+        for log_likelihood in old_log_likelihoods:
+            log_likelihood.create_stored_log_likelihood(self, new_models)
 
         self.refresh_from_db()
 
