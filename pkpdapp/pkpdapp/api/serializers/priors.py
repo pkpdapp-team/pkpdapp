@@ -25,6 +25,9 @@ class PriorNormalSerializer(serializers.ModelSerializer):
         return 'PriorNormal'
 
 
+
+
+
 class PriorUniformSerializer(serializers.ModelSerializer):
     inference = serializers.PrimaryKeyRelatedField(
         queryset=Inference.objects.all(),
@@ -43,6 +46,16 @@ class PriorUniformSerializer(serializers.ModelSerializer):
 class PriorSerializer(PolymorphicSerializer):
     class Meta:
         model = Prior
+
+    name = serializers.SerializerMethodField()
+
+    def get_name(self, obj):
+        if obj.variable:
+            return obj.variable.name
+        elif obj.log_likelihood_parameter:
+            return obj.log_likelihood_parameter.name
+        else:
+            return None
 
     def get_serializer_map(self):
         return {

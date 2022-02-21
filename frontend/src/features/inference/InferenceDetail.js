@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
+import Divider from '@material-ui/core/Divider';
 import Button from "@material-ui/core/Button";
+import Grid from "@material-ui/core/Grid";
+import Paper from "@material-ui/core/Paper";
 
 import FormControl from "@material-ui/core/FormControl";
 import InputLabel from "@material-ui/core/InputLabel";
@@ -53,8 +56,17 @@ const useStyles = makeStyles((theme) => ({
   components: {
     width: "100%",
   },
+  root: {
+    width: '100%',
+  },
+  formRoot: {
+    display: "flex",
+    '& .MuiFormControl-root': { flex: 1 },
+  },
+  
   formInput: {
     margin: theme.spacing(1),
+    flex: 1,
   },
 }));
 
@@ -64,7 +76,6 @@ function PriorSubform({
   index,
   variables,
   variable_options,
-  type_options,
   remove,
   watch,
   setValue,
@@ -72,6 +83,11 @@ function PriorSubform({
 }) {
   const [type, setType] = useState(prior.type);
   const baseName = `priors[${index}]`
+
+  const type_options = [
+    { key: "Normal", value: "PriorNormal" },
+    { key: "Uniform", value: "PriorUniform" },
+  ];
   
   const setDefaults = (type, variable) => {
     if (type === "PriorNormal") {
@@ -104,7 +120,7 @@ function PriorSubform({
   };
 
   return (
-    <ListItem key={prior.id} role={undefined} dense>
+    <ListItem key={prior.id} role={undefined}>
       <FormSelectField
         control={control}
         defaultValue={prior.type || ""}
@@ -179,63 +195,6 @@ function PriorSubform({
 }
 
 
-function PriorsSubform({
-  control,
-  objects,
-  variables,
-  append,
-  remove,
-  watch,
-  setValue,
-  disabled,
-}) {
-  const variable_options = variables
-    .filter((variable) => variable.constant || variable.state)
-    .map((variable) => ({ key: variable.qname.replace('.size', '.volume'), value: variable.id }));
-  if (variable_options.length === 0) {
-    return null;
-  }
-  const type_options = [
-    { key: "Normal", value: "PriorNormal" },
-    { key: "Uniform", value: "PriorUniform" },
-  ];
-  
-
-  return (
-    <React.Fragment>
-      <Typography>Parameter Priors</Typography>
-      <List>
-        {objects.map((prior, index) => (
-          <PriorSubform
-            key={index}
-            control={control}
-            prior={prior}
-            index={index}
-            variable_options={variable_options}
-            variables={variables}
-            type_options={type_options}
-            remove={remove}
-            watch={watch[index]}
-            setValue={setValue}
-            disabled={disabled}
-          />
-        ))}
-        <ListItem key={-1} role={undefined} dense>
-          <Tooltip title={`create new prior`} placement="right">
-            <IconButton
-              variant="rounded"
-              disabled={disabled}
-              onClick={handleNewPrior}
-            >
-              <AddIcon />
-            </IconButton>
-          </Tooltip>
-        </ListItem>
-      </List>
-    </React.Fragment>
-  );
-}
-
 function LogLikelihoodSubform({
   control,
   objects,
@@ -244,7 +203,6 @@ function LogLikelihoodSubform({
   datasetOptions,
   models,
   modelOptions,
-  append,
   baseName,
   remove,
   watch,
@@ -252,12 +210,9 @@ function LogLikelihoodSubform({
   disabled,
 }) {
 
+  const classes = useStyles();
   const watchForm = watch.form;
   const watchVariable = watch.variable;
-  const [modelType, setModelType] = useState("PD");
-
-  const watchPdModel = watch("pd_model");
-  const watchPkModel = watch("dosed_pk_model");
 
   const {
     fields: priors,
@@ -274,37 +229,48 @@ function LogLikelihoodSubform({
   const dosed_pk_models = useSelector(selectAllPkModels);
   const model_options = pd_models.map((model) => ({
     key: model.name,
-    value: {id: model.id, type: 'PD'},
+    value: `${model.id}:PD`,
     group: 'Pharmacodynamic',
-  })) + dosed_pk_models.map((model) => ({
+  })).concat(dosed_pk_models.map((model) => ({
     key: model.name,
-    value: {id: model.id, type: 'PK'},
+    value: `${model.id}:PK`,
     group: 'Pharmacokinetic',
-  }));
+  })));
+
+  const modelIdParse = modelId ? parseInt(modelId.split(':')[0]) : null
+  const modelType = modelId ? modelId.split(':')[1] : null
+
+  console.log('model_options', model_options, 'modelId', modelId, modelIdParse, modelType)
   const model = modelId ? 
-    modelId.type == 'PD' ?
-        pd_models.find(m => m.id == modelId.id)
+    modelType == 'PD' ?
+        pd_models.find(m => m.id === modelIdParse)
       :
-        dosed_pk_model.find(m => m.id == modelId.id)
+        dosed_pk_models.find(m => m.id === modelIdParse)
     : null
+
   const handleModelChange = (event) => {
+    const value = event.target.value;
+    console.log('handleModelChange', value)
+    setModelId(value)
     setValue("priors", logLikelihood.priors);
   };
 
   // model variables
   const variables = useSelector((state) => {
     if (modelId) {
-      if (modelId.type == 'PD') {
-        return selectVariablesByPdModel(state, watchPdModel);
-      } else if (modelId.type == 'PK') {
-        return selectVariablesByDosedPkModel(state, watchPkModel);
+      if (modelType === 'PD') {
+        return selectVariablesByPdModel(state, modelIdParse);
+      } else if (modelType === 'PK') {
+        return selectVariablesByDosedPkModel(state, modelIdParse);
       }
     }
   });
+  console.log('variables', variables)
 
-  const variable_options = variables
-    .filter((variable) => !variable.constant)
-    .map((variable) => ({ key: variable.qname, value: variable.id }));
+  const variable_options = variables ? variables
+    .filter((variable) => variable.constant || variable.state)
+    .map((variable) => ({ key: variable.qname.replace('.size', '.volume'), value: variable.id }))
+  : []
       
   // dataset
   const [datasetId, setDatasetId] = useState(null);
@@ -315,7 +281,7 @@ function LogLikelihoodSubform({
 
   // dataset biomarkers
   const biomarker_types = useSelector((state) =>
-    dataset ? selectBiomarkerTypesByDatasetId(state, dataset) : []
+    datasetId ? selectBiomarkerTypesByDatasetId(state, datasetId) : []
   );
   const biomarker_type_options = biomarker_types.map((biomarker_type) => ({
     key: biomarker_type.name,
@@ -360,7 +326,7 @@ function LogLikelihoodSubform({
   };
 
   const handleNewPrior = () => {
-    append({
+    priorsAppend({
       type: "PriorUniform",
       sd: "",
       mean: "",
@@ -370,22 +336,21 @@ function LogLikelihoodSubform({
     });
   }
   
-
-  if (variable_options.length === 0) {
-    return null;
-  }
-
   return (
-    <ListItem key={index} role={undefined} dense>
+    <ListItem  role={undefined} dense>
+      <Paper className={classes.root}>
+      <Grid container spacing={1}>
+      <Grid item xs={11}>
+      <Grid item xs={12} className={classes.formRoot}>
       <FormControl className={classes.formInput}>
         <InputLabel id="dataset-label">Dataset</InputLabel>
         <Select
           labelId="dataset-label"
           onChange={handleDatasetChange}
-          disabled={readOnly}
+          disabled={disabled}
           value={datasetId}
         >
-          {datasets_options.map((option, i) => {
+          {datasetOptions.map((option, i) => {
             return (
               <MenuItem key={i} value={option.value}>
                 {option.key}
@@ -394,11 +359,12 @@ function LogLikelihoodSubform({
           })}
         </Select>
       </FormControl>
-      <InputLabel id="model-label">Model</InputLabel>
+      <FormControl className={classes.formInput}>
+        <InputLabel id="model-label">Model</InputLabel>
         <Select
           labelId="model-label"
           onChange={handleModelChange}
-          disabled={readOnly}
+          disabled={disabled}
           value={modelId}
         >
           {model_options.map((option, i) => {
@@ -410,11 +376,13 @@ function LogLikelihoodSubform({
           })}
         </Select>
       </FormControl>
+      </Grid>
+      <Grid item xs={12} className={classes.formRoot}>
       <FormSelectField
         control={control}
         defaultValue={logLikelihood.form || ""}
         onChangeUser={handleFormChange(
-          watchType,
+          watchForm,
           watchVariable,
           baseName
         )}
@@ -427,7 +395,7 @@ function LogLikelihoodSubform({
         control={control}
         defaultValue={logLikelihood.variable || ""}
         onChangeUser={handleVariableChange(
-          watchType,
+          watchForm,
           watchVariable,
           baseName
         )}
@@ -468,6 +436,8 @@ function LogLikelihoodSubform({
           />
         </React.Fragment>
       )}
+      </Grid>
+      <Grid item xs={12}>
       <Typography>Parameter Priors</Typography>
       <List>
         {logLikelihood.priors.map((prior, index) => (
@@ -478,7 +448,6 @@ function LogLikelihoodSubform({
             index={index}
             variable_options={variable_options}
             variables={variables}
-            type_options={type_options}
             remove={remove}
             watch={watch[index]}
             setValue={setValue}
@@ -497,6 +466,9 @@ function LogLikelihoodSubform({
           </Tooltip>
         </ListItem>
       </List>
+      </Grid>
+      </Grid>
+      <Grid item xs={1}>
       <Tooltip title={`delete log-likelihood`} placement="right">
         <IconButton
           variant="rounded"
@@ -506,6 +478,9 @@ function LogLikelihoodSubform({
           <DeleteIcon />
         </IconButton>
       </Tooltip>
+      </Grid>
+      </Grid>
+    </Paper>
     </ListItem>
 
   );
@@ -537,6 +512,9 @@ export default function DraftInferenceDetail({ project, inference }) {
     control,
     name: "log_likelihoods",
   });
+  const watchLogLikelihoods = watch("log_likelihoods");
+  console.log('logLikelihoods', logLikelihoods)
+
 
   const handleDelete = () => {
     dispatch(deleteInference(inference.id));
@@ -551,9 +529,10 @@ export default function DraftInferenceDetail({ project, inference }) {
   };
 
   const handleNewLoglikelihood = () => 
-    append({
+    logLikelihoodsAppend({
       form: "N",
       variable: "",
+      priors: [],
       biomarker_type: "",
     });
 
@@ -617,7 +596,7 @@ export default function DraftInferenceDetail({ project, inference }) {
       />
 
 
-      <Typography>Objective Functions</Typography>
+      <Typography>Log-likelihoods</Typography>
       <List>
         {logLikelihoods.map((logLikelihood, index) => (
           <LogLikelihoodSubform
@@ -628,16 +607,16 @@ export default function DraftInferenceDetail({ project, inference }) {
             datasetOptions={dataset_options}
             remove={() => logLikelihoodsRemove(index)}
             baseName = {`log_likelihoods[${index}]`}
-            watch={watch[index]}
+            watch={watchLogLikelihoods[index]}
             setValue={setValue}
-            disabled={disabled}
+            disabled={readOnly}
           />
         ))}
         <ListItem key={-1} role={undefined} dense>
           <Tooltip title={`create new objective function`} placement="right">
             <IconButton
               variant="rounded"
-              disabled={disabled}
+              disabled={readOnly}
               onClick={handleNewLoglikelihood}
             >
               <AddIcon />

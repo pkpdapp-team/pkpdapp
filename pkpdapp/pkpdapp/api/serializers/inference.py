@@ -37,13 +37,11 @@ class InferenceSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def create(self, validated_data):
-        priors_data = validated_data.pop('priors')
-        log_likelihood_data = validated_data.pop('log_likelihood')
+        log_likelihood_data = validated_data.pop('log_likelihoods')
         new_inference = BaseInferenceSerializer().create(
             validated_data
         )
         for field_datas, Serializer in [
-                (priors_data, PriorSerializer),
                 (log_likelihood_data, LogLikelihoodSerializer),
         ]:
             for field_data in field_datas:
@@ -54,15 +52,12 @@ class InferenceSerializer(serializers.ModelSerializer):
         return new_inference
 
     def update(self, instance, validated_data):
-        priors_data = validated_data.pop('priors')
-        log_likelihood_data = validated_data.pop('log_likelihood')
-        old_priors = list((instance.priors).all())
+        log_likelihood_data = validated_data.pop('log_likelihoods')
         old_log_likelihoods = list((instance.log_likelihoods).all())
         new_inference = BaseInferenceSerializer().update(
             instance, validated_data
         )
         for field_datas, old_models, Serializer in [
-                (priors_data, old_priors, PriorSerializer),
                 (log_likelihood_data,
                  old_log_likelihoods, LogLikelihoodSerializer)
         ]:

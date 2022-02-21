@@ -41,9 +41,18 @@ class LogLikelihoodSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         # save method of log_likelihood will create its own parameters
         parameters_data = validated_data.pop('parameters')
+        priors_data = validated_data.pop('priors')
         new_log_likelihood = BaseLogLikelihoodSerializer().create(
             validated_data
         )
+
+        for field_datas, Serializer in [
+                (priors_data, PriorSerializer),
+        ]:
+            for field_data in field_datas:
+                serializer = Serializer()
+                field_data['log_likelihood'] = new_log_likelihood
+                serializer.create(field_data)
 
         # new log_likelihood will have had its parameters created, so
         # here we just update them with the validated data
@@ -74,10 +83,28 @@ class LogLikelihoodSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         parameters_data = validated_data.pop('parameters')
+        priors_data = validated_data.pop('priors')
+        old_priors = list((instance.priors).all())
         old_parameters = list((instance.parameters).all())
         new_log_likelihood = BaseLogLikelihoodSerializer().create(
             validated_data
         )
+
+        for field_datas, old_models, Serializer in [
+                (priors_data, old_priors, PriorSerializer),
+        ]:
+            for field_data in field_datas:
+                serializer = Serializer()
+                try:
+                    old_model = old_models.pop(0)
+                    new_model = serializer.update(
+                        old_model, field_data
+                    )
+                except IndexError:
+                    field_data['log_likelihood'] = new_log_likelihood
+                    new_model = serializer.create(field_data)
+                new_model.save()
+
         for field_datas, old_models, Serializer in [
                 (parameters_data, old_parameters,
                  LogLikelihoodParameterSerializer),

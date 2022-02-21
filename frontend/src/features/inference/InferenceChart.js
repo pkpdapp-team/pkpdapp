@@ -53,6 +53,17 @@ export default function InferenceChart({inference}) {
   }, [dispatch, inference.id]);
 
 
+  const priorsWithChainValues = inference.log_likelihoods.reduce((sum, log_likelihood) => 
+    sum.concat(log_likelihood.priors.map(prior => {
+      console.log('prior', prior)
+      return {
+        ...prior, 
+        chains: chains.map(chain => chain.data.values.filter((x, i) => chain.data.priors[i] === prior.id)),
+      }
+    })), []
+  )
+
+
   const chains = useSelector((state) =>
     selectChainsByInferenceId(state, inference.id)
   );
@@ -91,7 +102,7 @@ export default function InferenceChart({inference}) {
   </Box>
     { tabs.map((tab, index) => (
     <TabPanel key={index} value={value} index={index}>
-      <tab.component inference={inference} algorithm={algorithm} chains={chains} />
+      <tab.component inference={inference} priorsWithChainValues={priorsWithChainValues} />
     </TabPanel>
     ))}
   </Box>

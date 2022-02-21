@@ -49,8 +49,7 @@ export const addNewInference = createAsyncThunk(
     const initialInference = {
       name: "new",
       project: project.id,
-      priors: [],
-      objective_functions: [],
+      log_likelihoods: [],
     };
     let inference = await api.post("/api/inference/", initialInference);
     inference.chosen = true;

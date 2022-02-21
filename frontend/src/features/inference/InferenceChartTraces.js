@@ -68,7 +68,7 @@ function InferenceChartTrace({ prior }) {
       y: {
         position: "left",
         title: {
-          text: prior.variable.name,
+          text: prior.name,
           display: true,
         },
       },
@@ -105,25 +105,9 @@ function InferenceChartTrace({ prior }) {
   );
 } 
 
-export default function InferenceChartTraces({ chains, inference, algorithm }) {
+export default function InferenceChartTraces({ inference, priorsWithChainValues }) {
   const classes = useStyles();
-  const variables = useSelector((state) => {
-    if (inference.pd_model) {
-      return selectVariablesByPdModel(state, inference.pd_model);
-    } else if (inference.dosed_pk_model) {
-      return selectVariablesByDosedPkModel(state, inference.dosed_pk_model);
-    }
-  });
-
-  const priorsWithChainValues = inference.priors.map(prior => {
-    const variable = variables.find(v => v.id === prior.variable)
-    return {
-      ...prior, 
-      variable,
-      chains: chains.map(chain => chain.data.values.filter((x, i) => chain.data.priors[i] === prior.id)),
-    }
-  })
-
+  
   return (
     <div className={classes.root}>
       {priorsWithChainValues.map(prior => (
