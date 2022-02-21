@@ -143,8 +143,8 @@ class Variable(StoredModel):
             model = self.pd_model
         if self.dosed_pk_model:
             model = self.dosed_pk_model
-        if self.pkpd_model:
-            model = self.pkpd_model
+        if self.pk_model:
+            model = self.pk_model
         return model
 
     def get_default_value(self):

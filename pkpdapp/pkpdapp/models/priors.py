@@ -28,6 +28,14 @@ class Prior(PolymorphicModel):
         blank=True, null=True,
         on_delete=models.CASCADE,
     )
+    inference = models.ForeignKey(
+        Inference,
+        related_name='priors',
+        on_delete=models.CASCADE,
+        help_text=(
+            'Prior belongs to this inference object.'
+        )
+    )
 
     class Meta:
         constraints = [
@@ -70,6 +78,7 @@ class Prior(PolymorphicModel):
 
         stored_prior_kwargs.update({
             'variable': new_variable,
+            'inference': inference,
             'log_likelihood_parameter': new_parameter,
         })
 

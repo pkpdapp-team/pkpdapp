@@ -11,7 +11,6 @@ from .priors import (
     PriorSerializer,
     PriorNormalSerializer,
     PriorUniformSerializer,
-    BoundarySerializer
 )
 from .likelihoods import (
     LogLikelihoodSerializer,

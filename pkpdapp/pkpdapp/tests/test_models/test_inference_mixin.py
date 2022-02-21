@@ -48,12 +48,11 @@ class TestInferenceMixinSingleOutputSampling(TestCase):
 
         self.inference = Inference.objects.create(
             name='bob',
-            pd_model=model,
             project=project,
             max_number_of_iterations=10,
             algorithm=Algorithm.objects.get(name='Haario-Bardenet'),
         )
-        LogLikelihood.objects.create(
+        log_likelihood = LogLikelihood.objects.create(
             variable=variables[var_index],
             inference=self.inference,
             biomarker_type=biomarker_type,
@@ -70,8 +69,16 @@ class TestInferenceMixinSingleOutputSampling(TestCase):
                 variable=variables[i],
                 inference=self.inference,
             )
+        self.inference.priors.add(
+            PriorUniform.objects.create(
+                lower=0.0,
+                upper=2.0,
+                log_likelihood_parameter=log_likelihood.parameters.first(),
+                inference=self.inference,
+            )
+        )
         # 'run' inference to create copies of models
-        self.inference = self.inference.run_inference(test=True)
+        self.inference.run_inference(test=True)
 
         # create mixin object
         self.inference_mixin = InferenceMixin(self.inference)
@@ -81,26 +88,26 @@ class TestInferenceMixinSingleOutputSampling(TestCase):
 
         # Test log-likelihood
         log_likelihood = self.inference_mixin._pints_log_likelihood
-        val = log_likelihood([1, 1, 1, 1, 1])
+        val = log_likelihood([1, 1, 1, 1, 1, 1])
         self.assertAlmostEqual(val, -113.33099855566624, delta=0.1)
-        val = log_likelihood([1, 2, 3, 4, 5])
-        self.assertAlmostEqual(val, -121.32407882599529, delta=0.1)
+        val = log_likelihood([1, 2, 3, 4, 5, 6])
+        self.assertAlmostEqual(val, -277.2576503714145, delta=0.1)
 
         # Test log-prior
         log_prior = self.inference_mixin._pints_composed_log_prior
-        val = log_prior([1, 1, 1, 1, 1])
-        self.assertAlmostEqual(val, -3.4657359027997265, delta=0.1)
-        val = log_prior([3, 1, 1, 1, 1])
+        val = log_prior([1, 1, 1, 1, 1, 1])
+        self.assertAlmostEqual(val, -4.1588830833596715, delta=0.1)
+        val = log_prior([3, 1, 1, 1, 1, 1])
         self.assertEqual(val, -np.inf)
 
         # Test log-posterior
         log_posterior = self.inference_mixin._pints_log_posterior
-        val = log_posterior([1, 1, 1, 1, 1])
-        self.assertAlmostEqual(val, -116.79673445846596, delta=0.1)
-        val = log_posterior([1.3, 0.5, 1.1, 0.9, 1.2])
-        self.assertAlmostEqual(val, -149.2582993033948, delta=0.1)
+        val = log_posterior([1, 1, 1, 1, 1, 1])
+        self.assertAlmostEqual(val, -117.48988163902555, delta=0.1)
+        val = log_posterior([1.3, 0.5, 1.1, 0.9, 1.2, 1])
+        self.assertAlmostEqual(val, -149.95144648403073, delta=0.1)
 
-        val = log_posterior([1, 3, 1, 1, 1])
+        val = log_posterior([1, 3, 1, 1, 1, 1])
         self.assertEqual(val, -np.inf)
 
     def test_inference_runs(self):
@@ -110,7 +117,7 @@ class TestInferenceMixinSingleOutputSampling(TestCase):
         chains = self.inference_mixin.inference.chains.all()
         self.assertEqual(len(chains), 4)
         for chain in chains:
-            priors = self.inference_mixin.priors
+            priors = self.inference_mixin.priors_in_pints_order
             fun_res = chain.inference_function_results
             f_vals = fun_res.order_by('iteration').values_list(
                 'value', flat=True
@@ -133,9 +140,7 @@ class TestInferenceMixinSingleOutputSampling(TestCase):
             # transpose list of lists
             p_vals_all = list(map(list, zip(*p_vals_all)))
             fn = self.inference_mixin._pints_log_posterior
-            lookup = self.inference_mixin._django_to_pints_lookup
             for idx, params in enumerate(p_vals_all):
-                params = [params[lookup[p.variable.qname]] for p in priors]
                 self.assertTrue(abs(fn(params) - f_vals[idx]) < 0.01)
         inference = self.inference_mixin.inference
         self.assertTrue(inference.time_elapsed > 0)
@@ -173,7 +178,6 @@ class TestInferenceMixinSingleOutputOptimisation(TestCase):
 
         self.inference = Inference.objects.create(
             name='bob',
-            pd_model=self.model,
             project=self.project,
             max_number_of_iterations=10,
             algorithm=Algorithm.objects.get(name='XNES'),
@@ -219,7 +223,6 @@ class TestInferenceMixinSingleOutputOptimisation(TestCase):
     def test_all_parameters_need_prior_or_value(self):
         inference = Inference.objects.create(
             name='bad_bob',
-            pd_model=self.model,
             project=self.project,
             max_number_of_iterations=10,
             algorithm=Algorithm.objects.get(name='XNES'),

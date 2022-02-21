@@ -42,15 +42,8 @@ class LogLikelihoodParameter(models.Model):
         on_delete=models.CASCADE,
     )
 
-    def create_stored_parameter(self, log_likelihood):
-        stored_parameter_kwargs = {
-            'name': self.name,
-            'value': self.value,
-            'log_likelihood': log_likelihood,
-        }
-        return LogLikelihoodParameter.objects.create(
-            **stored_parameter_kwargs
-        )
+    class Meta:
+        unique_together = (('name', 'log_likelihood'),)
 
 
 class LogLikelihood(models.Model):
@@ -88,6 +81,28 @@ class LogLikelihood(models.Model):
         default=Form.NORMAL,
     )
 
+    def save(self, force_insert=False, force_update=False, *args, **kwargs):
+        created = not self.pk
+
+        super().save(force_insert, force_update, *args, **kwargs)
+
+        # if created then add the necessary parameters
+        if created:
+            if self.form == self.Form.NORMAL:
+                self.parameters.set([
+                    LogLikelihoodParameter.objects.create(
+                        name=LogLikelihoodParameter.Name.STANDARD_DEVIATION,
+                        log_likelihood=self
+                    )
+                ])
+            elif self.form == self.Form.LOGNORMAL:
+                self.parameters.set([
+                    LogLikelihoodParameter.objects.create(
+                        name=LogLikelihoodParameter.Name.SIGMA,
+                        log_likelihood=self
+                    )
+                ])
+
     def create_stored_log_likelihood(self, inference, new_models):
         old_parameters = self.parameters.all()
         for parameter in old_parameters:
@@ -115,10 +130,16 @@ class LogLikelihood(models.Model):
             'form': self.form,
         }
 
+        # this will create parameters
         stored_log_likelihood = LogLikelihood.objects.create(
             **stored_log_likelihood_kwargs
         )
+
+        # now we copy over the parameter values
         for parameter in old_parameters:
-            parameter.create_stored_parameter(stored_log_likelihood)
+            new_parameter = stored_log_likelihood.parameters.get(
+                name=parameter.name
+            )
+            new_parameter.value = parameter.value
 
         return stored_log_likelihood

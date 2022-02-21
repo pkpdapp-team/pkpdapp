@@ -58,12 +58,18 @@ class InferenceMixin:
         # types needed later
         self.inference = inference
 
-        # create a dictionary of key-value pairs for fixed parameters of Myokit
-        # model
+        # get model parameters to be inferred
+        fitted_parameter_names = [
+            prior.variable.qname
+            for prior in inference.priors.all()
+            if prior.variable is not None
+        ]
+        print('fitted parameters', fitted_parameter_names)
 
         # create pints forward model
+        # TODO: only supports a single log_likelihood
         self._pints_forward_model = self.create_pints_forward_model(
-            self._outputs, inference
+            self._outputs, inference.log_likelihoods.first(), fitted_parameter_names
         )
 
         self._collection = self.create_pints_problem_collection(
@@ -204,9 +210,9 @@ class InferenceMixin:
 
     @staticmethod
     def create_pints_forward_model(
-            outputs, inference,
+            outputs, log_likelihood, fitted_parameter_names
     ):
-        model = inference.get_model()
+        model = log_likelihood.variable.get_model()
 
         myokit_model = model.get_myokit_model()
 
@@ -224,12 +230,7 @@ class InferenceMixin:
                          for
                          param in all_myokit_variables]
 
-        # get myokit parameters minus outputs: i.e. just input parameters
-        fitted_parameter_names = [
-            prior.variable.qname
-            for prior in inference.priors.all()
-            if prior.variable is not None
-        ]
+
         myokit_minus_fixed = [item
                               for
                               item in myokit_pnames

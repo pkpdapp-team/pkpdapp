@@ -36,7 +36,7 @@ from .likelihoods import (
     LogLikelihoodParameter,
 )
 from .priors import (
-    PriorNormal, PriorUniform, Boundary, Prior,
+    PriorNormal, PriorUniform, Prior,
 )
 from .inference_results import (
     InferenceChain,
