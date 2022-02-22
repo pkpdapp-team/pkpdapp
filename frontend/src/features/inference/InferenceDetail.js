@@ -74,8 +74,7 @@ function PriorSubform({
   control,
   prior,
   index,
-  variables,
-  variable_options,
+  variable,
   remove,
   watch,
   setValue,
@@ -104,7 +103,6 @@ function PriorSubform({
   const handleTypeChange = (event) => {
     const oldVar = watch.variable
     const newType = event.target.value;
-    const variable = variables.find((v) => v.id === oldVar);
     if (variable) {
       setDefaults(newType, variable, baseName);
     }
@@ -112,8 +110,6 @@ function PriorSubform({
   };
   const handleVariableChange = (event) => {
     const oldType = watch.type
-    const newVariable = event.target.value;
-    const variable = variables.find((v) => v.id === newVariable);
     if (variable) {
       setDefaults(oldType, variable, baseName);
     }
@@ -130,16 +126,6 @@ function PriorSubform({
         name={`${baseName}.type`}
         label="Type"
       />
-      <FormSelectField
-        control={control}
-        defaultValue={prior.variable || ""}
-        disabled={disabled}
-        options={variable_options}
-        onChangeUser={handleVariableChange}
-        name={`${baseName}.variable`}
-        label="Variable"
-      />
-
       {type === "PriorNormal" && (
         <React.Fragment>
           <FormTextField
@@ -263,6 +249,8 @@ function LogLikelihoodSubform({
       } else if (modelType === 'PK') {
         return selectVariablesByDosedPkModel(state, modelIdParse);
       }
+    } else {
+      return [];
     }
   });
   console.log('variables', variables)
@@ -325,16 +313,21 @@ function LogLikelihoodSubform({
     }
   };
 
-  const handleNewPrior = () => {
-    priorsAppend({
-      type: "PriorUniform",
-      sd: "",
-      mean: "",
-      lower: "",
-      upper: "",
-      variable: "",
-    });
-  }
+  const handleNewPrior = (variable) => (() => {
+    console.log('adding new prior', variable)
+    return (
+      priorsAppend({
+        type: "PriorUniform",
+        sd: Math.sqrt(
+          Math.pow(variable.lower_bound - variable.lower_bound, 2),
+        ) / 12,
+        mean: variable.default_value,
+        lower: variable.lower_bound,
+        upper: variable.upper_bound,
+        variable: variable.id,
+      })
+    )
+  });
   
   return (
     <ListItem  role={undefined} dense>
@@ -438,33 +431,42 @@ function LogLikelihoodSubform({
       )}
       </Grid>
       <Grid item xs={12}>
-      <Typography>Parameter Priors</Typography>
+      <Typography>Variables</Typography>
       <List>
-        {logLikelihood.priors.map((prior, index) => (
-          <PriorSubform
-            key={index}
-            control={control}
-            prior={prior}
-            index={index}
-            variable_options={variable_options}
-            variables={variables}
-            remove={remove}
-            watch={watch[index]}
-            setValue={setValue}
-            disabled={disabled}
-          />
-        ))}
-        <ListItem key={-1} role={undefined} dense>
-          <Tooltip title={`create new prior`} placement="right">
-            <IconButton
-              variant="rounded"
-              disabled={disabled}
-              onClick={handleNewPrior}
-            >
-              <AddIcon />
-            </IconButton>
-          </Tooltip>
-        </ListItem>
+        {variables.map((variable, index) => {
+          const priorIndex = priors.findIndex(p => p.variable === variable.id);
+          const prior = priors[priorIndex];
+          if (prior) {
+            return (
+              <PriorSubform
+                key={index}
+                control={control}
+                prior={prior}
+                variable={variable}
+                remove={() => priorsRemove(priorIndex)}
+                setValue={setValue}
+                disabled={disabled}
+              />
+            )
+          } else {
+            return (
+              <ListItem key={index} dense>
+              <Typography>{variable.name} = {variable.default_value}</Typography>
+              <Tooltip title={`create new prior`} placement="right">
+                <IconButton
+                  variant="rounded"
+                  disabled={disabled}
+                  onClick={handleNewPrior(variable)}
+                >
+                  <AddIcon />
+                </IconButton>
+              </Tooltip>
+              </ListItem>
+            )
+          }
+        }
+        )}
+          
       </List>
       </Grid>
       </Grid>
@@ -514,6 +516,7 @@ export default function DraftInferenceDetail({ project, inference }) {
   });
   const watchLogLikelihoods = watch("log_likelihoods");
   console.log('logLikelihoods', logLikelihoods)
+  console.log('watchlogLikelihoods', watchLogLikelihoods)
 
 
   const handleDelete = () => {
