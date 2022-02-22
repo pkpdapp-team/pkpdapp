@@ -33,6 +33,7 @@ import {
 import {
   selectVariablesByPdModel,
   selectVariablesByDosedPkModel,
+  selectVariableById,
 } from "../variables/variablesSlice";
 
 import { selectAllDatasets } from "../datasets/datasetsSlice";
@@ -75,48 +76,30 @@ function PriorSubform({
   prior,
   index,
   variable,
+  log_likelihood_parameter,
+  baseName,
   remove,
   watch,
   setValue,
   disabled,
 }) {
   const [type, setType] = useState(prior.type);
-  const baseName = `priors[${index}]`
 
   const type_options = [
     { key: "Normal", value: "PriorNormal" },
     { key: "Uniform", value: "PriorUniform" },
   ];
   
-  const setDefaults = (type, variable) => {
-    if (type === "PriorNormal") {
-      setValue(`${baseName}.mean`, variable.default_value);
-      const standardDeviation = Math.sqrt(
-        Math.pow(variable.upper_bound - variable.lower_bound, 2) / 12
-      );
-      setValue(`${baseName}.sd`, standardDeviation);
-    } else if (type === "PriorUniform") {
-      setValue(`${baseName}.lower`, variable.lower_bound);
-      setValue(`${baseName}.upper`, variable.upper_bound);
-    }
-  };
   const handleTypeChange = (event) => {
-    const oldVar = watch.variable
     const newType = event.target.value;
-    if (variable) {
-      setDefaults(newType, variable, baseName);
-    }
     setType(newType)
-  };
-  const handleVariableChange = (event) => {
-    const oldType = watch.type
-    if (variable) {
-      setDefaults(oldType, variable, baseName);
-    }
   };
 
   return (
     <ListItem key={prior.id} role={undefined}>
+      <Typography>
+        {variable ? variable.name : log_likelihood_parameter.name} prior
+      </Typography>
       <FormSelectField
         control={control}
         defaultValue={prior.type || ""}
@@ -131,7 +114,7 @@ function PriorSubform({
           <FormTextField
             control={control}
             name={`${baseName}.mean`}
-            defaultValue={prior.mean}
+            defaultValue={prior.mean || ""}
             disabled={disabled}
             label="Mean"
             type="number"
@@ -140,7 +123,7 @@ function PriorSubform({
             control={control}
             name={`${baseName}.sd`}
             disabled={disabled}
-            defaultValue={prior.sd}
+            defaultValue={prior.sd || ""}
             label="Standard Deviation"
             type="number"
           />
@@ -152,14 +135,14 @@ function PriorSubform({
             control={control}
             name={`${baseName}.lower`}
             disabled={disabled}
-            defaultValue={prior.lower}
+            defaultValue={prior.lower || ""}
             label="Lower"
             type="number"
           />
           <FormTextField
             control={control}
             name={`${baseName}.upper`}
-            defaultValue={prior.upper}
+            defaultValue={prior.upper || ""}
             disabled={disabled}
             label="Upper"
             type="number"
@@ -197,8 +180,26 @@ function LogLikelihoodSubform({
 }) {
 
   const classes = useStyles();
-  const watchForm = watch.form;
-  const watchVariable = watch.variable;
+  const watchForm = watch(`${baseName}.form`);
+  const watchVariable = watch(`${baseName}.variable`);
+
+  const variable = useSelector((state) => {
+    if (watchVariable) {
+        return selectVariableById(state, watchVariable);
+    }
+  });
+
+  
+
+  let variableModelType = null
+  let variableModelId = null
+  if (variable.pd_model) {
+    variableModelType = 'PD'
+    variableModelId = variable.pd_model
+  } else if (variable.dosed_pk_model) {
+    variableModelType = 'PK'
+    variableModelId = variable.dosed_pd_model
+  }
 
   const {
     fields: priors,
@@ -210,7 +211,12 @@ function LogLikelihoodSubform({
   });
 
   // model 
-  const [modelId, setModelId] = useState(null);
+  
+  const [modelId, setModelId] = useState(
+    variableModelId ? 
+      `${variableModelId}:${variableModelType}`
+      : null
+  );
   const pd_models = useSelector(selectAllPdModels);
   const dosed_pk_models = useSelector(selectAllPkModels);
   const model_options = pd_models.map((model) => ({
@@ -252,16 +258,25 @@ function LogLikelihoodSubform({
     } else {
       return [];
     }
-  });
+  }).filter(variable => variable.name !== "time");
   console.log('variables', variables)
 
+
+
   const variable_options = variables ? variables
-    .filter((variable) => variable.constant || variable.state)
+    .filter((variable) => variable.name !== "time" && (variable.state))
     .map((variable) => ({ key: variable.qname.replace('.size', '.volume'), value: variable.id }))
   : []
       
   // dataset
-  const [datasetId, setDatasetId] = useState(null);
+  const biomarker_type = useSelector((state) => {
+    if (logLikelihood.biomarker_type) {
+        return selectBiomarkerTypeById(
+          state, logLikelihood.biomarker_type
+        );
+    }
+  });
+  const [datasetId, setDatasetId] = useState(biomarker_type.dataset);
   const handleDatasetChange = (event) => {
     const value = event.target.value;
     setDatasetId(value);
@@ -283,33 +298,31 @@ function LogLikelihoodSubform({
   ];
   
   const setDefaults = (form, variable) => {
+    console.log('setDefaults', form, variable)
     if (form === "N") {
       const standardDeviation = Math.sqrt(
         Math.pow(variable.upper_bound - variable.lower_bound, 2) / 12
       );
+      setValue(`${baseName}.parameters[0].name`, 'SD');
       setValue(`${baseName}.parameters[0].value`, standardDeviation);
     } else if (form === "LN") {
       const standardDeviation = Math.sqrt(
         Math.pow(variable.upper_bound - variable.lower_bound, 2) / 12
       );
+      setValue(`${baseName}.parameters[0].name`, 'SI');
       setValue(`${baseName}.parameters[0].value`, standardDeviation);
     }
   };
-  const handleFormChange = (oldForm, oldVar) => (event) => {
+  const handleFormChange = (event) => {
     const newForm = event.target.value;
-    const variable = variables.find((v) => v.id === oldVar);
     if (variable) {
-      setDefaults(newForm, variable, baseName);
-    } else {
-      setValue(`${baseName}.parameters[0].value`, null);
-      setValue(`${baseName}.parameters[0].value`, null);
+      setDefaults(newForm, variable);
     }
   };
-  const handleVariableChange = (oldType, oldVar) => (event) => {
+  const handleVariableChange = (event) => {
     const newVariable = event.target.value;
-    const variable = variables.find((v) => v.id === newVariable);
     if (variable) {
-      setDefaults(oldType, variable, baseName);
+      setDefaults(watchForm, variable);
     }
   };
 
@@ -319,8 +332,8 @@ function LogLikelihoodSubform({
       priorsAppend({
         type: "PriorUniform",
         sd: Math.sqrt(
-          Math.pow(variable.lower_bound - variable.lower_bound, 2),
-        ) / 12,
+          Math.pow(variable.upper_bound - variable.lower_bound, 2),
+        ) / 12.0,
         mean: variable.default_value,
         lower: variable.lower_bound,
         upper: variable.upper_bound,
@@ -328,7 +341,28 @@ function LogLikelihoodSubform({
       })
     )
   });
-  
+
+  const handleNewParamPrior = (baseName) => (() => {
+    console.log('adding new param prior', baseName)
+    setValue(`${baseName}.prior`, 
+      {
+        type: "PriorUniform",
+        sd: Math.sqrt(
+          Math.pow(variable.upper_bound - variable.lower_bound, 2),
+        ) / 12.0,
+        mean: variable.default_value,
+        lower: variable.lower_bound,
+        upper: variable.upper_bound,
+      }
+    );
+  });
+
+
+  const handleRemoveParamPrior = (baseName) => (() => {
+    console.log('remove param prior', baseName)
+    setValue(`${baseName}.prior`, null);
+  });
+
   return (
     <ListItem  role={undefined} dense>
       <Paper className={classes.root}>
@@ -374,11 +408,7 @@ function LogLikelihoodSubform({
       <FormSelectField
         control={control}
         defaultValue={logLikelihood.form || ""}
-        onChangeUser={handleFormChange(
-          watchForm,
-          watchVariable,
-          baseName
-        )}
+        onChangeUser={handleFormChange}
         disabled={disabled}
         options={form_options}
         name={`${baseName}.form`}
@@ -387,11 +417,7 @@ function LogLikelihoodSubform({
       <FormSelectField
         control={control}
         defaultValue={logLikelihood.variable || ""}
-        onChangeUser={handleVariableChange(
-          watchForm,
-          watchVariable,
-          baseName
-        )}
+        onChangeUser={handleVariableChange}
         disabled={disabled}
         options={variable_options}
         name={`${baseName}.variable`}
@@ -405,36 +431,59 @@ function LogLikelihoodSubform({
         name={`${baseName}.biomarker_type`}
         label="Biomarker Type"
       />
-      {watchForm === "N" && (
-        <React.Fragment>
-          <FormTextField
-            control={control}
-            name={`${baseName}.parameters[0].value`}
-            defaultValue={logLikelihood.sd}
-            disabled={disabled}
-            label="Standard Deviation"
-            type="number"
-          />
-        </React.Fragment>
-      )}
-      {watchForm === "LN" && (
-        <React.Fragment>
-          <FormTextField
-            control={control}
-            name={`${baseName}.parameters[0].value`}
-            disabled={disabled}
-            defaultValue={logLikelihood.sigma}
-            label="Sigma"
-            type="number"
-          />
-        </React.Fragment>
-      )}
       </Grid>
       <Grid item xs={12}>
+      <Typography>Log-likelihood Parameters</Typography>
+        {logLikelihood.parameters.map((param, index) => {
+          
+          const paramBaseName = `${baseName}.parameters[${index}]`;
+          const watchParam = watch(`${paramBaseName}`)
+          const prior = watchParam.prior
+          if (prior) {
+            return (
+              <PriorSubform
+                key={variables.length + index}
+                control={control}
+                prior={prior}
+                baseName={paramBaseName + `.prior`}
+                log_likelihood_parameter={param}
+                remove={handleRemoveParamPrior(paramBaseName)}
+                setValue={setValue}
+                disabled={disabled}
+              />
+            )
+          } else {
+            return (
+              <ListItem key={variables.length + index} dense>
+              <FormTextField
+                control={control}
+                name={`${baseName}.parameters[${index}].value`}
+                disabled={disabled}
+                defaultValue={param.value || ""}
+                label={watchParam.name}
+                type="number"
+              />
+              <Tooltip title={`create new prior`} placement="right">
+                <IconButton
+                  variant="rounded"
+                  disabled={disabled}
+                  onClick={handleNewParamPrior(
+                    `${baseName}.parameters[${index}]`
+                  )}
+                >
+                  <AddIcon />
+                </IconButton>
+              </Tooltip>
+              </ListItem>
+            )
+          }
+        })}
       <Typography>Variables</Typography>
       <List>
         {variables.map((variable, index) => {
-          const priorIndex = priors.findIndex(p => p.variable === variable.id);
+          const priorIndex = priors.findIndex(
+            p => p.variable === variable.id
+          );
           const prior = priors[priorIndex];
           if (prior) {
             return (
@@ -443,6 +492,7 @@ function LogLikelihoodSubform({
                 control={control}
                 prior={prior}
                 variable={variable}
+                baseName={baseName + `.priors[${index}]`}
                 remove={() => priorsRemove(priorIndex)}
                 setValue={setValue}
                 disabled={disabled}
@@ -466,7 +516,7 @@ function LogLikelihoodSubform({
           }
         }
         )}
-          
+        
       </List>
       </Grid>
       </Grid>
@@ -536,6 +586,13 @@ export default function DraftInferenceDetail({ project, inference }) {
       form: "N",
       variable: "",
       priors: [],
+      parameters: [
+        {
+          name: 'SD',
+          value: null,
+          prior: null,
+        }
+      ],
       biomarker_type: "",
     });
 
@@ -610,7 +667,7 @@ export default function DraftInferenceDetail({ project, inference }) {
             datasetOptions={dataset_options}
             remove={() => logLikelihoodsRemove(index)}
             baseName = {`log_likelihoods[${index}]`}
-            watch={watchLogLikelihoods[index]}
+            watch={watch}
             setValue={setValue}
             disabled={readOnly}
           />

@@ -20,6 +20,7 @@ class PriorNormalSerializer(serializers.ModelSerializer):
     class Meta:
         model = PriorNormal
         fields = '__all__'
+        read_only_fields = ("log_likelihood", )
 
     def get_type(self, obj):
         return 'PriorNormal'
@@ -38,6 +39,7 @@ class PriorUniformSerializer(serializers.ModelSerializer):
     class Meta:
         model = PriorUniform
         fields = '__all__'
+        read_only_fields = ("log_likelihood", )
 
     def get_type(self, obj):
         return 'PriorUniform'
@@ -46,6 +48,7 @@ class PriorUniformSerializer(serializers.ModelSerializer):
 class PriorSerializer(PolymorphicSerializer):
     class Meta:
         model = Prior
+        read_only_fields = ("log_likelihood", )
 
     name = serializers.SerializerMethodField()
 

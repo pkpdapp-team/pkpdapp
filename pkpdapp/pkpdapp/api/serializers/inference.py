@@ -36,7 +36,9 @@ class InferenceSerializer(serializers.ModelSerializer):
         model = Inference
         fields = '__all__'
 
+
     def create(self, validated_data):
+        print('craete inference', validated_data)
         log_likelihood_data = validated_data.pop('log_likelihoods')
         new_inference = BaseInferenceSerializer().create(
             validated_data

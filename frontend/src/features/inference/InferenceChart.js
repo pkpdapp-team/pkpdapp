@@ -53,20 +53,35 @@ export default function InferenceChart({inference}) {
   }, [dispatch, inference.id]);
 
 
-  const priorsWithChainValues = inference.log_likelihoods.reduce((sum, log_likelihood) => 
-    sum.concat(log_likelihood.priors.map(prior => {
-      console.log('prior', prior)
-      return {
-        ...prior, 
-        chains: chains.map(chain => chain.data.values.filter((x, i) => chain.data.priors[i] === prior.id)),
-      }
-    })), []
-  )
-
-
   const chains = useSelector((state) =>
     selectChainsByInferenceId(state, inference.id)
   );
+
+  const priorsWithChainValues = inference.log_likelihoods.reduce((sum, log_likelihood) => {
+    let new_sum = sum.concat(
+      log_likelihood.priors.map(prior => {
+        console.log('prior', prior)
+        return {
+          ...prior, 
+          chains: chains.map(chain => chain.data.values.filter((x, i) => chain.data.priors[i] === prior.id)),
+        }
+      })
+    )
+    new_sum = new_sum.concat(
+      log_likelihood.parameters.filter(
+        param => param.prior
+      ).map(param => {
+        const prior = param.prior
+        return {
+          ...prior, 
+          chains: chains.map(chain => chain.data.values.filter((x, i) => chain.data.priors[i] === prior.id)),
+        }
+      })
+
+    )
+    return new_sum
+  } , [] )
+  console.log('priorsWithChainValues', priorsWithChainValues)
 
   const algorithm = useSelector((state) =>
     selectAlgorithmById(state, inference.algorithm)

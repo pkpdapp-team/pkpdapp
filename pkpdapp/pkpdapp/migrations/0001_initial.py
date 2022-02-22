@@ -178,7 +178,7 @@ class Migration(migrations.Migration):
             name='Prior',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('log_likelihood', models.ForeignKey(help_text='Prior belongs to this log_likelihood object.', on_delete=django.db.models.deletion.CASCADE, related_name='priors', to='pkpdapp.loglikelihood')),
+                ('log_likelihood', models.ForeignKey(blank=True, help_text='Prior belongs to this log_likelihood object. Only used if is a prior on a variable, otherwise blank', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='priors', to='pkpdapp.loglikelihood')),
                 ('log_likelihood_parameter', models.OneToOneField(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='prior', to='pkpdapp.loglikelihoodparameter')),
                 ('polymorphic_ctype', models.ForeignKey(editable=False, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='polymorphic_pkpdapp.prior_set+', to='contenttypes.contenttype')),
             ],

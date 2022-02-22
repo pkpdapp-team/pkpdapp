@@ -32,8 +32,10 @@ class Prior(PolymorphicModel):
         LogLikelihood,
         related_name='priors',
         on_delete=models.CASCADE,
+        blank=True, null=True,
         help_text=(
-            'Prior belongs to this log_likelihood object.'
+            'Prior belongs to this log_likelihood object. '
+            'Only used if is a prior on a variable, otherwise blank'
         )
     )
 
