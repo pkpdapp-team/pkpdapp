@@ -6,7 +6,6 @@ import {
 import { api } from "../../Api";
 import { fetchPdModelById } from "../pdModels/pdModelsSlice";
 import { fetchPkModelById } from "../pkModels/pkModelsSlice";
-import { runInference } from "../inference/inferenceSlice";
 
 const variablesAdapter = createEntityAdapter({
   sortComparer: (a, b) => b.id < a.id,
@@ -84,10 +83,6 @@ export const variablesSlice = createSlice({
     addVariables: variablesAdapter.upsertMany,
   },
   extraReducers: {
-    // Inferences
-    [runInference.fulfilled]: (state, action) => {
-      variablesAdapter.addMany(state, action.payload.variables);
-    },
     [fetchVariables.pending]: (state, action) => {
       state.status = "loading";
     },

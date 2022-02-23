@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
 import Divider from '@material-ui/core/Divider';
@@ -182,6 +182,7 @@ function LogLikelihoodSubform({
   const classes = useStyles();
   const watchForm = watch(`${baseName}.form`);
   const watchVariable = watch(`${baseName}.variable`);
+  const watchParameters = watch(`${baseName}.parameters`);
 
   const variable = useSelector((state) => {
     if (watchVariable) {
@@ -189,34 +190,25 @@ function LogLikelihoodSubform({
     }
   });
 
-  
-
   let variableModelType = null
   let variableModelId = null
-  if (variable.pd_model) {
-    variableModelType = 'PD'
-    variableModelId = variable.pd_model
-  } else if (variable.dosed_pk_model) {
-    variableModelType = 'PK'
-    variableModelId = variable.dosed_pd_model
+  if (variable) {
+    if (variable.pd_model) {
+      variableModelType = 'PD'
+      variableModelId = variable.pd_model
+    } else if (variable.dosed_pk_model) {
+      variableModelType = 'PK'
+      variableModelId = variable.dosed_pd_model
+    }
   }
-
-  const {
-    fields: priors,
-    append: priorsAppend,
-    remove: priorsRemove,
-  } = useFieldArray({
-    control,
-    name: `${baseName}.priors`,
-  });
+  const defaultModelID = variableModelId ? 
+      `${variableModelId}:${variableModelType}`
+      : null
 
   // model 
   
-  const [modelId, setModelId] = useState(
-    variableModelId ? 
-      `${variableModelId}:${variableModelType}`
-      : null
-  );
+  const [modelId, setModelId] = useState(defaultModelID);
+  const [changedModel, setChangedModel] = useState(false);
   const pd_models = useSelector(selectAllPdModels);
   const dosed_pk_models = useSelector(selectAllPkModels);
   const model_options = pd_models.map((model) => ({
@@ -241,7 +233,7 @@ function LogLikelihoodSubform({
     : null
 
   // model variables
-  const variables = useSelector((state) => {
+  const variablesAll = useSelector((state) => {
     if (modelId) {
       if (modelType === 'PD') {
         return selectVariablesByPdModel(state, modelIdParse);
@@ -251,29 +243,46 @@ function LogLikelihoodSubform({
     } else {
       return [];
     }
-  }).filter(variable => variable.name !== "time");
+  });
+  const variables = useMemo(
+    () => variablesAll.filter(variable => variable.name !== "time"),
+    [variablesAll]
+  );
+
+
+  useEffect(() => {
+    console.log('updating parameters')
+    if (defaultModelID === modelId && !changedModel) {
+      return
+    }
+    const noise_params = [
+      {
+        name: 'standard deviation',
+        value: null,
+        prior: null
+      }
+    ]
+    const model_params = variables.map(variable => ({
+      name: variable.qname, 
+      value: variable.default_value,
+      variable: variable.id,
+      _variable: variable,
+      prior: null,
+    }))
+    setValue(`${baseName}.parameters`, noise_params.concat(model_params))
+    }
+  , [JSON.stringify(variables)]);
+
 
   const handleModelChange = (event) => {
     const value = event.target.value;
     console.log('handleModelChange', value)
+    setChangedModel(true)
     setModelId(value)
-    setValue("priors", []);
-    setValue("parameters", [{
-      name: variable.qname + ' standard deviation',
-      value: variable.default_value,
-      prior: null
-    }].concat(variables.map(variable => ({
-      name: variable.qname, 
-      value: variable.default_value,
-      variable: variable.id,
-      prior: null,
-    }))))
   };
 
   
   console.log('variables', variables)
-
-
 
   const variable_options = variables ? variables
     .filter((variable) => variable.name !== "time" && (variable.state))
@@ -288,7 +297,9 @@ function LogLikelihoodSubform({
         );
     }
   });
-  const [datasetId, setDatasetId] = useState(biomarker_type.dataset);
+  const [datasetId, setDatasetId] = useState(
+    biomarker_type ? biomarker_type.dataset : null
+  );
   const handleDatasetChange = (event) => {
     const value = event.target.value;
     setDatasetId(value);
@@ -338,35 +349,47 @@ function LogLikelihoodSubform({
     }
   };
 
-  const handleNewPrior = (variable) => (() => {
-    console.log('adding new prior', variable)
-    return (
-      priorsAppend({
-        type: "PriorUniform",
-        sd: Math.sqrt(
-          Math.pow(variable.upper_bound - variable.lower_bound, 2),
-        ) / 12.0,
-        mean: variable.default_value,
-        lower: variable.lower_bound,
-        upper: variable.upper_bound,
-        variable: variable.id,
-      })
-    )
-  });
-
-  const handleNewParamPrior = (baseName) => (() => {
-    console.log('adding new param prior', baseName)
-    setValue(`${baseName}.prior`, 
-      {
-        type: "PriorUniform",
-        sd: Math.sqrt(
-          Math.pow(variable.upper_bound - variable.lower_bound, 2),
-        ) / 12.0,
-        mean: variable.default_value,
-        lower: variable.lower_bound,
-        upper: variable.upper_bound,
+  
+  const handleNewParamPrior = (param, baseName) => (() => {
+    console.log('adding new param prior', param, baseName)
+    if (param.variable) {
+      const variable = param._variable
+      setValue(`${baseName}.prior`, 
+        {
+          type: "PriorUniform",
+          sd: Math.sqrt(
+            Math.pow(variable.upper_bound - variable.lower_bound, 2),
+          ) / 12.0,
+          mean: variable.default_value,
+          lower: variable.lower_bound,
+          upper: variable.upper_bound,
+        }
+      );
+    } else {
+      if (variable) {
+        setValue(`${baseName}.prior`, 
+          {
+            type: "PriorUniform",
+            sd: Math.sqrt(
+              Math.pow(variable.upper_bound - variable.lower_bound, 2),
+            ) / 12.0,
+            mean: variable.default_value,
+            lower: variable.lower_bound,
+            upper: variable.upper_bound,
+          }
+        );
+      } else {
+        setValue(`${baseName}.prior`, 
+          {
+            type: "PriorUniform",
+            sd: param.value,
+            mean: param.value,
+            lower: param.value,
+            upper: param.value,
+          }
+        );
       }
-    );
+    }
   });
 
 
@@ -446,7 +469,7 @@ function LogLikelihoodSubform({
       </Grid>
       <Grid item xs={12}>
       <Typography>Log-likelihood Parameters</Typography>
-        {logLikelihood.parameters.map((param, index) => {
+        {watchParameters.map((param, index) => {
           
           const paramBaseName = `${baseName}.parameters[${index}]`;
           const watchParam = watch(`${paramBaseName}`)
@@ -469,7 +492,7 @@ function LogLikelihoodSubform({
               <ListItem key={variables.length + index} dense>
               <FormTextField
                 control={control}
-                name={`${baseName}.parameters[${index}].value`}
+                name={`${paramBaseName}.value`}
                 disabled={disabled}
                 defaultValue={param.value || ""}
                 label={watchParam.name}
@@ -480,7 +503,7 @@ function LogLikelihoodSubform({
                   variant="rounded"
                   disabled={disabled}
                   onClick={handleNewParamPrior(
-                    `${baseName}.parameters[${index}]`
+                    watchParam, `${baseName}.parameters[${index}]`
                   )}
                 >
                   <AddIcon />
@@ -490,46 +513,6 @@ function LogLikelihoodSubform({
             )
           }
         })}
-      <Typography>Variables</Typography>
-      <List>
-        {variables.map((variable, index) => {
-          const priorIndex = priors.findIndex(
-            p => p.variable === variable.id
-          );
-          const prior = priors[priorIndex];
-          if (prior) {
-            return (
-              <PriorSubform
-                key={index}
-                control={control}
-                prior={prior}
-                variable={variable}
-                baseName={baseName + `.priors[${index}]`}
-                remove={() => priorsRemove(priorIndex)}
-                setValue={setValue}
-                disabled={disabled}
-              />
-            )
-          } else {
-            return (
-              <ListItem key={index} dense>
-              <Typography>{variable.name} = {variable.default_value}</Typography>
-              <Tooltip title={`create new prior`} placement="right">
-                <IconButton
-                  variant="rounded"
-                  disabled={disabled}
-                  onClick={handleNewPrior(variable)}
-                >
-                  <AddIcon />
-                </IconButton>
-              </Tooltip>
-              </ListItem>
-            )
-          }
-        }
-        )}
-        
-      </List>
       </Grid>
       </Grid>
       <Grid item xs={1}>

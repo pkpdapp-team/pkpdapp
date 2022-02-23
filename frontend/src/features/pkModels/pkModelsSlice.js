@@ -8,8 +8,6 @@ import { api } from "../../Api";
 import { fetchVariablesByPkModel } from "../variables/variablesSlice";
 import { fetchUnitsByPkModel } from "../projects/unitsSlice";
 
-import { runInference } from "../inference/inferenceSlice";
-
 export const pkModelsAdapter = createEntityAdapter({
   sortComparer: (a, b) => b.id < a.id,
 });
@@ -112,12 +110,6 @@ export const pkModelsSlice = createSlice({
     addPkModels: pkModelsAdapter.upsertMany,
   },
   extraReducers: {
-    // Inferences
-    [runInference.fulfilled]: (state, action) => {
-      if (action.payload.dosed_pk_models) {
-        pkModelsAdapter.addMany(state, action.payload.dosed_pk_models);
-      }
-    },
 
     [fetchPkModels.pending]: (state, action) => {
       state.status = "loading";

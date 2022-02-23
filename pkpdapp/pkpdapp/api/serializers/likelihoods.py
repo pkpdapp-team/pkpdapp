@@ -20,7 +20,7 @@ class BaseLogLikelihoodParameterSerializer(serializers.ModelSerializer):
 
 
 class LogLikelihoodParameterSerializer(serializers.ModelSerializer):
-    prior = PriorSerializer()
+    prior = PriorSerializer(required=False, allow_null=True)
 
     class Meta:
         model = LogLikelihoodParameter
@@ -29,32 +29,34 @@ class LogLikelihoodParameterSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         # save method of log_likelihood will create its own parameters
-        prior_data = validated_data.pop('prior')
+        prior_data = validated_data.pop('prior', None)
         new_param = BaseLogLikelihoodParameterSerializer().create(
             validated_data
         )
 
-        serializer = PriorSerializer()
-        prior_data['log_likelihood_parameter'] = new_param
-        serializer.create(prior_data)
+        if prior_data:
+            serializer = PriorSerializer()
+            prior_data['log_likelihood_parameter'] = new_param
+            serializer.create(prior_data)
 
         return new_param
 
     def update(self, instance, validated_data):
-        prior_data = validated_data.pop('prior')
+        prior_data = validated_data.pop('prior', None)
         new_param = BaseLogLikelihoodParameterSerializer().update(
             instance, validated_data
         )
-        serializer = PriorSerializer()
-        if hasattr(instance, 'prior'):
-            old_prior = instance.prior
-            new_model = serializer.update(
-                old_prior, prior_data
-            )
-            new_model.save()
-        else:
-            prior_data['log_likelihood_parameter'] = new_param
-            new_model = serializer.create(prior_data)
+        if prior_data:
+            serializer = PriorSerializer()
+            if hasattr(instance, 'prior'):
+                old_prior = instance.prior
+                new_model = serializer.update(
+                    old_prior, prior_data
+                )
+                new_model.save()
+            else:
+                prior_data['log_likelihood_parameter'] = new_param
+                new_model = serializer.create(prior_data)
 
         return new_param
 
@@ -69,34 +71,32 @@ class LogLikelihoodSerializer(serializers.ModelSerializer):
     parameters = LogLikelihoodParameterSerializer(
         many=True
     )
-
-    priors = PriorSerializer(
-        many=True
-    )
+    pd_model = serializers.SerializerMethodField('get_pd_model')
+    dosed_pk_model = \
+        serializers.SerializerMethodField('get_dosed_pk_model')
 
     class Meta:
         model = LogLikelihood
         fields = '__all__'
         read_only_fields = ("inference", )
 
+    def get_dosed_pk_model(self, instance):
+        if instance.variable.dosed_pk_model:
+            return instance.variable.dosed_pk_model.id
+
+    def get_pd_model(self, instance):
+        if instance.variable.pd_model:
+            return instance.variable.pd_model.id
+
     def create(self, validated_data):
         # save method of log_likelihood will create its own parameters
         parameters_data = validated_data.pop('parameters')
-        priors_data = validated_data.pop('priors')
         print('creating new log_likelihood', validated_data)
         new_log_likelihood = BaseLogLikelihoodSerializer().create(
             validated_data
         )
 
         print('created new log_likelihood', validated_data)
-
-        for field_datas, Serializer in [
-                (priors_data, PriorSerializer),
-        ]:
-            for field_data in field_datas:
-                serializer = Serializer()
-                field_data['log_likelihood'] = new_log_likelihood
-                serializer.create(field_data)
 
         # new log_likelihood will have had its parameters created, so
         # here we just update them with the validated data
@@ -128,27 +128,10 @@ class LogLikelihoodSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         parameters_data = validated_data.pop('parameters')
-        priors_data = validated_data.pop('priors')
-        old_priors = list((instance.priors).all())
         old_parameters = list((instance.parameters).all())
         new_log_likelihood = BaseLogLikelihoodSerializer().update(
             instance, validated_data
         )
-
-        for field_datas, old_models, Serializer in [
-                (priors_data, old_priors, PriorSerializer),
-        ]:
-            for field_data in field_datas:
-                serializer = Serializer()
-                try:
-                    old_model = old_models.pop(0)
-                    new_model = serializer.update(
-                        old_model, field_data
-                    )
-                except IndexError:
-                    field_data['log_likelihood'] = new_log_likelihood
-                    new_model = serializer.create(field_data)
-                new_model.save()
 
         for field_datas, old_models, Serializer in [
                 (parameters_data, old_parameters,

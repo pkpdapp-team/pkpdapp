@@ -66,22 +66,14 @@ export default function InferenceChart({inference}) {
 
 
   const priorsWithChainValues = inference.log_likelihoods.reduce((sum, log_likelihood) => {
-    let new_sum = sum.concat(
-      log_likelihood.priors.map(prior => {
-        console.log('prior', prior)
-        return {
-          ...prior, 
-          chains: chains.map(chain => chain.data.values.filter((x, i) => chain.data.priors[i] === prior.id)),
-        }
-      })
-    )
-    new_sum = new_sum.concat(
+    const new_sum = sum.concat(
       log_likelihood.parameters.filter(
         param => param.prior
       ).map(param => {
         const prior = param.prior
         return {
           ...prior, 
+          name: param.name,
           chains: chains.map(chain => chain.data.values.filter((x, i) => chain.data.priors[i] === prior.id)),
         }
       })

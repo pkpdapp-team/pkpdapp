@@ -92,6 +92,9 @@ class LogLikelihood(models.Model):
         default=Form.NORMAL,
     )
 
+    def get_model(self):
+        return self.variable.get_model()
+
     def get_priors(self):
         return [
             param.prior
@@ -106,11 +109,10 @@ class LogLikelihood(models.Model):
 
         # if created then add the necessary parameters
         if created:
-            baseName = self.variable.qname
             if self.form == self.Form.NORMAL:
                 parameters = [
                     LogLikelihoodParameter.objects.create(
-                        name=baseName + " standard deviation",
+                        name="standard deviation",
                         log_likelihood=self,
                         value=self.variable.default_value,
                     )
@@ -118,7 +120,7 @@ class LogLikelihood(models.Model):
             elif self.form == self.Form.LOGNORMAL:
                 parameters = [
                     LogLikelihoodParameter.objects.create(
-                        name=baseName + " sigma",
+                        name="sigma",
                         log_likelihood=self,
                         value=self.variable.default_value,
                     )

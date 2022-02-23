@@ -6,7 +6,6 @@ import {
 import { api } from "../../Api";
 import { fetchVariablesByPdModel } from "../variables/variablesSlice";
 import { fetchUnitsByPdModel } from "../projects/unitsSlice";
-import { runInference } from "../inference/inferenceSlice";
 
 const pdModelsAdapter = createEntityAdapter({
   sortComparer: (a, b) => b.id < a.id,
@@ -125,12 +124,6 @@ export const pdModelsSlice = createSlice({
       pdModelsAdapter.setAll(state, action.payload);
     },
 
-    // Inferences
-    [runInference.fulfilled]: (state, action) => {
-      if (action.payload.pd_models) {
-        pdModelsAdapter.addMany(state, action.payload.pd_models);
-      }
-    },
 
     [fetchPdModelById.fulfilled]: pdModelsAdapter.upsertOne,
     [fetchPdModelSimulateById.fulfilled]: pdModelsAdapter.upsertOne,

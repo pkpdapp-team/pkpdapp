@@ -5,6 +5,12 @@ import {
 } from "@reduxjs/toolkit";
 import { api } from "../../Api";
 import { normalize, schema } from "normalizr";
+import { fetchPdModelById} from '../pdModels/pdModelsSlice'
+import { fetchPkModelById} from '../pkModels/pkModelsSlice'
+import { 
+  fetchVariablesByPkModel, 
+  fetchVariablesByPdModel 
+} from '../variables/variablesSlice'
 
 const inferencesAdapter = createEntityAdapter({
   sortComparer: (a, b) => b.id < a.id,
@@ -28,10 +34,10 @@ export const fetchInferences = createAsyncThunk(
   "inferences/fetchInferences",
   async (project, { dispatch }) => {
     let response = await api.get(`/api/inference/?project_id=${project.id}`);
-    const normalized = normalize(response, [inference]);
-    console.log("fetchInferences got", response, normalized);
+    //const normalized = normalize(response, [inference]);
+    //console.log("fetchInferences got", response, normalized);
 
-    return normalized.entities;
+    return response;
   }
 );
 
@@ -73,8 +79,18 @@ export const runInference = createAsyncThunk(
   "inferences/runInference",
   async (inferenceId, { dispatch }) => {
     const newInference = await api.post(`/api/inference/${inferenceId}/run`);
-    const normalized = normalize(newInference, inference);
-    return normalized.entities;
+    //const normalized = normalize(newInference, inference);
+    for (const log_likelihood of newInference.log_likelihoods) {
+      if (log_likelihood.pd_model) {
+        dispatch(fetchPdModelById(log_likelihood.pd_model))
+        dispatch(fetchVariablesByPdModel(log_likelihood.pd_model))
+      } 
+      if (log_likelihood.dosed_pk_model){
+        dispatch(fetchPkModelById(log_likelihood.dosed_pk_model))
+        dispatch(fetchVariablesByPkModel(log_likelihood.dosed_pk_model))
+      }
+    }
+    return newInference;
   }
 );
 
@@ -82,8 +98,8 @@ export const stopInference = createAsyncThunk(
   "inferences/stopInference",
   async (inferenceId, { dispatch }) => {
     const newInference = await api.post(`/api/inference/${inferenceId}/stop`);
-    const normalized = normalize(newInference, inference);
-    return normalized.entities;
+    //const normalized = normalize(newInference, inference);
+    return newInference;
   }
 );
 
@@ -117,17 +133,15 @@ export const inferencesSlice = createSlice({
       state.errorFetch = action.error.message;
     },
     [fetchInferences.fulfilled]: (state, action) => {
-      if (action.payload.inferences) {
-        inferencesAdapter.upsertMany(state, action.payload.inferences);
-      }
+      inferencesAdapter.upsertMany(state, action.payload);
       state.status = "succeeded";
     },
     [fetchInferenceById.fulfilled]: inferencesAdapter.upsertOne,
     [runInference.fulfilled]: (state, action) => {
-      inferencesAdapter.upsertMany(state, action.payload.inferences);
+      inferencesAdapter.upsertOne(state, action.payload);
     },
     [stopInference.fulfilled]: (state, action) => {
-      inferencesAdapter.upsertMany(state, action.payload.inferences);
+      inferencesAdapter.upsertOne(state, action.payload);
     },
     [addNewInference.fulfilled]: inferencesAdapter.addOne,
     [updateInference.fulfilled]: inferencesAdapter.upsertOne,

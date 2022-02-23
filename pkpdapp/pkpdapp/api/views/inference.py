@@ -40,18 +40,17 @@ class InferenceOperationView(views.APIView):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         errors = {}
-        model = inference.get_model()
-        if model is None:
-            for field in ['pd_model', 'dosed_pd_model', 'pkpd_model']:
-                errors[field] = 'Inference must have a model'
-
-        if inference.priors.count() == 0:
-            errors['priors'] = 'Inference must have at least one prior'
-
-        if inference.objective_functions.count() == 0:
-            errors['objective_functions'] = (
-                'Inference must have at least one objective function'
+        if inference.log_likelihoods.count() == 0:
+            errors['log_likelihoods'] = (
+                'Inference must have at least one log_likelihood'
             )
+        for log_likelihood in inference.log_likelihoods.all():
+            model = log_likelihood.get_model()
+            if model is None:
+                errors['log_likelihoods'] = 'LogLikelihood must have a model'
+
+            if len(log_likelihood.get_priors()) == 0:
+                errors['log_likelihoods'] = 'LogLikelihood must have at least one prior'
 
         if errors:
             return Response(

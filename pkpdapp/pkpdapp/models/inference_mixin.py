@@ -163,12 +163,7 @@ class InferenceMixin:
         # set inference results objects for each fitted parameter to be
         # initial values
         self._inference_objects = []
-        print('create sampler objects')
         for i, chain in enumerate(self.inference.chains.all()):
-            for result in chain.inference_results.all():
-                print('chain {} iteration {} value {}'.format(
-                    chain.id, result.iteration, result.value
-                ))
             x0 = []
             if self.inference.number_of_iterations > 0:
                 print('restarting chains!')
