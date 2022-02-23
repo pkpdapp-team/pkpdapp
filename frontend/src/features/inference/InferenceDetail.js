@@ -240,13 +240,6 @@ function LogLikelihoodSubform({
         dosed_pk_models.find(m => m.id === modelIdParse)
     : null
 
-  const handleModelChange = (event) => {
-    const value = event.target.value;
-    console.log('handleModelChange', value)
-    setModelId(value)
-    setValue("priors", logLikelihood.priors);
-  };
-
   // model variables
   const variables = useSelector((state) => {
     if (modelId) {
@@ -259,6 +252,25 @@ function LogLikelihoodSubform({
       return [];
     }
   }).filter(variable => variable.name !== "time");
+
+  const handleModelChange = (event) => {
+    const value = event.target.value;
+    console.log('handleModelChange', value)
+    setModelId(value)
+    setValue("priors", []);
+    setValue("parameters", [{
+      name: variable.qname + ' standard deviation',
+      value: variable.default_value,
+      prior: null
+    }].concat(variables.map(variable => ({
+      name: variable.qname, 
+      value: variable.default_value,
+      variable: variable.id,
+      prior: null,
+    }))))
+  };
+
+  
   console.log('variables', variables)
 
 
@@ -586,13 +598,7 @@ export default function DraftInferenceDetail({ project, inference }) {
       form: "N",
       variable: "",
       priors: [],
-      parameters: [
-        {
-          name: 'SD',
-          value: null,
-          prior: null,
-        }
-      ],
+      parameters: [],
       biomarker_type: "",
     });
 

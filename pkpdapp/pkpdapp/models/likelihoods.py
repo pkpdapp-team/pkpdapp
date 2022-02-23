@@ -22,13 +22,8 @@ class LogLikelihoodParameter(models.Model):
     parameters of the log_likelihood itself
     """
 
-    class Name(models.TextChoices):
-        SIGMA = 'SI', 'Sigma'
-        STANDARD_DEVIATION = 'SD', 'Standard Deviation'
-
     name = models.CharField(
-        max_length=2,
-        choices=Name.choices,
+        max_length=100,
     )
 
     value = models.FloatField(
@@ -40,6 +35,13 @@ class LogLikelihoodParameter(models.Model):
         'LogLikelihood',
         related_name='parameters',
         on_delete=models.CASCADE,
+    )
+
+    variable = models.ForeignKey(
+        Variable,
+        related_name='log_likelihood_parameter',
+        on_delete=models.CASCADE,
+        help_text='this parameter corresponds to this model variable.'
     )
 
     class Meta:
@@ -88,20 +90,37 @@ class LogLikelihood(models.Model):
 
         # if created then add the necessary parameters
         if created:
+            baseName = variable.qname
             if self.form == self.Form.NORMAL:
-                self.parameters.set([
+                parameters = [
                     LogLikelihoodParameter.objects.create(
-                        name=LogLikelihoodParameter.Name.STANDARD_DEVIATION,
-                        log_likelihood=self
+                        name=baseName + " standard deviation",
+                        log_likelihood=self,
+                        value=self.variable.default_value,
                     )
-                ])
+                ]
             elif self.form == self.Form.LOGNORMAL:
-                self.parameters.set([
+                parameters = [
                     LogLikelihoodParameter.objects.create(
-                        name=LogLikelihoodParameter.Name.SIGMA,
-                        log_likelihood=self
+                        name=baseName + " sigma",
+                        log_likelihood=self,
+                        value=self.variable.default_value,
                     )
-                ])
+                ]
+            for model_variable in self.variable.get_model().variables.filter(
+                constant=True, state=True, name__ne="time", pk__ne=variable.pk
+            ):
+                parameters.append(
+                    LogLikelihoodParameter.objects.create(
+                        name=model_variable.qname,
+                        value=model_variable.default_value,
+                        log_likelihood=self,
+                        variable=model_variable,
+                    )
+                )
+            self.parameters.set(parameters)
+
+
 
     def create_stored_log_likelihood(self, inference, new_models):
         old_parameters = self.parameters.all()

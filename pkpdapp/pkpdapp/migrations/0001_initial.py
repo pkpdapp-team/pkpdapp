@@ -7,6 +7,7 @@
 # flake8: noqa
 
 
+
 from django.conf import settings
 from django.db import migrations, models
 import django.db.models.deletion
@@ -22,8 +23,8 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        migrations.swappable_dependency(settings.AUTH_USER_MODEL),
         ('contenttypes', '0002_remove_content_type_name'),
+        migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
@@ -137,7 +138,7 @@ class Migration(migrations.Migration):
             name='LogLikelihoodParameter',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(choices=[('SI', 'Sigma'), ('SD', 'Standard Deviation')], max_length=2)),
+                ('name', models.CharField(max_length=100)),
                 ('value', models.FloatField(blank=True, help_text='set if a fixed value for the parameter is required', null=True)),
                 ('log_likelihood', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='parameters', to='pkpdapp.loglikelihood')),
             ],
@@ -350,6 +351,11 @@ class Migration(migrations.Migration):
             model_name='pharmacodynamicmodel',
             name='project',
             field=models.ForeignKey(blank=True, help_text='Project that "owns" this model', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='pd_models', to='pkpdapp.project'),
+        ),
+        migrations.AddField(
+            model_name='loglikelihoodparameter',
+            name='variable',
+            field=models.ForeignKey(help_text='this parameter corresponds to this model variable.', on_delete=django.db.models.deletion.CASCADE, related_name='log_likelihood_parameter', to='pkpdapp.variable'),
         ),
         migrations.AddField(
             model_name='loglikelihood',

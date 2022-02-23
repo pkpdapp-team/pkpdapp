@@ -9,13 +9,6 @@ import { Chart, registerables, Interaction } from "chart.js";
 import { CrosshairPlugin, Interpolate } from "chartjs-plugin-crosshair";
 import { getColor, getShape } from "../modelling/ShapesAndColors";
 
-import {
-  selectVariablesByPdModel,
-  selectVariablesByDosedPkModel,
-} from "../variables/variablesSlice";
-
-
-
 
 Chart.register(...registerables, CrosshairPlugin);
 Interaction.modes.interpolate = Interpolate;

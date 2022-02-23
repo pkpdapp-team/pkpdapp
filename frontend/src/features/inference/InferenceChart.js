@@ -13,6 +13,13 @@ import { fetchChainsByInferenceId } from "../inference/chainSlice";
 import {selectChainsByInferenceId} from './chainSlice'
 import {selectAlgorithmById} from './algorithmsSlice'
 
+
+import {
+  selectVariablesByPdModel,
+  selectVariablesByDosedPkModel,
+} from "../variables/variablesSlice";
+
+
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
 
@@ -56,6 +63,7 @@ export default function InferenceChart({inference}) {
   const chains = useSelector((state) =>
     selectChainsByInferenceId(state, inference.id)
   );
+
 
   const priorsWithChainValues = inference.log_likelihoods.reduce((sum, log_likelihood) => {
     let new_sum = sum.concat(

@@ -16,44 +16,13 @@ class Prior(PolymorphicModel):
     """
     Model for a generic prior.
     """
-    variable = models.ForeignKey(
-        Variable,
-        related_name='priors',
-        blank=True, null=True,
-        on_delete=models.CASCADE,
-    )
     log_likelihood_parameter = models.OneToOneField(
         LogLikelihoodParameter,
         related_name='prior',
         blank=True, null=True,
         on_delete=models.CASCADE,
     )
-    log_likelihood = models.ForeignKey(
-        LogLikelihood,
-        related_name='priors',
-        on_delete=models.CASCADE,
-        blank=True, null=True,
-        help_text=(
-            'Prior belongs to this log_likelihood object. '
-            'Only used if is a prior on a variable, otherwise blank'
-        )
-    )
 
-    class Meta:
-        constraints = [
-            models.CheckConstraint(
-                check=(
-                    (Q(variable__isnull=True) &
-                     Q(log_likelihood_parameter__isnull=False)) |
-                    (Q(variable__isnull=False) &
-                     Q(log_likelihood_parameter__isnull=True))
-                ),
-                name=(
-                    '%(class)s: prior must belong to a variable '
-                    'or log likelihood parameter'
-                )
-            )
-        ]
 
     def create_stored_prior(
             self, inference, new_models, new_log_likelihood,
