@@ -7,7 +7,6 @@
 # flake8: noqa
 
 
-
 from django.conf import settings
 from django.db import migrations, models
 import django.db.models.deletion
@@ -23,8 +22,8 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('contenttypes', '0002_remove_content_type_name'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
+        ('contenttypes', '0002_remove_content_type_name'),
     ]
 
     operations = [
@@ -179,10 +178,13 @@ class Migration(migrations.Migration):
             name='Prior',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('log_likelihood', models.ForeignKey(blank=True, help_text='Prior belongs to this log_likelihood object. Only used if is a prior on a variable, otherwise blank', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='priors', to='pkpdapp.loglikelihood')),
-                ('log_likelihood_parameter', models.OneToOneField(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='prior', to='pkpdapp.loglikelihoodparameter')),
+                ('log_likelihood_parameter', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='prior', to='pkpdapp.loglikelihoodparameter')),
                 ('polymorphic_ctype', models.ForeignKey(editable=False, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='polymorphic_pkpdapp.prior_set+', to='contenttypes.contenttype')),
             ],
+            options={
+                'abstract': False,
+                'base_manager_name': 'objects',
+            },
         ),
         migrations.CreateModel(
             name='Project',
@@ -323,11 +325,6 @@ class Migration(migrations.Migration):
                 ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
         ),
-        migrations.AddField(
-            model_name='prior',
-            name='variable',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='priors', to='pkpdapp.variable'),
-        ),
         migrations.CreateModel(
             name='PkpdModel',
             fields=[
@@ -355,7 +352,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='loglikelihoodparameter',
             name='variable',
-            field=models.ForeignKey(help_text='this parameter corresponds to this model variable.', on_delete=django.db.models.deletion.CASCADE, related_name='log_likelihood_parameter', to='pkpdapp.variable'),
+            field=models.ForeignKey(blank=True, help_text='this parameter corresponds to this model variable.', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='log_likelihood_parameter', to='pkpdapp.variable'),
         ),
         migrations.AddField(
             model_name='loglikelihood',
@@ -460,10 +457,6 @@ class Migration(migrations.Migration):
         migrations.AddConstraint(
             model_name='subject',
             constraint=models.CheckConstraint(check=models.Q(models.Q(('dose_group_unit__isnull', True), ('dose_group_unit__isnull', True)), models.Q(('dose_group_unit__isnull', False), ('dose_group_unit__isnull', False)), _connector='OR'), name='amount must have a unit and visa versa'),
-        ),
-        migrations.AddConstraint(
-            model_name='prior',
-            constraint=models.CheckConstraint(check=models.Q(models.Q(('variable__isnull', True), ('log_likelihood_parameter__isnull', False)), models.Q(('variable__isnull', False), ('log_likelihood_parameter__isnull', True)), _connector='OR'), name='prior: prior must belong to a variable or log likelihood parameter'),
         ),
         migrations.AlterUniqueTogether(
             name='loglikelihoodparameter',

@@ -9,7 +9,7 @@ from pkpdapp.models import (
     Inference,
 )
 from pkpdapp.api.serializers import (
-    PriorSerializer,
+    PriorSerializer, VariableSerializer
 )
 
 

@@ -63,19 +63,21 @@ class TestInferenceMixinSingleOutputSampling(TestCase):
         parameter_names = forward_model.variable_parameter_names()
         var_indices = [var_names.index(v) for v in parameter_names]
         for i in var_indices:
+            param = log_likelihood.parameters.get(
+                variable=variables[i]
+            )
             PriorUniform.objects.create(
                 lower=0.0,
                 upper=2.0,
-                variable=variables[i],
-                log_likelihood=log_likelihood,
+                log_likelihood_parameter=param,
             )
-        log_likelihood.priors.add(
-            PriorUniform.objects.create(
-                lower=0.0,
-                upper=2.0,
-                log_likelihood_parameter=log_likelihood.parameters.first(),
-                log_likelihood=log_likelihood,
-            )
+        noise_param = log_likelihood.parameters.get(
+            variable__isnull=True
+        )
+        PriorUniform.objects.create(
+            lower=0.0,
+            upper=2.0,
+            log_likelihood_parameter=noise_param,
         )
         # 'run' inference to create copies of models
         self.inference.run_inference(test=True)
@@ -197,22 +199,21 @@ class TestInferenceMixinSingleOutputOptimisation(TestCase):
         self.input_variables = [
             variables[i] for i in var_indices
         ]
-        log_likelihood.priors.set([
+        for variable in self.input_variables:
             PriorUniform.objects.create(
                 lower=0.0,
                 upper=2.0,
-                variable=variable,
-                log_likelihood=log_likelihood,
+                log_likelihood_parameter=log_likelihood.parameters.get(
+                    variable=variable
+                )
             )
-            for variable in self.input_variables
-        ])
-        log_likelihood.priors.add(
-            PriorUniform.objects.create(
-                lower=0.0,
-                upper=2.0,
-                log_likelihood_parameter=log_likelihood.parameters.first(),
-                log_likelihood=log_likelihood,
-            )
+        noise_param = log_likelihood.parameters.get(
+            variable__isnull=True
+        )
+        PriorUniform.objects.create(
+            lower=0.0,
+            upper=2.0,
+            log_likelihood_parameter=noise_param,
         )
         # 'run' inference to create copies of models
         self.inference.run_inference(test=True)
@@ -234,15 +235,19 @@ class TestInferenceMixinSingleOutputOptimisation(TestCase):
             biomarker_type=self.biomarker_type,
             form=LogLikelihood.Form.NORMAL
         )
-        log_likelihood.priors.set([
+        for param in log_likelihood.parameters.all():
+            if not param.is_model_variable():
+                param.value = None
+                param.save()
+
+        for variable in self.input_variables:
             PriorUniform.objects.create(
                 lower=0.0,
                 upper=2.0,
-                variable=variable,
-                log_likelihood=log_likelihood,
+                log_likelihood_parameter=log_likelihood.parameters.get(
+                    variable=variable
+                )
             )
-            for variable in self.input_variables
-        ])
 
         with self.assertRaisesRegex(
             RuntimeError,
@@ -290,6 +295,7 @@ class TestInferenceMixinSingleOutputOptimisation(TestCase):
             InferenceChain.objects.create(inference=self.inference)
             for i in range(self.inference.number_of_chains)
         ])
+        self.inference.refresh_from_db()
         for chain in self.inference.chains.all():
             chain.inference_function_results.add(
                 InferenceFunctionResult.objects.create(
@@ -304,7 +310,7 @@ class TestInferenceMixinSingleOutputOptimisation(TestCase):
                 )
             )
             log_likelihood = self.inference.log_likelihoods.first()
-            for prior in log_likelihood.priors.all():
+            for prior in log_likelihood.get_priors():
                 chain.inference_results.add(
                     InferenceResult.objects.create(
                         chain=chain,
@@ -319,7 +325,9 @@ class TestInferenceMixinSingleOutputOptimisation(TestCase):
                         value=0.4,
                     )
                 )
+            chain.refresh_from_db()
         self.inference.number_of_iterations = 1
+        self.inference.save()
 
         # tests that inference runs and writes results to db
         inference_mixin = InferenceMixin(self.inference)

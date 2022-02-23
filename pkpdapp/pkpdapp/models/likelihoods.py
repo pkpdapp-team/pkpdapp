@@ -41,11 +41,20 @@ class LogLikelihoodParameter(models.Model):
         Variable,
         related_name='log_likelihood_parameter',
         on_delete=models.CASCADE,
+        blank=True, null=True,
         help_text='this parameter corresponds to this model variable.'
     )
 
     class Meta:
         unique_together = (('name', 'log_likelihood'),)
+
+    def is_fixed(self):
+        return not hasattr(self, 'prior')
+
+    def is_model_variable(self):
+        return self.variable is not None
+
+
 
 
 class LogLikelihood(models.Model):
@@ -83,6 +92,13 @@ class LogLikelihood(models.Model):
         default=Form.NORMAL,
     )
 
+    def get_priors(self):
+        return [
+            param.prior
+            for param in self.parameters.all()
+            if not param.is_fixed()
+        ]
+
     def save(self, force_insert=False, force_update=False, *args, **kwargs):
         created = not self.pk
 
@@ -90,7 +106,7 @@ class LogLikelihood(models.Model):
 
         # if created then add the necessary parameters
         if created:
-            baseName = variable.qname
+            baseName = self.variable.qname
             if self.form == self.Form.NORMAL:
                 parameters = [
                     LogLikelihoodParameter.objects.create(
@@ -107,9 +123,8 @@ class LogLikelihood(models.Model):
                         value=self.variable.default_value,
                     )
                 ]
-            for model_variable in self.variable.get_model().variables.filter(
-                constant=True, state=True, name__ne="time", pk__ne=variable.pk
-            ):
+            for model_variable in self.variable.get_model(
+            ).variables.exclude(name="time"):
                 parameters.append(
                     LogLikelihoodParameter.objects.create(
                         name=model_variable.qname,
@@ -120,21 +135,19 @@ class LogLikelihood(models.Model):
                 )
             self.parameters.set(parameters)
 
-
-
     def create_stored_log_likelihood(self, inference, new_models):
         old_parameters = self.parameters.all()
         for parameter in old_parameters:
+            print('checking {} {}'.format(
+                parameter.name, parameter.value))
             if (
-                parameter.value is None and
-                not hasattr(parameter, 'prior')
+                parameter.is_fixed() and
+                parameter.value is None
             ):
                 raise RuntimeError(
                     'All LogLikelihood parameters must have a '
                     'set value or a prior'
                 )
-
-        old_priors = self.priors.all()
 
         old_model = self.variable.get_model()
         new_model = new_models[old_model.id]
@@ -157,16 +170,18 @@ class LogLikelihood(models.Model):
         )
 
         # now we copy over the parameter values
+        # and the priors
         for parameter in old_parameters:
             new_parameter = stored_log_likelihood.parameters.get(
                 name=parameter.name
             )
+            new_prior = None
+            if not parameter.is_fixed():
+                new_prior = parameter.prior.create_stored_prior(
+                    stored_log_likelihood
+                )
             new_parameter.value = parameter.value
+            new_parameter.prior = new_prior
 
-        # recreate priors
-        for prior in old_priors:
-            prior.create_stored_prior(
-                self, new_models, stored_log_likelihood
-            )
 
         return stored_log_likelihood

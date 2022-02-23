@@ -61,10 +61,15 @@ class InferenceMixin:
         # get model parameters to be inferred
         # TODO: only one log_likelihood!
         log_likelihood = inference.log_likelihoods.first()
+        log_likelihood_priors = [
+            param.prior
+            for param in log_likelihood.parameters.all()
+            if not param.is_fixed()
+        ]
         fitted_parameter_names = [
-            prior.variable.qname
-            for prior in log_likelihood.priors.all()
-            if prior.variable is not None
+            param.variable.qname
+            for param in log_likelihood.parameters.all()
+            if not param.is_fixed() and param.is_model_variable()
         ]
         print('fitted parameters', fitted_parameter_names)
 
@@ -84,18 +89,21 @@ class InferenceMixin:
         # we'll need the priors in the same order as the theta vector,
         # so we can write back to the database
         self.priors_in_pints_order = [
-            log_likelihood.priors.get(variable__qname=name)
+            [prior for prior in log_likelihood_priors
+             if prior.is_match(name)][0]
             for name in pints_var_names
         ]
 
-        # this function returns the noise priors in the right order
-        self._pints_log_likelihood, noise_priors = \
+        # add remaining (noise) priors to the end
+        self.priors_in_pints_order += [
+            prior for prior in log_likelihood_priors
+            if not prior.is_model_variable_prior()
+        ]
+
+        self._pints_log_likelihood = \
             self.create_pints_log_likelihood(
                 self._collection, inference
             )
-
-        # add noise priors to the list
-        self.priors_in_pints_order += noise_priors
 
         # get priors / boundaries, using variable ordering already established
         (
@@ -142,6 +150,7 @@ class InferenceMixin:
 
         # create chains if not exist
         if self.inference.chains.count() == 0:
+            print('creating chains')
             for i in range(self.inference.number_of_chains):
                 InferenceChain.objects.create(inference=self.inference)
 
@@ -154,7 +163,12 @@ class InferenceMixin:
         # set inference results objects for each fitted parameter to be
         # initial values
         self._inference_objects = []
-        for i, chain in enumerate(inference.chains.all()):
+        print('create sampler objects')
+        for i, chain in enumerate(self.inference.chains.all()):
+            for result in chain.inference_results.all():
+                print('chain {} iteration {} value {}'.format(
+                    chain.id, result.iteration, result.value
+                ))
             x0 = []
             if self.inference.number_of_iterations > 0:
                 print('restarting chains!')
@@ -233,7 +247,6 @@ class InferenceMixin:
                          for
                          param in all_myokit_variables]
 
-
         myokit_minus_fixed = [item
                               for
                               item in myokit_pnames
@@ -274,27 +287,23 @@ class InferenceMixin:
 
         # instantiate PINTS log-likelihoods
         pints_log_likelihoods = []
-        priors = []
         for problem, log_likelihood in zip(problems, log_likelihoods):
             if log_likelihood.form == LogLikelihood.Form.NORMAL:
-                if log_likelihood.parameters.first().value is not None:
-                    value = log_likelihood.parameters.first().value
+                noise_param = log_likelihood.parameters.get(
+                    variable__isnull=True
+                )
+                if noise_param.is_fixed():
+                    value = noise_param.value
                     pints_log_likelihoods.append(
                         pints.GaussianKnownSigmaLogLikelihood(
                             problem, value
                         )
                     )
                 else:
-                    priors.append(
-                        log_likelihood.parameters.first().prior
-                    )
                     pints_log_likelihoods.append(
                         pints.GaussianLogLikelihood(problem)
                     )
             elif log_likelihood.form == LogLikelihood.Form.LOGNORMAL:
-                priors.append(
-                    log_likelihood.parameters.first().prior
-                )
                 pints_log_likelihoods.append(
                     pints.LogNormalLogLikelihood(problem)
                 )
@@ -302,7 +311,7 @@ class InferenceMixin:
         # combine them
         return CombinedLogLikelihood(
             *pints_log_likelihoods
-        ), priors
+        )
 
     @staticmethod
     def get_inference_type_and_method(inference):
@@ -391,7 +400,6 @@ class InferenceMixin:
                 prior=prior,
                 iteration=iteration,
                 value=values[i])
-
 
     def step_inference(self):
         # runs one set of ask / tell

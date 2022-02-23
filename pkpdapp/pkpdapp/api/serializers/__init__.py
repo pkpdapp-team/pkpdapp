@@ -24,11 +24,11 @@ from .models import (
     PkpdSerializer,
     PharmacodynamicSbmlSerializer,
 )
+from .variables import VariableSerializer
 from .likelihoods import (
     LogLikelihoodSerializer,
     LogLikelihoodParameterSerializer,
 )
-from .variables import VariableSerializer
 from .inference import (
     InferenceSerializer,
     InferenceChainSerializer,
