@@ -192,15 +192,15 @@ function LogLikelihoodSubform({
 
   let variableModelType = null
   let variableModelId = null
-  if (variable) {
-    if (variable.pd_model) {
-      variableModelType = 'PD'
-      variableModelId = variable.pd_model
-    } else if (variable.dosed_pk_model) {
-      variableModelType = 'PK'
-      variableModelId = variable.dosed_pd_model
-    }
+  if (logLikelihood.pd_model) {
+    variableModelType = 'PD'
+    variableModelId = logLikelihood.pd_model
   }
+  if (logLikelihood.dosed_pk_model) {
+    variableModelType = 'PK'
+    variableModelId = logLikelihood.dosed_pk_model
+  }
+    
   const defaultModelID = variableModelId ? 
       `${variableModelId}:${variableModelType}`
       : null
@@ -224,7 +224,6 @@ function LogLikelihoodSubform({
   const modelIdParse = modelId ? parseInt(modelId.split(':')[0]) : null
   const modelType = modelId ? modelId.split(':')[1] : null
 
-  console.log('model_options', model_options, 'modelId', modelId, modelIdParse, modelType)
   const model = modelId ? 
     modelType == 'PD' ?
         pd_models.find(m => m.id === modelIdParse)
@@ -249,9 +248,7 @@ function LogLikelihoodSubform({
     [variablesAll]
   );
 
-
   useEffect(() => {
-    console.log('updating parameters')
     if (defaultModelID === modelId && !changedModel) {
       return
     }
@@ -262,7 +259,9 @@ function LogLikelihoodSubform({
         prior: null
       }
     ]
-    const model_params = variables.map(variable => ({
+    const model_params = variables.filter(variable => 
+      variable.constant || variable.state
+    ).map(variable => ({
       name: variable.qname, 
       value: variable.default_value,
       variable: variable.id,
@@ -276,30 +275,24 @@ function LogLikelihoodSubform({
 
   const handleModelChange = (event) => {
     const value = event.target.value;
-    console.log('handleModelChange', value)
     setChangedModel(true)
     setModelId(value)
   };
 
   
-  console.log('variables', variables)
-
   const variable_options = variables ? variables
-    .filter((variable) => variable.name !== "time" && (variable.state))
-    .map((variable) => ({ key: variable.qname.replace('.size', '.volume'), value: variable.id }))
+    .filter((variable) => 
+      variable.name !== "time" && (!variable.constant)
+    ).map((variable) => 
+      ({ 
+        key: variable.qname.replace('.size', '.volume'), 
+        value: variable.id 
+      })
+    )
   : []
       
   // dataset
-  const biomarker_type = useSelector((state) => {
-    if (logLikelihood.biomarker_type) {
-        return selectBiomarkerTypeById(
-          state, logLikelihood.biomarker_type
-        );
-    }
-  });
-  const [datasetId, setDatasetId] = useState(
-    biomarker_type ? biomarker_type.dataset : null
-  );
+  const [datasetId, setDatasetId] = useState(logLikelihood.dataset);
   const handleDatasetChange = (event) => {
     const value = event.target.value;
     setDatasetId(value);
@@ -321,7 +314,6 @@ function LogLikelihoodSubform({
   ];
   
   const setDefaults = (form, variable) => {
-    console.log('setDefaults', form, variable)
     if (form === "N") {
       const standardDeviation = Math.sqrt(
         Math.pow(variable.upper_bound - variable.lower_bound, 2) / 12
@@ -351,7 +343,6 @@ function LogLikelihoodSubform({
 
   
   const handleNewParamPrior = (param, baseName) => (() => {
-    console.log('adding new param prior', param, baseName)
     if (param.variable) {
       const variable = param._variable
       setValue(`${baseName}.prior`, 
@@ -394,7 +385,6 @@ function LogLikelihoodSubform({
 
 
   const handleRemoveParamPrior = (baseName) => (() => {
-    console.log('remove param prior', baseName)
     setValue(`${baseName}.prior`, null);
   });
 
@@ -560,8 +550,6 @@ export default function DraftInferenceDetail({ project, inference }) {
     name: "log_likelihoods",
   });
   const watchLogLikelihoods = watch("log_likelihoods");
-  console.log('logLikelihoods', logLikelihoods)
-  console.log('watchlogLikelihoods', watchLogLikelihoods)
 
 
   const handleDelete = () => {

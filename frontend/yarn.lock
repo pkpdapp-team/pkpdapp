@@ -2994,6 +2994,21 @@ compression@^1.7.4:
     safe-buffer "5.1.2"
     vary "~1.1.2"
 
+compute-iqr@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/compute-iqr/-/compute-iqr-1.1.0.tgz#2eaae69dca6ff810b3fe8f05f0c646c0198cee67"
+  integrity sha1-Lqrmncpv+BCz/o8F8MZGwBmM7mc=
+  dependencies:
+    compute-quantile "^1.0.0"
+    validate.io-object "^1.0.0"
+
+compute-quantile@^1.0.0:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/compute-quantile/-/compute-quantile-1.0.1.tgz#30723bac616d9cc5e27c0e0775a9d3567dfbad66"
+  integrity sha1-MHI7rGFtnMXifA4HdanTVn37rWY=
+  dependencies:
+    validate.io-object "^1.0.0"
+
 concat-map@0.0.1:
   version "0.0.1"
   resolved "https://registry.yarnpkg.com/concat-map/-/concat-map-0.0.1.tgz#d8a96bd77fd68df7793a73036a3ba0d5405d477b"
@@ -8619,6 +8634,18 @@ v8-to-istanbul@^8.1.0:
     "@types/istanbul-lib-coverage" "^2.0.1"
     convert-source-map "^1.6.0"
     source-map "^0.7.3"
+
+validate.io-array@^1.0.1:
+  version "1.0.6"
+  resolved "https://registry.yarnpkg.com/validate.io-array/-/validate.io-array-1.0.6.tgz#5b5a2cafd8f8b85abb2f886ba153f2d93a27774d"
+  integrity sha1-W1osr9j4uFq7L4hroVPy2Tond00=
+
+validate.io-object@^1.0.0:
+  version "1.0.4"
+  resolved "https://registry.yarnpkg.com/validate.io-object/-/validate.io-object-1.0.4.tgz#dca01eceee390e110dbc2af843c81f7bf33a41ab"
+  integrity sha1-3KAezu45DhENvCr4Q8gfe/M6Qas=
+  dependencies:
+    validate.io-array "^1.0.1"
 
 value-equal@^1.0.1:
   version "1.0.1"

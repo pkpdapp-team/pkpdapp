@@ -74,6 +74,7 @@ class LogLikelihoodSerializer(serializers.ModelSerializer):
     pd_model = serializers.SerializerMethodField('get_pd_model')
     dosed_pk_model = \
         serializers.SerializerMethodField('get_dosed_pk_model')
+    dataset = serializers.SerializerMethodField('get_dataset')
 
     class Meta:
         model = LogLikelihood
@@ -87,6 +88,10 @@ class LogLikelihoodSerializer(serializers.ModelSerializer):
     def get_pd_model(self, instance):
         if instance.variable.pd_model:
             return instance.variable.pd_model.id
+
+    def get_dataset(self, instance):
+        if instance.biomarker_type:
+            return instance.biomarker_type.dataset.id
 
     def create(self, validated_data):
         # save method of log_likelihood will create its own parameters

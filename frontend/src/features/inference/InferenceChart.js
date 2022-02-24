@@ -81,7 +81,6 @@ export default function InferenceChart({inference}) {
     )
     return new_sum
   } , [] )
-  console.log('priorsWithChainValues', priorsWithChainValues)
 
   const algorithm = useSelector((state) =>
     selectAlgorithmById(state, inference.algorithm)

@@ -66,7 +66,7 @@ export default function Inference() {
   useEffect(() => {
     const interval = setInterval(() => {
       dispatch(fetchInferences(project));
-    }, 10000);
+    }, 100000);
     return () => {
       clearInterval(interval);
     };
