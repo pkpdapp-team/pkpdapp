@@ -187,7 +187,7 @@ class InferenceMixin:
                         if prior.variable is not None:
                             x0[i] = prior.variable.get_default_value()
 
-                sim = self._pints_forward_model.simulate(x0[:-1], self._times[0])
+                sim = self._pints_forward_model.simulate(x0, self._times[0])
 
                 plt.plot(self._times[0], sim, label='sim')
                 plt.plot(self._times[0], self._values[0], label='data')
@@ -232,28 +232,10 @@ class InferenceMixin:
 
         output_names = [output.qname for output in outputs]
 
-        # get all myokit names
-        all_myokit_variables = model.variables.filter(
-            Q(constant=True) | Q(state=True)
-        )
-
-        # myokit: inputs and outputs
-        myokit_pnames = [param.qname
-                         for
-                         param in all_myokit_variables]
-
-        myokit_minus_fixed = [item
-                              for
-                              item in myokit_pnames
-                              if item not in fitted_parameter_names]
-
-        # get index of variables in named list
-        fixed_variables = [all_myokit_variables[myokit_pnames.index(v)]
-                           for v in myokit_minus_fixed]
-
         fixed_parameters_dict = {
-            param.qname: param.get_default_value()
-            for param in fixed_variables
+            param.variable.qname: param.value
+            for param in log_likelihood.parameters.all()
+            if param.is_model_variable() and param.is_fixed()
         }
 
         return MyokitForwardModel(myokit_simulator, myokit_model,
@@ -304,9 +286,10 @@ class InferenceMixin:
                 )
 
         # combine them
-        return CombinedLogLikelihood(
-            *pints_log_likelihoods
-        )
+        return pints_log_likelihoods[0]
+        #return CombinedLogLikelihood(
+        #    *pints_log_likelihoods
+        #)
 
     @staticmethod
     def get_inference_type_and_method(inference):
@@ -426,7 +409,21 @@ class InferenceMixin:
         time_start = time.time()
         max_iterations = self.inference.max_number_of_iterations
         n_iterations = self.inference.number_of_iterations
+        initial_phase_iterations = -1
+        if (
+            self.inference.algorithm.category == 'SP' and
+            self._inference_objects[0].needs_initial_phase()
+        ):
+            initial_phase_iterations = 200
+            if n_iterations < initial_phase_iterations:
+                for sampler in self._inference_objects:
+                    sampler.set_initial_phase(True)
+
         for i in range(n_iterations, max_iterations):
+            if i == initial_phase_iterations:
+                for sampler in self._inference_objects:
+                    sampler.set_initial_phase(False)
+
             self.inference.number_of_iterations += 1
             self.step_inference()
             time_now = time.time()

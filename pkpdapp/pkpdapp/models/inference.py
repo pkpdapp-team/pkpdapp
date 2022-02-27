@@ -24,6 +24,7 @@ class Algorithm(models.Model):
     class Category(models.TextChoices):
         SAMPLING = 'SA', 'Sampling'
         OPTIMISATION = 'OP', 'Optimisation'
+        OTHER = 'OT', 'Optimisation'
 
     category = models.CharField(
         max_length=10,

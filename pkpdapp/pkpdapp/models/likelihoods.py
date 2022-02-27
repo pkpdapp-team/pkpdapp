@@ -55,8 +55,6 @@ class LogLikelihoodParameter(models.Model):
         return self.variable is not None
 
 
-
-
 class LogLikelihood(models.Model):
     """
     model class for log_likelihood functions.
@@ -114,7 +112,7 @@ class LogLikelihood(models.Model):
                     LogLikelihoodParameter.objects.create(
                         name="standard deviation",
                         log_likelihood=self,
-                        value=self.variable.default_value,
+                        value=self.variable.get_default_value(),
                     )
                 ]
             elif self.form == self.Form.LOGNORMAL:
@@ -122,15 +120,17 @@ class LogLikelihood(models.Model):
                     LogLikelihoodParameter.objects.create(
                         name="sigma",
                         log_likelihood=self,
-                        value=self.variable.default_value,
+                        value=self.variable.get_default_value(),
                     )
                 ]
             for model_variable in self.variable.get_model(
-            ).variables.exclude(name="time"):
+            ).variables.filter(
+                Q(constant=True) | Q(state=True)
+            ).exclude(name="time"):
                 parameters.append(
                     LogLikelihoodParameter.objects.create(
                         name=model_variable.qname,
-                        value=model_variable.default_value,
+                        value=model_variable.get_default_value(),
                         log_likelihood=self,
                         variable=model_variable,
                     )
@@ -174,6 +174,7 @@ class LogLikelihood(models.Model):
         # now we copy over the parameter values
         # and the priors
         for parameter in old_parameters:
+            print('copying {}'.format(parameter.name))
             new_parameter = stored_log_likelihood.parameters.get(
                 name=parameter.name
             )
@@ -184,6 +185,5 @@ class LogLikelihood(models.Model):
                 )
             new_parameter.value = parameter.value
             new_parameter.prior = new_prior
-
 
         return stored_log_likelihood

@@ -21,8 +21,8 @@ import MenuItem from "@material-ui/core/MenuItem";
 import AddIcon from "@material-ui/icons/Add";
 import DeleteIcon from "@material-ui/icons/Delete";
 
-import { selectAllPkModels } from "../pkModels/pkModelsSlice";
-import { selectAllPdModels } from "../pdModels/pdModelsSlice";
+import { selectWritablePkModels} from "../pkModels/pkModelsSlice";
+import { selectWritablePdModels} from "../pdModels/pdModelsSlice";
 import { selectAllAlgorithms } from "../inference/algorithmsSlice";
 
 import {
@@ -70,6 +70,15 @@ const useStyles = makeStyles((theme) => ({
     flex: 1,
   },
 }));
+
+
+function variableGetDefaultValue(variable) {
+  if (variable.is_log) {
+    return Math.exp(variable.default_value)
+  } else {
+    return variable.default_value
+  }
+}
 
 function PriorSubform({
   control,
@@ -209,8 +218,8 @@ function LogLikelihoodSubform({
   
   const [modelId, setModelId] = useState(defaultModelID);
   const [changedModel, setChangedModel] = useState(false);
-  const pd_models = useSelector(selectAllPdModels);
-  const dosed_pk_models = useSelector(selectAllPkModels);
+  const pd_models = useSelector(selectWritablePdModels);
+  const dosed_pk_models = useSelector(selectWritablePkModels);
   const model_options = pd_models.map((model) => ({
     key: model.name,
     value: `${model.id}:PD`,
@@ -263,9 +272,8 @@ function LogLikelihoodSubform({
       variable.constant || variable.state
     ).map(variable => ({
       name: variable.qname, 
-      value: variable.default_value,
+      value: variableGetDefaultValue(variable),
       variable: variable.id,
-      _variable: variable,
       prior: null,
     }))
     setValue(`${baseName}.parameters`, noise_params.concat(model_params))
@@ -344,14 +352,14 @@ function LogLikelihoodSubform({
   
   const handleNewParamPrior = (param, baseName) => (() => {
     if (param.variable) {
-      const variable = param._variable
+      const variable = variables.find(v => v.id === param.variable)
       setValue(`${baseName}.prior`, 
         {
           type: "PriorUniform",
           sd: Math.sqrt(
             Math.pow(variable.upper_bound - variable.lower_bound, 2),
           ) / 12.0,
-          mean: variable.default_value,
+          mean: variableGetDefaultValue(variable),
           lower: variable.lower_bound,
           upper: variable.upper_bound,
         }
@@ -364,7 +372,7 @@ function LogLikelihoodSubform({
             sd: Math.sqrt(
               Math.pow(variable.upper_bound - variable.lower_bound, 2),
             ) / 12.0,
-            mean: variable.default_value,
+            mean: variableGetDefaultValue(variable),
             lower: variable.lower_bound,
             upper: variable.upper_bound,
           }
@@ -599,20 +607,6 @@ export default function DraftInferenceDetail({ project, inference }) {
     { key: "Random from prior", value: "R" },
     { key: "Default value from model", value: "D" },
   ]
-
-  const pdModels = useSelector(selectAllPdModels);
-  const pd_model_options = pdModels
-    ? pdModels
-        .map((pd) => ({ key: pd.name, value: pd.id }))
-        .concat([{ key: "None", value: "" }])
-    : [{ key: "Loading...", value: null }];
-
-  const pkModels = useSelector(selectAllPkModels);
-  const dosed_pk_model_options = pkModels
-    ? pkModels
-        .map((pk) => ({ key: pk.name, value: pk.id }))
-        .concat([{ key: "None", value: "" }])
-    : [{ key: "Loading...", value: null }];
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">

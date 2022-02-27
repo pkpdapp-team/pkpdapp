@@ -46,7 +46,7 @@ class LogLikelihoodParameterSerializer(serializers.ModelSerializer):
         new_param = BaseLogLikelihoodParameterSerializer().update(
             instance, validated_data
         )
-        if prior_data:
+        if prior_data is not None:
             serializer = PriorSerializer()
             if hasattr(instance, 'prior'):
                 old_prior = instance.prior
@@ -57,6 +57,9 @@ class LogLikelihoodParameterSerializer(serializers.ModelSerializer):
             else:
                 prior_data['log_likelihood_parameter'] = new_param
                 new_model = serializer.create(prior_data)
+        else:
+            if hasattr(instance, 'prior'):
+                instance.prior.delete()
 
         return new_param
 
@@ -152,7 +155,8 @@ class LogLikelihoodSerializer(serializers.ModelSerializer):
 
                     # only allow updating value
                     field_data = {
-                        'value': field_data['value']
+                        'value': field_data['value'],
+                        'prior': field_data['prior']
                     }
                     new_model = serializer.update(
                         old_model, field_data
