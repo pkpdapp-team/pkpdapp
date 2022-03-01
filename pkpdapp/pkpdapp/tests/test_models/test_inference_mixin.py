@@ -5,9 +5,12 @@
 #
 
 from django.test import TestCase
+import matplotlib.pylab as plt
 import numpy as np
 from pkpdapp.models import (
     Inference, PharmacodynamicModel,
+    PharmacokineticModel, DosedPharmacokineticModel,
+    Protocol, Unit,
     LogLikelihood,
     Project, BiomarkerType,
     PriorUniform, MyokitForwardModel,
@@ -15,6 +18,141 @@ from pkpdapp.models import (
     InferenceFunctionResult,
 )
 from django.core.cache import cache
+
+
+class TestInferenceMixinPkModel(TestCase):
+    def setUp(self):
+        # ensure we've got nothing in the cache
+        cache._cache.flush_all()
+
+        project = Project.objects.get(
+            name='demo',
+        )
+        biomarker_type = BiomarkerType.objects.get(
+            name='DemoDrug Concentration',
+            dataset__name='usecase0'
+        )
+        biomarker_type.display_unit = Unit.objects.get(
+            symbol='g/L'
+        )
+        biomarker_type.save()
+        pk = PharmacokineticModel.objects\
+            .get(name='three_compartment_pk_model')
+
+        protocol = Protocol.objects.get(
+            dataset=biomarker_type.dataset,
+            subject__id_in_dataset=1,
+        )
+
+        model = DosedPharmacokineticModel.objects.create(
+            pharmacokinetic_model=pk,
+            dose_compartment='central',
+            protocol=protocol,
+        )
+
+        variables = model.variables.all()
+        var_names = [v.qname for v in variables]
+        m = model.get_myokit_model()
+        s = model.get_myokit_simulator()
+
+        forward_model = MyokitForwardModel(
+            myokit_model=m,
+            myokit_simulator=s,
+            outputs="central.drug_c_concentration"
+        )
+
+        output_names = forward_model.output_names()
+        var_index = var_names.index(output_names[0])
+
+        self.inference = Inference.objects.create(
+            name='bob',
+            project=project,
+            max_number_of_iterations=10,
+            algorithm=Algorithm.objects.get(name='Haario-Bardenet'),
+        )
+        log_likelihood = LogLikelihood.objects.create(
+            variable=variables[var_index],
+            inference=self.inference,
+            biomarker_type=biomarker_type,
+            form=LogLikelihood.Form.NORMAL
+        )
+
+        # find variables that are being estimated
+        parameter_names = forward_model.variable_parameter_names()
+        var_indices = [var_names.index(v) for v in parameter_names]
+        for i in var_indices:
+            param = log_likelihood.parameters.get(
+                variable=variables[i]
+            )
+            if '_amount' in param.name:
+                param.value = 0
+                param.save()
+            else:
+                PriorUniform.objects.create(
+                    lower=0.0,
+                    upper=0.1,
+                    log_likelihood_parameter=param,
+                )
+        noise_param = log_likelihood.parameters.get(
+            variable__isnull=True
+        )
+        PriorUniform.objects.create(
+            lower=0.0,
+            upper=2.0,
+            log_likelihood_parameter=noise_param,
+        )
+        # 'run' inference to create copies of models
+        self.inference.run_inference(test=True)
+
+        # create mixin object
+        self.inference_mixin = InferenceMixin(self.inference)
+
+    def test_objective_functions(self):
+        # Test that log-likelihood, log-prior and log-posterior work
+
+        # Test log-likelihood
+        log_likelihood = self.inference_mixin._pints_log_likelihood
+        val = log_likelihood([0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01])
+        self.assertAlmostEqual(val, 66.34743439514594, delta=0.1)
+        val = log_likelihood([0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07])
+        self.assertAlmostEqual(val, 31.325221749717322, delta=0.1)
+
+        # Test log-prior
+        log_prior = self.inference_mixin._pints_composed_log_prior
+        val = log_prior([0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01])
+        self.assertAlmostEqual(val, 13.122363377404326, delta=0.1)
+        val = log_prior([1.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01])
+        self.assertEqual(val, -np.inf)
+
+        # Test log-posterior
+        log_posterior = self.inference_mixin._pints_log_posterior
+        val = log_posterior([0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01])
+        self.assertAlmostEqual(val, 79.46979777255027, delta=0.1)
+        val = log_posterior([0.0065, 0.0063, 0.05, 0.0135, 0.0022, 0.0089, 0.004])
+        self.assertAlmostEqual(val, 95.96699346836532, delta=0.1)
+
+        #CL
+        #base = [0.0065, 0.0063, 0.05, 0.0135, 0.0022, 0.0089, 0.004]
+        #CL = np.linspace(0.004, 0.008, 100)
+        #posterior_CL = [
+        #    log_posterior([0.0065, v, 0.05, 0.0135, 0.0022, 0.0089, 0.004])
+        #    for v in CL
+        #]
+        #plt.plot(CL, posterior_CL, label='CL')
+        #plt.legend()
+        #plt.show()
+        #plt.clf()
+        #Vc = np.linspace(0.00004, 0.108, 100)
+        #posterior_Vc = [
+        #    log_posterior([0.0065, 0.0063, v, 0.0135, 0.0022, 0.0089, 0.004])
+        #    for v in Vc
+        #]
+        #plt.plot(Vc, posterior_Vc, label='Vc')
+        #plt.legend()
+        #plt.show()
+
+
+
 
 
 class TestInferenceMixinSingleOutputSampling(TestCase):
@@ -87,6 +225,8 @@ class TestInferenceMixinSingleOutputSampling(TestCase):
 
     def test_objective_functions(self):
         # Test that log-likelihood, log-prior and log-posterior work
+        for prior in self.inference_mixin.priors_in_pints_order:
+            print('prior', prior.log_likelihood_parameter.name)
 
         # Test log-likelihood
         log_likelihood = self.inference_mixin._pints_log_likelihood

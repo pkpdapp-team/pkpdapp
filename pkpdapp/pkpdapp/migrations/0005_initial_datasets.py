@@ -20,6 +20,7 @@ datafile_urls = [
     'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/datasets/lxf_single_erlotinib_dose.csv',  # noqa: E501
     'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/datasets/demo_pk_data_upload.csv',  # noqa: E501
     'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/datasets/TCB4dataset.csv',  # noqa: E501
+    'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/usecase0/usecase0.csv',  # noqa: E501
 ]
 
 datafile_names = [
@@ -30,6 +31,7 @@ datafile_names = [
     'lxf_single_erlotinib_dose',
     'demo_pk_data',
     'TCB4dataset',
+    'usecase0',
 ]
 
 protocol_units = [
@@ -61,6 +63,11 @@ protocol_units = [
         'time': None,
         'amount': myokit.Unit.parse_simple('ng'),
     },
+    {
+        'time': myokit.Unit.parse_simple('h'),
+        'amount': myokit.Unit.parse_simple('ng'),
+    },
+
 ]
 
 datafile_descriptions = [
@@ -136,6 +143,10 @@ Demo PK data
     '''
 TCB4 dataset
 ''',  # noqa: W605
+    '''
+usecase0 dataset
+''',  # noqa: W605
+
 
 ]
 
@@ -274,6 +285,13 @@ biomarkers_for_datasets = [
             'time': 'h',
         },
     ],
+    [
+        {
+            'name': 'DemoDrug Concentration',
+            'unit': 'ng/mL',
+            'time': 'h',
+        },
+    ]
 ]
 
 
@@ -366,6 +384,19 @@ def load_datasets(apps, schema_editor):
                 COMPOUND_COLUMN = 0
                 SUBJECT_GROUP_COLUMN = None
                 ROUTE_COLUMN = None
+            elif datafile_name == 'usecase0':
+                TIME_COLUMN = 4
+                TIME_UNIT_COLUMN = 5
+                TINF_COLUMN = 9
+                VALUE_COLUMN = 3
+                UNIT_COLUMN = 11
+                BIOMARKER_TYPE_COLUMN = 13
+                SUBJECT_ID_COLUMN = 2
+                DOSE_GROUP_COLUMN = None
+                DOSE_COLUMN = 8
+                COMPOUND_COLUMN = 0
+                SUBJECT_GROUP_COLUMN = 18
+                ROUTE_COLUMN = 21
             else:
                 TIME_COLUMN = 1
                 TIME_UNIT_COLUMN = 2

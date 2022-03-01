@@ -38,7 +38,7 @@ import {
 
 import { selectAllDatasets } from "../datasets/datasetsSlice";
 
-import { updateInference, deleteInference } from "../inference/inferenceSlice";
+import { updateInference, deleteInference, selectAllInferences } from "../inference/inferenceSlice";
 import { runInference, stopInference } from "./inferenceSlice";
 import { FormTextField, FormSelectField } from "../forms/FormComponents";
 import { userHasReadOnlyAccess } from "../projects/projectsSlice";
@@ -545,6 +545,11 @@ export default function DraftInferenceDetail({ project, inference }) {
   }));
 
   
+  const inferences = useSelector(selectAllInferences);
+  const inference_options = inferences.map((inference) => ({
+    key: inference.name,
+    value: inference.id,
+  }));
 
   const classes = useStyles();
 
@@ -605,8 +610,10 @@ export default function DraftInferenceDetail({ project, inference }) {
 
   const initialization_options = [
     { key: "Random from prior", value: "R" },
-    { key: "Default value from model", value: "D" },
+    { key: "Default values of model", value: "D" },
+    { key: "From another inference", value: "F" },
   ]
+
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
@@ -670,10 +677,18 @@ export default function DraftInferenceDetail({ project, inference }) {
         control={control}
         defaultValue={inference.initialization_strategy}
         disabled={readOnly}
-        useGroups
         options={initialization_options}
         name="initialization_strategy"
         label="Initialization Strategy"
+      />
+
+      <FormSelectField
+        control={control}
+        defaultValue={inference.initialization_inference}
+        disabled={readOnly}
+        options={inference_options}
+        name="initialization_inference"
+        label="Initialize from"
       />
 
       <FormTextField

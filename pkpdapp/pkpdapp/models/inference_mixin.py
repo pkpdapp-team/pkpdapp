@@ -35,6 +35,66 @@ samplers_dict = {
     'Population MCMC': pints.PopulationMCMC
 }
 
+class ChainWriter:
+    """
+    utility class for buffering inference results writes to the database
+    """
+    def __init__(self, chains, priors, buffer_size):
+        self._iterations = []
+        self._fn_value_buffers = [
+            [] for _ in chains
+        ]
+        self._x0_buffers = [
+            [] for _ in chains
+        ]
+        self._chains = chains
+        self._priors = priors
+        self._buffer_size = buffer_size
+
+    def append(self, fn_values, x0s, iteration):
+        for buffer, x0 in zip(self._x0_buffers, x0s):
+            buffer.append(x0)
+        for buffer, fn_value in zip(self._fn_value_buffers, fn_values):
+            buffer.append(fn_value)
+        self._iterations.append(iteration)
+        if len(self._iterations) > self._buffer_size:
+            self.write()
+
+    def write(self):
+        function_results = []
+        inference_results = []
+        for x0_buffer, fn_values_buffer, chain in zip(
+                self._x0_buffers, self._fn_value_buffers, self._chains
+        ):
+            for iteration, x0, fn_value in zip(
+                    self._iterations, x0_buffer, fn_values_buffer
+            ):
+                function_results.append(InferenceFunctionResult(
+                    chain=chain,
+                    iteration=iteration,
+                    value=fn_value
+                ))
+                for i, prior in enumerate(self._priors):
+                    inference_results.append(InferenceResult(
+                        chain=chain,
+                        prior=prior,
+                        iteration=iteration,
+                        value=x0[i]
+                    ))
+        InferenceFunctionResult.objects.bulk_create(function_results)
+        InferenceResult.objects.bulk_create(inference_results)
+
+        self._iterations = []
+        self._fn_value_buffers = [
+            [] for _ in self._chains
+        ]
+        self._x0_buffers = [
+            [] for _ in self._chains
+        ]
+
+
+
+
 
 class InferenceMixin:
     def __init__(self, inference):
@@ -71,7 +131,6 @@ class InferenceMixin:
             for param in log_likelihood.parameters.all()
             if not param.is_fixed() and param.is_model_variable()
         ]
-        print('fitted parameters', fitted_parameter_names)
 
         # create pints forward model
         # TODO: only supports a single log_likelihood
@@ -163,6 +222,13 @@ class InferenceMixin:
         # set inference results objects for each fitted parameter to be
         # initial values
         self._inference_objects = []
+        if (
+            self.inference.initialization_strategy ==
+            Inference.InitializationStrategy.FROM_OTHER
+        ):
+            other_chains = self.inference.initialization_inference.chains.all()
+            other_last_iteration = \
+                self.inference.initialization_inference.number_of_iterations
         for i, chain in enumerate(self.inference.chains.all()):
             x0 = []
             if self.inference.number_of_iterations > 0:
@@ -183,16 +249,38 @@ class InferenceMixin:
                     self.inference.initialization_strategy ==
                     Inference.InitializationStrategy.DEFAULT_VALUE
                 ):
-                    for i, prior in enumerate(self.priors_in_pints_order):
+                    for xi, prior in enumerate(self.priors_in_pints_order):
                         if prior.variable is not None:
-                            x0[i] = prior.variable.get_default_value()
+                            x0[xi] = prior.variable.get_default_value()
+                elif (
+                    self.inference.initialization_strategy ==
+                    Inference.InitializationStrategy.FROM_OTHER
+                ):
+                    other_chain_index = min(i, len(other_chains) - 1)
+                    other_chain = other_chains[other_chain_index]
+                    last_values = InferenceResult.objects.filter(
+                        chain=other_chain,
+                        iteration=other_last_iteration
 
-                sim = self._pints_forward_model.simulate(x0, self._times[0])
+                    )
+                    for xi, this_prior in enumerate(self.priors_in_pints_order):
+                        try:
+                            last_result = last_values.get(
+                                prior__log_likelihood_parameter__name=(
+                                    this_prior.log_likelihood_parameter.name
+                                )
+                            )
+                            x0[xi] = last_result.value
+                        except InferenceResult.DoesNotExist:
+                            pass
 
-                plt.plot(self._times[0], sim, label='sim')
-                plt.plot(self._times[0], self._values[0], label='data')
-                plt.legend()
-                plt.savefig('test.pdf')
+
+                #sim = self._pints_forward_model.simulate(x0, self._times[0])
+
+                #plt.plot(self._times[0], sim, label='sim')
+                #plt.plot(self._times[0], self._values[0], label='data')
+                #plt.legend()
+                #plt.savefig('test.pdf')
 
                 # write x0 to empty chain
                 self.inference.number_of_function_evals += 1
@@ -237,6 +325,7 @@ class InferenceMixin:
             for param in log_likelihood.parameters.all()
             if param.is_model_variable() and param.is_fixed()
         }
+        print('passing fixed_parameters_dict', fixed_parameters_dict)
 
         return MyokitForwardModel(myokit_simulator, myokit_model,
                                   output_names,
@@ -379,30 +468,26 @@ class InferenceMixin:
                 iteration=iteration,
                 value=values[i])
 
-    def step_inference(self):
+    def step_inference(self, writer):
         # runs one set of ask / tell
+        fn_values = []
+        x0s = []
         for idx, obj in enumerate(self._inference_objects):
             x = obj.ask()
             if self._inference_type == "SA":  # sampling
                 score = self._pints_log_posterior(x)
                 self.inference.number_of_function_evals += 1
                 x, score, _ = obj.tell(score)
-                if idx == 0:
-                    print('chain {}, x = {}, score = {}'.format(idx, x, score))
             else:
                 scores = [self._pints_log_posterior(xi) for xi in x]
                 self.inference.number_of_function_evals += len(x)
                 obj.tell(scores)
                 x = obj.xbest()
                 score = obj.fbest()
-                if idx == 0:
-                    print('chain {}, x = {}, score = {}'.format(idx, x, score, scores))
-            # TODO move these writes to say, every 100 samples to reduce
-            # database traffic
-            self.write_inference_results(
-                self._pints_composed_transform.to_model(x),
-                score, self.inference.number_of_iterations, idx
-            )
+
+            x0s.append(self._pints_composed_transform.to_model(x))
+            fn_values.append(score)
+        writer.append(fn_values, x0s, self.inference.number_of_iterations)
 
     def run_inference(self):
         # runs ask / tell
@@ -414,23 +499,33 @@ class InferenceMixin:
             self.inference.algorithm.category == 'SP' and
             self._inference_objects[0].needs_initial_phase()
         ):
-            initial_phase_iterations = 200
+            dimensions = len(self.priors_in_pints_order)
+            initial_phase_iterations = 500 * dimensions
             if n_iterations < initial_phase_iterations:
                 for sampler in self._inference_objects:
                     sampler.set_initial_phase(True)
 
+        write_every_n_iteration = 100
+        writer = ChainWriter(
+            self.inference.chains.all(),
+            self.priors_in_pints_order,
+            write_every_n_iteration
+        )
         for i in range(n_iterations, max_iterations):
             if i == initial_phase_iterations:
                 for sampler in self._inference_objects:
                     sampler.set_initial_phase(False)
 
             self.inference.number_of_iterations += 1
-            self.step_inference()
+            self.step_inference(writer)
             time_now = time.time()
             self.inference.time_elapsed = time_now - time_start
-            self.inference.save()
-            # free up connection
-            connection.close()
+
+            if i % write_every_n_iteration == 0:
+                self.inference.save()
+
+        # write out the remaining iterations
+        writer.write()
 
     def fixed_variables(self):
         return self._fixed_variables
@@ -472,12 +567,12 @@ class CombinedLogLikelihood(pints.LogPDF):
         # log-likelihood
         log_like = 0
         for noise_slice, ll in zip(self._noise_parameter_slices, self._log_likelihoods):
-            log_like += ll(
-                np.concatenate((
-                    x[self._myokit_parameter_slice],
-                    x[noise_slice]
-                ))
-            )
+            params = np.concatenate((
+                x[self._myokit_parameter_slice],
+                x[noise_slice]
+            ))
+            print('log_likelihood with param vec', params)
+            log_like += ll(params)
         return log_like
 
     def n_parameters(self):

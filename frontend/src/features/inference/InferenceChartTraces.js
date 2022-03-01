@@ -33,12 +33,12 @@ function InferenceChartDistribution({ prior }) {
     datasets: prior.chains.map((chain, index) => {
       const binStep = 2 * iqr(chain) * Math.pow(chain.length, -0.333);
       const binStart = Math.min(...chain)
-      const binStop = Math.max(...chain) + Number.EPSILON
+      const binStop = Math.max(...chain) + 10 * Number.EPSILON
       let nBins = Math.floor((binStop - binStart) / binStep) + 1
       if (nBins > 1000) {
         nBins = 1000
       }
-      if (nBins === 0) {
+      if (nBins < 1) {
         nBins = 1 
       }
       let bins = Array.from({length: nBins }, _ => 0);
@@ -84,6 +84,10 @@ function InferenceChartDistribution({ prior }) {
       },
     },
     plugins: {
+      decimation: {
+        enabled: true,
+        algorithm: 'lttb',
+      },
       legend: {
         display: false,
         labels: {
@@ -151,6 +155,10 @@ function InferenceChartTrace({ prior }) {
       },
     },
     plugins: {
+      decimation: {
+        enabled: true,
+        algorithm: 'lttb',
+      },
       legend: {
         labels: {
           boxHeight: 1
@@ -193,7 +201,6 @@ export default function InferenceChartTraces({ inference, priorsWithChainValues 
           <InferenceChartTrace prior={prior} />
           </Grid>
           <Grid item xs={12} md={4}>
-          <InferenceChartDistribution prior={prior} />
           </Grid>
         </Grid>
       ))}

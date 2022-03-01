@@ -140,8 +140,6 @@ class LogLikelihood(models.Model):
     def create_stored_log_likelihood(self, inference, new_models):
         old_parameters = self.parameters.all()
         for parameter in old_parameters:
-            print('checking {} {}'.format(
-                parameter.name, parameter.value))
             if (
                 parameter.is_fixed() and
                 parameter.value is None
@@ -174,7 +172,6 @@ class LogLikelihood(models.Model):
         # now we copy over the parameter values
         # and the priors
         for parameter in old_parameters:
-            print('copying {}'.format(parameter.name))
             new_parameter = stored_log_likelihood.parameters.get(
                 name=parameter.name
             )
@@ -185,5 +182,6 @@ class LogLikelihood(models.Model):
                 )
             new_parameter.value = parameter.value
             new_parameter.prior = new_prior
+            new_parameter.save()
 
         return stored_log_likelihood
