@@ -4,6 +4,7 @@ import Tab from '@material-ui/core/Tab';
 import Typography from '@material-ui/core/Typography';
 import Tabs from '@material-ui/core/Tabs';
 import Box from '@material-ui/core/Box';
+import Button from '@material-ui/core/Button';
 import { useSelector, useDispatch } from "react-redux";
 import InferenceChartOptimisationResults from './InferenceChartOptimisationResults'
 import InferenceChartSamplingResults from './InferenceChartSamplingResults'
@@ -50,16 +51,6 @@ export default function InferenceChart({inference}) {
   const [value, setValue] = useState(0);
   const dispatch = useDispatch();
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      dispatch(fetchChainsByInferenceId(inference.id));
-    }, 10000);
-    return () => {
-      clearInterval(interval);
-    };
-  }, [dispatch, inference.id]);
-
-
   const chains = useSelector((state) =>
     selectChainsByInferenceId(state, inference.id)
   );
@@ -105,9 +96,19 @@ export default function InferenceChart({inference}) {
     setValue(newValue);
   };
 
+  const handleRefresh = () => {
+    dispatch(fetchChainsByInferenceId(inference.id));
+  }
+
   return (
   <Box sx={{ width: '100%' }}>
   <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+  <Button
+    variant="contained"
+    onClick={handleRefresh}
+  >
+    Refresh
+  </Button>
   <Tabs value={value} onChange={handleChange}>
     { tabs.map(tab => (
       <Tab key={tab.label} label={tab.label} />

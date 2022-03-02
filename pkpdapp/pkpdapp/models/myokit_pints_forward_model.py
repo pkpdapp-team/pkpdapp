@@ -26,7 +26,7 @@ class MyokitForwardModel(pints.ForwardModel):
 
         model = myokit_model
         self._sim = myokit_simulator
-        self._sim.set_tolerance(abs_tol=1e-9, rel_tol=1e-6)
+        self._sim.set_tolerance(abs_tol=1e-11, rel_tol=1e-9)
 
         # get all model states that will be used for inference
         self._n_states = model.count_states()

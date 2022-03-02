@@ -291,11 +291,18 @@ class InferenceMixin:
                 self.write_inference_results(x0, fn_val,
                                              self.inference.number_of_iterations, i)
 
+            # apply transformations to initial point and create default sigma0
+            sigma0 = x0**2
+            sigma0[sigma0 == 0] = 1
+            # Use to create diagonal matrix
+            sigma0 = np.diag(0.01 * sigma0)
+            sigma0 = self._pints_composed_transform.convert_covariance_matrix(
+                sigma0, x0
+            )
+            x0 = self._pints_composed_transform.to_search(x0)
             if self._pints_boundaries is None:
                 self._inference_objects.append(
-                    self._inference_method(
-                        self._pints_composed_transform.to_search(x0),
-                    )
+                    self._inference_method(x0, sigma0)
                 )
             else:
                 print('x0', x0)
@@ -303,8 +310,7 @@ class InferenceMixin:
                 print('boundaries', self._pints_boundaries)
                 self._inference_objects.append(
                     self._inference_method(
-                        self._pints_composed_transform.to_search(x0),
-                        boundaries=self._pints_boundaries
+                        x0, boundaries=self._pints_boundaries
                     )
                 )
 
@@ -375,10 +381,9 @@ class InferenceMixin:
                 )
 
         # combine them
-        return pints_log_likelihoods[0]
-        #return CombinedLogLikelihood(
-        #    *pints_log_likelihoods
-        #)
+        return CombinedLogLikelihood(
+            *pints_log_likelihoods
+        )
 
     @staticmethod
     def get_inference_type_and_method(inference):
@@ -477,7 +482,7 @@ class InferenceMixin:
             if self._inference_type == "SA":  # sampling
                 score = self._pints_log_posterior(x)
                 self.inference.number_of_function_evals += 1
-                x, score, _ = obj.tell(score)
+                x, score, accepted = obj.tell(score)
             else:
                 scores = [self._pints_log_posterior(xi) for xi in x]
                 self.inference.number_of_function_evals += len(x)
@@ -495,13 +500,16 @@ class InferenceMixin:
         max_iterations = self.inference.max_number_of_iterations
         n_iterations = self.inference.number_of_iterations
         initial_phase_iterations = -1
+        print('running inference')
         if (
-            self.inference.algorithm.category == 'SP' and
+            self.inference.algorithm.category == 'SA' and
             self._inference_objects[0].needs_initial_phase()
         ):
+            print('need to consider an initial phase')
             dimensions = len(self.priors_in_pints_order)
             initial_phase_iterations = 500 * dimensions
             if n_iterations < initial_phase_iterations:
+                print('Turning on initial phase')
                 for sampler in self._inference_objects:
                     sampler.set_initial_phase(True)
 
@@ -513,6 +521,7 @@ class InferenceMixin:
         )
         for i in range(n_iterations, max_iterations):
             if i == initial_phase_iterations:
+                print('Turning off initial phase')
                 for sampler in self._inference_objects:
                     sampler.set_initial_phase(False)
 
@@ -526,6 +535,7 @@ class InferenceMixin:
 
         # write out the remaining iterations
         writer.write()
+        self.inference.save()
 
     def fixed_variables(self):
         return self._fixed_variables
@@ -571,7 +581,6 @@ class CombinedLogLikelihood(pints.LogPDF):
                 x[self._myokit_parameter_slice],
                 x[noise_slice]
             ))
-            print('log_likelihood with param vec', params)
             log_like += ll(params)
         return log_like
 
