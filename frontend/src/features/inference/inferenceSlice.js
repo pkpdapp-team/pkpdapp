@@ -116,8 +116,13 @@ export const inferencesSlice = createSlice({
   initialState,
   reducers: {
     toggleInference(state, action) {
-      let inference = state.entities[action.payload.id];
-      inference.chosen = !inference.chosen;
+      for (let inference of Object.values(state.entities)) {
+        if (inference.id === action.payload.id) {
+          inference.chosen = true
+        } else {
+          inference.chosen = false
+        }
+      }
     },
     setInferenceError(state, action) {
       let inference = state.entities[action.payload.id];

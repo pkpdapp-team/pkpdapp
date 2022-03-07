@@ -21,8 +21,8 @@ import MenuItem from "@material-ui/core/MenuItem";
 import AddIcon from "@material-ui/icons/Add";
 import DeleteIcon from "@material-ui/icons/Delete";
 
-import { selectWritablePkModels} from "../pkModels/pkModelsSlice";
-import { selectWritablePdModels} from "../pdModels/pdModelsSlice";
+import { selectWritablePkModels, selectReadOnlyPkModels } from "../pkModels/pkModelsSlice";
+import { selectWritablePdModels, selectReadOnlyPdModels } from "../pdModels/pdModelsSlice";
 import { selectAllAlgorithms } from "../inference/algorithmsSlice";
 
 import {
@@ -160,6 +160,7 @@ function PriorSubform({
       )}
 
       <Tooltip title={`delete prior`} placement="right">
+        <span>
         <IconButton
           variant="rounded"
           disabled={disabled}
@@ -167,6 +168,7 @@ function PriorSubform({
         >
           <DeleteIcon />
         </IconButton>
+        </span>
       </Tooltip>
     </ListItem>
   );
@@ -191,7 +193,13 @@ function LogLikelihoodSubform({
   const classes = useStyles();
   const watchForm = watch(`${baseName}.form`);
   const watchVariable = watch(`${baseName}.variable`);
-  const watchParameters = watch(`${baseName}.parameters`);
+  const {
+    fields: parameters,
+    replace: parametersReplace,
+  } = useFieldArray({
+    control,
+    name: `${baseName}.parameters`,
+  });
 
   const variable = useSelector((state) => {
     if (watchVariable) {
@@ -218,8 +226,12 @@ function LogLikelihoodSubform({
   
   const [modelId, setModelId] = useState(defaultModelID);
   const [changedModel, setChangedModel] = useState(false);
-  const pd_models = useSelector(selectWritablePdModels);
-  const dosed_pk_models = useSelector(selectWritablePkModels);
+  const pd_models = useSelector(state => 
+    disabled ? selectReadOnlyPdModels(state) : selectWritablePdModels(state)
+  );
+  const dosed_pk_models = useSelector(state => 
+    disabled ? selectReadOnlyPkModels(state) : selectWritablePkModels(state)
+  );
   const model_options = pd_models.map((model) => ({
     key: model.name,
     value: `${model.id}:PD`,
@@ -253,8 +265,10 @@ function LogLikelihoodSubform({
     }
   });
   const variables = useMemo(
-    () => variablesAll.filter(variable => variable.name !== "time"),
-    [variablesAll]
+    () => {
+      return variablesAll.filter(variable => variable.name !== "time")
+    },
+    [JSON.stringify(variablesAll)]
   );
 
   useEffect(() => {
@@ -276,7 +290,7 @@ function LogLikelihoodSubform({
       variable: variable.id,
       prior: null,
     }))
-    setValue(`${baseName}.parameters`, noise_params.concat(model_params))
+    parametersReplace(noise_params.concat(model_params))
     }
   , [JSON.stringify(variables)]);
 
@@ -344,8 +358,8 @@ function LogLikelihoodSubform({
   };
   const handleVariableChange = (event) => {
     const newVariable = event.target.value;
-    if (variable) {
-      setDefaults(watchForm, variable);
+    if (newVariable) {
+      setDefaults(watchForm, newVariable);
     }
   };
 
@@ -467,7 +481,7 @@ function LogLikelihoodSubform({
       </Grid>
       <Grid item xs={12}>
       <Typography>Log-likelihood Parameters</Typography>
-        {watchParameters.map((param, index) => {
+        {parameters.map((param, index) => {
           
           const paramBaseName = `${baseName}.parameters[${index}]`;
           const watchParam = watch(`${paramBaseName}`)
@@ -497,6 +511,7 @@ function LogLikelihoodSubform({
                 type="number"
               />
               <Tooltip title={`create new prior`} placement="right">
+                <span>
                 <IconButton
                   variant="rounded"
                   disabled={disabled}
@@ -506,6 +521,7 @@ function LogLikelihoodSubform({
                 >
                   <AddIcon />
                 </IconButton>
+                </span>
               </Tooltip>
               </ListItem>
             )
@@ -515,6 +531,7 @@ function LogLikelihoodSubform({
       </Grid>
       <Grid item xs={1}>
       <Tooltip title={`delete log-likelihood`} placement="right">
+        <span>
         <IconButton
           variant="rounded"
           disabled={disabled}
@@ -522,6 +539,7 @@ function LogLikelihoodSubform({
         >
           <DeleteIcon />
         </IconButton>
+        </span>
       </Tooltip>
       </Grid>
       </Grid>
@@ -535,7 +553,10 @@ export default function DraftInferenceDetail({ project, inference }) {
   const dispatch = useDispatch();
 
   const { control, handleSubmit, watch, setValue } = useForm({
-    defaultValues: inference,
+    defaultValues: {
+      ...inference,
+      initialization_inference: inference.initialization_inference || ""
+    },
   });
 
   const datasets = useSelector(selectAllDatasets);
@@ -549,7 +570,9 @@ export default function DraftInferenceDetail({ project, inference }) {
   const inference_options = inferences.map((inference) => ({
     key: inference.name,
     value: inference.id,
-  }));
+  })).concat([
+    { key: "None", value: "" } 
+  ]);
 
   const classes = useStyles();
 
@@ -562,7 +585,6 @@ export default function DraftInferenceDetail({ project, inference }) {
     control,
     name: "log_likelihoods",
   });
-  const watchLogLikelihoods = watch("log_likelihoods");
 
 
   const handleDelete = () => {
@@ -602,11 +624,6 @@ export default function DraftInferenceDetail({ project, inference }) {
         group: algorithm.category === "SA" ? "Sampling" : "Optimisation",
       }))
     : [{ key: "Loading...", value: null, group: null }];
-
-  const model_type_options = [
-    { key: "Pharmacodynamic", value: "PD" },
-    { key: "Pharmacokinetic", value: "PK" },
-  ];
 
   const initialization_options = [
     { key: "Random from prior", value: "R" },
@@ -652,6 +669,7 @@ export default function DraftInferenceDetail({ project, inference }) {
         ))}
         <ListItem key={-1} role={undefined} dense>
           <Tooltip title={`create new objective function`} placement="right">
+            <span>
             <IconButton
               variant="rounded"
               disabled={readOnly}
@@ -659,13 +677,13 @@ export default function DraftInferenceDetail({ project, inference }) {
             >
               <AddIcon />
             </IconButton>
+            </span>
           </Tooltip>
         </ListItem>
       </List>
 
       <FormSelectField
         control={control}
-        defaultValue={inference.algorithm}
         disabled={readOnly}
         useGroups
         options={algorithm_options}
@@ -675,8 +693,6 @@ export default function DraftInferenceDetail({ project, inference }) {
 
       <FormSelectField
         control={control}
-        defaultValue={inference.initialization_strategy}
-        disabled={readOnly}
         options={initialization_options}
         name="initialization_strategy"
         label="Initialization Strategy"
@@ -684,8 +700,6 @@ export default function DraftInferenceDetail({ project, inference }) {
 
       <FormSelectField
         control={control}
-        defaultValue={inference.initialization_inference}
-        disabled={readOnly}
         options={inference_options}
         name="initialization_inference"
         label="Initialize from"

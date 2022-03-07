@@ -23,7 +23,9 @@ export const fetchPdModels = createAsyncThunk(
       `/api/pharmacodynamic/?project_id=${project.id}`
     );
     for (var i = 0; i < response.length; i++) {
-      dispatch(fetchPdModelSimulateById(response[i].id));
+      if (!response[i].read_only) {
+        dispatch(fetchPdModelSimulateById(response[i].id));
+      }
     }
     return response;
   }
@@ -182,3 +184,6 @@ export const selectChosenPdModels = (state) =>
 
 export const selectWritablePdModels = (state) =>
   selectAllPdModels(state).filter((pdModel) => !pdModel.read_only);
+
+export const selectReadOnlyPdModels = (state) =>
+  selectAllPdModels(state).filter((pdModel) => pdModel.read_only);

@@ -65,7 +65,8 @@ export default function InferenceChart({inference}) {
         return {
           ...prior, 
           name: param.name,
-          chains: chains.map(chain => chain.data.values.filter((x, i) => chain.data.priors[i] === prior.id)),
+          chains: chains.map(chain => chain.data.chain[prior]),
+          kdes: chains.map(chain => chain.data.kde[prior]),
         }
       })
 

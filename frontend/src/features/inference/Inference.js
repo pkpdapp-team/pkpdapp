@@ -4,7 +4,7 @@ import PropTypes from "prop-types";
 import Grid from "@material-ui/core/Grid";
 import InferenceDetail from "./InferenceDetail";
 import InferenceChart from "./InferenceChart";
-import Accordion from "@material-ui/core/Accordion";
+import Paper from "@material-ui/core/Paper";
 import AccordionSummary from "@material-ui/core/AccordionSummary";
 import AccordionDetails from "@material-ui/core/AccordionDetails";
 import CircularProgress from "@material-ui/core/CircularProgress";
@@ -27,10 +27,10 @@ const useStyles = makeStyles((theme) => ({
   linearProgress: {
     marginLeft: "auto",
     marginRight: theme.spacing(2),
-    width: "50%",
+    width: "70%",
     alignItems: "center",
   },
-  chartPaper: {
+  paper: {
     padding: theme.spacing(2),
   },
 }));
@@ -70,7 +70,7 @@ export default function Inference() {
     return () => {
       clearInterval(interval);
     };
-  }, [dispatch, project]);
+  }, [project]);
 
   if (!project) {
     return "Select a project";
@@ -92,21 +92,17 @@ export default function Inference() {
           (100 * inference.number_of_iterations) /
           inference.max_number_of_iterations;
         return (
-          <Accordion key={inference.id}>
-            <AccordionSummary expandIcon={expandIcon}>
-              <Typography className={classes.heading}>
+          <Paper key={inference.id} className={classes.paper}>
+              <Typography variant="h6">
                 {title} - {inference.name}
               </Typography>
-              {inference.read_only && (
-                <div className={classes.linearProgress}>
-                  <LinearProgressWithLabel value={progress} />
-                </div>
-              )}
-            </AccordionSummary>
-            <AccordionDetails>
+              
               {!loading && (
                 <Grid container spacing={3}>
                   <Grid item xs={12} md={6}>
+                    <div className={classes.linearProgress}>
+                      <LinearProgressWithLabel value={progress} />
+                    </div>
                     <InferenceChart inference={inference} />
                   </Grid>
                   <Grid item xs={12} md={6}>
@@ -114,8 +110,7 @@ export default function Inference() {
                   </Grid>
                 </Grid>
               )}
-            </AccordionDetails>
-          </Accordion>
+          </Paper>
         );
       })}
     </div>

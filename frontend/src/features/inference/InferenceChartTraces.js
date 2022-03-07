@@ -30,23 +30,7 @@ function InferenceChartDistribution({ prior }) {
   const classes = useStyles();
 
   const data = {
-    datasets: prior.chains.map((chain, index) => {
-      const binStep = 2 * iqr(chain) * Math.pow(chain.length, -0.333);
-      const binStart = Math.min(...chain)
-      const binStop = Math.max(...chain) + 10 * Number.EPSILON
-      let nBins = Math.floor((binStop - binStart) / binStep) + 1
-      if (nBins > 1000) {
-        nBins = 1000
-      }
-      if (nBins < 1) {
-        nBins = 1 
-      }
-      let bins = Array.from({length: nBins }, _ => 0);
-      for (const y of chain) {
-        const index = Math.floor((y - binStart) / binStep)
-        bins[index] += 1;
-      }
-
+    datasets: prior.kdes.map((kde, index) => {
       const color = getColor(prior.id);
       const backgroundColor = getColorBackground(prior.id);
       return {
@@ -58,7 +42,7 @@ function InferenceChartDistribution({ prior }) {
         pointRadius: 0,
         fill: true,
         borderWidth: 2.5,
-        data: bins.map((y, i) => ({ x: binStart + i * binStep, y: y })),
+        data: kde.densities.map((y, i) => ({ x: kde.values[i], y: y })),
       };
     })
   }
@@ -111,8 +95,6 @@ function InferenceChartTrace({ prior }) {
   const data = {
     datasets: prior.chains.map((chain, index) => {
       const color = getColor(prior.id);
-      const downsample = chain.length > 1000
-      const everyNsample = Math.floor(chain.length / 1000.0)
       return {
         type: "line",
         label: `Chain ${index}`,
@@ -124,11 +106,7 @@ function InferenceChartTrace({ prior }) {
         borderWidth: 1.5,
         lineTension: 0,
         interpolate: true,
-        data: downsample ? 
-          chain.filter((y, i) => 
-            i % everyNsample === 0
-          ).map((y, i) => ({ x: everyNsample * i, y: y }))
-        : chain.map((y, i) => ({ x: i, y: y })),
+        data: chain.map((y, i) => ({ x: i, y: y })),
       };
     })
   }

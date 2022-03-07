@@ -7,6 +7,8 @@ from rest_framework import serializers
 from pkpdapp.models import (
     Inference, InferenceChain, Algorithm
 )
+import scipy.stats
+import numpy as np
 from pkpdapp.api.serializers import (
     PriorSerializer,
     LogLikelihoodSerializer,
@@ -86,5 +88,44 @@ class InferenceChainSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def get_data(self, inference_chain):
-        result = inference_chain.as_pandas().to_dict(orient='list')
-        return result
+        chain = inference_chain.as_pandas()
+        by_priors = chain.groupby('priors')
+
+        chain = {}
+        kde = {}
+        print(inference_chain.id)
+
+        for prior, frame in by_priors:
+            prior = int(frame['priors'].iloc[0])
+            values = frame['values']
+
+            # get kde density of chains
+            #min_value = values.min()
+            #max_value = values.max()
+            #kde_values = np.linspace(min_value, max_value, 100)
+            #try:
+            #    kde_densities = scipy.stats.gaussian_kde(values)(kde_values)
+            #except:
+            #    kde_densities = np.zeros_like(kde_values)
+            if values.count() > 0:
+                hist, bin_edges = np.histogram(values, bins='sturges')
+                bins = 0.5 * (bin_edges[1:] + bin_edges[:-1])
+            else:
+                hist = np.array([0])
+                bins = np.array([0])
+            kde[prior] = {
+                'values': bins.tolist(),
+                'densities': hist.tolist(),
+            }
+
+            # only send a max of 500 chain values
+            sample_n = 500
+            if values.count() > sample_n:
+                values = values.sample(n=sample_n)
+
+            chain[prior] = values.tolist()
+
+        return {
+            'kde': kde,
+            'chain': chain,
+        }

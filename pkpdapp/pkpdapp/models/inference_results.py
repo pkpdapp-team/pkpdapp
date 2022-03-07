@@ -25,7 +25,11 @@ class InferenceChain(models.Model):
             self.inference_results.order_by('iteration').values_list(
                 'prior', 'value'
             )
-        priors, values = list(zip(*priors_values))
+        if priors_values:
+            priors, values = list(zip(*priors_values))
+        else:
+            priors = []
+            values = []
         df = pd.DataFrame.from_dict({
             'priors': priors,
             'values': values,
