@@ -5,6 +5,7 @@ import Typography from '@material-ui/core/Typography';
 import Tabs from '@material-ui/core/Tabs';
 import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
+import Alert from "@material-ui/lab/Alert";
 import { useSelector, useDispatch } from "react-redux";
 import InferenceChartOptimisationResults from './InferenceChartOptimisationResults'
 import InferenceChartSamplingResults from './InferenceChartSamplingResults'
@@ -65,14 +66,17 @@ export default function InferenceChart({inference}) {
         return {
           ...prior, 
           name: param.name,
-          chains: chains.map(chain => chain.data.chain[prior]),
-          kdes: chains.map(chain => chain.data.kde[prior]),
+          chains: chains.map(chain => chain.data.chain[prior.id]),
+          kdes: chains.map(chain => chain.data.kde[prior.id])
         }
       })
 
     )
     return new_sum
   } , [] )
+
+  console.log('chains', chains)
+  console.log('priorsWithChainValues', priorsWithChainValues)
 
   const algorithm = useSelector((state) =>
     selectAlgorithmById(state, inference.algorithm)
@@ -101,6 +105,8 @@ export default function InferenceChart({inference}) {
     dispatch(fetchChainsByInferenceId(inference.id));
   }
 
+  const noData = chains.length === 0
+
   return (
   <Box sx={{ width: '100%' }}>
   <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
@@ -110,6 +116,9 @@ export default function InferenceChart({inference}) {
   >
     Refresh
   </Button>
+  { noData &&
+      <Alert severity="warning">No data, refresh to get chain data</Alert>
+  }
   <Tabs value={value} onChange={handleChange}>
     { tabs.map(tab => (
       <Tab key={tab.label} label={tab.label} />

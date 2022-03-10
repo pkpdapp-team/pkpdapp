@@ -99,13 +99,15 @@ export default function Inference() {
               
               {!loading && (
                 <Grid container spacing={3}>
+                  { inference.read_only &&
                   <Grid item xs={12} md={6}>
                     <div className={classes.linearProgress}>
                       <LinearProgressWithLabel value={progress} />
                     </div>
                     <InferenceChart inference={inference} />
                   </Grid>
-                  <Grid item xs={12} md={6}>
+                  }
+                  <Grid item xs={12} md={inference.read_only ? 6 : 12}>
                     <InferenceDetail inference={inference} project={project} />
                   </Grid>
                 </Grid>

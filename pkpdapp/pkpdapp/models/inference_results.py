@@ -8,6 +8,7 @@ from django.db import models
 from pkpdapp.models import (
     Inference,
     Prior,
+    LogLikelihood,
 )
 import pandas as pd
 
@@ -64,7 +65,7 @@ class InferenceResult(models.Model):
 
 class InferenceFunctionResult(models.Model):
     """
-    Abstract class for function evaluations during inference.
+    model for logLikelihood evaluations during inference.
     """
     chain = models.ForeignKey(
         InferenceChain,
@@ -77,4 +78,28 @@ class InferenceFunctionResult(models.Model):
     )
     value = models.FloatField(
         help_text='estimated parameter value'
+    )
+
+class InferenceOutputResult(models.Model):
+    """
+    model for output values for a given logLikelihood.
+    """
+    chain = models.ForeignKey(
+        InferenceChain,
+        on_delete=models.CASCADE,
+        related_name='inference_output_results',
+        help_text='Chain related to the output result'
+    )
+    value = models.FloatField(
+        help_text=(
+            'if value_max is null, then this is the value of the output. '
+            'if value_max is not null, then this is the minimum value of output (for a range)'
+        )
+    )
+    value_max = models.FloatField(
+        blank=True, null=True,
+        help_text='maximum value of output (for a range)'
+    )
+    time = models.FloatField(
+        help_text='time of output value'
     )

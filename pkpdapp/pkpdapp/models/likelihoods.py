@@ -12,6 +12,7 @@ from pkpdapp.models import (
     DosedPharmacokineticModel,
     PkpdModel,
     StoredModel,
+    MyokitForwardModel,
 )
 
 
@@ -89,6 +90,37 @@ class LogLikelihood(models.Model):
         choices=Form.choices,
         default=Form.NORMAL,
     )
+
+    def create_pints_forward_model(self, fitted_parameter_names, outputs=None):
+        """
+        create pints forwards model for this log_likelihood.
+
+        Parameters
+        ----------
+        outputs: [Variable] (optional)
+            list of outputs that the forward model will produce
+            if None then the output of the log_likelihood will be used
+        fitted_parameter_names: [str]
+            list of parameters that are input to the pints forwards model
+        """
+
+        model = self.variable.get_model()
+        myokit_model = model.get_myokit_model()
+        myokit_simulator = model.get_myokit_simulator()
+
+        if outputs is None:
+            outputs = [self.variable]
+        output_names = [output.qname for output in outputs]
+
+        fixed_parameters_dict = {
+            param.variable.qname: param.value
+            for param in self.parameters.all()
+            if param.is_model_variable() and param.is_fixed()
+        }
+
+        return MyokitForwardModel(myokit_simulator, myokit_model,
+                                  output_names,
+                                  fixed_parameters_dict)
 
     def get_model(self):
         return self.variable.get_model()

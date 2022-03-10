@@ -695,6 +695,7 @@ export default function DraftInferenceDetail({ project, inference }) {
         control={control}
         options={initialization_options}
         name="initialization_strategy"
+        disabled={readOnly}
         label="Initialization Strategy"
       />
 
@@ -702,6 +703,7 @@ export default function DraftInferenceDetail({ project, inference }) {
         control={control}
         options={inference_options}
         name="initialization_inference"
+        disabled={readOnly}
         label="Initialize from"
       />
 
