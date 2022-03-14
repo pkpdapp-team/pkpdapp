@@ -18,7 +18,9 @@ from pkpdapp.models import (
     MyokitForwardModel, LogLikelihood,
     LogLikelihoodParameter, Inference,
     PriorNormal, PriorUniform, InferenceResult,
-    InferenceChain, InferenceFunctionResult)
+    InferenceChain, InferenceFunctionResult,
+    InferenceOutputResult,
+)
 
 optimisers_dict = {
     'CMAES': pints.CMAES,
@@ -50,9 +52,6 @@ class ChainWriter:
         ]
         self._x0_buffers = [
             [] for _ in chains
-        ]
-        self._tdigests = [
-            [TDigest() for _ in times] for _ in chains
         ]
         self._chains = chains
         self._priors = priors
@@ -102,96 +101,134 @@ class ChainWriter:
 
 class OutputWriter:
     """
-    utility class for writing output results writes to the database
+    utility class for generating & writing output results writes to the database
     """
 
-    def __init__(self, chains, evaluate_model,
+    def __init__(self, chains,
                  times, pints_forward_model,
+                 use_every_n_sample=1,
+                 buffer_size=100,
                  store_output_range=True):
         self._tdigests = [
             [TDigest() for _ in times] for _ in chains
         ]
+        self._iterations = []
+        self._x0_buffers = [
+            [] for _ in chains
+        ]
+
         self._chains = chains
-        self._pints_forward_model = pints
-        self._times = times,
+        self._pints_forward_model = pints_forward_model
+        self._len_x0 = pints_forward_model.n_parameters()
+        self._times = times
+        self._n_times = len(times)
+        self._use_every_n_sample = use_every_n_sample
         self._store_output_range = store_output_range
-        n = self._pints_forward_model.n_parameters()
         self._outputs = self.initialise_outputs()
+        self._buffer = 0
+        self._buffer_size = buffer_size
+        self._updated = False
 
     def initialise_outputs(self):
-        outputs = InferenceOutputResult.filter(
+        outputs = InferenceOutputResult.objects.filter(
             chain__in=self._chains
         )
-        if len(outputs) != len(self.times * self.chains):
-            InferenceOutputResult.filter(
+        if len(outputs) != len(self._times) * len(self._chains):
+            InferenceOutputResult.objects.filter(
                 chain__in=self._chains
             ).delete()
             outputs = []
             for chain in self._chains:
-                for time in self.times:
+                for i in range(self._n_times):
                     outputs.append(InferenceOutputResult(
-                        chain=chain
+                        chain=chain,
                         value=0,
-                        time=time
+                        time=self._times[i]
                     ))
             InferenceOutputResult.objects.bulk_create(outputs)
         return outputs
 
-    def append(self, x0s):
+    def append(self, x0s, iteration):
+        for buffer, x0 in zip(self._x0_buffers, x0s):
+            buffer.append(x0)
+        self._iterations.append(iteration)
+        if len(self._iterations) > self._buffer_size:
+            self.write()
+
+    def write(self):
         output_index = 0
-        for x0, tdigests, chain in zip(
-                x0s, self._tdigests, self._chains
+        for x0_buffer, tdigests, chain in zip(
+                self._x0_buffers, self._tdigests, self._chains
         ):
-            result = self._pints_forward_model.simulate(
-                x0, self._times
-            )
-            if store_output_range:
-                for i, value in enumerate(result):
-                    tdigests[i].update(value)
-                    maximum = tdigests[i].percentile(90)
-                    minimum = tdigests[i].percentile(10)
+            if self._store_output_range:
+                for iteration, x0 in zip(
+                        self._iterations, x0_buffer
+                ):
+                    if iteration % self._use_every_n_sample != 0:
+                        continue
+                    result = self._pints_forward_model.simulate(
+                        x0[:self._len_x0], self._times
+                    )
+                    for i in range(self._n_times):
+                        value = result[i]
+                        tdigests[i].update(value)
+
+                for i in range(self._n_times):
+                    maximum = tdigests[i].percentile(95)
+                    minimum = tdigests[i].percentile(5)
                     self._outputs[output_index].value = minimum
-                    self._outputs[output_index].value_max = max
+                    self._outputs[output_index].value_max = maximum
+                    output_index += 1
             else:
-                for i, value in enumerate(result):
+                result = self._pints_forward_model.simulate(
+                    x0_buffer[-1][:self._len_x0], self._times
+                )
+                for i in range(self._n_times):
+                    value = result[i]
+                    self._outputs[output_index].value = value
+                    output_index += 1
 
         with transaction.atomic():
             [output.save() for output in self._outputs]
 
+        self._iterations = []
+        self._x0_buffers = [
+            [] for _ in self._chains
+        ]
 
 
 class InferenceMixin:
     def __init__(self, inference):
 
         # get biomarkers
-        self._biomarker_types, self._outputs=(
+        self._biomarker_types, self._outputs = (
             self.get_biomarker_types_and_output_variables(inference)
         )
-        self._n_outputs=len(self._outputs)
+        self._n_outputs = len(self._outputs)
 
         # # select inference methods
-        self._inference_type, self._inference_method=(
+        self._inference_type, self._inference_method = (
             self.get_inference_type_and_method(inference)
         )
 
         # get data and time points as lists of lists
-        dfs=[output.as_pandas() for output in self._biomarker_types]
-        self._values=[df['values'].tolist() for df in dfs]
-        self._times=[df['times'].tolist() for df in dfs]
-        self._times_all=np.sort(list(set(np.concatenate(self._times))))
+        dfs = [output.as_pandas() for output in self._biomarker_types]
+        self._values = [df['values'].tolist() for df in dfs]
+        self._times = [df['times'].tolist() for df in dfs]
+        self._times_all = np.sort(list(set(np.concatenate(self._times))))
 
         # types needed later
-        self.inference=inference
+        self.inference = inference
 
         # get model parameters to be inferred
         # TODO: only one log_likelihood!
-        log_likelihood=inference.log_likelihoods.first()
-        log_likelihood_priors=[
+        log_likelihood = inference.log_likelihoods.first()
+        log_likelihood_priors = [
             param.prior
             for param in log_likelihood.parameters.all()
             if not param.is_fixed()
         ]
-        fitted_parameter_names=[
+        fitted_parameter_names = [
             param.variable.qname
             for param in log_likelihood.parameters.all()
             if not param.is_fixed() and param.is_model_variable()
@@ -199,20 +236,20 @@ class InferenceMixin:
 
         # create pints forward model
         # TODO: only supports a single log_likelihood
-        self._pints_forward_model=log_likelihood.create_pints_forward_model(
+        self._pints_forward_model = log_likelihood.create_pints_forward_model(
             fitted_parameter_names, outputs=self._outputs
         )
 
-        self._collection=self.create_pints_problem_collection(
+        self._collection = self.create_pints_problem_collection(
             self._pints_forward_model, self._times, self._values, self._outputs
         )
 
         # We'll use the variable ordering based on the forwards model.
-        pints_var_names=self._pints_forward_model.variable_parameter_names()
+        pints_var_names = self._pints_forward_model.variable_parameter_names()
 
         # we'll need the priors in the same order as the theta vector,
         # so we can write back to the database
-        self.priors_in_pints_order=[
+        self.priors_in_pints_order = [
             [prior for prior in log_likelihood_priors
              if prior.is_match(name)][0]
             for name in pints_var_names
@@ -224,36 +261,36 @@ class InferenceMixin:
             if not prior.is_model_variable_prior()
         ]
 
-        self._pints_log_likelihood=self.create_pints_log_likelihood(
-                self._collection, inference
-            )
+        self._pints_log_likelihood = self.create_pints_log_likelihood(
+            self._collection, inference
+        )
 
         # get priors / boundaries, using variable ordering already established
         (
             self._pints_log_priors,
             self._pints_boundaries,
             self._pints_transforms
-        )=self.get_priors_boundaries_transforms(self.priors_in_pints_order)
+        ) = self.get_priors_boundaries_transforms(self.priors_in_pints_order)
 
-        self._pints_composed_log_prior=pints.ComposedLogPrior(
+        self._pints_composed_log_prior = pints.ComposedLogPrior(
             *self._pints_log_priors
         )
-        self._pints_composed_transform=pints.ComposedTransformation(
+        self._pints_composed_transform = pints.ComposedTransformation(
             *self._pints_transforms
         )
-        self._pints_log_posterior=pints.LogPosterior(
+        self._pints_log_posterior = pints.LogPosterior(
             self._pints_log_likelihood,
             self._pints_composed_log_prior
         )
 
         # transform function and boundaries
-        self._pints_log_posterior=(
+        self._pints_log_posterior = (
             self._pints_composed_transform.convert_log_pdf(
                 self._pints_log_posterior
             )
         )
         if self._pints_boundaries is not None:
-            self._pints_boundaries=(
+            self._pints_boundaries = (
                 self._pints_composed_transform.convert_boundaries(
                     self._pints_boundaries
                 )
@@ -262,14 +299,14 @@ class InferenceMixin:
         # if doing an optimisation use a probability based error to maximise
         # the posterior
         if inference.algorithm.category == 'OP':
-            self._pints_log_posterior=(
+            self._pints_log_posterior = (
                 pints.ProbabilityBasedError(
                     self._pints_log_posterior
                 )
             )
         # if doing a sampler, we can't use boundaries
         else:
-            self._pints_boundaries=None
+            self._pints_boundaries = None
 
         # create chains if not exist
         if self.inference.chains.count() == 0:
@@ -285,19 +322,19 @@ class InferenceMixin:
         # sample prior for initial values.
         # set inference results objects for each fitted parameter to be
         # initial values
-        self._inference_objects=[]
+        self._inference_objects = []
         if (
             self.inference.initialization_strategy ==
             Inference.InitializationStrategy.FROM_OTHER
         ):
-            other_chains=self.inference.initialization_inference.chains.all()
-            other_last_iteration=self.inference.initialization_inference.number_of_iterations
+            other_chains = self.inference.initialization_inference.chains.all()
+            other_last_iteration = self.inference.initialization_inference.number_of_iterations
         for i, chain in enumerate(self.inference.chains.all()):
-            x0=[]
+            x0 = []
             if self.inference.number_of_iterations > 0:
                 print('restarting chains!')
                 for prior in self.priors_in_pints_order:
-                    this_chain=InferenceResult.objects.filter(
+                    this_chain = InferenceResult.objects.filter(
                         prior=prior,
                         chain=chain
                     )
@@ -307,36 +344,35 @@ class InferenceMixin:
                         ).value
                     )
             else:
-                x0=self._pints_composed_log_prior.sample().flatten()
+                x0 = self._pints_composed_log_prior.sample().flatten()
                 if (
                     self.inference.initialization_strategy ==
                     Inference.InitializationStrategy.DEFAULT_VALUE
                 ):
                     for xi, prior in enumerate(self.priors_in_pints_order):
                         if prior.variable is not None:
-                            x0[xi]=prior.variable.get_default_value()
+                            x0[xi] = prior.variable.get_default_value()
                 elif (
                     self.inference.initialization_strategy ==
                     Inference.InitializationStrategy.FROM_OTHER
                 ):
-                    other_chain_index=min(i, len(other_chains) - 1)
-                    other_chain=other_chains[other_chain_index]
-                    last_values=InferenceResult.objects.filter(
+                    other_chain_index = min(i, len(other_chains) - 1)
+                    other_chain = other_chains[other_chain_index]
+                    last_values = InferenceResult.objects.filter(
                         chain=other_chain,
                         iteration=other_last_iteration
 
                     )
                     for xi, this_prior in enumerate(self.priors_in_pints_order):
                         try:
-                            last_result=last_values.get(
+                            last_result = last_values.get(
                                 prior__log_likelihood_parameter__name=(
                                     this_prior.log_likelihood_parameter.name
                                 )
                             )
-                            x0[xi]=last_result.value
+                            x0[xi] = last_result.value
                         except InferenceResult.DoesNotExist:
                             pass
-
 
                 # sim = self._pints_forward_model.simulate(x0, self._times[0])
 
@@ -347,7 +383,7 @@ class InferenceMixin:
 
                 # write x0 to empty chain
                 self.inference.number_of_function_evals += 1
-                fn_val=self._pints_log_posterior(
+                fn_val = self._pints_log_posterior(
                     self._pints_composed_transform.to_search(x0)
                 )
                 print('starting function value', fn_val)
@@ -355,14 +391,14 @@ class InferenceMixin:
                                              self.inference.number_of_iterations, i)
 
             # apply transformations to initial point and create default sigma0
-            sigma0=x0**2
-            sigma0[sigma0 == 0]=1
+            sigma0 = x0**2
+            sigma0[sigma0 == 0] = 1
             # Use to create diagonal matrix
-            sigma0=np.diag(0.01 * sigma0)
-            sigma0=self._pints_composed_transform.convert_covariance_matrix(
+            sigma0 = np.diag(0.01 * sigma0)
+            sigma0 = self._pints_composed_transform.convert_covariance_matrix(
                 sigma0, x0
             )
-            x0=self._pints_composed_transform.to_search(x0)
+            x0 = self._pints_composed_transform.to_search(x0)
             if self._pints_boundaries is None:
                 self._inference_objects.append(
                     self._inference_method(x0, sigma0)
@@ -377,38 +413,35 @@ class InferenceMixin:
                     )
                 )
 
-    @ staticmethod
-
-
-    @ staticmethod
+    @staticmethod
     def create_pints_problem_collection(model, times, values, outputs):
         # create a problem collection to handle the case when the outputs or
         # times are wragged
-        times_values=[]
+        times_values = []
         for i in range(len(outputs)):
             times_values.append(times[i])
             times_values.append(values[i])
         return pints.ProblemCollection(model, *times_values)
 
-    @ staticmethod
+    @staticmethod
     def create_pints_log_likelihood(
             collection, inference,
     ):
-        log_likelihoods=inference.log_likelihoods.all()
+        log_likelihoods = inference.log_likelihoods.all()
 
-        n_outputs=len(log_likelihoods)
+        n_outputs = len(log_likelihoods)
 
-        problems=[collection.subproblem(i) for i in range(n_outputs)]
+        problems = [collection.subproblem(i) for i in range(n_outputs)]
 
         # instantiate PINTS log-likelihoods
-        pints_log_likelihoods=[]
+        pints_log_likelihoods = []
         for problem, log_likelihood in zip(problems, log_likelihoods):
             if log_likelihood.form == LogLikelihood.Form.NORMAL:
-                noise_param=log_likelihood.parameters.get(
+                noise_param = log_likelihood.parameters.get(
                     variable__isnull=True
                 )
                 if noise_param.is_fixed():
-                    value=noise_param.value
+                    value = noise_param.value
                     pints_log_likelihoods.append(
                         pints.GaussianKnownSigmaLogLikelihood(
                             problem, value
@@ -430,20 +463,20 @@ class InferenceMixin:
 
     @ staticmethod
     def get_inference_type_and_method(inference):
-        inference_type=inference.algorithm.category
-        methodname=inference.algorithm.name
+        inference_type = inference.algorithm.category
+        methodname = inference.algorithm.name
         if inference_type == 'SA':
-            method_dict=samplers_dict
+            method_dict = samplers_dict
         else:
-            method_dict=optimisers_dict
-        inference_method=method_dict[methodname]
+            method_dict = optimisers_dict
+        inference_method = method_dict[methodname]
         return inference_type, inference_method
 
     @ staticmethod
     def get_biomarker_types_and_output_variables(inference):
-        objs=inference.log_likelihoods.all()
-        biomarker_types=[]
-        output_variables=[]
+        objs = inference.log_likelihoods.all()
+        biomarker_types = []
+        output_variables = []
         for obj in objs:
             biomarker_types.append(obj.biomarker_type)
             output_variables.append(obj.variable)
@@ -453,8 +486,8 @@ class InferenceMixin:
     def get_objectives(inference):
         # determine objective function and observed biomarker types
         # to simulate
-        objs=inference.log_likelihoods.all()
-        observed_loglikelihoods=[]
+        objs = inference.log_likelihoods.all()
+        observed_loglikelihoods = []
         for obj in objs:
             if obj.form == LogLikelihood.Form.NORMAL:
                 if obj.parameters.first().value is not None:
@@ -471,14 +504,14 @@ class InferenceMixin:
     @ staticmethod
     def get_priors_boundaries_transforms(priors):
         # get all variables being fitted from priors
-        pints_log_priors=[]
-        pints_transforms=[]
+        pints_log_priors = []
+        pints_transforms = []
         if all([isinstance(p, PriorUniform) for p in priors]):
-            lower=[p.lower for p in priors]
-            upper=[p.upper for p in priors]
-            pints_boundaries=pints.RectangularBoundaries(lower, upper)
+            lower = [p.lower for p in priors]
+            upper = [p.upper for p in priors]
+            pints_boundaries = pints.RectangularBoundaries(lower, upper)
         else:
-            pints_boundaries=None
+            pints_boundaries = None
         for prior in priors:
             # if prior.variable.is_log:
             if False:
@@ -486,13 +519,13 @@ class InferenceMixin:
             else:
                 pints_transforms.append(pints.IdentityTransformation(n_parameters=1))
             if isinstance(prior, PriorUniform):
-                lower=prior.lower
-                upper=prior.upper
-                pints_log_prior=pints.UniformLogPrior(lower, upper)
+                lower = prior.lower
+                upper = prior.upper
+                pints_log_prior = pints.UniformLogPrior(lower, upper)
             elif isinstance(prior, PriorNormal):
-                mean=prior.mean
-                sd=prior.sd
-                pints_log_prior=pints.GaussianLogPrior(mean, sd)
+                mean = prior.mean
+                sd = prior.sd
+                pints_log_prior = pints.GaussianLogPrior(mean, sd)
             pints_log_priors.append(pints_log_prior)
 
         return pints_log_priors, pints_boundaries, pints_transforms
@@ -503,7 +536,7 @@ class InferenceMixin:
     def write_inference_results(self, values, fn_value, iteration,
                                 chain_index):
         # Writes inference results to one chain
-        chains=self.inference.chains.all()
+        chains = self.inference.chains.all()
         InferenceFunctionResult.objects.create(
             chain=chains[chain_index],
             iteration=iteration,
@@ -516,56 +549,63 @@ class InferenceMixin:
                 iteration=iteration,
                 value=values[i])
 
-    def step_inference(self, writer):
+    def step_inference(self, writer, output_writer):
         # runs one set of ask / tell
-        fn_values=[]
-        x0s=[]
+        fn_values = []
+        x0s = []
         for idx, obj in enumerate(self._inference_objects):
-            x=obj.ask()
+            x = obj.ask()
             if self._inference_type == "SA":  # sampling
-                score=self._pints_log_posterior(x)
+                score = self._pints_log_posterior(x)
                 self.inference.number_of_function_evals += 1
-                x, score, accepted=obj.tell(score)
+                x, score, accepted = obj.tell(score)
             else:
-                scores=[self._pints_log_posterior(xi) for xi in x]
+                scores = [self._pints_log_posterior(xi) for xi in x]
                 self.inference.number_of_function_evals += len(x)
                 obj.tell(scores)
-                x=obj.xbest()
-                score=obj.fbest()
+                x = obj.xbest()
+                score = obj.fbest()
 
             x0s.append(self._pints_composed_transform.to_model(x))
             fn_values.append(score)
         writer.append(fn_values, x0s, self.inference.number_of_iterations)
+        output_writer.append(x0s, self.inference.number_of_iterations)
 
     def run_inference(self):
         # runs ask / tell
-        time_start=time.time()
-        max_iterations=self.inference.max_number_of_iterations
-        n_iterations=self.inference.number_of_iterations
-        initial_phase_iterations=-1
+        time_start = time.time()
+        max_iterations = self.inference.max_number_of_iterations
+        n_iterations = self.inference.number_of_iterations
+        initial_phase_iterations = -1
         print('running inference')
         if (
             self.inference.algorithm.category == 'SA' and
             self._inference_objects[0].needs_initial_phase()
         ):
             print('need to consider an initial phase')
-            dimensions=len(self.priors_in_pints_order)
-            initial_phase_iterations=500 * dimensions
+            dimensions = len(self.priors_in_pints_order)
+            initial_phase_iterations = 500 * dimensions
             if n_iterations < initial_phase_iterations:
                 print('Turning on initial phase')
                 for sampler in self._inference_objects:
                     sampler.set_initial_phase(True)
 
-        write_every_n_iteration=100
-        def evaluate_model(parameters):
-            return
-        writer=ChainWriter(
+        write_every_n_iteration = 100
+        evaluate_model_every_n_iterations = 1
+
+        writer = ChainWriter(
             self.inference.chains.all(),
             self.priors_in_pints_order,
             write_every_n_iteration,
-            evaluate_model,
+        )
+
+        output_writer = OutputWriter(
+            self.inference.chains.all(),
             self._times_all,
-            self._pints_forward_model
+            self._pints_forward_model,
+            use_every_n_sample=evaluate_model_every_n_iterations,
+            buffer_size=write_every_n_iteration,
+            store_output_range=self.inference.algorithm.category == 'SA'
         )
         for i in range(n_iterations, max_iterations):
             if i == initial_phase_iterations:
@@ -574,15 +614,16 @@ class InferenceMixin:
                     sampler.set_initial_phase(False)
 
             self.inference.number_of_iterations += 1
-            self.step_inference(writer)
-            time_now=time.time()
-            self.inference.time_elapsed=time_now - time_start
+            self.step_inference(writer, output_writer)
+            time_now = time.time()
+            self.inference.time_elapsed = time_now - time_start
 
             if i % write_every_n_iteration == 0:
                 self.inference.save()
 
         # write out the remaining iterations
         writer.write()
+        output_writer.write()
         self.inference.save()
 
     def fixed_variables(self):
@@ -596,24 +637,24 @@ class CombinedLogLikelihood(pints.LogPDF):
     """
 
     def __init__(self, *log_likelihoods):
-        self._log_likelihoods=[ll for ll in log_likelihoods]
-        self._n_outputs=len(self._log_likelihoods)
+        self._log_likelihoods = [ll for ll in log_likelihoods]
+        self._n_outputs = len(self._log_likelihoods)
 
-        self._n_myokit_parameters=self._log_likelihoods[0]._problem.n_parameters()
+        self._n_myokit_parameters = self._log_likelihoods[0]._problem.n_parameters()
 
         # the myokit forwards model parameters are at the start of the
         # parameter vector
-        self._myokit_parameter_slice=slice(0, self._n_myokit_parameters)
+        self._myokit_parameter_slice = slice(0, self._n_myokit_parameters)
 
         # we're going to put all the noise parameters for each log-likelihood
         # at the end of the parameter vector, so loop through them all and
         # pre-calculate the slice of the parameter vector corrseponding to
         # the noise parameters for each log_likelihood
-        curr_index=self._n_myokit_parameters
-        self._n_noise_parameters=0
-        self._noise_parameter_slices=[]
+        curr_index = self._n_myokit_parameters
+        self._n_noise_parameters = 0
+        self._noise_parameter_slices = []
         for ll in self._log_likelihoods:
-            n_noise_parameters=ll.n_parameters() - self._n_myokit_parameters
+            n_noise_parameters = ll.n_parameters() - self._n_myokit_parameters
             self._noise_parameter_slices.append(
                 slice(curr_index, curr_index + n_noise_parameters)
             )
@@ -623,9 +664,9 @@ class CombinedLogLikelihood(pints.LogPDF):
     def __call__(self, x):
         # use pre-calculated slices to get the parameter vector for each
         # log-likelihood
-        log_like=0
+        log_like = 0
         for noise_slice, ll in zip(self._noise_parameter_slices, self._log_likelihoods):
-            params=np.concatenate((
+            params = np.concatenate((
                 x[self._myokit_parameter_slice],
                 x[noise_slice]
             ))

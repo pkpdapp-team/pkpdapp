@@ -284,9 +284,14 @@ class TestInferenceMixinSingleOutputSampling(TestCase):
             fn = self.inference_mixin._pints_log_posterior
             for idx, params in enumerate(p_vals_all):
                 self.assertTrue(abs(fn(params) - f_vals[idx]) < 0.01)
+
+            output_res = chain.inference_output_results.all()
+            self.assertTrue(len(output_res), 28)
+
         inference = self.inference_mixin.inference
         self.assertTrue(inference.time_elapsed > 0)
         self.assertTrue(inference.number_of_function_evals > 0)
+
 
 
 class TestInferenceMixinSingleOutputOptimisation(TestCase):

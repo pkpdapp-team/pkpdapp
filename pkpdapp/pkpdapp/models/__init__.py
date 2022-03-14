@@ -31,6 +31,7 @@ from .inference import (
     Inference,
     Algorithm,
 )
+from .myokit_pints_forward_model import MyokitForwardModel
 from .likelihoods import (
     LogLikelihood,
     LogLikelihoodParameter,
@@ -42,8 +43,8 @@ from .inference_results import (
     InferenceChain,
     InferenceResult,
     InferenceFunctionResult,
+    InferenceOutputResult,
 )
 
 
-from .myokit_pints_forward_model import MyokitForwardModel
 from .inference_mixin import InferenceMixin
