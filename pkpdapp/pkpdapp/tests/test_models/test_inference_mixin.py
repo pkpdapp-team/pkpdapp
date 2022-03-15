@@ -152,9 +152,6 @@ class TestInferenceMixinPkModel(TestCase):
         #plt.show()
 
 
-
-
-
 class TestInferenceMixinSingleOutputSampling(TestCase):
     def setUp(self):
         # ensure we've got nothing in the cache
@@ -291,6 +288,7 @@ class TestInferenceMixinSingleOutputSampling(TestCase):
         inference = self.inference_mixin.inference
         self.assertTrue(inference.time_elapsed > 0)
         self.assertTrue(inference.number_of_function_evals > 0)
+
 
 
 
@@ -500,3 +498,110 @@ class TestInferenceMixinSingleOutputOptimisation(TestCase):
                 )
                 expected = list(range(11))
                 self.assertTrue(np.array_equal(iterations, expected))
+
+class TestInferenceMixinFakeData(TestCase):
+    def setUp(self):
+        # ensure we've got nothing in the cache
+        cache._cache.flush_all()
+        self.project = Project.objects.get(
+            name='demo',
+        )
+        self.model = PharmacodynamicModel.objects.get(
+            name='tumour_growth_inhibition_model_koch',
+            read_only=False,
+        )
+        variables = self.model.variables.all()
+        var_names = [v.qname for v in variables]
+        m = self.model.get_myokit_model()
+        s = self.model.get_myokit_simulator()
+
+        forward_model = MyokitForwardModel(
+            myokit_model=m,
+            myokit_simulator=s,
+            outputs="myokit.tumour_volume")
+
+        output_names = forward_model.output_names()
+        var_index = var_names.index(output_names[0])
+        self.output_variable = variables[var_index]
+
+        self.inference = Inference.objects.create(
+            name='bob',
+            project=self.project,
+            max_number_of_iterations=10,
+            algorithm=Algorithm.objects.get(name='XNES'),
+            number_of_chains=3,
+        )
+        log_likelihood = LogLikelihood.objects.create(
+            variable=self.output_variable,
+            inference=self.inference,
+            form=LogLikelihood.Form.NORMAL
+        )
+        self.inference.log_likelihoods.set([log_likelihood])
+
+        # find variables that are being estimated
+        parameter_names = forward_model.variable_parameter_names()
+        var_indices = [var_names.index(v) for v in parameter_names]
+        self.input_variables = [
+            variables[i] for i in var_indices
+        ]
+        for variable in self.input_variables:
+            PriorUniform.objects.create(
+                lower=0.0,
+                upper=2.0,
+                log_likelihood_parameter=log_likelihood.parameters.get(
+                    variable=variable
+                )
+            )
+        noise_param = log_likelihood.parameters.get(
+            variable__isnull=True
+        )
+        PriorUniform.objects.create(
+            lower=0.0,
+            upper=2.0,
+            log_likelihood_parameter=noise_param,
+        )
+        # 'run' inference to create copies of models
+        self.inference.run_inference(test=True)
+
+        # create mixin object
+        self.inference_mixin = InferenceMixin(self.inference)
+
+
+    def test_inference_runs(self):
+        # tests that inference runs and writes results to db
+        self.inference_mixin.run_inference()
+
+        # check we've got true parameter values
+        priors = self.inference_mixin.priors_in_pints_order
+        for prior in priors:
+            self.assertIsNotNone(prior.log_likelihood_parameter.value)
+
+        chains = self.inference_mixin.inference.chains.all()
+        self.assertEqual(len(chains), 3)
+        for chain in chains:
+            fun_res = chain.inference_function_results
+            f_vals = fun_res.order_by('iteration').values_list(
+                'value', flat=True
+            )
+            self.assertEqual(len(f_vals), 11)
+            p_vals_all = []
+            for prior in priors:
+                res = chain.inference_results.filter(prior=prior)
+                p_vals = res.order_by('iteration').values_list(
+                    'value', flat=True
+                )
+                self.assertEqual(len(p_vals), 11)
+                p_vals_all.append(p_vals)
+                iterations = res.order_by('iteration').values_list(
+                    'iteration', flat=True
+                )
+                expected = list(range(11))
+                self.assertTrue(np.array_equal(iterations, expected))
+
+        # don't test for inference log_posterior(param) = fn since they won't
+        # because of the way the 'best' params are picked
+
+        inference = self.inference_mixin.inference
+        self.assertTrue(inference.time_elapsed > 0)
+        self.assertTrue(inference.number_of_function_evals > 0)
+

@@ -220,11 +220,12 @@ function LogLikelihoodSubform({
     
   const defaultModelID = variableModelId ? 
       `${variableModelId}:${variableModelType}`
-      : null
+      : ''
 
   // model 
   
   const [modelId, setModelId] = useState(defaultModelID);
+  console.log('modelId', modelId, modelId === '')
   const [changedModel, setChangedModel] = useState(false);
   const pd_models = useSelector(state => 
     disabled ? selectReadOnlyPdModels(state) : selectWritablePdModels(state)
@@ -314,7 +315,8 @@ function LogLikelihoodSubform({
   : []
       
   // dataset
-  const [datasetId, setDatasetId] = useState(logLikelihood.dataset);
+  const [datasetId, setDatasetId] = useState(logLikelihood.dataset || '');
+  console.log('datasetId', datasetId, datasetId === '', datasetOptions)
   const handleDatasetChange = (event) => {
     const value = event.target.value;
     setDatasetId(value);
@@ -340,13 +342,13 @@ function LogLikelihoodSubform({
       const standardDeviation = Math.sqrt(
         Math.pow(variable.upper_bound - variable.lower_bound, 2) / 12
       );
-      setValue(`${baseName}.parameters[0].name`, 'SD');
+      setValue(`${baseName}.parameters[0].name`, 'standard deviation');
       setValue(`${baseName}.parameters[0].value`, standardDeviation);
     } else if (form === "LN") {
       const standardDeviation = Math.sqrt(
         Math.pow(variable.upper_bound - variable.lower_bound, 2) / 12
       );
-      setValue(`${baseName}.parameters[0].name`, 'SI');
+      setValue(`${baseName}.parameters[0].name`, 'sigma');
       setValue(`${baseName}.parameters[0].value`, standardDeviation);
     }
   };
@@ -417,12 +419,15 @@ function LogLikelihoodSubform({
       <Grid item xs={11}>
       <Grid item xs={12} className={classes.formRoot}>
       <FormControl className={classes.formInput}>
-        <InputLabel id="dataset-label">Dataset</InputLabel>
+        <InputLabel id="dataset-label" shrink={true}>
+        Dataset
+        </InputLabel>
         <Select
           labelId="dataset-label"
           onChange={handleDatasetChange}
           disabled={disabled}
           value={datasetId}
+          displayEmpty
         >
           {datasetOptions.map((option, i) => {
             return (
@@ -563,8 +568,9 @@ export default function DraftInferenceDetail({ project, inference }) {
   const dataset_options = datasets.map((dataset) => ({
     key: dataset.name,
     value: dataset.id,
-  }));
-
+  })).concat([
+    { key: 'Use simulated data', value: '' }
+  ]);
   
   const inferences = useSelector(selectAllInferences);
   const inference_options = inferences.map((inference) => ({

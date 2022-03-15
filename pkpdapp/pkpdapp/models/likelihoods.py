@@ -79,6 +79,11 @@ class LogLikelihood(models.Model):
     biomarker_type = models.ForeignKey(
         BiomarkerType,
         on_delete=models.CASCADE,
+        blank=True, null=True,
+        help_text=(
+            'biomarker_type for measurements. if blank then simulated data is used, '
+            'with non-fixed parameters sampled at the start of inference'
+        )
     )
 
     class Form(models.TextChoices):

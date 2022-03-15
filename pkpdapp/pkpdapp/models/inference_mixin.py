@@ -105,7 +105,7 @@ class OutputWriter:
     """
 
     def __init__(self, chains,
-                 times, pints_forward_model,
+                 times, values, pints_forward_model,
                  use_every_n_sample=1,
                  buffer_size=100,
                  store_output_range=True):
@@ -121,6 +121,7 @@ class OutputWriter:
         self._pints_forward_model = pints_forward_model
         self._len_x0 = pints_forward_model.n_parameters()
         self._times = times
+        self._values = values
         self._n_times = len(times)
         self._use_every_n_sample = use_every_n_sample
         self._store_output_range = store_output_range
@@ -140,12 +141,12 @@ class OutputWriter:
             outputs = []
             for chain in self._chains:
                 for i in range(self._n_times):
-                    outputs.append(InferenceOutputResult(
+                    outputs.append(InferenceOutputResult.objects.create(
                         chain=chain,
                         value=0,
+                        data=self._values[0][i],
                         time=self._times[i]
                     ))
-            InferenceOutputResult.objects.bulk_create(outputs)
         return outputs
 
     def append(self, x0s, iteration):
@@ -174,8 +175,8 @@ class OutputWriter:
                         tdigests[i].update(value)
 
                 for i in range(self._n_times):
-                    maximum = tdigests[i].percentile(95)
-                    minimum = tdigests[i].percentile(5)
+                    maximum = tdigests[i].percentile(90)
+                    minimum = tdigests[i].percentile(10)
                     self._outputs[output_index].value = minimum
                     self._outputs[output_index].value_max = maximum
                     output_index += 1
@@ -200,22 +201,11 @@ class OutputWriter:
 class InferenceMixin:
     def __init__(self, inference):
 
-        # get biomarkers
-        self._biomarker_types, self._outputs = (
-            self.get_biomarker_types_and_output_variables(inference)
-        )
-        self._n_outputs = len(self._outputs)
-
         # # select inference methods
         self._inference_type, self._inference_method = (
             self.get_inference_type_and_method(inference)
         )
 
-        # get data and time points as lists of lists
-        dfs = [output.as_pandas() for output in self._biomarker_types]
-        self._values = [df['values'].tolist() for df in dfs]
-        self._times = [df['times'].tolist() for df in dfs]
-        self._times_all = np.sort(list(set(np.concatenate(self._times))))
 
         # types needed later
         self.inference = inference
@@ -236,12 +226,10 @@ class InferenceMixin:
 
         # create pints forward model
         # TODO: only supports a single log_likelihood
+        self._log_likelihoods = inference.log_likelihoods.all()
+        self._outputs = [ll.variable for ll in self._log_likelihoods]
         self._pints_forward_model = log_likelihood.create_pints_forward_model(
             fitted_parameter_names, outputs=self._outputs
-        )
-
-        self._collection = self.create_pints_problem_collection(
-            self._pints_forward_model, self._times, self._values, self._outputs
         )
 
         # We'll use the variable ordering based on the forwards model.
@@ -261,10 +249,6 @@ class InferenceMixin:
             if not prior.is_model_variable_prior()
         ]
 
-        self._pints_log_likelihood = self.create_pints_log_likelihood(
-            self._collection, inference
-        )
-
         # get priors / boundaries, using variable ordering already established
         (
             self._pints_log_priors,
@@ -275,6 +259,22 @@ class InferenceMixin:
         self._pints_composed_log_prior = pints.ComposedLogPrior(
             *self._pints_log_priors
         )
+
+        # get data
+        self._values, self._times = (
+            self.get_data(self._log_likelihoods, self._pints_forward_model,
+                          self.priors_in_pints_order, self._pints_composed_log_prior)
+        )
+        self._times_all = np.sort(list(set(np.concatenate(self._times))))
+
+        self._collection = self.create_pints_problem_collection(
+            self._pints_forward_model, self._times, self._values, self._outputs
+        )
+
+        self._pints_log_likelihood = self.create_pints_log_likelihood(
+            self._collection, inference
+        )
+
         self._pints_composed_transform = pints.ComposedTransformation(
             *self._pints_transforms
         )
@@ -473,14 +473,72 @@ class InferenceMixin:
         return inference_type, inference_method
 
     @ staticmethod
-    def get_biomarker_types_and_output_variables(inference):
-        objs = inference.log_likelihoods.all()
-        biomarker_types = []
-        output_variables = []
-        for obj in objs:
-            biomarker_types.append(obj.biomarker_type)
-            output_variables.append(obj.variable)
-        return biomarker_types, output_variables
+    def get_data(log_likelihoods, pints_forward_model, priors_in_pints_order,
+                 pints_composed_log_prior):
+
+        # if we're using fake data sample from composed prior and store the values
+        use_fake_data = any([ll.biomarker_type is None for ll in log_likelihoods])
+        if use_fake_data:
+            t_max = max([
+                ll.get_model().time_max for ll in log_likelihoods
+            ])
+            fake_data_times = np.linspace(0, t_max, 20)
+            fake_data_x0 = pints_composed_log_prior.sample().flatten()
+            for x, prior in zip(fake_data_x0, priors_in_pints_order):
+                prior.log_likelihood_parameter.value = x
+                prior.log_likelihood_parameter.save()
+            result = pints_forward_model.simulate(
+                fake_data_x0[:pints_forward_model.n_parameters()], fake_data_times
+            )
+
+        values = []
+        times = []
+        result_index = 0
+        noise_param_index = pints_forward_model.n_parameters()
+        for obj in log_likelihoods:
+            # if we have data then use it, otherwise
+            # use simulated data
+            if obj.biomarker_type:
+                df = obj.biomarker_type.as_pandas()
+                values.append(df['values'].tolist())
+                times.append(df['times'].tolist())
+            else:
+                output_values = result[result_index:result_index + len(fake_data_times)]
+
+                # add noise to the simulated data according to the log_likelihood
+                if obj.form == LogLikelihood.Form.NORMAL:
+                    noise_param = obj.parameters.get(
+                        variable__isnull=True
+                    )
+                    if noise_param.is_fixed():
+                        noise = np.random.normal(
+                            scale=noise_param.value,
+                            size=output_values.shape
+                        )
+                        output_values += noise
+                    else:
+                        noise = np.random.normal(
+                            scale=fake_data_x0[noise_param_index],
+                            size=output_values.shape
+                        )
+                        output_values += noise
+                        noise_param_index += 1
+                elif log_likelihood.form == LogLikelihood.Form.LOGNORMAL:
+                    output_values += (
+                        np.random.lognormal(
+                            scale=fake_data_x0[noise_param_index],
+                            size=output_values.shape
+                        )
+                    )
+                    noise_param_index += 1
+
+                values.append(output_values)
+                times.append(fake_data_times)
+                result_index += len(fake_data_times)
+
+        print('output values', values)
+
+        return values, times
 
     @ staticmethod
     def get_objectives(inference):
@@ -602,6 +660,7 @@ class InferenceMixin:
         output_writer = OutputWriter(
             self.inference.chains.all(),
             self._times_all,
+            self._values,
             self._pints_forward_model,
             use_every_n_sample=evaluate_model_every_n_iterations,
             buffer_size=write_every_n_iteration,

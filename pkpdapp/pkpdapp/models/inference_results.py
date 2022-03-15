@@ -24,16 +24,18 @@ class InferenceChain(models.Model):
     def as_pandas(self):
         priors_values = \
             self.inference_results.order_by('iteration').values_list(
-                'prior', 'value'
+                'prior', 'value', 'iteration'
             )
         if priors_values:
-            priors, values = list(zip(*priors_values))
+            priors, values, iterations = list(zip(*priors_values))
         else:
             priors = []
             values = []
+            iterations = []
         df = pd.DataFrame.from_dict({
             'priors': priors,
             'values': values,
+            'iterations': iterations,
         })
 
         return df
@@ -94,6 +96,11 @@ class InferenceOutputResult(models.Model):
         help_text=(
             'if value_max is null, then this is the value of the output. '
             'if value_max is not null, then this is the minimum value of output (for a range)'
+        )
+    )
+    data = models.FloatField(
+        help_text=(
+            'data value for comparison'
         )
     )
     value_max = models.FloatField(

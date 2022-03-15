@@ -109,6 +109,7 @@ class LogLikelihoodSerializer(serializers.ModelSerializer):
         # new log_likelihood will have had its parameters created, so
         # here we just update them with the validated data
         old_parameters = list((new_log_likelihood.parameters).all())
+        print('old_parameters', old_parameters, parameters_data)
         for field_datas, old_models, Serializer in [
                 (parameters_data, old_parameters,
                  LogLikelihoodParameterSerializer),
@@ -129,9 +130,9 @@ class LogLikelihoodSerializer(serializers.ModelSerializer):
                     new_model = serializer.update(
                         old_model, field_data
                     )
+                    new_model.save()
                 except IndexError:
                     pass
-                new_model.save()
         return new_log_likelihood
 
     def update(self, instance, validated_data):
@@ -161,8 +162,8 @@ class LogLikelihoodSerializer(serializers.ModelSerializer):
                     new_model = serializer.update(
                         old_model, field_data
                     )
+                    new_model.save()
                 except IndexError:
                     pass
-                new_model.save()
 
         return new_log_likelihood

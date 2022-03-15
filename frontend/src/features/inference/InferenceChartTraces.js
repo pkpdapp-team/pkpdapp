@@ -10,9 +10,11 @@ import { Scatter } from "react-chartjs-2";
 import { Chart, registerables, Interaction } from "chart.js";
 import { CrosshairPlugin, Interpolate } from "chartjs-plugin-crosshair";
 import { getColor, getColorBackground } from "../modelling/ShapesAndColors";
+import annotationPlugin from 'chartjs-plugin-annotation';
 
 
-Chart.register(...registerables, CrosshairPlugin);
+
+Chart.register(...registerables, CrosshairPlugin, annotationPlugin);
 Interaction.modes.interpolate = Interpolate;
 
 const useStyles = makeStyles((theme) => ({
@@ -46,7 +48,19 @@ function InferenceChartDistribution({ prior }) {
       };
     })
   }
+  let annotations = []
+  if (prior.value) {
+    annotations = [{
+        type: 'line',
+        scaleID: 'x',
+        value: prior.value,
+        endValue: prior.value,
+        borderColor: 'black',
+        borderWidth: 1,
+    }]
+  }
   let options = {
+    
     animation: {
       duration: 0,
     },
@@ -54,6 +68,7 @@ function InferenceChartDistribution({ prior }) {
     maintainAspectRatio: false,
     scales: {
       x: {
+        type: "linear",
         title: {
           text: prior.name,
           display: true,
@@ -68,6 +83,9 @@ function InferenceChartDistribution({ prior }) {
       },
     },
     plugins: {
+      annotation: {
+        annotations: annotations
+      },
       decimation: {
         enabled: true,
         algorithm: 'lttb',
@@ -81,6 +99,8 @@ function InferenceChartDistribution({ prior }) {
       
     },
   };
+
+  console.log('options', options)
 
   return (
     <div className={classes.chart}>
@@ -106,7 +126,7 @@ function InferenceChartTrace({ prior }) {
         borderWidth: 1.5,
         lineTension: 0,
         interpolate: true,
-        data: chain.map((y, i) => ({ x: i, y: y })),
+        data: chain.values.map((y, i) => ({ x: chain.iterations[i], y: y })),
       };
     })
   }

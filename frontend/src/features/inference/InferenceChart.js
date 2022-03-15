@@ -10,6 +10,7 @@ import { useSelector, useDispatch } from "react-redux";
 import InferenceChartOptimisationResults from './InferenceChartOptimisationResults'
 import InferenceChartSamplingResults from './InferenceChartSamplingResults'
 import InferenceChartTraces from './InferenceChartTraces'
+import InferenceChartFits from './InferenceChartFits'
 import { fetchChainsByInferenceId } from "../inference/chainSlice";
 
 import {selectChainsByInferenceId} from './chainSlice'
@@ -66,6 +67,7 @@ export default function InferenceChart({inference}) {
         return {
           ...prior, 
           name: param.name,
+          value: param.value,
           chains: chains.map(chain => chain.data.chain[prior.id]),
           kdes: chains.map(chain => chain.data.kde[prior.id])
         }
@@ -87,12 +89,14 @@ export default function InferenceChart({inference}) {
   const optimisationTabs = [
     //{ label: 'Fit', component: InferenceChartFit },
     { label: 'Traces', component: InferenceChartTraces },
+    { label: 'Fits', component: InferenceChartFits },
     { label: 'Results', component: InferenceChartOptimisationResults },
   ]
   const samplingTabs = [
     //{ label: 'PosteriorPredictive', component: InferenceChartPosteriorPredictive },
     //{ label: 'Biplot', component: InferenceChartBiplot},
     { label: 'Traces', component: InferenceChartTraces },
+    { label: 'Fits', component: InferenceChartFits },
     { label: 'Results', component: InferenceChartSamplingResults },
   ]
   const tabs = isSampling ? samplingTabs : optimisationTabs
@@ -127,7 +131,7 @@ export default function InferenceChart({inference}) {
   </Box>
     { tabs.map((tab, index) => (
     <TabPanel key={index} value={value} index={index}>
-      <tab.component inference={inference} priorsWithChainValues={priorsWithChainValues} />
+      <tab.component inference={inference} chains={chains} priorsWithChainValues={priorsWithChainValues} />
     </TabPanel>
     ))}
   </Box>
