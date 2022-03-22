@@ -10,6 +10,12 @@ import { Scatter } from "react-chartjs-2";
 import { Chart, registerables, Interaction } from "chart.js";
 import { CrosshairPlugin, Interpolate } from "chartjs-plugin-crosshair";
 import { getColor, getColorBackground } from "../modelling/ShapesAndColors";
+import {
+  selectVariableById,
+} from "../variables/variablesSlice";
+import {
+  selectUnitById,
+} from "../projects/unitsSlice";
 
 
 Chart.register(...registerables, CrosshairPlugin);
@@ -28,20 +34,42 @@ const useStyles = makeStyles((theme) => ({
 
 
 function InferenceChartFits({ chains }) {
+  // TODO: assumes a single log likelihood
+  //
   const classes = useStyles();
 
   const has_distribution = true
-  const outputs = chains[0].inference_output_results
-  const times = chains[0].inference_output_results.map(output => output.time)
+  const times = chains[0].outputs.outputs.times
+  const datas = chains[0].outputs.outputs.datas
+  const loglikelihood = chains[0].loglikelihoods[0]
+
+  const outputVariable = useSelector((state) => {
+        return selectVariableById(state, loglikelihood.variable);
+  });
+  const timeVariable = useSelector((state) => {
+        return selectVariableById(state, loglikelihood.time_variable);
+  });
+  const outputUnit = useSelector((state) => {
+    if (outputVariable) {
+      return selectUnitById(state, outputVariable.unit)
+    }
+  });
+  const timeUnit = useSelector((state) => {
+    if (timeVariable) {
+      return selectUnitById(state, timeVariable.unit)
+    }
+  });
+
+  const yLabel = `${outputVariable.name} [${outputUnit.symbol}]`
+  const xLabel = `${timeVariable.name} [${timeUnit.symbol}]`
 
   // TODO: assume single output
-  const outputName = "test"
-  console.log('outputs', outputs)
+  console.log('outputs', chains[0].outputs, outputVariable, timeVariable, outputUnit, timeUnit)
   let data = {
   }
   if (has_distribution) {
     data['datasets'] = chains.map((chain, i) => {
-      const outputs = chain.inference_output_results
+      const outputs = chain.outputs.outputs[0]
       const color = getColor(chain.id);
       const backgroundColor = getColorBackground(chain.id);
       return [
@@ -55,7 +83,7 @@ function InferenceChartFits({ chains }) {
           backgroundColor: backgroundColor,
           lineTension: 0,
           interpolate: true,
-          data: outputs.map((output, i) => ({ x: times[i], y: output.percentile_min }))
+          data: outputs.percentile_mins.map((y, i) => ({ x: times[i], y: y }))
         },
         {
           type: "line",
@@ -67,7 +95,7 @@ function InferenceChartFits({ chains }) {
           fill: '-1',
           lineTension: 0,
           interpolate: true,
-          data: outputs.map((output, i) => ({ x: times[i], y: output.percentile_max }))
+          data: outputs.percentile_maxs.map((y, i) => ({ x: times[i], y: y }))
         },
         {
           type: "line",
@@ -79,7 +107,7 @@ function InferenceChartFits({ chains }) {
           fill: false,
           lineTension: 0,
           interpolate: true,
-          data: outputs.map((output, i) => ({ x: times[i], y: output.median }))
+          data: outputs.medians.map((y, i) => ({ x: times[i], y: y }))
         },
       ]
     }).concat([
@@ -90,15 +118,13 @@ function InferenceChartFits({ chains }) {
           borderWidth: 2.5,
           backgroundColor: 'black',
           showLine: false,
-          data: chains[0].inference_output_results.map((output, i) => (
-            { x: times[i], y: output.data }
-          ))
+          data: datas.map((y, i) => ({ x: times[i], y: y }))
         },
     ]).flat()
 
   } else {
     data['datasets'] = chains.map((chain, i) => {
-      const outputs = chain.inference_output_results
+      const outputs = chain.outputs.outputs[0]
       const color = getColor(chain.id);
       const backgroundColor = getColorBackground(chain.id);
       return {
@@ -110,7 +136,7 @@ function InferenceChartFits({ chains }) {
         backgroundColor: backgroundColor,
         lineTension: 0,
         interpolate: true,
-        data: outputs.map((output, i) => ({ x: times[i], y: output.median }))
+        data: outputs.medians.map((y, i) => ({ x: times[i], y: y }))
       }
     }).concat([
       {
@@ -120,9 +146,7 @@ function InferenceChartFits({ chains }) {
         backgroundColor: 'black',
         borderWidth: 2.5,
         showLine: false,
-        data: chains[0].inference_output_results.map((output, i) => (
-          { x: times[i], y: output.data }
-        ))
+        data: datas.map((y, i) => ({ x: times[i], y: y }))
       },
     ])
   }
@@ -137,14 +161,14 @@ function InferenceChartFits({ chains }) {
       x: {
         type: "linear",
         title: {
-          text: "Time",
+          text: xLabel,
           display: true,
         },
       },
       y: {
         position: "left",
         title: {
-          text: outputName,
+          text: yLabel,
           display: true,
         },
       },

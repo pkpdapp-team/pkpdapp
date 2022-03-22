@@ -108,7 +108,7 @@ class InferenceChainSerializer(serializers.ModelSerializer):
     def get_outputs(self, inference_chain):
         log_likelihoods = inference_chain.inference.log_likelihoods.all()
         outputs = [
-            inference_chain.outputs_for(ll).to_dict()
+            inference_chain.outputs_for(ll).to_dict(orient='list')
             for ll in log_likelihoods
         ]
 

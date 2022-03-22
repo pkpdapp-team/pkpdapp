@@ -118,4 +118,9 @@ class TestInferenceSerializer(TestCase):
 
         chain = self.inference.chains.first()
         chain_serializer = InferenceChainSerializer(chain)
-        print('data', chain_serializer.data)
+        data = chain_serializer.data
+        self.assertTrue('outputs' in data)
+        self.assertTrue('log_likelihoods' in data['outputs'])
+        self.assertTrue('outputs' in data['outputs'])
+        self.assertEqual(len(data['outputs']['outputs']), 1)
+        self.assertEqual(len(data['outputs']['outputs'][0]['times']), 14)

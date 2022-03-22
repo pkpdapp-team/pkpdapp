@@ -26,25 +26,28 @@ class InferenceChain(models.Model):
             self.inference_output_results.filter(
                 log_likelihood=log_likelihood
             ).order_by('time').values_list(
-                'median', 'percentile_min', 'percentile_max', 'time'
+                'median', 'percentile_min', 'percentile_max', 'data', 'time'
             )
         if data:
             (
                 medians,
                 percentile_mins,
                 percentile_maxs,
+                datas,
                 times
             ) = list(zip(*data))
         else:
             medians = []
             percentile_mins = []
             percentile_maxs = []
+            datas = []
             times = []
 
         df = pd.DataFrame.from_dict({
             'medians': medians,
             'percentile_mins': percentile_mins,
             'percentile_maxs': percentile_maxs,
+            'datas': datas,
             'times': times,
         })
 

@@ -78,11 +78,18 @@ class LogLikelihoodSerializer(serializers.ModelSerializer):
     dosed_pk_model = \
         serializers.SerializerMethodField('get_dosed_pk_model')
     dataset = serializers.SerializerMethodField('get_dataset')
+    time_variable = serializers.SerializerMethodField('get_time_variable')
 
     class Meta:
         model = LogLikelihood
         fields = '__all__'
         read_only_fields = ("inference", )
+
+    def get_time_variable(self, instance):
+        time_variable = instance.get_model().variables.get(
+            name='time'
+        )
+        return time_variable.id
 
     def get_dosed_pk_model(self, instance):
         if instance.variable.dosed_pk_model:
