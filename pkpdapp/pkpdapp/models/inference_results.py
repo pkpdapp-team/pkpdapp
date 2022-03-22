@@ -94,20 +94,25 @@ class InferenceOutputResult(models.Model):
         related_name='inference_output_results',
         help_text='Chain related to the output result'
     )
-    value = models.FloatField(
-        help_text=(
-            'if value_max is null, then this is the value of the output. '
-            'if value_max is not null, then this is the minimum value of output (for a range)'
-        )
+
+    median = models.FloatField(
+        help_text='median of output distribution'
     )
+
+    percentile_min = models.FloatField(
+        blank=True, null=True,
+        help_text='10th percentile of output distribution'
+    )
+
+    percentile_max = models.FloatField(
+        blank=True, null=True,
+        help_text='90th percentile of output distribution'
+    )
+
     data = models.FloatField(
         help_text=(
             'data value for comparison'
         )
-    )
-    value_max = models.FloatField(
-        blank=True, null=True,
-        help_text='maximum value of output (for a range)'
     )
     time = models.FloatField(
         help_text='time of output value'

@@ -156,7 +156,9 @@ class OutputWriter:
                 for i in range(self._n_times):
                     outputs.append(InferenceOutputResult.objects.create(
                         chain=chain,
-                        value=0,
+                        median=0,
+                        percentile_min=0,
+                        percentile_max=0,
                         data=self._values[0][i],
                         time=self._times[i]
                     ))
@@ -199,8 +201,10 @@ class OutputWriter:
                 for i in range(self._n_times):
                     maximum = tdigests[i].percentile(90)
                     minimum = tdigests[i].percentile(10)
-                    self._outputs[output_index].value = minimum
-                    self._outputs[output_index].value_max = maximum
+                    median = tdigests[i].percentile(50)
+                    self._outputs[output_index].median = median
+                    self._outputs[output_index].percentile_min = minimum
+                    self._outputs[output_index].percentile_max = maximum
                     output_index += 1
             else:
                 # just use the last parameter values
@@ -216,8 +220,9 @@ class OutputWriter:
                     result, noise_params
                 )
                 for i in range(self._n_times):
-                    self._outputs[output_index].value = result_min[i]
-                    self._outputs[output_index].value_max = result_max[i]
+                    self._outputs[output_index].median = result[i]
+                    self._outputs[output_index].percentile_min = result_min[i]
+                    self._outputs[output_index].percentile_max = result_max[i]
                     output_index += 1
 
         with transaction.atomic():

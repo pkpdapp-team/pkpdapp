@@ -62,24 +62,36 @@ class InferenceSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         log_likelihood_data = validated_data.pop('log_likelihoods')
         old_log_likelihoods = list((instance.log_likelihoods).all())
+
+        # if read_only only update name, description and burnin
+        if instance.read_only:
+            validated_data = {
+                key: validated_data[key]
+                for key in ['name', 'description', 'burn_in']
+                if key in validated_data
+            }
+
         new_inference = BaseInferenceSerializer().update(
             instance, validated_data
         )
-        for field_datas, old_models, Serializer in [
-                (log_likelihood_data,
-                 old_log_likelihoods, LogLikelihoodSerializer)
-        ]:
-            for field_data in field_datas:
-                serializer = Serializer()
-                try:
-                    old_model = old_models.pop(0)
-                    new_model = serializer.update(
-                        old_model, field_data
-                    )
-                except IndexError:
-                    field_data['inference'] = new_inference
-                    new_model = serializer.create(field_data)
-                new_model.save()
+
+        # don't update log_likelihoods if read_only
+        if not instance.read_only:
+            for field_datas, old_models, Serializer in [
+                    (log_likelihood_data,
+                     old_log_likelihoods, LogLikelihoodSerializer)
+            ]:
+                for field_data in field_datas:
+                    serializer = Serializer()
+                    try:
+                        old_model = old_models.pop(0)
+                        new_model = serializer.update(
+                            old_model, field_data
+                        )
+                    except IndexError:
+                        field_data['inference'] = new_inference
+                        new_model = serializer.create(field_data)
+                    new_model.save()
 
         return new_inference
 

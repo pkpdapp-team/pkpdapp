@@ -374,9 +374,10 @@ class Migration(migrations.Migration):
             name='InferenceOutputResult',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('value', models.FloatField(help_text='if value_max is null, then this is the value of the output. if value_max is not null, then this is the minimum value of output (for a range)')),
+                ('median', models.FloatField(help_text='median of output distribution')),
+                ('percentile_min', models.FloatField(blank=True, help_text='10th percentile of output distribution', null=True)),
+                ('percentile_max', models.FloatField(blank=True, help_text='90th percentile of output distribution', null=True)),
                 ('data', models.FloatField(help_text='data value for comparison')),
-                ('value_max', models.FloatField(blank=True, help_text='maximum value of output (for a range)', null=True)),
                 ('time', models.FloatField(help_text='time of output value')),
                 ('chain', models.ForeignKey(help_text='Chain related to the output result', on_delete=django.db.models.deletion.CASCADE, related_name='inference_output_results', to='pkpdapp.inferencechain')),
             ],

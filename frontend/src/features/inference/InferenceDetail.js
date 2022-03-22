@@ -623,7 +623,10 @@ export default function DraftInferenceDetail({ project, inference }) {
       biomarker_type: "",
     });
 
-  const max_number_of_iterations = watch("max_number_of_iterations", 0)
+  const max_number_of_iterations = watch(
+    "max_number_of_iterations", 
+    inference.max_number_of_iterations
+  )
   console.log('inference', inference)
   
 
@@ -727,6 +730,19 @@ export default function DraftInferenceDetail({ project, inference }) {
         label="Initialize from"
       />
 
+      <Grid container spacing={0}>
+      <Grid item xs={6}>
+      <FormSliderField
+        control={control}
+        name={"burn_in"}
+        tooltip={"choose burn-in"}
+        label={"Final burn-in iteration"}
+        label_min={'0'}
+        min={0}
+        max={max_number_of_iterations}
+      />
+      </Grid>
+      <Grid item xs={4}>
       <FormTextField
         control={control}
         name="max_number_of_iterations"
@@ -734,15 +750,8 @@ export default function DraftInferenceDetail({ project, inference }) {
         disabled={readOnly}
         type="number"
       />
-
-      <FormSliderField
-        control={control}
-        name={"burn_in"}
-        tooltip={"choose burn-in"}
-        label={"Final burn-in iteration"}
-        min={0}
-        max={max_number_of_iterations}
-      />
+      </Grid>
+      </Grid>
 
       <FormTextField
         control={control}

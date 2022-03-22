@@ -30,8 +30,7 @@ const useStyles = makeStyles((theme) => ({
 function InferenceChartFits({ chains }) {
   const classes = useStyles();
 
-  const has_distribution = chains[0].inference_output_results.length > 0 ? 
-    chains[0].inference_output_results[0].value_max : false
+  const has_distribution = true
   const outputs = chains[0].inference_output_results
   const times = chains[0].inference_output_results.map(output => output.time)
 
@@ -56,7 +55,7 @@ function InferenceChartFits({ chains }) {
           backgroundColor: backgroundColor,
           lineTension: 0,
           interpolate: true,
-          data: outputs.map((output, i) => ({ x: times[i], y: output.value }))
+          data: outputs.map((output, i) => ({ x: times[i], y: output.percentile_min }))
         },
         {
           type: "line",
@@ -68,11 +67,11 @@ function InferenceChartFits({ chains }) {
           fill: '-1',
           lineTension: 0,
           interpolate: true,
-          data: outputs.map((output, i) => ({ x: times[i], y: output.value_max }))
+          data: outputs.map((output, i) => ({ x: times[i], y: output.percentile_max }))
         },
         {
           type: "line",
-          label: `chain ${i}`,
+          label: `chain ${i}: median`,
           borderColor: color,
           borderWidth: 2.5,
           backgroundColor: backgroundColor,
@@ -80,8 +79,7 @@ function InferenceChartFits({ chains }) {
           fill: false,
           lineTension: 0,
           interpolate: true,
-          data: outputs.map((output, i) => (
-            { x: times[i], y: 0.5 * (output.value_max + output.value) }))
+          data: outputs.map((output, i) => ({ x: times[i], y: output.median }))
         },
       ]
     }).concat([
@@ -112,7 +110,7 @@ function InferenceChartFits({ chains }) {
         backgroundColor: backgroundColor,
         lineTension: 0,
         interpolate: true,
-        data: outputs.map((output, i) => ({ x: times[i], y: output.value }))
+        data: outputs.map((output, i) => ({ x: times[i], y: output.median }))
       }
     }).concat([
       {

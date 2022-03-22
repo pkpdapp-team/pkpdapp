@@ -94,6 +94,8 @@ export function FormSliderField({
   name,
   defaultValue,
   min,
+  label_min,
+  label_max,
   max,
   log,
   label,
@@ -125,13 +127,22 @@ export function FormSliderField({
   } 
 
   const marks = [
-    {
-      value: min,
-    },
-    {
-      value: max,
-    },
-  ];
+      label_min ? {
+        value: min,
+        label: label_min,
+      } : 
+      {
+        value: min,
+      },
+      label_max ? {
+        value: max,
+        label: label_max,
+      } : 
+      {
+        value: max,
+      },
+
+  ]
 
   const internalMin = log ? Math.log(min) : min;
   const internalMax = log ? Math.log(max) : max;
