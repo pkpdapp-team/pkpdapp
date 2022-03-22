@@ -21,6 +21,35 @@ class InferenceChain(models.Model):
         help_text='inference for this chain'
     )
 
+    def outputs_for(self, log_likelihood):
+        data = \
+            self.inference_output_results.filter(
+                log_likelihood=log_likelihood
+            ).order_by('time').values_list(
+                'median', 'percentile_min', 'percentile_max', 'time'
+            )
+        if data:
+            (
+                medians,
+                percentile_mins,
+                percentile_maxs,
+                times
+            ) = list(zip(*data))
+        else:
+            medians = []
+            percentile_mins = []
+            percentile_maxs = []
+            times = []
+
+        df = pd.DataFrame.from_dict({
+            'medians': medians,
+            'percentile_mins': percentile_mins,
+            'percentile_maxs': percentile_maxs,
+            'times': times,
+        })
+
+        return df
+
     def as_pandas(self):
         priors_values = \
             self.inference_results.filter(
@@ -84,10 +113,18 @@ class InferenceFunctionResult(models.Model):
         help_text='estimated parameter value'
     )
 
+
 class InferenceOutputResult(models.Model):
     """
     model for output values for a given logLikelihood.
     """
+    log_likelihood = models.ForeignKey(
+        LogLikelihood,
+        on_delete=models.CASCADE,
+        related_name='inference_output_results',
+        help_text='log_likelihood related to the output result'
+    )
+
     chain = models.ForeignKey(
         InferenceChain,
         on_delete=models.CASCADE,

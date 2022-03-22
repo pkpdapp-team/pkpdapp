@@ -22,8 +22,8 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('contenttypes', '0002_remove_content_type_name'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
+        ('contenttypes', '0002_remove_content_type_name'),
     ]
 
     operations = [
@@ -380,6 +380,7 @@ class Migration(migrations.Migration):
                 ('data', models.FloatField(help_text='data value for comparison')),
                 ('time', models.FloatField(help_text='time of output value')),
                 ('chain', models.ForeignKey(help_text='Chain related to the output result', on_delete=django.db.models.deletion.CASCADE, related_name='inference_output_results', to='pkpdapp.inferencechain')),
+                ('log_likelihood', models.ForeignKey(help_text='log_likelihood related to the output result', on_delete=django.db.models.deletion.CASCADE, related_name='inference_output_results', to='pkpdapp.loglikelihood')),
             ],
         ),
         migrations.CreateModel(

@@ -16,10 +16,12 @@ from pkpdapp.api.serializers import (
     VariableSerializer,
 )
 
+
 class InferenceOutputResultSerializer(serializers.ModelSerializer):
     class Meta:
         model = InferenceOutputResult
         fields = '__all__'
+
 
 class AlgorithmSerializer(serializers.ModelSerializer):
     class Meta:
@@ -42,7 +44,6 @@ class InferenceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Inference
         fields = '__all__'
-
 
     def create(self, validated_data):
         log_likelihood_data = validated_data.pop('log_likelihoods')
@@ -98,14 +99,26 @@ class InferenceSerializer(serializers.ModelSerializer):
 
 class InferenceChainSerializer(serializers.ModelSerializer):
     data = serializers.SerializerMethodField('get_data')
-    inference_output_results = InferenceOutputResultSerializer(many=True)
+    outputs = serializers.SerializerMethodField('get_outputs')
 
     class Meta:
         model = InferenceChain
         fields = '__all__'
 
     def get_outputs(self, inference_chain):
-        outputs = inference_chain.inference_output_results.all()
+        log_likelihoods = inference_chain.inference.log_likelihoods.all()
+        outputs = [
+            inference_chain.outputs_for(ll).to_dict()
+            for ll in log_likelihoods
+        ]
+
+        return {
+            'log_likelihoods': [
+                LogLikelihoodSerializer(ll).data
+                for ll in log_likelihoods
+            ],
+            'outputs': outputs
+        }
 
     def get_data(self, inference_chain):
         chain = inference_chain.as_pandas()
@@ -113,7 +126,6 @@ class InferenceChainSerializer(serializers.ModelSerializer):
 
         chain = {}
         kde = {}
-
 
         for prior, frame in by_priors:
             prior = int(frame['priors'].iloc[0])
@@ -131,18 +143,6 @@ class InferenceChainSerializer(serializers.ModelSerializer):
                 'values': kde_values.tolist(),
                 'densities': kde_densities.tolist(),
             }
-
-            #if values.count() > 0:
-            #    hist, bin_edges = np.histogram(values, bins='sturges')
-            #    bins = 0.5 * (bin_edges[1:] + bin_edges[:-1])
-            #else:
-            #    hist = np.array([0])
-            #    bins = np.array([0])
-            #kde[prior] = {
-            #    'values': bins.tolist(),
-            #    'densities': hist.tolist(),
-            #}
-
 
         # reduce to max 500 values for each prior
         sample_n = 500

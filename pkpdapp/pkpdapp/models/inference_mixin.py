@@ -149,12 +149,14 @@ class OutputWriter:
         )
         if len(outputs) != len(self._times) * len(self._chains):
             InferenceOutputResult.objects.filter(
-                chain__in=self._chains
+                chain__in=self._chains,
+                log_likelihood=self._log_likelihood
             ).delete()
             outputs = []
             for chain in self._chains:
                 for i in range(self._n_times):
                     outputs.append(InferenceOutputResult.objects.create(
+                        log_likelihood=self._log_likelihood,
                         chain=chain,
                         median=0,
                         percentile_min=0,
