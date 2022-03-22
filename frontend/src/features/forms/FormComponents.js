@@ -355,6 +355,7 @@ export function FormSelectField({
   defaultValue,
   label,
   options,
+  displayEmpty,
   useGroups,
   onChangeUser,
   ...rest
@@ -371,7 +372,7 @@ export function FormSelectField({
   }
   return (
     <FormControl className={classes.formInput}>
-      <InputLabel id={name.concat("-select-label")}>{label}</InputLabel>
+      <InputLabel id={name.concat("-select-label")} shrink={displayEmpty}>{label}</InputLabel>
       <Controller
         control={control}
         defaultValue={defaultValue}
@@ -384,13 +385,15 @@ export function FormSelectField({
           field: { onChange, onBlur, value, name, ref },
           fieldState: { invalid, isTouched, isDirty, error },
           formState,
-        }) => (
+        }) => {
+          return (
           <Select
             labelId={name.concat("-select-label")}
             value={value}
             error={error}
             onBlur={onBlur}
             checked={value}
+            displayEmpty
             inputRef={ref}
             onChange={(value) => {
               if (onChangeUser) {
@@ -417,7 +420,9 @@ export function FormSelectField({
                   </MenuItem>
                 ))}
           </Select>
-        )}
+          )
+        }
+        }
       />
     </FormControl>
   );

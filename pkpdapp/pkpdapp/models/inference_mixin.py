@@ -7,9 +7,9 @@
 from django.db.models import Q
 from django.db.models import Max
 from django.db import transaction
+import numpy as np
 import matplotlib.pylab as plt
 from time import perf_counter
-import numpy as np
 from django.db import connection
 import pints
 import time
@@ -106,6 +106,8 @@ class OutputWriter:
 
     def __init__(self, chains,
                  times, values, pints_forward_model,
+                 log_likelihood,
+                 priors,
                  use_every_n_sample=1,
                  buffer_size=100,
                  store_output_range=True):
@@ -118,6 +120,17 @@ class OutputWriter:
         ]
 
         self._chains = chains
+        self._priors = priors
+        self._noise_param_indices = []
+        for i, prior in enumerate(priors):
+            if not prior.log_likelihood_parameter.is_model_variable():
+                self._noise_param_indices.append(i)
+        self._fixed_noise_params = []
+        for param in log_likelihood.parameters.all():
+            if param.is_fixed() and not param.is_model_variable():
+                self._fixed_noise_params.append(param.value)
+
+        self._log_likelihood = log_likelihood
         self._pints_forward_model = pints_forward_model
         self._len_x0 = pints_forward_model.n_parameters()
         self._times = times
@@ -170,6 +183,15 @@ class OutputWriter:
                     result = self._pints_forward_model.simulate(
                         x0[:self._len_x0], self._times
                     )
+
+                    noise_params = (
+                        [x0[i] for i in self._noise_param_indices] +
+                        self._fixed_noise_params
+                    )
+                    result = self._log_likelihood.add_noise(
+                        result, noise_params
+                    )
+
                     for i in range(self._n_times):
                         value = result[i]
                         tdigests[i].update(value)
@@ -181,12 +203,21 @@ class OutputWriter:
                     self._outputs[output_index].value_max = maximum
                     output_index += 1
             else:
+                # just use the last parameter values
+                x0 = x0_buffer[-1]
                 result = self._pints_forward_model.simulate(
-                    x0_buffer[-1][:self._len_x0], self._times
+                    x0[:self._len_x0], self._times
+                )
+                noise_params = (
+                    [x0[i] for i in self._noise_param_indices] +
+                    self._fixed_noise_params
+                )
+                result_min, result_max = self._log_likelihood.noise_range(
+                    result, noise_params
                 )
                 for i in range(self._n_times):
-                    value = result[i]
-                    self._outputs[output_index].value = value
+                    self._outputs[output_index].value = result_min[i]
+                    self._outputs[output_index].value_max = result_max[i]
                     output_index += 1
 
         with transaction.atomic():
@@ -205,7 +236,6 @@ class InferenceMixin:
         self._inference_type, self._inference_method = (
             self.get_inference_type_and_method(inference)
         )
-
 
         # types needed later
         self.inference = inference
@@ -343,6 +373,7 @@ class InferenceMixin:
                             iteration=self.inference.number_of_iterations
                         ).value
                     )
+                x0 = np.array(x0)
             else:
                 x0 = self._pints_composed_log_prior.sample().flatten()
                 if (
@@ -413,7 +444,7 @@ class InferenceMixin:
                     )
                 )
 
-    @staticmethod
+    @ staticmethod
     def create_pints_problem_collection(model, times, values, outputs):
         # create a problem collection to handle the case when the outputs or
         # times are wragged
@@ -423,7 +454,7 @@ class InferenceMixin:
             times_values.append(values[i])
         return pints.ProblemCollection(model, *times_values)
 
-    @staticmethod
+    @ staticmethod
     def create_pints_log_likelihood(
             collection, inference,
     ):
@@ -494,8 +525,8 @@ class InferenceMixin:
         values = []
         times = []
         result_index = 0
-        noise_param_index = pints_forward_model.n_parameters()
         for obj in log_likelihoods:
+
             # if we have data then use it, otherwise
             # use simulated data
             if obj.biomarker_type:
@@ -505,32 +536,21 @@ class InferenceMixin:
             else:
                 output_values = result[result_index:result_index + len(fake_data_times)]
 
-                # add noise to the simulated data according to the log_likelihood
-                if obj.form == LogLikelihood.Form.NORMAL:
-                    noise_param = obj.parameters.get(
-                        variable__isnull=True
-                    )
-                    if noise_param.is_fixed():
-                        noise = np.random.normal(
-                            scale=noise_param.value,
-                            size=output_values.shape
-                        )
-                        output_values += noise
-                    else:
-                        noise = np.random.normal(
-                            scale=fake_data_x0[noise_param_index],
-                            size=output_values.shape
-                        )
-                        output_values += noise
-                        noise_param_index += 1
-                elif log_likelihood.form == LogLikelihood.Form.LOGNORMAL:
-                    output_values += (
-                        np.random.lognormal(
-                            scale=fake_data_x0[noise_param_index],
-                            size=output_values.shape
-                        )
-                    )
-                    noise_param_index += 1
+                # noise param value could be fixed or in priors
+                x0_noise_params = []
+                for param in obj.parameters.all():
+                    if param.is_fixed() and not param.is_model_variable():
+                        x0_noise_params.append(param.value)
+                n_parameters = pints_forward_model.n_parameters()
+                for i, prior in enumerate(
+                        priors_in_pints_order[n_parameters:]
+                ):
+                    param = prior.log_likelihood_parameter
+                    if param.log_likelihood == obj and not param.is_model_variable():
+                        x0_noise_params.append(fake_data_x0[n_parameters + i])
+
+                print('adding noise to fake data with params', x0_noise_params)
+                output_values = obj.add_noise(output_values, x0_noise_params)
 
                 values.append(output_values)
                 times.append(fake_data_times)
@@ -662,6 +682,8 @@ class InferenceMixin:
             self._times_all,
             self._values,
             self._pints_forward_model,
+            self.inference.log_likelihoods.first(),
+            self.priors_in_pints_order,
             use_every_n_sample=evaluate_model_every_n_iterations,
             buffer_size=write_every_n_iteration,
             store_output_range=self.inference.algorithm.category == 'SA'

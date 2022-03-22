@@ -48,10 +48,10 @@ function InferenceChartFits({ chains }) {
       return [
         {
           type: "line",
-          label: '10% percentile',
+          label: `chain ${i}: 10% percentile`,
           fill: false,
           borderColor: color,
-          borderWidth: 2.5,
+          borderWidth: 0,
           pointRadius: 0,
           backgroundColor: backgroundColor,
           lineTension: 0,
@@ -60,15 +60,28 @@ function InferenceChartFits({ chains }) {
         },
         {
           type: "line",
-          label: '90% percentile',
+          label: `chain ${i}: 90% percentile`,
+          borderColor: color,
+          borderWidth: 0,
+          backgroundColor: backgroundColor,
+          pointRadius: 0,
+          fill: '-1',
+          lineTension: 0,
+          interpolate: true,
+          data: outputs.map((output, i) => ({ x: times[i], y: output.value_max }))
+        },
+        {
+          type: "line",
+          label: `chain ${i}`,
           borderColor: color,
           borderWidth: 2.5,
           backgroundColor: backgroundColor,
           pointRadius: 0,
-          fill: -1,
+          fill: false,
           lineTension: 0,
           interpolate: true,
-          data: outputs.map((output, i) => ({ x: times[i], y: output.value_max }))
+          data: outputs.map((output, i) => (
+            { x: times[i], y: 0.5 * (output.value_max + output.value) }))
         },
       ]
     }).concat([
@@ -92,7 +105,7 @@ function InferenceChartFits({ chains }) {
       const backgroundColor = getColorBackground(chain.id);
       return {
         type: "line",
-        label: 'final fit',
+        label: `chain ${i}: final fit`,
         borderColor: color,
         borderWidth: 2.5,
         pointRadius: 0,

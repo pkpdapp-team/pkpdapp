@@ -7,7 +7,6 @@
 # flake8: noqa
 
 
-
 from django.conf import settings
 from django.db import migrations, models
 import django.db.models.deletion
@@ -107,6 +106,7 @@ class Migration(migrations.Migration):
                 ('initialization_strategy', models.CharField(choices=[('D', 'Default Value of model'), ('R', 'Random from prior'), ('F', 'From other inference')], default='R', max_length=1)),
                 ('number_of_chains', models.IntegerField(default=4, help_text='number of chains')),
                 ('max_number_of_iterations', models.IntegerField(default=1000, help_text='maximum number of iterations')),
+                ('burn_in', models.IntegerField(default=0, help_text='final iteration of burn-in')),
                 ('number_of_iterations', models.IntegerField(default=0, help_text='number of iterations calculated')),
                 ('time_elapsed', models.IntegerField(default=0, help_text='Elapsed run time for inference in seconds')),
                 ('number_of_function_evals', models.IntegerField(default=0, help_text='number of function evaluations')),

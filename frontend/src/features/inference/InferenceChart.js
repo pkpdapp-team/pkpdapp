@@ -12,6 +12,7 @@ import InferenceChartSamplingResults from './InferenceChartSamplingResults'
 import InferenceChartTraces from './InferenceChartTraces'
 import InferenceChartFits from './InferenceChartFits'
 import { fetchChainsByInferenceId } from "../inference/chainSlice";
+import { fetchInferenceById } from "../inference/inferenceSlice";
 
 import {selectChainsByInferenceId} from './chainSlice'
 import {selectAlgorithmById} from './algorithmsSlice'
@@ -107,6 +108,7 @@ export default function InferenceChart({inference}) {
 
   const handleRefresh = () => {
     dispatch(fetchChainsByInferenceId(inference.id));
+    dispatch(fetchInferenceById(inference.id));
   }
 
   const noData = chains.length === 0

@@ -6,6 +6,8 @@
 
 from django.db import models
 from django.db.models import Q
+import numpy as np
+import scipy.stats as sps
 from pkpdapp.models import (
     Variable, BiomarkerType, Inference,
     PharmacodynamicModel,
@@ -95,6 +97,43 @@ class LogLikelihood(models.Model):
         choices=Form.choices,
         default=Form.NORMAL,
     )
+
+    def add_noise(self, output_values, noise_params):
+        """
+        add noise to the simulated data according to the log_likelihood
+        """
+        if self.form == LogLikelihood.Form.NORMAL:
+            output_values += np.random.normal(
+                scale=noise_params[0],
+                size=output_values.shape
+            )
+        elif self.form == LogLikelihood.Form.LOGNORMAL:
+            output_values += (
+                np.random.lognormal(
+                    scale=noise_params[0],
+                    size=output_values.shape
+                )
+            )
+        return output_values
+
+    def noise_range(self, output_values, noise_params):
+        """
+        return 10% and 90% noise levels from a set of output values
+        """
+        output_values_min = np.copy(output_values)
+        output_values_max = np.copy(output_values)
+        if self.form == LogLikelihood.Form.NORMAL:
+            for i in range(len(output_values)):
+                dist = sps.norm(loc=output_values[i], scale=noise_params[0])
+                output_values_min[i] = dist.ppf(.1)
+                output_values_max[i] = dist.ppf(.9)
+        elif self.form == LogLikelihood.Form.LOGNORMAL:
+            for i in range(len(output_values)):
+                dist = sps.lognorm(loc=output_values[i], scale=noise_params[0])
+                output_values_min[i] = dist.ppf(.1)
+                output_values_max[i] = dist.ppf(.9)
+
+        return output_values_min, output_values_max
 
     def create_pints_forward_model(self, fitted_parameter_names, outputs=None):
         """

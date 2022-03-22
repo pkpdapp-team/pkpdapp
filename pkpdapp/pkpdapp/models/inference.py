@@ -90,6 +90,11 @@ class Inference(StoredModel):
         help_text='maximum number of iterations'
     )
 
+    burn_in = models.IntegerField(
+        default=0,
+        help_text='final iteration of burn-in',
+    )
+
     number_of_iterations = models.IntegerField(
         default=0,
         help_text='number of iterations calculated'

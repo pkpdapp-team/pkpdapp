@@ -40,7 +40,7 @@ import { selectAllDatasets } from "../datasets/datasetsSlice";
 
 import { updateInference, deleteInference, selectAllInferences } from "../inference/inferenceSlice";
 import { runInference, stopInference } from "./inferenceSlice";
-import { FormTextField, FormSelectField } from "../forms/FormComponents";
+import { FormTextField, FormSelectField, FormSliderField } from "../forms/FormComponents";
 import { userHasReadOnlyAccess } from "../projects/projectsSlice";
 
 const useStyles = makeStyles((theme) => ({
@@ -329,7 +329,9 @@ function LogLikelihoodSubform({
   const biomarker_type_options = biomarker_types.map((biomarker_type) => ({
     key: biomarker_type.name,
     value: biomarker_type.id,
-  }));
+  })).concat([
+    {key: "None", value: ""}
+  ]);
 
   
   const form_options = [
@@ -479,6 +481,7 @@ function LogLikelihoodSubform({
         control={control}
         defaultValue={logLikelihood.biomarker_type || ""}
         options={biomarker_type_options}
+        displayEmpty
         disabled={disabled}
         name={`${baseName}.biomarker_type`}
         label="Biomarker Type"
@@ -557,10 +560,16 @@ function LogLikelihoodSubform({
 export default function DraftInferenceDetail({ project, inference }) {
   const dispatch = useDispatch();
 
+  const logLikelihoodsNoNull = inference.log_likelihoods.map(ll =>
+    Object.keys(ll).reduce((sum, key) => {
+      sum[key] = ll[key] || ""
+      return sum
+    }, {}))
   const { control, handleSubmit, watch, setValue } = useForm({
     defaultValues: {
       ...inference,
-      initialization_inference: inference.initialization_inference || ""
+      initialization_inference: inference.initialization_inference || "",
+      log_likelihoods: logLikelihoodsNoNull
     },
   });
 
@@ -614,6 +623,8 @@ export default function DraftInferenceDetail({ project, inference }) {
       biomarker_type: "",
     });
 
+  const max_number_of_iterations = watch("max_number_of_iterations", 0)
+  console.log('inference', inference)
   
 
   const onSubmit = (values) => {
@@ -632,6 +643,7 @@ export default function DraftInferenceDetail({ project, inference }) {
     : [{ key: "Loading...", value: null, group: null }];
 
   const initialization_options = [
+    { key: "NA", value: "" },
     { key: "Random from prior", value: "R" },
     { key: "Default values of model", value: "D" },
     { key: "From another inference", value: "F" },
@@ -644,13 +656,11 @@ export default function DraftInferenceDetail({ project, inference }) {
         control={control}
         name="name"
         label="Name"
-        disabled={readOnly}
       />
 
       <FormTextField
         control={control}
         fullWidth
-        disabled={readOnly}
         multiline
         name="description"
         label="Description"
@@ -691,6 +701,7 @@ export default function DraftInferenceDetail({ project, inference }) {
       <FormSelectField
         control={control}
         disabled={readOnly}
+        defaultValue={inference.algorithm || ""}
         useGroups
         options={algorithm_options}
         name="algorithm"
@@ -700,6 +711,7 @@ export default function DraftInferenceDetail({ project, inference }) {
       <FormSelectField
         control={control}
         options={initialization_options}
+        defaultValue={inference.initialization_strategy || ""}
         name="initialization_strategy"
         disabled={readOnly}
         label="Initialization Strategy"
@@ -708,6 +720,8 @@ export default function DraftInferenceDetail({ project, inference }) {
       <FormSelectField
         control={control}
         options={inference_options}
+        defaultValue={inference.initialization_inference || ""}
+        displayEmpty
         name="initialization_inference"
         disabled={readOnly}
         label="Initialize from"
@@ -719,6 +733,15 @@ export default function DraftInferenceDetail({ project, inference }) {
         label="Maximum iterations"
         disabled={readOnly}
         type="number"
+      />
+
+      <FormSliderField
+        control={control}
+        name={"burn_in"}
+        tooltip={"choose burn-in"}
+        label={"Final burn-in iteration"}
+        min={0}
+        max={max_number_of_iterations}
       />
 
       <FormTextField
@@ -733,7 +756,7 @@ export default function DraftInferenceDetail({ project, inference }) {
         <Button
           className={classes.controls}
           type="submit"
-          disabled={readOnly}
+          disabled={false}
           variant="contained"
         >
           Save

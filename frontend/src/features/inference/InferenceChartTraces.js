@@ -35,6 +35,9 @@ function InferenceChartDistribution({ prior }) {
     datasets: prior.kdes.map((kde, index) => {
       const color = getColor(prior.id);
       const backgroundColor = getColorBackground(prior.id);
+      const data = kde ? 
+        kde.densities.map((y, i) => ({ x: kde.values[i], y: y })) : 
+        { x: null, y: null }
       return {
         type: "line",
         label: `Chain ${index}`,
@@ -44,7 +47,7 @@ function InferenceChartDistribution({ prior }) {
         pointRadius: 0,
         fill: true,
         borderWidth: 2.5,
-        data: kde.densities.map((y, i) => ({ x: kde.values[i], y: y })),
+        data: data,
       };
     })
   }
@@ -115,6 +118,9 @@ function InferenceChartTrace({ prior }) {
   const data = {
     datasets: prior.chains.map((chain, index) => {
       const color = getColor(prior.id);
+      const data = chain ? 
+        chain.values.map((y, i) => ({ x: chain.iterations[i], y: y })) :
+        { x : null, y: null }
       return {
         type: "line",
         label: `Chain ${index}`,
@@ -126,7 +132,7 @@ function InferenceChartTrace({ prior }) {
         borderWidth: 1.5,
         lineTension: 0,
         interpolate: true,
-        data: chain.values.map((y, i) => ({ x: chain.iterations[i], y: y })),
+        data: data,
       };
     })
   }

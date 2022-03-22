@@ -29,13 +29,13 @@ export default function InferenceChartSamplingResults({ inference, priorsWithCha
 
   const rows = priorsWithChainValues.map(prior => {
     const number_of_samples = prior.chains.map(
-      c => c.length
+      c => c.values.length
     ).reduce((sum, x) => sum + x, 0)
     const mean = (
-      prior.chains.reduce((sum, chain) => sum + chain.reduce((sum, x) => sum + x, 0), 0) / number_of_samples
+      prior.chains.reduce((sum, chain) => sum + chain.values.reduce((sum, x) => sum + x, 0), 0) / number_of_samples
     ).toFixed(2)
     const stddev = Math.sqrt(prior.chains.reduce((sum, chain) => 
-      sum + chain.map(x => (x - mean)**2).reduce((sum, x) => sum + x, 0)
+      sum + chain.values.map(x => (x - mean)**2).reduce((sum, x) => sum + x, 0)
         , 0
       ) / number_of_samples
     ).toFixed(2)

@@ -23,7 +23,9 @@ class InferenceChain(models.Model):
 
     def as_pandas(self):
         priors_values = \
-            self.inference_results.order_by('iteration').values_list(
+            self.inference_results.filter(
+                iteration__gt=self.inference.burn_in
+            ).order_by('iteration').values_list(
                 'prior', 'value', 'iteration'
             )
         if priors_values:
