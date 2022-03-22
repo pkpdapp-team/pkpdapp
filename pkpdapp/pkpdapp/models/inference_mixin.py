@@ -705,7 +705,13 @@ class InferenceMixin:
             self.inference.time_elapsed = time_now - time_start
 
             if i % write_every_n_iteration == 0:
-                self.inference.save()
+                # only save fields we've updated
+                self.inference.save(
+                    update_fields=[
+                        'number_of_iterations',
+                        'number_of_function_evals',
+                    ]
+                )
 
         # write out the remaining iterations
         writer.write()
