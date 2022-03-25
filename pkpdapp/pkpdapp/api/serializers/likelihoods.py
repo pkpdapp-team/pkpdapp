@@ -82,6 +82,7 @@ class LogLikelihoodSerializer(serializers.ModelSerializer):
     class Meta:
         model = LogLikelihood
         fields = '__all__'
+        read_only_fields = ("inference", )
 
     def get_time_variable(self, instance):
         time_variable = instance.get_model().variables.get(

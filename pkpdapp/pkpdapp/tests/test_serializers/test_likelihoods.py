@@ -83,17 +83,3 @@ class TestObjectiveFunctionSerializer(TestCase):
         serializer.update(self.log_likelihood, validated_data)
         self.parameter.refresh_from_db()
         self.assertEqual(self.parameter.value, 2.0)
-
-    def test_create(self):
-        data = {
-            'form': 'LN',
-            'variable': self.variables[0].id,
-            'inference': self.inference.id,
-            'biomarker_type': self.biomarker_type.id,
-            'parameters': [],
-        }
-        serializer = LogLikelihoodSerializer(data=data)
-        serializer.is_valid()
-        new_log_likelihood = serializer.save()
-        self.assertEqual(new_log_likelihood.form, 'LN')
-        self.assertGreater(new_log_likelihood.parameters.count(), 1)
