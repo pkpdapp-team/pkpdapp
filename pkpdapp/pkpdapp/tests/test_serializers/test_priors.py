@@ -7,7 +7,8 @@
 from django.test import TestCase
 from pkpdapp.models import (
     Inference, PharmacodynamicModel, Project,
-    PriorNormal, PriorUniform,
+    PriorNormal, PriorUniform, BiomarkerType,
+    LogLikelihood, Prior
 )
 from pkpdapp.api.serializers import (
     PriorSerializer
@@ -24,25 +25,35 @@ class TestPriorSerializer(TestCase):
         )
         variables = model.variables.all()
         self.inference = Inference.objects.create(
-            pd_model=model,
             project=project,
         )
+        biomarker_type = BiomarkerType.objects.get(
+            name='Tumour volume',
+            dataset__name='lxf_control_growth'
+        )
+        self.log_likelihood = LogLikelihood.objects.create(
+            form='N',
+            variable=model.variables.first(),
+            inference=self.inference,
+            biomarker_type=biomarker_type
+        )
+        parameters = self.log_likelihood.parameters.all()
         PriorNormal.objects.create(
             mean=1.0,
             sd=1.0,
-            variable=variables[0],
-            inference=self.inference,
+            log_likelihood_parameter=parameters[0],
         )
         self.prior_uniform = PriorUniform.objects.create(
             lower=1.0,
             upper=2.0,
-            variable=variables[0],
-            inference=self.inference,
+            log_likelihood_parameter=parameters[1],
         )
 
     def test_serialize(self):
         serializer = PriorSerializer(
-            self.inference.priors.all(),
+            Prior.objects.filter(
+                log_likelihood_parameter__log_likelihood=self.log_likelihood
+            ),
             many=True
         )
         data = serializer.data

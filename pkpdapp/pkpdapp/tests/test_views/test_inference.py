@@ -121,23 +121,16 @@ class TestInferenceViews(APITestCase):
         self.assertTrue('data' in response.data)
 
     def test_run_inference_errors(self):
-        inference_no_model = Inference.objects.create(
-            name='bad bob',
-            project=self.inference.project,
-        )
-
         log_likelihood = self.inference.log_likelihoods.first()
         model = log_likelihood.get_model()
 
         inference_no_prior = Inference.objects.create(
             name='bad bob',
-            pd_model=model,
             project=self.inference.project,
         )
 
-        inference_no_objective_function = Inference.objects.create(
+        inference_no_log_likelihood = Inference.objects.create(
             name='bad bob',
-            pd_model=model,
             project=self.inference.project,
         )
 
@@ -145,37 +138,27 @@ class TestInferenceViews(APITestCase):
             name='Tumour volume',
             dataset__name='lxf_control_growth'
         )
-        LogLikelihoodNormal.objects.create(
-            sd=1.0,
+
+        LogLikelihood.objects.create(
+            form='N',
             variable=model.variables.first(),
             inference=inference_no_prior,
             biomarker_type=biomarker_type
         )
-
-        PriorNormal.objects.create(
-            mean=1.0,
-            sd=1.0,
-            variable=model.variables.first(),
-            inference=inference_no_objective_function,
-        )
-
-        response = self.client.post(
-            "/api/inference/{}/run".format(inference_no_model.id)
-        )
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        errors = response.data
-        self.assertTrue('pd_model' in errors)
 
         response = self.client.post(
             "/api/inference/{}/run".format(inference_no_prior.id)
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         errors = response.data
-        self.assertTrue('priors' in errors)
+        self.assertTrue('log_likelihoods' in errors)
+        self.assertTrue('prior' in errors['log_likelihoods'])
 
         response = self.client.post(
-            "/api/inference/{}/run".format(inference_no_objective_function.id)
+            "/api/inference/{}/run".format(inference_no_log_likelihood.id)
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         errors = response.data
-        self.assertTrue('objective_functions' in errors)
+        print(errors)
+        self.assertTrue('log_likelihoods' in errors)
+        self.assertTrue('least one log_likelihood' in errors['log_likelihoods'])
