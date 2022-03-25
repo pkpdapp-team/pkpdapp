@@ -8,7 +8,7 @@ from django.test import TestCase
 from pkpdapp.models import (
     PharmacodynamicModel, LogLikelihood,
     Project, BiomarkerType,
-    Inference,
+    Inference, PriorUniform
 )
 from pkpdapp.api.serializers import (
     LogLikelihoodSerializer
@@ -20,28 +20,34 @@ class TestObjectiveFunctionSerializer(TestCase):
         project = Project.objects.get(
             name='demo',
         )
-        biomarker_type = BiomarkerType.objects.get(
+        self.biomarker_type = BiomarkerType.objects.get(
             name='Tumour volume',
             dataset__name='lxf_control_growth'
         )
         model = PharmacodynamicModel.objects.get(
             name='tumour_growth_inhibition_model_koch',
         )
-        variables = model.variables.all()
+        self.variables = model.variables.all()
         self.inference = Inference.objects.create(
             project=project,
         )
-        LogLikelihood.objects.create(
+        self.log_likelihood = LogLikelihood.objects.create(
             form='N',
-            variable=variables[0],
+            variable=self.variables[0],
             inference=self.inference,
-            biomarker_type=biomarker_type
+            biomarker_type=self.biomarker_type
         )
+        self.parameter = self.log_likelihood.parameters.first()
         LogLikelihood.objects.create(
             form='LN',
-            variable=variables[0],
+            variable=self.variables[0],
             inference=self.inference,
-            biomarker_type=biomarker_type
+            biomarker_type=self.biomarker_type
+        )
+        PriorUniform.objects.create(
+            lower=0.0,
+            upper=1.0,
+            log_likelihood_parameter=self.parameter
         )
 
     def test_serialize(self):
@@ -62,3 +68,32 @@ class TestObjectiveFunctionSerializer(TestCase):
         self.assertNotEqual(
             data[0]['form'], data[1]['form']
         )
+
+    def test_update(self):
+        serializer = LogLikelihoodSerializer(self.log_likelihood)
+        data = serializer.data
+        found_index = -1
+        for i in range(len(data['parameters'])):
+            if data['parameters'][i]['name'] == self.parameter.name:
+                found_index = i
+                break
+
+        data['parameters'][found_index]['value'] = 2.0
+        validated_data = serializer.to_internal_value(data)
+        serializer.update(self.log_likelihood, validated_data)
+        self.parameter.refresh_from_db()
+        self.assertEqual(self.parameter.value, 2.0)
+
+    def test_create(self):
+        data = {
+            'form': 'LN',
+            'variable': self.variables[0].id,
+            'inference': self.inference.id,
+            'biomarker_type': self.biomarker_type.id,
+            'parameters': [],
+        }
+        serializer = LogLikelihoodSerializer(data=data)
+        serializer.is_valid()
+        new_log_likelihood = serializer.save()
+        self.assertEqual(new_log_likelihood.form, 'LN')
+        self.assertGreater(new_log_likelihood.parameters.count(), 1)

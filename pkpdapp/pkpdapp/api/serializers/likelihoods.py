@@ -82,7 +82,6 @@ class LogLikelihoodSerializer(serializers.ModelSerializer):
     class Meta:
         model = LogLikelihood
         fields = '__all__'
-        read_only_fields = ("inference", )
 
     def get_time_variable(self, instance):
         time_variable = instance.get_model().variables.get(
@@ -105,17 +104,13 @@ class LogLikelihoodSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         # save method of log_likelihood will create its own parameters
         parameters_data = validated_data.pop('parameters')
-        print('creating new log_likelihood', validated_data)
         new_log_likelihood = BaseLogLikelihoodSerializer().create(
             validated_data
         )
 
-        print('created new log_likelihood', validated_data)
-
         # new log_likelihood will have had its parameters created, so
         # here we just update them with the validated data
         old_parameters = list((new_log_likelihood.parameters).all())
-        print('old_parameters', old_parameters, parameters_data)
         for field_datas, old_models, Serializer in [
                 (parameters_data, old_parameters,
                  LogLikelihoodParameterSerializer),
