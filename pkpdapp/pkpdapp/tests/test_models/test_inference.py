@@ -8,7 +8,6 @@ from django.test import TestCase
 from pkpdapp.models import (
     Inference, PharmacodynamicModel, LogLikelihood,
     Project, BiomarkerType,
-    PriorNormal, PriorUniform,
 )
 
 
@@ -35,7 +34,6 @@ class TestInferenceSerializer(TestCase):
             inference=self.inference,
             biomarker_type=biomarker_type
         )
-
 
     def test_run_inference(self):
         self.inference.run_inference(test=True)

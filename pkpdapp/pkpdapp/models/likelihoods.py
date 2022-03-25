@@ -10,10 +10,6 @@ import numpy as np
 import scipy.stats as sps
 from pkpdapp.models import (
     Variable, BiomarkerType, Inference,
-    PharmacodynamicModel,
-    DosedPharmacokineticModel,
-    PkpdModel,
-    StoredModel,
     MyokitForwardModel,
 )
 
@@ -83,7 +79,8 @@ class LogLikelihood(models.Model):
         on_delete=models.CASCADE,
         blank=True, null=True,
         help_text=(
-            'biomarker_type for measurements. if blank then simulated data is used, '
+            'biomarker_type for measurements. '
+            'if blank then simulated data is used, '
             'with non-fixed parameters sampled at the start of inference'
         )
     )

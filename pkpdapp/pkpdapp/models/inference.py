@@ -5,12 +5,10 @@
 #
 
 from django.db import models
-from django.db.models import Q
 from pkpdapp.celery import app
 from pkpdapp.models import (
     Project, PharmacodynamicModel,
     DosedPharmacokineticModel,
-    PkpdModel,
     StoredModel,
 )
 

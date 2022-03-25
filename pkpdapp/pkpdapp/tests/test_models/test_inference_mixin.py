@@ -5,7 +5,6 @@
 #
 
 from django.test import TestCase
-import matplotlib.pylab as plt
 import numpy as np
 from pkpdapp.models import (
     Inference, PharmacodynamicModel,
@@ -128,28 +127,10 @@ class TestInferenceMixinPkModel(TestCase):
         log_posterior = self.inference_mixin._pints_log_posterior
         val = log_posterior([0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01])
         self.assertAlmostEqual(val, 79.46979777255027, delta=0.1)
-        val = log_posterior([0.0065, 0.0063, 0.05, 0.0135, 0.0022, 0.0089, 0.004])
+        val = log_posterior([
+            0.0065, 0.0063, 0.05, 0.0135, 0.0022, 0.0089, 0.004
+        ])
         self.assertAlmostEqual(val, 95.96699346836532, delta=0.1)
-
-        #CL
-        #base = [0.0065, 0.0063, 0.05, 0.0135, 0.0022, 0.0089, 0.004]
-        #CL = np.linspace(0.004, 0.008, 100)
-        #posterior_CL = [
-        #    log_posterior([0.0065, v, 0.05, 0.0135, 0.0022, 0.0089, 0.004])
-        #    for v in CL
-        #]
-        #plt.plot(CL, posterior_CL, label='CL')
-        #plt.legend()
-        #plt.show()
-        #plt.clf()
-        #Vc = np.linspace(0.00004, 0.108, 100)
-        #posterior_Vc = [
-        #    log_posterior([0.0065, 0.0063, v, 0.0135, 0.0022, 0.0089, 0.004])
-        #    for v in Vc
-        #]
-        #plt.plot(Vc, posterior_Vc, label='Vc')
-        #plt.legend()
-        #plt.show()
 
 
 class TestInferenceMixinSingleOutputSampling(TestCase):
@@ -288,8 +269,6 @@ class TestInferenceMixinSingleOutputSampling(TestCase):
         inference = self.inference_mixin.inference
         self.assertTrue(inference.time_elapsed > 0)
         self.assertTrue(inference.number_of_function_evals > 0)
-
-
 
 
 class TestInferenceMixinSingleOutputOptimisation(TestCase):
@@ -499,6 +478,7 @@ class TestInferenceMixinSingleOutputOptimisation(TestCase):
                 expected = list(range(11))
                 self.assertTrue(np.array_equal(iterations, expected))
 
+
 class TestInferenceMixinFakeData(TestCase):
     def setUp(self):
         # ensure we've got nothing in the cache
@@ -566,7 +546,6 @@ class TestInferenceMixinFakeData(TestCase):
         # create mixin object
         self.inference_mixin = InferenceMixin(self.inference)
 
-
     def test_inference_runs(self):
         # tests that inference runs and writes results to db
         self.inference_mixin.run_inference()
@@ -604,4 +583,3 @@ class TestInferenceMixinFakeData(TestCase):
         inference = self.inference_mixin.inference
         self.assertTrue(inference.time_elapsed > 0)
         self.assertTrue(inference.number_of_function_evals > 0)
-

@@ -175,7 +175,6 @@ class Variable(StoredModel):
         if found_variable is not None:
             return variables[0]
         else:
-            print('creating variable', myokit_variable.qname(), myokit_variable.value())
             return Variable.objects.create(
                 name=myokit_variable.name(),
                 qname=myokit_variable.qname(),

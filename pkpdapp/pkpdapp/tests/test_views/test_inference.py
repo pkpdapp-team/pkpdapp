@@ -8,14 +8,13 @@ from rest_framework import status
 from django.contrib.auth.models import User
 from rest_framework.test import APITestCase, APIClient
 from pkpdapp.models import (
-    Inference, PharmacodynamicModel,
+    Inference,
     PharmacokineticModel, DosedPharmacokineticModel,
     Protocol, Unit,
     LogLikelihood,
     Project, BiomarkerType,
     PriorUniform, MyokitForwardModel,
-    InferenceMixin, Algorithm, InferenceChain, InferenceResult,
-    InferenceFunctionResult,
+    InferenceMixin, Algorithm,
 )
 
 
@@ -103,11 +102,9 @@ class TestInferenceViews(APITestCase):
         # create mixin object
         self.inference_mixin = InferenceMixin(self.inference)
 
-
         user = User.objects.get(username='demo')
         self.client = APIClient()
         self.client.force_authenticate(user=user)
-
 
     def test_chains_view(self):
         self.inference_mixin.run_inference()
@@ -161,4 +158,6 @@ class TestInferenceViews(APITestCase):
         errors = response.data
         print(errors)
         self.assertTrue('log_likelihoods' in errors)
-        self.assertTrue('least one log_likelihood' in errors['log_likelihoods'])
+        self.assertTrue(
+            'least one log_likelihood' in errors['log_likelihoods']
+        )

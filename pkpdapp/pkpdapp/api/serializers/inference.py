@@ -11,9 +11,7 @@ from pkpdapp.models import (
 import scipy.stats
 import numpy as np
 from pkpdapp.api.serializers import (
-    PriorSerializer,
     LogLikelihoodSerializer,
-    VariableSerializer,
 )
 
 
@@ -135,10 +133,7 @@ class InferenceChainSerializer(serializers.ModelSerializer):
             min_value = values.min()
             max_value = values.max()
             kde_values = np.linspace(min_value, max_value, 100)
-            try:
-                kde_densities = scipy.stats.gaussian_kde(values)(kde_values)
-            except:
-                kde_densities = np.zeros_like(kde_values)
+            kde_densities = scipy.stats.gaussian_kde(values)(kde_values)
             kde[prior] = {
                 'values': kde_values.tolist(),
                 'densities': kde_densities.tolist(),
@@ -147,7 +142,9 @@ class InferenceChainSerializer(serializers.ModelSerializer):
         # reduce to max 500 values for each prior
         sample_n = 500
         if any(by_priors['values'].count() > sample_n):
-            by_priors = by_priors.sample(n=sample_n).sort_index().groupby('priors')
+            by_priors = by_priors.sample(
+                n=sample_n
+            ).sort_index().groupby('priors')
 
         for prior, frame in by_priors:
             values = frame['values']

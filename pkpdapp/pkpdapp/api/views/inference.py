@@ -50,7 +50,9 @@ class InferenceOperationView(views.APIView):
                 errors['log_likelihoods'] = 'LogLikelihood must have a model'
 
             if len(log_likelihood.get_priors()) == 0:
-                errors['log_likelihoods'] = 'LogLikelihood must have at least one prior'
+                errors['log_likelihoods'] = (
+                    'LogLikelihood must have at least one prior'
+                )
 
         if errors:
             return Response(

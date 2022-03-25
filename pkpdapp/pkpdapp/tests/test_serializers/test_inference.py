@@ -8,13 +8,14 @@ from django.test import TestCase
 from pkpdapp.models import (
     Inference, PharmacodynamicModel, LogLikelihood,
     Project, BiomarkerType,
-    PriorNormal, PriorUniform,
+    PriorUniform,
     MyokitForwardModel,
     Algorithm, InferenceMixin
 )
 from pkpdapp.api.serializers import (
     InferenceSerializer, InferenceChainSerializer,
 )
+
 
 class TestInferenceSerializer(TestCase):
     def setUp(self):
@@ -75,7 +76,6 @@ class TestInferenceSerializer(TestCase):
             upper=2.0,
             log_likelihood_parameter=noise_param,
         )
-
 
     def test_create(self):
         serializer = InferenceSerializer()

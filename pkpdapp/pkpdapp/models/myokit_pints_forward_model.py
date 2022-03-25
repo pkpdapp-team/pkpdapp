@@ -6,7 +6,6 @@
 
 import pints
 import numpy as np
-import numbers
 from sys import float_info
 
 
@@ -89,9 +88,6 @@ class MyokitForwardModel(pints.ForwardModel):
                                              for v
                                              in self._fixed_parameter_names]
 
-        print('created forward model with fixed params', self._fixed_parameter_dict)
-        print('created forward model with variable params',
-              self._variable_parameter_names)
         self._variable_parameter_indices = [self._all_parameter_names.index(v)
                                             for v
                                             in self._variable_parameter_names]

@@ -5,10 +5,9 @@
 #
 
 from django.db import models
-from django.db.models import Q
 from polymorphic.models import PolymorphicModel
 from pkpdapp.models import (
-    Variable, LogLikelihoodParameter, LogLikelihood
+    LogLikelihoodParameter
 )
 
 

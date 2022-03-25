@@ -23,7 +23,6 @@ class TestPriorSerializer(TestCase):
         model = PharmacodynamicModel.objects.get(
             name='tumour_growth_inhibition_model_koch',
         )
-        variables = model.variables.all()
         self.inference = Inference.objects.create(
             project=project,
         )

@@ -26,9 +26,6 @@ class PriorNormalSerializer(serializers.ModelSerializer):
         return 'PriorNormal'
 
 
-
-
-
 class PriorUniformSerializer(serializers.ModelSerializer):
     inference = serializers.PrimaryKeyRelatedField(
         queryset=Inference.objects.all(),

@@ -4,19 +4,14 @@
 # copyright notice and full license details.
 #
 
-from django.db.models import Q
-from django.db.models import Max
 from django.db import transaction
 import numpy as np
-import matplotlib.pylab as plt
-from time import perf_counter
-from django.db import connection
 import pints
 import time
 from tdigest import TDigest
 from pkpdapp.models import (
-    MyokitForwardModel, LogLikelihood,
-    LogLikelihoodParameter, Inference,
+    LogLikelihood,
+    Inference,
     PriorNormal, PriorUniform, InferenceResult,
     InferenceChain, InferenceFunctionResult,
     InferenceOutputResult,
@@ -101,7 +96,8 @@ class ChainWriter:
 
 class OutputWriter:
     """
-    utility class for generating & writing output results writes to the database
+    utility class for generating & writing output
+    results writes to the database
     """
 
     def __init__(self, chains,
@@ -299,8 +295,10 @@ class InferenceMixin:
 
         # get data
         self._values, self._times = (
-            self.get_data(self._log_likelihoods, self._pints_forward_model,
-                          self.priors_in_pints_order, self._pints_composed_log_prior)
+            self.get_data(
+                self._log_likelihoods, self._pints_forward_model,
+                self.priors_in_pints_order, self._pints_composed_log_prior
+            )
         )
         self._times_all = np.sort(list(set(np.concatenate(self._times))))
 
@@ -352,7 +350,9 @@ class InferenceMixin:
                 InferenceChain.objects.create(inference=self.inference)
 
         if self.inference.chains.count() != self.inference.number_of_chains:
-            raise RuntimeError('number of chains not equal to chains in database')
+            raise RuntimeError(
+                'number of chains not equal to chains in database'
+            )
 
         # create sampler objects
         # If results already exist append to them, otherwise randomly
@@ -365,7 +365,8 @@ class InferenceMixin:
             Inference.InitializationStrategy.FROM_OTHER
         ):
             other_chains = self.inference.initialization_inference.chains.all()
-            other_last_iteration = self.inference.initialization_inference.number_of_iterations
+            other_last_iteration = \
+                self.inference.initialization_inference.number_of_iterations
         for i, chain in enumerate(self.inference.chains.all()):
             x0 = []
             if self.inference.number_of_iterations > 0:
@@ -401,7 +402,9 @@ class InferenceMixin:
                         iteration=other_last_iteration
 
                     )
-                    for xi, this_prior in enumerate(self.priors_in_pints_order):
+                    for xi, this_prior in enumerate(
+                            self.priors_in_pints_order
+                    ):
                         try:
                             last_result = last_values.get(
                                 prior__log_likelihood_parameter__name=(
@@ -425,8 +428,10 @@ class InferenceMixin:
                     self._pints_composed_transform.to_search(x0)
                 )
                 print('starting function value', fn_val)
-                self.write_inference_results(x0, fn_val,
-                                             self.inference.number_of_iterations, i)
+                self.write_inference_results(
+                    x0, fn_val,
+                    self.inference.number_of_iterations, i
+                )
 
             # apply transformations to initial point and create default sigma0
             sigma0 = x0**2
@@ -442,9 +447,6 @@ class InferenceMixin:
                     self._inference_method(x0, sigma0)
                 )
             else:
-                print('x0', x0)
-                print('transformed x0', self._pints_composed_transform.to_search(x0))
-                print('boundaries', self._pints_boundaries)
                 self._inference_objects.append(
                     self._inference_method(
                         x0, boundaries=self._pints_boundaries
@@ -514,8 +516,11 @@ class InferenceMixin:
     def get_data(log_likelihoods, pints_forward_model, priors_in_pints_order,
                  pints_composed_log_prior):
 
-        # if we're using fake data sample from composed prior and store the values
-        use_fake_data = any([ll.biomarker_type is None for ll in log_likelihoods])
+        # if we're using fake data sample from composed prior
+        # and store the values
+        use_fake_data = any([
+            ll.biomarker_type is None for ll in log_likelihoods
+        ])
         if use_fake_data:
             t_max = max([
                 ll.get_model().time_max for ll in log_likelihoods
@@ -526,7 +531,8 @@ class InferenceMixin:
                 prior.log_likelihood_parameter.value = x
                 prior.log_likelihood_parameter.save()
             result = pints_forward_model.simulate(
-                fake_data_x0[:pints_forward_model.n_parameters()], fake_data_times
+                fake_data_x0[:pints_forward_model.n_parameters()],
+                fake_data_times
             )
 
         values = []
@@ -541,7 +547,9 @@ class InferenceMixin:
                 values.append(df['values'].tolist())
                 times.append(df['times'].tolist())
             else:
-                output_values = result[result_index:result_index + len(fake_data_times)]
+                output_values = result[
+                    result_index:result_index + len(fake_data_times)
+                ]
 
                 # noise param value could be fixed or in priors
                 x0_noise_params = []
@@ -553,7 +561,10 @@ class InferenceMixin:
                         priors_in_pints_order[n_parameters:]
                 ):
                     param = prior.log_likelihood_parameter
-                    if param.log_likelihood == obj and not param.is_model_variable():
+                    if (
+                            param.log_likelihood == obj and
+                            not param.is_model_variable()
+                    ):
                         x0_noise_params.append(fake_data_x0[n_parameters + i])
 
                 print('adding noise to fake data with params', x0_noise_params)
@@ -600,9 +611,13 @@ class InferenceMixin:
         for prior in priors:
             # if prior.variable.is_log:
             if False:
-                pints_transforms.append(pints.LogTransformation(n_parameters=1))
+                pints_transforms.append(
+                    pints.LogTransformation(n_parameters=1)
+                )
             else:
-                pints_transforms.append(pints.IdentityTransformation(n_parameters=1))
+                pints_transforms.append(
+                    pints.IdentityTransformation(n_parameters=1)
+                )
             if isinstance(prior, PriorUniform):
                 lower = prior.lower
                 upper = prior.upper
@@ -734,7 +749,8 @@ class CombinedLogLikelihood(pints.LogPDF):
         self._log_likelihoods = [ll for ll in log_likelihoods]
         self._n_outputs = len(self._log_likelihoods)
 
-        self._n_myokit_parameters = self._log_likelihoods[0]._problem.n_parameters()
+        self._n_myokit_parameters = \
+            self._log_likelihoods[0]._problem.n_parameters()
 
         # the myokit forwards model parameters are at the start of the
         # parameter vector
@@ -759,7 +775,9 @@ class CombinedLogLikelihood(pints.LogPDF):
         # use pre-calculated slices to get the parameter vector for each
         # log-likelihood
         log_like = 0
-        for noise_slice, ll in zip(self._noise_parameter_slices, self._log_likelihoods):
+        for noise_slice, ll in zip(
+                self._noise_parameter_slices, self._log_likelihoods
+        ):
             params = np.concatenate((
                 x[self._myokit_parameter_slice],
                 x[noise_slice]

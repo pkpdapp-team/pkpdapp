@@ -27,6 +27,7 @@ class LogLikelihoodView(viewsets.ModelViewSet):
         IsAuthenticated & CheckAccessToProject
     ]
 
+
 class LogLikelihoodParameterView(viewsets.ModelViewSet):
     queryset = LogLikelihoodParameter.objects.all()
     serializer_class = LogLikelihoodParameterSerializer
