@@ -6,12 +6,12 @@
 
 from django.test import TestCase
 from pkpdapp.models import (
-    PharmacodynamicModel, LogLikelihoodNormal,
-    LogLikelihoodLogNormal, Project, BiomarkerType,
+    PharmacodynamicModel, LogLikelihood,
+    Project, BiomarkerType,
     Inference,
 )
 from pkpdapp.api.serializers import (
-    ObjectiveFunctionSerializer
+    LogLikelihoodSerializer
 )
 
 
@@ -29,37 +29,36 @@ class TestObjectiveFunctionSerializer(TestCase):
         )
         variables = model.variables.all()
         self.inference = Inference.objects.create(
-            pd_model=model,
             project=project,
         )
-        LogLikelihoodNormal.objects.create(
-            sd=1.0,
+        LogLikelihood.objects.create(
+            form='N',
             variable=variables[0],
             inference=self.inference,
             biomarker_type=biomarker_type
         )
-        LogLikelihoodLogNormal.objects.create(
-            sigma=2.0,
-            variable=variables[1],
+        LogLikelihood.objects.create(
+            form='LN',
+            variable=variables[0],
             inference=self.inference,
             biomarker_type=biomarker_type
         )
 
     def test_serialize(self):
-        serializer = ObjectiveFunctionSerializer(
-            self.inference.objective_functions.all(),
+        serializer = LogLikelihoodSerializer(
+            self.inference.log_likelihoods.all(),
             many=True
         )
         data = serializer.data
         self.assertEqual(len(data), 2)
         self.assertTrue(
-            data[0]['type'] == 'LogLikelihoodNormal' or
-            data[0]['type'] == 'LogLikelihoodLogNormal'
+            data[0]['form'] == 'N' or
+            data[0]['form'] == 'LN'
         )
         self.assertTrue(
-            data[1]['type'] == 'LogLikelihoodNormal' or
-            data[1]['type'] == 'LogLikelihoodLogNormal'
+            data[1]['form'] == 'N' or
+            data[1]['form'] == 'LN'
         )
         self.assertNotEqual(
-            data[0]['type'], data[1]['type']
+            data[0]['form'], data[1]['form']
         )

@@ -39,9 +39,9 @@ function InferenceChartFits({ chains }) {
   const classes = useStyles();
 
   const has_distribution = true
-  const times = chains[0].outputs.outputs.times
-  const datas = chains[0].outputs.outputs.datas
-  const loglikelihood = chains[0].loglikelihoods[0]
+  const times = chains[0].outputs.outputs[0].times
+  const datas = chains[0].outputs.outputs[0].datas
+  const loglikelihood = chains[0].outputs.log_likelihoods[0]
 
   const outputVariable = useSelector((state) => {
         return selectVariableById(state, loglikelihood.variable);
