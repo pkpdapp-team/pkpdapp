@@ -27,7 +27,7 @@ export default function InferenceChartOptimisationResults({ inference, priorsWit
   const classes = useStyles();
 
   const rows = priorsWithChainValues.map(prior => {
-    const final_values = prior.chains.map(chain => chain[chain.length - 1].toFixed(2))
+    const final_values = prior.chains.map(chain => chain.values[chain.values.length - 1].toFixed(2))
     return {
       name: prior.name,
       final_values,
