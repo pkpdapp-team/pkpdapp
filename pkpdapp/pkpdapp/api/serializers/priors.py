@@ -47,7 +47,7 @@ class PriorSerializer(PolymorphicSerializer):
         model = Prior
         read_only_fields = ("log_likelihood_parameter", )
 
-    name = serializers.SerializerMethodField()
+    name = serializers.SerializerMethodField('get_name')
 
     def get_name(self, obj):
         if obj.variable:
