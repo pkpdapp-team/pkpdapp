@@ -26,20 +26,6 @@ class LogLikelihoodParameterSerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = ("log_likelihood", )
 
-    def create(self, validated_data):
-        # save method of log_likelihood will create its own parameters
-        prior_data = validated_data.pop('prior', None)
-        new_param = BaseLogLikelihoodParameterSerializer().create(
-            validated_data
-        )
-
-        if prior_data:
-            serializer = PriorSerializer()
-            prior_data['log_likelihood_parameter'] = new_param
-            serializer.create(prior_data)
-
-        return new_param
-
     def update(self, instance, validated_data):
         prior_data = validated_data.pop('prior', None)
         new_param = BaseLogLikelihoodParameterSerializer().update(
