@@ -20,6 +20,7 @@ datafile_urls = [
     'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/datasets/lxf_single_erlotinib_dose.csv',  # noqa: E501
     'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/datasets/demo_pk_data_upload.csv',  # noqa: E501
     'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/datasets/TCB4dataset.csv',  # noqa: E501
+    'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/usecase0/usecase0.csv',  # noqa: E501
 ]
 
 datafile_names = [
@@ -30,6 +31,7 @@ datafile_names = [
     'lxf_single_erlotinib_dose',
     'demo_pk_data',
     'TCB4dataset',
+    'usecase0',
 ]
 
 protocol_units = [
@@ -61,6 +63,11 @@ protocol_units = [
         'time': None,
         'amount': myokit.Unit.parse_simple('ng'),
     },
+    {
+        'time': myokit.Unit.parse_simple('h'),
+        'amount': myokit.Unit.parse_simple('ng'),
+    },
+
 ]
 
 datafile_descriptions = [
@@ -136,6 +143,10 @@ Demo PK data
     '''
 TCB4 dataset
 ''',  # noqa: W605
+    '''
+usecase0 dataset
+''',  # noqa: W605
+
 
 ]
 
@@ -274,6 +285,13 @@ biomarkers_for_datasets = [
             'time': 'h',
         },
     ],
+    [
+        {
+            'name': 'DemoDrug Concentration',
+            'unit': 'ng/mL',
+            'time': 'h',
+        },
+    ]
 ]
 
 
@@ -352,6 +370,7 @@ def load_datasets(apps, schema_editor):
                 DOSE_GROUP_COLUMN = 4
                 COMPOUND_COLUMN = None
                 SUBJECT_GROUP_COLUMN = 3
+                ROUTE_COLUMN = None
             elif datafile_name == 'demo_pk_data':
                 TIME_COLUMN = 4
                 TIME_UNIT_COLUMN = 5
@@ -364,6 +383,20 @@ def load_datasets(apps, schema_editor):
                 DOSE_COLUMN = 8
                 COMPOUND_COLUMN = 0
                 SUBJECT_GROUP_COLUMN = None
+                ROUTE_COLUMN = None
+            elif datafile_name == 'usecase0':
+                TIME_COLUMN = 4
+                TIME_UNIT_COLUMN = 5
+                TINF_COLUMN = 9
+                VALUE_COLUMN = 3
+                UNIT_COLUMN = 11
+                BIOMARKER_TYPE_COLUMN = 13
+                SUBJECT_ID_COLUMN = 2
+                DOSE_GROUP_COLUMN = None
+                DOSE_COLUMN = 8
+                COMPOUND_COLUMN = 0
+                SUBJECT_GROUP_COLUMN = 18
+                ROUTE_COLUMN = 21
             else:
                 TIME_COLUMN = 1
                 TIME_UNIT_COLUMN = 2
@@ -376,6 +409,7 @@ def load_datasets(apps, schema_editor):
                 DOSE_COLUMN = None
                 COMPOUND_COLUMN = None
                 SUBJECT_GROUP_COLUMN = None
+                ROUTE_COLUMN = None
             subject_index = 0
             for row in data_reader:
                 biomarker_type_str = row[BIOMARKER_TYPE_COLUMN]
@@ -452,6 +486,10 @@ def load_datasets(apps, schema_editor):
                             compound=compound
                         )
                     except Protocol.DoesNotExist:
+                        if ROUTE_COLUMN is None or row[ROUTE_COLUMN] == 'IV':
+                            route = 'D'
+                        else:
+                            route = 'ID'
                         protocol = Protocol.objects.create(
                             name='{}-{}-{}'.format(
                                 dataset.name,
@@ -462,8 +500,9 @@ def load_datasets(apps, schema_editor):
                             dataset=dataset,
                             subject=subject,
                             time_unit=time_unit,
-                            project=demo_project,
                             amount_unit=unit,
+                            read_only=True,
+                            dose_type=route,
                         )
 
                     Dose.objects.create(

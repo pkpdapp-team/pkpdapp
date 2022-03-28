@@ -23,38 +23,24 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-export default function InferenceChartSamplingResults({ chains, inference, algorithm }) {
+export default function InferenceChartSamplingResults({ inference, priorsWithChainValues }) {
   const classes = useStyles();
-  const variables = useSelector((state) => {
-    if (inference.pd_model) {
-      return selectVariablesByPdModel(state, inference.pd_model);
-    } else if (inference.dosed_pk_model) {
-      return selectVariablesByDosedPkModel(state, inference.dosed_pk_model);
-    }
-  });
+  
 
-
-  const priorsWithSamples = inference.priors.map(prior => (
-    {
-      ...prior, 
-      samples: chains.reduce((sum, chain) => (
-        sum.concat(chain.data.values.filter((x, i) => chain.data.priors[i] === prior.id))
-      ), []),
-    }
-  ))
-
-  const rows = priorsWithSamples.map(prior => {
-    const variable = variables.find(v => v.id === prior.variable)
-    const name = variable ? variable.name : 'Not found'
-    const number_of_samples = prior.samples.length
+  const rows = priorsWithChainValues.map(prior => {
+    const number_of_samples = prior.chains.map(
+      c => c.values.length
+    ).reduce((sum, x) => sum + x, 0)
     const mean = (
-      prior.samples.reduce((sum, x) => sum + x, 0) / number_of_samples
+      prior.chains.reduce((sum, chain) => sum + chain.values.reduce((sum, x) => sum + x, 0), 0) / number_of_samples
     ).toFixed(2)
-    const stddev = (
-      Math.sqrt(prior.samples.reduce((sum, x) => sum + (x - mean)**2, 0) / number_of_samples)
+    const stddev = Math.sqrt(prior.chains.reduce((sum, chain) => 
+      sum + chain.values.map(x => (x - mean)**2).reduce((sum, x) => sum + x, 0)
+        , 0
+      ) / number_of_samples
     ).toFixed(2)
     return {
-      name,
+      name: prior.name,
       number_of_samples,
       mean,
       stddev

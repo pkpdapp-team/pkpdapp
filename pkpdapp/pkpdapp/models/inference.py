@@ -5,11 +5,10 @@
 #
 
 from django.db import models
-from django.db.models import Q
+from pkpdapp.celery import app
 from pkpdapp.models import (
     Project, PharmacodynamicModel,
     DosedPharmacokineticModel,
-    PkpdModel,
     StoredModel,
 )
 
@@ -23,6 +22,7 @@ class Algorithm(models.Model):
     class Category(models.TextChoices):
         SAMPLING = 'SA', 'Sampling'
         OPTIMISATION = 'OP', 'Optimisation'
+        OTHER = 'OT', 'Optimisation'
 
     category = models.CharField(
         max_length=10,
@@ -48,28 +48,6 @@ class Inference(StoredModel):
         blank=True, default=''
     )
 
-    pd_model = models.ForeignKey(
-        PharmacodynamicModel,
-        blank=True, null=True,
-        on_delete=models.CASCADE,
-        related_name='inferences',
-        help_text='pharmacodynamic model'
-    )
-    dosed_pk_model = models.ForeignKey(
-        DosedPharmacokineticModel,
-        blank=True, null=True,
-        on_delete=models.CASCADE,
-        related_name='inferences',
-        help_text='dosed pharmacokinetic model'
-    )
-    pkpd_model = models.ForeignKey(
-        PkpdModel,
-        blank=True, null=True,
-        on_delete=models.CASCADE,
-        related_name='inferences',
-        help_text='pharmacokinetic/pharmacokinetic model'
-    )
-
     project = models.ForeignKey(
         Project, on_delete=models.CASCADE,
         help_text='Project that "owns" this inference object'
@@ -82,6 +60,23 @@ class Inference(StoredModel):
         help_text='algorithm used to perform the inference'
     )
 
+    class InitializationStrategy(models.TextChoices):
+        DEFAULT_VALUE = 'D', 'Default Value of model'
+        RANDOM = 'R', 'Random from prior'
+        FROM_OTHER = 'F', 'From other inference'
+
+    initialization_strategy = models.CharField(
+        max_length=1,
+        choices=InitializationStrategy.choices,
+        default=InitializationStrategy.RANDOM,
+    )
+
+    initialization_inference = models.ForeignKey(
+        'Inference',
+        on_delete=models.CASCADE,
+        blank=True, null=True,
+    )
+
     # potentially for optimisation too (as in number of starting points)
     number_of_chains = models.IntegerField(
         default=4,
@@ -91,6 +86,11 @@ class Inference(StoredModel):
     max_number_of_iterations = models.IntegerField(
         default=1000,
         help_text='maximum number of iterations'
+    )
+
+    burn_in = models.IntegerField(
+        default=0,
+        help_text='final iteration of burn-in',
     )
 
     number_of_iterations = models.IntegerField(
@@ -108,85 +108,64 @@ class Inference(StoredModel):
         help_text='number of function evaluations'
     )
 
-    constraints = [
-        models.CheckConstraint(
-            check=(
-                (Q(pkpd_model__isnull=True) &
-                 Q(dosed_pk_model__isnull=True) &
-                 Q(pd_model__isnull=False)) |
-                (Q(pkpd_model__isnull=False) &
-                 Q(dosed_pk_model__isnull=True) &
-                 Q(pd_model__isnull=True)) |
-                (Q(pkpd_model__isnull=True) &
-                 Q(dosed_pk_model__isnull=False) &
-                 Q(pd_model__isnull=True))
-            ),
-            name='inference must belong to a model'
-        ),
-    ]
+    task_id = models.CharField(
+        max_length=40,
+        blank=True, null=True,
+        help_text='If executing, this is the celery task id'
+    )
 
     def get_project(self):
         return self.project
-
-    def get_model(self):
-        model = None
-        if self.pd_model:
-            model = self.pd_model
-        if self.dosed_pk_model:
-            model = self.dosed_pk_model
-        if self.pkpd_model:
-            model = self.pkpd_model
-        return model
 
     def run_inference(self, test=False):
         """
         when an inference is run, a new model is created (a copy),
         and the model and all its variables are stored
         """
-        inference_kwargs = {
-            'name': self.name,
-            'description': self.description,
-            'project': self.project,
-            'algorithm': self.algorithm,
-            'number_of_chains': self.number_of_chains,
-            'max_number_of_iterations': self.max_number_of_iterations,
-            'read_only': True,
+        # store related objects so we can recreate them later
+        old_log_likelihoods = self.log_likelihoods.all()
+
+        # save models used in this inference
+        old_models = list(PharmacodynamicModel.objects.filter(
+            variables__log_likelihoods__inference=self
+        ).distinct())
+
+        old_models += list(DosedPharmacokineticModel.objects.filter(
+            variables__log_likelihoods__inference=self
+        ).distinct())
+        # old_models += list(PkpdModel.objects.filter(
+        #    variables__log_likelihoods__in=old_log_likelihoods
+        # ).distinct())
+        print('all models', old_models)
+
+        # create a map between old and new models so we can transfer
+        # the relationships
+        new_models = {
+            model.id: model.create_stored_model() for model in old_models
         }
-        if self.pd_model:
-            model = self.pd_model.create_stored_model()
-            inference_kwargs['pd_model'] = model
-        if self.dosed_pk_model:
-            model = self.dosed_pk_model.create_stored_model()
-            inference_kwargs['dosed_pk_model'] = model
-        if self.pkpd_model:
-            model = self.pkpd_model.create_stored_model()
-            inference_kwargs['pkpd_model'] = model
 
-        new_inference = Inference.objects.create(**inference_kwargs)
+        self.id = None
+        self.pk = None
 
-        for prior in self.priors.all():
-            prior.id = None
-            prior.pk = None
-            prior.inference = new_inference
-            prior.variable = model.variables.get(qname=prior.variable.qname)
-            prior.save()
+        # save new as readonly
+        self.read_only = True
+        self.save()
 
-        for objective_function in self.objective_functions.all():
-            objective_function.id = None
-            objective_function.pk = None
-            objective_function.inference = new_inference
-            objective_function.variable = model.variables.get(
-                qname=objective_function.variable.qname
-            )
-            objective_function.save()
+        # recreate log_likelihoods
+        for log_likelihood in old_log_likelihoods:
+            log_likelihood.create_stored_log_likelihood(self, new_models)
 
-        new_inference.refresh_from_db()
+        self.refresh_from_db()
 
         if not test:
             from pkpdapp.tasks import run_inference
             try:
-                run_inference.delay(new_inference.id)
+                result = run_inference.delay(self.id)
+                self.task_id = result.id
+                self.save()
             except run_inference.OperationalError as exc:
                 print('Sending task raised: {}'.format(exc))
 
-        return new_inference
+    def stop_inference(self):
+        if self.task_id is not None:
+            app.control.revoke(self.task_id, terminate=True)

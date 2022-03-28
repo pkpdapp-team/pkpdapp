@@ -8,75 +8,126 @@ from rest_framework import status
 from django.contrib.auth.models import User
 from rest_framework.test import APITestCase, APIClient
 from pkpdapp.models import (
-    Inference, PharmacodynamicModel, LogLikelihoodNormal,
-    LogLikelihoodLogNormal, Project, BiomarkerType,
-    PriorNormal, PriorUniform,
+    Inference,
+    PharmacokineticModel, DosedPharmacokineticModel,
+    Protocol, Unit,
+    LogLikelihood,
+    Project, BiomarkerType,
+    PriorUniform, MyokitForwardModel,
+    InferenceMixin, Algorithm,
 )
 
 
-class TestObjectiveFunctionSerializer(APITestCase):
+class TestInferenceViews(APITestCase):
     def setUp(self):
         project = Project.objects.get(
             name='demo',
         )
         biomarker_type = BiomarkerType.objects.get(
-            name='Tumour volume',
-            dataset__name='lxf_control_growth'
+            name='DemoDrug Concentration',
+            dataset__name='usecase0'
         )
-        model = PharmacodynamicModel.objects.get(
-            name='tumour_growth_inhibition_model_koch',
+        biomarker_type.display_unit = Unit.objects.get(
+            symbol='g/L'
         )
+        biomarker_type.save()
+        pk = PharmacokineticModel.objects\
+            .get(name='three_compartment_pk_model')
+
+        protocol = Protocol.objects.get(
+            dataset=biomarker_type.dataset,
+            subject__id_in_dataset=1,
+        )
+
+        model = DosedPharmacokineticModel.objects.create(
+            pharmacokinetic_model=pk,
+            dose_compartment='central',
+            protocol=protocol,
+        )
+
         variables = model.variables.all()
+        var_names = [v.qname for v in variables]
+        m = model.get_myokit_model()
+        s = model.get_myokit_simulator()
+
+        forward_model = MyokitForwardModel(
+            myokit_model=m,
+            myokit_simulator=s,
+            outputs="central.drug_c_concentration"
+        )
+
+        output_names = forward_model.output_names()
+        var_index = var_names.index(output_names[0])
+
         self.inference = Inference.objects.create(
             name='bob',
-            pd_model=model,
             project=project,
+            max_number_of_iterations=10,
+            algorithm=Algorithm.objects.get(name='Haario-Bardenet'),
         )
-        LogLikelihoodNormal.objects.create(
-            sd=1.0,
-            variable=variables[0],
+        log_likelihood = LogLikelihood.objects.create(
+            variable=variables[var_index],
             inference=self.inference,
-            biomarker_type=biomarker_type
+            biomarker_type=biomarker_type,
+            form=LogLikelihood.Form.NORMAL
         )
-        LogLikelihoodLogNormal.objects.create(
-            sigma=2.0,
-            variable=variables[1],
-            inference=self.inference,
-            biomarker_type=biomarker_type
-        )
-        PriorNormal.objects.create(
-            mean=1.0,
-            sd=1.0,
-            variable=variables[0],
-            inference=self.inference,
+
+        # find variables that are being estimated
+        parameter_names = forward_model.variable_parameter_names()
+        var_indices = [var_names.index(v) for v in parameter_names]
+        for i in var_indices:
+            param = log_likelihood.parameters.get(
+                variable=variables[i]
+            )
+            if '_amount' in param.name:
+                param.value = 0
+                param.save()
+            else:
+                PriorUniform.objects.create(
+                    lower=0.0,
+                    upper=0.1,
+                    log_likelihood_parameter=param,
+                )
+        noise_param = log_likelihood.parameters.get(
+            variable__isnull=True
         )
         PriorUniform.objects.create(
-            lower=1.0,
+            lower=0.0,
             upper=2.0,
-            variable=variables[0],
-            inference=self.inference,
+            log_likelihood_parameter=noise_param,
         )
+        # 'run' inference to create copies of models
+        self.inference.run_inference(test=True)
+
+        # create mixin object
+        self.inference_mixin = InferenceMixin(self.inference)
 
         user = User.objects.get(username='demo')
         self.client = APIClient()
         self.client.force_authenticate(user=user)
 
-    def test_run_inference_errors(self):
-        inference_no_model = Inference.objects.create(
-            name='bad bob',
-            project=self.inference.project,
-        )
+    def test_chains_view(self):
+        self.inference_mixin.run_inference()
 
-        model = self.inference.pd_model
+        chain = self.inference_mixin.inference.chains.first()
+
+        response = self.client.get(
+            "/api/inference_chain/{}/".format(chain.id)
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue('data' in response.data)
+
+    def test_run_inference_errors(self):
+        log_likelihood = self.inference.log_likelihoods.first()
+        model = log_likelihood.get_model()
+
         inference_no_prior = Inference.objects.create(
             name='bad bob',
-            pd_model=model,
             project=self.inference.project,
         )
 
-        inference_no_objective_function = Inference.objects.create(
+        inference_no_log_likelihood = Inference.objects.create(
             name='bad bob',
-            pd_model=model,
             project=self.inference.project,
         )
 
@@ -84,37 +135,29 @@ class TestObjectiveFunctionSerializer(APITestCase):
             name='Tumour volume',
             dataset__name='lxf_control_growth'
         )
-        LogLikelihoodNormal.objects.create(
-            sd=1.0,
+
+        LogLikelihood.objects.create(
+            form='N',
             variable=model.variables.first(),
             inference=inference_no_prior,
             biomarker_type=biomarker_type
         )
-
-        PriorNormal.objects.create(
-            mean=1.0,
-            sd=1.0,
-            variable=model.variables.first(),
-            inference=inference_no_objective_function,
-        )
-
-        response = self.client.post(
-            "/api/inference/{}/run".format(inference_no_model.id)
-        )
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        errors = response.data
-        self.assertTrue('pd_model' in errors)
 
         response = self.client.post(
             "/api/inference/{}/run".format(inference_no_prior.id)
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         errors = response.data
-        self.assertTrue('priors' in errors)
+        self.assertTrue('log_likelihoods' in errors)
+        self.assertTrue('prior' in errors['log_likelihoods'])
 
         response = self.client.post(
-            "/api/inference/{}/run".format(inference_no_objective_function.id)
+            "/api/inference/{}/run".format(inference_no_log_likelihood.id)
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         errors = response.data
-        self.assertTrue('objective_functions' in errors)
+        print(errors)
+        self.assertTrue('log_likelihoods' in errors)
+        self.assertTrue(
+            'least one log_likelihood' in errors['log_likelihoods']
+        )

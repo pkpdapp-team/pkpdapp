@@ -31,18 +31,20 @@ from .inference import (
     Inference,
     Algorithm,
 )
+from .myokit_pints_forward_model import MyokitForwardModel
+from .likelihoods import (
+    LogLikelihood,
+    LogLikelihoodParameter,
+)
 from .priors import (
-    PriorNormal, PriorUniform, Boundary, Prior,
+    PriorNormal, PriorUniform, Prior,
 )
 from .inference_results import (
     InferenceChain,
     InferenceResult,
     InferenceFunctionResult,
-)
-from .likelihoods import (
-    SumOfSquaredErrorsScoreFunction, LogLikelihoodNormal,
-    LogLikelihoodLogNormal, ObjectiveFunction
+    InferenceOutputResult,
 )
 
-from .myokit_pints_forward_model import MyokitForwardModel
+
 from .inference_mixin import InferenceMixin

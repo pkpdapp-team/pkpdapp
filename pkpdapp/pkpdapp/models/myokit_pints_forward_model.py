@@ -20,12 +20,14 @@ class MyokitForwardModel(pints.ForwardModel):
         fixed_parameter_dict(=None by default) -- a dictionary
         representing key-value pairs for fixed parameters
     """
+
     def __init__(self, myokit_simulator, myokit_model, outputs=None,
                  fixed_parameter_dict=None):
         super(MyokitForwardModel, self).__init__()
 
         model = myokit_model
         self._sim = myokit_simulator
+        self._sim.set_tolerance(abs_tol=1e-11, rel_tol=1e-9)
 
         # get all model states that will be used for inference
         self._n_states = model.count_states()
@@ -118,6 +120,7 @@ class MyokitForwardModel(pints.ForwardModel):
         parameters and times. Note, the parameter inputs should be ordered as
         in `variable_parameter_names()`.
         """
+
         if len(parameters) != self._n_parameters:
             raise ValueError('Number of parameters supplied must equal ' +
                              'number of non-fixed model parameters.')
@@ -146,9 +149,11 @@ class MyokitForwardModel(pints.ForwardModel):
 
         # Simulate: need +100*epsilon for times to ensure simulation
         # surpasses last time
+        t_max = times[-1] + 1e2 * float_info.epsilon
+        log_times = times
         output = self._sim.run(
-            times[-1] + 1e2 * float_info.epsilon,
-            log=self._output_names, log_times=times
+            t_max,
+            log=self._output_names, log_times=log_times
         )
         result = [output[name] for name in self._output_names]
 

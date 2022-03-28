@@ -14,6 +14,6 @@ from .views import (
     ProjectAccessView, NcaView, AuceView,
     InferenceView, InferenceChainView,
     AlgorithmView,
-    RunInferenceView,
-    PriorView, ObjectiveFunctionView,
+    RunInferenceView, StopInferenceView,
+    PriorView, LogLikelihoodView,
 )

@@ -7,7 +7,7 @@
 from django.db import models
 from polymorphic.models import PolymorphicModel
 from pkpdapp.models import (
-    Variable, Inference
+    LogLikelihoodParameter
 )
 
 
@@ -15,17 +15,45 @@ class Prior(PolymorphicModel):
     """
     Model for a generic prior.
     """
-    variable = models.ForeignKey(
-        Variable,
-        related_name='priors',
-        blank=True, null=True,
+    log_likelihood_parameter = models.OneToOneField(
+        LogLikelihoodParameter,
+        related_name='prior',
         on_delete=models.CASCADE,
     )
-    inference = models.ForeignKey(
-        Inference,
-        related_name='priors',
-        on_delete=models.CASCADE,
-    )
+
+    def is_match(self, variable_qname):
+        """
+        returns True if priors is on the model variable provided
+        """
+        if self.is_model_variable_prior():
+            return (
+                variable_qname ==
+                self.log_likelihood_parameter.variable.qname
+            )
+
+        return False
+
+    def is_model_variable_prior(self):
+        return self.log_likelihood_parameter.variable is not None
+
+    def create_stored_prior(
+            self, new_log_likelihood,
+            model, stored_prior_kwargs
+    ):
+
+        new_parameter = new_log_likelihood.parameters.get(
+            name=self.log_likelihood_parameter.name
+        )
+
+        stored_prior_kwargs.update({
+            'log_likelihood_parameter': new_parameter,
+        })
+
+        stored_prior = model.objects.create(
+            **stored_prior_kwargs
+        )
+
+        return stored_prior
 
 
 class PriorUniform(Prior):
@@ -38,6 +66,18 @@ class PriorUniform(Prior):
     upper = models.FloatField(
         help_text='upper bound of the uniform distribution.'
     )
+
+    def create_stored_prior(
+            self, new_log_likelihood
+    ):
+        stored_prior_kwargs = {
+            'lower': self.lower,
+            'upper': self.upper,
+        }
+        return Prior.create_stored_prior(
+            self, new_log_likelihood,
+            PriorUniform, stored_prior_kwargs
+        )
 
 
 class PriorNormal(Prior):
@@ -52,8 +92,14 @@ class PriorNormal(Prior):
         help_text='sd of normal prior distribution.'
     )
 
-
-class Boundary(Prior):
-    """
-    Model for a single parameter boundary for use in optimisation.
-    """
+    def create_stored_prior(
+            self, new_log_likelihood
+    ):
+        stored_prior_kwargs = {
+            'mean': self.mean,
+            'sd': self.sd,
+        }
+        return Prior.create_stored_prior(
+            self, new_log_likelihood,
+            PriorNormal, stored_prior_kwargs
+        )

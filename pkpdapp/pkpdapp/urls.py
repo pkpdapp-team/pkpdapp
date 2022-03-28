@@ -58,14 +58,6 @@ router.register(
     'inference_chain', api.InferenceChainView,
     basename='inference_chain'
 )
-router.register(
-    'objective_function', api.ObjectiveFunctionView,
-    basename='objective_function'
-)
-router.register(
-    'prior', api.PriorView,
-    basename='prior'
-)
 
 urlpatterns = [
     path('admin/doc/', include('django.contrib.admindocs.urls')),
@@ -80,6 +72,11 @@ urlpatterns = [
         'api/inference/<int:pk>/run',
         api.RunInferenceView.as_view(),
         name='run-inference'
+    ),
+    path(
+        'api/inference/<int:pk>/stop',
+        api.StopInferenceView.as_view(),
+        name='stop-inference'
     ),
     path('api/pharmacodynamic/<int:pk>/simulate',
          api.SimulatePdView.as_view(), name='simulate-pharmacodynamic'),

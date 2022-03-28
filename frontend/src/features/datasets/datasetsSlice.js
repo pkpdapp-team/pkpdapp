@@ -79,6 +79,12 @@ export const datasetsSlice = createSlice({
       let dataset = state.entities[action.payload.id];
       dataset.chosen = !dataset.chosen;
     },
+    toggleProtocol(state, action) {
+      const dataset_id = action.payload.dataset
+      let dataset = state.entities[dataset_id];
+      let protocol = dataset.protocols.find(p => p.id === action.payload.id)
+      protocol.chosen = !protocol.chosen;
+    },
     toggleDisplayGroup(state, action) {
       const group = action.payload.group;
       const id = action.payload.id;
@@ -126,7 +132,7 @@ export const datasetsSlice = createSlice({
   },
 });
 
-export const { toggleDataset, toggleDisplayGroup: toggleDatasetDisplayGroup } =
+export const { toggleDataset, toggleProtocol, toggleDisplayGroup: toggleDatasetDisplayGroup } =
   datasetsSlice.actions;
 
 export default datasetsSlice.reducer;
@@ -139,3 +145,14 @@ export const {
 
 export const selectChosenDatasets = (state) =>
   selectAllDatasets(state).filter((dataset) => dataset.chosen);
+
+
+export const selectChosenDatasetProtocols = (state) =>
+  selectAllDatasets(state).reduce((sum, dataset) => {
+    return sum.concat(dataset.protocols.filter(p => p.chosen))
+  }, []);
+
+export const selectAllProtocols = (state) =>
+  selectAllDatasets(state).reduce((sum, dataset) => {
+    return sum.concat(dataset.protocols)
+  }, []);

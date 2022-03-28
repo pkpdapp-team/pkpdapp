@@ -94,7 +94,10 @@ export function FormSliderField({
   name,
   defaultValue,
   min,
+  label_min,
+  label_max,
   max,
+  log,
   label,
   tooltip,
 }) {
@@ -117,14 +120,34 @@ export function FormSliderField({
     }
   };
 
+
+  let calculateValue = (value) => value;
+  if (log) {
+    calculateValue = (value) => Math.exp(value);
+  } 
+
   const marks = [
-    {
-      value: min,
-    },
-    {
-      value: max,
-    },
-  ];
+      label_min ? {
+        value: min,
+        label: label_min,
+      } : 
+      {
+        value: min,
+      },
+      label_max ? {
+        value: max,
+        label: label_max,
+      } : 
+      {
+        value: max,
+      },
+
+  ]
+
+  const internalMin = log ? Math.log(min) : min;
+  const internalMax = log ? Math.log(max) : max;
+  const internalStep = log ? (Math.log(max) - Math.log(min)) / 100.0 : (max - min) / 100.0;
+
   return (
     <div className={classes.formInput}>
       {label && (
@@ -148,9 +171,10 @@ export function FormSliderField({
               valueLabelDisplay="auto"
               valueLabelFormat={roundNumber}
               value={value}
-              step={(max - min) / 100.0}
-              min={min}
-              max={max}
+              step={internalStep}
+              min={internalMin}
+              max={internalMax}
+              scale={calculateValue}
               marks={marks}
               onChange={(e, v) => {
                 e.target.name = name;
@@ -342,6 +366,7 @@ export function FormSelectField({
   defaultValue,
   label,
   options,
+  displayEmpty,
   useGroups,
   onChangeUser,
   ...rest
@@ -358,7 +383,7 @@ export function FormSelectField({
   }
   return (
     <FormControl className={classes.formInput}>
-      <InputLabel id={name.concat("-select-label")}>{label}</InputLabel>
+      <InputLabel id={name.concat("-select-label")} shrink={displayEmpty}>{label}</InputLabel>
       <Controller
         control={control}
         defaultValue={defaultValue}
@@ -371,13 +396,15 @@ export function FormSelectField({
           field: { onChange, onBlur, value, name, ref },
           fieldState: { invalid, isTouched, isDirty, error },
           formState,
-        }) => (
+        }) => {
+          return (
           <Select
             labelId={name.concat("-select-label")}
             value={value}
             error={error}
             onBlur={onBlur}
             checked={value}
+            displayEmpty
             inputRef={ref}
             onChange={(value) => {
               if (onChangeUser) {
@@ -404,7 +431,9 @@ export function FormSelectField({
                   </MenuItem>
                 ))}
           </Select>
-        )}
+          )
+        }
+        }
       />
     </FormControl>
   );

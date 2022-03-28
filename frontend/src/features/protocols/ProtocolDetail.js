@@ -98,7 +98,7 @@ export default function ProtocolDetail({ project, protocol }) {
     { title: "Duration", field: "duration" },
   ];
 
-  const disableSave = userHasReadOnlyAccess(project);
+  const disableSave = protocol.dataset || userHasReadOnlyAccess(project);
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">

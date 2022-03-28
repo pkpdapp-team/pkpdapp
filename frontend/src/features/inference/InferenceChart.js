@@ -4,14 +4,25 @@ import Tab from '@material-ui/core/Tab';
 import Typography from '@material-ui/core/Typography';
 import Tabs from '@material-ui/core/Tabs';
 import Box from '@material-ui/core/Box';
+import Button from '@material-ui/core/Button';
+import Alert from "@material-ui/lab/Alert";
 import { useSelector, useDispatch } from "react-redux";
 import InferenceChartOptimisationResults from './InferenceChartOptimisationResults'
 import InferenceChartSamplingResults from './InferenceChartSamplingResults'
 import InferenceChartTraces from './InferenceChartTraces'
+import InferenceChartFits from './InferenceChartFits'
 import { fetchChainsByInferenceId } from "../inference/chainSlice";
+import { fetchInferenceById } from "../inference/inferenceSlice";
 
 import {selectChainsByInferenceId} from './chainSlice'
 import {selectAlgorithmById} from './algorithmsSlice'
+
+
+import {
+  selectVariablesByPdModel,
+  selectVariablesByDosedPkModel,
+} from "../variables/variablesSlice";
+
 
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -43,19 +54,32 @@ export default function InferenceChart({inference}) {
   const [value, setValue] = useState(0);
   const dispatch = useDispatch();
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      dispatch(fetchChainsByInferenceId(inference.id));
-    }, 10000);
-    return () => {
-      clearInterval(interval);
-    };
-  }, [dispatch, inference.id]);
-
-
   const chains = useSelector((state) =>
     selectChainsByInferenceId(state, inference.id)
   );
+
+
+  const priorsWithChainValues = inference.log_likelihoods.reduce((sum, log_likelihood) => {
+    const new_sum = sum.concat(
+      log_likelihood.parameters.filter(
+        param => param.prior
+      ).map(param => {
+        const prior = param.prior
+        return {
+          ...prior, 
+          name: param.name,
+          value: param.value,
+          chains: chains.map(chain => chain.data.chain[prior.id]),
+          kdes: chains.map(chain => chain.data.kde[prior.id])
+        }
+      })
+
+    )
+    return new_sum
+  } , [] )
+
+  console.log('chains', chains)
+  console.log('priorsWithChainValues', priorsWithChainValues)
 
   const algorithm = useSelector((state) =>
     selectAlgorithmById(state, inference.algorithm)
@@ -66,12 +90,14 @@ export default function InferenceChart({inference}) {
   const optimisationTabs = [
     //{ label: 'Fit', component: InferenceChartFit },
     { label: 'Traces', component: InferenceChartTraces },
+    { label: 'Fits', component: InferenceChartFits },
     { label: 'Results', component: InferenceChartOptimisationResults },
   ]
   const samplingTabs = [
     //{ label: 'PosteriorPredictive', component: InferenceChartPosteriorPredictive },
     //{ label: 'Biplot', component: InferenceChartBiplot},
     { label: 'Traces', component: InferenceChartTraces },
+    { label: 'Fits', component: InferenceChartFits },
     { label: 'Results', component: InferenceChartSamplingResults },
   ]
   const tabs = isSampling ? samplingTabs : optimisationTabs
@@ -80,9 +106,25 @@ export default function InferenceChart({inference}) {
     setValue(newValue);
   };
 
+  const handleRefresh = () => {
+    dispatch(fetchChainsByInferenceId(inference.id));
+    dispatch(fetchInferenceById(inference.id));
+  }
+
+  const noData = chains.length === 0
+
   return (
   <Box sx={{ width: '100%' }}>
   <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+  <Button
+    variant="contained"
+    onClick={handleRefresh}
+  >
+    Refresh
+  </Button>
+  { noData &&
+      <Alert severity="warning">No data, refresh to get chain data</Alert>
+  }
   <Tabs value={value} onChange={handleChange}>
     { tabs.map(tab => (
       <Tab key={tab.label} label={tab.label} />
@@ -91,7 +133,7 @@ export default function InferenceChart({inference}) {
   </Box>
     { tabs.map((tab, index) => (
     <TabPanel key={index} value={value} index={index}>
-      <tab.component inference={inference} algorithm={algorithm} chains={chains} />
+      <tab.component inference={inference} chains={chains} priorsWithChainValues={priorsWithChainValues} />
     </TabPanel>
     ))}
   </Box>

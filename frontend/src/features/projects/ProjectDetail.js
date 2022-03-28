@@ -83,7 +83,7 @@ export default function ProjectDetail({ project }) {
     dispatch(fetchBasePkModels(project));
     dispatch(fetchProtocols(project));
     dispatch(fetchInferences(project));
-    dispatch(fetchChains(project));
+    //dispatch(fetchChains(project));
   };
 
   const handleDeleteProject = () => {

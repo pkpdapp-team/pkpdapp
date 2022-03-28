@@ -6,7 +6,6 @@ import {
 import { api } from "../../Api";
 import { fetchVariablesByPdModel } from "../variables/variablesSlice";
 import { fetchUnitsByPdModel } from "../projects/unitsSlice";
-import { runInference } from "../inference/inferenceSlice";
 
 const pdModelsAdapter = createEntityAdapter({
   sortComparer: (a, b) => b.id < a.id,
@@ -24,7 +23,9 @@ export const fetchPdModels = createAsyncThunk(
       `/api/pharmacodynamic/?project_id=${project.id}`
     );
     for (var i = 0; i < response.length; i++) {
-      dispatch(fetchPdModelSimulateById(response[i].id));
+      if (!response[i].read_only) {
+        dispatch(fetchPdModelSimulateById(response[i].id));
+      }
     }
     return response;
   }
@@ -125,12 +126,6 @@ export const pdModelsSlice = createSlice({
       pdModelsAdapter.setAll(state, action.payload);
     },
 
-    // Inferences
-    [runInference.fulfilled]: (state, action) => {
-      if (action.payload.pd_models) {
-        pdModelsAdapter.addMany(state, action.payload.pd_models);
-      }
-    },
 
     [fetchPdModelById.fulfilled]: pdModelsAdapter.upsertOne,
     [fetchPdModelSimulateById.fulfilled]: pdModelsAdapter.upsertOne,
@@ -189,3 +184,6 @@ export const selectChosenPdModels = (state) =>
 
 export const selectWritablePdModels = (state) =>
   selectAllPdModels(state).filter((pdModel) => !pdModel.read_only);
+
+export const selectReadOnlyPdModels = (state) =>
+  selectAllPdModels(state).filter((pdModel) => pdModel.read_only);

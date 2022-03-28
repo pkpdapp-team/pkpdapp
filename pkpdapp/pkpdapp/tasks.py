@@ -14,5 +14,11 @@ from pkpdapp.models import (
 @shared_task
 def run_inference(inference_id):
     inference = Inference.objects.get(id=inference_id)
+
+    # create the mixin object to run the inference
     inference_mixin = InferenceMixin(inference)
     inference_mixin.run_inference()
+
+    # remove task id to indicate that we're finished
+    inference.task_id = None
+    inference.save()

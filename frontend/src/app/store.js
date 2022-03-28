@@ -31,4 +31,8 @@ export default configureStore({
     algorithms: algorithmsReducer,
     chains: chainsReducer,
   },
+   middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: false,
+    }),
 });

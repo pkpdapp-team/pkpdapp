@@ -23,29 +23,13 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-export default function InferenceChartOptimisationResults({ chains, inference, algorithm }) {
+export default function InferenceChartOptimisationResults({ inference, priorsWithChainValues }) {
   const classes = useStyles();
-  const variables = useSelector((state) => {
-    if (inference.pd_model) {
-      return selectVariablesByPdModel(state, inference.pd_model);
-    } else if (inference.dosed_pk_model) {
-      return selectVariablesByDosedPkModel(state, inference.dosed_pk_model);
-    }
-  });
-
-  const priorsWithChainValues = inference.priors.map(prior => (
-    {
-      ...prior, 
-      chains: chains.map(chain => chain.data.values.filter((x, i) => chain.data.priors[i] === prior.id)),
-    }
-  ))
 
   const rows = priorsWithChainValues.map(prior => {
-    const variable = variables.find(v => v.id === prior.variable)
-    const name = variable ? variable.name : 'Not found'
-    const final_values = prior.chains.map(chain => chain[chain.length - 1].toFixed(2))
+    const final_values = prior.chains.map(chain => chain.values[chain.values.length - 1].toFixed(2))
     return {
-      name,
+      name: prior.name,
       final_values,
     }
   });

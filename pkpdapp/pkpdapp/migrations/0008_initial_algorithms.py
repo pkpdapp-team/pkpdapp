@@ -47,6 +47,11 @@ def load_algorithms(apps, schema_editor):
             'name': 'Nelder-Mead',
             'category': 'OP',
         },
+        {
+            'name': 'Parameter Sweep',
+            'category': 'OT',
+        },
+
 
     ]
 

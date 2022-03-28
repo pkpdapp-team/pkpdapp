@@ -39,6 +39,8 @@ import { fetchVariables } from "../variables/variablesSlice.js";
 
 import { fetchInferences } from "../inference/inferenceSlice.js";
 
+import { fetchChains} from "../inference/chainSlice.js";
+
 const useStyles = makeStyles((theme) => ({
   avatarPlus: {
     width: theme.spacing(5),
@@ -74,6 +76,7 @@ export default function ListOfProjects() {
             dispatch(fetchProtocols(p));
             dispatch(fetchUnits(p));
             dispatch(fetchInferences(p));
+            //dispatch(fetchChains(p));
           }}
         />
       ))}

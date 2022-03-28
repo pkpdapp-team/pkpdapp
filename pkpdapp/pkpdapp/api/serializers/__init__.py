@@ -11,14 +11,8 @@ from .priors import (
     PriorSerializer,
     PriorNormalSerializer,
     PriorUniformSerializer,
-    BoundarySerializer
 )
-from .likelihoods import (
-    ObjectiveFunctionSerializer,
-    LogLikelihoodNormalSerializer,
-    LogLikelihoodLogNormalSerializer,
-    SumOfSquaredErrorsScoreFunctionSerializer,
-)
+
 from .validators import ValidSbml
 from .auce import AuceSerializer
 from .biomarker_type import BiomarkerTypeSerializer
@@ -31,6 +25,10 @@ from .models import (
     PharmacodynamicSbmlSerializer,
 )
 from .variables import VariableSerializer
+from .likelihoods import (
+    LogLikelihoodSerializer,
+    LogLikelihoodParameterSerializer,
+)
 from .inference import (
     InferenceSerializer,
     InferenceChainSerializer,

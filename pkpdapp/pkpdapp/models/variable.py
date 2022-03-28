@@ -7,6 +7,7 @@
 from django.db import models
 from django.db.models import Q
 import myokit
+import numpy as np
 from pkpdapp.models import (
     Unit, DosedPharmacokineticModel,
     PharmacokineticModel, PharmacodynamicModel,
@@ -32,9 +33,17 @@ class Variable(StoredModel):
         help_text='default value for this variable'
     )
 
-    name = models.CharField(max_length=20, help_text='name of the variable')
+    is_log = models.BooleanField(
+        default=False,
+        help_text=(
+            'True if default_value is stored as '
+            'the log of this value'
+        )
+    )
+
+    name = models.CharField(max_length=100, help_text='name of the variable')
     qname = models.CharField(
-        max_length=100, help_text='fully qualitifed name of the variable')
+        max_length=200, help_text='fully qualitifed name of the variable')
 
     unit = models.ForeignKey(
         Unit, on_delete=models.CASCADE,
@@ -78,16 +87,6 @@ class Variable(StoredModel):
         )
     )
 
-    class Scale(models.TextChoices):
-        LINEAR = 'LN', 'Linear'
-        LOG = 'LG', 'Log'
-
-    scale = models.CharField(
-        max_length=2,
-        choices=Scale.choices,
-        default=Scale.LINEAR,
-    )
-
     pd_model = models.ForeignKey(
         PharmacodynamicModel,
         blank=True, null=True,
@@ -114,8 +113,8 @@ class Variable(StoredModel):
         constraints = [
             models.CheckConstraint(
                 check=(
-                    (Q(scale='LG') & Q(lower_bound__gt=0)) |
-                    Q(scale='LN')
+                    (Q(is_log=True) & Q(lower_bound__gt=0)) |
+                    Q(is_log=False)
                 ),
                 name=(
                     '%(class)s: log scale must have a lower '
@@ -138,13 +137,26 @@ class Variable(StoredModel):
             )
         ]
 
-    def get_project(self):
+    def get_model(self):
+        model = None
         if self.pd_model:
-            return self.pd_model.get_project()
-        elif self.dosed_pk_model:
-            return self.dosed_pk_model.get_project()
-        elif self.pkpd_model:
-            return self.pkpd_model.get_project()
+            model = self.pd_model
+        if self.dosed_pk_model:
+            model = self.dosed_pk_model
+        if self.pk_model:
+            model = self.pk_model
+        return model
+
+    def get_default_value(self):
+        if self.is_log:
+            return np.exp(self.default_value)
+        else:
+            return self.default_value
+
+    def get_project(self):
+        model = self.get_model()
+        if model is not None:
+            return model.get_project()
         else:
             return None
 
@@ -166,6 +178,7 @@ class Variable(StoredModel):
             return Variable.objects.create(
                 name=myokit_variable.name(),
                 qname=myokit_variable.qname(),
+                default_value=myokit_variable.value(),
                 constant=myokit_variable.is_constant(),
                 state=myokit_variable.is_state(),
                 unit=Unit.get_unit_from_variable(myokit_variable),
@@ -206,6 +219,7 @@ class Variable(StoredModel):
                 name=myokit_variable.name(),
                 qname=myokit_variable.qname(),
                 constant=myokit_variable.is_constant(),
+                default_value=myokit_variable.value(),
                 state=myokit_variable.is_state(),
                 unit=Unit.get_unit_from_variable(myokit_variable),
                 pd_model=model,
@@ -232,6 +246,7 @@ class Variable(StoredModel):
                 name=myokit_variable.name(),
                 qname=myokit_variable.qname(),
                 constant=myokit_variable.is_constant(),
+                default_value=myokit_variable.value(),
                 state=myokit_variable.is_state(),
                 unit=Unit.get_unit_from_variable(myokit_variable),
                 dosed_pk_model=model,
@@ -262,7 +277,7 @@ class Variable(StoredModel):
             'lower_bound': self.lower_bound,
             'upper_bound': self.upper_bound,
             'default_value': self.default_value,
-            'scale': self.scale,
+            'is_log': self.is_log,
             'axis': self.axis,
             'display': self.display,
             'color': self.color,

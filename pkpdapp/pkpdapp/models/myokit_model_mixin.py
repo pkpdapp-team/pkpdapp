@@ -248,12 +248,12 @@ class MyokitModelMixin:
             ]
         if initial_conditions is None:
             initial_conditions = {
-                s.qname: s.default_value
+                s.qname: s.get_default_value()
                 for s in self.variables.filter(state=True)
             }
         if variables is None:
             variables = {
-                v.qname: v.default_value
+                v.qname: v.get_default_value()
                 for v in self.variables.filter(constant=True)
             }
 

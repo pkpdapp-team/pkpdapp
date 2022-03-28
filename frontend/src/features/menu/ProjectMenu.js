@@ -14,6 +14,7 @@ import Datasets from "../datasets/Datasets";
 import PkModels from "../pkModels/PkModels";
 import PdModels from "../pdModels/PdModels";
 import Protocols from "../protocols/Protocols";
+import DatasetProtocols from "../protocols/DatasetProtocols";
 
 import {
   selectChosenProject,
@@ -43,6 +44,7 @@ export default function ProjectMenu() {
           <PdModels project={project} disableSave={disableSave} />
           <PkModels project={project} disableSave={disableSave} />
           <Protocols project={project} disableSave={disableSave} />
+          <DatasetProtocols project={project} disableSave={disableSave} />
         </React.Fragment>
       )}
     </List>

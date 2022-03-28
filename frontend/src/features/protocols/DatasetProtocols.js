@@ -6,14 +6,18 @@ import AccessibilityIcon from "@material-ui/icons/Accessibility";
 import ExpandableListItem from "../menu/ExpandableListItem";
 
 import {
-  selectWritableProtocols,
-  selectAllProtocols,
-  toggleProtocol,
   addNewProtocol,
 } from "../protocols/protocolsSlice.js";
 
-export default function Protocols({ project, disableSave }) {
-  const protocols = useSelector(selectWritableProtocols);
+
+import {
+  selectAllProtocols,
+  toggleProtocol,
+} from "../datasets/datasetsSlice.js";
+
+
+export default function DatasetProtocols({ project, disableSave }) {
+  const protocols = useSelector(selectAllProtocols);
   const dispatch = useDispatch();
   const handleClickItem = (item) => dispatch(toggleProtocol(item));
   const handleNewItem = () => dispatch(addNewProtocol(project));
@@ -21,10 +25,10 @@ export default function Protocols({ project, disableSave }) {
   return (
     <ExpandableListItem
       items={protocols}
-      text="Protocols"
-      type="protocol"
+      text="Data Protocols"
+      type="datasetProtocol"
       icon={AccessibilityIcon}
-      disableSave={disableSave}
+      disableSave={true}
       handleClickItem={handleClickItem}
       handleNewItem={handleNewItem}
     />

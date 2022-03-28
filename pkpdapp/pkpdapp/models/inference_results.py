@@ -8,6 +8,7 @@ from django.db import models
 from pkpdapp.models import (
     Inference,
     Prior,
+    LogLikelihood,
 )
 import pandas as pd
 
@@ -20,15 +21,55 @@ class InferenceChain(models.Model):
         help_text='inference for this chain'
     )
 
+    def outputs_for(self, log_likelihood):
+        data = \
+            self.inference_output_results.filter(
+                log_likelihood=log_likelihood
+            ).order_by('time').values_list(
+                'median', 'percentile_min', 'percentile_max', 'data', 'time'
+            )
+        if data:
+            (
+                medians,
+                percentile_mins,
+                percentile_maxs,
+                datas,
+                times
+            ) = list(zip(*data))
+        else:
+            medians = []
+            percentile_mins = []
+            percentile_maxs = []
+            datas = []
+            times = []
+
+        df = pd.DataFrame.from_dict({
+            'medians': medians,
+            'percentile_mins': percentile_mins,
+            'percentile_maxs': percentile_maxs,
+            'datas': datas,
+            'times': times,
+        })
+
+        return df
+
     def as_pandas(self):
         priors_values = \
-            self.inference_results.order_by('iteration').values_list(
-                'prior', 'value'
+            self.inference_results.filter(
+                iteration__gt=self.inference.burn_in
+            ).order_by('iteration').values_list(
+                'prior', 'value', 'iteration'
             )
-        priors, values = list(zip(*priors_values))
+        if priors_values:
+            priors, values, iterations = list(zip(*priors_values))
+        else:
+            priors = []
+            values = []
+            iterations = []
         df = pd.DataFrame.from_dict({
             'priors': priors,
             'values': values,
+            'iterations': iterations,
         })
 
         return df
@@ -60,7 +101,7 @@ class InferenceResult(models.Model):
 
 class InferenceFunctionResult(models.Model):
     """
-    Abstract class for function evaluations during inference.
+    model for logLikelihood evaluations during inference.
     """
     chain = models.ForeignKey(
         InferenceChain,
@@ -73,4 +114,46 @@ class InferenceFunctionResult(models.Model):
     )
     value = models.FloatField(
         help_text='estimated parameter value'
+    )
+
+
+class InferenceOutputResult(models.Model):
+    """
+    model for output values for a given logLikelihood.
+    """
+    log_likelihood = models.ForeignKey(
+        LogLikelihood,
+        on_delete=models.CASCADE,
+        related_name='inference_output_results',
+        help_text='log_likelihood related to the output result'
+    )
+
+    chain = models.ForeignKey(
+        InferenceChain,
+        on_delete=models.CASCADE,
+        related_name='inference_output_results',
+        help_text='Chain related to the output result'
+    )
+
+    median = models.FloatField(
+        help_text='median of output distribution'
+    )
+
+    percentile_min = models.FloatField(
+        blank=True, null=True,
+        help_text='10th percentile of output distribution'
+    )
+
+    percentile_max = models.FloatField(
+        blank=True, null=True,
+        help_text='90th percentile of output distribution'
+    )
+
+    data = models.FloatField(
+        help_text=(
+            'data value for comparison'
+        )
+    )
+    time = models.FloatField(
+        help_text='time of output value'
     )

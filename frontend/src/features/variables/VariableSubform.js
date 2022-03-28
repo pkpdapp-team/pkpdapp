@@ -1,7 +1,8 @@
 import React, { useEffect } from "react";
 import { useSelector } from "react-redux";
-import { FormSliderField, FormTextField } from "../forms/FormComponents";
+import { FormSliderField, FormTextField, FormCheckboxField } from "../forms/FormComponents";
 import Box from "@material-ui/core/Box";
+import Grid from "@material-ui/core/Grid";
 import { useForm, useFormState } from "react-hook-form";
 import SaveIcon from "@material-ui/icons/Save";
 import { useDispatch } from "react-redux";
@@ -26,6 +27,7 @@ export default function VariableSubform({ variable_id, disableSave }) {
       default_value: variable.default_value,
       lower_bound: variable.lower_bound,
       upper_bound: variable.upper_bound,
+      is_log: variable.is_log,
     },
   });
 
@@ -40,9 +42,12 @@ export default function VariableSubform({ variable_id, disableSave }) {
       symbol: "X",
     };
   }
-  const label = `${variable.name} [${unit.symbol}]`;
+  const label = variable.name === 'size' ? 
+    `volume [${unit.symbol}]` : 
+    `${variable.name} [${unit.symbol}]`
+    ;
   let truncatedLabel = label;
-  const maxLength = 28;
+  const maxLength = 15;
   if (label.length > maxLength) {
     truncatedLabel = label.slice(0, maxLength - 2) + "...";
   }
@@ -54,6 +59,7 @@ export default function VariableSubform({ variable_id, disableSave }) {
   const { isDirty } = useFormState({ control });
   const current_lower_bound = getValues("lower_bound");
   const current_upper_bound = getValues("upper_bound");
+  const current_is_log = getValues("is_log");
 
   return (
     <React.Fragment>
@@ -102,14 +108,26 @@ export default function VariableSubform({ variable_id, disableSave }) {
             </IconButton>
           )}
         </Box>
+        <Grid container spacing={0} alignItems="center">
+        <Grid item xs>
         <FormSliderField
           control={control}
           name={"default_value"}
           tooltip={label}
+          log={current_is_log}
           label={truncatedLabel}
           min={current_lower_bound}
           max={current_upper_bound}
         />
+        </Grid>
+        <Grid item>
+        <FormCheckboxField
+          control={control}
+          name={"is_log"}
+          label={'Log'}
+        />
+        </Grid>
+        </Grid>
       </Box>
     </React.Fragment>
   );

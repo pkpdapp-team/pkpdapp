@@ -29,7 +29,9 @@ class InferenceView(viewsets.ModelViewSet):
     filter_backends = [ProjectFilter]
 
 
-class RunInferenceView(views.APIView):
+class InferenceOperationView(views.APIView):
+    def op(self, inference):
+        raise NotImplementedError
 
     def post(self, request, pk, format=None):
         try:
@@ -38,25 +40,38 @@ class RunInferenceView(views.APIView):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         errors = {}
-        model = inference.get_model()
-        if model is None:
-            for field in ['pd_model', 'dosed_pd_model', 'pkpd_model']:
-                errors[field] = 'Inference must have a model'
-
-        if inference.priors.count() == 0:
-            errors['priors'] = 'Inference must have at least one prior'
-
-        if inference.objective_functions.count() == 0:
-            errors['objective_functions'] = (
-                'Inference must have at least one objective function'
+        if inference.log_likelihoods.count() == 0:
+            errors['log_likelihoods'] = (
+                'Inference must have at least one log_likelihood'
             )
+        for log_likelihood in inference.log_likelihoods.all():
+            model = log_likelihood.get_model()
+            if model is None:
+                errors['log_likelihoods'] = 'LogLikelihood must have a model'
+
+            if len(log_likelihood.get_priors()) == 0:
+                errors['log_likelihoods'] = (
+                    'LogLikelihood must have at least one prior'
+                )
 
         if errors:
             return Response(
                 errors, status=status.HTTP_400_BAD_REQUEST
             )
-        stored_inference = inference.run_inference()
-        return Response(InferenceSerializer(stored_inference).data)
+
+        self.op(inference)
+
+        return Response(InferenceSerializer(inference).data)
+
+
+class RunInferenceView(InferenceOperationView):
+    def op(self, inference):
+        return inference.run_inference()
+
+
+class StopInferenceView(InferenceOperationView):
+    def op(self, inference):
+        return inference.stop_inference()
 
 
 class InferenceChainView(viewsets.ModelViewSet):

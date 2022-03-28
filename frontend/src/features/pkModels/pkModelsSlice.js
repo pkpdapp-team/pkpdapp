@@ -8,8 +8,6 @@ import { api } from "../../Api";
 import { fetchVariablesByPkModel } from "../variables/variablesSlice";
 import { fetchUnitsByPkModel } from "../projects/unitsSlice";
 
-import { runInference } from "../inference/inferenceSlice";
-
 export const pkModelsAdapter = createEntityAdapter({
   sortComparer: (a, b) => b.id < a.id,
 });
@@ -26,7 +24,9 @@ export const fetchPkModels = createAsyncThunk(
       `/api/dosed_pharmacokinetic/?project_id=${project.id}`
     );
     for (var i = 0; i < response.length; i++) {
-      dispatch(fetchPkModelSimulateById(response[i].id));
+      if (!response[i].read_only) {
+        dispatch(fetchPkModelSimulateById(response[i].id));
+      }
     }
     return response;
   }
@@ -112,12 +112,6 @@ export const pkModelsSlice = createSlice({
     addPkModels: pkModelsAdapter.upsertMany,
   },
   extraReducers: {
-    // Inferences
-    [runInference.fulfilled]: (state, action) => {
-      if (action.payload.dosed_pk_models) {
-        pkModelsAdapter.addMany(state, action.payload.dosed_pk_models);
-      }
-    },
 
     [fetchPkModels.pending]: (state, action) => {
       state.status = "loading";
@@ -176,3 +170,7 @@ export const selectChosenPkModels = (state) =>
 
 export const selectWritablePkModels = (state) =>
   selectAllPkModels(state).filter((pkModel) => !pkModel.read_only);
+
+export const selectReadOnlyPkModels = (state) =>
+  selectAllPkModels(state).filter((pkModel) => pkModel.read_only);
+
