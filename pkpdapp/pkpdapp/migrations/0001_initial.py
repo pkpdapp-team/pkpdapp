@@ -22,8 +22,8 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('contenttypes', '0002_remove_content_type_name'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
+        ('contenttypes', '0002_remove_content_type_name'),
     ]
 
     operations = [
@@ -377,6 +377,11 @@ class Migration(migrations.Migration):
             model_name='loglikelihoodparameter',
             name='variable',
             field=models.ForeignKey(blank=True, help_text='this parameter corresponds to this model variable.', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='log_likelihood_parameter', to='pkpdapp.variable'),
+        ),
+        migrations.AddField(
+            model_name='loglikelihood',
+            name='subject_group',
+            field=models.ForeignKey(blank=True, help_text='filter data on this subject group (null implies all subjects)', null=True, on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.subjectgroup'),
         ),
         migrations.AddField(
             model_name='loglikelihood',

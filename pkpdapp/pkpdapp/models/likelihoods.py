@@ -10,7 +10,7 @@ import numpy as np
 import scipy.stats as sps
 from pkpdapp.models import (
     Variable, BiomarkerType, Inference,
-    MyokitForwardModel,
+    MyokitForwardModel, SubjectGroup
 )
 
 
@@ -82,6 +82,16 @@ class LogLikelihood(models.Model):
             'biomarker_type for measurements. '
             'if blank then simulated data is used, '
             'with non-fixed parameters sampled at the start of inference'
+        )
+    )
+
+    subject_group = models.ForeignKey(
+        SubjectGroup,
+        on_delete=models.CASCADE,
+        blank=True, null=True,
+        help_text=(
+            'filter data on this subject group '
+            '(null implies all subjects)'
         )
     )
 
