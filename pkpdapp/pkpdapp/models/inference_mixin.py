@@ -244,26 +244,29 @@ class InferenceMixin:
         self.inference = inference
 
         # get model parameters to be inferred
-        # TODO: only one log_likelihood!
-        log_likelihood = inference.log_likelihoods.first()
+        self._log_likelihood = inference.log_likelihood
+
+        # take parameter priors and names from log_likelihood
         log_likelihood_priors = [
             param.prior
-            for param in log_likelihood.parameters.all()
+            for param in self._log_likelihood.parameters.all()
             if not param.is_fixed()
         ]
         fitted_parameter_names = [
             param.variable.qname
-            for param in log_likelihood.parameters.all()
+            for param in self._log_likelihood.parameters.all()
             if not param.is_fixed() and param.is_model_variable()
         ]
 
         # create pints forward model
-        # TODO: only supports a single log_likelihood
-        self._log_likelihoods = inference.log_likelihoods.all()
-        self._outputs = [ll.variable for ll in self._log_likelihoods]
-        self._pints_forward_model = log_likelihood.create_pints_forward_model(
-            fitted_parameter_names, outputs=self._outputs
-        )
+        self._outputs = [
+            m.variable for m in
+            self._log_likelihood.variable_biomarker_matches.all()
+        ]
+        self._pints_forward_model = \
+            self._log_likelihood.create_pints_forward_model(
+                fitted_parameter_names, outputs=self._outputs
+            )
 
         # We'll use the variable ordering based on the forwards model.
         pints_var_names = self._pints_forward_model.variable_parameter_names()

@@ -125,6 +125,8 @@ class Protocol(StoredModel):
         self.__original_dose_type = self.dose_type
 
     def create_stored_protocol(self):
+        if self.read_only:
+            return self
         stored_protocol_kwargs = {
             'name': self.name,
             'project': self.project,

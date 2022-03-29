@@ -41,11 +41,28 @@ class LogLikelihoodParameter(models.Model):
         related_name='log_likelihood_parameter',
         on_delete=models.CASCADE,
         blank=True, null=True,
-        help_text='this parameter corresponds to this model variable.'
+        help_text='this parameter corresponds to this model input variable.'
+    )
+
+    output = models.ForeignKey(
+        'VariableBiomarkerMatch',
+        related_name='log_likelihood_parameter',
+        on_delete=models.CASCADE,
+        blank=True, null=True,
+        help_text='this parameter corresponds to this output model variable.'
     )
 
     class Meta:
         unique_together = (('name', 'log_likelihood'),)
+        models.CheckConstraint(
+            check=(
+                (Q(variable__isnull=True) &
+                 Q(output__isnull=False)) |
+                (Q(variable__isnull=False) &
+                 Q(output__isnull=True))
+            ),
+            name='%(class)s: parameter must belong to input or output variable'
+        )
 
     def is_fixed(self):
         return not hasattr(self, 'prior')
@@ -54,26 +71,18 @@ class LogLikelihoodParameter(models.Model):
         return self.variable is not None
 
 
-class LogLikelihood(models.Model):
-    """
-    model class for log_likelihood functions.
-    """
+class VariableBiomarkerMatch(models.Model):
+    log_likelihood = models.ForeignKey(
+        'LogLikelihood',
+        related_name='variable_biomarker_matches',
+        on_delete=models.CASCADE,
+    )
     variable = models.ForeignKey(
         Variable,
         related_name='log_likelihoods',
         on_delete=models.CASCADE,
         help_text='variable for the log_likelihood.'
     )
-
-    inference = models.ForeignKey(
-        Inference,
-        related_name='log_likelihoods',
-        on_delete=models.CASCADE,
-        help_text=(
-            'Log_likelihood belongs to this inference object. '
-        )
-    )
-
     biomarker_type = models.ForeignKey(
         BiomarkerType,
         on_delete=models.CASCADE,
@@ -84,7 +93,6 @@ class LogLikelihood(models.Model):
             'with non-fixed parameters sampled at the start of inference'
         )
     )
-
     subject_group = models.ForeignKey(
         SubjectGroup,
         on_delete=models.CASCADE,
@@ -109,12 +117,12 @@ class LogLikelihood(models.Model):
         """
         add noise to the simulated data according to the log_likelihood
         """
-        if self.form == LogLikelihood.Form.NORMAL:
+        if self.form == self.Form.NORMAL:
             output_values += np.random.normal(
                 scale=noise_params[0],
                 size=output_values.shape
             )
-        elif self.form == LogLikelihood.Form.LOGNORMAL:
+        elif self.form == self.Form.LOGNORMAL:
             output_values += (
                 np.random.lognormal(
                     scale=noise_params[0],
@@ -129,18 +137,55 @@ class LogLikelihood(models.Model):
         """
         output_values_min = np.copy(output_values)
         output_values_max = np.copy(output_values)
-        if self.form == LogLikelihood.Form.NORMAL:
+        if self.form == self.Form.NORMAL:
             for i in range(len(output_values)):
                 dist = sps.norm(loc=output_values[i], scale=noise_params[0])
                 output_values_min[i] = dist.ppf(.1)
                 output_values_max[i] = dist.ppf(.9)
-        elif self.form == LogLikelihood.Form.LOGNORMAL:
+        elif self.form == self.Form.LOGNORMAL:
             for i in range(len(output_values)):
                 dist = sps.lognorm(loc=output_values[i], scale=noise_params[0])
                 output_values_min[i] = dist.ppf(.1)
                 output_values_max[i] = dist.ppf(.9)
 
         return output_values_min, output_values_max
+
+    def create_stored_variable_biomarker_match(
+            self, log_likelihood, new_models
+    ):
+        old_model = self.variable.get_model()
+        new_model = new_models[old_model.id]
+        variable_qname = self.variable.qname
+
+        new_variable = new_model.variables.get(
+            qname=variable_qname
+        )
+        stored_match_kwargs = {
+            'log_likelihood': log_likelihood,
+            'variable': new_variable,
+            'biomarker_type': self.biomarker_type,
+            'subject_group': self.subject_group,
+        }
+        stored_match = VariableBiomarkerMatch.objects.create(
+            **stored_match_kwargs
+        )
+        return stored_match
+
+
+class LogLikelihood(models.Model):
+    """
+    model class for log_likelihood functions.
+    """
+
+    inference = models.OneToOneField(
+        Inference,
+        related_name='log_likelihood',
+        on_delete=models.CASCADE,
+        blank=True, null=True,
+        help_text=(
+            'Log_likelihood belongs to this inference object. '
+        )
+    )
 
     def create_pints_forward_model(self, fitted_parameter_names, outputs=None):
         """
@@ -155,7 +200,7 @@ class LogLikelihood(models.Model):
             list of parameters that are input to the pints forwards model
         """
 
-        model = self.variable.get_model()
+        model = self.get_model()
         myokit_model = model.get_myokit_model()
         myokit_simulator = model.get_myokit_simulator()
 
@@ -174,7 +219,20 @@ class LogLikelihood(models.Model):
                                   fixed_parameters_dict)
 
     def get_model(self):
-        return self.variable.get_model()
+        first_match = self.variable_biomarker_matches.first()
+        if first_match is None:
+            return None
+        else:
+            return first_match.variable.get_model()
+
+    def get_model_variables(self):
+        model = self.get_model()
+        if model is None:
+            return []
+        else:
+            return model.variables.filter(
+                Q(constant=True) | Q(state=True)
+            ).exclude(name="time")
 
     def get_priors(self):
         return [
@@ -184,33 +242,24 @@ class LogLikelihood(models.Model):
         ]
 
     def save(self, force_insert=False, force_update=False, *args, **kwargs):
-        created = not self.pk
 
         super().save(force_insert, force_update, *args, **kwargs)
 
-        # if created then add the necessary parameters
-        if created:
-            if self.form == self.Form.NORMAL:
-                parameters = [
-                    LogLikelihoodParameter.objects.create(
-                        name="standard deviation",
-                        log_likelihood=self,
-                        value=self.variable.get_default_value(),
-                    )
-                ]
-            elif self.form == self.Form.LOGNORMAL:
-                parameters = [
-                    LogLikelihoodParameter.objects.create(
-                        name="sigma",
-                        log_likelihood=self,
-                        value=self.variable.get_default_value(),
-                    )
-                ]
-            for model_variable in self.variable.get_model(
-            ).variables.filter(
-                Q(constant=True) | Q(state=True)
-            ).exclude(name="time"):
-                parameters.append(
+        # update parameters
+        old_parameters = self.parameters.all()
+        new_parameters = []
+
+        # model parameteers
+        for model_variable in self.get_model_variables():
+            index = None
+            for i, p in enumerate(old_parameters):
+                if (
+                    p.is_model_variable() and
+                    p.variable.id == model_variable.id
+                ):
+                    index = i
+            if index is None:
+                new_parameters.append(
                     LogLikelihoodParameter.objects.create(
                         name=model_variable.qname,
                         value=model_variable.get_default_value(),
@@ -218,7 +267,50 @@ class LogLikelihood(models.Model):
                         variable=model_variable,
                     )
                 )
-            self.parameters.set(parameters)
+            else:
+                new_parameters.append(old_parameters[index])
+
+        # noise parameters
+        for match in self.variable_biomarker_matches.all():
+            index = None
+            for i, p in enumerate(old_parameters):
+                if (
+                    not p.is_model_variable() and
+                    p.output.id == match.id
+                ):
+                    index = i
+
+            if index is None:
+                if match.form == match.Form.NORMAL:
+                    name = (
+                        "noise standard deviation for " +
+                        match.variable.name
+                    )
+                    new_parameters.append(
+                        LogLikelihoodParameter.objects.create(
+                            name=name,
+                            log_likelihood=self,
+                            output=match,
+                            value=match.variable.get_default_value(),
+                        )
+                    )
+                elif self.form == self.Form.LOGNORMAL:
+                    name = (
+                        "noise sigma for " +
+                        match.variable.name
+                    )
+                    new_parameters.append(
+                        LogLikelihoodParameter.objects.create(
+                            name=name,
+                            log_likelihood=self,
+                            output=match,
+                            value=match.variable.get_default_value(),
+                        )
+                    )
+            else:
+                new_parameters.append(old_parameters[index])
+
+            self.parameters.set(new_parameters)
 
     def create_stored_log_likelihood(self, inference, new_models):
         old_parameters = self.parameters.all()
@@ -232,18 +324,8 @@ class LogLikelihood(models.Model):
                     'set value or a prior'
                 )
 
-        old_model = self.variable.get_model()
-        new_model = new_models[old_model.id]
-        variable_qname = self.variable.qname
-
-        new_variable = new_model.variables.get(
-            qname=variable_qname
-        )
-
         stored_log_likelihood_kwargs = {
-            'variable': new_variable,
             'inference': inference,
-            'biomarker_type': self.biomarker_type,
             'form': self.form,
         }
 
@@ -251,6 +333,12 @@ class LogLikelihood(models.Model):
         stored_log_likelihood = LogLikelihood.objects.create(
             **stored_log_likelihood_kwargs
         )
+
+        # now re-create matches
+        for match in self.variable_biomarker_matches.all():
+            match.create_stored_variable_biomarker_match(
+                stored_log_likelihood, new_models
+            )
 
         # now we copy over the parameter values
         # and the priors

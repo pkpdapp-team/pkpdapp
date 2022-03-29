@@ -22,8 +22,8 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        migrations.swappable_dependency(settings.AUTH_USER_MODEL),
         ('contenttypes', '0002_remove_content_type_name'),
+        migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
@@ -129,9 +129,7 @@ class Migration(migrations.Migration):
             name='LogLikelihood',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('form', models.CharField(choices=[('N', 'Normal'), ('LN', 'Log-Normal')], default='N', max_length=2)),
-                ('biomarker_type', models.ForeignKey(blank=True, help_text='biomarker_type for measurements. if blank then simulated data is used, with non-fixed parameters sampled at the start of inference', null=True, on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.biomarkertype')),
-                ('inference', models.ForeignKey(help_text='Log_likelihood belongs to this inference object. ', on_delete=django.db.models.deletion.CASCADE, related_name='log_likelihoods', to='pkpdapp.inference')),
+                ('inference', models.OneToOneField(blank=True, help_text='Log_likelihood belongs to this inference object. ', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='log_likelihood', to='pkpdapp.inference')),
             ],
         ),
         migrations.CreateModel(
@@ -209,6 +207,14 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
+            name='SubjectGroup',
+            fields=[
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('name', models.CharField(help_text='group name', max_length=100)),
+                ('dataset', models.ForeignKey(help_text='dataset containing this subject', on_delete=django.db.models.deletion.CASCADE, related_name='subject_groups', to='pkpdapp.dataset')),
+            ],
+        ),
+        migrations.CreateModel(
             name='Unit',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
@@ -221,6 +227,30 @@ class Migration(migrations.Migration):
                 ('cd', models.FloatField(default=0, help_text='candela exponent')),
                 ('mol', models.FloatField(default=0, help_text='mole exponent')),
                 ('multiplier', models.FloatField(default=0, help_text='multiplier in powers of 10')),
+            ],
+        ),
+        migrations.CreateModel(
+            name='Variable',
+            fields=[
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('read_only', models.BooleanField(default=False, help_text='true if object has been stored')),
+                ('datetime', models.DateTimeField(blank=True, help_text='datetime the object was stored.', null=True)),
+                ('is_public', models.BooleanField(default=False)),
+                ('lower_bound', models.FloatField(default=1e-06, help_text='lowest possible value for this variable')),
+                ('upper_bound', models.FloatField(default=2, help_text='largest possible value for this variable')),
+                ('default_value', models.FloatField(default=1, help_text='default value for this variable')),
+                ('is_log', models.BooleanField(default=False, help_text='True if default_value is stored as the log of this value')),
+                ('name', models.CharField(help_text='name of the variable', max_length=100)),
+                ('qname', models.CharField(help_text='fully qualitifed name of the variable', max_length=200)),
+                ('constant', models.BooleanField(default=True, help_text='True for a constant variable of the model, i.e. a parameter. False if non-constant, i.e. an output of the model (default is True)')),
+                ('state', models.BooleanField(default=False, help_text='True for a state variable of the model (default is False)')),
+                ('color', models.IntegerField(default=0, help_text='Color index associated with this variable. For display purposes in the frontend')),
+                ('display', models.BooleanField(default=True, help_text='True if this variable will be displayed in the frontend, False otherwise')),
+                ('axis', models.BooleanField(default=False, help_text='False/True if biomarker type displayed on LHS/RHS axis')),
+                ('dosed_pk_model', models.ForeignKey(blank=True, help_text='dosed pharmacokinetic model', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='variables', to='pkpdapp.dosedpharmacokineticmodel')),
+                ('pd_model', models.ForeignKey(blank=True, help_text='pharmacodynamic model', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='variables', to='pkpdapp.pharmacodynamicmodel')),
+                ('pk_model', models.ForeignKey(blank=True, help_text='pharmacokinetic model', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='variables', to='pkpdapp.pharmacokineticmodel')),
+                ('unit', models.ForeignKey(help_text='variable values are in this unit (note this might be different from the unit in the stored sbml)', on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.unit')),
             ],
         ),
         migrations.CreateModel(
@@ -262,35 +292,14 @@ class Migration(migrations.Migration):
             bases=('pkpdapp.prior',),
         ),
         migrations.CreateModel(
-            name='Variable',
+            name='VariableBiomarkerMatch',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('read_only', models.BooleanField(default=False, help_text='true if object has been stored')),
-                ('datetime', models.DateTimeField(blank=True, help_text='datetime the object was stored.', null=True)),
-                ('is_public', models.BooleanField(default=False)),
-                ('lower_bound', models.FloatField(default=1e-06, help_text='lowest possible value for this variable')),
-                ('upper_bound', models.FloatField(default=2, help_text='largest possible value for this variable')),
-                ('default_value', models.FloatField(default=1, help_text='default value for this variable')),
-                ('is_log', models.BooleanField(default=False, help_text='True if default_value is stored as the log of this value')),
-                ('name', models.CharField(help_text='name of the variable', max_length=100)),
-                ('qname', models.CharField(help_text='fully qualitifed name of the variable', max_length=200)),
-                ('constant', models.BooleanField(default=True, help_text='True for a constant variable of the model, i.e. a parameter. False if non-constant, i.e. an output of the model (default is True)')),
-                ('state', models.BooleanField(default=False, help_text='True for a state variable of the model (default is False)')),
-                ('color', models.IntegerField(default=0, help_text='Color index associated with this variable. For display purposes in the frontend')),
-                ('display', models.BooleanField(default=True, help_text='True if this variable will be displayed in the frontend, False otherwise')),
-                ('axis', models.BooleanField(default=False, help_text='False/True if biomarker type displayed on LHS/RHS axis')),
-                ('dosed_pk_model', models.ForeignKey(blank=True, help_text='dosed pharmacokinetic model', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='variables', to='pkpdapp.dosedpharmacokineticmodel')),
-                ('pd_model', models.ForeignKey(blank=True, help_text='pharmacodynamic model', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='variables', to='pkpdapp.pharmacodynamicmodel')),
-                ('pk_model', models.ForeignKey(blank=True, help_text='pharmacokinetic model', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='variables', to='pkpdapp.pharmacokineticmodel')),
-                ('unit', models.ForeignKey(help_text='variable values are in this unit (note this might be different from the unit in the stored sbml)', on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.unit')),
-            ],
-        ),
-        migrations.CreateModel(
-            name='SubjectGroup',
-            fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(help_text='group name', max_length=100)),
-                ('dataset', models.ForeignKey(help_text='dataset containing this subject', on_delete=django.db.models.deletion.CASCADE, related_name='subject_groups', to='pkpdapp.dataset')),
+                ('form', models.CharField(choices=[('N', 'Normal'), ('LN', 'Log-Normal')], default='N', max_length=2)),
+                ('biomarker_type', models.ForeignKey(blank=True, help_text='biomarker_type for measurements. if blank then simulated data is used, with non-fixed parameters sampled at the start of inference', null=True, on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.biomarkertype')),
+                ('log_likelihood', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='variable_biomarker_matches', to='pkpdapp.loglikelihood')),
+                ('subject_group', models.ForeignKey(blank=True, help_text='filter data on this subject group (null implies all subjects)', null=True, on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.subjectgroup')),
+                ('variable', models.ForeignKey(help_text='variable for the log_likelihood.', on_delete=django.db.models.deletion.CASCADE, related_name='log_likelihoods', to='pkpdapp.variable')),
             ],
         ),
         migrations.CreateModel(
@@ -375,18 +384,13 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='loglikelihoodparameter',
-            name='variable',
-            field=models.ForeignKey(blank=True, help_text='this parameter corresponds to this model variable.', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='log_likelihood_parameter', to='pkpdapp.variable'),
+            name='output',
+            field=models.ForeignKey(blank=True, help_text='this parameter corresponds to this output model variable.', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='log_likelihood_parameter', to='pkpdapp.variablebiomarkermatch'),
         ),
         migrations.AddField(
-            model_name='loglikelihood',
-            name='subject_group',
-            field=models.ForeignKey(blank=True, help_text='filter data on this subject group (null implies all subjects)', null=True, on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.subjectgroup'),
-        ),
-        migrations.AddField(
-            model_name='loglikelihood',
+            model_name='loglikelihoodparameter',
             name='variable',
-            field=models.ForeignKey(help_text='variable for the log_likelihood.', on_delete=django.db.models.deletion.CASCADE, related_name='log_likelihoods', to='pkpdapp.variable'),
+            field=models.ForeignKey(blank=True, help_text='this parameter corresponds to this model input variable.', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='log_likelihood_parameter', to='pkpdapp.variable'),
         ),
         migrations.CreateModel(
             name='InferenceResult',
