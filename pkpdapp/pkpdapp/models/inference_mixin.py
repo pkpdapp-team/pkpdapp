@@ -543,7 +543,9 @@ class InferenceMixin:
             # if we have data then use it, otherwise
             # use simulated data
             if obj.biomarker_type:
-                df = obj.biomarker_type.as_pandas()
+                df = obj.biomarker_type.as_pandas(
+                    subject_group=obj.subject_group
+                )
                 values.append(df['values'].tolist())
                 times.append(df['times'].tolist())
             else:

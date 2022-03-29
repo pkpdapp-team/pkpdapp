@@ -74,11 +74,19 @@ class BiomarkerType(models.Model):
     def get_project(self):
         return self.dataset.get_project()
 
-    def as_pandas(self):
-        times_subjects_values = \
-            self.biomarkers.order_by('time').values_list(
-                'time', 'subject__id', 'value'
-            )
+    def as_pandas(self, subject_group=None):
+        if subject_group:
+            times_subjects_values = \
+                self.biomarkers.filter(
+                    subject__in=subject_group.subjects.all()
+                ).order_by('time').values_list(
+                    'time', 'subject__id', 'value'
+                )
+        else:
+            times_subjects_values = \
+                self.biomarkers.order_by('time').values_list(
+                    'time', 'subject__id', 'value'
+                )
         times, subjects, values = list(zip(*times_subjects_values))
         df = pd.DataFrame.from_dict({
             'times': times,
