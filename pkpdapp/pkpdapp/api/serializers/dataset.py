@@ -9,7 +9,7 @@ import codecs
 import pandas as pd
 from pkpdapp.models import (
     Dataset, BiomarkerType, Protocol, Subject,
-    Unit, Compound, Biomarker, Dose
+    Unit, Compound, Biomarker, Dose, SubjectGroup,
 )
 from pkpdapp.api.serializers import ProtocolSerializer
 
@@ -132,6 +132,7 @@ class DatasetCsvSerializer(serializers.ModelSerializer):
         # remove existing dataset
         BiomarkerType.objects.filter(dataset=instance).delete()
         Subject.objects.filter(dataset=instance).delete()
+        SubjectGroup.objects.filter(dataset=instance).delete()
 
         # save default biomarker types
         data = validated_data['csv']
@@ -184,16 +185,29 @@ class DatasetCsvSerializer(serializers.ModelSerializer):
                     dose_group_value = None
                     dose_group_unit = None
 
-                group = row['SUBJECT_GROUP']
+                group_str = row['SUBJECT_GROUP']
+                if group_str != '' and group_str != '.':
+                    try:
+                        group = SubjectGroup.objects.get(
+                            name=group_str,
+                            dataset=instance,
+                        )
+                    except SubjectGroup.DoesNotExist:
+                        group = SubjectGroup.objects.create(
+                            name=group_str,
+                            dataset=instance,
+                        )
+
 
                 subject = Subject.objects.create(
                     id_in_dataset=subject_id,
                     dataset=instance,
-                    group=group,
                     dose_group_amount=dose_group_value,
                     dose_group_unit=dose_group_unit,
                     shape=subject_index,
                 )
+                if group is not None:
+                    subject.groups.add(group)
                 subject_index += 1
             if value != ".":  # measurement observation
                 Biomarker.objects.create(

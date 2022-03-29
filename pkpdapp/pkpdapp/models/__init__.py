@@ -10,7 +10,7 @@ from .units import Unit
 from .compound import Compound
 from .project import Project, ProjectAccess
 from .dataset import Dataset
-from .subject import Subject
+from .subject import Subject, SubjectGroup
 from .protocol import Protocol
 from .myokit_model_mixin import MyokitModelMixin
 from .mechanistic_model import MechanisticModel

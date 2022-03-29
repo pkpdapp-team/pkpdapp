@@ -330,6 +330,7 @@ def load_datasets(apps, schema_editor):
     Dose = apps.get_model("pkpdapp", "Dose")
     Unit = apps.get_model("pkpdapp", "Unit")
     Protocol = apps.get_model("pkpdapp", "Protocol")
+    SubjectGroup = apps.get_model("pkpdapp", "SubjectGroup")
 
     demo_project = Project.objects.get(name='demo')
     for (datafile_name, datafile_url, datafile_description,
@@ -455,11 +456,22 @@ def load_datasets(apps, schema_editor):
                         dataset=dataset,
                     )
                 except Subject.DoesNotExist:
-                    group = ''
+                    group = None
                     dose_group_amount = None
                     dose_group_unit = None
                     if SUBJECT_GROUP_COLUMN:
-                        group = row[SUBJECT_GROUP_COLUMN]
+                        group_str = row[SUBJECT_GROUP_COLUMN]
+                        if group_str != '' and group_str != '.':
+                            try:
+                                group = SubjectGroup.objects.get(
+                                    name=group_str,
+                                    dataset=dataset
+                                )
+                            except SubjectGroup.DoesNotExist:
+                                group = SubjectGroup.objects.create(
+                                    name=group_str,
+                                    dataset=dataset,
+                                )
                     if DOSE_GROUP_COLUMN:
                         dose_group_amount = row[DOSE_GROUP_COLUMN]
                         dose_group_unit = Unit.objects.get(symbol='')
@@ -467,11 +479,12 @@ def load_datasets(apps, schema_editor):
                     subject = Subject.objects.create(
                         id_in_dataset=subject_id,
                         dataset=dataset,
-                        group=group,
                         dose_group_amount=dose_group_amount,
                         dose_group_unit=dose_group_unit,
                         shape=subject_index,
                     )
+                    if group is not None:
+                        subject.groups.add(group)
                     subject_index += 1
                 if UNIT_COLUMN is None:
                     unit = Unit.objects.get(symbol='')

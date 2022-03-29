@@ -286,17 +286,25 @@ class Migration(migrations.Migration):
             ],
         ),
         migrations.CreateModel(
+            name='SubjectGroup',
+            fields=[
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('name', models.CharField(help_text='group name', max_length=100)),
+                ('dataset', models.ForeignKey(help_text='dataset containing this subject', on_delete=django.db.models.deletion.CASCADE, related_name='subject_groups', to='pkpdapp.dataset')),
+            ],
+        ),
+        migrations.CreateModel(
             name='Subject',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('id_in_dataset', models.IntegerField(help_text='unique id in the dataset')),
                 ('dose_group_amount', models.FloatField(blank=True, help_text='dosing amount for this subject (for constant dosing)', null=True)),
-                ('group', models.CharField(blank=True, help_text='dataset specific grouping for this subject', max_length=100)),
                 ('shape', models.IntegerField(default=0, help_text='Shape index associated with this subject. For plotting purposes in the frontend')),
                 ('display', models.BooleanField(default=True, help_text='True if this subject will be displayed in the frontend, False otherwise')),
                 ('metadata', jsonfield.fields.JSONField(default=dict, help_text='subject metadata')),
                 ('dataset', models.ForeignKey(help_text='dataset containing this subject', on_delete=django.db.models.deletion.CASCADE, related_name='subjects', to='pkpdapp.dataset')),
                 ('dose_group_unit', models.ForeignKey(blank=True, help_text='unit for dose_group_amount', null=True, on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.unit')),
+                ('groups', models.ManyToManyField(help_text='groups this subject belongs to', related_name='subjects', to='pkpdapp.SubjectGroup')),
                 ('protocol', models.ForeignKey(blank=True, help_text='dosing protocol for this subject.', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='subjects', to='pkpdapp.protocol')),
             ],
         ),
