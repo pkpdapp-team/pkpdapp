@@ -295,6 +295,31 @@ biomarkers_for_datasets = [
 ]
 
 
+def protocol_is_same_as(my_protocol, my_doses, protocol, other_doses):
+    if my_protocol.project != protocol.project:
+        return False
+    if my_protocol.compound != protocol.compound:
+        return False
+    if my_protocol.dose_type != protocol.dose_type:
+        return False
+    if my_protocol.time_unit != protocol.time_unit:
+        return False
+    if my_protocol.time_unit != protocol.time_unit:
+        return False
+    if my_protocol.amount_unit != protocol.amount_unit:
+        return False
+
+    for my_dose, other_dose in zip(my_doses, other_doses):
+        if my_dose.start_time != other_dose.start_time:
+            return False
+        if my_dose.amount != other_dose.amount:
+            return False
+        if my_dose.duration != other_dose.duration:
+            return False
+
+    return True
+
+
 def load_datasets(apps, schema_editor):
     Dataset = apps.get_model("pkpdapp", "Dataset")
     Subject = apps.get_model("pkpdapp", "Subject")
@@ -411,6 +436,8 @@ def load_datasets(apps, schema_editor):
                 SUBJECT_GROUP_COLUMN = None
                 ROUTE_COLUMN = None
             subject_index = 0
+            protocols = {}
+            doses = {}
             for row in data_reader:
                 biomarker_type_str = row[BIOMARKER_TYPE_COLUMN]
                 if not biomarker_type_str:
@@ -479,39 +506,66 @@ def load_datasets(apps, schema_editor):
                         compound = Compound.objects.create(
                             name=compound_str
                         )
-                    try:
-                        protocol = Protocol.objects.get(
-                            dataset=dataset,
-                            subject=subject,
-                            compound=compound
-                        )
-                    except Protocol.DoesNotExist:
+                    if subject.id in protocols:
+                        protocol = protocols[subject.id]
+                    else:
                         if ROUTE_COLUMN is None or row[ROUTE_COLUMN] == 'IV':
                             route = 'D'
                         else:
                             route = 'ID'
-                        protocol = Protocol.objects.create(
+                        protocol = Protocol(
                             name='{}-{}-{}'.format(
                                 dataset.name,
                                 compound.name,
                                 subject_id
                             ),
                             compound=compound,
-                            dataset=dataset,
-                            subject=subject,
                             time_unit=time_unit,
                             amount_unit=unit,
                             read_only=True,
                             dose_type=route,
                         )
+                        protocols[subject.id] = protocol
+                        doses[protocol.name] = []
 
-                    Dose.objects.create(
+                    doses[protocol.name].append(Dose(
                         start_time=row[TIME_COLUMN],
                         amount=row[DOSE_COLUMN],
                         duration=row[TINF_COLUMN],
                         protocol=protocol,
-                    )
+                    ))
 
+            unique_protocols = []
+            protocol_subjects = []
+            for subject_id, protocol in protocols.items():
+                index = None
+                for i in range(len(unique_protocols)):
+                    if protocol_is_same_as(
+                        unique_protocols[i],
+                        doses[unique_protocols[i].name],
+                        protocol,
+                        doses[protocol.name],
+                    ):
+                        index = i
+                        break
+                if index is None:
+                    unique_protocols.append(protocol)
+                    protocol_subjects.append(
+                        [Subject.objects.get(id=subject_id)]
+                    )
+                else:
+                    protocol_subjects[index].append(
+                        Subject.objects.get(id=subject_id)
+                    )
+            for protocol, subjects in zip(unique_protocols, protocol_subjects):
+                the_doses = doses[protocol.name]
+                protocol.save()
+                for dose in the_doses:
+                    dose.protocol = protocol
+                    dose.save()
+                for subject in subjects:
+                    subject.protocol = protocol
+                    subject.save()
 
 class Migration(migrations.Migration):
 

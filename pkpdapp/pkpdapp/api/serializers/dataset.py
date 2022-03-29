@@ -131,7 +131,6 @@ class DatasetCsvSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         # remove existing dataset
         BiomarkerType.objects.filter(dataset=instance).delete()
-        Protocol.objects.filter(dataset=instance).delete()
         Subject.objects.filter(dataset=instance).delete()
 
         # save default biomarker types
@@ -219,13 +218,9 @@ class DatasetCsvSerializer(serializers.ModelSerializer):
                     compound = Compound.objects.create(
                         name=compound_str
                     )
-                try:
-                    protocol = Protocol.objects.get(
-                        dataset=instance,
-                        subject_id=subject,
-                        compound=compound
-                    )
-                except Protocol.DoesNotExist:
+                if subject.protocol:
+                    protocol = subject.protocol
+                else:
                     protocol = Protocol.objects.create(
                         name='{}-{}-{}'.format(
                             instance.name,
@@ -235,10 +230,10 @@ class DatasetCsvSerializer(serializers.ModelSerializer):
                         compound=compound,
                         time_unit=time_unit,
                         amount_unit=value_unit,
-                        dataset=instance,
-                        subject=subject,
                         dose_type=route
                     )
+                    subject.protocol = protocol
+                    subject.save()
                 start_time = float(row['TIME'])
                 amount = float(row['AMT'])
                 infusion_time = float(row['TINF'])
@@ -248,4 +243,7 @@ class DatasetCsvSerializer(serializers.ModelSerializer):
                     duration=infusion_time,
                     protocol=protocol,
                 )
+
+        instance.merge_protocols()
+
         return instance

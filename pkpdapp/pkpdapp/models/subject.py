@@ -31,6 +31,12 @@ class Subject(models.Model):
             'unit for dose_group_amount'
         )
     )
+    protocol = models.ForeignKey(
+        'Protocol', on_delete=models.CASCADE,
+        related_name='subjects',
+        blank=True, null=True,
+        help_text='dosing protocol for this subject.'
+    )
     group = models.CharField(
         max_length=100,
         help_text='dataset specific grouping for this subject',

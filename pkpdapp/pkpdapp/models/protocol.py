@@ -46,17 +46,6 @@ class Protocol(StoredModel):
         blank=True, null=True,
         help_text='drug compound'
     )
-    dataset = models.ForeignKey(
-        Dataset, on_delete=models.CASCADE,
-        blank=True, null=True,
-        related_name='protocols',
-        help_text='dataset containing this protocol'
-    )
-    subject = models.ForeignKey(
-        Subject, on_delete=models.CASCADE,
-        help_text='subject associated with protocol',
-        blank=True, null=True,
-    )
 
     class DoseType(models.TextChoices):
         DIRECT = 'D', 'IV'
@@ -96,13 +85,35 @@ class Protocol(StoredModel):
     def get_project(self):
         if self.project:
             return self.project
-        elif self.dataset:
-            return self.dataset.get_project()
+        else:
+            subject = self.subjects.first()
+            return subject.get_project()
 
         return None
 
     def __str__(self):
         return str(self.name)
+
+    def is_same_as(self, protocol):
+        if self.project != protocol.project:
+            return False
+        if self.compound != protocol.compound:
+            return False
+        if self.dose_type != protocol.dose_type:
+            return False
+        if self.time_unit != protocol.time_unit:
+            return False
+        if self.time_unit != protocol.time_unit:
+            return False
+        if self.amount_unit != protocol.amount_unit:
+            return False
+
+        my_doses = self.doses.order_by('start_time')
+        other_doses = protocol.doses.order_by('start_time')
+        for my_dose, other_dose in zip(my_doses, other_doses):
+            if not my_dose.is_same_as(other_dose):
+                return False
+        return True
 
     def save(self, force_insert=False, force_update=False, *args, **kwargs):
         super().save(force_insert, force_update, *args, **kwargs)

@@ -61,3 +61,8 @@ class TestBiomarkerTypeModel(TestCase):
             BiomarkerType.objects.get(id=self.biomarker_type.id)
         with self.assertRaises(Biomarker.DoesNotExist):
             Biomarker.objects.get(id=self.biomarkers[0].id)
+
+    def test_migration(self):
+        dataset = Dataset.objects.get(name='demo_pk_data')
+        protocols = set([subject.protocol for subject in dataset.subjects.all()])
+        self.assertEqual(len(protocols), 39)
