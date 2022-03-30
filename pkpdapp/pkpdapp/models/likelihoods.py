@@ -14,75 +14,54 @@ from pkpdapp.models import (
 )
 
 
-class LogLikelihoodParameter(models.Model):
+class LogLikelihood(models.Model):
     """
-    LogLikelihoods for ODE models have many parameters
-    which are encoded as a `pkpdapp.Variable`. This models
-    parameters of the log_likelihood itself
+    model class for log_likelihood functions.
     """
+
+    inference = models.ForeignKey(
+        Inference,
+        related_name='log_likelihood',
+        blank=True, null=True,
+        on_delete=models.CASCADE,
+        help_text=(
+            'Log_likelihood belongs to this inference object. '
+        )
+    )
 
     name = models.CharField(
         max_length=100,
     )
 
     value = models.FloatField(
-        help_text='set if a fixed value for the parameter is required',
+        help_text='set if a fixed value is required',
         blank=True, null=True,
     )
 
-    log_likelihood = models.ForeignKey(
+    children = models.ManyToManyField(
         'LogLikelihood',
-        related_name='parameters',
-        on_delete=models.CASCADE,
-    )
-
-    variable = models.ForeignKey(
-        Variable,
-        related_name='log_likelihood_parameter',
-        on_delete=models.CASCADE,
+        related_name='parents',
+        symmetrical=False,
         blank=True, null=True,
-        help_text='this parameter corresponds to this model input variable.'
-    )
-
-    output = models.ForeignKey(
-        'VariableBiomarkerMatch',
-        related_name='log_likelihood_parameter',
         on_delete=models.CASCADE,
-        blank=True, null=True,
-        help_text='this parameter corresponds to this output model variable.'
     )
 
-    class Meta:
-        unique_together = (('name', 'log_likelihood'),)
-        models.CheckConstraint(
-            check=(
-                (Q(variable__isnull=True) &
-                 Q(output__isnull=False)) |
-                (Q(variable__isnull=False) &
-                 Q(output__isnull=True))
-            ),
-            name='%(class)s: parameter must belong to input or output variable'
+    index = models.IntegerField(
+        blank=True, null=True,
+        help_text=(
+            'parameter index for distribution parameters. '
+            'null if variable is not null'
         )
-
-    def is_fixed(self):
-        return not hasattr(self, 'prior')
-
-    def is_model_variable(self):
-        return self.variable is not None
-
-
-class VariableBiomarkerMatch(models.Model):
-    log_likelihood = models.ForeignKey(
-        'LogLikelihood',
-        related_name='variable_biomarker_matches',
-        on_delete=models.CASCADE,
     )
+
     variable = models.ForeignKey(
         Variable,
         related_name='log_likelihoods',
+        blank=True, null=True,
         on_delete=models.CASCADE,
         help_text='variable for the log_likelihood.'
     )
+
     biomarker_type = models.ForeignKey(
         BiomarkerType,
         on_delete=models.CASCADE,
@@ -93,6 +72,7 @@ class VariableBiomarkerMatch(models.Model):
             'with non-fixed parameters sampled at the start of inference'
         )
     )
+
     subject_group = models.ForeignKey(
         SubjectGroup,
         on_delete=models.CASCADE,
@@ -105,12 +85,14 @@ class VariableBiomarkerMatch(models.Model):
 
     class Form(models.TextChoices):
         NORMAL = 'N', 'Normal'
+        UNIFORM = 'U', 'Uniform'
         LOGNORMAL = 'LN', 'Log-Normal'
+        FIXED = 'F', 'Fixed'
 
     form = models.CharField(
         max_length=2,
         choices=Form.choices,
-        default=Form.NORMAL,
+        default=Form.FIXED,
     )
 
     def add_noise(self, output_values, noise_params):
@@ -171,22 +153,6 @@ class VariableBiomarkerMatch(models.Model):
         )
         return stored_match
 
-
-class LogLikelihood(models.Model):
-    """
-    model class for log_likelihood functions.
-    """
-
-    inference = models.OneToOneField(
-        Inference,
-        related_name='log_likelihood',
-        on_delete=models.CASCADE,
-        blank=True, null=True,
-        help_text=(
-            'Log_likelihood belongs to this inference object. '
-        )
-    )
-
     def create_pints_forward_model(self, fitted_parameter_names, outputs=None):
         """
         create pints forwards model for this log_likelihood.
@@ -218,14 +184,37 @@ class LogLikelihood(models.Model):
                                   output_names,
                                   fixed_parameters_dict)
 
+    def is_a_prior(self):
+        """
+        False for fixed parameters, and log_likelihoods on
+        non-constant model parameters
+        """
+        if self.form is self.Form.Fixed:
+            return False
+        if (
+            self.variable is not None and
+            not self.variable.constant
+        ):
+            return False
+
+        return True
+
     def get_model(self):
-        first_match = self.variable_biomarker_matches.first()
-        if first_match is None:
+        """
+        if this is a log_likelihood that includes a mechanistic model
+        this model is returned, else None
+        """
+        if self.variable is None:
             return None
-        else:
-            return first_match.variable.get_model()
+        if self.variable.constant:
+            return None
+        return self.variable.get_model()
 
     def get_model_variables(self):
+        """
+        if this is a log_likelihood that includes a mechanistic model
+        return a list of model parameters, else return []
+        """
         model = self.get_model()
         if model is None:
             return []
@@ -234,87 +223,94 @@ class LogLikelihood(models.Model):
                 Q(constant=True) | Q(state=True)
             ).exclude(name="time")
 
-    def get_priors(self):
-        return [
-            param.prior
-            for param in self.parameters.all()
-            if not param.is_fixed()
-        ]
+    def is_on_variable(self):
+        return self.variable is not None
 
     def save(self, force_insert=False, force_update=False, *args, **kwargs):
 
         super().save(force_insert, force_update, *args, **kwargs)
 
-        # update parameters
-        old_parameters = self.parameters.all()
-        new_parameters = []
+        # update children
+        old_children = self.children.all()
+        new_children = []
 
         # model parameteers
         for model_variable in self.get_model_variables():
             index = None
-            for i, p in enumerate(old_parameters):
+            for i, p in enumerate(old_children):
                 if (
-                    p.is_model_variable() and
+                    p.is_on_variable() and
                     p.variable.id == model_variable.id
                 ):
                     index = i
             if index is None:
-                new_parameters.append(
-                    LogLikelihoodParameter.objects.create(
+                new_children.append(
+                    LogLikelihood.objects.create(
                         name=model_variable.qname,
                         value=model_variable.get_default_value(),
-                        log_likelihood=self,
+                        form=self.Form.FIXED,
                         variable=model_variable,
                     )
                 )
             else:
-                new_parameters.append(old_parameters[index])
+                new_children.append(old_children[index])
 
-        # noise parameters
-        for match in self.variable_biomarker_matches.all():
+        # distribution parameters
+        if self.form == self.Form.NORMAL:
+            name = (
+                "standard deviation for " +
+                self.variable.name
+            )
             index = None
-            for i, p in enumerate(old_parameters):
+            for i, p in enumerate(old_children):
                 if (
-                    not p.is_model_variable() and
-                    p.output.id == match.id
+                    not p.is_on_variable() and
+                    p.index == 0
                 ):
                     index = i
-
             if index is None:
-                if match.form == match.Form.NORMAL:
-                    name = (
-                        "noise standard deviation for " +
-                        match.variable.name
+                new_children.append(
+                    LogLikelihood.objects.create(
+                        name=name,
+                        value=self.variable.get_default_value(),
+                        index=0,
+                        self.Form.FIXED,
                     )
-                    new_parameters.append(
-                        LogLikelihoodParameter.objects.create(
-                            name=name,
-                            log_likelihood=self,
-                            output=match,
-                            value=match.variable.get_default_value(),
-                        )
-                    )
-                elif self.form == self.Form.LOGNORMAL:
-                    name = (
-                        "noise sigma for " +
-                        match.variable.name
-                    )
-                    new_parameters.append(
-                        LogLikelihoodParameter.objects.create(
-                            name=name,
-                            log_likelihood=self,
-                            output=match,
-                            value=match.variable.get_default_value(),
-                        )
-                    )
+                )
             else:
-                new_parameters.append(old_parameters[index])
+                new_children.append(old_children[index])
+        elif self.form == self.Form.LOGNORMAL:
+            name = (
+                "noise sigma for " +
+                self.variable.name
+            )
+            index = None
+            for i, p in enumerate(old_children):
+                if (
+                    not p.is_on_variable() and
+                    p.index == 0
+                ):
+                    index = i
+            if index is None:
+                new_children.append(
+                    LogLikelihood.objects.create(
+                        name=name,
+                        value=match.variable.get_default_value(),
+                        index=0,
+                        self.Form.FIXED,
+                    )
+                )
+            else:
+                new_children.append(old_children[index])
 
-            self.parameters.set(new_parameters)
+            self.children.set(new_children)
 
     def create_stored_log_likelihood(self, inference, new_models):
-        old_parameters = self.parameters.all()
-        for parameter in old_parameters:
+        """
+        create stored log_likelihood, ignoring children for now
+        """
+        old_children = self.children.all()
+        for child in old_children:
             if (
                 parameter.is_fixed() and
                 parameter.value is None
@@ -323,36 +319,28 @@ class LogLikelihood(models.Model):
                     'All LogLikelihood parameters must have a '
                     'set value or a prior'
                 )
+        old_model = self.variable.get_model()
+        new_model = new_models[old_model.id]
+        variable_qname = self.variable.qname
+
+        new_variable = new_model.variables.get(
+            qname=variable_qname
+        )
 
         stored_log_likelihood_kwargs = {
             'inference': inference,
+            'name': self.name,
+            'value': self.value,
+            'index': self.index,
+            'variable': new_variable,
+            'biomarker_type': self.biomarker_type,
+            'subject_group': self.subject_group,
             'form': self.form,
         }
 
-        # this will create parameters
+        # this will create default children
         stored_log_likelihood = LogLikelihood.objects.create(
             **stored_log_likelihood_kwargs
         )
-
-        # now re-create matches
-        for match in self.variable_biomarker_matches.all():
-            match.create_stored_variable_biomarker_match(
-                stored_log_likelihood, new_models
-            )
-
-        # now we copy over the parameter values
-        # and the priors
-        for parameter in old_parameters:
-            new_parameter = stored_log_likelihood.parameters.get(
-                name=parameter.name
-            )
-            new_prior = None
-            if not parameter.is_fixed():
-                new_prior = parameter.prior.create_stored_prior(
-                    stored_log_likelihood
-                )
-            new_parameter.value = parameter.value
-            new_parameter.prior = new_prior
-            new_parameter.save()
 
         return stored_log_likelihood

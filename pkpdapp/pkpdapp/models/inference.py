@@ -151,9 +151,23 @@ class Inference(StoredModel):
         self.read_only = True
         self.save()
 
-        # recreate log_likelihoods
+        # recreate log_likelihoods and remove default children
+        new_log_likelihoods = []
         for log_likelihood in old_log_likelihoods:
-            log_likelihood.create_stored_log_likelihood(self, new_models)
+            new_ll = log_likelihood.create_stored_log_likelihood(
+                self, new_models
+            )
+            new_ll.children.delete()
+            new_log_likelihoods.append(new_ll)
+
+        # recreate children relationships using indicies
+        # of old_log_likelihoods
+        for log_likelihood in old_log_likelihoods:
+            children = []
+            for child in log_likelihood.children.all():
+                index = old_log_likelihoods.index(child)
+                children.append(new_log_likelihoods[index])
+            log_likelihood.children.set(children)
 
         self.refresh_from_db()
 

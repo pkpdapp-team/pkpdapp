@@ -15,26 +15,24 @@ class Prior(PolymorphicModel):
     """
     Model for a generic prior.
     """
-    log_likelihood_parameter = models.OneToOneField(
-        LogLikelihoodParameter,
-        related_name='prior',
-        on_delete=models.CASCADE,
-    )
 
     def is_match(self, variable_qname):
         """
         returns True if priors is on the model variable provided
         """
-        if self.is_model_variable_prior():
-            return (
-                variable_qname ==
-                self.log_likelihood_parameter.variable.qname
-            )
-
+        for param in self.parameters.all():
+            if (
+                param.variable is not None and
+                param.variable.qname == variable_qname
+            ):
+                return True
         return False
 
     def is_model_variable_prior(self):
-        return self.log_likelihood_parameter.variable is not None
+        for param in self.parameters.all():
+            if param.variable is not None:
+                return True
+        return False
 
     def create_stored_prior(
             self, new_log_likelihood,

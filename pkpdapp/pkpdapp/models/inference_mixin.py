@@ -244,45 +244,27 @@ class InferenceMixin:
         self.inference = inference
 
         # get model parameters to be inferred
-        self._log_likelihood = inference.log_likelihood
+        self._log_likelihoods = inference.log_likelihoods.all()
 
-        # take parameter priors and names from log_likelihood
-        log_likelihood_priors = [
-            param.prior
-            for param in self._log_likelihood.parameters.all()
-            if not param.is_fixed()
-        ]
-        fitted_parameter_names = [
-            param.variable.qname
-            for param in self._log_likelihood.parameters.all()
-            if not param.is_fixed() and param.is_model_variable()
+        # this list defines the ordering in the parameter vector
+        # for the sampler
+        self._priors = [
+            ll
+            for ll in self._log_likelihoods
+            if ll.is_a_prior()
         ]
 
-        # create pints forward model
-        self._outputs = [
-            m.variable for m in
-            self._log_likelihood.variable_biomarker_matches.all()
-        ]
-        self._pints_forward_model = \
-            self._log_likelihood.create_pints_forward_model(
-                fitted_parameter_names, outputs=self._outputs
-            )
-
-        # We'll use the variable ordering based on the forwards model.
-        pints_var_names = self._pints_forward_model.variable_parameter_names()
-
-        # we'll need the priors in the same order as the theta vector,
-        # so we can write back to the database
-        self.priors_in_pints_order = [
-            [prior for prior in log_likelihood_priors
-             if prior.is_match(name)][0]
-            for name in pints_var_names
+        # create forwards models
+        self._model_log_likelihoods = [
+            ll
+            for ll in self._log_likelihoods
+            if ll.get_model() is not None
         ]
 
-        # add remaining (noise) priors to the end
-        self.priors_in_pints_order += [
-            prior for prior in log_likelihood_priors
-            if not prior.is_model_variable_prior()
+        # generate forward models from top-level model log_likelihoods
+        self._pints_forward_models = [
+            ll.create_pints_forward_model()
+            for ll in self._model_log_likelihoods
         ]
 
         # get priors / boundaries, using variable ordering already established
@@ -290,7 +272,7 @@ class InferenceMixin:
             self._pints_log_priors,
             self._pints_boundaries,
             self._pints_transforms
-        ) = self.get_priors_boundaries_transforms(self.priors_in_pints_order)
+        ) = self.get_priors_boundaries_transforms(self.priors)
 
         self._pints_composed_log_prior = pints.ComposedLogPrior(
             *self._pints_log_priors
