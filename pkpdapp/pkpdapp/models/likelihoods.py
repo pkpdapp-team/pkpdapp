@@ -95,19 +95,64 @@ class LogLikelihood(models.Model):
         default=Form.FIXED,
     )
 
-    def add_noise(self, output_values, noise_params):
+    def is_a_prior(self):
+        """
+        False for fixed parameters, and log_likelihoods on
+        non-constant model parameters
+        """
+        if self.form is self.Form.Fixed:
+            return False
+        if (
+            self.variable is not None and
+            not self.variable.constant
+        ):
+            return False
+
+        return True
+
+    def is_on_variable(self):
+        return self.variable is not None
+
+    def sample(self):
+        if self.form == self.Form.FIXED:
+            return self.value
+
+        noise_params = self.get_noise_params()
+        if self.form == self.Form.NORMAL:
+            self.value = np.random.normal(
+                loc=noise_params[0],
+                scale=noise_params[1],
+            )
+        elif self.form == self.Form.LOGNORMAL:
+            self.value = np.random.lognormal(
+                mean=noise_params[0],
+                scale=noise_params[1],
+            )
+        elif self.form == self.Form.UNIFORM:
+            self.value = np.random.uniform(
+                low=noise_params[0],
+                high=noise_params[1],
+            )
+        self.save()
+        return self.value
+
+    def add_noise(self, output_values, noise_params=None):
         """
         add noise to the simulated data according to the log_likelihood
         """
+        if noise_params is None:
+            params = self.get_noise_params()
         if self.form == self.Form.NORMAL:
             output_values += np.random.normal(
-                scale=noise_params[0],
+                mean=noise_params[0],
+                scale=noise_params[1],
                 size=output_values.shape
             )
         elif self.form == self.Form.LOGNORMAL:
             output_values += (
                 np.random.lognormal(
-                    scale=noise_params[0],
+                    mean=noise_params[0],
+                    sigma=noise_params[1],
                     size=output_values.shape
                 )
             )
@@ -153,7 +198,7 @@ class LogLikelihood(models.Model):
         )
         return stored_match
 
-    def create_pints_forward_model(self, fitted_parameter_names, outputs=None):
+    def create_pints_forward_model(self):
         """
         create pints forwards model for this log_likelihood.
 
@@ -162,42 +207,182 @@ class LogLikelihood(models.Model):
         outputs: [Variable] (optional)
             list of outputs that the forward model will produce
             if None then the output of the log_likelihood will be used
-        fitted_parameter_names: [str]
-            list of parameters that are input to the pints forwards model
         """
 
         model = self.get_model()
         myokit_model = model.get_myokit_model()
         myokit_simulator = model.get_myokit_simulator()
 
-        if outputs is None:
-            outputs = [self.variable]
+        outputs = [self.variable]
         output_names = [output.qname for output in outputs]
 
         fixed_parameters_dict = {
             param.variable.qname: param.value
-            for param in self.parameters.all()
-            if param.is_model_variable() and param.is_fixed()
+            for param in self.children.all()
+            if param.is_on_variable() and param.form == param.Form.FIXED
         }
 
-        return MyokitForwardModel(myokit_simulator, myokit_model,
-                                  output_names,
-                                  fixed_parameters_dict)
+        pints_model = MyokitForwardModel(
+            myokit_simulator, myokit_model,
+            output_names,
+            fixed_parameters_dict
+        )
 
-    def is_a_prior(self):
-        """
-        False for fixed parameters, and log_likelihoods on
-        non-constant model parameters
-        """
-        if self.form is self.Form.Fixed:
-            return False
-        if (
-            self.variable is not None and
-            not self.variable.constant
-        ):
-            return False
+        fitted_children = [
+            self.get_child(name)
+            for name in pints_model.variable_parameter_names()
+        ]
 
-        return True
+        return pints_model, fitted_children
+
+    def get_child(self, qname):
+        return self.children.filter(
+            variable__qname=qname
+        )
+
+    def get_inference_data(self):
+        # if we have data then use it, otherwise
+        # use simulated data
+        if self.biomarker_type:
+            df = self.biomarker_type.as_pandas(
+                subject_group=self.subject_group
+            )
+            return df['values'].tolist(), df['times'].tolist()
+        else:
+            # sample from model
+            model = self.get_model()
+            pints_model, param_children = self.create_pints_forward_model()
+            param_vector = [
+                child.sample()
+                for child in param_children
+            ]
+            fake_data_times = np.linspace(0, model.time_max, 20)
+            result = forward_model.simulate(param_vector, fake_data_times)
+
+            output_values = obj.add_noise(output_values)
+            return output_values, times
+
+    def get_noise_params(self):
+        """
+        get ordered list of noise params
+        """
+        params = self.children.all()
+        noise_children = [p for p in params if not p.is_on_variable()]
+        noise_params = [] * len(noise_children)
+        for c in noise_children:
+            noise_params[c.index] = c.sample()
+
+    def create_pints_transform(self):
+        if False:
+            return pints.LogTransformation(n_parameters=1)
+        else:
+            return pints.IdentityTransformation(n_parameters=1)
+
+    def create_pints_prior(self):
+        noise_parameters = prior.get_noise_params()
+        if prior.form == prior.Form.UNIFORM:
+            lower = noise_parameters[0]
+            upper = noise_parameters[1]
+            pints_log_prior = pints.UniformLogPrior(lower, upper)
+        elif prior.form == prior.Form.NORMAL:
+            mean = noise_parameters[0]
+            sd = noise_parameters[1]
+            pints_log_prior = pints.GaussianLogPrior(mean, sd)
+
+    def create_pints_problem(self):
+        values, times = self.get_inference_data()
+        model, fitted_children = self.create_pints_forward_model()
+        return pints.SingleOutputProblem(model, values, times), fitted_children
+
+    def create_pints_log_likelihood(self):
+        problem, fitted_children = self.create_pints_problem()
+        if self.form == self.Form.NORMAL:
+            noise_param = self.children.get(
+                index=1
+            )
+            if noise_param.form == noise_param.Form.FIXED:
+                value = noise_param.value
+                return pints.GaussianKnownnoiseLogLikelihood(
+                    problem, value
+                ), fitted_children
+            else:
+                return pints.GaussianLogLikelihood(
+                    problem
+                ), fitted_children + [noise_param]
+        elif self.form == LogLikelihood.Form.LOGNORMAL:
+            noise_param = self.children.get(
+                index=1
+            )
+            return pints.LogNormalLogLikelihood(
+                problem
+            ), fitted_children + [noise_param]
+
+        raise RuntimeError('unknown log_likelihood form')
+
+    def get_forward_model_and_data(self):
+        model = self.get_model()
+        pints_forward_model = self.create_pints_forward_model()
+
+        # if we're using fake data sample from composed prior
+        # and store the values
+        use_fake_data = any([
+            ll.biomarker_type is None for ll in log_likelihoods
+        ])
+        if self.biomarker_type:
+            fake_data_times = np.linspace(0, model.time_max, 20)
+            fake_data_x0 = pints_composed_log_prior.sample().flatten()
+            for x, prior in zip(fake_data_x0, priors_in_pints_order):
+                prior.log_likelihood_parameter.value = x
+                prior.log_likelihood_parameter.save()
+            result = pints_forward_model.simulate(
+                fake_data_x0[:pints_forward_model.n_parameters()],
+                fake_data_times
+            )
+
+        values = []
+        times = []
+        result_index = 0
+        for obj in log_likelihoods:
+
+            # if we have data then use it, otherwise
+            # use simulated data
+            if obj.biomarker_type:
+                df = obj.biomarker_type.as_pandas(
+                    subject_group=obj.subject_group
+                )
+                values.append(df['values'].tolist())
+                times.append(df['times'].tolist())
+            else:
+                output_values = result[
+                    result_index:result_index + len(fake_data_times)
+                ]
+
+                # noise param value could be fixed or in priors
+                x0_noise_params = []
+                for param in obj.parameters.all():
+                    if param.is_fixed() and not param.is_model_variable():
+                        x0_noise_params.append(param.value)
+                n_parameters = pints_forward_model.n_parameters()
+                for i, prior in enumerate(
+                        priors_in_pints_order[n_parameters:]
+                ):
+                    param = prior.log_likelihood_parameter
+                    if (
+                            param.log_likelihood == obj and
+                            not param.is_model_variable()
+                    ):
+                        x0_noise_params.append(fake_data_x0[n_parameters + i])
+
+                print('adding noise to fake data with params', x0_noise_params)
+                output_values = obj.add_noise(output_values, x0_noise_params)
+
+                values.append(output_values)
+                times.append(fake_data_times)
+                result_index += len(fake_data_times)
+
+        print('output values', values)
+
+        return values, times
 
     def get_model(self):
         """
@@ -222,9 +407,6 @@ class LogLikelihood(models.Model):
             return model.variables.filter(
                 Q(constant=True) | Q(state=True)
             ).exclude(name="time")
-
-    def is_on_variable(self):
-        return self.variable is not None
 
     def save(self, force_insert=False, force_update=False, *args, **kwargs):
 
@@ -257,15 +439,26 @@ class LogLikelihood(models.Model):
 
         # distribution parameters
         if self.form == self.Form.NORMAL:
-            name = (
-                "standard deviation for " +
-                self.variable.name
-            )
-            index = None
-            for i, p in enumerate(old_children):
+            names = [
+                "mean for " + self.variable.name,
+                "standard deviation for " + self.variable.name,
+            ]
+        elif self.form == self.Form.LOGNORMAL:
+            names = [
+                "mean for " + self.variable.name,
+                "sigma for " + self.variable.name,
+            ]
+        elif self.form == self.Form.LOGNORMAL:
+            names = [
+                "lower for " + self.variable.name,
+                "upper for " + self.variable.name,
+            ]
+        for param_index, name in enumerate(names)
+          index = None
+           for i, p in enumerate(old_children):
                 if (
                     not p.is_on_variable() and
-                    p.index == 0
+                    p.index == param_index
                 ):
                     index = i
             if index is None:
@@ -279,31 +472,8 @@ class LogLikelihood(models.Model):
                 )
             else:
                 new_children.append(old_children[index])
-        elif self.form == self.Form.LOGNORMAL:
-            name = (
-                "noise sigma for " +
-                self.variable.name
-            )
-            index = None
-            for i, p in enumerate(old_children):
-                if (
-                    not p.is_on_variable() and
-                    p.index == 0
-                ):
-                    index = i
-            if index is None:
-                new_children.append(
-                    LogLikelihood.objects.create(
-                        name=name,
-                        value=match.variable.get_default_value(),
-                        index=0,
-                        self.Form.FIXED,
-                    )
-                )
-            else:
-                new_children.append(old_children[index])
 
-            self.children.set(new_children)
+        self.children.set(new_children)
 
     def create_stored_log_likelihood(self, inference, new_models):
         """

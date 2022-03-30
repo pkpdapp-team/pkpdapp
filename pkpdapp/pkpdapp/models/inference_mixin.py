@@ -261,42 +261,48 @@ class InferenceMixin:
             if ll.get_model() is not None
         ]
 
-        # generate forward models from top-level model log_likelihoods
-        self._pints_forward_models = [
-            ll.create_pints_forward_model()
-            for ll in self._model_log_likelihoods
-        ]
+        self._pints_log_likelihoods = []
+        self._priors_indicies_for_lls = []
+        for ll in self._model_log_likelihoods:
+            pints_log_likelihood, pints_log_likelihood_priors = \
+                ll.create_pints_log_likelihood()
+
+            priors_indicies_for_ll = [
+                self._priors.index(prior)
+                for prior in pints_log_likelihood_priors
+            ]
+
+            self._pints_log_likelihoods.append(pints_log_likelihood)
+            self._priors_indicies_for_lls.append(priors_indicies_for_ll)
+
+        self._pints_log_likelihood = CombinedLogLikelihood(
+            self._pints_log_likelihoods,
+            self._priors_indicies_for_lls
+        )
 
         # get priors / boundaries, using variable ordering already established
-        (
-            self._pints_log_priors,
-            self._pints_boundaries,
-            self._pints_transforms
-        ) = self.get_priors_boundaries_transforms(self.priors)
+        # get all variables being fitted from priors
+        pints_log_priors = [
+            prior.create_pints_prior()
+            for prior in self._priors
+        ]
+        pints_transforms = [
+            prior.create_pints_transform()
+            for prior in self._priors:
+        ]
+        if all([p.form == p.Form.UNIFORM for p in self._priors]):
+            lower = [p.lower for p in self._priors]
+            upper = [p.upper for p in self._priors]
+            pints_boundaries = pints.RectangularBoundaries(lower, upper)
+        else:
+            pints_boundaries = None
 
         self._pints_composed_log_prior = pints.ComposedLogPrior(
-            *self._pints_log_priors
-        )
-
-        # get data
-        self._values, self._times = (
-            self.get_data(
-                self._log_likelihoods, self._pints_forward_model,
-                self.priors_in_pints_order, self._pints_composed_log_prior
-            )
-        )
-        self._times_all = np.sort(list(set(np.concatenate(self._times))))
-
-        self._collection = self.create_pints_problem_collection(
-            self._pints_forward_model, self._times, self._values, self._outputs
-        )
-
-        self._pints_log_likelihood = self.create_pints_log_likelihood(
-            self._collection, inference
+            *pints_log_priors
         )
 
         self._pints_composed_transform = pints.ComposedTransformation(
-            *self._pints_transforms
+            *pints_transforms
         )
         self._pints_log_posterior = pints.LogPosterior(
             self._pints_log_likelihood,
@@ -497,73 +503,6 @@ class InferenceMixin:
         inference_method = method_dict[methodname]
         return inference_type, inference_method
 
-    @ staticmethod
-    def get_data(log_likelihoods, pints_forward_model, priors_in_pints_order,
-                 pints_composed_log_prior):
-
-        # if we're using fake data sample from composed prior
-        # and store the values
-        use_fake_data = any([
-            ll.biomarker_type is None for ll in log_likelihoods
-        ])
-        if use_fake_data:
-            t_max = max([
-                ll.get_model().time_max for ll in log_likelihoods
-            ])
-            fake_data_times = np.linspace(0, t_max, 20)
-            fake_data_x0 = pints_composed_log_prior.sample().flatten()
-            for x, prior in zip(fake_data_x0, priors_in_pints_order):
-                prior.log_likelihood_parameter.value = x
-                prior.log_likelihood_parameter.save()
-            result = pints_forward_model.simulate(
-                fake_data_x0[:pints_forward_model.n_parameters()],
-                fake_data_times
-            )
-
-        values = []
-        times = []
-        result_index = 0
-        for obj in log_likelihoods:
-
-            # if we have data then use it, otherwise
-            # use simulated data
-            if obj.biomarker_type:
-                df = obj.biomarker_type.as_pandas(
-                    subject_group=obj.subject_group
-                )
-                values.append(df['values'].tolist())
-                times.append(df['times'].tolist())
-            else:
-                output_values = result[
-                    result_index:result_index + len(fake_data_times)
-                ]
-
-                # noise param value could be fixed or in priors
-                x0_noise_params = []
-                for param in obj.parameters.all():
-                    if param.is_fixed() and not param.is_model_variable():
-                        x0_noise_params.append(param.value)
-                n_parameters = pints_forward_model.n_parameters()
-                for i, prior in enumerate(
-                        priors_in_pints_order[n_parameters:]
-                ):
-                    param = prior.log_likelihood_parameter
-                    if (
-                            param.log_likelihood == obj and
-                            not param.is_model_variable()
-                    ):
-                        x0_noise_params.append(fake_data_x0[n_parameters + i])
-
-                print('adding noise to fake data with params', x0_noise_params)
-                output_values = obj.add_noise(output_values, x0_noise_params)
-
-                values.append(output_values)
-                times.append(fake_data_times)
-                result_index += len(fake_data_times)
-
-        print('output values', values)
-
-        return values, times
 
     @ staticmethod
     def get_objectives(inference):
@@ -584,38 +523,6 @@ class InferenceMixin:
                 observed_loglikelihoods.append(pints.LogNormalLogLikelihood)
         return observed_loglikelihoods
 
-    @ staticmethod
-    def get_priors_boundaries_transforms(priors):
-        # get all variables being fitted from priors
-        pints_log_priors = []
-        pints_transforms = []
-        if all([isinstance(p, PriorUniform) for p in priors]):
-            lower = [p.lower for p in priors]
-            upper = [p.upper for p in priors]
-            pints_boundaries = pints.RectangularBoundaries(lower, upper)
-        else:
-            pints_boundaries = None
-        for prior in priors:
-            # if prior.variable.is_log:
-            if False:
-                pints_transforms.append(
-                    pints.LogTransformation(n_parameters=1)
-                )
-            else:
-                pints_transforms.append(
-                    pints.IdentityTransformation(n_parameters=1)
-                )
-            if isinstance(prior, PriorUniform):
-                lower = prior.lower
-                upper = prior.upper
-                pints_log_prior = pints.UniformLogPrior(lower, upper)
-            elif isinstance(prior, PriorNormal):
-                mean = prior.mean
-                sd = prior.sd
-                pints_log_prior = pints.GaussianLogPrior(mean, sd)
-            pints_log_priors.append(pints_log_prior)
-
-        return pints_log_priors, pints_boundaries, pints_transforms
 
     def get_myokit_model(self):
         return self._myokit_model
