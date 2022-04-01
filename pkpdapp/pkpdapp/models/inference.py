@@ -9,7 +9,7 @@ from pkpdapp.celery import app
 from pkpdapp.models import (
     Project, PharmacodynamicModel,
     DosedPharmacokineticModel,
-    StoredModel,
+    StoredModel, LogLikelihoodParameter
 )
 
 
@@ -162,12 +162,21 @@ class Inference(StoredModel):
 
         # recreate children relationships using indicies
         # of old_log_likelihoods
-        for log_likelihood in old_log_likelihoods:
-            children = []
-            for child in log_likelihood.children.all():
-                index = old_log_likelihoods.index(child)
-                children.append(new_log_likelihoods[index])
-            log_likelihood.children.set(children)
+        for parent_index, parent in enumerate(old_log_likelihoods):
+            new_parent = new_log_likelihoods[parent_index]
+            for child in parent.children.all():
+                child_index = old_log_likelihoods.index(child)
+                new_child = new_log_likelihoods[child_index]
+
+                # get old parameter and save it as a new relationship
+                old_param = LogLikelihoodParameter.objects.get(
+                    parent=parent, child=child
+                )
+                old_param.id = None
+                old_param.pk = None
+                old_param.parent = new_parent
+                old_param.child = new_child
+                old_param.save()
 
         self.refresh_from_db()
 

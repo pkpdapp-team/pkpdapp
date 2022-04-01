@@ -6,12 +6,49 @@
 
 from django.db import models
 from django.db.models import Q
+import pints
 import numpy as np
 import scipy.stats as sps
 from pkpdapp.models import (
     Variable, BiomarkerType, Inference,
     MyokitForwardModel, SubjectGroup
 )
+
+
+class LogLikelihoodParameter(models.Model):
+    """
+    each parent log_likelihood has one or more parameters, or children.
+    This model stores data on which input parameter this relationship
+    referres to
+    """
+    parent = models.ForeignKey(
+        'LogLikelihood',
+        related_name='parameters',
+        on_delete=models.CASCADE
+    )
+    child = models.ForeignKey(
+        'LogLikelihood',
+        related_name='outputs',
+        on_delete=models.CASCADE
+    )
+    variable = models.ForeignKey(
+        Variable,
+        related_name='log_likelihood_parameters',
+        blank=True, null=True,
+        on_delete=models.CASCADE,
+        help_text='input model variable for this parameter.'
+    )
+    index = models.IntegerField(
+        blank=True, null=True,
+        help_text=(
+            'parameter index for distribution parameters. '
+            'null if variable is not null'
+        )
+    )
+    name = models.CharField(
+        max_length=100,
+        help_text='name of log_likelihood parameter.'
+    )
 
 
 class LogLikelihood(models.Model):
@@ -29,10 +66,6 @@ class LogLikelihood(models.Model):
         )
     )
 
-    name = models.CharField(
-        max_length=100,
-    )
-
     value = models.FloatField(
         help_text='set if a fixed value is required',
         blank=True, null=True,
@@ -42,16 +75,10 @@ class LogLikelihood(models.Model):
         'LogLikelihood',
         related_name='parents',
         symmetrical=False,
+        through=LogLikelihoodParameter,
         blank=True, null=True,
         on_delete=models.CASCADE,
-    )
-
-    index = models.IntegerField(
-        blank=True, null=True,
-        help_text=(
-            'parameter index for distribution parameters. '
-            'null if variable is not null'
-        )
+        through_fields=('parent', 'child'),
     )
 
     variable = models.ForeignKey(
@@ -59,7 +86,10 @@ class LogLikelihood(models.Model):
         related_name='log_likelihoods',
         blank=True, null=True,
         on_delete=models.CASCADE,
-        help_text='variable for the log_likelihood.'
+        help_text=(
+            'output variable for the log_likelihood, '
+            'defines the mechanistic model'
+        )
     )
 
     biomarker_type = models.ForeignKey(
@@ -98,19 +128,15 @@ class LogLikelihood(models.Model):
     def is_a_prior(self):
         """
         False for fixed parameters, and log_likelihoods on
-        non-constant model parameters
+        model parameters
         """
         if self.form is self.Form.Fixed:
             return False
-        if (
-            self.variable is not None and
-            not self.variable.constant
-        ):
+        if self.variable is not None:
             return False
-
         return True
 
-    def is_on_variable(self):
+    def is_a_model_log_likelihood(self):
         return self.variable is not None
 
     def sample(self):
@@ -141,7 +167,7 @@ class LogLikelihood(models.Model):
         add noise to the simulated data according to the log_likelihood
         """
         if noise_params is None:
-            params = self.get_noise_params()
+            noise_params = self.get_noise_params()
         if self.form == self.Form.NORMAL:
             output_values += np.random.normal(
                 mean=noise_params[0],
@@ -158,45 +184,32 @@ class LogLikelihood(models.Model):
             )
         return output_values
 
-    def noise_range(self, output_values, noise_params):
+    def noise_range(self, output_values, noise_params=None):
         """
         return 10% and 90% noise levels from a set of output values
         """
+        if noise_params is None:
+            noise_params = self.get_noise_params()
         output_values_min = np.copy(output_values)
         output_values_max = np.copy(output_values)
         if self.form == self.Form.NORMAL:
             for i in range(len(output_values)):
-                dist = sps.norm(loc=output_values[i], scale=noise_params[0])
+                dist = sps.norm(
+                    loc=output_values[i] + noise_params[0],
+                    scale=noise_params[1]
+                )
                 output_values_min[i] = dist.ppf(.1)
                 output_values_max[i] = dist.ppf(.9)
         elif self.form == self.Form.LOGNORMAL:
             for i in range(len(output_values)):
-                dist = sps.lognorm(loc=output_values[i], scale=noise_params[0])
+                dist = sps.lognorm(
+                    loc=output_values[i] + noise_params[0],
+                    scale=noise_params[1]
+                )
                 output_values_min[i] = dist.ppf(.1)
                 output_values_max[i] = dist.ppf(.9)
 
         return output_values_min, output_values_max
-
-    def create_stored_variable_biomarker_match(
-            self, log_likelihood, new_models
-    ):
-        old_model = self.variable.get_model()
-        new_model = new_models[old_model.id]
-        variable_qname = self.variable.qname
-
-        new_variable = new_model.variables.get(
-            qname=variable_qname
-        )
-        stored_match_kwargs = {
-            'log_likelihood': log_likelihood,
-            'variable': new_variable,
-            'biomarker_type': self.biomarker_type,
-            'subject_group': self.subject_group,
-        }
-        stored_match = VariableBiomarkerMatch.objects.create(
-            **stored_match_kwargs
-        )
-        return stored_match
 
     def create_pints_forward_model(self):
         """
@@ -219,7 +232,7 @@ class LogLikelihood(models.Model):
         fixed_parameters_dict = {
             param.variable.qname: param.value
             for param in self.children.all()
-            if param.is_on_variable() and param.form == param.Form.FIXED
+            if param.form == param.Form.FIXED
         }
 
         pints_model = MyokitForwardModel(
@@ -237,7 +250,7 @@ class LogLikelihood(models.Model):
 
     def get_child(self, qname):
         return self.children.filter(
-            variable__qname=qname
+            loglikelihoodrelationship__variable__qname=qname
         )
 
     def get_inference_data(self):
@@ -257,20 +270,30 @@ class LogLikelihood(models.Model):
                 for child in param_children
             ]
             fake_data_times = np.linspace(0, model.time_max, 20)
-            result = forward_model.simulate(param_vector, fake_data_times)
+            output_values = pints_model.simulate(param_vector, fake_data_times)
+            output_values = self.add_noise(output_values)
+            return output_values, fake_data_times
 
-            output_values = obj.add_noise(output_values)
-            return output_values, times
+    def get_noise_children(self):
+        """
+        get index ordered list of noise param children
+        """
+        return self.children.filter(
+            loglikelihoodrelationship__variable__isnull=True
+        ).order_by(
+            'loglikelihoodrelationship__index'
+        )
 
     def get_noise_params(self):
         """
-        get ordered list of noise params
+        get ordered list of noise param values
+        if any noise params have a prior on them then
+        this is sampled
         """
-        params = self.children.all()
-        noise_children = [p for p in params if not p.is_on_variable()]
-        noise_params = [] * len(noise_children)
-        for c in noise_children:
-            noise_params[c.index] = c.sample()
+        return [
+            c.sample()
+            for c in self.get_noise_children()
+        ]
 
     def create_pints_transform(self):
         if False:
@@ -279,15 +302,16 @@ class LogLikelihood(models.Model):
             return pints.IdentityTransformation(n_parameters=1)
 
     def create_pints_prior(self):
-        noise_parameters = prior.get_noise_params()
-        if prior.form == prior.Form.UNIFORM:
+        noise_parameters = self.get_noise_params()
+        if self.form == self.Form.UNIFORM:
             lower = noise_parameters[0]
             upper = noise_parameters[1]
             pints_log_prior = pints.UniformLogPrior(lower, upper)
-        elif prior.form == prior.Form.NORMAL:
+        elif self.form == self.Form.NORMAL:
             mean = noise_parameters[0]
             sd = noise_parameters[1]
             pints_log_prior = pints.GaussianLogPrior(mean, sd)
+        return pints_log_prior
 
     def create_pints_problem(self):
         values, times = self.get_inference_data()
@@ -302,7 +326,7 @@ class LogLikelihood(models.Model):
             )
             if noise_param.form == noise_param.Form.FIXED:
                 value = noise_param.value
-                return pints.GaussianKnownnoiseLogLikelihood(
+                return pints.GaussianKnownSigmaLogLikelihood(
                     problem, value
                 ), fitted_children
             else:
@@ -318,71 +342,6 @@ class LogLikelihood(models.Model):
             ), fitted_children + [noise_param]
 
         raise RuntimeError('unknown log_likelihood form')
-
-    def get_forward_model_and_data(self):
-        model = self.get_model()
-        pints_forward_model = self.create_pints_forward_model()
-
-        # if we're using fake data sample from composed prior
-        # and store the values
-        use_fake_data = any([
-            ll.biomarker_type is None for ll in log_likelihoods
-        ])
-        if self.biomarker_type:
-            fake_data_times = np.linspace(0, model.time_max, 20)
-            fake_data_x0 = pints_composed_log_prior.sample().flatten()
-            for x, prior in zip(fake_data_x0, priors_in_pints_order):
-                prior.log_likelihood_parameter.value = x
-                prior.log_likelihood_parameter.save()
-            result = pints_forward_model.simulate(
-                fake_data_x0[:pints_forward_model.n_parameters()],
-                fake_data_times
-            )
-
-        values = []
-        times = []
-        result_index = 0
-        for obj in log_likelihoods:
-
-            # if we have data then use it, otherwise
-            # use simulated data
-            if obj.biomarker_type:
-                df = obj.biomarker_type.as_pandas(
-                    subject_group=obj.subject_group
-                )
-                values.append(df['values'].tolist())
-                times.append(df['times'].tolist())
-            else:
-                output_values = result[
-                    result_index:result_index + len(fake_data_times)
-                ]
-
-                # noise param value could be fixed or in priors
-                x0_noise_params = []
-                for param in obj.parameters.all():
-                    if param.is_fixed() and not param.is_model_variable():
-                        x0_noise_params.append(param.value)
-                n_parameters = pints_forward_model.n_parameters()
-                for i, prior in enumerate(
-                        priors_in_pints_order[n_parameters:]
-                ):
-                    param = prior.log_likelihood_parameter
-                    if (
-                            param.log_likelihood == obj and
-                            not param.is_model_variable()
-                    ):
-                        x0_noise_params.append(fake_data_x0[n_parameters + i])
-
-                print('adding noise to fake data with params', x0_noise_params)
-                output_values = obj.add_noise(output_values, x0_noise_params)
-
-                values.append(output_values)
-                times.append(fake_data_times)
-                result_index += len(fake_data_times)
-
-        print('output values', values)
-
-        return values, times
 
     def get_model(self):
         """
@@ -414,28 +373,34 @@ class LogLikelihood(models.Model):
 
         # update children
         old_children = self.children.all()
-        new_children = []
+        old_parameters = [
+            LogLikelihoodParameter.objects.get(parent=self, child=c)
+            for c in old_children
+        ]
 
         # model parameteers
         for model_variable in self.get_model_variables():
             index = None
-            for i, p in enumerate(old_children):
+            for i, (c, p) in enumerate(zip(old_children, old_parameters)):
                 if (
-                    p.is_on_variable() and
+                    p.variable is not None and
                     p.variable.id == model_variable.id
                 ):
                     index = i
             if index is None:
-                new_children.append(
-                    LogLikelihood.objects.create(
-                        name=model_variable.qname,
-                        value=model_variable.get_default_value(),
-                        form=self.Form.FIXED,
-                        variable=model_variable,
-                    )
+                child = LogLikelihood.objects.create(
+                    value=model_variable.get_default_value(),
+                    form=self.Form.FIXED,
                 )
+                LogLikelihoodParameter.objects.create(
+                    parent=self, child=child,
+                    variable=model_variable,
+                    name=model_variable.qname,
+                )
+
             else:
-                new_children.append(old_children[index])
+                del old_children[index]
+                del old_parameters[index]
 
         # distribution parameters
         if self.form == self.Form.NORMAL:
@@ -453,27 +418,32 @@ class LogLikelihood(models.Model):
                 "lower for " + self.variable.name,
                 "upper for " + self.variable.name,
             ]
-        for param_index, name in enumerate(names)
-          index = None
-           for i, p in enumerate(old_children):
+        for param_index, name in enumerate(names):
+            index = None
+            for i, (c, p) in enumerate(zip(old_children, old_parameters)):
                 if (
-                    not p.is_on_variable() and
+                    p.variable is None and
                     p.index == param_index
                 ):
                     index = i
             if index is None:
-                new_children.append(
-                    LogLikelihood.objects.create(
-                        name=name,
-                        value=self.variable.get_default_value(),
-                        index=0,
-                        self.Form.FIXED,
-                    )
+                child = LogLikelihood.objects.create(
+                    value=model_variable.get_default_value(),
+                    form=self.Form.FIXED,
+                )
+                LogLikelihoodParameter.objects.create(
+                    parent=self, child=child,
+                    variable=model_variable,
+                    index=param_index,
+                    name=name,
                 )
             else:
-                new_children.append(old_children[index])
+                del old_children[index]
+                del old_parameters[index]
 
-        self.children.set(new_children)
+        # remove children not in list above
+        for c in old_children:
+            c.delete()
 
     def create_stored_log_likelihood(self, inference, new_models):
         """
@@ -482,26 +452,27 @@ class LogLikelihood(models.Model):
         old_children = self.children.all()
         for child in old_children:
             if (
-                parameter.is_fixed() and
-                parameter.value is None
+                child.form == child.Form.Fixed and
+                child.value is None
             ):
                 raise RuntimeError(
                     'All LogLikelihood parameters must have a '
                     'set value or a prior'
                 )
-        old_model = self.variable.get_model()
-        new_model = new_models[old_model.id]
-        variable_qname = self.variable.qname
 
-        new_variable = new_model.variables.get(
-            qname=variable_qname
-        )
+        new_variable = None
+        if self.variable is not None:
+            old_model = self.variable.get_model()
+            new_model = new_models[old_model.id]
+            variable_qname = self.variable.qname
+
+            new_variable = new_model.variables.get(
+                qname=variable_qname
+            )
 
         stored_log_likelihood_kwargs = {
             'inference': inference,
-            'name': self.name,
             'value': self.value,
-            'index': self.index,
             'variable': new_variable,
             'biomarker_type': self.biomarker_type,
             'subject_group': self.subject_group,
