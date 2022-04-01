@@ -101,7 +101,7 @@ class OutputWriter:
     results writes to the database
     """
 
-    def __init__(self, chains, priors,
+    def __init__(self, chains,
                  log_likelihoods,
                  combined_log_likelihood,
                  use_every_n_sample=1,
@@ -114,7 +114,6 @@ class OutputWriter:
         ]
 
         self._chains = chains
-        self._priors = priors
 
         self._log_likelihoods = log_likelihoods
         self._combined_log_likelihood = combined_log_likelihood
@@ -129,21 +128,6 @@ class OutputWriter:
             for _ in chains
         ]
 
-        self._noise_param_indices = []
-        for i, prior in enumerate(priors):
-            if not prior.log_likelihood_parameter.is_model_variable():
-                self._noise_param_indices.append(i)
-        self._fixed_noise_params = []
-        for param in log_likelihood.parameters.all():
-            if param.is_fixed() and not param.is_model_variable():
-                self._fixed_noise_params.append(param.value)
-
-        self._log_likelihood = log_likelihood
-        self._pints_forward_model = pints_forward_model
-        self._len_x0 = pints_forward_model.n_parameters()
-        self._times = times
-        self._values = values
-        self._n_times = len(times)
         self._use_every_n_sample = use_every_n_sample
         self._store_output_range = store_output_range
         self._outputs = self.initialise_outputs()
@@ -536,10 +520,8 @@ class InferenceMixin:
 
         output_writer = OutputWriter(
             self.inference.chains.all(),
-            self._times_all,
-            self._values,
-            self._pints_log_posterior,
-            self._priors,
+            self._model_log_likelihoods,
+            self._combined_log_likelihood,
             use_every_n_sample=evaluate_model_every_n_iterations,
             buffer_size=write_every_n_iteration,
             store_output_range=self.inference.algorithm.category == 'SA'
