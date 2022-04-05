@@ -27,15 +27,16 @@ from .biomarker_type import BiomarkerType
 from .biomarker import Biomarker
 from .profile import Profile
 from .dose import Dose
-from .inference import (
-    Inference,
-    Algorithm,
-)
 from .myokit_pints_forward_model import MyokitForwardModel
 from .likelihoods import (
     LogLikelihood,
     LogLikelihoodParameter,
 )
+from .inference import (
+    Inference,
+    Algorithm,
+)
+
 from .priors import (
     PriorNormal, PriorUniform, Prior,
 )

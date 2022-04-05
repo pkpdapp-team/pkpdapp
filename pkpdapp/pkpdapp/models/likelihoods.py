@@ -10,7 +10,7 @@ import pints
 import numpy as np
 import scipy.stats as sps
 from pkpdapp.models import (
-    Variable, BiomarkerType, Inference,
+    Variable, BiomarkerType,
     MyokitForwardModel, SubjectGroup
 )
 
@@ -50,6 +50,26 @@ class LogLikelihoodParameter(models.Model):
         help_text='name of log_likelihood parameter.'
     )
 
+    def set_fixed(self, value):
+        self.child.value = value
+        self.child.form = self.child.Form.FIXED
+        self.child.save()
+
+    def set_uniform_prior(self, lower, upper):
+        child = self.child
+        child.form = child.Form.UNIFORM
+        child.save()
+        lower_param = LogLikelihoodParameter.objects.get(
+            parent=child, index=0
+        )
+        lower_param.child.value = lower
+        lower_param.child.save()
+        upper_param = LogLikelihoodParameter.objects.get(
+            parent=child, index=1
+        )
+        upper_param.child.value = upper
+        upper_param.child.save()
+
 
 class LogLikelihood(models.Model):
     """
@@ -57,8 +77,8 @@ class LogLikelihood(models.Model):
     """
 
     inference = models.ForeignKey(
-        Inference,
-        related_name='log_likelihood',
+        'Inference',
+        related_name='log_likelihoods',
         blank=True, null=True,
         on_delete=models.CASCADE,
         help_text=(
@@ -77,7 +97,6 @@ class LogLikelihood(models.Model):
         symmetrical=False,
         through=LogLikelihoodParameter,
         blank=True, null=True,
-        on_delete=models.CASCADE,
         through_fields=('parent', 'child'),
     )
 
@@ -130,7 +149,7 @@ class LogLikelihood(models.Model):
         False for fixed parameters, and log_likelihoods on
         model parameters
         """
-        if self.form is self.Form.Fixed:
+        if self.form == self.Form.FIXED:
             return False
         if self.variable is not None:
             return False
@@ -230,9 +249,12 @@ class LogLikelihood(models.Model):
         output_names = [output.qname for output in outputs]
 
         fixed_parameters_dict = {
-            param.variable.qname: param.value
-            for param in self.children.all()
-            if param.form == param.Form.FIXED
+            param.variable.qname: param.child.value
+            for param in self.parameters.all()
+            if (
+                param.child.form == param.child.Form.FIXED and
+                param.variable is not None
+            )
         }
 
         pints_model = MyokitForwardModel(
@@ -249,9 +271,10 @@ class LogLikelihood(models.Model):
         return pints_model, fitted_children
 
     def get_child(self, qname):
-        return self.children.filter(
-            loglikelihoodrelationship__variable__qname=qname
+        param = LogLikelihoodParameter.objects.get(
+            parent=self, variable__qname=qname
         )
+        return param.child
 
     def get_inference_data(self):
         # if we have data then use it, otherwise
@@ -274,25 +297,18 @@ class LogLikelihood(models.Model):
             output_values = self.add_noise(output_values)
             return output_values, fake_data_times
 
-    def get_noise_children(self):
-        """
-        get index ordered list of noise param children
-        """
-        return self.children.filter(
-            loglikelihoodrelationship__variable__isnull=True
-        ).order_by(
-            'loglikelihoodrelationship__index'
-        )
-
     def get_noise_params(self):
         """
         get ordered list of noise param values
         if any noise params have a prior on them then
         this is sampled
         """
+        noise_parameters = self.parameters.filter(
+            variable__isnull=True
+        ).order_by('index')
+
         return [
-            c.sample()
-            for c in self.get_noise_children()
+            p.child.sample() for p in noise_parameters
         ]
 
     def create_pints_transform(self):
@@ -316,15 +332,13 @@ class LogLikelihood(models.Model):
     def create_pints_problem(self):
         values, times = self.get_inference_data()
         model, fitted_children = self.create_pints_forward_model()
-        return pints.SingleOutputProblem(model, values, times), fitted_children
+        return pints.SingleOutputProblem(model, times, values), fitted_children
 
     def create_pints_log_likelihood(self):
         problem, fitted_children = self.create_pints_problem()
         if self.form == self.Form.NORMAL:
-            noise_param = self.children.get(
-                index=1
-            )
-            if noise_param.form == noise_param.Form.FIXED:
+            noise_param = self.parameters.get(index=1)
+            if noise_param.child.form == noise_param.child.Form.FIXED:
                 value = noise_param.value
                 return pints.GaussianKnownSigmaLogLikelihood(
                     problem, value
@@ -332,14 +346,12 @@ class LogLikelihood(models.Model):
             else:
                 return pints.GaussianLogLikelihood(
                     problem
-                ), fitted_children + [noise_param]
+                ), fitted_children + [noise_param.child]
         elif self.form == LogLikelihood.Form.LOGNORMAL:
-            noise_param = self.children.get(
-                index=1
-            )
+            noise_param = self.parameters.get(index=1)
             return pints.LogNormalLogLikelihood(
                 problem
-            ), fitted_children + [noise_param]
+            ), fitted_children + [noise_param.child]
 
         raise RuntimeError('unknown log_likelihood form')
 
@@ -389,6 +401,7 @@ class LogLikelihood(models.Model):
                     index = i
             if index is None:
                 child = LogLikelihood.objects.create(
+                    inference=self.inference,
                     value=model_variable.get_default_value(),
                     form=self.Form.FIXED,
                 )
@@ -403,22 +416,74 @@ class LogLikelihood(models.Model):
                 del old_parameters[index]
 
         # distribution parameters
+        variable = None
+        if self.variable:
+            variable = self.variable
+        elif self.outputs.count() > 0:
+            first_output = self.outputs.first()
+            if first_output.variable:
+                variable = first_output.variable
+            elif first_output.parent.variable:
+                variable = first_output.parent.variable
+
         if self.form == self.Form.NORMAL:
-            names = [
-                "mean for " + self.variable.name,
-                "standard deviation for " + self.variable.name,
-            ]
+            if variable is not None:
+                names = [
+                    "mean for " + variable.name,
+                    "standard deviation for " + variable.name,
+                ]
+            else:
+                names = [
+                    "mean",
+                    "standard deviation",
+                ]
+            if variable is not None:
+                defaults = [
+                    variable.get_default_value(),
+                    0.1 * (variable.upper_bound - variable.lower_bound),
+                ]
+            else:
+                defaults = [0.0, 0.0]
         elif self.form == self.Form.LOGNORMAL:
-            names = [
-                "mean for " + self.variable.name,
-                "sigma for " + self.variable.name,
-            ]
-        elif self.form == self.Form.LOGNORMAL:
-            names = [
-                "lower for " + self.variable.name,
-                "upper for " + self.variable.name,
-            ]
-        for param_index, name in enumerate(names):
+            if variable is not None:
+                names = [
+                    "mean for " + variable.name,
+                    "sigma for " + variable.name,
+                ]
+            else:
+                names = [
+                    "mean",
+                    "sigma",
+                ]
+            if variable is not None:
+                defaults = [
+                    variable.get_default_value(),
+                    0.1 * (variable.upper_bound - variable.lower_bound),
+                ]
+            else:
+                defaults = [0.0, 0.0]
+        elif self.form == self.Form.UNIFORM:
+            if variable is not None:
+                names = [
+                    "lower for " + variable.name,
+                    "upper for " + variable.name,
+                ]
+            else:
+                names = [
+                    "lower",
+                    "upper",
+                ]
+            if variable is not None:
+                defaults = [
+                    variable.lower_bound,
+                    variable.upper_bound,
+                ]
+            else:
+                defaults = [0.0, 0.0]
+        elif self.form == self.Form.FIXED:
+            names = []
+            defaults = []
+        for param_index, (name, default) in enumerate(zip(names, defaults)):
             index = None
             for i, (c, p) in enumerate(zip(old_children, old_parameters)):
                 if (
@@ -428,12 +493,12 @@ class LogLikelihood(models.Model):
                     index = i
             if index is None:
                 child = LogLikelihood.objects.create(
-                    value=model_variable.get_default_value(),
+                    inference=self.inference,
+                    value=default,
                     form=self.Form.FIXED,
                 )
                 LogLikelihoodParameter.objects.create(
                     parent=self, child=child,
-                    variable=model_variable,
                     index=param_index,
                     name=name,
                 )
@@ -452,7 +517,7 @@ class LogLikelihood(models.Model):
         old_children = self.children.all()
         for child in old_children:
             if (
-                child.form == child.Form.Fixed and
+                child.form == child.Form.FIXED and
                 child.value is None
             ):
                 raise RuntimeError(

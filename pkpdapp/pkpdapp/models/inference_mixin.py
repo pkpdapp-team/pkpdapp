@@ -244,14 +244,14 @@ class InferenceMixin:
         # for the sampler
         self._priors = [
             ll
-            for ll in self._log_likelihoods
+            for ll in log_likelihoods
             if ll.is_a_prior()
         ]
 
         # create forwards models
-        model_log_likelihoods = [
+        self._model_log_likelihoods = [
             ll
-            for ll in self._log_likelihoods
+            for ll in log_likelihoods
             if ll.is_a_model_log_likelihood()
         ]
 
@@ -288,13 +288,17 @@ class InferenceMixin:
             for prior in self._priors
         ]
         if all([p.form == p.Form.UNIFORM for p in self._priors]):
-            lower = [p.lower for p in self._priors]
-            upper = [p.upper for p in self._priors]
+            lower = []
+            upper = []
+            for p in self._priors:
+                noise_params = p.get_noise_params()
+                lower.append(noise_params[0])
+                upper.append(noise_params[1])
             pints_boundaries = pints.RectangularBoundaries(lower, upper)
         else:
             pints_boundaries = None
 
-        pints_composed_log_prior = pints.ComposedLogPrior(
+        self._pints_composed_log_prior = pints.ComposedLogPrior(
             *pints_log_priors
         )
 
@@ -303,7 +307,7 @@ class InferenceMixin:
         )
         self._pints_log_posterior = pints.LogPosterior(
             self._pints_log_likelihood,
-            pints_composed_log_prior
+            self._pints_composed_log_prior
         )
 
         # transform function and boundaries
@@ -329,7 +333,7 @@ class InferenceMixin:
             )
         # if doing a sampler, we can't use boundaries
         else:
-            self._pints_boundaries = None
+            pints_boundaries = None
 
         # create chains if not exist
         if self.inference.chains.count() == 0:
@@ -413,7 +417,7 @@ class InferenceMixin:
                 # write x0 to empty chain
                 self.inference.number_of_function_evals += 1
                 fn_val = self._pints_log_posterior(
-                    self._pints_composed_transform.to_search(x0)
+                    pints_composed_transform.to_search(x0)
                 )
                 print('starting function value', fn_val)
                 self.write_inference_results(
@@ -426,10 +430,10 @@ class InferenceMixin:
             sigma0[sigma0 == 0] = 1
             # Use to create diagonal matrix
             sigma0 = np.diag(0.01 * sigma0)
-            sigma0 = self._pints_composed_transform.convert_covariance_matrix(
+            sigma0 = pints_composed_transform.convert_covariance_matrix(
                 sigma0, x0
             )
-            x0 = self._pints_composed_transform.to_search(x0)
+            x0 = pints_composed_transform.to_search(x0)
             if pints_boundaries is None:
                 self._inference_objects.append(
                     self._inference_method(x0, sigma0)
@@ -464,7 +468,7 @@ class InferenceMixin:
         for i, prior in enumerate(self._priors):
             InferenceResult.objects.create(
                 chain=chains[chain_index],
-                prior=prior,
+                log_likelihood=prior,
                 iteration=iteration,
                 value=values[i])
 
@@ -563,10 +567,17 @@ class CombinedLogLikelihood(pints.LogPDF):
 
     def __init__(self, log_likelihoods, param_indicies):
         self._log_likelihoods = log_likelihoods
-        self._param_indicies = [
-            np.array(indicies, dtype=int)
-            for indicies in param_indicies
-        ]
+        self._param_indicies = []
+        for indicies in param_indicies:
+            if indicies == list(range(indicies[0], indicies[-1] + 1)):
+                self._param_indicies.append(
+                    slice(indicies[0], indicies[-1] + 1)
+                )
+            else:
+                self._param_indicies.append(
+                    np.array(indicies, dtype=np.int)
+                )
+
         self._n_parameters = max([
             max(indicies)
             for indicies in param_indicies

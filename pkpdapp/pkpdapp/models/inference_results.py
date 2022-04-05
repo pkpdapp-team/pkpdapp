@@ -85,11 +85,11 @@ class InferenceResult(models.Model):
         related_name='inference_results',
         help_text='Chain related to the row'
     )
-    prior = models.ForeignKey(
-        Prior,
+    log_likelihood = models.ForeignKey(
+        LogLikelihood,
         on_delete=models.CASCADE,
         related_name='inference_results',
-        help_text='prior/variable for this value'
+        help_text='log_likelihood related to this result'
     )
     iteration = models.IntegerField(
         help_text='Iteration'

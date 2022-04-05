@@ -14,7 +14,7 @@ from pkpdapp.models import (
     Project, BiomarkerType,
     PriorUniform, MyokitForwardModel,
     InferenceMixin, Algorithm, InferenceChain, InferenceResult,
-    InferenceFunctionResult,
+    InferenceFunctionResult, LogLikelihoodParameter
 )
 from django.core.cache import cache
 
@@ -39,8 +39,8 @@ class TestInferenceMixinPkModel(TestCase):
             .get(name='three_compartment_pk_model')
 
         protocol = Protocol.objects.get(
-            dataset=biomarker_type.dataset,
-            subject__id_in_dataset=1,
+            subjects__dataset=biomarker_type.dataset,
+            subjects__id_in_dataset=1,
         )
 
         model = DosedPharmacokineticModel.objects.create(
@@ -84,22 +84,15 @@ class TestInferenceMixinPkModel(TestCase):
                 variable=variables[i]
             )
             if '_amount' in param.name:
-                param.value = 0
-                param.save()
+                param.set_fixed(0)
             else:
-                PriorUniform.objects.create(
-                    lower=0.0,
-                    upper=0.1,
-                    log_likelihood_parameter=param,
-                )
+                param.set_uniform_prior(0.0, 0.1)
         noise_param = log_likelihood.parameters.get(
-            variable__isnull=True
+            variable__isnull=True,
+            index=1,
         )
-        PriorUniform.objects.create(
-            lower=0.0,
-            upper=2.0,
-            log_likelihood_parameter=noise_param,
-        )
+        noise_param.set_uniform_prior(0.0, 2.0)
+
         # 'run' inference to create copies of models
         self.inference.run_inference(test=True)
 
@@ -118,10 +111,10 @@ class TestInferenceMixinPkModel(TestCase):
 
         # Test log-prior
         log_prior = self.inference_mixin._pints_composed_log_prior
+        val = log_prior([0.01, 1.01, 0.01, 0.01, 0.01, 0.01, 0.01])
+        self.assertEqual(val, -np.inf)
         val = log_prior([0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01])
         self.assertAlmostEqual(val, 13.122363377404326, delta=0.1)
-        val = log_prior([1.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01])
-        self.assertEqual(val, -np.inf)
 
         # Test log-posterior
         log_posterior = self.inference_mixin._pints_log_posterior

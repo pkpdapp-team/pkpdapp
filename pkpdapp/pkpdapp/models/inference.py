@@ -157,7 +157,7 @@ class Inference(StoredModel):
             new_ll = log_likelihood.create_stored_log_likelihood(
                 self, new_models
             )
-            new_ll.children.delete()
+            new_ll.children.all().delete()
             new_log_likelihoods.append(new_ll)
 
         # recreate children relationships using indicies
@@ -165,7 +165,10 @@ class Inference(StoredModel):
         for parent_index, parent in enumerate(old_log_likelihoods):
             new_parent = new_log_likelihoods[parent_index]
             for child in parent.children.all():
-                child_index = old_log_likelihoods.index(child)
+                child_index = None
+                for i, ll in enumerate(old_log_likelihoods):
+                    if ll == child:
+                        child_index = i
                 new_child = new_log_likelihoods[child_index]
 
                 # get old parameter and save it as a new relationship
