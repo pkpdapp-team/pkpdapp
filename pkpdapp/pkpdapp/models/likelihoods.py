@@ -331,6 +331,7 @@ class LogLikelihood(models.Model):
 
     def create_pints_problem(self):
         values, times = self.get_inference_data()
+        print(times)
         model, fitted_children = self.create_pints_forward_model()
         return pints.SingleOutputProblem(model, times, values), fitted_children
 

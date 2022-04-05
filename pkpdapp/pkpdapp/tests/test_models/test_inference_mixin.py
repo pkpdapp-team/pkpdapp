@@ -175,19 +175,13 @@ class TestInferenceMixinSingleOutputSampling(TestCase):
             param = log_likelihood.parameters.get(
                 variable=variables[i]
             )
-            PriorUniform.objects.create(
-                lower=0.0,
-                upper=2.0,
-                log_likelihood_parameter=param,
-            )
+            param.set_uniform_prior(0.0, 2.0)
+
         noise_param = log_likelihood.parameters.get(
-            variable__isnull=True
+            variable__isnull=True, index=1
         )
-        PriorUniform.objects.create(
-            lower=0.0,
-            upper=2.0,
-            log_likelihood_parameter=noise_param,
-        )
+        noise_param.set_uniform_prior(0.0, 2.0)
+
         # 'run' inference to create copies of models
         self.inference.run_inference(test=True)
 
@@ -314,22 +308,17 @@ class TestInferenceMixinSingleOutputOptimisation(TestCase):
         self.input_variables = [
             variables[i] for i in var_indices
         ]
-        for variable in self.input_variables:
-            PriorUniform.objects.create(
-                lower=0.0,
-                upper=2.0,
-                log_likelihood_parameter=log_likelihood.parameters.get(
-                    variable=variable
-                )
+        for i in var_indices:
+            param = log_likelihood.parameters.get(
+                variable=variables[i]
             )
+            param.set_uniform_prior(0.0, 2.0)
+
         noise_param = log_likelihood.parameters.get(
-            variable__isnull=True
+            variable__isnull=True, index=1
         )
-        PriorUniform.objects.create(
-            lower=0.0,
-            upper=2.0,
-            log_likelihood_parameter=noise_param,
-        )
+        noise_param.set_uniform_prior(0.0, 2.0)
+
         # 'run' inference to create copies of models
         self.inference.run_inference(test=True)
 
@@ -517,22 +506,17 @@ class TestInferenceMixinFakeData(TestCase):
         self.input_variables = [
             variables[i] for i in var_indices
         ]
-        for variable in self.input_variables:
-            PriorUniform.objects.create(
-                lower=0.0,
-                upper=2.0,
-                log_likelihood_parameter=log_likelihood.parameters.get(
-                    variable=variable
-                )
+        for i in var_indices:
+            param = log_likelihood.parameters.get(
+                variable=variables[i]
             )
+            param.set_uniform_prior(0.0, 2.0)
+
         noise_param = log_likelihood.parameters.get(
-            variable__isnull=True
+            variable__isnull=True, index=1
         )
-        PriorUniform.objects.create(
-            lower=0.0,
-            upper=2.0,
-            log_likelihood_parameter=noise_param,
-        )
+        noise_param.set_uniform_prior(0.0, 2.0)
+
         # 'run' inference to create copies of models
         self.inference.run_inference(test=True)
 
