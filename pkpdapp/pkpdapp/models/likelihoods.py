@@ -99,6 +99,14 @@ class LogLikelihood(models.Model):
         through_fields=('parent', 'child'),
     )
 
+    variable = models.ForeignKey(
+        Variable,
+        related_name='log_likelihoods',
+        blank=True, null=True,
+        on_delete=models.CASCADE,
+        help_text='a variable (any) in the deterministic model.'
+    )
+
     biomarker_type = models.ForeignKey(
         BiomarkerType,
         on_delete=models.CASCADE,
@@ -138,7 +146,7 @@ class LogLikelihood(models.Model):
         constraints = [
             models.CheckConstraint(
                 check=(
-                    (Q(form='F') & Q(value__isnull=False))
+                    ~(Q(form='F') & Q(value__isnull=True))
                 ),
                 name=(
                     '%(class)s: fixed log_likelihood must have a value'
@@ -146,12 +154,20 @@ class LogLikelihood(models.Model):
             ),
             models.CheckConstraint(
                 check=(
-                    (
+                    ~(Q(form='M') & Q(variable__isnull=True))
+                ),
+                name=(
+                    '%(class)s: model log_likelihood must have a variable'
+                )
+            ),
+            models.CheckConstraint(
+                check=(
+                    ~(
                         (
                             Q(form='F') | Q(form='S') | Q(form='M')
                         ) &
-                        Q(biomarker_type__isnull=True) &
-                        Q(subject_group__isnull=True)
+                        Q(biomarker_type__isnull=False) &
+                        Q(subject_group__isnull=False)
                     )
                 ),
                 name=(
@@ -380,13 +396,7 @@ class LogLikelihood(models.Model):
         """
         if self.form != self.Form.MODEL:
             return None
-        output_variable = self.outputs.first().variable
-        if output_variable is None:
-            raise ValueError(
-                'all output params of a model log_likelihood '
-                'must be model variables'
-            )
-        return output_variable.get_model()
+        return self.variable.get_model()
 
     def get_model_variables(self):
         """
@@ -406,7 +416,7 @@ class LogLikelihood(models.Model):
         super().save(force_insert, force_update, *args, **kwargs)
 
         # update children
-        old_children = self.children.all()
+        old_children = list(self.children.all())
         old_parameters = [
             LogLikelihoodParameter.objects.get(parent=self, child=c)
             for c in old_children

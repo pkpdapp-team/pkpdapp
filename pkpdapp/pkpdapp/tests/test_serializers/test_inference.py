@@ -22,60 +22,24 @@ class TestInferenceSerializer(TestCase):
         project = Project.objects.get(
             name='demo',
         )
-        biomarker_type = BiomarkerType.objects.get(
+        self.biomarker_type = BiomarkerType.objects.get(
             name='Tumour volume',
             dataset__name='lxf_control_growth'
         )
-        model = PharmacodynamicModel.objects.get(
+        self.model = PharmacodynamicModel.objects.get(
             name='tumour_growth_inhibition_model_koch',
-            read_only=False,
         )
-        variables = model.variables.all()
-        var_names = [v.qname for v in variables]
-        m = model.get_myokit_model()
-        s = model.get_myokit_simulator()
-
-        forward_model = MyokitForwardModel(
-            myokit_model=m,
-            myokit_simulator=s,
-            outputs="myokit.tumour_volume")
-
-        output_names = forward_model.output_names()
-        var_index = var_names.index(output_names[0])
-
         self.inference = Inference.objects.create(
-            name='bob',
             project=project,
-            max_number_of_iterations=10,
-            algorithm=Algorithm.objects.get(name='Haario-Bardenet'),
         )
-        log_likelihood = LogLikelihood.objects.create(
-            variable=variables[var_index],
+        self.log_likelihood = LogLikelihood.objects.create(
             inference=self.inference,
-            biomarker_type=biomarker_type,
-            form=LogLikelihood.Form.NORMAL
+            variable=self.model.variables.first(),
+            biomarker_type=self.biomarker_type,
+            form=LogLikelihood.Form.MODEL
         )
-
-        # find variables that are being estimated
-        parameter_names = forward_model.variable_parameter_names()
-        var_indices = [var_names.index(v) for v in parameter_names]
-        for i in var_indices:
-            param = log_likelihood.parameters.get(
-                variable=variables[i]
-            )
-            PriorUniform.objects.create(
-                lower=0.0,
-                upper=2.0,
-                log_likelihood_parameter=param,
-            )
-        noise_param = log_likelihood.parameters.get(
-            variable__isnull=True
-        )
-        PriorUniform.objects.create(
-            lower=0.0,
-            upper=2.0,
-            log_likelihood_parameter=noise_param,
-        )
+        self.parameters = self.log_likelihood.parameters.all()
+        self.prior = self.parameters[0].child
 
     def test_create(self):
         serializer = InferenceSerializer()
@@ -94,19 +58,22 @@ class TestInferenceSerializer(TestCase):
             self.inference
         )
         data = serializer.data
+        old_number_of_loglikelihoods = len(data['log_likelihoods'])
         data['name'] = 'fred'
         data['log_likelihoods'].append({
             'form': 'N',
-            'variable': self.inference.log_likelihoods.first().variable.id,
             'parameters': [],
-            'biomarker_type': (
-                self.inference.log_likelihoods.first().biomarker_type.id
-            ),
         })
         validated_data = serializer.to_internal_value(data)
         serializer.update(self.inference, validated_data)
         self.assertEqual(self.inference.name, 'fred')
-        self.assertEqual(len(self.inference.log_likelihoods.all()), 2)
+
+        # new prior will add three new log_likelihood
+        # since a normal has 2 params
+        self.assertEqual(
+            len(self.inference.log_likelihoods.all()),
+            old_number_of_loglikelihoods + 3
+        )
 
     def test_inference_results(self):
         # 'run' inference to create copies of models
