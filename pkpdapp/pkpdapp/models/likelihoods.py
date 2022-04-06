@@ -79,7 +79,6 @@ class LogLikelihood(models.Model):
     inference = models.ForeignKey(
         'Inference',
         related_name='log_likelihoods',
-        blank=True, null=True,
         on_delete=models.CASCADE,
         help_text=(
             'Log_likelihood belongs to this inference object. '
@@ -98,17 +97,6 @@ class LogLikelihood(models.Model):
         through=LogLikelihoodParameter,
         blank=True, null=True,
         through_fields=('parent', 'child'),
-    )
-
-    variable = models.ForeignKey(
-        Variable,
-        related_name='log_likelihoods',
-        blank=True, null=True,
-        on_delete=models.CASCADE,
-        help_text=(
-            'output variable for the log_likelihood, '
-            'defines the mechanistic model'
-        )
     )
 
     biomarker_type = models.ForeignKey(
@@ -137,6 +125,8 @@ class LogLikelihood(models.Model):
         UNIFORM = 'U', 'Uniform'
         LOGNORMAL = 'LN', 'Log-Normal'
         FIXED = 'F', 'Fixed'
+        SUM = 'S', 'Sum'
+        MODEL = 'M', 'Model'
 
     form = models.CharField(
         max_length=2,
@@ -144,19 +134,47 @@ class LogLikelihood(models.Model):
         default=Form.FIXED,
     )
 
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                check=(
+                    (Q(form='F') & Q(value__isnull=False))
+                ),
+                name=(
+                    '%(class)s: fixed log_likelihood must have a value'
+                )
+            ),
+            models.CheckConstraint(
+                check=(
+                    (
+                        (
+                            Q(form='F') | Q(form='S') | Q(form='M')
+                        ) &
+                        Q(biomarker_type__isnull=True) &
+                        Q(subject_group__isnull=True)
+                    )
+                ),
+                name=(
+                    '%(class)s: deterministic log_likelihoods cannot have data'
+                )
+            ),
+        ]
+
+    def is_a_distribution(self):
+        return (
+            self.form == self.Form.NORMAL or
+            self.form == self.Form.UNIFORM or
+            self.form == self.Form.LOGNORMAL
+        )
+
     def is_a_prior(self):
         """
-        False for fixed parameters, and log_likelihoods on
-        model parameters
+        True for distributions where there is no observed data
         """
-        if self.form == self.Form.FIXED:
-            return False
-        if self.variable is not None:
-            return False
-        return True
-
-    def is_a_model_log_likelihood(self):
-        return self.variable is not None
+        return (
+            self.is_a_distribution() and
+            self.biomarker_type is not None
+        )
 
     def sample(self):
         if self.form == self.Form.FIXED:
@@ -240,7 +258,6 @@ class LogLikelihood(models.Model):
             list of outputs that the forward model will produce
             if None then the output of the log_likelihood will be used
         """
-
         model = self.get_model()
         myokit_model = model.get_myokit_model()
         myokit_simulator = model.get_myokit_simulator()
@@ -361,11 +378,15 @@ class LogLikelihood(models.Model):
         if this is a log_likelihood that includes a mechanistic model
         this model is returned, else None
         """
-        if self.variable is None:
+        if self.form != self.Form.MODEL:
             return None
-        if self.variable.constant:
-            return None
-        return self.variable.get_model()
+        output_variable = self.outputs.first().variable
+        if output_variable is None:
+            raise ValueError(
+                'all output params of a model log_likelihood '
+                'must be model variables'
+            )
+        return output_variable.get_model()
 
     def get_model_variables(self):
         """
@@ -481,7 +502,7 @@ class LogLikelihood(models.Model):
                 ]
             else:
                 defaults = [0.0, 0.0]
-        elif self.form == self.Form.FIXED:
+        else:
             names = []
             defaults = []
         for param_index, (name, default) in enumerate(zip(names, defaults)):
@@ -515,17 +536,6 @@ class LogLikelihood(models.Model):
         """
         create stored log_likelihood, ignoring children for now
         """
-        old_children = self.children.all()
-        for child in old_children:
-            if (
-                child.form == child.Form.FIXED and
-                child.value is None
-            ):
-                raise RuntimeError(
-                    'All LogLikelihood parameters must have a '
-                    'set value or a prior'
-                )
-
         new_variable = None
         if self.variable is not None:
             old_model = self.variable.get_model()
