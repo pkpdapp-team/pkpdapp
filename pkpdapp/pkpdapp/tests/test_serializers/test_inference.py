@@ -33,6 +33,7 @@ class TestInferenceSerializer(TestCase):
             project=project,
         )
         self.log_likelihood = LogLikelihood.objects.create(
+            name='tumour_growth_inhibition_model_koch',
             inference=self.inference,
             variable=self.model.variables.first(),
             biomarker_type=self.biomarker_type,
@@ -61,9 +62,11 @@ class TestInferenceSerializer(TestCase):
         old_number_of_loglikelihoods = len(data['log_likelihoods'])
         data['name'] = 'fred'
         data['log_likelihoods'].append({
+            'name': 'x',
             'form': 'N',
             'parameters': [],
         })
+        print(data)
         validated_data = serializer.to_internal_value(data)
         serializer.update(self.inference, validated_data)
         self.assertEqual(self.inference.name, 'fred')

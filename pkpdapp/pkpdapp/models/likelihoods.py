@@ -42,7 +42,6 @@ class LogLikelihoodParameter(models.Model):
         blank=True, null=True,
         help_text=(
             'parameter index for distribution parameters. '
-            'null if variable is not null'
         )
     )
     name = models.CharField(
@@ -83,6 +82,11 @@ class LogLikelihood(models.Model):
         help_text=(
             'Log_likelihood belongs to this inference object. '
         )
+    )
+
+    name = models.CharField(
+        max_length=100,
+        help_text='name of log_likelihood.'
     )
 
     value = models.FloatField(
@@ -264,6 +268,9 @@ class LogLikelihood(models.Model):
 
         return output_values_min, output_values_max
 
+    def create_pymc3_model(self):
+        pass
+
     def create_pints_forward_model(self):
         """
         create pints forwards model for this log_likelihood.
@@ -433,6 +440,7 @@ class LogLikelihood(models.Model):
                     index = i
             if index is None:
                 child = LogLikelihood.objects.create(
+                    name=model_variable.qname,
                     inference=self.inference,
                     value=model_variable.get_default_value(),
                     form=self.Form.FIXED,
@@ -519,12 +527,12 @@ class LogLikelihood(models.Model):
             index = None
             for i, (c, p) in enumerate(zip(old_children, old_parameters)):
                 if (
-                    p.variable is None and
                     p.index == param_index
                 ):
                     index = i
             if index is None:
                 child = LogLikelihood.objects.create(
+                    name=name,
                     inference=self.inference,
                     value=default,
                     form=self.Form.FIXED,

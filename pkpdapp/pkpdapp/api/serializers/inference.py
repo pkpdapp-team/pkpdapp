@@ -43,6 +43,17 @@ class InferenceSerializer(serializers.ModelSerializer):
         model = Inference
         fields = '__all__'
 
+    def validate_log_likelihoods(self, value):
+        """
+        Check that the blog post is about Django.
+        """
+        names = [v['name'] for v in value]
+        if(len(set(names)) < len(names)):
+            raise serializers.ValidationError(
+                "all log_likelihoods in an inference must have unique names"
+            )
+        return value
+
     def create(self, validated_data):
         log_likelihood_data = validated_data.pop('log_likelihoods')
         new_inference = BaseInferenceSerializer().create(

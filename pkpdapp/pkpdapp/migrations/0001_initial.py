@@ -129,6 +129,7 @@ class Migration(migrations.Migration):
             name='LogLikelihood',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('name', models.CharField(help_text='name of log_likelihood.', max_length=100)),
                 ('value', models.FloatField(blank=True, help_text='set if a fixed value is required', null=True)),
                 ('form', models.CharField(choices=[('N', 'Normal'), ('U', 'Uniform'), ('LN', 'Log-Normal'), ('F', 'Fixed'), ('S', 'Sum'), ('M', 'Model')], default='F', max_length=2)),
                 ('biomarker_type', models.ForeignKey(blank=True, help_text='biomarker_type for measurements. if blank then simulated data is used, with non-fixed parameters sampled at the start of inference', null=True, on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.biomarkertype')),
@@ -367,7 +368,7 @@ class Migration(migrations.Migration):
             name='LogLikelihoodParameter',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('index', models.IntegerField(blank=True, help_text='parameter index for distribution parameters. null if variable is not null', null=True)),
+                ('index', models.IntegerField(blank=True, help_text='parameter index for distribution parameters. ', null=True)),
                 ('name', models.CharField(help_text='name of log_likelihood parameter.', max_length=100)),
                 ('child', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='outputs', to='pkpdapp.loglikelihood')),
                 ('parent', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='parameters', to='pkpdapp.loglikelihood')),
