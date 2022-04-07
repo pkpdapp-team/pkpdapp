@@ -5,6 +5,7 @@
 #
 
 from django.test import TestCase
+from rest_framework.exceptions import ValidationError
 from pkpdapp.models import (
     Inference, PharmacodynamicModel, LogLikelihood,
     Project, BiomarkerType,
@@ -66,7 +67,6 @@ class TestInferenceSerializer(TestCase):
             'form': 'N',
             'parameters': [],
         })
-        print(data)
         validated_data = serializer.to_internal_value(data)
         serializer.update(self.inference, validated_data)
         self.assertEqual(self.inference.name, 'fred')
@@ -77,6 +77,23 @@ class TestInferenceSerializer(TestCase):
             len(self.inference.log_likelihoods.all()),
             old_number_of_loglikelihoods + 3
         )
+
+        # do it again with the same name, should have validation error
+        serializer = InferenceSerializer(
+            self.inference
+        )
+        data = serializer.data
+        old_number_of_loglikelihoods = len(data['log_likelihoods'])
+        data['log_likelihoods'].append({
+            'name': 'x',
+            'form': 'N',
+            'parameters': [],
+        })
+        with self.assertRaisesRegex(
+            ValidationError,
+            "all log_likelihoods in an inference must have unique names"
+        ):
+            validated_data = serializer.to_internal_value(data)
 
     def test_inference_results(self):
         # 'run' inference to create copies of models

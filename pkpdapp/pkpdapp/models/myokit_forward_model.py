@@ -9,22 +9,23 @@ import numpy as np
 from sys import float_info
 
 
-class MyokitForwardModel(pints.ForwardModel):
+class MyokitForwardModel():
     """
-    Creates a `pints.ForwardModel`.
     Arguments:
         myokit_model -- a Myokit model.
         myokit_simulator -- a Myokit simulator.
-        outputs(=None by default) -- a list of strings
+        outputs -- a list of strings representing output names
+        times -- a list of ndarrays representing times for each output
         representing state names in model
         fixed_parameter_dict(=None by default) -- a dictionary
         representing key-value pairs for fixed parameters
     """
 
-    def __init__(self, myokit_simulator, myokit_model, outputs=None,
-                 fixed_parameter_dict=None):
-        super(MyokitForwardModel, self).__init__()
-
+    def __init__(
+        self, myokit_simulator, myokit_model,
+        outputs, times,
+        fixed_parameter_dict=None
+    ):
         model = myokit_model
         self._sim = myokit_simulator
         self._sim.set_tolerance(abs_tol=1e-11, rel_tol=1e-9)
@@ -34,26 +35,33 @@ class MyokitForwardModel(pints.ForwardModel):
 
         # get initial conditions
         self._output_names = sorted(
-            [var.qname() for var in model.variables(const=False)])
-        self._state_names = sorted(
-            [var.qname() for var in model.states()])
+            [var.qname() for var in model.variables(const=False)]
+        )
 
-        if outputs is None:
-            self._output_names = self._output_names
-            self._n_outputs = self._n_states
-        else:
-            if not isinstance(outputs, list):
-                outputs = [outputs]
-            outputs_not_in_model = (
-                [v not in self._output_names for v in outputs])
-            if any(outputs_not_in_model):
-                raise ValueError('All outputs must be within model.')
-            self._output_names = outputs
-            self._n_outputs = len(outputs)
+        self._times = times
+        self._times_all = np.sort(list(set(np.concatenate(self._times))))
+
+        self._output_indices = [
+            np.searchsorted(self._times_all, t)
+            for t in self._times
+        ]
+
+        self._state_names = sorted(
+            [var.qname() for var in model.states()]
+        )
+
+        outputs_not_in_model = (
+            [v not in self._output_names for v in outputs]
+        )
+        if any(outputs_not_in_model):
+            raise ValueError('All outputs must be within model.')
+        self._output_names = outputs
+        self._n_outputs = len(outputs)
 
         # find fixed and variable parameters
         self._const_names = sorted(
-            [var.qname() for var in model.variables(const=True)])
+            [var.qname() for var in model.variables(const=True)]
+        )
 
         # parameters are all const variables plus the number of states
         # (for initial conditions)
@@ -68,29 +76,34 @@ class MyokitForwardModel(pints.ForwardModel):
             self._n_parameters = len(self._variable_parameter_names)
         else:
             if self._n_all_parameters < len(fixed_parameter_dict):
-                raise ValueError('Number of fixed parameters must be fewer' +
-                                 'than total number of model parameters.')
+                raise ValueError(
+                    'Number of fixed parameters must be fewer'
+                    'than total number of model parameters.'
+                )
             fparams_not_in_model_params = [p not in self._all_parameter_names
                                            for p
                                            in fixed_parameter_dict.keys()]
             if any(fparams_not_in_model_params):
-                raise ValueError('All fixed parameter keys must correspond ' +
-                                 'with model keys.')
+                raise ValueError(
+                    'All fixed parameter keys must correspond '
+                    'with model keys.'
+                )
             self._fixed_parameter_dict = fixed_parameter_dict
             self._fixed_parameter_names = list(fixed_parameter_dict.keys())
-            self._variable_parameter_names = [x
-                                              for x
-                                              in self._all_parameter_names
-                                              if x not
-                                              in self._fixed_parameter_names]
+            self._variable_parameter_names = [
+                x for x in self._all_parameter_names
+                if x not in self._fixed_parameter_names
+            ]
             self._n_parameters = len(self._variable_parameter_names)
-            self._fixed_parameter_indices = [self._all_parameter_names.index(v)
-                                             for v
-                                             in self._fixed_parameter_names]
+            self._fixed_parameter_indices = [
+                self._all_parameter_names.index(v)
+                for v in self._fixed_parameter_names
+            ]
 
-        self._variable_parameter_indices = [self._all_parameter_names.index(v)
-                                            for v
-                                            in self._variable_parameter_names]
+        self._variable_parameter_indices = [
+            self._all_parameter_names.index(v)
+            for v in self._variable_parameter_names
+        ]
 
     def n_outputs(self):
         """
@@ -114,10 +127,10 @@ class MyokitForwardModel(pints.ForwardModel):
         for id_var, var in enumerate(self._const_names):
             self._sim.set_constant(var, float(parameters[id_var]))
 
-    def simulate(self, parameters, times):
+    def simulate(self, parameters):
         """
         Returns the numerical solution of the model outputs for specified
-        parameters and times. Note, the parameter inputs should be ordered as
+        parameters. Note, the parameter inputs should be ordered as
         in `variable_parameter_names()`.
         """
 
@@ -149,20 +162,16 @@ class MyokitForwardModel(pints.ForwardModel):
 
         # Simulate: need +100*epsilon for times to ensure simulation
         # surpasses last time
-        t_max = times[-1] + 1e2 * float_info.epsilon
-        log_times = times
+        t_max = self._times_all[-1] + 1e2 * float_info.epsilon
+        log_times = self._times_all
         output = self._sim.run(
             t_max,
             log=self._output_names, log_times=log_times
         )
-        result = [output[name] for name in self._output_names]
-
-        # Transform shape of output to be compatible with
-        # pints.SingleOutputProblem/pints.MultiOutputProblem
-        if self._n_outputs == 1:
-            result = np.array(result).flatten()
-        else:
-            result = np.array(result).transpose()
+        result = [
+            np.array(output[name])[indices]
+            for name, indices in zip(self._output_names, self._output_indices)
+        ]
 
         return result
 

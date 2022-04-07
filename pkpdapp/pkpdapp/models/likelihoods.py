@@ -6,6 +6,8 @@
 
 from django.db import models
 from django.db.models import Q
+import pymc3 as pm
+import theano
 import pints
 import numpy as np
 import scipy.stats as sps
@@ -13,6 +15,101 @@ from pkpdapp.models import (
     Variable, BiomarkerType,
     MyokitForwardModel, SubjectGroup
 )
+
+
+class SolveCached:
+    def __init__(self, function):
+        self._cachedParam = None
+        self._cachedOutput = None
+        self._function = function
+
+    def __call__(self, x):
+        if np.any(x != self._cachedParam):
+            self._cachedOutput = self._function(x)
+            self._cachedParam = x
+        return self._cachedOutput
+
+
+class ODEGradop(theano.tensor.Op):
+    __props__ = ("name",)
+
+    def __init__(self, name, numpy_vsp, n_outputs):
+        self.name = name
+        self._numpy_vsp = numpy_vsp
+        self._n_outputs = n_outputs
+
+    def make_node(self, x, *gs):
+        x = theano.tensor.as_tensor_variable(x)
+        gs = [theano.tensor.as_tensor_variable(g) for g in gs]
+        node = theano.Apply(self, [x] + gs, [g.type() for g in gs])
+        return node
+
+    def perform(self, node, inputs_storage, output_storage):
+        x = inputs_storage[0]
+        outs = self._numpy_vsp(x, inputs_storage[1:])  # get the numerical VSP
+        for i in range(self._n_outputs):
+            output_storage[i][0] = outs[0]
+
+
+class ODEop(theano.tensor.Op):
+    __props__ = ("name",)
+
+    def __init__(self, name, ode_model, sensitivities=False):
+        self.name = name
+        self._ode_model = ode_model
+        self._n_outputs = ode_model.n_outputs()
+        if sensitivities:
+            self._cached_ode_model = SolveCached(self._ode_model.simulateS1)
+        else:
+            self._cached_ode_model = self._ode_model.simulate
+
+        if sensitivities:
+            def function(x):
+                state, = self._cached_ode_model(np.array(x, dtype=np.float64))
+                return state
+        else:
+            def function(x):
+                state = self._cached_ode_model(np.array(x, dtype=np.float64))
+                return state
+        self._function = function
+
+        if sensitivities:
+            def vjp(x, gs):
+                _, sens = self._cached_ode_model(
+                    np.array(x, dtype=np.float64)
+                )
+                return [
+                    s.T.dot(g) for s, g in zip(sens, gs)
+                ]
+        else:
+            def vjp(x, g):
+                raise NotImplementedError('sensitivities have been turned off')
+        self._vjp = vjp
+
+    def __repr__(self):
+        return self.name
+
+    def __str__(self):
+        return self.name
+
+    def make_node(self, x):
+        x = theano.tensor.as_tensor_variable(x)
+        return theano.tensor.Apply(self, [x], [x.type()] * self._n_outputs)
+
+    def perform(self, node, inputs_storage, output_storage):
+        x = inputs_storage[0]
+        outs = self._function(x)
+        for i in range(self._n_outputs):
+            output_storage[i][0] = outs[0]
+
+    def grad(self, inputs, output_grads):
+        x = inputs[0]
+
+        # pass the VSP when asked for gradient
+        grad_op = ODEGradop('grad of ' + self.name, self._vjp, self._n_outputs)
+        grad_op_apply = grad_op(x, *output_grads)
+
+        return [grad_op_apply]
 
 
 class LogLikelihoodParameter(models.Model):
@@ -268,25 +365,87 @@ class LogLikelihood(models.Model):
 
         return output_values_min, output_values_max
 
-    def create_pymc3_model(self):
-        pass
+    def _create_pymc3_model(self, pm_model, parent):
+        # we are a graph not a tree, so
+        # if name already in pm_model return it
+        # ode models can have multiple outputs, so make
+        # sure to choose the right one
+        try:
+            op = pm_model[self.name]
+            if self.form == self.Form.MODEL:
+                parents = list(self.parents.order_by('id'))
+                return op[parents.index(parent)]
+            else:
+                return op
+        except KeyError:
+            pass
+        values, times = self.get_inference_data()
+        if self.form == self.Form.NORMAL:
+            mean, sigma = self.get_noise_log_likelihoods()
+            mean = mean._create_pymc3_model(pm_model, self)
+            sigma = sigma._create_pymc3_model(pm_model, self)
+            return pm.Normal(
+                self.name, mean, sigma, observed=values
+            )
+        elif self.form == self.Form.LOGNORMAL:
+            mean, sigma = self.get_noise_log_likelihoods()
+            mean = mean._create_pymc3_model(pm_model, self)
+            sigma = sigma._create_pymc3_model(pm_model, self)
+            return pm.LogNormal(
+                self.name, mean, sigma, observed=values
+            )
+        elif self.form == self.Form.UNIFORM:
+            lower, upper = self.get_noise_log_likelihoods()
+            lower = lower._create_pymc3_model(pm_model, self)
+            upper = upper._create_pymc3_model(pm_model, self)
+            return pm.Uniform(
+                self.name, lower, upper, observed=values
+            )
+        elif self.form == self.Form.MODEL:
+            parents = list(self.parents.order_by('id'))
+            times = [
+                parent.get_inference_data()[1] for parent in parents
+            ]
 
-    def create_pints_forward_model(self):
+            # fill in any missing data with some fake times
+            model = self.get_model()
+            for i, t in enumerate(times):
+                if t is None:
+                    times[i] = np.linspace(0, model.time_max, 20)
+
+            forward_model, fitted_children = self.create_forward_model(
+                times
+            )
+            forward_model_op = ODEop(self.name, forward_model)
+            all_params = pm.math.stack([
+                child._create_pymc3_model(pm_model, self)
+                for child in fitted_children
+            ])
+            op = pm.Deterministic(self.name, forward_model_op(all_params))
+            return op[parents.index(parent)]
+        elif self.form == self.Form.SUM:
+            return sum([
+                child._create_pymc3_model(pm_model, self)
+                for child in self.children.all()
+            ])
+        elif self.form == self.Form.FIXED:
+            return self.value
+
+    def create_pymc3_model(self):
+        with pm.Model() as pm_model:
+            _ = self._create_pymc3_model(pm_model, self)
+        return pm_model
+
+    def create_forward_model(self, output_times):
         """
         create pints forwards model for this log_likelihood.
-
-        Parameters
-        ----------
-        outputs: [Variable] (optional)
-            list of outputs that the forward model will produce
-            if None then the output of the log_likelihood will be used
         """
         model = self.get_model()
         myokit_model = model.get_myokit_model()
         myokit_simulator = model.get_myokit_simulator()
 
-        outputs = [self.variable]
-        output_names = [output.qname for output in outputs]
+        outputs = self.outputs.all()
+        output_names = [output.variable.qname for output in outputs]
 
         fixed_parameters_dict = {
             param.variable.qname: param.child.value
@@ -299,7 +458,7 @@ class LogLikelihood(models.Model):
 
         pints_model = MyokitForwardModel(
             myokit_simulator, myokit_model,
-            output_names,
+            output_names, output_times,
             fixed_parameters_dict
         )
 
@@ -316,26 +475,30 @@ class LogLikelihood(models.Model):
         )
         return param.child
 
-    def get_inference_data(self):
-        # if we have data then use it, otherwise
-        # use simulated data
+    def get_inference_data(self, fake=False):
+        """
+        return data. if fake=True and no data return
+        some fake times
+        """
         if self.biomarker_type:
             df = self.biomarker_type.as_pandas(
                 subject_group=self.subject_group
             )
             return df['values'].tolist(), df['times'].tolist()
         else:
-            # sample from model
-            model = self.get_model()
-            pints_model, param_children = self.create_pints_forward_model()
-            param_vector = [
-                child.sample()
-                for child in param_children
-            ]
-            fake_data_times = np.linspace(0, model.time_max, 20)
-            output_values = pints_model.simulate(param_vector, fake_data_times)
-            output_values = self.add_noise(output_values)
-            return output_values, fake_data_times
+            return None, None
+
+    def get_noise_log_likelihoods(self):
+        """
+        get ordered list of noise log_likelihoods
+        """
+        noise_parameters = self.parameters.filter(
+            index__isnull=False,
+        ).order_by('index')
+
+        return [
+            p.child for p in noise_parameters
+        ]
 
     def get_noise_params(self):
         """
@@ -343,12 +506,8 @@ class LogLikelihood(models.Model):
         if any noise params have a prior on them then
         this is sampled
         """
-        noise_parameters = self.parameters.filter(
-            variable__isnull=True
-        ).order_by('index')
-
         return [
-            p.child.sample() for p in noise_parameters
+            child.sample() for child in self.get_noise_log_likelihoods()
         ]
 
     def create_pints_transform(self):
@@ -371,7 +530,6 @@ class LogLikelihood(models.Model):
 
     def create_pints_problem(self):
         values, times = self.get_inference_data()
-        print(times)
         model, fitted_children = self.create_pints_forward_model()
         return pints.SingleOutputProblem(model, times, values), fitted_children
 
@@ -419,6 +577,12 @@ class LogLikelihood(models.Model):
             ).exclude(name="time")
 
     def save(self, force_insert=False, force_update=False, *args, **kwargs):
+        created = not self.pk
+
+        if created:
+            model = self.get_model()
+            if model is not None:
+                self.name = model.name
 
         super().save(force_insert, force_update, *args, **kwargs)
 
@@ -483,7 +647,7 @@ class LogLikelihood(models.Model):
                     0.1 * (variable.upper_bound - variable.lower_bound),
                 ]
             else:
-                defaults = [0.0, 0.0]
+                defaults = [0.0, 1.0]
         elif self.form == self.Form.LOGNORMAL:
             if variable is not None:
                 names = [
@@ -501,7 +665,7 @@ class LogLikelihood(models.Model):
                     0.1 * (variable.upper_bound - variable.lower_bound),
                 ]
             else:
-                defaults = [0.0, 0.0]
+                defaults = [0.0, 1.0]
         elif self.form == self.Form.UNIFORM:
             if variable is not None:
                 names = [
@@ -519,7 +683,7 @@ class LogLikelihood(models.Model):
                     variable.upper_bound,
                 ]
             else:
-                defaults = [0.0, 0.0]
+                defaults = [0.0, 1.0]
         else:
             names = []
             defaults = []
