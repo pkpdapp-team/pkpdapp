@@ -36,6 +36,7 @@ class TestInferenceMixinPkModel(TestCase):
             subjects__id_in_dataset=1,
         )
         self.model = DosedPharmacokineticModel.objects.create(
+            name='test model',
             pharmacokinetic_model=pk,
             dose_compartment='central',
             protocol=protocol,
@@ -95,26 +96,27 @@ class TestInferenceMixinPkModel(TestCase):
             form=LogLikelihood.Form.MODEL
         )
 
-        output_model = LogLikelihood.objects.create(
-            name="my_model output",
-            inference=self.inference,
-            form=LogLikelihood.Form.NORMAL
-        )
-
-        # add the output_model
-        mean_param = output_model.parameters.get(index=0)
-        mean_param.child = log_likelihood
-        possible_outputs = self.model.variables.filter(
-            constant=False
-        )
-        mean_param.variable = possible_outputs[0]
-        mean_param.save()
+        # remove all outputs except
+        output_names = [
+            'central.drug_c_concentration',
+            'peripheral_1.drug_p1_concentration',
+        ]
+        outputs = []
+        for output in log_likelihood.outputs.all():
+            if output.variable.qname in output_names:
+                outputs.append(output.parent)
+            else:
+                output.parent.delete()
 
         # add a prior on the first param
         first_param = log_likelihood.parameters.first()
+        prior_name = first_param.name
         first_param.child.form = LogLikelihood.Form.UNIFORM
         first_param.child.save()
 
-        model = output_model.create_pymc3_model()
-        print(model)
-        print(model.basic_RVs)
+        model = outputs[0].create_pymc3_model(outputs[1])
+
+        # check everything is in there
+        model[prior_name]
+        for name in output_names:
+            model[name]

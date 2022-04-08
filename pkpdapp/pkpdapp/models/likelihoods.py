@@ -7,6 +7,7 @@
 from django.db import models
 from django.db.models import Q
 import pymc3 as pm
+import numbers
 import theano
 import pints
 import numpy as np
@@ -86,15 +87,15 @@ class ODEop(theano.tensor.Op):
                 raise NotImplementedError('sensitivities have been turned off')
         self._vjp = vjp
 
-    def __repr__(self):
-        return self.name
-
-    def __str__(self):
-        return self.name
+    def infer_shape(self, fgraph, node, input_shapes):
+        return [input_shapes[0] for _ in range(self.n_outputs)]
 
     def make_node(self, x):
         x = theano.tensor.as_tensor_variable(x)
-        return theano.tensor.Apply(self, [x], [x.type()] * self._n_outputs)
+        outputs = [
+            theano.tensor.vector() for _ in range(self._n_outputs)
+        ]
+        return theano.tensor.Apply(self, [x], outputs)
 
     def perform(self, node, inputs_storage, output_storage):
         x = inputs_storage[0]
@@ -277,6 +278,9 @@ class LogLikelihood(models.Model):
             ),
         ]
 
+    __original_variable = None
+    __original_form = None
+
     def is_a_distribution(self):
         return (
             self.form == self.Form.NORMAL or
@@ -365,42 +369,52 @@ class LogLikelihood(models.Model):
 
         return output_values_min, output_values_max
 
-    def _create_pymc3_model(self, pm_model, parent):
+    def _create_pymc3_model(self, pm_model, parent, ops, shapes):
         # we are a graph not a tree, so
         # if name already in pm_model return it
         # ode models can have multiple outputs, so make
         # sure to choose the right one
+
+        name = self.name
         try:
-            op = pm_model[self.name]
+            op = ops[name]
+            shape = shapes[name]
             if self.form == self.Form.MODEL:
                 parents = list(self.parents.order_by('id'))
-                return op[parents.index(parent)]
-            else:
-                return op
+                index = parents.index(parent)
+                op = op[index]
+                shape = shape[index]
+            return op, shape
         except KeyError:
             pass
         values, times = self.get_inference_data()
         if self.form == self.Form.NORMAL:
             mean, sigma = self.get_noise_log_likelihoods()
-            mean = mean._create_pymc3_model(pm_model, self)
-            sigma = sigma._create_pymc3_model(pm_model, self)
-            return pm.Normal(
-                self.name, mean, sigma, observed=values
+            mean, shape = mean._create_pymc3_model(pm_model, self, ops, shapes)
+            shapes[name] = shape
+            sigma, _ = sigma._create_pymc3_model(pm_model, self, ops, shapes)
+            ops[name] = pm.Normal(
+                name, mean, sigma, observed=values, shape=shape
             )
+            return ops[name], shapes[name]
         elif self.form == self.Form.LOGNORMAL:
             mean, sigma = self.get_noise_log_likelihoods()
-            mean = mean._create_pymc3_model(pm_model, self)
-            sigma = sigma._create_pymc3_model(pm_model, self)
-            return pm.LogNormal(
-                self.name, mean, sigma, observed=values
+            mean, shape = mean._create_pymc3_model(pm_model, self, ops, shapes)
+            shapes[name] = shape
+            sigma, _ = sigma._create_pymc3_model(pm_model, self, ops, shapes)
+            ops[name] = pm.LogNormal(
+                name, mean, sigma, observed=values, shape=shape
             )
+            return ops[name], shapes[name]
         elif self.form == self.Form.UNIFORM:
             lower, upper = self.get_noise_log_likelihoods()
-            lower = lower._create_pymc3_model(pm_model, self)
-            upper = upper._create_pymc3_model(pm_model, self)
-            return pm.Uniform(
-                self.name, lower, upper, observed=values
+            lower, shape = lower._create_pymc3_model(pm_model, self, ops, shapes)
+            shapes[name] = shape
+            upper, _ = upper._create_pymc3_model(pm_model, self, ops, shapes)
+            ops[name] = pm.Uniform(
+                name, lower, upper, observed=values, shape=shape
             )
+            return ops[name], shapes[name]
         elif self.form == self.Form.MODEL:
             parents = list(self.parents.order_by('id'))
             times = [
@@ -413,27 +427,33 @@ class LogLikelihood(models.Model):
                 if t is None:
                     times[i] = np.linspace(0, model.time_max, 20)
 
+            ts_shapes = [
+                t.shape for t in times
+            ]
+
             forward_model, fitted_children = self.create_forward_model(
                 times
             )
-            forward_model_op = ODEop(self.name, forward_model)
+            forward_model_op = ODEop(name, forward_model)
             all_params = pm.math.stack([
-                child._create_pymc3_model(pm_model, self)
+                child._create_pymc3_model(pm_model, self, ops, shapes)[0]
                 for child in fitted_children
             ])
-            op = pm.Deterministic(self.name, forward_model_op(all_params))
-            return op[parents.index(parent)]
-        elif self.form == self.Form.SUM:
-            return sum([
-                child._create_pymc3_model(pm_model, self)
-                for child in self.children.all()
-            ])
+            op = forward_model_op(all_params)
+            ops[name] = op
+            shapes[name] = ts_shapes
+            index = parents.index(parent)
+            return op[index], ts_shapes[index]
         elif self.form == self.Form.FIXED:
-            return self.value
+            return theano.shared(self.value), ()
 
-    def create_pymc3_model(self):
+    def create_pymc3_model(self, *other_log_likelihoods):
+        ops = {}
+        shapes = {}
         with pm.Model() as pm_model:
-            _ = self._create_pymc3_model(pm_model, self)
+            self._create_pymc3_model(pm_model, self, ops, shapes)
+            for ll in other_log_likelihoods:
+                ll._create_pymc3_model(pm_model, ll, ops, shapes)
         return pm_model
 
     def create_forward_model(self, output_times):
@@ -487,6 +507,18 @@ class LogLikelihood(models.Model):
             return df['values'].tolist(), df['times'].tolist()
         else:
             return None, None
+
+    def get_noise_names(self):
+        """
+        get ordered list of noise log_likelihoods
+        """
+        noise_parameters = self.parameters.filter(
+            index__isnull=False,
+        ).order_by('index')
+
+        return [
+            p.name for p in noise_parameters
+        ]
 
     def get_noise_log_likelihoods(self):
         """
@@ -554,14 +586,17 @@ class LogLikelihood(models.Model):
 
         raise RuntimeError('unknown log_likelihood form')
 
-    def get_model(self):
+    def get_model(self, variable=None):
         """
         if this is a log_likelihood that includes a mechanistic model
         this model is returned, else None
         """
         if self.form != self.Form.MODEL:
             return None
-        return self.variable.get_model()
+        if variable is None:
+            return self.variable.get_model()
+        else:
+            return variable.get_model()
 
     def get_model_variables(self):
         """
@@ -576,49 +611,80 @@ class LogLikelihood(models.Model):
                 Q(constant=True) | Q(state=True)
             ).exclude(name="time")
 
+    def get_model_outputs(self):
+        """
+        if this is a log_likelihood that includes a mechanistic model
+        return a list of model parameters, else return []
+        """
+        model = self.get_model()
+        if model is None:
+            return []
+        else:
+            return model.variables.filter(
+                Q(constant=False)
+            ).exclude(name="time")
+
     def save(self, force_insert=False, force_update=False, *args, **kwargs):
         created = not self.pk
 
-        if created:
-            model = self.get_model()
-            if model is not None:
-                self.name = model.name
+        set_defaults = (
+            created or
+            self.get_model() != self.get_model(self.__original_variable) or
+            self.form != self.__original_form
+        )
+
+        if set_defaults:
+            if self.form == self.Form.MODEL:
+                self.name = self.variable.get_model().name
 
         super().save(force_insert, force_update, *args, **kwargs)
 
-        # update children
-        old_children = list(self.children.all())
-        old_parameters = [
-            LogLikelihoodParameter.objects.get(parent=self, child=c)
-            for c in old_children
-        ]
+        # if the model or form is changed regenerate
+        # default children and parents
+        if set_defaults:
+            for child in self.children.all():
+                child.delete()
+            if self.form == self.Form.MODEL:
+                for parent in self.parents.all():
+                    parent.delete()
+                self.create_model_family()
+            self.create_noise_children()
 
-        # model parameteers
+        self.__original_variable = self.variable
+        self.__original_form = self.form
+
+    def create_model_family(self):
         for model_variable in self.get_model_variables():
-            index = None
-            for i, (c, p) in enumerate(zip(old_children, old_parameters)):
-                if (
-                    p.variable is not None and
-                    p.variable.id == model_variable.id
-                ):
-                    index = i
-            if index is None:
-                child = LogLikelihood.objects.create(
-                    name=model_variable.qname,
-                    inference=self.inference,
-                    value=model_variable.get_default_value(),
-                    form=self.Form.FIXED,
-                )
-                LogLikelihoodParameter.objects.create(
-                    parent=self, child=child,
-                    variable=model_variable,
-                    name=model_variable.qname,
-                )
-
+            if model_variable.constant:
+                name = model_variable.qname
             else:
-                del old_children[index]
-                del old_parameters[index]
+                name = model_variable.qname + ' initial condition'
+            child = LogLikelihood.objects.create(
+                name=name,
+                inference=self.inference,
+                value=model_variable.get_default_value(),
+                form=self.Form.FIXED,
+            )
+            LogLikelihoodParameter.objects.create(
+                parent=self, child=child,
+                variable=model_variable,
+                name=name,
+            )
 
+        for model_variable in self.get_model_outputs():
+            parent = LogLikelihood.objects.create(
+                name=model_variable.qname,
+                inference=self.inference,
+                form=self.Form.NORMAL,
+            )
+            # add the output_model
+            mean_param = parent.parameters.get(index=0)
+            mean_param.child = self
+            mean_param.name = model_variable.qname
+            mean_param.variable = model_variable
+            mean_param.save()
+
+    def create_noise_children(self):
         # distribution parameters
         variable = None
         if self.variable:
@@ -688,31 +754,17 @@ class LogLikelihood(models.Model):
             names = []
             defaults = []
         for param_index, (name, default) in enumerate(zip(names, defaults)):
-            index = None
-            for i, (c, p) in enumerate(zip(old_children, old_parameters)):
-                if (
-                    p.index == param_index
-                ):
-                    index = i
-            if index is None:
-                child = LogLikelihood.objects.create(
-                    name=name,
-                    inference=self.inference,
-                    value=default,
-                    form=self.Form.FIXED,
-                )
-                LogLikelihoodParameter.objects.create(
-                    parent=self, child=child,
-                    index=param_index,
-                    name=name,
-                )
-            else:
-                del old_children[index]
-                del old_parameters[index]
-
-        # remove children not in list above
-        for c in old_children:
-            c.delete()
+            child = LogLikelihood.objects.create(
+                name=name,
+                inference=self.inference,
+                value=default,
+                form=self.Form.FIXED,
+            )
+            LogLikelihoodParameter.objects.create(
+                parent=self, child=child,
+                index=param_index,
+                name=name,
+            )
 
     def create_stored_log_likelihood(self, inference, new_models):
         """
