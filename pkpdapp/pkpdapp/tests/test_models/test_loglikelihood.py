@@ -92,7 +92,6 @@ class TestInferenceMixinPkModel(TestCase):
         log_likelihood = LogLikelihood.objects.create(
             inference=self.inference,
             variable=self.model.variables.first(),
-            biomarker_type=self.biomarker_type,
             form=LogLikelihood.Form.MODEL
         )
 
@@ -104,6 +103,8 @@ class TestInferenceMixinPkModel(TestCase):
         outputs = []
         for output in log_likelihood.outputs.all():
             if output.variable.qname in output_names:
+                output.parent.biomarker_type = self.biomarker_type
+                output.parent.save()
                 outputs.append(output.parent)
             else:
                 output.parent.delete()
@@ -120,3 +121,5 @@ class TestInferenceMixinPkModel(TestCase):
         model[prior_name]
         for name in output_names:
             model[name]
+
+        model.logp({prior_name: 0.3})

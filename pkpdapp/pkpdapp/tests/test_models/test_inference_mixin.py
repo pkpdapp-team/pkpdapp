@@ -144,14 +144,8 @@ class TestInferenceMixinSingleOutputSampling(TestCase):
         )
         variables = model.variables.all()
         var_names = [v.qname for v in variables]
-        m = model.get_myokit_model()
-        s = model.get_myokit_simulator()
 
-        forward_model = MyokitForwardModel(
-            myokit_model=m,
-            myokit_simulator=s,
-            outputs="myokit.tumour_volume")
-
+        outputs
         output_names = forward_model.output_names()
         var_index = var_names.index(output_names[0])
 

@@ -249,40 +249,21 @@ class InferenceMixin:
         ]
 
         # create forwards models
-        self._model_log_likelihoods = [
+        self._observed_log_likelihoods = [
             ll
             for ll in log_likelihoods
-            if ll.is_a_model_log_likelihood()
+            if ll.has_data()
         ]
 
-        # create log_likelihoods and establish
-        # mapping between priors list and individual
-        # parameter lists of log_likelihoods
-        pints_log_likelihoods = []
-        priors_indicies_for_lls = []
-        for ll in self._model_log_likelihoods:
-            pints_log_likelihood, pints_log_likelihood_priors = \
-                ll.create_pints_log_likelihood()
+        pymc3_model = \
+            self._observed_log_likelihoods[0].create_pymc3_model(
+                self._observed_log_likelihoods[1:]
+            )
 
-            priors_indicies_for_ll = [
-                self._priors.index(prior)
-                for prior in pints_log_likelihood_priors
-            ]
-
-            pints_log_likelihoods.append(pints_log_likelihood)
-            priors_indicies_for_lls.append(priors_indicies_for_ll)
-
-        self._pints_log_likelihood = CombinedLogLikelihood(
-            pints_log_likelihoods,
-            priors_indicies_for_lls
+        self._pints_log_posterior = PyMC3LogPosterior(
+            pymc3_model, self._priors
         )
 
-        # get priors / boundaries, using variable ordering already established
-        # get all variables being fitted from priors
-        pints_log_priors = [
-            prior.create_pints_prior()
-            for prior in self._priors
-        ]
         pints_transforms = [
             prior.create_pints_transform()
             for prior in self._priors
@@ -298,16 +279,8 @@ class InferenceMixin:
         else:
             pints_boundaries = None
 
-        self._pints_composed_log_prior = pints.ComposedLogPrior(
-            *pints_log_priors
-        )
-
         pints_composed_transform = pints.ComposedTransformation(
             *pints_transforms
-        )
-        self._pints_log_posterior = pints.LogPosterior(
-            self._pints_log_likelihood,
-            self._pints_composed_log_prior
         )
 
         # transform function and boundaries
@@ -557,6 +530,19 @@ class InferenceMixin:
 
     def fixed_variables(self):
         return self._fixed_variables
+
+
+class PyMC3LogPosterior(pints.LogPDF):
+    def __init__(self, pymc3_model, priors):
+        self._prior_names = [p.name for p in priors]
+        self._model = pymc3_model
+        self._logp = pymc3_model.logp
+
+    def __call__(self, x):
+        call_dict = {
+            name: value for name, value in zip(self._prior_names, x)
+        }
+        return self._logp(call_dict)
 
 
 class CombinedLogLikelihood(pints.LogPDF):

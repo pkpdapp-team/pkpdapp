@@ -38,7 +38,7 @@ class MyokitForwardModel():
             [var.qname() for var in model.variables(const=False)]
         )
 
-        self._times = times
+        self._times = [np.array(t) for t in times]
         self._times_all = np.sort(list(set(np.concatenate(self._times))))
 
         self._output_indices = [
@@ -178,6 +178,10 @@ class MyokitForwardModel():
     def output_names(self):
         """ Returns outputs of model. """
         return self._output_names
+
+    def output_shapes(self):
+        """ Returns outputs of model. """
+        return [t.shape for t in self._times]
 
     def variable_parameter_names(self):
         """ The order expected for parameter inputs to simulate. """

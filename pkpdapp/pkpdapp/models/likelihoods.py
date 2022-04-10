@@ -59,6 +59,7 @@ class ODEop(theano.tensor.Op):
         self.name = name
         self._ode_model = ode_model
         self._n_outputs = ode_model.n_outputs()
+        self._output_shapes = ode_model.output_shapes()
         if sensitivities:
             self._cached_ode_model = SolveCached(self._ode_model.simulateS1)
         else:
@@ -88,7 +89,7 @@ class ODEop(theano.tensor.Op):
         self._vjp = vjp
 
     def infer_shape(self, fgraph, node, input_shapes):
-        return [input_shapes[0] for _ in range(self.n_outputs)]
+        return self._output_shapes
 
     def make_node(self, x):
         x = theano.tensor.as_tensor_variable(x)
@@ -281,6 +282,11 @@ class LogLikelihood(models.Model):
     __original_variable = None
     __original_form = None
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.__original_form = self.form
+        self.__original_variable = self.variable
+
     def is_a_distribution(self):
         return (
             self.form == self.Form.NORMAL or
@@ -288,13 +294,19 @@ class LogLikelihood(models.Model):
             self.form == self.Form.LOGNORMAL
         )
 
+    def has_data(self):
+        """
+        True for distributions where there is observed data
+        """
+        return self.biomarker_type is not None
+
     def is_a_prior(self):
         """
         True for distributions where there is no observed data
         """
         return (
             self.is_a_distribution() and
-            self.biomarker_type is not None
+            self.biomarker_type is None
         )
 
     def sample(self):
@@ -403,7 +415,7 @@ class LogLikelihood(models.Model):
             shapes[name] = shape
             sigma, _ = sigma._create_pymc3_model(pm_model, self, ops, shapes)
             ops[name] = pm.LogNormal(
-                name, mean, sigma, observed=values, shape=shape
+                name, mean, sigma, observed=values, shape=shape, transform=None
             )
             return ops[name], shapes[name]
         elif self.form == self.Form.UNIFORM:
@@ -412,7 +424,7 @@ class LogLikelihood(models.Model):
             shapes[name] = shape
             upper, _ = upper._create_pymc3_model(pm_model, self, ops, shapes)
             ops[name] = pm.Uniform(
-                name, lower, upper, observed=values, shape=shape
+                name, lower, upper, observed=values, shape=shape, transform=None
             )
             return ops[name], shapes[name]
         elif self.form == self.Form.MODEL:
@@ -428,7 +440,7 @@ class LogLikelihood(models.Model):
                     times[i] = np.linspace(0, model.time_max, 20)
 
             ts_shapes = [
-                t.shape for t in times
+                (len(t),) for t in times
             ]
 
             forward_model, fitted_children = self.create_forward_model(
