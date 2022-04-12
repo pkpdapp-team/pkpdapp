@@ -15,7 +15,9 @@ from pkpdapp.api.serializers import (
     AlgorithmSerializer,
 )
 from pkpdapp.models import (
-    Inference, InferenceChain, Algorithm,
+    Inference, InferenceChain, Algorithm, Dataset,
+    DosedPharmacokineticModel, PharmacodynamicModel,
+    Variable,
 )
 
 
@@ -45,10 +47,11 @@ class NaivePooledInferenceView(views.APIView):
         'burn_in': 0,
 
         # Model
-        'model': 5,
-        'protocols': [
-            3, 4, 5
-        ],
+        'model': {
+            'form': 'PK',
+            'id': 5
+        }
+        'dataset': 3,
 
         # Model parameters
         'parameters': {
@@ -70,42 +73,100 @@ class NaivePooledInferenceView(views.APIView):
         'observations': [
             {
                 'model': 'myokit.plasma_concentration',
-                'biomarker': 3,
-                '
-            }
-            'myokit.bacteria count'
+                'biomarker': 'concentration,
+            },
+            {
+                'model': 'myokit.bacteria_count',
+                'biomarker': 'bacteria,
+            },
         ]
-
-        # Data parameters
-        'dataset': 3,
-        'subject_groups': [
-            1, 2, 3
-        ],
-
-
     }
 
-    Uses model as the base model, and then creates a model for each
-    protocol listed, replacing the protocol of the model with the new one.
+    Uses model as the base model. If it is a PK or PKPD model, creates a model
+    for each protocol used in the dataset, replacing the protocol of the model
+    with each new one.
 
     This set of models has a set of parameters, and parameters of the same
-    name are assumed to be identical. All Variable fields from the original
+    qname are assumed to be identical. All Variable fields from the original
     model are copied over to the new models. Priors and fixed values for each
-    parameter in this set is provided in 'parameters'.
+    parameter in this set are provided in 'parameters'.
 
-
+    The 'observations' field maps model output variables with biomarkers in the
+    dataset
 
 
     """
 
     def post(self, request, format=None):
-        data = json.loads(request.body)
-        try:
-            inference = Inference.objects.get(pk=pk)
-        except Inference.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-
         errors = {}
+        data = json.loads(request.body)
+
+        if 'dataset' not in data:
+            try:
+                dataset = Dataset.objects.get(id=data['dataset'])
+            except Dataset.DoesNotExist:
+                errors['dataset'] = 'id {} not found'.format(data['dataset'])
+        else:
+            errors['dataset'] = 'field required'
+
+        model_table = None
+        model_id = None
+        if 'model' in data:
+            if 'form' in data['model']:
+                if data['model']['form'] == 'PK':
+                    model_table = DosedPharmacokineticModel
+                else:
+                    model_table = PharmacodynamicModel
+            else:
+                errors.get('model', {})['form'] = 'field required'
+            if 'id' in data['model']:
+                model_id = data['model']['id']
+            else:
+                errors.get('model', {})['id'] = 'field required'
+
+        else:
+            errors['model'] = 'field required'
+
+        if (
+            model_table is not None and
+            model_id is not None
+        ):
+            try:
+                model = model_table.objects.get(id=model_id)
+            except model_table.DoesNotExist:
+                errors['model'] = '{} id {} not found'.format(
+                    model_table, model_id
+                )
+
+        if 'parameters' in data:
+            for param, value in data['parameters'].items():
+                if model.variables.filter(qname=param).count() == 0:
+                    errors.get('parameters', {})[param] = 'not found in model'
+        else:
+            errors['parameters'] = 'field required'
+
+        if 'observations' in data:
+            for i, obs in enumerate(data['observations']):
+                model_var = obs['model']
+                biomarker = obs['biomarker']
+                if dataset.biomarkers.filter(name=biomarker).count() == 0:
+                    errors.get('observations', {}).get(i, {})['biomarker'] = \
+                        'not found in dataset'
+                if model.variables.filter(qname=model_var).count() == 0:
+                    errors.get('observations', {}).get(i, {})['model'] = \
+                        'not found in model'
+        else:
+            errors['observations'] = 'field required'
+
+        if errors:
+            return Response(errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+        protocols = Protocol.objects.filter(
+            projects
+            subjects__dataset__in=datset
+
+
         if inference.log_likelihoods.count() == 0:
             errors['log_likelihoods'] = (
                 'Inference must have at least one log_likelihood'
