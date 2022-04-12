@@ -157,7 +157,11 @@ class Inference(StoredModel):
             new_ll = log_likelihood.create_stored_log_likelihood(
                 self, new_models
             )
+
+            # delete auto-generated parents and children
             new_ll.children.all().delete()
+            new_ll.parents.all().delete()
+
             new_log_likelihoods.append(new_ll)
 
         # recreate children relationships using indicies

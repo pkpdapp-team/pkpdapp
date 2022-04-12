@@ -17,7 +17,6 @@ from pkpdapp.models import (
     MyokitForwardModel, SubjectGroup
 )
 
-
 class SolveCached:
     def __init__(self, function):
         self._cachedParam = None
@@ -60,7 +59,6 @@ class ODEop(theano.tensor.Op):
         self._ode_model = ode_model
         self._n_outputs = ode_model.n_outputs()
         self._output_shapes = ode_model.output_shapes()
-        print('output_shapes', self._output_shapes)
         if sensitivities:
             self._cached_ode_model = SolveCached(self._ode_model.simulateS1)
         else:
@@ -102,8 +100,6 @@ class ODEop(theano.tensor.Op):
     def perform(self, node, inputs_storage, output_storage):
         x = inputs_storage[0]
         outs = self._function(x)
-        shapes = [out.shape for out in outs]
-        print('perform', shapes)
         for i in range(self._n_outputs):
             output_storage[i][0] = outs[i]
 
@@ -409,10 +405,7 @@ class LogLikelihood(models.Model):
             mean, sigma = self.get_noise_log_likelihoods()
             mean, shape = mean._create_pymc3_model(pm_model, self, ops, shapes)
             shapes[name] = shape
-            print('creating normal with shape', shape, name, len(values), mean.shape,
-                  mean - values)
             sigma, _ = sigma._create_pymc3_model(pm_model, self, ops, shapes)
-            print('sigma shape', sigma.shape)
             ops[name] = pm.Normal(
                 name, mean, 1, observed=values, shape=shape
             )
@@ -444,8 +437,6 @@ class LogLikelihood(models.Model):
                 parent.name for parent in parents
             ]
 
-            print('got times', times)
-            print('got names', names)
             # fill in any missing data with some fake times
             model = self.get_model()
             for i, t in enumerate(times):
@@ -455,7 +446,6 @@ class LogLikelihood(models.Model):
             ts_shapes = [
                 (len(t),) for t in times
             ]
-            print('got ts_shapes', ts_shapes)
 
             forward_model, fitted_children = self.create_forward_model(
                 times
@@ -469,8 +459,6 @@ class LogLikelihood(models.Model):
             ops[name] = op
             shapes[name] = ts_shapes
             index = parents.index(parent)
-            print('op[index]', op[index].get_test_value().shape, index)
-            print('parent', parent, index, parents, op[index] - times[index])
             return op[index], ts_shapes[index]
         elif self.form == self.Form.FIXED:
             return theano.shared(self.value), ()

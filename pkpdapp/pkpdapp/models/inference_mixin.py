@@ -8,6 +8,9 @@ from django.db import transaction
 import numpy as np
 import pints
 import time
+import theano.tensor as tt
+from theano.compile.io import In
+import theano
 import scipy.stats as sps
 from tdigest import TDigest
 from pkpdapp.models import (
@@ -79,7 +82,7 @@ class ChainWriter:
                 for i, prior in enumerate(self._priors):
                     inference_results.append(InferenceResult(
                         chain=chain,
-                        prior=prior,
+                        log_likelihood=prior,
                         iteration=iteration,
                         value=x0[i]
                     ))
@@ -103,7 +106,7 @@ class OutputWriter:
 
     def __init__(self, chains,
                  log_likelihoods,
-                 combined_log_likelihood,
+                 pints_log_posterior,
                  use_every_n_sample=1,
                  buffer_size=100,
                  store_output_range=True):
@@ -116,8 +119,10 @@ class OutputWriter:
         self._chains = chains
 
         self._log_likelihoods = log_likelihoods
-        self._combined_log_likelihood = combined_log_likelihood
-        self._times, self._values = combined_log_likelihood.get_measured_data()
+        self._pints_log_posterior = pints_log_posterior
+        data = [ll.get_inference_data() for ll in log_likelihoods]
+        self._values = [d[0] for d in data]
+        self._times = [d[1] for d in data]
         self._tdigests = [
             [
                 [
@@ -130,39 +135,39 @@ class OutputWriter:
 
         self._use_every_n_sample = use_every_n_sample
         self._store_output_range = store_output_range
-        self._outputs = self.initialise_outputs()
+        self._outputs = [
+            self.initialise_outputs(chain) for chain in self._chains
+        ]
         self._buffer = 0
         self._buffer_size = buffer_size
         self._updated = False
 
-    def initialise_outputs(self):
+    def initialise_outputs(self, chain):
         outputs = []
         outputs_count = InferenceOutputResult.objects.filter(
-            chain__in=self._chains,
+            chain=chain,
             log_likelihood__in=self._log_likelihoods,
         ).count()
         if outputs_count != (
-                sum([len(times) for times in self._times]) *
-                len(self._chains)
+                sum([len(times) for times in self._times])
         ):
             InferenceOutputResult.objects.filter(
-                chain__in=self._chains,
+                chain=chain,
                 log_likelihood__in=self._log_likelihoods,
             ).delete()
-            for chain in self._chains:
-                for log_likelihood, times, values in zip(
-                    self._log_likelihoods, self._times, self._values
-                ):
-                    for time_val, value in zip(times, values):
-                        outputs.append(InferenceOutputResult.objects.create(
-                            log_likelihood=self._log_likelihood,
-                            chain=chain,
-                            median=0,
-                            percentile_min=0,
-                            percentile_max=0,
-                            data=value,
-                            time=time_val,
-                        ))
+            for log_likelihood, times, values in zip(
+                self._log_likelihoods, self._times, self._values
+            ):
+                for time_val, value in zip(times, values):
+                    outputs.append(InferenceOutputResult.objects.create(
+                        log_likelihood=log_likelihood,
+                        chain=chain,
+                        median=0,
+                        percentile_min=0,
+                        percentile_max=0,
+                        data=value,
+                        time=time_val,
+                    ))
             return outputs
 
     def append(self, x0s, iteration):
@@ -173,24 +178,24 @@ class OutputWriter:
             self.write()
 
     def write(self):
-        output_index = 0
-        for x0_buffer, tdigests_for_chain, chain in zip(
-            self._x0_buffers, self._tdigests, self._chains
+        for x0_buffer, tdigests_for_chain, chain, outputs in zip(
+            self._x0_buffers, self._tdigests, self._chains, self._outputs
         ):
             if self._store_output_range:
                 for iteration, x0 in zip(
                     self._iterations, x0_buffer
                 ):
+                    if iteration % self._use_every_n_sample != 0:
+                        continue
+                    output_index = 0
                     results = \
-                        self._combined_log_likelihood.sample_generative_model(
-                            x0
+                        self._pints_log_posterior.sample_generative_model(
+                            self._pints_log_posterior.to_search(x0)
                         )
                     for times, tdigests, result in zip(
                         self._times, tdigests_for_chain, results
                     ):
 
-                        if iteration % self._use_every_n_sample != 0:
-                            continue
 
                         for i in range(len(times)):
                             value = result[i]
@@ -198,27 +203,30 @@ class OutputWriter:
                             maximum = tdigests[i].percentile(90)
                             minimum = tdigests[i].percentile(10)
                             median = tdigests[i].percentile(50)
-                            self._outputs[output_index].median = median
-                            self._outputs[output_index].percentile_min = minimum
-                            self._outputs[output_index].percentile_max = maximum
+                            outputs[output_index].median = median
+                            outputs[output_index].percentile_min = minimum
+                            outputs[output_index].percentile_max = maximum
                             output_index += 1
             else:
                 # just use the last parameter values
+                output_index = 0
                 x0 = x0_buffer[-1]
                 results_min, results, results_max = \
-                    self._combined_log_likelihood.generative_model_range(x0)
+                    self._pints_log_posterior.generative_model_range(
+                        self._pints_log_posterior.to_search(x0)
+                    )
                 for times, tdigests, result, result_min, result_max in zip(
                     self._times, tdigests_for_chain, results, results_min,
                     results_max
                 ):
                     for i in range(len(times)):
-                        self._outputs[output_index].median = result[i]
-                        self._outputs[output_index].percentile_min = result_min[i]
-                        self._outputs[output_index].percentile_max = result_max[i]
+                        outputs[output_index].median = result[i]
+                        outputs[output_index].percentile_min = result_min[i]
+                        outputs[output_index].percentile_max = result_max[i]
                         output_index += 1
 
-        with transaction.atomic():
-            [output.save() for output in self._outputs]
+            with transaction.atomic():
+                [output.save() for output in outputs]
 
         self._iterations = []
         self._x0_buffers = [
@@ -247,6 +255,9 @@ class InferenceMixin:
             for ll in log_likelihoods
             if ll.is_a_prior()
         ]
+        print('priors are')
+        for p in self._priors:
+            print(p.name, p.form)
 
         # create forwards models
         self._observed_log_likelihoods = [
@@ -255,38 +266,21 @@ class InferenceMixin:
             if ll.has_data()
         ]
 
+        if len(self._observed_log_likelihoods) == 0:
+            raise RuntimeError(
+                'Error: must have at least one observed random variable '
+                'in model'
+            )
+
         pymc3_model = \
             self._observed_log_likelihoods[0].create_pymc3_model(
                 *self._observed_log_likelihoods[1:]
             )
 
         self._pints_log_posterior = PyMC3LogPosterior(
-            pymc3_model, self._priors
+            pymc3_model, self._observed_log_likelihoods, self._priors,
+            optimisation=(self.inference.algorithm.category == 'OP')
         )
-
-
-        if all([p.form == p.Form.UNIFORM for p in self._priors]):
-            lower = []
-            upper = []
-            for p in self._priors:
-                noise_params = p.get_noise_params()
-                lower.append(noise_params[0])
-                upper.append(noise_params[1])
-            pints_boundaries = pints.RectangularBoundaries(lower, upper)
-        else:
-            pints_boundaries = None
-
-        # if doing an optimisation use a probability based error to maximise
-        # the posterior
-        if self.inference.algorithm.category == 'OP':
-            self._pints_log_posterior = (
-                pints.ProbabilityBasedError(
-                    self._pints_log_posterior
-                )
-            )
-        # if doing a sampler, we can't use boundaries
-        else:
-            pints_boundaries = None
 
         # create chains if not exist
         if self.inference.chains.count() == 0:
@@ -318,7 +312,7 @@ class InferenceMixin:
                 print('restarting chains!')
                 for prior in self._priors:
                     this_chain = InferenceResult.objects.filter(
-                        prior=prior,
+                        log_likelihood=prior,
                         chain=chain
                     )
                     x0.append(
@@ -328,7 +322,9 @@ class InferenceMixin:
                     )
                 x0 = np.array(x0)
             else:
-                x0 = self._pints_composed_log_prior.sample().flatten()
+                x0 = np.array(
+                    [p.sample() for p in self._priors]
+                )
                 if (
                     self.inference.initialization_strategy ==
                     Inference.InitializationStrategy.DEFAULT_VALUE
@@ -360,17 +356,10 @@ class InferenceMixin:
                         except InferenceResult.DoesNotExist:
                             pass
 
-                # sim = self._pints_forward_model.simulate(x0, self._times[0])
-
-                # plt.plot(self._times[0], sim, label='sim')
-                # plt.plot(self._times[0], self._values[0], label='data')
-                # plt.legend()
-                # plt.savefig('test.pdf')
-
                 # write x0 to empty chain
                 self.inference.number_of_function_evals += 1
                 fn_val = self._pints_log_posterior(
-                    pints_composed_transform.to_search(x0)
+                    self._pints_log_posterior.to_search(x0)
                 )
                 print('starting function value', fn_val)
                 self.write_inference_results(
@@ -382,21 +371,12 @@ class InferenceMixin:
             sigma0 = x0**2
             sigma0[sigma0 == 0] = 1
             # Use to create diagonal matrix
-            sigma0 = np.diag(0.01 * sigma0)
-            sigma0 = pints_composed_transform.convert_covariance_matrix(
-                sigma0, x0
+            sigma0 = 0.01 * sigma0
+            print('sigma0', sigma0)
+            x0 = self._pints_log_posterior.to_search(x0)
+            self._inference_objects.append(
+                self._inference_method(x0, sigma0)
             )
-            x0 = pints_composed_transform.to_search(x0)
-            if pints_boundaries is None:
-                self._inference_objects.append(
-                    self._inference_method(x0, sigma0)
-                )
-            else:
-                self._inference_objects.append(
-                    self._inference_method(
-                        x0, boundaries=self._pints_boundaries
-                    )
-                )
 
     @ staticmethod
     def get_inference_type_and_method(inference):
@@ -442,7 +422,7 @@ class InferenceMixin:
                 x = obj.xbest()
                 score = obj.fbest()
 
-            x0s.append(self._pints_composed_transform.to_model(x))
+            x0s.append(self._pints_log_posterior.to_model(x))
             fn_values.append(score)
         writer.append(fn_values, x0s, self.inference.number_of_iterations)
         output_writer.append(x0s, self.inference.number_of_iterations)
@@ -477,8 +457,8 @@ class InferenceMixin:
 
         output_writer = OutputWriter(
             self.inference.chains.all(),
-            self._model_log_likelihoods,
-            self._combined_log_likelihood,
+            self._observed_log_likelihoods,
+            self._pints_log_posterior,
             use_every_n_sample=evaluate_model_every_n_iterations,
             buffer_size=write_every_n_iteration,
             store_output_range=self.inference.algorithm.category == 'SA'
@@ -513,16 +493,153 @@ class InferenceMixin:
 
 
 class PyMC3LogPosterior(pints.LogPDF):
-    def __init__(self, pymc3_model, priors):
-        self._prior_names = [p.name for p in priors]
-        self._model = pymc3_model
-        self._logp = pymc3_model.logp
+    def __init__(self, model, log_likelihoods, priors, optimisation=False):
+        self._transforms = [
+            model[p.name].distribution.transform for p in priors
+        ]
+        self._transform_names = [
+            t if t is None else t.name for t in self._transforms
+        ]
+        self._transform_backwards = [
+            self._transform_backward(t) for t in self._transforms
+        ]
+        self._transform_forwards = [
+            self._transform_forward(t) for t in self._transforms
+        ]
+        self._prior_names = [
+            self._get_name(p, t) for p, t in zip(priors, self._transforms)
+        ]
+        self._log_likelihoods = log_likelihoods
+        self._log_likelihood_names = [
+            self._get_name(ll, None) for ll in log_likelihoods
+        ]
+        self._posterior_predictive = model.fastfn([
+            model[name] for name in self._log_likelihood_names
+        ])
+        self._model = model
+        self._logp = model.logp
+        if optimisation:
+            def function(x):
+                return -self._logp(x)
+            self._function = function
+        else:
+            self._function = self._logp
+
+    @staticmethod
+    def _transform_forward(transform):
+        x = tt.dscalar('x')
+        x.tag.test_value = 1.0
+        if transform is None:
+            z = x
+        else:
+            z = transform.forward(x)
+        return theano.function([x], z)
+
+    @staticmethod
+    def _transform_backward(transform):
+        x = tt.dscalar('x')
+        x.tag.test_value = 1.0
+        if transform is None:
+            z = x
+        else:
+            z = transform.backward(x)
+        return theano.function([x], z)
+
+    def _get_name(self, prior, transform):
+        if transform is None:
+            return prior.name
+        return prior.name + '_{}__'.format(transform.name)
+
+    def to_search(self, x):
+        return np.array([
+            t(xi) for xi, t in zip(x, self._transform_forwards)
+        ])
+
+    def to_model(self, x):
+        return np.array([
+            t(xi) for xi, t in zip(x, self._transform_backwards)
+        ])
 
     def __call__(self, x):
         call_dict = {
             name: value for name, value in zip(self._prior_names, x)
         }
-        return self._logp(call_dict)
+        return self._function(call_dict)
+
+    def generative_model_range(self, x):
+        call_dict = {
+            name: value for name, value in zip(self._prior_names, x)
+        }
+        results = self._posterior_predictive(call_dict)
+        values = []
+        values_min = []
+        values_max = []
+        for output_values, log_likelihood in zip(results, self._log_likelihoods):
+            #noise_params = x[problem.n_parameters():]
+            #if isinstance(log_likelihood, pints.GaussianLogLikelihood):
+            #    for i in range(len(output_values)):
+            #        dist = sps.norm(
+            #            loc=output_values[i],
+            #            scale=noise_params[0]
+            #        )
+            #        output_values_min[i] = dist.ppf(.1)
+            #        output_values_max[i] = dist.ppf(.9)
+            #elif isinstance(
+            #    log_likelihood, pints.GaussianKnownSigmaLogLikelihood
+            #):
+            #    for i in range(len(output_values)):
+            #        dist = sps.norm(
+            #            loc=output_values[i],
+            #            scale=np.sqrt(1 / log_likelihood._isigma2)
+            #        )
+            #        output_values_min[i] = dist.ppf(.1)
+            #        output_values_max[i] = dist.ppf(.9)
+            #elif isinstance(log_likelihood, pints.LogNormalLogLikelihood):
+            #    for i in range(len(output_values)):
+            #        dist = sps.lognorm(
+            #            loc=output_values[i],
+            #            scale=noise_params[0]
+            #        )
+            #        output_values_min[i] = dist.ppf(.1)
+            #        output_values_max[i] = dist.ppf(.9)
+
+            values.append(output_values)
+            values_min.append(output_values)
+            values_max.append(output_values)
+        return values_min, values, values_max
+
+    def sample_generative_model(self, x):
+        call_dict = {
+            name: value for name, value in zip(self._prior_names, x)
+        }
+        results = self._posterior_predictive(call_dict)
+        sampled_values = []
+        for output_values, log_likelihood in zip(results, self._log_likelihoods):
+            #noise_params = x[problem.n_parameters():]
+            #if isinstance(log_likelihood, pints.GaussianLogLikelihood):
+            #    output_values += np.random.normal(
+            #        scale=noise_params[0],
+            #        size=output_values.shape
+            #    )
+            #elif isinstance(
+            #    log_likelihood, pints.GaussianKnownSigmaLogLikelihood
+            #):
+            #    output_values += np.random.normal(
+            #        scale=np.sqrt(1 / log_likelihood._isigma2),
+            #        size=output_values.shape
+            #    )
+            #elif isinstance(log_likelihood, pints.LogNormalLogLikelihood):
+            #    output_values += (
+            #        np.random.lognormal(
+            #            sigma=noise_params[0],
+            #            size=output_values.shape
+            #        )
+            #    )
+            sampled_values.append(output_values)
+
+        return sampled_values
+
+
 
 
 class CombinedLogLikelihood(pints.LogPDF):

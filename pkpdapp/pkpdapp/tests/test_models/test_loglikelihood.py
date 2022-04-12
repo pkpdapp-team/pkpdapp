@@ -112,7 +112,7 @@ class TestInferenceMixinPkModel(TestCase):
         # add a prior on the first param
         first_param = log_likelihood.parameters.first()
         prior_name = first_param.name
-        first_param.child.form = LogLikelihood.Form.UNIFORM
+        first_param.child.form = LogLikelihood.Form.NORMAL
         first_param.child.save()
 
         model = outputs[0].create_pymc3_model(outputs[1])
