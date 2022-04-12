@@ -60,6 +60,7 @@ class ODEop(theano.tensor.Op):
         self._ode_model = ode_model
         self._n_outputs = ode_model.n_outputs()
         self._output_shapes = ode_model.output_shapes()
+        print('output_shapes', self._output_shapes)
         if sensitivities:
             self._cached_ode_model = SolveCached(self._ode_model.simulateS1)
         else:
@@ -101,8 +102,10 @@ class ODEop(theano.tensor.Op):
     def perform(self, node, inputs_storage, output_storage):
         x = inputs_storage[0]
         outs = self._function(x)
+        shapes = [out.shape for out in outs]
+        print('perform', shapes)
         for i in range(self._n_outputs):
-            output_storage[i][0] = outs[0]
+            output_storage[i][0] = outs[i]
 
     def grad(self, inputs, output_grads):
         x = inputs[0]
@@ -207,7 +210,9 @@ class LogLikelihood(models.Model):
         related_name='log_likelihoods',
         blank=True, null=True,
         on_delete=models.CASCADE,
-        help_text='a variable (any) in the deterministic model.'
+        help_text=(
+            'If form=MODEL, a variable (any) in the deterministic model. '
+        )
     )
 
     biomarker_type = models.ForeignKey(
@@ -404,9 +409,12 @@ class LogLikelihood(models.Model):
             mean, sigma = self.get_noise_log_likelihoods()
             mean, shape = mean._create_pymc3_model(pm_model, self, ops, shapes)
             shapes[name] = shape
+            print('creating normal with shape', shape, name, len(values), mean.shape,
+                  mean - values)
             sigma, _ = sigma._create_pymc3_model(pm_model, self, ops, shapes)
+            print('sigma shape', sigma.shape)
             ops[name] = pm.Normal(
-                name, mean, sigma, observed=values, shape=shape
+                name, mean, 1, observed=values, shape=shape
             )
             return ops[name], shapes[name]
         elif self.form == self.Form.LOGNORMAL:
@@ -415,7 +423,7 @@ class LogLikelihood(models.Model):
             shapes[name] = shape
             sigma, _ = sigma._create_pymc3_model(pm_model, self, ops, shapes)
             ops[name] = pm.LogNormal(
-                name, mean, sigma, observed=values, shape=shape, transform=None
+                name, mean, sigma, observed=values, shape=shape
             )
             return ops[name], shapes[name]
         elif self.form == self.Form.UNIFORM:
@@ -424,7 +432,7 @@ class LogLikelihood(models.Model):
             shapes[name] = shape
             upper, _ = upper._create_pymc3_model(pm_model, self, ops, shapes)
             ops[name] = pm.Uniform(
-                name, lower, upper, observed=values, shape=shape, transform=None
+                name, lower, upper, observed=values, shape=shape
             )
             return ops[name], shapes[name]
         elif self.form == self.Form.MODEL:
@@ -432,16 +440,22 @@ class LogLikelihood(models.Model):
             times = [
                 parent.get_inference_data()[1] for parent in parents
             ]
+            names = [
+                parent.name for parent in parents
+            ]
 
+            print('got times', times)
+            print('got names', names)
             # fill in any missing data with some fake times
             model = self.get_model()
             for i, t in enumerate(times):
                 if t is None:
-                    times[i] = np.linspace(0, model.time_max, 20)
+                    times[i] = np.linspace(0, model.time_max, 21)
 
             ts_shapes = [
                 (len(t),) for t in times
             ]
+            print('got ts_shapes', ts_shapes)
 
             forward_model, fitted_children = self.create_forward_model(
                 times
@@ -455,6 +469,8 @@ class LogLikelihood(models.Model):
             ops[name] = op
             shapes[name] = ts_shapes
             index = parents.index(parent)
+            print('op[index]', op[index].get_test_value().shape, index)
+            print('parent', parent, index, parents, op[index] - times[index])
             return op[index], ts_shapes[index]
         elif self.form == self.Form.FIXED:
             return theano.shared(self.value), ()
@@ -675,6 +691,7 @@ class LogLikelihood(models.Model):
                 name=name,
                 inference=self.inference,
                 value=model_variable.get_default_value(),
+                variable=model_variable,
                 form=self.Form.FIXED,
             )
             LogLikelihoodParameter.objects.create(
@@ -687,11 +704,14 @@ class LogLikelihood(models.Model):
             parent = LogLikelihood.objects.create(
                 name=model_variable.qname,
                 inference=self.inference,
+                variable=model_variable,
                 form=self.Form.NORMAL,
             )
             # add the output_model
             mean_param = parent.parameters.get(index=0)
+            old_mean = mean_param.child
             mean_param.child = self
+            old_mean.delete()
             mean_param.name = model_variable.qname
             mean_param.variable = model_variable
             mean_param.save()
@@ -707,12 +727,16 @@ class LogLikelihood(models.Model):
                 variable = first_output.variable
             elif first_output.parent.variable:
                 variable = first_output.parent.variable
+        elif self.parameters.count() > 0:
+            for param in self.parameters.all():
+                if param.variable:
+                    variable = param.variable
 
         if self.form == self.Form.NORMAL:
             if variable is not None:
                 names = [
-                    "mean for " + variable.name,
-                    "standard deviation for " + variable.name,
+                    "mean for " + variable.qname,
+                    "standard deviation for " + variable.qname,
                 ]
             else:
                 names = [
@@ -729,8 +753,8 @@ class LogLikelihood(models.Model):
         elif self.form == self.Form.LOGNORMAL:
             if variable is not None:
                 names = [
-                    "mean for " + variable.name,
-                    "sigma for " + variable.name,
+                    "mean for " + variable.qname,
+                    "sigma for " + variable.qname,
                 ]
             else:
                 names = [
@@ -747,8 +771,8 @@ class LogLikelihood(models.Model):
         elif self.form == self.Form.UNIFORM:
             if variable is not None:
                 names = [
-                    "lower for " + variable.name,
-                    "upper for " + variable.name,
+                    "lower for " + variable.qname,
+                    "upper for " + variable.qname,
                 ]
             else:
                 names = [
@@ -782,6 +806,7 @@ class LogLikelihood(models.Model):
         """
         create stored log_likelihood, ignoring children for now
         """
+        print('create_stored_log_likelihood', self.name)
         new_variable = None
         if self.variable is not None:
             old_model = self.variable.get_model()
@@ -794,6 +819,7 @@ class LogLikelihood(models.Model):
 
         stored_log_likelihood_kwargs = {
             'inference': inference,
+            'name': self.name,
             'value': self.value,
             'variable': new_variable,
             'biomarker_type': self.biomarker_type,

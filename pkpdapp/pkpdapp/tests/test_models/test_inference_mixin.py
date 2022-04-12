@@ -44,24 +44,11 @@ class TestInferenceMixinPkModel(TestCase):
         )
 
         model = DosedPharmacokineticModel.objects.create(
+            name='my wonderful model',
             pharmacokinetic_model=pk,
             dose_compartment='central',
             protocol=protocol,
         )
-
-        variables = model.variables.all()
-        var_names = [v.qname for v in variables]
-        m = model.get_myokit_model()
-        s = model.get_myokit_simulator()
-
-        forward_model = MyokitForwardModel(
-            myokit_model=m,
-            myokit_simulator=s,
-            outputs="central.drug_c_concentration"
-        )
-
-        output_names = forward_model.output_names()
-        var_index = var_names.index(output_names[0])
 
         self.inference = Inference.objects.create(
             name='bob',
@@ -70,28 +57,33 @@ class TestInferenceMixinPkModel(TestCase):
             algorithm=Algorithm.objects.get(name='Haario-Bardenet'),
         )
         log_likelihood = LogLikelihood.objects.create(
-            variable=variables[var_index],
+            variable=model.variables.first(),
             inference=self.inference,
-            biomarker_type=biomarker_type,
-            form=LogLikelihood.Form.NORMAL
+            form=LogLikelihood.Form.MODEL
         )
 
-        # find variables that are being estimated
-        parameter_names = forward_model.variable_parameter_names()
-        var_indices = [var_names.index(v) for v in parameter_names]
-        for i in var_indices:
-            param = log_likelihood.parameters.get(
-                variable=variables[i]
-            )
+        # remove all outputs except
+        output_names = [
+            'central.drug_c_concentration',
+        ]
+        outputs = []
+        for output in log_likelihood.outputs.all():
+            if output.variable.qname in output_names:
+                output.parent.biomarker_type = biomarker_type
+                output.parent.save()
+                outputs.append(output.parent)
+            else:
+                for param in output.parent.parameters.all():
+                    if param != output:
+                        param.child.delete()
+                output.parent.delete()
+
+        # set uniform prior on everything, except amounts
+        for param in log_likelihood.parameters.all():
             if '_amount' in param.name:
                 param.set_fixed(0)
             else:
                 param.set_uniform_prior(0.0, 0.1)
-        noise_param = log_likelihood.parameters.get(
-            variable__isnull=True,
-            index=1,
-        )
-        noise_param.set_uniform_prior(0.0, 2.0)
 
         # 'run' inference to create copies of models
         self.inference.run_inference(test=True)
@@ -145,8 +137,8 @@ class TestInferenceMixinSingleOutputSampling(TestCase):
         variables = model.variables.all()
         var_names = [v.qname for v in variables]
 
-        outputs
-        output_names = forward_model.output_names()
+        outputs = model.variables.filter(constant=False)
+        output_names = [output.qname for output in outputs]
         var_index = var_names.index(output_names[0])
 
         self.inference = Inference.objects.create(
@@ -158,8 +150,7 @@ class TestInferenceMixinSingleOutputSampling(TestCase):
         log_likelihood = LogLikelihood.objects.create(
             variable=variables[var_index],
             inference=self.inference,
-            biomarker_type=biomarker_type,
-            form=LogLikelihood.Form.NORMAL
+            form=LogLikelihood.Form.MODEL
         )
 
         # find variables that are being estimated

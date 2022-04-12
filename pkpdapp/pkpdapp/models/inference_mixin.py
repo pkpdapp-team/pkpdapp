@@ -257,17 +257,14 @@ class InferenceMixin:
 
         pymc3_model = \
             self._observed_log_likelihoods[0].create_pymc3_model(
-                self._observed_log_likelihoods[1:]
+                *self._observed_log_likelihoods[1:]
             )
 
         self._pints_log_posterior = PyMC3LogPosterior(
             pymc3_model, self._priors
         )
 
-        pints_transforms = [
-            prior.create_pints_transform()
-            for prior in self._priors
-        ]
+
         if all([p.form == p.Form.UNIFORM for p in self._priors]):
             lower = []
             upper = []
@@ -278,23 +275,6 @@ class InferenceMixin:
             pints_boundaries = pints.RectangularBoundaries(lower, upper)
         else:
             pints_boundaries = None
-
-        pints_composed_transform = pints.ComposedTransformation(
-            *pints_transforms
-        )
-
-        # transform function and boundaries
-        self._pints_log_posterior = (
-            pints_composed_transform.convert_log_pdf(
-                self._pints_log_posterior
-            )
-        )
-        if pints_boundaries is not None:
-            pints_boundaries = (
-                pints_composed_transform.convert_boundaries(
-                    pints_boundaries
-                )
-            )
 
         # if doing an optimisation use a probability based error to maximise
         # the posterior
