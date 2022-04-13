@@ -18,9 +18,6 @@ class DatasetSerializer(serializers.ModelSerializer):
     biomarker_types = serializers.PrimaryKeyRelatedField(
         many=True, read_only=True
     )
-    protocols = ProtocolSerializer(
-        many=True, read_only=True
-    )
     subjects = serializers.PrimaryKeyRelatedField(
         many=True, read_only=True
     )
@@ -32,10 +29,11 @@ class DatasetSerializer(serializers.ModelSerializer):
 
     def get_groups(self, dataset):
         groups = {}
+        print('get_groups')
         for s in dataset.subjects.all():
-            if s.group not in groups:
-                groups[s.group] = []
-            groups[s.group].append(s.pk)
+            for group in s.groups.all():
+                groups.get(group, []).append(s.pk)
+        print('returning', groups)
         return groups
 
 

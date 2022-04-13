@@ -6,16 +6,259 @@
 
 from rest_framework import status
 from django.contrib.auth.models import User
+import json
 from rest_framework.test import APITestCase, APIClient
 from pkpdapp.models import (
-    Inference,
+    Inference, Dataset,
     PharmacokineticModel, DosedPharmacokineticModel,
     Protocol, Unit,
     LogLikelihood,
     Project, BiomarkerType,
     PriorUniform, MyokitForwardModel,
     InferenceMixin, Algorithm,
+    PharmacodynamicModel,
 )
+
+
+class TestNaivePooledInferenceView(APITestCase):
+    def setUp(self):
+        self.project = Project.objects.get(
+            name='demo',
+        )
+
+        user = User.objects.get(username='demo')
+        self.client = APIClient()
+        self.client.force_authenticate(user=user)
+
+    def test_pd_inference_runs(self):
+        pd_dataset = Dataset.objects.get(
+            name='lxf_control_growth'
+        )
+
+        pd_biomarker_name = 'Tumour volume'
+
+        pd_model = PharmacodynamicModel.objects.get(
+            name='tumour_growth_inhibition_model_koch',
+            read_only=False,
+        )
+        pd_output_name = 'myokit.tumour_volume'
+        pd_parameter_names = [
+            v.qname for v in pd_model.variables.filter(constant=True)
+        ]
+
+        data = {
+            # Inference parameters
+            'name': "test inference run",
+            'project': self.project.id,
+            'algorithm': Algorithm.objects.get(name='XNES').id,
+            'initialization_strategy': 'R',
+            'number_of_chains': 4,
+            'max_number_of_iterations': 11,
+            'burn_in': 0,
+
+            # Model
+            'model': {
+                'form': 'PD',
+                'id': pd_model.id
+            },
+            'dataset': pd_dataset.id,
+
+            # Model parameters
+            'parameters': {
+                pd_parameter_names[0]: {
+                    'form': 'N',
+                    'parameters': [0, 1],
+                },
+                pd_parameter_names[1]: {
+                    'form': 'U',
+                    'parameters': [-1, 1],
+                },
+                pd_parameter_names[2]: {
+                    'form': 'F',
+                    'parameters': [0.1],
+                }
+            },
+            # output
+            'observations': [
+                {
+                    'model': pd_output_name,
+                    'biomarker': pd_biomarker_name,
+                },
+            ]
+        }
+        response = self.client.post(
+            "/api/inference/naive_pooled", data, format='json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response_data = response.data
+
+        # check inference fields
+        self.assertEqual(response_data['name'], 'test inference run')
+        self.assertEqual(response_data['project'], self.project.id)
+        self.assertEqual(response_data['initialization_strategy'], 'R')
+
+        # check number of log_likelihoods, and that the model ll is there
+        self.assertEqual(len(response_data['log_likelihoods']), 12)
+        found_it = False
+        for ll in response_data['log_likelihoods']:
+            if ll['name'] == 'tumour_growth_inhibition_model_koch':
+                found_it = True
+                self.assertEqual(len(ll['parameters']), 5)
+                model_id = ll['id']
+        self.assertTrue(found_it)
+
+        # check that the output log_likelihood is there and looks ok
+        found_it = False
+        for ll in response_data['log_likelihoods']:
+            if ll['name'] == pd_output_name:
+                found_it = True
+                self.assertEqual(len(ll['parameters']), 2)
+                self.assertEqual(ll['parameters'][0]['name'],
+                                 pd_output_name)
+                self.assertEqual(ll['parameters'][0]['child'], model_id)
+        self.assertTrue(found_it)
+
+        # check that the param 1 log_likelihood is there and looks ok
+        found_it = False
+        for ll in response_data['log_likelihoods']:
+            if ll['name'] == pd_parameter_names[1]:
+                found_it = True
+                self.assertEqual(ll['form'], 'U')
+                self.assertEqual(len(ll['parameters']), 2)
+                child_id = ll['parameters'][0]['child']
+        self.assertTrue(found_it)
+        found_it = False
+        for ll in response_data['log_likelihoods']:
+            if ll['id'] == child_id:
+                found_it = True
+                self.assertEqual(ll['form'], 'F')
+                self.assertEqual(ll['value'], -1)
+        self.assertTrue(found_it)
+
+    def test_pk_inference_runs(self):
+        pk_dataset = Dataset.objects.get(
+            name='usecase0'
+        )
+        pk_biomarker_name = 'DemoDrug Concentration'
+
+        biomarker_type = BiomarkerType.objects.get(
+            name=pk_biomarker_name,
+            dataset__name=pk_dataset.name,
+        )
+        biomarker_type.display_unit = Unit.objects.get(
+            symbol='g/L'
+        )
+        biomarker_type.save()
+        pk = PharmacokineticModel.objects\
+            .get(name='three_compartment_pk_model')
+
+        protocol = Protocol.objects.get(
+            subjects__dataset=biomarker_type.dataset,
+            subjects__id_in_dataset=1,
+        )
+
+        pk_model = DosedPharmacokineticModel.objects.create(
+            name='my wonderful model',
+            pharmacokinetic_model=pk,
+            dose_compartment='central',
+            protocol=protocol,
+        )
+        pk_output_name = 'central.drug_c_concentration'
+        pk_parameter_names = [
+            v.qname for v in pk_model.variables.filter(constant=True)
+        ]
+
+        data = {
+            # Inference parameters
+            'name': "test inference run",
+            'project': self.project.id,
+            'algorithm': Algorithm.objects.get(name='XNES').id,
+            'initialization_strategy': 'R',
+            'number_of_chains': 4,
+            'max_number_of_iterations': 11,
+            'burn_in': 0,
+
+            # Model
+            'model': {
+                'form': 'PK',
+                'id': pk_model.id
+            },
+            'dataset': pk_dataset.id,
+
+            # Model parameters
+            'parameters': {
+                pk_parameter_names[0]: {
+                    'form': 'N',
+                    'parameters': [0, 1],
+                },
+                pk_parameter_names[1]: {
+                    'form': 'U',
+                    'parameters': [-1, 1],
+                },
+                pk_parameter_names[2]: {
+                    'form': 'F',
+                    'parameters': [0.1],
+                }
+            },
+            # output
+            'observations': [
+                {
+                    'model': pk_output_name,
+                    'biomarker': pk_biomarker_name,
+                },
+            ]
+        }
+        response = self.client.post(
+            "/api/inference/naive_pooled", data, format='json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response_data = response.data
+
+        # check inference fields
+        self.assertEqual(response_data['name'], 'test inference run')
+        self.assertEqual(response_data['project'], self.project.id)
+        self.assertEqual(response_data['initialization_strategy'], 'R')
+
+        # check number of log_likelihoods, and that the model ll is there
+        self.assertEqual(len(response_data['log_likelihoods']), 16)
+        found_it = False
+        for ll in response_data['log_likelihoods']:
+            if ll['name'] == 'my wonderful model':
+                found_it = True
+                self.assertEqual(len(ll['parameters']), 9)
+                model_id = ll['id']
+        self.assertTrue(found_it)
+
+        # check that the output log_likelihood is there and looks ok
+        found_it = False
+        for ll in response_data['log_likelihoods']:
+            if ll['name'] == pk_output_name:
+                found_it = True
+                self.assertEqual(len(ll['parameters']), 2)
+                self.assertEqual(ll['parameters'][0]['name'],
+                                 pk_output_name)
+                self.assertEqual(ll['parameters'][0]['child'], model_id)
+        self.assertTrue(found_it)
+
+        # check that the param 1 log_likelihood is there and looks ok
+        found_it = False
+        for ll in response_data['log_likelihoods']:
+            if ll['name'] == pk_parameter_names[1]:
+                found_it = True
+                self.assertEqual(ll['form'], 'U')
+                self.assertEqual(len(ll['parameters']), 2)
+                child_id = ll['parameters'][0]['child']
+        self.assertTrue(found_it)
+        found_it = False
+        for ll in response_data['log_likelihoods']:
+            if ll['id'] == child_id:
+                found_it = True
+                self.assertEqual(ll['form'], 'F')
+                self.assertEqual(ll['value'], -1)
+        self.assertTrue(found_it)
+
+    def test_errors(self):
+        pass
 
 
 class TestInferenceViews(APITestCase):
@@ -156,7 +399,6 @@ class TestInferenceViews(APITestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         errors = response.data
-        print(errors)
         self.assertTrue('log_likelihoods' in errors)
         self.assertTrue(
             'least one log_likelihood' in errors['log_likelihoods']

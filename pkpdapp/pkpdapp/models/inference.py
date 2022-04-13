@@ -117,11 +117,7 @@ class Inference(StoredModel):
     def get_project(self):
         return self.project
 
-    def run_inference(self, test=False):
-        """
-        when an inference is run, a new model is created (a copy),
-        and the model and all its variables are stored
-        """
+    def store_inference(self):
         # store related objects so we can recreate them later
         old_log_likelihoods = self.log_likelihoods.all()
 
@@ -186,6 +182,14 @@ class Inference(StoredModel):
                 old_param.save()
 
         self.refresh_from_db()
+
+    def run_inference(self, test=False):
+        """
+        when an inference is run, a new model is created (a copy),
+        and the model and all its variables are stored
+        """
+        if not self.read_only:
+            self.store_inference()
 
         if not test:
             from pkpdapp.tasks import run_inference
