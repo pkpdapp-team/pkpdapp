@@ -652,7 +652,6 @@ export default function DraftInferenceDetail({ project, inference }) {
     { key: "From another inference", value: "F" },
   ]
 
-
   return (
     <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
       <FormTextField

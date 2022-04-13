@@ -22,7 +22,11 @@ class ProtocolSerializer(serializers.ModelSerializer):
     dosed_pk_models = serializers.PrimaryKeyRelatedField(
         many=True, read_only=True
     )
+    dataset = serializers.SerializerMethodField('get_dataset')
 
     class Meta:
         model = Protocol
         fields = '__all__'
+
+    def get_dataset(self, protocol):
+        return protocol.subjects.values('dataset').distinct()[0]['dataset']

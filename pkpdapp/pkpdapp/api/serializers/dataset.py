@@ -22,18 +22,25 @@ class DatasetSerializer(serializers.ModelSerializer):
         many=True, read_only=True
     )
     subject_groups = serializers.SerializerMethodField('get_groups')
+    protocols = serializers.SerializerMethodField('get_protocols')
 
     class Meta:
         model = Dataset
         fields = '__all__'
 
+    def get_protocols(self, dataset):
+        protocols = [
+            Protocol.objects.get(pk=p['protocol'])
+            for p in dataset.subjects.values('protocol').distinct()
+            if p['protocol'] is not None
+        ]
+        return ProtocolSerializer(protocols, many=True).data
+
     def get_groups(self, dataset):
         groups = {}
-        print('get_groups')
         for s in dataset.subjects.all():
             for group in s.groups.all():
                 groups.get(group, []).append(s.pk)
-        print('returning', groups)
         return groups
 
 
