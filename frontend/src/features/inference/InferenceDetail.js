@@ -7,6 +7,8 @@ import Grid from "@material-ui/core/Grid";
 import Paper from "@material-ui/core/Paper";
 
 import FormControl from "@material-ui/core/FormControl";
+import ReactFlow from 'react-flow-renderer';
+import * as ELK from 'elkjs';
 import InputLabel from "@material-ui/core/InputLabel";
 import Alert from "@material-ui/lab/Alert";
 import { useForm, useFieldArray } from "react-hook-form";
@@ -42,6 +44,8 @@ import { updateInference, deleteInference, selectAllInferences } from "../infere
 import { runInference, stopInference } from "./inferenceSlice";
 import { FormTextField, FormSelectField, FormSliderField } from "../forms/FormComponents";
 import { userHasReadOnlyAccess } from "../projects/projectsSlice";
+
+const elk = new ELK()
 
 const useStyles = makeStyles((theme) => ({
   controlsRoot: {
@@ -557,7 +561,7 @@ function LogLikelihoodSubform({
   );
 }
 
-export default function DraftInferenceDetail({ project, inference }) {
+export default function InferenceDetail({ project, inference }) {
   const dispatch = useDispatch();
 
   const logLikelihoodsNoNull = inference.log_likelihoods.map(ll =>
@@ -652,6 +656,35 @@ export default function DraftInferenceDetail({ project, inference }) {
     { key: "From another inference", value: "F" },
   ]
 
+  let logLikelihoodNodes = inference.log_likelihoods.map(ll => ({
+    id: ll.id,
+    data: { label: ll.name },
+    position: { x: 0, y: 0 },
+  }));
+
+  const parameterEdges = inference.log_likelihoods.reduce((sum, ll) => 
+    sum.concat(ll.parameters.map(p => ({
+      id: p.name,
+      source: p.parent,
+      target: p.child,
+    }))), []);
+
+  let graph = {
+    id: "root",
+    layoutOptions: { 'elk.algorithm': 'layered' },
+    children: logLikelihoodNodes.map(n => (
+      { id: n.id, data: n.data, width: 30, height: 30 }
+    )),
+    edges: parameterEdges.map(e => (
+      { id: e.id, sources: [e.source], targets: [e.target] }
+    )),
+  }
+
+  graph = elk.layout(graph).then(console.log)
+  console.log(graph)
+
+  logLikelihoodNodes = graph.children
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
       <FormTextField
@@ -670,35 +703,7 @@ export default function DraftInferenceDetail({ project, inference }) {
 
 
       <Typography>Log-likelihoods</Typography>
-      <List>
-        {logLikelihoods.map((logLikelihood, index) => (
-          <LogLikelihoodSubform
-            key={index}
-            control={control}
-            logLikelihood={logLikelihood}
-            datasets={datasets}
-            datasetOptions={dataset_options}
-            remove={() => logLikelihoodsRemove(index)}
-            baseName = {`log_likelihoods[${index}]`}
-            watch={watch}
-            setValue={setValue}
-            disabled={readOnly}
-          />
-        ))}
-        <ListItem key={-1} role={undefined} dense>
-          <Tooltip title={`create new objective function`} placement="right">
-            <span>
-            <IconButton
-              variant="rounded"
-              disabled={readOnly}
-              onClick={handleNewLoglikelihood}
-            >
-              <AddIcon />
-            </IconButton>
-            </span>
-          </Tooltip>
-        </ListItem>
-      </List>
+      <ReactFlow nodes={logLikelihoodNodes} edges={parameterEdges} fitView />
 
       <FormSelectField
         control={control}
