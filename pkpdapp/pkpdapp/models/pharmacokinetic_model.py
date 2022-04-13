@@ -121,7 +121,10 @@ class DosedPharmacokineticModel(MyokitModelMixin, StoredModel):
                 self.pharmacokinetic_model.create_stored_model()
             ),
             'dose_compartment': self.dose_compartment,
-            'protocol': self.protocol.create_stored_protocol(),
+            'protocol': (
+                self.protocol.create_stored_protocol()
+                if self.protocol is not None else None
+            ),
             'time_max': self.time_max,
             'read_only': True,
         }

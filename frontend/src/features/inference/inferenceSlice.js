@@ -75,6 +75,24 @@ export const updateInference = createAsyncThunk(
   }
 );
 
+export const runNaivePooledInference = createAsyncThunk(
+  "inferences/runNaivePooledInference",
+  async (naivePooledInference, { dispatch }) => {
+    const newInference = await api.post(`/api/inference/naive_pooled`, naivePooledInference);
+    for (const log_likelihood of newInference.log_likelihoods) {
+      if (log_likelihood.pd_model) {
+        dispatch(fetchPdModelById(log_likelihood.pd_model))
+        dispatch(fetchVariablesByPdModel(log_likelihood.pd_model))
+      } 
+      if (log_likelihood.dosed_pk_model){
+        dispatch(fetchPkModelById(log_likelihood.dosed_pk_model))
+        dispatch(fetchVariablesByPkModel(log_likelihood.dosed_pk_model))
+      }
+    }
+    return newInference;
+  }
+);
+
 export const runInference = createAsyncThunk(
   "inferences/runInference",
   async (inferenceId, { dispatch }) => {
@@ -143,6 +161,9 @@ export const inferencesSlice = createSlice({
     },
     [fetchInferenceById.fulfilled]: inferencesAdapter.upsertOne,
     [runInference.fulfilled]: (state, action) => {
+      inferencesAdapter.upsertOne(state, action.payload);
+    },
+    [runNaivePooledInference.fulfilled]: (state, action) => {
       inferencesAdapter.upsertOne(state, action.payload);
     },
     [stopInference.fulfilled]: (state, action) => {

@@ -18,7 +18,7 @@ export default function Inferences({ project, disableSave }) {
     setOpen(true);
   };
 
-  const handleClose = () => {
+  const handleCloseDialog = () => {
     setOpen(false);
   };
 
@@ -39,7 +39,7 @@ export default function Inferences({ project, disableSave }) {
     />
     <InferenceDialog 
       open={open}
-      handleClose={handleClose}
+      handleCloseDialog={handleCloseDialog}
       project={project}
     />
     </React.Fragment>

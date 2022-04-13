@@ -55,20 +55,23 @@ class NaivePooledInferenceView(views.APIView):
         'dataset': 3,
 
         # Model parameters
-        'parameters': {
-            'myokit.parameter1': {
+        'parameters': [
+            {
+                'name': 'myokit.parameter1'
                 'form': 'N',
                 'parameters': [0, 1]
             },
-            'myokit.parameter2': {
+            {
+                'name': 'myokit.parameter2'
                 'form': 'U',
                 'parameters': [-1, 1]
-            }
-            'myokit.parameter3': {
+            },
+            {
+                'name': 'myokit.parameter3'
                 'form': 'F',
                 'parameters': [123.5]
             }
-        }
+        ]
 
         # output
         'observations': [
@@ -123,6 +126,7 @@ class NaivePooledInferenceView(views.APIView):
     @staticmethod
     def _set_observed_loglikelihoods(obs, models, groups, dataset):
         output_names = [ob['model'] for ob in obs]
+        # TODO: handle simulated data
         biomarkers = [
             BiomarkerType.objects.get(
                 name=ob['biomarker'], dataset=dataset
@@ -151,8 +155,9 @@ class NaivePooledInferenceView(views.APIView):
 
     @staticmethod
     def _set_parameters(params, models, inference):
-        for param_name, param in params.items():
-            form = param['form']
+        for param in params:
+            param_name = param['name']
+            param_form = param['form']
             noise_params = param['parameters']
 
             # set parameter log_likelihood on models
@@ -162,8 +167,8 @@ class NaivePooledInferenceView(views.APIView):
                 except LogLikelihoodParameter.DoesNotExist:
                     continue
                 child = model_param.child
-                child.form = form
-                if form == 'F':
+                child.form = param_form
+                if param_form == 'F':
                     child.value = noise_params[0]
                 else:
                     child.value = None
@@ -175,6 +180,7 @@ class NaivePooledInferenceView(views.APIView):
     def post(self, request, format=None):
         errors = {}
         data = json.loads(request.body)
+        print('got data', data)
 
         if 'project' in data:
             try:
@@ -231,8 +237,8 @@ class NaivePooledInferenceView(views.APIView):
                 )
 
         if 'parameters' in data:
-            for param, value in data['parameters'].items():
-                if model.variables.filter(qname=param).count() == 0:
+            for param in data['parameters']:
+                if model.variables.filter(qname=param['name']).count() == 0:
                     errors.get('parameters', {})[param] = 'not found in model'
         else:
             errors['parameters'] = 'field required'
