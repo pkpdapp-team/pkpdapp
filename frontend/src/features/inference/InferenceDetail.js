@@ -73,6 +73,10 @@ const useStyles = makeStyles((theme) => ({
     margin: theme.spacing(1),
     flex: 1,
   },
+  graph: {
+    height: "30vh",
+    width: "100%",
+  },
 }));
 
 
@@ -564,6 +568,68 @@ function LogLikelihoodSubform({
 export default function InferenceDetail({ project, inference }) {
   const dispatch = useDispatch();
 
+  const nodeWidth = 150;
+  const nodeHeight = 50;
+
+  let logLikelihoodNodes = inference.log_likelihoods.map(ll => ({
+    id: `${ll.id}`,
+    data: { label: ll.name },
+    position: { x: 0, y: 0 },
+    style: {
+      background: '#D6D5E6',
+      color: '#333',
+      border: '1px solid #222138',
+      width: nodeWidth,
+      height: nodeHeight,
+    },
+  }));
+
+  const parameterEdges = inference.log_likelihoods.reduce((sum, ll) => 
+    sum.concat(ll.parameters.map(p => ({
+      id: `e-${p.id}`,
+      source: `${p.parent}`,
+      target: `${p.child}`,
+      label: p.name,
+      type: 'default',
+      animated: true
+    }))), []);
+
+  const [nodes, setNodes] = useState(logLikelihoodNodes);
+  const [edges, setEdges] = useState(parameterEdges);
+
+  console.log('nodes', nodes, 'edges', edges)
+
+  useEffect(() => {
+    const graph = {
+      id: "root",
+      layoutOptions: { 
+        'elk.algorithm': 'layered',
+        'elk.nodePlacement.strategy': 'NETWORK_SIMPLEX',
+        'elk.direction': 'DOWN',
+        'elk.spacing.nodeNode': 20,
+        'elk.layered.spacing.nodeNodeBetweenLayers': 90,
+        'elk.aspectRatio': 1.0,
+      },
+      children: logLikelihoodNodes.map(n => (
+        { id: n.id, width: nodeWidth, height: nodeHeight}
+      )),
+      edges: parameterEdges.map(e => (
+        { id: e.id, sources: [e.source], targets: [e.target] }
+      )),
+    }
+
+    elk.layout(graph).then(graph => {
+      const newNodes = nodes.map((n, i) => {
+        n.position.x = graph.children[i].x
+        n.position.y = graph.children[i].y
+        return n;
+      })
+      console.log('done layout', newNodes)
+      setNodes(newNodes)
+    })
+
+  }, [inference.id]);
+
   const logLikelihoodsNoNull = inference.log_likelihoods.map(ll =>
     Object.keys(ll).reduce((sum, key) => {
       sum[key] = ll[key] || ""
@@ -656,35 +722,8 @@ export default function InferenceDetail({ project, inference }) {
     { key: "From another inference", value: "F" },
   ]
 
-  let logLikelihoodNodes = inference.log_likelihoods.map(ll => ({
-    id: ll.id,
-    data: { label: ll.name },
-    position: { x: 0, y: 0 },
-  }));
-
-  const parameterEdges = inference.log_likelihoods.reduce((sum, ll) => 
-    sum.concat(ll.parameters.map(p => ({
-      id: p.name,
-      source: p.parent,
-      target: p.child,
-    }))), []);
-
-  let graph = {
-    id: "root",
-    layoutOptions: { 'elk.algorithm': 'layered' },
-    children: logLikelihoodNodes.map(n => (
-      { id: n.id, data: n.data, width: 30, height: 30 }
-    )),
-    edges: parameterEdges.map(e => (
-      { id: e.id, sources: [e.source], targets: [e.target] }
-    )),
-  }
-
-  graph = elk.layout(graph).then(console.log)
-  console.log(graph)
-
-  logLikelihoodNodes = graph.children
-
+  
+  
   return (
     <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
       <FormTextField
@@ -703,7 +742,9 @@ export default function InferenceDetail({ project, inference }) {
 
 
       <Typography>Log-likelihoods</Typography>
-      <ReactFlow nodes={logLikelihoodNodes} edges={parameterEdges} fitView />
+      <div className={classes.graph}>
+      <ReactFlow nodes={nodes} edges={edges} fitView />
+      </div>
 
       <FormSelectField
         control={control}
