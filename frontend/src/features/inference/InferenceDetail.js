@@ -594,7 +594,7 @@ export default function InferenceDetail({ project, inference }) {
       animated: true
     }))), []);
 
-  const [nodes, setNodes] = useState(logLikelihoodNodes);
+  const [nodes, setNodes] = useState(null);
   const [edges, setEdges] = useState(parameterEdges);
 
   console.log('nodes', nodes, 'edges', edges)
@@ -619,7 +619,7 @@ export default function InferenceDetail({ project, inference }) {
     }
 
     elk.layout(graph).then(graph => {
-      const newNodes = nodes.map((n, i) => {
+      const newNodes = logLikelihoodNodes.map((n, i) => {
         n.position.x = graph.children[i].x
         n.position.y = graph.children[i].y
         return n;
@@ -743,7 +743,12 @@ export default function InferenceDetail({ project, inference }) {
 
       <Typography>Log-likelihoods</Typography>
       <div className={classes.graph}>
-      <ReactFlow nodes={nodes} edges={edges} fitView />
+      {nodes && <ReactFlow 
+        nodes={nodes} 
+        edges={edges} 
+        defaultZoom={0.1}
+        fitView
+      />}
       </div>
 
       <FormSelectField
