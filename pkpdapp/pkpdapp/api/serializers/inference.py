@@ -118,7 +118,7 @@ class InferenceChainSerializer(serializers.ModelSerializer):
         outputs = {
             ll.id: inference_chain.outputs_for(ll).to_dict(orient='list')
             for ll in inference_chain.inference.log_likelihoods.all()
-            if ll.is_a_prior()
+            if ll.has_data()
         }
         return outputs
 

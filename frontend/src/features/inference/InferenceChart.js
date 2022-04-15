@@ -64,8 +64,22 @@ export default function InferenceChart({inference}) {
   ).map(ll => ({
     ...ll,  
     chains: chains.map(chain => chain.data.chain[ll.id]),
-    kdes: chains.map(chain => chain.data.kde[ll.id])
+    kdes: chains.map(chain => chain.data.kde[ll.id]),
+    outputs: chains.map(chain => chain.outputs[ll.id])
   }));
+
+  const observedWithChainValues = inference.log_likelihoods.filter(
+    ll => ll.biomarker_type
+  ).map(ll => {
+    const model_loglikelihoods = inference.log_likelihoods.filter(cll =>
+      ll.children.includes(cll.id)
+    )
+    return {
+      ...ll,  
+      model_loglikelihoods,
+      outputs: chains.map(chain => chain.outputs[ll.id])
+    }
+  });
 
   console.log('chains', chains)
   console.log('priorsWithChainValues', priorsWithChainValues)
@@ -122,7 +136,12 @@ export default function InferenceChart({inference}) {
   </Box>
     { tabs.map((tab, index) => (
     <TabPanel key={index} value={value} index={index}>
-      <tab.component inference={inference} chains={chains} priorsWithChainValues={priorsWithChainValues} />
+      <tab.component 
+        inference={inference} 
+        chains={chains} 
+        priorsWithChainValues={priorsWithChainValues} 
+        observedWithChainValues={observedWithChainValues} 
+      />
     </TabPanel>
     ))}
   </Box>
