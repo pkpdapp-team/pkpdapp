@@ -33,6 +33,7 @@ class LogLikelihoodSerializer(serializers.ModelSerializer):
     model = serializers.SerializerMethodField('get_model')
     dataset = serializers.SerializerMethodField('get_dataset')
     time_variable = serializers.SerializerMethodField('get_time_variable')
+    is_a_prior = serializers.SerializerMethodField('get_is_a_prior')
 
     class Meta:
         model = LogLikelihood
@@ -46,6 +47,9 @@ class LogLikelihoodSerializer(serializers.ModelSerializer):
                 name='time'
             )
             return time_variable.id
+
+    def get_is_a_prior(self, instance):
+        return instance.is_a_prior()
 
     def get_model(self, instance):
         model = instance.get_model()

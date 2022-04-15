@@ -115,19 +115,12 @@ class InferenceChainSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def get_outputs(self, inference_chain):
-        log_likelihoods = inference_chain.inference.log_likelihoods.all()
-        outputs = [
-            inference_chain.outputs_for(ll).to_dict(orient='list')
-            for ll in log_likelihoods
-        ]
-
-        return {
-            'log_likelihoods': [
-                LogLikelihoodSerializer(ll).data
-                for ll in log_likelihoods
-            ],
-            'outputs': outputs
+        outputs = {
+            ll.id: inference_chain.outputs_for(ll).to_dict(orient='list')
+            for ll in inference_chain.inference.log_likelihoods.all()
+            if ll.is_a_prior()
         }
+        return outputs
 
     def get_data(self, inference_chain):
         chain = inference_chain.as_pandas()

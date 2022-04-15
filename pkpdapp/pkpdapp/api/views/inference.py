@@ -247,6 +247,7 @@ class NaivePooledInferenceView(views.APIView):
             for i, obs in enumerate(data['observations']):
                 model_var = obs['model']
                 biomarker = obs['biomarker']
+                # TODO: simulated data
                 if dataset.biomarker_types.filter(name=biomarker).count() == 0:
                     errors.get('observations', {}).get(i, {})['biomarker'] = \
                         'not found in dataset'

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
 import Divider from '@material-ui/core/Divider';
@@ -7,7 +7,7 @@ import Grid from "@material-ui/core/Grid";
 import Paper from "@material-ui/core/Paper";
 
 import FormControl from "@material-ui/core/FormControl";
-import ReactFlow from 'react-flow-renderer';
+import ReactFlow, { MarkerType, applyEdgeChanges, applyNodeChanges } from 'react-flow-renderer';
 import * as ELK from 'elkjs';
 import InputLabel from "@material-ui/core/InputLabel";
 import Alert from "@material-ui/lab/Alert";
@@ -568,21 +568,50 @@ function LogLikelihoodSubform({
 export default function InferenceDetail({ project, inference }) {
   const dispatch = useDispatch();
 
-  const nodeWidth = 150;
-  const nodeHeight = 50;
-
-  let logLikelihoodNodes = inference.log_likelihoods.map(ll => ({
-    id: `${ll.id}`,
-    data: { label: ll.name },
-    position: { x: 0, y: 0 },
-    style: {
-      background: '#D6D5E6',
-      color: '#333',
-      border: '1px solid #222138',
-      width: nodeWidth,
-      height: nodeHeight,
-    },
-  }));
+  let logLikelihoodNodes = inference.log_likelihoods.map(ll => {
+    let label = (<>ll.name</>)
+    let border = 'solid';
+    let width = 140;
+    let height = 40;
+    let type = 'default';
+    if (ll.biomarker_type) {
+      type = 'input'
+    }
+    if (ll.form === 'F') {
+      type = 'output'
+    }
+    if (ll.form === 'M') {
+      label = (<><strong>Model:</strong> {ll.name}</>); 
+      border = '5px double';
+      height = 2 * height;
+    } else if (ll.form === 'N') {
+      if (ll.biomarker_type) {
+        label = (<><strong>Observed Normal</strong></>); 
+      } else {
+        label = (<><strong>Normal</strong></>); 
+      }
+    } else if (ll.form === 'LN') {
+      label = (<><strong>LogNormal</strong></>); 
+    } else if (ll.form === 'U') {
+      label = (<><strong>Uniform</strong></>); 
+    } else if (ll.form === 'F') {
+      label = `${ll.value}`
+      width = 0.6 * width;
+    }
+    return {
+      id: `${ll.id}`,
+      data: { label },
+      position: { x: 0, y: 0 },
+      type,
+      style: {
+        background: '#D6D5E6',
+        color: '#333',
+        border,
+        width,
+        height,
+      },
+    }
+  });
 
   const parameterEdges = inference.log_likelihoods.reduce((sum, ll) => 
     sum.concat(ll.parameters.map(p => ({
@@ -591,13 +620,20 @@ export default function InferenceDetail({ project, inference }) {
       target: `${p.child}`,
       label: p.name,
       type: 'default',
-      animated: true
+      animated: false,
     }))), []);
 
   const [nodes, setNodes] = useState(null);
   const [edges, setEdges] = useState(parameterEdges);
 
-  console.log('nodes', nodes, 'edges', edges)
+  const onNodesChange = useCallback(
+    (changes) => setNodes((nds) => applyNodeChanges(changes, nds)),
+    [setNodes]
+  );
+  const onEdgesChange = useCallback(
+    (changes) => setEdges((eds) => applyEdgeChanges(changes, eds)),
+    [setEdges]
+  );
 
   useEffect(() => {
     const graph = {
@@ -611,7 +647,7 @@ export default function InferenceDetail({ project, inference }) {
         'elk.aspectRatio': 1.0,
       },
       children: logLikelihoodNodes.map(n => (
-        { id: n.id, width: nodeWidth, height: nodeHeight}
+        { id: n.id, width: n.style.width, height: n.style.height}
       )),
       edges: parameterEdges.map(e => (
         { id: e.id, sources: [e.source], targets: [e.target] }
@@ -624,7 +660,6 @@ export default function InferenceDetail({ project, inference }) {
         n.position.y = graph.children[i].y
         return n;
       })
-      console.log('done layout', newNodes)
       setNodes(newNodes)
     })
 
@@ -701,6 +736,16 @@ export default function InferenceDetail({ project, inference }) {
   
 
   const onSubmit = (values) => {
+    values.log_likelihoods = values.log_likelihoods.map(ll =>
+      Object.keys(ll).reduce((sum, key) => {
+        let value = ll[key]
+        if (value === '') {
+          value = null
+        }
+        sum[key] = value
+        return sum
+      }, {})
+    )
     dispatch(updateInference(values));
   };
 
@@ -741,12 +786,13 @@ export default function InferenceDetail({ project, inference }) {
       />
 
 
-      <Typography>Log-likelihoods</Typography>
+      <Typography>Statistical model</Typography>
       <div className={classes.graph}>
       {nodes && <ReactFlow 
         nodes={nodes} 
         edges={edges} 
-        defaultZoom={0.1}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
         fitView
       />}
       </div>

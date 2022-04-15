@@ -33,7 +33,7 @@ const useStyles = makeStyles((theme) => ({
 
 
 
-function InferenceChartFits({ chains }) {
+function InferenceChartFits({ inference, chains }) {
   // TODO: assumes a single log likelihood
   //
   const classes = useStyles();
@@ -210,6 +210,6 @@ export default function InferenceChartTraces({ inference, chains, priorsWithChai
   const classes = useStyles();
   
   return (
-    <InferenceChartFits chains={chains} />
+    <InferenceChartFits inference={inference} chains={chains} />
   )
 }

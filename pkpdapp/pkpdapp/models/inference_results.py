@@ -58,7 +58,7 @@ class InferenceChain(models.Model):
             self.inference_results.filter(
                 iteration__gt=self.inference.burn_in
             ).order_by('iteration').values_list(
-                'prior', 'value', 'iteration'
+                'log_likelihood', 'value', 'iteration'
             )
         if priors_values:
             priors, values, iterations = list(zip(*priors_values))

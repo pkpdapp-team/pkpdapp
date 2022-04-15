@@ -674,7 +674,7 @@ class LogLikelihood(models.Model):
             if model_variable.constant:
                 name = model_variable.qname
             else:
-                name = model_variable.qname + ' initial condition'
+                name = 'initial ' + model_variable.qname
             child = LogLikelihood.objects.create(
                 name=name,
                 inference=self.inference,
@@ -685,7 +685,7 @@ class LogLikelihood(models.Model):
             LogLikelihoodParameter.objects.create(
                 parent=self, child=child,
                 variable=model_variable,
-                name=name,
+                name=model_variable.qname,
             )
 
         for model_variable in self.get_model_outputs():
