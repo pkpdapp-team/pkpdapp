@@ -59,6 +59,7 @@ function InferenceChartFits({ inference, observed }) {
     }
   });
 
+  console.log('observed', observed, outputVariable, outputUnit)
   const yLabel = `${outputVariable.name} [${outputUnit.symbol}]`
   const xLabel = `${timeVariable.name} [${timeUnit.symbol}]`
 

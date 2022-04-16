@@ -4,6 +4,8 @@
 # copyright notice and full license details.
 #
 
+import cProfile, pstats, io
+from pstats import SortKey
 from django.test import TestCase
 import numpy as np
 from pkpdapp.models import (
@@ -125,7 +127,7 @@ class TestInferenceMixinSingleOutputSampling(TestCase):
         self.inference = Inference.objects.create(
             name='bob',
             project=project,
-            max_number_of_iterations=10,
+            max_number_of_iterations=1000,
             algorithm=Algorithm.objects.get(name='Haario-Bardenet'),
         )
         log_likelihood = LogLikelihood.objects.create(
@@ -174,7 +176,16 @@ class TestInferenceMixinSingleOutputSampling(TestCase):
 
     def test_inference_runs(self):
         # tests that inference runs and writes results to db
+
+        pr = cProfile.Profile()
+        pr.enable()
         self.inference_mixin.run_inference()
+        pr.disable()
+        s = io.StringIO()
+        sortby = SortKey.CUMULATIVE
+        ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+        ps.print_stats()
+        print(s.getvalue())
 
         chains = self.inference_mixin.inference.chains.all()
         self.assertEqual(len(chains), 4)

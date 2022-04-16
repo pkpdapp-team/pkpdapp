@@ -341,7 +341,7 @@ class LogLikelihood(models.Model):
             noise_params = self.get_noise_params()
         if self.form == self.Form.NORMAL:
             output_values += np.random.normal(
-                mean=noise_params[0],
+                loc=noise_params[0],
                 scale=noise_params[1],
                 size=output_values.shape
             )

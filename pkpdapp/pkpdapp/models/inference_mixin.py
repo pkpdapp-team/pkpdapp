@@ -192,7 +192,6 @@ class OutputWriter:
                         self._pints_log_posterior.sample_generative_model(
                             self._pints_log_posterior.to_search(x0)
                         )
-                    print('got results', results)
                     for times, tdigests, result in zip(
                         self._times, tdigests_for_chain, results
                     ):

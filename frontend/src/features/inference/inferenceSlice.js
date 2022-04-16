@@ -80,13 +80,13 @@ export const runNaivePooledInference = createAsyncThunk(
   async (naivePooledInference, { dispatch }) => {
     const newInference = await api.post(`/api/inference/naive_pooled`, naivePooledInference);
     for (const log_likelihood of newInference.log_likelihoods) {
-      if (log_likelihood.pd_model) {
-        dispatch(fetchPdModelById(log_likelihood.pd_model))
-        dispatch(fetchVariablesByPdModel(log_likelihood.pd_model))
+      if (log_likelihood.model && log_likelihood.model[1] === 'pkpdapp_pharmacodynamicmodel') {
+        dispatch(fetchPdModelById(log_likelihood.model[0]))
+        dispatch(fetchVariablesByPdModel(log_likelihood.model[0]))
       } 
-      if (log_likelihood.dosed_pk_model){
-        dispatch(fetchPkModelById(log_likelihood.dosed_pk_model))
-        dispatch(fetchVariablesByPkModel(log_likelihood.dosed_pk_model))
+      if (log_likelihood.model && log_likelihood.model[1] === 'pkpdapp_dosedpharmacokineticmodel') {
+        dispatch(fetchPkModelById(log_likelihood.model[0]))
+        dispatch(fetchVariablesByPkModel(log_likelihood.model[0]))
       }
     }
     return newInference;
