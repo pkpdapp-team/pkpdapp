@@ -192,11 +192,10 @@ class OutputWriter:
                         self._pints_log_posterior.sample_generative_model(
                             self._pints_log_posterior.to_search(x0)
                         )
+                    print('got results', results)
                     for times, tdigests, result in zip(
                         self._times, tdigests_for_chain, results
                     ):
-
-
                         for i in range(len(times)):
                             value = result[i]
                             tdigests[i].update(value)
@@ -513,9 +512,26 @@ class PyMC3LogPosterior(pints.LogPDF):
         self._log_likelihood_names = [
             self._get_name(ll, None) for ll in log_likelihoods
         ]
-        self._posterior_predictive = model.fastfn([
-            model[name] for name in self._log_likelihood_names
-        ])
+        mean_rvs = []
+        param1s_rvs = []
+        param1s_index = []
+        param1s = []
+        # assumes that all observed ll have 2 noise params
+        # assumes that the mean comes from a model
+        for i, ll in enumerate(self._log_likelihoods):
+            mean, param1 = ll.get_noise_log_likelihoods()
+            mean_name = mean.name + ll.name
+            mean_rvs.append(model[mean_name])
+            if param1.form == param1.Form.FIXED:
+                param1s.append(param1.value)
+            else:
+                param1s_rvs.append(model[param1.name])
+                param1s.index.append(i)
+                param1s.append(np.nan)
+        self._n_means = len(self._log_likelihoods)
+        self._param1s_index = param1s_index
+        self._param1s = np.array(param1s)
+        self._posterior_predictive = model.fastfn(mean_rvs + param1s_rvs)
         self._model = model
         self._logp = model.logp
         if optimisation:
@@ -550,6 +566,11 @@ class PyMC3LogPosterior(pints.LogPDF):
             return prior.name
         return prior.name + '_{}__'.format(transform.name)
 
+    def _get_input_name(self, log_likelihood):
+        mean = log_likelihood.get_noise_log_likelihoods()[0]
+        print('name is ', mean.name + log_likelihood.name)
+        return mean.name + log_likelihood.name
+
     def to_search(self, x):
         return np.array([
             t(xi) for xi, t in zip(x, self._transform_forwards)
@@ -571,38 +592,18 @@ class PyMC3LogPosterior(pints.LogPDF):
             name: value for name, value in zip(self._prior_names, x)
         }
         results = self._posterior_predictive(call_dict)
+        means = results[:self._n_means]
+        param1s = self._param1s
+        for result, index in zip(results[self._n_means:], self._param1s_index):
+            param1s[index] = result
         values = []
         values_min = []
         values_max = []
-        for output_values, log_likelihood in zip(results, self._log_likelihoods):
-            #noise_params = x[problem.n_parameters():]
-            #if isinstance(log_likelihood, pints.GaussianLogLikelihood):
-            #    for i in range(len(output_values)):
-            #        dist = sps.norm(
-            #            loc=output_values[i],
-            #            scale=noise_params[0]
-            #        )
-            #        output_values_min[i] = dist.ppf(.1)
-            #        output_values_max[i] = dist.ppf(.9)
-            #elif isinstance(
-            #    log_likelihood, pints.GaussianKnownSigmaLogLikelihood
-            #):
-            #    for i in range(len(output_values)):
-            #        dist = sps.norm(
-            #            loc=output_values[i],
-            #            scale=np.sqrt(1 / log_likelihood._isigma2)
-            #        )
-            #        output_values_min[i] = dist.ppf(.1)
-            #        output_values_max[i] = dist.ppf(.9)
-            #elif isinstance(log_likelihood, pints.LogNormalLogLikelihood):
-            #    for i in range(len(output_values)):
-            #        dist = sps.lognorm(
-            #            loc=output_values[i],
-            #            scale=noise_params[0]
-            #        )
-            #        output_values_min[i] = dist.ppf(.1)
-            #        output_values_max[i] = dist.ppf(.9)
-
+        for output_values, param1, log_likelihood in zip(
+                means, param1s, self._log_likelihoods
+        ):
+            output_values_min, output_values_max = \
+                log_likelihood.noise_range(output_values, [0, param1])
             values.append(output_values)
             values_min.append(output_values)
             values_max.append(output_values)
@@ -613,33 +614,19 @@ class PyMC3LogPosterior(pints.LogPDF):
             name: value for name, value in zip(self._prior_names, x)
         }
         results = self._posterior_predictive(call_dict)
+        means = results[:self._n_means]
+        param1s = self._param1s
+        for result, index in zip(results[self._n_means:], self._param1s_index):
+            param1s[index] = result
         sampled_values = []
-        for output_values, log_likelihood in zip(results, self._log_likelihoods):
-            #noise_params = x[problem.n_parameters():]
-            #if isinstance(log_likelihood, pints.GaussianLogLikelihood):
-            #    output_values += np.random.normal(
-            #        scale=noise_params[0],
-            #        size=output_values.shape
-            #    )
-            #elif isinstance(
-            #    log_likelihood, pints.GaussianKnownSigmaLogLikelihood
-            #):
-            #    output_values += np.random.normal(
-            #        scale=np.sqrt(1 / log_likelihood._isigma2),
-            #        size=output_values.shape
-            #    )
-            #elif isinstance(log_likelihood, pints.LogNormalLogLikelihood):
-            #    output_values += (
-            #        np.random.lognormal(
-            #            sigma=noise_params[0],
-            #            size=output_values.shape
-            #        )
-            #    )
+        for output_values, param1, log_likelihood in zip(
+                means, param1s, self._log_likelihoods
+        ):
+            output_values = \
+                log_likelihood.add_noise(output_values, [0, param1])
             sampled_values.append(output_values)
 
         return sampled_values
-
-
 
 
 class CombinedLogLikelihood(pints.LogPDF):

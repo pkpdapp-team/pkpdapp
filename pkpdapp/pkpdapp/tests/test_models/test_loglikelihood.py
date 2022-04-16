@@ -123,3 +123,9 @@ class TestInferenceMixinPkModel(TestCase):
             model[name]
 
         model.logp({prior_name: 0.3})
+
+        # check we can run predictive posteriors
+        predictive_posterior = model.fastfn([
+            model[log_likelihood.name + outputs[0].name]
+        ])
+

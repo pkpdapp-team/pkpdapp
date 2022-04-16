@@ -395,7 +395,7 @@ class LogLikelihood(models.Model):
             if self.form == self.Form.MODEL:
                 parents = list(self.parents.order_by('id'))
                 index = parents.index(parent)
-                op = op[index]
+                op = pm.Deterministic(name + parent.name, op[index])
                 shape = shape[index]
             return op, shape
         except KeyError:
@@ -458,8 +458,16 @@ class LogLikelihood(models.Model):
             op = forward_model_op(all_params)
             ops[name] = op
             shapes[name] = ts_shapes
+            if len(parents) == 1:
+                return (
+                    pm.Deterministic(name + parent.name, op),
+                    ts_shapes[0]
+                )
             index = parents.index(parent)
-            return op[index], ts_shapes[index]
+            return (
+                pm.Deterministic(name + parent.name, op[index]),
+                ts_shapes[index]
+            )
         elif self.form == self.Form.FIXED:
             return theano.shared(self.value), ()
 
@@ -721,16 +729,18 @@ class LogLikelihood(models.Model):
                     variable = param.variable
 
         if self.form == self.Form.NORMAL:
+            pnames = [
+                "mean",
+                "standard deviation",
+            ]
             if variable is not None:
                 names = [
                     "mean for " + variable.qname,
                     "standard deviation for " + variable.qname,
                 ]
             else:
-                names = [
-                    "mean",
-                    "standard deviation",
-                ]
+                names = pnames
+
             if variable is not None:
                 defaults = [
                     variable.get_default_value(),
@@ -739,16 +749,18 @@ class LogLikelihood(models.Model):
             else:
                 defaults = [0.0, 1.0]
         elif self.form == self.Form.LOGNORMAL:
+            pnames = [
+                "mean",
+                "sigma",
+            ]
             if variable is not None:
                 names = [
                     "mean for " + variable.qname,
                     "sigma for " + variable.qname,
                 ]
             else:
-                names = [
-                    "mean",
-                    "sigma",
-                ]
+                names = pnames
+
             if variable is not None:
                 defaults = [
                     variable.get_default_value(),
@@ -757,16 +769,18 @@ class LogLikelihood(models.Model):
             else:
                 defaults = [0.0, 1.0]
         elif self.form == self.Form.UNIFORM:
+            pnames = [
+                "lower",
+                "upper",
+            ]
             if variable is not None:
                 names = [
                     "lower for " + variable.qname,
                     "upper for " + variable.qname,
                 ]
             else:
-                names = [
-                    "lower",
-                    "upper",
-                ]
+                names = pnames
+
             if variable is not None:
                 defaults = [
                     variable.lower_bound,
@@ -776,8 +790,11 @@ class LogLikelihood(models.Model):
                 defaults = [0.0, 1.0]
         else:
             names = []
+            pnames = []
             defaults = []
-        for param_index, (name, default) in enumerate(zip(names, defaults)):
+        for param_index, (name, pname, default) in enumerate(
+                zip(names, pnames, defaults)
+        ):
             child = LogLikelihood.objects.create(
                 name=name,
                 inference=self.inference,
@@ -787,7 +804,7 @@ class LogLikelihood(models.Model):
             LogLikelihoodParameter.objects.create(
                 parent=self, child=child,
                 index=param_index,
-                name=name,
+                name=pname,
             )
 
     def create_stored_log_likelihood(self, inference, new_models):
