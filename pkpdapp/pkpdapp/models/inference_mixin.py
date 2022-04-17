@@ -187,7 +187,6 @@ class OutputWriter:
                 ):
                     if iteration % self._use_every_n_sample != 0:
                         continue
-                    output_index = 0
                     results = \
                         self._pints_log_posterior.sample_generative_model(
                             self._pints_log_posterior.to_search(x0)
@@ -198,13 +197,21 @@ class OutputWriter:
                         for i in range(len(times)):
                             value = result[i]
                             tdigests[i].update(value)
-                            maximum = tdigests[i].percentile(90)
-                            minimum = tdigests[i].percentile(10)
-                            median = tdigests[i].percentile(50)
-                            outputs[output_index].median = median
-                            outputs[output_index].percentile_min = minimum
-                            outputs[output_index].percentile_max = maximum
-                            output_index += 1
+
+                # write new percentiles
+                output_index = 0
+                for times, tdigests, result in zip(
+                    self._times, tdigests_for_chain, results
+                ):
+                    for i in range(len(times)):
+                        maximum = tdigests[i].percentile(90)
+                        minimum = tdigests[i].percentile(10)
+                        median = tdigests[i].percentile(50)
+                        outputs[output_index].median = median
+                        outputs[output_index].percentile_min = minimum
+                        outputs[output_index].percentile_max = maximum
+                        output_index += 1
+
             else:
                 # just use the last parameter values
                 output_index = 0
@@ -445,7 +452,7 @@ class InferenceMixin:
                     sampler.set_initial_phase(True)
 
         write_every_n_iteration = 100
-        evaluate_model_every_n_iterations = 1
+        evaluate_model_every_n_iterations = 10
 
         writer = ChainWriter(
             self.inference.chains.all(),
