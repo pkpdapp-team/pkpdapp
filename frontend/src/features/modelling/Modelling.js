@@ -34,6 +34,10 @@ const useStyles = makeStyles((theme) => ({
   chartPaper: {
     padding: theme.spacing(2),
   },
+  chart: {
+    height: "85vh",
+    width: "100%",
+  },
 }));
 
 export default function Modelling() {
@@ -62,7 +66,9 @@ export default function Modelling() {
         <Grid item xs={12} md={6}>
           <Paper className={classes.chartPaper}>
             {showChart && (
+
               <Chart
+                className={classes.chart}
                 datasets={chosenDatasets}
                 pkModels={chosenPkModels}
                 pdModels={chosenPdModels}

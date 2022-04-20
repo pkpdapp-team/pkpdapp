@@ -533,7 +533,7 @@ class PyMC3LogPosterior(pints.LogPDF):
                 param1s.append(param1.value)
             else:
                 param1s_rvs.append(model[param1.name])
-                param1s.index.append(i)
+                param1s_index.append(i)
                 param1s.append(np.nan)
         self._n_means = len(self._log_likelihoods)
         self._param1s_index = param1s_index

@@ -49,11 +49,17 @@ const useStyles = makeStyles(() => ({
   dialogPaper: {
     minHeight: '500px',
     maxHeight: '80vh',
-  }
+  },
+  chart: {
+    height: "50vh",
+    width: "100%",
+  },
 }));
 
 export default function InferenceDialog({ project, open, handleCloseDialog }) {
   const dispatch = useDispatch();
+
+  const classes = useStyles();
 
   const [activeStep, setActiveStep] = React.useState(0);
 
@@ -145,12 +151,11 @@ export default function InferenceDialog({ project, open, handleCloseDialog }) {
   });
 
   const modelId = watch("model")
-  const modelIdParse = JSON.parse(modelId)
+  const modelIdParse = modelId ? JSON.parse(modelId) : {id: null, form: null}
   const datasetId = watch("dataset")
 
-  const chosenDataset = datasets.find(d => d.id === datasetId)
-  const chosenPkModel = dosed_pk_models.find(m => m.id === modelIdParse.id)
-  const chosenPdModel = pd_models.find(m => m.id === modelIdParse.id)
+  const chosenPkModel = dosed_pk_models.find(m => m.id === modelIdParse.id && modelIdParse.form === 'PK')
+  const chosenPdModel = pd_models.find(m => m.id === modelIdParse.id && modelIdParse.form === 'PD')
 
   const variablesAll = useSelector((state) => {
     if (modelId) {
@@ -190,6 +195,9 @@ export default function InferenceDialog({ project, open, handleCloseDialog }) {
     observationsAppend({
       model: variablesRemain[0].qname,
       biomarker: '',
+      noise_form: 'N',
+      noise_param_form: 'F',
+      parameters: [variableGetDefaultValue(variablesRemain[0])],
     })
   };
   const handleDeleteObservation = (index) => () => {
@@ -203,6 +211,9 @@ export default function InferenceDialog({ project, open, handleCloseDialog }) {
         {
           model: variablesRemain[0].qname, 
           biomarker: '', 
+          noise_form: 'N',
+          noise_param_form: 'F',
+          parameters: [variableGetDefaultValue(variablesRemain[0])],
         }
       ]
     }
@@ -225,6 +236,7 @@ export default function InferenceDialog({ project, open, handleCloseDialog }) {
   })).concat([
     { key: 'Use simulated data', value: '' }
   ]);
+  const chosenDataset = datasets.find(d => d.id === datasetId)
 
   const inferences = useSelector(selectAllInferences);
   const inference_options = inferences.map((inference) => ({
@@ -356,11 +368,11 @@ export default function InferenceDialog({ project, open, handleCloseDialog }) {
         name="dataset"
         label="Dataset"
       />
-
       <ModellingChart 
-        datasets={[chosenDataset]}
-        pkModels={[chosenPkModel]}
-        pdModels={[chosenPdModel]} 
+        className={classes.chart}
+        datasets={chosenDataset ? [chosenDataset] : []}
+        pkModels={chosenPkModel ? [chosenPkModel] : []}
+        pdModels={chosenPdModel ? [chosenPdModel] : []} 
       />
       </React.Fragment>
     ),
@@ -368,10 +380,12 @@ export default function InferenceDialog({ project, open, handleCloseDialog }) {
       <List>
       {observations.map((obs, index) => {
         const baseName = `observations[${index}]`
-        const watchForm = watch(`observations[${index}].form`)
+        const watchForm = watch(`observations[${index}].noise_param_form`)
         const variable = variables.find(v => v.qname === obs.model)
         return (
         <ListItem key={index} role={undefined} dense>
+          <Grid container spacing={1}>
+          <Grid item xs={2}>
           <FormSelectField
             control={control}
             displayEmpty
@@ -379,8 +393,8 @@ export default function InferenceDialog({ project, open, handleCloseDialog }) {
             name={`${baseName}.biomarker`}
             label={obs.model}
           />
-          <Grid container spacing={1}>
-          <Grid item xs={4}>
+          </Grid>
+          <Grid item xs={8}>
           <FormSelectField
             control={control}
             options={obs_form_options}
@@ -394,8 +408,6 @@ export default function InferenceDialog({ project, open, handleCloseDialog }) {
             name={`${baseName}.noise_param_form`}
             label={'Noise param'}
           />
-          </Grid>
-          <Grid item xs={6}>
             {prior_parameter_render(baseName, watchForm)}
           </Grid>
           </Grid>
@@ -411,6 +423,12 @@ export default function InferenceDialog({ project, open, handleCloseDialog }) {
        >
           <AddIcon />
       </IconButton>
+      <ModellingChart 
+        className={classes.chart}
+        datasets={chosenDataset ? [chosenDataset] : []}
+        pkModels={chosenPkModel ? [chosenPkModel] : []}
+        pdModels={chosenPdModel ? [chosenPdModel] : []} 
+      />
       </List>
     ),
     (
@@ -422,12 +440,12 @@ export default function InferenceDialog({ project, open, handleCloseDialog }) {
         return (
         <ListItem key={index} role={undefined} dense>
           <Grid container spacing={1}>
-          <Grid item xs={4}>
+          <Grid item xs={3}>
           <FormSelectField
             control={control}
             options={form_options}
-            onChangeUser={handleFormChange(baseName, variable, false)}
             name={`parameters[${index}].form`}
+            onChangeUser={handleFormChange(baseName, variable, false)}
             label={param.name}
           />
           </Grid>
@@ -513,7 +531,6 @@ export default function InferenceDialog({ project, open, handleCloseDialog }) {
 
   ]
 
-  const classes = useStyles();
   return (
     <Dialog open={open} onClose={handleClose} maxWidth='md' fullWidth>
       <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">

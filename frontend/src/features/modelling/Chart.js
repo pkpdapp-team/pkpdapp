@@ -12,16 +12,8 @@ import { getColor, getShape } from "./ShapesAndColors";
 Chart.register(...registerables, CrosshairPlugin);
 Interaction.modes.interpolate = Interpolate;
 
-const useStyles = makeStyles((theme) => ({
-  root: {
-    height: "85vh",
-    width: "100%",
-  },
-}));
-
-export default function ModellingChart({ datasets, pkModels, pdModels }) {
+export default function ModellingChart({ datasets, pkModels, pdModels, className }) {
   let renderChart = true;
-  const classes = useStyles();
 
   let showRhsAxis = false;
 
@@ -183,7 +175,7 @@ export default function ModellingChart({ datasets, pkModels, pdModels }) {
   }
 
   return (
-    <div className={classes.root}>
+    <div className={className}>
       {renderChart && <Scatter data={data} options={options} />}
     </div>
   );

@@ -30,7 +30,6 @@ class TestNaivePooledInferenceView(APITestCase):
         self.client = APIClient()
         self.client.force_authenticate(user=user)
 
-
     def test_pd_inference_runs(self):
         pd_dataset = Dataset.objects.get(
             name='lxf_control_growth'
@@ -293,7 +292,72 @@ class TestNaivePooledInferenceView(APITestCase):
         self.assertTrue(found_it)
 
     def test_errors(self):
-        pass
+        pd_dataset = Dataset.objects.get(
+            name='lxf_control_growth'
+        )
+
+        pd_biomarker_name = 'Tumour volume'
+
+        pd_model = PharmacodynamicModel.objects.get(
+            name='tumour_growth_inhibition_model_koch',
+            read_only=False,
+        )
+        pd_output_name = 'myokit.tumour_volume'
+        pd_parameter_names = [
+            v.qname for v in pd_model.variables.filter(constant=True)
+        ]
+
+        data = {}
+        response = self.client.post(
+            "/api/inference/naive_pooled", data, format='json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('project', response.data)
+        self.assertIn('dataset', response.data)
+        self.assertIn('model', response.data)
+        self.assertIn('parameters', response.data)
+        self.assertIn('observations', response.data)
+
+        data = {
+            'name': "test inference run",
+            'project': self.project.id,
+            'algorithm': Algorithm.objects.get(name='XNES').id,
+            'initialization_strategy': 'R',
+            'number_of_chains': 4,
+            'max_number_of_iterations': 11,
+            'burn_in': 0,
+
+            'model': {
+                'form': 'PD',
+                'id': pd_model.id
+            },
+            'dataset': pd_dataset.id,
+
+            'parameters': [
+                {
+                    'name': 'not in the model',
+                    'form': 'N',
+                    'parameters': [0, 1],
+                },
+            ],
+            'observations': [
+                {
+                    'model': 'not in the model, really',
+                    'biomarker': 'not in the dataset',
+                    'noise_form': 'N',
+                    'noise_param_form': 'N',
+                    'parameters': [0, 1],
+                },
+            ]
+        }
+
+        response = self.client.post(
+            "/api/inference/naive_pooled", data, format='json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('name', response.data['parameters'][0])
+        self.assertIn('model', response.data['observations'][0])
+        self.assertIn('biomarker', response.data['observations'][0])
 
 
 class TestInferenceViews(APITestCase):

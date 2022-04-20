@@ -161,12 +161,15 @@ class NaivePooledInferenceView(views.APIView):
 
         output_names = [ob['model'] for ob in obs]
         output_forms = [ob['noise_form'] for ob in obs]
-        # TODO: handle simulated data
-        biomarkers = [
-            BiomarkerType.objects.get(
-                name=ob['biomarker'], dataset=dataset
-            ) for ob in obs
-        ]
+        biomarkers = []
+        for ob in obs:
+            try:
+                biomarker = BiomarkerType.objects.get(
+                    name=ob['biomarker'], dataset=dataset
+                )
+            except BiomarkerType.DoesNotExist:
+                biomarker = None
+            biomarkers.append(biomarker)
         for model, group in zip(models, groups):
             # remove all outputs (and their parameters)
             # except those in output_names
@@ -279,10 +282,19 @@ class NaivePooledInferenceView(views.APIView):
                 )
 
         if 'parameters' in data:
-            for param in data['parameters']:
-                print('param', param)
+            for i, param in enumerate(data['parameters']):
+                if model is None:
+                    continue
                 if model.variables.filter(qname=param['name']).count() == 0:
-                    errors.get('parameters', {})[param] = 'not found in model'
+                    base_error = errors.get('parameters', None)
+                    if base_error is None:
+                        errors['parameters'] = {}
+                        base_error = errors['parameters']
+                    error = base_error.get(i)
+                    if error is None:
+                        base_error[i] = {}
+                        error = base_error[i]
+                    error['name'] = 'not found in model'
         else:
             errors['parameters'] = 'field required'
 
@@ -290,13 +302,30 @@ class NaivePooledInferenceView(views.APIView):
             for i, obs in enumerate(data['observations']):
                 model_var = obs['model']
                 biomarker = obs['biomarker']
-                # TODO: simulated data
-                if dataset.biomarker_types.filter(name=biomarker).count() == 0:
-                    errors.get('observations', {}).get(i, {})['biomarker'] = \
-                        'not found in dataset'
-                if model.variables.filter(qname=model_var).count() == 0:
-                    errors.get('observations', {}).get(i, {})['model'] = \
-                        'not found in model'
+                if dataset is not None and biomarker:
+                    if dataset.biomarker_types.filter(
+                        name=biomarker
+                    ).count() == 0:
+                        base_error = errors.get('observations', None)
+                        if base_error is None:
+                            errors['observations'] = {}
+                            base_error = errors['observations']
+                        error = base_error.get(i, None)
+                        if error is None:
+                            base_error[i] = {}
+                            error = base_error[i]
+                        error['biomarker'] = 'not found in dataset'
+                if model is not None:
+                    if model.variables.filter(qname=model_var).count() == 0:
+                        base_error = errors.get('observations', None)
+                        if base_error is None:
+                            errors['observations'] = {}
+                            base_error = errors['observations']
+                        error = base_error.get(i, None)
+                        if error is None:
+                            base_error[i] = {}
+                            error = base_error[i]
+                        error['model'] = 'not found in model'
         else:
             errors['observations'] = 'field required'
 

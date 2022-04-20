@@ -26,7 +26,7 @@ const useStyles = makeStyles((theme) => ({
     width: "100%",
   },
   plot: {
-    height: "85vh",
+    height: "40vh",
     width: "100%",
   },
 }));
@@ -60,8 +60,12 @@ function InferenceChartFits({ inference, observed }) {
   });
 
   console.log('observed', observed, outputVariable, outputUnit)
-  const yLabel = `${outputVariable.name} [${outputUnit.symbol}]`
-  const xLabel = `${timeVariable.name} [${timeUnit.symbol}]`
+  const yLabelUnit = outputUnit ? outputUnit.symbol : ''
+  const yLabelName = outputVariable ? outputVariable.name : ''
+  const xLabelUnit = timeUnit ? timeUnit.symbol : ''
+  const xLabelName = timeVariable ? timeVariable.name : ''
+  const yLabel = `${yLabelName} [${yLabelUnit}]`
+  const xLabel = `${xLabelName} [${xLabelUnit}]`
 
   // TODO: assume single output
   console.log('outputs', observed, outputVariable, timeVariable, outputUnit, timeUnit)
@@ -211,7 +215,7 @@ export default function InferenceChartTraces({ inference, observedWithChainValue
     <div className={classes.root}>
       <Grid container spacing={1}>
       {observedWithChainValues.map(observed => (
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12}>
           <InferenceChartFits inference={inference} observed={observed} />
           </Grid>
       ))}
