@@ -65,20 +65,23 @@ class TestNaivePooledInferenceView(APITestCase):
             'dataset': pd_dataset.id,
 
             # Model parameters
-            'parameters': {
-                pd_parameter_names[0]: {
+            'parameters': [
+                {
+                    'name': pd_parameter_names[0],
                     'form': 'N',
                     'parameters': [0, 1],
                 },
-                pd_parameter_names[1]: {
+                {
+                    'name': pd_parameter_names[1],
                     'form': 'U',
                     'parameters': [-1, 1],
                 },
-                pd_parameter_names[2]: {
+                {
+                    'name': pd_parameter_names[2],
                     'form': 'F',
                     'parameters': [0.1],
                 }
-            },
+            ],
             # output
             'observations': [
                 {
@@ -102,7 +105,7 @@ class TestNaivePooledInferenceView(APITestCase):
         self.assertEqual(response_data['initialization_strategy'], 'R')
 
         # check number of log_likelihoods, and that the model ll is there
-        self.assertEqual(len(response_data['log_likelihoods']), 12)
+        self.assertEqual(len(response_data['log_likelihoods']), 14)
         found_it = False
         for ll in response_data['log_likelihoods']:
             if ll['name'] == 'tumour_growth_inhibition_model_koch':
@@ -119,7 +122,18 @@ class TestNaivePooledInferenceView(APITestCase):
                 self.assertEqual(len(ll['parameters']), 2)
                 self.assertEqual(ll['parameters'][0]['name'],
                                  pd_output_name)
+                self.assertEqual(ll['form'], 'N')
                 self.assertEqual(ll['parameters'][0]['child'], model_id)
+                sigma_ll = ll['parameters'][1]['child']
+        self.assertTrue(found_it)
+
+        # check that the sigma log_likelihood is there and looks ok
+        found_it = False
+        for ll in response_data['log_likelihoods']:
+            if ll['id'] == sigma_ll:
+                found_it = True
+                self.assertEqual(ll['form'], 'N')
+                self.assertEqual(len(ll['parameters']), 2)
         self.assertTrue(found_it)
 
         # check that the param 1 log_likelihood is there and looks ok
@@ -190,20 +204,23 @@ class TestNaivePooledInferenceView(APITestCase):
             'dataset': pk_dataset.id,
 
             # Model parameters
-            'parameters': {
-                pk_parameter_names[0]: {
+            'parameters': [
+                {
+                    'name': pk_parameter_names[0],
                     'form': 'N',
                     'parameters': [0, 1],
                 },
-                pk_parameter_names[1]: {
+                {
+                    'name': pk_parameter_names[1],
                     'form': 'U',
                     'parameters': [-1, 1],
                 },
-                pk_parameter_names[2]: {
+                {
+                    'name': pk_parameter_names[2],
                     'form': 'F',
                     'parameters': [0.1],
                 }
-            },
+            ],
             # output
             'observations': [
                 {
@@ -244,7 +261,18 @@ class TestNaivePooledInferenceView(APITestCase):
                 self.assertEqual(len(ll['parameters']), 2)
                 self.assertEqual(ll['parameters'][0]['name'],
                                  pk_output_name)
+                self.assertEqual(ll['form'], 'N')
+                sigma_ll = ll['parameters'][1]['child']
                 self.assertEqual(ll['parameters'][0]['child'], model_id)
+        self.assertTrue(found_it)
+
+        # check that the sigma log_likelihood is there and looks ok
+        found_it = False
+        for ll in response_data['log_likelihoods']:
+            if ll['id'] == sigma_ll:
+                found_it = True
+                self.assertEqual(ll['value'], 123.3)
+                self.assertEqual(ll['form'], 'F')
         self.assertTrue(found_it)
 
         # check that the param 1 log_likelihood is there and looks ok

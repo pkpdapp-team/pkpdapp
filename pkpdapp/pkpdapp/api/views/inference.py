@@ -136,16 +136,20 @@ class NaivePooledInferenceView(views.APIView):
         for ob in obs:
             # create model
             sigma_form = ob['noise_param_form']
-            ll = LogLikelihood.objects.create(
-                inference=inference,
-                name='sigma for ' + obs.model,
-                form=sigma_form,
-            )
             parameters = ob['parameters']
             if sigma_form == LogLikelihood.Form.FIXED:
-                ll.value = parameters[0]
-                ll.save()
+                ll = LogLikelihood.objects.create(
+                    inference=inference,
+                    name='sigma for ' + ob['model'],
+                    form=sigma_form,
+                    value=parameters[0]
+                )
             else:
+                ll = LogLikelihood.objects.create(
+                    inference=inference,
+                    name='sigma for ' + ob['model'],
+                    form=sigma_form,
+                )
                 for p, v in zip(
                         ll.get_noise_log_likelihoods(),
                         parameters
@@ -276,6 +280,7 @@ class NaivePooledInferenceView(views.APIView):
 
         if 'parameters' in data:
             for param in data['parameters']:
+                print('param', param)
                 if model.variables.filter(qname=param['name']).count() == 0:
                     errors.get('parameters', {})[param] = 'not found in model'
         else:
