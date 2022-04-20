@@ -78,10 +78,16 @@ class NaivePooledInferenceView(views.APIView):
             {
                 'model': 'myokit.plasma_concentration',
                 'biomarker': 'concentration,
+                'noise_form': 'N',
+                'noise_param_form': 'N',
+                'parameters': [0, 1]
             },
             {
                 'model': 'myokit.bacteria_count',
                 'biomarker': 'bacteria,
+                'noise_form': 'LN',
+                'noise_param_form': 'F'
+                'parameters': [123.3]
             },
         ]
     }
@@ -124,8 +130,33 @@ class NaivePooledInferenceView(views.APIView):
         return group
 
     @staticmethod
-    def _set_observed_loglikelihoods(obs, models, groups, dataset):
+    def _set_observed_loglikelihoods(obs, models, groups, dataset, inference):
+        # create noise param models
+        sigma_models = []
+        for ob in obs:
+            # create model
+            sigma_form = ob['noise_param_form']
+            ll = LogLikelihood.objects.create(
+                inference=inference,
+                name='sigma for ' + obs.model,
+                form=sigma_form,
+            )
+            parameters = ob['parameters']
+            if sigma_form == LogLikelihood.Form.FIXED:
+                ll.value = parameters[0]
+                ll.save()
+            else:
+                for p, v in zip(
+                        ll.get_noise_log_likelihoods(),
+                        parameters
+                ):
+                    p.value = v
+                    p.save()
+
+            sigma_models.append(ll)
+
         output_names = [ob['model'] for ob in obs]
+        output_forms = [ob['noise_form'] for ob in obs]
         # TODO: handle simulated data
         biomarkers = [
             BiomarkerType.objects.get(
@@ -136,17 +167,24 @@ class NaivePooledInferenceView(views.APIView):
             # remove all outputs (and their parameters)
             # except those in output_names
             # and set the right biomarkers and subject groups
-            outputs = []
             for output in model.outputs.all():
                 try:
                     index = output_names.index(output.variable.qname)
                 except ValueError:
                     index = None
                 if index is not None:
-                    output.parent.biomarker_type = biomarkers[index]
-                    output.parent.subject_group = groups[index]
-                    output.parent.save()
-                    outputs.append(output.parent)
+                    parent = output.parent
+                    parent.biomarker_type = biomarkers[index]
+                    parent.subject_group = groups[index]
+                    parent.form = output_forms[index]
+                    parent.save()
+
+                    # remove sigma param and replace it with generated one
+                    parent.get_noise_log_likelihoods()[1].delete()
+                    param = LogLikelihoodParameter.objects.create(
+                        parent=parent, child=sigma_models[index],
+                        index=1, name='sigma for ' + output.variable.qname
+                    )
                 else:
                     for param in output.parent.parameters.all():
                         if param != output:
@@ -302,7 +340,7 @@ class NaivePooledInferenceView(views.APIView):
 
         self._set_observed_loglikelihoods(
             data['observations'], model_loglikelihoods, subject_groups,
-            dataset
+            dataset, inference
         )
 
         self._set_parameters(

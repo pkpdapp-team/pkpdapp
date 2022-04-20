@@ -19,6 +19,7 @@ import Step from '@material-ui/core/Step';
 import StepLabel from '@material-ui/core/StepLabel';
 import Typography from '@material-ui/core/Typography';
 
+import ModellingChart from '../modelling/Chart';
 import { FormTextField, FormSelectField, FormSliderField } from "../forms/FormComponents";
 import { selectAllAlgorithms } from "../inference/algorithmsSlice";
 import { selectAllDatasets } from "../datasets/datasetsSlice";
@@ -144,11 +145,15 @@ export default function InferenceDialog({ project, open, handleCloseDialog }) {
   });
 
   const modelId = watch("model")
+  const modelIdParse = JSON.parse(modelId)
   const datasetId = watch("dataset")
+
+  const chosenDataset = datasets.find(d => d.id === datasetId)
+  const chosenPkModel = dosed_pk_models.find(m => m.id === modelIdParse.id)
+  const chosenPdModel = pd_models.find(m => m.id === modelIdParse.id)
 
   const variablesAll = useSelector((state) => {
     if (modelId) {
-      const modelIdParse = JSON.parse(modelId)
       if (modelIdParse.form === 'PD') {
         return selectVariablesByPdModel(state, modelIdParse.id);
       } else if (modelIdParse.form === 'PK') {
@@ -236,14 +241,19 @@ export default function InferenceDialog({ project, open, handleCloseDialog }) {
     { key: "Fixed", value: "F" },
   ];
 
-  const handleFormChange = (baseName, variable) => (event) => {
+  const obs_form_options = [
+    { key: "Normal", value: "N" },
+    { key: "LogNormal", value: "LN" },
+  ];
+
+  const handleFormChange = (baseName, variable, forObs) => (event) => {
     const newForm = event.target.value;
     if (variable) {
       if (newForm === "F") {
         const value = variableGetDefaultValue(variable)
         setValue(`${baseName}.parameters[0]`, value);
       } else if (newForm === "N" || newForm === 'LN') {
-        const mean = variableGetDefaultValue(variable)
+        const mean = forObs ? 0 : variableGetDefaultValue(variable)
         const standardDeviation = Math.sqrt(
           Math.pow(variable.upper_bound - variable.lower_bound, 2) / 12
         );
@@ -279,6 +289,53 @@ export default function InferenceDialog({ project, open, handleCloseDialog }) {
     "max_number_of_iterations"
   )
 
+  const prior_parameter_render = (baseName, watchForm) => {
+    if (watchForm === 'F') {
+      return (
+        <FormTextField
+          control={control}
+          name={`${baseName}.parameters[0]`}
+          label="Value"
+          number
+        />
+      )
+    } else if ((watchForm === 'N' || watchForm === 'LN')) {
+      return (
+        <React.Fragment>
+        <FormTextField
+          control={control}
+          name={`${baseName}.parameters[0]`}
+          label="Mean"
+          number
+        />
+        <FormTextField
+          control={control}
+          name={`${baseName}.parameters[1]`}
+          label="Sigma"
+          number
+        />
+        </React.Fragment>
+      )
+    } else if (watchForm === 'U') {
+      return (
+        <React.Fragment>
+        <FormTextField
+          control={control}
+          name={`${baseName}.parameters[0]`}
+          label="Lower"
+          number
+        />
+        <FormTextField
+          control={control}
+          name={`${baseName}.parameters[1]`}
+          label="Upper"
+          number
+        />
+        </React.Fragment>
+      )
+    }
+  };
+
   const stepRenders = [
     (
       <React.Fragment>
@@ -299,24 +356,55 @@ export default function InferenceDialog({ project, open, handleCloseDialog }) {
         name="dataset"
         label="Dataset"
       />
+
+      <ModellingChart 
+        datasets={[chosenDataset]}
+        pkModels={[chosenPkModel]}
+        pdModels={[chosenPdModel]} 
+      />
       </React.Fragment>
     ),
     (
       <List>
-      {observations.map((obs, index) => (
+      {observations.map((obs, index) => {
+        const baseName = `observations[${index}]`
+        const watchForm = watch(`observations[${index}].form`)
+        const variable = variables.find(v => v.qname === obs.model)
+        return (
         <ListItem key={index} role={undefined} dense>
           <FormSelectField
             control={control}
             displayEmpty
             options={biomarker_type_options}
-            name={`observations[${index}].biomarker`}
+            name={`${baseName}.biomarker`}
             label={obs.model}
           />
+          <Grid container spacing={1}>
+          <Grid item xs={4}>
+          <FormSelectField
+            control={control}
+            options={obs_form_options}
+            name={`${baseName}.noise_form`}
+            label={'Noise form'}
+          />
+          <FormSelectField
+            control={control}
+            options={form_options}
+            onChangeUser={handleFormChange(baseName, variable, false)}
+            name={`${baseName}.noise_param_form`}
+            label={'Noise param'}
+          />
+          </Grid>
+          <Grid item xs={6}>
+            {prior_parameter_render(baseName, watchForm)}
+          </Grid>
+          </Grid>
           <IconButton size="small" onClick={handleDeleteObservation(index)}>
             <DeleteIcon />
           </IconButton>
         </ListItem>
-      ))}
+        )
+      })}
        <IconButton
         disabled={variablesRemain.length === 0}
         onClick={handleNewObservation}
@@ -338,52 +426,13 @@ export default function InferenceDialog({ project, open, handleCloseDialog }) {
           <FormSelectField
             control={control}
             options={form_options}
-            onChangeUser={handleFormChange(baseName, variable)}
+            onChangeUser={handleFormChange(baseName, variable, false)}
             name={`parameters[${index}].form`}
             label={param.name}
           />
           </Grid>
           <Grid item xs={6}>
-          { watchForm === 'F' &&
-          <FormTextField
-            control={control}
-            name={`parameters[${index}].parameters[0]`}
-            label="Value"
-            number
-          />
-          }
-          { (watchForm === 'N' || watchForm === 'LN') &&
-          <React.Fragment>
-          <FormTextField
-            control={control}
-            name={`parameters[${index}].parameters[0]`}
-            label="Mean"
-            number
-          />
-          <FormTextField
-            control={control}
-            name={`parameters[${index}].parameters[1]`}
-            label="Sigma"
-            number
-          />
-          </React.Fragment>
-          }
-          { watchForm === 'U' &&
-          <React.Fragment>
-          <FormTextField
-            control={control}
-            name={`parameters[${index}].parameters[0]`}
-            label="Lower"
-            number
-          />
-          <FormTextField
-            control={control}
-            name={`parameters[${index}].parameters[1]`}
-            label="Upper"
-            number
-          />
-          </React.Fragment>
-          }
+            {prior_parameter_render(baseName, watchForm)}
           </Grid>
           </Grid>
         </ListItem>

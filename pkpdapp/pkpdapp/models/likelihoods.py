@@ -667,7 +667,9 @@ class LogLikelihood(models.Model):
         # default children and parents
         if set_defaults:
             for child in self.children.all():
-                child.delete()
+                # make sure we don't delete models from children
+                if child.form != self.Form.MODEL:
+                    child.delete()
             if self.form == self.Form.MODEL:
                 for parent in self.parents.all():
                     parent.delete()

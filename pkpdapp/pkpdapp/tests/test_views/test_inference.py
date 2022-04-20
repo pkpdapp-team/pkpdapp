@@ -30,6 +30,7 @@ class TestNaivePooledInferenceView(APITestCase):
         self.client = APIClient()
         self.client.force_authenticate(user=user)
 
+
     def test_pd_inference_runs(self):
         pd_dataset = Dataset.objects.get(
             name='lxf_control_growth'
@@ -83,6 +84,9 @@ class TestNaivePooledInferenceView(APITestCase):
                 {
                     'model': pd_output_name,
                     'biomarker': pd_biomarker_name,
+                    'noise_form': 'N',
+                    'noise_param_form': 'N',
+                    'parameters': [0, 1],
                 },
             ]
         }
@@ -205,6 +209,9 @@ class TestNaivePooledInferenceView(APITestCase):
                 {
                     'model': pk_output_name,
                     'biomarker': pk_biomarker_name,
+                    'noise_form': 'N',
+                    'noise_param_form': 'F',
+                    'parameters': [123.3],
                 },
             ]
         }

@@ -127,7 +127,7 @@ class TestInferenceMixinSingleOutputSampling(TestCase):
         self.inference = Inference.objects.create(
             name='bob',
             project=project,
-            max_number_of_iterations=1000,
+            max_number_of_iterations=10,
             algorithm=Algorithm.objects.get(name='Haario-Bardenet'),
         )
         log_likelihood = LogLikelihood.objects.create(
@@ -168,24 +168,16 @@ class TestInferenceMixinSingleOutputSampling(TestCase):
         val = log_posterior(
             log_posterior.to_search([1, 1, 1, 1, 1, 1])
         )
-        self.assertAlmostEqual(val, -123.49973995, delta=0.1)
+        self.assertAlmostEqual(val, -120.26377224, delta=0.1)
         val = log_posterior(
             log_posterior.to_search([1.3, 0.5, 1.1, 0.9, 1.2, 1])
         )
-        self.assertAlmostEqual(val, -140.00639117, delta=0.1)
+        self.assertAlmostEqual(val, -140.26327173, delta=0.1)
 
     def test_inference_runs(self):
         # tests that inference runs and writes results to db
 
-        pr = cProfile.Profile()
-        pr.enable()
         self.inference_mixin.run_inference()
-        pr.disable()
-        s = io.StringIO()
-        sortby = SortKey.CUMULATIVE
-        ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
-        ps.print_stats()
-        print(s.getvalue())
 
         chains = self.inference_mixin.inference.chains.all()
         self.assertEqual(len(chains), 4)

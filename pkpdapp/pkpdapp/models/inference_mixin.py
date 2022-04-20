@@ -414,7 +414,7 @@ class InferenceMixin:
         # runs one set of ask / tell
         fn_values = []
         x0s = []
-        for idx, obj in enumerate(self._inference_objects):
+        for obj in self._inference_objects:
             x = obj.ask()
             if self._inference_type == "SA":  # sampling
                 score = self._pints_log_posterior(x)
@@ -451,7 +451,7 @@ class InferenceMixin:
                 for sampler in self._inference_objects:
                     sampler.set_initial_phase(True)
 
-        write_every_n_iteration = 100
+        write_every_n_iteration = 500
         evaluate_model_every_n_iterations = 10
 
         writer = ChainWriter(
@@ -485,6 +485,7 @@ class InferenceMixin:
                     update_fields=[
                         'number_of_iterations',
                         'number_of_function_evals',
+                        'time_elapsed',
                     ]
                 )
 
