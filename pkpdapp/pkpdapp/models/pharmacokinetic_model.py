@@ -205,12 +205,14 @@ class DosedPharmacokineticModel(MyokitModelMixin, StoredModel):
         if self.read_only:
             return
 
+        print('saving model')
         if (
             created or
             self.protocol != self.__original_protocol or
             self.pharmacokinetic_model != self.__original_pk_model or
             self.dose_compartment != self.__original_dose_compartment
         ):
+            print('update model')
             self.update_model()
 
         self.__original_pk_model = self.pharmacokinetic_model

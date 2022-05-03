@@ -14,39 +14,23 @@ import myokit
 
 datafile_urls = [
     'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/datasets/lxf_control_growth.csv',  # noqa: E501
-    'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/datasets/lxf_high_erlotinib_dose.csv',  # noqa: E501
-    'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/datasets/lxf_low_erlotinib_dose.csv',  # noqa: E501
     'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/datasets/lxf_medium_erlotinib_dose.csv',  # noqa: E501
-    'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/datasets/lxf_single_erlotinib_dose.csv',  # noqa: E501
     'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/datasets/demo_pk_data_upload.csv',  # noqa: E501
     'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/datasets/TCB4dataset.csv',  # noqa: E501
     'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/usecase0/usecase0.csv',  # noqa: E501
+    'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/usecase1/usecase1.csv',  # noqa: E501
 ]
 
 datafile_names = [
     'lxf_control_growth',
-    'lxf_high_erlotinib_dose',
-    'lxf_low_erlotinib_dose',
     'lxf_medium_erlotinib_dose',
-    'lxf_single_erlotinib_dose',
     'demo_pk_data',
     'TCB4dataset',
     'usecase0',
+    'usecase1',
 ]
 
 protocol_units = [
-    {
-        'time': None,
-        'amount': None,
-    },
-    {
-        'time': None,
-        'amount': None,
-    },
-    {
-        'time': None,
-        'amount': None,
-    },
     {
         'time': None,
         'amount': None,
@@ -67,6 +51,11 @@ protocol_units = [
         'time': myokit.Unit.parse_simple('h'),
         'amount': myokit.Unit.parse_simple('ng'),
     },
+    {
+        'time': myokit.Unit.parse_simple('h'),
+        'amount': myokit.Unit.parse_simple('ng'),
+    },
+
 
 ]
 
@@ -82,34 +71,6 @@ References
 .. [1] Eigenmann, M. J. et al., Combining Nonclinical Experiments with
     Translational PKPD Modeling to Differentiate Erlotinib and
     Gefitinib, Mol Cancer Ther. 2016; 15(12):3110-3119.
-''',
-    '''
-Returns the high erlotinib dose lung cancer treatment group data
-published in [1]_ as a :class:`pandas.DataFrame`.
-
-The dataset contains the time series data of 6 mice with
-patient-derived lung cancer implants. Each mouse was treated with
-an oral dose of erlotinib of \(100\, \\text{mg}\) per
-\(\\text{g}\) body weight. The dose was administered daily from
-day 3 to day 16, with a treatment break on days 9 to 13.
-
-The blood plasma concentration of erlotinib was measured on day 14,
-while the tumour volume of each mouse was monitored over a period
-of 30 days and measured a couple times a week.
-''',  # noqa: W605
-    '''
-Returns the low erlotinib dose lung cancer treatment group data
-published in [1]_ as a :class:`pandas.DataFrame`.
-
-The dataset contains the time series data of 8 mice with
-patient-derived lung cancer implants. Each mouse was treated with
-an oral dose of erlotinib of \(6.25\, \\text{mg}\) per
-\(\\text{g}\) body weight. The dose was administered daily from
-day 3 to day 16.
-
-The blood plasma concentration of erlotinib was measured on day 10 and 16,
-while the tumour volume of each mouse was monitored over a period of 30 days
-and measured a couple times a week.
 ''',  # noqa: W605
     '''
 Returns the medium erlotinib dose lung cancer treatment group data
@@ -125,19 +86,6 @@ while the tumour volume of each mouse was monitored over a period of 30 days
 and measured a couple times a week.
 ''',  # noqa: W605
     '''
-Returns the single erlotinib dose lung cancer treatment group data
-published in [1]_ as a :class:`pandas.DataFrame`.
-
-The dataset contains the time series data of 30 mice with
-patient-derived lung cancer implants. Each mouse was treated with
-a single oral dose of erlotinib of \(100\, \\text{mg}\) per
-\(\\text{g}\) body weight. The dose was administered either on
-day 0 or day 4.
-
-The blood plasma concentration of erlotinib was measured only once per mouse,
-either on day 0 or day 4.
-''',  # noqa: W605
-    '''
 Demo PK data
 ''',  # noqa: W605
     '''
@@ -146,8 +94,9 @@ TCB4 dataset
     '''
 usecase0 dataset
 ''',  # noqa: W605
-
-
+    '''
+usecase1 dataset
+''',  # noqa: W605
 ]
 
 biomarkers_for_datasets = [
@@ -169,52 +118,6 @@ biomarkers_for_datasets = [
             'unit': 'cm^3',
             'time': 'd',
         },
-        {
-            'name': 'Body weight',
-            'unit': 'g',
-            'time': 'd',
-        },
-        {
-            'name': 'Plasma concentration',
-            'unit': 'ng/mL',
-            'time': 'd',
-        },
-    ],
-    [
-        {
-            'name': 'Tumour volume',
-            'unit': 'cm^3',
-            'time': 'd',
-        },
-        {
-            'name': 'Body weight',
-            'unit': 'g',
-            'time': 'd',
-        },
-        {
-            'name': 'Plasma concentration',
-            'unit': 'ng/mL',
-            'time': 'd',
-        },
-    ],
-    [
-        {
-            'name': 'Tumour volume',
-            'unit': 'cm^3',
-            'time': 'd',
-        },
-        {
-            'name': 'Body weight',
-            'unit': 'g',
-            'time': 'd',
-        },
-        {
-            'name': 'Plasma concentration',
-            'unit': 'ng/mL',
-            'time': 'd',
-        },
-    ],
-    [
         {
             'name': 'Body weight',
             'unit': 'g',
@@ -281,6 +184,13 @@ biomarkers_for_datasets = [
         },
         {
             'name': 'Cells',
+            'unit': 'ng/mL',
+            'time': 'h',
+        },
+    ],
+    [
+        {
+            'name': 'DemoDrug Concentration',
             'unit': 'ng/mL',
             'time': 'h',
         },
@@ -410,7 +320,7 @@ def load_datasets(apps, schema_editor):
                 COMPOUND_COLUMN = 0
                 SUBJECT_GROUP_COLUMN = None
                 ROUTE_COLUMN = None
-            elif datafile_name == 'usecase0':
+            elif datafile_name in ['usecase0', 'usecase1']:
                 TIME_COLUMN = 4
                 TIME_UNIT_COLUMN = 5
                 TINF_COLUMN = 9
@@ -525,7 +435,7 @@ def load_datasets(apps, schema_editor):
                         if ROUTE_COLUMN is None or row[ROUTE_COLUMN] == 'IV':
                             route = 'D'
                         else:
-                            route = 'ID'
+                            route = 'I'
                         protocol = Protocol(
                             name='{}-{}-{}'.format(
                                 dataset.name,

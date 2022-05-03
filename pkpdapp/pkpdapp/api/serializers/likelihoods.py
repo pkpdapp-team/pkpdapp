@@ -54,7 +54,7 @@ class LogLikelihoodSerializer(serializers.ModelSerializer):
     def get_model(self, instance):
         model = instance.get_model()
         if model is not None:
-            return {model._meta.db_table, model.id}
+            return (model._meta.db_table, model.id)
 
     def get_dataset(self, instance):
         if instance.biomarker_type:

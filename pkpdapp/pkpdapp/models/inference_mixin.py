@@ -241,6 +241,7 @@ class OutputWriter:
 
 class InferenceMixin:
     def __init__(self, inference):
+        print('inference mixin', inference.number_of_iterations)
 
         # # select inference methods
         self._inference_type, self._inference_method = (
@@ -314,7 +315,7 @@ class InferenceMixin:
         for i, chain in enumerate(self.inference.chains.all()):
             x0 = []
             if self.inference.number_of_iterations > 0:
-                print('restarting chains!')
+                print('restarting chains!', self.inference.number_of_iterations, 'nit')
                 for prior in self._priors:
                     this_chain = InferenceResult.objects.filter(
                         log_likelihood=prior,
@@ -538,6 +539,7 @@ class PyMC3LogPosterior(pints.LogPDF):
         self._n_means = len(self._log_likelihoods)
         self._param1s_index = param1s_index
         self._param1s = np.array(param1s)
+        print('posterior_predictive', mean_rvs, param1s_rvs)
         self._posterior_predictive = model.fastfn(mean_rvs + param1s_rvs)
         self._model = model
         self._logp = model.logp
@@ -547,6 +549,9 @@ class PyMC3LogPosterior(pints.LogPDF):
             self._function = function
         else:
             self._function = self._logp
+
+    def n_parameters(self):
+        return len(self._prior_names)
 
     @staticmethod
     def _transform_forward(transform):

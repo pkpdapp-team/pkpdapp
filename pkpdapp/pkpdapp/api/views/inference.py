@@ -108,10 +108,17 @@ class NaivePooledInferenceView(views.APIView):
     """
 
     @staticmethod
-    def _create_dosed_model(model, protocol):
-        stored_model = model.create_stored_model()
-        stored_model.protocol = protocol
-        stored_model.save()
+    def _create_dosed_model(model, protocol, rename_model=False):
+        model_copy = type(model).objects.get(id=model.id)
+        original_name = model_copy.name
+        model_copy.id = None
+        model_copy.pk = None
+        if rename_model:
+            model_copy.name = original_name + '_' + protocol.name
+        model_copy.protocol = protocol
+        model_copy.save()
+        stored_model = model_copy.create_stored_model()
+        model_copy.delete()
         return stored_model
 
     @staticmethod
@@ -181,8 +188,10 @@ class NaivePooledInferenceView(views.APIView):
                     index = None
                 if index is not None:
                     parent = output.parent
+                    if group is not None:
+                        parent.name = parent.name + '_' + group.name
                     parent.biomarker_type = biomarkers[index]
-                    parent.subject_group = groups[index]
+                    parent.subject_group = group
                     parent.form = output_forms[index]
                     parent.save()
 
@@ -200,27 +209,46 @@ class NaivePooledInferenceView(views.APIView):
 
     @staticmethod
     def _set_parameters(params, models, inference):
-        for param in params:
-            param_name = param['name']
-            param_form = param['form']
-            noise_params = param['parameters']
-
-            # set parameter log_likelihood on models
-            for model in models:
-                try:
-                    model_param = model.parameters.get(name=param_name)
-                except LogLikelihoodParameter.DoesNotExist:
+        pooled_params = {}
+        params_names = [p['name'] for p in params]
+        for model in models:
+            for model_param in model.parameters.all():
+                # if we've already done this param, use the child
+                # in pooled_params
+                if model_param.name in pooled_params:
+                    old_child = model_param.child
+                    model_param.child = pooled_params[model_param.name]
+                    model_param.save()
+                    old_child.delete()
                     continue
-                child = model_param.child
-                child.form = param_form
-                if param_form == 'F':
-                    child.value = noise_params[0]
+
+                # else we'll deal with it now
+                # if the user has set a form for this param use it,
+                # otherwise use the default
+                try:
+                    param_index = params_names.index(model_param.name)
+                except ValueError:
+                    param_index = None
+                if param_index is None:
+                    child = model_param.child
                 else:
-                    child.value = None
-                child.save()
-                for i, p in enumerate(child.parameters.all()):
-                    p.child.value = noise_params[p.index]
-                    p.child.save()
+                    param = params[param_index]
+                    param_form = param['form']
+                    noise_params = param['parameters']
+
+                    child = model_param.child
+                    child.form = param_form
+                    if param_form == 'F':
+                        child.value = noise_params[0]
+                    else:
+                        child.value = None
+                    child.save()
+                    for i, p in enumerate(child.parameters.all()):
+                        p.child.value = noise_params[p.index]
+                        p.child.save()
+
+                pooled_params[model_param.name] = child
+
 
     def post(self, request, format=None):
         errors = {}
@@ -340,12 +368,14 @@ class NaivePooledInferenceView(views.APIView):
             for p in dataset.subjects.values('protocol').distinct()
             if p['protocol'] is not None
         ]
+        rename_models = len(protocols) > 1
         if len(protocols) == 0 or data['model']['form'] == 'PD':
             models = [model.create_stored_model()]
             subject_groups = [None]
         else:
             models = [
-                self._create_dosed_model(model, p) for p in protocols
+                self._create_dosed_model(model, p, rename_model=rename_models)
+                for p in protocols
             ]
             subject_groups = [
                 self._create_sgroup_protocol(dataset, p) for p in protocols

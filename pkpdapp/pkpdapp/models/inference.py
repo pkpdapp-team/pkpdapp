@@ -132,7 +132,6 @@ class Inference(StoredModel):
         # old_models += list(PkpdModel.objects.filter(
         #    variables__log_likelihoods__in=old_log_likelihoods
         # ).distinct())
-        print('all models', old_models)
 
         # create a map between old and new models so we can transfer
         # the relationships
@@ -188,6 +187,17 @@ class Inference(StoredModel):
         when an inference is run, a new model is created (a copy),
         and the model and all its variables are stored
         """
+        ll_names = [
+            ll.name for ll in self.log_likelihoods.all()
+        ]
+        if len(set(ll_names)) < len(ll_names):
+            raise RuntimeError(
+                (
+                    'inference has log-likelihoods '
+                    'with identical names! {}'
+                ).format(ll_names)
+            )
+
         if not self.read_only:
             self.store_inference()
 
