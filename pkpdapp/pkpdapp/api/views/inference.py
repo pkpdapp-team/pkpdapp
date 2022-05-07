@@ -38,6 +38,7 @@ class NaivePooledInferenceView(views.APIView):
     expecting data in the form:
     {
         # Inference parameters
+        'id': 1
         'name': "my inference run",
         'project': 1,
         'algorithm': 2,
@@ -382,17 +383,42 @@ class NaivePooledInferenceView(views.APIView):
             ]
 
         # start creating inference object
-        inference = Inference.objects.create(
-            name=data.get('name'),
-            project=project,
-            algorithm=algorithm,
-            initialization_strategy=data.get('initialization_strategy'),
-            initialization_inference=data.get('initialization_inference'),
-            number_of_chains=data.get('number_of_chains'),
-            max_number_of_iterations=data.get('max_number_of_iterations'),
-            burn_in=data.get('burn_in'),
-            read_only=True
-        )
+        initialization_inference = data.get('initialization_inference')
+        if initialization_inference is not None:
+            initialization_inference = Inference.objects.get(
+                id=initialization_inference
+            )
+
+        if 'id' in data:
+            inference = Inference.objects.get(id=data['id'])
+            inference.reset()
+            inference.name = data.get('name')
+            inference.project = project
+            inference.algorithm = algorithm
+            inference.initialization_strategy = \
+                data.get('initialization_strategy')
+            inference.initialization_inference = initialization_inference
+            inference.number_of_chains = data.get('number_of_chains')
+            inference.max_number_of_iterations = \
+                data.get('max_number_of_iterations')
+            inference.burn_in = data.get('burn_in')
+            inference.read_only = True
+        else:
+            inference = Inference.objects.create(
+                name=data.get('name'),
+                project=project,
+                algorithm=algorithm,
+                initialization_strategy=data.get('initialization_strategy'),
+                initialization_inference=initialization_inference,
+                number_of_chains=data.get('number_of_chains'),
+                max_number_of_iterations=data.get('max_number_of_iterations'),
+                burn_in=data.get('burn_in'),
+                read_only=True
+            )
+            data['id'] = inference.id
+
+        inference.metadata = data
+        inference.save()
 
         model_loglikelihoods = [
             LogLikelihood.objects.create(

@@ -60,7 +60,18 @@ export const chainsSlice = createSlice({
       state.status = "succeeded";
       chainsAdapter.setAll(state, action.payload);
     },
-    [fetchChainsByInferenceId.fulfilled]: chainsAdapter.upsertMany,
+    [fetchChainsByInferenceId.fulfilled]: (state, action) => {
+      if (action.payload.length === 0) {
+        return
+      }
+      console.log('fetchChainsByInferenceId', action, state)
+      const existingChains = selectChainsByInferenceId(
+        state, action.payload[0].inference
+      )
+      console.log('fetchChainsByInferenceId', existingChains)
+      chainsAdapter.removeMany(existingChains)
+      chainsAdapter.upsertMany(action.payload)
+    },
     [fetchChainById.fulfilled]: chainsAdapter.upsertOne,
   },
 });

@@ -7,6 +7,7 @@
 from rest_framework import status
 from django.contrib.auth.models import User
 from rest_framework.test import APITestCase, APIClient
+import pymc3
 from pkpdapp.models import (
     Inference, Dataset,
     PharmacokineticModel, DosedPharmacokineticModel,
@@ -67,12 +68,12 @@ class TestNaivePooledInferenceView(APITestCase):
                 {
                     'name': pd_parameter_names[0],
                     'form': 'N',
-                    'parameters': [0, 1],
+                    'parameters': [1, 0.1],
                 },
                 {
                     'name': pd_parameter_names[1],
                     'form': 'U',
-                    'parameters': [-1, 1],
+                    'parameters': [0.1, 0.2],
                 },
                 {
                     'name': pd_parameter_names[2],
@@ -148,8 +149,28 @@ class TestNaivePooledInferenceView(APITestCase):
             if ll['id'] == child_id:
                 found_it = True
                 self.assertEqual(ll['form'], 'F')
-                self.assertEqual(ll['value'], -1)
+                self.assertEqual(ll['value'], 0.1)
         self.assertTrue(found_it)
+
+        inference = Inference.objects.get(id=response_data['id'])
+
+        inference_mixin = InferenceMixin(inference)
+        log_posterior = inference_mixin._pints_log_posterior
+
+        #pymc3_model = log_posterior._model
+        #graph = pymc3.model_graph.model_to_graphviz(pymc3_model)
+        #graph.render(directory='test', view=True)
+
+        val = log_posterior(
+            log_posterior.to_search([0.5, 0.12])
+        )
+        self.assertAlmostEqual(val, 85.45662850306755, delta=0.1)
+        val = log_posterior(
+            log_posterior.to_search([0.4, 0.11])
+        )
+        self.assertAlmostEqual(val, 86.03699035096102, delta=0.1)
+
+
 
     def test_pk_inference_runs(self):
         pk_dataset = Dataset.objects.get(
@@ -449,6 +470,10 @@ class TestNaivePooledInferenceView(APITestCase):
 
         inference_mixin = InferenceMixin(inference)
         log_posterior = inference_mixin._pints_log_posterior
+
+        #pymc3_model = log_posterior._model
+        #graph = pymc3.model_graph.model_to_graphviz(pymc3_model)
+        #graph.render(directory='test', view=True)
 
         val = log_posterior(
             log_posterior.to_search([0.5, 0.12])

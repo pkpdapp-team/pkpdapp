@@ -354,9 +354,7 @@ class InferenceMixin:
                     ):
                         try:
                             last_result = last_values.get(
-                                prior__log_likelihood_parameter__name=(
-                                    this_prior.log_likelihood_parameter.name
-                                )
+                                log_likelihood__name=this_prior.name
                             )
                             x0[xi] = last_result.value
                         except InferenceResult.DoesNotExist:

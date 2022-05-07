@@ -74,6 +74,26 @@ class InferenceChain(models.Model):
 
         return df
 
+    def function_as_pandas(self):
+        iteration_values = \
+            self.inference_function_results.filter(
+                iteration__gt=self.inference.burn_in
+            ).order_by('iteration').values_list(
+                'value', 'iteration'
+            )
+        if iteration_values:
+            values, iterations = list(zip(*iteration_values))
+        else:
+            values = []
+            iterations = []
+        df = pd.DataFrame.from_dict({
+            'values': values,
+            'iterations': iterations,
+        })
+
+        return df
+
+
 
 class InferenceResult(models.Model):
     """

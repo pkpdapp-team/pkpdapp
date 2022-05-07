@@ -124,6 +124,7 @@ class InferenceChainSerializer(serializers.ModelSerializer):
 
     def get_data(self, inference_chain):
         chain = inference_chain.as_pandas()
+        function_values = inference_chain.function_as_pandas()
         by_priors = chain.groupby('priors')
 
         chain = {}
@@ -158,7 +159,15 @@ class InferenceChainSerializer(serializers.ModelSerializer):
                 'iterations': iterations.tolist()
             }
 
+        if len(function_values.index) > sample_n:
+            function_values = function_values.sample(n=sample_n).sort_index()
+        function_values = {
+            'values': function_values['values'].tolist(),
+            'iterations': function_values['iterations'],
+        }
+
         return {
             'kde': kde,
             'chain': chain,
+            'function': function_values,
         }

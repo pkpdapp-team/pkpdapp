@@ -23,6 +23,9 @@ import MenuItem from "@material-ui/core/MenuItem";
 import AddIcon from "@material-ui/icons/Add";
 import DeleteIcon from "@material-ui/icons/Delete";
 
+
+import InferenceDialog from "./InferenceDialog";
+
 import { selectWritablePkModels, selectReadOnlyPkModels } from "../pkModels/pkModelsSlice";
 import { selectWritablePdModels, selectReadOnlyPdModels } from "../pdModels/pdModelsSlice";
 import { selectAllAlgorithms } from "../inference/algorithmsSlice";
@@ -567,6 +570,13 @@ function LogLikelihoodSubform({
 
 export default function InferenceDetail({ project, inference }) {
   const dispatch = useDispatch();
+  const [openDialog, setOpenDialog] = React.useState(false);
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
+  };
+  const handleEdit = () => {
+    setOpenDialog(true);
+  };
 
   let logLikelihoodNodes = inference.log_likelihoods.map(ll => {
     let label = (<>ll.name</>)
@@ -711,9 +721,6 @@ export default function InferenceDetail({ project, inference }) {
     dispatch(deleteInference(inference.id));
   };
 
-  const handleRun = () => {
-    dispatch(runInference(inference.id));
-  };
 
   const handleStop= () => {
     dispatch(stopInference(inference.id));
@@ -770,6 +777,7 @@ export default function InferenceDetail({ project, inference }) {
   
   
   return (
+    <div>
     <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
       <FormTextField
         control={control}
@@ -868,11 +876,10 @@ export default function InferenceDetail({ project, inference }) {
         </Button>
         <Button
           className={classes.controls}
-          disabled={readOnly}
-          onClick={handleRun}
+          onClick={handleEdit}
           variant="contained"
         >
-          Run
+          Edit
         </Button>
         <Button
           className={classes.controls}
@@ -899,5 +906,12 @@ export default function InferenceDetail({ project, inference }) {
           </Alert>
         ))}
     </form>
+    <InferenceDialog 
+      open={openDialog}
+      handleCloseDialog={handleCloseDialog}
+      project={project}
+      defaultValues={inference.metadata}
+    />
+    </div>
   );
 }

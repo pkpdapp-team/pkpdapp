@@ -56,7 +56,7 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
-export default function InferenceDialog({ project, open, handleCloseDialog }) {
+export default function InferenceDialog({ project, open, handleCloseDialog, defaultValues }) {
   const dispatch = useDispatch();
 
   const classes = useStyles();
@@ -107,20 +107,27 @@ export default function InferenceDialog({ project, open, handleCloseDialog }) {
     group: 'Pharmacokinetic',
   })));
 
-  
-  const defaultValues = {
-    name: '',
-    description: '',
-    project: project.id, 
-    algorithm: 1, 
-    initialization_strategy: 'R',
-    initialization_inference: '',
-    number_of_chains: 4,
-    max_number_of_iterations: 1000,
-    burn_in: 0,
-    model: '',
-    dataset: '',
+  if (defaultValues) {
+    defaultValues = {
+      ...defaultValues,
+      model: JSON.stringify(defaultValues.model),
+    }
+  } else if (!defaultValues) {
+    defaultValues = {
+      name: '',
+      description: '',
+      project: project.id, 
+      algorithm: 1, 
+      initialization_strategy: 'R',
+      initialization_inference: '',
+      number_of_chains: 4,
+      max_number_of_iterations: 1000,
+      burn_in: 0,
+      model: '',
+      dataset: '',
+    }
   }
+  console.log('defaultValues', defaultValues)
 
   const { control, handleSubmit, watch, setValue, reset } = useForm({
     defaultValues
@@ -205,8 +212,17 @@ export default function InferenceDialog({ project, open, handleCloseDialog }) {
   };
 
   useEffect(() => {
-    let model_observations = []
-    if (variablesRemain.length > 0) {
+    let model_observations = observations.filter(o => {
+      const variable = variables.find(v => v.qname === o.model)
+      if (variable) {
+        return true
+      }
+      return false
+    }).map( o => ({
+      ...o,
+      parameters: [...o.parameters]
+    }))
+    if (model_observations.length === 0 && variablesRemain.length > 0) {
       model_observations = [
         {
           model: variablesRemain[0].qname, 
@@ -219,11 +235,21 @@ export default function InferenceDialog({ project, open, handleCloseDialog }) {
     }
     const model_params = variables.filter(variable => 
       variable.constant || variable.state
-    ).map(variable => ({
-      name: variable.qname, 
-      form: 'F',
-      parameters: [variableGetDefaultValue(variable)],
-    }))
+    ).map(variable => {
+      const existing_param = parameters.find(p => p.name === variable.qname)
+      if (existing_param) {
+        return {
+          name: existing_param.name,
+          form: existing_param.form,
+          parameters: [...existing_param.parameters],
+        }
+      }
+      return {
+        name: variable.qname, 
+        form: 'F',
+        parameters: [variableGetDefaultValue(variable)],
+      }
+    })
     parametersReplace(model_params)
     observationsReplace(model_observations)
     }
@@ -437,6 +463,7 @@ export default function InferenceDialog({ project, open, handleCloseDialog }) {
         const baseName = `parameters[${index}]`
         const watchForm = watch(`parameters[${index}].form`)
         const variable = variables.find(v => v.qname === param.name)
+        console.log('doing parameter', param, baseName, watchForm, variable)
         return (
         <ListItem key={index} role={undefined} dense>
           <Grid container spacing={1}>

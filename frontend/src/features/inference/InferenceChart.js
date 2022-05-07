@@ -65,7 +65,6 @@ export default function InferenceChart({inference}) {
     ...ll,  
     chains: chains.map(chain => chain.data.chain[ll.id]),
     kdes: chains.map(chain => chain.data.kde[ll.id]),
-    outputs: chains.map(chain => chain.outputs[ll.id])
   }));
 
   const observedWithChainValues = inference.log_likelihoods.filter(

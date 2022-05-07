@@ -407,7 +407,7 @@ class LogLikelihood(models.Model):
             shapes[name] = shape
             sigma, _ = sigma._create_pymc3_model(pm_model, self, ops, shapes)
             ops[name] = pm.Normal(
-                name, mean, 1, observed=values, shape=shape
+                name, mean, sigma, observed=values, shape=shape
             )
             return ops[name], shapes[name]
         elif self.form == self.Form.LOGNORMAL:

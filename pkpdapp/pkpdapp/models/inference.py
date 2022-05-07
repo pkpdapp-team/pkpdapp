@@ -114,6 +114,19 @@ class Inference(StoredModel):
         help_text='If executing, this is the celery task id'
     )
 
+    metadata = models.JSONField(
+        default={},
+        help_text="metadata for inference",
+    )
+
+    def reset(self):
+        self.chains.all().delete()
+        self.log_likelihoods.all().delete()
+        self.number_of_iterations = 0
+        self.time_elapsed = 0
+        self.number_of_function_evals = 0
+        self.metadata = {}
+
     def get_project(self):
         return self.project
 
@@ -183,10 +196,6 @@ class Inference(StoredModel):
         self.refresh_from_db()
 
     def run_inference(self, test=False):
-        """
-        when an inference is run, a new model is created (a copy),
-        and the model and all its variables are stored
-        """
         ll_names = [
             ll.name for ll in self.log_likelihoods.all()
         ]
@@ -197,9 +206,6 @@ class Inference(StoredModel):
                     'with identical names! {}'
                 ).format(ll_names)
             )
-
-        if not self.read_only:
-            self.store_inference()
 
         if not test:
             from pkpdapp.tasks import run_inference

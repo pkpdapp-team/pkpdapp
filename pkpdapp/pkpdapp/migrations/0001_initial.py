@@ -7,6 +7,7 @@
 # flake8: noqa
 
 
+
 from django.conf import settings
 from django.db import migrations, models
 import django.db.models.deletion
@@ -22,8 +23,8 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        migrations.swappable_dependency(settings.AUTH_USER_MODEL),
         ('contenttypes', '0002_remove_content_type_name'),
+        migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
@@ -111,6 +112,7 @@ class Migration(migrations.Migration):
                 ('time_elapsed', models.IntegerField(default=0, help_text='Elapsed run time for inference in seconds')),
                 ('number_of_function_evals', models.IntegerField(default=0, help_text='number of function evaluations')),
                 ('task_id', models.CharField(blank=True, help_text='If executing, this is the celery task id', max_length=40, null=True)),
+                ('metadata', models.JSONField(default={}, help_text='metadata for inference')),
                 ('algorithm', models.ForeignKey(default=pkpdapp.models.inference.get_default_optimisation_algorithm, help_text='algorithm used to perform the inference', on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.algorithm')),
                 ('initialization_inference', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.inference')),
             ],
@@ -393,7 +395,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='loglikelihood',
             name='variable',
-            field=models.ForeignKey(blank=True, help_text='a variable (any) in the deterministic model.', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='log_likelihoods', to='pkpdapp.variable'),
+            field=models.ForeignKey(blank=True, help_text='If form=MODEL, a variable (any) in the deterministic model. ', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='log_likelihoods', to='pkpdapp.variable'),
         ),
         migrations.CreateModel(
             name='InferenceResult',
