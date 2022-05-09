@@ -33,7 +33,6 @@ export default function InferenceChartOptimisationResults({ inference, priorsWit
       final_values,
     }
   });
-  console.log('InferenceChartOptimisationResults', priorsWithChainValues)
     
   return (
     <div className={classes.root}>

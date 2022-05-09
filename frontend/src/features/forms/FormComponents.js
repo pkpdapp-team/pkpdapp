@@ -24,6 +24,7 @@ const useStyles = makeStyles((theme) => ({
     height: "100%",
   },
   formInput: {
+    display: "flex",
     margin: theme.spacing(1),
   },
   chips: {
@@ -321,6 +322,7 @@ export function FormMultiSelectField({
         render={({ field }) => (
           <Select
             labelId={name.concat("-select-label")}
+            autoWidth={true}
             multiple
             renderValue={(selected) => (
               <div className={classes.chips}>
@@ -402,6 +404,7 @@ export function FormSelectField({
             labelId={name.concat("-select-label")}
             value={value}
             error={error}
+            autoWidth={true}
             onBlur={onBlur}
             checked={value}
             displayEmpty

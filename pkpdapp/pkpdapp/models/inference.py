@@ -115,11 +115,12 @@ class Inference(StoredModel):
     )
 
     metadata = models.JSONField(
-        default={},
+        default=dict,
         help_text="metadata for inference",
     )
 
     def reset(self):
+        print('reset', self)
         self.chains.all().delete()
         self.log_likelihoods.all().delete()
         self.number_of_iterations = 0

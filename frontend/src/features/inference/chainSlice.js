@@ -34,12 +34,19 @@ export const fetchChainById = createAsyncThunk(
 
 export const fetchChainsByInferenceId = createAsyncThunk(
   "chains/fetchChainByInference",
-  async (inferenceId, { dispatch }) => {
-    console.log("fetchChainsByInference", inferenceId);
+  async (inferenceId, { dispatch, getState }) => {
     let response = await api.get(
       `/api/inference_chain/?inference_id=${inferenceId}`
     );
-    return response;
+
+    const state = getState()
+    const responseIds = response.map(chain => chain.id)
+    const existingChains = selectChainsByInferenceId(state, inferenceId)
+    const deletedChains = existingChains.filter(chain => responseIds.indexOf(chain.id) == -1)
+    return {
+      chains: response,
+      deletedChains
+    };
   }
 );
 
@@ -61,16 +68,10 @@ export const chainsSlice = createSlice({
       chainsAdapter.setAll(state, action.payload);
     },
     [fetchChainsByInferenceId.fulfilled]: (state, action) => {
-      if (action.payload.length === 0) {
-        return
+      if (action.payload.deletedChains.length > 0) {
+        chainsAdapter.removeMany(state, action.payload.deletedChains.map(c => c.id))
       }
-      console.log('fetchChainsByInferenceId', action, state)
-      const existingChains = selectChainsByInferenceId(
-        state, action.payload[0].inference
-      )
-      console.log('fetchChainsByInferenceId', existingChains)
-      chainsAdapter.removeMany(existingChains)
-      chainsAdapter.upsertMany(action.payload)
+      chainsAdapter.upsertMany(state, action.payload.chains)
     },
     [fetchChainById.fulfilled]: chainsAdapter.upsertOne,
   },

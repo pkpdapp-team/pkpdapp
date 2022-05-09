@@ -236,7 +236,6 @@ function LogLikelihoodSubform({
   // model 
   
   const [modelId, setModelId] = useState(defaultModelID);
-  console.log('modelId', modelId, modelId === '')
   const [changedModel, setChangedModel] = useState(false);
   const pd_models = useSelector(state => 
     disabled ? selectReadOnlyPdModels(state) : selectWritablePdModels(state)
@@ -327,7 +326,6 @@ function LogLikelihoodSubform({
       
   // dataset
   const [datasetId, setDatasetId] = useState(logLikelihood.dataset || '');
-  console.log('datasetId', datasetId, datasetId === '', datasetOptions)
   const handleDatasetChange = (event) => {
     const value = event.target.value;
     setDatasetId(value);
@@ -671,9 +669,10 @@ export default function InferenceDetail({ project, inference }) {
         return n;
       })
       setNodes(newNodes)
+      setEdges(parameterEdges)
     })
 
-  }, [inference.id]);
+  }, [JSON.stringify(inference.metadata)]);
 
   const logLikelihoodsNoNull = inference.log_likelihoods.map(ll =>
     Object.keys(ll).reduce((sum, key) => {
@@ -739,7 +738,6 @@ export default function InferenceDetail({ project, inference }) {
     "max_number_of_iterations", 
     inference.max_number_of_iterations
   )
-  console.log('inference', inference)
   
 
   const onSubmit = (values) => {

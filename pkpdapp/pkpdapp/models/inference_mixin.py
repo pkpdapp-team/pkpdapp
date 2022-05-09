@@ -123,12 +123,33 @@ class OutputWriter:
         data = [ll.get_inference_data() for ll in log_likelihoods]
         self._values = [d[0] for d in data]
         self._times = [d[1] for d in data]
+        self._unique_times = [
+            [times[0]] for times in self._times
+        ]
+        self._unique_times_index = [
+            [0] for _ in self._times
+        ]
+        self._times_index = [
+            [0] for _ in self._times
+        ]
+        for unique_times, unique_times_index, times_index, times in zip(
+            self._unique_times, self._unique_times_index, self._times_index,
+            self._times
+        ):
+            unique_index = 0
+            for i, t in enumerate(times[1:]):
+                if t != unique_times[-1]:
+                    times_index.append(i + 1)
+                    unique_times.append(t)
+                    unique_index += 1
+                unique_times_index.append(unique_index)
+
         self._tdigests = [
             [
                 [
                     TDigest() for _ in times
                 ]
-                for times in self._times
+                for times in self._unique_times
             ]
             for _ in chains
         ]
@@ -191,22 +212,25 @@ class OutputWriter:
                         self._pints_log_posterior.sample_generative_model(
                             self._pints_log_posterior.to_search(x0)
                         )
-                    for times, tdigests, result in zip(
-                        self._times, tdigests_for_chain, results
+                    for times, tdigests, result, unique_times_index in zip(
+                        self._times, tdigests_for_chain, results,
+                        self._unique_times_index
                     ):
                         for i in range(len(times)):
                             value = result[i]
-                            tdigests[i].update(value)
+                            tdigests[unique_times_index[i]].update(value)
 
                 # write new percentiles
                 output_index = 0
-                for times, tdigests, result in zip(
-                    self._times, tdigests_for_chain, results
+                for times, unique_times_index, tdigests, result in zip(
+                    self._times, self._unique_times_index,
+                    tdigests_for_chain, results
                 ):
                     for i in range(len(times)):
-                        maximum = tdigests[i].percentile(90)
-                        minimum = tdigests[i].percentile(10)
-                        median = tdigests[i].percentile(50)
+                        tdigest = tdigests[unique_times_index[i]]
+                        maximum = tdigest.percentile(90)
+                        minimum = tdigest.percentile(10)
+                        median = tdigest.percentile(50)
                         outputs[output_index].median = median
                         outputs[output_index].percentile_min = minimum
                         outputs[output_index].percentile_max = maximum
@@ -221,8 +245,8 @@ class OutputWriter:
                         self._pints_log_posterior.to_search(x0)
                     )
                 for times, tdigests, result, result_min, result_max in zip(
-                    self._times, tdigests_for_chain, results, results_min,
-                    results_max
+                    self._times, tdigests_for_chain,
+                    results, results_min, results_max
                 ):
                     for i in range(len(times)):
                         outputs[output_index].median = result[i]
@@ -606,6 +630,7 @@ class PyMC3LogPosterior(pints.LogPDF):
         param1s = self._param1s
         for result, index in zip(results[self._n_means:], self._param1s_index):
             param1s[index] = result
+        print('generative_model_range', param1s, self._param1s_index, self._param1s)
         values = []
         values_min = []
         values_max = []
@@ -615,8 +640,8 @@ class PyMC3LogPosterior(pints.LogPDF):
             output_values_min, output_values_max = \
                 log_likelihood.noise_range(output_values, [0, param1])
             values.append(output_values)
-            values_min.append(output_values)
-            values_max.append(output_values)
+            values_min.append(output_values_min)
+            values_max.append(output_values_max)
         return values_min, values, values_max
 
     def sample_generative_model(self, x):

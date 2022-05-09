@@ -22,6 +22,9 @@ import { FormTextField } from "../forms/FormComponents";
 import { userHasReadOnlyAccess } from "../projects/projectsSlice";
 
 const useStyles = makeStyles((theme) => ({
+  root: {
+    width: "100%",
+  },
   controlsRoot: {
     display: "flex",
     alignItems: "center",
@@ -70,6 +73,7 @@ export default function PdDetail({ project, pd_model }) {
   const disableSave = userHasReadOnlyAccess(project);
 
   return (
+    <div className={classes.root}>
     <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
       <FormTextField
         control={control}
@@ -153,5 +157,6 @@ export default function PdDetail({ project, pd_model }) {
           </Alert>
         ))}
     </form>
+    </div>
   );
 }

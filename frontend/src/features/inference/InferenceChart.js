@@ -76,12 +76,12 @@ export default function InferenceChart({inference}) {
     return {
       ...ll,  
       model_loglikelihoods,
-      outputs: chains.map(chain => chain.outputs[ll.id])
+      outputs: chains.map(chain => chain.outputs[ll.id] || {
+        times: [], datas: [], percentile_mins: [], percentile_maxs: [],
+        medians: [],
+      })
     }
   });
-
-  console.log('chains', chains)
-  console.log('priorsWithChainValues', priorsWithChainValues)
 
   const algorithm = useSelector((state) =>
     selectAlgorithmById(state, inference.algorithm)

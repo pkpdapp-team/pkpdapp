@@ -124,7 +124,7 @@ class NaivePooledInferenceView(views.APIView):
 
     @staticmethod
     def _create_sgroup_protocol(dataset, protocol):
-        name = 'auto-group for protocol {}'.format(protocol.id)
+        name = 'subject group for protocol {}'.format(protocol.name)
         try:
             group = SubjectGroup.objects.get(
                 name=name, dataset=dataset
@@ -190,7 +190,7 @@ class NaivePooledInferenceView(views.APIView):
                 if index is not None:
                     parent = output.parent
                     if group is not None:
-                        parent.name = parent.name + '_' + group.name
+                        parent.name = '{} ({})'.format(parent.name, group.name)
                     parent.biomarker_type = biomarkers[index]
                     parent.subject_group = group
                     parent.form = output_forms[index]

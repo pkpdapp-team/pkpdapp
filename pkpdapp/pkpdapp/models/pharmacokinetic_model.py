@@ -117,9 +117,7 @@ class DosedPharmacokineticModel(MyokitModelMixin, StoredModel):
         stored_model_kwargs = {
             'name': self.name,
             'project': self.project,
-            'pharmacokinetic_model': (
-                self.pharmacokinetic_model.create_stored_model()
-            ),
+            'pharmacokinetic_model': self.pharmacokinetic_model,
             'dose_compartment': self.dose_compartment,
             'protocol': (
                 self.protocol.create_stored_protocol()

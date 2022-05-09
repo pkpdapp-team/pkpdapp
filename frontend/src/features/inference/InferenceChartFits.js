@@ -39,8 +39,8 @@ function InferenceChartFits({ inference, observed }) {
   const classes = useStyles();
 
   const has_distribution = true
-  const times = observed.outputs[0].times
-  const datas = observed.outputs[0].datas
+  const times = observed.outputs ? observed.outputs[0].times : []
+  const datas = observed.outputs ? observed.outputs[0].datas : []
 
   const outputVariable = useSelector((state) => {
         return selectVariableById(state, observed.parameters[0].variable);
@@ -59,7 +59,6 @@ function InferenceChartFits({ inference, observed }) {
     }
   });
 
-  console.log('observed', observed, outputVariable, outputUnit)
   const yLabelUnit = outputUnit ? outputUnit.symbol : ''
   const yLabelName = outputVariable ? outputVariable.name : ''
   const xLabelUnit = timeUnit ? timeUnit.symbol : ''
@@ -68,7 +67,6 @@ function InferenceChartFits({ inference, observed }) {
   const xLabel = `${xLabelName} [${xLabelUnit}]`
 
   // TODO: assume single output
-  console.log('outputs', observed, outputVariable, timeVariable, outputUnit, timeUnit)
   let data = {
   }
   if (has_distribution) {
@@ -180,6 +178,10 @@ function InferenceChartFits({ inference, observed }) {
         labels: {
           boxHeight: 1
         },
+      },
+      title: {
+        display: true,
+        text: observed.name,
       },
       tooltip: {
         mode: "interpolate",

@@ -18,6 +18,8 @@ import Stepper from '@material-ui/core/Stepper';
 import Step from '@material-ui/core/Step';
 import StepLabel from '@material-ui/core/StepLabel';
 import Typography from '@material-ui/core/Typography';
+import Divider from '@material-ui/core/Divider';
+import Paper from '@material-ui/core/Paper';
 
 import ModellingChart from '../modelling/Chart';
 import { FormTextField, FormSelectField, FormSliderField } from "../forms/FormComponents";
@@ -49,6 +51,10 @@ const useStyles = makeStyles(() => ({
   dialogPaper: {
     minHeight: '500px',
     maxHeight: '80vh',
+  },
+  listPaper: {
+    display: 'flex',
+    width: "100%",
   },
   chart: {
     height: "50vh",
@@ -127,7 +133,6 @@ export default function InferenceDialog({ project, open, handleCloseDialog, defa
       dataset: '',
     }
   }
-  console.log('defaultValues', defaultValues)
 
   const { control, handleSubmit, watch, setValue, reset } = useForm({
     defaultValues
@@ -162,6 +167,7 @@ export default function InferenceDialog({ project, open, handleCloseDialog, defa
   const datasetId = watch("dataset")
 
   const chosenPkModel = dosed_pk_models.find(m => m.id === modelIdParse.id && modelIdParse.form === 'PK')
+  console.log('chosenPkModel', chosenPkModel)
   const chosenPdModel = pd_models.find(m => m.id === modelIdParse.id && modelIdParse.form === 'PD')
 
   const variablesAll = useSelector((state) => {
@@ -188,11 +194,7 @@ export default function InferenceDialog({ project, open, handleCloseDialog, defa
   const biomarker_type_options = biomarker_types.map((biomarker_type) => ({
     key: biomarker_type.name,
     value: biomarker_type.name,
-  })).concat([
-    {key: "Simulated data", value: ""}
-  ]);
-  console.log('biomarker types', biomarker_types, biomarker_type_options)
-
+  }));
 
   const observedVariables = observations.map(obs => obs.model)
   const variablesRemain = variables.filter(v => (
@@ -233,6 +235,7 @@ export default function InferenceDialog({ project, open, handleCloseDialog, defa
         }
       ]
     }
+
     const model_params = variables.filter(variable => 
       variable.constant || variable.state
     ).map(variable => {
@@ -255,13 +258,17 @@ export default function InferenceDialog({ project, open, handleCloseDialog, defa
     }
   , [JSON.stringify(variables)]);
 
+  const model_output_options = variables.filter(variable => 
+    !variable.constant
+  ).map(variable => ({
+    key: variable.qname, value: variable.qname
+  }))
+
   const datasets = useSelector(selectAllDatasets);
   const dataset_options = datasets.map((dataset) => ({
     key: dataset.name,
     value: dataset.id,
-  })).concat([
-    { key: 'Use simulated data', value: '' }
-  ]);
+  }));
   const chosenDataset = datasets.find(d => d.id === datasetId)
 
   const inferences = useSelector(selectAllInferences);
@@ -318,7 +325,6 @@ export default function InferenceDialog({ project, open, handleCloseDialog, defa
       sum[key] = value
       return sum
     }, {})
-    console.log('submit', values)
     dispatch(runNaivePooledInference(values));
     handleClose()
   };
@@ -327,48 +333,59 @@ export default function InferenceDialog({ project, open, handleCloseDialog, defa
     "max_number_of_iterations"
   )
 
+
   const prior_parameter_render = (baseName, watchForm) => {
     if (watchForm === 'F') {
       return (
+        <Grid item xs={3}>
         <FormTextField
           control={control}
           name={`${baseName}.parameters[0]`}
           label="Value"
           number
         />
+        </Grid>
       )
     } else if ((watchForm === 'N' || watchForm === 'LN')) {
       return (
         <React.Fragment>
+        <Grid item xs={3}>
         <FormTextField
           control={control}
           name={`${baseName}.parameters[0]`}
           label="Mean"
           number
         />
+        </Grid>
+        <Grid item xs={3}>
         <FormTextField
           control={control}
           name={`${baseName}.parameters[1]`}
           label="Sigma"
           number
         />
+        </Grid>
         </React.Fragment>
       )
     } else if (watchForm === 'U') {
       return (
         <React.Fragment>
+        <Grid item xs={3}>
         <FormTextField
           control={control}
           name={`${baseName}.parameters[0]`}
           label="Lower"
           number
         />
+        </Grid>
+        <Grid item xs={3}>
         <FormTextField
           control={control}
           name={`${baseName}.parameters[1]`}
           label="Upper"
           number
         />
+        </Grid>
         </React.Fragment>
       )
     }
@@ -376,31 +393,44 @@ export default function InferenceDialog({ project, open, handleCloseDialog, defa
 
   const stepRenders = [
     (
-      <React.Fragment>
+      <Grid container spacing={1}>
+      <Grid item xs={6}>
       <FormSelectField
         control={control}
         useGroups
         options={model_options}
+        rules={{required: true}}
         defaultValue={defaultValues.model}
-        displayEmpty
         name="model"
         label="Model"
       />
+      </Grid>
+      <Grid item xs={6}>
       <FormSelectField
         control={control}
         defaultValue={defaultValues.dataset}
+        rules={{required: true}}
         options={dataset_options}
-        displayEmpty
         name="dataset"
         label="Dataset"
       />
+      </Grid>
+      {chosenPkModel && chosenDataset && 
+      <Grid item xs={12}>
+        <Typography>
+          Note: there are {chosenDataset.protocols.length} dosing protocols for this dataset.
+        </Typography>
+      </Grid>
+      }
+      <Grid item xs={12}>
       <ModellingChart 
         className={classes.chart}
         datasets={chosenDataset ? [chosenDataset] : []}
         pkModels={chosenPkModel ? [chosenPkModel] : []}
         pdModels={chosenPdModel ? [chosenPdModel] : []} 
       />
-      </React.Fragment>
+      </Grid>
+      </Grid>
     ),
     (
       <List>
@@ -409,24 +439,36 @@ export default function InferenceDialog({ project, open, handleCloseDialog, defa
         const watchForm = watch(`observations[${index}].noise_param_form`)
         const variable = variables.find(v => v.qname === obs.model)
         return (
+        <React.Fragment>
         <ListItem key={index} role={undefined} dense>
           <Grid container spacing={1}>
-          <Grid item xs={2}>
+          <Grid item xs={6}>
           <FormSelectField
             control={control}
-            displayEmpty
-            options={biomarker_type_options}
-            name={`${baseName}.biomarker`}
-            label={obs.model}
+            rules={{required: true}}
+            options={model_output_options}
+            name={`${baseName}.model`}
+            label={"Model output"}
           />
           </Grid>
-          <Grid item xs={8}>
+          <Grid item xs={6}>
+          <FormSelectField
+            control={control}
+            rules={{required: true}}
+            options={biomarker_type_options}
+            name={`${baseName}.biomarker`}
+            label={"Dataset measurement"}
+          />
+          </Grid>
+          <Grid item xs={3}>
           <FormSelectField
             control={control}
             options={obs_form_options}
             name={`${baseName}.noise_form`}
             label={'Noise form'}
           />
+          </Grid>
+          <Grid item xs={3}>
           <FormSelectField
             control={control}
             options={form_options}
@@ -434,13 +476,14 @@ export default function InferenceDialog({ project, open, handleCloseDialog, defa
             name={`${baseName}.noise_param_form`}
             label={'Noise param'}
           />
+          </Grid>
             {prior_parameter_render(baseName, watchForm)}
           </Grid>
-          </Grid>
-          <IconButton size="small" onClick={handleDeleteObservation(index)}>
+            <IconButton size="small" onClick={handleDeleteObservation(index)}>
             <DeleteIcon />
           </IconButton>
         </ListItem>
+        </React.Fragment>
         )
       })}
        <IconButton
@@ -463,7 +506,6 @@ export default function InferenceDialog({ project, open, handleCloseDialog, defa
         const baseName = `parameters[${index}]`
         const watchForm = watch(`parameters[${index}].form`)
         const variable = variables.find(v => v.qname === param.name)
-        console.log('doing parameter', param, baseName, watchForm, variable)
         return (
         <ListItem key={index} role={undefined} dense>
           <Grid container spacing={1}>
@@ -476,9 +518,7 @@ export default function InferenceDialog({ project, open, handleCloseDialog, defa
             label={param.name}
           />
           </Grid>
-          <Grid item xs={6}>
             {prior_parameter_render(baseName, watchForm)}
-          </Grid>
           </Grid>
         </ListItem>
         )
@@ -488,12 +528,15 @@ export default function InferenceDialog({ project, open, handleCloseDialog, defa
 
     ),
     (
-      <React.Fragment>
+      <Grid container spacing={1}>
+      <Grid item xs={6}>
       <FormTextField
         control={control}
         name="name"
         label="Name"
       />
+      </Grid>
+      <Grid item xs={12}>
       <FormTextField
         control={control}
         fullWidth
@@ -501,6 +544,8 @@ export default function InferenceDialog({ project, open, handleCloseDialog, defa
         name="description"
         label="Description"
       />
+      </Grid>
+      <Grid item xs={12}>
       <FormSelectField
         control={control}
         useGroups
@@ -509,6 +554,8 @@ export default function InferenceDialog({ project, open, handleCloseDialog, defa
         name="algorithm"
         label="Algorithm"
       />
+      </Grid>
+      <Grid item xs={6}>
       <FormSelectField
         control={control}
         options={initialization_options}
@@ -516,6 +563,8 @@ export default function InferenceDialog({ project, open, handleCloseDialog, defa
         name="initialization_strategy"
         label="Initialization Strategy"
       />
+      </Grid>
+      <Grid item xs={6}>
       <FormSelectField
         control={control}
         defaultValue={defaultValues.initialization_inference}
@@ -524,7 +573,7 @@ export default function InferenceDialog({ project, open, handleCloseDialog, defa
         name="initialization_inference"
         label="Initialize from"
       />
-      <Grid container spacing={0}>
+      </Grid>
       <Grid item xs={6}>
       <FormSliderField
         control={control}
@@ -545,7 +594,7 @@ export default function InferenceDialog({ project, open, handleCloseDialog, defa
         type="number"
       />
       </Grid>
-      </Grid>
+      <Grid item xs={3}>
       <FormTextField
         control={control}
         name="number_of_chains"
@@ -553,7 +602,8 @@ export default function InferenceDialog({ project, open, handleCloseDialog, defa
         defaultValue={defaultValues.number_of_chains}
         type="number"
       />
-      </React.Fragment>
+      </Grid>
+      </Grid>
     ),
 
   ]
@@ -573,6 +623,7 @@ export default function InferenceDialog({ project, open, handleCloseDialog, defa
             );
           })}
         </Stepper>
+        <Divider/>
         {stepRenders[activeStep]}
       </DialogContent>
       <DialogActions>

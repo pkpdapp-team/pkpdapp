@@ -89,8 +89,6 @@ function InferenceChartDistribution({ prior }) {
     },
   };
 
-  console.log('options', options)
-
   return (
     <div className={classes.chart}>
       <Scatter data={data} options={options} />
@@ -185,7 +183,6 @@ function InferenceChartFunction({ chains }) {
 
   const data = {
     datasets: chains.map((chain, index) => {
-      console.log('chain', chain)
       const color = getColor(index);
       const data = chain ? 
         chain.data.function.values.map((y, i) => ({ x: chain.data.function.iterations[i], y: y })) :
