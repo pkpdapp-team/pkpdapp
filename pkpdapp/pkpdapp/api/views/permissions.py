@@ -16,7 +16,7 @@ from pkpdapp.models import (
 class NotADatasetDose(BasePermission):
     def has_object_permission(self, request, view, obj):
         is_update_method = request.method == 'PUT' or request.method == 'PATCH'
-        if is_update_method and obj.protocol.dataset:
+        if is_update_method and obj.protocol.get_dataset():
             return False
         return True
 
@@ -25,7 +25,7 @@ class NotADatasetProtocol(BasePermission):
     def has_object_permission(self, request, view, obj):
         is_update_method = \
             request.method == 'PUT' or request.method == 'PATCH'
-        if is_update_method and obj.dataset:
+        if is_update_method and obj.get_dataset():
             return False
         return True
 

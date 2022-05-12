@@ -4,7 +4,6 @@
 # copyright notice and full license details.
 #
 
-import pints
 import numpy as np
 from sys import float_info
 

@@ -134,5 +134,7 @@ class DatasetTestCase(APITestCase):
 
         # check the right number of subjects and protocols added
         self.assertEqual(dataset.subjects.count(), 66)
-        protocols = set([subject.protocol for subject in dataset.subjects.all()])
+        protocols = set([
+            subject.protocol for subject in dataset.subjects.all()
+        ])
         self.assertEqual(len(protocols), 39)

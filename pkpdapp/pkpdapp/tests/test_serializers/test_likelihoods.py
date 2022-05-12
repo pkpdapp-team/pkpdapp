@@ -8,7 +8,7 @@ from django.test import TestCase
 from pkpdapp.models import (
     PharmacodynamicModel, LogLikelihood,
     Project, BiomarkerType,
-    Inference, PriorUniform
+    Inference,
 )
 from pkpdapp.api.serializers import (
     LogLikelihoodSerializer
@@ -45,7 +45,7 @@ class TestLoglikelihoodSerializer(TestCase):
             many=True
         )
         data = serializer.data
-        self.assertEqual(len(data), 6)
+        self.assertEqual(len(data), 8)
 
     def test_update(self):
         serializer = LogLikelihoodSerializer(self.prior)

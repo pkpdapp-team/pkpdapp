@@ -63,5 +63,3 @@ class Dataset(models.Model):
             for subject in subjects:
                 subject.protocol = protocol
                 subject.save()
-
-

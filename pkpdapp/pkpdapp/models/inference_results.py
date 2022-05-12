@@ -7,7 +7,6 @@
 from django.db import models
 from pkpdapp.models import (
     Inference,
-    Prior,
     LogLikelihood,
 )
 import pandas as pd
@@ -92,7 +91,6 @@ class InferenceChain(models.Model):
         })
 
         return df
-
 
 
 class InferenceResult(models.Model):

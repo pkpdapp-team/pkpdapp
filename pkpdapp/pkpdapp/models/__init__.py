@@ -37,9 +37,6 @@ from .inference import (
     Algorithm,
 )
 
-from .priors import (
-    PriorNormal, PriorUniform, Prior,
-)
 from .inference_results import (
     InferenceChain,
     InferenceResult,

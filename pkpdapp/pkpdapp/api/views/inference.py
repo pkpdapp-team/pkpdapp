@@ -17,7 +17,7 @@ from pkpdapp.api.serializers import (
 from pkpdapp.models import (
     Inference, InferenceChain, Algorithm, Dataset,
     DosedPharmacokineticModel, PharmacodynamicModel,
-    Variable, SubjectGroup, BiomarkerType, LogLikelihoodParameter,
+    SubjectGroup, BiomarkerType, LogLikelihoodParameter,
     LogLikelihood, Protocol, Project
 )
 
@@ -249,7 +249,6 @@ class NaivePooledInferenceView(views.APIView):
                         p.child.save()
 
                 pooled_params[model_param.name] = child
-
 
     def post(self, request, format=None):
         errors = {}

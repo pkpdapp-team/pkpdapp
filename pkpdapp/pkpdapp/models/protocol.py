@@ -7,7 +7,7 @@
 from django.db import models
 from django.urls import reverse
 from pkpdapp.models import (
-    Compound, Dataset, Subject, Unit,
+    Compound, Unit,
     Project, StoredModel,
 )
 
@@ -87,12 +87,19 @@ class Protocol(StoredModel):
             return self.project
         else:
             subject = self.subjects.first()
-            return subject.get_project()
+            if subject is not None:
+                return subject.get_project()
 
         return None
 
     def __str__(self):
         return str(self.name)
+
+    def get_dataset(self):
+        all_datasets = self.subjects.values('dataset').distinct()
+        if all_datasets:
+            return all_datasets[0]['dataset']
+        return None
 
     def is_same_as(self, protocol):
         if self.project != protocol.project:

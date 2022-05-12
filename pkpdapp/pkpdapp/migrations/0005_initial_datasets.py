@@ -490,6 +490,7 @@ def load_datasets(apps, schema_editor):
                     subject.protocol = protocol
                     subject.save()
 
+
 class Migration(migrations.Migration):
 
     dependencies = [

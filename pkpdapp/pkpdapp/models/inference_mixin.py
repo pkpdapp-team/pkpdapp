@@ -9,14 +9,12 @@ import numpy as np
 import pints
 import time
 import theano.tensor as tt
-from theano.compile.io import In
 import theano
 import scipy.stats as sps
 from tdigest import TDigest
 from pkpdapp.models import (
-    LogLikelihood,
     Inference,
-    PriorNormal, PriorUniform, InferenceResult,
+    InferenceResult,
     InferenceChain, InferenceFunctionResult,
     InferenceOutputResult,
 )
@@ -339,7 +337,7 @@ class InferenceMixin:
         for i, chain in enumerate(self.inference.chains.all()):
             x0 = []
             if self.inference.number_of_iterations > 0:
-                print('restarting chains!', self.inference.number_of_iterations, 'nit')
+                print('restarting chains!')
                 for prior in self._priors:
                     this_chain = InferenceResult.objects.filter(
                         log_likelihood=prior,
@@ -630,7 +628,6 @@ class PyMC3LogPosterior(pints.LogPDF):
         param1s = self._param1s
         for result, index in zip(results[self._n_means:], self._param1s_index):
             param1s[index] = result
-        print('generative_model_range', param1s, self._param1s_index, self._param1s)
         values = []
         values_min = []
         values_max = []

@@ -7,7 +7,6 @@
 from django.db import models
 from django.db.models import Q
 import pymc3 as pm
-import numbers
 import theano
 import pints
 import numpy as np
@@ -16,6 +15,7 @@ from pkpdapp.models import (
     Variable, BiomarkerType,
     MyokitForwardModel, SubjectGroup
 )
+
 
 class SolveCached:
     def __init__(self, function):
@@ -421,7 +421,9 @@ class LogLikelihood(models.Model):
             return ops[name], shapes[name]
         elif self.form == self.Form.UNIFORM:
             lower, upper = self.get_noise_log_likelihoods()
-            lower, shape = lower._create_pymc3_model(pm_model, self, ops, shapes)
+            lower, shape = lower._create_pymc3_model(
+                pm_model, self, ops, shapes
+            )
             shapes[name] = shape
             upper, _ = upper._create_pymc3_model(pm_model, self, ops, shapes)
             ops[name] = pm.Uniform(
@@ -432,9 +434,6 @@ class LogLikelihood(models.Model):
             parents = list(self.parents.order_by('id'))
             times = [
                 parent.get_inference_data()[1] for parent in parents
-            ]
-            names = [
-                parent.name for parent in parents
             ]
 
             # fill in any missing data with some fake times

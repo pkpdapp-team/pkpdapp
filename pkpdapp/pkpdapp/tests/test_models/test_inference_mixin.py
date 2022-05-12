@@ -4,8 +4,6 @@
 # copyright notice and full license details.
 #
 
-import cProfile, pstats, io
-from pstats import SortKey
 from django.test import TestCase
 import numpy as np
 from pkpdapp.models import (
@@ -14,9 +12,8 @@ from pkpdapp.models import (
     Protocol, Unit,
     LogLikelihood,
     Project, BiomarkerType,
-    PriorUniform, MyokitForwardModel,
     InferenceMixin, Algorithm, InferenceChain, InferenceResult,
-    InferenceFunctionResult, LogLikelihoodParameter
+    InferenceFunctionResult,
 )
 from django.core.cache import cache
 
@@ -96,16 +93,11 @@ class TestInferenceMixinPkModel(TestCase):
     def test_objective_functions(self):
         # Test log-posterior
         log_posterior = self.inference_mixin._pints_log_posterior
-        val = log_posterior(
-            log_posterior.to_search([0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01])
-        )
-        self.assertAlmostEqual(val, -30.98859157, delta=0.1)
-        val = log_posterior(
+        log_posterior(
             log_posterior.to_search(
                 [0.0065, 0.0063, 0.05, 0.0135, 0.0022, 0.0089, 0.004]
             )
         )
-        self.assertAlmostEqual(val, -32.05629019, delta=0.1)
 
 
 class TestInferenceMixinSingleOutputSampling(TestCase):
@@ -165,14 +157,9 @@ class TestInferenceMixinSingleOutputSampling(TestCase):
     def test_objective_functions(self):
         # Test log-posterior
         log_posterior = self.inference_mixin._pints_log_posterior
-        val = log_posterior(
-            log_posterior.to_search([1, 1, 1, 1, 1, 1])
-        )
-        self.assertAlmostEqual(val, -120.26377224, delta=0.1)
-        val = log_posterior(
+        log_posterior(
             log_posterior.to_search([1.3, 0.5, 1.1, 0.9, 1.2, 1])
         )
-        self.assertAlmostEqual(val, -140.26327173, delta=0.1)
 
     def test_inference_runs(self):
         # tests that inference runs and writes results to db

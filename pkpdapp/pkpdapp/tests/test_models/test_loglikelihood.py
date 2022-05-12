@@ -5,18 +5,14 @@
 #
 
 from django.test import TestCase
-import numpy as np
 from pkpdapp.models import (
-    Inference, PharmacodynamicModel,
+    Inference,
     PharmacokineticModel, DosedPharmacokineticModel,
-    Protocol, Unit,
+    Protocol,
     LogLikelihood,
     Project, BiomarkerType,
-    PriorUniform, MyokitForwardModel,
-    InferenceMixin, Algorithm, InferenceChain, InferenceResult,
-    InferenceFunctionResult, LogLikelihoodParameter
+    Algorithm,
 )
-from django.core.cache import cache
 
 
 class TestInferenceMixinPkModel(TestCase):
@@ -60,7 +56,7 @@ class TestInferenceMixinPkModel(TestCase):
             log_likelihood.parameters.filter(name='central.size').count(),
             1
         )
-        self.assertEqual(log_likelihood.outputs.count(), 0)
+        self.assertEqual(log_likelihood.outputs.count(), 7)
 
     def test_add_output_model(self):
         log_likelihood = LogLikelihood.objects.create(
@@ -125,7 +121,6 @@ class TestInferenceMixinPkModel(TestCase):
         model.logp({prior_name: 0.3})
 
         # check we can run predictive posteriors
-        predictive_posterior = model.fastfn([
+        model.fastfn([
             model[log_likelihood.name + outputs[0].name]
         ])
-

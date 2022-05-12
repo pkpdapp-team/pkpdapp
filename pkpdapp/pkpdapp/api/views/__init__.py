@@ -45,4 +45,3 @@ from .unit import UnitView
 from .user import UserView
 from .variable import VariableView
 from .likelihoods import LogLikelihoodView
-from .priors import PriorView

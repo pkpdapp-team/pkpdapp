@@ -64,5 +64,7 @@ class TestBiomarkerTypeModel(TestCase):
 
     def test_migration(self):
         dataset = Dataset.objects.get(name='demo_pk_data')
-        protocols = set([subject.protocol for subject in dataset.subjects.all()])
+        protocols = set([
+            subject.protocol for subject in dataset.subjects.all()
+        ])
         self.assertEqual(len(protocols), 39)

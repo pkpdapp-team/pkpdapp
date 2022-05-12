@@ -20,6 +20,7 @@ class SubjectGroup(models.Model):
         related_name='subject_groups',
         help_text='dataset containing this subject'
     )
+
     class Meta:
         models.UniqueConstraint(fields=['name', 'dataset'], name='unique_name')
 

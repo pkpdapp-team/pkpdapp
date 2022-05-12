@@ -9,9 +9,7 @@ from rest_framework.exceptions import ValidationError
 from pkpdapp.models import (
     Inference, PharmacodynamicModel, LogLikelihood,
     Project, BiomarkerType,
-    PriorUniform,
-    MyokitForwardModel,
-    Algorithm, InferenceMixin
+    InferenceMixin
 )
 from pkpdapp.api.serializers import (
     InferenceSerializer, InferenceChainSerializer,

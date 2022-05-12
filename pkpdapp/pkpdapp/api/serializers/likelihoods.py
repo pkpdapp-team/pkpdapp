@@ -6,10 +6,6 @@
 from rest_framework import serializers
 from pkpdapp.models import (
     LogLikelihood, LogLikelihoodParameter,
-    DosedPharmacokineticModel, PharmacodynamicModel
-)
-from pkpdapp.api.serializers import (
-    PriorSerializer
 )
 
 

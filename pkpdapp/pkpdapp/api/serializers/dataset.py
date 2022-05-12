@@ -191,6 +191,7 @@ class DatasetCsvSerializer(serializers.ModelSerializer):
                     dose_group_unit = None
 
                 group_str = row['SUBJECT_GROUP']
+                group = None
                 if group_str != '' and group_str != '.':
                     try:
                         group = SubjectGroup.objects.get(
@@ -202,7 +203,6 @@ class DatasetCsvSerializer(serializers.ModelSerializer):
                             name=group_str,
                             dataset=instance,
                         )
-
 
                 subject = Subject.objects.create(
                     id_in_dataset=subject_id,

@@ -9,7 +9,7 @@ from rest_framework import (
 from rest_framework.response import Response
 from pkpdapp.models import (
     BiomarkerType,
-    Protocol,
+    Subject,
     Dose,
 )
 from pkpdapp.api.serializers import NcaSerializer
@@ -20,23 +20,23 @@ class NcaView(views.APIView):
     def post(self, request, format=None):
         errors = {
         }
-        protocol_id = request.data.get('protocol_id', None)
-        if protocol_id is None:
-            errors['protocol_id'] = "This field is required"
+        subject_id = request.data.get('subject_id', None)
+        if subject_id is None:
+            errors['subject_id'] = "This field is required"
         else:
             try:
-                protocol = Protocol.objects.get(id=protocol_id)
-            except Protocol.DoesNotExist:
-                errors['protocol_id'] = \
-                    "Protocol id {} not found".format(protocol_id)
-            if not protocol.subject:
-                errors['protocol_id'] = (
-                    "Protocol id {} does not have a subject"
-                    .format(protocol_id)
+                subject = Subject.objects.get(id=subject_id)
+            except Subject.DoesNotExist:
+                errors['subject_id'] = \
+                    "Subject id {} not found".format(subject_id)
+            if not subject.protocol:
+                errors['subject_id'] = (
+                    "Subject id {} does not have a protocol"
+                    .format(subject_id)
                 )
-            if protocol.dose_type != Protocol.DoseType.DIRECT:
-                errors['protocol_id'] = \
-                    "Protocol is required to have an IV dose type"
+            if subject.protocol.dose_type != subject.protocol.DoseType.DIRECT:
+                errors['subject_id'] = \
+                    "Subject dosing protocol is required to be type IV"
 
         biomarker_type_id = request.data.get('biomarker_type_id', None)
         if biomarker_type_id is None:
@@ -55,14 +55,15 @@ class NcaView(views.APIView):
             return Response(
                 errors, status=status.HTTP_400_BAD_REQUEST
             )
+        protocol = subject.protocol
         df = biomarker_type.as_pandas()
-        df = df.loc[df['subjects'] == protocol.subject.id]
+        df = df.loc[df['subjects'] == subject.id]
 
         if df.shape[0] == 0:
             errors['biomarker_type'] = (
                 "BiomarkerType {} does not have measurements "
                 "for subject id {}."
-                .format(biomarker_type.id, protocol.subject.id)
+                .format(biomarker_type.id, subject.id)
             )
 
         doses = Dose.objects.filter(

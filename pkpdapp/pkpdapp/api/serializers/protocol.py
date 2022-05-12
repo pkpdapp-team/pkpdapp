@@ -29,4 +29,4 @@ class ProtocolSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def get_dataset(self, protocol):
-        return protocol.subjects.values('dataset').distinct()[0]['dataset']
+        return protocol.get_dataset()
