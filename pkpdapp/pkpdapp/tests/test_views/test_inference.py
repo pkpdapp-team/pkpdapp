@@ -556,22 +556,11 @@ class TestInferenceViews(APITestCase):
         )
 
         model = DosedPharmacokineticModel.objects.create(
+            name='my wonderful model',
             pharmacokinetic_model=pk,
             dose_compartment='central',
             protocol=protocol,
         )
-
-        variables = model.variables.all()
-        var_names = [v.qname for v in variables]
-        m = model.get_myokit_model()
-
-        output_names = [var.qname() for var in m.variables(const=False)]
-        parameter_names = (
-            [var.qname() for var in m.variables(const=True)] +
-            [var.qname() for var in m.states()]
-        )
-
-        var_index = var_names.index(output_names[0])
 
         self.inference = Inference.objects.create(
             name='bob',
@@ -580,35 +569,34 @@ class TestInferenceViews(APITestCase):
             algorithm=Algorithm.objects.get(name='Haario-Bardenet'),
         )
         log_likelihood = LogLikelihood.objects.create(
-            variable=variables[var_index],
+            variable=model.variables.first(),
             inference=self.inference,
-            biomarker_type=biomarker_type,
-            form=LogLikelihood.Form.NORMAL
+            form=LogLikelihood.Form.MODEL
         )
 
-        # find variables that are being estimated
-        var_indices = [var_names.index(v) for v in parameter_names]
-        for i in var_indices:
-            param = log_likelihood.parameters.get(
-                variable=variables[i]
-            )
-            if '_amount' in param.name:
-                param.value = 0
-                param.save()
+        # remove all outputs except
+        output_names = [
+            'central.drug_c_concentration',
+        ]
+        outputs = []
+        for output in log_likelihood.outputs.all():
+            if output.variable.qname in output_names:
+                output.parent.biomarker_type = biomarker_type
+                output.parent.save()
+                outputs.append(output.parent)
             else:
-                PriorUniform.objects.create(
-                    lower=0.0,
-                    upper=0.1,
-                    log_likelihood_parameter=param,
-                )
-        noise_param = log_likelihood.parameters.get(
-            variable__isnull=True
-        )
-        PriorUniform.objects.create(
-            lower=0.0,
-            upper=2.0,
-            log_likelihood_parameter=noise_param,
-        )
+                for param in output.parent.parameters.all():
+                    if param != output:
+                        param.child.delete()
+                output.parent.delete()
+
+        # set uniform prior on everything, except amounts
+        for param in log_likelihood.parameters.all():
+            if '_amount' in param.name:
+                param.set_fixed(0)
+            else:
+                param.set_uniform_prior(0.0, 0.1)
+
         # 'run' inference to create copies of models
         self.inference.run_inference(test=True)
 
@@ -631,38 +619,26 @@ class TestInferenceViews(APITestCase):
         self.assertTrue('data' in response.data)
 
     def test_run_inference_errors(self):
-        log_likelihood = self.inference.log_likelihoods.first()
-        model = log_likelihood.get_model()
+        log_likelihoods = list(self.inference.log_likelihoods.all())
+        log_likelihoods[0].name = log_likelihoods[1].name
+        log_likelihoods[0].save()
+        ll_names = [
+            ll.name for ll in log_likelihoods
+        ]
+        print('ll_names1', ll_names)
 
-        inference_no_prior = Inference.objects.create(
-            name='bad bob',
-            project=self.inference.project,
+        response = self.client.post(
+            "/api/inference/{}/run".format(self.inference.id)
         )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        errors = response.data
+        self.assertTrue('log_likelihoods' in errors)
+        self.assertTrue('identical names' in errors['log_likelihoods'])
 
         inference_no_log_likelihood = Inference.objects.create(
             name='bad bob',
             project=self.inference.project,
         )
-
-        biomarker_type = BiomarkerType.objects.get(
-            name='Tumour volume',
-            dataset__name='lxf_control_growth'
-        )
-
-        LogLikelihood.objects.create(
-            form='N',
-            variable=model.variables.first(),
-            inference=inference_no_prior,
-            biomarker_type=biomarker_type
-        )
-
-        response = self.client.post(
-            "/api/inference/{}/run".format(inference_no_prior.id)
-        )
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        errors = response.data
-        self.assertTrue('log_likelihoods' in errors)
-        self.assertTrue('prior' in errors['log_likelihoods'])
 
         response = self.client.post(
             "/api/inference/{}/run".format(inference_no_log_likelihood.id)
@@ -673,3 +649,4 @@ class TestInferenceViews(APITestCase):
         self.assertTrue(
             'least one log_likelihood' in errors['log_likelihoods']
         )
+

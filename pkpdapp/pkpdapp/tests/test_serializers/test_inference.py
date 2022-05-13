@@ -9,7 +9,7 @@ from rest_framework.exceptions import ValidationError
 from pkpdapp.models import (
     Inference, PharmacodynamicModel, LogLikelihood,
     Project, BiomarkerType,
-    InferenceMixin
+    InferenceMixin, Algorithm
 )
 from pkpdapp.api.serializers import (
     InferenceSerializer, InferenceChainSerializer,
@@ -21,25 +21,45 @@ class TestInferenceSerializer(TestCase):
         project = Project.objects.get(
             name='demo',
         )
-        self.biomarker_type = BiomarkerType.objects.get(
+        biomarker_type = BiomarkerType.objects.get(
             name='Tumour volume',
             dataset__name='lxf_control_growth'
         )
-        self.model = PharmacodynamicModel.objects.get(
+        model = PharmacodynamicModel.objects.get(
             name='tumour_growth_inhibition_model_koch',
+            read_only=False,
         )
         self.inference = Inference.objects.create(
+            name='bob',
             project=project,
+            max_number_of_iterations=10,
+            algorithm=Algorithm.objects.get(name='Haario-Bardenet'),
         )
-        self.log_likelihood = LogLikelihood.objects.create(
-            name='tumour_growth_inhibition_model_koch',
+        log_likelihood = LogLikelihood.objects.create(
+            variable=model.variables.first(),
             inference=self.inference,
-            variable=self.model.variables.first(),
-            biomarker_type=self.biomarker_type,
             form=LogLikelihood.Form.MODEL
         )
-        self.parameters = self.log_likelihood.parameters.all()
-        self.prior = self.parameters[0].child
+
+        # remove all outputs except
+        output_names = [
+            'myokit.tumour_volume',
+        ]
+        outputs = []
+        for output in log_likelihood.outputs.all():
+            if output.variable.qname in output_names:
+                output.parent.biomarker_type = biomarker_type
+                output.parent.save()
+                outputs.append(output.parent)
+            else:
+                for param in output.parent.parameters.all():
+                    if param != output:
+                        param.child.delete()
+                output.parent.delete()
+
+        # set uniform prior on everything, except amounts
+        for param in log_likelihood.parameters.all():
+            param.set_uniform_prior(0.0, 2.0)
 
     def test_create(self):
         serializer = InferenceSerializer()
@@ -94,9 +114,6 @@ class TestInferenceSerializer(TestCase):
             validated_data = serializer.to_internal_value(data)
 
     def test_inference_results(self):
-        # 'run' inference to create copies of models
-        self.inference.run_inference(test=True)
-
         # create mixin object
         inference_mixin = InferenceMixin(self.inference)
         inference_mixin.run_inference()
@@ -104,6 +121,7 @@ class TestInferenceSerializer(TestCase):
         chain = self.inference.chains.first()
         chain_serializer = InferenceChainSerializer(chain)
         data = chain_serializer.data
+        print(data)
         self.assertTrue('outputs' in data)
         self.assertTrue('log_likelihoods' in data['outputs'])
         self.assertTrue('outputs' in data['outputs'])

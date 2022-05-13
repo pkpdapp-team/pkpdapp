@@ -293,6 +293,8 @@ class InferenceMixin:
             for ll in log_likelihoods
             if ll.has_data()
         ]
+        for ll in self._observed_log_likelihoods:
+            print('observed', ll.name, ll.biomarker_type)
 
         if len(self._observed_log_likelihoods) == 0:
             raise RuntimeError(
@@ -521,6 +523,8 @@ class InferenceMixin:
 
 class PyMC3LogPosterior(pints.LogPDF):
     def __init__(self, model, log_likelihoods, priors, optimisation=False):
+        for p in priors:
+            print('have prior name', p.name)
         self._transforms = [
             model[p.name].distribution.transform for p in priors
         ]

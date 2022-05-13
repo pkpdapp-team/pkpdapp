@@ -450,10 +450,13 @@ class LogLikelihood(models.Model):
                 times
             )
             forward_model_op = ODEop(name, forward_model)
-            all_params = pm.math.stack([
-                child._create_pymc3_model(pm_model, self, ops, shapes)[0]
-                for child in fitted_children
-            ])
+            if fitted_children:
+                all_params = pm.math.stack([
+                    child._create_pymc3_model(pm_model, self, ops, shapes)[0]
+                    for child in fitted_children
+                ])
+            else:
+                all_params = []
             op = forward_model_op(all_params)
             ops[name] = op
             shapes[name] = ts_shapes

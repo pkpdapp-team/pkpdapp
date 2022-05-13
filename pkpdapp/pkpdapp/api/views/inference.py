@@ -456,15 +456,14 @@ class InferenceOperationView(views.APIView):
             errors['log_likelihoods'] = (
                 'Inference must have at least one log_likelihood'
             )
-        for log_likelihood in inference.log_likelihoods.all():
-            model = log_likelihood.get_model()
-            if model is None:
-                errors['log_likelihoods'] = 'LogLikelihood must have a model'
-
-            if len(log_likelihood.get_priors()) == 0:
-                errors['log_likelihoods'] = (
-                    'LogLikelihood must have at least one prior'
-                )
+        ll_names = [
+            ll.name for ll in inference.log_likelihoods.all()
+        ]
+        if len(set(ll_names)) < len(ll_names):
+            errors['log_likelihoods'] = (
+                'inference has log-likelihoods '
+                'with identical names! {}'
+            ).format(ll_names)
 
         if errors:
             return Response(
