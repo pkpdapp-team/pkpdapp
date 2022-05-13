@@ -331,7 +331,6 @@ class TestPkpdModel(TestCase):
         p = Protocol.objects.create(
             name='my_cool_protocol',
             compound=c,
-            subject_id=1,
             amount_unit=Unit.objects.get(symbol='mg'),
             time_unit=Unit.objects.get(symbol='h'),
         )
