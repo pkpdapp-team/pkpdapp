@@ -13,7 +13,6 @@ from pkpdapp.models import (
     Protocol, Unit,
     LogLikelihood,
     Project, BiomarkerType,
-    MyokitForwardModel,
     InferenceMixin, Algorithm,
     PharmacodynamicModel,
 )
@@ -649,4 +648,3 @@ class TestInferenceViews(APITestCase):
         self.assertTrue(
             'least one log_likelihood' in errors['log_likelihoods']
         )
-

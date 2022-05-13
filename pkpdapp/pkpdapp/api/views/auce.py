@@ -11,7 +11,6 @@ from pkpdapp.models import (
     BiomarkerType,
     Subject,
     Biomarker,
-    SubjectGroup,
 )
 from pkpdapp.api.serializers import AuceSerializer
 from pkpdapp.utils import Auce
