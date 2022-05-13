@@ -26,6 +26,9 @@ import { updatePkModel, deletePkModel } from "../pkModels/pkModelsSlice.js";
 import { userHasReadOnlyAccess } from "../projects/projectsSlice";
 
 const useStyles = makeStyles((theme) => ({
+  root: {
+    width: "100%",
+  },
   components: {
     width: "100%",
   },
@@ -61,7 +64,7 @@ export default function PkDetail({ project, pk_model }) {
     dispatch(updatePkModel(values));
   };
 
-  const base_pk_model_options = basePkModels.map((pk) => ({
+  const base_pk_model_options = basePkModels.filter(pk => !pk.read_only).map((pk) => ({
     key: pk.name,
     value: pk.id,
   }));
@@ -87,6 +90,7 @@ export default function PkDetail({ project, pk_model }) {
   const disableSave = userHasReadOnlyAccess(project);
 
   return (
+    <div className={classes.root}>
     <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
       <FormTextField
         control={control}
@@ -162,5 +166,6 @@ export default function PkDetail({ project, pk_model }) {
         </Button>
       </div>
     </form>
+    </div>
   );
 }

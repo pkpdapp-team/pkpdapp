@@ -5,12 +5,11 @@
 #
 
 from django.test import TestCase
+from rest_framework.exceptions import ValidationError
 from pkpdapp.models import (
     Inference, PharmacodynamicModel, LogLikelihood,
     Project, BiomarkerType,
-    PriorUniform,
-    MyokitForwardModel,
-    Algorithm, InferenceMixin
+    InferenceMixin, Algorithm
 )
 from pkpdapp.api.serializers import (
     InferenceSerializer, InferenceChainSerializer,
@@ -30,19 +29,6 @@ class TestInferenceSerializer(TestCase):
             name='tumour_growth_inhibition_model_koch',
             read_only=False,
         )
-        variables = model.variables.all()
-        var_names = [v.qname for v in variables]
-        m = model.get_myokit_model()
-        s = model.get_myokit_simulator()
-
-        forward_model = MyokitForwardModel(
-            myokit_model=m,
-            myokit_simulator=s,
-            outputs="myokit.tumour_volume")
-
-        output_names = forward_model.output_names()
-        var_index = var_names.index(output_names[0])
-
         self.inference = Inference.objects.create(
             name='bob',
             project=project,
@@ -50,32 +36,30 @@ class TestInferenceSerializer(TestCase):
             algorithm=Algorithm.objects.get(name='Haario-Bardenet'),
         )
         log_likelihood = LogLikelihood.objects.create(
-            variable=variables[var_index],
+            variable=model.variables.first(),
             inference=self.inference,
-            biomarker_type=biomarker_type,
-            form=LogLikelihood.Form.NORMAL
+            form=LogLikelihood.Form.MODEL
         )
 
-        # find variables that are being estimated
-        parameter_names = forward_model.variable_parameter_names()
-        var_indices = [var_names.index(v) for v in parameter_names]
-        for i in var_indices:
-            param = log_likelihood.parameters.get(
-                variable=variables[i]
-            )
-            PriorUniform.objects.create(
-                lower=0.0,
-                upper=2.0,
-                log_likelihood_parameter=param,
-            )
-        noise_param = log_likelihood.parameters.get(
-            variable__isnull=True
-        )
-        PriorUniform.objects.create(
-            lower=0.0,
-            upper=2.0,
-            log_likelihood_parameter=noise_param,
-        )
+        # remove all outputs except
+        output_names = [
+            'myokit.tumour_volume',
+        ]
+        outputs = []
+        for output in log_likelihood.outputs.all():
+            if output.variable.qname in output_names:
+                output.parent.biomarker_type = biomarker_type
+                output.parent.save()
+                outputs.append(output.parent)
+            else:
+                for param in output.parent.parameters.all():
+                    if param != output:
+                        param.child.delete()
+                output.parent.delete()
+
+        # set uniform prior on everything, except amounts
+        for param in log_likelihood.parameters.all():
+            param.set_uniform_prior(0.0, 2.0)
 
     def test_create(self):
         serializer = InferenceSerializer()
@@ -94,24 +78,42 @@ class TestInferenceSerializer(TestCase):
             self.inference
         )
         data = serializer.data
+        old_number_of_loglikelihoods = len(data['log_likelihoods'])
         data['name'] = 'fred'
         data['log_likelihoods'].append({
+            'name': 'x',
             'form': 'N',
-            'variable': self.inference.log_likelihoods.first().variable.id,
             'parameters': [],
-            'biomarker_type': (
-                self.inference.log_likelihoods.first().biomarker_type.id
-            ),
         })
         validated_data = serializer.to_internal_value(data)
         serializer.update(self.inference, validated_data)
         self.assertEqual(self.inference.name, 'fred')
-        self.assertEqual(len(self.inference.log_likelihoods.all()), 2)
+
+        # new prior will add three new log_likelihood
+        # since a normal has 2 params
+        self.assertEqual(
+            len(self.inference.log_likelihoods.all()),
+            old_number_of_loglikelihoods + 3
+        )
+
+        # do it again with the same name, should have validation error
+        serializer = InferenceSerializer(
+            self.inference
+        )
+        data = serializer.data
+        old_number_of_loglikelihoods = len(data['log_likelihoods'])
+        data['log_likelihoods'].append({
+            'name': 'x',
+            'form': 'N',
+            'parameters': [],
+        })
+        with self.assertRaisesRegex(
+            ValidationError,
+            "all log_likelihoods in an inference must have unique names"
+        ):
+            validated_data = serializer.to_internal_value(data)
 
     def test_inference_results(self):
-        # 'run' inference to create copies of models
-        self.inference.run_inference(test=True)
-
         # create mixin object
         inference_mixin = InferenceMixin(self.inference)
         inference_mixin.run_inference()
@@ -120,7 +122,4 @@ class TestInferenceSerializer(TestCase):
         chain_serializer = InferenceChainSerializer(chain)
         data = chain_serializer.data
         self.assertTrue('outputs' in data)
-        self.assertTrue('log_likelihoods' in data['outputs'])
-        self.assertTrue('outputs' in data['outputs'])
-        self.assertEqual(len(data['outputs']['outputs']), 1)
-        self.assertEqual(len(data['outputs']['outputs'][0]['times']), 14)
+        self.assertTrue(len(data['outputs']) > 0)

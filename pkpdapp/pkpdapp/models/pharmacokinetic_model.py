@@ -117,11 +117,12 @@ class DosedPharmacokineticModel(MyokitModelMixin, StoredModel):
         stored_model_kwargs = {
             'name': self.name,
             'project': self.project,
-            'pharmacokinetic_model': (
-                self.pharmacokinetic_model.create_stored_model()
-            ),
+            'pharmacokinetic_model': self.pharmacokinetic_model,
             'dose_compartment': self.dose_compartment,
-            'protocol': self.protocol.create_stored_protocol(),
+            'protocol': (
+                self.protocol.create_stored_protocol()
+                if self.protocol is not None else None
+            ),
             'time_max': self.time_max,
             'read_only': True,
         }
@@ -202,12 +203,14 @@ class DosedPharmacokineticModel(MyokitModelMixin, StoredModel):
         if self.read_only:
             return
 
+        print('saving model')
         if (
             created or
             self.protocol != self.__original_protocol or
             self.pharmacokinetic_model != self.__original_pk_model or
             self.dose_compartment != self.__original_dose_compartment
         ):
+            print('update model')
             self.update_model()
 
         self.__original_pk_model = self.pharmacokinetic_model

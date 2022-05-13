@@ -15,5 +15,5 @@ from .views import (
     InferenceView, InferenceChainView,
     AlgorithmView,
     RunInferenceView, StopInferenceView,
-    PriorView, LogLikelihoodView,
+    LogLikelihoodView, NaivePooledInferenceView,
 )

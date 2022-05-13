@@ -10,6 +10,21 @@ from pkpdapp.models import Dataset, Unit
 from django.db.models import Q
 
 
+class SubjectGroup(models.Model):
+    name = models.CharField(
+        max_length=100,
+        help_text='group name'
+    )
+    dataset = models.ForeignKey(
+        Dataset, on_delete=models.CASCADE,
+        related_name='subject_groups',
+        help_text='dataset containing this subject'
+    )
+
+    class Meta:
+        models.UniqueConstraint(fields=['name', 'dataset'], name='unique_name')
+
+
 class Subject(models.Model):
     """
     A subject in a particular dataset.
@@ -31,10 +46,16 @@ class Subject(models.Model):
             'unit for dose_group_amount'
         )
     )
-    group = models.CharField(
-        max_length=100,
-        help_text='dataset specific grouping for this subject',
-        blank=True
+    protocol = models.ForeignKey(
+        'Protocol', on_delete=models.CASCADE,
+        related_name='subjects',
+        blank=True, null=True,
+        help_text='dosing protocol for this subject.'
+    )
+    groups = models.ManyToManyField(
+        SubjectGroup,
+        related_name='subjects',
+        help_text='groups this subject belongs to'
     )
     shape = models.IntegerField(
         default=0,

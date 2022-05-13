@@ -61,6 +61,15 @@ class DoseBase(models.Model):
         for dosed_pk_model in self.protocol.dosed_pk_models.all():
             dosed_pk_model.update_simulator()
 
+    def is_same_as(self, other_dose):
+        if self.duration != other_dose.duration:
+            return False
+        if self.start_time != other_dose.start_time:
+            return False
+        if self.amount != other_dose.amount:
+            return False
+        return True
+
 
 class Dose(DoseBase, StoredModel):
     protocol = models.ForeignKey(

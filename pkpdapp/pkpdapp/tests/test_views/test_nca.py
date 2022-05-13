@@ -22,8 +22,9 @@ class NcaTestCase(APITestCase):
         protocol = Protocol.objects.get(
             name='demo_pk_data-Docetaxel-5335'
         )
+        subject = protocol.subjects.first()
         data = {
-            'protocol_id': protocol.id,
+            'subject_id': subject.id,
             'biomarker_type_id': biomarker_type.id,
         }
         response = self.client.post(
@@ -40,8 +41,9 @@ class NcaTestCase(APITestCase):
         protocol = Protocol.objects.get(
             name='demo_pk_data-Docetaxel-5109'
         )
+        subject = protocol.subjects.first()
         data = {
-            'protocol_id': protocol.id,
+            'subject_id': subject.id,
             'biomarker_type_id': biomarker_type.id,
         }
         response = self.client.post(

@@ -15,6 +15,8 @@ from pkpdapp.models import (
 def run_inference(inference_id):
     inference = Inference.objects.get(id=inference_id)
 
+    print('task', inference.number_of_iterations)
+
     # create the mixin object to run the inference
     inference_mixin = InferenceMixin(inference)
     inference_mixin.run_inference()

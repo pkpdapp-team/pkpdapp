@@ -75,6 +75,27 @@ export const updateInference = createAsyncThunk(
   }
 );
 
+export const runNaivePooledInference = createAsyncThunk(
+  "inferences/runNaivePooledInference",
+  async (naivePooledInference, { dispatch }) => {
+    const newInference = await api.post(`/api/inference/naive_pooled`, naivePooledInference);
+    for (const log_likelihood of newInference.log_likelihoods) {
+      if (log_likelihood.model && log_likelihood.model[0] === 'pkpdapp_pharmacodynamicmodel') {
+        dispatch(fetchPdModelById(log_likelihood.model[1]))
+        dispatch(fetchVariablesByPdModel(log_likelihood.model[1]))
+      } 
+      if (log_likelihood.model && log_likelihood.model[0] === 'pkpdapp_dosedpharmacokineticmodel') {
+        dispatch(fetchPkModelById(log_likelihood.model[1]))
+        dispatch(fetchVariablesByPkModel(log_likelihood.model[1]))
+      }
+    }
+    return {
+      newInference,
+      naivePooledInference,
+    }
+  }
+);
+
 export const runInference = createAsyncThunk(
   "inferences/runInference",
   async (inferenceId, { dispatch }) => {
@@ -106,7 +127,7 @@ export const stopInference = createAsyncThunk(
 export const deleteInference = createAsyncThunk(
   "inferences/deleteInference",
   async (inferenceId, { dispatch }) => {
-    await api.delete(`/api/inference/${inferenceId}`);
+    await api.delete(`/api/inference/${inferenceId}/`);
     return inferenceId;
   }
 );
@@ -144,6 +165,16 @@ export const inferencesSlice = createSlice({
     [fetchInferenceById.fulfilled]: inferencesAdapter.upsertOne,
     [runInference.fulfilled]: (state, action) => {
       inferencesAdapter.upsertOne(state, action.payload);
+    },
+    [runNaivePooledInference.fulfilled]: (state, action) => {
+      if (action.payload.naivePooledInference.id) {
+        inferencesAdapter.removeOne(state, action.payload.naivePooledInference.id);
+      }
+      for (let inference of Object.values(state.entities)) {
+          inference.chosen = false
+      }
+      action.payload.newInference.chosen = true
+      inferencesAdapter.upsertOne(state, action.payload.newInference);
     },
     [stopInference.fulfilled]: (state, action) => {
       inferencesAdapter.upsertOne(state, action.payload);

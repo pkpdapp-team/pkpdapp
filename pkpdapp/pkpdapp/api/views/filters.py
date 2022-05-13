@@ -19,7 +19,7 @@ from pkpdapp.models import (
     Variable,
     Subject,
     Inference, InferenceChain,
-    Prior, LogLikelihood,
+    LogLikelihood,
 )
 
 
@@ -120,8 +120,6 @@ class InferenceFilter(filters.BaseFilterBackend):
                         queryset = queryset.model.objects.none()
                 elif queryset.model == InferenceChain:
                     queryset = inference.chains.all()
-                elif queryset.model == Prior:
-                    queryset = inference.priors.all()
                 elif queryset.model == LogLikelihood:
                     queryset = inference.log_likelihoods.all()
                 else:

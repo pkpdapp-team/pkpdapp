@@ -34,12 +34,19 @@ export const fetchChainById = createAsyncThunk(
 
 export const fetchChainsByInferenceId = createAsyncThunk(
   "chains/fetchChainByInference",
-  async (inferenceId, { dispatch }) => {
-    console.log("fetchChainsByInference", inferenceId);
+  async (inferenceId, { dispatch, getState }) => {
     let response = await api.get(
       `/api/inference_chain/?inference_id=${inferenceId}`
     );
-    return response;
+
+    const state = getState()
+    const responseIds = response.map(chain => chain.id)
+    const existingChains = selectChainsByInferenceId(state, inferenceId)
+    const deletedChains = existingChains.filter(chain => responseIds.indexOf(chain.id) == -1)
+    return {
+      chains: response,
+      deletedChains
+    };
   }
 );
 
@@ -60,7 +67,12 @@ export const chainsSlice = createSlice({
       state.status = "succeeded";
       chainsAdapter.setAll(state, action.payload);
     },
-    [fetchChainsByInferenceId.fulfilled]: chainsAdapter.upsertMany,
+    [fetchChainsByInferenceId.fulfilled]: (state, action) => {
+      if (action.payload.deletedChains.length > 0) {
+        chainsAdapter.removeMany(state, action.payload.deletedChains.map(c => c.id))
+      }
+      chainsAdapter.upsertMany(state, action.payload.chains)
+    },
     [fetchChainById.fulfilled]: chainsAdapter.upsertOne,
   },
 });

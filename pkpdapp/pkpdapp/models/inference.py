@@ -9,7 +9,7 @@ from pkpdapp.celery import app
 from pkpdapp.models import (
     Project, PharmacodynamicModel,
     DosedPharmacokineticModel,
-    StoredModel,
+    StoredModel, LogLikelihoodParameter
 )
 
 
@@ -114,14 +114,24 @@ class Inference(StoredModel):
         help_text='If executing, this is the celery task id'
     )
 
+    metadata = models.JSONField(
+        default=dict,
+        help_text="metadata for inference",
+    )
+
+    def reset(self):
+        print('reset', self)
+        self.chains.all().delete()
+        self.log_likelihoods.all().delete()
+        self.number_of_iterations = 0
+        self.time_elapsed = 0
+        self.number_of_function_evals = 0
+        self.metadata = {}
+
     def get_project(self):
         return self.project
 
-    def run_inference(self, test=False):
-        """
-        when an inference is run, a new model is created (a copy),
-        and the model and all its variables are stored
-        """
+    def store_inference(self):
         # store related objects so we can recreate them later
         old_log_likelihoods = self.log_likelihoods.all()
 
@@ -136,7 +146,6 @@ class Inference(StoredModel):
         # old_models += list(PkpdModel.objects.filter(
         #    variables__log_likelihoods__in=old_log_likelihoods
         # ).distinct())
-        print('all models', old_models)
 
         # create a map between old and new models so we can transfer
         # the relationships
@@ -151,11 +160,53 @@ class Inference(StoredModel):
         self.read_only = True
         self.save()
 
-        # recreate log_likelihoods
+        # recreate log_likelihoods and remove default children
+        new_log_likelihoods = []
         for log_likelihood in old_log_likelihoods:
-            log_likelihood.create_stored_log_likelihood(self, new_models)
+            new_ll = log_likelihood.create_stored_log_likelihood(
+                self, new_models
+            )
+
+            # delete auto-generated parents and children
+            new_ll.children.all().delete()
+            new_ll.parents.all().delete()
+
+            new_log_likelihoods.append(new_ll)
+
+        # recreate children relationships using indicies
+        # of old_log_likelihoods
+        for parent_index, parent in enumerate(old_log_likelihoods):
+            new_parent = new_log_likelihoods[parent_index]
+            for child in parent.children.all():
+                child_index = None
+                for i, ll in enumerate(old_log_likelihoods):
+                    if ll == child:
+                        child_index = i
+                new_child = new_log_likelihoods[child_index]
+
+                # get old parameter and save it as a new relationship
+                old_param = LogLikelihoodParameter.objects.get(
+                    parent=parent, child=child
+                )
+                old_param.id = None
+                old_param.pk = None
+                old_param.parent = new_parent
+                old_param.child = new_child
+                old_param.save()
 
         self.refresh_from_db()
+
+    def run_inference(self, test=False):
+        ll_names = [
+            ll.name for ll in self.log_likelihoods.all()
+        ]
+        if len(set(ll_names)) < len(ll_names):
+            raise RuntimeError(
+                (
+                    'inference has log-likelihoods '
+                    'with identical names! {}'
+                ).format(ll_names)
+            )
 
         if not test:
             from pkpdapp.tasks import run_inference

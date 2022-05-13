@@ -39,7 +39,7 @@ class DatasetTestCase(APITestCase):
 
         keys = response_data.keys()
         present_keys = ['name', 'datetime', 'description', 'subjects',
-                        'biomarker_types', 'protocols']
+                        'biomarker_types']
         for k in present_keys:
             self.assertTrue(k in keys)
 
@@ -134,4 +134,7 @@ class DatasetTestCase(APITestCase):
 
         # check the right number of subjects and protocols added
         self.assertEqual(dataset.subjects.count(), 66)
-        self.assertEqual(dataset.protocols.count(), 54)
+        protocols = set([
+            subject.protocol for subject in dataset.subjects.all()
+        ])
+        self.assertEqual(len(protocols), 39)

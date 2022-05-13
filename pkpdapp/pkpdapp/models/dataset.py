@@ -38,3 +38,28 @@ class Dataset(models.Model):
 
     def __str__(self):
         return self.name
+
+    def merge_protocols(self):
+        unique_protocols = []
+        protocol_subjects = []
+        for subject in self.subjects.all():
+            if subject.protocol is None:
+                continue
+            protocol = subject.protocol
+            index = None
+            for i, other_protocol in enumerate(unique_protocols):
+                if protocol.is_same_as(other_protocol):
+                    index = i
+                    break
+            if index is None:
+                unique_protocols.append(protocol)
+                protocol_subjects.append([subject])
+            else:
+                protocol_subjects[index].append(subject)
+                protocol.delete()
+
+        # migrate subjects to unique_protocols
+        for protocol, subjects in zip(unique_protocols, protocol_subjects):
+            for subject in subjects:
+                subject.protocol = protocol
+                subject.save()

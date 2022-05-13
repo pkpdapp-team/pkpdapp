@@ -11,6 +11,7 @@ from pkpdapp.models import (
     Biomarker,
     Unit,
     Subject,
+    SubjectGroup,
 )
 from django.utils import timezone
 from django.db.utils import IntegrityError
@@ -36,21 +37,44 @@ class TestBiomarkerTypeModel(TestCase):
             stored_time_unit=self.time_unit,
             display_time_unit=self.time_unit,
         )
-        self.subject = Subject.objects.create(
-            id_in_dataset=1,
+        self.subject_group = SubjectGroup.objects.create(
+            name='test',
             dataset=self.dataset,
         )
-        self.values = [0, 1, 2]
-        self.times = [0, 2, 4]
-        self.subjects = [self.subject.id, self.subject.id, self.subject.id]
+        self.subjects = [
+            Subject.objects.create(
+                id_in_dataset=1,
+                dataset=self.dataset,
+            ),
+            Subject.objects.create(
+                id_in_dataset=2,
+                dataset=self.dataset,
+            ),
+        ]
+        self.subject_group.subjects.add(self.subjects[0])
+
+        self.values = [0, 1, 2, 3]
+        self.times = [0, 2, 4, 6]
+        self.biomarker_subjects = [
+            self.subjects[0].id, self.subjects[0].id, self.subjects[0].id,
+            self.subjects[1].id
+        ]
         self.biomarkers = [
             Biomarker.objects.create(
                 time=time,
-                subject=self.subject,
+                subject=self.subjects[0],
                 biomarker_type=self.biomarker_type,
                 value=value
-            ) for value, time in zip(self.values, self.times)
+            ) for value, time in zip(self.values[:-1], self.times[:-1])
         ]
+        self.biomarkers.append(
+            Biomarker.objects.create(
+                time=self.times[-1],
+                subject=self.subjects[1],
+                biomarker_type=self.biomarker_type,
+                value=self.values[-1]
+            )
+        )
 
     def test_biomarker_type_creation(self):
         self.assertTrue(
@@ -89,5 +113,19 @@ class TestBiomarkerTypeModel(TestCase):
             df['times'], np.array(self.times)
         )
         np.testing.assert_array_equal(
-            df['subjects'], np.array(self.subjects)
+            df['subjects'], np.array(self.biomarker_subjects)
+        )
+
+        df = self.biomarker_type.as_pandas(
+            subject_group=self.subject_group
+        )
+
+        np.testing.assert_array_equal(
+            df['values'], np.array(self.values[:-1])
+        )
+        np.testing.assert_array_equal(
+            df['times'], np.array(self.times[:-1])
+        )
+        np.testing.assert_array_equal(
+            df['subjects'], np.array(self.biomarker_subjects[:-1])
         )

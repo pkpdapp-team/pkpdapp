@@ -74,6 +74,11 @@ urlpatterns = [
         name='run-inference'
     ),
     path(
+        'api/inference/naive_pooled',
+        api.NaivePooledInferenceView.as_view(),
+        name='run-naive-pooled-inference'
+    ),
+    path(
         'api/inference/<int:pk>/stop',
         api.StopInferenceView.as_view(),
         name='stop-inference'

@@ -26,28 +26,27 @@ const useStyles = makeStyles((theme) => ({
     width: "100%",
   },
   plot: {
-    height: "85vh",
+    height: "40vh",
     width: "100%",
   },
 }));
 
 
 
-function InferenceChartFits({ chains }) {
+function InferenceChartFits({ inference, observed }) {
   // TODO: assumes a single log likelihood
   //
   const classes = useStyles();
 
   const has_distribution = true
-  const times = chains[0].outputs.outputs[0].times
-  const datas = chains[0].outputs.outputs[0].datas
-  const loglikelihood = chains[0].outputs.log_likelihoods[0]
+  const times = observed.outputs ? observed.outputs[0].times : []
+  const datas = observed.outputs ? observed.outputs[0].datas : []
 
   const outputVariable = useSelector((state) => {
-        return selectVariableById(state, loglikelihood.variable);
+        return selectVariableById(state, observed.parameters[0].variable);
   });
   const timeVariable = useSelector((state) => {
-        return selectVariableById(state, loglikelihood.time_variable);
+        return selectVariableById(state, observed.model_loglikelihoods[0].time_variable);
   });
   const outputUnit = useSelector((state) => {
     if (outputVariable) {
@@ -60,18 +59,20 @@ function InferenceChartFits({ chains }) {
     }
   });
 
-  const yLabel = `${outputVariable.name} [${outputUnit.symbol}]`
-  const xLabel = `${timeVariable.name} [${timeUnit.symbol}]`
+  const yLabelUnit = outputUnit ? outputUnit.symbol : ''
+  const yLabelName = outputVariable ? outputVariable.name : ''
+  const xLabelUnit = timeUnit ? timeUnit.symbol : ''
+  const xLabelName = timeVariable ? timeVariable.name : ''
+  const yLabel = `${yLabelName} [${yLabelUnit}]`
+  const xLabel = `${xLabelName} [${xLabelUnit}]`
 
   // TODO: assume single output
-  console.log('outputs', chains[0].outputs, outputVariable, timeVariable, outputUnit, timeUnit)
   let data = {
   }
   if (has_distribution) {
-    data['datasets'] = chains.map((chain, i) => {
-      const outputs = chain.outputs.outputs[0]
-      const color = getColor(chain.id);
-      const backgroundColor = getColorBackground(chain.id);
+    data['datasets'] = observed.outputs.map((outputs, i) => {
+      const color = getColor(i);
+      const backgroundColor = getColorBackground(i);
       return [
         {
           type: "line",
@@ -102,8 +103,8 @@ function InferenceChartFits({ chains }) {
           label: `chain ${i}: median`,
           borderColor: color,
           borderWidth: 2.5,
-          backgroundColor: backgroundColor,
           pointRadius: 0,
+          backgroundColor: backgroundColor,
           fill: false,
           lineTension: 0,
           interpolate: true,
@@ -123,10 +124,9 @@ function InferenceChartFits({ chains }) {
     ]).flat()
 
   } else {
-    data['datasets'] = chains.map((chain, i) => {
-      const outputs = chain.outputs.outputs[0]
-      const color = getColor(chain.id);
-      const backgroundColor = getColorBackground(chain.id);
+    data['datasets'] = observed.outputs.map((outputs, i) => {
+      const color = getColor(i);
+      const backgroundColor = getColorBackground(i);
       return {
         type: "line",
         label: `chain ${i}: final fit`,
@@ -179,6 +179,10 @@ function InferenceChartFits({ chains }) {
           boxHeight: 1
         },
       },
+      title: {
+        display: true,
+        text: observed.name,
+      },
       tooltip: {
         mode: "interpolate",
         intersect: false,
@@ -206,10 +210,18 @@ function InferenceChartFits({ chains }) {
   );
 } 
 
-export default function InferenceChartTraces({ inference, chains, priorsWithChainValues }) {
+export default function InferenceChartTraces({ inference, observedWithChainValues}) {
   const classes = useStyles();
-  
+
   return (
-    <InferenceChartFits chains={chains} />
+    <div className={classes.root}>
+      <Grid container spacing={1}>
+      {observedWithChainValues.map(observed => (
+          <Grid item xs={12}>
+          <InferenceChartFits inference={inference} observed={observed} />
+          </Grid>
+      ))}
+      </Grid>
+    </div>
   )
 }

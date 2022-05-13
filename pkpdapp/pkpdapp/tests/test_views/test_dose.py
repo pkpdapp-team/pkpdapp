@@ -17,7 +17,7 @@ class ProtocolTestCase(APITestCase):
 
     def test_dataset_dose_no_update(self):
         dataset = Dataset.objects.get(name='demo_pk_data')
-        protocol = dataset.protocols.first()
+        protocol = dataset.subjects.first().protocol
         dose = protocol.doses.first()
 
         data = {

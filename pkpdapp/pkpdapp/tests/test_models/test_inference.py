@@ -38,5 +38,4 @@ class TestInferenceSerializer(TestCase):
     def test_run_inference(self):
         self.inference.run_inference(test=True)
         self.assertEqual(self.inference.name, 'bob')
-        self.assertEqual(self.inference.read_only, True)
-        self.assertEqual(self.inference.log_likelihoods.count(), 1)
+        self.assertEqual(self.inference.log_likelihoods.count(), 3)

@@ -43,6 +43,17 @@ class InferenceSerializer(serializers.ModelSerializer):
         model = Inference
         fields = '__all__'
 
+    def validate_log_likelihoods(self, value):
+        """
+        Check that the blog post is about Django.
+        """
+        names = [v['name'] for v in value]
+        if(len(set(names)) < len(names)):
+            raise serializers.ValidationError(
+                "all log_likelihoods in an inference must have unique names"
+            )
+        return value
+
     def create(self, validated_data):
         log_likelihood_data = validated_data.pop('log_likelihoods')
         new_inference = BaseInferenceSerializer().create(
@@ -104,22 +115,16 @@ class InferenceChainSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def get_outputs(self, inference_chain):
-        log_likelihoods = inference_chain.inference.log_likelihoods.all()
-        outputs = [
-            inference_chain.outputs_for(ll).to_dict(orient='list')
-            for ll in log_likelihoods
-        ]
-
-        return {
-            'log_likelihoods': [
-                LogLikelihoodSerializer(ll).data
-                for ll in log_likelihoods
-            ],
-            'outputs': outputs
+        outputs = {
+            ll.id: inference_chain.outputs_for(ll).to_dict(orient='list')
+            for ll in inference_chain.inference.log_likelihoods.all()
+            if ll.has_data()
         }
+        return outputs
 
     def get_data(self, inference_chain):
         chain = inference_chain.as_pandas()
+        function_values = inference_chain.function_as_pandas()
         by_priors = chain.groupby('priors')
 
         chain = {}
@@ -154,7 +159,15 @@ class InferenceChainSerializer(serializers.ModelSerializer):
                 'iterations': iterations.tolist()
             }
 
+        if len(function_values.index) > sample_n:
+            function_values = function_values.sample(n=sample_n).sort_index()
+        function_values = {
+            'values': function_values['values'].tolist(),
+            'iterations': function_values['iterations'],
+        }
+
         return {
             'kde': kde,
             'chain': chain,
+            'function': function_values,
         }

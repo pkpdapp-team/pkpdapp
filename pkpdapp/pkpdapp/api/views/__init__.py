@@ -34,7 +34,7 @@ from .project import ProjectView, ProjectAccessView
 from .protocol import ProtocolView
 from .inference import (
     InferenceView, InferenceChainView, AlgorithmView,
-    RunInferenceView, StopInferenceView
+    RunInferenceView, StopInferenceView, NaivePooledInferenceView,
 )
 from .simulate import (
     SimulatePkView,
@@ -45,4 +45,3 @@ from .unit import UnitView
 from .user import UserView
 from .variable import VariableView
 from .likelihoods import LogLikelihoodView
-from .priors import PriorView

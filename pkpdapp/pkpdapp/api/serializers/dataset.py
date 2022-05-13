@@ -9,7 +9,7 @@ import codecs
 import pandas as pd
 from pkpdapp.models import (
     Dataset, BiomarkerType, Protocol, Subject,
-    Unit, Compound, Biomarker, Dose
+    Unit, Compound, Biomarker, Dose, SubjectGroup,
 )
 from pkpdapp.api.serializers import ProtocolSerializer
 
@@ -18,24 +18,29 @@ class DatasetSerializer(serializers.ModelSerializer):
     biomarker_types = serializers.PrimaryKeyRelatedField(
         many=True, read_only=True
     )
-    protocols = ProtocolSerializer(
-        many=True, read_only=True
-    )
     subjects = serializers.PrimaryKeyRelatedField(
         many=True, read_only=True
     )
     subject_groups = serializers.SerializerMethodField('get_groups')
+    protocols = serializers.SerializerMethodField('get_protocols')
 
     class Meta:
         model = Dataset
         fields = '__all__'
 
+    def get_protocols(self, dataset):
+        protocols = [
+            Protocol.objects.get(pk=p['protocol'])
+            for p in dataset.subjects.values('protocol').distinct()
+            if p['protocol'] is not None
+        ]
+        return ProtocolSerializer(protocols, many=True).data
+
     def get_groups(self, dataset):
         groups = {}
         for s in dataset.subjects.all():
-            if s.group not in groups:
-                groups[s.group] = []
-            groups[s.group].append(s.pk)
+            for group in s.groups.all():
+                groups.get(group, []).append(s.pk)
         return groups
 
 
@@ -131,8 +136,8 @@ class DatasetCsvSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         # remove existing dataset
         BiomarkerType.objects.filter(dataset=instance).delete()
-        Protocol.objects.filter(dataset=instance).delete()
         Subject.objects.filter(dataset=instance).delete()
+        SubjectGroup.objects.filter(dataset=instance).delete()
 
         # save default biomarker types
         data = validated_data['csv']
@@ -185,16 +190,29 @@ class DatasetCsvSerializer(serializers.ModelSerializer):
                     dose_group_value = None
                     dose_group_unit = None
 
-                group = row['SUBJECT_GROUP']
+                group_str = row['SUBJECT_GROUP']
+                group = None
+                if group_str != '' and group_str != '.':
+                    try:
+                        group = SubjectGroup.objects.get(
+                            name=group_str,
+                            dataset=instance,
+                        )
+                    except SubjectGroup.DoesNotExist:
+                        group = SubjectGroup.objects.create(
+                            name=group_str,
+                            dataset=instance,
+                        )
 
                 subject = Subject.objects.create(
                     id_in_dataset=subject_id,
                     dataset=instance,
-                    group=group,
                     dose_group_amount=dose_group_value,
                     dose_group_unit=dose_group_unit,
                     shape=subject_index,
                 )
+                if group is not None:
+                    subject.groups.add(group)
                 subject_index += 1
             if value != ".":  # measurement observation
                 Biomarker.objects.create(
@@ -219,13 +237,9 @@ class DatasetCsvSerializer(serializers.ModelSerializer):
                     compound = Compound.objects.create(
                         name=compound_str
                     )
-                try:
-                    protocol = Protocol.objects.get(
-                        dataset=instance,
-                        subject_id=subject,
-                        compound=compound
-                    )
-                except Protocol.DoesNotExist:
+                if subject.protocol:
+                    protocol = subject.protocol
+                else:
                     protocol = Protocol.objects.create(
                         name='{}-{}-{}'.format(
                             instance.name,
@@ -235,10 +249,10 @@ class DatasetCsvSerializer(serializers.ModelSerializer):
                         compound=compound,
                         time_unit=time_unit,
                         amount_unit=value_unit,
-                        dataset=instance,
-                        subject=subject,
                         dose_type=route
                     )
+                    subject.protocol = protocol
+                    subject.save()
                 start_time = float(row['TIME'])
                 amount = float(row['AMT'])
                 infusion_time = float(row['TINF'])
@@ -248,4 +262,7 @@ class DatasetCsvSerializer(serializers.ModelSerializer):
                     duration=infusion_time,
                     protocol=protocol,
                 )
+
+        instance.merge_protocols()
+
         return instance

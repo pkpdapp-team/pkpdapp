@@ -59,27 +59,29 @@ export default function InferenceChart({inference}) {
   );
 
 
-  const priorsWithChainValues = inference.log_likelihoods.reduce((sum, log_likelihood) => {
-    const new_sum = sum.concat(
-      log_likelihood.parameters.filter(
-        param => param.prior
-      ).map(param => {
-        const prior = param.prior
-        return {
-          ...prior, 
-          name: param.name,
-          value: param.value,
-          chains: chains.map(chain => chain.data.chain[prior.id]),
-          kdes: chains.map(chain => chain.data.kde[prior.id])
-        }
-      })
+  const priorsWithChainValues = inference.log_likelihoods.filter(
+    ll => ll.is_a_prior
+  ).map(ll => ({
+    ...ll,  
+    chains: chains.map(chain => chain.data.chain[ll.id]),
+    kdes: chains.map(chain => chain.data.kde[ll.id]),
+  }));
 
+  const observedWithChainValues = inference.log_likelihoods.filter(
+    ll => ll.biomarker_type
+  ).map(ll => {
+    const model_loglikelihoods = inference.log_likelihoods.filter(cll =>
+      ll.children.includes(cll.id)
     )
-    return new_sum
-  } , [] )
-
-  console.log('chains', chains)
-  console.log('priorsWithChainValues', priorsWithChainValues)
+    return {
+      ...ll,  
+      model_loglikelihoods,
+      outputs: chains.map(chain => chain.outputs[ll.id] || {
+        times: [], datas: [], percentile_mins: [], percentile_maxs: [],
+        medians: [],
+      })
+    }
+  });
 
   const algorithm = useSelector((state) =>
     selectAlgorithmById(state, inference.algorithm)
@@ -133,7 +135,12 @@ export default function InferenceChart({inference}) {
   </Box>
     { tabs.map((tab, index) => (
     <TabPanel key={index} value={value} index={index}>
-      <tab.component inference={inference} chains={chains} priorsWithChainValues={priorsWithChainValues} />
+      <tab.component 
+        inference={inference} 
+        chains={chains} 
+        priorsWithChainValues={priorsWithChainValues} 
+        observedWithChainValues={observedWithChainValues} 
+      />
     </TabPanel>
     ))}
   </Box>

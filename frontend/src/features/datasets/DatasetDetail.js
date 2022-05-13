@@ -27,6 +27,9 @@ import {
 import { FormTextField, FormDateTimeField } from "../forms/FormComponents";
 
 const useStyles = makeStyles((theme) => ({
+  root: {
+    width: "100%",
+  },
   controlsRoot: {
     display: "flex",
     alignItems: "center",
@@ -62,6 +65,7 @@ export default function DatasetDetail({ project, dataset }) {
   const disableSave = userHasReadOnlyAccess(project);
 
   return (
+    <div className={classes.root}>
     <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
       <FormTextField
         control={control}
@@ -165,5 +169,6 @@ export default function DatasetDetail({ project, dataset }) {
           </Alert>
         ))}
     </form>
+    </div>
   );
 }

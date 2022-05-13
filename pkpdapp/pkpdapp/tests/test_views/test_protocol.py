@@ -6,7 +6,7 @@
 from rest_framework import status
 from rest_framework.test import APITestCase, APIClient
 from django.contrib.auth.models import User
-from pkpdapp.models import Dataset
+from pkpdapp.models import Dataset, Subject, Protocol
 
 
 class ProtocolTestCase(APITestCase):
@@ -19,7 +19,6 @@ class ProtocolTestCase(APITestCase):
         dataset = Dataset.objects.get(name='lxf_control_growth')
         data = {
             'name': 'test',
-            'dataset': dataset.id,
         }
         response = self.client.post("/api/protocol/", data)
         self.assertEqual(
@@ -27,11 +26,18 @@ class ProtocolTestCase(APITestCase):
         )
         self.assertEqual(response.data['name'], data['name'])
 
+        # add a subject to the protocol
+        protocol_id = response.data['id']
+        protocol = Protocol.objects.get(id=protocol_id)
+        Subject.objects.create(
+            id_in_dataset=123,
+            dataset=dataset,
+            protocol=protocol
+        )
+
         new_data = {
             'name': 'test_new',
-            'dataset': dataset.id,
         }
-        protocol_id = response.data['id']
 
         response = self.client.put(
             "/api/protocol/{}/".format(protocol_id), new_data

@@ -7,7 +7,6 @@
 from django.db import models
 from pkpdapp.models import (
     Inference,
-    Prior,
     LogLikelihood,
 )
 import pandas as pd
@@ -58,7 +57,7 @@ class InferenceChain(models.Model):
             self.inference_results.filter(
                 iteration__gt=self.inference.burn_in
             ).order_by('iteration').values_list(
-                'prior', 'value', 'iteration'
+                'log_likelihood', 'value', 'iteration'
             )
         if priors_values:
             priors, values, iterations = list(zip(*priors_values))
@@ -68,6 +67,25 @@ class InferenceChain(models.Model):
             iterations = []
         df = pd.DataFrame.from_dict({
             'priors': priors,
+            'values': values,
+            'iterations': iterations,
+        })
+
+        return df
+
+    def function_as_pandas(self):
+        iteration_values = \
+            self.inference_function_results.filter(
+                iteration__gt=self.inference.burn_in
+            ).order_by('iteration').values_list(
+                'value', 'iteration'
+            )
+        if iteration_values:
+            values, iterations = list(zip(*iteration_values))
+        else:
+            values = []
+            iterations = []
+        df = pd.DataFrame.from_dict({
             'values': values,
             'iterations': iterations,
         })
@@ -85,11 +103,11 @@ class InferenceResult(models.Model):
         related_name='inference_results',
         help_text='Chain related to the row'
     )
-    prior = models.ForeignKey(
-        Prior,
+    log_likelihood = models.ForeignKey(
+        LogLikelihood,
         on_delete=models.CASCADE,
         related_name='inference_results',
-        help_text='prior/variable for this value'
+        help_text='log_likelihood related to this result'
     )
     iteration = models.IntegerField(
         help_text='Iteration'

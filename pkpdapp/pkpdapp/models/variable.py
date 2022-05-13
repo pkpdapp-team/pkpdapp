@@ -175,12 +175,18 @@ class Variable(StoredModel):
         if found_variable is not None:
             return variables[0]
         else:
+            state = myokit_variable.is_state()
+            if state:
+                value = myokit_variable.state_value()
+            else:
+                value = myokit_variable.value()
+            qname = myokit_variable.qname()
             return Variable.objects.create(
                 name=myokit_variable.name(),
-                qname=myokit_variable.qname(),
-                default_value=myokit_variable.value(),
+                qname=qname,
+                default_value=value,
                 constant=myokit_variable.is_constant(),
-                state=myokit_variable.is_state(),
+                state=state,
                 unit=Unit.get_unit_from_variable(myokit_variable),
                 pk_model=model,
                 color=num_variables,
@@ -215,12 +221,18 @@ class Variable(StoredModel):
         if found_variable is not None:
             return variables[0]
         else:
+            state = myokit_variable.is_state()
+            if state:
+                value = myokit_variable.state_value()
+            else:
+                value = myokit_variable.value()
+            qname = myokit_variable.qname()
             return Variable.objects.create(
                 name=myokit_variable.name(),
-                qname=myokit_variable.qname(),
+                qname=qname,
                 constant=myokit_variable.is_constant(),
-                default_value=myokit_variable.value(),
-                state=myokit_variable.is_state(),
+                default_value=value,
+                state=state,
                 unit=Unit.get_unit_from_variable(myokit_variable),
                 pd_model=model,
                 color=num_variables,
@@ -242,12 +254,18 @@ class Variable(StoredModel):
         if found_variable is not None:
             return variables[0]
         else:
+            state = myokit_variable.is_state()
+            if state:
+                value = myokit_variable.state_value()
+            else:
+                value = myokit_variable.value()
+            qname = myokit_variable.qname()
             return Variable.objects.create(
                 name=myokit_variable.name(),
-                qname=myokit_variable.qname(),
+                qname=qname,
                 constant=myokit_variable.is_constant(),
-                default_value=myokit_variable.value(),
-                state=myokit_variable.is_state(),
+                default_value=value,
+                state=state,
                 unit=Unit.get_unit_from_variable(myokit_variable),
                 dosed_pk_model=model,
                 color=num_variables,

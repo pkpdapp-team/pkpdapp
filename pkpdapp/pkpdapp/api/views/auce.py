@@ -42,21 +42,19 @@ class AuceView(views.APIView):
         subjects = Subject.objects.filter(
             dataset=biomarker_type.dataset
         ).order_by(
-            'group', 'dose_group_amount'
+            'dose_group_amount'
         )
 
+        # include None as a group to cover subjects with no group
+        groups = set([g for s in subjects for g in s.groups.all()] + [None])
+
         auces = []
-        groups = subjects.order_by(
-            'group'
-        ).values_list(
-            'group', flat=True
-        ).distinct()
         for group in groups:
             subject_times = []
             subject_data = []
             subject_ids = []
             concentrations = []
-            for subject in subjects.filter(group=group):
+            for subject in subjects.filter(groups=group):
                 times_and_values = (
                     Biomarker.objects
                     .filter(

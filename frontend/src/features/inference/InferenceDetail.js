@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
 import Divider from '@material-ui/core/Divider';
@@ -7,6 +7,8 @@ import Grid from "@material-ui/core/Grid";
 import Paper from "@material-ui/core/Paper";
 
 import FormControl from "@material-ui/core/FormControl";
+import ReactFlow, { MarkerType, applyEdgeChanges, applyNodeChanges } from 'react-flow-renderer';
+import * as ELK from 'elkjs';
 import InputLabel from "@material-ui/core/InputLabel";
 import Alert from "@material-ui/lab/Alert";
 import { useForm, useFieldArray } from "react-hook-form";
@@ -20,6 +22,9 @@ import IconButton from "@material-ui/core/IconButton";
 import MenuItem from "@material-ui/core/MenuItem";
 import AddIcon from "@material-ui/icons/Add";
 import DeleteIcon from "@material-ui/icons/Delete";
+
+
+import InferenceDialog from "./InferenceDialog";
 
 import { selectWritablePkModels, selectReadOnlyPkModels } from "../pkModels/pkModelsSlice";
 import { selectWritablePdModels, selectReadOnlyPdModels } from "../pdModels/pdModelsSlice";
@@ -42,6 +47,8 @@ import { updateInference, deleteInference, selectAllInferences } from "../infere
 import { runInference, stopInference } from "./inferenceSlice";
 import { FormTextField, FormSelectField, FormSliderField } from "../forms/FormComponents";
 import { userHasReadOnlyAccess } from "../projects/projectsSlice";
+
+const elk = new ELK()
 
 const useStyles = makeStyles((theme) => ({
   controlsRoot: {
@@ -68,6 +75,10 @@ const useStyles = makeStyles((theme) => ({
   formInput: {
     margin: theme.spacing(1),
     flex: 1,
+  },
+  graph: {
+    height: "30vh",
+    width: "100%",
   },
 }));
 
@@ -225,7 +236,6 @@ function LogLikelihoodSubform({
   // model 
   
   const [modelId, setModelId] = useState(defaultModelID);
-  console.log('modelId', modelId, modelId === '')
   const [changedModel, setChangedModel] = useState(false);
   const pd_models = useSelector(state => 
     disabled ? selectReadOnlyPdModels(state) : selectWritablePdModels(state)
@@ -316,7 +326,6 @@ function LogLikelihoodSubform({
       
   // dataset
   const [datasetId, setDatasetId] = useState(logLikelihood.dataset || '');
-  console.log('datasetId', datasetId, datasetId === '', datasetOptions)
   const handleDatasetChange = (event) => {
     const value = event.target.value;
     setDatasetId(value);
@@ -557,8 +566,113 @@ function LogLikelihoodSubform({
   );
 }
 
-export default function DraftInferenceDetail({ project, inference }) {
+export default function InferenceDetail({ project, inference }) {
   const dispatch = useDispatch();
+  const [openDialog, setOpenDialog] = React.useState(false);
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
+  };
+  const handleEdit = () => {
+    setOpenDialog(true);
+  };
+
+  let logLikelihoodNodes = inference.log_likelihoods.map(ll => {
+    let label = (<>ll.name</>)
+    let border = 'solid';
+    let width = 140;
+    let height = 40;
+    let type = 'default';
+    if (ll.biomarker_type) {
+      type = 'input'
+    }
+    if (ll.form === 'F') {
+      type = 'output'
+    }
+    if (ll.form === 'M') {
+      label = (<><strong>Model:</strong> {ll.name}</>); 
+      border = '5px double';
+      height = 2 * height;
+    } else if (ll.form === 'N') {
+      if (ll.biomarker_type) {
+        label = (<><strong>Observed Normal</strong></>); 
+      } else {
+        label = (<><strong>Normal</strong></>); 
+      }
+    } else if (ll.form === 'LN') {
+      label = (<><strong>LogNormal</strong></>); 
+    } else if (ll.form === 'U') {
+      label = (<><strong>Uniform</strong></>); 
+    } else if (ll.form === 'F') {
+      label = `${ll.value}`
+      width = 0.6 * width;
+    }
+    return {
+      id: `${ll.id}`,
+      data: { label },
+      position: { x: 0, y: 0 },
+      type,
+      style: {
+        background: '#D6D5E6',
+        color: '#333',
+        border,
+        width,
+        height,
+      },
+    }
+  });
+
+  const parameterEdges = inference.log_likelihoods.reduce((sum, ll) => 
+    sum.concat(ll.parameters.map(p => ({
+      id: `e-${p.id}`,
+      source: `${p.parent}`,
+      target: `${p.child}`,
+      label: p.name,
+      type: 'default',
+      animated: false,
+    }))), []);
+
+  const [nodes, setNodes] = useState(null);
+  const [edges, setEdges] = useState(parameterEdges);
+
+  const onNodesChange = useCallback(
+    (changes) => setNodes((nds) => applyNodeChanges(changes, nds)),
+    [setNodes]
+  );
+  const onEdgesChange = useCallback(
+    (changes) => setEdges((eds) => applyEdgeChanges(changes, eds)),
+    [setEdges]
+  );
+
+  useEffect(() => {
+    const graph = {
+      id: "root",
+      layoutOptions: { 
+        'elk.algorithm': 'layered',
+        'elk.nodePlacement.strategy': 'NETWORK_SIMPLEX',
+        'elk.direction': 'DOWN',
+        'elk.spacing.nodeNode': 20,
+        'elk.layered.spacing.nodeNodeBetweenLayers': 90,
+        'elk.aspectRatio': 1.0,
+      },
+      children: logLikelihoodNodes.map(n => (
+        { id: n.id, width: n.style.width, height: n.style.height}
+      )),
+      edges: parameterEdges.map(e => (
+        { id: e.id, sources: [e.source], targets: [e.target] }
+      )),
+    }
+
+    elk.layout(graph).then(graph => {
+      const newNodes = logLikelihoodNodes.map((n, i) => {
+        n.position.x = graph.children[i].x
+        n.position.y = graph.children[i].y
+        return n;
+      })
+      setNodes(newNodes)
+      setEdges(parameterEdges)
+    })
+
+  }, [JSON.stringify(inference.metadata)]);
 
   const logLikelihoodsNoNull = inference.log_likelihoods.map(ll =>
     Object.keys(ll).reduce((sum, key) => {
@@ -606,9 +720,6 @@ export default function DraftInferenceDetail({ project, inference }) {
     dispatch(deleteInference(inference.id));
   };
 
-  const handleRun = () => {
-    dispatch(runInference(inference.id));
-  };
 
   const handleStop= () => {
     dispatch(stopInference(inference.id));
@@ -627,10 +738,19 @@ export default function DraftInferenceDetail({ project, inference }) {
     "max_number_of_iterations", 
     inference.max_number_of_iterations
   )
-  console.log('inference', inference)
   
 
   const onSubmit = (values) => {
+    values.log_likelihoods = values.log_likelihoods.map(ll =>
+      Object.keys(ll).reduce((sum, key) => {
+        let value = ll[key]
+        if (value === '') {
+          value = null
+        }
+        sum[key] = value
+        return sum
+      }, {})
+    )
     dispatch(updateInference(values));
   };
 
@@ -652,8 +772,10 @@ export default function DraftInferenceDetail({ project, inference }) {
     { key: "From another inference", value: "F" },
   ]
 
-
+  
+  
   return (
+    <div>
     <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
       <FormTextField
         control={control}
@@ -670,36 +792,16 @@ export default function DraftInferenceDetail({ project, inference }) {
       />
 
 
-      <Typography>Log-likelihoods</Typography>
-      <List>
-        {logLikelihoods.map((logLikelihood, index) => (
-          <LogLikelihoodSubform
-            key={index}
-            control={control}
-            logLikelihood={logLikelihood}
-            datasets={datasets}
-            datasetOptions={dataset_options}
-            remove={() => logLikelihoodsRemove(index)}
-            baseName = {`log_likelihoods[${index}]`}
-            watch={watch}
-            setValue={setValue}
-            disabled={readOnly}
-          />
-        ))}
-        <ListItem key={-1} role={undefined} dense>
-          <Tooltip title={`create new objective function`} placement="right">
-            <span>
-            <IconButton
-              variant="rounded"
-              disabled={readOnly}
-              onClick={handleNewLoglikelihood}
-            >
-              <AddIcon />
-            </IconButton>
-            </span>
-          </Tooltip>
-        </ListItem>
-      </List>
+      <Typography>Statistical model</Typography>
+      <div className={classes.graph}>
+      {nodes && <ReactFlow 
+        nodes={nodes} 
+        edges={edges} 
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        fitView
+      />}
+      </div>
 
       <FormSelectField
         control={control}
@@ -772,11 +874,10 @@ export default function DraftInferenceDetail({ project, inference }) {
         </Button>
         <Button
           className={classes.controls}
-          disabled={readOnly}
-          onClick={handleRun}
+          onClick={handleEdit}
           variant="contained"
         >
-          Run
+          Edit
         </Button>
         <Button
           className={classes.controls}
@@ -803,5 +904,12 @@ export default function DraftInferenceDetail({ project, inference }) {
           </Alert>
         ))}
     </form>
+    <InferenceDialog 
+      open={openDialog}
+      handleCloseDialog={handleCloseDialog}
+      project={project}
+      defaultValues={inference.metadata}
+    />
+    </div>
   );
 }

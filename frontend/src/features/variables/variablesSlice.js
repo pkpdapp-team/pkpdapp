@@ -37,7 +37,14 @@ export const fetchVariablesByPdModel = createAsyncThunk(
   "variables/fetchVariablesByPdModel",
   async (pd_model_id, { getState }) => {
     const response = await api.get(`/api/variable/?pd_model_id=${pd_model_id}`);
-    return response;
+    const responseIds = response.map(v => v.id)
+    const state = getState()
+    const existingVariables = selectVariablesByPdModel(state, pd_model_id)
+    const deletedVariables = existingVariables.filter(v => responseIds.indexOf(v.id) === -1)
+    return {
+      variables: response,
+      deletedVariables
+    };
   }
 );
 
@@ -47,7 +54,14 @@ export const fetchVariablesByPkModel = createAsyncThunk(
     const response = await api.get(
       `/api/variable/?dosed_pk_model_id=${pk_model_id}`
     );
-    return response;
+    const responseIds = response.map(v => v.id)
+    const state = getState()
+    const existingVariables = selectVariablesByDosedPkModel(state, pk_model_id)
+    const deletedVariables = existingVariables.filter(v => responseIds.indexOf(v.id) === -1)
+    return {
+      variables: response,
+      deletedVariables
+    };
   }
 );
 
@@ -95,8 +109,20 @@ export const variablesSlice = createSlice({
       variablesAdapter.setAll(state, action.payload);
     },
     [fetchVariableById.fulfilled]: variablesAdapter.upsertOne,
-    [fetchVariablesByPdModel.fulfilled]: variablesAdapter.upsertMany,
-    [fetchVariablesByPkModel.fulfilled]: variablesAdapter.upsertMany,
+    [fetchVariablesByPdModel.fulfilled]: (state, action) => {
+      state.status = "succeeded";
+      if (action.payload.deletedVariables.length > 0) {
+        variablesAdapter.removeMany(state, action.payload.deletedVariables.map(v => v.id))
+      }
+      variablesAdapter.upsertMany(state, action.payload.variables);
+    },
+    [fetchVariablesByPkModel.fulfilled]: (state, action) => {
+      state.status = "succeeded";
+      if (action.payload.deletedVariables.length > 0) {
+        variablesAdapter.removeMany(state, action.payload.deletedVariables.map(v => v.id))
+      }
+      variablesAdapter.upsertMany(state, action.payload.variables);
+    },
     [addNewVariable.fulfilled]: variablesAdapter.addOne,
     [updateVariable.fulfilled]: variablesAdapter.upsertOne,
   },

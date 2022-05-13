@@ -10,7 +10,7 @@ from .units import Unit
 from .compound import Compound
 from .project import Project, ProjectAccess
 from .dataset import Dataset
-from .subject import Subject
+from .subject import Subject, SubjectGroup
 from .protocol import Protocol
 from .myokit_model_mixin import MyokitModelMixin
 from .mechanistic_model import MechanisticModel
@@ -27,18 +27,16 @@ from .biomarker_type import BiomarkerType
 from .biomarker import Biomarker
 from .profile import Profile
 from .dose import Dose
-from .inference import (
-    Inference,
-    Algorithm,
-)
-from .myokit_pints_forward_model import MyokitForwardModel
+from .myokit_forward_model import MyokitForwardModel
 from .likelihoods import (
     LogLikelihood,
     LogLikelihoodParameter,
 )
-from .priors import (
-    PriorNormal, PriorUniform, Prior,
+from .inference import (
+    Inference,
+    Algorithm,
 )
+
 from .inference_results import (
     InferenceChain,
     InferenceResult,

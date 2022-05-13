@@ -8,11 +8,13 @@ from django.db import transaction
 import numpy as np
 import pints
 import time
+import theano.tensor as tt
+import theano
+import scipy.stats as sps
 from tdigest import TDigest
 from pkpdapp.models import (
-    LogLikelihood,
     Inference,
-    PriorNormal, PriorUniform, InferenceResult,
+    InferenceResult,
     InferenceChain, InferenceFunctionResult,
     InferenceOutputResult,
 )
@@ -78,7 +80,7 @@ class ChainWriter:
                 for i, prior in enumerate(self._priors):
                     inference_results.append(InferenceResult(
                         chain=chain,
-                        prior=prior,
+                        log_likelihood=prior,
                         iteration=iteration,
                         value=x0[i]
                     ))
@@ -101,66 +103,91 @@ class OutputWriter:
     """
 
     def __init__(self, chains,
-                 times, values, pints_forward_model,
-                 log_likelihood,
-                 priors,
+                 log_likelihoods,
+                 pints_log_posterior,
                  use_every_n_sample=1,
                  buffer_size=100,
                  store_output_range=True):
-        self._tdigests = [
-            [TDigest() for _ in times] for _ in chains
-        ]
+
         self._iterations = []
         self._x0_buffers = [
             [] for _ in chains
         ]
 
         self._chains = chains
-        self._priors = priors
-        self._noise_param_indices = []
-        for i, prior in enumerate(priors):
-            if not prior.log_likelihood_parameter.is_model_variable():
-                self._noise_param_indices.append(i)
-        self._fixed_noise_params = []
-        for param in log_likelihood.parameters.all():
-            if param.is_fixed() and not param.is_model_variable():
-                self._fixed_noise_params.append(param.value)
 
-        self._log_likelihood = log_likelihood
-        self._pints_forward_model = pints_forward_model
-        self._len_x0 = pints_forward_model.n_parameters()
-        self._times = times
-        self._values = values
-        self._n_times = len(times)
+        self._log_likelihoods = log_likelihoods
+        self._pints_log_posterior = pints_log_posterior
+        data = [ll.get_inference_data() for ll in log_likelihoods]
+        self._values = [d[0] for d in data]
+        self._times = [d[1] for d in data]
+        self._unique_times = [
+            [times[0]] for times in self._times
+        ]
+        self._unique_times_index = [
+            [0] for _ in self._times
+        ]
+        self._times_index = [
+            [0] for _ in self._times
+        ]
+        for unique_times, unique_times_index, times_index, times in zip(
+            self._unique_times, self._unique_times_index, self._times_index,
+            self._times
+        ):
+            unique_index = 0
+            for i, t in enumerate(times[1:]):
+                if t != unique_times[-1]:
+                    times_index.append(i + 1)
+                    unique_times.append(t)
+                    unique_index += 1
+                unique_times_index.append(unique_index)
+
+        self._tdigests = [
+            [
+                [
+                    TDigest() for _ in times
+                ]
+                for times in self._unique_times
+            ]
+            for _ in chains
+        ]
+
         self._use_every_n_sample = use_every_n_sample
         self._store_output_range = store_output_range
-        self._outputs = self.initialise_outputs()
+        self._outputs = [
+            self.initialise_outputs(chain) for chain in self._chains
+        ]
         self._buffer = 0
         self._buffer_size = buffer_size
         self._updated = False
 
-    def initialise_outputs(self):
-        outputs = InferenceOutputResult.objects.filter(
-            chain__in=self._chains
-        )
-        if len(outputs) != len(self._times) * len(self._chains):
+    def initialise_outputs(self, chain):
+        outputs = []
+        outputs_count = InferenceOutputResult.objects.filter(
+            chain=chain,
+            log_likelihood__in=self._log_likelihoods,
+        ).count()
+        if outputs_count != (
+                sum([len(times) for times in self._times])
+        ):
             InferenceOutputResult.objects.filter(
-                chain__in=self._chains,
-                log_likelihood=self._log_likelihood
+                chain=chain,
+                log_likelihood__in=self._log_likelihoods,
             ).delete()
-            outputs = []
-            for chain in self._chains:
-                for i in range(self._n_times):
+            for log_likelihood, times, values in zip(
+                self._log_likelihoods, self._times, self._values
+            ):
+                for time_val, value in zip(times, values):
                     outputs.append(InferenceOutputResult.objects.create(
-                        log_likelihood=self._log_likelihood,
+                        log_likelihood=log_likelihood,
                         chain=chain,
                         median=0,
                         percentile_min=0,
                         percentile_max=0,
-                        data=self._values[0][i],
-                        time=self._times[i]
+                        data=value,
+                        time=time_val,
                     ))
-        return outputs
+            return outputs
 
     def append(self, x0s, iteration):
         for buffer, x0 in zip(self._x0_buffers, x0s):
@@ -170,61 +197,63 @@ class OutputWriter:
             self.write()
 
     def write(self):
-        output_index = 0
-        for x0_buffer, tdigests, chain in zip(
-                self._x0_buffers, self._tdigests, self._chains
+        for x0_buffer, tdigests_for_chain, chain, outputs in zip(
+            self._x0_buffers, self._tdigests, self._chains, self._outputs
         ):
             if self._store_output_range:
                 for iteration, x0 in zip(
-                        self._iterations, x0_buffer
+                    self._iterations, x0_buffer
                 ):
                     if iteration % self._use_every_n_sample != 0:
                         continue
-                    result = self._pints_forward_model.simulate(
-                        x0[:self._len_x0], self._times
-                    )
+                    results = \
+                        self._pints_log_posterior.sample_generative_model(
+                            self._pints_log_posterior.to_search(x0)
+                        )
+                    for times, tdigests, result, unique_times_index in zip(
+                        self._times, tdigests_for_chain, results,
+                        self._unique_times_index
+                    ):
+                        for i in range(len(times)):
+                            value = result[i]
+                            tdigests[unique_times_index[i]].update(value)
 
-                    noise_params = (
-                        [x0[i] for i in self._noise_param_indices] +
-                        self._fixed_noise_params
-                    )
-                    result = self._log_likelihood.add_noise(
-                        result, noise_params
-                    )
+                # write new percentiles
+                output_index = 0
+                for times, unique_times_index, tdigests, result in zip(
+                    self._times, self._unique_times_index,
+                    tdigests_for_chain, results
+                ):
+                    for i in range(len(times)):
+                        tdigest = tdigests[unique_times_index[i]]
+                        maximum = tdigest.percentile(90)
+                        minimum = tdigest.percentile(10)
+                        median = tdigest.percentile(50)
+                        outputs[output_index].median = median
+                        outputs[output_index].percentile_min = minimum
+                        outputs[output_index].percentile_max = maximum
+                        output_index += 1
 
-                    for i in range(self._n_times):
-                        value = result[i]
-                        tdigests[i].update(value)
-
-                for i in range(self._n_times):
-                    maximum = tdigests[i].percentile(90)
-                    minimum = tdigests[i].percentile(10)
-                    median = tdigests[i].percentile(50)
-                    self._outputs[output_index].median = median
-                    self._outputs[output_index].percentile_min = minimum
-                    self._outputs[output_index].percentile_max = maximum
-                    output_index += 1
             else:
                 # just use the last parameter values
+                output_index = 0
                 x0 = x0_buffer[-1]
-                result = self._pints_forward_model.simulate(
-                    x0[:self._len_x0], self._times
-                )
-                noise_params = (
-                    [x0[i] for i in self._noise_param_indices] +
-                    self._fixed_noise_params
-                )
-                result_min, result_max = self._log_likelihood.noise_range(
-                    result, noise_params
-                )
-                for i in range(self._n_times):
-                    self._outputs[output_index].median = result[i]
-                    self._outputs[output_index].percentile_min = result_min[i]
-                    self._outputs[output_index].percentile_max = result_max[i]
-                    output_index += 1
+                results_min, results, results_max = \
+                    self._pints_log_posterior.generative_model_range(
+                        self._pints_log_posterior.to_search(x0)
+                    )
+                for times, tdigests, result, result_min, result_max in zip(
+                    self._times, tdigests_for_chain,
+                    results, results_min, results_max
+                ):
+                    for i in range(len(times)):
+                        outputs[output_index].median = result[i]
+                        outputs[output_index].percentile_min = result_min[i]
+                        outputs[output_index].percentile_max = result_max[i]
+                        output_index += 1
 
-        with transaction.atomic():
-            [output.save() for output in self._outputs]
+            with transaction.atomic():
+                [output.save() for output in outputs]
 
         self._iterations = []
         self._x0_buffers = [
@@ -234,6 +263,7 @@ class OutputWriter:
 
 class InferenceMixin:
     def __init__(self, inference):
+        print('inference mixin', inference.number_of_iterations)
 
         # # select inference methods
         self._inference_type, self._inference_method = (
@@ -244,104 +274,43 @@ class InferenceMixin:
         self.inference = inference
 
         # get model parameters to be inferred
-        # TODO: only one log_likelihood!
-        log_likelihood = inference.log_likelihoods.first()
-        log_likelihood_priors = [
-            param.prior
-            for param in log_likelihood.parameters.all()
-            if not param.is_fixed()
+        log_likelihoods = inference.log_likelihoods.all()
+
+        # this list defines the ordering in the parameter vector
+        # for the sampler
+        self._priors = [
+            ll
+            for ll in log_likelihoods
+            if ll.is_a_prior()
         ]
-        fitted_parameter_names = [
-            param.variable.qname
-            for param in log_likelihood.parameters.all()
-            if not param.is_fixed() and param.is_model_variable()
+        print('priors are')
+        for p in self._priors:
+            print(p.name, p.form)
+
+        # create forwards models
+        self._observed_log_likelihoods = [
+            ll
+            for ll in log_likelihoods
+            if ll.has_data()
         ]
+        for ll in self._observed_log_likelihoods:
+            print('observed', ll.name, ll.biomarker_type)
 
-        # create pints forward model
-        # TODO: only supports a single log_likelihood
-        self._log_likelihoods = inference.log_likelihoods.all()
-        self._outputs = [ll.variable for ll in self._log_likelihoods]
-        self._pints_forward_model = log_likelihood.create_pints_forward_model(
-            fitted_parameter_names, outputs=self._outputs
-        )
-
-        # We'll use the variable ordering based on the forwards model.
-        pints_var_names = self._pints_forward_model.variable_parameter_names()
-
-        # we'll need the priors in the same order as the theta vector,
-        # so we can write back to the database
-        self.priors_in_pints_order = [
-            [prior for prior in log_likelihood_priors
-             if prior.is_match(name)][0]
-            for name in pints_var_names
-        ]
-
-        # add remaining (noise) priors to the end
-        self.priors_in_pints_order += [
-            prior for prior in log_likelihood_priors
-            if not prior.is_model_variable_prior()
-        ]
-
-        # get priors / boundaries, using variable ordering already established
-        (
-            self._pints_log_priors,
-            self._pints_boundaries,
-            self._pints_transforms
-        ) = self.get_priors_boundaries_transforms(self.priors_in_pints_order)
-
-        self._pints_composed_log_prior = pints.ComposedLogPrior(
-            *self._pints_log_priors
-        )
-
-        # get data
-        self._values, self._times = (
-            self.get_data(
-                self._log_likelihoods, self._pints_forward_model,
-                self.priors_in_pints_order, self._pints_composed_log_prior
-            )
-        )
-        self._times_all = np.sort(list(set(np.concatenate(self._times))))
-
-        self._collection = self.create_pints_problem_collection(
-            self._pints_forward_model, self._times, self._values, self._outputs
-        )
-
-        self._pints_log_likelihood = self.create_pints_log_likelihood(
-            self._collection, inference
-        )
-
-        self._pints_composed_transform = pints.ComposedTransformation(
-            *self._pints_transforms
-        )
-        self._pints_log_posterior = pints.LogPosterior(
-            self._pints_log_likelihood,
-            self._pints_composed_log_prior
-        )
-
-        # transform function and boundaries
-        self._pints_log_posterior = (
-            self._pints_composed_transform.convert_log_pdf(
-                self._pints_log_posterior
-            )
-        )
-        if self._pints_boundaries is not None:
-            self._pints_boundaries = (
-                self._pints_composed_transform.convert_boundaries(
-                    self._pints_boundaries
-                )
+        if len(self._observed_log_likelihoods) == 0:
+            raise RuntimeError(
+                'Error: must have at least one observed random variable '
+                'in model'
             )
 
-        # if doing an optimisation use a probability based error to maximise
-        # the posterior
-        if inference.algorithm.category == 'OP':
-            self._pints_log_posterior = (
-                pints.ProbabilityBasedError(
-                    self._pints_log_posterior
-                )
+        pymc3_model = \
+            self._observed_log_likelihoods[0].create_pymc3_model(
+                *self._observed_log_likelihoods[1:]
             )
-        # if doing a sampler, we can't use boundaries
-        else:
-            self._pints_boundaries = None
+
+        self._pints_log_posterior = PyMC3LogPosterior(
+            pymc3_model, self._observed_log_likelihoods, self._priors,
+            optimisation=(self.inference.algorithm.category == 'OP')
+        )
 
         # create chains if not exist
         if self.inference.chains.count() == 0:
@@ -371,9 +340,9 @@ class InferenceMixin:
             x0 = []
             if self.inference.number_of_iterations > 0:
                 print('restarting chains!')
-                for prior in self.priors_in_pints_order:
+                for prior in self._priors:
                     this_chain = InferenceResult.objects.filter(
-                        prior=prior,
+                        log_likelihood=prior,
                         chain=chain
                     )
                     x0.append(
@@ -383,12 +352,14 @@ class InferenceMixin:
                     )
                 x0 = np.array(x0)
             else:
-                x0 = self._pints_composed_log_prior.sample().flatten()
+                x0 = np.array(
+                    [p.sample() for p in self._priors]
+                )
                 if (
                     self.inference.initialization_strategy ==
                     Inference.InitializationStrategy.DEFAULT_VALUE
                 ):
-                    for xi, prior in enumerate(self.priors_in_pints_order):
+                    for xi, prior in enumerate(self._priors):
                         if prior.variable is not None:
                             x0[xi] = prior.variable.get_default_value()
                 elif (
@@ -403,29 +374,20 @@ class InferenceMixin:
 
                     )
                     for xi, this_prior in enumerate(
-                            self.priors_in_pints_order
+                            self._priors
                     ):
                         try:
                             last_result = last_values.get(
-                                prior__log_likelihood_parameter__name=(
-                                    this_prior.log_likelihood_parameter.name
-                                )
+                                log_likelihood__name=this_prior.name
                             )
                             x0[xi] = last_result.value
                         except InferenceResult.DoesNotExist:
                             pass
 
-                # sim = self._pints_forward_model.simulate(x0, self._times[0])
-
-                # plt.plot(self._times[0], sim, label='sim')
-                # plt.plot(self._times[0], self._values[0], label='data')
-                # plt.legend()
-                # plt.savefig('test.pdf')
-
                 # write x0 to empty chain
                 self.inference.number_of_function_evals += 1
                 fn_val = self._pints_log_posterior(
-                    self._pints_composed_transform.to_search(x0)
+                    self._pints_log_posterior.to_search(x0)
                 )
                 print('starting function value', fn_val)
                 self.write_inference_results(
@@ -437,69 +399,12 @@ class InferenceMixin:
             sigma0 = x0**2
             sigma0[sigma0 == 0] = 1
             # Use to create diagonal matrix
-            sigma0 = np.diag(0.01 * sigma0)
-            sigma0 = self._pints_composed_transform.convert_covariance_matrix(
-                sigma0, x0
+            sigma0 = 0.01 * sigma0
+            print('sigma0', sigma0)
+            x0 = self._pints_log_posterior.to_search(x0)
+            self._inference_objects.append(
+                self._inference_method(x0, sigma0)
             )
-            x0 = self._pints_composed_transform.to_search(x0)
-            if self._pints_boundaries is None:
-                self._inference_objects.append(
-                    self._inference_method(x0, sigma0)
-                )
-            else:
-                self._inference_objects.append(
-                    self._inference_method(
-                        x0, boundaries=self._pints_boundaries
-                    )
-                )
-
-    @ staticmethod
-    def create_pints_problem_collection(model, times, values, outputs):
-        # create a problem collection to handle the case when the outputs or
-        # times are wragged
-        times_values = []
-        for i in range(len(outputs)):
-            times_values.append(times[i])
-            times_values.append(values[i])
-        return pints.ProblemCollection(model, *times_values)
-
-    @ staticmethod
-    def create_pints_log_likelihood(
-            collection, inference,
-    ):
-        log_likelihoods = inference.log_likelihoods.all()
-
-        n_outputs = len(log_likelihoods)
-
-        problems = [collection.subproblem(i) for i in range(n_outputs)]
-
-        # instantiate PINTS log-likelihoods
-        pints_log_likelihoods = []
-        for problem, log_likelihood in zip(problems, log_likelihoods):
-            if log_likelihood.form == LogLikelihood.Form.NORMAL:
-                noise_param = log_likelihood.parameters.get(
-                    variable__isnull=True
-                )
-                if noise_param.is_fixed():
-                    value = noise_param.value
-                    pints_log_likelihoods.append(
-                        pints.GaussianKnownSigmaLogLikelihood(
-                            problem, value
-                        )
-                    )
-                else:
-                    pints_log_likelihoods.append(
-                        pints.GaussianLogLikelihood(problem)
-                    )
-            elif log_likelihood.form == LogLikelihood.Form.LOGNORMAL:
-                pints_log_likelihoods.append(
-                    pints.LogNormalLogLikelihood(problem)
-                )
-
-        # combine them
-        return CombinedLogLikelihood(
-            *pints_log_likelihoods
-        )
 
     @ staticmethod
     def get_inference_type_and_method(inference):
@@ -512,127 +417,6 @@ class InferenceMixin:
         inference_method = method_dict[methodname]
         return inference_type, inference_method
 
-    @ staticmethod
-    def get_data(log_likelihoods, pints_forward_model, priors_in_pints_order,
-                 pints_composed_log_prior):
-
-        # if we're using fake data sample from composed prior
-        # and store the values
-        use_fake_data = any([
-            ll.biomarker_type is None for ll in log_likelihoods
-        ])
-        if use_fake_data:
-            t_max = max([
-                ll.get_model().time_max for ll in log_likelihoods
-            ])
-            fake_data_times = np.linspace(0, t_max, 20)
-            fake_data_x0 = pints_composed_log_prior.sample().flatten()
-            for x, prior in zip(fake_data_x0, priors_in_pints_order):
-                prior.log_likelihood_parameter.value = x
-                prior.log_likelihood_parameter.save()
-            result = pints_forward_model.simulate(
-                fake_data_x0[:pints_forward_model.n_parameters()],
-                fake_data_times
-            )
-
-        values = []
-        times = []
-        result_index = 0
-        for obj in log_likelihoods:
-
-            # if we have data then use it, otherwise
-            # use simulated data
-            if obj.biomarker_type:
-                df = obj.biomarker_type.as_pandas()
-                values.append(df['values'].tolist())
-                times.append(df['times'].tolist())
-            else:
-                output_values = result[
-                    result_index:result_index + len(fake_data_times)
-                ]
-
-                # noise param value could be fixed or in priors
-                x0_noise_params = []
-                for param in obj.parameters.all():
-                    if param.is_fixed() and not param.is_model_variable():
-                        x0_noise_params.append(param.value)
-                n_parameters = pints_forward_model.n_parameters()
-                for i, prior in enumerate(
-                        priors_in_pints_order[n_parameters:]
-                ):
-                    param = prior.log_likelihood_parameter
-                    if (
-                            param.log_likelihood == obj and
-                            not param.is_model_variable()
-                    ):
-                        x0_noise_params.append(fake_data_x0[n_parameters + i])
-
-                print('adding noise to fake data with params', x0_noise_params)
-                output_values = obj.add_noise(output_values, x0_noise_params)
-
-                values.append(output_values)
-                times.append(fake_data_times)
-                result_index += len(fake_data_times)
-
-        print('output values', values)
-
-        return values, times
-
-    @ staticmethod
-    def get_objectives(inference):
-        # determine objective function and observed biomarker types
-        # to simulate
-        objs = inference.log_likelihoods.all()
-        observed_loglikelihoods = []
-        for obj in objs:
-            if obj.form == LogLikelihood.Form.NORMAL:
-                if obj.parameters.first().value is not None:
-                    observed_loglikelihoods.append(
-                        pints.GaussianKnownSigmaLogLikelihood)
-                else:
-                    observed_loglikelihoods.append(pints.GaussianLogLikelihood)
-
-                observed_loglikelihoods.append(pints.GaussianLogLikelihood)
-            elif obj.form == LogLikelihood.Form.LOGNORMAL:
-                observed_loglikelihoods.append(pints.LogNormalLogLikelihood)
-        return observed_loglikelihoods
-
-    @ staticmethod
-    def get_priors_boundaries_transforms(priors):
-        # get all variables being fitted from priors
-        pints_log_priors = []
-        pints_transforms = []
-        if all([isinstance(p, PriorUniform) for p in priors]):
-            lower = [p.lower for p in priors]
-            upper = [p.upper for p in priors]
-            pints_boundaries = pints.RectangularBoundaries(lower, upper)
-        else:
-            pints_boundaries = None
-        for prior in priors:
-            # if prior.variable.is_log:
-            if False:
-                pints_transforms.append(
-                    pints.LogTransformation(n_parameters=1)
-                )
-            else:
-                pints_transforms.append(
-                    pints.IdentityTransformation(n_parameters=1)
-                )
-            if isinstance(prior, PriorUniform):
-                lower = prior.lower
-                upper = prior.upper
-                pints_log_prior = pints.UniformLogPrior(lower, upper)
-            elif isinstance(prior, PriorNormal):
-                mean = prior.mean
-                sd = prior.sd
-                pints_log_prior = pints.GaussianLogPrior(mean, sd)
-            pints_log_priors.append(pints_log_prior)
-
-        return pints_log_priors, pints_boundaries, pints_transforms
-
-    def get_myokit_model(self):
-        return self._myokit_model
-
     def write_inference_results(self, values, fn_value, iteration,
                                 chain_index):
         # Writes inference results to one chain
@@ -642,10 +426,10 @@ class InferenceMixin:
             iteration=iteration,
             value=fn_value
         )
-        for i, prior in enumerate(self.priors_in_pints_order):
+        for i, prior in enumerate(self._priors):
             InferenceResult.objects.create(
                 chain=chains[chain_index],
-                prior=prior,
+                log_likelihood=prior,
                 iteration=iteration,
                 value=values[i])
 
@@ -653,7 +437,7 @@ class InferenceMixin:
         # runs one set of ask / tell
         fn_values = []
         x0s = []
-        for idx, obj in enumerate(self._inference_objects):
+        for obj in self._inference_objects:
             x = obj.ask()
             if self._inference_type == "SA":  # sampling
                 score = self._pints_log_posterior(x)
@@ -666,7 +450,7 @@ class InferenceMixin:
                 x = obj.xbest()
                 score = obj.fbest()
 
-            x0s.append(self._pints_composed_transform.to_model(x))
+            x0s.append(self._pints_log_posterior.to_model(x))
             fn_values.append(score)
         writer.append(fn_values, x0s, self.inference.number_of_iterations)
         output_writer.append(x0s, self.inference.number_of_iterations)
@@ -683,29 +467,26 @@ class InferenceMixin:
             self._inference_objects[0].needs_initial_phase()
         ):
             print('need to consider an initial phase')
-            dimensions = len(self.priors_in_pints_order)
+            dimensions = len(self._priors)
             initial_phase_iterations = 500 * dimensions
             if n_iterations < initial_phase_iterations:
                 print('Turning on initial phase')
                 for sampler in self._inference_objects:
                     sampler.set_initial_phase(True)
 
-        write_every_n_iteration = 100
-        evaluate_model_every_n_iterations = 1
+        write_every_n_iteration = 500
+        evaluate_model_every_n_iterations = 10
 
         writer = ChainWriter(
             self.inference.chains.all(),
-            self.priors_in_pints_order,
+            self._priors,
             write_every_n_iteration,
         )
 
         output_writer = OutputWriter(
             self.inference.chains.all(),
-            self._times_all,
-            self._values,
-            self._pints_forward_model,
-            self.inference.log_likelihoods.first(),
-            self.priors_in_pints_order,
+            self._observed_log_likelihoods,
+            self._pints_log_posterior,
             use_every_n_sample=evaluate_model_every_n_iterations,
             buffer_size=write_every_n_iteration,
             store_output_range=self.inference.algorithm.category == 'SA'
@@ -727,6 +508,7 @@ class InferenceMixin:
                     update_fields=[
                         'number_of_iterations',
                         'number_of_function_evals',
+                        'time_elapsed',
                     ]
                 )
 
@@ -739,51 +521,273 @@ class InferenceMixin:
         return self._fixed_variables
 
 
+class PyMC3LogPosterior(pints.LogPDF):
+    def __init__(self, model, log_likelihoods, priors, optimisation=False):
+        for p in priors:
+            print('have prior name', p.name)
+        self._transforms = [
+            model[p.name].distribution.transform for p in priors
+        ]
+        self._transform_names = [
+            t if t is None else t.name for t in self._transforms
+        ]
+        self._transform_backwards = [
+            self._transform_backward(t) for t in self._transforms
+        ]
+        self._transform_forwards = [
+            self._transform_forward(t) for t in self._transforms
+        ]
+        self._prior_names = [
+            self._get_name(p, t) for p, t in zip(priors, self._transforms)
+        ]
+        self._log_likelihoods = log_likelihoods
+        self._log_likelihood_names = [
+            self._get_name(ll, None) for ll in log_likelihoods
+        ]
+        mean_rvs = []
+        param1s_rvs = []
+        param1s_index = []
+        param1s = []
+        # assumes that all observed ll have 2 noise params
+        # assumes that the mean comes from a model
+        for i, ll in enumerate(self._log_likelihoods):
+            mean, param1 = ll.get_noise_log_likelihoods()
+            mean_name = mean.name + ll.name
+            mean_rvs.append(model[mean_name])
+            if param1.form == param1.Form.FIXED:
+                param1s.append(param1.value)
+            else:
+                param1s_rvs.append(model[param1.name])
+                param1s_index.append(i)
+                param1s.append(np.nan)
+        self._n_means = len(self._log_likelihoods)
+        self._param1s_index = param1s_index
+        self._param1s = np.array(param1s)
+        print('posterior_predictive', mean_rvs, param1s_rvs)
+        self._posterior_predictive = model.fastfn(mean_rvs + param1s_rvs)
+        self._model = model
+        self._logp = model.logp
+        if optimisation:
+            def function(x):
+                return -self._logp(x)
+            self._function = function
+        else:
+            self._function = self._logp
+
+    def n_parameters(self):
+        return len(self._prior_names)
+
+    @staticmethod
+    def _transform_forward(transform):
+        x = tt.dscalar('x')
+        x.tag.test_value = 1.0
+        if transform is None:
+            z = x
+        else:
+            z = transform.forward(x)
+        return theano.function([x], z)
+
+    @staticmethod
+    def _transform_backward(transform):
+        x = tt.dscalar('x')
+        x.tag.test_value = 1.0
+        if transform is None:
+            z = x
+        else:
+            z = transform.backward(x)
+        return theano.function([x], z)
+
+    def _get_name(self, prior, transform):
+        if transform is None:
+            return prior.name
+        return prior.name + '_{}__'.format(transform.name)
+
+    def _get_input_name(self, log_likelihood):
+        mean = log_likelihood.get_noise_log_likelihoods()[0]
+        print('name is ', mean.name + log_likelihood.name)
+        return mean.name + log_likelihood.name
+
+    def to_search(self, x):
+        return np.array([
+            t(xi) for xi, t in zip(x, self._transform_forwards)
+        ])
+
+    def to_model(self, x):
+        return np.array([
+            t(xi) for xi, t in zip(x, self._transform_backwards)
+        ])
+
+    def __call__(self, x):
+        call_dict = {
+            name: value for name, value in zip(self._prior_names, x)
+        }
+        return self._function(call_dict)
+
+    def generative_model_range(self, x):
+        call_dict = {
+            name: value for name, value in zip(self._prior_names, x)
+        }
+        results = self._posterior_predictive(call_dict)
+        means = results[:self._n_means]
+        param1s = self._param1s
+        for result, index in zip(results[self._n_means:], self._param1s_index):
+            param1s[index] = result
+        values = []
+        values_min = []
+        values_max = []
+        for output_values, param1, log_likelihood in zip(
+                means, param1s, self._log_likelihoods
+        ):
+            output_values_min, output_values_max = \
+                log_likelihood.noise_range(output_values, [0, param1])
+            values.append(output_values)
+            values_min.append(output_values_min)
+            values_max.append(output_values_max)
+        return values_min, values, values_max
+
+    def sample_generative_model(self, x):
+        call_dict = {
+            name: value for name, value in zip(self._prior_names, x)
+        }
+        results = self._posterior_predictive(call_dict)
+        means = results[:self._n_means]
+        param1s = self._param1s
+        for result, index in zip(results[self._n_means:], self._param1s_index):
+            param1s[index] = result
+        sampled_values = []
+        for output_values, param1, log_likelihood in zip(
+                means, param1s, self._log_likelihoods
+        ):
+            output_values = \
+                log_likelihood.add_noise(output_values, [0, param1])
+            sampled_values.append(output_values)
+
+        return sampled_values
+
+
 class CombinedLogLikelihood(pints.LogPDF):
     """
     Creates a `PINTS.LogLikelihood` object from a list of individual
     `PINTS.LogLikelihood` objects.
     """
 
-    def __init__(self, *log_likelihoods):
-        self._log_likelihoods = [ll for ll in log_likelihoods]
-        self._n_outputs = len(self._log_likelihoods)
+    def __init__(self, log_likelihoods, param_indicies):
+        self._log_likelihoods = log_likelihoods
+        self._param_indicies = []
+        for indicies in param_indicies:
+            if indicies == list(range(indicies[0], indicies[-1] + 1)):
+                self._param_indicies.append(
+                    slice(indicies[0], indicies[-1] + 1)
+                )
+            else:
+                self._param_indicies.append(
+                    np.array(indicies, dtype=np.int)
+                )
 
-        self._n_myokit_parameters = \
-            self._log_likelihoods[0]._problem.n_parameters()
-
-        # the myokit forwards model parameters are at the start of the
-        # parameter vector
-        self._myokit_parameter_slice = slice(0, self._n_myokit_parameters)
-
-        # we're going to put all the noise parameters for each log-likelihood
-        # at the end of the parameter vector, so loop through them all and
-        # pre-calculate the slice of the parameter vector corrseponding to
-        # the noise parameters for each log_likelihood
-        curr_index = self._n_myokit_parameters
-        self._n_noise_parameters = 0
-        self._noise_parameter_slices = []
-        for ll in self._log_likelihoods:
-            n_noise_parameters = ll.n_parameters() - self._n_myokit_parameters
-            self._noise_parameter_slices.append(
-                slice(curr_index, curr_index + n_noise_parameters)
-            )
-            curr_index += n_noise_parameters
-            self._n_noise_parameters += n_noise_parameters
+        self._n_parameters = max([
+            max(indicies)
+            for indicies in param_indicies
+        ]) + 1
 
     def __call__(self, x):
-        # use pre-calculated slices to get the parameter vector for each
-        # log-likelihood
         log_like = 0
-        for noise_slice, ll in zip(
-                self._noise_parameter_slices, self._log_likelihoods
+        for log_likelihood, indicies in zip(
+            self._log_likelihoods, self._param_indicies
         ):
-            params = np.concatenate((
-                x[self._myokit_parameter_slice],
-                x[noise_slice]
-            ))
-            log_like += ll(params)
+            log_like += log_likelihood(x[indicies])
         return log_like
 
+    def get_measured_data(self):
+        times = []
+        values = []
+        for log_likelihood, indicies in zip(
+            self._log_likelihoods, self._param_indicies
+        ):
+            problem = log_likelihood._problem
+            times.append(problem._times)
+            values.append(problem._values)
+        return times, values
+
+    def generative_model_range(self, x_all):
+        values = []
+        values_min = []
+        values_max = []
+        for log_likelihood, indicies in zip(
+            self._log_likelihoods, self._param_indicies
+        ):
+            x = x_all[indicies]
+            problem = log_likelihood._problem
+            if problem.n_parameters() < len(x):
+                x = x[:problem.n_parameters()]
+            output_values = problem.evaluate(x)
+            output_values_min = np.copy(output_values)
+            output_values_max = np.copy(output_values)
+            noise_params = x[problem.n_parameters():]
+            if isinstance(log_likelihood, pints.GaussianLogLikelihood):
+                for i in range(len(output_values)):
+                    dist = sps.norm(
+                        loc=output_values[i],
+                        scale=noise_params[0]
+                    )
+                    output_values_min[i] = dist.ppf(.1)
+                    output_values_max[i] = dist.ppf(.9)
+            elif isinstance(
+                log_likelihood, pints.GaussianKnownSigmaLogLikelihood
+            ):
+                for i in range(len(output_values)):
+                    dist = sps.norm(
+                        loc=output_values[i],
+                        scale=np.sqrt(1 / log_likelihood._isigma2)
+                    )
+                    output_values_min[i] = dist.ppf(.1)
+                    output_values_max[i] = dist.ppf(.9)
+            elif isinstance(log_likelihood, pints.LogNormalLogLikelihood):
+                for i in range(len(output_values)):
+                    dist = sps.lognorm(
+                        loc=output_values[i],
+                        scale=noise_params[0]
+                    )
+                    output_values_min[i] = dist.ppf(.1)
+                    output_values_max[i] = dist.ppf(.9)
+
+            values.append(output_values)
+            values_min.append(output_values_min)
+            values_max.append(output_values_max)
+        return values_min, values, values_max
+
+    def sample_generative_model(self, x_all):
+        sampled_values = []
+        for log_likelihood, indicies in zip(
+            self._log_likelihoods, self._param_indicies
+        ):
+            x = x_all[indicies]
+            problem = log_likelihood._problem
+            if problem.n_parameters() < len(x):
+                x = x[:problem.n_parameters()]
+            output_values = problem.evaluate(x)
+            noise_params = x[problem.n_parameters():]
+            if isinstance(log_likelihood, pints.GaussianLogLikelihood):
+                output_values += np.random.normal(
+                    scale=noise_params[0],
+                    size=output_values.shape
+                )
+            elif isinstance(
+                log_likelihood, pints.GaussianKnownSigmaLogLikelihood
+            ):
+                output_values += np.random.normal(
+                    scale=np.sqrt(1 / log_likelihood._isigma2),
+                    size=output_values.shape
+                )
+            elif isinstance(log_likelihood, pints.LogNormalLogLikelihood):
+                output_values += (
+                    np.random.lognormal(
+                        sigma=noise_params[0],
+                        size=output_values.shape
+                    )
+                )
+            sampled_values.append(output_values)
+
+        return sampled_values
+
     def n_parameters(self):
-        return self._n_myokit_parameters + self._n_noise_parameters
+        return self._n_parameters
