@@ -142,6 +142,7 @@ class PkpdModel(MyokitModelMixin, StoredModel):
         # import PK components one by one,
         # renaming the "myokit" component to "PK"
         for component in pk_model.components():
+            print('importing component', component.name())
             if component.name() == 'myokit':
                 time_var = component.get('time')
                 time_var.set_binding(None)
@@ -149,8 +150,6 @@ class PkpdModel(MyokitModelMixin, StoredModel):
                     component, new_name='PK',
                     var_map=var_map, convert_units=True
                 )
-                for var in component.variables():
-                    var_map[var.qname()] = 'PK.' + var.name()
                 imported_pk_component = pkpd_model.get('PK')
                 imported_time = imported_pk_component.get('time')
                 imported_pk_component.remove_variable(imported_time)
@@ -158,11 +157,40 @@ class PkpdModel(MyokitModelMixin, StoredModel):
                 pkpd_model.import_component(
                     component, var_map=var_map, convert_units=True
                 )
-                for var in component.variables():
-                    var_map[var.qname()] = var.qname()
+
+        # now map from qname => qname, except for the myokit component
+        var_map = {}
+        for v in pk_model.variables():
+            if component.name() == 'myokit':
+                if v.name() == 'time':
+                    continue
+                var_map[v.qname()] = 'PK.' + v.name()
+            else:
+                var_map[v.qname()] = v.qname()
+
+        # remove, then import PK components one by one again,
+        # using the correct variable mapping now
+        for component in pk_model.components():
+            print('importing component', component.name())
+            if component.name() == 'myokit':
+                pkpd_model_component = pkpd_model.get('PK')
+                pkpd_model.remove_component(pkpd_model_component)
+                pkpd_model.import_component(
+                    component, new_name='PK',
+                    var_map=var_map, convert_units=True
+                )
+                imported_pk_component = pkpd_model.get('PK')
+                imported_time = imported_pk_component.get('time')
+                imported_pk_component.remove_variable(imported_time)
+            else:
+                pkpd_model_component = pkpd_model.get(component.name())
+                pkpd_model.remove_component(pkpd_model_component)
+                pkpd_model.import_component(
+                    component, var_map=var_map, convert_units=True
+                )
 
         pkpd_model.remove_component(temp)
-
+        pkpd_model.validate()
         return pkpd_model
 
     def create_myokit_simulator(self):
