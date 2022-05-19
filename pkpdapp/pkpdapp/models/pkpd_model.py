@@ -122,74 +122,21 @@ class PkpdModel(MyokitModelMixin, StoredModel):
         # clone PD model so original model is unaffected
         pkpd_model = pd_model.clone()
 
-        # need to import variables from PK to PD otherwise there will be issues
-        # part way through when there are variables that imported PK components
-        # refers to, that have not yet been imported
-        temp = pkpd_model.add_component('temp')
-        pk_model.create_unique_names()
-        var_map = {}
-        for var in pk_model.variables():
-            if var.name() == 'time':
-                continue
-            temp_var = temp.add_variable(var.uname())
-            temp_var.set_unit(unit=var.unit())
-            var_map[var.qname()] = temp_var.qname()
+        # remove time binding
+        time_var = pk_model.get('myokit.time')
+        time_var.set_binding(None)
 
-        # add mappings
-        for mapping in self.mappings.all():
-            var_map[mapping.pk_variable.qname()] = mapping.pd_variable.qname()
+        pk_components = list(pk_model.components())
+        pk_names = [
+            c.name().replace('myokit', 'PK') for c in pk_components
+        ]
+        pkpd_model.import_component(pk_components, new_name=pk_names)
 
-        # import PK components one by one,
-        # renaming the "myokit" component to "PK"
-        for component in pk_model.components():
-            print('importing component', component.name())
-            if component.name() == 'myokit':
-                time_var = component.get('time')
-                time_var.set_binding(None)
-                pkpd_model.import_component(
-                    component, new_name='PK',
-                    var_map=var_map, convert_units=True
-                )
-                imported_pk_component = pkpd_model.get('PK')
-                imported_time = imported_pk_component.get('time')
-                imported_pk_component.remove_variable(imported_time)
-            else:
-                pkpd_model.import_component(
-                    component, var_map=var_map, convert_units=True
-                )
+        # remove imported time var
+        imported_pk_component = pkpd_model.get('PK')
+        imported_time = imported_pk_component.get('time')
+        imported_pk_component.remove_variable(imported_time)
 
-        # now map from qname => qname, except for the myokit component
-        var_map = {}
-        for v in pk_model.variables():
-            if component.name() == 'myokit':
-                if v.name() == 'time':
-                    continue
-                var_map[v.qname()] = 'PK.' + v.name()
-            else:
-                var_map[v.qname()] = v.qname()
-
-        # remove, then import PK components one by one again,
-        # using the correct variable mapping now
-        for component in pk_model.components():
-            print('importing component', component.name())
-            if component.name() == 'myokit':
-                pkpd_model_component = pkpd_model.get('PK')
-                pkpd_model.remove_component(pkpd_model_component)
-                pkpd_model.import_component(
-                    component, new_name='PK',
-                    var_map=var_map, convert_units=True
-                )
-                imported_pk_component = pkpd_model.get('PK')
-                imported_time = imported_pk_component.get('time')
-                imported_pk_component.remove_variable(imported_time)
-            else:
-                pkpd_model_component = pkpd_model.get(component.name())
-                pkpd_model.remove_component(pkpd_model_component)
-                pkpd_model.import_component(
-                    component, var_map=var_map, convert_units=True
-                )
-
-        pkpd_model.remove_component(temp)
         pkpd_model.validate()
         return pkpd_model
 
