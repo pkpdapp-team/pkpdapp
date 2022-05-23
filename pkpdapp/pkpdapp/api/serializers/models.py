@@ -7,15 +7,72 @@ from rest_framework import serializers
 from pkpdapp.models import (
     PharmacokineticModel, MyokitModelMixin,
     DosedPharmacokineticModel, PkpdModel,
-    PharmacodynamicModel,
+    PharmacodynamicModel, PkpdMapping
 )
 from pkpdapp.api.serializers import ValidSbml
 
 
-class PkpdSerializer(serializers.ModelSerializer):
+class PkpdMappingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PkpdMapping
+        fields = '__all__'
+
+
+class BasePkpdSerializer(serializers.ModelSerializer):
     class Meta:
         model = PkpdModel
         fields = '__all__'
+
+
+class PkpdSerializer(serializers.ModelSerializer):
+    mappings = PkpdMappingSerializer(many=True)
+
+    class Meta:
+        model = PkpdModel
+        fields = '__all__'
+
+    def create(self, validated_data):
+        mappings_data = validated_data.pop('mappings')
+        new_pkpd_model = BasePkpdSerializer().create(
+            validated_data
+        )
+        for field_datas, Serializer in [
+                (mappings_data, PkpdMappingSerializer),
+        ]:
+            for field_data in field_datas:
+                serializer = Serializer()
+                field_data['pkpd_model'] = new_pkpd_model
+                serializer.create(field_data)
+
+        return new_pkpd_model
+
+    def update(self, instance, validated_data):
+        mappings_data = validated_data.pop('mappings')
+        old_mappings = list((instance.mappings).all())
+
+        new_pkpd_model = BasePkpdSerializer().update(
+            instance, validated_data
+        )
+
+        # don't update mappings if read_only
+        if not instance.read_only:
+            for field_datas, old_models, Serializer in [
+                    (mappings_data,
+                     old_mappings, PkpdMappingSerializer)
+            ]:
+                for field_data in field_datas:
+                    serializer = Serializer()
+                    try:
+                        old_model = old_models.pop(0)
+                        new_model = serializer.update(
+                            old_model, field_data
+                        )
+                    except IndexError:
+                        field_data['pkpd_model'] = new_pkpd_model
+                        new_model = serializer.create(field_data)
+                    new_model.save()
+
+        return new_pkpd_model
 
 
 class PharmacokineticSerializer(serializers.ModelSerializer):

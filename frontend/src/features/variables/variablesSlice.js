@@ -48,6 +48,7 @@ export const fetchVariablesByPdModel = createAsyncThunk(
   }
 );
 
+
 export const fetchVariablesByPkModel = createAsyncThunk(
   "variables/fetchVariablesByPkModel",
   async (pk_model_id, { getState }) => {

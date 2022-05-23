@@ -11,7 +11,7 @@ import numpy as np
 from pkpdapp.models import (
     Unit, DosedPharmacokineticModel,
     PharmacokineticModel, PharmacodynamicModel,
-    StoredModel,
+    StoredModel, PkpdModel
 )
 
 
@@ -108,6 +108,13 @@ class Variable(StoredModel):
         related_name='variables',
         help_text='dosed pharmacokinetic model'
     )
+    pkpd_model = models.ForeignKey(
+        PkpdModel,
+        blank=True, null=True,
+        on_delete=models.CASCADE,
+        related_name='variables',
+        help_text='pkpd model'
+    )
 
     class Meta:
         constraints = [
@@ -125,12 +132,19 @@ class Variable(StoredModel):
                 check=(
                     (Q(pk_model__isnull=True) &
                      Q(dosed_pk_model__isnull=True) &
+                     Q(pkpd_model__isnull=True) &
                      Q(pd_model__isnull=False)) |
                     (Q(pk_model__isnull=False) &
                      Q(dosed_pk_model__isnull=True) &
+                     Q(pkpd_model__isnull=True) &
                      Q(pd_model__isnull=True)) |
                     (Q(pk_model__isnull=True) &
                      Q(dosed_pk_model__isnull=False) &
+                     Q(pkpd_model__isnull=True) &
+                     Q(pd_model__isnull=True)) |
+                    (Q(pk_model__isnull=True) &
+                     Q(dosed_pk_model__isnull=True) &
+                     Q(pkpd_model__isnull=False) &
                      Q(pd_model__isnull=True))
                 ),
                 name='%(class)s: variable must belong to a model'

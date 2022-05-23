@@ -38,7 +38,8 @@ from .inference import (
 )
 from .simulate import (
     SimulatePkView,
-    SimulatePdView
+    SimulatePdView,
+    SimulatePkpdView
 )
 from .subject import SubjectView
 from .unit import UnitView

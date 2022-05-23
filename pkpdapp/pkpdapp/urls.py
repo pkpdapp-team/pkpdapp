@@ -68,6 +68,8 @@ urlpatterns = [
     path('api/auce/', api.AuceView.as_view(), name='auce'),
     path('api/dosed_pharmacokinetic/<int:pk>/simulate',
          api.SimulatePkView.as_view(), name='simulate-dosed-pharmacokinetic'),
+    path('api/pkpd_model/<int:pk>/simulate',
+         api.SimulatePkpdView.as_view(), name='simulate-pkpd-model'),
     path(
         'api/inference/<int:pk>/run',
         api.RunInferenceView.as_view(),

@@ -71,11 +71,13 @@ class PkpdModel(MyokitModelMixin, StoredModel):
     dosed_pk_model = models.ForeignKey(
         DosedPharmacokineticModel, on_delete=models.CASCADE,
         related_name='pkpd_models',
+        blank=True, null=True,
         help_text='PK part of model'
     )
     pd_model = models.ForeignKey(
         PharmacodynamicModel, on_delete=models.CASCADE,
         related_name='pkpd_models',
+        blank=True, null=True,
         help_text='PD part of model'
     )
     project = models.ForeignKey(
@@ -87,14 +89,6 @@ class PkpdModel(MyokitModelMixin, StoredModel):
 
     def get_project(self):
         return self.project
-
-    __original_pd_model = None
-    __original_dosed_pk_model = None
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.__original_pd_model = self.pd_model
-        self.__original_dosed_pk_model = self.dosed_pk_model
 
     def create_stored_model(self, new_pk_model, new_pd_model):
         stored_model_kwargs = {
@@ -116,26 +110,63 @@ class PkpdModel(MyokitModelMixin, StoredModel):
         return stored_model
 
     def create_myokit_model(self):
-        pk_model = self.dosed_pk_model.create_myokit_model()
-        pd_model = self.pd_model.create_myokit_model()
+        if self.dosed_pk_model is None:
+            pk_model = myokit.Model()
+        else:
+            pk_model = self.dosed_pk_model.create_myokit_model()
+        if self.pd_model is None:
+            pd_model = myokit.Model()
+        else:
+            pd_model = self.pd_model.create_myokit_model()
+        have_both_models = (
+            self.dosed_pk_model is not None and
+            self.pd_model is not None
+        )
+        have_no_models = (
+            self.dosed_pk_model is None and
+            self.pd_model is None
+        )
 
-        # clone PD model so original model is unaffected
-        pkpd_model = pd_model.clone()
+        # clone PK model so original model is unaffected
+        pkpd_model = pk_model.clone()
 
-        # remove time binding
-        time_var = pk_model.get('myokit.time')
-        time_var.set_binding(None)
+        # default model is one with just time
+        if have_no_models:
+            pkpd_model = myokit.parse_model('''
+            [[model]]
+            [myokit]
+            time = 0 [s] bind time
+                in [s]
+        ''')
 
-        pk_components = list(pk_model.components())
-        pk_names = [
-            c.name().replace('myokit', 'PK') for c in pk_components
+        # remove time binding if
+        if have_both_models:
+            time_var = pd_model.get('myokit.time')
+            time_var.set_binding(None)
+
+        pd_components = list(pd_model.components())
+        pd_names = [
+            c.name().replace('myokit', 'PD') for c in pd_components
         ]
-        pkpd_model.import_component(pk_components, new_name=pk_names)
+
+        if pd_components:
+            pkpd_model.import_component(
+                pd_components,
+                new_name=pd_names,
+            )
 
         # remove imported time var
-        imported_pk_component = pkpd_model.get('PK')
-        imported_time = imported_pk_component.get('time')
-        imported_pk_component.remove_variable(imported_time)
+        if have_both_models:
+            imported_pd_component = pkpd_model.get('PD')
+            imported_time = imported_pd_component.get('time')
+            imported_pd_component.remove_variable(imported_time)
+
+        # do mappings
+        for mapping in self.mappings.all():
+            pd_var = pkpd_model.get(
+                mapping.pd_variable.qname.replace('myokit', 'PD')
+            )
+            pd_var.set_rhs(mapping.pk_variable.qname)
 
         pkpd_model.validate()
         return pkpd_model
@@ -145,26 +176,6 @@ class PkpdModel(MyokitModelMixin, StoredModel):
         with lock:
             sim = myokit.Simulation(model)
         return sim
-
-    def save(self, force_insert=False, force_update=False, *args, **kwargs):
-        created = not self.pk
-
-        super().save(force_insert, force_update, *args, **kwargs)
-
-        # don't update a stored model
-        if self.read_only:
-            return
-
-        if (
-            created or
-            self.pd_model != self.__original_pd_model or
-            self.dosed_pk_model != self.__original_dosed_pk_model
-        ):
-            print('update model')
-            self.update_model()
-
-        self.__original_pd_model = self.pd_model
-        self.__original_dosed_pk_model = self.dosed_pk_model
 
 
 class PkpdMapping(StoredModel):
