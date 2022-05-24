@@ -5,6 +5,8 @@ import {
 } from "@reduxjs/toolkit";
 
 import { api } from "../../Api";
+import { fetchVariablesByPkpdModel } from "../variables/variablesSlice";
+import { fetchUnitsByPkpdModel } from "../projects/unitsSlice";
 
 export const pkpdModelsAdapter = createEntityAdapter({
   sortComparer: (a, b) => b.id < a.id,
@@ -23,6 +25,8 @@ export const fetchPkpdModels = createAsyncThunk(
     );
     for (var i = 0; i < response.length; i++) {
       if (!response[i].read_only) {
+        dispatch(fetchVariablesByPkpdModel(response[i].id));
+        dispatch(fetchUnitsByPkpdModel(response[i].id));
         dispatch(fetchPkpdModelSimulateById(response[i].id));
       }
     }
@@ -35,6 +39,8 @@ export const fetchPkpdModelById = createAsyncThunk(
   async (model_id, { dispatch }) => {
     let response = await api.get(`/api/pkpd_model/${model_id}/`);
     dispatch(fetchPkpdModelSimulateById(response.id));
+    dispatch(fetchVariablesByPkpdModel(response.id));
+    dispatch(fetchUnitsByPkpdModel(response.id));
     return response;
   }
 );
@@ -66,6 +72,8 @@ export const addNewPkpdModel = createAsyncThunk(
       mappings: [],
     };
     let pkpdModel = await api.post("/api/pkpd_model/", initialPkpdModel);
+    dispatch(fetchVariablesByPkpdModel(pkpdModel.id));
+    dispatch(fetchUnitsByPkpdModel(pkpdModel.id));
     dispatch(fetchPkpdModelSimulateById(pkpdModel.id));
     pkpdModel.chosen = true;
     return pkpdModel;
@@ -79,6 +87,8 @@ export const updatePkpdModel = createAsyncThunk(
       `/api/pkpd_model/${pkpdModel.id}/`,
       pkpdModel
     );
+    dispatch(fetchVariablesByPkpdModel(newPkpdModel.id));
+    dispatch(fetchUnitsByPkpdModel(newPkpdModel.id));
     dispatch(fetchPkpdModelSimulateById(newPkpdModel.id));
     return newPkpdModel;
   }

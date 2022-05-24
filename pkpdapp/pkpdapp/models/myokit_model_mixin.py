@@ -223,6 +223,9 @@ class MyokitModelMixin:
 
         return result
 
+    def get_time_max(self):
+        return self.time_max
+
     def simulate(self, outputs=None, initial_conditions=None, variables=None):
         """
         Arguments
@@ -273,7 +276,7 @@ class MyokitModelMixin:
         }
 
         time_max = self._convert_unit(
-            'myokit.time', self.time_max, model
+            'myokit.time', self.get_time_max(), model
         )
 
         # Set initial conditions

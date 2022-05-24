@@ -16,6 +16,7 @@ export default function PkpdModels({ project, disableSave }) {
   const dispatch = useDispatch();
   const handleClickItem = (item) => dispatch(togglePkpdModel(item));
   const handleNewItem = () => dispatch(addNewPkpdModel(project));
+  console.log('pkpdModels', pkpdModels)
 
   return (
     <ExpandableListItem

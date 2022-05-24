@@ -70,6 +70,35 @@ class DosedPkModelFilter(filters.BaseFilterBackend):
         return queryset
 
 
+class PkpdModelFilter(filters.BaseFilterBackend):
+    """
+    Filter that only allows users to filter by pkpd_model.
+    """
+
+    def filter_queryset(self, request, queryset, view):
+        pkpd_model_id = \
+            request.query_params.get('pkpd_model_id')
+        if pkpd_model_id is not None:
+            try:
+                pkpd_model = PkpdModel.objects.get(
+                    id=pkpd_model_id
+                )
+                if queryset.model == Variable:
+                    queryset = pkpd_model.variables.all()
+                elif queryset.model == Unit:
+                    unit_ids = (
+                        pkpd_model.variables
+                        .values_list('unit', flat=True)
+                    )
+                    queryset = Unit.objects.filter(id__in=unit_ids)
+                else:
+                    raise RuntimeError('queryset model {} not recognised')
+            except PkpdModel.DoesNotExist:
+                queryset = queryset.model.objects.none()
+
+        return queryset
+
+
 class PdModelFilter(filters.BaseFilterBackend):
     """
     Filter that only allows users to filter by dosed_pk_model.

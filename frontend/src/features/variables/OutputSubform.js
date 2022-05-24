@@ -35,10 +35,11 @@ export default function OutputSubform({ variable_id, disableSave }) {
       axis: variable.axis,
     },
   });
+  const variableStringify = JSON.stringify(variable)
 
   useEffect(() => {
     reset(variable);
-  }, [reset, variable]);
+  }, [variableStringify]);
 
   const unit_id = variable ? variable.unit : 1;
   let unit = useSelector((state) => selectUnitById(state, unit_id));

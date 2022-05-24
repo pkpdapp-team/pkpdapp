@@ -68,6 +68,9 @@ class PharmacodynamicModel(MechanisticModel, StoredModel):
 
 
 class PkpdModel(MyokitModelMixin, StoredModel):
+    name = models.CharField(
+        max_length=100, help_text='name of the model'
+    )
     dosed_pk_model = models.ForeignKey(
         DosedPharmacokineticModel, on_delete=models.CASCADE,
         related_name='pkpd_models',
@@ -86,6 +89,41 @@ class PkpdModel(MyokitModelMixin, StoredModel):
         blank=True, null=True,
         help_text='Project that "owns" this model'
     )
+
+    __original_dosed_pk_model = None
+    __original_pd_model = None
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.__original_dosed_pk_model = self.dosed_pk_model
+        self.__original_pd_model = self.pd_model
+
+    def save(self, force_insert=False, force_update=False, *args, **kwargs):
+        created = not self.pk
+
+        super().save(force_insert, force_update, *args, **kwargs)
+
+        # don't update a stored model
+        if self.read_only:
+            return
+
+        if (
+            created or
+            self.dosed_pk_model != self.__original_dosed_pk_model or
+            self.pd_model != self.__original_pd_model
+        ):
+            self.update_model()
+
+        self.__original_dosed_pk_model = self.dosed_pk_model
+        self.__original_pd_model = self.pd_model
+
+    def get_time_max(self):
+        time_max = 0
+        if self.pd_model:
+            time_max = max(time_max, self.pd_model.time_max)
+        if self.dosed_pk_model:
+            time_max = max(time_max, self.dosed_pk_model.time_max)
+        return time_max
 
     def get_project(self):
         return self.project
@@ -194,6 +232,38 @@ class PkpdMapping(StoredModel):
         related_name='pd_mappings',
         help_text='variable in PD part of model'
     )
+
+    __original_pk_variable = None
+    __original_pd_variable = None
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.__original_pk_variable = self.pk_variable
+        self.__original_pd_variable = self.pd_variable
+
+    def save(self, force_insert=False, force_update=False, *args, **kwargs):
+        created = not self.pk
+
+        super().save(force_insert, force_update, *args, **kwargs)
+
+        # don't update a stored model
+        if self.read_only:
+            return
+
+        if (
+            created or
+            self.pk_variable != self.__original_pk_variable or
+            self.pd_variable != self.__original_pd_variable
+        ):
+            self.pkpd_model.update_model()
+
+        self.__original_pk_variable = self.pk_variable
+        self.__original_pd_variable = self.pd_variable
+
+    def delete(self):
+        pkpd_model = self.pkpd_model
+        super().delete()
+        pkpd_model.update_model()
 
     def create_stored_mapping(self, new_pkpd_model, new_variables):
         new_pk_variable = new_variables[self.pk_variable.qname]

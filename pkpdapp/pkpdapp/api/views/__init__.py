@@ -10,6 +10,7 @@ from .filters import (
     UserAccessFilter,
     DosedPkModelFilter,
     PdModelFilter,
+    PkpdModelFilter,
     ProjectFilter,
     InferenceFilter
 )

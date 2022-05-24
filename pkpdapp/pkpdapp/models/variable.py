@@ -287,6 +287,44 @@ class Variable(StoredModel):
             )
 
     @staticmethod
+    def get_variable_pkpd(model, myokit_variable):
+        num_variables = Variable.objects.filter(
+            pkpd_model=model,
+        ).count()
+        variables = Variable.objects.filter(
+            qname=myokit_variable.qname(),
+            pkpd_model=model,
+        )
+        found_variable = Variable._find_close_variable(
+            myokit_variable, variables
+        )
+        if found_variable is not None:
+            variable = variables[0]
+            # mapped variables can go from constant to not
+            if variable.constant != myokit_variable.is_constant():
+                variable.constant = myokit_variable.is_constant()
+                variable.save()
+            return variable
+        else:
+            state = myokit_variable.is_state()
+            if state:
+                value = myokit_variable.state_value()
+            else:
+                value = myokit_variable.value()
+            qname = myokit_variable.qname()
+            return Variable.objects.create(
+                name=myokit_variable.name(),
+                qname=qname,
+                constant=myokit_variable.is_constant(),
+                default_value=value,
+                state=state,
+                unit=Unit.get_unit_from_variable(myokit_variable),
+                pkpd_model=model,
+                color=num_variables,
+                display=myokit_variable.name() != 'time',
+            )
+
+    @staticmethod
     def get_variable(model, myokit_variable):
         if isinstance(model, PharmacokineticModel):
             return Variable.get_variable_pk(model, myokit_variable)
@@ -294,6 +332,8 @@ class Variable(StoredModel):
             return Variable.get_variable_dosed_pk(model, myokit_variable)
         elif isinstance(model, PharmacodynamicModel):
             return Variable.get_variable_pd(model, myokit_variable)
+        elif isinstance(model, PkpdModel):
+            return Variable.get_variable_pkpd(model, myokit_variable)
         else:
             raise RuntimeError(
                 'create_variable got unexpected model type {}'

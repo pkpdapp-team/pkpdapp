@@ -19,6 +19,8 @@ class PkpdMappingSerializer(serializers.ModelSerializer):
 
 
 class BasePkpdSerializer(serializers.ModelSerializer):
+
+
     class Meta:
         model = PkpdModel
         fields = '__all__'
@@ -26,10 +28,21 @@ class BasePkpdSerializer(serializers.ModelSerializer):
 
 class PkpdSerializer(serializers.ModelSerializer):
     mappings = PkpdMappingSerializer(many=True)
+    components = serializers.SerializerMethodField('get_components')
+    variables = serializers.PrimaryKeyRelatedField(
+        many=True, read_only=True
+    )
 
     class Meta:
         model = PkpdModel
         fields = '__all__'
+
+    def get_components(self, m):
+        model = m.get_myokit_model()
+        return [
+            _serialize_component(m, c, model)
+            for c in model.components(sort=True)
+        ]
 
     def create(self, validated_data):
         mappings_data = validated_data.pop('mappings')
@@ -49,6 +62,9 @@ class PkpdSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         mappings_data = validated_data.pop('mappings')
         old_mappings = list((instance.mappings).all())
+        for i in range(len(mappings_data), len(old_mappings)):
+            old_mappings[i].delete()
+            del old_mappings[i]
 
         new_pkpd_model = BasePkpdSerializer().update(
             instance, validated_data

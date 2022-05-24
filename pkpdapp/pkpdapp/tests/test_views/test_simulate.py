@@ -5,7 +5,16 @@
 #
 
 from pkpdapp.models import (
-    PharmacodynamicModel, Variable
+    PharmacodynamicModel, Variable,
+    Project,
+    Compound,
+    DosedPharmacokineticModel,
+    PkpdModel,
+    PkpdMapping,
+    PharmacokineticModel,
+    BiomarkerType,
+    Protocol,
+
 )
 from django.contrib.auth.models import User
 
@@ -54,3 +63,70 @@ class TestSimulateView(APITestCase):
         url = reverse('simulate-pharmacodynamic', args=(123,))
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_simulate_pkpd(self):
+        project = Project.objects.get(
+            name='demo',
+        )
+        pk_model = PharmacokineticModel.objects.get(
+            name='three_compartment_pk_model'
+        )
+        biomarker_type = BiomarkerType.objects.get(
+            name='DemoDrug Concentration',
+            dataset__name='usecase0'
+        )
+        protocol = Protocol.objects.get(
+            subjects__dataset=biomarker_type.dataset,
+            subjects__id_in_dataset=1,
+        )
+        dosed_pk_model = DosedPharmacokineticModel.objects.create(
+            name='my wonderful model',
+            pharmacokinetic_model=pk_model,
+            dose_compartment='central',
+            protocol=protocol,
+        )
+        pd_model = PharmacodynamicModel.objects.get(
+            name='tumour_growth_inhibition_model_koch',
+        )
+
+        pkpd_model = PkpdModel.objects.create(
+            project=project
+        )
+
+        url = reverse('simulate-pkpd-model', args=(pkpd_model.pk,))
+        data = {
+            'outputs': ['myokit.time'],
+        }
+
+        response = self.client.post(url, data, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        print(response.data)
+
+        pkpd_model = PkpdModel.objects.create(
+            dosed_pk_model=dosed_pk_model,
+            pd_model=pd_model,
+            project=project
+        )
+        pk_variable = dosed_pk_model.variables.get(
+            qname='central.drug_c_concentration',
+        )
+        pd_variable = pd_model.variables.get(
+            qname='myokit.drug_concentration',
+        )
+        PkpdMapping.objects.create(
+            pkpd_model=pkpd_model,
+            pk_variable=pk_variable,
+            pd_variable=pd_variable,
+        )
+
+        data = {
+            'outputs': ['PD.tumour_volume', 'myokit.time'],
+        }
+
+        url = reverse('simulate-pkpd-model', args=(pkpd_model.pk,))
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        print(response.data)
+
+

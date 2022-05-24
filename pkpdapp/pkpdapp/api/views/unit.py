@@ -7,6 +7,7 @@ from rest_framework import viewsets
 from pkpdapp.api.views import (
     DosedPkModelFilter,
     PdModelFilter,
+    PkpdModelFilter,
 )
 from pkpdapp.api.serializers import UnitSerializer
 from pkpdapp.models import Unit
@@ -15,4 +16,4 @@ from pkpdapp.models import Unit
 class UnitView(viewsets.ModelViewSet):
     queryset = Unit.objects.all()
     serializer_class = UnitSerializer
-    filter_backends = [DosedPkModelFilter, PdModelFilter]
+    filter_backends = [DosedPkModelFilter, PdModelFilter, PkpdModelFilter]

@@ -59,6 +59,7 @@ export default function Modelling() {
   if (
     chosenDatasets.length === 0 &&
     chosenPkModels.length === 0 &&
+    chosenPkpdModels.length === 0 &&
     chosenPdModels.length === 0
   ) {
     showChart = false;
@@ -74,6 +75,7 @@ export default function Modelling() {
               <Chart
                 className={classes.chart}
                 datasets={chosenDatasets}
+                pkpdModels={chosenPkpdModels}
                 pkModels={chosenPkModels}
                 pdModels={chosenPdModels}
               />

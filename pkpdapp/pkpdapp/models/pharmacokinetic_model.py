@@ -113,6 +113,9 @@ class DosedPharmacokineticModel(MyokitModelMixin, StoredModel):
     def get_project(self):
         return self.project
 
+    def get_time_max(self):
+        return self.time_max
+
     def create_stored_model(self):
         stored_model_kwargs = {
             'name': self.name,

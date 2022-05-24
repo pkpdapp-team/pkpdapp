@@ -173,6 +173,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('read_only', models.BooleanField(default=False, help_text='true if object has been stored')),
                 ('datetime', models.DateTimeField(blank=True, help_text='datetime the object was stored.', null=True)),
+                ('name', models.CharField(help_text='name of the model', max_length=100)),
                 ('dosed_pk_model', models.ForeignKey(blank=True, help_text='PK part of model', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='pkpd_models', to='pkpdapp.dosedpharmacokineticmodel')),
                 ('pd_model', models.ForeignKey(blank=True, help_text='PD part of model', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='pkpd_models', to='pkpdapp.pharmacodynamicmodel')),
             ],
