@@ -6,6 +6,7 @@ import {
 import { api } from "../../Api";
 import { fetchPdModelById } from "../pdModels/pdModelsSlice";
 import { fetchPkModelById } from "../pkModels/pkModelsSlice";
+import { fetchPkpdModelById } from "../pkpdModels/pkpdModelsSlice";
 
 const variablesAdapter = createEntityAdapter({
   sortComparer: (a, b) => b.id < a.id,
@@ -103,6 +104,9 @@ export const updateVariable = createAsyncThunk(
     }
     if (response.dosed_pk_model) {
       thunkAPI.dispatch(fetchPkModelById(response.dosed_pk_model));
+    }
+    if (response.pkpd_model) {
+      thunkAPI.dispatch(fetchPkpdModelById(response.pkpd_model));
     }
     return response;
   }
