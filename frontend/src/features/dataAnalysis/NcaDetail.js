@@ -74,10 +74,10 @@ export default function NcaDetail({ project, dataset }) {
     ? biomarker_type.data.subjects
     : null;
 
-  const filteredProtocols = subjectsInBiomarkerType
+  const filteredProtocols = subjectsInBiomarkerType && protocol && protocol.subjects
     ? protocols.filter((protocol) =>
-        subjectsInBiomarkerType.includes(protocol.subject)
-      )
+      subjectsInBiomarkerType.filter(x => protocol.subjects.includes(x))
+    )
     : protocols;
 
   useEffect(() => {

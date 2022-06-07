@@ -439,8 +439,8 @@ export default function InferenceDialog({ project, open, handleCloseDialog, defa
         const watchForm = watch(`observations[${index}].noise_param_form`)
         const variable = variables.find(v => v.qname === obs.model)
         return (
-        <React.Fragment>
-        <ListItem key={index} role={undefined} dense>
+        <React.Fragment key={index}>
+        <ListItem role={undefined} dense>
           <Grid container spacing={1}>
           <Grid item xs={6}>
           <FormSelectField

@@ -41,7 +41,10 @@ let options = {
       labels: {
         usePointStyle: true,
         filter: function (item, chart) {
-          return !item.text.includes("noLabel");
+          if (item.text) {
+            return !item.text.includes("noLabel");
+          }
+          return item.text
         },
       },
     },
@@ -103,6 +106,9 @@ export function AuceChartDataVsTime({ auces, biomarker_type }) {
           display: true,
         },
       },
+    },
+    plugins: {
+      crosshair: false,
     },
   };
 

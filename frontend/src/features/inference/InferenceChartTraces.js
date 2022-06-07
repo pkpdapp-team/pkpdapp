@@ -75,6 +75,7 @@ function InferenceChartDistribution({ prior }) {
       },
     },
     plugins: {
+      crosshair: false,
       decimation: {
         enabled: true,
         algorithm: 'lttb',
@@ -163,11 +164,7 @@ function InferenceChartTrace({ prior }) {
           },
         },
       },
-      crosshair: {
-        sync: {
-          enabled: false,
-        },
-      },
+      crosshair: false,
     },
   };
 
@@ -245,11 +242,7 @@ function InferenceChartFunction({ chains }) {
           },
         },
       },
-      crosshair: {
-        sync: {
-          enabled: false,
-        },
-      },
+      crosshair: false,
     },
   };
 
