@@ -45,6 +45,7 @@ class AuceView(views.APIView):
             'dose_group_amount'
         )
 
+        # include all subjects as well
         groups = set([g for s in subjects for g in s.groups.all()] + [None])
 
         auces = []
