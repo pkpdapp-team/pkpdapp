@@ -33,7 +33,7 @@ class TestInferenceMixinPkModel(TestCase):
         )
         self.model = DosedPharmacokineticModel.objects.create(
             name='test model',
-            pharmacokinetic_model=pk,
+            pk_model=pk,
             dose_compartment='central',
             protocol=protocol,
         )

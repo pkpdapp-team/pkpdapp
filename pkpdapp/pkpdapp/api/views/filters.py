@@ -14,7 +14,6 @@ from pkpdapp.models import (
     DosedPharmacokineticModel,
     Protocol,
     Unit,
-    PkpdModel,
     BiomarkerType,
     Variable,
     Subject,
@@ -65,35 +64,6 @@ class DosedPkModelFilter(filters.BaseFilterBackend):
                 else:
                     raise RuntimeError('queryset model {} not recognised')
             except DosedPharmacokineticModel.DoesNotExist:
-                queryset = queryset.model.objects.none()
-
-        return queryset
-
-
-class PkpdModelFilter(filters.BaseFilterBackend):
-    """
-    Filter that only allows users to filter by pkpd_model.
-    """
-
-    def filter_queryset(self, request, queryset, view):
-        pkpd_model_id = \
-            request.query_params.get('pkpd_model_id')
-        if pkpd_model_id is not None:
-            try:
-                pkpd_model = PkpdModel.objects.get(
-                    id=pkpd_model_id
-                )
-                if queryset.model == Variable:
-                    queryset = pkpd_model.variables.all()
-                elif queryset.model == Unit:
-                    unit_ids = (
-                        pkpd_model.variables
-                        .values_list('unit', flat=True)
-                    )
-                    queryset = Unit.objects.filter(id__in=unit_ids)
-                else:
-                    raise RuntimeError('queryset model {} not recognised')
-            except PkpdModel.DoesNotExist:
                 queryset = queryset.model.objects.none()
 
         return queryset
@@ -177,8 +147,6 @@ class ProjectFilter(filters.BaseFilterBackend):
                     queryset = project.pd_models
                 elif queryset.model == DosedPharmacokineticModel:
                     queryset = project.pk_models
-                elif queryset.model == PkpdModel:
-                    queryset = project.pkpd_models
                 elif queryset.model == Protocol:
                     queryset = project.protocols
                 elif queryset.model == Inference:

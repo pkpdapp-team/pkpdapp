@@ -9,9 +9,9 @@ from django.urls import reverse
 from pkpdapp.models import (
     MyokitModelMixin,
     MechanisticModel,
-    Pharmacodynamic,
     Protocol,
     Project, StoredModel,
+    PharmacodynamicModel,
 )
 import myokit
 from .myokit_model_mixin import lock
@@ -75,11 +75,18 @@ class DosedPharmacokineticModel(MyokitModelMixin, StoredModel):
         blank=True, null=True,
         help_text='Project that "owns" this model'
     )
-    pharmacokinetic_model = models.ForeignKey(
+    pk_model = models.ForeignKey(
         PharmacokineticModel,
         default=DEFAULT_PK_MODEL,
         on_delete=models.CASCADE,
-        help_text='pharmacokinetic model'
+        blank=True, null=True,
+        help_text='model'
+    )
+    pd_model = models.ForeignKey(
+        PharmacodynamicModel, on_delete=models.CASCADE,
+        related_name='pkpd_models',
+        blank=True, null=True,
+        help_text='PD part of model'
     )
     dose_compartment = models.CharField(
         max_length=100,
@@ -104,24 +111,30 @@ class DosedPharmacokineticModel(MyokitModelMixin, StoredModel):
     __original_pk_model = None
     __original_protocol = None
     __original_dose_compartment = None
+    __original_pd_model = None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.__original_pk_model = self.pharmacokinetic_model
+        self.__original_pk_model = self.pk_model
         self.__original_protocol = self.protocol
         self.__original_dose_compartment = self.dose_compartment
+        self.__original_pd_model = self.pd_model
 
     def get_project(self):
         return self.project
 
     def get_time_max(self):
-        return self.time_max
+        time_max = self.time_max
+        if self.pd_model:
+            time_max = max(time_max, self.pd_model.time_max)
+        return time_max
 
-    def create_stored_model(self):
+    def create_stored_model(self, new_pd_model=None):
         stored_model_kwargs = {
             'name': self.name,
             'project': self.project,
-            'pharmacokinetic_model': self.pharmacokinetic_model,
+            'pk_model': self.pk_model,
+            'pd_model': new_pd_model,
             'dose_compartment': self.dose_compartment,
             'protocol': (
                 self.protocol.create_stored_protocol()
@@ -132,12 +145,19 @@ class DosedPharmacokineticModel(MyokitModelMixin, StoredModel):
         }
         stored_model = DosedPharmacokineticModel.objects.create(
             **stored_model_kwargs)
+
+        new_variables = {}
         for variable in self.variables.all():
-            variable.create_stored_variable(stored_model)
+            new_variable = variable.create_stored_variable(stored_model)
+            new_variables[new_variable.qname] = new_variable
+
+        for mapping in self.mappings.all():
+            mapping.create_stored_mapping(stored_model, new_variables)
+
         return stored_model
 
-    def create_myokit_model(self):
-        pk_model = self.pharmacokinetic_model.create_myokit_model()
+    def create_myokit_dosed_pk_model(self):
+        pk_model = self.pk_model.create_myokit_model()
         if self.protocol:
             compartment = self.dose_compartment
             amount_var = None
@@ -154,6 +174,68 @@ class DosedPharmacokineticModel(MyokitModelMixin, StoredModel):
                 )
 
         return pk_model
+
+    def create_myokit_model(self):
+        if self.pk_model is None:
+            pk_model = myokit.Model()
+        else:
+            pk_model = self.create_myokit_dosed_pk_model()
+        if self.pd_model is None:
+            pd_model = myokit.Model()
+        else:
+            pd_model = self.pd_model.create_myokit_model()
+        have_both_models = (
+            self.pk_model is not None and
+            self.pd_model is not None
+        )
+        have_no_models = (
+            self.pk_model is None and
+            self.pd_model is None
+        )
+
+        # use pk model as the base and import the pd model
+        pkpd_model = pk_model
+
+        # default model is one with just time
+        if have_no_models:
+            pkpd_model = myokit.parse_model('''
+            [[model]]
+            [myokit]
+            time = 0 [s] bind time
+                in [s]
+        ''')
+
+        # remove time binding if
+        if have_both_models:
+            time_var = pd_model.get('myokit.time')
+            time_var.set_binding(None)
+
+        pd_components = list(pd_model.components())
+        pd_names = [
+            c.name().replace('myokit', 'PD') for c in pd_components
+        ]
+
+        if pd_components:
+            pkpd_model.import_component(
+                pd_components,
+                new_name=pd_names,
+            )
+
+        # remove imported time var
+        if have_both_models:
+            imported_pd_component = pkpd_model.get('PD')
+            imported_time = imported_pd_component.get('time')
+            imported_pd_component.remove_variable(imported_time)
+
+        # do mappings
+        for mapping in self.mappings.all():
+            pd_var = pkpd_model.get(
+                mapping.pd_variable.qname.replace('myokit', 'PD')
+            )
+            pd_var.set_rhs(mapping.pk_variable.qname)
+
+        pkpd_model.validate()
+        return pkpd_model
 
     def create_myokit_simulator(self):
         model = self.get_myokit_model()
@@ -211,168 +293,22 @@ class DosedPharmacokineticModel(MyokitModelMixin, StoredModel):
         if (
             created or
             self.protocol != self.__original_protocol or
-            self.pharmacokinetic_model != self.__original_pk_model or
+            self.pk_model != self.__original_pk_model or
+            self.pd_model != self.__original_pd_model or
             self.dose_compartment != self.__original_dose_compartment
         ):
             print('update model')
             self.update_model()
 
-        self.__original_pk_model = self.pharmacokinetic_model
+        self.__original_pd_model = self.pd_model
+        self.__original_pk_model = self.pk_model
         self.__original_protocol = self.protocol
         self.__original_dose_compartment = self.dose_compartment
-
-class PkpdModel(MyokitModelMixin, StoredModel):
-    name = models.CharField(
-        max_length=100, help_text='name of the model'
-    )
-    pk_model = models.ForeignKey(
-        PharmacokineticModel, on_delete=models.CASCADE,
-        related_name='pkpd_models',
-        blank=True, null=True,
-        help_text='PK part of model'
-    )
-    pd_model = models.ForeignKey(
-        PharmacodynamicModel, on_delete=models.CASCADE,
-        related_name='pkpd_models',
-        blank=True, null=True,
-        help_text='PD part of model'
-    )
-    project = models.ForeignKey(
-        Project, on_delete=models.CASCADE,
-        related_name='pkpd_models',
-        blank=True, null=True,
-        help_text='Project that "owns" this model'
-    )
-
-    __original_dosed_pk_model = None
-    __original_pd_model = None
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.__original_dosed_pk_model = self.dosed_pk_model
-        self.__original_pd_model = self.pd_model
-
-    def save(self, force_insert=False, force_update=False, *args, **kwargs):
-        created = not self.pk
-
-        super().save(force_insert, force_update, *args, **kwargs)
-
-        # don't update a stored model
-        if self.read_only:
-            return
-
-        if (
-            created or
-            self.dosed_pk_model != self.__original_dosed_pk_model or
-            self.pd_model != self.__original_pd_model
-        ):
-            self.update_model()
-
-        self.__original_dosed_pk_model = self.dosed_pk_model
-        self.__original_pd_model = self.pd_model
-
-    def get_time_max(self):
-        time_max = 0
-        if self.pd_model:
-            time_max = max(time_max, self.pd_model.time_max)
-        if self.dosed_pk_model:
-            time_max = max(time_max, self.dosed_pk_model.time_max)
-        return time_max
-
-    def get_project(self):
-        return self.project
-
-    def create_stored_model(self, new_pk_model, new_pd_model):
-        stored_model_kwargs = {
-            'name': self.name,
-            'project': self.project,
-            'dosed_pk_model': new_pk_model,
-            'pd_model': new_pk_model,
-            'read_only': True,
-        }
-        stored_model = PkpdModel.objects.create(
-            **stored_model_kwargs)
-        new_variables = {}
-        for variable in self.variables.all():
-            new_variable = variable.create_stored_variable(stored_model)
-            new_variables[new_variable.qname] = new_variable
-
-        for mapping in self.mappings.all():
-            mapping.create_stored_mapping(stored_model, new_variables)
-        return stored_model
-
-    def create_myokit_model(self):
-        if self.dosed_pk_model is None:
-            pk_model = myokit.Model()
-        else:
-            pk_model = self.dosed_pk_model.create_myokit_model()
-        if self.pd_model is None:
-            pd_model = myokit.Model()
-        else:
-            pd_model = self.pd_model.create_myokit_model()
-        have_both_models = (
-            self.dosed_pk_model is not None and
-            self.pd_model is not None
-        )
-        have_no_models = (
-            self.dosed_pk_model is None and
-            self.pd_model is None
-        )
-
-        # clone PK model so original model is unaffected
-        pkpd_model = pk_model.clone()
-
-        # default model is one with just time
-        if have_no_models:
-            pkpd_model = myokit.parse_model('''
-            [[model]]
-            [myokit]
-            time = 0 [s] bind time
-                in [s]
-        ''')
-
-        # remove time binding if
-        if have_both_models:
-            time_var = pd_model.get('myokit.time')
-            time_var.set_binding(None)
-
-        pd_components = list(pd_model.components())
-        pd_names = [
-            c.name().replace('myokit', 'PD') for c in pd_components
-        ]
-
-        if pd_components:
-            pkpd_model.import_component(
-                pd_components,
-                new_name=pd_names,
-            )
-
-        # remove imported time var
-        if have_both_models:
-            imported_pd_component = pkpd_model.get('PD')
-            imported_time = imported_pd_component.get('time')
-            imported_pd_component.remove_variable(imported_time)
-
-        # do mappings
-        for mapping in self.mappings.all():
-            pd_var = pkpd_model.get(
-                mapping.pd_variable.qname.replace('myokit', 'PD')
-            )
-            pd_var.set_rhs(mapping.pk_variable.qname)
-
-        pkpd_model.validate()
-        return pkpd_model
-
-    def create_myokit_simulator(self):
-        model = self.get_myokit_model()
-        with lock:
-            sim = myokit.Simulation(model)
-        return sim
 
 
 class PkpdMapping(StoredModel):
     pkpd_model = models.ForeignKey(
-        PkpdModel, on_delete=models.CASCADE,
+        DosedPharmacokineticModel, on_delete=models.CASCADE,
         related_name='mappings',
         help_text='PKPD model that this mapping is for'
     )

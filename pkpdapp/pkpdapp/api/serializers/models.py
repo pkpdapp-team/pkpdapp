@@ -6,7 +6,7 @@
 from rest_framework import serializers
 from pkpdapp.models import (
     PharmacokineticModel, MyokitModelMixin,
-    DosedPharmacokineticModel, PkpdModel,
+    DosedPharmacokineticModel,
     PharmacodynamicModel, PkpdMapping
 )
 from pkpdapp.api.serializers import ValidSbml
@@ -18,15 +18,13 @@ class PkpdMappingSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class BasePkpdSerializer(serializers.ModelSerializer):
-
-
+class BaseDosedPharmacokineticSerializer(serializers.ModelSerializer):
     class Meta:
-        model = PkpdModel
+        model = DosedPharmacokineticModel
         fields = '__all__'
 
 
-class PkpdSerializer(serializers.ModelSerializer):
+class DosedPharmacokineticSerializer(serializers.ModelSerializer):
     mappings = PkpdMappingSerializer(many=True)
     components = serializers.SerializerMethodField('get_components')
     variables = serializers.PrimaryKeyRelatedField(
@@ -34,7 +32,7 @@ class PkpdSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        model = PkpdModel
+        model = DosedPharmacokineticModel
         fields = '__all__'
 
     def get_components(self, m):
@@ -46,7 +44,7 @@ class PkpdSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         mappings_data = validated_data.pop('mappings')
-        new_pkpd_model = BasePkpdSerializer().create(
+        new_pkpd_model = BaseDosedPharmacokineticSerializer().create(
             validated_data
         )
         for field_datas, Serializer in [
@@ -66,7 +64,7 @@ class PkpdSerializer(serializers.ModelSerializer):
             old_mappings[i].delete()
             del old_mappings[i]
 
-        new_pkpd_model = BasePkpdSerializer().update(
+        new_pkpd_model = BaseDosedPharmacokineticSerializer().update(
             instance, validated_data
         )
 
@@ -128,24 +126,6 @@ def _serialize_component(model, component, myokit_model):
         'outputs': outputs,
         'equations': equations,
     }
-
-
-class DosedPharmacokineticSerializer(serializers.ModelSerializer):
-    components = serializers.SerializerMethodField('get_components')
-    variables = serializers.PrimaryKeyRelatedField(
-        many=True, read_only=True
-    )
-
-    def get_components(self, m):
-        model = m.get_myokit_model()
-        return [
-            _serialize_component(m, c, model)
-            for c in model.components(sort=True)
-        ]
-
-    class Meta:
-        model = DosedPharmacokineticModel
-        fields = '__all__'
 
 
 class PharmacodynamicSerializer(serializers.ModelSerializer):

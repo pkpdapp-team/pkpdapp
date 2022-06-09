@@ -10,7 +10,6 @@ from pkpdapp.models import (
     PharmacodynamicModel,
     Compound,
     DosedPharmacokineticModel,
-    PkpdModel,
     PkpdMapping,
     PharmacokineticModel,
     BiomarkerType,
@@ -34,25 +33,23 @@ class TestPkpdModel(TestCase):
             subjects__dataset=biomarker_type.dataset,
             subjects__id_in_dataset=1,
         )
-        dosed_pk_model = DosedPharmacokineticModel.objects.create(
-            name='my wonderful model',
-            pharmacokinetic_model=pk_model,
-            dose_compartment='central',
-            protocol=protocol,
-        )
+
         pd_model = PharmacodynamicModel.objects.get(
             name='tumour_growth_inhibition_model_koch',
         )
-        pkpd_model = PkpdModel.objects.create(
-            dosed_pk_model=dosed_pk_model,
+        pkpd_model = DosedPharmacokineticModel.objects.create(
+            name='my wonderful model',
+            pk_model=pk_model,
             pd_model=pd_model,
-            project=project
+            dose_compartment='central',
+            protocol=protocol,
+            project=project,
         )
-        pk_variable = dosed_pk_model.variables.get(
+        pk_variable = pkpd_model.variables.get(
             qname='central.drug_c_concentration',
         )
-        pd_variable = pd_model.variables.get(
-            qname='myokit.drug_concentration',
+        pd_variable = pkpd_model.variables.get(
+            qname='PD.drug_concentration',
         )
         mapping = PkpdMapping.objects.create(
             pkpd_model=pkpd_model,
@@ -95,7 +92,7 @@ class TestPkpdModel(TestCase):
 
         # check it still works if remove pk_model
         mapping.delete()
-        pkpd_model.dosed_pk_model = None
+        pkpd_model.pk_model = None
         pkpd_model.save()
 
         myokit_model = pkpd_model.get_myokit_model()
@@ -116,7 +113,7 @@ class TestPkpdModel(TestCase):
             del variables[index]
 
         # check it still works if remove pd_model
-        pkpd_model.dosed_pk_model = dosed_pk_model
+        pkpd_model.pk_model = pk_model
         pkpd_model.pd_model = None
         pkpd_model.save()
 
@@ -145,7 +142,7 @@ class TestPkpdModel(TestCase):
             del variables[index]
 
         # check it still works if remove all models
-        pkpd_model.dosed_pk_model = None
+        pkpd_model.pk_model = None
         pkpd_model.pd_model = None
         pkpd_model.save()
 

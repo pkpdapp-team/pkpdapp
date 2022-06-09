@@ -10,7 +10,6 @@ from .filters import (
     UserAccessFilter,
     DosedPkModelFilter,
     PdModelFilter,
-    PkpdModelFilter,
     ProjectFilter,
     InferenceFilter
 )
@@ -28,7 +27,6 @@ from .models import (
     PharmacokineticView,
     PharmacodynamicView,
     DosedPharmacokineticView,
-    PkpdView,
 )
 from .nca import NcaView
 from .project import ProjectView, ProjectAccessView
@@ -40,7 +38,6 @@ from .inference import (
 from .simulate import (
     SimulatePkView,
     SimulatePdView,
-    SimulatePkpdView
 )
 from .subject import SubjectView
 from .unit import UnitView

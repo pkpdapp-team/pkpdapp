@@ -168,21 +168,6 @@ class Migration(migrations.Migration):
             bases=(models.Model, pkpdapp.models.myokit_model_mixin.MyokitModelMixin),
         ),
         migrations.CreateModel(
-            name='PkpdModel',
-            fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('read_only', models.BooleanField(default=False, help_text='true if object has been stored')),
-                ('datetime', models.DateTimeField(blank=True, help_text='datetime the object was stored.', null=True)),
-                ('name', models.CharField(help_text='name of the model', max_length=100)),
-                ('dosed_pk_model', models.ForeignKey(blank=True, help_text='PK part of model', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='pkpd_models', to='pkpdapp.dosedpharmacokineticmodel')),
-                ('pd_model', models.ForeignKey(blank=True, help_text='PD part of model', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='pkpd_models', to='pkpdapp.pharmacodynamicmodel')),
-            ],
-            options={
-                'abstract': False,
-            },
-            bases=(pkpdapp.models.myokit_model_mixin.MyokitModelMixin, models.Model),
-        ),
-        migrations.CreateModel(
             name='Project',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
@@ -251,7 +236,6 @@ class Migration(migrations.Migration):
                 ('dosed_pk_model', models.ForeignKey(blank=True, help_text='dosed pharmacokinetic model', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='variables', to='pkpdapp.dosedpharmacokineticmodel')),
                 ('pd_model', models.ForeignKey(blank=True, help_text='pharmacodynamic model', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='variables', to='pkpdapp.pharmacodynamicmodel')),
                 ('pk_model', models.ForeignKey(blank=True, help_text='pharmacokinetic model', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='variables', to='pkpdapp.pharmacokineticmodel')),
-                ('pkpd_model', models.ForeignKey(blank=True, help_text='pkpd model', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='variables', to='pkpdapp.pkpdmodel')),
                 ('unit', models.ForeignKey(help_text='variable values are in this unit (note this might be different from the unit in the stored sbml)', on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.unit')),
             ],
         ),
@@ -319,11 +303,6 @@ class Migration(migrations.Migration):
                 ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
         ),
-        migrations.AddField(
-            model_name='pkpdmodel',
-            name='project',
-            field=models.ForeignKey(blank=True, help_text='Project that "owns" this model', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='pkpd_models', to='pkpdapp.project'),
-        ),
         migrations.CreateModel(
             name='PkpdMapping',
             fields=[
@@ -332,7 +311,7 @@ class Migration(migrations.Migration):
                 ('datetime', models.DateTimeField(blank=True, help_text='datetime the object was stored.', null=True)),
                 ('pd_variable', models.ForeignKey(help_text='variable in PD part of model', on_delete=django.db.models.deletion.CASCADE, related_name='pd_mappings', to='pkpdapp.variable')),
                 ('pk_variable', models.ForeignKey(help_text='variable in PK part of model', on_delete=django.db.models.deletion.CASCADE, related_name='pk_mappings', to='pkpdapp.variable')),
-                ('pkpd_model', models.ForeignKey(help_text='PKPD model that this mapping is for', on_delete=django.db.models.deletion.CASCADE, related_name='mappings', to='pkpdapp.pkpdmodel')),
+                ('pkpd_model', models.ForeignKey(help_text='PKPD model that this mapping is for', on_delete=django.db.models.deletion.CASCADE, related_name='mappings', to='pkpdapp.dosedpharmacokineticmodel')),
             ],
             options={
                 'abstract': False,
@@ -413,8 +392,13 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='dosedpharmacokineticmodel',
-            name='pharmacokinetic_model',
-            field=models.ForeignKey(default=1, help_text='pharmacokinetic model', on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.pharmacokineticmodel'),
+            name='pd_model',
+            field=models.ForeignKey(blank=True, help_text='PD part of model', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='pkpd_models', to='pkpdapp.pharmacodynamicmodel'),
+        ),
+        migrations.AddField(
+            model_name='dosedpharmacokineticmodel',
+            name='pk_model',
+            field=models.ForeignKey(blank=True, default=1, help_text='model', null=True, on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.pharmacokineticmodel'),
         ),
         migrations.AddField(
             model_name='dosedpharmacokineticmodel',
@@ -476,7 +460,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='variable',
-            constraint=models.CheckConstraint(check=models.Q(models.Q(('pk_model__isnull', True), ('dosed_pk_model__isnull', True), ('pkpd_model__isnull', True), ('pd_model__isnull', False)), models.Q(('pk_model__isnull', False), ('dosed_pk_model__isnull', True), ('pkpd_model__isnull', True), ('pd_model__isnull', True)), models.Q(('pk_model__isnull', True), ('dosed_pk_model__isnull', False), ('pkpd_model__isnull', True), ('pd_model__isnull', True)), models.Q(('pk_model__isnull', True), ('dosed_pk_model__isnull', True), ('pkpd_model__isnull', False), ('pd_model__isnull', True)), _connector='OR'), name='variable: variable must belong to a model'),
+            constraint=models.CheckConstraint(check=models.Q(models.Q(('pk_model__isnull', True), ('dosed_pk_model__isnull', True), ('pd_model__isnull', False)), models.Q(('pk_model__isnull', False), ('dosed_pk_model__isnull', True), ('pd_model__isnull', True)), models.Q(('pk_model__isnull', True), ('dosed_pk_model__isnull', False), ('pd_model__isnull', True)), _connector='OR'), name='variable: variable must belong to a model'),
         ),
         migrations.AddConstraint(
             model_name='subject',

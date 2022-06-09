@@ -136,11 +136,11 @@ class Inference(StoredModel):
         old_log_likelihoods = self.log_likelihoods.all()
 
         # save models used in this inference
-        old_models = list(PharmacodynamicModel.objects.filter(
+        old_pd_models = list(PharmacodynamicModel.objects.filter(
             variables__log_likelihoods__inference=self
         ).distinct())
 
-        old_models += list(DosedPharmacokineticModel.objects.filter(
+        old_pk_models = list(DosedPharmacokineticModel.objects.filter(
             variables__log_likelihoods__inference=self
         ).distinct())
         # old_models += list(PkpdModel.objects.filter(
@@ -150,8 +150,25 @@ class Inference(StoredModel):
         # create a map between old and new models so we can transfer
         # the relationships
         new_models = {
-            model.id: model.create_stored_model() for model in old_models
+            model.id: model.create_stored_model() for model in old_pd_models
         }
+
+        # store pd models referred to by pk models
+        new_models.update({
+            model.pd_model.id: model.pd_model.create_stored_model()
+            for model in old_pk_models
+            if model.pd_model is not None
+        })
+
+        # finally store the pk models
+        new_models.update({
+            model.id: model.create_stored_model(
+                new_models[
+                    model.pd_model.id if model.pd_model is not None else None
+                ]
+            )
+            for model in old_pk_models
+        })
 
         self.id = None
         self.pk = None

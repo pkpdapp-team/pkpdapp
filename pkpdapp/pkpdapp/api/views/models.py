@@ -13,7 +13,6 @@ from pkpdapp.api.serializers import (
     PharmacodynamicSerializer,
     DosedPharmacokineticSerializer,
     PharmacodynamicSbmlSerializer,
-    PkpdSerializer,
 )
 from pkpdapp.api.views import (
     ProjectFilter,
@@ -23,7 +22,6 @@ from pkpdapp.models import (
     PharmacokineticModel,
     PharmacodynamicModel,
     DosedPharmacokineticModel,
-    PkpdModel,
 )
 
 
@@ -68,8 +66,3 @@ class PharmacodynamicView(viewsets.ModelViewSet):
         return response.Response(serializer.errors,
                                  status.HTTP_400_BAD_REQUEST)
 
-
-class PkpdView(viewsets.ModelViewSet):
-    queryset = PkpdModel.objects.all()
-    serializer_class = PkpdSerializer
-    filter_backends = [ProjectFilter]

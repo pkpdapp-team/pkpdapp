@@ -7,7 +7,6 @@ from rest_framework import views, status
 from rest_framework.response import Response
 from pkpdapp.models import (
     DosedPharmacokineticModel, PharmacodynamicModel,
-    PkpdModel
 )
 
 
@@ -27,9 +26,6 @@ class SimulateBaseView(views.APIView):
 class SimulatePkView(SimulateBaseView):
     model = DosedPharmacokineticModel
 
-
-class SimulatePkpdView(SimulateBaseView):
-    model = PkpdModel
 
 
 class SimulatePdView(SimulateBaseView):
