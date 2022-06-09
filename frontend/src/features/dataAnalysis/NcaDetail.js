@@ -66,10 +66,6 @@ export default function NcaDetail({ project, dataset }) {
     ? [... new Set(biomarker_type.data.subjects)]
     : []; 
 
-
-  console.log("biomarker_type", biomarker_type);
-  console.log("subjectsInBiomarkerType", subjectsInBiomarkerType);
-
   const subjectOptions = subjectsInBiomarkerType.filter(s_id => 
     (subjectsEntities[s_id].protocol)
   ).map(s_id => ({
