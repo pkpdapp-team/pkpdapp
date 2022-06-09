@@ -12,7 +12,7 @@ import { getColor, getShape } from "./ShapesAndColors";
 Chart.register(...registerables, CrosshairPlugin);
 Interaction.modes.interpolate = Interpolate;
 
-export default function ModellingChart({ datasets, pkModels, pkpdModels, pdModels, className }) {
+export default function ModellingChart({ datasets, pkModels, pdModels, className }) {
   let renderChart = true;
 
   let showRhsAxis = false;
@@ -123,7 +123,6 @@ export default function ModellingChart({ datasets, pkModels, pkpdModels, pdModel
         .flat(),
       ...pkModels.map((m) => getChartData(m)).flat(),
       ...pdModels.map((m) => getChartData(m)).flat(),
-      ...pkpdModels.map((m) => getChartData(m)).flat(),
     ],
   };
 

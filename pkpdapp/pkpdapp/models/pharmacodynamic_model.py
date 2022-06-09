@@ -8,13 +8,9 @@ from django.db import models
 from django.urls import reverse
 from pkpdapp.models import (
     MechanisticModel,
-    Protocol,
     Project,
     StoredModel,
-    MyokitModelMixin,
 )
-import myokit
-from .myokit_model_mixin import lock
 
 
 class PharmacodynamicModel(MechanisticModel, StoredModel):

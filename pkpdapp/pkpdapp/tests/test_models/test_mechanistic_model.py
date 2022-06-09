@@ -319,5 +319,3 @@ class TestDosedPharmokineticModel(TestCase):
             result[test_model_output_ids[1]][0],
             1e9 * first_drug_concentration,
         )
-
-

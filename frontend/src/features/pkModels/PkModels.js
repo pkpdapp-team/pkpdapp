@@ -20,7 +20,7 @@ export default function PkModels({ project, disableSave }) {
   return (
     <ExpandableListItem
       items={pkModels}
-      text="PK Models"
+      text="PKPD Models"
       type="pk_model"
       icon={AccessibilityIcon}
       handleClickItem={handleClickItem}

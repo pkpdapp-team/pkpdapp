@@ -8,7 +8,6 @@ from django.test import TestCase
 from pkpdapp.models import (
     Project,
     PharmacodynamicModel,
-    Compound,
     DosedPharmacokineticModel,
     PkpdMapping,
     PharmacokineticModel,

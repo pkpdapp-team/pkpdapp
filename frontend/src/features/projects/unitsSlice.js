@@ -40,16 +40,6 @@ export const fetchUnitsByPkModel = createAsyncThunk(
   }
 );
 
-export const fetchUnitsByPkpdModel = createAsyncThunk(
-  "units/fetchUnitsByPkpdModel",
-  async (pkpd_model_id, { getState }) => {
-    const response = await api.get(
-      `/api/unit/?pkpd_model_id=${pkpd_model_id}`
-    );
-    return response;
-  }
-);
-
 export const addNewUnit = createAsyncThunk("units/addNewUnit", async () => {
   const initialUnit = {
     name: "new",
@@ -81,7 +71,6 @@ export const unitsSlice = createSlice({
     },
     [fetchUnitsByPdModel.fulfilled]: unitsAdapter.upsertMany,
     [fetchUnitsByPkModel.fulfilled]: unitsAdapter.upsertMany,
-    [fetchUnitsByPkpdModel.fulfilled]: unitsAdapter.upsertMany,
     [addNewUnit.fulfilled]: unitsAdapter.addOne,
     [updateUnit.fulfilled]: unitsAdapter.upsertOne,
   },

@@ -272,7 +272,6 @@ class Variable(StoredModel):
                 display=myokit_variable.name() != 'time',
             )
 
-
     @staticmethod
     def get_variable(model, myokit_variable):
         if isinstance(model, PharmacokineticModel):

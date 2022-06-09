@@ -65,4 +65,3 @@ class PharmacodynamicView(viewsets.ModelViewSet):
             return response.Response(serializer.data)
         return response.Response(serializer.errors,
                                  status.HTTP_400_BAD_REQUEST)
-

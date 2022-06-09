@@ -6,7 +6,6 @@ import {
 import { api } from "../../Api";
 import { fetchPdModelById } from "../pdModels/pdModelsSlice";
 import { fetchPkModelById } from "../pkModels/pkModelsSlice";
-import { fetchPkpdModelById } from "../pkpdModels/pkpdModelsSlice";
 
 const variablesAdapter = createEntityAdapter({
   sortComparer: (a, b) => b.id < a.id,
@@ -67,23 +66,6 @@ export const fetchVariablesByPkModel = createAsyncThunk(
   }
 );
 
-export const fetchVariablesByPkpdModel = createAsyncThunk(
-  "variables/fetchVariablesByPkpdModel",
-  async (pkpd_model_id, { getState }) => {
-    const response = await api.get(
-      `/api/variable/?pkpd_model_id=${pkpd_model_id}`
-    );
-    const responseIds = response.map(v => v.id)
-    const state = getState()
-    const existingVariables = selectVariablesByPkpdModel(state, pkpd_model_id)
-    const deletedVariables = existingVariables.filter(v => responseIds.indexOf(v.id) === -1)
-    return {
-      variables: response,
-      deletedVariables
-    };
-  }
-);
-
 export const addNewVariable = createAsyncThunk(
   "variables/addNewVariable",
   async () => {
@@ -104,9 +86,6 @@ export const updateVariable = createAsyncThunk(
     }
     if (response.dosed_pk_model) {
       thunkAPI.dispatch(fetchPkModelById(response.dosed_pk_model));
-    }
-    if (response.pkpd_model) {
-      thunkAPI.dispatch(fetchPkpdModelById(response.pkpd_model));
     }
     return response;
   }
@@ -139,13 +118,6 @@ export const variablesSlice = createSlice({
       variablesAdapter.upsertMany(state, action.payload.variables);
     },
     [fetchVariablesByPkModel.fulfilled]: (state, action) => {
-      state.status = "succeeded";
-      if (action.payload.deletedVariables.length > 0) {
-        variablesAdapter.removeMany(state, action.payload.deletedVariables.map(v => v.id))
-      }
-      variablesAdapter.upsertMany(state, action.payload.variables);
-    },
-    [fetchVariablesByPkpdModel.fulfilled]: (state, action) => {
       state.status = "succeeded";
       if (action.payload.deletedVariables.length > 0) {
         variablesAdapter.removeMany(state, action.payload.deletedVariables.map(v => v.id))

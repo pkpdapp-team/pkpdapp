@@ -41,7 +41,10 @@ let options = {
       labels: {
         usePointStyle: true,
         filter: function (item, chart) {
-          return !item.text.includes("noLabel");
+          if (item.text) {
+            return !item.text.includes("noLabel");
+          }
+          return false;
         },
       },
     },
@@ -56,11 +59,7 @@ let options = {
         },
       },
     },
-    crosshair: {
-      sync: {
-        enabled: false,
-      },
-    },
+    
   },
 };
 
@@ -104,6 +103,14 @@ export function AuceChartDataVsTime({ auces, biomarker_type }) {
         },
       },
     },
+    plugins: {
+      ...options.plugins,
+      crosshair: {
+        sync: {
+          enabled: false,
+        },
+      },
+    }
   };
 
   return (
@@ -196,6 +203,10 @@ export function AuceChartFitsVsConcentration({ auces, biomarker_type }) {
         },
       },
     },
+    plugins: {
+      ...options.plugins,
+      crosshair: false,
+    }
   };
 
   return (

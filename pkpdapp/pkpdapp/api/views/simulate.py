@@ -27,6 +27,5 @@ class SimulatePkView(SimulateBaseView):
     model = DosedPharmacokineticModel
 
 
-
 class SimulatePdView(SimulateBaseView):
     model = PharmacodynamicModel

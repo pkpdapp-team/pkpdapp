@@ -7,9 +7,7 @@
 from pkpdapp.models import (
     PharmacodynamicModel, Variable,
     Project,
-    Compound,
     DosedPharmacokineticModel,
-    PkpdMapping,
     PharmacokineticModel,
     BiomarkerType,
     Protocol,

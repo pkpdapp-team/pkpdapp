@@ -3,7 +3,6 @@ import { useSelector } from "react-redux";
 import Paper from "@material-ui/core/Paper";
 import Grid from "@material-ui/core/Grid";
 import PkDetail from "../pkModels/PkDetail";
-import PkpdDetail from "../pkpdModels/PkpdDetail";
 import PdDetail from "../pdModels/PdDetail";
 import ProtocolDetail from "../protocols/ProtocolDetail";
 import DatasetDetail from "../datasets/DatasetDetail";
@@ -24,8 +23,6 @@ import { selectChosenDatasets, selectChosenDatasetProtocols } from "../datasets/
 import { selectChosenPdModels } from "../pdModels/pdModelsSlice.js";
 
 import { selectChosenPkModels } from "../pkModels/pkModelsSlice.js";
-
-import { selectChosenPkpdModels } from "../pkpdModels/pkpdModelsSlice.js";
 
 import { selectChosenProtocols } from "../protocols/protocolsSlice.js";
 
@@ -48,7 +45,6 @@ export default function Modelling() {
   const project = useSelector(selectChosenProject);
   const chosenDatasets = useSelector(selectChosenDatasets);
   const chosenPkModels = useSelector(selectChosenPkModels);
-  const chosenPkpdModels = useSelector(selectChosenPkpdModels);
   const chosenPdModels = useSelector(selectChosenPdModels);
   const chosenProtocols = useSelector(selectChosenProtocols);
   const chosenDatasetProtocols = useSelector(selectChosenDatasetProtocols);
@@ -59,7 +55,6 @@ export default function Modelling() {
   if (
     chosenDatasets.length === 0 &&
     chosenPkModels.length === 0 &&
-    chosenPkpdModels.length === 0 &&
     chosenPdModels.length === 0
   ) {
     showChart = false;
@@ -75,7 +70,6 @@ export default function Modelling() {
               <Chart
                 className={classes.chart}
                 datasets={chosenDatasets}
-                pkpdModels={chosenPkpdModels}
                 pkModels={chosenPkModels}
                 pdModels={chosenPdModels}
               />
@@ -157,41 +151,12 @@ export default function Modelling() {
               <Accordion key={pkModel.id}>
                 <AccordionSummary expandIcon={expandIcon}>
                   <Typography className={classes.heading}>
-                    PK Model - {pkModel.name}
+                    PKPD Model - {pkModel.name}
                   </Typography>
                 </AccordionSummary>
                 <AccordionDetails>
                   {!loading && (
                     <PkDetail project={project} pk_model={pkModel} />
-                  )}
-                </AccordionDetails>
-              </Accordion>
-            );
-          })}
-          {chosenPkpdModels.map((pkpdModel) => {
-            const loading = pkpdModel.status
-              ? pkpdModel.status === "loading"
-              : false;
-            const simulateLoading = pkpdModel.simulate
-              ? pkpdModel.simulate.status === "loading"
-              : true;
-            const expandIcon =
-              loading | simulateLoading ? (
-                <CircularProgress size={20} />
-              ) : (
-                <ExpandMoreIcon />
-              );
-
-            return (
-              <Accordion key={pkpdModel.id}>
-                <AccordionSummary expandIcon={expandIcon}>
-                  <Typography className={classes.heading}>
-                    PKPD Model - {pkpdModel.name}
-                  </Typography>
-                </AccordionSummary>
-                <AccordionDetails>
-                  {!loading && (
-                    <PkpdDetail project={project} pkpd_model={pkpdModel} />
                   )}
                 </AccordionDetails>
               </Accordion>

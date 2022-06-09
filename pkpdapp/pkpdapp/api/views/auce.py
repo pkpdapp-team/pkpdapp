@@ -45,7 +45,6 @@ class AuceView(views.APIView):
             'dose_group_amount'
         )
 
-        # include None as a group to cover subjects with no group
         groups = set([g for s in subjects for g in s.groups.all()] + [None])
 
         auces = []
@@ -81,7 +80,9 @@ class AuceView(views.APIView):
                 subject_times.append(times)
                 subject_data.append(values)
             auces.append(Auce(
-                group, subject_ids, concentrations, subject_times, subject_data
+                group.name if group is not None else 'All',
+                subject_ids, concentrations,
+                subject_times, subject_data
             ))
 
         serializers = [AuceSerializer(auce) for auce in auces]

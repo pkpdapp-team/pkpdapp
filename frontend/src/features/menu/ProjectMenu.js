@@ -12,7 +12,6 @@ import Divider from "@material-ui/core/Divider";
 
 import Datasets from "../datasets/Datasets";
 import PkModels from "../pkModels/PkModels";
-import PkpdModels from "../pkpdModels/PkpdModels";
 import PdModels from "../pdModels/PdModels";
 import Protocols from "../protocols/Protocols";
 import DatasetProtocols from "../protocols/DatasetProtocols";
@@ -44,7 +43,6 @@ export default function ProjectMenu() {
           <Datasets project={project} disableSave={disableSave} />
           <PdModels project={project} disableSave={disableSave} />
           <PkModels project={project} disableSave={disableSave} />
-          <PkpdModels project={project} disableSave={disableSave} />
           <Protocols project={project} disableSave={disableSave} />
           <DatasetProtocols project={project} disableSave={disableSave} />
         </React.Fragment>
