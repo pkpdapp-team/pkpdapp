@@ -14,13 +14,13 @@ from .subject import Subject, SubjectGroup
 from .protocol import Protocol
 from .myokit_model_mixin import MyokitModelMixin
 from .mechanistic_model import MechanisticModel
+from .pharmacodynamic_model import (
+    PharmacodynamicModel,
+)
 from .pharmacokinetic_model import (
     PharmacokineticModel,
     DosedPharmacokineticModel,
-)
-from .pkpd_model import (
-    PharmacodynamicModel,
-    PkpdModel,
+    PkpdMapping,
 )
 from .variable import Variable
 from .biomarker_type import BiomarkerType

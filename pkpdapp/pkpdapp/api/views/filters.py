@@ -14,7 +14,6 @@ from pkpdapp.models import (
     DosedPharmacokineticModel,
     Protocol,
     Unit,
-    PkpdModel,
     BiomarkerType,
     Variable,
     Subject,
@@ -148,8 +147,6 @@ class ProjectFilter(filters.BaseFilterBackend):
                     queryset = project.pd_models
                 elif queryset.model == DosedPharmacokineticModel:
                     queryset = project.pk_models
-                elif queryset.model == PkpdModel:
-                    queryset = project.pkpd_models
                 elif queryset.model == Protocol:
                     queryset = project.protocols
                 elif queryset.model == Inference:

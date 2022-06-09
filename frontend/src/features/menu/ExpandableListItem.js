@@ -57,7 +57,7 @@ export default function ExpandableListItem({
             const loading = item.status ? item.status === "loading" : false;
             const simulateLoading = item.simulate
               ? item.simulate.status === "loading"
-              : type === "pd_model" || type === "pk_model";
+              : type === "pd_model" || type === "pk_model" || type === "pkpd_model";
 
             return (
               <AvatarListItem

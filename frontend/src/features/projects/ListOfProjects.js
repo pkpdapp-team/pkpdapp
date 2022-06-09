@@ -29,6 +29,8 @@ import { fetchDatasets } from "../datasets/datasetsSlice.js";
 
 import { fetchPkModels } from "../pkModels/pkModelsSlice.js";
 
+import { fetchPkpdModels } from "../pkModels/pkpdModelsSlice.js";
+
 import { fetchPdModels } from "../pdModels/pdModelsSlice.js";
 
 import { fetchBasePkModels } from "../pkModels/basePkModelsSlice.js";
@@ -71,6 +73,7 @@ export default function ListOfProjects() {
             dispatch(fetchPkModels(p));
             dispatch(fetchPdModels(p));
             dispatch(fetchPkModels(p));
+            dispatch(fetchPkpdModels(p));
             dispatch(fetchBasePkModels(p));
             dispatch(fetchVariables(p));
             dispatch(fetchProtocols(p));

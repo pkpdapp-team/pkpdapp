@@ -6,7 +6,7 @@
 from rest_framework import views, status
 from rest_framework.response import Response
 from pkpdapp.models import (
-    DosedPharmacokineticModel, PharmacodynamicModel
+    DosedPharmacokineticModel, PharmacodynamicModel,
 )
 
 

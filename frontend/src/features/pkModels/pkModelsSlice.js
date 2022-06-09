@@ -67,6 +67,7 @@ export const addNewPkModel = createAsyncThunk(
     const initialPkModel = {
       name: "new",
       project: project.id,
+      mappings: [],
     };
     let pkModel = await api.post("/api/dosed_pharmacokinetic/", initialPkModel);
     dispatch(fetchVariablesByPkModel(pkModel.id));

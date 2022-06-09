@@ -21,6 +21,8 @@ export default function ModellingChart({ datasets, pkModels, pdModels, className
   const subjects = useSelector((state) => state.subjects.entities);
   const variables = useSelector((state) => state.variables.entities);
 
+  let labelsShown = {}
+
   const getChartData = (model) => {
     console.log("getChartData");
     if (!model.simulate) {
@@ -50,10 +52,18 @@ export default function ModellingChart({ datasets, pkModels, pdModels, className
         if (variable.axis) {
           showRhsAxis = true;
         }
+        // chartjs crashes if there are identical labels
+        let label = variable.qname
+        if (label in labelsShown) {
+          label = `${label}${labelsShown[label]}`
+          labelsShown[label] += 1
+        } else {
+          labelsShown[label] = 1
+        }
         return {
           yAxisID: yAxisID,
           type: "line",
-          label: variable.name,
+          label: label,
           borderColor: color,
           backgroundColor: color,
           showLine: true,
@@ -115,7 +125,6 @@ export default function ModellingChart({ datasets, pkModels, pdModels, className
       ...pdModels.map((m) => getChartData(m)).flat(),
     ],
   };
-  console.log('data', data)
 
   let options = {
     animation: {
@@ -174,6 +183,7 @@ export default function ModellingChart({ datasets, pkModels, pdModels, className
     };
   }
 
+  console.log('data', data, options, renderChart)
   return (
     <div className={className}>
       {renderChart && <Scatter data={data} options={options} />}

@@ -23,6 +23,9 @@ class ProtocolSerializer(serializers.ModelSerializer):
         many=True, read_only=True
     )
     dataset = serializers.SerializerMethodField('get_dataset')
+    subjects = serializers.PrimaryKeyRelatedField(
+        many=True, read_only=True
+    )
 
     class Meta:
         model = Protocol

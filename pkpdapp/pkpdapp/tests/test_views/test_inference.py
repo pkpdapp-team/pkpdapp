@@ -187,7 +187,7 @@ class TestNaivePooledInferenceView(APITestCase):
 
         pk_model = DosedPharmacokineticModel.objects.create(
             name='my wonderful model',
-            pharmacokinetic_model=pk,
+            pk_model=pk,
             dose_compartment='central',
             protocol=protocol,
         )
@@ -326,7 +326,7 @@ class TestNaivePooledInferenceView(APITestCase):
 
         pk_model = DosedPharmacokineticModel.objects.create(
             name='my wonderful model',
-            pharmacokinetic_model=pk,
+            pk_model=pk,
             dose_compartment='central',
             protocol=protocol,
         )
@@ -556,7 +556,7 @@ class TestInferenceViews(APITestCase):
 
         model = DosedPharmacokineticModel.objects.create(
             name='my wonderful model',
-            pharmacokinetic_model=pk,
+            pk_model=pk,
             dose_compartment='central',
             protocol=protocol,
         )

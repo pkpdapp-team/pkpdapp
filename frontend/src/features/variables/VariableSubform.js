@@ -30,10 +30,12 @@ export default function VariableSubform({ variable_id, disableSave }) {
       is_log: variable.is_log,
     },
   });
+  const variableStringify = JSON.stringify(variable)
 
   useEffect(() => {
+    console.log('useEffect variable subform', variable)
     reset(variable);
-  }, [reset, variable]);
+  }, [variableStringify]);
 
   const unit_id = variable ? variable.unit : 1;
   let unit = useSelector((state) => selectUnitById(state, unit_id));

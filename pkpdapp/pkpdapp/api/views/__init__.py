@@ -27,7 +27,6 @@ from .models import (
     PharmacokineticView,
     PharmacodynamicView,
     DosedPharmacokineticView,
-    PkpdView,
 )
 from .nca import NcaView
 from .project import ProjectView, ProjectAccessView
@@ -38,7 +37,7 @@ from .inference import (
 )
 from .simulate import (
     SimulatePkView,
-    SimulatePdView
+    SimulatePdView,
 )
 from .subject import SubjectView
 from .unit import UnitView

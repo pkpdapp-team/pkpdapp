@@ -6,16 +6,87 @@
 from rest_framework import serializers
 from pkpdapp.models import (
     PharmacokineticModel, MyokitModelMixin,
-    DosedPharmacokineticModel, PkpdModel,
-    PharmacodynamicModel,
+    DosedPharmacokineticModel,
+    PharmacodynamicModel, PkpdMapping
 )
 from pkpdapp.api.serializers import ValidSbml
 
 
-class PkpdSerializer(serializers.ModelSerializer):
+class PkpdMappingSerializer(serializers.ModelSerializer):
     class Meta:
-        model = PkpdModel
+        model = PkpdMapping
         fields = '__all__'
+
+
+class BaseDosedPharmacokineticSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DosedPharmacokineticModel
+        fields = '__all__'
+
+
+class DosedPharmacokineticSerializer(serializers.ModelSerializer):
+    mappings = PkpdMappingSerializer(many=True)
+    components = serializers.SerializerMethodField('get_components')
+    variables = serializers.PrimaryKeyRelatedField(
+        many=True, read_only=True
+    )
+
+    class Meta:
+        model = DosedPharmacokineticModel
+        fields = '__all__'
+
+    def get_components(self, m):
+        model = m.get_myokit_model()
+        return [
+            _serialize_component(m, c, model)
+            for c in model.components(sort=True)
+        ]
+
+    def create(self, validated_data):
+        mappings_data = validated_data.pop('mappings')
+        new_pkpd_model = BaseDosedPharmacokineticSerializer().create(
+            validated_data
+        )
+        for field_datas, Serializer in [
+                (mappings_data, PkpdMappingSerializer),
+        ]:
+            for field_data in field_datas:
+                serializer = Serializer()
+                field_data['pkpd_model'] = new_pkpd_model
+                serializer.create(field_data)
+
+        return new_pkpd_model
+
+    def update(self, instance, validated_data):
+        mappings_data = validated_data.pop('mappings')
+        old_mappings = list((instance.mappings).all())
+        for i in range(len(mappings_data), len(old_mappings)):
+            old_mappings[i].delete()
+            del old_mappings[i]
+
+        new_pkpd_model = BaseDosedPharmacokineticSerializer().update(
+            instance, validated_data
+        )
+
+        # don't update mappings if read_only
+        if not instance.read_only:
+            for field_datas, old_models, Serializer in [
+                    (mappings_data,
+                     old_mappings, PkpdMappingSerializer)
+            ]:
+                for field_data in field_datas:
+                    serializer = Serializer()
+                    try:
+                        old_model = old_models.pop(0)
+                        new_model = serializer.update(
+                            old_model, field_data
+                        )
+                    except IndexError:
+                        field_data['pkpd_model'] = new_pkpd_model
+                        new_model = serializer.create(field_data)
+                    new_model.save()
+
+        return new_pkpd_model
 
 
 class PharmacokineticSerializer(serializers.ModelSerializer):
@@ -55,24 +126,6 @@ def _serialize_component(model, component, myokit_model):
         'outputs': outputs,
         'equations': equations,
     }
-
-
-class DosedPharmacokineticSerializer(serializers.ModelSerializer):
-    components = serializers.SerializerMethodField('get_components')
-    variables = serializers.PrimaryKeyRelatedField(
-        many=True, read_only=True
-    )
-
-    def get_components(self, m):
-        model = m.get_myokit_model()
-        return [
-            _serialize_component(m, c, model)
-            for c in model.components(sort=True)
-        ]
-
-    class Meta:
-        model = DosedPharmacokineticModel
-        fields = '__all__'
 
 
 class PharmacodynamicSerializer(serializers.ModelSerializer):

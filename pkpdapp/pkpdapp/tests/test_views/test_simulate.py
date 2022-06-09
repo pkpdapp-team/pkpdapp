@@ -5,7 +5,13 @@
 #
 
 from pkpdapp.models import (
-    PharmacodynamicModel, Variable
+    PharmacodynamicModel, Variable,
+    Project,
+    DosedPharmacokineticModel,
+    PharmacokineticModel,
+    BiomarkerType,
+    Protocol,
+
 )
 from django.contrib.auth.models import User
 
@@ -54,3 +60,38 @@ class TestSimulateView(APITestCase):
         url = reverse('simulate-pharmacodynamic', args=(123,))
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_simulate_pkpd(self):
+        project = Project.objects.get(
+            name='demo',
+        )
+        pk_model = PharmacokineticModel.objects.get(
+            name='three_compartment_pk_model'
+        )
+        biomarker_type = BiomarkerType.objects.get(
+            name='DemoDrug Concentration',
+            dataset__name='usecase0'
+        )
+        protocol = Protocol.objects.get(
+            subjects__dataset=biomarker_type.dataset,
+            subjects__id_in_dataset=1,
+        )
+        pd_model = PharmacodynamicModel.objects.get(
+            name='tumour_growth_inhibition_model_koch',
+        )
+        pkpd_model = DosedPharmacokineticModel.objects.create(
+            name='my wonderful model',
+            pk_model=pk_model,
+            pd_model=pd_model,
+            dose_compartment='central',
+            protocol=protocol,
+            project=project,
+        )
+
+        url = reverse('simulate-dosed-pharmacokinetic', args=(pkpd_model.pk,))
+        data = {
+            'outputs': ['PD.tumour_volume', 'myokit.time'],
+        }
+
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)

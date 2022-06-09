@@ -151,7 +151,7 @@ export default function Modelling() {
               <Accordion key={pkModel.id}>
                 <AccordionSummary expandIcon={expandIcon}>
                   <Typography className={classes.heading}>
-                    PK Model - {pkModel.name}
+                    PKPD Model - {pkModel.name}
                   </Typography>
                 </AccordionSummary>
                 <AccordionDetails>

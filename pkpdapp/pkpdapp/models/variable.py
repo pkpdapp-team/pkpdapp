@@ -11,7 +11,7 @@ import numpy as np
 from pkpdapp.models import (
     Unit, DosedPharmacokineticModel,
     PharmacokineticModel, PharmacodynamicModel,
-    StoredModel,
+    StoredModel
 )
 
 

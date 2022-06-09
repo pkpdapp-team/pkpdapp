@@ -8,7 +8,6 @@ from django.db import models
 from django.urls import reverse
 from pkpdapp.models import (
     MechanisticModel,
-    Protocol,
     Project,
     StoredModel,
 )
@@ -61,30 +60,3 @@ class PharmacodynamicModel(MechanisticModel, StoredModel):
         for variable in self.variables.all():
             variable.create_stored_variable(stored_model)
         return stored_model
-
-
-class PkpdModel(MechanisticModel, StoredModel):
-    dose_compartment = models.CharField(
-        max_length=100,
-        default='central',
-        help_text='compartment name to be dosed',
-        blank=True, null=True,
-    )
-    project = models.ForeignKey(
-        Project, on_delete=models.CASCADE,
-        related_name='pkpd_models',
-        blank=True, null=True,
-        help_text='Project that "owns" this model'
-    )
-    protocol = models.ForeignKey(
-        Protocol,
-        on_delete=models.CASCADE,
-        help_text='dosing protocol',
-        blank=True, null=True,
-    )
-
-    def get_project(self):
-        return self.project
-
-    def get_absolute_url(self):
-        return reverse('pkpd_model-detail', kwargs={'pk': self.pk})

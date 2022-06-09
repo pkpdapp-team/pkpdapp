@@ -9,7 +9,7 @@ whitenoise==5.0.1
 docutils==0.16
 python-markdown-math==0.8
 pints @ git+https://github.com/pints-team/pints@i1403-multi-outputs#egg=pints
-myokit>=1.31
+myokit @ git+https://github.com/MichaelClerx/myokit@8cb840b#egg=myokit
 django-extensions==3.1.1
 jsonfield==3.1.0
 djangorestframework>=3.12.4

@@ -35,7 +35,7 @@ class VariableTestCase(APITestCase):
 
         self.dosed_pk_model = \
             DosedPharmacokineticModel.objects.create(
-                pharmacokinetic_model=pk,
+                pk_model=pk,
                 dose_compartment='central',
                 protocol=p,
             )

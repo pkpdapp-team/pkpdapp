@@ -48,6 +48,7 @@ export const fetchVariablesByPdModel = createAsyncThunk(
   }
 );
 
+
 export const fetchVariablesByPkModel = createAsyncThunk(
   "variables/fetchVariablesByPkModel",
   async (pk_model_id, { getState }) => {
@@ -146,4 +147,9 @@ export const selectVariablesByPdModel = (state, model_id, model_type) =>
 export const selectVariablesByDosedPkModel = (state, model_id, model_type) =>
   selectAllVariables(state).filter(
     (variable) => variable.dosed_pk_model === model_id
+  );
+
+export const selectVariablesByPkpdModel = (state, model_id, model_type) =>
+  selectAllVariables(state).filter(
+    (variable) => variable.pkpd_model === model_id
   );

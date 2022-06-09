@@ -8,7 +8,7 @@ from django.test import TestCase
 from pkpdapp.models import (
     PharmacodynamicModel, Protocol, PharmacokineticModel,
     Compound, DosedPharmacokineticModel,
-    Dose, PkpdModel, Unit, Variable,
+    Dose, Unit, Variable,
 )
 from myokit.formats.sbml._parser import SBMLParsingError
 from django.core.exceptions import ValidationError
@@ -160,7 +160,7 @@ class TestDosedPharmokineticModel(TestCase):
         )
 
         m = DosedPharmacokineticModel.objects.create(
-            pharmacokinetic_model=pk,
+            pk_model=pk,
             dose_compartment='central',
             protocol=p,
         )
@@ -179,7 +179,7 @@ class TestDosedPharmokineticModel(TestCase):
         )
 
         model = DosedPharmacokineticModel.objects.create(
-            pharmacokinetic_model=pk,
+            pk_model=pk,
             dose_compartment='central',
             protocol=p,
         )
@@ -203,7 +203,7 @@ class TestDosedPharmokineticModel(TestCase):
         )
 
         m = DosedPharmacokineticModel.objects.create(
-            pharmacokinetic_model=pk,
+            pk_model=pk,
             dose_compartment='central',
             protocol=p,
         )
@@ -261,7 +261,7 @@ class TestDosedPharmokineticModel(TestCase):
         )
 
         m = DosedPharmacokineticModel.objects.create(
-            pharmacokinetic_model=pk,
+            pk_model=pk,
             dose_compartment='central',
             protocol=p,
         )
@@ -319,25 +319,3 @@ class TestDosedPharmokineticModel(TestCase):
             result[test_model_output_ids[1]][0],
             1e9 * first_drug_concentration,
         )
-
-
-class TestPkpdModel(TestCase):
-    def test_pkpd_model_creation(self):
-        c = Compound.objects.create(
-            name='test_pkpd_model_creation',
-            description='placebo',
-        )
-
-        p = Protocol.objects.create(
-            name='my_cool_protocol',
-            compound=c,
-            amount_unit=Unit.objects.get(symbol='mg'),
-            time_unit=Unit.objects.get(symbol='h'),
-        )
-        m = PkpdModel.objects.create(
-            name='my_cool_model',
-            sbml='sbml_here',
-            dose_compartment='central',
-            protocol=p,
-        )
-        self.assertTrue(isinstance(m, PkpdModel))

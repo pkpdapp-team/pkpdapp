@@ -37,7 +37,7 @@ const useStyles = makeStyles((theme) => ({
 export default function NcaDetail({ project, dataset }) {
   const classes = useStyles();
   const [nca, setNca] = useState(null);
-  const [protocolId, setProtocolId] = useState(null);
+  const [subjectId, setSubjectId] = useState(null);
   const [mode, setMode] = useState("data");
   const modeOptions = [
     { key: "Data", value: "data" },
@@ -52,50 +52,45 @@ export default function NcaDetail({ project, dataset }) {
   );
   
 
-  console.log("biomarker_type", biomarker_type);
-
-  const protocols = useSelector((state) =>
-    selectDatasetById(state, dataset.id).protocols
-  );
-
-  const protocol = (protocols && protocolId) ? 
-    protocols.find(p => p.id === protocolId)
-    : null
-
   const subject = useSelector((state) =>
-    protocol ? selectSubjectById(state, protocol.subject) : null
+    subjectId ? selectSubjectById(state, subjectId) : null
   );
 
   const biomarkerTypes = useSelector((state) =>
     selectBiomarkerTypesByDatasetId(state, dataset.id)
   );
 
-  const subjectsInBiomarkerType = biomarkerTypeId
-    ? biomarker_type.data.subjects
-    : null;
+  const subjectsEntities = useSelector((state) => state.subjects.entities);
 
-  const filteredProtocols = subjectsInBiomarkerType && protocol && protocol.subjects
-    ? protocols.filter((protocol) =>
-      subjectsInBiomarkerType.filter(x => protocol.subjects.includes(x))
-    )
-    : protocols;
+  const subjectsInBiomarkerType = biomarkerTypeId
+    ? [... new Set(biomarker_type.data.subjects)]
+    : []; 
+
+  const subjectOptions = subjectsInBiomarkerType.filter(s_id => 
+    (subjectsEntities[s_id].protocol)
+  ).map(s_id => ({
+    key: subjectsEntities[s_id].id_in_dataset, value: s_id
+  }))
 
   useEffect(() => {
-    if (biomarkerTypeId != null && protocolId != null) {
+    if (biomarkerTypeId != null && subjectId != null) {
       api
         .post(`/api/nca/`, {
           biomarker_type_id: biomarkerTypeId,
-          protocol_id: protocolId,
+          subject_id: subjectId,
         })
         .then(setNca);
+    } else {
+      setNca(null)
     }
-  }, [biomarkerTypeId, protocolId]);
+  }, [biomarkerTypeId, subjectId]);
 
-  const handleProtocolChange = (event) => {
-    setProtocolId(event.target.value);
+  const handleSubjectChange = (event) => {
+    setSubjectId(event.target.value);
   };
   const handleBiomarkerTypeChange = (event) => {
     setBiomarkerTypeId(event.target.value);
+    setSubjectId(null);
   };
   const handleModeChange = (event) => {
     setMode(event.target.value);
@@ -123,23 +118,24 @@ export default function NcaDetail({ project, dataset }) {
       </FormControl>
 
       <FormControl className={classes.formControl}>
-        <InputLabel id="protocol-label">Protocol</InputLabel>
+        <InputLabel id="subject-label">Subject</InputLabel>
         <Select
-          onChange={handleProtocolChange}
-          labelId="protocol-label"
-          value={protocolId || ""}
+          onChange={handleSubjectChange}
+          labelId="subject-label"
+          value={subjectId || ""}
         >
-          {filteredProtocols.map((protocol, i) => {
+          {subjectOptions.map((s, i) => {
             return (
-              <MenuItem key={protocol.id} value={protocol.id}>
-                {protocol.name}
+              <MenuItem key={s.value} value={s.value}>
+                {s.key}
               </MenuItem>
             );
           })}
         </Select>
       </FormControl>
 
-      {nca && (
+
+      {nca && subject && (
         <FormControl className={classes.formControl}>
           <InputLabel id="mode-label">Show</InputLabel>
           <Select
@@ -158,7 +154,7 @@ export default function NcaDetail({ project, dataset }) {
         </FormControl>
       )}
 
-      {nca && (
+      {nca && subject && (
         <NcaChart
           nca={nca}
           biomarker_type={biomarker_type}

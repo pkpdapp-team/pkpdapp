@@ -9,7 +9,7 @@ from pkpdapp.api.views import (
     ProjectFilter,
     CheckAccessToProject,
     DosedPkModelFilter,
-    PdModelFilter
+    PdModelFilter,
 )
 from pkpdapp.api.serializers import (
     VariableSerializer

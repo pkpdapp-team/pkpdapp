@@ -16,7 +16,6 @@ from .models import (
     PharmacokineticSerializer,
     DosedPharmacokineticSerializer,
     PharmacodynamicSerializer,
-    PkpdSerializer,
     PharmacodynamicSbmlSerializer,
 )
 from .variables import VariableSerializer

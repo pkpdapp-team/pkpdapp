@@ -93,6 +93,11 @@ class MyokitModelMixin:
             Variable.get_variable(self, v)
             for v in self.get_myokit_model().variables(const=True, sort=True)
         ]
+        # parameters could originally be outputs
+        for v in new_variables:
+            if not v.constant:
+                v.constant = True
+                v.save()
         new_states = [
             Variable.get_variable(self, v)
             for v in self.get_myokit_model().variables(state=True, sort=True)
@@ -101,6 +106,12 @@ class MyokitModelMixin:
             Variable.get_variable(self, v)
             for v in self.get_myokit_model().variables(const=False, sort=True)
         ]
+        # parameters could originally be variables
+        for v in new_outputs:
+            if v.constant:
+                v.constant = False
+                v.save()
+
         all_new_variables = new_variables + new_states + new_outputs
 
         # delete all variables that are not in new
@@ -223,6 +234,9 @@ class MyokitModelMixin:
 
         return result
 
+    def get_time_max(self):
+        return self.time_max
+
     def simulate(self, outputs=None, initial_conditions=None, variables=None):
         """
         Arguments
@@ -273,7 +287,7 @@ class MyokitModelMixin:
         }
 
         time_max = self._convert_unit(
-            'myokit.time', self.time_max, model
+            'myokit.time', self.get_time_max(), model
         )
 
         # Set initial conditions

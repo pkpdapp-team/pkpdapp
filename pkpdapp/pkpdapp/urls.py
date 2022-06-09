@@ -42,10 +42,7 @@ router.register(
     basename='dosed_pharmacodynamic'
 )
 
-router.register(
-    'pkpd_model', api.PkpdView,
-    basename='pkpd_model'
-)
+
 router.register(
     'inference', api.InferenceView,
     basename='inference'

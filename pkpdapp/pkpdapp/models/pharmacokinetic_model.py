@@ -11,6 +11,7 @@ from pkpdapp.models import (
     MechanisticModel,
     Protocol,
     Project, StoredModel,
+    PharmacodynamicModel,
 )
 import myokit
 from .myokit_model_mixin import lock
@@ -74,11 +75,18 @@ class DosedPharmacokineticModel(MyokitModelMixin, StoredModel):
         blank=True, null=True,
         help_text='Project that "owns" this model'
     )
-    pharmacokinetic_model = models.ForeignKey(
+    pk_model = models.ForeignKey(
         PharmacokineticModel,
         default=DEFAULT_PK_MODEL,
         on_delete=models.CASCADE,
-        help_text='pharmacokinetic model'
+        blank=True, null=True,
+        help_text='model'
+    )
+    pd_model = models.ForeignKey(
+        PharmacodynamicModel, on_delete=models.CASCADE,
+        related_name='pkpd_models',
+        blank=True, null=True,
+        help_text='PD part of model'
     )
     dose_compartment = models.CharField(
         max_length=100,
@@ -103,21 +111,30 @@ class DosedPharmacokineticModel(MyokitModelMixin, StoredModel):
     __original_pk_model = None
     __original_protocol = None
     __original_dose_compartment = None
+    __original_pd_model = None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.__original_pk_model = self.pharmacokinetic_model
+        self.__original_pk_model = self.pk_model
         self.__original_protocol = self.protocol
         self.__original_dose_compartment = self.dose_compartment
+        self.__original_pd_model = self.pd_model
 
     def get_project(self):
         return self.project
 
-    def create_stored_model(self):
+    def get_time_max(self):
+        time_max = self.time_max
+        if self.pd_model:
+            time_max = max(time_max, self.pd_model.time_max)
+        return time_max
+
+    def create_stored_model(self, new_pd_model=None):
         stored_model_kwargs = {
             'name': self.name,
             'project': self.project,
-            'pharmacokinetic_model': self.pharmacokinetic_model,
+            'pk_model': self.pk_model,
+            'pd_model': new_pd_model,
             'dose_compartment': self.dose_compartment,
             'protocol': (
                 self.protocol.create_stored_protocol()
@@ -128,12 +145,19 @@ class DosedPharmacokineticModel(MyokitModelMixin, StoredModel):
         }
         stored_model = DosedPharmacokineticModel.objects.create(
             **stored_model_kwargs)
+
+        new_variables = {}
         for variable in self.variables.all():
-            variable.create_stored_variable(stored_model)
+            new_variable = variable.create_stored_variable(stored_model)
+            new_variables[new_variable.qname] = new_variable
+
+        for mapping in self.mappings.all():
+            mapping.create_stored_mapping(stored_model, new_variables)
+
         return stored_model
 
-    def create_myokit_model(self):
-        pk_model = self.pharmacokinetic_model.create_myokit_model()
+    def create_myokit_dosed_pk_model(self):
+        pk_model = self.pk_model.create_myokit_model()
         if self.protocol:
             compartment = self.dose_compartment
             amount_var = None
@@ -150,6 +174,68 @@ class DosedPharmacokineticModel(MyokitModelMixin, StoredModel):
                 )
 
         return pk_model
+
+    def create_myokit_model(self):
+        if self.pk_model is None:
+            pk_model = myokit.Model()
+        else:
+            pk_model = self.create_myokit_dosed_pk_model()
+        if self.pd_model is None:
+            pd_model = myokit.Model()
+        else:
+            pd_model = self.pd_model.create_myokit_model()
+        have_both_models = (
+            self.pk_model is not None and
+            self.pd_model is not None
+        )
+        have_no_models = (
+            self.pk_model is None and
+            self.pd_model is None
+        )
+
+        # use pk model as the base and import the pd model
+        pkpd_model = pk_model
+
+        # default model is one with just time
+        if have_no_models:
+            pkpd_model = myokit.parse_model('''
+            [[model]]
+            [myokit]
+            time = 0 [s] bind time
+                in [s]
+        ''')
+
+        # remove time binding if
+        if have_both_models:
+            time_var = pd_model.get('myokit.time')
+            time_var.set_binding(None)
+
+        pd_components = list(pd_model.components())
+        pd_names = [
+            c.name().replace('myokit', 'PD') for c in pd_components
+        ]
+
+        if pd_components:
+            pkpd_model.import_component(
+                pd_components,
+                new_name=pd_names,
+            )
+
+        # remove imported time var
+        if have_both_models:
+            imported_pd_component = pkpd_model.get('PD')
+            imported_time = imported_pd_component.get('time')
+            imported_pd_component.remove_variable(imported_time)
+
+        # do mappings
+        for mapping in self.mappings.all():
+            pd_var = pkpd_model.get(
+                mapping.pd_variable.qname.replace('myokit', 'PD')
+            )
+            pd_var.set_rhs(mapping.pk_variable.qname)
+
+        pkpd_model.validate()
+        return pkpd_model
 
     def create_myokit_simulator(self):
         model = self.get_myokit_model()
@@ -207,15 +293,80 @@ class DosedPharmacokineticModel(MyokitModelMixin, StoredModel):
         if (
             created or
             self.protocol != self.__original_protocol or
-            self.pharmacokinetic_model != self.__original_pk_model or
+            self.pk_model != self.__original_pk_model or
+            self.pd_model != self.__original_pd_model or
             self.dose_compartment != self.__original_dose_compartment
         ):
             print('update model')
             self.update_model()
 
-        self.__original_pk_model = self.pharmacokinetic_model
+        self.__original_pd_model = self.pd_model
+        self.__original_pk_model = self.pk_model
         self.__original_protocol = self.protocol
         self.__original_dose_compartment = self.dose_compartment
+
+
+class PkpdMapping(StoredModel):
+    pkpd_model = models.ForeignKey(
+        DosedPharmacokineticModel, on_delete=models.CASCADE,
+        related_name='mappings',
+        help_text='PKPD model that this mapping is for'
+    )
+    pk_variable = models.ForeignKey(
+        'Variable', on_delete=models.CASCADE,
+        related_name='pk_mappings',
+        help_text='variable in PK part of model'
+    )
+    pd_variable = models.ForeignKey(
+        'Variable', on_delete=models.CASCADE,
+        related_name='pd_mappings',
+        help_text='variable in PD part of model'
+    )
+
+    __original_pk_variable = None
+    __original_pd_variable = None
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.__original_pk_variable = self.pk_variable
+        self.__original_pd_variable = self.pd_variable
+
+    def save(self, force_insert=False, force_update=False, *args, **kwargs):
+        created = not self.pk
+
+        super().save(force_insert, force_update, *args, **kwargs)
+
+        # don't update a stored model
+        if self.read_only:
+            return
+
+        if (
+            created or
+            self.pk_variable != self.__original_pk_variable or
+            self.pd_variable != self.__original_pd_variable
+        ):
+            self.pkpd_model.update_model()
+
+        self.__original_pk_variable = self.pk_variable
+        self.__original_pd_variable = self.pd_variable
+
+    def delete(self):
+        pkpd_model = self.pkpd_model
+        super().delete()
+        pkpd_model.update_model()
+
+    def create_stored_mapping(self, new_pkpd_model, new_variables):
+        new_pk_variable = new_variables[self.pk_variable.qname]
+        new_pd_variable = new_variables[self.pd_variable.qname]
+        stored_kwargs = {
+            'pkpd_model': new_pkpd_model,
+            'pk_variable': new_pk_variable,
+            'pd_variable': new_pd_variable,
+            'read_only': True,
+        }
+        stored_mapping = PkpdMapping.objects.create(
+            **stored_kwargs)
+        return stored_mapping
 
 
 def _add_dose_compartment(model, drug_amount, time_unit):
