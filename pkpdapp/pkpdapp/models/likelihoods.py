@@ -136,10 +136,17 @@ class LogLikelihoodParameter(models.Model):
         on_delete=models.CASCADE,
         help_text='input model variable for this parameter.'
     )
+    biomarker_type = models.ForeignKey(
+        BiomarkerType,
+        related_name='log_likelihood_parameters',
+        blank=True, null=True,
+        on_delete=models.CASCADE,
+        help_text='biomarker_type for covariates.'
+    )
     index = models.IntegerField(
         blank=True, null=True,
         help_text=(
-            'parameter index for distribution parameters. '
+            'parameter index for distribution and equation parameters. '
         )
     )
     name = models.CharField(
@@ -211,6 +218,14 @@ class LogLikelihood(models.Model):
         )
     )
 
+    equation = models.CharField(
+        max_length=100,
+        help_text=(
+            'Free form equation. Parameters represented via their index and '
+            'there is only one implied output, e.g. $1 * $2^$3'
+        )
+    )
+
     biomarker_type = models.ForeignKey(
         BiomarkerType,
         on_delete=models.CASCADE,
@@ -237,6 +252,7 @@ class LogLikelihood(models.Model):
         UNIFORM = 'U', 'Uniform'
         LOGNORMAL = 'LN', 'Log-Normal'
         FIXED = 'F', 'Fixed'
+        EQUATION = 'E', 'Equation'
         SUM = 'S', 'Sum'
         MODEL = 'M', 'Model'
 

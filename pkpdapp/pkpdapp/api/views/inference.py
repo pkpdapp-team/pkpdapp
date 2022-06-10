@@ -60,6 +60,14 @@ class NaivePooledInferenceView(views.APIView):
             {
                 'name': 'myokit.parameter1'
                 'form': 'N',
+                'parameters': [
+                    '2 * biomarker[subject_weight]',
+                    'parameter[parameter1_variance]'
+                 ]
+            },
+            {
+                'name': 'parameter1_variance'
+                'form': 'N',
                 'parameters': [0, 1]
             },
             {
@@ -71,7 +79,8 @@ class NaivePooledInferenceView(views.APIView):
                 'name': 'myokit.parameter3'
                 'form': 'F',
                 'parameters': [123.5]
-            }
+            },
+
         ]
 
         # output
