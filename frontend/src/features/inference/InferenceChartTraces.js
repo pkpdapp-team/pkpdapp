@@ -263,7 +263,7 @@ export default function InferenceChartTraces({ inference, priorsWithChainValues,
           <InferenceChartFunction chains={chains} />
         </Grid>
       {priorsWithChainValues.map(prior => (
-        <React.Fragment>
+        <React.Fragment key={prior.id}>
           <Grid item xs={12} md={8}>
           <InferenceChartTrace prior={prior} />
           </Grid>

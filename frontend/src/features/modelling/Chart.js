@@ -166,9 +166,6 @@ export default function ModellingChart({ datasets, pkModels, pdModels, className
         },
       },
       crosshair: {
-        sync: {
-          enabled: false,
-        },
       },
     },
   };
