@@ -28,6 +28,151 @@ class TestNaivePooledInferenceView(APITestCase):
         self.client = APIClient()
         self.client.force_authenticate(user=user)
 
+    def test_population_and_covariates_inference(self):
+        pd_dataset = Dataset.objects.get(
+            name='lxf_control_growth'
+        )
+
+        pd_biomarker_names = [
+            'Tumour volume', 'Body weight'
+        ]
+
+        pd_model = PharmacodynamicModel.objects.get(
+            name='tumour_growth_inhibition_model_koch',
+            read_only=False,
+        )
+        pd_output_name = 'myokit.tumour_volume'
+        pd_parameter_names = [
+            v.qname for v in pd_model.variables.filter(constant=True)
+        ]
+        data = {
+            # inference type
+            'type': 'population',
+
+            # Inference parameters
+            'id': 1,
+            'name': "my inference run",
+            'project': 1,
+            'algorithm': 2,
+            'initialization_strategy': 'R',
+            'initialization_inference': 2,
+            'number_of_chains': 4,
+            'max_number_of_iterations': 3000,
+            'burn_in': 0,
+
+            # Model
+            'model': {
+                'form': 'PD',
+                'id': pd_model.id
+            },
+            'dataset': pd_dataset.id,
+
+            # Model parameters
+            'parameters': [
+                {
+                    'name': pd_parameter_names[0],
+                    'form': 'N',
+                    'parameters': [
+                        (
+                            '0.1 * Biomarker[{}] + '
+                            'Parameter[population_parameter]'
+                            .format(pd_biomarker_names[1]),
+                        ),
+                        0.1
+                    ]
+                },
+                {
+                    'name': 'population_parameter',
+                    'form': 'N',
+                    'parameters': [1, 0.1]
+                },
+            ],
+
+            # output
+            'observations': [
+                {
+                    'model': pd_output_name,
+                    'biomarker': pd_biomarker_names[0],
+                    'noise_form': 'N',
+                    'noise_param_form': 'N',
+                    'parameters': [0, 1]
+                },
+            ]
+        }
+
+        response = self.client.post(
+            "/api/inference/wizard", data, format='json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response_data = response.data
+
+        # check inference fields
+        self.assertEqual(response_data['name'], 'test inference run')
+        self.assertEqual(response_data['project'], self.project.id)
+        self.assertEqual(response_data['initialization_strategy'], 'R')
+
+        # check number of log_likelihoods, and that the model ll is there
+        self.assertEqual(len(response_data['log_likelihoods']), 14)
+        found_it = False
+        for ll in response_data['log_likelihoods']:
+            if ll['name'] == 'tumour_growth_inhibition_model_koch':
+                found_it = True
+                self.assertEqual(len(ll['parameters']), 5)
+                model_id = ll['id']
+        self.assertTrue(found_it)
+
+        # check that the output log_likelihood is there and looks ok
+        found_it = False
+        for ll in response_data['log_likelihoods']:
+            if ll['name'] == pd_output_name:
+                found_it = True
+                self.assertEqual(len(ll['parameters']), 2)
+                self.assertEqual(ll['parameters'][0]['name'],
+                                 pd_output_name)
+                self.assertEqual(ll['form'], 'N')
+                self.assertEqual(ll['parameters'][0]['child'], model_id)
+                sigma_ll = ll['parameters'][1]['child']
+        self.assertTrue(found_it)
+
+        # check that the sigma log_likelihood is there and looks ok
+        found_it = False
+        for ll in response_data['log_likelihoods']:
+            if ll['id'] == sigma_ll:
+                found_it = True
+                self.assertEqual(ll['form'], 'N')
+                self.assertEqual(len(ll['parameters']), 2)
+        self.assertTrue(found_it)
+
+        # check that the param 1 log_likelihood is there and looks ok
+        found_it = False
+        for ll in response_data['log_likelihoods']:
+            if ll['name'] == pd_parameter_names[1]:
+                found_it = True
+                self.assertEqual(ll['form'], 'U')
+                self.assertEqual(len(ll['parameters']), 2)
+                child_id = ll['parameters'][0]['child']
+        self.assertTrue(found_it)
+        found_it = False
+        for ll in response_data['log_likelihoods']:
+            if ll['id'] == child_id:
+                found_it = True
+                self.assertEqual(ll['form'], 'F')
+                self.assertEqual(ll['value'], 0.1)
+        self.assertTrue(found_it)
+
+        inference = Inference.objects.get(id=response_data['id'])
+
+        inference_mixin = InferenceMixin(inference)
+        log_posterior = inference_mixin._pints_log_posterior
+
+        # pymc3_model = log_posterior._model
+        # graph = pymc3.model_graph.model_to_graphviz(pymc3_model)
+        # graph.render(directory='test', view=True)
+
+        log_posterior(
+            log_posterior.to_search([0.5, 0.12, 0.1])
+        )
+
     def test_pd_inference_runs(self):
         pd_dataset = Dataset.objects.get(
             name='lxf_control_growth'
@@ -91,7 +236,7 @@ class TestNaivePooledInferenceView(APITestCase):
             ]
         }
         response = self.client.post(
-            "/api/inference/naive_pooled", data, format='json'
+            "/api/inference/wizard", data, format='json'
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_data = response.data
@@ -243,7 +388,7 @@ class TestNaivePooledInferenceView(APITestCase):
             ]
         }
         response = self.client.post(
-            "/api/inference/naive_pooled", data, format='json'
+            "/api/inference/wizard", data, format='json'
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_data = response.data
@@ -388,7 +533,7 @@ class TestNaivePooledInferenceView(APITestCase):
             ]
         }
         response = self.client.post(
-            "/api/inference/naive_pooled", data, format='json'
+            "/api/inference/wizard", data, format='json'
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_data = response.data
@@ -482,7 +627,7 @@ class TestNaivePooledInferenceView(APITestCase):
 
         data = {}
         response = self.client.post(
-            "/api/inference/naive_pooled", data, format='json'
+            "/api/inference/wizard", data, format='json'
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('project', response.data)
@@ -525,7 +670,7 @@ class TestNaivePooledInferenceView(APITestCase):
         }
 
         response = self.client.post(
-            "/api/inference/naive_pooled", data, format='json'
+            "/api/inference/wizard", data, format='json'
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('name', response.data['parameters'][0])

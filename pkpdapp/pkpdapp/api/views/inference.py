@@ -6,6 +6,13 @@
 from rest_framework import viewsets, views, status
 from rest_framework.response import Response
 import json
+import numbers
+from pyparsing import (
+    ParseException,
+)
+from pkpdapp.utils.views import (
+    ExpressionParser
+)
 from pkpdapp.api.views import (
     ProjectFilter, InferenceFilter
 )
@@ -22,6 +29,7 @@ from pkpdapp.models import (
 )
 
 
+
 class AlgorithmView(viewsets.ModelViewSet):
     queryset = Algorithm.objects.all()
     serializer_class = AlgorithmSerializer
@@ -33,10 +41,11 @@ class InferenceView(viewsets.ModelViewSet):
     filter_backends = [ProjectFilter]
 
 
-class NaivePooledInferenceView(views.APIView):
+class InferenceWizardView(views.APIView):
     """
     expecting data in the form:
     {
+
         # Inference parameters
         'id': 1
         'name': "my inference run",
@@ -51,14 +60,22 @@ class NaivePooledInferenceView(views.APIView):
         # Model
         'model': {
             'form': 'PK',
+            'grouping': 'protocol' / 'subject'
             'id': 5
         }
         'dataset': 3,
+
 
         # Model parameters
         'parameters': [
             {
                 'name': 'myokit.parameter1'
+                'form': 'N',
+                'pooled': False,
+                'parameters': ['2 * biomarker[subject_weight]', 'parameter[parameter1_variance]']
+            },
+            {
+                'name': 'parameter1_variance'
                 'form': 'N',
                 'parameters': [0, 1]
             },
@@ -71,7 +88,7 @@ class NaivePooledInferenceView(views.APIView):
                 'name': 'myokit.parameter3'
                 'form': 'F',
                 'parameters': [123.5]
-            }
+            },
         ]
 
         # output
@@ -93,14 +110,22 @@ class NaivePooledInferenceView(views.APIView):
         ]
     }
 
-    Uses model as the base model. If it is a PK or PKPD model, creates a model
-    for each protocol used in the dataset, replacing the protocol of the model
-    with each new one.
+    Uses model as the base model. If it is a PK or PKPD model and grouping is
+    'protocol' or missing, creates a model for each protocol used in the
+    dataset, replacing the protocol of the model with each new one. If the
+    grouping is 'subject', creates a model for each subject in the dataset.
 
-    This set of models has a set of parameters, and parameters of the same
-    qname are assumed to be identical. All Variable fields from the original
-    model are copied over to the new models. Priors and fixed values for each
-    parameter in this set are provided in 'parameters'.
+    This set of models has a set of parameters. If pooled is True or not given,
+    then parameters of the same qname are assumed to be identical, if pooled is
+    False, then each model is given a separate parameter. All Variable fields
+    from the original model are copied over to the new models. Priors and fixed
+    values for each parameter in this set are provided in 'parameters'.
+    Distribution parameters for each prior can be provided using a python
+    expression, or a number. If a python expression is used, the keywords
+    Parameter[<param_name>] are used to refer to other parameters in the list.
+    Additional parameters can be added to the list (parameters not in the
+    model) to contruct hierarchical inference. You can refer to biomarkers in
+    the expression using the keyword Biomarker[<biomarker_name>].
 
     The 'observations' field maps model output variables with biomarkers in the
     dataset
@@ -255,6 +280,17 @@ class NaivePooledInferenceView(views.APIView):
         data = json.loads(request.body)
         print('got data', data)
 
+        if 'type' in data:
+            valid_types = [
+                'pooled', 'population'
+            ]
+            if not isinstance(data['type'], str):
+                errors['type'] = 'type should be a string'
+            elif data['type'] not in valid_types:
+                errors['type'] = 'type should be one of ' + valid_types
+        else:
+            errors['type'] = 'field required'
+
         if 'project' in data:
             try:
                 project = Project.objects.get(id=data['project'])
@@ -310,6 +346,7 @@ class NaivePooledInferenceView(views.APIView):
                 )
 
         if 'parameters' in data:
+            parser = ExpressionParser()
             for i, param in enumerate(data['parameters']):
                 if model is None:
                     continue
@@ -323,6 +360,31 @@ class NaivePooledInferenceView(views.APIView):
                         base_error[i] = {}
                         error = base_error[i]
                     error['name'] = 'not found in model'
+                for dist_param in param['parameters']:
+                    if not isinstance(dist_param, [numbers.Number, str]):
+                        base_error = errors.get('parameters', None)
+                        if base_error is None:
+                            errors['parameters'] = {}
+                            base_error = errors['parameters']
+                        error = base_error.get(i)
+                        if error is None:
+                            base_error[i] = {}
+                            error = base_error[i]
+                        error['parameters'] = \
+                            'parameters should be str or number'
+                    elif isinstance(dist_param, str):
+                        base_error = errors.get('parameters', None)
+                        if base_error is None:
+                            errors['parameters'] = {}
+                            base_error = errors['parameters']
+                        error = base_error.get(i)
+                        if error is None:
+                            base_error[i] = {}
+                            error = base_error[i]
+                        try:
+                            parser.parse(dist_param)
+                        except ParseException as pe:
+                            error['parameters'] = str(pe)
         else:
             errors['parameters'] = 'field required'
 
@@ -474,10 +536,6 @@ class InferenceOperationView(views.APIView):
 
         return Response(InferenceSerializer(inference).data)
 
-
-class RunInferenceView(InferenceOperationView):
-    def op(self, inference):
-        return inference.run_inference()
 
 
 class StopInferenceView(InferenceOperationView):
