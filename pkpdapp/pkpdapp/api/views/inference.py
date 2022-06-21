@@ -25,9 +25,8 @@ from pkpdapp.models import (
     Inference, InferenceChain, Algorithm, Dataset,
     DosedPharmacokineticModel, PharmacodynamicModel,
     SubjectGroup, BiomarkerType, LogLikelihoodParameter,
-    LogLikelihood, Protocol, Project
+    LogLikelihood, Protocol, Project, Subject,
 )
-
 
 
 class AlgorithmView(viewsets.ModelViewSet):
@@ -148,6 +147,21 @@ class InferenceWizardView(views.APIView):
         return stored_model
 
     @staticmethod
+    def _create_subject_model(model, subject):
+        model_copy = type(model).objects.get(id=model.id)
+        original_name = model_copy.name
+        model_copy.id = None
+        model_copy.pk = None
+        model_copy.name = (
+            '{}_Subject{}'.format(original_name, subject.id_in_dataset)
+        )
+        model_copy.protocol = subject.protocol
+        model_copy.save()
+        stored_model = model_copy.create_stored_model()
+        model_copy.delete()
+        return stored_model
+
+    @staticmethod
     def _create_sgroup_protocol(dataset, protocol):
         name = 'subject group for protocol {}'.format(protocol.name)
         try:
@@ -237,11 +251,12 @@ class InferenceWizardView(views.APIView):
     def _set_parameters(params, models, inference):
         pooled_params = {}
         params_names = [p['name'] for p in params]
+        parser = ExpressionParser()
         for model in models:
             for model_param in model.parameters.all():
                 # if we've already done this param, use the child
-                # in pooled_params
                 if model_param.name in pooled_params:
+                    # in pooled_params
                     old_child = model_param.child
                     model_param.child = pooled_params[model_param.name]
                     model_param.save()
@@ -255,41 +270,102 @@ class InferenceWizardView(views.APIView):
                     param_index = params_names.index(model_param.name)
                 except ValueError:
                     param_index = None
+                child = model_param.child
                 if param_index is None:
-                    child = model_param.child
+                    pooled_params[model_param.name] = child
                 else:
-                    param = params[param_index]
-                    param_form = param['form']
-                    noise_params = param['parameters']
+                    param_info = params[param_index]
 
-                    child = model_param.child
-                    child.form = param_form
-                    if param_form == 'F':
-                        child.value = noise_params[0]
-                    else:
-                        child.value = None
-                    child.save()
-                    for i, p in enumerate(child.parameters.all()):
-                        p.child.value = noise_params[p.index]
-                        p.child.save()
+                    InferenceWizardView.param_info_to_log_likelihood(
+                        child, param_info, params, parser
+                    )
 
-                pooled_params[model_param.name] = child
+                    if param.get('pooled', True):
+                        pooled_params[model_param.name] = model_param.child
+
+    @staticmethod
+    def param_info_to_log_likelihood(log_likelihood, param_info, params_info, parser):
+        # deal with possible equations in noise params
+        # if form is fixed and there is an equation, the child form
+        # will be an equation
+        # if form is a distribution, then the child form will be
+        # that distribution, but if a parameter is given by an
+        # equation its child will be an equation
+        noise_params = param_info['parameters']
+        param_form = param_info['form']
+        log_likelihood.form = param_form
+        if param_form == 'F' and isinstance(noise_params[0], str):
+            InferenceWizardView.to_equation_log_likelihood(
+                log_likelihood, noise_params[0]
+            )
+        elif param_form == 'F':
+            log_likelihood.value = noise_params[0]
+        else:
+            log_likelihood.value = None
+        log_likelihood.save()
+        for i, p in enumerate(log_likelihood.parameters.all()):
+            if isinstance(noise_params[p.index], str):
+                InferenceWizardView.to_equation_log_likelihood(
+                    p.child, noise_params[p.index], parser
+                )
+            else:
+                p.child.value = noise_params[p.index]
+            p.child.save()
+
+    @staticmethod
+    def to_equation_log_likelihood(log_likelihood, eqn_str, params_info, parser):
+        # set form to equation and remove existing children
+        log_likelihood.children.clear()
+        log_likelihood.form = 'E'
+
+        params_in_eqn_str = parser.get_params(eqn_str)
+
+        # replace parameters and biomarkers in equation string
+        # with arg1, arg2 etc
+        for i, param in enumerate(params_in_eqn_str):
+            eqn_str = re.sub(
+                r'{}\s*\[\s*{}\s(*\]'.format(param[0], param[1]),
+                r'arg{}'.format(i),
+                eqn_str
+            )
+        log_likelihood.description = eqn_str
+        log_likelihood.save()
+
+        # create children using parameters and biomarkers
+        for i, param in enumerate(params_in_eqn_str):
+            if param[0] == 'Parameter':
+                param_info = [
+                    p for p in params_info
+                    if p['name'] == param[1]
+                ][0]
+                new_child = LogLikelihood.object.create(
+                    name=params_info['name'],
+                    form=LogLikelihood.form.FIXED,
+                )
+                InferenceWizardView.param_info_to_log_likelihood(
+                    new_child, params_info, params_info, parser
+                )
+
+            elif param[0] == 'Biomarker':
+                biomarker_type = BiomarkerType.objects.get(
+                    name=param[1]
+                )
+                new_child = LogLikelihood.object.create(
+                    name=params_info['name'],
+                    form=LogLikelihood.form.FIXED,
+                    biomarker_type=biomarker_type,
+                )
+            LogLikelihoodParameter.object.create(
+                parent=log_likelihood,
+                child=new_child,
+                index=i,
+                name=param[1]
+            )
 
     def post(self, request, format=None):
         errors = {}
         data = json.loads(request.body)
         print('got data', data)
-
-        if 'type' in data:
-            valid_types = [
-                'pooled', 'population'
-            ]
-            if not isinstance(data['type'], str):
-                errors['type'] = 'type should be a string'
-            elif data['type'] not in valid_types:
-                errors['type'] = 'type should be one of ' + valid_types
-        else:
-            errors['type'] = 'field required'
 
         if 'project' in data:
             try:
@@ -330,7 +406,16 @@ class InferenceWizardView(views.APIView):
                 model_id = data['model']['id']
             else:
                 errors.get('model', {})['id'] = 'field required'
-
+            if 'grouping' in data['model']:
+                valid_types = [
+                    'protocol', 'subject'
+                ]
+                if not isinstance(data['model']['grouping'], str):
+                    errors.get('model', {})['grouping'] = \
+                        'grouping must be a string'
+                elif data['type'] not in valid_types:
+                    errors.get('model', {})['grouping'] = \
+                        'grouping should be one of ' + valid_types
         else:
             errors['model'] = 'field required'
 
@@ -345,48 +430,65 @@ class InferenceWizardView(views.APIView):
                     model_table, model_id
                 )
 
+        parameter_errors = []
         if 'parameters' in data:
             parser = ExpressionParser()
+            param_names = [p['name'] for p in data['parameters']]
+            biomarker_names =
             for i, param in enumerate(data['parameters']):
                 if model is None:
                     continue
                 if model.variables.filter(qname=param['name']).count() == 0:
-                    base_error = errors.get('parameters', None)
-                    if base_error is None:
-                        errors['parameters'] = {}
-                        base_error = errors['parameters']
-                    error = base_error.get(i)
-                    if error is None:
-                        base_error[i] = {}
-                        error = base_error[i]
-                    error['name'] = 'not found in model'
-                for dist_param in param['parameters']:
+                    parameter_errors.append(((i, 'name'), 'not found in model'))
+                for j, dist_param in enumerate(param['parameters']):
                     if not isinstance(dist_param, [numbers.Number, str]):
-                        base_error = errors.get('parameters', None)
-                        if base_error is None:
-                            errors['parameters'] = {}
-                            base_error = errors['parameters']
-                        error = base_error.get(i)
-                        if error is None:
-                            base_error[i] = {}
-                            error = base_error[i]
-                        error['parameters'] = \
-                            'parameters should be str or number'
+                        parameter_errors.append((
+                            (i, 'parameters', j),
+                            'should be str or number'
+                        ))
                     elif isinstance(dist_param, str):
-                        base_error = errors.get('parameters', None)
-                        if base_error is None:
-                            errors['parameters'] = {}
-                            base_error = errors['parameters']
-                        error = base_error.get(i)
-                        if error is None:
-                            base_error[i] = {}
-                            error = base_error[i]
                         try:
                             parser.parse(dist_param)
+                            params = parser.get_params(dist_param)
+                            for param in params:
+                                if (
+                                    param[0] == 'Parameter' and
+                                    param[1] not in param_names
+                                ):
+                                    parameter_errors.append((
+                                        (i, 'parameters', j),
+                                        '{} not in list of parameters'
+                                        .format(param[1])
+                                    ))
+                                elif (
+                                    param[0] == 'Biomarker' and
+                                    dataset.biomarker_types.filter(
+                                        name=param[1]
+                                    ).count() == 0
+                                ):
+                                    parameter_errors.append((
+                                        (i, 'parameters', j),
+                                        '{} not in list of biomarkers'
+                                        .format(param[1])
+                                    ))
                         except ParseException as pe:
-                            error['parameters'] = str(pe)
+                            parameter_errors.append((
+                                (i, 'parameters', j), str(pe)
+                            ))
         else:
             errors['parameters'] = 'field required'
+
+        # fill out the errors with the parameter errors
+        if parameter_errors:
+            for p in parameter_errors:
+                this_error = errors.get('parameters', {})
+                for index in p[0][:-1]:
+                    new_error = this_error.get(index)
+                    if new_error is None:
+                        this_error[index] = {}
+                    else:
+                        this_error = new_error
+                this_error[p[0][-1]] = p[1]
 
         if 'observations' in data:
             for i, obs in enumerate(data['observations']):
@@ -422,25 +524,34 @@ class InferenceWizardView(views.APIView):
         if errors:
             return Response(errors, status=status.HTTP_400_BAD_REQUEST)
 
-        # create necessary models, one for each protocol
-        # create subject groups so we can refer to the subjects
-        # belonging to each protocol
-        protocols = [
-            Protocol.objects.get(pk=p['protocol'])
-            for p in dataset.subjects.values('protocol').distinct()
-            if p['protocol'] is not None
-        ]
-        rename_models = len(protocols) > 1
-        if len(protocols) == 0 or data['model']['form'] == 'PD':
-            models = [model.create_stored_model()]
-            subject_groups = [None]
-        else:
-            models = [
-                self._create_dosed_model(model, p, rename_model=rename_models)
-                for p in protocols
+        grouping = data['model'].get('grouping', 'protocol')
+        if grouping == 'protocol':
+            # create necessary models, one for each protocol
+            # create subject groups so we can refer to the subjects
+            # belonging to each protocol
+            protocols = [
+                Protocol.objects.get(pk=p['protocol'])
+                for p in dataset.subjects.values('protocol').distinct()
+                if p['protocol'] is not None
             ]
-            subject_groups = [
-                self._create_sgroup_protocol(dataset, p) for p in protocols
+            rename_models = len(protocols) > 1
+            if len(protocols) == 0 or data['model']['form'] == 'PD':
+                models = [model.create_stored_model()]
+                subject_groups = [None]
+            else:
+                models = [
+                    self._create_dosed_model(
+                        model, p, rename_model=rename_models)
+                    for p in protocols
+                ]
+                subject_groups = [
+                    self._create_sgroup_protocol(dataset, p) for p in protocols
+                ]
+        else:
+            # create necessary models, one for each subject
+            subjects = dataset.subjects.all()
+            models = [
+                self._create_subject_model(model, s) for s in subjects
             ]
 
         # start creating inference object
@@ -535,7 +646,6 @@ class InferenceOperationView(views.APIView):
         self.op(inference)
 
         return Response(InferenceSerializer(inference).data)
-
 
 
 class StopInferenceView(InferenceOperationView):

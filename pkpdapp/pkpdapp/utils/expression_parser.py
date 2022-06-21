@@ -99,8 +99,8 @@ class ExpressionParser:
         atom = (
             addop[...]
             + (
-                Group(param + lpar + string + rpar)
-                | Group(biomarker + lpar + string + rpar)
+                Group(param + lpar + ident + rpar)
+                | Group(biomarker + lpar + ident + rpar)
                 | (fn_call | fnumber | ident).setParseAction(self.push_first)
                 | Group(lpar + expr + rpar)
             )
@@ -166,7 +166,13 @@ class ExpressionParser:
         except ParseException:
             return False
 
-    def eval(self, string, args, parseAll=True):
+    def get_params(self, string, args, parseAll=True):
         self.exprStack[:] = []
         self.bnf.parseString(string, parseAll=parseAll)
-        self.evaluate_stack(self.exprStack[:], args)
+        ret = []
+        for i, op in enumerate(self.exprStack):
+            if op == 'Parameter':
+                ret.append((op, self.exprStack[i + 1]))
+            elif op == 'Biomarker':
+                ret.append((op, self.exprStack[i + 1]))
+        return ret

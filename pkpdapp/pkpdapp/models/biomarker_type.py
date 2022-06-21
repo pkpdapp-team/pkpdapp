@@ -74,8 +74,15 @@ class BiomarkerType(models.Model):
     def get_project(self):
         return self.dataset.get_project()
 
-    def as_pandas(self, subject_group=None):
-        if subject_group:
+    def as_pandas(self, subject_group=None, subject=None):
+        if subject:
+            times_subjects_values = \
+                self.biomarkers.filter(
+                    subject=subject
+                ).order_by('time').values_list(
+                    'time', 'subject__id', 'value'
+                )
+        elif subject_group:
             times_subjects_values = \
                 self.biomarkers.filter(
                     subject__in=subject_group.subjects.all()

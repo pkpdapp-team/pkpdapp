@@ -187,6 +187,14 @@ class LogLikelihood(models.Model):
         help_text='name of log_likelihood.'
     )
 
+    description = models.TextField(
+        blank=True, null=True,
+        help_text=(
+            'description of log_likelihood. For equations will be the '
+            'code of that equation'
+        )
+    )
+
     value = models.FloatField(
         help_text='set if a fixed value is required',
         blank=True, null=True,
@@ -232,12 +240,23 @@ class LogLikelihood(models.Model):
         )
     )
 
+    subject = models.ForeignKey(
+        Subject,
+        on_delete=models.CASCADE,
+        blank=True, null=True,
+        help_text=(
+            'filter data on this subject '
+            '(null implies all subjects)'
+        )
+    )
+
     class Form(models.TextChoices):
         NORMAL = 'N', 'Normal'
         UNIFORM = 'U', 'Uniform'
         LOGNORMAL = 'LN', 'Log-Normal'
         FIXED = 'F', 'Fixed'
         SUM = 'S', 'Sum'
+        EQUATION = 'E', 'Equation'
         MODEL = 'M', 'Model'
 
     form = models.CharField(
@@ -470,8 +489,27 @@ class LogLikelihood(models.Model):
                 pm.Deterministic(name + parent.name, op[index]),
                 ts_shapes[index]
             )
+        elif self.form == self.Form.EQUATION:
+            params = self.get_noise_log_likelihoods()
+            pymc3_params = []
+            for param in params:
+                param, shape = param._create_pymc3_model(
+                    pm_model, self, ops, shapes
+                )
+                shapes[name] = shape
+                pymc3_params.append(param)
+            lcls = {
+                'arg{}'.format(i): param
+                for i, param in enumerate(pymc3_params)
+            }
+            return eval(self.description, None, lcls)
         elif self.form == self.Form.FIXED:
-            return theano.shared(self.value), ()
+            if self.biomarker_type is None:
+                return theano.shared(self.value), ()
+            else:
+                # get the value of the 1st measurement for
+                # this biomarker+subject
+                return theano.shared(values[0]), ()
 
     def create_pymc3_model(self, *other_log_likelihoods):
         ops = {}
@@ -528,7 +566,8 @@ class LogLikelihood(models.Model):
         """
         if self.biomarker_type:
             df = self.biomarker_type.as_pandas(
-                subject_group=self.subject_group
+                subject_group=self.subject_group,
+                subject=self.subject,
             )
             return df['values'].tolist(), df['times'].tolist()
         else:
@@ -676,7 +715,12 @@ class LogLikelihood(models.Model):
                 for parent in self.parents.all():
                     parent.delete()
                 self.create_model_family()
-            self.create_noise_children()
+            if self.form == self.Form.EQUATION:
+                # save() is not responsible for generating
+                # equation children
+                pass
+            else:  # a distribution
+                self.create_noise_children()
 
         self.__original_variable = self.variable
         self.__original_form = self.form

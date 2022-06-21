@@ -124,3 +124,71 @@ class TestInferenceMixinPkModel(TestCase):
         model.fastfn([
             model[log_likelihood.name + outputs[0].name]
         ])
+
+class TestInferenceMixinPdModel(TestCase):
+    def setUp(self):
+        project = Project.objects.get(
+            name='demo',
+        )
+        self.dataset = Dataset.objects.get(
+            name='lxf_control_growth'
+        )
+
+        biomarker_names = [
+            'Tumour volume', 'Body weight'
+        ]
+
+        self.model = PharmacodynamicModel.objects.get(
+            name='tumour_growth_inhibition_model_koch',
+            read_only=False,
+        )
+        parameter_names = [
+            v.qname for v in pd_model.variables.filter(constant=True)
+        ]
+
+        self.inference = Inference.objects.create(
+            name='test',
+            project=project,
+            max_number_of_iterations=10,
+            algorithm=Algorithm.objects.get(name='Haario-Bardenet'),
+        )
+
+    def test_create_pymc3_model(self):
+        log_likelihood = LogLikelihood.objects.create(
+            inference=self.inference,
+            variable=self.model.variables.first(),
+            form=LogLikelihood.Form.MODEL
+        )
+
+        # remove all outputs except
+        output_names = [
+            'myokit.tumour_volume'
+        ]
+        outputs = []
+        for output in log_likelihood.outputs.all():
+            if output.variable.qname in output_names:
+                output.parent.biomarker_type = self.biomarker_type
+                output.parent.save()
+                outputs.append(output.parent)
+            else:
+                output.parent.delete()
+
+        # add a prior on the first param
+        first_param = log_likelihood.parameters.first()
+        prior_name = first_param.name
+        first_param.child.form = LogLikelihood.Form.NORMAL
+        first_param.child.save()
+
+        model = outputs[0].create_pymc3_model(outputs[1])
+
+        # check everything is in there
+        model[prior_name]
+        for name in output_names:
+            model[name]
+
+        model.logp({prior_name: 0.3})
+
+        # check we can run predictive posteriors
+        model.fastfn([
+            model[log_likelihood.name + outputs[0].name]
+        ])
