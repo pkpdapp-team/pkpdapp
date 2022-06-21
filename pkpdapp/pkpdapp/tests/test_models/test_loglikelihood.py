@@ -5,13 +5,14 @@
 #
 
 from django.test import TestCase
+import pymc3
 from pkpdapp.models import (
     Inference,
     PharmacokineticModel, DosedPharmacokineticModel,
     Protocol,
     LogLikelihood,
     Project, BiomarkerType,
-    Algorithm,
+    Algorithm, LogLikelihoodParameter
 )
 
 
@@ -51,7 +52,7 @@ class TestInferenceMixinPkModel(TestCase):
             biomarker_type=self.biomarker_type,
             form=LogLikelihood.Form.MODEL
         )
-        self.assertEqual(log_likelihood.parameters.count(), 9)
+        self.assertEqual(log_likelihood.parameters.count(), 10)
         self.assertEqual(
             log_likelihood.parameters.filter(name='central.size').count(),
             1
@@ -124,3 +125,38 @@ class TestInferenceMixinPkModel(TestCase):
         model.fastfn([
             model[log_likelihood.name + outputs[0].name]
         ])
+
+    def test_equations(self):
+        equation = LogLikelihood.objects.create(
+            inference=self.inference,
+            name='double it',
+            equation='2 * arg1',
+            form=LogLikelihood.Form.EQUATION
+        )
+        normal = LogLikelihood.objects.create(
+            inference=self.inference,
+            name='normal',
+            form=LogLikelihood.Form.NORMAL
+        )
+        LogLikelihoodParameter.objects.create(
+            parent=equation,
+            child=normal,
+            name='x'
+        )
+        mean, sigma = normal.get_noise_log_likelihoods()
+        mean.value = 1.0
+        mean.save()
+        sigma.value = 1.0
+        sigma.save()
+
+        model = equation.create_pymc3_model()
+
+        graph = pymc3.model_graph.model_to_graphviz(model)
+        graph.render(directory='test', view=True)
+
+        # check everything is in there
+        for name in ['double it', 'normal']:
+            model[name]
+
+        print('x=1', model.logp({'x': 1}))
+        print('x=2', model.logp({'x': 2}))

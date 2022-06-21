@@ -222,7 +222,7 @@ class LogLikelihood(models.Model):
         max_length=100,
         help_text=(
             'Free form equation. Parameters represented via their index and '
-            'there is only one implied output, e.g. $1 * $2^$3'
+            'there is only one implied output, e.g. arg1 * arg2^arg3'
         )
     )
 
