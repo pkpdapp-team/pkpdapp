@@ -13,7 +13,7 @@ import numpy as np
 import scipy.stats as sps
 from pkpdapp.models import (
     Variable, BiomarkerType,
-    MyokitForwardModel, SubjectGroup
+    MyokitForwardModel, SubjectGroup, Subject
 )
 
 
@@ -139,7 +139,7 @@ class LogLikelihoodParameter(models.Model):
     index = models.IntegerField(
         blank=True, null=True,
         help_text=(
-            'parameter index for distribution parameters. '
+            'parameter index for distribution and equation parameters. '
         )
     )
     name = models.CharField(
@@ -191,7 +191,7 @@ class LogLikelihood(models.Model):
         blank=True, null=True,
         help_text=(
             'description of log_likelihood. For equations will be the '
-            'code of that equation'
+            'code of that equation using Python syntax: arg1 * arg2^arg3'
         )
     )
 
@@ -492,17 +492,24 @@ class LogLikelihood(models.Model):
         elif self.form == self.Form.EQUATION:
             params = self.get_noise_log_likelihoods()
             pymc3_params = []
+            result_shape = ()
             for param in params:
+                print('loping through param', param.name)
                 param, shape = param._create_pymc3_model(
                     pm_model, self, ops, shapes
                 )
-                shapes[name] = shape
+                # assume the shape of all args is the same
+                result_shape = shape
                 pymc3_params.append(param)
             lcls = {
                 'arg{}'.format(i): param
                 for i, param in enumerate(pymc3_params)
             }
-            return eval(self.description, None, lcls)
+            print('lcls', lcls)
+            result = eval(self.description, None, lcls)
+            ops[name] = pm.Deterministic(name, result)
+            shapes[name] = result_shape
+            return ops[name], shapes[name]
         elif self.form == self.Form.FIXED:
             if self.biomarker_type is None:
                 return theano.shared(self.value), ()

@@ -10,7 +10,7 @@ import numbers
 from pyparsing import (
     ParseException,
 )
-from pkpdapp.utils.views import (
+from pkpdapp.utils import (
     ExpressionParser
 )
 from pkpdapp.api.views import (
@@ -434,12 +434,13 @@ class InferenceWizardView(views.APIView):
         if 'parameters' in data:
             parser = ExpressionParser()
             param_names = [p['name'] for p in data['parameters']]
-            biomarker_names =
             for i, param in enumerate(data['parameters']):
                 if model is None:
                     continue
                 if model.variables.filter(qname=param['name']).count() == 0:
-                    parameter_errors.append(((i, 'name'), 'not found in model'))
+                    parameter_errors.append((
+                        (i, 'name'), 'not found in model'
+                    ))
                 for j, dist_param in enumerate(param['parameters']):
                     if not isinstance(dist_param, [numbers.Number, str]):
                         parameter_errors.append((

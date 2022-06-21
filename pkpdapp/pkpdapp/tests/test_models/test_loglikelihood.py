@@ -5,13 +5,16 @@
 #
 
 from django.test import TestCase
+import pymc3
+import matplotlib.pylab as plt
+import numpy as np
 from pkpdapp.models import (
     Inference,
     PharmacokineticModel, DosedPharmacokineticModel,
     Protocol,
     LogLikelihood,
     Project, BiomarkerType,
-    Algorithm,
+    Algorithm, LogLikelihoodParameter
 )
 
 
@@ -51,7 +54,7 @@ class TestInferenceMixinPkModel(TestCase):
             biomarker_type=self.biomarker_type,
             form=LogLikelihood.Form.MODEL
         )
-        self.assertEqual(log_likelihood.parameters.count(), 9)
+        self.assertEqual(log_likelihood.parameters.count(), 10)
         self.assertEqual(
             log_likelihood.parameters.filter(name='central.size').count(),
             1
@@ -124,6 +127,37 @@ class TestInferenceMixinPkModel(TestCase):
         model.fastfn([
             model[log_likelihood.name + outputs[0].name]
         ])
+
+    def test_equations(self):
+        equation = LogLikelihood.objects.create(
+            inference=self.inference,
+            name='double it',
+            description='2 * arg0',
+            form=LogLikelihood.Form.EQUATION
+        )
+        normal = LogLikelihood.objects.create(
+            inference=self.inference,
+            name='normal',
+            form=LogLikelihood.Form.NORMAL
+        )
+        LogLikelihoodParameter.objects.create(
+            parent=equation,
+            child=normal,
+            index=0,
+            name='x'
+        )
+        mean, sigma = normal.get_noise_log_likelihoods()
+        mean.value = 1.0
+        mean.save()
+        sigma.value = 1.0
+        sigma.save()
+
+        model = equation.create_pymc3_model()
+
+        # check everything is in there
+        for name in ['double it', 'normal']:
+            model[name]
+
 
 class TestInferenceMixinPdModel(TestCase):
     def setUp(self):
