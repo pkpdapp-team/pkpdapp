@@ -120,7 +120,6 @@ class ExpressionParser:
         self.bnf = expr
 
     def push_first(self, toks):
-        print('push_first', toks)
         self.exprStack.append(toks[0])
 
     def push_unary_minus(self, toks):
@@ -174,8 +173,6 @@ class ExpressionParser:
         self.bnf.parseString(string, parseAll=parseAll)
         ret = []
         for i, op in enumerate(self.exprStack):
-            print('get_params stack', i, op, type(op))
             if op == 'parameter' or op == 'biomarker':
                 ret.append((op, self.exprStack[i - 1]))
-        print('get_params return', ret)
         return list(set(ret))

@@ -323,7 +323,7 @@ class LogLikelihood(models.Model):
         """
         True for distributions where there is observed data
         """
-        return self.biomarker_type is not None
+        return self.is_a_distribution() and self.biomarker_type is not None
 
     def is_a_prior(self):
         """
@@ -499,7 +499,6 @@ class LogLikelihood(models.Model):
             pymc3_params = []
             result_shape = ()
             for param in params:
-                print('loping through param', param.name)
                 param, shape = param._create_pymc3_model(
                     pm_model, self, ops, shapes
                 )
@@ -510,7 +509,6 @@ class LogLikelihood(models.Model):
                 'arg{}'.format(i): param
                 for i, param in enumerate(pymc3_params)
             }
-            print('lcls', lcls)
             result = eval(self.description, None, lcls)
             ops[name] = pm.Deterministic(name, result)
             shapes[name] = result_shape
@@ -790,8 +788,8 @@ class LogLikelihood(models.Model):
 
         if self.form == self.Form.NORMAL:
             pnames = [
-                "mean",
-                "standard deviation",
+                "mean for " + self.name,
+                "standard deviation for " + self.name,
             ]
             if variable is not None:
                 names = [
@@ -810,8 +808,8 @@ class LogLikelihood(models.Model):
                 defaults = [0.0, 1.0]
         elif self.form == self.Form.LOGNORMAL:
             pnames = [
-                "mean",
-                "sigma",
+                "mean for " + self.name,
+                "sigma for " + self.name,
             ]
             if variable is not None:
                 names = [
@@ -830,8 +828,8 @@ class LogLikelihood(models.Model):
                 defaults = [0.0, 1.0]
         elif self.form == self.Form.UNIFORM:
             pnames = [
-                "lower",
-                "upper",
+                "lower for " + self.name,
+                "upper for " + self.name,
             ]
             if variable is not None:
                 names = [

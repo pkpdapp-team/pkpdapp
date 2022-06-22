@@ -5,6 +5,8 @@
 #
 
 from rest_framework import status
+import pprint
+import pymc3
 from django.contrib.auth.models import User
 from rest_framework.test import APITestCase, APIClient
 from pkpdapp.models import (
@@ -52,7 +54,7 @@ class TestNaivePooledInferenceView(APITestCase):
             # Inference parameters
             'name': "my inference run",
             'project': 1,
-            'algorithm': 2,
+            'algorithm': 1,
             'initialization_strategy': 'R',
             'number_of_chains': 4,
             'max_number_of_iterations': 3000,
@@ -105,57 +107,30 @@ class TestNaivePooledInferenceView(APITestCase):
         response_data = response.data
 
         # check inference fields
-        self.assertEqual(response_data['name'], 'test inference run')
+        self.assertEqual(response_data['name'], 'my inference run')
         self.assertEqual(response_data['project'], self.project.id)
         self.assertEqual(response_data['initialization_strategy'], 'R')
 
-        # check number of log_likelihoods, and that the model ll is there
-        self.assertEqual(len(response_data['log_likelihoods']), 14)
+        # check number of log_likelihoods, and that the population_parameter is there
+        self.assertEqual(len(response_data['log_likelihoods']), 16)
         found_it = False
         for ll in response_data['log_likelihoods']:
-            if ll['name'] == 'tumour_growth_inhibition_model_koch':
+            if ll['name'] == 'population_parameter':
                 found_it = True
-                self.assertEqual(len(ll['parameters']), 5)
+                self.assertEqual(len(ll['parameters']), 2)
                 model_id = ll['id']
         self.assertTrue(found_it)
 
-        # check that the output log_likelihood is there and looks ok
+        # check that the equation log_likelihood looks ok
         found_it = False
         for ll in response_data['log_likelihoods']:
-            if ll['name'] == pd_output_name:
+            if ll['name'] == 'mean for ' + pd_parameter_names[0]:
                 found_it = True
                 self.assertEqual(len(ll['parameters']), 2)
-                self.assertEqual(ll['parameters'][0]['name'],
-                                 pd_output_name)
-                self.assertEqual(ll['form'], 'N')
-                self.assertEqual(ll['parameters'][0]['child'], model_id)
-                sigma_ll = ll['parameters'][1]['child']
-        self.assertTrue(found_it)
-
-        # check that the sigma log_likelihood is there and looks ok
-        found_it = False
-        for ll in response_data['log_likelihoods']:
-            if ll['id'] == sigma_ll:
-                found_it = True
-                self.assertEqual(ll['form'], 'N')
-                self.assertEqual(len(ll['parameters']), 2)
-        self.assertTrue(found_it)
-
-        # check that the param 1 log_likelihood is there and looks ok
-        found_it = False
-        for ll in response_data['log_likelihoods']:
-            if ll['name'] == pd_parameter_names[1]:
-                found_it = True
-                self.assertEqual(ll['form'], 'U')
-                self.assertEqual(len(ll['parameters']), 2)
-                child_id = ll['parameters'][0]['child']
-        self.assertTrue(found_it)
-        found_it = False
-        for ll in response_data['log_likelihoods']:
-            if ll['id'] == child_id:
-                found_it = True
-                self.assertEqual(ll['form'], 'F')
-                self.assertEqual(ll['value'], 0.1)
+                self.assertTrue(
+                    ll['description'] == '0.1 * arg0 + arg1' or
+                    ll['description'] == '0.1 * arg1 + arg0'
+                )
         self.assertTrue(found_it)
 
         inference = Inference.objects.get(id=response_data['id'])
@@ -163,9 +138,9 @@ class TestNaivePooledInferenceView(APITestCase):
         inference_mixin = InferenceMixin(inference)
         log_posterior = inference_mixin._pints_log_posterior
 
-        # pymc3_model = log_posterior._model
-        # graph = pymc3.model_graph.model_to_graphviz(pymc3_model)
-        # graph.render(directory='test', view=True)
+        pymc3_model = log_posterior._model
+        graph = pymc3.model_graph.model_to_graphviz(pymc3_model)
+        graph.render(directory='test', view=True)
 
         log_posterior(
             log_posterior.to_search([0.5, 0.12, 0.1])
@@ -622,6 +597,9 @@ class TestNaivePooledInferenceView(APITestCase):
             name='tumour_growth_inhibition_model_koch',
             read_only=False,
         )
+        pd_parameter_names = [
+            v.qname for v in pd_model.variables.filter(constant=True)
+        ]
 
         data = {}
         response = self.client.post(
@@ -651,9 +629,24 @@ class TestNaivePooledInferenceView(APITestCase):
 
             'parameters': [
                 {
-                    'name': 'not in the model',
+                    'name': pd_parameter_names[0],
                     'form': 'N',
-                    'parameters': [0, 1],
+                    'parameters': ['import pybamm', 1],
+                },
+                {
+                    'name': pd_parameter_names[1],
+                    'form': 'N',
+                    'parameters': ['1 + parameter("doesnt exist")', 1],
+                },
+                {
+                    'name': pd_parameter_names[2],
+                    'form': 'N',
+                    'parameters': ['1 + biomarker("doesnt exist")', 1],
+                },
+                {
+                    'name': pd_parameter_names[3],
+                    'form': 'N',
+                    'parameters': [('cant use a tuple',), 1],
                 },
             ],
             'observations': [
@@ -671,7 +664,21 @@ class TestNaivePooledInferenceView(APITestCase):
             "/api/inference/wizard", data, format='json'
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('name', response.data['parameters'][0])
+        self.assertIn(
+            'Expected', response.data['parameters'][0]['parameters'][0]
+        )
+        self.assertIn(
+            'not in list of parameters',
+            response.data['parameters'][1]['parameters'][0]
+        )
+        self.assertIn(
+            'not in list of biomarkers',
+            response.data['parameters'][2]['parameters'][0]
+        )
+        self.assertIn(
+            'str or number',
+            response.data['parameters'][3]['parameters'][0]
+        )
         self.assertIn('model', response.data['observations'][0])
         self.assertIn('biomarker', response.data['observations'][0])
 
@@ -764,10 +771,6 @@ class TestInferenceViews(APITestCase):
         log_likelihoods = list(self.inference.log_likelihoods.all())
         log_likelihoods[0].name = log_likelihoods[1].name
         log_likelihoods[0].save()
-        ll_names = [
-            ll.name for ll in log_likelihoods
-        ]
-        print('ll_names1', ll_names)
 
         response = self.client.post(
             "/api/inference/{}/run".format(self.inference.id)

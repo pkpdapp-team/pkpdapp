@@ -309,8 +309,8 @@ class InferenceWizardView(views.APIView):
         for i, p in enumerate(log_likelihood.parameters.all()):
             if isinstance(noise_params[p.index], str):
                 InferenceWizardView.to_equation_log_likelihood(
-                    p.child, noise_params[p.index], params_info, parser, dataset,
-                    inference
+                    p.child, noise_params[p.index], params_info, parser,
+                    dataset, inference
                 )
             else:
                 p.child.value = noise_params[p.index]
@@ -324,7 +324,6 @@ class InferenceWizardView(views.APIView):
         log_likelihood.children.clear()
         log_likelihood.form = 'E'
 
-        print('get_params', eqn_str)
         params_in_eqn_str = parser.get_params(eqn_str)
 
         # replace parameters and biomarkers in equation string
@@ -337,7 +336,6 @@ class InferenceWizardView(views.APIView):
                 r'arg{}'.format(i),
                 eqn_str
             )
-        print('got final equation', eqn_str)
         log_likelihood.description = eqn_str
         log_likelihood.save()
 
@@ -450,10 +448,6 @@ class InferenceWizardView(views.APIView):
             for i, param in enumerate(data['parameters']):
                 if model is None:
                     continue
-                if model.variables.filter(qname=param['name']).count() == 0:
-                    parameter_errors.append((
-                        (i, 'name'), 'not found in model'
-                    ))
                 for j, dist_param in enumerate(param['parameters']):
                     if not isinstance(dist_param, (numbers.Number, str)):
                         parameter_errors.append((
@@ -466,7 +460,7 @@ class InferenceWizardView(views.APIView):
                             params = parser.get_params(dist_param)
                             for param in params:
                                 if (
-                                    param[0] == 'Parameter' and
+                                    param[0] == 'parameter' and
                                     param[1] not in param_names
                                 ):
                                     parameter_errors.append((
@@ -475,7 +469,7 @@ class InferenceWizardView(views.APIView):
                                         .format(param[1])
                                     ))
                                 elif (
-                                    param[0] == 'Biomarker' and
+                                    param[0] == 'biomarker' and
                                     dataset.biomarker_types.filter(
                                         name=param[1]
                                     ).count() == 0
@@ -493,16 +487,19 @@ class InferenceWizardView(views.APIView):
             errors['parameters'] = 'field required'
 
         # fill out the errors with the parameter errors
-        if parameter_errors:
-            for p in parameter_errors:
-                this_error = errors.get('parameters', {})
-                for index in p[0][:-1]:
-                    new_error = this_error.get(index)
-                    if new_error is None:
-                        this_error[index] = {}
-                    else:
-                        this_error = new_error
-                this_error[p[0][-1]] = p[1]
+        for p in parameter_errors:
+            this_error = errors.get('parameters')
+            if this_error is None:
+                errors['parameters'] = {}
+                this_error = errors['parameters']
+            for index in p[0][:-1]:
+                new_error = this_error.get(index)
+                if new_error is None:
+                    this_error[index] = {}
+                    this_error = this_error[index]
+                else:
+                    this_error = new_error
+            this_error[p[0][-1]] = p[1]
 
         if 'observations' in data:
             for i, obs in enumerate(data['observations']):
