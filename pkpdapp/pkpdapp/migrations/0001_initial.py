@@ -130,7 +130,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(help_text='name of log_likelihood.', max_length=100)),
-                ('description', models.TextField(blank=True, help_text='description of log_likelihood. For equations will be the code of that equation', null=True)),
+                ('description', models.TextField(blank=True, help_text='description of log_likelihood. For equations will be the code of that equation using Python syntax: arg1 * arg2^arg3', null=True)),
                 ('value', models.FloatField(blank=True, help_text='set if a fixed value is required', null=True)),
                 ('form', models.CharField(choices=[('N', 'Normal'), ('U', 'Uniform'), ('LN', 'Log-Normal'), ('F', 'Fixed'), ('S', 'Sum'), ('E', 'Equation'), ('M', 'Model')], default='F', max_length=2)),
                 ('biomarker_type', models.ForeignKey(blank=True, help_text='biomarker_type for measurements. if blank then simulated data is used, with non-fixed parameters sampled at the start of inference', null=True, on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.biomarkertype')),
@@ -478,7 +478,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='loglikelihood',
-            constraint=models.CheckConstraint(check=models.Q(('form', 'F'), ('value__isnull', True), _negated=True), name='loglikelihood: fixed log_likelihood must have a value'),
+            constraint=models.CheckConstraint(check=models.Q(('form', 'F'), ('value__isnull', True), ('biomarker_type__isnull', True), _negated=True), name='loglikelihood: fixed log_likelihood must have a value or biomarker_type'),
         ),
         migrations.AddConstraint(
             model_name='loglikelihood',

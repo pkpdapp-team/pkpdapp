@@ -50,12 +50,10 @@ class TestNaivePooledInferenceView(APITestCase):
             'type': 'population',
 
             # Inference parameters
-            'id': 1,
             'name': "my inference run",
             'project': 1,
             'algorithm': 2,
             'initialization_strategy': 'R',
-            'initialization_inference': 2,
             'number_of_chains': 4,
             'max_number_of_iterations': 3000,
             'burn_in': 0,
@@ -74,9 +72,9 @@ class TestNaivePooledInferenceView(APITestCase):
                     'form': 'N',
                     'parameters': [
                         (
-                            '0.1 * Biomarker[{}] + '
-                            'Parameter[population_parameter]'
-                            .format(pd_biomarker_names[1]),
+                            r'0.1 * biomarker("{}") + '
+                            r'parameter("population_parameter")'
+                            .format(pd_biomarker_names[1])
                         ),
                         0.1
                     ]

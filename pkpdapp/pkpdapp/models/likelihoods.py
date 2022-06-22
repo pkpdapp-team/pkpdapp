@@ -269,10 +269,15 @@ class LogLikelihood(models.Model):
         constraints = [
             models.CheckConstraint(
                 check=(
-                    ~(Q(form='F') & Q(value__isnull=True))
+                    ~(
+                        Q(form='F') &
+                        Q(value__isnull=True) &
+                        Q(biomarker_type__isnull=True)
+                    )
                 ),
                 name=(
-                    '%(class)s: fixed log_likelihood must have a value'
+                    '%(class)s: fixed log_likelihood must have a value '
+                    'or biomarker_type'
                 )
             ),
             models.CheckConstraint(

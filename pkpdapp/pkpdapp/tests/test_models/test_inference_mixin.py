@@ -414,3 +414,5 @@ class TestInferenceMixinFakeData(TestCase):
             "must have at least one observed random variable"
         ):
             InferenceMixin(self.inference)
+
+

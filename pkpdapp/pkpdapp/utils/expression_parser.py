@@ -15,6 +15,7 @@ from pyparsing import (
     ParseException,
     dbl_quoted_string,
     sgl_quoted_string,
+    remove_quotes,
     CaselessKeyword,
     Suppress,
     Keyword,
@@ -67,9 +68,11 @@ class ExpressionParser:
         # and CaselessKeyword only match whole words
         e = CaselessKeyword("E")
         pi = CaselessKeyword("PI")
-        param = Keyword("Parameter")
-        biomarker = Keyword("Biomarker")
-        string = dbl_quoted_string | sgl_quoted_string
+        param = Keyword("parameter")
+        biomarker = Keyword("biomarker")
+        string = (dbl_quoted_string | sgl_quoted_string).setParseAction(
+            remove_quotes, self.push_first
+        )
         # fnumber = Combine(Word("+-"+nums, nums) +
         #                    Optional("." + Optional(Word(nums))) +
         #                    Optional(e + Word("+-"+nums, nums)))
@@ -82,7 +85,7 @@ class ExpressionParser:
         lpar, rpar = map(Suppress, "()")
         addop = plus | minus
         multop = mult | div
-        expop = Literal("**")
+        expop = Literal("^")
 
         expr = Forward()
         expr_list = delimitedList(Group(expr))
@@ -99,8 +102,8 @@ class ExpressionParser:
         atom = (
             addop[...]
             + (
-                Group(param + lpar + ident + rpar)
-                | Group(biomarker + lpar + ident + rpar)
+                (param + lpar + string + rpar).setParseAction(self.push_first)
+                | (biomarker + lpar + string + rpar).setParseAction(self.push_first)
                 | (fn_call | fnumber | ident).setParseAction(self.push_first)
                 | Group(lpar + expr + rpar)
             )
@@ -117,6 +120,7 @@ class ExpressionParser:
         self.bnf = expr
 
     def push_first(self, toks):
+        print('push_first', toks)
         self.exprStack.append(toks[0])
 
     def push_unary_minus(self, toks):
@@ -137,7 +141,6 @@ class ExpressionParser:
             op2 = self.evaluate_stack(s)
             op1 = self.evaluate_stack(s)
             return opn[op](op1, op2)
-
         elif op == "PI":
             return math.pi  # 3.1415926535
         elif op == "E":
@@ -166,13 +169,13 @@ class ExpressionParser:
         except ParseException:
             return False
 
-    def get_params(self, string, args, parseAll=True):
+    def get_params(self, string, parseAll=True):
         self.exprStack[:] = []
         self.bnf.parseString(string, parseAll=parseAll)
         ret = []
         for i, op in enumerate(self.exprStack):
-            if op == 'Parameter':
-                ret.append((op, self.exprStack[i + 1]))
-            elif op == 'Biomarker':
-                ret.append((op, self.exprStack[i + 1]))
-        return ret
+            print('get_params stack', i, op, type(op))
+            if op == 'parameter' or op == 'biomarker':
+                ret.append((op, self.exprStack[i - 1]))
+        print('get_params return', ret)
+        return list(set(ret))

@@ -7,6 +7,7 @@ from rest_framework import viewsets, views, status
 from rest_framework.response import Response
 import json
 import numbers
+import re
 from pyparsing import (
     ParseException,
 )
@@ -248,7 +249,7 @@ class InferenceWizardView(views.APIView):
                     output.parent.delete()
 
     @staticmethod
-    def _set_parameters(params, models, inference):
+    def _set_parameters(params, models, inference, dataset):
         pooled_params = {}
         params_names = [p['name'] for p in params]
         parser = ExpressionParser()
@@ -277,14 +278,16 @@ class InferenceWizardView(views.APIView):
                     param_info = params[param_index]
 
                     InferenceWizardView.param_info_to_log_likelihood(
-                        child, param_info, params, parser
+                        child, param_info, params, parser, dataset, inference
                     )
 
-                    if param.get('pooled', True):
+                    if param_info.get('pooled', True):
                         pooled_params[model_param.name] = model_param.child
 
     @staticmethod
-    def param_info_to_log_likelihood(log_likelihood, param_info, params_info, parser):
+    def param_info_to_log_likelihood(
+            log_likelihood, param_info, params_info, parser, dataset, inference
+    ):
         # deal with possible equations in noise params
         # if form is fixed and there is an equation, the child form
         # will be an equation
@@ -296,7 +299,7 @@ class InferenceWizardView(views.APIView):
         log_likelihood.form = param_form
         if param_form == 'F' and isinstance(noise_params[0], str):
             InferenceWizardView.to_equation_log_likelihood(
-                log_likelihood, noise_params[0]
+                log_likelihood, noise_params[0], params_info, parser, dataset, inference
             )
         elif param_form == 'F':
             log_likelihood.value = noise_params[0]
@@ -306,56 +309,66 @@ class InferenceWizardView(views.APIView):
         for i, p in enumerate(log_likelihood.parameters.all()):
             if isinstance(noise_params[p.index], str):
                 InferenceWizardView.to_equation_log_likelihood(
-                    p.child, noise_params[p.index], parser
+                    p.child, noise_params[p.index], params_info, parser, dataset,
+                    inference
                 )
             else:
                 p.child.value = noise_params[p.index]
             p.child.save()
 
     @staticmethod
-    def to_equation_log_likelihood(log_likelihood, eqn_str, params_info, parser):
+    def to_equation_log_likelihood(
+            log_likelihood, eqn_str, params_info, parser, dataset, inference
+    ):
         # set form to equation and remove existing children
         log_likelihood.children.clear()
         log_likelihood.form = 'E'
 
+        print('get_params', eqn_str)
         params_in_eqn_str = parser.get_params(eqn_str)
 
         # replace parameters and biomarkers in equation string
         # with arg1, arg2 etc
+        escape_regex = re.compile(r'/[.*+?^${}()|[\]\\]/g')
         for i, param in enumerate(params_in_eqn_str):
+            param1_escaped = escape_regex.sub(r'\\$&', param[1])
             eqn_str = re.sub(
-                r'{}\s*\[\s*{}\s(*\]'.format(param[0], param[1]),
+                r'{}\s*\(\s*"{}"\s*\)'.format(param[0], param1_escaped),
                 r'arg{}'.format(i),
                 eqn_str
             )
+        print('got final equation', eqn_str)
         log_likelihood.description = eqn_str
         log_likelihood.save()
 
         # create children using parameters and biomarkers
         for i, param in enumerate(params_in_eqn_str):
-            if param[0] == 'Parameter':
+            if param[0] == 'parameter':
                 param_info = [
                     p for p in params_info
                     if p['name'] == param[1]
                 ][0]
-                new_child = LogLikelihood.object.create(
-                    name=params_info['name'],
-                    form=LogLikelihood.form.FIXED,
+                new_child = LogLikelihood.objects.create(
+                    name=param_info['name'],
+                    form=LogLikelihood.Form.FIXED,
+                    inference=inference,
+                    value=0.0
                 )
                 InferenceWizardView.param_info_to_log_likelihood(
-                    new_child, params_info, params_info, parser
+                    new_child, param_info, params_info, parser, dataset, inference
                 )
 
-            elif param[0] == 'Biomarker':
+            elif param[0] == 'biomarker':
                 biomarker_type = BiomarkerType.objects.get(
-                    name=param[1]
+                    name=param[1], dataset=dataset
                 )
-                new_child = LogLikelihood.object.create(
-                    name=params_info['name'],
-                    form=LogLikelihood.form.FIXED,
+                new_child = LogLikelihood.objects.create(
+                    name=param[1],
+                    form=LogLikelihood.Form.FIXED,
                     biomarker_type=biomarker_type,
+                    inference=inference,
                 )
-            LogLikelihoodParameter.object.create(
+            LogLikelihoodParameter.objects.create(
                 parent=log_likelihood,
                 child=new_child,
                 index=i,
@@ -442,7 +455,7 @@ class InferenceWizardView(views.APIView):
                         (i, 'name'), 'not found in model'
                     ))
                 for j, dist_param in enumerate(param['parameters']):
-                    if not isinstance(dist_param, [numbers.Number, str]):
+                    if not isinstance(dist_param, (numbers.Number, str)):
                         parameter_errors.append((
                             (i, 'parameters', j),
                             'should be str or number'
@@ -607,7 +620,7 @@ class InferenceWizardView(views.APIView):
         )
 
         self._set_parameters(
-            data['parameters'], model_loglikelihoods, inference
+            data['parameters'], model_loglikelihoods, inference, dataset
         )
 
         inference.run_inference()
