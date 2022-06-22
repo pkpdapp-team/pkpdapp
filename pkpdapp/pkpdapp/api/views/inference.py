@@ -60,10 +60,10 @@ class InferenceWizardView(views.APIView):
         # Model
         'model': {
             'form': 'PK',
-            'grouping': 'protocol' / 'subject'
             'id': 5
         }
         'dataset': 3,
+        'grouping': 'protocol' / 'subject'
 
 
         # Model parameters
@@ -178,7 +178,10 @@ class InferenceWizardView(views.APIView):
         return group
 
     @staticmethod
-    def _set_observed_loglikelihoods(obs, models, groups, dataset, inference):
+    def _set_observed_loglikelihoods(
+        obs, models, dataset, inference, subject_groups,
+        subjects
+    ):
         # create noise param models
         sigma_models = []
         for ob in obs:
@@ -218,7 +221,15 @@ class InferenceWizardView(views.APIView):
             except BiomarkerType.DoesNotExist:
                 biomarker = None
             biomarkers.append(biomarker)
-        for model, group in zip(models, groups):
+
+        group_by_subject = subject_groups is None
+
+        if group_by_subject:
+            models_and_groups = zip(models, subjects)
+        else:
+            models_and_groups = zip(models, subject_groups)
+
+        for model, group in models_and_groups:
             # remove all outputs (and their parameters)
             # except those in output_names
             # and set the right biomarkers and subject groups
@@ -230,9 +241,19 @@ class InferenceWizardView(views.APIView):
                 if index is not None:
                     parent = output.parent
                     if group is not None:
-                        parent.name = '{} ({})'.format(parent.name, group.name)
+                        if group_by_subject:
+                            parent.name = '{} ({})'.format(
+                                parent.name, group.id_in_dataset
+                            )
+                        else:
+                            parent.name = '{} ({})'.format(
+                                parent.name, group.name
+                            )
                     parent.biomarker_type = biomarkers[index]
-                    parent.subject_group = group
+                    if group_by_subject:
+                        parent.subject = group
+                    else:
+                        parent.subject_group = group
                     parent.form = output_forms[index]
                     parent.save()
 
@@ -417,16 +438,15 @@ class InferenceWizardView(views.APIView):
                 model_id = data['model']['id']
             else:
                 errors.get('model', {})['id'] = 'field required'
-            if 'grouping' in data['model']:
+            if 'grouping' in data:
                 valid_types = [
                     'protocol', 'subject'
                 ]
-                if not isinstance(data['model']['grouping'], str):
-                    errors.get('model', {})['grouping'] = \
-                        'grouping must be a string'
-                elif data['type'] not in valid_types:
-                    errors.get('model', {})['grouping'] = \
-                        'grouping should be one of ' + valid_types
+                if not isinstance(data['grouping'], str):
+                    errors['grouping'] = 'grouping must be a string'
+                elif data['grouping'] not in valid_types:
+                    errors['grouping'] = \
+                        'grouping should be one of ' + str(valid_types)
         else:
             errors['model'] = 'field required'
 
@@ -535,7 +555,9 @@ class InferenceWizardView(views.APIView):
         if errors:
             return Response(errors, status=status.HTTP_400_BAD_REQUEST)
 
-        grouping = data['model'].get('grouping', 'protocol')
+        grouping = data.get('grouping', 'protocol')
+        subjects = dataset.subjects.all()
+        subject_groups = None
         if grouping == 'protocol':
             # create necessary models, one for each protocol
             # create subject groups so we can refer to the subjects
@@ -560,7 +582,6 @@ class InferenceWizardView(views.APIView):
                 ]
         else:
             # create necessary models, one for each subject
-            subjects = dataset.subjects.all()
             models = [
                 self._create_subject_model(model, s) for s in subjects
             ]
@@ -612,8 +633,8 @@ class InferenceWizardView(views.APIView):
         ]
 
         self._set_observed_loglikelihoods(
-            data['observations'], model_loglikelihoods, subject_groups,
-            dataset, inference
+            data['observations'], model_loglikelihoods,
+            dataset, inference, subject_groups, subjects
         )
 
         self._set_parameters(

@@ -20,7 +20,7 @@ from pkpdapp.models import (
 )
 
 
-class TestNaivePooledInferenceView(APITestCase):
+class TestInferenceWizardView(APITestCase):
     def setUp(self):
         self.project = Project.objects.get(
             name='demo',
@@ -66,6 +66,7 @@ class TestNaivePooledInferenceView(APITestCase):
                 'id': pd_model.id
             },
             'dataset': pd_dataset.id,
+            'grouping': 'subject',
 
             # Model parameters
             'parameters': [
@@ -112,7 +113,7 @@ class TestNaivePooledInferenceView(APITestCase):
         self.assertEqual(response_data['initialization_strategy'], 'R')
 
         # check number of log_likelihoods, and that the population_parameter is there
-        self.assertEqual(len(response_data['log_likelihoods']), 16)
+        self.assertEqual(len(response_data['log_likelihoods']), 30)
         found_it = False
         for ll in response_data['log_likelihoods']:
             if ll['name'] == 'population_parameter':
@@ -138,9 +139,9 @@ class TestNaivePooledInferenceView(APITestCase):
         inference_mixin = InferenceMixin(inference)
         log_posterior = inference_mixin._pints_log_posterior
 
-        pymc3_model = log_posterior._model
-        graph = pymc3.model_graph.model_to_graphviz(pymc3_model)
-        graph.render(directory='test', view=True)
+        # pymc3_model = log_posterior._model
+        # graph = pymc3.model_graph.model_to_graphviz(pymc3_model)
+        # graph.render(directory='test', view=True)
 
         log_posterior(
             log_posterior.to_search([0.5, 0.12, 0.1])

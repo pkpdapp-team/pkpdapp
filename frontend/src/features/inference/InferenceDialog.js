@@ -112,6 +112,10 @@ export default function InferenceDialog({ project, open, handleCloseDialog, defa
     value: JSON.stringify({id: model.id, form: 'PK'}),
     group: 'Pharmacokinetic',
   })));
+  const grouping_options = [
+    { key: 'by subject', value: 'subject' },
+    { key: 'by protocol', value: 'protocol' },
+  ]
 
   if (defaultValues) {
     defaultValues = {
@@ -121,6 +125,7 @@ export default function InferenceDialog({ project, open, handleCloseDialog, defa
   } else if (!defaultValues) {
     defaultValues = {
       name: '',
+      grouping: 'protocol',
       description: '',
       project: project.id, 
       algorithm: 1, 
@@ -415,10 +420,24 @@ export default function InferenceDialog({ project, open, handleCloseDialog, defa
         label="Dataset"
       />
       </Grid>
+      <Grid item xs={6}>
+      <FormSelectField
+        control={control}
+        defaultValue={defaultValues.grouping}
+        options={grouping_options}
+        name="grouping"
+        label="Grouping"
+      />
+      </Grid>
+
       {chosenPkModel && chosenDataset && 
       <Grid item xs={12}>
         <Typography>
-          Note: there are {chosenDataset.protocols.length} dosing protocols for this dataset.
+          Note: there are {chosenDataset.protocols.length} dosing protocols and
+          {chosenDataset.subjects.length} subjects in this dataset. If "Grouping" is set
+          to "by protocol" then the inference will use one model per protocol (this is
+          the default). If "Grouping" is set to "by subject" then the inference will use
+          one model per subject
         </Typography>
       </Grid>
       }
