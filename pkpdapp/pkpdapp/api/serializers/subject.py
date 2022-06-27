@@ -5,11 +5,19 @@
 #
 from rest_framework import serializers
 from pkpdapp.models import (
-    Subject
+    Subject, SubjectGroup
 )
 
 
+class SubjectGroupSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SubjectGroup
+        fields = '__all__'
+
+
 class SubjectSerializer(serializers.ModelSerializer):
+    groups = SubjectGroupSerializer(many=True, read_only=True)
+
     class Meta:
         model = Subject
         fields = '__all__'

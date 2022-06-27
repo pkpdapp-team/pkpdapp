@@ -3,18 +3,17 @@ import { useSelector, useDispatch } from "react-redux";
 import IconButton from "@material-ui/core/IconButton";
 import { useForm, useFormState } from "react-hook-form";
 import SaveIcon from "@material-ui/icons/Save";
+import AddIcon from "@material-ui/icons/Add";
+import DoneIcon from "@material-ui/icons/Done";
+import TableCell from "@material-ui/core/TableCell";
+import TableRow from "@material-ui/core/TableRow";
 
 import { FormCheckboxField, FormTextField } from "../forms/FormComponents";
 import { selectSubjectById, updateSubject } from "./subjectsSlice";
+import { selectDatasetProtocolById } from "../protocols/DatasetProtocols";
 
-export default function SubjectSubform({ subject_id, disableSave }) {
+export default function SubjectSubform({ subject, disableSave, groups, dataset }) {
   const dispatch = useDispatch();
-  let subject = useSelector((state) => selectSubjectById(state, subject_id));
-  if (!subject) {
-    subject = {
-      display: false,
-    };
-  }
 
   const { control, handleSubmit } = useForm({
     defaultValues: {
@@ -25,6 +24,11 @@ export default function SubjectSubform({ subject_id, disableSave }) {
     },
   });
 
+  const hasGroup = groups.reduce((sum, group) => {
+    sum[group] = subject.groups.find(g => g.name === group) !== undefined
+    return sum
+  }, {})
+
   const { isDirty } = useFormState({ control });
 
   const onSubmit = (values) => {
@@ -32,20 +36,38 @@ export default function SubjectSubform({ subject_id, disableSave }) {
     dispatch(updateSubject(values));
   };
 
+  const protocol = dataset.protocols.find(p => p.id === subject.protocol)
+
   return (
-    <React.Fragment>
-      <FormCheckboxField
-        control={control}
-        name={"display"}
-        defaultValue={subject.display}
-        label={subject.id_in_dataset}
-      />
-      <FormTextField
-        control={control}
-        name={"shape"}
-        label={"Shape"}
-        type="number"
-      />
+    <TableRow>
+      <TableCell>
+        {subject.id_in_dataset}
+      </TableCell>
+      {groups.map((group) => (
+        <TableCell>
+          {hasGroup[group] && <DoneIcon/>}
+        </TableCell>
+      ))}
+      <TableCell>
+        {protocol?.name}{subject.protocol}
+      </TableCell>
+      <TableCell>
+        <FormCheckboxField
+          control={control}
+          name={"display"}
+          defaultValue={subject.display}
+          label={subject.id_in_dataset}
+        />
+      </TableCell>
+      <TableCell>
+        <FormTextField
+          control={control}
+          name={"shape"}
+          label={"Shape"}
+          type="number"
+        />
+      </TableCell>
+      <TableCell>
       {isDirty && (
         <IconButton
           onClick={handleSubmit(onSubmit)}
@@ -55,6 +77,7 @@ export default function SubjectSubform({ subject_id, disableSave }) {
           <SaveIcon />
         </IconButton>
       )}
-    </React.Fragment>
+      </TableCell>
+    </TableRow>
   );
 }

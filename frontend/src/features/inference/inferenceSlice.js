@@ -75,10 +75,10 @@ export const updateInference = createAsyncThunk(
   }
 );
 
-export const runNaivePooledInference = createAsyncThunk(
-  "inferences/runNaivePooledInference",
-  async (naivePooledInference, { dispatch }) => {
-    const newInference = await api.post(`/api/inference/naive_pooled`, naivePooledInference);
+export const runInferenceWizard = createAsyncThunk(
+  "inferences/runInferenceWizard",
+  async (inference, { dispatch }) => {
+    const newInference = await api.post(`/api/inference/wizard`, inference);
     for (const log_likelihood of newInference.log_likelihoods) {
       if (log_likelihood.model && log_likelihood.model[0] === 'pkpdapp_pharmacodynamicmodel') {
         dispatch(fetchPdModelById(log_likelihood.model[1]))
@@ -91,7 +91,7 @@ export const runNaivePooledInference = createAsyncThunk(
     }
     return {
       newInference,
-      naivePooledInference,
+      inference,
     }
   }
 );
@@ -166,9 +166,9 @@ export const inferencesSlice = createSlice({
     [runInference.fulfilled]: (state, action) => {
       inferencesAdapter.upsertOne(state, action.payload);
     },
-    [runNaivePooledInference.fulfilled]: (state, action) => {
-      if (action.payload.naivePooledInference.id) {
-        inferencesAdapter.removeOne(state, action.payload.naivePooledInference.id);
+    [runInferenceWizard.fulfilled]: (state, action) => {
+      if (action.payload.inference.id) {
+        inferencesAdapter.removeOne(state, action.payload.inference.id);
       }
       for (let inference of Object.values(state.entities)) {
           inference.chosen = false

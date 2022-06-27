@@ -40,7 +40,9 @@ class DatasetSerializer(serializers.ModelSerializer):
         groups = {}
         for s in dataset.subjects.all():
             for group in s.groups.all():
-                groups.get(group, []).append(s.pk)
+                if group.name not in groups:
+                    groups[group.name] = []
+                groups[group.name].append(s.pk)
         return groups
 
 
