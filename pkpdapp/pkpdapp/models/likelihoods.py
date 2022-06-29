@@ -119,15 +119,31 @@ class LogLikelihoodParameter(models.Model):
     This model stores data on which input parameter this relationship
     referres to
     """
+    name = models.CharField(
+        max_length=100,
+        help_text='name of log_likelihood parameter.'
+    )
     parent = models.ForeignKey(
         'LogLikelihood',
         related_name='parameters',
         on_delete=models.CASCADE
     )
+    parent_index = models.IntegerField(
+        blank=True, null=True,
+        help_text=(
+            'parameter index for distribution and equation parameters. '
+        )
+    )
     child = models.ForeignKey(
         'LogLikelihood',
         related_name='outputs',
         on_delete=models.CASCADE
+    )
+    child_index = models.IntegerField(
+        blank=True, null=True,
+        help_text=(
+            'output index for models. '
+        )
     )
     variable = models.ForeignKey(
         Variable,
@@ -136,15 +152,11 @@ class LogLikelihoodParameter(models.Model):
         on_delete=models.CASCADE,
         help_text='input model variable for this parameter.'
     )
-    index = models.IntegerField(
+    length = models.IntegerField(
         blank=True, null=True,
         help_text=(
-            'parameter index for distribution and equation parameters. '
+            'length of array representing parameter. null for scalar'
         )
-    )
-    name = models.CharField(
-        max_length=100,
-        help_text='name of log_likelihood parameter.'
     )
 
     def set_fixed(self, value):
@@ -236,16 +248,6 @@ class LogLikelihood(models.Model):
         blank=True, null=True,
         help_text=(
             'filter data on this subject group '
-            '(null implies all subjects)'
-        )
-    )
-
-    subject = models.ForeignKey(
-        Subject,
-        on_delete=models.CASCADE,
-        blank=True, null=True,
-        help_text=(
-            'filter data on this subject '
             '(null implies all subjects)'
         )
     )
@@ -406,120 +408,116 @@ class LogLikelihood(models.Model):
 
         return output_values_min, output_values_max
 
-    def _create_pymc3_model(self, pm_model, parent, ops, shapes):
+    def _create_pymc3_model(self, pm_model, parent, ops):
         # we are a graph not a tree, so
         # if name already in pm_model return it
         # ode models can have multiple outputs, so make
         # sure to choose the right one
 
+        param = LogLikelihoodParameter.objects.get(
+            parent=parent,
+            child=self
+        )
         name = self.name
+        parent_index = param.child_index
         try:
-            op = ops[name]
-            shape = shapes[name]
-            if self.form == self.Form.MODEL:
-                parents = list(self.parents.order_by('id'))
-                index = parents.index(parent)
-                op = pm.Deterministic(name + parent.name, op[index])
-                shape = shape[index]
-            return op, shape
+            return ops[name][parent_index]
         except KeyError:
             pass
         values, times = self.get_inference_data()
+        outputs = list(self.outputs.order_by('child_index'))
+        n_distinct_outputs = outputs[-1].child_index + 1
+        parents = [output.parent for output in outputs]
+        length_by_index = [()] * n_distinct_outputs
+        for output in outputs:
+            length_by_index[output.child_index] = \
+                1 if output.length is None else output.length
+        total_length = sum(length_by_index)
+        shape = () if total_length == 1 else (total_length,)
+
         if self.form == self.Form.NORMAL:
             mean, sigma = self.get_noise_log_likelihoods()
-            mean, shape = mean._create_pymc3_model(pm_model, self, ops, shapes)
-            shapes[name] = shape
-            sigma, _ = sigma._create_pymc3_model(pm_model, self, ops, shapes)
-            ops[name] = pm.Normal(
+            mean = mean._create_pymc3_model(pm_model, self, ops)
+            sigma = sigma._create_pymc3_model(pm_model, self, ops)
+            op = pm.Normal(
                 name, mean, sigma, observed=values, shape=shape
             )
-            return ops[name], shapes[name]
         elif self.form == self.Form.LOGNORMAL:
             mean, sigma = self.get_noise_log_likelihoods()
-            mean, shape = mean._create_pymc3_model(pm_model, self, ops, shapes)
-            shapes[name] = shape
-            sigma, _ = sigma._create_pymc3_model(pm_model, self, ops, shapes)
-            ops[name] = pm.LogNormal(
+            mean = mean._create_pymc3_model(pm_model, self, ops)
+            sigma = sigma._create_pymc3_model(pm_model, self, ops)
+            op = pm.LogNormal(
                 name, mean, sigma, observed=values, shape=shape
             )
-            return ops[name], shapes[name]
         elif self.form == self.Form.UNIFORM:
             lower, upper = self.get_noise_log_likelihoods()
-            lower, shape = lower._create_pymc3_model(
-                pm_model, self, ops, shapes
-            )
-            shapes[name] = shape
-            upper, _ = upper._create_pymc3_model(pm_model, self, ops, shapes)
-            ops[name] = pm.Uniform(
+            lower = lower._create_pymc3_model(pm_model, self, ops)
+            op = pm.Uniform(
                 name, lower, upper, observed=values, shape=shape
             )
-            return ops[name], shapes[name]
         elif self.form == self.Form.MODEL:
-            parents = list(self.parents.order_by('id'))
-            times = [
-                parent.get_inference_data()[1] for parent in parents
-            ]
+            times = []
+            subjects = []
+            all_subjects = {}
+            for parent in parents:
+                _, this_times, this_subjects = parent.get_inference_data()
+                times.append(this_times)
+                subjects.append(this_subjects)
+                all_subjects.update(this_subjects)
 
-            # fill in any missing data with some fake times
-            model = self.get_model()
-            for i, t in enumerate(times):
-                if t is None:
-                    times[i] = np.linspace(0, model.time_max, 21)
-
-            ts_shapes = [
-                (len(t),) for t in times
-            ]
+            # transform subject ids into an index into all_subjects
+            all_subjects = sorted(list(all_subjects))
+            for i, this_subjects in enumerate(subjects):
+                subjects[i] = np.searchsorted(all_subjects, this_subjects)
 
             forward_model, fitted_children = self.create_forward_model(
-                times
+                times, subjects
             )
             forward_model_op = ODEop(name, forward_model)
             if fitted_children:
                 all_params = pm.math.stack([
-                    child._create_pymc3_model(pm_model, self, ops, shapes)[0]
+                    child._create_pymc3_model(pm_model, self, ops)
                     for child in fitted_children
                 ])
             else:
                 all_params = []
             op = forward_model_op(all_params)
-            ops[name] = op
-            shapes[name] = ts_shapes
-            if len(parents) == 1:
-                return (
-                    pm.Deterministic(name + parent.name, op),
-                    ts_shapes[0]
-                )
-            index = parents.index(parent)
-            return (
-                pm.Deterministic(name + parent.name, op[index]),
-                ts_shapes[index]
-            )
         elif self.form == self.Form.EQUATION:
             params = self.get_noise_log_likelihoods()
             pymc3_params = []
-            result_shape = ()
             for param in params:
                 param, shape = param._create_pymc3_model(
-                    pm_model, self, ops, shapes
+                    pm_model, self, ops
                 )
-                # assume the shape of all args is the same
-                result_shape = shape
                 pymc3_params.append(param)
             lcls = {
                 'arg{}'.format(i): param
                 for i, param in enumerate(pymc3_params)
             }
-            result = eval(self.description, None, lcls)
-            ops[name] = pm.Deterministic(name, result)
-            shapes[name] = result_shape
-            return ops[name], shapes[name]
+            op = eval(self.description, None, lcls)
         elif self.form == self.Form.FIXED:
             if self.biomarker_type is None:
-                return theano.shared(self.value), ()
+                op = theano.shared(self.value)
             else:
                 # get the value of the 1st measurement for
                 # this biomarker+subject
-                return theano.shared(values[0]), ()
+                op = theano.shared(values[0])
+
+        # split the op into its distinct outputs
+        if n_distinct_outputs == 1:
+            ops[name] = [op]
+        else:
+            if self.form == self.Form.MODEL:
+                ops[name] = op
+            else:
+                indexed_list = []
+                current_index = 0
+                for length in length_by_index:
+                    indexed_list.append(
+                        op[current_index:current_index + length]
+                    )
+                ops[name] = indexed_list
+        return ops[name][parent_index]
 
     def create_pymc3_model(self, *other_log_likelihoods):
         ops = {}
@@ -577,9 +575,8 @@ class LogLikelihood(models.Model):
         if self.biomarker_type:
             df = self.biomarker_type.as_pandas(
                 subject_group=self.subject_group,
-                subject=self.subject,
             )
-            return df['values'].tolist(), df['times'].tolist()
+            return df['values'].tolist(), df['times'].tolist(), df['subjects'].tolist()
         else:
             return None, None
 

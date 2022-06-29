@@ -48,9 +48,6 @@ class TestInferenceWizardView(APITestCase):
             v.qname for v in pd_model.variables.filter(constant=True)
         ]
         data = {
-            # inference type
-            'type': 'population',
-
             # Inference parameters
             'name': "my inference run",
             'project': 1,
@@ -73,6 +70,7 @@ class TestInferenceWizardView(APITestCase):
                 {
                     'name': pd_parameter_names[0],
                     'form': 'N',
+                    'pooled': False,
                     'parameters': [
                         (
                             r'0.1 * biomarker("{}") + '
@@ -106,6 +104,7 @@ class TestInferenceWizardView(APITestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_data = response.data
+        print(response_data)
 
         # check inference fields
         self.assertEqual(response_data['name'], 'my inference run')

@@ -188,17 +188,20 @@ class InferenceWizardView(views.APIView):
             # create model
             sigma_form = ob['noise_param_form']
             parameters = ob['parameters']
+            name = 'sigma for {}'.format(
+                ob['model']
+            )
             if sigma_form == LogLikelihood.Form.FIXED:
                 ll = LogLikelihood.objects.create(
                     inference=inference,
-                    name='sigma for ' + ob['model'],
+                    name=name,
                     form=sigma_form,
                     value=parameters[0]
                 )
             else:
                 ll = LogLikelihood.objects.create(
                     inference=inference,
-                    name='sigma for ' + ob['model'],
+                    name=name,
                     form=sigma_form,
                 )
                 for p, v in zip(
@@ -271,7 +274,7 @@ class InferenceWizardView(views.APIView):
 
     @staticmethod
     def _set_parameters(params, models, inference, dataset):
-        pooled_params = {}
+        created_params = {}
         params_names = [p['name'] for p in params]
         parser = ExpressionParser()
         for model in models:
@@ -302,8 +305,8 @@ class InferenceWizardView(views.APIView):
                         child, param_info, params, parser, dataset, inference
                     )
 
-                    if param_info.get('pooled', True):
-                        pooled_params[model_param.name] = model_param.child
+                    created_params[model_param.name] = model_param.child
+
 
     @staticmethod
     def param_info_to_log_likelihood(
@@ -317,7 +320,9 @@ class InferenceWizardView(views.APIView):
         # equation its child will be an equation
         noise_params = param_info['parameters']
         param_form = param_info['form']
+        pooled = param_info.get('pooled', True)
         log_likelihood.form = param_form
+        log_likelihood.pooled = pooled
         if param_form == 'F' and isinstance(noise_params[0], str):
             InferenceWizardView.to_equation_log_likelihood(
                 log_likelihood, noise_params[0], params_info, parser, dataset, inference
