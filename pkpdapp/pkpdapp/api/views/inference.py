@@ -63,8 +63,6 @@ class InferenceWizardView(views.APIView):
             'id': 5
         }
         'dataset': 3,
-        'grouping': 'protocol' / 'subject'
-
 
         # Model parameters
         'parameters': [
@@ -110,22 +108,21 @@ class InferenceWizardView(views.APIView):
         ]
     }
 
-    Uses model as the base model. If it is a PK or PKPD model and grouping is
-    'protocol' or missing, creates a model for each protocol used in the
-    dataset, replacing the protocol of the model with each new one. If the
-    grouping is 'subject', creates a model for each subject in the dataset.
+    Uses model as the base model. If it is a PK or PKPD model, creates a model
+    for each protocol used in the dataset, replacing the protocol of the model
+    with each new one.
 
     This set of models has a set of parameters. If pooled is True or not given,
     then parameters of the same qname are assumed to be identical, if pooled is
-    False, then each model is given a separate parameter. All Variable fields
-    from the original model are copied over to the new models. Priors and fixed
-    values for each parameter in this set are provided in 'parameters'.
-    Distribution parameters for each prior can be provided using a python
-    expression, or a number. If a python expression is used, the keywords
-    Parameter[<param_name>] are used to refer to other parameters in the list.
-    Additional parameters can be added to the list (parameters not in the
-    model) to contruct hierarchical inference. You can refer to biomarkers in
-    the expression using the keyword Biomarker[<biomarker_name>].
+    False, then the value of this parameter is different across each subject.
+    All Variable fields from the original model are copied over to the new
+    models. Priors and fixed values for each parameter in this set are provided
+    in 'parameters'. Distribution parameters for each prior can be provided
+    using a python expression, or a number. If a python expression is used, the
+    keywords Parameter[<param_name>] are used to refer to other parameters in
+    the list. Additional parameters can be added to the list (parameters not in
+    the model) to contruct hierarchical inference. You can refer to biomarkers
+    in the expression using the keyword Biomarker[<biomarker_name>].
 
     The 'observations' field maps model output variables with biomarkers in the
     dataset
@@ -443,15 +440,6 @@ class InferenceWizardView(views.APIView):
                 model_id = data['model']['id']
             else:
                 errors.get('model', {})['id'] = 'field required'
-            if 'grouping' in data:
-                valid_types = [
-                    'protocol', 'subject'
-                ]
-                if not isinstance(data['grouping'], str):
-                    errors['grouping'] = 'grouping must be a string'
-                elif data['grouping'] not in valid_types:
-                    errors['grouping'] = \
-                        'grouping should be one of ' + str(valid_types)
         else:
             errors['model'] = 'field required'
 
@@ -560,35 +548,26 @@ class InferenceWizardView(views.APIView):
         if errors:
             return Response(errors, status=status.HTTP_400_BAD_REQUEST)
 
-        grouping = data.get('grouping', 'protocol')
-        subjects = dataset.subjects.all()
-        subject_groups = None
-        if grouping == 'protocol':
-            # create necessary models, one for each protocol
-            # create subject groups so we can refer to the subjects
-            # belonging to each protocol
-            protocols = [
-                Protocol.objects.get(pk=p['protocol'])
-                for p in dataset.subjects.values('protocol').distinct()
-                if p['protocol'] is not None
-            ]
-            rename_models = len(protocols) > 1
-            if len(protocols) == 0 or data['model']['form'] == 'PD':
-                models = [model.create_stored_model()]
-                subject_groups = [None]
-            else:
-                models = [
-                    self._create_dosed_model(
-                        model, p, rename_model=rename_models)
-                    for p in protocols
-                ]
-                subject_groups = [
-                    self._create_sgroup_protocol(dataset, p) for p in protocols
-                ]
+        # create necessary models, one for each protocol
+        # create subject groups so we can refer to the subjects
+        # belonging to each protocol
+        protocols = [
+            Protocol.objects.get(pk=p['protocol'])
+            for p in dataset.subjects.values('protocol').distinct()
+            if p['protocol'] is not None
+        ]
+        rename_models = len(protocols) > 1
+        if len(protocols) == 0 or data['model']['form'] == 'PD':
+            models = [model.create_stored_model()]
+            subject_groups = [None]
         else:
-            # create necessary models, one for each subject
             models = [
-                self._create_subject_model(model, s) for s in subjects
+                self._create_dosed_model(
+                    model, p, rename_model=rename_models)
+                for p in protocols
+            ]
+            subject_groups = [
+                self._create_sgroup_protocol(dataset, p) for p in protocols
             ]
 
         # start creating inference object
@@ -639,7 +618,7 @@ class InferenceWizardView(views.APIView):
 
         self._set_observed_loglikelihoods(
             data['observations'], model_loglikelihoods,
-            dataset, inference, subject_groups, subjects
+            dataset, inference, subject_groups
         )
 
         self._set_parameters(

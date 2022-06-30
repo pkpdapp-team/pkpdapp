@@ -260,6 +260,9 @@ class MyokitForwardModel():
                     t_max,
                     log=self._output_names, log_times=log_times
                 )
+
+                # scatter this subject's output across result according to
+                # output_indices
                 for output_index, (name, indices, subjects) in enumerate(zip(
                     self._output_names,
                     self._output_indices[s],
