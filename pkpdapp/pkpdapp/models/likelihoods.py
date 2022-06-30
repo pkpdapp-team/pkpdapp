@@ -457,17 +457,19 @@ class LogLikelihood(models.Model):
         length_by_index = [()] * n_distinct_outputs
         for output in outputs:
             length_by_index[output.child_index] = \
-                1 if output.length is None else output.length
+                0 if output.length is None else output.length
         total_length = sum(length_by_index)
-        if total_length == 0 and values is not None:
+        if n_distinct_outputs == 0 and values is not None:
             shape = (len(values),)
-        elif total_length > 0:
-            shape = () if total_length == 1 else (total_length,)
-        else:
+        elif n_distinct_outputs == 0 and values is None:
             total_length = self.parameters.first().length
             if total_length is None:
                 total_length = 1
             shape = () if total_length == 1 else (total_length,)
+        elif total_length == 0:
+            shape = ()
+        else:
+            shape = (total_length,)
 
         # create the pymc3 op
         if self.form == self.Form.NORMAL:
@@ -499,8 +501,6 @@ class LogLikelihood(models.Model):
                 times.append(this_times)
                 subjects.append(this_subjects)
                 all_subjects.update(this_subjects)
-            print('all_subjects', all_subjects)
-            print('subjects', subjects)
 
             # look at all parameters and check their length, if they are all
             # scalar values then we can just run 1 sim, if any are vector
@@ -538,11 +538,9 @@ class LogLikelihood(models.Model):
                         param.length if param.length is not None else 1
                         for param in fitted_parameters
                     ])
-                    print('broadcasting with max_length', max_length)
                     for index in range(len(all_params)):
                         param = fitted_parameters[index]
                         pymc3_param = all_params[index]
-                        print('doing param', index, param.name)
                         if param.length is None:
                             all_params[index] = pymc3_param.reshape(
                                 (1, max_length)
@@ -553,9 +551,18 @@ class LogLikelihood(models.Model):
             else:
                 all_params = []
             op = forward_model_op(all_params)
+
+            # make sure its a list
+            if len(parents) == 1:
+                op = [op]
+
+            # track outputs of model so we can simulate
+            op = [
+                pm.Deterministic(name + parent.name, output)
+                for output, parent in zip(op, parents)
+            ]
         elif self.form == self.Form.EQUATION:
             params = self.get_noise_log_likelihoods()
-            print('equation', params)
             pymc3_params = []
             for param in params:
                 param = param._create_pymc3_model(
@@ -578,19 +585,18 @@ class LogLikelihood(models.Model):
             raise RuntimeError('unrecognised form', self.form)
 
         # split the op into its distinct outputs
-        if n_distinct_outputs == 1:
+        if self.form == self.Form.MODEL:
+            ops[name] = op
+        elif n_distinct_outputs == 1:
             ops[name] = [op]
         else:
-            if self.form == self.Form.MODEL:
-                ops[name] = op
-            else:
-                indexed_list = []
-                current_index = 0
-                for length in length_by_index:
-                    indexed_list.append(
-                        op[current_index:current_index + length]
-                    )
-                ops[name] = indexed_list
+            indexed_list = []
+            current_index = 0
+            for length in length_by_index:
+                indexed_list.append(
+                    op[current_index:current_index + length]
+                )
+            ops[name] = indexed_list
 
         # if no outputs then we don't need to return anything
         if n_distinct_outputs == 0:

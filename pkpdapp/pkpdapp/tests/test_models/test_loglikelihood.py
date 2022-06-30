@@ -14,7 +14,8 @@ from pkpdapp.models import (
     Protocol,
     LogLikelihood,
     Project, BiomarkerType,
-    Algorithm, LogLikelihoodParameter
+    Algorithm, LogLikelihoodParameter,
+    PharmacodynamicModel,
 )
 
 
@@ -75,7 +76,7 @@ class TestInferenceMixinPkModel(TestCase):
         )
 
         # add the output_model
-        mean_param = output_model.parameters.get(index=0)
+        mean_param = output_model.parameters.get(parent_index=0)
         mean_param.child = log_likelihood
         possible_outputs = self.model.variables.filter(
             constant=False
@@ -173,7 +174,6 @@ class TestInferenceMixinPkModel(TestCase):
         log_likelihood = LogLikelihood.objects.create(
             inference=self.inference,
             variable=self.model.variables.first(),
-            biomarker_type=self.biomarker_type,
             form=LogLikelihood.Form.MODEL
         )
 
@@ -210,8 +210,9 @@ class TestInferenceMixinPdModel(TestCase):
         project = Project.objects.get(
             name='demo',
         )
-        self.dataset = Dataset.objects.get(
-            name='lxf_control_growth'
+        self.biomarker_type = BiomarkerType.objects.get(
+            name='Tumour volume',
+            dataset__name='lxf_control_growth'
         )
 
         biomarker_names = [
@@ -223,7 +224,7 @@ class TestInferenceMixinPdModel(TestCase):
             read_only=False,
         )
         parameter_names = [
-            v.qname for v in pd_model.variables.filter(constant=True)
+            v.qname for v in self.model.variables.filter(constant=True)
         ]
 
         self.inference = Inference.objects.create(
@@ -272,3 +273,36 @@ class TestInferenceMixinPdModel(TestCase):
         model.fastfn([
             model[log_likelihood.name + outputs[0].name]
         ])
+
+    def test_population_model(self):
+        log_likelihood = LogLikelihood.objects.create(
+            inference=self.inference,
+            variable=self.model.variables.first(),
+            form=LogLikelihood.Form.MODEL
+        )
+
+        # remove all outputs except
+        output_names = [
+            'myokit.tumour_volume'
+        ]
+        outputs = []
+        for output in log_likelihood.outputs.all():
+            if output.variable.qname in output_names:
+                output.parent.biomarker_type = self.biomarker_type
+                output.parent.save()
+                outputs.append(output.parent)
+            else:
+                output.parent.delete()
+        values, times, subjects = outputs[0].get_inference_data()
+        n_subjects = len(set(subjects))
+
+        # add a prior on the first param
+        first_param = log_likelihood.parameters.first()
+        first_param.length = n_subjects
+        first_param.save()
+        first_param.child.form = LogLikelihood.Form.NORMAL
+        first_param.child.save()
+
+        model = outputs[0].create_pymc3_model()
+
+        model.logp({first_param.name: [0.3] * n_subjects})
