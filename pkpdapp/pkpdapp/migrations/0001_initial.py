@@ -327,8 +327,10 @@ class Migration(migrations.Migration):
             name='LogLikelihoodParameter',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('index', models.IntegerField(blank=True, help_text='parameter index for distribution and equation parameters. ', null=True)),
                 ('name', models.CharField(help_text='name of log_likelihood parameter.', max_length=100)),
+                ('parent_index', models.IntegerField(blank=True, help_text='parameter index for distribution and equation parameters. ', null=True)),
+                ('child_index', models.IntegerField(blank=True, help_text='output index for models. ', null=True)),
+                ('length', models.IntegerField(blank=True, help_text='length of array representing parameter. null for scalar', null=True)),
                 ('child', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='outputs', to='pkpdapp.loglikelihood')),
                 ('parent', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='parameters', to='pkpdapp.loglikelihood')),
                 ('variable', models.ForeignKey(blank=True, help_text='input model variable for this parameter.', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='log_likelihood_parameters', to='pkpdapp.variable')),
@@ -343,11 +345,6 @@ class Migration(migrations.Migration):
             model_name='loglikelihood',
             name='inference',
             field=models.ForeignKey(help_text='Log_likelihood belongs to this inference object. ', on_delete=django.db.models.deletion.CASCADE, related_name='log_likelihoods', to='pkpdapp.inference'),
-        ),
-        migrations.AddField(
-            model_name='loglikelihood',
-            name='subject',
-            field=models.ForeignKey(blank=True, help_text='filter data on this subject (null implies all subjects)', null=True, on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.subject'),
         ),
         migrations.AddField(
             model_name='loglikelihood',

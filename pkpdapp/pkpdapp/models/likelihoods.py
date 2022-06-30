@@ -132,6 +132,7 @@ class LogLikelihoodParameter(models.Model):
         blank=True, null=True,
         help_text=(
             'parameter index for distribution and equation parameters. '
+            'blank for models (variable is used instead)'
         )
     )
     child = models.ForeignKey(
@@ -140,9 +141,9 @@ class LogLikelihoodParameter(models.Model):
         on_delete=models.CASCADE
     )
     child_index = models.IntegerField(
-        blank=True, null=True,
+        default=0,
         help_text=(
-            'output index for models. '
+            'output index for all log_likelihoods. '
         )
     )
     variable = models.ForeignKey(
@@ -414,27 +415,49 @@ class LogLikelihood(models.Model):
         # ode models can have multiple outputs, so make
         # sure to choose the right one
 
-        param = LogLikelihoodParameter.objects.get(
-            parent=parent,
-            child=self
-        )
+        if parent is not None:
+            param = LogLikelihoodParameter.objects.get(
+                parent=parent,
+                child=self
+            )
+            parent_index = param.child_index
+        else:
+            parent_index = 0
+
         name = self.name
-        parent_index = param.child_index
         try:
             return ops[name][parent_index]
         except KeyError:
             pass
+
+        # the distributions need a shape, we use the stacked outputs to
+        # determine the shape, if no outputs then use the shape of the observed
+        # values if no outputs and no observed values then use length of 1st
+        # input
         values, times = self.get_inference_data()
         outputs = list(self.outputs.order_by('child_index'))
-        n_distinct_outputs = outputs[-1].child_index + 1
+        if len(outputs) == 0:
+            n_distinct_outputs = 0
+        else:
+            n_distinct_outputs = outputs[-1].child_index + 1
         parents = [output.parent for output in outputs]
         length_by_index = [()] * n_distinct_outputs
         for output in outputs:
             length_by_index[output.child_index] = \
                 1 if output.length is None else output.length
         total_length = sum(length_by_index)
-        shape = () if total_length == 1 else (total_length,)
+        if total_length == 0 and values is not None:
+            shape = values.shape
+        elif total_length > 0:
+            shape = () if total_length == 1 else (total_length,)
+        else:
+            total_length = self.parameters.first().length
+            if total_length is None:
+                total_length = 1
+            shape = () if total_length == 1 else (total_length,)
+        print(self.form, shape)
 
+        # create the pymc3 op
         if self.form == self.Form.NORMAL:
             mean, sigma = self.get_noise_log_likelihoods()
             mean = mean._create_pymc3_model(pm_model, self, ops)
@@ -484,9 +507,10 @@ class LogLikelihood(models.Model):
             op = forward_model_op(all_params)
         elif self.form == self.Form.EQUATION:
             params = self.get_noise_log_likelihoods()
+            print('equation', params)
             pymc3_params = []
             for param in params:
-                param, shape = param._create_pymc3_model(
+                param = param._create_pymc3_model(
                     pm_model, self, ops
                 )
                 pymc3_params.append(param)
@@ -502,6 +526,8 @@ class LogLikelihood(models.Model):
                 # get the value of the 1st measurement for
                 # this biomarker+subject
                 op = theano.shared(values[0])
+        else:
+            raise RuntimeError('unrecognised form', self.form)
 
         # split the op into its distinct outputs
         if n_distinct_outputs == 1:
@@ -517,15 +543,18 @@ class LogLikelihood(models.Model):
                         op[current_index:current_index + length]
                     )
                 ops[name] = indexed_list
+
+        # if no outputs then we don't need to return anything
+        if n_distinct_outputs == 0:
+            return None
         return ops[name][parent_index]
 
     def create_pymc3_model(self, *other_log_likelihoods):
         ops = {}
-        shapes = {}
         with pm.Model() as pm_model:
-            self._create_pymc3_model(pm_model, self, ops, shapes)
+            self._create_pymc3_model(pm_model, None, ops)
             for ll in other_log_likelihoods:
-                ll._create_pymc3_model(pm_model, ll, ops, shapes)
+                ll._create_pymc3_model(pm_model, None, ops)
         return pm_model
 
     def create_forward_model(self, output_times):
@@ -585,8 +614,8 @@ class LogLikelihood(models.Model):
         get ordered list of noise log_likelihoods
         """
         noise_parameters = self.parameters.filter(
-            index__isnull=False,
-        ).order_by('index')
+            parent_index__isnull=False,
+        ).order_by('parent_index')
 
         return [
             p.name for p in noise_parameters
@@ -597,8 +626,8 @@ class LogLikelihood(models.Model):
         get ordered list of noise log_likelihoods
         """
         noise_parameters = self.parameters.filter(
-            index__isnull=False,
-        ).order_by('index')
+            parent_index__isnull=False,
+        ).order_by('parent_index')
 
         return [
             p.child for p in noise_parameters
@@ -858,7 +887,7 @@ class LogLikelihood(models.Model):
             )
             LogLikelihoodParameter.objects.create(
                 parent=self, child=child,
-                index=param_index,
+                parent_index=param_index,
                 name=pname,
             )
 

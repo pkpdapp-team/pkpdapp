@@ -129,34 +129,45 @@ class TestInferenceMixinPkModel(TestCase):
         ])
 
     def test_equations(self):
-        equation = LogLikelihood.objects.create(
-            inference=self.inference,
-            name='double it',
-            description='2 * arg0',
-            form=LogLikelihood.Form.EQUATION
-        )
+        # create model N(2 * 1.0, 1.0) using an equation
         normal = LogLikelihood.objects.create(
             inference=self.inference,
             name='normal',
             form=LogLikelihood.Form.NORMAL
         )
+        mean, sigma = normal.get_noise_log_likelihoods()
+        mean.name = 'double it'
+        mean.form = LogLikelihood.Form.EQUATION
+        mean.description = '2 * arg0'
+        mean.save()
+
+        fixed = LogLikelihood.objects.create(
+            inference=self.inference,
+            name='untransformed mean',
+            value=1.0,
+            form=LogLikelihood.Form.FIXED,
+        )
         LogLikelihoodParameter.objects.create(
-            parent=equation,
-            child=normal,
-            index=0,
+            parent=mean,
+            child=fixed,
+            parent_index=0,
             name='x'
         )
-        mean, sigma = normal.get_noise_log_likelihoods()
-        mean.value = 1.0
-        mean.save()
+
         sigma.value = 1.0
         sigma.save()
 
-        model = equation.create_pymc3_model()
+        model = normal.create_pymc3_model()
 
         # check everything is in there
-        for name in ['double it', 'normal']:
+        for name in ['normal']:
             model[name]
+
+        # equation will shift max likelihood point from 1.0 => 2.0
+        self.assertLess(
+            model.logp({'normal': 1.0}),
+            model.logp({'normal': 2.0})
+        )
 
 
 class TestInferenceMixinPdModel(TestCase):
