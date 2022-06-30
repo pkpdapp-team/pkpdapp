@@ -315,6 +315,19 @@ class LogLikelihood(models.Model):
         self.__original_form = self.form
         self.__original_variable = self.variable
 
+    def is_random(self):
+        # if fixed or is a distribution answer is easy
+        if self.form == self.Form.FIXED:
+            return False
+        if self.is_a_distribution():
+            return True
+
+        # if model or equation then need to look at the parameters to determine
+        # if random or not
+        for child in self.children.all():
+            if child.is_random():
+                return True
+
     def is_a_distribution(self):
         return (
             self.form == self.Form.NORMAL or
@@ -434,7 +447,7 @@ class LogLikelihood(models.Model):
         # determine the shape, if no outputs then use the shape of the observed
         # values if no outputs and no observed values then use length of 1st
         # input
-        values, times = self.get_inference_data()
+        values, times, subjects = self.get_inference_data()
         outputs = list(self.outputs.order_by('child_index'))
         if len(outputs) == 0:
             n_distinct_outputs = 0
@@ -447,7 +460,7 @@ class LogLikelihood(models.Model):
                 1 if output.length is None else output.length
         total_length = sum(length_by_index)
         if total_length == 0 and values is not None:
-            shape = values.shape
+            shape = (len(values),)
         elif total_length > 0:
             shape = () if total_length == 1 else (total_length,)
         else:
@@ -481,17 +494,29 @@ class LogLikelihood(models.Model):
         elif self.form == self.Form.MODEL:
             times = []
             subjects = []
-            all_subjects = {}
+            all_subjects = set()
             for parent in parents:
                 _, this_times, this_subjects = parent.get_inference_data()
                 times.append(this_times)
                 subjects.append(this_subjects)
                 all_subjects.update(this_subjects)
 
-            # transform subject ids into an index into all_subjects
-            all_subjects = sorted(list(all_subjects))
-            for i, this_subjects in enumerate(subjects):
-                subjects[i] = np.searchsorted(all_subjects, this_subjects)
+            # look at all parameters and check their length, if they are all
+            # scalar values then we can just run 1 sim, if any are vector
+            # values then each value is a different parameter for each subject,
+            # so we need to run a sim for every subject
+            all_params_scalar = all([
+                p.length is None or p.length == 1
+                for p in self.parameters.all()
+            ])
+
+            if all_params_scalar:
+                subjects = None
+            else:
+                # transform subject ids into an index into all_subjects
+                all_subjects = sorted(list(all_subjects))
+                for i, this_subjects in enumerate(subjects):
+                    subjects[i] = np.searchsorted(all_subjects, this_subjects)
 
             forward_model, fitted_children = self.create_forward_model(
                 times, subjects
@@ -557,7 +582,7 @@ class LogLikelihood(models.Model):
                 ll._create_pymc3_model(pm_model, None, ops)
         return pm_model
 
-    def create_forward_model(self, output_times):
+    def create_forward_model(self, output_times, output_subjects=None):
         """
         create pints forwards model for this log_likelihood.
         """
@@ -572,14 +597,14 @@ class LogLikelihood(models.Model):
             param.variable.qname: param.child.value
             for param in self.parameters.all()
             if (
-                param.child.form == param.child.Form.FIXED and
+                not param.child.is_random() and
                 param.variable is not None
             )
         }
 
         pints_model = MyokitForwardModel(
             myokit_simulator, myokit_model,
-            output_names, output_times,
+            output_names, output_times, output_subjects,
             fixed_parameters_dict
         )
 
@@ -607,7 +632,7 @@ class LogLikelihood(models.Model):
             )
             return df['values'].tolist(), df['times'].tolist(), df['subjects'].tolist()
         else:
-            return None, None
+            return None, None, None
 
     def get_noise_names(self):
         """
@@ -662,7 +687,7 @@ class LogLikelihood(models.Model):
         return pints_log_prior
 
     def create_pints_problem(self):
-        values, times = self.get_inference_data()
+        values, times, subjects = self.get_inference_data()
         model, fitted_children = self.create_pints_forward_model()
         return pints.SingleOutputProblem(model, times, values), fitted_children
 
@@ -788,7 +813,7 @@ class LogLikelihood(models.Model):
                 form=self.Form.NORMAL,
             )
             # add the output_model
-            mean_param = parent.parameters.get(index=0)
+            mean_param = parent.parameters.get(parent_index=0)
             old_mean = mean_param.child
             mean_param.child = self
             old_mean.delete()

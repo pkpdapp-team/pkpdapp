@@ -36,6 +36,7 @@ class TestMyokitForwardModelSingleOutput(TestCase):
             'myokit.lambda_0': 1,
             'myokit.drug_concentration': 1,
         }
+
         variable_keys = (
             [k for k in all_keys if k not in list(self.fixed_dict.keys())]
         )
@@ -94,6 +95,44 @@ class TestMyokitForwardModelSingleOutput(TestCase):
         )
         z4 = forward_model.simulate(self.variable_parameter_values)
         self.assertTrue(not np.array_equal(z4, z3))
+
+        # try with subjects now, should get same result
+        times = np.linspace(0, 100)
+        n_subjects = 7
+        subjects = list(range(n_subjects)) * (len(times) // n_subjects + 1)
+        subjects = subjects[:len(times)]
+        all_keys = list(self.parameter_dict.keys())
+
+        fixed_dict = {
+            'myokit.tumour_volume': self.fixed_dict['myokit.tumour_volume'],
+            'myokit.lambda_0':
+                [self.fixed_dict['myokit.lambda_0']] * n_subjects,
+            'myokit.drug_concentration':
+                self.fixed_dict['myokit.drug_concentration'],
+        }
+
+        variable_keys = (
+            [k for k in all_keys if k not in list(self.fixed_dict.keys())]
+        )
+        variable_parameter_values = [
+            [self.parameter_dict[v]] * n_subjects for v in variable_keys
+        ]
+        variable_parameter_values = np.array(variable_parameter_values)
+        print('variable_parameter_values', variable_parameter_values.shape)
+
+        forward_model = MyokitForwardModel(
+            myokit_model=self.model,
+            myokit_simulator=self.simulator,
+            outputs=["myokit.tumour_volume"],
+            times=[times],
+            subjects=[subjects],
+            fixed_parameter_dict=fixed_dict,
+        )
+
+        z_subjects = forward_model.simulate(variable_parameter_values)
+        self.assertEqual(len(z_subjects), 1)
+        self.assertEqual(len(z_subjects[0]), len(times))
+        np.testing.assert_almost_equal(z_subjects[0], z[0])
 
     def test_values(self):
         times = np.linspace(0, 100)
@@ -156,6 +195,7 @@ class TestMyokitPintsForwardModelMultipleOutput(TestCase):
         #     'peripheral_2.drug_p2_amount': 1,
         #     'central.size': 1,
         #     'myokit.clearance': 1,
+        #     'myokit.drug_c_scale_factor': 1,
         #     'myokit.k_peripheral1': 1,
         #     'myokit.k_peripheral2': 1,
         #     'peripheral_1.size': 1,
@@ -163,7 +203,8 @@ class TestMyokitPintsForwardModelMultipleOutput(TestCase):
         # }
         fixed_dict = {
             'peripheral_1.drug_p1_amount': 1,
-            'peripheral_2.drug_p2_amount': 1
+            'peripheral_2.drug_p2_amount': 1,
+            'myokit.drug_c_scale_factor': 1,
         }
         variable_parameters = [1, 1, 1, 1, 1, 1, 1]
 

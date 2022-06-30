@@ -59,7 +59,7 @@ class TestInferenceMixinPkModel(TestCase):
             log_likelihood.parameters.filter(name='central.size').count(),
             1
         )
-        self.assertEqual(log_likelihood.outputs.count(), 7)
+        self.assertEqual(log_likelihood.outputs.count(), 8)
 
     def test_add_output_model(self):
         log_likelihood = LogLikelihood.objects.create(
