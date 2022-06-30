@@ -222,14 +222,7 @@ class InferenceWizardView(views.APIView):
                 biomarker = None
             biomarkers.append(biomarker)
 
-        group_by_subject = subject_groups is None
-
-        if group_by_subject:
-            models_and_groups = zip(models, subjects)
-        else:
-            models_and_groups = zip(models, subject_groups)
-
-        for model, group in models_and_groups:
+        for model, group in zip(models, subject_groups):
             # remove all outputs (and their parameters)
             # except those in output_names
             # and set the right biomarkers and subject groups
@@ -241,19 +234,11 @@ class InferenceWizardView(views.APIView):
                 if index is not None:
                     parent = output.parent
                     if group is not None:
-                        if group_by_subject:
-                            parent.name = '{} ({})'.format(
-                                parent.name, group.id_in_dataset
-                            )
-                        else:
-                            parent.name = '{} ({})'.format(
-                                parent.name, group.name
-                            )
+                        parent.name = '{} ({})'.format(
+                            parent.name, group.name
+                        )
                     parent.biomarker_type = biomarkers[index]
-                    if group_by_subject:
-                        parent.subject = group
-                    else:
-                        parent.subject_group = group
+                    parent.subject_group = group
                     parent.form = output_forms[index]
                     parent.save()
 

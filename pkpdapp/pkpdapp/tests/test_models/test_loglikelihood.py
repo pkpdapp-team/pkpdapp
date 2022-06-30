@@ -169,6 +169,41 @@ class TestInferenceMixinPkModel(TestCase):
             model.logp({'normal': 2.0})
         )
 
+    def test_population_model(self):
+        log_likelihood = LogLikelihood.objects.create(
+            inference=self.inference,
+            variable=self.model.variables.first(),
+            biomarker_type=self.biomarker_type,
+            form=LogLikelihood.Form.MODEL
+        )
+
+        # remove all outputs except
+        output_names = [
+            'central.drug_c_concentration',
+        ]
+        outputs = []
+        for output in log_likelihood.outputs.all():
+            if output.variable.qname in output_names:
+                output.parent.biomarker_type = self.biomarker_type
+                output.parent.save()
+                outputs.append(output.parent)
+            else:
+                output.parent.delete()
+        values, times, subjects = outputs[0].get_inference_data()
+        n_subjects = len(set(subjects))
+
+        # add a prior on the first param
+        first_param = log_likelihood.parameters.first()
+        first_param.length = n_subjects
+        first_param.save()
+        first_param.child.form = LogLikelihood.Form.NORMAL
+        first_param.child.save()
+
+        model = outputs[0].create_pymc3_model()
+
+        model.logp({first_param.name: [0.3] * n_subjects})
+
+
 
 class TestInferenceMixinPdModel(TestCase):
     def setUp(self):

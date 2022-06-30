@@ -468,7 +468,6 @@ class LogLikelihood(models.Model):
             if total_length is None:
                 total_length = 1
             shape = () if total_length == 1 else (total_length,)
-        print(self.form, shape)
 
         # create the pymc3 op
         if self.form == self.Form.NORMAL:
@@ -500,13 +499,15 @@ class LogLikelihood(models.Model):
                 times.append(this_times)
                 subjects.append(this_subjects)
                 all_subjects.update(this_subjects)
+            print('all_subjects', all_subjects)
+            print('subjects', subjects)
 
             # look at all parameters and check their length, if they are all
             # scalar values then we can just run 1 sim, if any are vector
             # values then each value is a different parameter for each subject,
             # so we need to run a sim for every subject
             all_params_scalar = all([
-                p.length is None or p.length == 1
+                p.length is None
                 for p in self.parameters.all()
             ])
 
@@ -518,15 +519,37 @@ class LogLikelihood(models.Model):
                 for i, this_subjects in enumerate(subjects):
                     subjects[i] = np.searchsorted(all_subjects, this_subjects)
 
-            forward_model, fitted_children = self.create_forward_model(
+            forward_model, fitted_parameters = self.create_forward_model(
                 times, subjects
             )
             forward_model_op = ODEop(name, forward_model)
-            if fitted_children:
-                all_params = pm.math.stack([
-                    child._create_pymc3_model(pm_model, self, ops)
-                    for child in fitted_children
-                ])
+            if fitted_parameters:
+                # create child pymc3 models
+                all_params = [
+                    param.child._create_pymc3_model(pm_model, self, ops)
+                    for param in fitted_parameters
+                ]
+
+                # if any vector params, need to broadcast any scalars to
+                # max_length and create a 2d tensor to pass to the model with
+                # shape (n_params, max_length)
+                if not all_params_scalar:
+                    max_length = max([
+                        param.length if param.length is not None else 1
+                        for param in fitted_parameters
+                    ])
+                    print('broadcasting with max_length', max_length)
+                    for index in range(len(all_params)):
+                        param = fitted_parameters[index]
+                        pymc3_param = all_params[index]
+                        print('doing param', index, param.name)
+                        if param.length is None:
+                            all_params[index] = pymc3_param.reshape(
+                                (1, max_length)
+                            )
+
+                # now we stack them along axis 0
+                all_params = pm.math.stack(all_params, axis=0)
             else:
                 all_params = []
             op = forward_model_op(all_params)
@@ -608,18 +631,18 @@ class LogLikelihood(models.Model):
             fixed_parameters_dict
         )
 
-        fitted_children = [
-            self.get_child(name)
+        fitted_parameters = [
+            self.get_param(name)
             for name in pints_model.variable_parameter_names()
         ]
 
-        return pints_model, fitted_children
+        return pints_model, fitted_parameters
 
-    def get_child(self, qname):
+    def get_param(self, qname):
         param = LogLikelihoodParameter.objects.get(
             parent=self, variable__qname=qname
         )
-        return param.child
+        return param
 
     def get_inference_data(self, fake=False):
         """

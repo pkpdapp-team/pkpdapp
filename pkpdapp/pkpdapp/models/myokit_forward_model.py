@@ -56,6 +56,7 @@ class MyokitForwardModel():
             self._n_subjects = max(
                 [np.max(s_array) for s_array in self._subjects]
             ) + 1
+            print('n_subjects', self._n_subjects, self._subjects)
             self._times_all = []
             self._output_indices = []
             for s in range(self._n_subjects):
@@ -175,6 +176,7 @@ class MyokitForwardModel():
         is not None, with shape (n_parameters, n_subjects)
         """
         parameters = np.array(parameters)
+        print('parameters shape', parameters.shape)
 
         if parameters.shape[0] != self._n_parameters:
             raise ValueError('Dim 0 of parameters supplied must equal ' +
