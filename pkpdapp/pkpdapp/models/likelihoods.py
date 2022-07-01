@@ -237,9 +237,17 @@ class LogLikelihood(models.Model):
         on_delete=models.CASCADE,
         blank=True, null=True,
         help_text=(
-            'biomarker_type for measurements. '
-            'if blank then simulated data is used, '
-            'with non-fixed parameters sampled at the start of inference'
+            'data associated with this log_likelihood. '
+            'This is used for measurement data or for covariates '
+        )
+    )
+
+    time_independent_data = models.BooleanField(
+        default=False,
+        help_text=(
+            'True if biomarker_type refers to time-independent data. '
+            'If there are multiple timepoints in biomarker_type then only '
+            'the first is taken '
         )
     )
 
@@ -493,6 +501,10 @@ class LogLikelihood(models.Model):
                 name, lower, upper, observed=values, shape=shape
             )
         elif self.form == self.Form.MODEL:
+            # ASSUMPTIONS / LIMITATIONS:
+            #   - parents of models must be observed random variables (e.g.
+            #   can't have equation to, say, measure 2 * model output
+            #   -
             times = []
             subjects = []
             all_subjects = set()
@@ -579,7 +591,7 @@ class LogLikelihood(models.Model):
                 op = theano.shared(self.value)
             else:
                 # get the value of the 1st measurement for
-                # this biomarker+subject
+                # this biomarker for each subject
                 op = theano.shared(values[0])
         else:
             raise RuntimeError('unrecognised form', self.form)
@@ -650,7 +662,7 @@ class LogLikelihood(models.Model):
         )
         return param
 
-    def get_inference_data(self, fake=False):
+    def get_data(self, fake=False):
         """
         return data. if fake=True and no data return
         some fake times

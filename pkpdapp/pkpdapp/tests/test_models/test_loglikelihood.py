@@ -274,7 +274,7 @@ class TestInferenceMixinPdModel(TestCase):
             model[log_likelihood.name + outputs[0].name]
         ])
 
-    def test_population_model(self):
+    def test_population_model_with_covariate(self):
         log_likelihood = LogLikelihood.objects.create(
             inference=self.inference,
             variable=self.model.variables.first(),
@@ -295,6 +295,7 @@ class TestInferenceMixinPdModel(TestCase):
                 output.parent.delete()
         values, times, subjects = outputs[0].get_inference_data()
         n_subjects = len(set(subjects))
+        print('n_subjects', n_subjects)
 
         # add a prior on the first param
         first_param = log_likelihood.parameters.first()
@@ -303,6 +304,32 @@ class TestInferenceMixinPdModel(TestCase):
         first_param.child.form = LogLikelihood.Form.NORMAL
         first_param.child.save()
 
+        # use a covariate to adjust the mean of the normal according to body weight
+        mean, sigma = first_param.child.get_noise_log_likelihoods()
+        mean.form = LogLikelihood.Form.EQUATION
+        mean.description = '1.0 if arg0 < 20 else 2.0'
+        mean.save()
+        body_weight = LogLikelihood.objects.create(
+            name='Body weight',
+            inference=self.inference,
+            form=LogLikelihood.Form.FIXED,
+            biomarker_type=BiomarkerType.objects.get(
+                name='Body weight',
+                dataset__name='lxf_control_growth'
+            )
+        )
+        LogLikelihoodParameter.objects.create(
+            name='Body weight',
+            parent=mean,
+            child=body_weight,
+            parent_index=0,
+        )
+        sigma.value = 0.01
+        sigma.save()
+
         model = outputs[0].create_pymc3_model()
 
-        model.logp({first_param.name: [0.3] * n_subjects})
+        model.logp({first_param.child.name: [0.3] * n_subjects})
+
+        max_logp = model[first_param.child.name].logp({first_param.child.name: [1.0] * n_subjects}
+        lower_logp = model[first_param.child.name].logp({first_param.child.name: [1.0] * n_subjects}

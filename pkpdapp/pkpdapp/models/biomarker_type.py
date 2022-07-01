@@ -5,6 +5,7 @@
 #
 
 from django.db import models
+from django.db.models import OuterRef, Subquery
 from pkpdapp.models import Dataset, Unit
 import pandas as pd
 
@@ -74,26 +75,38 @@ class BiomarkerType(models.Model):
     def get_project(self):
         return self.dataset.get_project()
 
-    def as_pandas(self, subject_group=None, subject=None):
-        if subject:
+    def as_pandas(self, subject_group=None, first_time_only=False):
+        if subject_group and first_time_only:
+            earliest = self.biomarkers.filter(
+                subject=OuterRef('subject')).order_by('time')
             times_subjects_values = \
                 self.biomarkers.filter(
-                    subject=subject
-                ).order_by('time').values_list(
+                    subject__in=subject_group.subjects.all(),
+                    time=Subquery(earliest.values('time')[:1])
+                ).values_list(
                     'time', 'subject__id', 'value'
                 )
-        elif subject_group:
-            times_subjects_values = \
-                self.biomarkers.filter(
-                    subject__in=subject_group.subjects.all()
-                ).order_by('time').values_list(
-                    'time', 'subject__id', 'value'
-                )
+        elif subject_group and not first_time_only:
+            times_subjects_values = self.biomarkers.filter(
+                subject__in=subject_group.subjects.all()
+            ).order_by('time').values_list(
+                'time', 'subject__id', 'value'
+            )
+        elif first_time_only:
+            earliest = self.biomarkers.filter(
+                subject=OuterRef('subject')).order_by('time')
+            times_subjects_values = self.biomarkers.filter(
+                time=Subquery(earliest.values('time')[:1])
+            ).values_list(
+                'time', 'subject__id', 'value'
+            )
         else:
-            times_subjects_values = \
-                self.biomarkers.order_by('time').values_list(
-                    'time', 'subject__id', 'value'
-                )
+            times_subjects_values = self.biomarkers.order_by(
+                'time'
+            ).values_list(
+                'time', 'subject__id', 'value'
+            )
+
         times, subjects, values = list(zip(*times_subjects_values))
         df = pd.DataFrame.from_dict({
             'times': times,

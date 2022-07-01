@@ -132,8 +132,9 @@ class Migration(migrations.Migration):
                 ('name', models.CharField(help_text='name of log_likelihood.', max_length=100)),
                 ('description', models.TextField(blank=True, help_text='description of log_likelihood. For equations will be the code of that equation using Python syntax: arg1 * arg2^arg3', null=True)),
                 ('value', models.FloatField(blank=True, help_text='set if a fixed value is required', null=True)),
+                ('time_independent_data', models.BooleanField(default=False, help_text='True if biomarker_type refers to time-independent data. If there are multiple timepoints in biomarker_type then only the first is taken ')),
                 ('form', models.CharField(choices=[('N', 'Normal'), ('U', 'Uniform'), ('LN', 'Log-Normal'), ('F', 'Fixed'), ('S', 'Sum'), ('E', 'Equation'), ('M', 'Model')], default='F', max_length=2)),
-                ('biomarker_type', models.ForeignKey(blank=True, help_text='biomarker_type for measurements. if blank then simulated data is used, with non-fixed parameters sampled at the start of inference', null=True, on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.biomarkertype')),
+                ('biomarker_type', models.ForeignKey(blank=True, help_text='data associated with this log_likelihood. This is used for measurement data or for covariates ', null=True, on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.biomarkertype')),
             ],
         ),
         migrations.CreateModel(
@@ -328,8 +329,8 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(help_text='name of log_likelihood parameter.', max_length=100)),
-                ('parent_index', models.IntegerField(blank=True, help_text='parameter index for distribution and equation parameters. ', null=True)),
-                ('child_index', models.IntegerField(blank=True, help_text='output index for models. ', null=True)),
+                ('parent_index', models.IntegerField(blank=True, help_text='parameter index for distribution and equation parameters. blank for models (variable is used instead)', null=True)),
+                ('child_index', models.IntegerField(default=0, help_text='output index for all log_likelihoods. ')),
                 ('length', models.IntegerField(blank=True, help_text='length of array representing parameter. null for scalar', null=True)),
                 ('child', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='outputs', to='pkpdapp.loglikelihood')),
                 ('parent', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='parameters', to='pkpdapp.loglikelihood')),
