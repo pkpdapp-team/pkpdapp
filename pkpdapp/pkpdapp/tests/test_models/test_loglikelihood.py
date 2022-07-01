@@ -204,7 +204,6 @@ class TestInferenceMixinPkModel(TestCase):
         model.logp({first_param.name: [0.3] * n_subjects})
 
 
-
 class TestInferenceMixinPdModel(TestCase):
     def setUp(self):
         project = Project.objects.get(
@@ -293,36 +292,46 @@ class TestInferenceMixinPdModel(TestCase):
                 outputs.append(output.parent)
             else:
                 output.parent.delete()
-        values, times, subjects = outputs[0].get_inference_data()
+        values, times, subjects = outputs[0].get_data()
         n_subjects = len(set(subjects))
         print('n_subjects', n_subjects)
 
-        # add a prior on the first param
+        # first param is sampled from a normal distribution with a mean
+        # derived from subject body weight
         first_param = log_likelihood.parameters.first()
+        body_weight_biomarker_type = BiomarkerType.objects.get(
+            name='Body weight',
+            dataset__name='lxf_control_growth'
+        )
         first_param.length = n_subjects
         first_param.save()
+        first_param.child.biomarker_type = body_weight_biomarker_type
         first_param.child.form = LogLikelihood.Form.NORMAL
         first_param.child.save()
 
-        # use a covariate to adjust the mean of the normal according to body weight
+        # use a covariate to adjust the mean of the normal according to body
+        # weight
         mean, sigma = first_param.child.get_noise_log_likelihoods()
         mean.form = LogLikelihood.Form.EQUATION
         mean.description = '1.0 if arg0 < 20 else 2.0'
+
+        mean.biomarker_type = body_weight_biomarker_type
+        mean.time_independent_data = True
         mean.save()
         body_weight = LogLikelihood.objects.create(
             name='Body weight',
             inference=self.inference,
             form=LogLikelihood.Form.FIXED,
-            biomarker_type=BiomarkerType.objects.get(
-                name='Body weight',
-                dataset__name='lxf_control_growth'
-            )
+            biomarker_type=body_weight_biomarker_type,
+            time_independent_data=True,
         )
+        body_weight_values, _, subjects = body_weight.get_data()
         LogLikelihoodParameter.objects.create(
             name='Body weight',
             parent=mean,
             child=body_weight,
             parent_index=0,
+            length=len(subjects)
         )
         sigma.value = 0.01
         sigma.save()
@@ -331,5 +340,13 @@ class TestInferenceMixinPdModel(TestCase):
 
         model.logp({first_param.child.name: [0.3] * n_subjects})
 
-        max_logp = model[first_param.child.name].logp({first_param.child.name: [1.0] * n_subjects}
-        lower_logp = model[first_param.child.name].logp({first_param.child.name: [1.0] * n_subjects}
+        max_logp = model[first_param.child.name].logp({
+            first_param.child.name: [
+                1.0 if value < 20 else 2.0
+                for value in body_weight_values
+            ]
+        })
+        lower_logp = model[first_param.child.name].logp({
+            first_param.child.name: [1.0] * n_subjects
+        })
+        self.assertLess(lower_logp, max_logp)

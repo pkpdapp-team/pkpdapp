@@ -238,7 +238,11 @@ class LogLikelihood(models.Model):
         blank=True, null=True,
         help_text=(
             'data associated with this log_likelihood. '
-            'This is used for measurement data or for covariates '
+            'This is used for measurement data or for covariates. '
+            'The random variable associated with this log_likelihood '
+            'has the same shape as this data. '
+            'For covariates the subject ids in the data correspond '
+            'to the values of the random variable at that location.'
         )
     )
 
@@ -347,7 +351,7 @@ class LogLikelihood(models.Model):
         """
         True for distributions where there is observed data
         """
-        return self.is_a_distribution() and self.biomarker_type is not None
+        return self.biomarker_type is not None
 
     def is_a_prior(self):
         """
@@ -359,9 +363,41 @@ class LogLikelihood(models.Model):
         )
 
     def sample(self):
+        # if fixed or equation just evaluate it
         if self.form == self.Form.FIXED:
-            return self.value
+            values, _, _ = self.get_data()
+            if values is None:
+                return self.value
+            else:
+                return values
+        elif self.form == self.Form.EQUATION:
+            params = self.get_noise_log_likelihoods()
+            param_values = [
+                p.sample() for p in params
+            ]
 
+            args = [
+                'arg{}'.format(i)
+                for i, _ in enumerate(param_values)
+            ]
+            args = ','.join(args)
+            code = (
+                'import numpy as np\n'
+                'def fun({}):\n'
+                '  return {}\n'
+                'result = np.vectorize(fun)({})\n'
+            ).format(args, self.description, args)
+
+            lcls = {
+                'arg{}'.format(i): param
+                for i, param in enumerate(param_values)
+            }
+
+            exec(code, None, lcls)
+            return lcls['result']
+
+        # otherwise must be a distribtion
+        # TODO: MODEL not supported
         noise_params = self.get_noise_params()
         if self.form == self.Form.NORMAL:
             self.value = np.random.normal(
@@ -451,11 +487,9 @@ class LogLikelihood(models.Model):
         except KeyError:
             pass
 
-        # the distributions need a shape, we use the stacked outputs to
-        # determine the shape, if no outputs then use the shape of the observed
-        # values if no outputs and no observed values then use length of 1st
-        # input
-        values, times, subjects = self.get_inference_data()
+        # the distributions need a shape, take this from the data
+        # if no data then assume scalar
+        values, times, subjects = self.get_data()
         outputs = list(self.outputs.order_by('child_index'))
         if len(outputs) == 0:
             n_distinct_outputs = 0
@@ -465,22 +499,31 @@ class LogLikelihood(models.Model):
         length_by_index = [()] * n_distinct_outputs
         for output in outputs:
             length_by_index[output.child_index] = \
-                0 if output.length is None else output.length
+                1 if output.length is None else output.length
         total_length = sum(length_by_index)
-        if n_distinct_outputs == 0 and values is not None:
-            shape = (len(values),)
-        elif n_distinct_outputs == 0 and values is None:
-            total_length = self.parameters.first().length
-            if total_length is None:
-                total_length = 1
-            shape = () if total_length == 1 else (total_length,)
-        elif total_length == 0:
-            shape = ()
-        else:
-            shape = (total_length,)
 
-        # create the pymc3 op
-        if self.form == self.Form.NORMAL:
+        # set shape and check total length of outputs is < this shape
+        if values is None:
+            shape = ()
+            if total_length > 1:
+                raise RuntimeError(
+                    'log_likelihood {} is scalar but total length of outputs '
+                    'is {}'.format(self.name, total_length)
+                )
+        else:
+            shape = (len(values),)
+            if total_length > shape[0]:
+                raise RuntimeError(
+                    'log_likelihood {} has data of length {} but total length '
+                    'of outputs is {}'.format(
+                        self.name, shape[0], total_length
+                    )
+                )
+
+        # if its not random, just evaluate it, otherwise create the pymc3 op
+        if not self.is_random():
+            op = theano.shared(self.sample())
+        elif self.form == self.Form.NORMAL:
             mean, sigma = self.get_noise_log_likelihoods()
             mean = mean._create_pymc3_model(pm_model, self, ops)
             sigma = sigma._create_pymc3_model(pm_model, self, ops)
@@ -504,12 +547,11 @@ class LogLikelihood(models.Model):
             # ASSUMPTIONS / LIMITATIONS:
             #   - parents of models must be observed random variables (e.g.
             #   can't have equation to, say, measure 2 * model output
-            #   -
             times = []
             subjects = []
             all_subjects = set()
             for parent in parents:
-                _, this_times, this_subjects = parent.get_inference_data()
+                _, this_times, this_subjects = parent.get_data()
                 times.append(this_times)
                 subjects.append(this_subjects)
                 all_subjects.update(this_subjects)
@@ -557,6 +599,11 @@ class LogLikelihood(models.Model):
                             all_params[index] = pymc3_param.reshape(
                                 (1, max_length)
                             )
+                        elif param.length != max_length:
+                            raise RuntimeError(
+                                'all parmeters must be scalar '
+                                'or the same length'
+                            )
 
                 # now we stack them along axis 0
                 all_params = pm.math.stack(all_params, axis=0)
@@ -590,9 +637,7 @@ class LogLikelihood(models.Model):
             if self.biomarker_type is None:
                 op = theano.shared(self.value)
             else:
-                # get the value of the 1st measurement for
-                # this biomarker for each subject
-                op = theano.shared(values[0])
+                op = theano.shared(values)
         else:
             raise RuntimeError('unrecognised form', self.form)
 
@@ -670,8 +715,13 @@ class LogLikelihood(models.Model):
         if self.biomarker_type:
             df = self.biomarker_type.as_pandas(
                 subject_group=self.subject_group,
+                first_time_only=self.time_independent_data
             )
-            return df['values'].tolist(), df['times'].tolist(), df['subjects'].tolist()
+            return (
+                df['values'].tolist(),
+                df['times'].tolist(),
+                df['subjects'].tolist()
+            )
         else:
             return None, None, None
 
@@ -728,7 +778,7 @@ class LogLikelihood(models.Model):
         return pints_log_prior
 
     def create_pints_problem(self):
-        values, times, subjects = self.get_inference_data()
+        values, times, subjects = self.get_data()
         model, fitted_children = self.create_pints_forward_model()
         return pints.SingleOutputProblem(model, times, values), fitted_children
 
