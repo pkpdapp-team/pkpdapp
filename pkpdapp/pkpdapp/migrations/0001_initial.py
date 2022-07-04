@@ -133,8 +133,9 @@ class Migration(migrations.Migration):
                 ('description', models.TextField(blank=True, help_text='description of log_likelihood. For equations will be the code of that equation using Python syntax: arg1 * arg2^arg3', null=True)),
                 ('value', models.FloatField(blank=True, help_text='set if a fixed value is required', null=True)),
                 ('time_independent_data', models.BooleanField(default=False, help_text='True if biomarker_type refers to time-independent data. If there are multiple timepoints in biomarker_type then only the first is taken ')),
+                ('observed', models.BooleanField(default=False, help_text='True if this log_likelihood is observed ')),
                 ('form', models.CharField(choices=[('N', 'Normal'), ('U', 'Uniform'), ('LN', 'Log-Normal'), ('F', 'Fixed'), ('S', 'Sum'), ('E', 'Equation'), ('M', 'Model')], default='F', max_length=2)),
-                ('biomarker_type', models.ForeignKey(blank=True, help_text='data associated with this log_likelihood. This is used for measurement data or for covariates ', null=True, on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.biomarkertype')),
+                ('biomarker_type', models.ForeignKey(blank=True, help_text='data associated with this log_likelihood. This is used for measurement data (observed=True) or for covariates (observed=False). The random variable associated with this log_likelihood has the same shape as this data. For covariates the subject ids in the data correspond to the values of the random variable at that location.', null=True, on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.biomarkertype')),
             ],
         ),
         migrations.CreateModel(

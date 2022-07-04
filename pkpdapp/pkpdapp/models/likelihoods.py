@@ -238,7 +238,8 @@ class LogLikelihood(models.Model):
         blank=True, null=True,
         help_text=(
             'data associated with this log_likelihood. '
-            'This is used for measurement data or for covariates. '
+            'This is used for measurement data (observed=True) '
+            'or for covariates (observed=False). '
             'The random variable associated with this log_likelihood '
             'has the same shape as this data. '
             'For covariates the subject ids in the data correspond '
@@ -247,11 +248,18 @@ class LogLikelihood(models.Model):
     )
 
     time_independent_data = models.BooleanField(
-        default=False,
+        default=True,
         help_text=(
             'True if biomarker_type refers to time-independent data. '
             'If there are multiple timepoints in biomarker_type then only '
             'the first is taken '
+        )
+    )
+
+    observed = models.BooleanField(
+        default=False,
+        help_text=(
+            'True if this log_likelihood is observed '
         )
     )
 
@@ -347,20 +355,20 @@ class LogLikelihood(models.Model):
             self.form == self.Form.LOGNORMAL
         )
 
-    def has_data(self):
-        """
-        True for distributions where there is observed data
-        """
-        return self.biomarker_type is not None
-
     def is_a_prior(self):
         """
-        True for distributions where there is no observed data
+        True for distributions
         """
         return (
             self.is_a_distribution() and
-            self.biomarker_type is None
+            not self.observed
         )
+
+    def has_data(self):
+        """
+        True for distributions where there is data
+        """
+        return self.biomarker_type is not None
 
     def sample(self):
         # if fixed or equation just evaluate it
@@ -400,22 +408,21 @@ class LogLikelihood(models.Model):
         # TODO: MODEL not supported
         noise_params = self.get_noise_params()
         if self.form == self.Form.NORMAL:
-            self.value = np.random.normal(
+            value = np.random.normal(
                 loc=noise_params[0],
                 scale=noise_params[1],
             )
         elif self.form == self.Form.LOGNORMAL:
-            self.value = np.random.lognormal(
+            value = np.random.lognormal(
                 mean=noise_params[0],
                 scale=noise_params[1],
             )
         elif self.form == self.Form.UNIFORM:
-            self.value = np.random.uniform(
+            value = np.random.uniform(
                 low=noise_params[0],
                 high=noise_params[1],
             )
-        self.save()
-        return self.value
+        return value
 
     def add_noise(self, output_values, noise_params=None):
         """
@@ -520,33 +527,42 @@ class LogLikelihood(models.Model):
                     )
                 )
 
+        observed = values if self.observed else None
+
         # if its not random, just evaluate it, otherwise create the pymc3 op
         if not self.is_random():
-            op = theano.shared(self.sample())
+            value = self.sample()
+            if isinstance(value, list):
+                value = np.array(value)
+            op = theano.shared(value)
         elif self.form == self.Form.NORMAL:
             mean, sigma = self.get_noise_log_likelihoods()
             mean = mean._create_pymc3_model(pm_model, self, ops)
             sigma = sigma._create_pymc3_model(pm_model, self, ops)
+            print('create normal', name, mean, sigma, observed, shape)
             op = pm.Normal(
-                name, mean, sigma, observed=values, shape=shape
+                name, mean, sigma, observed=observed, shape=shape
             )
         elif self.form == self.Form.LOGNORMAL:
             mean, sigma = self.get_noise_log_likelihoods()
             mean = mean._create_pymc3_model(pm_model, self, ops)
             sigma = sigma._create_pymc3_model(pm_model, self, ops)
             op = pm.LogNormal(
-                name, mean, sigma, observed=values, shape=shape
+                name, mean, sigma, observed=observed, shape=shape
             )
         elif self.form == self.Form.UNIFORM:
             lower, upper = self.get_noise_log_likelihoods()
             lower = lower._create_pymc3_model(pm_model, self, ops)
             op = pm.Uniform(
-                name, lower, upper, observed=values, shape=shape
+                name, lower, upper, observed=observed, shape=shape
             )
         elif self.form == self.Form.MODEL:
             # ASSUMPTIONS / LIMITATIONS:
             #   - parents of models must be observed random variables (e.g.
             #   can't have equation to, say, measure 2 * model output
+            #   - subject ids of output data, e.g. [0, 1, 2, 8, 10] are the same
+            #     subjects of input data, we only check that the lengths of the
+            #     subject vectors are the same
             times = []
             subjects = []
             all_subjects = set()
@@ -555,6 +571,9 @@ class LogLikelihood(models.Model):
                 times.append(this_times)
                 subjects.append(this_subjects)
                 all_subjects.update(this_subjects)
+
+            all_subjects = sorted(list(all_subjects))
+            n_subjects = len(all_subjects)
 
             # look at all parameters and check their length, if they are all
             # scalar values then we can just run 1 sim, if any are vector
@@ -569,7 +588,6 @@ class LogLikelihood(models.Model):
                 subjects = None
             else:
                 # transform subject ids into an index into all_subjects
-                all_subjects = sorted(list(all_subjects))
                 for i, this_subjects in enumerate(subjects):
                     subjects[i] = np.searchsorted(all_subjects, this_subjects)
 
@@ -592,6 +610,11 @@ class LogLikelihood(models.Model):
                         param.length if param.length is not None else 1
                         for param in fitted_parameters
                     ])
+                    if max_length != n_subjects:
+                        raise RuntimeError(
+                            'Error: n_subjects given by params is '
+                            'different to n_subjects given by output data.'
+                        )
                     for index in range(len(all_params)):
                         param = fitted_parameters[index]
                         pymc3_param = all_params[index]
@@ -637,7 +660,7 @@ class LogLikelihood(models.Model):
             if self.biomarker_type is None:
                 op = theano.shared(self.value)
             else:
-                op = theano.shared(values)
+                op = theano.shared(np.array(values))
         else:
             raise RuntimeError('unrecognised form', self.form)
 
@@ -902,6 +925,7 @@ class LogLikelihood(models.Model):
                 inference=self.inference,
                 variable=model_variable,
                 form=self.Form.NORMAL,
+                time_independent_data=False,
             )
             # add the output_model
             mean_param = parent.parameters.get(parent_index=0)

@@ -291,7 +291,7 @@ class InferenceMixin:
         self._observed_log_likelihoods = [
             ll
             for ll in log_likelihoods
-            if ll.has_data()
+            if ll.observed
         ]
         for ll in self._observed_log_likelihoods:
             print('observed', ll.name, ll.biomarker_type)

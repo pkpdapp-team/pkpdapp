@@ -177,7 +177,6 @@ class InferenceWizardView(views.APIView):
     @staticmethod
     def _set_observed_loglikelihoods(
         obs, models, dataset, inference, subject_groups,
-        subjects
     ):
         # create noise param models
         sigma_models = []
@@ -238,6 +237,7 @@ class InferenceWizardView(views.APIView):
                             parent.name, group.name
                         )
                     parent.biomarker_type = biomarkers[index]
+                    parent.observed = True
                     parent.subject_group = group
                     parent.form = output_forms[index]
                     parent.save()
@@ -246,26 +246,27 @@ class InferenceWizardView(views.APIView):
                     parent.get_noise_log_likelihoods()[1].delete()
                     param = LogLikelihoodParameter.objects.create(
                         parent=parent, child=sigma_models[index],
-                        index=1, name='sigma for ' + output.variable.qname
+                        parent_index=1, name='sigma for ' + output.variable.qname
                     )
                 else:
                     for param in output.parent.parameters.all():
                         if param != output:
                             param.child.delete()
                     output.parent.delete()
+        return biomarkers
 
     @staticmethod
-    def _set_parameters(params, models, inference, dataset):
+    def _set_parameters(params, models, inference, dataset, observed_biomarkers):
         created_params = {}
         params_names = [p['name'] for p in params]
         parser = ExpressionParser()
         for model in models:
             for model_param in model.parameters.all():
                 # if we've already done this param, use the child
-                if model_param.name in pooled_params:
+                if model_param.name in created_params:
                     # in pooled_params
                     old_child = model_param.child
-                    model_param.child = pooled_params[model_param.name]
+                    model_param.child = created_params[model_param.name]
                     model_param.save()
                     old_child.delete()
                     continue
@@ -278,21 +279,20 @@ class InferenceWizardView(views.APIView):
                 except ValueError:
                     param_index = None
                 child = model_param.child
-                if param_index is None:
-                    pooled_params[model_param.name] = child
-                else:
+                if param_index is not None:
                     param_info = params[param_index]
 
                     InferenceWizardView.param_info_to_log_likelihood(
-                        child, param_info, params, parser, dataset, inference
+                        child, param_info, params, parser, dataset, inference,
+                        observed_biomarkers
                     )
 
-                    created_params[model_param.name] = model_param.child
-
+                created_params[model_param.name] = child
 
     @staticmethod
     def param_info_to_log_likelihood(
-            log_likelihood, param_info, params_info, parser, dataset, inference
+        log_likelihood, param_info, params_info, parser, dataset, inference,
+        observed_biomarkers
     ):
         # deal with possible equations in noise params
         # if form is fixed and there is an equation, the child form
@@ -305,28 +305,58 @@ class InferenceWizardView(views.APIView):
         pooled = param_info.get('pooled', True)
         log_likelihood.form = param_form
         log_likelihood.pooled = pooled
+
+        biomarker_type = None
         if param_form == 'F' and isinstance(noise_params[0], str):
-            InferenceWizardView.to_equation_log_likelihood(
-                log_likelihood, noise_params[0], params_info, parser, dataset, inference
+            biomarker_type = InferenceWizardView.to_equation_log_likelihood(
+                log_likelihood, noise_params[0], params_info, parser, dataset,
+                inference, observed_biomarkers
             )
         elif param_form == 'F':
             log_likelihood.value = noise_params[0]
         else:
             log_likelihood.value = None
+
+        # if we're not pooled then need to give a biomarker_type to get list of
+        # subjects if there is a biomarker covariate in the children use that,
+        # otherwise use the list of subjects in the measured data
+        if not pooled:
+            if biomarker_type is None and observed_biomarkers:
+                if len(observed_biomarkers) == 0:
+                    raise RuntimeError('no observed biomakers found')
+
+                # TODO: assumes that multiple observed biomarkers have
+                # identical subjects
+                log_likelihood.biomarker_type = observed_biomarkers[0]
+                log_likelihood.time_independent_data = True
+            else:
+                log_likelihood.biomarker_type = biomarker_type
+                log_likelihood.time_independent_data = True
+
         log_likelihood.save()
+
+        # set length of output appropriately if not pooled
+        if not pooled:
+            _, _, subjects = log_likelihood.get_data()
+            output = log_likelihood.outputs.first()
+            output.length = len(subjects)
+            output.save()
+
         for i, p in enumerate(log_likelihood.parameters.all()):
-            if isinstance(noise_params[p.index], str):
+            param_index = p.parent_index
+            if isinstance(noise_params[param_index], str):
                 InferenceWizardView.to_equation_log_likelihood(
-                    p.child, noise_params[p.index], params_info, parser,
-                    dataset, inference
+                    p.child, noise_params[param_index], params_info, parser,
+                    dataset, inference, observed_biomarkers
                 )
             else:
-                p.child.value = noise_params[p.index]
+                p.child.value = noise_params[param_index]
             p.child.save()
 
     @staticmethod
     def to_equation_log_likelihood(
-            log_likelihood, eqn_str, params_info, parser, dataset, inference
+            log_likelihood, eqn_str, params_info, parser, dataset, inference,
+        observed_biomarkers
     ):
         # set form to equation and remove existing children
         log_likelihood.children.clear()
@@ -348,6 +378,7 @@ class InferenceWizardView(views.APIView):
         log_likelihood.save()
 
         # create children using parameters and biomarkers
+        biomarker_type = None
         for i, param in enumerate(params_in_eqn_str):
             if param[0] == 'parameter':
                 param_info = [
@@ -361,7 +392,8 @@ class InferenceWizardView(views.APIView):
                     value=0.0
                 )
                 InferenceWizardView.param_info_to_log_likelihood(
-                    new_child, param_info, params_info, parser, dataset, inference
+                    new_child, param_info, params_info, parser, dataset, inference,
+                    observed_biomarkers
                 )
 
             elif param[0] == 'biomarker':
@@ -377,9 +409,10 @@ class InferenceWizardView(views.APIView):
             LogLikelihoodParameter.objects.create(
                 parent=log_likelihood,
                 child=new_child,
-                index=i,
+                parent_index=i,
                 name=param[1]
             )
+        return biomarker_type
 
     def post(self, request, format=None):
         errors = {}
@@ -601,13 +634,13 @@ class InferenceWizardView(views.APIView):
             ) for m in models
         ]
 
-        self._set_observed_loglikelihoods(
+        biomarkers = self._set_observed_loglikelihoods(
             data['observations'], model_loglikelihoods,
             dataset, inference, subject_groups
         )
 
         self._set_parameters(
-            data['parameters'], model_loglikelihoods, inference, dataset
+            data['parameters'], model_loglikelihoods, inference, dataset, biomarkers
         )
 
         inference.run_inference()

@@ -178,6 +178,20 @@ class MyokitForwardModel():
         parameters = np.array(parameters)
         print('parameters shape', parameters.shape)
 
+        if self._subjects is None and parameters.ndim != 1:
+            raise ValueError(
+                'no subjects provided, but parameters shape is {}'.format(
+                    parameters.shape
+                )
+            )
+
+        if self._subjects is not None and parameters.ndim != 2:
+            raise ValueError(
+                'subjects provided, but parameters shape is {}'.format(
+                    parameters.shape
+                )
+            )
+
         if parameters.shape[0] != self._n_parameters:
             raise ValueError('Dim 0 of parameters supplied must equal ' +
                              'number of non-fixed model parameters.')

@@ -104,6 +104,7 @@ class TestInferenceMixinPkModel(TestCase):
         for output in log_likelihood.outputs.all():
             if output.variable.qname in output_names:
                 output.parent.biomarker_type = self.biomarker_type
+                output.parent.observed = True
                 output.parent.save()
                 outputs.append(output.parent)
             else:
@@ -185,18 +186,20 @@ class TestInferenceMixinPkModel(TestCase):
         for output in log_likelihood.outputs.all():
             if output.variable.qname in output_names:
                 output.parent.biomarker_type = self.biomarker_type
+                output.parent.observed = True
                 output.parent.save()
                 outputs.append(output.parent)
             else:
                 output.parent.delete()
-        values, times, subjects = outputs[0].get_inference_data()
+        values, times, subjects = outputs[0].get_data()
         n_subjects = len(set(subjects))
 
-        # add a prior on the first param
+        # first param a new rv is drawn for each subject, set length
         first_param = log_likelihood.parameters.first()
         first_param.length = n_subjects
         first_param.save()
         first_param.child.form = LogLikelihood.Form.NORMAL
+        first_param.child.biomarker_type = self.biomarker_type
         first_param.child.save()
 
         model = outputs[0].create_pymc3_model()
@@ -248,6 +251,7 @@ class TestInferenceMixinPdModel(TestCase):
         for output in log_likelihood.outputs.all():
             if output.variable.qname in output_names:
                 output.parent.biomarker_type = self.biomarker_type
+                output.parent.observed = True
                 output.parent.save()
                 outputs.append(output.parent)
             else:
@@ -255,11 +259,11 @@ class TestInferenceMixinPdModel(TestCase):
 
         # add a prior on the first param
         first_param = log_likelihood.parameters.first()
-        prior_name = first_param.name
+        prior_name = first_param.child.name
         first_param.child.form = LogLikelihood.Form.NORMAL
         first_param.child.save()
 
-        model = outputs[0].create_pymc3_model(outputs[1])
+        model = outputs[0].create_pymc3_model()
 
         # check everything is in there
         model[prior_name]
@@ -288,6 +292,7 @@ class TestInferenceMixinPdModel(TestCase):
         for output in log_likelihood.outputs.all():
             if output.variable.qname in output_names:
                 output.parent.biomarker_type = self.biomarker_type
+                output.parent.observed = True
                 output.parent.save()
                 outputs.append(output.parent)
             else:
@@ -306,6 +311,7 @@ class TestInferenceMixinPdModel(TestCase):
         first_param.length = n_subjects
         first_param.save()
         first_param.child.biomarker_type = body_weight_biomarker_type
+        first_param.child.time_independent_data = True
         first_param.child.form = LogLikelihood.Form.NORMAL
         first_param.child.save()
 

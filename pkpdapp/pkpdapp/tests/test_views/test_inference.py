@@ -112,13 +112,12 @@ class TestInferenceWizardView(APITestCase):
         self.assertEqual(response_data['initialization_strategy'], 'R')
 
         # check number of log_likelihoods, and that the population_parameter is there
-        self.assertEqual(len(response_data['log_likelihoods']), 30)
+        self.assertEqual(len(response_data['log_likelihoods']), 16)
         found_it = False
         for ll in response_data['log_likelihoods']:
             if ll['name'] == 'population_parameter':
                 found_it = True
                 self.assertEqual(len(ll['parameters']), 2)
-                model_id = ll['id']
         self.assertTrue(found_it)
 
         # check that the equation log_likelihood looks ok
