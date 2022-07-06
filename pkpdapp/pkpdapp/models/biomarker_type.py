@@ -76,6 +76,10 @@ class BiomarkerType(models.Model):
         return self.dataset.get_project()
 
     def as_pandas(self, subject_group=None, first_time_only=False):
+        """
+        if first_time_only then ordered by subject
+        if not first_time_only then ordered by time
+        """
         if subject_group and first_time_only:
             earliest = self.biomarkers.filter(
                 subject=OuterRef('subject')).order_by('time')
@@ -83,7 +87,7 @@ class BiomarkerType(models.Model):
                 self.biomarkers.filter(
                     subject__in=subject_group.subjects.all(),
                     time=Subquery(earliest.values('time')[:1])
-                ).values_list(
+                ).order_by('subject').values_list(
                     'time', 'subject__id', 'value'
                 )
         elif subject_group and not first_time_only:
@@ -97,7 +101,7 @@ class BiomarkerType(models.Model):
                 subject=OuterRef('subject')).order_by('time')
             times_subjects_values = self.biomarkers.filter(
                 time=Subquery(earliest.values('time')[:1])
-            ).values_list(
+            ).order_by('subject').values_list(
                 'time', 'subject__id', 'value'
             )
         else:

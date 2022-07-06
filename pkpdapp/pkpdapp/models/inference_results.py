@@ -8,6 +8,7 @@ from django.db import models
 from pkpdapp.models import (
     Inference,
     LogLikelihood,
+    Subject,
 )
 import pandas as pd
 
@@ -108,6 +109,13 @@ class InferenceResult(models.Model):
         on_delete=models.CASCADE,
         related_name='inference_results',
         help_text='log_likelihood related to this result'
+    )
+    subject = models.ForeignKey(
+        Subject,
+        on_delete=models.CASCADE,
+        blank=True, null=True,
+        related_name='inference_results',
+        help_text='subject related to this result'
     )
     iteration = models.IntegerField(
         help_text='Iteration'

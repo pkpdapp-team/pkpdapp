@@ -13,7 +13,7 @@ import numpy as np
 import scipy.stats as sps
 from pkpdapp.models import (
     Variable, BiomarkerType,
-    MyokitForwardModel, SubjectGroup, Subject
+    MyokitForwardModel, SubjectGroup, Subject,
 )
 
 
@@ -165,17 +165,24 @@ class LogLikelihoodParameter(models.Model):
         self.child.form = self.child.Form.FIXED
         self.child.save()
 
-    def set_uniform_prior(self, lower, upper):
+    def set_uniform_prior(self, lower, upper, biomarker_type=None):
         child = self.child
         child.form = child.Form.UNIFORM
+        if biomarker_type is not None:
+            child.biomarker_type = biomarker_type
+            child.time_independent_data = True
         child.save()
+        if biomarker_type is not None:
+            _, _, subjects = child.get_data()
+            self.length = len(subjects)
+            self.save()
         lower_param = LogLikelihoodParameter.objects.get(
-            parent=child, index=0
+            parent=child, parent_index=0
         )
         lower_param.child.value = lower
         lower_param.child.save()
         upper_param = LogLikelihoodParameter.objects.get(
-            parent=child, index=1
+            parent=child, parent_index=1
         )
         upper_param.child.value = upper
         upper_param.child.save()
@@ -446,6 +453,33 @@ class LogLikelihood(models.Model):
             )
         return output_values
 
+    def get_length_by_index(self):
+        outputs = list(self.outputs.order_by('child_index'))
+        if len(outputs) == 0:
+            n_distinct_outputs = 0
+        else:
+            n_distinct_outputs = outputs[-1].child_index + 1
+        length_by_index = [()] * n_distinct_outputs
+        for output in outputs:
+            length_by_index[output.child_index] = \
+                1 if output.length is None else output.length
+        return length_by_index
+
+    def get_total_length(self):
+        length_by_index = self.get_length_by_index()
+        total_length = sum(length_by_index)
+        return total_length
+
+    def get_results(self, chain=None, iteration=None):
+        """
+        get inference results, respecting order of subjects
+        defined by this log_likelihood
+        """
+        return self.inference_results.filter(
+            chain=chain,
+            iteration=iteration,
+        ).order_by('subject').values_list('value', flat=True)
+
     def noise_range(self, output_values, noise_params=None):
         """
         return 10% and 90% noise levels from a set of output values
@@ -553,6 +587,7 @@ class LogLikelihood(models.Model):
         elif self.form == self.Form.UNIFORM:
             lower, upper = self.get_noise_log_likelihoods()
             lower = lower._create_pymc3_model(pm_model, self, ops)
+            upper = upper._create_pymc3_model(pm_model, self, ops)
             op = pm.Uniform(
                 name, lower, upper, observed=observed, shape=shape
             )
@@ -1052,6 +1087,7 @@ class LogLikelihood(models.Model):
             'value': self.value,
             'variable': new_variable,
             'biomarker_type': self.biomarker_type,
+            'observed': self.observed,
             'subject_group': self.subject_group,
             'form': self.form,
         }
