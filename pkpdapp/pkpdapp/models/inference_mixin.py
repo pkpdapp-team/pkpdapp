@@ -403,6 +403,7 @@ class InferenceMixin:
                     )
                 x0 = np.hstack(x0)
             else:
+                print('sample', [p.sample() for p in self._priors])
                 x0 = np.hstack(
                     [p.sample() for p in self._priors]
                 )
@@ -447,6 +448,7 @@ class InferenceMixin:
 
                 # write x0 to empty chain
                 self.inference.number_of_function_evals += 1
+                print('x0', x0)
                 fn_val = self._pints_log_posterior(
                     self._pints_log_posterior.to_search(x0)
                 )
@@ -618,6 +620,7 @@ class PyMC3LogPosterior(pints.LogPDF):
             else:
                 self._prior_slices.append(curr_index)
             curr_index += prior_length
+        print('slices are', self._prior_slices)
         self._transform_names = [
             t if t is None else t.name for t in self._transforms
         ]

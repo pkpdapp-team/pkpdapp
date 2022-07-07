@@ -176,7 +176,6 @@ class MyokitForwardModel():
         is not None, with shape (n_parameters, n_subjects)
         """
         parameters = np.array(parameters)
-        print('parameters shape', parameters.shape)
 
         if self._subjects is None and parameters.ndim != 1:
             raise ValueError(

@@ -13,7 +13,7 @@ from pkpdapp.models import (
     LogLikelihood,
     Project, BiomarkerType,
     InferenceMixin, Algorithm, InferenceChain, InferenceResult,
-    InferenceFunctionResult,
+    InferenceFunctionResult, LogLikelihoodParameter,
 )
 from django.core.cache import cache
 
@@ -495,19 +495,13 @@ class TestInferenceMixinSingleOutputOptimisationPopulation(TestCase):
                 'value', flat=True
             )
             self.assertEqual(len(f_vals), 11)
-            p_vals_all = []
             for prior in priors:
                 res = chain.inference_results.filter(log_likelihood=prior)
                 p_vals = res.order_by('iteration').values_list(
                     'value', flat=True
                 )
-                self.assertEqual(len(p_vals), 11)
-                p_vals_all.append(p_vals)
-                iterations = res.order_by('iteration').values_list(
-                    'iteration', flat=True
-                )
-                expected = list(range(11))
-                self.assertTrue(np.array_equal(iterations, expected))
+                length = prior.get_total_length()
+                self.assertEqual(len(p_vals), 11 * length)
 
         # don't test for inference log_posterior(param) = fn since they won't
         # because of the way the 'best' params are picked
@@ -517,3 +511,129 @@ class TestInferenceMixinSingleOutputOptimisationPopulation(TestCase):
         self.assertTrue(inference.number_of_function_evals > 0)
 
 
+class TestInferenceMixinSingleOutputOptimisationCovariate(TestCase):
+    def setUp(self):
+        # ensure we've got nothing in the cache
+        cache._cache.flush_all()
+
+        self.project = Project.objects.get(
+            name='demo',
+        )
+        biomarker_type = BiomarkerType.objects.get(
+            name='Tumour volume',
+            dataset__name='lxf_control_growth'
+        )
+        model = PharmacodynamicModel.objects.get(
+            name='tumour_growth_inhibition_model_koch',
+            read_only=False,
+        )
+        self.inference = Inference.objects.create(
+            name='bob',
+            project=self.project,
+            max_number_of_iterations=10,
+            algorithm=Algorithm.objects.get(name='XNES'),
+            number_of_chains=3,
+        )
+        log_likelihood = LogLikelihood.objects.create(
+            variable=model.variables.first(),
+            inference=self.inference,
+            form=LogLikelihood.Form.MODEL
+        )
+
+        # remove all outputs except
+        output_names = [
+            'myokit.tumour_volume',
+        ]
+        outputs = []
+        for output in log_likelihood.outputs.all():
+            if output.variable.qname in output_names:
+                output.parent.biomarker_type = biomarker_type
+                output.parent.observed = True
+                output.parent.save()
+                outputs.append(output.parent)
+            else:
+                for param in output.parent.parameters.all():
+                    if param != output:
+                        param.child.delete()
+                output.parent.delete()
+        self.outputs = outputs
+
+        # set uniform prior on everything, except
+        # we'll do a population prior on the first one
+        for i, param in enumerate(log_likelihood.parameters.all()):
+            if i == 0:
+                # first param is sampled from a normal distribution with a mean
+                # derived from subject body weight
+                body_weight_biomarker_type = BiomarkerType.objects.get(
+                    name='Body weight',
+                    dataset__name='lxf_control_growth'
+                )
+                param.child.biomarker_type = body_weight_biomarker_type
+                param.child.time_independent_data = True
+                param.child.form = LogLikelihood.Form.NORMAL
+                param.child.save()
+                body_weight_values, _, subjects = param.child.get_data()
+                param.length = len(subjects)
+                param.save()
+
+                # use a covariate to adjust the mean of the normal according to
+                # body weight
+                mean, sigma = param.child.get_noise_log_likelihoods()
+                mean.form = LogLikelihood.Form.EQUATION
+                mean.description = '1.0 if arg0 < 20 else 2.0'
+
+                mean.biomarker_type = body_weight_biomarker_type
+                mean.time_independent_data = True
+                mean.save()
+                body_weight = LogLikelihood.objects.create(
+                    name='Body weight',
+                    inference=self.inference,
+                    form=LogLikelihood.Form.FIXED,
+                    biomarker_type=body_weight_biomarker_type,
+                    time_independent_data=True,
+                )
+                LogLikelihoodParameter.objects.create(
+                    name='Body weight',
+                    parent=mean,
+                    child=body_weight,
+                    parent_index=0,
+                    length=len(subjects)
+                )
+                sigma.value = 0.01
+                sigma.save()
+            else:
+                param.set_uniform_prior(0.0, 2.0)
+
+        # 'run' inference to create copies of models
+        self.inference.run_inference(test=True)
+
+        # create mixin object
+        self.inference_mixin = InferenceMixin(self.inference)
+
+    def test_inference_runs(self):
+        # tests that inference runs and writes results to db
+        self.inference_mixin.run_inference()
+
+        chains = self.inference_mixin.inference.chains.all()
+        self.assertEqual(len(chains), 3)
+        priors = self.inference_mixin._priors
+        for chain in chains:
+            fun_res = chain.inference_function_results
+            f_vals = fun_res.order_by('iteration').values_list(
+                'value', flat=True
+            )
+            self.assertEqual(len(f_vals), 11)
+            for prior in priors:
+                res = chain.inference_results.filter(log_likelihood=prior)
+                p_vals = res.order_by('iteration').values_list(
+                    'value', flat=True
+                )
+                length = prior.get_total_length()
+                self.assertEqual(len(p_vals), 11 * length)
+
+        # don't test for inference log_posterior(param) = fn since they won't
+        # because of the way the 'best' params are picked
+
+        inference = self.inference_mixin.inference
+        self.assertTrue(inference.time_elapsed > 0)
+        self.assertTrue(inference.number_of_function_evals > 0)

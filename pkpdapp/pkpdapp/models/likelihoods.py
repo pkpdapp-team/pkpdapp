@@ -412,22 +412,30 @@ class LogLikelihood(models.Model):
             return lcls['result']
 
         # otherwise must be a distribtion
+
         # TODO: MODEL not supported
+        length = self.get_total_length()
+        # don't do an array length 1, use scalar instead
+        if length == 1:
+            length = None
         noise_params = self.get_noise_params()
         if self.form == self.Form.NORMAL:
             value = np.random.normal(
                 loc=noise_params[0],
                 scale=noise_params[1],
+                size=length,
             )
         elif self.form == self.Form.LOGNORMAL:
             value = np.random.lognormal(
                 mean=noise_params[0],
                 scale=noise_params[1],
+                size=length,
             )
         elif self.form == self.Form.UNIFORM:
             value = np.random.uniform(
                 low=noise_params[0],
                 high=noise_params[1],
+                size=length,
             )
         return value
 
@@ -653,18 +661,17 @@ class LogLikelihood(models.Model):
                     for index in range(len(all_params)):
                         param = fitted_parameters[index]
                         pymc3_param = all_params[index]
-                        if param.length is None:
+                        if pymc3_param.ndim == 0:
+                            all_params[index] = theano.tensor.tile(
+                                pymc3_param, (1, max_length)
+                            )
+                        else:
                             all_params[index] = pymc3_param.reshape(
                                 (1, max_length)
                             )
-                        elif param.length != max_length:
-                            raise RuntimeError(
-                                'all parmeters must be scalar '
-                                'or the same length'
-                            )
 
                 # now we stack them along axis 0
-                all_params = pm.math.stack(all_params, axis=0)
+                all_params = pm.math.concatenate(all_params, axis=0)
             else:
                 all_params = []
             op = forward_model_op(all_params)
@@ -988,17 +995,10 @@ class LogLikelihood(models.Model):
                     variable = param.variable
 
         if self.form == self.Form.NORMAL:
-            pnames = [
+            names = [
                 "mean for " + self.name,
                 "standard deviation for " + self.name,
             ]
-            if variable is not None:
-                names = [
-                    "mean for " + variable.qname,
-                    "standard deviation for " + variable.qname,
-                ]
-            else:
-                names = pnames
 
             if variable is not None:
                 defaults = [
@@ -1008,17 +1008,10 @@ class LogLikelihood(models.Model):
             else:
                 defaults = [0.0, 1.0]
         elif self.form == self.Form.LOGNORMAL:
-            pnames = [
+            names = [
                 "mean for " + self.name,
                 "sigma for " + self.name,
             ]
-            if variable is not None:
-                names = [
-                    "mean for " + variable.qname,
-                    "sigma for " + variable.qname,
-                ]
-            else:
-                names = pnames
 
             if variable is not None:
                 defaults = [
@@ -1028,17 +1021,10 @@ class LogLikelihood(models.Model):
             else:
                 defaults = [0.0, 1.0]
         elif self.form == self.Form.UNIFORM:
-            pnames = [
+            names = [
                 "lower for " + self.name,
                 "upper for " + self.name,
             ]
-            if variable is not None:
-                names = [
-                    "lower for " + variable.qname,
-                    "upper for " + variable.qname,
-                ]
-            else:
-                names = pnames
 
             if variable is not None:
                 defaults = [
@@ -1049,10 +1035,9 @@ class LogLikelihood(models.Model):
                 defaults = [0.0, 1.0]
         else:
             names = []
-            pnames = []
             defaults = []
-        for param_index, (name, pname, default) in enumerate(
-                zip(names, pnames, defaults)
+        for param_index, (name, default) in enumerate(
+                zip(names, defaults)
         ):
             child = LogLikelihood.objects.create(
                 name=name,
@@ -1063,7 +1048,7 @@ class LogLikelihood(models.Model):
             LogLikelihoodParameter.objects.create(
                 parent=self, child=child,
                 parent_index=param_index,
-                name=pname,
+                name=name,
             )
 
     def create_stored_log_likelihood(self, inference, new_models):
