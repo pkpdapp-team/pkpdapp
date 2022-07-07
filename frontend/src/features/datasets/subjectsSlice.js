@@ -89,3 +89,6 @@ export const selectSubjectDisplayGroups = (state) => {
 export const selectSubjectsByDataset = (state, dataset) => {
   return selectAllSubjects(state).filter((subject) => subject.dataset === dataset.id);
 };
+export const selectSubjectsByIds = (state, ids) => {
+  return selectAllSubjects(state).filter((subject) => subject.dataset === dataset.id);
+}

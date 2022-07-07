@@ -11,6 +11,7 @@ import { Chart, registerables, Interaction } from "chart.js";
 import { CrosshairPlugin, Interpolate } from "chartjs-plugin-crosshair";
 import { getColor, getColorBackground } from "../modelling/ShapesAndColors";
 import annotationPlugin from 'chartjs-plugin-annotation';
+import { selectSubjectsByIds } from "../datasets/subjectsSlice";
 
 
 
@@ -253,6 +254,43 @@ function InferenceChartFunction({ chains }) {
   );
 }
 
+
+function InferenceChartTracesPrior({ prior }) {
+  const multiple_subjects = !('times' in prior.chains[0])
+  const subjectIds = multiple_subjects ? Object.keys(prior.chains[0]) : []
+  const subjects = useSelector((state) => selectSubjectsByIds(state, subjectIds));
+  const [subject, setSubject] = React.useState(multiple_subjects ? subjects[0].id : null);
+  const subjectOptions = subjects.map(s => ({label: s.id_in_dataset, value: s.id}))
+
+  return (
+
+      <React.Fragment key={prior.id}>
+        {multiple_subjects &&
+        <FormControl fullWidth>
+          <InputLabel id="subject-select-label">Age</InputLabel>
+          <Select
+            labelId="subject-select-label"
+            id="subject-select"
+            value={age}
+            label="Age"
+            onChange={handleSubjectChange}
+          >
+            <MenuItem value={10}>Ten</MenuItem>
+            <MenuItem value={20}>Twenty</MenuItem>
+            <MenuItem value={30}>Thirty</MenuItem>
+          </Select>
+        </FormControl>
+        }
+        <Grid item xs={12} md={8}>
+        <InferenceChartTrace prior={prior} />
+        </Grid>
+        <Grid item xs={12} md={4}>
+        <InferenceChartDistribution prior={prior} />
+        </Grid>
+      </React.Fragment>
+  )
+}
+
 export default function InferenceChartTraces({ inference, priorsWithChainValues, chains }) {
   const classes = useStyles();
   
@@ -263,14 +301,7 @@ export default function InferenceChartTraces({ inference, priorsWithChainValues,
           <InferenceChartFunction chains={chains} />
         </Grid>
       {priorsWithChainValues.map(prior => (
-        <React.Fragment key={prior.id}>
-          <Grid item xs={12} md={8}>
-          <InferenceChartTrace prior={prior} />
-          </Grid>
-          <Grid item xs={12} md={4}>
-          <InferenceChartDistribution prior={prior} />
-          </Grid>
-        </React.Fragment>
+        <InferenceChartTracesPrior prior={prior} />
       ))}
       </Grid>
     </div>
