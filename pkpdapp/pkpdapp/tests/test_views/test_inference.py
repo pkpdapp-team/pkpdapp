@@ -142,7 +142,7 @@ class TestInferenceWizardView(APITestCase):
         # graph.render(directory='test', view=True)
 
         log_posterior(
-            log_posterior.to_search([0.5, 0.12, 0.1])
+            log_posterior.to_search([0.5] * log_posterior.n_parameters())
         )
 
     def test_pd_inference_runs(self):
@@ -237,6 +237,10 @@ class TestInferenceWizardView(APITestCase):
                 self.assertEqual(ll['parameters'][0]['name'],
                                  pd_output_name)
                 self.assertEqual(ll['form'], 'N')
+                self.assertEqual(
+                    ll['biomarker_type'],
+                    pd_dataset.biomarker_types.get(name=pd_biomarker_name).id
+                )
                 self.assertEqual(ll['parameters'][0]['child'], model_id)
                 sigma_ll = ll['parameters'][1]['child']
         self.assertTrue(found_it)
@@ -371,12 +375,12 @@ class TestInferenceWizardView(APITestCase):
         self.assertEqual(response_data['initialization_strategy'], 'R')
 
         # check number of log_likelihoods, and that the model ll is there
-        self.assertEqual(len(response_data['log_likelihoods']), 16)
+        self.assertEqual(len(response_data['log_likelihoods']), 17)
         found_it = False
         for ll in response_data['log_likelihoods']:
             if ll['name'] == 'my wonderful model':
                 found_it = True
-                self.assertEqual(len(ll['parameters']), 9)
+                self.assertEqual(len(ll['parameters']), 10)
                 model_id = ll['id']
         self.assertTrue(found_it)
 
@@ -516,7 +520,7 @@ class TestInferenceWizardView(APITestCase):
         self.assertEqual(response_data['initialization_strategy'], 'R')
 
         # check number of log_likelihoods, and that the 5 model ll's are there
-        self.assertEqual(len(response_data['log_likelihoods']), 26)
+        self.assertEqual(len(response_data['log_likelihoods']), 27)
         found_it = 0
         model_ids = []
         model_name = 'my wonderful model'
@@ -527,9 +531,9 @@ class TestInferenceWizardView(APITestCase):
                     id=ll['model'][1]
                 )
                 if dbmodel.protocol.dose_type == 'D':
-                    self.assertEqual(len(ll['parameters']), 9)
+                    self.assertEqual(len(ll['parameters']), 10)
                 elif dbmodel.protocol.dose_type == 'I':
-                    self.assertEqual(len(ll['parameters']), 11)
+                    self.assertEqual(len(ll['parameters']), 12)
                 model_ids.append(ll['id'])
         self.assertEqual(found_it, 5)
 

@@ -221,6 +221,8 @@ class InferenceWizardView(views.APIView):
                 biomarker = None
             biomarkers.append(biomarker)
 
+        print('found biomarkers', biomarkers)
+
         for model, group in zip(models, subject_groups):
             # remove all outputs (and their parameters)
             # except those in output_names
@@ -237,6 +239,8 @@ class InferenceWizardView(views.APIView):
                             parent.name, group.name
                         )
                     parent.biomarker_type = biomarkers[index]
+                    print('setting biomarker', biomarkers[index],
+                          biomarkers[index].name)
                     parent.observed = True
                     parent.subject_group = group
                     parent.form = output_forms[index]
@@ -640,7 +644,8 @@ class InferenceWizardView(views.APIView):
         )
 
         self._set_parameters(
-            data['parameters'], model_loglikelihoods, inference, dataset, biomarkers
+            data['parameters'], model_loglikelihoods, inference, dataset,
+            biomarkers
         )
 
         inference.run_inference()

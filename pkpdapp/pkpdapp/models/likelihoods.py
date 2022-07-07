@@ -611,6 +611,8 @@ class LogLikelihood(models.Model):
             all_subjects = set()
             for parent in parents:
                 _, this_times, this_subjects = parent.get_data()
+                print('doing parent', parent.name, parent.biomarker_type,
+                      parent.observed)
                 times.append(this_times)
                 subjects.append(this_subjects)
                 all_subjects.update(this_subjects)
@@ -663,15 +665,11 @@ class LogLikelihood(models.Model):
                         pymc3_param = all_params[index]
                         if pymc3_param.ndim == 0:
                             all_params[index] = theano.tensor.tile(
-                                pymc3_param, (1, max_length)
-                            )
-                        else:
-                            all_params[index] = pymc3_param.reshape(
-                                (1, max_length)
+                                pymc3_param, (max_length)
                             )
 
                 # now we stack them along axis 0
-                all_params = pm.math.concatenate(all_params, axis=0)
+                all_params = pm.math.stack(all_params, axis=0)
             else:
                 all_params = []
             op = forward_model_op(all_params)

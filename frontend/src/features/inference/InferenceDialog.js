@@ -509,24 +509,13 @@ export default function InferenceDialog({ project, open, handleCloseDialog, defa
         label="Dataset"
       />
       </Grid>
-      <Grid item xs={6}>
-      <FormSelectField
-        control={control}
-        defaultValue={defaultValues.grouping}
-        options={grouping_options}
-        name="grouping"
-        label="Grouping"
-      />
-      </Grid>
 
       {chosenPkModel && chosenDataset && 
       <Grid item xs={12}>
         <Typography>
-          Note: there are {chosenDataset.protocols.length} dosing protocols 
-          and {chosenDataset.subjects.length} subjects in this dataset. If "Grouping" is set
-          to "by protocol" then the inference will use one model per protocol (this is
-          the default). If "Grouping" is set to "by subject" then the inference will use
-          one model per subject
+          Note: there are {chosenDataset.protocols.length} dosing protocols and
+          {chosenDataset.subjects.length} subjects in this dataset. The
+          inference will use generate one model per protocol
         </Typography>
       </Grid>
       }
