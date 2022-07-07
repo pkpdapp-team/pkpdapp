@@ -57,19 +57,21 @@ class InferenceChain(models.Model):
         priors_values = \
             self.inference_results.filter(
                 iteration__gt=self.inference.burn_in
-            ).order_by('iteration').values_list(
-                'log_likelihood', 'value', 'iteration'
+            ).order_by('iteration', 'subject').values_list(
+                'log_likelihood', 'value', 'iteration', 'subject'
             )
         if priors_values:
-            priors, values, iterations = list(zip(*priors_values))
+            priors, values, iterations, subjects = list(zip(*priors_values))
         else:
             priors = []
             values = []
             iterations = []
+            subjects = []
         df = pd.DataFrame.from_dict({
             'priors': priors,
             'values': values,
             'iterations': iterations,
+            'subjects': subjects,
         })
 
         return df

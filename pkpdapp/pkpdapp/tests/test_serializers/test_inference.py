@@ -49,6 +49,7 @@ class TestInferenceSerializer(TestCase):
         for output in log_likelihood.outputs.all():
             if output.variable.qname in output_names:
                 output.parent.biomarker_type = biomarker_type
+                output.parent.observed = True
                 output.parent.save()
                 outputs.append(output.parent)
             else:
@@ -58,8 +59,15 @@ class TestInferenceSerializer(TestCase):
                 output.parent.delete()
 
         # set uniform prior on everything, except amounts
-        for param in log_likelihood.parameters.all():
-            param.set_uniform_prior(0.0, 2.0)
+        for i, param in enumerate(
+                log_likelihood.parameters.all()
+        ):
+            if i == 0:
+                param.set_uniform_prior(
+                    0.0, 2.0, biomarker_type=biomarker_type
+                )
+            else:
+                param.set_uniform_prior(0.0, 2.0)
 
     def test_create(self):
         serializer = InferenceSerializer()
@@ -123,3 +131,8 @@ class TestInferenceSerializer(TestCase):
         data = chain_serializer.data
         self.assertTrue('outputs' in data)
         self.assertTrue(len(data['outputs']) > 0)
+        self.assertTrue('data' in data)
+        self.assertTrue('kde' in data['data'])
+        self.assertTrue(len(data['data']['kde']) > 0)
+        self.assertTrue('chain' in data['data'])
+        self.assertTrue(len(data['data']['chain']) > 0)

@@ -125,13 +125,12 @@ class InferenceChainSerializer(serializers.ModelSerializer):
     def get_data(self, inference_chain):
         chain = inference_chain.as_pandas()
         function_values = inference_chain.function_as_pandas()
-        by_priors = chain.groupby('priors')
+        by_priors = chain.groupby(['priors', 'subjects'], dropna=False)
 
         chain = {}
         kde = {}
 
-        for prior, frame in by_priors:
-            prior = int(frame['priors'].iloc[0])
+        for (prior, subject), frame in by_priors:
             values = frame['values']
 
             # get kde density of chains
@@ -139,25 +138,41 @@ class InferenceChainSerializer(serializers.ModelSerializer):
             max_value = values.max()
             kde_values = np.linspace(min_value, max_value, 100)
             kde_densities = scipy.stats.gaussian_kde(values)(kde_values)
-            kde[prior] = {
-                'values': kde_values.tolist(),
-                'densities': kde_densities.tolist(),
-            }
+            if np.isnan(subject):
+                kde[prior] = {
+                    'values': kde_values.tolist(),
+                    'densities': kde_densities.tolist(),
+                }
+            else:
+                if prior not in kde:
+                    kde[prior] = {}
+                kde[prior][subject] = {
+                    'values': kde_values.tolist(),
+                    'densities': kde_densities.tolist(),
+                }
 
         # reduce to max 500 values for each prior
         sample_n = 500
         if any(by_priors['values'].count() > sample_n):
             by_priors = by_priors.sample(
                 n=sample_n
-            ).sort_index().groupby('priors')
+            ).sort_index().groupby(['priors', 'subjects'])
 
-        for prior, frame in by_priors:
+        for (prior, subject), frame in by_priors:
             values = frame['values']
             iterations = frame['iterations']
-            chain[prior] = {
-                'values': values.tolist(),
-                'iterations': iterations.tolist()
-            }
+            if np.isnan(subject):
+                chain[prior] = {
+                    'values': values.tolist(),
+                    'iterations': iterations.tolist()
+                }
+            else:
+                if prior not in chain:
+                    chain[prior] = {}
+                chain[prior][subject] = {
+                    'values': values.tolist(),
+                    'iterations': iterations.tolist()
+                }
 
         if len(function_values.index) > sample_n:
             function_values = function_values.sample(n=sample_n).sort_index()
