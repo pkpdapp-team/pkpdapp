@@ -68,7 +68,7 @@ export default function InferenceChart({inference}) {
   }));
 
   const observedWithChainValues = inference.log_likelihoods.filter(
-    ll => ll.biomarker_type
+    ll => ll.observed
   ).map(ll => {
     const model_loglikelihoods = inference.log_likelihoods.filter(cll =>
       ll.children.includes(cll.id)
@@ -78,10 +78,11 @@ export default function InferenceChart({inference}) {
       model_loglikelihoods,
       outputs: chains.map(chain => chain.outputs[ll.id] || {
         times: [], datas: [], percentile_mins: [], percentile_maxs: [],
-        medians: [],
+        medians: [], subjects: [],
       })
     }
   });
+  console.log('chains', chains)
 
   const algorithm = useSelector((state) =>
     selectAlgorithmById(state, inference.algorithm)

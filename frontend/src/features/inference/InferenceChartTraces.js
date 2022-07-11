@@ -6,6 +6,10 @@ import { makeStyles } from "@material-ui/core/styles";
 import iqr from 'compute-iqr'
 
 import { Scatter } from "react-chartjs-2";
+import FormControl from "@material-ui/core/FormControl";
+import MenuItem from "@material-ui/core/MenuItem";
+import InputLabel from "@material-ui/core/InputLabel";
+import Select from "@material-ui/core/Select";
 
 import { Chart, registerables, Interaction } from "chart.js";
 import { CrosshairPlugin, Interpolate } from "chartjs-plugin-crosshair";
@@ -256,36 +260,60 @@ function InferenceChartFunction({ chains }) {
 
 
 function InferenceChartTracesPrior({ prior }) {
-  const multiple_subjects = !('times' in prior.chains[0])
+  console.log('prior', prior)
+  const multiple_subjects = prior.chains.length !== 0 && !('values' in prior.chains[0])
   const subjectIds = multiple_subjects ? Object.keys(prior.chains[0]) : []
   const subjects = useSelector((state) => selectSubjectsByIds(state, subjectIds));
-  const [subject, setSubject] = React.useState(multiple_subjects ? subjects[0].id : null);
-  const subjectOptions = subjects.map(s => ({label: s.id_in_dataset, value: s.id}))
+  const [subjectIndex, setSubjectIndex] = React.useState(0);
+  const subjectOptions = subjects.map((s, i) => ({label: s.id_in_dataset, value: i}))
+  const chosenSubject = subjects && subjectIndex ? subjects[subjectIndex] : null
+  console.log('subjects', multiple_subjects, subjectIds, subjects, chosenSubject)
+  let priorForSubject = prior
+  if (multiple_subjects) {
+    if (chosenSubject) {
+      priorForSubject = {
+        ...prior,
+        chains: prior.chains.map(chain => chain[chosenSubject.id]) ,
+        kdes: prior.kdes.map(kde => kde[chosenSubject.id]),
+      }
+    } else {
+      const firstKey = Object.keys(prior.chains[0])[0]
+      priorForSubject = {
+        ...prior,
+        chains: prior.chains.map(chain => chain[firstKey]) ,
+        kdes: prior.kdes.map(kde => kde[firstKey]),
+      }
+    }
+  }
+
+  const handleSubjectChange = (event) => {
+    setSubjectIndex(event.target.value);
+  };
 
   return (
 
       <React.Fragment key={prior.id}>
         {multiple_subjects &&
         <FormControl fullWidth>
-          <InputLabel id="subject-select-label">Age</InputLabel>
+          <InputLabel id="subject-select-label">Subject</InputLabel>
           <Select
             labelId="subject-select-label"
             id="subject-select"
-            value={age}
-            label="Age"
+            value={subjectIndex}
+            label="Subject"
             onChange={handleSubjectChange}
           >
-            <MenuItem value={10}>Ten</MenuItem>
-            <MenuItem value={20}>Twenty</MenuItem>
-            <MenuItem value={30}>Thirty</MenuItem>
+            {subjectOptions.map(so => (
+              <MenuItem value={so.value}>{so.label}</MenuItem>
+            ))}
           </Select>
         </FormControl>
         }
         <Grid item xs={12} md={8}>
-        <InferenceChartTrace prior={prior} />
+        <InferenceChartTrace prior={priorForSubject} />
         </Grid>
         <Grid item xs={12} md={4}>
-        <InferenceChartDistribution prior={prior} />
+        <InferenceChartDistribution prior={priorForSubject} />
         </Grid>
       </React.Fragment>
   )

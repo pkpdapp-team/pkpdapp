@@ -142,7 +142,9 @@ class OutputWriter:
                  pints_log_posterior,
                  use_every_n_sample=1,
                  buffer_size=100,
-                 store_output_range=True):
+                 store_output_range=True,
+                 pooled=True,
+                 ):
 
         self._iterations = []
         self._x0_buffers = [
@@ -156,26 +158,44 @@ class OutputWriter:
         data = [ll.get_data() for ll in log_likelihoods]
         self._values = [d[0] for d in data]
         self._times = [d[1] for d in data]
-        self._unique_times = [
-            [times[0]] for times in self._times
-        ]
-        self._unique_times_index = [
-            [0] for _ in self._times
-        ]
-        self._times_index = [
-            [0] for _ in self._times
-        ]
-        for unique_times, unique_times_index, times_index, times in zip(
-            self._unique_times, self._unique_times_index, self._times_index,
-            self._times
-        ):
-            unique_index = 0
-            for i, t in enumerate(times[1:]):
-                if t != unique_times[-1]:
-                    times_index.append(i + 1)
-                    unique_times.append(t)
-                    unique_index += 1
-                unique_times_index.append(unique_index)
+        print('creating output thingo', pooled, 'is_pooled')
+        if pooled:
+            self._subjects = [
+                [None for _ in values]
+                for values in self._values
+            ]
+            self._unique_times = [
+                [times[0]] for times in self._times
+            ]
+            self._unique_times_index = [
+                [0] for _ in self._times
+            ]
+            self._times_index = [
+                [0] for _ in self._times
+            ]
+            for unique_times, unique_times_index, times_index, times in zip(
+                self._unique_times, self._unique_times_index,
+                self._times_index, self._times
+            ):
+                unique_index = 0
+                for i, t in enumerate(times[1:]):
+                    if t != unique_times[-1]:
+                        times_index.append(i + 1)
+                        unique_times.append(t)
+                        unique_index += 1
+                    unique_times_index.append(unique_index)
+        else:
+            self._subjects = [
+                [Subject.objects.get(id=subject_id) for subject_id in d[2]]
+                for d in data
+            ]
+            for subjects in self._subjects:
+                print('subjects', subjects)
+            self._unique_times = self._times
+            self._unique_times_index = [
+                list(range(len(times))) for times in self._times
+            ]
+            self._times_index = self._unique_times_index
 
         self._tdigests = [
             [
@@ -209,16 +229,18 @@ class OutputWriter:
                 chain=chain,
                 log_likelihood__in=self._log_likelihoods,
             ).delete()
-            for log_likelihood, times, values in zip(
-                self._log_likelihoods, self._times, self._values
+            for log_likelihood, times, values, subjects in zip(
+                self._log_likelihoods, self._times, self._values,
+                self._subjects
             ):
-                for time_val, value in zip(times, values):
+                for time_val, value, subject in zip(times, values, subjects):
                     outputs.append(InferenceOutputResult.objects.create(
                         log_likelihood=log_likelihood,
                         chain=chain,
                         median=0,
                         percentile_min=0,
                         percentile_max=0,
+                        subject=subject,
                         data=value,
                         time=time_val,
                     ))
@@ -318,6 +340,9 @@ class InferenceMixin:
             for ll in log_likelihoods
             if ll.is_a_prior()
         ]
+        self._pooled = all([
+            ll.get_total_length() == 1 for ll in self._priors
+        ])
         self._prior_lengths = [
             p.get_total_length() for p in self._priors
         ]
@@ -568,7 +593,8 @@ class InferenceMixin:
             self._pints_log_posterior,
             use_every_n_sample=evaluate_model_every_n_iterations,
             buffer_size=write_every_n_iteration,
-            store_output_range=self.inference.algorithm.category == 'SA'
+            store_output_range=self.inference.algorithm.category == 'SA',
+            pooled=self._pooled
         )
         for i in range(n_iterations, max_iterations):
             if i == initial_phase_iterations:

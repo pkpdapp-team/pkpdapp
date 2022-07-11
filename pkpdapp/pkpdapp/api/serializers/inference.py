@@ -132,6 +132,7 @@ class InferenceChainSerializer(serializers.ModelSerializer):
 
         for (prior, subject), frame in by_priors:
             values = frame['values']
+            print(prior, subject, values)
 
             # get kde density of chains
             min_value = values.min()
@@ -139,37 +140,36 @@ class InferenceChainSerializer(serializers.ModelSerializer):
             kde_values = np.linspace(min_value, max_value, 100)
             kde_densities = scipy.stats.gaussian_kde(values)(kde_values)
             if np.isnan(subject):
-                kde[prior] = {
+                kde[int(prior)] = {
                     'values': kde_values.tolist(),
                     'densities': kde_densities.tolist(),
                 }
             else:
                 if prior not in kde:
-                    kde[prior] = {}
-                kde[prior][subject] = {
+                    kde[int(prior)] = {}
+                kde[int(prior)][int(subject)] = {
                     'values': kde_values.tolist(),
                     'densities': kde_densities.tolist(),
                 }
 
         # reduce to max 500 values for each prior
         sample_n = 500
-        if any(by_priors['values'].count() > sample_n):
-            by_priors = by_priors.sample(
-                n=sample_n
-            ).sort_index().groupby(['priors', 'subjects'])
-
         for (prior, subject), frame in by_priors:
-            values = frame['values']
-            iterations = frame['iterations']
+            if frame['values'].count() > sample_n:
+                sampled_frame = frame.sample(n=sample_n).sort_index()
+            else:
+                sampled_frame = frame
+            values = sampled_frame['values']
+            iterations = sampled_frame['iterations']
             if np.isnan(subject):
-                chain[prior] = {
+                chain[int(prior)] = {
                     'values': values.tolist(),
                     'iterations': iterations.tolist()
                 }
             else:
                 if prior not in chain:
-                    chain[prior] = {}
-                chain[prior][subject] = {
+                    chain[int(prior)] = {}
+                chain[int(prior)][int(subject)] = {
                     'values': values.tolist(),
                     'iterations': iterations.tolist()
                 }

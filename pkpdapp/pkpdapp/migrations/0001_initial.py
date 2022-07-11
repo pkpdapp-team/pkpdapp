@@ -380,6 +380,7 @@ class Migration(migrations.Migration):
                 ('time', models.FloatField(help_text='time of output value')),
                 ('chain', models.ForeignKey(help_text='Chain related to the output result', on_delete=django.db.models.deletion.CASCADE, related_name='inference_output_results', to='pkpdapp.inferencechain')),
                 ('log_likelihood', models.ForeignKey(help_text='log_likelihood related to the output result', on_delete=django.db.models.deletion.CASCADE, related_name='inference_output_results', to='pkpdapp.loglikelihood')),
+                ('subject', models.ForeignKey(blank=True, help_text='subject of output value', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='inference_outputs', to='pkpdapp.subject')),
             ],
         ),
         migrations.CreateModel(
