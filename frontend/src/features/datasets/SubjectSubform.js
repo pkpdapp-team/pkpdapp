@@ -1,4 +1,4 @@
-import React from "react";
+import React,{ useEffect }  from "react";
 import { useSelector, useDispatch } from "react-redux";
 import IconButton from "@material-ui/core/IconButton";
 import { useForm, useFormState } from "react-hook-form";
@@ -15,7 +15,7 @@ import { selectDatasetProtocolById } from "../protocols/DatasetProtocols";
 export default function SubjectSubform({ subject, disableSave, groups, dataset }) {
   const dispatch = useDispatch();
 
-  const { control, handleSubmit } = useForm({
+  const { control, handleSubmit, reset } = useForm({
     defaultValues: {
       id: subject.id,
       display: subject.display,
@@ -36,6 +36,10 @@ export default function SubjectSubform({ subject, disableSave, groups, dataset }
     dispatch(updateSubject(values));
   };
 
+  useEffect(() => {
+    reset(subject);
+  }, [reset, subject]);
+
   const protocol = dataset.protocols.find(p => p.id === subject.protocol)
 
   return (
@@ -49,7 +53,7 @@ export default function SubjectSubform({ subject, disableSave, groups, dataset }
         </TableCell>
       ))}
       <TableCell>
-        {protocol?.name}{subject.protocol}
+        {protocol?.name}
       </TableCell>
       <TableCell>
         <FormCheckboxField

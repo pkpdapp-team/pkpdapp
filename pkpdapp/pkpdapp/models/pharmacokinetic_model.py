@@ -78,12 +78,12 @@ class DosedPharmacokineticModel(MyokitModelMixin, StoredModel):
     pk_model = models.ForeignKey(
         PharmacokineticModel,
         default=DEFAULT_PK_MODEL,
-        on_delete=models.CASCADE,
+        on_delete=models.PROTECT,
         blank=True, null=True,
         help_text='model'
     )
     pd_model = models.ForeignKey(
-        PharmacodynamicModel, on_delete=models.CASCADE,
+        PharmacodynamicModel, on_delete=models.PROTECT,
         related_name='pkpd_models',
         blank=True, null=True,
         help_text='PD part of model'
@@ -96,7 +96,7 @@ class DosedPharmacokineticModel(MyokitModelMixin, StoredModel):
     )
     protocol = models.ForeignKey(
         Protocol,
-        on_delete=models.CASCADE,
+        on_delete=models.PROTECT,
         related_name='dosed_pk_models',
         blank=True, null=True,
         help_text='dosing protocol'
@@ -232,7 +232,19 @@ class DosedPharmacokineticModel(MyokitModelMixin, StoredModel):
             pd_var = pkpd_model.get(
                 mapping.pd_variable.qname.replace('myokit', 'PD')
             )
-            pd_var.set_rhs(mapping.pk_variable.qname)
+            pk_var = pkpd_model.get(
+                mapping.pk_variable.qname
+            )
+
+            unit_conversion_multiplier = myokit.Unit.conversion_factor(
+                pk_var.unit(), pd_var.unit()
+            )
+            pd_var.set_rhs(
+                myokit.Multiply(
+                    myokit.Number(unit_conversion_multiplier),
+                    myokit.Name(pk_var)
+                )
+            )
 
         pkpd_model.validate()
         return pkpd_model
@@ -313,12 +325,12 @@ class PkpdMapping(StoredModel):
         help_text='PKPD model that this mapping is for'
     )
     pk_variable = models.ForeignKey(
-        'Variable', on_delete=models.CASCADE,
+        'Variable', on_delete=models.PROTECT,
         related_name='pk_mappings',
         help_text='variable in PK part of model'
     )
     pd_variable = models.ForeignKey(
-        'Variable', on_delete=models.CASCADE,
+        'Variable', on_delete=models.PROTECT,
         related_name='pd_mappings',
         help_text='variable in PD part of model'
     )

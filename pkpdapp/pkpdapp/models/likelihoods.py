@@ -150,7 +150,7 @@ class LogLikelihoodParameter(models.Model):
         Variable,
         related_name='log_likelihood_parameters',
         blank=True, null=True,
-        on_delete=models.CASCADE,
+        on_delete=models.PROTECT,
         help_text='input model variable for this parameter.'
     )
     length = models.IntegerField(
@@ -233,7 +233,7 @@ class LogLikelihood(models.Model):
         Variable,
         related_name='log_likelihoods',
         blank=True, null=True,
-        on_delete=models.CASCADE,
+        on_delete=models.PROTECT,
         help_text=(
             'If form=MODEL, a variable (any) in the deterministic model. '
         )
@@ -241,7 +241,7 @@ class LogLikelihood(models.Model):
 
     biomarker_type = models.ForeignKey(
         BiomarkerType,
-        on_delete=models.CASCADE,
+        on_delete=models.PROTECT,
         blank=True, null=True,
         help_text=(
             'data associated with this log_likelihood. '
@@ -272,7 +272,7 @@ class LogLikelihood(models.Model):
 
     subject_group = models.ForeignKey(
         SubjectGroup,
-        on_delete=models.CASCADE,
+        on_delete=models.PROTECT,
         blank=True, null=True,
         help_text=(
             'filter data on this subject group '

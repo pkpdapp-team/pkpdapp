@@ -118,7 +118,7 @@ class InferenceResult(models.Model):
     )
     subject = models.ForeignKey(
         Subject,
-        on_delete=models.CASCADE,
+        on_delete=models.PROTECT,
         blank=True, null=True,
         related_name='inference_results',
         help_text='subject related to this result'

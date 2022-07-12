@@ -20,7 +20,7 @@ class BiomarkerType(models.Model):
         max_length=100, help_text='name of the biomarker type'
     )
     stored_unit = models.ForeignKey(
-        Unit, on_delete=models.CASCADE,
+        Unit, on_delete=models.PROTECT,
         related_name='biomarker_types_stored',
         help_text='unit for the value stored in :model:`pkpdapp.Biomarker`'
     )
@@ -41,12 +41,12 @@ class BiomarkerType(models.Model):
         )
     )
     display_unit = models.ForeignKey(
-        Unit, on_delete=models.CASCADE,
+        Unit, on_delete=models.PROTECT,
         related_name='biomarker_types_display',
         help_text='unit to use when sending or displaying biomarker values'
     )
     stored_time_unit = models.ForeignKey(
-        Unit, on_delete=models.CASCADE,
+        Unit, on_delete=models.PROTECT,
         related_name='biomarker_types_time_stored',
         help_text=(
             'unit for the time values stored in '
@@ -54,7 +54,7 @@ class BiomarkerType(models.Model):
         )
     )
     display_time_unit = models.ForeignKey(
-        Unit, on_delete=models.CASCADE,
+        Unit, on_delete=models.PROTECT,
         related_name='biomarker_types_time_display',
         help_text='unit to use when sending or displaying time values'
     )

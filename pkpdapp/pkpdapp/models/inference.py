@@ -55,7 +55,7 @@ class Inference(StoredModel):
 
     algorithm = models.ForeignKey(
         Algorithm,
-        on_delete=models.CASCADE,
+        on_delete=models.PROTECT,
         default=get_default_optimisation_algorithm,
         help_text='algorithm used to perform the inference'
     )
@@ -73,7 +73,7 @@ class Inference(StoredModel):
 
     initialization_inference = models.ForeignKey(
         'Inference',
-        on_delete=models.CASCADE,
+        on_delete=models.PROTECT,
         blank=True, null=True,
     )
 
