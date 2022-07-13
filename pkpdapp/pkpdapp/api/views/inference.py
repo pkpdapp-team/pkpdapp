@@ -140,7 +140,14 @@ class InferenceWizardView(views.APIView):
             model_copy.name = original_name + '_' + protocol.name
         model_copy.protocol = protocol
         model_copy.save()
-        stored_model = model_copy.create_stored_model()
+        stored_pd_model = None
+        if model_copy.pd_model is None:
+            stored_pd_model = None
+        else:
+            stored_pd_model = model_copy.pd_model.create_stored_model()
+        stored_model = model_copy.create_stored_model(
+            new_pd_model=stored_pd_model
+        )
         model_copy.delete()
         return stored_model
 
@@ -246,12 +253,22 @@ class InferenceWizardView(views.APIView):
                     parent.form = output_forms[index]
                     parent.save()
 
-                    # remove sigma param and replace it with generated one
-                    parent.get_noise_log_likelihoods()[1].delete()
-                    param = LogLikelihoodParameter.objects.create(
-                        parent=parent, child=sigma_models[index],
-                        parent_index=1, name='sigma for ' + output.variable.qname
-                    )
+                    # check there is actually data for this output
+                    values, _, _ = parent.get_data()
+                    if values is None:
+                        # no data, delete this output as well
+                        for param in parent.parameters.all():
+                            if param != output:
+                                param.child.delete()
+                        parent.delete()
+                    else:
+                        # remove sigma param and replace it with generated one
+                        parent.get_noise_log_likelihoods()[1].delete()
+                        param = LogLikelihoodParameter.objects.create(
+                            parent=parent, child=sigma_models[index],
+                            parent_index=1,
+                            name='sigma for ' + output.variable.qname
+                        )
                 else:
                     for param in output.parent.parameters.all():
                         if param != output:
@@ -472,6 +489,7 @@ class InferenceWizardView(views.APIView):
             try:
                 model = model_table.objects.get(id=model_id)
             except model_table.DoesNotExist:
+                model = None
                 errors['model'] = '{} id {} not found'.format(
                     model_table, model_id
                 )
@@ -481,8 +499,6 @@ class InferenceWizardView(views.APIView):
             parser = ExpressionParser()
             param_names = [p['name'] for p in data['parameters']]
             for i, param in enumerate(data['parameters']):
-                if model is None:
-                    continue
                 for j, dist_param in enumerate(param['parameters']):
                     if not isinstance(dist_param, (numbers.Number, str)):
                         parameter_errors.append((

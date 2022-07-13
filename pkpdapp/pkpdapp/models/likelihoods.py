@@ -526,7 +526,16 @@ class LogLikelihood(models.Model):
                 parent=parent,
                 child=self
             )
-            parent_index = param.child_index
+
+            # outputs for models are assumed to be unique and ordered
+            # by parent id, outputs for the rest can be non-unique, so use
+            # child_index in this case
+            if self.form == self.Form.MODEL:
+                parents = list(self.parents.order_by())
+                parent_index = parents.index(parent)
+            else:
+                parent_index = param.child_index
+
         else:
             parent_index = 0
 
@@ -536,40 +545,41 @@ class LogLikelihood(models.Model):
         except KeyError:
             pass
 
-        # the distributions need a shape, take this from the data
-        # if no data then assume scalar
         values, times, subjects = self.get_data()
+
         outputs = list(self.outputs.order_by('child_index'))
         if len(outputs) == 0:
             n_distinct_outputs = 0
         else:
             n_distinct_outputs = outputs[-1].child_index + 1
-        parents = [output.parent for output in outputs]
-        length_by_index = [()] * n_distinct_outputs
-        for output in outputs:
-            length_by_index[output.child_index] = \
-                1 if output.length is None else output.length
-        total_length = sum(length_by_index)
 
-        # set shape and check total length of outputs is < this shape
-        if values is None:
-            shape = ()
-            if total_length > 1:
-                raise RuntimeError(
-                    'log_likelihood {} is scalar but total length of outputs '
-                    'is {}'.format(self.name, total_length)
-                )
-        else:
-            shape = (len(values),)
-            if total_length > shape[0]:
-                raise RuntimeError(
-                    'log_likelihood {} has data of length {} but total length '
-                    'of outputs is {}'.format(
-                        self.name, shape[0], total_length
+        # the distributions need a shape, take this from the data
+        # if no data then assume scalar
+        if self.is_a_distribution():
+            length_by_index = [()] * n_distinct_outputs
+            for output in outputs:
+                length_by_index[output.child_index] = \
+                    1 if output.length is None else output.length
+            total_length = sum(length_by_index)
+
+            # set shape and check total length of outputs is < this shape
+            if values is None:
+                shape = ()
+                if total_length > 1:
+                    raise RuntimeError(
+                        'log_likelihood {} is scalar but total length of '
+                        'outputs is {}'.format(self.name, total_length)
                     )
-                )
-
-        observed = values if self.observed else None
+            else:
+                shape = (len(values),)
+                if total_length > shape[0]:
+                    raise RuntimeError(
+                        'log_likelihood {} has data of length {} but total '
+                        'length of outputs is {}'.format(
+                            self.name, shape[0], total_length
+                        )
+                    )
+            observed = values if self.observed else None
 
         # if its not random, just evaluate it, otherwise create the pymc3 op
         if not self.is_random():
@@ -581,7 +591,6 @@ class LogLikelihood(models.Model):
             mean, sigma = self.get_noise_log_likelihoods()
             mean = mean._create_pymc3_model(pm_model, self, ops)
             sigma = sigma._create_pymc3_model(pm_model, self, ops)
-            print('create normal', name, mean, sigma, observed, shape)
             op = pm.Normal(
                 name, mean, sigma, observed=observed, shape=shape
             )
@@ -606,13 +615,17 @@ class LogLikelihood(models.Model):
             #   - subject ids of output data, e.g. [0, 1, 2, 8, 10] are the same
             #     subjects of input data, we only check that the lengths of the
             #     subject vectors are the same
+
+            output_names = []
             times = []
             subjects = []
             all_subjects = set()
             for parent in parents:
+                output = LogLikelihoodParameter.objects.get(
+                    parent=parent, child=self
+                )
                 _, this_times, this_subjects = parent.get_data()
-                print('doing parent', parent.name, parent.biomarker_type,
-                      parent.observed)
+                output_names.append(output.variable.qname)
                 times.append(this_times)
                 subjects.append(this_subjects)
                 all_subjects.update(this_subjects)
@@ -637,7 +650,7 @@ class LogLikelihood(models.Model):
                     subjects[i] = np.searchsorted(all_subjects, this_subjects)
 
             forward_model, fitted_parameters = self.create_forward_model(
-                times, subjects
+                output_names, times, subjects
             )
             forward_model_op = ODEop(name, forward_model)
             if fitted_parameters:
@@ -718,8 +731,8 @@ class LogLikelihood(models.Model):
                 )
             ops[name] = indexed_list
 
-        # if no outputs then we don't need to return anything
-        if n_distinct_outputs == 0:
+        # if no parent then we don't need to return anything
+        if parent is None:
             return None
         return ops[name][parent_index]
 
@@ -731,16 +744,15 @@ class LogLikelihood(models.Model):
                 ll._create_pymc3_model(pm_model, None, ops)
         return pm_model
 
-    def create_forward_model(self, output_times, output_subjects=None):
+    def create_forward_model(
+            self, output_names, output_times, output_subjects=None
+    ):
         """
         create pints forwards model for this log_likelihood.
         """
         model = self.get_model()
         myokit_model = model.get_myokit_model()
         myokit_simulator = model.get_myokit_simulator()
-
-        outputs = self.outputs.all()
-        output_names = [output.variable.qname for output in outputs]
 
         fixed_parameters_dict = {
             param.variable.qname: param.child.value
@@ -780,6 +792,9 @@ class LogLikelihood(models.Model):
                 subject_group=self.subject_group,
                 first_time_only=self.time_independent_data
             )
+            if df is None:
+                return None, None, None
+
             return (
                 df['values'].tolist(),
                 df['times'].tolist(),
@@ -959,7 +974,7 @@ class LogLikelihood(models.Model):
                 name=model_variable.qname,
             )
 
-        for model_variable in self.get_model_outputs():
+        for i, model_variable in enumerate(self.get_model_outputs()):
             parent = LogLikelihood.objects.create(
                 name=model_variable.qname,
                 inference=self.inference,

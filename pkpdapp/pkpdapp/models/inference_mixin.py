@@ -628,8 +628,9 @@ class InferenceMixin:
 
 class PyMC3LogPosterior(pints.LogPDF):
     def __init__(self, model, log_likelihoods, priors, optimisation=False):
-        for p in priors:
-            print('have prior name', p.name)
+        self._original_prior_names = [
+            p.name for p in priors
+        ]
         self._transforms = [
             model[p.name].distribution.transform for p in priors
         ]
@@ -699,6 +700,9 @@ class PyMC3LogPosterior(pints.LogPDF):
 
     def n_parameters(self):
         return sum(self._prior_lengths)
+
+    def parameter_names(self):
+        return self._original_prior_names
 
     @staticmethod
     def _transform_forward(transform, is_scalar=True):

@@ -89,7 +89,10 @@ class MyokitForwardModel():
             [v not in self._output_names for v in outputs]
         )
         if any(outputs_not_in_model):
-            raise ValueError('All outputs must be within model.')
+            raise ValueError(
+                'All outputs must be within model. Outputs are:', outputs,
+                '. Outputs in the model are:', self._output_names
+            )
         self._output_names = outputs
         self._n_outputs = len(outputs)
 

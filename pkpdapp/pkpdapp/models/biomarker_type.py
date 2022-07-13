@@ -111,6 +111,9 @@ class BiomarkerType(models.Model):
                 'time', 'subject__id', 'value'
             )
 
+        if not times_subjects_values:
+            return None
+
         times, subjects, values = list(zip(*times_subjects_values))
         df = pd.DataFrame.from_dict({
             'times': times,

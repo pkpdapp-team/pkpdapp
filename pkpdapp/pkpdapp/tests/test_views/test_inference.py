@@ -6,6 +6,10 @@
 
 from rest_framework import status
 import pprint
+import urllib.request
+from urllib.request import urlretrieve
+import codecs
+from django.core.files import File
 import pymc3
 from django.contrib.auth.models import User
 from rest_framework.test import APITestCase, APIClient
@@ -17,6 +21,7 @@ from pkpdapp.models import (
     Project, BiomarkerType,
     InferenceMixin, Algorithm,
     PharmacodynamicModel,
+    PkpdMapping
 )
 
 
@@ -589,6 +594,195 @@ class TestInferenceWizardView(APITestCase):
 
         log_posterior(
             log_posterior.to_search([0.5, 0.12])
+        )
+
+    def test_usecase2(self):
+        def faux_test_file(url, ending='.csv'):
+            tempname, _ = urlretrieve(url)
+            file = File(open(tempname, 'rb'))
+            file.name = 'test' + ending
+            return(file)
+
+        project = Project.objects.get(
+            name='demo',
+        )
+
+        # upload dataset
+        BASE_URL_DATASETS = 'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/usecase2/'   # noqa: E501
+        file = faux_test_file(
+            BASE_URL_DATASETS + 'PKPD_UseCase_Abx.csv', '.csv'
+        )
+        dataset = Dataset.objects.create(
+            name='usecase2',
+            project=project,
+        )
+        response = self.client.put(
+            '/api/dataset/{}/csv/'.format(dataset.id),
+            data={
+                'csv': file
+            },
+        )
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        dataset.refresh_from_db()
+        for bt in dataset.biomarker_types.all():
+            print('have bt', bt.name, bt.display_unit.symbol,
+                  bt.display_time_unit.symbol)
+
+        # upload pd model
+        with urllib.request.urlopen(
+            BASE_URL_DATASETS + 'ABx_updated3.xml', timeout=5
+        ) as f:
+            sbml_string = codecs.decode(f.read(), 'utf-8')
+
+        pd_model = PharmacodynamicModel.objects.create(
+            name='usecase2-pd',
+            project=project,
+        )
+
+        response = self.client.put(
+            '/api/pharmacodynamic/{}/sbml/'.format(pd_model.id),
+            data={
+                'sbml': sbml_string
+            },
+        )
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        pd_model.refresh_from_db()
+
+        # create pkpd model
+        pk_model = PharmacokineticModel.objects\
+            .get(name='three_compartment_pk_model')
+
+        protocol = Protocol.objects.get(
+            subjects__dataset=dataset,
+            subjects__id_in_dataset=1,
+        )
+        pkpd_model = DosedPharmacokineticModel.objects.create(
+            name='usecase2',
+            pk_model=pk_model,
+            pd_model=pd_model,
+            dose_compartment='central',
+            protocol=protocol,
+        )
+        PkpdMapping.objects.create(
+            pkpd_model=pkpd_model,
+            pk_variable=pkpd_model.variables.get(
+                qname='myokit.scaled_drug_c_concentration',
+            ),
+            pd_variable=pkpd_model.variables.get(
+                qname='PD.Drug_concentration',
+            ),
+        )
+        pkpd_variables = {
+            'dose.absorption_rate': (0.0006, 0.006, 0.06),
+            'myokit.clearance': (0.003, 0.03, 0.3),
+            'central.size': (0.0024, 0.024, 0.24),
+            'myokit.k_peripheral1': (0.0001, 0.001, 0.01),
+            'peripheral_1.size': (0.001, 0.01, 0.1),
+            'myokit.k_peripheral2': (0.000003, 0.00003, 0.0003),
+            'peripheral_2.size': (0.00007, 0.0007, 0.007),
+            'myokit.drug_c_scale_factor': (0.0014, 0.014, 0.14),
+
+            'PD.KNetgrowth': (0.05, 0.5, 5.0),
+            'PD.tvbmax': (1.35E+08, 1.35E+09, 1.35E+10),
+            'PD.Kmax': (0.15, 1.5, 15.0),
+            'PD.EC50k': (0.01, 0.1, 1.0),
+            'PD.gamma': (0.4, 4.0, 40.0),
+            'PD.beta': (0.2, 2.0, 20.0),
+            'PD.tau': (0.015, 0.15, 1.5),
+            'PD.Kdeath': (0.005, 0.5, 5.0),
+            'PD.Ksr_max': (0.1, 1.0, 10.0),
+        }
+        for qname, values in pkpd_variables.items():
+            print(qname, values)
+            var = pkpd_model.variables.get(qname=qname)
+            var.lower_bound, var.default_value, var.upper_bound = values
+            var.save()
+
+        CFU = dataset.biomarker_types.get(name='CFU')
+        demodrug_concentration = dataset.biomarker_types.get(
+            name='DemoDrug Concentration'
+        )
+
+        Ptotal = pkpd_model.variables.get(qname='Ptotal.size')
+        drug_c_concentration = pkpd_model.variables.get(
+            qname='central.drug_c_concentration')
+        drug_c_concentration.unit = demodrug_concentration.display_unit
+        drug_c_concentration.save()
+
+        fit_parameters = {
+            qname: values
+            for qname, values in pkpd_variables.items()
+            if qname != 'myokit.drug_c_scale_factor'
+        }
+
+        data = {
+            # Inference parameters
+            'name': "usecase2",
+            'project': self.project.id,
+            'algorithm': Algorithm.objects.get(name='XNES').id,
+            'initialization_strategy': 'R',
+            'number_of_chains': 4,
+            'max_number_of_iterations': 11,
+            'burn_in': 0,
+
+            # Model
+            'model': {
+                'form': 'PK',
+                'id': pkpd_model.id
+            },
+            'dataset': dataset.id,
+
+            # Model parameters
+            'parameters': [
+                {
+                    'name': qname,
+                    'form': 'U',
+                    'parameters': [values[0], values[2]],
+                }
+                for qname, values in fit_parameters.items()
+            ],
+            # output
+            'observations': [
+                {
+                    'model': drug_c_concentration.qname,
+                    'biomarker': demodrug_concentration.name,
+                    'noise_form': 'N',
+                    'noise_param_form': 'F',
+                    'parameters': [10],
+                },
+                {
+                    'model': Ptotal.qname,
+                    'biomarker': CFU.name,
+                    'noise_form': 'N',
+                    'noise_param_form': 'F',
+                    'parameters': [1e6],
+                },
+            ]
+        }
+        response = self.client.post(
+            "/api/inference/wizard", data, format='json'
+        )
+        response_data = response.data
+        print(response_data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        inference = Inference.objects.get(id=response_data['id'])
+
+        inference_mixin = InferenceMixin(inference)
+        log_posterior = inference_mixin._pints_log_posterior
+
+        pymc3_model = log_posterior._model
+        graph = pymc3.model_graph.model_to_graphviz(pymc3_model)
+        graph.render(directory='test', view=True)
+
+        eval_pt = [
+            fit_parameters[name][1]
+            for name in log_posterior.parameter_names()
+        ]
+        log_posterior(
+            log_posterior.to_search(
+                eval_pt
+            )
         )
 
     def test_errors(self):
