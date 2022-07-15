@@ -114,6 +114,11 @@ class Inference(StoredModel):
         help_text='If executing, this is the celery task id'
     )
 
+    #error = models.TextField(
+    #    blank=True, null=True,
+    #    help_text='If inference failed, an error message is here'
+    #)
+
     metadata = models.JSONField(
         default=dict,
         help_text="metadata for inference",

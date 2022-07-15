@@ -223,9 +223,10 @@ function InferenceChartTracesObserved({ inference, observed}) {
   const uniqueSubjectsIds = [...new Set(subjectIds)]
   const [subjectIndex, setSubjectIndex] = React.useState(0);
   const subjects = useSelector((state) => selectSubjectsByIds(state, uniqueSubjectsIds));
-  const subjectOptions = subjects.map((s, i) => ({label: s.id_in_dataset, value: i}))
   const multiple_subjects = uniqueSubjectsIds.length > 1
-  const observedFiltered = subjects ? {
+  const subjectOptions = multiple_subjects ? 
+    subjects.map((s, i) => ({label: s.id_in_dataset, value: i})) : []
+  const observedFiltered = multiple_subjects ? {
     ...observed,
     outputs: observed.outputs.map(outputs => ({
         ...outputs,

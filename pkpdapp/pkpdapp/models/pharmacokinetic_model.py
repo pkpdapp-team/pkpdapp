@@ -325,12 +325,12 @@ class PkpdMapping(StoredModel):
         help_text='PKPD model that this mapping is for'
     )
     pk_variable = models.ForeignKey(
-        'Variable', on_delete=models.PROTECT,
+        'Variable', on_delete=models.CASCADE,
         related_name='pk_mappings',
         help_text='variable in PK part of model'
     )
     pd_variable = models.ForeignKey(
-        'Variable', on_delete=models.PROTECT,
+        'Variable', on_delete=models.CASCADE,
         related_name='pd_mappings',
         help_text='variable in PD part of model'
     )

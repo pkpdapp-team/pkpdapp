@@ -28,7 +28,7 @@ class MyokitForwardModel():
 
     def __init__(
         self, myokit_simulator, myokit_model,
-        outputs, times, subjects=None,
+        outputs, conversion_factors, times, subjects=None,
         fixed_parameter_dict=None
     ):
         model = myokit_model
@@ -39,9 +39,9 @@ class MyokitForwardModel():
         self._n_states = model.count_states()
 
         # get initial conditions
-        self._output_names = sorted(
-            [var.qname() for var in model.variables(const=False)]
-        )
+        self._output_names = [
+            var.qname() for var in model.variables(const=False)
+        ]
 
         self._times = [np.array(t) for t in times]
         if subjects is None:
@@ -81,9 +81,9 @@ class MyokitForwardModel():
                 for t in self._times
             ]
 
-        self._state_names = sorted(
-            [var.qname() for var in model.states()]
-        )
+        self._state_names = [
+            var.qname() for var in model.states()
+        ]
 
         outputs_not_in_model = (
             [v not in self._output_names for v in outputs]
@@ -94,12 +94,16 @@ class MyokitForwardModel():
                 '. Outputs in the model are:', self._output_names
             )
         self._output_names = outputs
+        self._conversion_factor = {
+            name: conversion_factor
+            for name, conversion_factor in zip(outputs, conversion_factors)
+        }
         self._n_outputs = len(outputs)
 
         # find fixed and variable parameters
-        self._const_names = sorted(
-            [var.qname() for var in model.variables(const=True)]
-        )
+        self._const_names = [
+            var.qname() for var in model.variables(const=True)
+        ]
 
         # parameters are all const variables plus the number of states
         # (for initial conditions)
@@ -235,6 +239,9 @@ class MyokitForwardModel():
                 t_max,
                 log=self._output_names, log_times=log_times
             )
+
+            output = self._convert_units(output)
+
             result = [
                 np.array(output[name])[indices]
                 for name, indices in zip(
@@ -279,6 +286,8 @@ class MyokitForwardModel():
                     log=self._output_names, log_times=log_times
                 )
 
+                output = self._convert_units(output)
+
                 # scatter this subject's output across result according to
                 # output_indices
                 for output_index, (name, indices, subjects) in enumerate(zip(
@@ -290,6 +299,11 @@ class MyokitForwardModel():
                         np.array(output[name])[indices]
 
         return result
+
+    def _convert_units(self, output):
+        for key, value in output.items():
+            output[key] = self._conversion_factor[key] * np.frombuffer(value)
+        return output
 
     def output_names(self):
         """ Returns outputs of model. """

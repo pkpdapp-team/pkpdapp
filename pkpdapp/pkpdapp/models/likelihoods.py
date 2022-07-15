@@ -8,6 +8,7 @@ from django.db import models
 from django.db.models import Q
 import pymc3 as pm
 import theano
+import myokit
 import pints
 import numpy as np
 import scipy.stats as sps
@@ -763,10 +764,22 @@ class LogLikelihood(models.Model):
             )
         }
 
+        conversion_factors = []
+        for name in output_names:
+            variable = model.variables.get(qname=name)
+            myokit_variable_sbml = myokit_model.get(name)
+
+            conversion_factor = myokit.Unit.conversion_factor(
+                myokit_variable_sbml.unit(),
+                variable.unit.get_myokit_unit()
+            ).value()
+
+            conversion_factors.append(conversion_factor)
+
         pints_model = MyokitForwardModel(
             myokit_simulator, myokit_model,
-            output_names, output_times, output_subjects,
-            fixed_parameters_dict
+            output_names, conversion_factors, output_times,
+            output_subjects, fixed_parameters_dict
         )
 
         fitted_parameters = [

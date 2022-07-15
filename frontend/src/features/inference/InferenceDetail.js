@@ -577,7 +577,7 @@ export default function InferenceDetail({ project, inference }) {
   };
 
   let logLikelihoodNodes = inference.log_likelihoods.map(ll => {
-    let label = (<>ll.name</>)
+    let label = (<>{ll.name}</>)
     let border = 'solid';
     let width = 140;
     let height = 40;

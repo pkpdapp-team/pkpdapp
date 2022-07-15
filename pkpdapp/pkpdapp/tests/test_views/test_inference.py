@@ -4,24 +4,31 @@
 # copyright notice and full license details.
 #
 
-from rest_framework import status
+import codecs
 import pprint
 import urllib.request
 from urllib.request import urlretrieve
-import codecs
+
+from django.contrib.auth.models import User
 from django.core.files import File
 import pymc3
-from django.contrib.auth.models import User
-from rest_framework.test import APITestCase, APIClient
+from rest_framework import status
+from rest_framework.test import APIClient, APITestCase
+
 from pkpdapp.models import (
-    Inference, Dataset,
-    PharmacokineticModel, DosedPharmacokineticModel,
-    Protocol, Unit,
+    Algorithm,
+    BiomarkerType,
+    Dataset,
+    DosedPharmacokineticModel,
+    Inference,
+    InferenceMixin,
     LogLikelihood,
-    Project, BiomarkerType,
-    InferenceMixin, Algorithm,
     PharmacodynamicModel,
-    PkpdMapping
+    PharmacokineticModel,
+    PkpdMapping,
+    Project,
+    Protocol,
+    Unit,
 )
 
 
@@ -601,7 +608,7 @@ class TestInferenceWizardView(APITestCase):
             tempname, _ = urlretrieve(url)
             file = File(open(tempname, 'rb'))
             file.name = 'test' + ending
-            return(file)
+            return file
 
         project = Project.objects.get(
             name='demo',
@@ -673,7 +680,7 @@ class TestInferenceWizardView(APITestCase):
             ),
         )
         pkpd_variables = {
-            'dose.absorption_rate': (0.0006, 0.006, 0.06),
+            'dose.absorption_rate': (0.6, 6.0, 60.0),
             'myokit.clearance': (0.003, 0.03, 0.3),
             'central.size': (0.0024, 0.024, 0.24),
             'myokit.k_peripheral1': (0.0001, 0.001, 0.01),
@@ -719,8 +726,8 @@ class TestInferenceWizardView(APITestCase):
             # Inference parameters
             'name': "usecase2",
             'project': self.project.id,
-            'algorithm': Algorithm.objects.get(name='XNES').id,
-            'initialization_strategy': 'R',
+            'algorithm': Algorithm.objects.get(name='PSO').id,
+            'initialization_strategy': 'D',
             'number_of_chains': 4,
             'max_number_of_iterations': 11,
             'burn_in': 0,
@@ -740,6 +747,18 @@ class TestInferenceWizardView(APITestCase):
                     'parameters': [values[0], values[2]],
                 }
                 for qname, values in fit_parameters.items()
+            ] + [
+                {
+                    'name': 't.size',
+                    'form': 'F',
+                    'parameters': ['1'],
+                },
+                {
+                    'name': 'central.drug_c_amount',
+                    'form': 'F',
+                    'parameters': ['0'],
+                }
+
             ],
             # output
             'observations': [
@@ -763,17 +782,23 @@ class TestInferenceWizardView(APITestCase):
             "/api/inference/wizard", data, format='json'
         )
         response_data = response.data
-        print(response_data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # check that there are no equations,
+        # the strings should be converted to float
+        for ll in response_data['log_likelihoods']:
+            self.assertNotEqual(
+                ll['form'], 'E', '{} is an Equation!'.format(ll['name'])
+            )
 
         inference = Inference.objects.get(id=response_data['id'])
 
         inference_mixin = InferenceMixin(inference)
         log_posterior = inference_mixin._pints_log_posterior
 
-        pymc3_model = log_posterior._model
-        graph = pymc3.model_graph.model_to_graphviz(pymc3_model)
-        graph.render(directory='test', view=True)
+        # pymc3_model = log_posterior._model
+        # graph = pymc3.model_graph.model_to_graphviz(pymc3_model)
+        # graph.render(directory='test', view=True)
 
         eval_pt = [
             fit_parameters[name][1]
@@ -784,6 +809,8 @@ class TestInferenceWizardView(APITestCase):
                 eval_pt
             )
         )
+
+        inference_mixin.run_inference()
 
     def test_errors(self):
         pd_dataset = Dataset.objects.get(
@@ -815,7 +842,7 @@ class TestInferenceWizardView(APITestCase):
             'algorithm': Algorithm.objects.get(name='XNES').id,
             'initialization_strategy': 'R',
             'number_of_chains': 4,
-            'max_number_of_iterations': 11,
+            'max_number_of_iterations': 2,
             'burn_in': 0,
 
             'model': {

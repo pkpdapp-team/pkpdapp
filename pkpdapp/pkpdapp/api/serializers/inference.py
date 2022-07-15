@@ -132,13 +132,20 @@ class InferenceChainSerializer(serializers.ModelSerializer):
 
         for (prior, subject), frame in by_priors:
             values = frame['values']
-            print(prior, subject, values)
 
             # get kde density of chains
             min_value = values.min()
             max_value = values.max()
             kde_values = np.linspace(min_value, max_value, 100)
-            kde_densities = scipy.stats.gaussian_kde(values)(kde_values)
+            try:
+                kde_densities = scipy.stats.gaussian_kde(values)(kde_values)
+            except np.linalg.LinAlgError:
+                kde[int(prior)] = {
+                    'values': [],
+                    'densities': [],
+                }
+                continue
+
             if np.isnan(subject):
                 kde[int(prior)] = {
                     'values': kde_values.tolist(),
@@ -176,6 +183,11 @@ class InferenceChainSerializer(serializers.ModelSerializer):
 
         if len(function_values.index) > sample_n:
             function_values = function_values.sample(n=sample_n).sort_index()
+
+        # inf & nan values not serializable
+        function_values.replace([np.inf, -np.inf], np.nan, inplace=True)
+        function_values.fillna('', inplace=True)
+
         function_values = {
             'values': function_values['values'].tolist(),
             'iterations': function_values['iterations'],

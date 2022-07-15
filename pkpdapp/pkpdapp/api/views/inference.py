@@ -132,23 +132,17 @@ class InferenceWizardView(views.APIView):
 
     @staticmethod
     def _create_dosed_model(model, protocol, rename_model=False):
-        model_copy = type(model).objects.get(id=model.id)
-        original_name = model_copy.name
-        model_copy.id = None
-        model_copy.pk = None
-        if rename_model:
-            model_copy.name = original_name + '_' + protocol.name
-        model_copy.protocol = protocol
-        model_copy.save()
-        stored_pd_model = None
-        if model_copy.pd_model is None:
+        if model.pd_model is None:
             stored_pd_model = None
         else:
-            stored_pd_model = model_copy.pd_model.create_stored_model()
-        stored_model = model_copy.create_stored_model(
+            stored_pd_model = model.pd_model.create_stored_model()
+        stored_model = model.create_stored_model(
             new_pd_model=stored_pd_model
         )
-        model_copy.delete()
+        if rename_model:
+            stored_model.name = model.name + '_' + protocol.name
+        stored_model.protocol = protocol
+        stored_model.save()
         return stored_model
 
     @staticmethod
@@ -329,10 +323,14 @@ class InferenceWizardView(views.APIView):
 
         biomarker_type = None
         if param_form == 'F' and isinstance(noise_params[0], str):
-            biomarker_type = InferenceWizardView.to_equation_log_likelihood(
-                log_likelihood, noise_params[0], params_info, parser, dataset,
-                inference, observed_biomarkers
-            )
+            if noise_params[0].isnumeric():
+                log_likelihood.value = float(noise_params[0])
+            else:
+                biomarker_type = \
+                    InferenceWizardView.to_equation_log_likelihood(
+                        log_likelihood, noise_params[0], params_info,
+                        parser, dataset, inference, observed_biomarkers
+                    )
         elif param_form == 'F':
             log_likelihood.value = noise_params[0]
         else:
@@ -366,22 +364,25 @@ class InferenceWizardView(views.APIView):
         for i, p in enumerate(log_likelihood.parameters.all()):
             param_index = p.parent_index
             if isinstance(noise_params[param_index], str):
-                InferenceWizardView.to_equation_log_likelihood(
-                    p.child, noise_params[param_index], params_info, parser,
-                    dataset, inference, observed_biomarkers
-                )
+                if noise_params[param_index].isnumeric():
+                    p.child.value = float(noise_params[param_index])
+                else:
+                    InferenceWizardView.to_equation_log_likelihood(
+                        p.child, noise_params[param_index], params_info,
+                        parser, dataset, inference, observed_biomarkers
+                    )
             else:
                 p.child.value = noise_params[param_index]
             p.child.save()
 
     @staticmethod
     def to_equation_log_likelihood(
-            log_likelihood, eqn_str, params_info, parser, dataset, inference,
+        log_likelihood, eqn_str, params_info, parser, dataset, inference,
         observed_biomarkers
     ):
         # set form to equation and remove existing children
         log_likelihood.children.clear()
-        log_likelihood.form = 'E'
+        log_likelihood.form = LogLikelihood.Form.EQUATION
 
         params_in_eqn_str = parser.get_params(eqn_str)
 

@@ -7,6 +7,7 @@
 from django.db import transaction
 import numpy as np
 import pints
+import myokit
 import time
 import theano.tensor as tt
 import theano
@@ -73,6 +74,15 @@ class ChainWriter:
                 slice(curr_index, curr_index + prior_length)
             )
             curr_index += prior_length
+
+        InferenceOutputResult.objects.filter(
+            chain__in=self._chains,
+        ).delete()
+
+        InferenceFunctionResult.objects.filter(
+            chain__in=self._chains,
+        ).delete()
+
 
     def append(self, fn_values, x0s, iteration):
         for buffer, x0 in zip(self._x0_buffers, x0s):
@@ -263,10 +273,14 @@ class OutputWriter:
                 ):
                     if iteration % self._use_every_n_sample != 0:
                         continue
-                    results = \
-                        self._pints_log_posterior.sample_generative_model(
-                            self._pints_log_posterior.to_search(x0)
-                        )
+                    try:
+                        results = \
+                            self._pints_log_posterior.sample_generative_model(
+                                self._pints_log_posterior.to_search(x0)
+                            )
+                    except myokit.SimulationError as e:
+                        print(e)
+                        continue
                     for times, tdigests, result, unique_times_index in zip(
                         self._times, tdigests_for_chain, results,
                         self._unique_times_index
@@ -295,10 +309,14 @@ class OutputWriter:
                 # just use the last parameter values
                 output_index = 0
                 x0 = x0_buffer[-1]
-                results_min, results, results_max = \
-                    self._pints_log_posterior.generative_model_range(
-                        self._pints_log_posterior.to_search(x0)
-                    )
+                try:
+                    results_min, results, results_max = \
+                        self._pints_log_posterior.generative_model_range(
+                            self._pints_log_posterior.to_search(x0)
+                        )
+                except myokit.SimulationError as e:
+                    print(e)
+                    continue
                 for times, tdigests, result, result_min, result_max in zip(
                     self._times, tdigests_for_chain,
                     results, results_min, results_max
@@ -439,10 +457,30 @@ class InferenceMixin:
                     curr_index = 0
                     for xi, prior in enumerate(self._priors):
                         length = prior.get_total_length()
-                        if prior.variable is not None:
+                        outputs = list(prior.outputs.all())
+                        if (
+                            len(outputs) > 0 and
+                            outputs[0].variable is not None
+                        ):
+                            value = outputs[0].variable.get_default_value()
+                            # if uniform prior then adjust default value
+                            # to fall between bounds
+                            if prior.form == prior.Form.UNIFORM:
+                                lower, upper = \
+                                    prior.get_noise_log_likelihoods()
+                                if (
+                                    lower.form == lower.Form.FIXED and
+                                    value < lower.value
+                                ):
+                                    value = lower.value
+                                if (
+                                    upper.form == upper.Form.FIXED and
+                                    value > upper.value
+                                ):
+                                    value = upper.value
                             x0[
                                 curr_index:curr_index + length
-                            ] = prior.variable.get_default_value()
+                            ] = value
                         curr_index += length
                 elif (
                     self.inference.initialization_strategy ==
@@ -695,8 +733,10 @@ class PyMC3LogPosterior(pints.LogPDF):
             def function(x):
                 return -self._logp(x)
             self._function = function
+            self._exception_value = np.inf
         else:
             self._function = self._logp
+            self._exception_value = -np.inf
 
     def n_parameters(self):
         return sum(self._prior_lengths)
@@ -768,11 +808,19 @@ class PyMC3LogPosterior(pints.LogPDF):
 
     def __call__(self, x):
         call_dict = self.get_call_dict_from_params(x)
-        return self._function(call_dict)
+        try:
+            result = self._function(call_dict)
+        except myokit.SimulationError as e:
+            print('ERROR in forward simulation at params:')
+            print(call_dict)
+            print(e)
+            result = self._exception_value
+        return result
 
     def generative_model_range(self, x):
         call_dict = self.get_call_dict_from_params(x)
         results = self._posterior_predictive(call_dict)
+
         means = results[:self._n_means]
         param1s = self._param1s
         for result, index in zip(results[self._n_means:], self._param1s_index):

@@ -63,8 +63,12 @@ export default function InferenceChart({inference}) {
     ll => ll.is_a_prior
   ).map(ll => ({
     ...ll,  
-    chains: chains.map(chain => chain.data.chain[ll.id]),
-    kdes: chains.map(chain => chain.data.kde[ll.id]),
+    chains: chains.map(chain => chain.data.chain[ll.id] || {
+      iterations: [], values: [], 
+    }),
+    kdes: chains.map(chain => chain.data.kde[ll.id] || {
+      densities: [], values: [],
+    }),
   }));
 
   const observedWithChainValues = inference.log_likelihoods.filter(
