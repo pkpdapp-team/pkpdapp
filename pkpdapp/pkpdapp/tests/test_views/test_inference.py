@@ -5,13 +5,11 @@
 #
 
 import codecs
-import pprint
 import urllib.request
 from urllib.request import urlretrieve
 
 from django.contrib.auth.models import User
 from django.core.files import File
-import pymc3
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
 
@@ -123,7 +121,8 @@ class TestInferenceWizardView(APITestCase):
         self.assertEqual(response_data['project'], self.project.id)
         self.assertEqual(response_data['initialization_strategy'], 'R')
 
-        # check number of log_likelihoods, and that the population_parameter is there
+        # check number of log_likelihoods, and that the population_parameter is
+        # there
         self.assertEqual(len(response_data['log_likelihoods']), 16)
         found_it = False
         for ll in response_data['log_likelihoods']:
@@ -906,4 +905,3 @@ class TestInferenceWizardView(APITestCase):
         )
         self.assertIn('model', response.data['observations'][0])
         self.assertIn('biomarker', response.data['observations'][0])
-

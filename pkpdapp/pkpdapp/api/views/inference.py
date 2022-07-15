@@ -26,7 +26,7 @@ from pkpdapp.models import (
     Inference, InferenceChain, Algorithm, Dataset,
     DosedPharmacokineticModel, PharmacodynamicModel,
     SubjectGroup, BiomarkerType, LogLikelihoodParameter,
-    LogLikelihood, Protocol, Project, Subject,
+    LogLikelihood, Protocol, Project,
 )
 
 
@@ -70,7 +70,10 @@ class InferenceWizardView(views.APIView):
                 'name': 'myokit.parameter1'
                 'form': 'N',
                 'pooled': False,
-                'parameters': ['2 * biomarker[subject_weight]', 'parameter[parameter1_variance]']
+                'parameters': [
+                    '2 * biomarker[subject_weight]',
+                    'parameter[parameter1_variance]'
+                ]
             },
             {
                 'name': 'parameter1_variance'
@@ -280,7 +283,9 @@ class InferenceWizardView(views.APIView):
         return biomarkers
 
     @staticmethod
-    def _set_parameters(params, models, inference, dataset, observed_biomarkers):
+    def _set_parameters(
+            params, models, inference, dataset, observed_biomarkers
+    ):
         created_params = {}
         params_names = [p['name'] for p in params]
         parser = ExpressionParser()
@@ -423,7 +428,8 @@ class InferenceWizardView(views.APIView):
                     value=0.0
                 )
                 InferenceWizardView.param_info_to_log_likelihood(
-                    new_child, param_info, params_info, parser, dataset, inference,
+                    new_child, param_info, params_info, parser,
+                    dataset, inference,
                     observed_biomarkers
                 )
 

@@ -14,7 +14,7 @@ import numpy as np
 import scipy.stats as sps
 from pkpdapp.models import (
     Variable, BiomarkerType,
-    MyokitForwardModel, SubjectGroup, Subject,
+    MyokitForwardModel, SubjectGroup,
 )
 
 
@@ -610,12 +610,11 @@ class LogLikelihood(models.Model):
                 name, lower, upper, observed=observed, shape=shape
             )
         elif self.form == self.Form.MODEL:
-            # ASSUMPTIONS / LIMITATIONS:
-            #   - parents of models must be observed random variables (e.g.
-            #   can't have equation to, say, measure 2 * model output
-            #   - subject ids of output data, e.g. [0, 1, 2, 8, 10] are the same
-            #     subjects of input data, we only check that the lengths of the
-            #     subject vectors are the same
+            # ASSUMPTIONS / LIMITATIONS: - parents of models must be observed
+            # random variables (e.g. can't have equation to, say, measure 2 *
+            # model output - subject ids of output data, e.g. [0, 1, 2, 8, 10]
+            # are the same subjects of input data, we only check that the
+            # lengths of the subject vectors are the same
 
             output_names = []
             times = []

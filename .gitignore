@@ -19,3 +19,6 @@ db.sqlite3
 
 # static files
 pkpdapp/static
+
+# nodemodules
+frontend/node_modules

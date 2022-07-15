@@ -148,5 +148,3 @@ class TestBiomarkerTypeModel(TestCase):
         np.testing.assert_array_equal(
             df['values'], [self.values[0]]
         )
-
-

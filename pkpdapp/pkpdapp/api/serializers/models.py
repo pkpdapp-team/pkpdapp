@@ -15,6 +15,7 @@ from pkpdapp.api.serializers import ValidSbml
 class PkpdMappingSerializer(serializers.ModelSerializer):
     datetime = serializers.DateField(read_only=True)
     read_only = serializers.BooleanField(read_only=True)
+
     class Meta:
         model = PkpdMapping
         fields = '__all__'

@@ -11,7 +11,6 @@ import myokit
 import time
 import theano.tensor as tt
 import theano
-import scipy.stats as sps
 from tdigest import TDigest
 from pkpdapp.models import (
     Inference,
@@ -75,14 +74,13 @@ class ChainWriter:
             )
             curr_index += prior_length
 
-        #InferenceOutputResult.objects.filter(
+        # InferenceOutputResult.objects.filter(
         #    chain__in=self._chains,
-        #).delete()
+        # ).delete()
 
-        #InferenceFunctionResult.objects.filter(
+        # InferenceFunctionResult.objects.filter(
         #    chain__in=self._chains,
-        #).delete()
-
+        # ).delete()
 
     def append(self, fn_values, x0s, iteration):
         for buffer, x0 in zip(self._x0_buffers, x0s):

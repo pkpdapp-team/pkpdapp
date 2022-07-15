@@ -148,8 +148,6 @@ Description of a three compartment PK model here.
     Unit = apps.get_model("pkpdapp", "Unit")
     Variable = apps.get_model("pkpdapp", "Variable")
     Project = apps.get_model("pkpdapp", "Project")
-    Dataset = apps.get_model("pkpdapp", "Dataset")
-    DosedPharmacokineticModel = apps.get_model("pkpdapp", "DosedPharmacokineticModel")
     demo_project = Project.objects.get(name='demo')
     for m in models_pd:
         try:
@@ -242,10 +240,10 @@ Description of a three compartment PK model here.
         except urllib.error.URLError:
             print('WARNING: urlopen timed-out, no data loaded')
 
-    #three_comp_model = PharmacokineticModel.objects.get(
+    # three_comp_model = PharmacokineticModel.objects.get(
     #    name='three_compartment_pk_model'
-    #)
-    #usecase0_model = DosedPharmacokineticModel.objects.create(
+    # )
+    # usecase0_model = DosedPharmacokineticModel.objects.create(
     #    name='usecase0',
     #    project=demo_project,
     #    pk_model=three_comp_model,
@@ -254,8 +252,8 @@ Description of a three compartment PK model here.
     #        Dataset.objects.get(name='usecase0')
     #        .subjects.first().protocol
     #    )
-    #)
-    #for variable in usecase0_model.variables.all():
+    # )
+    # for variable in usecase0_model.variables.all():
     #    if variable.qname == 'myokit.drug_c_scale':
     #        continue
     #    if variable.state and variable.qname != 'myokit.drug_c_concentration':
@@ -265,7 +263,7 @@ Description of a three compartment PK model here.
     #    variable.default_value = 0.05
     #    variable.save()
 
-    #usecase1_model = DosedPharmacokineticModel.objects.create(
+    # usecase1_model = DosedPharmacokineticModel.objects.create(
     #    name='usecase1',
     #    project=demo_project,
     #    pk_model=three_comp_model,
@@ -274,8 +272,8 @@ Description of a three compartment PK model here.
     #        Dataset.objects.get(name='usecase1')
     #        .subjects.first().protocol
     #    )
-    #)
-    #for variable in usecase1_model.variables.all():
+    # )
+    # for variable in usecase1_model.variables.all():
     #    if variable.qname == 'myokit.drug_c_scale':
     #        continue
     #    if variable.state and variable.qname != 'myokit.drug_c_concentration':
@@ -285,11 +283,6 @@ Description of a three compartment PK model here.
     #    variable.upper_bound = 0.1
     #    variable.default_value = 0.05
     #    variable.save()
-
-
-
-
-
 
 
 class Migration(migrations.Migration):

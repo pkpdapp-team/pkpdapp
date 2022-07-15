@@ -5,17 +5,18 @@
 #
 
 from django.test import TestCase
-import pymc3
-import matplotlib.pylab as plt
-import numpy as np
+
 from pkpdapp.models import (
+    Algorithm,
+    BiomarkerType,
+    DosedPharmacokineticModel,
     Inference,
-    PharmacokineticModel, DosedPharmacokineticModel,
-    Protocol,
     LogLikelihood,
-    Project, BiomarkerType,
-    Algorithm, LogLikelihoodParameter,
+    LogLikelihoodParameter,
     PharmacodynamicModel,
+    PharmacokineticModel,
+    Project,
+    Protocol,
 )
 
 
@@ -217,17 +218,10 @@ class TestInferenceMixinPdModel(TestCase):
             dataset__name='lxf_control_growth'
         )
 
-        biomarker_names = [
-            'Tumour volume', 'Body weight'
-        ]
-
         self.model = PharmacodynamicModel.objects.get(
             name='tumour_growth_inhibition_model_koch',
             read_only=False,
         )
-        parameter_names = [
-            v.qname for v in self.model.variables.filter(constant=True)
-        ]
 
         self.inference = Inference.objects.create(
             name='test',

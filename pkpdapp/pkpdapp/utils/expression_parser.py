@@ -4,6 +4,8 @@
 # (https://github.com/pyparsing/pyparsing/blob/master/examples/fourFn.py)
 # Copyright 2003-2019 by Paul McGuire
 #
+import math
+import operator
 from pyparsing import (
     Literal,
     Word,
@@ -16,13 +18,35 @@ from pyparsing import (
     dbl_quoted_string,
     sgl_quoted_string,
     remove_quotes,
-    CaselessKeyword,
     Suppress,
     Keyword,
     delimitedList,
 )
-import math
-import operator
+
+epsilon = 1e-12
+opn = {
+    "+": operator.add,
+    "-": operator.sub,
+    "*": operator.mul,
+    "/": operator.truediv,
+    "^": operator.pow,
+}
+
+functions = {
+    "sin": math.sin,
+    "cos": math.cos,
+    "tan": math.tan,
+    "exp": math.exp,
+    "abs": abs,
+    "trunc": int,
+    "round": round,
+    "sgn": lambda a: -1 if a < -epsilon else 1 if a > epsilon else 0,
+    # functionsl with multiple arguments
+    "multiply": lambda a, b: a * b,
+    "hypot": math.hypot,
+    # functions with a variable number of arguments
+    "all": lambda *a: all(a),
+}
 
 
 class ExpressionParser:
@@ -31,43 +55,20 @@ class ExpressionParser:
     multop  :: '*' | '/'
     addop   :: '+' | '-'
     integer :: ['+' | '-'] '0'..'9'+
-    atom    :: real | Parameter '[' string ']' | Biomarker '[' string ']' | fn '(' expr ')' | '(' expr ')'
+    atom    :: real | Parameter '[' string ']'
+               | Biomarker '[' string ']'
+               | fn '(' expr ')'
+               | '(' expr ')'
     factor  :: atom [ expop factor ]*
     term    :: factor [ multop factor ]*
     expr    :: term [ addop term ]*
     """
     # map operator symbols to corresponding arithmetic operations
-    epsilon = 1e-12
-    opn = {
-        "+": operator.add,
-        "-": operator.sub,
-        "*": operator.mul,
-        "/": operator.truediv,
-        "^": operator.pow,
-    }
-
-    fn = {
-        "sin": math.sin,
-        "cos": math.cos,
-        "tan": math.tan,
-        "exp": math.exp,
-        "abs": abs,
-        "trunc": int,
-        "round": round,
-        "sgn": lambda a: -1 if a < -epsilon else 1 if a > epsilon else 0,
-        # functionsl with multiple arguments
-        "multiply": lambda a, b: a * b,
-        "hypot": math.hypot,
-        # functions with a variable number of arguments
-        "all": lambda *a: all(a),
-    }
 
     def __init__(self):
         # use CaselessKeyword for e and pi, to avoid accidentally matching
         # functions that start with 'e' or 'pi' (such as 'exp'); Keyword
         # and CaselessKeyword only match whole words
-        e = CaselessKeyword("E")
-        pi = CaselessKeyword("PI")
         param = Keyword("parameter")
         biomarker = Keyword("biomarker")
         string = (dbl_quoted_string | sgl_quoted_string).setParseAction(
@@ -89,8 +90,9 @@ class ExpressionParser:
 
         expr = Forward()
         expr_list = delimitedList(Group(expr))
-        # add parse action that replaces the function identifier with a (name, number of args) tuple
 
+        # add parse action that replaces the function identifier with a (name,
+        # number of args) tuple
         def insert_fn_argcount_tuple(t):
             fn = t.pop(0)
             num_args = len(t[0])
@@ -100,17 +102,24 @@ class ExpressionParser:
             insert_fn_argcount_tuple
         )
         atom = (
-            addop[...]
-            + (
-                (param + lpar + string + rpar).setParseAction(self.push_first)
-                | (biomarker + lpar + string + rpar).setParseAction(self.push_first)
-                | (fn_call | fnumber | ident).setParseAction(self.push_first)
-                | Group(lpar + expr + rpar)
+            addop[...] +
+            (
+                (
+                    param + lpar + string + rpar
+                ).setParseAction(self.push_first) |
+                (
+                    biomarker + lpar + string + rpar
+                ).setParseAction(self.push_first) |
+                (
+                    fn_call | fnumber | ident
+                ).setParseAction(self.push_first) |
+                Group(lpar + expr + rpar)
             )
         ).setParseAction(self.push_unary_minus)
 
-        # by defining exponentiation as "atom [ ^ factor ]..." instead of "atom [ ^ atom ]...", we get right-to-left
-        # exponents, instead of left-to-right that is, 2^3^2 = 2^(3^2), not (2^3)^2.
+        # by defining exponentiation as "atom [ ^ factor ]..." instead of "atom
+        # [ ^ atom ]...", we get right-to-left exponents, instead of
+        # left-to-right that is, 2^3^2 = 2^(3^2), not (2^3)^2.
         factor = Forward()
         factor <<= atom + (expop + factor).setParseAction(self.push_first)[...]
         term = factor + (multop + factor).setParseAction(self.push_first)[...]
@@ -129,39 +138,11 @@ class ExpressionParser:
             else:
                 break
 
-    def evaluate_stack(self, s):
-        op, num_args = s.pop(), 0
-        if isinstance(op, tuple):
-            op, num_args = op
-        if op == "unary -":
-            return -self.evaluate_stack(s)
-        if op in "+-*/^":
-            # note: operands are pushed onto the stack in reverse order
-            op2 = self.evaluate_stack(s)
-            op1 = self.evaluate_stack(s)
-            return opn[op](op1, op2)
-        elif op == "PI":
-            return math.pi  # 3.1415926535
-        elif op == "E":
-            return math.e  # 2.718281828
-        elif op in fn:
-            # note: args are pushed onto the stack in reverse order
-            args = reversed([self.evaluate_stack(s) for _ in range(num_args)])
-            return fn[op](*args)
-        elif op[0].isalpha():
-            raise Exception("invalid identifier '%s'" % op)
-        else:
-            # try to evaluate as int first, then as float if int fails
-            try:
-                return int(op)
-            except ValueError:
-                return float(op)
-
     def parse(self, string, parseAll=True):
         self.exprStack[:] = []
         self.bnf.parseString(string, parseAll=parseAll)
 
-    def is_valid(self, string, parseAll=True):
+    def is_valid(self, string):
         try:
             self.parse(string)
             return True
