@@ -52,6 +52,7 @@ class TestMyokitForwardModelSingleOutput(TestCase):
             outputs=["myokit.tumour_volume"],
             times=[times],
             fixed_parameter_dict=self.fixed_dict,
+            conversion_factors=[1.0],
         )
 
         z = forward_model.simulate(self.variable_parameter_values)
@@ -64,6 +65,7 @@ class TestMyokitForwardModelSingleOutput(TestCase):
             myokit_simulator=self.simulator,
             outputs=["myokit.tumour_volume"],
             times=[times],
+            conversion_factors=[1.0],
         )
         z1 = forward_model.simulate(list(self.parameter_dict.values()))
         self.assertTrue(np.array_equal(z, z1))
@@ -79,7 +81,8 @@ class TestMyokitForwardModelSingleOutput(TestCase):
             myokit_simulator=self.simulator,
             outputs=["myokit.tumour_volume"],
             times=[times],
-            fixed_parameter_dict=new_fixed_dict
+            fixed_parameter_dict=new_fixed_dict,
+            conversion_factors=[1.0],
         )
         z3 = forward_model.simulate(self.variable_parameter_values)
         self.assertTrue(not np.array_equal(z3, z))
@@ -91,7 +94,8 @@ class TestMyokitForwardModelSingleOutput(TestCase):
             myokit_simulator=self.simulator,
             outputs=["myokit.tumour_volume"],
             times=[times],
-            fixed_parameter_dict=new_fixed_dict
+            fixed_parameter_dict=new_fixed_dict,
+            conversion_factors=[1.0],
         )
         z4 = forward_model.simulate(self.variable_parameter_values)
         self.assertTrue(not np.array_equal(z4, z3))
@@ -127,6 +131,7 @@ class TestMyokitForwardModelSingleOutput(TestCase):
             times=[times],
             subjects=[subjects],
             fixed_parameter_dict=fixed_dict,
+            conversion_factors=[1.0],
         )
 
         z_subjects = forward_model.simulate(variable_parameter_values)
@@ -142,6 +147,7 @@ class TestMyokitForwardModelSingleOutput(TestCase):
             myokit_simulator=self.simulator,
             outputs=["myokit.tumour_volume"],
             times=[times],
+            conversion_factors=[1.0],
         )
         z = forward_model.simulate([1, 1, 1, 1, 1])
         self.assertAlmostEqual(z[0][-1], 0.4999996148976773, delta=0.1)
@@ -151,10 +157,10 @@ class TestMyokitForwardModelSingleOutput(TestCase):
         self.assertAlmostEqual(z[0][0], tumour_volume, delta=0.1)
 
         z = forward_model.simulate([tumour_volume, 2, 1, 1, 1])
-        self.assertAlmostEqual(z[0][-1], 0.0025839360953396786, delta=0.1)
+        self.assertAlmostEqual(z[0][-1], 0.7499999999974631, delta=0.1)
 
         z = forward_model.simulate([tumour_volume, 2, 0.1, 1, 1])
-        self.assertAlmostEqual(z[0][-1], 4.499969613738243, delta=0.1)
+        self.assertAlmostEqual(z[0][-1], 0.0750000000033424, delta=0.1)
 
         # add some fixed parameters
         forward_model = MyokitForwardModel(
@@ -162,10 +168,11 @@ class TestMyokitForwardModelSingleOutput(TestCase):
             myokit_simulator=self.simulator,
             outputs=["myokit.tumour_volume"],
             times=[times],
-            fixed_parameter_dict={'myokit.tumour_volume': 2}
+            fixed_parameter_dict={'myokit.tumour_volume': 2},
+            conversion_factors=[1.0],
         )
         z = forward_model.simulate([2, 0.1, 1, 1])
-        self.assertAlmostEqual(z[0][-1], 4.499969613738243, delta=0.1)
+        self.assertAlmostEqual(z[0][-1], 0.0750000000033424, delta=0.1)
 
         forward_model = MyokitForwardModel(
             myokit_model=self.model,
@@ -173,10 +180,11 @@ class TestMyokitForwardModelSingleOutput(TestCase):
             outputs=["myokit.tumour_volume"],
             times=[times],
             fixed_parameter_dict={'myokit.tumour_volume': 4,
-                                  'myokit.kappa': 0.1}
+                                  'myokit.kappa': 0.1},
+            conversion_factors=[1.0],
         )
         z = forward_model.simulate([2, 1, 3])
-        self.assertAlmostEqual(z[0][-1], 13.500733928623417, delta=0.1)
+        self.assertAlmostEqual(z[0][-1], 3.0833333340874463, delta=0.1)
 
 
 class TestMyokitPintsForwardModelMultipleOutput(TestCase):
@@ -214,6 +222,12 @@ class TestMyokitPintsForwardModelMultipleOutput(TestCase):
             'peripheral_2.drug_p2_amount'
         ]
 
+        conversion_factors = [
+            1.0,
+            1.0,
+            1.0,
+        ]
+
         times = [
             np.linspace(0, 100, 33),
             np.linspace(0, 100, 10),
@@ -226,6 +240,7 @@ class TestMyokitPintsForwardModelMultipleOutput(TestCase):
             fixed_parameter_dict=fixed_dict,
             outputs=desired_outputs,
             times=times,
+            conversion_factors=conversion_factors
         )
 
         z = forward_model.simulate(variable_parameters)
@@ -241,6 +256,12 @@ class TestMyokitPintsForwardModelMultipleOutput(TestCase):
             'peripheral_1.drug_p1_amount',
         ]
 
+        conversion_factors = [
+            1.0,
+            1.0,
+            1.0,
+        ]
+
         times = [
             np.linspace(0, 100, 20),
             np.linspace(0, 100, 33),
@@ -253,6 +274,7 @@ class TestMyokitPintsForwardModelMultipleOutput(TestCase):
             outputs=desired_outputs,
             times=times,
             fixed_parameter_dict=fixed_dict,
+            conversion_factors=conversion_factors
         )
 
         z_new = forward_model.simulate(variable_parameters)

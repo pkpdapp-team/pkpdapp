@@ -75,13 +75,13 @@ class ChainWriter:
             )
             curr_index += prior_length
 
-        InferenceOutputResult.objects.filter(
-            chain__in=self._chains,
-        ).delete()
+        #InferenceOutputResult.objects.filter(
+        #    chain__in=self._chains,
+        #).delete()
 
-        InferenceFunctionResult.objects.filter(
-            chain__in=self._chains,
-        ).delete()
+        #InferenceFunctionResult.objects.filter(
+        #    chain__in=self._chains,
+        #).delete()
 
 
     def append(self, fn_values, x0s, iteration):

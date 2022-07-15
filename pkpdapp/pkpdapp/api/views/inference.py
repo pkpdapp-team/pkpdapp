@@ -142,7 +142,16 @@ class InferenceWizardView(views.APIView):
         if rename_model:
             stored_model.name = model.name + '_' + protocol.name
         stored_model.protocol = protocol
+
+        # make the model updatable in case protocol change results
+        # in new variables (i.e. D <-> I)
+        stored_model.read_only = False
         stored_model.save()
+
+        # make it non-updatable again
+        stored_model.read_only = True
+        stored_model.save()
+
         return stored_model
 
     @staticmethod
