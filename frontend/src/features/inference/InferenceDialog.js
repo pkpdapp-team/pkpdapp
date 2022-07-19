@@ -5,12 +5,18 @@ import Dialog from '@material-ui/core/Dialog';
 import DialogActions from '@material-ui/core/DialogActions';
 import { makeStyles } from "@material-ui/core/styles";
 import DialogContent from '@material-ui/core/DialogContent';
+import Container from "@material-ui/core/Container";
 import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core//DialogTitle';
 import Button from '@material-ui/core/Button';
+import Popover from '@material-ui/core/Popover';
+import Alert from '@material-ui/lab/Alert';
+import AlertTitle from '@material-ui/lab/AlertTitle';
 import List from "@material-ui/core/List";
 import IconButton from "@material-ui/core/IconButton";
+import Tooltip from "@material-ui/core/Tooltip";
 import AddIcon from "@material-ui/icons/Add";
+import HelpIcon from "@material-ui/icons/Help";
 import DeleteIcon from "@material-ui/icons/Delete";
 import ListItem from "@material-ui/core/ListItem";
 import Grid from "@material-ui/core/Grid";
@@ -25,7 +31,7 @@ import ModellingChart from '../modelling/Chart';
 import { FormTextField, FormSelectField, FormSliderField } from "../forms/FormComponents";
 import { selectAllAlgorithms } from "../inference/algorithmsSlice";
 import { selectAllDatasets } from "../datasets/datasetsSlice";
-import { runNaivePooledInference, selectAllInferences } from "../inference/inferenceSlice";
+import { runInferenceWizard, selectAllInferences } from "../inference/inferenceSlice";
 import { selectWritablePkModels, selectReadOnlyPkModels } from "../pkModels/pkModelsSlice";
 import { selectWritablePdModels, selectReadOnlyPdModels } from "../pdModels/pdModelsSlice";
 import {
@@ -61,6 +67,54 @@ const useStyles = makeStyles(() => ({
     width: "100%",
   },
 }));
+
+function HelpPopover() {
+  const [anchorEl, setAnchorEl] = React.useState(null);
+
+  const handleClick = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  const open = Boolean(anchorEl);
+  const id = open ? 'simple-popover' : undefined;
+
+  const helpText = 'Value can be a number (e.g. 1.0), or an expression in Python syntax ' + 
+                   '(e.g. 1.0 + parameter[central.clearence]^2). You can refer to other ' +
+                   'parameters using the syntax "parameter[<parameter_name>]". You can ' + 
+                   'refer to a biomarker in the chosen dataset using "biomarker[<biomarker_name>]"' +
+                   '(e.g. 24.0 if biomarker[body weight] < 100 else 12.0). If there are more ' + 
+                   'than one biomarker measurement for that subject / subject group then only the ' + 
+                   'first measurement is used.';
+
+  return (
+    <React.Fragment>
+      <IconButton onClick={handleClick}>
+        <HelpIcon />
+      </IconButton>
+      <Popover
+        id={id}
+        open={open}
+        anchorEl={anchorEl}
+        onClose={handleClose}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'left',
+        }}
+      >
+        <Container component={Paper} maxWidth={'md'}>
+        <Alert severity="info">
+          <AlertTitle>Help on defining parameter values</AlertTitle>
+          {helpText}
+        </Alert>
+        </Container>
+      </Popover>
+    </React.Fragment>
+  );
+}
 
 export default function InferenceDialog({ project, open, handleCloseDialog, defaultValues }) {
   const dispatch = useDispatch();
@@ -112,6 +166,10 @@ export default function InferenceDialog({ project, open, handleCloseDialog, defa
     value: JSON.stringify({id: model.id, form: 'PK'}),
     group: 'Pharmacokinetic',
   })));
+  const grouping_options = [
+    { key: 'by subject', value: 'subject' },
+    { key: 'by protocol', value: 'protocol' },
+  ]
 
   if (defaultValues) {
     defaultValues = {
@@ -121,6 +179,7 @@ export default function InferenceDialog({ project, open, handleCloseDialog, defa
   } else if (!defaultValues) {
     defaultValues = {
       name: '',
+      grouping: 'protocol',
       description: '',
       project: project.id, 
       algorithm: 1, 
@@ -157,6 +216,8 @@ export default function InferenceDialog({ project, open, handleCloseDialog, defa
   const {
     fields: parameters,
     replace: parametersReplace,
+    append: parametersAppend,
+    remove: parametersRemove,
   } = useFieldArray({
     control,
     name: "parameters",
@@ -168,6 +229,7 @@ export default function InferenceDialog({ project, open, handleCloseDialog, defa
 
   const chosenPkModel = dosed_pk_models.find(m => m.id === modelIdParse.id && modelIdParse.form === 'PK')
   console.log('chosenPkModel', chosenPkModel)
+  console.log('defaultValues', defaultValues)
   const chosenPdModel = pd_models.find(m => m.id === modelIdParse.id && modelIdParse.form === 'PD')
 
   const variablesAll = useSelector((state) => {
@@ -244,12 +306,16 @@ export default function InferenceDialog({ project, open, handleCloseDialog, defa
         return {
           name: existing_param.name,
           form: existing_param.form,
+          pooled: existing_param.pooled,
+          userDefined: existing_param.userDefined,
           parameters: [...existing_param.parameters],
         }
       }
       return {
         name: variable.qname, 
         form: 'F',
+        pooled: true,
+        userDefined: false,
         parameters: [variableGetDefaultValue(variable)],
       }
     })
@@ -257,6 +323,19 @@ export default function InferenceDialog({ project, open, handleCloseDialog, defa
     observationsReplace(model_observations)
     }
   , [JSON.stringify(variables)]);
+
+  const handleNewParameter= () => {
+    parametersAppend({
+      name: 'New', 
+      form: 'F',
+      pooled: true,
+      userDefined: true,
+      parameters: ['0.0'],
+    })
+  };
+  const handleDeleteParameter = (index) => () => {
+    parametersRemove(index)
+  };
 
   const model_output_options = variables.filter(variable => 
     !variable.constant
@@ -325,7 +404,7 @@ export default function InferenceDialog({ project, open, handleCloseDialog, defa
       sum[key] = value
       return sum
     }, {})
-    dispatch(runNaivePooledInference(values));
+    dispatch(runInferenceWizard(values));
     handleClose()
   };
 
@@ -333,28 +412,45 @@ export default function InferenceDialog({ project, open, handleCloseDialog, defa
     "max_number_of_iterations"
   )
 
+  const pooled_options = [
+    { value: true, key: 'Yes'},
+    { value: false, key: 'No'},
+  ]
 
-  const prior_parameter_render = (baseName, watchForm) => {
+  
+  const prior_parameter_render = (baseName, watchForm, showPooled) => {
+    const pooled = (
+      <Grid item xs={3}>
+        <FormSelectField
+          name={`${baseName}.pooled`}
+          label="Pooled"
+          control={control}
+          options={pooled_options}
+        />
+      </Grid>
+    )
     if (watchForm === 'F') {
       return (
+        <React.Fragment>
+        {showPooled && pooled}
         <Grid item xs={3}>
         <FormTextField
           control={control}
           name={`${baseName}.parameters[0]`}
           label="Value"
-          number
         />
         </Grid>
+        </React.Fragment>
       )
     } else if ((watchForm === 'N' || watchForm === 'LN')) {
       return (
         <React.Fragment>
+        {showPooled && pooled}
         <Grid item xs={3}>
         <FormTextField
           control={control}
           name={`${baseName}.parameters[0]`}
           label="Mean"
-          number
         />
         </Grid>
         <Grid item xs={3}>
@@ -362,7 +458,6 @@ export default function InferenceDialog({ project, open, handleCloseDialog, defa
           control={control}
           name={`${baseName}.parameters[1]`}
           label="Sigma"
-          number
         />
         </Grid>
         </React.Fragment>
@@ -370,12 +465,12 @@ export default function InferenceDialog({ project, open, handleCloseDialog, defa
     } else if (watchForm === 'U') {
       return (
         <React.Fragment>
+        {showPooled && pooled}
         <Grid item xs={3}>
         <FormTextField
           control={control}
           name={`${baseName}.parameters[0]`}
           label="Lower"
-          number
         />
         </Grid>
         <Grid item xs={3}>
@@ -383,7 +478,6 @@ export default function InferenceDialog({ project, open, handleCloseDialog, defa
           control={control}
           name={`${baseName}.parameters[1]`}
           label="Upper"
-          number
         />
         </Grid>
         </React.Fragment>
@@ -415,10 +509,13 @@ export default function InferenceDialog({ project, open, handleCloseDialog, defa
         label="Dataset"
       />
       </Grid>
+
       {chosenPkModel && chosenDataset && 
       <Grid item xs={12}>
         <Typography>
-          Note: there are {chosenDataset.protocols.length} dosing protocols for this dataset.
+          Note: there are {chosenDataset.protocols.length} dosing protocols and
+          {chosenDataset.subjects.length} subjects in this dataset. The
+          inference will use generate one model per protocol
         </Typography>
       </Grid>
       }
@@ -477,9 +574,9 @@ export default function InferenceDialog({ project, open, handleCloseDialog, defa
             label={'Noise param'}
           />
           </Grid>
-            {prior_parameter_render(baseName, watchForm)}
+            {prior_parameter_render(baseName, watchForm, false)}
           </Grid>
-            <IconButton size="small" onClick={handleDeleteObservation(index)}>
+          <IconButton size="small" onClick={handleDeleteObservation(index)}>
             <DeleteIcon />
           </IconButton>
         </ListItem>
@@ -492,6 +589,7 @@ export default function InferenceDialog({ project, open, handleCloseDialog, defa
        >
           <AddIcon />
       </IconButton>
+      <HelpPopover />
       <ModellingChart 
         className={classes.chart}
         datasets={chosenDataset ? [chosenDataset] : []}
@@ -518,11 +616,21 @@ export default function InferenceDialog({ project, open, handleCloseDialog, defa
             label={param.name}
           />
           </Grid>
-            {prior_parameter_render(baseName, watchForm)}
+            {prior_parameter_render(baseName, watchForm, true)}
           </Grid>
+          <IconButton size="small" disabled={!param.userDefined} onClick={handleDeleteParameter(index)}>
+            <DeleteIcon />
+          </IconButton>
         </ListItem>
         )
       })}
+      <IconButton
+        onClick={handleNewParameter}
+       >
+          <AddIcon />
+      </IconButton>
+      <HelpPopover />
+
       
       </List>
 

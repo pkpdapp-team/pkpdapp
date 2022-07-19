@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useSelector } from "react";
 import { useDispatch } from "react-redux";
 import Button from "@material-ui/core/Button";
 import Grid from "@material-ui/core/Grid";
@@ -14,7 +14,7 @@ import AccordionSummary from "@material-ui/core/AccordionSummary";
 import AccordionDetails from "@material-ui/core/AccordionDetails";
 import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
 
-import SubjectSubform from "./SubjectSubform";
+import SubjectsTable from "./SubjectsTable";
 import BiomarkerTypeSubform from "./BiomarkerTypeSubform";
 
 import { userHasReadOnlyAccess } from "../projects/projectsSlice";
@@ -39,6 +39,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
+
 export default function DatasetDetail({ project, dataset }) {
   const classes = useStyles();
   const { control, handleSubmit, reset } = useForm();
@@ -47,6 +48,7 @@ export default function DatasetDetail({ project, dataset }) {
   useEffect(() => {
     reset(dataset);
   }, [reset, dataset]);
+
 
   const handleDatasetDelete = () => {
     dispatch(deleteDataset(dataset.id));
@@ -97,43 +99,7 @@ export default function DatasetDetail({ project, dataset }) {
           </List>
         </Grid>
         <Grid item xs={12}>
-          <Typography>Subjects</Typography>
-          <List>
-            {Object.keys(dataset.subject_groups).map((group, index) => {
-              return (
-                <ListItem key={index} dense>
-                  <Accordion>
-                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                      <Typography className={classes.heading}>
-                        {group || "No group"}
-                      </Typography>
-                    </AccordionSummary>
-                    <AccordionDetails>
-                      <List>
-                        {dataset.subject_groups[group].map(
-                          (subject_id, sindex) => {
-                            return (
-                              <ListItem
-                                key={`s${sindex}`}
-                                role={undefined}
-                                dense
-                                button
-                              >
-                                <SubjectSubform
-                                  subject_id={subject_id}
-                                  disableSave={disableSave}
-                                />
-                              </ListItem>
-                            );
-                          }
-                        )}
-                      </List>
-                    </AccordionDetails>
-                  </Accordion>
-                </ListItem>
-              );
-            })}
-          </List>
+          <SubjectsTable dataset={dataset} disableSave={disableSave}/>
         </Grid>
       </Grid>
       <Button

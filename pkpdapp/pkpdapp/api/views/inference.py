@@ -6,6 +6,14 @@
 from rest_framework import viewsets, views, status
 from rest_framework.response import Response
 import json
+import numbers
+import re
+from pyparsing import (
+    ParseException,
+)
+from pkpdapp.utils import (
+    ExpressionParser
+)
 from pkpdapp.api.views import (
     ProjectFilter, InferenceFilter
 )
@@ -18,7 +26,7 @@ from pkpdapp.models import (
     Inference, InferenceChain, Algorithm, Dataset,
     DosedPharmacokineticModel, PharmacodynamicModel,
     SubjectGroup, BiomarkerType, LogLikelihoodParameter,
-    LogLikelihood, Protocol, Project
+    LogLikelihood, Protocol, Project,
 )
 
 
@@ -33,10 +41,11 @@ class InferenceView(viewsets.ModelViewSet):
     filter_backends = [ProjectFilter]
 
 
-class NaivePooledInferenceView(views.APIView):
+class InferenceWizardView(views.APIView):
     """
     expecting data in the form:
     {
+
         # Inference parameters
         'id': 1
         'name': "my inference run",
@@ -60,6 +69,15 @@ class NaivePooledInferenceView(views.APIView):
             {
                 'name': 'myokit.parameter1'
                 'form': 'N',
+                'pooled': False,
+                'parameters': [
+                    '2 * biomarker[subject_weight]',
+                    'parameter[parameter1_variance]'
+                ]
+            },
+            {
+                'name': 'parameter1_variance'
+                'form': 'N',
                 'parameters': [0, 1]
             },
             {
@@ -71,7 +89,7 @@ class NaivePooledInferenceView(views.APIView):
                 'name': 'myokit.parameter3'
                 'form': 'F',
                 'parameters': [123.5]
-            }
+            },
         ]
 
         # output
@@ -97,10 +115,17 @@ class NaivePooledInferenceView(views.APIView):
     for each protocol used in the dataset, replacing the protocol of the model
     with each new one.
 
-    This set of models has a set of parameters, and parameters of the same
-    qname are assumed to be identical. All Variable fields from the original
-    model are copied over to the new models. Priors and fixed values for each
-    parameter in this set are provided in 'parameters'.
+    This set of models has a set of parameters. If pooled is True or not given,
+    then parameters of the same qname are assumed to be identical, if pooled is
+    False, then the value of this parameter is different across each subject.
+    All Variable fields from the original model are copied over to the new
+    models. Priors and fixed values for each parameter in this set are provided
+    in 'parameters'. Distribution parameters for each prior can be provided
+    using a python expression, or a number. If a python expression is used, the
+    keywords Parameter[<param_name>] are used to refer to other parameters in
+    the list. Additional parameters can be added to the list (parameters not in
+    the model) to contruct hierarchical inference. You can refer to biomarkers
+    in the expression using the keyword Biomarker[<biomarker_name>].
 
     The 'observations' field maps model output variables with biomarkers in the
     dataset
@@ -110,13 +135,38 @@ class NaivePooledInferenceView(views.APIView):
 
     @staticmethod
     def _create_dosed_model(model, protocol, rename_model=False):
+        if model.pd_model is None:
+            stored_pd_model = None
+        else:
+            stored_pd_model = model.pd_model.create_stored_model()
+        stored_model = model.create_stored_model(
+            new_pd_model=stored_pd_model
+        )
+        if rename_model:
+            stored_model.name = model.name + '_' + protocol.name
+        stored_model.protocol = protocol
+
+        # make the model updatable in case protocol change results
+        # in new variables (i.e. D <-> I)
+        stored_model.read_only = False
+        stored_model.save()
+
+        # make it non-updatable again
+        stored_model.read_only = True
+        stored_model.save()
+
+        return stored_model
+
+    @staticmethod
+    def _create_subject_model(model, subject):
         model_copy = type(model).objects.get(id=model.id)
         original_name = model_copy.name
         model_copy.id = None
         model_copy.pk = None
-        if rename_model:
-            model_copy.name = original_name + '_' + protocol.name
-        model_copy.protocol = protocol
+        model_copy.name = (
+            '{}_Subject{}'.format(original_name, subject.id_in_dataset)
+        )
+        model_copy.protocol = subject.protocol
         model_copy.save()
         stored_model = model_copy.create_stored_model()
         model_copy.delete()
@@ -138,24 +188,29 @@ class NaivePooledInferenceView(views.APIView):
         return group
 
     @staticmethod
-    def _set_observed_loglikelihoods(obs, models, groups, dataset, inference):
+    def _set_observed_loglikelihoods(
+        obs, models, dataset, inference, subject_groups,
+    ):
         # create noise param models
         sigma_models = []
         for ob in obs:
             # create model
             sigma_form = ob['noise_param_form']
             parameters = ob['parameters']
+            name = 'sigma for {}'.format(
+                ob['model']
+            )
             if sigma_form == LogLikelihood.Form.FIXED:
                 ll = LogLikelihood.objects.create(
                     inference=inference,
-                    name='sigma for ' + ob['model'],
+                    name=name,
                     form=sigma_form,
                     value=parameters[0]
                 )
             else:
                 ll = LogLikelihood.objects.create(
                     inference=inference,
-                    name='sigma for ' + ob['model'],
+                    name=name,
                     form=sigma_form,
                 )
                 for p, v in zip(
@@ -178,7 +233,10 @@ class NaivePooledInferenceView(views.APIView):
             except BiomarkerType.DoesNotExist:
                 biomarker = None
             biomarkers.append(biomarker)
-        for model, group in zip(models, groups):
+
+        print('found biomarkers', biomarkers)
+
+        for model, group in zip(models, subject_groups):
             # remove all outputs (and their parameters)
             # except those in output_names
             # and set the right biomarkers and subject groups
@@ -190,35 +248,54 @@ class NaivePooledInferenceView(views.APIView):
                 if index is not None:
                     parent = output.parent
                     if group is not None:
-                        parent.name = '{} ({})'.format(parent.name, group.name)
+                        parent.name = '{} ({})'.format(
+                            parent.name, group.name
+                        )
                     parent.biomarker_type = biomarkers[index]
+                    print('setting biomarker', biomarkers[index],
+                          biomarkers[index].name)
+                    parent.observed = True
                     parent.subject_group = group
                     parent.form = output_forms[index]
                     parent.save()
 
-                    # remove sigma param and replace it with generated one
-                    parent.get_noise_log_likelihoods()[1].delete()
-                    param = LogLikelihoodParameter.objects.create(
-                        parent=parent, child=sigma_models[index],
-                        index=1, name='sigma for ' + output.variable.qname
-                    )
+                    # check there is actually data for this output
+                    values, _, _ = parent.get_data()
+                    if values is None:
+                        # no data, delete this output as well
+                        for param in parent.parameters.all():
+                            if param != output:
+                                param.child.delete()
+                        parent.delete()
+                    else:
+                        # remove sigma param and replace it with generated one
+                        parent.get_noise_log_likelihoods()[1].delete()
+                        param = LogLikelihoodParameter.objects.create(
+                            parent=parent, child=sigma_models[index],
+                            parent_index=1,
+                            name='sigma for ' + output.variable.qname
+                        )
                 else:
                     for param in output.parent.parameters.all():
                         if param != output:
                             param.child.delete()
                     output.parent.delete()
+        return biomarkers
 
     @staticmethod
-    def _set_parameters(params, models, inference):
-        pooled_params = {}
+    def _set_parameters(
+            params, models, inference, dataset, observed_biomarkers
+    ):
+        created_params = {}
         params_names = [p['name'] for p in params]
+        parser = ExpressionParser()
         for model in models:
             for model_param in model.parameters.all():
                 # if we've already done this param, use the child
-                # in pooled_params
-                if model_param.name in pooled_params:
+                if model_param.name in created_params:
+                    # in pooled_params
                     old_child = model_param.child
-                    model_param.child = pooled_params[model_param.name]
+                    model_param.child = created_params[model_param.name]
                     model_param.save()
                     old_child.delete()
                     continue
@@ -230,25 +307,149 @@ class NaivePooledInferenceView(views.APIView):
                     param_index = params_names.index(model_param.name)
                 except ValueError:
                     param_index = None
-                if param_index is None:
-                    child = model_param.child
+                child = model_param.child
+                if param_index is not None:
+                    param_info = params[param_index]
+
+                    InferenceWizardView.param_info_to_log_likelihood(
+                        child, param_info, params, parser, dataset, inference,
+                        observed_biomarkers
+                    )
+
+                created_params[model_param.name] = child
+
+    @staticmethod
+    def param_info_to_log_likelihood(
+        log_likelihood, param_info, params_info, parser, dataset, inference,
+        observed_biomarkers
+    ):
+        # deal with possible equations in noise params
+        # if form is fixed and there is an equation, the child form
+        # will be an equation
+        # if form is a distribution, then the child form will be
+        # that distribution, but if a parameter is given by an
+        # equation its child will be an equation
+        noise_params = param_info['parameters']
+        param_form = param_info['form']
+        pooled = param_info.get('pooled', True)
+        log_likelihood.form = param_form
+        log_likelihood.pooled = pooled
+
+        biomarker_type = None
+        if param_form == 'F' and isinstance(noise_params[0], str):
+            if noise_params[0].isnumeric():
+                log_likelihood.value = float(noise_params[0])
+            else:
+                biomarker_type = \
+                    InferenceWizardView.to_equation_log_likelihood(
+                        log_likelihood, noise_params[0], params_info,
+                        parser, dataset, inference, observed_biomarkers
+                    )
+        elif param_form == 'F':
+            log_likelihood.value = noise_params[0]
+        else:
+            log_likelihood.value = None
+
+        # if we're not pooled then need to give a biomarker_type to get list of
+        # subjects if there is a biomarker covariate in the children use that,
+        # otherwise use the list of subjects in the measured data
+        if not pooled:
+            if biomarker_type is None and observed_biomarkers:
+                if len(observed_biomarkers) == 0:
+                    raise RuntimeError('no observed biomakers found')
+
+                # TODO: assumes that multiple observed biomarkers have
+                # identical subjects
+                log_likelihood.biomarker_type = observed_biomarkers[0]
+                log_likelihood.time_independent_data = True
+            else:
+                log_likelihood.biomarker_type = biomarker_type
+                log_likelihood.time_independent_data = True
+
+        log_likelihood.save()
+
+        # set length of output appropriately if not pooled
+        if not pooled:
+            _, _, subjects = log_likelihood.get_data()
+            output = log_likelihood.outputs.first()
+            output.length = len(subjects)
+            output.save()
+
+        for i, p in enumerate(log_likelihood.parameters.all()):
+            param_index = p.parent_index
+            if isinstance(noise_params[param_index], str):
+                if noise_params[param_index].isnumeric():
+                    p.child.value = float(noise_params[param_index])
                 else:
-                    param = params[param_index]
-                    param_form = param['form']
-                    noise_params = param['parameters']
+                    InferenceWizardView.to_equation_log_likelihood(
+                        p.child, noise_params[param_index], params_info,
+                        parser, dataset, inference, observed_biomarkers
+                    )
+            else:
+                p.child.value = noise_params[param_index]
+            p.child.save()
 
-                    child = model_param.child
-                    child.form = param_form
-                    if param_form == 'F':
-                        child.value = noise_params[0]
-                    else:
-                        child.value = None
-                    child.save()
-                    for i, p in enumerate(child.parameters.all()):
-                        p.child.value = noise_params[p.index]
-                        p.child.save()
+    @staticmethod
+    def to_equation_log_likelihood(
+        log_likelihood, eqn_str, params_info, parser, dataset, inference,
+        observed_biomarkers
+    ):
+        # set form to equation and remove existing children
+        log_likelihood.children.clear()
+        log_likelihood.form = LogLikelihood.Form.EQUATION
 
-                pooled_params[model_param.name] = child
+        params_in_eqn_str = parser.get_params(eqn_str)
+
+        # replace parameters and biomarkers in equation string
+        # with arg1, arg2 etc
+        escape_regex = re.compile(r'/[.*+?^${}()|[\]\\]/g')
+        for i, param in enumerate(params_in_eqn_str):
+            param1_escaped = escape_regex.sub(r'\\$&', param[1])
+            eqn_str = re.sub(
+                r'{}\s*\(\s*"{}"\s*\)'.format(param[0], param1_escaped),
+                r'arg{}'.format(i),
+                eqn_str
+            )
+        log_likelihood.description = eqn_str
+        log_likelihood.save()
+
+        # create children using parameters and biomarkers
+        biomarker_type = None
+        for i, param in enumerate(params_in_eqn_str):
+            if param[0] == 'parameter':
+                param_info = [
+                    p for p in params_info
+                    if p['name'] == param[1]
+                ][0]
+                new_child = LogLikelihood.objects.create(
+                    name=param_info['name'],
+                    form=LogLikelihood.Form.FIXED,
+                    inference=inference,
+                    value=0.0
+                )
+                InferenceWizardView.param_info_to_log_likelihood(
+                    new_child, param_info, params_info, parser,
+                    dataset, inference,
+                    observed_biomarkers
+                )
+
+            elif param[0] == 'biomarker':
+                biomarker_type = BiomarkerType.objects.get(
+                    name=param[1], dataset=dataset
+                )
+                new_child = LogLikelihood.objects.create(
+                    name=param[1],
+                    form=LogLikelihood.Form.FIXED,
+                    biomarker_type=biomarker_type,
+                    inference=inference,
+                )
+            LogLikelihoodParameter.objects.create(
+                parent=log_likelihood,
+                child=new_child,
+                parent_index=i,
+                name=param[1]
+            )
+        return biomarker_type
 
     def post(self, request, format=None):
         errors = {}
@@ -294,7 +495,6 @@ class NaivePooledInferenceView(views.APIView):
                 model_id = data['model']['id']
             else:
                 errors.get('model', {})['id'] = 'field required'
-
         else:
             errors['model'] = 'field required'
 
@@ -305,26 +505,68 @@ class NaivePooledInferenceView(views.APIView):
             try:
                 model = model_table.objects.get(id=model_id)
             except model_table.DoesNotExist:
+                model = None
                 errors['model'] = '{} id {} not found'.format(
                     model_table, model_id
                 )
 
+        parameter_errors = []
         if 'parameters' in data:
+            parser = ExpressionParser()
+            param_names = [p['name'] for p in data['parameters']]
             for i, param in enumerate(data['parameters']):
-                if model is None:
-                    continue
-                if model.variables.filter(qname=param['name']).count() == 0:
-                    base_error = errors.get('parameters', None)
-                    if base_error is None:
-                        errors['parameters'] = {}
-                        base_error = errors['parameters']
-                    error = base_error.get(i)
-                    if error is None:
-                        base_error[i] = {}
-                        error = base_error[i]
-                    error['name'] = 'not found in model'
+                for j, dist_param in enumerate(param['parameters']):
+                    if not isinstance(dist_param, (numbers.Number, str)):
+                        parameter_errors.append((
+                            (i, 'parameters', j),
+                            'should be str or number'
+                        ))
+                    elif isinstance(dist_param, str):
+                        try:
+                            parser.parse(dist_param)
+                            params = parser.get_params(dist_param)
+                            for param in params:
+                                if (
+                                    param[0] == 'parameter' and
+                                    param[1] not in param_names
+                                ):
+                                    parameter_errors.append((
+                                        (i, 'parameters', j),
+                                        '{} not in list of parameters'
+                                        .format(param[1])
+                                    ))
+                                elif (
+                                    param[0] == 'biomarker' and
+                                    dataset.biomarker_types.filter(
+                                        name=param[1]
+                                    ).count() == 0
+                                ):
+                                    parameter_errors.append((
+                                        (i, 'parameters', j),
+                                        '{} not in list of biomarkers'
+                                        .format(param[1])
+                                    ))
+                        except ParseException as pe:
+                            parameter_errors.append((
+                                (i, 'parameters', j), str(pe)
+                            ))
         else:
             errors['parameters'] = 'field required'
+
+        # fill out the errors with the parameter errors
+        for p in parameter_errors:
+            this_error = errors.get('parameters')
+            if this_error is None:
+                errors['parameters'] = {}
+                this_error = errors['parameters']
+            for index in p[0][:-1]:
+                new_error = this_error.get(index)
+                if new_error is None:
+                    this_error[index] = {}
+                    this_error = this_error[index]
+                else:
+                    this_error = new_error
+            this_error[p[0][-1]] = p[1]
 
         if 'observations' in data:
             for i, obs in enumerate(data['observations']):
@@ -374,7 +616,8 @@ class NaivePooledInferenceView(views.APIView):
             subject_groups = [None]
         else:
             models = [
-                self._create_dosed_model(model, p, rename_model=rename_models)
+                self._create_dosed_model(
+                    model, p, rename_model=rename_models)
                 for p in protocols
             ]
             subject_groups = [
@@ -427,13 +670,14 @@ class NaivePooledInferenceView(views.APIView):
             ) for m in models
         ]
 
-        self._set_observed_loglikelihoods(
-            data['observations'], model_loglikelihoods, subject_groups,
-            dataset, inference
+        biomarkers = self._set_observed_loglikelihoods(
+            data['observations'], model_loglikelihoods,
+            dataset, inference, subject_groups
         )
 
         self._set_parameters(
-            data['parameters'], model_loglikelihoods, inference
+            data['parameters'], model_loglikelihoods, inference, dataset,
+            biomarkers
         )
 
         inference.run_inference()
@@ -473,11 +717,6 @@ class InferenceOperationView(views.APIView):
         self.op(inference)
 
         return Response(InferenceSerializer(inference).data)
-
-
-class RunInferenceView(InferenceOperationView):
-    def op(self, inference):
-        return inference.run_inference()
 
 
 class StopInferenceView(InferenceOperationView):

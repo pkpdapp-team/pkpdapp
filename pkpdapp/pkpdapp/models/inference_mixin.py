@@ -7,16 +7,18 @@
 from django.db import transaction
 import numpy as np
 import pints
+import myokit
 import time
 import theano.tensor as tt
 import theano
-import scipy.stats as sps
 from tdigest import TDigest
 from pkpdapp.models import (
     Inference,
     InferenceResult,
     InferenceChain, InferenceFunctionResult,
     InferenceOutputResult,
+    LogLikelihood,
+    Subject
 )
 
 optimisers_dict = {
@@ -53,6 +55,32 @@ class ChainWriter:
         self._chains = chains
         self._priors = priors
         self._buffer_size = buffer_size
+        self._prior_lengths = [
+            p.get_total_length() for p in priors
+        ]
+        self._prior_subjects = [
+            p.get_data()[2] for p in priors
+        ]
+        for i, subjects in enumerate(self._prior_subjects):
+            if subjects is not None:
+                self._prior_subjects[i] = [
+                    Subject.objects.get(id=s) for s in subjects
+                ]
+        self._prior_slices = []
+        curr_index = 0
+        for prior_length in self._prior_lengths:
+            self._prior_slices.append(
+                slice(curr_index, curr_index + prior_length)
+            )
+            curr_index += prior_length
+
+        # InferenceOutputResult.objects.filter(
+        #    chain__in=self._chains,
+        # ).delete()
+
+        # InferenceFunctionResult.objects.filter(
+        #    chain__in=self._chains,
+        # ).delete()
 
     def append(self, fn_values, x0s, iteration):
         for buffer, x0 in zip(self._x0_buffers, x0s):
@@ -77,13 +105,28 @@ class ChainWriter:
                     iteration=iteration,
                     value=fn_value
                 ))
-                for i, prior in enumerate(self._priors):
-                    inference_results.append(InferenceResult(
-                        chain=chain,
-                        log_likelihood=prior,
-                        iteration=iteration,
-                        value=x0[i]
-                    ))
+                for prior_slice, prior, prior_subjects in zip(
+                        self._prior_slices, self._priors, self._prior_subjects
+                ):
+                    prior_values = x0[prior_slice]
+                    if prior_subjects is None:
+                        inference_results.append(InferenceResult(
+                            chain=chain,
+                            log_likelihood=prior,
+                            iteration=iteration,
+                            value=prior_values[0]
+                        ))
+                    else:
+                        for value, subject in zip(
+                                prior_values, prior_subjects
+                        ):
+                            inference_results.append(InferenceResult(
+                                chain=chain,
+                                log_likelihood=prior,
+                                iteration=iteration,
+                                subject=subject,
+                                value=value
+                            ))
         InferenceFunctionResult.objects.bulk_create(function_results)
         InferenceResult.objects.bulk_create(inference_results)
 
@@ -107,7 +150,9 @@ class OutputWriter:
                  pints_log_posterior,
                  use_every_n_sample=1,
                  buffer_size=100,
-                 store_output_range=True):
+                 store_output_range=True,
+                 pooled=True,
+                 ):
 
         self._iterations = []
         self._x0_buffers = [
@@ -118,29 +163,47 @@ class OutputWriter:
 
         self._log_likelihoods = log_likelihoods
         self._pints_log_posterior = pints_log_posterior
-        data = [ll.get_inference_data() for ll in log_likelihoods]
+        data = [ll.get_data() for ll in log_likelihoods]
         self._values = [d[0] for d in data]
         self._times = [d[1] for d in data]
-        self._unique_times = [
-            [times[0]] for times in self._times
-        ]
-        self._unique_times_index = [
-            [0] for _ in self._times
-        ]
-        self._times_index = [
-            [0] for _ in self._times
-        ]
-        for unique_times, unique_times_index, times_index, times in zip(
-            self._unique_times, self._unique_times_index, self._times_index,
-            self._times
-        ):
-            unique_index = 0
-            for i, t in enumerate(times[1:]):
-                if t != unique_times[-1]:
-                    times_index.append(i + 1)
-                    unique_times.append(t)
-                    unique_index += 1
-                unique_times_index.append(unique_index)
+        print('creating output thingo', pooled, 'is_pooled')
+        if pooled:
+            self._subjects = [
+                [None for _ in values]
+                for values in self._values
+            ]
+            self._unique_times = [
+                [times[0]] for times in self._times
+            ]
+            self._unique_times_index = [
+                [0] for _ in self._times
+            ]
+            self._times_index = [
+                [0] for _ in self._times
+            ]
+            for unique_times, unique_times_index, times_index, times in zip(
+                self._unique_times, self._unique_times_index,
+                self._times_index, self._times
+            ):
+                unique_index = 0
+                for i, t in enumerate(times[1:]):
+                    if t != unique_times[-1]:
+                        times_index.append(i + 1)
+                        unique_times.append(t)
+                        unique_index += 1
+                    unique_times_index.append(unique_index)
+        else:
+            self._subjects = [
+                [Subject.objects.get(id=subject_id) for subject_id in d[2]]
+                for d in data
+            ]
+            for subjects in self._subjects:
+                print('subjects', subjects)
+            self._unique_times = self._times
+            self._unique_times_index = [
+                list(range(len(times))) for times in self._times
+            ]
+            self._times_index = self._unique_times_index
 
         self._tdigests = [
             [
@@ -174,16 +237,18 @@ class OutputWriter:
                 chain=chain,
                 log_likelihood__in=self._log_likelihoods,
             ).delete()
-            for log_likelihood, times, values in zip(
-                self._log_likelihoods, self._times, self._values
+            for log_likelihood, times, values, subjects in zip(
+                self._log_likelihoods, self._times, self._values,
+                self._subjects
             ):
-                for time_val, value in zip(times, values):
+                for time_val, value, subject in zip(times, values, subjects):
                     outputs.append(InferenceOutputResult.objects.create(
                         log_likelihood=log_likelihood,
                         chain=chain,
                         median=0,
                         percentile_min=0,
                         percentile_max=0,
+                        subject=subject,
                         data=value,
                         time=time_val,
                     ))
@@ -206,10 +271,14 @@ class OutputWriter:
                 ):
                     if iteration % self._use_every_n_sample != 0:
                         continue
-                    results = \
-                        self._pints_log_posterior.sample_generative_model(
-                            self._pints_log_posterior.to_search(x0)
-                        )
+                    try:
+                        results = \
+                            self._pints_log_posterior.sample_generative_model(
+                                self._pints_log_posterior.to_search(x0)
+                            )
+                    except myokit.SimulationError as e:
+                        print(e)
+                        continue
                     for times, tdigests, result, unique_times_index in zip(
                         self._times, tdigests_for_chain, results,
                         self._unique_times_index
@@ -238,10 +307,14 @@ class OutputWriter:
                 # just use the last parameter values
                 output_index = 0
                 x0 = x0_buffer[-1]
-                results_min, results, results_max = \
-                    self._pints_log_posterior.generative_model_range(
-                        self._pints_log_posterior.to_search(x0)
-                    )
+                try:
+                    results_min, results, results_max = \
+                        self._pints_log_posterior.generative_model_range(
+                            self._pints_log_posterior.to_search(x0)
+                        )
+                except myokit.SimulationError as e:
+                    print(e)
+                    continue
                 for times, tdigests, result, result_min, result_max in zip(
                     self._times, tdigests_for_chain,
                     results, results_min, results_max
@@ -283,6 +356,28 @@ class InferenceMixin:
             for ll in log_likelihoods
             if ll.is_a_prior()
         ]
+        self._pooled = all([
+            ll.get_total_length() == 1 for ll in self._priors
+        ])
+        self._prior_lengths = [
+            p.get_total_length() for p in self._priors
+        ]
+        self._prior_slices = []
+        curr_index = 0
+        for prior_length in self._prior_lengths:
+            self._prior_slices.append(
+                slice(curr_index, curr_index + prior_length)
+            )
+            curr_index += prior_length
+        self._prior_subjects = [
+            p.get_data()[2] for p in self._priors
+        ]
+        for i, subjects in enumerate(self._prior_subjects):
+            if subjects is not None:
+                self._prior_subjects[i] = [
+                    Subject.objects.get(id=s) for s in subjects
+                ]
+
         print('priors are')
         for p in self._priors:
             print(p.name, p.form)
@@ -291,7 +386,7 @@ class InferenceMixin:
         self._observed_log_likelihoods = [
             ll
             for ll in log_likelihoods
-            if ll.has_data()
+            if ll.observed
         ]
         for ll in self._observed_log_likelihoods:
             print('observed', ll.name, ll.biomarker_type)
@@ -341,51 +436,80 @@ class InferenceMixin:
             if self.inference.number_of_iterations > 0:
                 print('restarting chains!')
                 for prior in self._priors:
-                    this_chain = InferenceResult.objects.filter(
-                        log_likelihood=prior,
-                        chain=chain
-                    )
                     x0.append(
-                        this_chain.get(
+                        prior.get_results(
+                            chain=chain,
                             iteration=self.inference.number_of_iterations
-                        ).value
+                        )
                     )
-                x0 = np.array(x0)
+                x0 = np.hstack(x0)
             else:
-                x0 = np.array(
+                print('sample', [p.sample() for p in self._priors])
+                x0 = np.hstack(
                     [p.sample() for p in self._priors]
                 )
                 if (
                     self.inference.initialization_strategy ==
                     Inference.InitializationStrategy.DEFAULT_VALUE
                 ):
+                    curr_index = 0
                     for xi, prior in enumerate(self._priors):
-                        if prior.variable is not None:
-                            x0[xi] = prior.variable.get_default_value()
+                        length = prior.get_total_length()
+                        outputs = list(prior.outputs.all())
+                        if (
+                            len(outputs) > 0 and
+                            outputs[0].variable is not None
+                        ):
+                            value = outputs[0].variable.get_default_value()
+                            # if uniform prior then adjust default value
+                            # to fall between bounds
+                            if prior.form == prior.Form.UNIFORM:
+                                lower, upper = \
+                                    prior.get_noise_log_likelihoods()
+                                if (
+                                    lower.form == lower.Form.FIXED and
+                                    value < lower.value
+                                ):
+                                    value = lower.value
+                                if (
+                                    upper.form == upper.Form.FIXED and
+                                    value > upper.value
+                                ):
+                                    value = upper.value
+                            x0[
+                                curr_index:curr_index + length
+                            ] = value
+                        curr_index += length
                 elif (
                     self.inference.initialization_strategy ==
                     Inference.InitializationStrategy.FROM_OTHER
                 ):
                     other_chain_index = min(i, len(other_chains) - 1)
                     other_chain = other_chains[other_chain_index]
-                    last_values = InferenceResult.objects.filter(
-                        chain=other_chain,
-                        iteration=other_last_iteration
-
-                    )
+                    curr_index = 0
                     for xi, this_prior in enumerate(
                             self._priors
                     ):
                         try:
-                            last_result = last_values.get(
+                            length = prior.get_total_length()
+                            other_prior = LogLikelihood.objects.get(
+                                inference=(
+                                    self.inference.initialization_inference
+                                ),
                                 log_likelihood__name=this_prior.name
                             )
-                            x0[xi] = last_result.value
+                            x0[curr_index:curr_index + length] = \
+                                other_prior.get_results(
+                                    chain=other_chain,
+                                    iteration=other_last_iteration,
+                            )
+
                         except InferenceResult.DoesNotExist:
                             pass
 
                 # write x0 to empty chain
                 self.inference.number_of_function_evals += 1
+                print('x0', x0)
                 fn_val = self._pints_log_posterior(
                     self._pints_log_posterior.to_search(x0)
                 )
@@ -426,12 +550,28 @@ class InferenceMixin:
             iteration=iteration,
             value=fn_value
         )
-        for i, prior in enumerate(self._priors):
-            InferenceResult.objects.create(
-                chain=chains[chain_index],
-                log_likelihood=prior,
-                iteration=iteration,
-                value=values[i])
+        for prior_slice, prior, prior_subjects in zip(
+                self._prior_slices, self._priors, self._prior_subjects
+        ):
+            prior_values = values[prior_slice]
+            if prior_subjects is None:
+                InferenceResult.objects.create(
+                    chain=chains[chain_index],
+                    log_likelihood=prior,
+                    iteration=iteration,
+                    value=prior_values[0]
+                )
+            else:
+                for value, subject in zip(
+                        prior_values, prior_subjects
+                ):
+                    InferenceResult.objects.create(
+                        chain=chains[chain_index],
+                        log_likelihood=prior,
+                        iteration=iteration,
+                        subject=subject,
+                        value=prior_values[0]
+                    )
 
     def step_inference(self, writer, output_writer):
         # runs one set of ask / tell
@@ -489,7 +629,8 @@ class InferenceMixin:
             self._pints_log_posterior,
             use_every_n_sample=evaluate_model_every_n_iterations,
             buffer_size=write_every_n_iteration,
-            store_output_range=self.inference.algorithm.category == 'SA'
+            store_output_range=self.inference.algorithm.category == 'SA',
+            pooled=self._pooled
         )
         for i in range(n_iterations, max_iterations):
             if i == initial_phase_iterations:
@@ -523,19 +664,38 @@ class InferenceMixin:
 
 class PyMC3LogPosterior(pints.LogPDF):
     def __init__(self, model, log_likelihoods, priors, optimisation=False):
-        for p in priors:
-            print('have prior name', p.name)
+        self._original_prior_names = [
+            p.name for p in priors
+        ]
         self._transforms = [
             model[p.name].distribution.transform for p in priors
         ]
+        self._prior_lengths = [
+            p.get_total_length() for p in priors
+        ]
+        self._prior_slices = []
+        curr_index = 0
+        for prior_length in self._prior_lengths:
+            if prior_length > 1:
+                self._prior_slices.append(
+                    slice(curr_index, curr_index + prior_length)
+                )
+            else:
+                self._prior_slices.append(curr_index)
+            curr_index += prior_length
+        print('slices are', self._prior_slices)
         self._transform_names = [
             t if t is None else t.name for t in self._transforms
         ]
         self._transform_backwards = [
-            self._transform_backward(t) for t in self._transforms
+            self._transform_backward(t, l == 1) for t, l in zip(
+                self._transforms, self._prior_lengths
+            )
         ]
         self._transform_forwards = [
-            self._transform_forward(t) for t in self._transforms
+            self._transform_forward(t, l == 1) for t, l in zip(
+                self._transforms, self._prior_lengths
+            )
         ]
         self._prior_names = [
             self._get_name(p, t) for p, t in zip(priors, self._transforms)
@@ -571,16 +731,25 @@ class PyMC3LogPosterior(pints.LogPDF):
             def function(x):
                 return -self._logp(x)
             self._function = function
+            self._exception_value = np.inf
         else:
             self._function = self._logp
+            self._exception_value = -np.inf
 
     def n_parameters(self):
-        return len(self._prior_names)
+        return sum(self._prior_lengths)
+
+    def parameter_names(self):
+        return self._original_prior_names
 
     @staticmethod
-    def _transform_forward(transform):
-        x = tt.dscalar('x')
-        x.tag.test_value = 1.0
+    def _transform_forward(transform, is_scalar=True):
+        if is_scalar:
+            x = tt.dscalar('x')
+            x.tag.test_value = 1.0
+        else:
+            x = tt.dvector('x')
+            x.tag.test_value = [1.0]
         if transform is None:
             z = x
         else:
@@ -588,9 +757,13 @@ class PyMC3LogPosterior(pints.LogPDF):
         return theano.function([x], z)
 
     @staticmethod
-    def _transform_backward(transform):
-        x = tt.dscalar('x')
-        x.tag.test_value = 1.0
+    def _transform_backward(transform, is_scalar=True):
+        if is_scalar:
+            x = tt.dscalar('x')
+            x.tag.test_value = 1.0
+        else:
+            x = tt.dvector('x')
+            x.tag.test_value = [1.0]
         if transform is None:
             z = x
         else:
@@ -608,26 +781,44 @@ class PyMC3LogPosterior(pints.LogPDF):
         return mean.name + log_likelihood.name
 
     def to_search(self, x):
-        return np.array([
-            t(xi) for xi, t in zip(x, self._transform_forwards)
-        ])
+        y = x.copy()
+        for prior_index, prior_slice in enumerate(self._prior_slices):
+            y[prior_slice] = \
+                self._transform_forwards[prior_index](
+                    y[prior_slice]
+            )
+        return y
 
     def to_model(self, x):
-        return np.array([
-            t(xi) for xi, t in zip(x, self._transform_backwards)
-        ])
+        y = x.copy()
+        for prior_index, prior_slice in enumerate(self._prior_slices):
+            y[prior_slice] = \
+                self._transform_backwards[prior_index](
+                    y[prior_slice]
+            )
+        return y
+
+    def get_call_dict_from_params(self, x):
+        return {
+            self._prior_names[prior_index]: x[prior_slice]
+            for prior_index, prior_slice in enumerate(self._prior_slices)
+        }
 
     def __call__(self, x):
-        call_dict = {
-            name: value for name, value in zip(self._prior_names, x)
-        }
-        return self._function(call_dict)
+        call_dict = self.get_call_dict_from_params(x)
+        try:
+            result = self._function(call_dict)
+        except myokit.SimulationError as e:
+            print('ERROR in forward simulation at params:')
+            print(call_dict)
+            print(e)
+            result = self._exception_value
+        return result
 
     def generative_model_range(self, x):
-        call_dict = {
-            name: value for name, value in zip(self._prior_names, x)
-        }
+        call_dict = self.get_call_dict_from_params(x)
         results = self._posterior_predictive(call_dict)
+
         means = results[:self._n_means]
         param1s = self._param1s
         for result, index in zip(results[self._n_means:], self._param1s_index):
@@ -646,9 +837,7 @@ class PyMC3LogPosterior(pints.LogPDF):
         return values_min, values, values_max
 
     def sample_generative_model(self, x):
-        call_dict = {
-            name: value for name, value in zip(self._prior_names, x)
-        }
+        call_dict = self.get_call_dict_from_params(x)
         results = self._posterior_predictive(call_dict)
         means = results[:self._n_means]
         param1s = self._param1s
@@ -663,131 +852,3 @@ class PyMC3LogPosterior(pints.LogPDF):
             sampled_values.append(output_values)
 
         return sampled_values
-
-
-class CombinedLogLikelihood(pints.LogPDF):
-    """
-    Creates a `PINTS.LogLikelihood` object from a list of individual
-    `PINTS.LogLikelihood` objects.
-    """
-
-    def __init__(self, log_likelihoods, param_indicies):
-        self._log_likelihoods = log_likelihoods
-        self._param_indicies = []
-        for indicies in param_indicies:
-            if indicies == list(range(indicies[0], indicies[-1] + 1)):
-                self._param_indicies.append(
-                    slice(indicies[0], indicies[-1] + 1)
-                )
-            else:
-                self._param_indicies.append(
-                    np.array(indicies, dtype=np.int)
-                )
-
-        self._n_parameters = max([
-            max(indicies)
-            for indicies in param_indicies
-        ]) + 1
-
-    def __call__(self, x):
-        log_like = 0
-        for log_likelihood, indicies in zip(
-            self._log_likelihoods, self._param_indicies
-        ):
-            log_like += log_likelihood(x[indicies])
-        return log_like
-
-    def get_measured_data(self):
-        times = []
-        values = []
-        for log_likelihood, indicies in zip(
-            self._log_likelihoods, self._param_indicies
-        ):
-            problem = log_likelihood._problem
-            times.append(problem._times)
-            values.append(problem._values)
-        return times, values
-
-    def generative_model_range(self, x_all):
-        values = []
-        values_min = []
-        values_max = []
-        for log_likelihood, indicies in zip(
-            self._log_likelihoods, self._param_indicies
-        ):
-            x = x_all[indicies]
-            problem = log_likelihood._problem
-            if problem.n_parameters() < len(x):
-                x = x[:problem.n_parameters()]
-            output_values = problem.evaluate(x)
-            output_values_min = np.copy(output_values)
-            output_values_max = np.copy(output_values)
-            noise_params = x[problem.n_parameters():]
-            if isinstance(log_likelihood, pints.GaussianLogLikelihood):
-                for i in range(len(output_values)):
-                    dist = sps.norm(
-                        loc=output_values[i],
-                        scale=noise_params[0]
-                    )
-                    output_values_min[i] = dist.ppf(.1)
-                    output_values_max[i] = dist.ppf(.9)
-            elif isinstance(
-                log_likelihood, pints.GaussianKnownSigmaLogLikelihood
-            ):
-                for i in range(len(output_values)):
-                    dist = sps.norm(
-                        loc=output_values[i],
-                        scale=np.sqrt(1 / log_likelihood._isigma2)
-                    )
-                    output_values_min[i] = dist.ppf(.1)
-                    output_values_max[i] = dist.ppf(.9)
-            elif isinstance(log_likelihood, pints.LogNormalLogLikelihood):
-                for i in range(len(output_values)):
-                    dist = sps.lognorm(
-                        loc=output_values[i],
-                        scale=noise_params[0]
-                    )
-                    output_values_min[i] = dist.ppf(.1)
-                    output_values_max[i] = dist.ppf(.9)
-
-            values.append(output_values)
-            values_min.append(output_values_min)
-            values_max.append(output_values_max)
-        return values_min, values, values_max
-
-    def sample_generative_model(self, x_all):
-        sampled_values = []
-        for log_likelihood, indicies in zip(
-            self._log_likelihoods, self._param_indicies
-        ):
-            x = x_all[indicies]
-            problem = log_likelihood._problem
-            if problem.n_parameters() < len(x):
-                x = x[:problem.n_parameters()]
-            output_values = problem.evaluate(x)
-            noise_params = x[problem.n_parameters():]
-            if isinstance(log_likelihood, pints.GaussianLogLikelihood):
-                output_values += np.random.normal(
-                    scale=noise_params[0],
-                    size=output_values.shape
-                )
-            elif isinstance(
-                log_likelihood, pints.GaussianKnownSigmaLogLikelihood
-            ):
-                output_values += np.random.normal(
-                    scale=np.sqrt(1 / log_likelihood._isigma2),
-                    size=output_values.shape
-                )
-            elif isinstance(log_likelihood, pints.LogNormalLogLikelihood):
-                output_values += (
-                    np.random.lognormal(
-                        sigma=noise_params[0],
-                        size=output_values.shape
-                    )
-                )
-            sampled_values.append(output_values)
-
-        return sampled_values
-
-    def n_parameters(self):
-        return self._n_parameters

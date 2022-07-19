@@ -5,6 +5,7 @@
 #
 
 from django.db import models
+from django.db.models import OuterRef, Subquery
 from pkpdapp.models import Dataset, Unit
 import pandas as pd
 
@@ -19,7 +20,7 @@ class BiomarkerType(models.Model):
         max_length=100, help_text='name of the biomarker type'
     )
     stored_unit = models.ForeignKey(
-        Unit, on_delete=models.CASCADE,
+        Unit, on_delete=models.PROTECT,
         related_name='biomarker_types_stored',
         help_text='unit for the value stored in :model:`pkpdapp.Biomarker`'
     )
@@ -40,12 +41,12 @@ class BiomarkerType(models.Model):
         )
     )
     display_unit = models.ForeignKey(
-        Unit, on_delete=models.CASCADE,
+        Unit, on_delete=models.PROTECT,
         related_name='biomarker_types_display',
         help_text='unit to use when sending or displaying biomarker values'
     )
     stored_time_unit = models.ForeignKey(
-        Unit, on_delete=models.CASCADE,
+        Unit, on_delete=models.PROTECT,
         related_name='biomarker_types_time_stored',
         help_text=(
             'unit for the time values stored in '
@@ -53,7 +54,7 @@ class BiomarkerType(models.Model):
         )
     )
     display_time_unit = models.ForeignKey(
-        Unit, on_delete=models.CASCADE,
+        Unit, on_delete=models.PROTECT,
         related_name='biomarker_types_time_display',
         help_text='unit to use when sending or displaying time values'
     )
@@ -74,19 +75,45 @@ class BiomarkerType(models.Model):
     def get_project(self):
         return self.dataset.get_project()
 
-    def as_pandas(self, subject_group=None):
-        if subject_group:
+    def as_pandas(self, subject_group=None, first_time_only=False):
+        """
+        if first_time_only then ordered by subject
+        if not first_time_only then ordered by time
+        """
+        if subject_group and first_time_only:
+            earliest = self.biomarkers.filter(
+                subject=OuterRef('subject')).order_by('time')
             times_subjects_values = \
                 self.biomarkers.filter(
-                    subject__in=subject_group.subjects.all()
-                ).order_by('time').values_list(
+                    subject__in=subject_group.subjects.all(),
+                    time=Subquery(earliest.values('time')[:1])
+                ).order_by('subject').values_list(
                     'time', 'subject__id', 'value'
                 )
+        elif subject_group and not first_time_only:
+            times_subjects_values = self.biomarkers.filter(
+                subject__in=subject_group.subjects.all()
+            ).order_by('time').values_list(
+                'time', 'subject__id', 'value'
+            )
+        elif first_time_only:
+            earliest = self.biomarkers.filter(
+                subject=OuterRef('subject')).order_by('time')
+            times_subjects_values = self.biomarkers.filter(
+                time=Subquery(earliest.values('time')[:1])
+            ).order_by('subject').values_list(
+                'time', 'subject__id', 'value'
+            )
         else:
-            times_subjects_values = \
-                self.biomarkers.order_by('time').values_list(
-                    'time', 'subject__id', 'value'
-                )
+            times_subjects_values = self.biomarkers.order_by(
+                'time'
+            ).values_list(
+                'time', 'subject__id', 'value'
+            )
+
+        if not times_subjects_values:
+            return None
+
         times, subjects, values = list(zip(*times_subjects_values))
         df = pd.DataFrame.from_dict({
             'times': times,

@@ -40,7 +40,9 @@ class DatasetSerializer(serializers.ModelSerializer):
         groups = {}
         for s in dataset.subjects.all():
             for group in s.groups.all():
-                groups.get(group, []).append(s.pk)
+                if group.name not in groups:
+                    groups[group.name] = []
+                groups[group.name].append(s.pk)
         return groups
 
 
@@ -130,7 +132,7 @@ class DatasetCsvSerializer(serializers.ModelSerializer):
         # check for missing data and drop any rows where data are missing
         num_missing = data.isna().sum().sum()
         if num_missing > 0:
-            data = data.dropna()
+            data = data.fillna('')
         return data
 
     def update(self, instance, validated_data):

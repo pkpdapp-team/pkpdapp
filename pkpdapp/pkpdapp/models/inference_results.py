@@ -8,6 +8,7 @@ from django.db import models
 from pkpdapp.models import (
     Inference,
     LogLikelihood,
+    Subject,
 )
 import pandas as pd
 
@@ -25,7 +26,8 @@ class InferenceChain(models.Model):
             self.inference_output_results.filter(
                 log_likelihood=log_likelihood
             ).order_by('time').values_list(
-                'median', 'percentile_min', 'percentile_max', 'data', 'time'
+                'median', 'percentile_min', 'percentile_max', 'data',
+                'time', 'subject'
             )
         if data:
             (
@@ -33,7 +35,8 @@ class InferenceChain(models.Model):
                 percentile_mins,
                 percentile_maxs,
                 datas,
-                times
+                times,
+                subjects,
             ) = list(zip(*data))
         else:
             medians = []
@@ -41,6 +44,7 @@ class InferenceChain(models.Model):
             percentile_maxs = []
             datas = []
             times = []
+            subjects = []
 
         df = pd.DataFrame.from_dict({
             'medians': medians,
@@ -48,6 +52,7 @@ class InferenceChain(models.Model):
             'percentile_maxs': percentile_maxs,
             'datas': datas,
             'times': times,
+            'subjects': subjects,
         })
 
         return df
@@ -56,19 +61,21 @@ class InferenceChain(models.Model):
         priors_values = \
             self.inference_results.filter(
                 iteration__gt=self.inference.burn_in
-            ).order_by('iteration').values_list(
-                'log_likelihood', 'value', 'iteration'
+            ).order_by('iteration', 'subject').values_list(
+                'log_likelihood', 'value', 'iteration', 'subject'
             )
         if priors_values:
-            priors, values, iterations = list(zip(*priors_values))
+            priors, values, iterations, subjects = list(zip(*priors_values))
         else:
             priors = []
             values = []
             iterations = []
+            subjects = []
         df = pd.DataFrame.from_dict({
             'priors': priors,
             'values': values,
             'iterations': iterations,
+            'subjects': subjects,
         })
 
         return df
@@ -108,6 +115,13 @@ class InferenceResult(models.Model):
         on_delete=models.CASCADE,
         related_name='inference_results',
         help_text='log_likelihood related to this result'
+    )
+    subject = models.ForeignKey(
+        Subject,
+        on_delete=models.PROTECT,
+        blank=True, null=True,
+        related_name='inference_results',
+        help_text='subject related to this result'
     )
     iteration = models.IntegerField(
         help_text='Iteration'
@@ -174,4 +188,11 @@ class InferenceOutputResult(models.Model):
     )
     time = models.FloatField(
         help_text='time of output value'
+    )
+    subject = models.ForeignKey(
+        Subject,
+        on_delete=models.CASCADE,
+        blank=True, null=True,
+        related_name='inference_outputs',
+        help_text='subject of output value'
     )

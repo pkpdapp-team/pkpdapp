@@ -577,12 +577,14 @@ export default function InferenceDetail({ project, inference }) {
   };
 
   let logLikelihoodNodes = inference.log_likelihoods.map(ll => {
-    let label = (<>ll.name</>)
+    let label = (<>{ll.name}</>)
     let border = 'solid';
     let width = 140;
     let height = 40;
     let type = 'default';
-    if (ll.biomarker_type) {
+    let observed = '';
+    if (ll.observed) {
+      observed = 'Observed '
       type = 'input'
     }
     if (ll.form === 'F') {
@@ -593,15 +595,11 @@ export default function InferenceDetail({ project, inference }) {
       border = '5px double';
       height = 2 * height;
     } else if (ll.form === 'N') {
-      if (ll.biomarker_type) {
-        label = (<><strong>Observed Normal</strong></>); 
-      } else {
-        label = (<><strong>Normal</strong></>); 
-      }
+      label = (<><strong>{observed}Normal</strong></>); 
     } else if (ll.form === 'LN') {
-      label = (<><strong>LogNormal</strong></>); 
+      label = (<><strong>{observed}LogNormal</strong></>); 
     } else if (ll.form === 'U') {
-      label = (<><strong>Uniform</strong></>); 
+      label = (<><strong>{observed}Uniform</strong></>); 
     } else if (ll.form === 'F') {
       label = `${ll.value}`
       width = 0.6 * width;
@@ -626,9 +624,12 @@ export default function InferenceDetail({ project, inference }) {
       id: `e-${p.id}`,
       source: `${p.parent}`,
       target: `${p.child}`,
-      label: p.name,
+      label: p.length ?  `${p.name} (${p.length},)` : `${p.name}`,
       type: 'default',
       animated: false,
+      style: {
+        'stroke-width': p.length ? '3px' : '1px',
+      }
     }))), []);
 
   const [nodes, setNodes] = useState(null);

@@ -186,7 +186,7 @@ class TestDosedPharmokineticModel(TestCase):
         stored_model = model.create_stored_model()
         self.assertTrue(isinstance(stored_model, DosedPharmacokineticModel))
         self.assertTrue(stored_model.read_only)
-        self.assertEqual(len(stored_model.variables.all()), 8)
+        self.assertEqual(len(stored_model.variables.all()), 10)
         self.assertEqual(stored_model.protocol.name, 'my_cool_protocol')
         self.assertNotEqual(stored_model.protocol.id, p.id)
 
@@ -276,7 +276,7 @@ class TestDosedPharmokineticModel(TestCase):
         variables = [v['qname'] for v in m.myokit_variables()]
         test_model_variables = [
             'central.size', 'dose.absorption_rate',
-            'myokit.clearance'
+            'myokit.clearance', 'myokit.drug_scale_factor',
         ]
         self.assertCountEqual(variables, test_model_variables)
 
@@ -287,7 +287,8 @@ class TestDosedPharmokineticModel(TestCase):
         outpts = [o['qname'] for o in m.outputs()]
         test_model_outputs = [
             'central.drug_amount', 'central.drug_concentration',
-            'dose.dose_rate', 'dose.drug_amount', 'myokit.time'
+            'dose.dose_rate', 'dose.drug_amount', 'myokit.time',
+            'myokit.scaled_drug_concentration',
         ]
         self.assertCountEqual(outpts, test_model_outputs)
 
@@ -305,7 +306,7 @@ class TestDosedPharmokineticModel(TestCase):
             for v in test_model_variables
         ]
         self.assertEqual(result[test_model_output_ids[0]][0], 1.1)
-        self.assertEqual(result[test_model_output_ids[-1]][0], 0.0)
+        self.assertEqual(result[test_model_output_ids[-2]][0], 0.0)
 
         first_drug_concentration = \
             result[test_model_output_ids[1]][0]

@@ -15,7 +15,9 @@ from pkpdapp.models import (
 def run_inference(inference_id):
     inference = Inference.objects.get(id=inference_id)
 
-    print('task', inference.number_of_iterations)
+    print('task', inference.number_of_iterations, inference_id)
+    for ll in inference.log_likelihoods.all():
+        print('LL', ll.id, ll.name, ll.biomarker_type)
 
     # create the mixin object to run the inference
     inference_mixin = InferenceMixin(inference)

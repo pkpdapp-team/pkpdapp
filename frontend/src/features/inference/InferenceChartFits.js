@@ -7,9 +7,15 @@ import iqr from 'compute-iqr'
 
 import { Scatter } from "react-chartjs-2";
 
+import FormControl from "@material-ui/core/FormControl";
+import MenuItem from "@material-ui/core/MenuItem";
+import InputLabel from "@material-ui/core/InputLabel";
+import Select from "@material-ui/core/Select";
+
 import { Chart, registerables, Interaction } from "chart.js";
 import { CrosshairPlugin, Interpolate } from "chartjs-plugin-crosshair";
 import { getColor, getColorBackground } from "../modelling/ShapesAndColors";
+import { selectSubjectsByIds } from "../datasets/subjectsSlice";
 import {
   selectVariableById,
 } from "../variables/variablesSlice";
@@ -210,6 +216,58 @@ function InferenceChartFits({ inference, observed }) {
   );
 } 
 
+
+function InferenceChartTracesObserved({ inference, observed}) {
+
+  const subjectIds = observed.outputs ? observed.outputs[0].subjects : []
+  const uniqueSubjectsIds = [...new Set(subjectIds)]
+  const [subjectIndex, setSubjectIndex] = React.useState(0);
+  const subjects = useSelector((state) => selectSubjectsByIds(state, uniqueSubjectsIds));
+  const multiple_subjects = uniqueSubjectsIds.length > 1
+  const subjectOptions = multiple_subjects ? 
+    subjects.map((s, i) => ({label: s.id_in_dataset, value: i})) : []
+  const observedFiltered = multiple_subjects ? {
+    ...observed,
+    outputs: observed.outputs.map(outputs => ({
+        ...outputs,
+        percentile_mins: outputs.percentile_mins.filter((_, i) => subjectIds[i] === uniqueSubjectsIds[subjectIndex]),
+        percentile_maxs: outputs.percentile_maxs.filter((_, i) => subjectIds[i] === uniqueSubjectsIds[subjectIndex]),
+        medians: outputs.medians.filter((_, i) => subjectIds[i] === uniqueSubjectsIds[subjectIndex]),
+        datas: outputs.datas.filter((_, i) => subjectIds[i] === uniqueSubjectsIds[subjectIndex]),
+        times: outputs.times.filter((_, i) => subjectIds[i] === uniqueSubjectsIds[subjectIndex]),
+      }))
+  } : observed
+
+  const handleSubjectChange = (event) => {
+    setSubjectIndex(event.target.value);
+  };
+
+  return (
+    <React.Fragment>
+    { multiple_subjects &&
+        <FormControl fullWidth>
+          <InputLabel id="subject-select-label">Subject</InputLabel>
+          <Select
+            labelId="subject-select-label"
+            id="subject-select"
+            value={subjectIndex}
+            label="Subject"
+            onChange={handleSubjectChange}
+          >
+            {subjectOptions.map(so => (
+              <MenuItem value={so.value}>{so.label}</MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+     }
+     <Grid item xs={12}>
+     <InferenceChartFits inference={inference} observed={observedFiltered} />
+     </Grid>
+    </React.Fragment>
+  )
+}
+
+
 export default function InferenceChartTraces({ inference, observedWithChainValues}) {
   const classes = useStyles();
 
@@ -217,9 +275,7 @@ export default function InferenceChartTraces({ inference, observedWithChainValue
     <div className={classes.root}>
       <Grid container spacing={1}>
       {observedWithChainValues.map(observed => (
-          <Grid item xs={12}>
-          <InferenceChartFits inference={inference} observed={observed} />
-          </Grid>
+          <InferenceChartTracesObserved inference={inference} observed={observed}/>
       ))}
       </Grid>
     </div>

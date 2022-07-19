@@ -6,11 +6,16 @@ import { makeStyles } from "@material-ui/core/styles";
 import iqr from 'compute-iqr'
 
 import { Scatter } from "react-chartjs-2";
+import FormControl from "@material-ui/core/FormControl";
+import MenuItem from "@material-ui/core/MenuItem";
+import InputLabel from "@material-ui/core/InputLabel";
+import Select from "@material-ui/core/Select";
 
 import { Chart, registerables, Interaction } from "chart.js";
 import { CrosshairPlugin, Interpolate } from "chartjs-plugin-crosshair";
 import { getColor, getColorBackground } from "../modelling/ShapesAndColors";
 import annotationPlugin from 'chartjs-plugin-annotation';
+import { selectSubjectsByIds } from "../datasets/subjectsSlice";
 
 
 
@@ -253,6 +258,67 @@ function InferenceChartFunction({ chains }) {
   );
 }
 
+
+function InferenceChartTracesPrior({ prior }) {
+  console.log('prior', prior)
+  const multiple_subjects = prior.chains.length !== 0 && !('values' in prior.chains[0])
+  const subjectIds = multiple_subjects ? Object.keys(prior.chains[0]) : []
+  const subjects = useSelector((state) => selectSubjectsByIds(state, subjectIds));
+  const [subjectIndex, setSubjectIndex] = React.useState(0);
+  const subjectOptions = subjects.map((s, i) => ({label: s.id_in_dataset, value: i}))
+  const chosenSubject = subjects && subjectIndex ? subjects[subjectIndex] : null
+  console.log('subjects', multiple_subjects, subjectIds, subjects, chosenSubject)
+  let priorForSubject = prior
+  if (multiple_subjects) {
+    if (chosenSubject) {
+      priorForSubject = {
+        ...prior,
+        chains: prior.chains.map(chain => chain[chosenSubject.id]) ,
+        kdes: prior.kdes.map(kde => kde[chosenSubject.id]),
+      }
+    } else {
+      const firstKey = Object.keys(prior.chains[0])[0]
+      priorForSubject = {
+        ...prior,
+        chains: prior.chains.map(chain => chain[firstKey]) ,
+        kdes: prior.kdes.map(kde => kde[firstKey]),
+      }
+    }
+  }
+
+  const handleSubjectChange = (event) => {
+    setSubjectIndex(event.target.value);
+  };
+
+  return (
+
+      <React.Fragment key={prior.id}>
+        {multiple_subjects &&
+        <FormControl fullWidth>
+          <InputLabel id="subject-select-label">Subject</InputLabel>
+          <Select
+            labelId="subject-select-label"
+            id="subject-select"
+            value={subjectIndex}
+            label="Subject"
+            onChange={handleSubjectChange}
+          >
+            {subjectOptions.map(so => (
+              <MenuItem value={so.value}>{so.label}</MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+        }
+        <Grid item xs={12} md={8}>
+        <InferenceChartTrace prior={priorForSubject} />
+        </Grid>
+        <Grid item xs={12} md={4}>
+        <InferenceChartDistribution prior={priorForSubject} />
+        </Grid>
+      </React.Fragment>
+  )
+}
+
 export default function InferenceChartTraces({ inference, priorsWithChainValues, chains }) {
   const classes = useStyles();
   
@@ -263,14 +329,7 @@ export default function InferenceChartTraces({ inference, priorsWithChainValues,
           <InferenceChartFunction chains={chains} />
         </Grid>
       {priorsWithChainValues.map(prior => (
-        <React.Fragment key={prior.id}>
-          <Grid item xs={12} md={8}>
-          <InferenceChartTrace prior={prior} />
-          </Grid>
-          <Grid item xs={12} md={4}>
-          <InferenceChartDistribution prior={prior} />
-          </Grid>
-        </React.Fragment>
+        <InferenceChartTracesPrior prior={prior} />
       ))}
       </Grid>
     </div>

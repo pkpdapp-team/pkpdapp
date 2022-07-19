@@ -46,7 +46,7 @@ class Variable(StoredModel):
         max_length=200, help_text='fully qualitifed name of the variable')
 
     unit = models.ForeignKey(
-        Unit, on_delete=models.CASCADE,
+        Unit, on_delete=models.PROTECT,
         help_text=(
             'variable values are in this unit '
             '(note this might be different from the unit '
@@ -185,6 +185,8 @@ class Variable(StoredModel):
                 name=myokit_variable.name(),
                 qname=qname,
                 default_value=value,
+                lower_bound=0.1 * value,
+                upper_bound=10.0 * value,
                 constant=myokit_variable.is_constant(),
                 state=state,
                 unit=Unit.get_unit_from_variable(myokit_variable),
@@ -232,6 +234,8 @@ class Variable(StoredModel):
                 qname=qname,
                 constant=myokit_variable.is_constant(),
                 default_value=value,
+                lower_bound=0.1 * value,
+                upper_bound=10.0 * value,
                 state=state,
                 unit=Unit.get_unit_from_variable(myokit_variable),
                 pd_model=model,
@@ -265,6 +269,8 @@ class Variable(StoredModel):
                 qname=qname,
                 constant=myokit_variable.is_constant(),
                 default_value=value,
+                lower_bound=0.1 * value,
+                upper_bound=10.0 * value,
                 state=state,
                 unit=Unit.get_unit_from_variable(myokit_variable),
                 dosed_pk_model=model,

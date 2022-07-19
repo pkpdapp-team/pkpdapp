@@ -66,14 +66,9 @@ urlpatterns = [
     path('api/dosed_pharmacokinetic/<int:pk>/simulate',
          api.SimulatePkView.as_view(), name='simulate-dosed-pharmacokinetic'),
     path(
-        'api/inference/<int:pk>/run',
-        api.RunInferenceView.as_view(),
-        name='run-inference'
-    ),
-    path(
-        'api/inference/naive_pooled',
-        api.NaivePooledInferenceView.as_view(),
-        name='run-naive-pooled-inference'
+        'api/inference/wizard',
+        api.InferenceWizardView.as_view(),
+        name='inference-wizard'
     ),
     path(
         'api/inference/<int:pk>/stop',

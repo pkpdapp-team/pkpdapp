@@ -18,6 +18,7 @@ class Biomarker(models.Model):
     )
     subject = models.ForeignKey(
         Subject, on_delete=models.CASCADE,
+        related_name='biomarkers',
         help_text='subject associated with this biomarker'
     )
     biomarker_type = models.ForeignKey(

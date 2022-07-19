@@ -61,5 +61,6 @@ class Dataset(models.Model):
         # migrate subjects to unique_protocols
         for protocol, subjects in zip(unique_protocols, protocol_subjects):
             for subject in subjects:
+                print('updating protocol for subject', subject, protocol)
                 subject.protocol = protocol
                 subject.save()

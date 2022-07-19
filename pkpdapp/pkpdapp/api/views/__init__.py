@@ -33,7 +33,7 @@ from .project import ProjectView, ProjectAccessView
 from .protocol import ProtocolView
 from .inference import (
     InferenceView, InferenceChainView, AlgorithmView,
-    RunInferenceView, StopInferenceView, NaivePooledInferenceView,
+    StopInferenceView, InferenceWizardView,
 )
 from .simulate import (
     SimulatePkView,

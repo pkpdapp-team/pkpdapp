@@ -78,6 +78,8 @@ class TestPkpdModel(TestCase):
             'myokit.clearance',
             'myokit.k_peripheral1',
             'myokit.k_peripheral2',
+            'myokit.drug_c_scale_factor',
+            'myokit.scaled_drug_c_concentration',
         ]
         for var in myokit_model.variables():
             self.assertIn(var.qname(), variables)
@@ -134,6 +136,8 @@ class TestPkpdModel(TestCase):
             'myokit.clearance',
             'myokit.k_peripheral1',
             'myokit.k_peripheral2',
+            'myokit.drug_c_scale_factor',
+            'myokit.scaled_drug_c_concentration',
         ]
         for var in myokit_model.variables():
             self.assertIn(var.qname(), variables)

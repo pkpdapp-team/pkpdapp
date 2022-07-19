@@ -240,11 +240,56 @@ Description of a three compartment PK model here.
         except urllib.error.URLError:
             print('WARNING: urlopen timed-out, no data loaded')
 
+    # three_comp_model = PharmacokineticModel.objects.get(
+    #    name='three_compartment_pk_model'
+    # )
+    # usecase0_model = DosedPharmacokineticModel.objects.create(
+    #    name='usecase0',
+    #    project=demo_project,
+    #    pk_model=three_comp_model,
+    #    dose_compartment='central',
+    #    protocol=(
+    #        Dataset.objects.get(name='usecase0')
+    #        .subjects.first().protocol
+    #    )
+    # )
+    # for variable in usecase0_model.variables.all():
+    #    if variable.qname == 'myokit.drug_c_scale':
+    #        continue
+    #    if variable.state and variable.qname != 'myokit.drug_c_concentration':
+    #        variable.display = False
+    #    variable.lower_bound = 0
+    #    variable.upper_bound = 0.1
+    #    variable.default_value = 0.05
+    #    variable.save()
+
+    # usecase1_model = DosedPharmacokineticModel.objects.create(
+    #    name='usecase1',
+    #    project=demo_project,
+    #    pk_model=three_comp_model,
+    #    dose_compartment='central',
+    #    protocol=(
+    #        Dataset.objects.get(name='usecase1')
+    #        .subjects.first().protocol
+    #    )
+    # )
+    # for variable in usecase1_model.variables.all():
+    #    if variable.qname == 'myokit.drug_c_scale':
+    #        continue
+    #    if variable.state and variable.qname != 'myokit.drug_c_concentration':
+    #        variable.display = False
+
+    #    variable.lower_bound = 0
+    #    variable.upper_bound = 0.1
+    #    variable.default_value = 0.05
+    #    variable.save()
+
 
 class Migration(migrations.Migration):
 
     dependencies = [
         ('pkpdapp', '0003_initial_users_and_projects'),
+        ('pkpdapp', '0005_initial_datasets'),
         ('pkpdapp', '0007_initial_units'),
     ]
 

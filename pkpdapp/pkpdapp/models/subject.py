@@ -40,14 +40,14 @@ class Subject(models.Model):
         blank=True, null=True,
     )
     dose_group_unit = models.ForeignKey(
-        Unit, on_delete=models.CASCADE,
+        Unit, on_delete=models.SET_NULL,
         blank=True, null=True,
         help_text=(
             'unit for dose_group_amount'
         )
     )
     protocol = models.ForeignKey(
-        'Protocol', on_delete=models.CASCADE,
+        'Protocol', on_delete=models.SET_NULL,
         related_name='subjects',
         blank=True, null=True,
         help_text='dosing protocol for this subject.'

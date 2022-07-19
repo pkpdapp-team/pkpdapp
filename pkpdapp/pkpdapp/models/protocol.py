@@ -42,7 +42,7 @@ class Protocol(StoredModel):
         help_text='Project that "owns" this protocol.'
     )
     compound = models.ForeignKey(
-        Compound, on_delete=models.CASCADE,
+        Compound, on_delete=models.PROTECT,
         blank=True, null=True,
         help_text='drug compound'
     )
@@ -58,7 +58,7 @@ class Protocol(StoredModel):
     )
 
     time_unit = models.ForeignKey(
-        Unit, on_delete=models.CASCADE,
+        Unit, on_delete=models.PROTECT,
         default=get_h_unit,
         related_name='protocols_time',
         help_text=(
@@ -67,7 +67,7 @@ class Protocol(StoredModel):
     )
 
     amount_unit = models.ForeignKey(
-        Unit, on_delete=models.CASCADE,
+        Unit, on_delete=models.PROTECT,
         default=get_mg_unit,
         related_name='protocols_amount',
         help_text='unit for the amount value stored in each dose'

@@ -119,7 +119,6 @@ class TestBiomarkerTypeModel(TestCase):
         df = self.biomarker_type.as_pandas(
             subject_group=self.subject_group
         )
-
         np.testing.assert_array_equal(
             df['values'], np.array(self.values[:-1])
         )
@@ -128,4 +127,24 @@ class TestBiomarkerTypeModel(TestCase):
         )
         np.testing.assert_array_equal(
             df['subjects'], np.array(self.biomarker_subjects[:-1])
+        )
+
+        df = self.biomarker_type.as_pandas(first_time_only=True)
+
+        np.testing.assert_array_equal(
+            df['times'], [self.times[0], self.times[3]]
+        )
+        np.testing.assert_array_equal(
+            df['values'], [self.values[0], self.values[3]]
+        )
+
+        df = self.biomarker_type.as_pandas(
+            subject_group=self.subject_group, first_time_only=True
+        )
+
+        np.testing.assert_array_equal(
+            df['times'], [self.times[0]]
+        )
+        np.testing.assert_array_equal(
+            df['values'], [self.values[0]]
         )
