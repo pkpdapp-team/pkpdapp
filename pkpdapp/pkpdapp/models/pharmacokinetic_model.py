@@ -232,6 +232,8 @@ class DosedPharmacokineticModel(MyokitModelMixin, StoredModel):
             pd_var = pkpd_model.get(
                 mapping.pd_variable.qname.replace('myokit', 'PD')
             )
+            # TODO: if pd_var is a state variable with a rate equation then
+            # remove the pd_var, and add this rate equation rhs to the pk one
             pk_var = pkpd_model.get(
                 mapping.pk_variable.qname
             )

@@ -202,7 +202,6 @@ class TestPkpdModel(TestCase):
                 'sbml': sbml_string
             },
         )
-        print(response.data)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         pd_model.refresh_from_db()
 
@@ -213,13 +212,16 @@ class TestPkpdModel(TestCase):
             pd_model=pd_model,
             dose_compartment='central',
             protocol=protocol,
-            project=project,
+            project=self.project,
         )
+        for var in pkpd_model.get_myokit_model().variables():
+            print(var.qname())
+
         pk_variable = pkpd_model.variables.get(
-            qname='central.drug_c_concentration',
+            qname='central.drug_c_amount',
         )
         pd_variable = pkpd_model.variables.get(
-            qname='PD.L',
+            qname='L.size',
         )
         mapping = PkpdMapping.objects.create(
             pkpd_model=pkpd_model,
