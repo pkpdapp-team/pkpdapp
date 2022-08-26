@@ -5,12 +5,11 @@
 #
 import codecs
 import urllib.request
-from urllib.request import urlretrieve
 
 from django.contrib.auth.models import User
 from django.test import TestCase
 from rest_framework import status
-from rest_framework.test import APIClient, APITestCase
+from rest_framework.test import APIClient
 
 from pkpdapp.models import (
     BiomarkerType,
@@ -220,7 +219,7 @@ class TestPkpdModel(TestCase):
         pd_variable = pkpd_model.variables.get(
             qname='L.size',
         )
-        mapping = PkpdMapping.objects.create(
+        PkpdMapping.objects.create(
             pkpd_model=pkpd_model,
             pk_variable=pk_variable,
             pd_variable=pd_variable,

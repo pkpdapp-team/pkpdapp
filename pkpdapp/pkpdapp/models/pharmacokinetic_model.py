@@ -249,12 +249,14 @@ class DosedPharmacokineticModel(MyokitModelMixin, StoredModel):
                     )
                 if compound.molecular_mass is None:
                     raise RuntimeError(
-                        'PD unit is in mol, but no molecular mass is listed for compound '
+                        'PD unit is in mol, but no molecular mass '
+                        'is listed for compound '
                         '{}'.format(compound.name)
                     )
                 if compound.molecular_mass_unit is None:
                     raise RuntimeError(
-                        'PD unit is in mol, but no molecular mass unit is listed for compound '
+                        'PD unit is in mol, but no molecular mass unit '
+                        'is listed for compound '
                         '{}'.format(compound.name)
                     )
 

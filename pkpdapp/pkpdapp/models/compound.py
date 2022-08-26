@@ -29,7 +29,9 @@ class Compound(models.Model):
     )
     molecular_mass = models.FloatField(
         blank=True, null=True,
-        help_text='molecular mass for compound for conversion from mol to grams'
+        help_text=(
+            'molecular mass for compound for conversion from mol to grams'
+        )
     )
     molecular_mass_unit = models.ForeignKey(
         Unit, on_delete=models.PROTECT,

@@ -430,7 +430,9 @@ def load_datasets(apps, schema_editor):
                             name=compound_str,
                             # TODO how to get molecular_mass?
                             molecular_mass=1.0,
-                            molecular_mass_unit=Unit.objects.get(symbol='g/mol')
+                            molecular_mass_unit=Unit.objects.get(
+                                symbol='g/mol'
+                            )
                         )
                     if subject.id in protocols:
                         protocol = protocols[subject.id]
