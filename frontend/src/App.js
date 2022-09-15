@@ -48,6 +48,7 @@ import InferenceMenu from "./features/menu/InferenceMenu";
 import Nca from "./features/dataAnalysis/Nca";
 import Auce from "./features/dataAnalysis/Auce";
 import Projects from "./features/projects/Projects";
+import ProjectDetail from "./features/projects/ProjectDetail";
 import ProjectMenu from "./features/menu/ProjectMenu";
 
 const PrivateRoute = ({ component: Component, componentProps, ...rest }) => {
@@ -185,7 +186,7 @@ const useStyles = makeStyles((theme) => ({
     overflow: "auto",
   },
   container: {
-    paddingTop: theme.spacing(4),
+    paddingTop: theme.spacing(10),
     paddingBottom: theme.spacing(4),
   },
   paper: {
@@ -278,6 +279,8 @@ export default function App() {
           <Typography className={classes.title} variant="h6" noWrap>
             PKPDapp
           </Typography>
+          { !rootPath &&
+          <React.Fragment>
           <div className={classes.search}>
             <div className={classes.searchIcon}>
               <SearchIcon />
@@ -336,6 +339,8 @@ export default function App() {
               Inference
             </Button>
           </ButtonGroup>
+          </React.Fragment>
+          }
 
           <div className={classes.grow} />
           <Button
@@ -349,6 +354,7 @@ export default function App() {
           </Button>
         </Toolbar>
       </AppBar>
+      {!rootPath &&
       <Drawer
         variant="permanent"
         classes={{
@@ -370,19 +376,16 @@ export default function App() {
           <PrivateRoute path="/" component={ProjectMenu} />
         </Switch>
       </Drawer>
+      }
       <MuiPickersUtilsProvider utils={DateFnsUtils}>
         {/* A <Switch> looks through its children <Route>s and
               renders the first one that matches the current URL. */}
 
-        <Container maxWidth={false}>
-          <div className={classes.appBarSpacer} />
-          <Switch>
-            <PrivateRoute path="/simulation" component={Modelling} />
-            <PrivateRoute path="/nca" component={Nca} />
-            <PrivateRoute path="/auce" component={Auce} />
-            <PrivateRoute path="/inference" component={Inference} />
-            <PrivateRoute path="/" component={Projects} />
-          </Switch>
+        <Container maxWidth="lg" className={classes.container}>
+        <Switch>
+          <PrivateRoute path="/:id" component={ProjectDetail} />
+          <PrivateRoute path="/" component={Projects} />
+        </Switch>
         </Container>
       </MuiPickersUtilsProvider>
     </div>
