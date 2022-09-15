@@ -15,6 +15,7 @@ def load_units(apps, schema_editor):
     cL = myokit.Unit.parse_simple('cL')
     h = myokit.Unit.parse_simple('h')
     g = myokit.Unit.parse_simple('g')
+    mol = myokit.Unit.parse_simple('mol')
     dimensionless = myokit.Unit()
 
     units = [
@@ -102,6 +103,15 @@ def load_units(apps, schema_editor):
             'symbol': '',
             'unit': dimensionless,
         },
+        {
+            'symbol': 'g/mol',
+            'unit': g / mol,
+        },
+        {
+            'symbol': 'g/nmol',
+            'unit': g / (1e-6 * mol),
+        },
+
     ]
 
     for u in units:

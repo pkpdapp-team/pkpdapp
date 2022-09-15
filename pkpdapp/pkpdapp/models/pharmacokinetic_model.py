@@ -236,12 +236,62 @@ class DosedPharmacokineticModel(MyokitModelMixin, StoredModel):
                 mapping.pk_variable.qname
             )
 
-            unit_conversion_multiplier = myokit.Unit.conversion_factor(
-                pk_var.unit(), pd_var.unit()
+            helpers = None
+
+            # if pd unit is in mol, then use the compound listed in the
+            # protocol to convert to grams
+            if pd_var.unit().exponents()[-1] != 0:
+                compound = self.protocol.compound
+                if compound is None:
+                    raise RuntimeError(
+                        'PD unit is in mol, but no compound listed for '
+                        'protocol to convert to grams'
+                    )
+                if compound.molecular_mass is None:
+                    raise RuntimeError(
+                        'PD unit is in mol, but no molecular mass '
+                        'is listed for compound '
+                        '{}'.format(compound.name)
+                    )
+                if compound.molecular_mass_unit is None:
+                    raise RuntimeError(
+                        'PD unit is in mol, but no molecular mass unit '
+                        'is listed for compound '
+                        '{}'.format(compound.name)
+                    )
+
+                mol_mass = myokit.Quantity(
+                    compound.molecular_mass,
+                    compound.molecular_mass_unit.get_myokit_unit()
+                )
+                helpers = [mol_mass]
+
+            pk_to_pd_conversion_multiplier = myokit.Unit.conversion_factor(
+                pk_var.unit(), pd_var.unit(), helpers=helpers
             )
+            pd_to_pk_conversion_multiplier = myokit.Unit.conversion_factor(
+                pd_var.unit(), pk_var.unit(), helpers=helpers
+            )
+
+            # pd var will be an intermediary variable driven by pk_var
+            if pd_var.is_state():
+                # add pd_var rate equation to pk_var
+                pk_var.set_rhs(
+                    myokit.Plus(
+                        pk_var.rhs(),
+                        myokit.Multiply(
+                            myokit.Number(pd_to_pk_conversion_multiplier),
+                            pd_var.rhs()
+                        )
+                    )
+                )
+
+                # demote pd_var to an intermediary variable
+                pd_var.demote()
+
             pd_var.set_rhs(
                 myokit.Multiply(
-                    myokit.Number(unit_conversion_multiplier),
+                    myokit.Number(pk_to_pd_conversion_multiplier),
                     myokit.Name(pk_var)
                 )
             )

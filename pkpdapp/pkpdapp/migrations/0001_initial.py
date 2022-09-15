@@ -11,6 +11,7 @@ from django.conf import settings
 from django.db import migrations, models
 import django.db.models.deletion
 import jsonfield.fields
+import pkpdapp.models.compound
 import pkpdapp.models.dose
 import pkpdapp.models.inference
 import pkpdapp.models.myokit_model_mixin
@@ -59,6 +60,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(help_text='name of the compound', max_length=100)),
                 ('description', models.TextField(help_text='short description of the compound')),
+                ('molecular_mass', models.FloatField(blank=True, help_text='molecular mass for compound for conversion from mol to grams', null=True)),
             ],
         ),
         migrations.CreateModel(
@@ -312,8 +314,8 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('read_only', models.BooleanField(default=False, help_text='true if object has been stored')),
                 ('datetime', models.DateTimeField(blank=True, help_text='datetime the object was stored.', null=True)),
-                ('pd_variable', models.ForeignKey(help_text='variable in PD part of model', on_delete=django.db.models.deletion.PROTECT, related_name='pd_mappings', to='pkpdapp.variable')),
-                ('pk_variable', models.ForeignKey(help_text='variable in PK part of model', on_delete=django.db.models.deletion.PROTECT, related_name='pk_mappings', to='pkpdapp.variable')),
+                ('pd_variable', models.ForeignKey(help_text='variable in PD part of model', on_delete=django.db.models.deletion.CASCADE, related_name='pd_mappings', to='pkpdapp.variable')),
+                ('pk_variable', models.ForeignKey(help_text='variable in PK part of model', on_delete=django.db.models.deletion.CASCADE, related_name='pk_mappings', to='pkpdapp.variable')),
                 ('pkpd_model', models.ForeignKey(help_text='PKPD model that this mapping is for', on_delete=django.db.models.deletion.CASCADE, related_name='mappings', to='pkpdapp.dosedpharmacokineticmodel')),
             ],
             options={
@@ -427,6 +429,11 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(blank=True, help_text='Project that "owns" this model', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='datasets', to='pkpdapp.project'),
         ),
         migrations.AddField(
+            model_name='compound',
+            name='molecular_mass_unit',
+            field=models.ForeignKey(blank=True, default=pkpdapp.models.compound.get_mol_mass_unit, help_text='unit for molecular mass (e.g. g/mol)', null=True, on_delete=django.db.models.deletion.PROTECT, related_name='compounds', to='pkpdapp.unit'),
+        ),
+        migrations.AddField(
             model_name='biomarkertype',
             name='dataset',
             field=models.ForeignKey(help_text='dataset containing this biomarker measurement', on_delete=django.db.models.deletion.CASCADE, related_name='biomarker_types', to='pkpdapp.dataset'),
@@ -459,7 +466,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='biomarker',
             name='subject',
-            field=models.ForeignKey(help_text='subject associated with this biomarker', on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.subject'),
+            field=models.ForeignKey(help_text='subject associated with this biomarker', on_delete=django.db.models.deletion.CASCADE, related_name='biomarkers', to='pkpdapp.subject'),
         ),
         migrations.AddConstraint(
             model_name='variable',
