@@ -48,7 +48,7 @@ class InferenceSerializer(serializers.ModelSerializer):
         Check that the blog post is about Django.
         """
         names = [v['name'] for v in value]
-        if(len(set(names)) < len(names)):
+        if len(set(names)) < len(names):
             raise serializers.ValidationError(
                 "all log_likelihoods in an inference must have unique names"
             )
