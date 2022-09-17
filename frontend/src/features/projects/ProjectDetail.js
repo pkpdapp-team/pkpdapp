@@ -1,9 +1,14 @@
 import React, { useEffect } from "react";
+import {
+  useParams
+} from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import Button from "@material-ui/core/Button";
+import Paper from "@material-ui/core/Paper";
 import { useForm } from "react-hook-form";
 import { makeStyles } from "@material-ui/core/styles";
 import List from "@material-ui/core/List";
+import CircularProgress from "@material-ui/core/CircularProgress";
 import ListItem from "@material-ui/core/ListItem";
 
 import {
@@ -14,6 +19,7 @@ import {
 import { selectAllUsers } from "../projects/usersSlice.js";
 
 import {
+  selectProjectById,
   updateProject,
   chooseProject,
   deleteProject,
@@ -21,6 +27,8 @@ import {
 } from "../projects/projectsSlice.js";
 
 import { fetchDatasets } from "../datasets/datasetsSlice.js";
+
+import { fetchUnits} from "../projects/unitsSlice.js";
 
 import { fetchPkModels } from "../pkModels/pkModelsSlice.js";
 
@@ -52,46 +60,26 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-export default function ProjectDetail({ project }) {
+function ProjectForm(project) {
   const classes = useStyles();
-  const { control, handleSubmit, reset } = useForm();
-  const dispatch = useDispatch();
   const users = useSelector(selectAllUsers);
   const userEntities = useSelector((state) => state.users.entities);
-
-  useEffect(() => {
-    reset(project);
-  }, [reset, project]);
-
+  const dispatch = useDispatch();
+  const { control, handleSubmit, reset } = useForm();
+  const disableSave = userHasReadOnlyAccess(project);
   const user_options = users.map((user) => ({
     key: user.username,
     value: user.id,
   }));
 
+  useEffect(() => {
+    reset(project);
+  }, [reset, project]);
+
   const onSubmit = (values) => {
     console.log("project detail submit", values);
     dispatch(updateProject(values));
   };
-
-  const handleSelectProject = () => {
-    dispatch(chooseProject(project));
-    dispatch(fetchDatasets(project));
-    dispatch(fetchPkModels(project));
-    dispatch(fetchPdModels(project));
-    dispatch(fetchPkModels(project));
-    dispatch(fetchVariables(project));
-    dispatch(fetchBasePkModels(project));
-    dispatch(fetchProtocols(project));
-    dispatch(fetchInferences(project));
-    //dispatch(fetchChains(project));
-  };
-
-  const handleDeleteProject = () => {
-    dispatch(deleteProject(project.id));
-  };
-
-  const disableSave = userHasReadOnlyAccess(project);
-
   return (
     <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
       <FormTextField
@@ -163,5 +151,37 @@ export default function ProjectDetail({ project }) {
         </Button>
       </div>
     </form>
+  )
+}
+
+export default function ProjectDetail() {
+  let { id } = useParams();
+  const project = useSelector(selectProjectById);
+  const classes = useStyles();
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(fetchDatasets(id));
+    dispatch(fetchPkModels(id));
+    dispatch(fetchPdModels(id));
+    dispatch(fetchBasePkModels(id));
+    dispatch(fetchVariables(id));
+    dispatch(fetchProtocols(id));
+    dispatch(fetchUnits(id));
+    dispatch(fetchInferences(id));
+  }, [id]);
+
+  const handleDeleteProject = () => {
+    dispatch(deleteProject(project.id));
+  };
+
+
+  return (
+    <Paper className={classes.paper}>
+      { project 
+        ? <ProjectForm project={project} />
+        : <CircularProgress />
+      }
+    </Paper>
   );
 }
