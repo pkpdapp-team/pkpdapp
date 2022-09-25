@@ -47,6 +47,7 @@ class Variable(StoredModel):
 
     unit = models.ForeignKey(
         Unit, on_delete=models.PROTECT,
+        blank=True, null=True,
         help_text=(
             'variable values are in this unit '
             '(note this might be different from the unit '

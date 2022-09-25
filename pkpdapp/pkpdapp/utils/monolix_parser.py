@@ -11,8 +11,13 @@
 from dataclasses import dataclass
 
 import myokit
+import numbers
+import io
 import pyparsing as pp
 import pyparsing.common as ppc
+import csv
+
+from theano.compile import mode
 
 from pkpdapp.models import set_administration
 pp.enable_all_warnings()
@@ -141,14 +146,16 @@ class MonolixParser:
         self.exprStack = []
         self.variables = {}
         self.pk = []
+        self.myokit_model = None
+        self.units = {}
+        self.administration_id = None
+        self.tlag = None
+
+    def initialise_model(self):
         self.myokit_model = myokit.Model()
         root_cmp = self.myokit_model.add_component('root')
         t = self.get_or_construct_var('t', root_cmp)
         t.set_binding('time')
-
-        self.administration_id = None
-        self.tlag = None
-
 
     def push_first(self, toks):
         self.exprStack.append(toks[0])
@@ -161,10 +168,8 @@ class MonolixParser:
                 break
 
     def construct_pk(self, toks):
-        print('construct_pk', toks)
         compartments = {}
         for line in toks[1:]:
-            print('line', line)
             fn_name, *tok_args = line
             args = {}
             for i, arg in enumerate(tok_args):
@@ -174,7 +179,6 @@ class MonolixParser:
                 else:
                     [value] = arg
                     args[i] = value
-            print('args', args)
 
             if fn_name == 'compartment':
                 cmt = args.get('cmt', args.get(0, 1))
@@ -223,7 +227,6 @@ class MonolixParser:
                 )
 
     def construct_inputs(self, toks):
-        print('construct_inputs', toks)
         for name in toks:
             v = self.get_or_construct_var(name)
 
@@ -236,19 +239,20 @@ class MonolixParser:
         if name not in self.variables:
             var = compartment.add_variable(name)
             var.set_rhs(0)
-            var.set_unit(myokit.units.dimensionless)
+            if name in self.units:
+                unit = myokit.Unit.parse_simple(self.units[name])
+            else:
+                unit = None
+            var.set_unit(unit)
             self.variables[name] = var
         return self.variables[name]
 
     def construct_equation(self, toks):
-        print('construct_equation', toks)
         name, expr = toks
         var = self.get_or_construct_var(name)
-        print('expr', expr)
         var.set_rhs(expr)
 
     def construct_rate_equation(self, toks):
-        print('construct_rate_equation', toks)
         name, expr = toks
         var = self.get_or_construct_var(name)
         if not var.is_state():
@@ -256,7 +260,6 @@ class MonolixParser:
         var.set_rhs(expr)
 
     def construct_initial_condition(self, toks):
-        print('construct_initial_condition', toks)
         name, expr = toks
         var = self.get_or_construct_var(name)
         if not var.is_state():
@@ -265,9 +268,10 @@ class MonolixParser:
 
     def construct_myokit_expr(self, s):
         op = s.pop()
-        print('op', op)
+        if isinstance(op, numbers.Number):
+            return myokit.Number(op)
         if op == "unary -":
-            return -self.construct_myokit_expr(s)
+            return myokit.PrefixMinus(self.construct_myokit_expr(s))
         if op in "+-*/^":
             # note: operands are pushed onto the stack in reverse order
             op2 = self.construct_myokit_expr(s)
@@ -277,15 +281,12 @@ class MonolixParser:
             var = self.get_or_construct_var(op)
             return myokit.Name(var)
         else:
-            # try to evaluate as int first, then as float if int fails
-            try:
-                return int(op)
-            except ValueError:
-                return float(op)
+            raise pp.ParseException(f'unknown op {op}')
 
-    def parse(self, string, parseAll=True):
+    def parse(self, model_str, parseAll=True):
         try:
-            self.parser.parseString(string, parseAll=parseAll)
+            self.initialise_model()
+            self.parser.parseString(model_str, parseAll=parseAll)
         except pp.ParseException as err:
-            print(err.explain())
+            raise RuntimeError(err.explain())
 

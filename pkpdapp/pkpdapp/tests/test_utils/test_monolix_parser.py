@@ -22,11 +22,11 @@ class TestMonolixParser(unittest.TestCase):
             BASE_URL_DATASETS + 'usecase_monolix/PK_Model.txt', timeout=5
         ) as f:
             monolix_str = codecs.decode(f.read(), 'utf-8')
-            parser = MonolixParser()
-            parser.parse(monolix_str)
-            print('model is', parser.myokit_model)
-            print(parser.myokit_model.code())
-            parser.myokit_model.validate()
+        parser = MonolixParser()
+        parser.parse(monolix_str)
+        print('model is', parser.myokit_model)
+        print(parser.myokit_model.code())
+        parser.myokit_model.validate()
 
 
 

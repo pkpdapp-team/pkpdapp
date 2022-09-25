@@ -481,7 +481,9 @@ def _add_dose_rate(compartment, drug_amount, time_unit):
     # Set initial value to 0 and unit to unit of drug amount over unit of
     # time
     dose_rate.set_rhs(0)
-    dose_rate.set_unit(drug_amount.unit() / time_unit)
+    drug_amount_unit = drug_amount.unit()
+    if drug_amount_unit is not None and time_unit is not None:
+        dose_rate.set_unit(drug_amount.unit() / time_unit)
 
     # Add the dose rate to the rhs of the drug amount variable
     rhs = drug_amount.rhs()
