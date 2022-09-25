@@ -23,6 +23,9 @@ class TestMonolixParser(unittest.TestCase):
         ) as f:
             monolix_str = codecs.decode(f.read(), 'utf-8')
         parser = MonolixParser()
+        parser.initialise_model()
+        print('model is', parser.myokit_model)
+        print(parser.myokit_model.code())
         parser.parse(monolix_str)
         print('model is', parser.myokit_model)
         print(parser.myokit_model.code())

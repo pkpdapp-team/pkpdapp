@@ -21,11 +21,11 @@ class PharmacokineticModel(MechanisticModel, StoredModel):
     """
     this just creates a concrete table for PK models without dosing
     """
-    __original_sbml = None
+    __original_mmt = None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.__original_sbml = self.sbml
+        self.__original_mmt = self.mmt
 
     def get_project(self):
         return None
@@ -42,16 +42,16 @@ class PharmacokineticModel(MechanisticModel, StoredModel):
         if self.read_only:
             return
 
-        if created or self.sbml != self.__original_sbml:
+        if created or self.mmt != self.__original_mmt:
             self.update_model()
 
-        self.__original_sbml = self.sbml
+        self.__original_mmt = self.mmt
 
     def create_stored_model(self):
         stored_model_kwargs = {
             'name': self.name,
             'description': self.description,
-            'sbml': self.sbml,
+            'mmt': self.mmt,
             'time_max': self.time_max,
             'read_only': True,
         }
@@ -105,7 +105,7 @@ class DosedPharmacokineticModel(MyokitModelMixin, StoredModel):
         default=30,
         help_text=(
             'suggested time to simulate after the last dose (in the time '
-            'units specified by the sbml model)'
+            'units specified by the mmt model)'
         )
     )
     __original_pk_model = None

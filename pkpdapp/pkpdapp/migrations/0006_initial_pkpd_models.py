@@ -8,6 +8,7 @@ from django.db import migrations
 import urllib.request
 import codecs
 from myokit.formats.sbml import SBMLParser
+from pkpdapp.models import MyokitModelMixin
 
 
 def load_pkpd_models(apps, schema_editor):
@@ -156,7 +157,7 @@ Description of a three compartment PK model here.
                 model = PharmacodynamicModel.objects.create(
                     name=m['name'],
                     description=m['description'],
-                    sbml=sbml_string,
+                    mmt=MyokitModelMixin.sbml_string_to_mmt(sbml_string),
                     project=demo_project
                 )
 
@@ -235,7 +236,7 @@ Description of a three compartment PK model here.
                 model = PharmacokineticModel.objects.create(
                     name=m['name'],
                     description=m['description'],
-                    sbml=sbml_string,
+                    mmt=MyokitModelMixin.sbml_string_to_mmt(sbml_string),
                 )
         except urllib.error.URLError:
             print('WARNING: urlopen timed-out, no data loaded')

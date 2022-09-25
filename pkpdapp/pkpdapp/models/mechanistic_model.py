@@ -11,9 +11,16 @@ from pkpdapp.models import MyokitModelMixin
 
 class MechanisticModel(models.Model, MyokitModelMixin):
     """
-    A PK or PD model, represented using SBML
+    A PK or PD model, represented using mmt
     """
-    DEFAULT_SBML = (
+    DEFAULT_MMT= (
+        '[[model]]\n'
+        '\n'
+        '[root]\n'
+        't = 0 bind time'
+    )
+
+    DEFAULT_SBML= (
         '<?xml version="1.0" encoding="UTF-8"?>'
         '<sbml '
         'xmlns="http://www.sbml.org/sbml/level3/version2/core" '
@@ -29,15 +36,15 @@ class MechanisticModel(models.Model, MyokitModelMixin):
         help_text='short description of the model',
         blank=True, default=''
     )
-    sbml = models.TextField(
-        help_text='the model represented using SBML (see http://sbml.org)',
-        default=DEFAULT_SBML,
+    mmt = models.TextField(
+        help_text='the model represented using mmt (see https://myokit.readthedocs)',
+        default=DEFAULT_MMT,
     )
     time_max = models.FloatField(
         default=30,
         help_text=(
             'suggested maximum time to simulate for this model (in the time '
-            'units specified by the sbml model)'
+            'units specified by the mmt model)'
         )
     )
 
@@ -51,4 +58,4 @@ class MechanisticModel(models.Model, MyokitModelMixin):
         try:
             self.create_myokit_model()
         except Exception as e:
-            raise ValidationError({'sbml': str(e)})
+            raise ValidationError({'mmt': str(e)})

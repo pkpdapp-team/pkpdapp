@@ -25,14 +25,14 @@ class TestPharmodynamicModel(TestCase):
             PharmacodynamicModel.objects.create(
                 name='my_cool_model',
                 description='description for my cool model',
-                sbml='this is not xml'
+                mmt='this is not sbml'
             )
 
     def test_model_clean(self):
         m = PharmacodynamicModel(
             name='my_cool_model',
             description='description for my cool model',
-            sbml='this is not xml'
+            mmt='this is not xml'
         )
         with self.assertRaises(ValidationError):
             m.clean()
@@ -133,7 +133,7 @@ class TestPharmokineticModel(TestCase):
         newl_pk = PharmacokineticModel.objects\
             .create(
                 name='one_compartment_pk_model_v2',
-                sbml=one_pk.sbml
+                mmt=one_pk.mmt
             )
         self.assertTrue(isinstance(newl_pk, PharmacokineticModel))
         self.assertGreater(len(newl_pk.variables.all()), 0)
