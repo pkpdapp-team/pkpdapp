@@ -17,8 +17,8 @@ const initialState = protocolsAdapter.getInitialState({
 
 export const fetchProtocols = createAsyncThunk(
   "protocols/fetchProtocols",
-  async (project, { getState }) => {
-    const response = await api.get(`/api/protocol/?project_id=${project.id}`);
+  async (project_id, { getState }) => {
+    const response = await api.get(`/api/protocol/?project_id=${project_id}`);
     return response;
   }
 );

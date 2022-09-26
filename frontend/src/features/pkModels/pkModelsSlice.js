@@ -19,9 +19,9 @@ const initialState = pkModelsAdapter.getInitialState({
 
 export const fetchPkModels = createAsyncThunk(
   "pkModels/fetchPkModels",
-  async (project, { dispatch }) => {
+  async (project_id, { dispatch }) => {
     const response = await api.get(
-      `/api/dosed_pharmacokinetic/?project_id=${project.id}`
+      `/api/dosed_pharmacokinetic/?project_id=${project_id}`
     );
     for (var i = 0; i < response.length; i++) {
       if (!response[i].read_only) {

@@ -23,13 +23,9 @@ import AddIcon from "@material-ui/icons/Add";
 import IconButton from "@material-ui/core/IconButton";
 import { makeStyles } from "@material-ui/core/styles";
 
-import { fetchProjects } from "./projectsSlice.js";
 
-import { fetchUsers } from "./usersSlice.js";
 
-import { fetchUnits } from "./unitsSlice.js";
 
-import { fetchAlgorithms } from "../inference/algorithmsSlice.js";
 
 import {
   selectMyProjects,
@@ -40,8 +36,6 @@ import {
 
 const useStyles = makeStyles((theme) => ({
   container: {
-    marginTop: theme.spacing(3),
-    flexGrow: 1,
   },
   paper: {
     padding: theme.spacing(2),
@@ -62,16 +56,7 @@ export default function Projects() {
   const dispatch = useDispatch();
   const history = useHistory();
 
-  useEffect(() => {
-    dispatch(fetchProjects());
-    dispatch(fetchUsers());
-    dispatch(fetchUnits());
-    dispatch(fetchAlgorithms());
-    //const interval = setInterval(() => {
-    //  refreshHarvesters();
-    //}, 5000);
-    //return () => clearInterval(interval);
-  }, [dispatch]);
+  
 
   const handleNewProject = () => {
     dispatch(addNewProject());
@@ -85,11 +70,12 @@ export default function Projects() {
 
   const handleDelete = (id) => (event) => {
     event.stopPropagation()
-    dispatch(deleteProject());
+    dispatch(deleteProject(id));
   }
 
   const column_headings = [
-    {label: 'Name', help: 'Cell Name'},
+    {label: 'Name', help: 'Project Name'},
+    {label: 'Description', help: 'Description'},
     {label: 'Actions', help: 'Click icon to perform actions'},
   ]
 
@@ -122,6 +108,10 @@ export default function Projects() {
               <TableCell>
                 {project.name}
               </TableCell>
+              <TableCell>
+                {project.description}
+              </TableCell>
+
               <TableCell>
               <Tooltip title="delete project">
                 <IconButton aria-label="delete" onClick={handleDelete(project.id)}>

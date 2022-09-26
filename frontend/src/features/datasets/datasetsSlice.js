@@ -18,11 +18,11 @@ const initialState = datasetsAdapter.getInitialState({
 
 export const fetchDatasets = createAsyncThunk(
   "datasets/fetchDatasets",
-  async (project, { dispatch }) => {
-    const response = await api.get(`/api/dataset/?project_id=${project.id}`);
+  async (project_id, { dispatch }) => {
+    const response = await api.get(`/api/dataset/?project_id=${project_id}`);
 
-    dispatch(fetchBiomarkerTypesByProject(project.id));
-    dispatch(fetchSubjectByProject(project.id));
+    dispatch(fetchBiomarkerTypesByProject(project_id));
+    dispatch(fetchSubjectByProject(project_id));
 
     return response;
   }

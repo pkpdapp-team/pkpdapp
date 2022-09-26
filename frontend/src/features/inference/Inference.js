@@ -57,10 +57,9 @@ LinearProgressWithLabel.propTypes = {
   value: PropTypes.number.isRequired,
 };
 
-export default function Inference() {
+export default function Inference({ project }) {
   const dispatch = useDispatch();
   const classes = useStyles();
-  const project = useSelector(selectChosenProject);
   const chosenInferences = useSelector(selectChosenInferences);
 
   useEffect(() => {
@@ -71,10 +70,6 @@ export default function Inference() {
       clearInterval(interval);
     };
   }, [project]);
-
-  if (!project) {
-    return "Select a project";
-  }
 
   return (
     <div className={classes.root}>

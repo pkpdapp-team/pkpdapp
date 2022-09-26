@@ -1,7 +1,16 @@
 import React, { useEffect } from "react";
 import {
-  useParams
+  Switch,
+  Route,
+  useParams,
+  Link,
+  matchPath,
+  useRouteMatch,
+  Redirect,
+  useLocation,
+  useHistory,
 } from "react-router-dom";
+
 import { useSelector, useDispatch } from "react-redux";
 import Button from "@material-ui/core/Button";
 import Paper from "@material-ui/core/Paper";
@@ -10,6 +19,11 @@ import { makeStyles } from "@material-ui/core/styles";
 import List from "@material-ui/core/List";
 import CircularProgress from "@material-ui/core/CircularProgress";
 import ListItem from "@material-ui/core/ListItem";
+
+import Inference from "../inference/Inference";
+import Nca from "../dataAnalysis/Nca";
+import Auce from "../dataAnalysis/Auce";
+import Modelling from "../modelling/Modelling";
 
 import {
   FormTextField,
@@ -60,7 +74,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-function ProjectForm(project) {
+function ProjectForm({ project }) {
   const classes = useStyles();
   const users = useSelector(selectAllUsers);
   const userEntities = useSelector((state) => state.users.entities);
@@ -75,6 +89,11 @@ function ProjectForm(project) {
   useEffect(() => {
     reset(project);
   }, [reset, project]);
+
+  const handleDeleteProject = () => {
+    console.log('delete project', project)
+    dispatch(deleteProject(project.id));
+  };
 
   const onSubmit = (values) => {
     console.log("project detail submit", values);
@@ -141,14 +160,6 @@ function ProjectForm(project) {
         >
           Delete
         </Button>
-
-        <Button
-          variant="contained"
-          className={classes.controls}
-          onClick={handleSelectProject}
-        >
-          Select Project
-        </Button>
       </div>
     </form>
   )
@@ -156,7 +167,8 @@ function ProjectForm(project) {
 
 export default function ProjectDetail() {
   let { id } = useParams();
-  const project = useSelector(selectProjectById);
+  let { path, url } = useRouteMatch();
+  const project = useSelector((state) => selectProjectById(state, id));
   const classes = useStyles();
   const dispatch = useDispatch();
 
@@ -171,17 +183,29 @@ export default function ProjectDetail() {
     dispatch(fetchInferences(id));
   }, [id]);
 
-  const handleDeleteProject = () => {
-    dispatch(deleteProject(project.id));
-  };
-
+  if (!project) {
+    return (<CircularProgress />)
+  }
 
   return (
-    <Paper className={classes.paper}>
-      { project 
-        ? <ProjectForm project={project} />
-        : <CircularProgress />
-      }
-    </Paper>
+    <Switch>
+      <Route exact path={path}>
+        <Paper className={classes.paper}>
+          <ProjectForm project={project} />
+        </Paper>
+      </Route>
+      <Route path={`${path}/simulation`}>
+        <Modelling project={project}/>
+      </Route>
+      <Route path={`${path}/auce`}>
+        <Auce project={project}/>
+      </Route>
+      <Route path={`${path}/nca`}>
+        <Nca project={project}/>
+      </Route>
+      <Route path={`${path}/inference`}>
+        <Inference project={project}/>
+      </Route>
+    </Switch>
   );
 }

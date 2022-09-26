@@ -18,9 +18,9 @@ const initialState = pdModelsAdapter.getInitialState({
 
 export const fetchPdModels = createAsyncThunk(
   "pdModels/fetchPdModels",
-  async (project, { dispatch }) => {
+  async (project_id, { dispatch }) => {
     let response = await api.get(
-      `/api/pharmacodynamic/?project_id=${project.id}`
+      `/api/pharmacodynamic/?project_id=${project_id}`
     );
     for (var i = 0; i < response.length; i++) {
       if (!response[i].read_only) {

@@ -32,8 +32,8 @@ const inference = new schema.Entity("inferences", {
 
 export const fetchInferences = createAsyncThunk(
   "inferences/fetchInferences",
-  async (project, { dispatch }) => {
-    let response = await api.get(`/api/inference/?project_id=${project.id}`);
+  async (project_id, { dispatch }) => {
+    let response = await api.get(`/api/inference/?project_id=${project_id}`);
     //const normalized = normalize(response, [inference]);
     //console.log("fetchInferences got", response, normalized);
 

@@ -25,13 +25,9 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-export default function Auce() {
+export default function Auce({project}) {
   const classes = useStyles();
-  const project = useSelector(selectChosenProject);
   const chosenDatasets = useSelector(selectChosenDatasets);
-  if (!project) {
-    return "Select a project";
-  }
 
   return (
     <div className={classes.root}>

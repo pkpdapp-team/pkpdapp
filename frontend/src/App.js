@@ -1,13 +1,15 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   Switch,
   Route,
   Link,
   matchPath,
   Redirect,
+  useParams,
   useLocation,
   useHistory,
 } from "react-router-dom";
+import { useDispatch } from "react-redux";
 
 import { MuiPickersUtilsProvider } from "@material-ui/pickers";
 import DateFnsUtils from "@date-io/date-fns";
@@ -42,14 +44,15 @@ import MenuIcon from "@material-ui/icons/Menu";
 import ChevronLeftIcon from "@material-ui/icons/ChevronLeft";
 
 import { api } from "./Api";
-import Modelling from "./features/modelling/Modelling";
-import Inference from "./features/inference/Inference";
 import InferenceMenu from "./features/menu/InferenceMenu";
-import Nca from "./features/dataAnalysis/Nca";
-import Auce from "./features/dataAnalysis/Auce";
 import Projects from "./features/projects/Projects";
 import ProjectDetail from "./features/projects/ProjectDetail";
-import ProjectMenu from "./features/menu/ProjectMenu";
+
+
+import { fetchAlgorithms } from "./features/inference/algorithmsSlice.js";
+import { fetchUnits } from "./features/projects/unitsSlice.js";
+import { fetchUsers } from "./features/projects/usersSlice.js";
+import { fetchProjects } from "./features/projects/projectsSlice.js";
 
 const PrivateRoute = ({ component: Component, componentProps, ...rest }) => {
   const logged = api.isLoggedIn();
@@ -244,24 +247,50 @@ export default function App() {
   };
 
   let history = useHistory();
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(fetchProjects());
+    dispatch(fetchUsers());
+    dispatch(fetchUnits());
+    dispatch(fetchAlgorithms());
+    //const interval = setInterval(() => {
+    //  refreshHarvesters();
+    //}, 5000);
+    //return () => clearInterval(interval);
+  }, [dispatch]);
 
   const { pathname } = useLocation();
-  const modellingPath = "/simulation";
-  const isModellingPath = !!matchPath(pathname, {
-    path: modellingPath,
-    exact: true,
-  });
-  const inferencePath = "/inference";
-  const isInferencePath = !!matchPath(pathname, {
-    path: inferencePath,
-    exact: true,
-  });
-  const ncaPath = "/nca";
-  const isNcaPath = !!matchPath(pathname, { path: ncaPath, exact: true });
-  const aucePath = "/auce";
-  const isAucePath = !!matchPath(pathname, { path: aucePath, exact: true });
+  const matchProject = matchPath(pathname, { path: '/:id'})
+
   const rootPath = "/";
   const isRootPath = !!matchPath(pathname, { path: rootPath, exact: true });
+  console.log('pathname', pathname)
+  let modellingPath = ''
+  let isModellingPath = false
+  let inferencePath = ''
+  let isInferencePath = false
+  let aucePath = ''
+  let isAucePath = false
+  let ncaPath  = ''
+  let isNcaPath = false
+  if (matchProject) {
+    modellingPath = `/${matchProject.params.id}/simulation`;
+    isModellingPath = !!matchPath(pathname, {
+      path: modellingPath,
+      exact: true,
+    });
+    inferencePath = `/${matchProject.params.id}/inference`;
+    isInferencePath = !!matchPath(pathname, {
+      path: inferencePath,
+      exact: true,
+    });
+    ncaPath = `/${matchProject.params.id}/nca`;
+    isNcaPath = !!matchPath(pathname, { path: ncaPath, exact: true });
+    aucePath = `/${matchProject.params.id}/auce`;
+    isAucePath = !!matchPath(pathname, { path: aucePath, exact: true });
+  }
+  console.log('path', pathname, isRootPath, isAucePath)
 
   const logged_in = (
     <div className={classes.root}>
@@ -279,7 +308,7 @@ export default function App() {
           <Typography className={classes.title} variant="h6" noWrap>
             PKPDapp
           </Typography>
-          { !rootPath &&
+          { !isRootPath &&
           <React.Fragment>
           <div className={classes.search}>
             <div className={classes.searchIcon}>
@@ -354,34 +383,10 @@ export default function App() {
           </Button>
         </Toolbar>
       </AppBar>
-      {!rootPath &&
-      <Drawer
-        variant="permanent"
-        classes={{
-          paper: clsx(classes.drawerPaper, !open && classes.drawerPaperClose),
-        }}
-        open={open}
-      >
-        <div className={classes.toolbarIcon}>
-          <IconButton>
-            <ChevronLeftIcon />
-          </IconButton>
-        </div>
-        <Divider />
-        <Switch>
-          <PrivateRoute path="/simulation" component={ProjectMenu} />
-          <PrivateRoute path="/nca" component={ProjectMenu} />
-          <PrivateRoute path="/inference" component={InferenceMenu} />
-          <PrivateRoute path="/auce" component={ProjectMenu} />
-          <PrivateRoute path="/" component={ProjectMenu} />
-        </Switch>
-      </Drawer>
-      }
       <MuiPickersUtilsProvider utils={DateFnsUtils}>
         {/* A <Switch> looks through its children <Route>s and
               renders the first one that matches the current URL. */}
-
-        <Container maxWidth="lg" className={classes.container}>
+        <Container maxWidth={false} className={classes.container}>
         <Switch>
           <PrivateRoute path="/:id" component={ProjectDetail} />
           <PrivateRoute path="/" component={Projects} />
