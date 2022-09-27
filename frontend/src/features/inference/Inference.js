@@ -5,23 +5,41 @@ import Grid from "@material-ui/core/Grid";
 import InferenceDetail from "./InferenceDetail";
 import InferenceChart from "./InferenceChart";
 import Paper from "@material-ui/core/Paper";
+import Toolbar from '@material-ui/core/Toolbar';
 import AccordionSummary from "@material-ui/core/AccordionSummary";
+import Drawer from "@material-ui/core/Drawer";
 import AccordionDetails from "@material-ui/core/AccordionDetails";
 import CircularProgress from "@material-ui/core/CircularProgress";
 import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
 import Typography from "@material-ui/core/Typography";
 import LinearProgress from "@material-ui/core/LinearProgress";
 import Box from "@material-ui/core/Box";
+import Inferences from "../inference/Inferences";
+import List from "@material-ui/core/List";
 
 import { makeStyles } from "@material-ui/core/styles";
 
-import { selectChosenProject } from "../projects/projectsSlice.js";
+import { selectChosenProject, userHasReadOnlyAccess } from "../projects/projectsSlice.js";
 
 import { selectChosenInferences, fetchInferences } from "./inferenceSlice.js";
+
+const drawerWidth = 200;
 
 const useStyles = makeStyles((theme) => ({
   root: {
     marginTop: theme.spacing(2),
+    flexGrow: 1,
+  },
+  drawer: {
+    width: drawerWidth,
+    flexShrink: 0,
+    '& .MuiDrawer-paper': {
+      width: drawerWidth,
+      boxSizing: 'border-box',
+    },
+  },
+  main: {
+    marginLeft: drawerWidth,
     flexGrow: 1,
   },
   linearProgress: {
@@ -34,6 +52,20 @@ const useStyles = makeStyles((theme) => ({
     padding: theme.spacing(2),
   },
 }));
+
+function InferenceMenu({ project }) {
+  console.log("got project", project);
+
+  const disableSave = project ? userHasReadOnlyAccess(project) : true;
+
+  const projectName = project ? project.name : "None";
+
+  return (
+    <List>
+      <Inferences project={project} disableSave={disableSave} />
+    </List>
+  );
+}
 
 function LinearProgressWithLabel(props) {
   return (
@@ -64,7 +96,7 @@ export default function Inference({ project }) {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      dispatch(fetchInferences(project));
+      dispatch(fetchInferences(project.id));
     }, 100000);
     return () => {
       clearInterval(interval);
@@ -73,6 +105,15 @@ export default function Inference({ project }) {
 
   return (
     <div className={classes.root}>
+    <Drawer
+        className={classes.drawer}
+        variant="permanent"
+        anchor="left"
+    >
+      <Toolbar />
+      <InferenceMenu project={project} />
+    </Drawer>
+    <div className={classes.main}>
       {chosenInferences.map((inference) => {
         const loading = inference.status
           ? inference.status === "loading"
@@ -110,6 +151,7 @@ export default function Inference({ project }) {
           </Paper>
         );
       })}
+    </div>
     </div>
   );
 }
