@@ -331,7 +331,15 @@ export default function App() {
               variant="contained"
               color={isRootPath ? "secondary" : "primary"}
             >
-              Projects
+              Home
+            </Button>
+            <Button
+              component={Link}
+              to={modellingPath}
+              variant="contained"
+              color={isModellingPath ? "secondary" : "primary"}
+            >
+              Workbench 
             </Button>
             <Button
               component={Link}
@@ -351,14 +359,7 @@ export default function App() {
               AUCE
             </Button>
 
-            <Button
-              component={Link}
-              to={modellingPath}
-              variant="contained"
-              color={isModellingPath ? "secondary" : "primary"}
-            >
-              Simulation
-            </Button>
+            
             <Button
               component={Link}
               to={inferencePath}

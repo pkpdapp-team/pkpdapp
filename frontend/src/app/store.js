@@ -5,6 +5,7 @@ import subjectsReducer from "../features/datasets/subjectsSlice";
 import biomarkerTypesReducer from "../features/datasets/biomarkerTypesSlice";
 import pdModelsReducer from "../features/pdModels/pdModelsSlice";
 import pkModelsReducer from "../features/pkModels/pkModelsSlice";
+import modellingReducer from "../features/modelling/modellingSlice";
 import basePkModelsReducer from "../features/pkModels/basePkModelsSlice";
 import protocolsReducer from "../features/protocols/protocolsSlice";
 import usersReducer from "../features/projects/usersSlice";
@@ -22,6 +23,7 @@ export default configureStore({
     subjects: subjectsReducer,
     pkModels: pkModelsReducer,
     basePkModels: basePkModelsReducer,
+    modelling: modellingReducer,
     protocols: protocolsReducer,
     pdModels: pdModelsReducer,
     users: usersReducer,

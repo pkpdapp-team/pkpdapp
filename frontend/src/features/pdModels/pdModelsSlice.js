@@ -61,7 +61,6 @@ export const addNewPdModel = createAsyncThunk(
 
     dispatch(fetchVariablesByPdModel(pdModel.id));
     dispatch(fetchUnitsByPdModel(pdModel.id));
-    pdModel.chosen = true;
 
     return pdModel;
   }
@@ -106,6 +105,10 @@ export const pdModelsSlice = createSlice({
     togglePdModel(state, action) {
       let pdModel = state.entities[action.payload.id];
       pdModel.chosen = !pdModel.chosen;
+    },
+    setSelectPdModel(state, action) {
+      let pdModel = state.entities[action.payload.id];
+      pdModel.selected = action.payload.select;
     },
     setPdModelError(state, action) {
       let pdModel = state.entities[action.payload.id];
@@ -169,7 +172,7 @@ export const pdModelsSlice = createSlice({
   },
 });
 
-export const { togglePdModel, addPdModels } = pdModelsSlice.actions;
+export const { togglePdModel, setSelectPdModel, addPdModels } = pdModelsSlice.actions;
 
 export default pdModelsSlice.reducer;
 
@@ -182,8 +185,12 @@ export const {
 export const selectChosenPdModels = (state) =>
   selectAllPdModels(state).filter((pdModel) => pdModel.chosen);
 
+
 export const selectWritablePdModels = (state) =>
   selectAllPdModels(state).filter((pdModel) => !pdModel.read_only);
+
+export const selectWritablePdModelIds = (state) =>
+  selectAllPdModels(state).filter((pdModel) => !pdModel.read_only).map(pdModel => pdModel.id);
 
 export const selectReadOnlyPdModels = (state) =>
   selectAllPdModels(state).filter((pdModel) => pdModel.read_only);

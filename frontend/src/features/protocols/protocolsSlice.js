@@ -32,7 +32,6 @@ export const addNewProtocol = createAsyncThunk(
       project: project.id,
     };
     let protocol = await api.post("/api/protocol/", initialProtocol);
-    protocol.chosen = true;
     return protocol;
   }
 );
@@ -97,6 +96,10 @@ export const protocolsSlice = createSlice({
       let protocol = state.entities[action.payload.id];
       protocol.chosen = !protocol.chosen;
     },
+    setSelectProtocol(state, action) {
+      let protocol = state.entities[action.payload.id];
+      protocol.selected = action.payload.select;
+    },
   },
   extraReducers: {
     [fetchProtocols.pending]: (state, action) => {
@@ -124,7 +127,7 @@ export const protocolsSlice = createSlice({
   },
 });
 
-export const { toggleProtocol } = protocolsSlice.actions;
+export const { toggleProtocol, setSelectProtocol } = protocolsSlice.actions;
 
 export default protocolsSlice.reducer;
 

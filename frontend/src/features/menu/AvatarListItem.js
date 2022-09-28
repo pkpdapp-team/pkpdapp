@@ -1,6 +1,7 @@
 import React from "react";
 
 import ListItem from "@material-ui/core/ListItem";
+import ListItemSecondaryAction from "@material-ui/core/ListItemSecondaryAction";
 import ListItemIcon from "@material-ui/core/ListItemIcon";
 import ListItemText from "@material-ui/core/ListItemText";
 import Checkbox from "@material-ui/core/Checkbox";
@@ -30,11 +31,12 @@ export default function AvatarListItem({
   item,
   selected,
   handleClick,
-  handleClickChecked,
+  handleToggle,
   small,
   checked,
   loading,
 }) {
+  console.log('avatarlistitem', item, selected, checked)
   const classes = useStyles();
   const avatarClassName = classNames(
     small ? classes.avatarSmall : null,
@@ -42,7 +44,7 @@ export default function AvatarListItem({
   );
   const itemClassName = classNames(nested ? classes.nested : null);
 
-  const marginAdjust = small ? 0 : 0;
+  const marginAdjust = -2;
 
   let avatar = (
     <ListItemAvatar>
@@ -59,25 +61,16 @@ export default function AvatarListItem({
 
   return (
     <Tooltip title={item.name} placement="right" arrow>
-      <ListItem button className={itemClassName} onClick={handleClick}>
-        {checked !== undefined && (
-          <Box mr={marginAdjust}>
-            <ListItemIcon>
-              <Checkbox
-                onClick={(event) => {
-                  handleClickChecked();
-                  event.stopPropagation();
-                }}
-                edge="start"
-                checked={checked}
-                tabIndex={-1}
-                disableRipple
-              />
-            </ListItemIcon>
-          </Box>
-        )}
+      <ListItem button selected={selected} className={itemClassName} onClick={handleClick}>
         <Box mr={marginAdjust}>{avatar}</Box>
-        <ListItemText primary={item.name} />
+        <ListItemText primary={item.name} primaryTypographyProps={{noWrap: true}}/>
+        <ListItemSecondaryAction>
+          <Checkbox
+            edge="end"
+            onChange={handleToggle}
+            checked={checked}
+          />
+        </ListItemSecondaryAction>
       </ListItem>
     </Tooltip>
   );

@@ -25,21 +25,18 @@ import { makeStyles } from "@material-ui/core/styles";
 
 import { selectChosenProject, userHasReadOnlyAccess } from "../projects/projectsSlice.js";
 
-import { selectChosenDatasets, selectChosenDatasetProtocols } from "../datasets/datasetsSlice.js";
+import { selectChosenDatasets, selectChosenDatasetProtocols, selectDatasetById } from "../datasets/datasetsSlice.js";
 
-import { selectChosenPdModels } from "../pdModels/pdModelsSlice.js";
+import { selectChosenPdModels, selectPdModelById } from "../pdModels/pdModelsSlice.js";
 
-import { selectChosenPkModels } from "../pkModels/pkModelsSlice.js";
+import { selectChosenPkModels, selectPkModelById } from "../pkModels/pkModelsSlice.js";
 
-import { selectChosenProtocols } from "../protocols/protocolsSlice.js";
+import { selectChosenProtocols, selectProtocolById } from "../protocols/protocolsSlice.js";
 
-import Datasets from "../datasets/Datasets";
-import PkModels from "../pkModels/PkModels";
-import PdModels from "../pdModels/PdModels";
-import Protocols from "../protocols/Protocols";
 import DatasetProtocols from "../protocols/DatasetProtocols";
+import ExpandableListItem from "../menu/ExpandableListItem";
 
-const drawerWidth = 300;
+const drawerWidth = 250;
 
 const useStyles = makeStyles((theme) => ({
   drawer: {
@@ -54,37 +51,45 @@ const useStyles = makeStyles((theme) => ({
     marginLeft: drawerWidth,
     flexGrow: 1,
   },
-  chartPaper: {
+  paperDetail: {
+    maxHeight: '90vh', overflow: 'auto'
+  },
+  paperChart: {
     padding: theme.spacing(2),
   },
   chart: {
-    height: "85vh",
+    height: "50vh",
     width: "100%",
   },
 }));
 
 function ModellingMenu({ project }) {
   const disableSave = project ? userHasReadOnlyAccess(project) : true;
-
   return (
       <List>
-        <Datasets project={project} disableSave={disableSave} />
-        <PdModels project={project} disableSave={disableSave} />
-        <PkModels project={project} disableSave={disableSave} />
-        <Protocols project={project} disableSave={disableSave} />
-        <DatasetProtocols project={project} disableSave={disableSave} />
+        <ExpandableListItem type={'dataset'} text={'Datasets'} project={project} disableSave={disableSave} />
+        <ExpandableListItem type={'pd_model'} text={'PD Models'} project={project} disableSave={disableSave} />
+        <ExpandableListItem type={'pk_model'} text={'PK Models'} project={project} disableSave={disableSave} />
+        <ExpandableListItem type={'protocol'} text={'Protocols'} project={project} disableSave={disableSave} />
       </List>
   );
 }
 
-export default function Modelling({project}) {
+function ModellingChart({ project }) {
   const classes = useStyles();
   const chosenDatasets = useSelector(selectChosenDatasets);
   const chosenPkModels = useSelector(selectChosenPkModels);
   const chosenPdModels = useSelector(selectChosenPdModels);
-  const chosenProtocols = useSelector(selectChosenProtocols);
   const chosenDatasetProtocols = useSelector(selectChosenDatasetProtocols);
+
   let showChart = true;
+  if (
+    !chosenDatasets ||
+    !chosenPkModels ||
+    !chosenPdModels
+  ) {
+    showChart = false;
+  }
   if (
     chosenDatasets.length === 0 &&
     chosenPkModels.length === 0 &&
@@ -93,6 +98,85 @@ export default function Modelling({project}) {
     showChart = false;
   }
 
+  if (!showChart) {
+    return (
+      <Typography>Choose a dataset or model to visualise</Typography>
+    )
+  }
+
+  console.log('Chosendatasets', chosenDatasets)
+  console.log('chosenPkModels', chosenPkModels)
+  console.log('chosenPdModels', chosenPdModels)
+
+  return (
+    <Chart
+      className={classes.chart}
+      datasets={chosenDatasets}
+      pkModels={chosenPkModels}
+      pdModels={chosenPdModels}
+    />
+  );
+}
+
+function SelectedItem({ project }) {
+  const id = useSelector((state) => state.modelling.selectedId);
+  const type = useSelector((state) => state.modelling.selectedType);
+  let selector = null;
+  if (type == 'dataset') {
+    selector = selectDatasetById
+  }
+  if (type == 'pk_model') {
+    selector = selectPkModelById
+  }
+  if (type == 'pd_model') {
+    selector = selectPdModelById
+  }
+  if (type == 'protocol') {
+    selector = selectProtocolById
+  }
+  const item = useSelector((state) => selector ? selector(state, id) : null)
+  if (!id || !type) {
+    return ('choose an item')
+  }
+  if (!item) {
+    return (
+      <CircularProgress />
+    )
+  }
+  let itemDetail = null
+  if (type == 'dataset') {
+    itemDetail = (
+      <DatasetDetail dataset={item} project={project} />
+    )
+  }
+  if (type == 'pk_model') {
+    itemDetail = (
+      <PkDetail pk_model={item} project={project} />
+    )
+  }
+  if (type == 'pd_model') {
+    itemDetail = (
+      <PdDetail pd_model={item} project={project} />
+    )
+  }
+  if (type == 'protocol') {
+    itemDetail = (
+      <ProtocolDetail protocol={item} project={project} />
+    )
+  }
+  const loading = item.status
+    ? item.status === "loading"
+    : false;
+  const expandIcon = loading ? (
+    <CircularProgress size={20} />
+  ) : (
+    <ExpandMoreIcon />
+  );
+  return itemDetail;
+}
+
+export default function Modelling({project}) {
+  const classes = useStyles();
   return (
     <div className={classes.root}>
     <Drawer
@@ -105,118 +189,19 @@ export default function Modelling({project}) {
     </Drawer>
     <div className={classes.main}>
     <Grid container spacing={1}>
-      <Grid item xs={12} md={6}>
-        <Paper className={classes.chartPaper}>
-          {showChart && (
-
-            <Chart
-              className={classes.chart}
-              datasets={chosenDatasets}
-              pkModels={chosenPkModels}
-              pdModels={chosenPdModels}
-            />
-          )}
-          {!showChart && (
-            <Typography>Choose a dataset or model to visualise</Typography>
-          )}
+      <Grid item xs={12} md={6} >
+        <Paper className={classes.paperDetail}>
+          <SelectedItem  project={project}/>
         </Paper>
       </Grid>
       <Grid item xs={12} md={6}>
-        {chosenDatasets.map((dataset) => {
-          const loading = dataset.status
-            ? dataset.status === "loading"
-            : false;
-          const expandIcon = loading ? (
-            <CircularProgress size={20} />
-          ) : (
-            <ExpandMoreIcon />
-          );
-          return (
-            <Accordion key={dataset.id}>
-              <AccordionSummary expandIcon={expandIcon}>
-                <Typography className={classes.heading}>
-                  Dataset - {dataset.name}
-                </Typography>
-              </AccordionSummary>
-              <AccordionDetails>
-                {!loading && (
-                  <DatasetDetail dataset={dataset} project={project} />
-                )}
-              </AccordionDetails>
-            </Accordion>
-          );
-        })}
-        {chosenPdModels.map((pdModel) => {
-          const loading = pdModel.status
-            ? pdModel.status === "loading"
-            : false;
-          const simulateLoading = pdModel.simulate
-            ? pdModel.simulate.status === "loading"
-            : true;
-          const expandIcon =
-            loading | simulateLoading ? (
-              <CircularProgress size={20} />
-            ) : (
-              <ExpandMoreIcon />
-            );
-
-          return (
-            <Accordion key={pdModel.id}>
-              <AccordionSummary expandIcon={expandIcon}>
-                <Typography className={classes.heading}>
-                  PD Model - {pdModel.name}
-                </Typography>
-              </AccordionSummary>
-              <AccordionDetails>
-                {!loading && (
-                  <PdDetail project={project} pd_model={pdModel} />
-                )}
-              </AccordionDetails>
-            </Accordion>
-          );
-        })}
-        {chosenPkModels.map((pkModel) => {
-          const loading = pkModel.status
-            ? pkModel.status === "loading"
-            : false;
-          const simulateLoading = pkModel.simulate
-            ? pkModel.simulate.status === "loading"
-            : true;
-          const expandIcon =
-            loading | simulateLoading ? (
-              <CircularProgress size={20} />
-            ) : (
-              <ExpandMoreIcon />
-            );
-
-          return (
-            <Accordion key={pkModel.id}>
-              <AccordionSummary expandIcon={expandIcon}>
-                <Typography className={classes.heading}>
-                  PKPD Model - {pkModel.name}
-                </Typography>
-              </AccordionSummary>
-              <AccordionDetails>
-                {!loading && (
-                  <PkDetail project={project} pk_model={pkModel} />
-                )}
-              </AccordionDetails>
-            </Accordion>
-          );
-        })}
-        {chosenProtocols.concat(chosenDatasetProtocols).map((protocol) => (
-          <Accordion key={protocol.id}>
-            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-              <Typography className={classes.heading}>
-                Protocol - {protocol.name}
-              </Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-              <ProtocolDetail protocol={protocol} project={project} />
-            </AccordionDetails>
-          </Accordion>
-        ))}
+        <Paper className={classes.paperChart}>
+            <ModellingChart
+              className={classes.chart}
+            />
+        </Paper>
       </Grid>
+      
     </Grid>
     </div>
   </div>

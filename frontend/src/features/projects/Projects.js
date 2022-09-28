@@ -65,7 +65,7 @@ export default function Projects() {
   const projects = useSelector(selectMyProjects);
 
   const handleRowClick = (project) => {
-     history.push(`/${project.id}/`);
+     history.push(`/${project.id}/simulation`);
   }
 
   const handleDelete = (id) => (event) => {

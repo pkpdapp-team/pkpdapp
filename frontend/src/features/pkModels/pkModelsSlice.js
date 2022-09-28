@@ -73,7 +73,6 @@ export const addNewPkModel = createAsyncThunk(
     dispatch(fetchVariablesByPkModel(pkModel.id));
     dispatch(fetchUnitsByPkModel(pkModel.id));
     dispatch(fetchPkModelSimulateById(pkModel.id));
-    pkModel.chosen = true;
     return pkModel;
   }
 );
@@ -109,6 +108,10 @@ export const pkModelsSlice = createSlice({
     togglePkModel(state, action) {
       let pkModel = state.entities[action.payload.id];
       pkModel.chosen = !pkModel.chosen;
+    },
+    setSelectPkModel(state, action) {
+      let pkModel = state.entities[action.payload.id];
+      pkModel.selected = action.payload.select;
     },
     addPkModels: pkModelsAdapter.upsertMany,
   },
@@ -156,7 +159,7 @@ export const pkModelsSlice = createSlice({
   },
 });
 
-export const { togglePkModel, addPkModels } = pkModelsSlice.actions;
+export const { togglePkModel, setSelectPkModel, addPkModels } = pkModelsSlice.actions;
 
 export default pkModelsSlice.reducer;
 
@@ -171,6 +174,9 @@ export const selectChosenPkModels = (state) =>
 
 export const selectWritablePkModels = (state) =>
   selectAllPkModels(state).filter((pkModel) => !pkModel.read_only);
+
+export const selectWritablePkModelIds = (state) =>
+  selectAllPkModels(state).filter((pkModel) => !pkModel.read_only).map(pkModel => pkModel.id);
 
 export const selectReadOnlyPkModels = (state) =>
   selectAllPkModels(state).filter((pkModel) => pkModel.read_only);

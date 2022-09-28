@@ -44,7 +44,6 @@ export const addNewDataset = createAsyncThunk(
       project: project.id,
     };
     let dataset = await api.post("/api/dataset/", initialDataset);
-    dataset.chosen = true;
     return dataset;
   }
 );
@@ -79,11 +78,21 @@ export const datasetsSlice = createSlice({
       let dataset = state.entities[action.payload.id];
       dataset.chosen = !dataset.chosen;
     },
+    setSelectDataset(state, action) {
+      let dataset = state.entities[action.payload.id];
+      dataset.selected = action.payload.select;
+    },
     toggleProtocol(state, action) {
       const dataset_id = action.payload.dataset
       let dataset = state.entities[dataset_id];
       let protocol = dataset.protocols.find(p => p.id === action.payload.id)
       protocol.chosen = !protocol.chosen;
+    },
+    setSelectDatasetProtocol(state, action) {
+      const dataset_id = action.payload.dataset
+      let dataset = state.entities[dataset_id];
+      let protocol = dataset.protocols.find(p => p.id === action.payload.id)
+      protocol.select = action.payload.select;
     },
     toggleDisplayGroup(state, action) {
       const group = action.payload.group;
@@ -132,7 +141,7 @@ export const datasetsSlice = createSlice({
   },
 });
 
-export const { toggleDataset, toggleProtocol, toggleDisplayGroup: toggleDatasetDisplayGroup } =
+export const { toggleDataset, toggleProtocol, setSelectDataset, toggleDisplayGroup: toggleDatasetDisplayGroup } =
   datasetsSlice.actions;
 
 export default datasetsSlice.reducer;
