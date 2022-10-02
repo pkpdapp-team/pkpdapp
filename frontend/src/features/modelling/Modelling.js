@@ -1,5 +1,5 @@
 import React from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import Paper from "@material-ui/core/Paper";
 import Grid from "@material-ui/core/Grid";
 import PkDetail from "../pkModels/PkDetail";
@@ -33,7 +33,10 @@ import { selectChosenPkModels, selectPkModelById } from "../pkModels/pkModelsSli
 
 import { selectChosenProtocols, selectProtocolById } from "../protocols/protocolsSlice.js";
 
+import { clearSelectItem } from "./modellingSlice"
+
 import DatasetProtocols from "../protocols/DatasetProtocols";
+import ProjectDetail from "../projects/ProjectDetail";
 import ExpandableListItem from "../menu/ExpandableListItem";
 
 const drawerWidth = 250;
@@ -51,9 +54,6 @@ const useStyles = makeStyles((theme) => ({
     marginLeft: drawerWidth,
     flexGrow: 1,
   },
-  paperDetail: {
-    maxHeight: '90vh', overflow: 'auto'
-  },
   paperChart: {
     padding: theme.spacing(2),
   },
@@ -65,8 +65,16 @@ const useStyles = makeStyles((theme) => ({
 
 function ModellingMenu({ project }) {
   const disableSave = project ? userHasReadOnlyAccess(project) : true;
+  const dispatch = useDispatch();
+  const handleProjectClick = () => dispatch(clearSelectItem());
   return (
       <List>
+        <ListItem button onClick={handleProjectClick}>
+        <ListItemIcon>
+          <AccountTreeIcon />
+        </ListItemIcon>
+        <ListItemText primary={'Project'} />
+        </ListItem>
         <ExpandableListItem type={'dataset'} text={'Datasets'} project={project} disableSave={disableSave} />
         <ExpandableListItem type={'pd_model'} text={'PD Models'} project={project} disableSave={disableSave} />
         <ExpandableListItem type={'pk_model'} text={'PK Models'} project={project} disableSave={disableSave} />
@@ -135,10 +143,8 @@ function SelectedItem({ project }) {
     selector = selectProtocolById
   }
   const item = useSelector((state) => selector ? selector(state, id) : null)
-  if (!id || !type) {
-    return ('choose an item')
-  }
-  if (!item) {
+  
+  if (type && !item) {
     return (
       <CircularProgress />
     )
@@ -148,30 +154,23 @@ function SelectedItem({ project }) {
     itemDetail = (
       <DatasetDetail dataset={item} project={project} />
     )
-  }
-  if (type == 'pk_model') {
+  } else if (type == 'pk_model') {
     itemDetail = (
       <PkDetail pk_model={item} project={project} />
     )
-  }
-  if (type == 'pd_model') {
+  } else if (type == 'pd_model') {
     itemDetail = (
       <PdDetail pd_model={item} project={project} />
     )
-  }
-  if (type == 'protocol') {
+  } else if (type == 'protocol') {
     itemDetail = (
       <ProtocolDetail protocol={item} project={project} />
     )
+  } else {
+    itemDetail = (
+      <ProjectDetail project={project} />
+    )
   }
-  const loading = item.status
-    ? item.status === "loading"
-    : false;
-  const expandIcon = loading ? (
-    <CircularProgress size={20} />
-  ) : (
-    <ExpandMoreIcon />
-  );
   return itemDetail;
 }
 
@@ -190,9 +189,7 @@ export default function Modelling({project}) {
     <div className={classes.main}>
     <Grid container spacing={1}>
       <Grid item xs={12} md={6} >
-        <Paper className={classes.paperDetail}>
-          <SelectedItem  project={project}/>
-        </Paper>
+        <SelectedItem  project={project}/>
       </Grid>
       <Grid item xs={12} md={6}>
         <Paper className={classes.paperChart}>

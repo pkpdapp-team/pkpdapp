@@ -16,6 +16,7 @@ const useStyles = makeStyles((theme) => ({
     backgroundColor: theme.palette.primary.main,
     position: 'sticky',
     bottom: 0,
+    borderRadius: '0 0 5px 5px',
   }
 }));
 
@@ -54,7 +55,7 @@ export default function Footer({ buttons, disableSave, variant }) {
   };
 
   return (
-    <Paper className={classes.toolbar} elevation={3}>
+    <Paper className={classes.toolbar} elevation={0}>
       <Toolbar className={classes.controls} variant='dense'>
         {buttons.map(createButton)}
       </Toolbar>

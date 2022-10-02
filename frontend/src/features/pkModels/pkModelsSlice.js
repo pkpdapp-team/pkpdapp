@@ -6,6 +6,7 @@ import {
 
 import { api } from "../../Api";
 import { fetchVariablesByPkModel } from "../variables/variablesSlice";
+import { setSelected } from "../modelling/modellingSlice";
 import { fetchUnitsByPkModel } from "../projects/unitsSlice";
 
 export const pkModelsAdapter = createEntityAdapter({
@@ -55,7 +56,11 @@ export const fetchPkModelSimulateById = createAsyncThunk(
 
 export const deletePkModel = createAsyncThunk(
   "pkModels/deletePkModel",
-  async (pkModelId, { dispatch }) => {
+  async (pkModelId, { dispatch, getState }) => {
+    let { modelling } = getState() 
+    if (modelling.selectedType === 'pk_model' && modelling.selectedId === pkModelId) {
+      await dispatch(setSelected({id: null, type: null}))
+    }
     await api.delete(`/api/dosed_pharmacokinetic/${pkModelId}`);
     return pkModelId;
   }

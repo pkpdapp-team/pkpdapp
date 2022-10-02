@@ -62,7 +62,6 @@ function InferenceMenu({ project }) {
 
   return (
     <List>
-      <Inferences project={project} disableSave={disableSave} />
     </List>
   );
 }

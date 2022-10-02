@@ -36,7 +36,6 @@ export default function AvatarListItem({
   checked,
   loading,
 }) {
-  console.log('avatarlistitem', item, selected, checked)
   const classes = useStyles();
   const avatarClassName = classNames(
     small ? classes.avatarSmall : null,

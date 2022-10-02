@@ -4,6 +4,7 @@ import { useSelector } from "react-redux";
 import { makeStyles } from "@material-ui/core/styles";
 
 import { Scatter } from "react-chartjs-2";
+import Header from "../modelling/Header";
 
 import { Chart, registerables, Interaction } from "chart.js";
 import { CrosshairPlugin, Interpolate } from "chartjs-plugin-crosshair";

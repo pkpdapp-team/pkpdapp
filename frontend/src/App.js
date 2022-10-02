@@ -46,7 +46,7 @@ import ChevronLeftIcon from "@material-ui/icons/ChevronLeft";
 import { api } from "./Api";
 import InferenceMenu from "./features/menu/InferenceMenu";
 import Projects from "./features/projects/Projects";
-import ProjectDetail from "./features/projects/ProjectDetail";
+import Project from "./features/projects/Project";
 
 
 import { fetchAlgorithms } from "./features/inference/algorithmsSlice.js";
@@ -275,7 +275,7 @@ export default function App() {
   let ncaPath  = ''
   let isNcaPath = false
   if (matchProject) {
-    modellingPath = `/${matchProject.params.id}/simulation`;
+    modellingPath = `/${matchProject.params.id}`;
     isModellingPath = !!matchPath(pathname, {
       path: modellingPath,
       exact: true,
@@ -389,7 +389,7 @@ export default function App() {
               renders the first one that matches the current URL. */}
         <Container maxWidth={false} className={classes.container}>
         <Switch>
-          <PrivateRoute path="/:id" component={ProjectDetail} />
+          <PrivateRoute path="/:id" component={Project} />
           <PrivateRoute path="/" component={Projects} />
         </Switch>
         </Container>

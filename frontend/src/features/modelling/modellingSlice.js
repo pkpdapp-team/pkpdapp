@@ -44,6 +44,28 @@ export const selectItem = createAsyncThunk(
   }
 );
 
+export const clearSelectItem = createAsyncThunk(
+  "modelling/clearSelectItem",
+  async (arg, { dispatch, getState }) => {
+    console.log('clearSelectItem')
+    const { modelling } = getState();
+    // turn off old select
+    if (modelling.selectedType == 'dataset') {
+      dispatch(setSelectDataset({id: modelling.selectedId, select: false}))
+    }
+    if (modelling.selectedType == 'pk_model') {
+      dispatch(setSelectPkModel({id: modelling.selectedId, select: false})) 
+    }
+    if (modelling.selectedType == 'pd_model') {
+      dispatch(setSelectPdModel({id: modelling.selectedId, select: false})) 
+    }
+    if (modelling.selectedType == 'protocol') {
+      dispatch(setSelectProtocol({id: modelling.selectedId, select: false})) 
+    }
+    return {id: null, type: null}
+  }
+);
+
 export const modellingSlice = createSlice({
   name: 'modelling',
   initialState: {
@@ -51,17 +73,25 @@ export const modellingSlice = createSlice({
     selectedId: null,
   },
   reducers: {
+    setSelected(state, action) {
+      state.selectedType = action.payload.type
+      state.selectedId = action.payload.id
+    },
   },
   extraReducers: {
     [selectItem.fulfilled]: (state, action) => {
       state.selectedType = action.payload.type
       state.selectedId = action.payload.id
     },
+    [clearSelectItem.fulfilled]: (state, action) => {
+      state.selectedType = null
+      state.selectedId = null
+    },
   },
 })
 
 // Action creators are generated for each case reducer function
-export const { select } = modellingSlice.actions
+export const { setSelected } = modellingSlice.actions
 
 export function selectSelected(state, type) {
   // turn off old selection

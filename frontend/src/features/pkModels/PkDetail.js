@@ -56,7 +56,7 @@ const useStyles = makeStyles((theme) => ({
     color: theme.palette.primary.contrastText,
   },
   root: {
-    width: "100%",
+    maxHeight: '75vh', overflow: 'auto',
     padding: theme.spacing(2),
   },
   paper: {
@@ -173,6 +173,7 @@ export default function PkDetail({ project, pk_model }) {
   const disableSave = userHasReadOnlyAccess(project);
 
   return (
+    <Paper>
     <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
       <Header title={`PK Model: ${pk_model.name}`}/>
 
@@ -293,5 +294,6 @@ export default function PkDetail({ project, pk_model }) {
         ]}
       />
     </form>
+    </Paper>
   );
 }

@@ -5,6 +5,7 @@ import {
 } from "@reduxjs/toolkit";
 import { fetchBiomarkerTypesByProject } from "./biomarkerTypesSlice";
 import { fetchSubjectByProject, fetchSubjectByDataset } from "./subjectsSlice";
+import { setSelected } from "../modelling/modellingSlice";
 import { api } from "../../Api";
 
 const datasetsAdapter = createEntityAdapter({
@@ -30,7 +31,11 @@ export const fetchDatasets = createAsyncThunk(
 
 export const deleteDataset = createAsyncThunk(
   "datasets/deleteDataset",
-  async (datasetId, { dispatch }) => {
+  async (datasetId, { dispatch, getState }) => {
+    let { modelling } = getState() 
+    if (modelling.selectedType == 'dataset' && modelling.selectedId == datasetId) {
+      await dispatch(setSelected({id: null, type: null}))
+    }
     await api.delete(`/api/dataset/${datasetId}`);
     return datasetId;
   }

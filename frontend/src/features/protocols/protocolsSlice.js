@@ -4,6 +4,7 @@ import {
   createAsyncThunk,
 } from "@reduxjs/toolkit";
 import { api } from "../../Api";
+import { setSelected } from "../modelling/modellingSlice";
 import { fetchPkModelById } from "../pkModels/pkModelsSlice";
 
 const protocolsAdapter = createEntityAdapter({
@@ -38,7 +39,11 @@ export const addNewProtocol = createAsyncThunk(
 
 export const deleteProtocol = createAsyncThunk(
   "protocols/deleteProtocol",
-  async (protocolId, { dispatch }) => {
+  async (protocolId, { dispatch, getState }) => {
+    let { modelling } = getState() 
+    if (modelling.selectedType === 'protocol' && modelling.selectedId === protocolId) {
+      await dispatch(setSelected({id: null, type: null}))
+    }
     await api.delete(`/api/protocol/${protocolId}`);
     return protocolId;
   }

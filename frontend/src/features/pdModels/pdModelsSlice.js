@@ -5,6 +5,7 @@ import {
 } from "@reduxjs/toolkit";
 import { api } from "../../Api";
 import { fetchVariablesByPdModel } from "../variables/variablesSlice";
+import { setSelected } from "../modelling/modellingSlice";
 import { fetchUnitsByPdModel } from "../projects/unitsSlice";
 
 const pdModelsAdapter = createEntityAdapter({
@@ -68,7 +69,11 @@ export const addNewPdModel = createAsyncThunk(
 
 export const deletePdModel = createAsyncThunk(
   "pdModels/deletePdModel",
-  async (pdModelId, { dispatch }) => {
+  async (pdModelId, { dispatch, getState }) => {
+    let { modelling } = getState() 
+    if (modelling.selectedType === 'pd_model' && modelling.selectedId === pdModelId) {
+      await dispatch(setSelected({id: null, type: null}))
+    }
     await api.delete(`/api/pharmacodynamic/${pdModelId}`);
     return pdModelId;
   }

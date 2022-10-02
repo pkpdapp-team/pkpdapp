@@ -9,6 +9,8 @@ const useStyles = makeStyles((theme) => ({
     backgroundColor: theme.palette.primary.main,
     position: 'sticky',
     top: 0,
+    borderRadius: '5px 5px 0 0',
+    zIndex: 10,
   },
   header: {
     fontWeight:'bold',
@@ -19,7 +21,7 @@ const useStyles = makeStyles((theme) => ({
 export default function Header({ title }) {
   const classes = useStyles();
   return (
-    <Paper className={classes.topToolbar} elevation={3}>
+    <Paper className={classes.topToolbar} elevation={0}>
       <Toolbar className={classes.controls} variant='dense'>
         <Typography variant='h6' className={classes.header}>{title}</Typography>
       </Toolbar>

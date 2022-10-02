@@ -44,6 +44,7 @@ const useStyles = makeStyles((theme) => ({
   root: {
     width: "100%",
     padding: theme.spacing(2),
+    maxHeight: '75vh', overflow: 'auto'
   },
   paper: {
     padding: theme.spacing(2)
@@ -93,6 +94,7 @@ export default function PdDetail({ project, pd_model }) {
   const disableSave = userHasReadOnlyAccess(project);
 
   return (
+    <Paper>
     <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
       <Header title={`PD Model: ${pd_model.name}`} />
       <Box className={classes.root}>
@@ -153,5 +155,6 @@ export default function PdDetail({ project, pd_model }) {
         ]}
       />
     </form>
+    </Paper>
   );
 }

@@ -2,6 +2,7 @@ import React, { useEffect, useSelector } from "react";
 import { useDispatch } from "react-redux";
 import Button from "@material-ui/core/Button";
 import Grid from "@material-ui/core/Grid";
+import Box from "@material-ui/core/Box";
 import Alert from "@material-ui/lab/Alert";
 import { useForm } from "react-hook-form";
 import { makeStyles } from "@material-ui/core/styles";
@@ -11,9 +12,12 @@ import ListItem from "@material-ui/core/ListItem";
 
 import Accordion from "@material-ui/core/Accordion";
 import AccordionSummary from "@material-ui/core/AccordionSummary";
+import Paper from "@material-ui/core/Paper";
 import AccordionDetails from "@material-ui/core/AccordionDetails";
 import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
 
+import Header from "../modelling/Header";
+import Footer from "../modelling/Footer";
 import SubjectsTable from "./SubjectsTable";
 import BiomarkerTypeSubform from "./BiomarkerTypeSubform";
 
@@ -27,12 +31,13 @@ import {
 import { FormTextField, FormDateTimeField } from "../forms/FormComponents";
 
 const useStyles = makeStyles((theme) => ({
-  controlsRoot: {
-    display: "flex",
-    alignItems: "center",
+  root: {
+    width: "100%",
+    padding: theme.spacing(2),
+    maxHeight: '75vh', overflow: 'auto'
   },
-  controls: {
-    margin: theme.spacing(1),
+  paper: {
+    padding: theme.spacing(2)
   },
 }));
 
@@ -64,7 +69,10 @@ export default function DatasetDetail({ project, dataset }) {
   const disableSave = userHasReadOnlyAccess(project);
 
   return (
+    <Paper>
     <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
+      <Header title={`Dataset: ${dataset.name}`} />
+      <Box className={classes.root}>
       <FormTextField
         control={control}
         defaultValue={dataset.name}
@@ -98,38 +106,22 @@ export default function DatasetDetail({ project, dataset }) {
           <SubjectsTable dataset={dataset} disableSave={disableSave}/>
         </Grid>
       </Grid>
-      <Button
-        type="submit"
-        variant="contained"
-        disabled={disableSave}
-        className={classes.button}
-      >
-        Save
-      </Button>
-      <Button
-        className={classes.controls}
-        variant="contained"
-        onClick={handleDatasetDelete}
-        disabled={disableSave}
-      >
-        Delete
-      </Button>
 
-      <Button
-        className={classes.controls}
-        component="label"
-        variant="contained"
-        disabled={disableSave}
-      >
-        Upload CSV file
-        <input type="file" hidden accept=".csv" onChange={handleFileUpload} />
-      </Button>
       {dataset.errors &&
         dataset.errors.map((error, index) => (
           <Alert key={index} severity="error">
             {error}
           </Alert>
         ))}
+      </Box>
+      <Footer
+        buttons={[
+          {label: 'Save', handle: handleSubmit(onSubmit)},
+          {label: 'Delete', handle: handleDatasetDelete},
+          {label: 'Upload CSV file', handle: handleFileUpload, variant: 'fileUpload'},
+        ]}
+      />
     </form>
+    </Paper>
   );
 }

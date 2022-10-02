@@ -30,6 +30,7 @@ import { addNewDataset, selectDatasetById, selectDatasetIds, toggleDataset } fro
 import { addNewPkModel, selectPkModelById, selectPkModelIds, selectWritablePkModelIds, togglePkModel } from "../pkModels/pkModelsSlice.js";
 import { addNewPdModel, selectPdModelById, selectPdModelIds, selectWritablePdModelIds, togglePdModel } from "../pdModels/pdModelsSlice.js";
 import { addNewProtocol, selectProtocolById, selectProtocolIds, toggleProtocol } from "../protocols/protocolsSlice.js";
+import { addNewInference, selectInferenceById, selectInferenceIds } from "../inference/inferenceSlice";
 
 const useStyles = makeStyles((theme) => ({
   avatarPlusSmall: {

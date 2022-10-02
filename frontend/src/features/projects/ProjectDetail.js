@@ -13,6 +13,7 @@ import {
 
 import { useSelector, useDispatch } from "react-redux";
 import Button from "@material-ui/core/Button";
+import Box from "@material-ui/core/Box";
 import Paper from "@material-ui/core/Paper";
 import { useForm } from "react-hook-form";
 import { makeStyles } from "@material-ui/core/styles";
@@ -24,6 +25,8 @@ import Inference from "../inference/Inference";
 import Nca from "../dataAnalysis/Nca";
 import Auce from "../dataAnalysis/Auce";
 import Modelling from "../modelling/Modelling";
+import Header from "../modelling/Header";
+import Footer from "../modelling/Footer";
 
 import {
   FormTextField,
@@ -74,7 +77,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-function ProjectForm({ project }) {
+export default function ProjectDetail({ project }) {
   const classes = useStyles();
   const users = useSelector(selectAllUsers);
   const userEntities = useSelector((state) => state.users.entities);
@@ -100,7 +103,10 @@ function ProjectForm({ project }) {
     dispatch(updateProject(values));
   };
   return (
+    <Paper>
     <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
+      <Header title={`Project: ${project.name}`} />
+      <Box className={classes.root}>
       <FormTextField
         control={control}
         defaultValue={project.name}
@@ -143,69 +149,16 @@ function ProjectForm({ project }) {
         name="description"
         label="Description"
       />
-      <div className={classes.controlsRoot}>
-        <Button
-          type="submit"
-          variant="contained"
-          className={classes.controls}
-          disabled={disableSave}
-        >
-          Save
-        </Button>
-        <Button
-          variant="contained"
-          className={classes.controls}
-          onClick={handleDeleteProject}
-          disabled={disableSave}
-        >
-          Delete
-        </Button>
-      </div>
+      </Box>
+      <Footer
+        buttons={[
+          {label: 'Save', handle: handleSubmit(onSubmit)},
+          {label: 'Delete', handle: handleDeleteProject},
+        ]}
+      />
     </form>
+    </Paper>
   )
 }
 
-export default function ProjectDetail() {
-  let { id } = useParams();
-  let { path, url } = useRouteMatch();
-  const project = useSelector((state) => selectProjectById(state, id));
-  const classes = useStyles();
-  const dispatch = useDispatch();
 
-  useEffect(() => {
-    dispatch(fetchDatasets(id));
-    dispatch(fetchPkModels(id));
-    dispatch(fetchPdModels(id));
-    dispatch(fetchBasePkModels(id));
-    dispatch(fetchVariables(id));
-    dispatch(fetchProtocols(id));
-    dispatch(fetchUnits(id));
-    dispatch(fetchInferences(id));
-  }, [id]);
-
-  if (!project) {
-    return (<CircularProgress />)
-  }
-
-  return (
-    <Switch>
-      <Route exact path={path}>
-        <Paper className={classes.paper}>
-          <ProjectForm project={project} />
-        </Paper>
-      </Route>
-      <Route path={`${path}/simulation`}>
-        <Modelling project={project}/>
-      </Route>
-      <Route path={`${path}/auce`}>
-        <Auce project={project}/>
-      </Route>
-      <Route path={`${path}/nca`}>
-        <Nca project={project}/>
-      </Route>
-      <Route path={`${path}/inference`}>
-        <Inference project={project}/>
-      </Route>
-    </Switch>
-  );
-}
