@@ -59,9 +59,9 @@ export const updateProtocol = createAsyncThunk(
         ...dose,
       };
       if (dose.id) {
-        return api.put(`api/dose/${dose.id}/`, data);
+        return api.put(`/api/dose/${dose.id}/`, data);
       } else {
-        return api.post(`api/dose/`, data);
+        return api.post(`/api/dose/`, data);
       }
     });
     const dose_ids = await Promise.all(dosePromises).then((doses) =>

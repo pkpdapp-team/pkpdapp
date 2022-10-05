@@ -62,6 +62,7 @@ export const addNewPdModel = createAsyncThunk(
 
     dispatch(fetchVariablesByPdModel(pdModel.id));
     dispatch(fetchUnitsByPdModel(pdModel.id));
+    dispatch(fetchPdModelSimulateById(pdModel.id));
 
     return pdModel;
   }

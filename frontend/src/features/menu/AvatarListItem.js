@@ -63,6 +63,7 @@ export default function AvatarListItem({
       <ListItem button selected={selected} className={itemClassName} onClick={handleClick}>
         <Box mr={marginAdjust}>{avatar}</Box>
         <ListItemText primary={item.name} primaryTypographyProps={{noWrap: true}}/>
+        {handleToggle &&
         <ListItemSecondaryAction>
           <Checkbox
             edge="end"
@@ -70,6 +71,7 @@ export default function AvatarListItem({
             checked={checked}
           />
         </ListItemSecondaryAction>
+        }
       </ListItem>
     </Tooltip>
   );

@@ -19,6 +19,7 @@ const inferencesAdapter = createEntityAdapter({
 const initialState = inferencesAdapter.getInitialState({
   status: "idle",
   errorFetch: null,
+  selectedId: null,
 });
 
 const variable = new schema.Entity("variables");

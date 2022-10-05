@@ -22,8 +22,6 @@ import CircularProgress from "@material-ui/core/CircularProgress";
 import ListItem from "@material-ui/core/ListItem";
 
 import Inference from "../inference/Inference";
-import Nca from "../dataAnalysis/Nca";
-import Auce from "../dataAnalysis/Auce";
 import Modelling from "../modelling/Modelling";
 import Header from "../modelling/Header";
 import Footer from "../modelling/Footer";

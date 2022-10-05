@@ -270,10 +270,6 @@ export default function App() {
   let isModellingPath = false
   let inferencePath = ''
   let isInferencePath = false
-  let aucePath = ''
-  let isAucePath = false
-  let ncaPath  = ''
-  let isNcaPath = false
   if (matchProject) {
     modellingPath = `/${matchProject.params.id}`;
     isModellingPath = !!matchPath(pathname, {
@@ -283,15 +279,8 @@ export default function App() {
     inferencePath = `/${matchProject.params.id}/inference`;
     isInferencePath = !!matchPath(pathname, {
       path: inferencePath,
-      exact: true,
     });
-    ncaPath = `/${matchProject.params.id}/nca`;
-    isNcaPath = !!matchPath(pathname, { path: ncaPath, exact: true });
-    aucePath = `/${matchProject.params.id}/auce`;
-    isAucePath = !!matchPath(pathname, { path: aucePath, exact: true });
   }
-  console.log('path', pathname, isRootPath, isAucePath)
-
   const logged_in = (
     <div className={classes.root}>
       <AppBar position="absolute" className={clsx(classes.appBar)}>
@@ -341,24 +330,6 @@ export default function App() {
             >
               Workbench 
             </Button>
-            <Button
-              component={Link}
-              to={ncaPath}
-              variant="contained"
-              color={isNcaPath ? "secondary" : "primary"}
-            >
-              NCA
-            </Button>
-
-            <Button
-              component={Link}
-              to={aucePath}
-              variant="contained"
-              color={isAucePath ? "secondary" : "primary"}
-            >
-              AUCE
-            </Button>
-
             
             <Button
               component={Link}
@@ -366,7 +337,7 @@ export default function App() {
               variant="contained"
               color={isInferencePath ? "secondary" : "primary"}
             >
-              Inference
+              Inferences
             </Button>
           </ButtonGroup>
           </React.Fragment>

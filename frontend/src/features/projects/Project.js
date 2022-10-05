@@ -20,9 +20,8 @@ import List from "@material-ui/core/List";
 import CircularProgress from "@material-ui/core/CircularProgress";
 import ListItem from "@material-ui/core/ListItem";
 
+import Inferences from "../inference/Inferences";
 import Inference from "../inference/Inference";
-import Nca from "../dataAnalysis/Nca";
-import Auce from "../dataAnalysis/Auce";
 import Modelling from "../modelling/Modelling";
 import Header from "../modelling/Header";
 import Footer from "../modelling/Footer";
@@ -91,14 +90,11 @@ export default function Project() {
       <Route exact path={path}>
        <Modelling project={project}/>
       </Route>
-      <Route path={`${path}/auce`}>
-        <Auce project={project}/>
-      </Route>
-      <Route path={`${path}/nca`}>
-        <Nca project={project}/>
+      <Route path={`${path}/inference/:id`}>
+        <Inference project={project} />
       </Route>
       <Route path={`${path}/inference`}>
-        <Inference project={project}/>
+        <Inferences project={project}/>
       </Route>
     </Switch>
   );

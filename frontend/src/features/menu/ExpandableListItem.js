@@ -25,12 +25,12 @@ import AddIcon from "@material-ui/icons/Add";
 
 import AvatarListItem from "./AvatarListItem";
 
-import { selectItem } from "../modelling/modellingSlice"
+import { selectItem as selectModellingItem } from "../modelling/modellingSlice"
 import { addNewDataset, selectDatasetById, selectDatasetIds, toggleDataset } from "../datasets/datasetsSlice.js";
 import { addNewPkModel, selectPkModelById, selectPkModelIds, selectWritablePkModelIds, togglePkModel } from "../pkModels/pkModelsSlice.js";
 import { addNewPdModel, selectPdModelById, selectPdModelIds, selectWritablePdModelIds, togglePdModel } from "../pdModels/pdModelsSlice.js";
 import { addNewProtocol, selectProtocolById, selectProtocolIds, toggleProtocol } from "../protocols/protocolsSlice.js";
-import { addNewInference, selectInferenceById, selectInferenceIds } from "../inference/inferenceSlice";
+import { addNewInference, selectInferenceById, selectInferenceIds, toggleInference } from "../inference/inferenceSlice";
 
 const useStyles = makeStyles((theme) => ({
   avatarPlusSmall: {
@@ -48,7 +48,7 @@ function GenericListItem({id, type, selector, handleToggle, handleClickItem}) {
   const loading = item.status ? item.status === "loading" : false;
   const simulateLoading = item.simulate
     ? item.simulate.status === "loading"
-    : type === "pd_model" || type === "pk_model" || type === "pkpd_model";
+    : false;
 
     return (
       <AvatarListItem
@@ -58,7 +58,7 @@ function GenericListItem({id, type, selector, handleToggle, handleClickItem}) {
         checked={item.chosen}
         loading={loading | simulateLoading}
         small={true}
-        handleToggle={() => handleToggle(item)}
+        handleToggle={handleToggle ? () => handleToggle(item) : null}
         handleClick={() => handleClickItem(item)}
       />
     );
@@ -84,6 +84,7 @@ export default function ExpandableListItem({
   let Icon = null
   let toggle = null
   let addNew = null
+  let selectItem = selectModellingItem
   if (type == 'dataset') {
     selectorById  = selectDatasetById
     selector = selectDatasetIds
@@ -112,9 +113,16 @@ export default function ExpandableListItem({
     toggle = toggleProtocol
     addNew = addNewProtocol
   }
+  if (type == 'inference') {
+    selector = selectInferenceIds
+    selectorById  = selectInferenceById
+    Icon = AccessibilityIcon
+    toggle = null
+    addNew = addNewInference
+  }
 
   const ids = useSelector(selector);
-  const handleToggle = (item) => dispatch(toggle(item))
+  const handleToggle = toggle ? (item) => dispatch(toggle(item)) : null
   const handleClickItem = (item) => {
     dispatch(selectItem({type: type, id: item.id}));
   }
