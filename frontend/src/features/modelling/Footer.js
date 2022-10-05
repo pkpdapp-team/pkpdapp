@@ -28,6 +28,7 @@ export default function Footer({ buttons, disableSave, variant }) {
       return (
         <Button 
           key={i}
+          component="label"
           variant="contained" 
         >
           {button.label}

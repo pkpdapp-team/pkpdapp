@@ -10,7 +10,6 @@ const useStyles = makeStyles((theme) => ({
     position: 'relative',
     margin: 'auto',
     height: '60vh',
-    width: '60vw',
   },
 }));
 

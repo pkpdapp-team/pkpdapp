@@ -11,7 +11,6 @@ const useStyles = makeStyles((theme) => ({
     position: 'relative',
     margin: 'auto',
     height: '29vh',
-    width: '60vw',
   },
 }));
 

@@ -57,6 +57,8 @@ const useStyles = makeStyles((theme) => ({
     color: theme.palette.primary.contrastText,
     borderBottom: 1,
     borderColor: 'divider',
+  },
+  dialogFooter: {
   }
 }));
 
@@ -112,7 +114,7 @@ function DataAnalysisDialog({ project, onClose, dataset, open }) {
       <TabPanel className={classes.rootTab} value={value} index={1}>
         <AuceDetail project={project} dataset={dataset} />
       </TabPanel>
-      <DialogActions>
+      <DialogActions className={classes.dialogFooter}>
         <Button onClick={handleClose} autoFocus>
           Close
         </Button>
@@ -145,6 +147,7 @@ export default function DatasetDetail({ project, dataset }) {
   };
 
   const handleFileUpload = (event) => {
+    console.log(event)
     const files = Array.from(event.target.files);
     const [file] = files;
     dispatch(uploadDatasetCsv({ id: dataset.id, csv: file }));
