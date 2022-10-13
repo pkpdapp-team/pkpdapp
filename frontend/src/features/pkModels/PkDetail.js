@@ -2,14 +2,20 @@ import React, { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import Button from "@material-ui/core/Button";
 import List from "@material-ui/core/List";
+import Box from "@material-ui/core/Box";
 import IconButton from "@material-ui/core/IconButton";
 import Grid from "@material-ui/core/Grid";
 import ListItem from "@material-ui/core/ListItem";
 import Accordion from "@material-ui/core/Accordion";
 import AccordionSummary from "@material-ui/core/AccordionSummary";
 import AccordionDetails from "@material-ui/core/AccordionDetails";
+import Paper from "@material-ui/core/Paper";
 import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
 import AddIcon from "@material-ui/icons/Add";
+import AppBar from "@material-ui/core/AppBar";
+import BottomNavigation from "@material-ui/core/BottomNavigation";
+import BottomNavigationAction from "@material-ui/core/BottomNavigationAction";
+import Toolbar from "@material-ui/core/Toolbar";
 import DeleteIcon from "@material-ui/icons/Delete";
 
 import { useForm, useFieldArray } from "react-hook-form";
@@ -17,6 +23,8 @@ import { makeStyles } from "@material-ui/core/styles";
 import Typography from "@material-ui/core/Typography";
 
 import ComponentForm from "../forms/ComponentForm";
+import Header from "../modelling/Header";
+import Footer from "../modelling/Footer";
 import { FormTextField, FormSelectField } from "../forms/FormComponents";
 
 import { selectAllBasePkModels } from "../pkModels/basePkModelsSlice.js";
@@ -38,17 +46,32 @@ import {
 
 
 const useStyles = makeStyles((theme) => ({
+  topToolbar: {
+    backgroundColor: theme.palette.primary.main,
+    position: 'sticky',
+    top: 0,
+  },
+  header: {
+    fontWeight:'bold',
+    color: theme.palette.primary.contrastText,
+  },
   root: {
-    width: "100%",
+    maxHeight: '75vh', overflow: 'auto',
+    padding: theme.spacing(2),
+  },
+  paper: {
+    padding: theme.spacing(2)
   },
   components: {
     width: "100%",
   },
+  toolbar: {
+    backgroundColor: theme.palette.primary.main,
+    position: 'sticky',
+    bottom: 0,
+  },
   controls: {
-    display: "flex",
-    alignItems: "center",
-    paddingLeft: theme.spacing(1),
-    paddingBottom: theme.spacing(1),
+    justifyContent: 'center',
     "& > *": {
       margin: theme.spacing(1),
     },
@@ -150,8 +173,11 @@ export default function PkDetail({ project, pk_model }) {
   const disableSave = userHasReadOnlyAccess(project);
 
   return (
-    <div className={classes.root}>
+    <Paper>
     <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
+      <Header title={`PK Model: ${pk_model.name}`}/>
+
+      <Box className={classes.root}>
       <Grid container spacing={1}>
       <Grid item xs={12}>
       <FormTextField
@@ -216,31 +242,23 @@ export default function PkDetail({ project, pk_model }) {
 
       <Grid item xs={12}>
       <Typography>Components</Typography>
-      <List>
-        {pk_model.components.map((component, index) => {
-          return (
-            <ListItem key={index} role={undefined} dense>
-              <div className={classes.components}>
-                <Accordion>
-                  <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                    <Typography className={classes.heading}>
-                      {component.name === "myokit" ? "root" : component.name}
-                    </Typography>
-                  </AccordionSummary>
-                  <AccordionDetails>
-                    <ComponentForm
-                      control={control}
-                      component={component}
-                      disableSave={disableSave}
-                    />
-                  </AccordionDetails>
-                </Accordion>
-              </div>
-            </ListItem>
-          );
-        })}
-      </List>
       </Grid>
+      {pk_model.components.map((component, index) => {
+        return (
+          <Grid item xs={12}>
+          <Paper key={index} variant={'outlined'} className={classes.paper}>
+            <Typography className={classes.heading} variant='h5' gutterBottom component="div">
+                    {component.name === "myokit" ? "root" : component.name}
+            </Typography>
+            <ComponentForm
+              control={control}
+              component={component}
+              disableSave={disableSave}
+            />
+          </Paper>
+          </Grid>
+        );
+      })}
 
       <Grid item xs={6}>
       <FormSelectField
@@ -267,20 +285,15 @@ export default function PkDetail({ project, pk_model }) {
       />
       </Grid>
       </Grid>
+      </Box>
 
-      <div className={classes.controls}>
-        <Button type="submit" variant="contained" disabled={disableSave}>
-          Save
-        </Button>
-        <Button
-          variant="contained"
-          onClick={handlePkDelete}
-          disabled={disableSave}
-        >
-          Delete
-        </Button>
-      </div>
+      <Footer
+        buttons={[
+          {label: 'Save', handle: handleSubmit(onSubmit)},
+          {label: 'Delete', handle: handlePkDelete},
+        ]}
+      />
     </form>
-    </div>
+    </Paper>
   );
 }

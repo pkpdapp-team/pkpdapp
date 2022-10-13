@@ -4,6 +4,7 @@ import {
   createAsyncThunk,
 } from "@reduxjs/toolkit";
 import { api } from "../../Api";
+import { setSelected } from "../modelling/modellingSlice";
 import { fetchPkModelById } from "../pkModels/pkModelsSlice";
 
 const protocolsAdapter = createEntityAdapter({
@@ -17,8 +18,8 @@ const initialState = protocolsAdapter.getInitialState({
 
 export const fetchProtocols = createAsyncThunk(
   "protocols/fetchProtocols",
-  async (project, { getState }) => {
-    const response = await api.get(`/api/protocol/?project_id=${project.id}`);
+  async (project_id, { getState }) => {
+    const response = await api.get(`/api/protocol/?project_id=${project_id}`);
     return response;
   }
 );
@@ -32,14 +33,17 @@ export const addNewProtocol = createAsyncThunk(
       project: project.id,
     };
     let protocol = await api.post("/api/protocol/", initialProtocol);
-    protocol.chosen = true;
     return protocol;
   }
 );
 
 export const deleteProtocol = createAsyncThunk(
   "protocols/deleteProtocol",
-  async (protocolId, { dispatch }) => {
+  async (protocolId, { dispatch, getState }) => {
+    let { modelling } = getState() 
+    if (modelling.selectedType === 'protocol' && modelling.selectedId === protocolId) {
+      await dispatch(setSelected({id: null, type: null}))
+    }
     await api.delete(`/api/protocol/${protocolId}`);
     return protocolId;
   }
@@ -55,9 +59,9 @@ export const updateProtocol = createAsyncThunk(
         ...dose,
       };
       if (dose.id) {
-        return api.put(`api/dose/${dose.id}/`, data);
+        return api.put(`/api/dose/${dose.id}/`, data);
       } else {
-        return api.post(`api/dose/`, data);
+        return api.post(`/api/dose/`, data);
       }
     });
     const dose_ids = await Promise.all(dosePromises).then((doses) =>
@@ -97,6 +101,10 @@ export const protocolsSlice = createSlice({
       let protocol = state.entities[action.payload.id];
       protocol.chosen = !protocol.chosen;
     },
+    setSelectProtocol(state, action) {
+      let protocol = state.entities[action.payload.id];
+      protocol.selected = action.payload.select;
+    },
   },
   extraReducers: {
     [fetchProtocols.pending]: (state, action) => {
@@ -124,7 +132,7 @@ export const protocolsSlice = createSlice({
   },
 });
 
-export const { toggleProtocol } = protocolsSlice.actions;
+export const { toggleProtocol, setSelectProtocol } = protocolsSlice.actions;
 
 export default protocolsSlice.reducer;
 

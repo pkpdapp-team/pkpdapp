@@ -6,6 +6,7 @@ import {
 
 import { api } from "../../Api";
 import { fetchVariablesByPkModel } from "../variables/variablesSlice";
+import { setSelected } from "../modelling/modellingSlice";
 import { fetchUnitsByPkModel } from "../projects/unitsSlice";
 
 export const pkModelsAdapter = createEntityAdapter({
@@ -19,9 +20,9 @@ const initialState = pkModelsAdapter.getInitialState({
 
 export const fetchPkModels = createAsyncThunk(
   "pkModels/fetchPkModels",
-  async (project, { dispatch }) => {
+  async (project_id, { dispatch }) => {
     const response = await api.get(
-      `/api/dosed_pharmacokinetic/?project_id=${project.id}`
+      `/api/dosed_pharmacokinetic/?project_id=${project_id}`
     );
     for (var i = 0; i < response.length; i++) {
       if (!response[i].read_only) {
@@ -55,7 +56,11 @@ export const fetchPkModelSimulateById = createAsyncThunk(
 
 export const deletePkModel = createAsyncThunk(
   "pkModels/deletePkModel",
-  async (pkModelId, { dispatch }) => {
+  async (pkModelId, { dispatch, getState }) => {
+    let { modelling } = getState() 
+    if (modelling.selectedType === 'pk_model' && modelling.selectedId === pkModelId) {
+      await dispatch(setSelected({id: null, type: null}))
+    }
     await api.delete(`/api/dosed_pharmacokinetic/${pkModelId}`);
     return pkModelId;
   }
@@ -73,7 +78,6 @@ export const addNewPkModel = createAsyncThunk(
     dispatch(fetchVariablesByPkModel(pkModel.id));
     dispatch(fetchUnitsByPkModel(pkModel.id));
     dispatch(fetchPkModelSimulateById(pkModel.id));
-    pkModel.chosen = true;
     return pkModel;
   }
 );
@@ -109,6 +113,10 @@ export const pkModelsSlice = createSlice({
     togglePkModel(state, action) {
       let pkModel = state.entities[action.payload.id];
       pkModel.chosen = !pkModel.chosen;
+    },
+    setSelectPkModel(state, action) {
+      let pkModel = state.entities[action.payload.id];
+      pkModel.selected = action.payload.select;
     },
     addPkModels: pkModelsAdapter.upsertMany,
   },
@@ -156,7 +164,7 @@ export const pkModelsSlice = createSlice({
   },
 });
 
-export const { togglePkModel, addPkModels } = pkModelsSlice.actions;
+export const { togglePkModel, setSelectPkModel, addPkModels } = pkModelsSlice.actions;
 
 export default pkModelsSlice.reducer;
 
@@ -171,6 +179,9 @@ export const selectChosenPkModels = (state) =>
 
 export const selectWritablePkModels = (state) =>
   selectAllPkModels(state).filter((pkModel) => !pkModel.read_only);
+
+export const selectWritablePkModelIds = (state) =>
+  selectAllPkModels(state).filter((pkModel) => !pkModel.read_only).map(pkModel => pkModel.id);
 
 export const selectReadOnlyPkModels = (state) =>
   selectAllPkModels(state).filter((pkModel) => pkModel.read_only);

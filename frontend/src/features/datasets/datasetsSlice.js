@@ -5,6 +5,7 @@ import {
 } from "@reduxjs/toolkit";
 import { fetchBiomarkerTypesByProject } from "./biomarkerTypesSlice";
 import { fetchSubjectByProject, fetchSubjectByDataset } from "./subjectsSlice";
+import { setSelected } from "../modelling/modellingSlice";
 import { api } from "../../Api";
 
 const datasetsAdapter = createEntityAdapter({
@@ -18,11 +19,11 @@ const initialState = datasetsAdapter.getInitialState({
 
 export const fetchDatasets = createAsyncThunk(
   "datasets/fetchDatasets",
-  async (project, { dispatch }) => {
-    const response = await api.get(`/api/dataset/?project_id=${project.id}`);
+  async (project_id, { dispatch }) => {
+    const response = await api.get(`/api/dataset/?project_id=${project_id}`);
 
-    dispatch(fetchBiomarkerTypesByProject(project.id));
-    dispatch(fetchSubjectByProject(project.id));
+    dispatch(fetchBiomarkerTypesByProject(project_id));
+    dispatch(fetchSubjectByProject(project_id));
 
     return response;
   }
@@ -30,7 +31,11 @@ export const fetchDatasets = createAsyncThunk(
 
 export const deleteDataset = createAsyncThunk(
   "datasets/deleteDataset",
-  async (datasetId, { dispatch }) => {
+  async (datasetId, { dispatch, getState }) => {
+    let { modelling } = getState() 
+    if (modelling.selectedType == 'dataset' && modelling.selectedId == datasetId) {
+      await dispatch(setSelected({id: null, type: null}))
+    }
     await api.delete(`/api/dataset/${datasetId}`);
     return datasetId;
   }
@@ -44,7 +49,6 @@ export const addNewDataset = createAsyncThunk(
       project: project.id,
     };
     let dataset = await api.post("/api/dataset/", initialDataset);
-    dataset.chosen = true;
     return dataset;
   }
 );
@@ -79,11 +83,21 @@ export const datasetsSlice = createSlice({
       let dataset = state.entities[action.payload.id];
       dataset.chosen = !dataset.chosen;
     },
+    setSelectDataset(state, action) {
+      let dataset = state.entities[action.payload.id];
+      dataset.selected = action.payload.select;
+    },
     toggleProtocol(state, action) {
       const dataset_id = action.payload.dataset
       let dataset = state.entities[dataset_id];
       let protocol = dataset.protocols.find(p => p.id === action.payload.id)
       protocol.chosen = !protocol.chosen;
+    },
+    setSelectDatasetProtocol(state, action) {
+      const dataset_id = action.payload.dataset
+      let dataset = state.entities[dataset_id];
+      let protocol = dataset.protocols.find(p => p.id === action.payload.id)
+      protocol.select = action.payload.select;
     },
     toggleDisplayGroup(state, action) {
       const group = action.payload.group;
@@ -132,7 +146,7 @@ export const datasetsSlice = createSlice({
   },
 });
 
-export const { toggleDataset, toggleProtocol, toggleDisplayGroup: toggleDatasetDisplayGroup } =
+export const { toggleDataset, toggleProtocol, setSelectDataset, toggleDisplayGroup: toggleDatasetDisplayGroup } =
   datasetsSlice.actions;
 
 export default datasetsSlice.reducer;

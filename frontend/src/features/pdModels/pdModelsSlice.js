@@ -5,6 +5,7 @@ import {
 } from "@reduxjs/toolkit";
 import { api } from "../../Api";
 import { fetchVariablesByPdModel } from "../variables/variablesSlice";
+import { setSelected } from "../modelling/modellingSlice";
 import { fetchUnitsByPdModel } from "../projects/unitsSlice";
 
 const pdModelsAdapter = createEntityAdapter({
@@ -18,9 +19,9 @@ const initialState = pdModelsAdapter.getInitialState({
 
 export const fetchPdModels = createAsyncThunk(
   "pdModels/fetchPdModels",
-  async (project, { dispatch }) => {
+  async (project_id, { dispatch }) => {
     let response = await api.get(
-      `/api/pharmacodynamic/?project_id=${project.id}`
+      `/api/pharmacodynamic/?project_id=${project_id}`
     );
     for (var i = 0; i < response.length; i++) {
       if (!response[i].read_only) {
@@ -61,7 +62,7 @@ export const addNewPdModel = createAsyncThunk(
 
     dispatch(fetchVariablesByPdModel(pdModel.id));
     dispatch(fetchUnitsByPdModel(pdModel.id));
-    pdModel.chosen = true;
+    dispatch(fetchPdModelSimulateById(pdModel.id));
 
     return pdModel;
   }
@@ -69,7 +70,11 @@ export const addNewPdModel = createAsyncThunk(
 
 export const deletePdModel = createAsyncThunk(
   "pdModels/deletePdModel",
-  async (pdModelId, { dispatch }) => {
+  async (pdModelId, { dispatch, getState }) => {
+    let { modelling } = getState() 
+    if (modelling.selectedType === 'pd_model' && modelling.selectedId === pdModelId) {
+      await dispatch(setSelected({id: null, type: null}))
+    }
     await api.delete(`/api/pharmacodynamic/${pdModelId}`);
     return pdModelId;
   }
@@ -106,6 +111,10 @@ export const pdModelsSlice = createSlice({
     togglePdModel(state, action) {
       let pdModel = state.entities[action.payload.id];
       pdModel.chosen = !pdModel.chosen;
+    },
+    setSelectPdModel(state, action) {
+      let pdModel = state.entities[action.payload.id];
+      pdModel.selected = action.payload.select;
     },
     setPdModelError(state, action) {
       let pdModel = state.entities[action.payload.id];
@@ -169,7 +178,7 @@ export const pdModelsSlice = createSlice({
   },
 });
 
-export const { togglePdModel, addPdModels } = pdModelsSlice.actions;
+export const { togglePdModel, setSelectPdModel, addPdModels } = pdModelsSlice.actions;
 
 export default pdModelsSlice.reducer;
 
@@ -182,8 +191,12 @@ export const {
 export const selectChosenPdModels = (state) =>
   selectAllPdModels(state).filter((pdModel) => pdModel.chosen);
 
+
 export const selectWritablePdModels = (state) =>
   selectAllPdModels(state).filter((pdModel) => !pdModel.read_only);
+
+export const selectWritablePdModelIds = (state) =>
+  selectAllPdModels(state).filter((pdModel) => !pdModel.read_only).map(pdModel => pdModel.id);
 
 export const selectReadOnlyPdModels = (state) =>
   selectAllPdModels(state).filter((pdModel) => pdModel.read_only);

@@ -25,8 +25,9 @@ If you are interested in developing PKPDApp with us, or just run the app locally
     can start it manually using `sudo -u rabbitmq rabbitmq-server`
     - MacOS-latest:
     ```bash
-    brew install sundials
+    brew install sundials rabbitmq
     ```
+    Note: to restart rabbitmq after an upgrade: brew services restart rabbitmq
     - Windows-latest:
     Sundials will be installed automatically by installing the app.
 

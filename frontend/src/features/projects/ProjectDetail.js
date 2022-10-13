@@ -1,10 +1,30 @@
 import React, { useEffect } from "react";
+import {
+  Switch,
+  Route,
+  useParams,
+  Link,
+  matchPath,
+  useRouteMatch,
+  Redirect,
+  useLocation,
+  useHistory,
+} from "react-router-dom";
+
 import { useSelector, useDispatch } from "react-redux";
 import Button from "@material-ui/core/Button";
+import Box from "@material-ui/core/Box";
+import Paper from "@material-ui/core/Paper";
 import { useForm } from "react-hook-form";
 import { makeStyles } from "@material-ui/core/styles";
 import List from "@material-ui/core/List";
+import CircularProgress from "@material-ui/core/CircularProgress";
 import ListItem from "@material-ui/core/ListItem";
+
+import Inference from "../inference/Inference";
+import Modelling from "../modelling/Modelling";
+import Header from "../modelling/Header";
+import Footer from "../modelling/Footer";
 
 import {
   FormTextField,
@@ -14,6 +34,7 @@ import {
 import { selectAllUsers } from "../projects/usersSlice.js";
 
 import {
+  selectProjectById,
   updateProject,
   chooseProject,
   deleteProject,
@@ -21,6 +42,8 @@ import {
 } from "../projects/projectsSlice.js";
 
 import { fetchDatasets } from "../datasets/datasetsSlice.js";
+
+import { fetchUnits} from "../projects/unitsSlice.js";
 
 import { fetchPkModels } from "../pkModels/pkModelsSlice.js";
 
@@ -54,46 +77,34 @@ const useStyles = makeStyles((theme) => ({
 
 export default function ProjectDetail({ project }) {
   const classes = useStyles();
-  const { control, handleSubmit, reset } = useForm();
-  const dispatch = useDispatch();
   const users = useSelector(selectAllUsers);
   const userEntities = useSelector((state) => state.users.entities);
-
-  useEffect(() => {
-    reset(project);
-  }, [reset, project]);
-
+  const dispatch = useDispatch();
+  const { control, handleSubmit, reset } = useForm();
+  const disableSave = userHasReadOnlyAccess(project);
   const user_options = users.map((user) => ({
     key: user.username,
     value: user.id,
   }));
 
+  useEffect(() => {
+    reset(project);
+  }, [reset, project]);
+
+  const handleDeleteProject = () => {
+    console.log('delete project', project)
+    dispatch(deleteProject(project.id));
+  };
+
   const onSubmit = (values) => {
     console.log("project detail submit", values);
     dispatch(updateProject(values));
   };
-
-  const handleSelectProject = () => {
-    dispatch(chooseProject(project));
-    dispatch(fetchDatasets(project));
-    dispatch(fetchPkModels(project));
-    dispatch(fetchPdModels(project));
-    dispatch(fetchPkModels(project));
-    dispatch(fetchVariables(project));
-    dispatch(fetchBasePkModels(project));
-    dispatch(fetchProtocols(project));
-    dispatch(fetchInferences(project));
-    //dispatch(fetchChains(project));
-  };
-
-  const handleDeleteProject = () => {
-    dispatch(deleteProject(project.id));
-  };
-
-  const disableSave = userHasReadOnlyAccess(project);
-
   return (
+    <Paper>
     <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
+      <Header title={`Project: ${project.name}`} />
+      <Box className={classes.root}>
       <FormTextField
         control={control}
         defaultValue={project.name}
@@ -136,32 +147,16 @@ export default function ProjectDetail({ project }) {
         name="description"
         label="Description"
       />
-      <div className={classes.controlsRoot}>
-        <Button
-          type="submit"
-          variant="contained"
-          className={classes.controls}
-          disabled={disableSave}
-        >
-          Save
-        </Button>
-        <Button
-          variant="contained"
-          className={classes.controls}
-          onClick={handleDeleteProject}
-          disabled={disableSave}
-        >
-          Delete
-        </Button>
-
-        <Button
-          variant="contained"
-          className={classes.controls}
-          onClick={handleSelectProject}
-        >
-          Select Project
-        </Button>
-      </div>
+      </Box>
+      <Footer
+        buttons={[
+          {label: 'Save', handle: handleSubmit(onSubmit)},
+          {label: 'Delete', handle: handleDeleteProject},
+        ]}
+      />
     </form>
-  );
+    </Paper>
+  )
 }
+
+

@@ -18,9 +18,9 @@ const initialState = variablesAdapter.getInitialState({
 
 export const fetchVariables = createAsyncThunk(
   "variables/fetchVariables",
-  async (project, { getState }) => {
+  async (project_id, { getState }) => {
     console.log("called fetchVariables");
-    const response = await api.get(`/api/variable/?project_id=${project.id}`);
+    const response = await api.get(`/api/variable/?project_id=${project_id}`);
     return response;
   }
 );
