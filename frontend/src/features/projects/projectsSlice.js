@@ -28,7 +28,9 @@ export const addNewProject = createAsyncThunk(
   async () => {
     const initialProject = {
       name: "new",
-      users: [api.loggedInUser().id],
+      user_access: [
+        {user: api.loggedInUser().id, read_only: false}
+      ],
     };
     console.log("addNewProject", initialProject);
     return await api.post("/api/project/", initialProject);

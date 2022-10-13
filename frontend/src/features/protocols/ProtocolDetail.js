@@ -4,6 +4,7 @@ import Paper from "@material-ui/core/Paper";
 import Button from "@material-ui/core/Button";
 import IconButton from "@material-ui/core/IconButton";
 import { useForm, useFieldArray } from "react-hook-form";
+import Box from "@material-ui/core/Box";
 import { makeStyles } from "@material-ui/core/styles";
 import DeleteIcon from "@material-ui/icons/Delete";
 import AddIcon from "@material-ui/icons/Add";
@@ -15,6 +16,9 @@ import TableContainer from "@material-ui/core/TableContainer";
 import TableHead from "@material-ui/core/TableHead";
 import TableRow from "@material-ui/core/TableRow";
 
+import Header from "../modelling/Header";
+import Footer from "../modelling/Footer";
+
 import { selectUnitById } from "../projects/unitsSlice";
 import { FormTextField, FormSelectField } from "../forms/FormComponents";
 
@@ -23,6 +27,10 @@ import { userHasReadOnlyAccess } from "../projects/projectsSlice";
 import { updateProtocol, deleteProtocol } from "../protocols/protocolsSlice.js";
 
 const useStyles = makeStyles((theme) => ({
+  root: {
+    maxHeight: '75vh', overflow: 'auto',
+    padding: theme.spacing(2),
+  },
   table: {
     width: "100%",
   },
@@ -101,8 +109,10 @@ export default function ProtocolDetail({ project, protocol }) {
   const disableSave = protocol.dataset || userHasReadOnlyAccess(project);
 
   return (
+    <Paper>
     <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
-      <Typography>Protocol</Typography>
+      <Header title={`Protocol: ${protocol.name}`}/>
+      <Box className={classes.root}>
       <FormTextField
         control={control}
         defaultValue={protocol.name}
@@ -173,18 +183,14 @@ export default function ProtocolDetail({ project, protocol }) {
           <AddIcon />
         </IconButton>
       </TableContainer>
-      <div className={classes.controls}>
-        <Button variant="contained" disabled={disableSave} type="submit">
-          Save
-        </Button>
-        <Button
-          variant="contained"
-          disabled={disableSave}
-          onClick={handleProtocolDelete}
-        >
-          Delete
-        </Button>
-      </div>
+      </Box>
+      <Footer
+        buttons={[
+          {label: 'Save', handle: handleSubmit(onSubmit)},
+          {label: 'Delete', handle: handleProtocolDelete},
+        ]}
+      />
     </form>
+    </Paper>
   );
 }

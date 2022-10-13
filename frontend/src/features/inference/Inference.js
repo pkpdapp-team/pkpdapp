@@ -1,27 +1,54 @@
 import React, { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
+import {
+  useParams,
+  useHistory,
+} from "react-router-dom";
+
 import PropTypes from "prop-types";
 import Grid from "@material-ui/core/Grid";
 import InferenceDetail from "./InferenceDetail";
 import InferenceChart from "./InferenceChart";
 import Paper from "@material-ui/core/Paper";
+import Toolbar from '@material-ui/core/Toolbar';
 import AccordionSummary from "@material-ui/core/AccordionSummary";
+import Drawer from "@material-ui/core/Drawer";
 import AccordionDetails from "@material-ui/core/AccordionDetails";
 import CircularProgress from "@material-ui/core/CircularProgress";
 import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
 import Typography from "@material-ui/core/Typography";
-import LinearProgress from "@material-ui/core/LinearProgress";
 import Box from "@material-ui/core/Box";
+import Inferences from "../inference/Inferences";
+import List from "@material-ui/core/List";
+
+import LinearProgressWithLabel from '../menu/LinearProgressWithLabel'
 
 import { makeStyles } from "@material-ui/core/styles";
 
-import { selectChosenProject } from "../projects/projectsSlice.js";
 
-import { selectChosenInferences, fetchInferences } from "./inferenceSlice.js";
+import { selectChosenProject, userHasReadOnlyAccess } from "../projects/projectsSlice.js";
+
+import { selectChosenInferences, fetchInferences, selectInferenceById } from "./inferenceSlice.js";
+
+import ExpandableListItem from "../menu/ExpandableListItem"
+
+const drawerWidth = 200;
 
 const useStyles = makeStyles((theme) => ({
   root: {
     marginTop: theme.spacing(2),
+    flexGrow: 1,
+  },
+  drawer: {
+    width: drawerWidth,
+    flexShrink: 0,
+    '& .MuiDrawer-paper': {
+      width: drawerWidth,
+      boxSizing: 'border-box',
+    },
+  },
+  main: {
+    marginLeft: drawerWidth,
     flexGrow: 1,
   },
   linearProgress: {
@@ -35,86 +62,36 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-function LinearProgressWithLabel(props) {
-  return (
-    <Box display="flex" alignItems="center">
-      <Typography
-        variant="body2"
-        color="textSecondary"
-      >{`${props.value}%`}</Typography>
-      <Box width="100%" ml={1}>
-        <LinearProgress variant="determinate" value={props.value} />
-      </Box>
-    </Box>
-  );
-}
 
-LinearProgressWithLabel.propTypes = {
-  /**
-   * The value of the progress indicator for the determinate and buffer variants.
-   * Value between 0 and 100.
-   */
-  value: PropTypes.number.isRequired,
-};
 
-export default function Inference() {
-  const dispatch = useDispatch();
+
+export default function Inference({project}) {
+  let { id } = useParams();
+  const inference = useSelector((state) => selectInferenceById(state, id));
   const classes = useStyles();
-  const project = useSelector(selectChosenProject);
-  const chosenInferences = useSelector(selectChosenInferences);
+  const dispatch = useDispatch();
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      dispatch(fetchInferences(project));
-    }, 100000);
-    return () => {
-      clearInterval(interval);
-    };
-  }, [project]);
-
-  if (!project) {
-    return "Select a project";
+  if (!inference) {
+    return (<CircularProgress />)
   }
 
+  const progress = (100 * inference.number_of_iterations) /
+              inference.max_number_of_iterations;
+
   return (
-    <div className={classes.root}>
-      {chosenInferences.map((inference) => {
-        const loading = inference.status
-          ? inference.status === "loading"
-          : false;
-        const title = inference.read_only ? "Inference" : "Draft Inference";
-        const expandIcon = loading ? (
-          <CircularProgress size={20} />
-        ) : (
-          <ExpandMoreIcon />
-        );
-        const progress =
-          (100 * inference.number_of_iterations) /
-          inference.max_number_of_iterations;
-        return (
-          <Paper key={inference.id} className={classes.paper}>
-              <Typography variant="h6">
-                {title} - {inference.name}
-              </Typography>
-              
-              {!loading && (
-                <Grid container spacing={3}>
-                  { inference.read_only &&
-                  <Grid item xs={12} md={6}>
-                    <div className={classes.linearProgress}>
-                      <LinearProgressWithLabel value={progress} />
-                    </div>
-                    <InferenceChart inference={inference} />
-                  </Grid>
-                  }
-                  <Grid item xs={12} md={inference.read_only ? 6 : 12}>
-                    <InferenceDetail inference={inference} project={project} />
-                  </Grid>
-                </Grid>
-              )}
-          </Paper>
-        );
-      })}
-    </div>
+    <Paper className={classes.paper}>
+    <Grid container spacing={3}>
+      <Grid item xs={12} md={6}>
+        <div className={classes.linearProgress}>
+          <LinearProgressWithLabel value={progress} />
+        </div>
+        <InferenceChart inference={inference} />
+      </Grid>
+      <Grid item xs={12} md={6} >
+        <InferenceDetail inference={inference} project={project} />
+      </Grid>
+    </Grid>
+    </Paper>
   );
 }
+

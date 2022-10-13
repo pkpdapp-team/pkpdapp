@@ -7,8 +7,9 @@ import { getColor, getColorBackground } from "../modelling/ShapesAndColors";
 
 const useStyles = makeStyles((theme) => ({
   root: {
-    height: "70vh",
-    width: "100%",
+    position: 'relative',
+    margin: 'auto',
+    height: '60vh',
   },
 }));
 

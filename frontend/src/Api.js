@@ -31,7 +31,7 @@ export const api = {
 };
 
 function login(username, password) {
-  return fetch("auth/token/login", {
+  return fetch("/auth/token/login", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -50,7 +50,7 @@ function login(username, password) {
 }
 
 function logout() {
-  post("auth/token/logout");
+  post("/auth/token/logout");
   authToken = null;
   localStorage.removeItem("authToken");
   localStorage.removeItem("loggedInUser");
