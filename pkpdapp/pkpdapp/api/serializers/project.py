@@ -3,7 +3,6 @@
 # is released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-from os import setpriority
 from rest_framework import serializers
 from pkpdapp.models import (
     ProjectAccess, Project
@@ -16,10 +15,12 @@ class ProjectAccessSerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = ("project", )
 
+
 class BaseProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
         fields = '__all__'
+
 
 class ProjectSerializer(serializers.ModelSerializer):
     user_access = ProjectAccessSerializer(
