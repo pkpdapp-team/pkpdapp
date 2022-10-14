@@ -187,6 +187,18 @@ export const pdModelsSlice = createSlice({
       state.entities[action.meta.arg.id].status = "failed";
       pdModelsAdapter.upsertOne(state, action);
     },
+    [uploadPdMmt.pending]: (state, action) => {
+      state.entities[action.meta.arg.id].status = "loading";
+      state.entities[action.meta.arg.id].errors = [];
+    },
+    [uploadPdMmt.rejected]: (state, action) => {
+      state.entities[action.meta.arg.id].status = "failed";
+      state.entities[action.meta.arg.id].errors = action.payload.mmt;
+    },
+    [uploadPdMmt.fulfilled]: (state, action) => {
+      state.entities[action.meta.arg.id].status = "failed";
+      pdModelsAdapter.upsertOne(state, action);
+    },
   },
 });
 

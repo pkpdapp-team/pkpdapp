@@ -122,6 +122,16 @@ export default function PdDetail({ project, pd_model }) {
       </Grid>
 
       <Grid item xs={12}>
+      <FormTextField
+        control={control}
+        defaultValue={pd_model.time_max}
+        name="time_max"
+        label="Maximum Time"
+        type="number"
+      />
+      </Grid>
+
+      <Grid item xs={12}>
       <Typography>Components</Typography>
       </Grid>
       {pd_model.components.map((component, index) => {
@@ -144,10 +154,10 @@ export default function PdDetail({ project, pd_model }) {
       <Grid item xs={12}>
       <FormTextField
         control={control}
-        defaultValue={pd_model.time_max}
-        name="time_max"
-        label="Maximum Time"
-        type="number"
+        defaultValue={pd_model.mmt}
+        name="mmt"
+        label="Source (mmt format)"
+        multiline
       />
       </Grid>
       </Grid>

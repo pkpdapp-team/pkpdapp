@@ -129,6 +129,10 @@ class DosedPharmacokineticModel(MyokitModelMixin, StoredModel):
             time_max = max(time_max, self.pd_model.time_max)
         return time_max
 
+    def get_mmt(self):
+        myokit_model = self.get_myokit_model()
+        return myokit_model.code()
+
     def create_stored_model(self, new_pd_model=None):
         stored_model_kwargs = {
             'name': self.name,

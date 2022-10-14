@@ -36,10 +36,14 @@ class DosedPharmacokineticSerializer(serializers.ModelSerializer):
     variables = serializers.PrimaryKeyRelatedField(
         many=True, read_only=True
     )
+    mmt = serializers.SerializerMethodField('get_mmt')
 
     class Meta:
         model = DosedPharmacokineticModel
         fields = '__all__'
+
+    def get_mmt(self, m):
+        return m.get_mmt()
 
     def get_components(self, m):
         model = m.get_myokit_model()

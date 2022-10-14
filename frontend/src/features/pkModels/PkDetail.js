@@ -236,29 +236,11 @@ export default function PkDetail({ project, pk_model }) {
           </React.Fragment>
         )
       })}
-        <IconButton size="small" onClick={handleNewMapping}>
-          <AddIcon />
-         </IconButton>
-
       <Grid item xs={12}>
-      <Typography>Components</Typography>
+      <IconButton size="small" onClick={handleNewMapping}>
+        <AddIcon />
+      </IconButton>
       </Grid>
-      {pk_model.components.map((component, index) => {
-        return (
-          <Grid item xs={12}>
-          <Paper key={index} variant={'outlined'} className={classes.paper}>
-            <Typography className={classes.heading} variant='h5' gutterBottom component="div">
-                    {component.name === "myokit" ? "root" : component.name}
-            </Typography>
-            <ComponentForm
-              control={control}
-              component={component}
-              disableSave={disableSave}
-            />
-          </Paper>
-          </Grid>
-        );
-      })}
 
       <Grid item xs={6}>
       <FormSelectField
@@ -284,6 +266,37 @@ export default function PkDetail({ project, pk_model }) {
         type="number"
       />
       </Grid>
+
+      <Grid item xs={12}>
+      <Typography>Components</Typography>
+      </Grid>
+      {pk_model.components.map((component, index) => {
+        return (
+          <Grid item xs={12}>
+          <Paper key={index} variant={'outlined'} className={classes.paper}>
+            <Typography className={classes.heading} variant='h5' gutterBottom component="div">
+                    {component.name === "myokit" ? "root" : component.name}
+            </Typography>
+            <ComponentForm
+              control={control}
+              component={component}
+              disableSave={disableSave}
+            />
+          </Paper>
+          </Grid>
+        );
+      })}
+
+      <Grid item xs={12}>
+      <FormTextField
+        control={control}
+        name="mmt"
+        label="Source (mmt format)"
+        disabled
+        multiline
+      />
+      </Grid>
+
       </Grid>
       </Box>
 
