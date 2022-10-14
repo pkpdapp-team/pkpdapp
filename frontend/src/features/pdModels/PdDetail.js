@@ -1,17 +1,12 @@
 import React, { useEffect } from "react";
 import { useDispatch } from "react-redux";
-import Button from "@material-ui/core/Button";
 import Alert from "@material-ui/lab/Alert";
 import Box from "@material-ui/core/Box";
 import Grid from "@material-ui/core/Grid";
 import { useForm } from "react-hook-form";
 import { makeStyles } from "@material-ui/core/styles";
-import Toolbar from "@material-ui/core/Toolbar";
-import List from "@material-ui/core/List";
 import Typography from "@material-ui/core/Typography";
-import ListItem from "@material-ui/core/ListItem";
 import Paper from "@material-ui/core/Paper";
-import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
 
 import Header from "../modelling/Header";
 import Footer from "../modelling/Footer";
@@ -19,6 +14,7 @@ import ComponentForm from "../forms/ComponentForm";
 import {
   updatePdModel,
   uploadPdSbml,
+  uploadPdMmt,
   deletePdModel,
 } from "../pdModels/pdModelsSlice";
 import { FormTextField } from "../forms/FormComponents";
@@ -66,14 +62,31 @@ export default function PdDetail({ project, pd_model }) {
     dispatch(deletePdModel(pd_model.id));
   };
 
-  const handleFileUpload = (event) => {
-    console.log('handleFileUpload', event)
+  const handleSbmlFileUpload = (event) => {
+    console.log('handleSbmlFileUpload', event)
     const files = Array.from(event.target.files);
     const [file] = files;
     let reader = new FileReader();
 
     reader.onload = function () {
       dispatch(uploadPdSbml({ id: pd_model.id, sbml: reader.result }));
+    };
+
+    reader.onerror = function () {
+      console.log(reader.error);
+    };
+
+    reader.readAsText(file);
+  };
+
+  const handleMmtFileUpload = (event) => {
+    console.log('handleMmtFileUpload', event)
+    const files = Array.from(event.target.files);
+    const [file] = files;
+    let reader = new FileReader();
+
+    reader.onload = function () {
+      dispatch(uploadPdMmt({ id: pd_model.id, mmt: reader.result }));
     };
 
     reader.onerror = function () {
@@ -151,7 +164,8 @@ export default function PdDetail({ project, pd_model }) {
         buttons={[
           {label: 'Save', handle: handleSubmit(onSubmit)},
           {label: 'Delete', handle: handlePdDelete},
-          {label: 'Upload SBML file', handle: handleFileUpload, variant: 'fileUpload'},
+          {label: 'Upload MMT file', handle: handleMmtFileUpload, variant: 'fileUpload'},
+          {label: 'Upload SBML file', handle: handleSbmlFileUpload, variant: 'fileUpload'},
         ]}
       />
     </form>

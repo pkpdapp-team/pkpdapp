@@ -92,6 +92,18 @@ export const uploadPdSbml = createAsyncThunk(
   }
 );
 
+export const uploadPdMmt = createAsyncThunk(
+  "pdModels/uploadPdMmt",
+  async ({ id, mmt }, { rejectWithValue, dispatch }) => {
+    await api.putMultiPart(`/api/pharmacodynamic/${id}/mmt/`, { mmt });
+    let pdModel = await api.get(`/api/pharmacodynamic/${id}`);
+    dispatch(fetchVariablesByPdModel(pdModel.id));
+    dispatch(fetchUnitsByPdModel(pdModel.id));
+    dispatch(fetchPdModelSimulateById(pdModel.id));
+    return pdModel;
+  }
+);
+
 export const updatePdModel = createAsyncThunk(
   "pdModels/updatePdModel",
   async (pdModel, { dispatch }) => {

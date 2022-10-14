@@ -1,3 +1,4 @@
+# type: ignore
 #
 # This file is part of PKPDApp (https://github.com/pkpdapp-team/pkpdapp) which
 # is released under the BSD 3-clause license. See accompanying LICENSE.md for
@@ -12,12 +13,8 @@ from dataclasses import dataclass
 
 import myokit
 import numbers
-import io
 import pyparsing as pp
 import pyparsing.common as ppc
-import csv
-
-from theano.compile import mode
 
 from pkpdapp.models import set_administration
 pp.enable_all_warnings()
@@ -29,11 +26,13 @@ binops = {
     '+': myokit.Plus,
 }
 
+
 @dataclass
 class Variable:
     name: str
     constant: bool
     state: bool
+
 
 class MonolixParser:
     """
@@ -50,7 +49,6 @@ class MonolixParser:
     eqn     :: term
     """
     # map operator symbols to corresponding arithmetic operations
-
 
     def __init__(self):
         # fnumber = Combine(Word("+-"+nums, nums) +
@@ -73,8 +71,8 @@ class MonolixParser:
         expr = pp.Forward()
         atom = (
             addop[...] + (
-                (fnumber | ident).set_parse_action(self.push_first)
-                | pp.Group(lpar + expr + rpar)
+                (fnumber | ident).set_parse_action(self.push_first) |
+                pp.Group(lpar + expr + rpar)
             )
         ).set_parse_action(self.push_unary_minus)
 
@@ -82,9 +80,18 @@ class MonolixParser:
         # [ ^ atom ]...", we get right-to-left exponents, instead of
         # left-to-right that is, 2^3^2 = 2^(3^2), not (2^3)^2.
         factor = pp.Forward()
-        factor <<= atom + (expop + factor).set_parse_action(self.push_first)[...]
-        term = factor + (multop + factor).set_parse_action(self.push_first)[...]
-        expr <<= term + (addop + term).set_parse_action(self.push_first)[...]
+        factor <<= (
+            atom +
+            (expop + factor).set_parse_action(self.push_first)[...]
+        )
+        term = (
+            factor +
+            (multop + factor).set_parse_action(self.push_first)[...]
+        )
+        expr <<= (
+            term +
+            (addop + term).set_parse_action(self.push_first)[...]
+        )
 
         ode_type = pp.Keyword('odeType') + equals + (pp.Keyword('stiff') |
                                                      pp.Keyword('nonStiff'))
@@ -103,40 +110,53 @@ class MonolixParser:
 
         fn_value = fnumber | ident
         fn_arg = (ident + equals + fn_value) | fn_value
-        fn_call = ident + lpar - pp.delimited_list(pp.Group(fn_arg), delim=',') + rpar
+        fn_call = (
+            ident + lpar -
+            pp.delimited_list(pp.Group(fn_arg), delim=',') + rpar
+        )
 
         pk_block = ("PK:" + (
             pp.Group(fn_call)
         )[...]).set_parse_action(self.construct_pk)
 
         equation_block = pp.Keyword("EQUATION:") + (
-            ode_type
-            | equation.set_parse_action(self.construct_equation)
-            | rate_equation.set_parse_action(self.construct_rate_equation)
-            | initial_condition.set_parse_action(self.construct_initial_condition)
+            ode_type |
+            equation.set_parse_action(
+                self.construct_equation
+            ) |
+            rate_equation.set_parse_action(
+                self.construct_rate_equation
+            ) |
+            initial_condition.set_parse_action(
+                self.construct_initial_condition
+            )
         )[...]
 
         output_block = pp.Keyword("OUTPUT:") + (
-            ident + equals + lcpar - pp.delimited_list(ident, delim=',') + rcpar
+            ident + equals +
+            lcpar - pp.delimited_list(ident, delim=',') +
+            rcpar
         )
 
         inputs = (
-            pp.Keyword("input") + equals + lcpar
-            - pp.delimited_list(
+            pp.Keyword("input") + equals + lcpar -
+            pp.delimited_list(
                 ident, delim=','
-            ).set_parse_action(self.construct_inputs)
-            + rcpar
+            ).set_parse_action(self.construct_inputs) +
+            rcpar
         )
 
         longitudinal_keyword = pp.Keyword("[LONGITUDINAL]")
 
-        longitudinal =  (
-            longitudinal_keyword
-            + inputs.set_debug(True)
-            + (pk_block & equation_block & output_block).set_debug(True)
+        longitudinal = (
+            longitudinal_keyword +
+            inputs.set_debug(True) +
+            (
+                pk_block & equation_block & output_block
+            ).set_debug(True)
         )
 
-        src =  "DESCRIPTION:" + pp.SkipTo(longitudinal_keyword) + longitudinal
+        src = "DESCRIPTION:" + pp.SkipTo(longitudinal_keyword) + longitudinal
 
         monolix_comment = ';' + pp.restOfLine()
         src.ignore(monolix_comment)
@@ -195,7 +215,8 @@ class MonolixParser:
                 if amount:
                     amount_var = self.get_or_construct_var(amount, comp)
                 else:
-                    raise pp.ParseException(f'arg "amount" required for compartment {cmt}')
+                    raise pp.ParseException(
+                        f'arg "amount" required for compartment {cmt}')
                 if concentration:
                     conc_var = self.get_or_construct_var(concentration, comp)
                     conc_var.set_rhs(myokit.Divide(amount_var, volume_var))
@@ -216,7 +237,9 @@ class MonolixParser:
                 # p = args.get('p', args.get(3, 1))
 
                 if cmt not in compartments:
-                    raise pp.ParseException(f'compartment {cmt} not found in pk block')
+                    raise pp.ParseException(
+                        f'compartment {cmt} not found in pk block'
+                    )
                 amount_var = compartments[cmt]
                 if not amount_var.is_state():
                     amount_var.promote(0)
@@ -228,7 +251,7 @@ class MonolixParser:
 
     def construct_inputs(self, toks):
         for name in toks:
-            v = self.get_or_construct_var(name)
+            _ = self.get_or_construct_var(name)
 
     def construct_expr(self, toks):
         toks[0] = self.construct_myokit_expr(self.exprStack)
@@ -289,4 +312,3 @@ class MonolixParser:
             self.parser.parseString(model_str, parseAll=parseAll)
         except pp.ParseException as err:
             raise RuntimeError(err.explain())
-

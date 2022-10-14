@@ -157,10 +157,10 @@ class TestMyokitForwardModelSingleOutput(TestCase):
         self.assertAlmostEqual(z[0][0], tumour_volume, delta=0.1)
 
         z = forward_model.simulate([tumour_volume, 2, 1, 1, 1])
-        self.assertAlmostEqual(z[0][-1], 0.7499999999974631, delta=0.1)
+        self.assertAlmostEqual(z[0][-1], 0.002582, delta=0.1)
 
         z = forward_model.simulate([tumour_volume, 2, 0.1, 1, 1])
-        self.assertAlmostEqual(z[0][-1], 0.0750000000033424, delta=0.1)
+        self.assertAlmostEqual(z[0][-1], 4.4999, delta=0.1)
 
         # add some fixed parameters
         forward_model = MyokitForwardModel(
@@ -172,7 +172,7 @@ class TestMyokitForwardModelSingleOutput(TestCase):
             conversion_factors=[1.0],
         )
         z = forward_model.simulate([2, 0.1, 1, 1])
-        self.assertAlmostEqual(z[0][-1], 0.0750000000033424, delta=0.1)
+        self.assertAlmostEqual(z[0][-1], 4.49999, delta=0.1)
 
         forward_model = MyokitForwardModel(
             myokit_model=self.model,
@@ -184,7 +184,7 @@ class TestMyokitForwardModelSingleOutput(TestCase):
             conversion_factors=[1.0],
         )
         z = forward_model.simulate([2, 1, 3])
-        self.assertAlmostEqual(z[0][-1], 3.0833333340874463, delta=0.1)
+        self.assertAlmostEqual(z[0][-1], 13.4999, delta=0.1)
 
 
 class TestMyokitPintsForwardModelMultipleOutput(TestCase):

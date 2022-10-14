@@ -65,3 +65,19 @@ class PharmacodynamicView(viewsets.ModelViewSet):
             return response.Response(serializer.data)
         return response.Response(serializer.errors,
                                  status.HTTP_400_BAD_REQUEST)
+
+    @decorators.action(
+        detail=True,
+        methods=['PUT'],
+        serializer_class=PharmacodynamicSerializer,
+        parser_classes=[parsers.MultiPartParser],
+    )
+    def mmt(self, request, pk):
+        obj = self.get_object()
+        serializer = self.serializer_class(obj, data=request.data,
+                                           partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return response.Response(serializer.data)
+        return response.Response(serializer.errors,
+                                 status.HTTP_400_BAD_REQUEST)

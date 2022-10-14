@@ -13,14 +13,14 @@ class MechanisticModel(models.Model, MyokitModelMixin):
     """
     A PK or PD model, represented using mmt
     """
-    DEFAULT_MMT= (
+    DEFAULT_MMT = (
         '[[model]]\n'
         '\n'
-        '[root]\n'
-        't = 0 bind time'
+        '[myokit]\n'
+        'time = 0 bind time'
     )
 
-    DEFAULT_SBML= (
+    DEFAULT_SBML = (
         '<?xml version="1.0" encoding="UTF-8"?>'
         '<sbml '
         'xmlns="http://www.sbml.org/sbml/level3/version2/core" '
@@ -37,7 +37,10 @@ class MechanisticModel(models.Model, MyokitModelMixin):
         blank=True, default=''
     )
     mmt = models.TextField(
-        help_text='the model represented using mmt (see https://myokit.readthedocs)',
+        help_text=(
+            'the model represented using mmt '
+            '(see https://myokit.readthedocs)'
+        ),
         default=DEFAULT_MMT,
     )
     time_max = models.FloatField(

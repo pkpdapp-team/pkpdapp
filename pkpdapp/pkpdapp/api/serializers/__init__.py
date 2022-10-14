@@ -8,7 +8,9 @@
 
 from .polymorphicserializer import PolymorphicSerializer
 
-from .validators import ValidSbml
+from .validators import (
+    ValidSbml, ValidMmt
+)
 from .auce import AuceSerializer
 from .biomarker_type import BiomarkerTypeSerializer
 from .dose import DoseSerializer

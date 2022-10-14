@@ -6,6 +6,7 @@
 from rest_framework import serializers
 from pkpdapp.models.mechanistic_model import MyokitModelMixin
 from myokit.formats.sbml import SBMLParsingError
+import myokit
 
 
 class ValidSbml:
@@ -13,4 +14,12 @@ class ValidSbml:
         try:
             MyokitModelMixin.parse_sbml_string(value)
         except SBMLParsingError as e:
+            raise serializers.ValidationError(e)
+
+
+class ValidMmt:
+    def __call__(self, value):
+        try:
+            MyokitModelMixin.parse_mmt_string(value)
+        except myokit.ParsingError as e:
             raise serializers.ValidationError(e)

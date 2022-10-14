@@ -25,7 +25,6 @@ class MyokitModelMixin:
             self._meta.db_table, self.id
         )
 
-
     @staticmethod
     def sbml_string_to_mmt(sbml):
         model = MyokitModelMixin.parse_sbml_string(sbml)
@@ -40,11 +39,9 @@ class MyokitModelMixin:
         return model
 
     @staticmethod
-    def parse_mmt_string(sbml):
+    def parse_mmt_string(mmt):
         with lock:
-            model, _, _ = myokit.parse(
-                str.encode(sbml)
-            )
+            model, _, _ = myokit.parse(mmt)
         return model
 
     def create_myokit_model(self):

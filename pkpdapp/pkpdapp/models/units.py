@@ -56,6 +56,8 @@ class Unit(models.Model):
     @staticmethod
     def get_unit_from_variable(v):
         unit = v.unit()
+        if unit is None:
+            return None
         exponents = unit.exponents()
         multiplier = unit.multiplier_log_10()
         close_enough = 1e-9

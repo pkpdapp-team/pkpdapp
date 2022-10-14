@@ -7,13 +7,9 @@
 import codecs
 import unittest
 import urllib.request
-from urllib.request import urlretrieve
+
 from pkpdapp.utils import MonolixParser
 
-from django.test import TestCase
-from django.utils import timezone
-
-from pkpdapp.models import Biomarker, BiomarkerType, Dataset, Unit
 
 class TestMonolixParser(unittest.TestCase):
     def test_parse(self):
@@ -30,7 +26,3 @@ class TestMonolixParser(unittest.TestCase):
         print('model is', parser.myokit_model)
         print(parser.myokit_model.code())
         parser.myokit_model.validate()
-
-
-
-

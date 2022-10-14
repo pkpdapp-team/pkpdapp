@@ -10,7 +10,7 @@ from pkpdapp.models import (
     Compound, DosedPharmacokineticModel,
     Dose, Unit, Variable,
 )
-from myokit.formats.sbml._parser import SBMLParsingError
+import myokit
 from django.core.exceptions import ValidationError
 from django.core.cache import cache
 import numpy as np
@@ -20,8 +20,8 @@ class TestPharmodynamicModel(TestCase):
     def setUp(self):
         cache.clear()
 
-    def test_model_bad_sbml(self):
-        with self.assertRaises(SBMLParsingError):
+    def test_model_bad_mmt(self):
+        with self.assertRaises(myokit.ParseError):
             PharmacodynamicModel.objects.create(
                 name='my_cool_model',
                 description='description for my cool model',

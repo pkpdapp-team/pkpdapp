@@ -5,11 +5,14 @@
 #
 from rest_framework import serializers
 from pkpdapp.models import (
-    PharmacokineticModel, MyokitModelMixin,
+    PharmacokineticModel,
     DosedPharmacokineticModel,
-    PharmacodynamicModel, PkpdMapping
+    PharmacodynamicModel, PkpdMapping,
+    MyokitModelMixin,
 )
-from pkpdapp.api.serializers import ValidSbml
+from pkpdapp.api.serializers import (
+    ValidSbml, ValidMmt
+)
 
 
 class PkpdMappingSerializer(serializers.ModelSerializer):
@@ -136,6 +139,7 @@ class PharmacodynamicSerializer(serializers.ModelSerializer):
     variables = serializers.PrimaryKeyRelatedField(
         many=True, read_only=True
     )
+    mmt = serializers.CharField(validators=[ValidMmt()])
 
     def get_components(self, m):
         model = m.get_myokit_model()
@@ -146,12 +150,28 @@ class PharmacodynamicSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PharmacodynamicModel
-        exclude = ['sbml']
+        fields = '__all__'
 
 
 class PharmacodynamicSbmlSerializer(serializers.ModelSerializer):
-    sbml = serializers.CharField(validators=[ValidSbml()])
+    sbml = serializers.CharField(validators=[ValidSbml()], write_only=True)
 
     class Meta:
         model = PharmacodynamicModel
         fields = ['sbml']
+        extra_kwargs = {'sbml': {'write_only': True}}
+
+    def create(self, validated_data):
+        sbml = validated_data.pop('sbml')
+        mmt = MyokitModelMixin.sbml_string_to_mmt(sbml)
+        validated_data['mmt'] = mmt
+        print('create', sbml, mmt)
+        return PharmacodynamicModel(**validated_data)
+
+    def update(self, instance, validated_data):
+        sbml = validated_data.get('sbml')
+        mmt = MyokitModelMixin.sbml_string_to_mmt(sbml)
+        instance.mmt = mmt
+        instance.save()
+        print('update', sbml, mmt)
+        return instance

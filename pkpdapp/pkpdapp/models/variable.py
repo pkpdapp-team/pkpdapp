@@ -200,8 +200,11 @@ class Variable(StoredModel):
     def _find_close_variable(myokit_variable, variables):
         found = None
         for i, v in enumerate(variables):
-            if myokit.Unit.close(
-                    v.unit.get_myokit_unit(),
+            if v.unit is None:
+                if myokit_variable.unit() is None:
+                    found = i
+            elif myokit.Unit.close(
+                v.unit.get_myokit_unit(),
                     myokit_variable.unit()
             ):
                 found = i
