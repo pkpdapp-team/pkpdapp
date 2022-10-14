@@ -38,7 +38,7 @@ export default function ModellingChart({ datasets, pkModels, pdModels, className
       return {};
     }
     const time_id = Object.keys(model_simulate).filter(
-      (id) => variables[id].name === "time"
+      (id) => variables[id].binding === "time"
     )[0];
 
     return Object.entries(model_simulate)

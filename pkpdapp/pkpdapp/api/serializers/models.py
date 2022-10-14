@@ -139,7 +139,7 @@ class PharmacodynamicSerializer(serializers.ModelSerializer):
     variables = serializers.PrimaryKeyRelatedField(
         many=True, read_only=True
     )
-    mmt = serializers.CharField(validators=[ValidMmt()])
+    mmt = serializers.CharField(validators=[ValidMmt()], required=False)
 
     def get_components(self, m):
         model = m.get_myokit_model()

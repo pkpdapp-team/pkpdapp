@@ -42,6 +42,12 @@ class Variable(StoredModel):
     )
 
     name = models.CharField(max_length=100, help_text='name of the variable')
+    binding = models.CharField(
+        max_length=100,
+        help_text='myokit binding of the variable (e.g. time)',
+        blank=True, null=True,
+    )
+
     qname = models.CharField(
         max_length=200, help_text='fully qualitifed name of the variable')
 
@@ -186,6 +192,7 @@ class Variable(StoredModel):
                 name=myokit_variable.name(),
                 qname=qname,
                 default_value=value,
+                binding=myokit_variable.binding(),
                 lower_bound=0.1 * value,
                 upper_bound=10.0 * value,
                 constant=myokit_variable.is_constant(),
@@ -237,6 +244,7 @@ class Variable(StoredModel):
                 name=myokit_variable.name(),
                 qname=qname,
                 constant=myokit_variable.is_constant(),
+                binding=myokit_variable.binding(),
                 default_value=value,
                 lower_bound=0.1 * value,
                 upper_bound=10.0 * value,
@@ -273,6 +281,7 @@ class Variable(StoredModel):
                 qname=qname,
                 constant=myokit_variable.is_constant(),
                 default_value=value,
+                binding=myokit_variable.binding(),
                 lower_bound=0.1 * value,
                 upper_bound=10.0 * value,
                 state=state,
@@ -302,6 +311,7 @@ class Variable(StoredModel):
             'qname': self.qname,
             'unit': self.unit,
             'is_public': self.is_public,
+            'binding': self.binding,
             'lower_bound': self.lower_bound,
             'upper_bound': self.upper_bound,
             'default_value': self.default_value,

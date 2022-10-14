@@ -218,14 +218,34 @@ class MyokitModelMixin:
             self._serialise_variable(v) for v in variables
         ]
 
-    def _convert_unit(self, qname, value, myokit_model):
+    def _convert_unit(self, variable, myokit_variable_sbml, value):
+        if variable.unit is None:
+            conversion_factor = 1.0
+        else:
+            conversion_factor = myokit.Unit.conversion_factor(
+                variable.unit.get_myokit_unit(),
+                myokit_variable_sbml.unit()
+            ).value()
+
+        return conversion_factor * value
+
+    def _convert_unit_qname(self, qname, value, myokit_model):
         variable = self.variables.get(qname=qname)
         myokit_variable_sbml = myokit_model.get(qname)
+        return self._convert_unit(variable, myokit_variable_sbml, value)
 
-        conversion_factor = myokit.Unit.conversion_factor(
-            variable.unit.get_myokit_unit(),
-            myokit_variable_sbml.unit()
-        ).value()
+    def _convert_bound_unit(self, binding, value, myokit_model):
+        myokit_variable_sbml = myokit_model.binding(binding)
+        variable = self.variables.get(qname=myokit_variable_sbml.qname())
+        return self._convert_unit(variable, myokit_variable_sbml, value)
+
+        if variable.unit is None:
+            conversion_factor = 1.0
+        else:
+            conversion_factor = myokit.Unit.conversion_factor(
+                variable.unit.get_myokit_unit(),
+                myokit_variable_sbml.unit()
+            ).value()
 
         return conversion_factor * value
 
@@ -235,10 +255,14 @@ class MyokitModelMixin:
             variable = self.variables.get(qname=k)
             myokit_variable_sbml = myokit_model.get(k)
 
-            conversion_factor = myokit.Unit.conversion_factor(
-                myokit_variable_sbml.unit(),
-                variable.unit.get_myokit_unit()
-            ).value()
+            if variable.unit is None:
+                conversion_factor = 1.0
+            else:
+                conversion_factor = myokit.Unit.conversion_factor(
+                    myokit_variable_sbml.unit(),
+                    variable.unit.get_myokit_unit()
+                ).value()
+
             result[variable.id] = (
                 conversion_factor * np.frombuffer(v)
             ).tolist()
@@ -288,17 +312,17 @@ class MyokitModelMixin:
         # convert units for variables, initial_conditions
         # and time_max
         initial_conditions = {
-            qname: self._convert_unit(qname, value, model)
+            qname: self._convert_unit_qname(qname, value, model)
             for qname, value in initial_conditions.items()
         }
 
         variables = {
-            qname: self._convert_unit(qname, value, model)
+            qname: self._convert_unit_qname(qname, value, model)
             for qname, value in variables.items()
         }
 
-        time_max = self._convert_unit(
-            'myokit.time', self.get_time_max(), model
+        time_max = self._convert_bound_unit(
+            'time', self.get_time_max(), model
         )
 
         # Set initial conditions

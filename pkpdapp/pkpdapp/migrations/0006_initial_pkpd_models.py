@@ -219,6 +219,7 @@ Description of a three compartment PK model here.
                         qname=v.qname(),
                         constant=v.is_constant(),
                         state=v.is_state(),
+                        binding=v.binding(),
                         unit=stored_unit,
                         pd_model=model,
                         color=i,
