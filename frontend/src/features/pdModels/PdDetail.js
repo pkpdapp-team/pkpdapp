@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import Alert from "@material-ui/lab/Alert";
 import Box from "@material-ui/core/Box";
 import Grid from "@material-ui/core/Grid";
@@ -104,7 +104,7 @@ export default function PdDetail({ project, pd_model }) {
     dispatch(updatePdModel(values));
   };
 
-  const disableSave = userHasReadOnlyAccess(project);
+  const disableSave = useSelector(state => userHasReadOnlyAccess(state, project));
 
   return (
     <Paper>

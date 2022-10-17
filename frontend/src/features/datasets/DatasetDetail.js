@@ -1,5 +1,5 @@
-import React, { useEffect, useSelector } from "react";
-import { useDispatch } from "react-redux";
+import React, { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import Button from "@material-ui/core/Button";
 import Grid from "@material-ui/core/Grid";
 import Box from "@material-ui/core/Box";
@@ -157,7 +157,7 @@ export default function DatasetDetail({ project, dataset }) {
     dispatch(updateDataset(values));
   };
 
-  const disableSave = userHasReadOnlyAccess(project);
+  const disableSave = useSelector(state => userHasReadOnlyAccess(state, project));
 
   return (
     <Paper>

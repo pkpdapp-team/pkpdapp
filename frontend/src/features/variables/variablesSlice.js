@@ -20,7 +20,7 @@ export const fetchVariables = createAsyncThunk(
   "variables/fetchVariables",
   async (project_id, { getState }) => {
     console.log("called fetchVariables");
-    const response = await api.get(`/api/variable/?project_id=${project_id}`);
+    const response = await api.get(`/api/variable/?project_id=${project_id}`, getState().login.csrf);
     return response;
   }
 );
@@ -28,7 +28,7 @@ export const fetchVariables = createAsyncThunk(
 export const fetchVariableById = createAsyncThunk(
   "variables/fetchVariableById",
   async (variable_id, { getState }) => {
-    const response = await api.get(`/api/variable/${variable_id}/`);
+    const response = await api.get(`/api/variable/${variable_id}/`, getState().login.csrf);
     return response;
   }
 );
@@ -36,7 +36,7 @@ export const fetchVariableById = createAsyncThunk(
 export const fetchVariablesByPdModel = createAsyncThunk(
   "variables/fetchVariablesByPdModel",
   async (pd_model_id, { getState }) => {
-    const response = await api.get(`/api/variable/?pd_model_id=${pd_model_id}`);
+    const response = await api.get(`/api/variable/?pd_model_id=${pd_model_id}`, getState().login.csrf);
     const responseIds = response.map(v => v.id)
     const state = getState()
     const existingVariables = selectVariablesByPdModel(state, pd_model_id)
@@ -53,7 +53,7 @@ export const fetchVariablesByPkModel = createAsyncThunk(
   "variables/fetchVariablesByPkModel",
   async (pk_model_id, { getState }) => {
     const response = await api.get(
-      `/api/variable/?dosed_pk_model_id=${pk_model_id}`
+      `/api/variable/?dosed_pk_model_id=${pk_model_id}`, getState().login.csrf
     );
     const responseIds = response.map(v => v.id)
     const state = getState()
@@ -68,24 +68,24 @@ export const fetchVariablesByPkModel = createAsyncThunk(
 
 export const addNewVariable = createAsyncThunk(
   "variables/addNewVariable",
-  async () => {
+  async (_, { getState }) => {
     const initialVariable = {
       name: "new",
     };
-    const variable = await api.post("/api/variable/", initialVariable);
+    const variable = await api.post("/api/variable/", getState().login.csrf, initialVariable);
     return variable;
   }
 );
 
 export const updateVariable = createAsyncThunk(
   "variables/updateVariable",
-  async (variable, thunkAPI) => {
-    const response = await api.patch(`/api/variable/${variable.id}/`, variable);
+  async (variable, { dispatch, getState }) => {
+    const response = await api.patch(`/api/variable/${variable.id}/`, getState().login.csrf, variable);
     if (response.pd_model) {
-      thunkAPI.dispatch(fetchPdModelById(response.pd_model));
+      dispatch(fetchPdModelById(response.pd_model));
     }
     if (response.dosed_pk_model) {
-      thunkAPI.dispatch(fetchPkModelById(response.dosed_pk_model));
+      dispatch(fetchPkModelById(response.dosed_pk_model));
     }
     return response;
   }

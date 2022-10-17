@@ -81,7 +81,7 @@ export default function ProjectDetail({ project }) {
   const userEntities = useSelector((state) => state.users.entities);
   const dispatch = useDispatch();
   const { control, handleSubmit, reset } = useForm();
-  const disableSave = userHasReadOnlyAccess(project);
+  const disableSave = useSelector(state => userHasReadOnlyAccess(state, project));
   const user_options = users.map((user) => ({
     key: user.username,
     value: user.id,

@@ -19,9 +19,9 @@ const initialState = pdModelsAdapter.getInitialState({
 
 export const fetchPdModels = createAsyncThunk(
   "pdModels/fetchPdModels",
-  async (project_id, { dispatch }) => {
+  async (project_id, { dispatch, getState }) => {
     let response = await api.get(
-      `/api/pharmacodynamic/?project_id=${project_id}`
+      `/api/pharmacodynamic/?project_id=${project_id}`, getState().login.csrf
     );
     for (var i = 0; i < response.length; i++) {
       if (!response[i].read_only) {
@@ -34,8 +34,8 @@ export const fetchPdModels = createAsyncThunk(
 
 export const fetchPdModelById = createAsyncThunk(
   "pdModels/fetchPdModelById",
-  async (model_id, { dispatch }) => {
-    let response = await api.get(`/api/pharmacodynamic/${model_id}/`);
+  async (model_id, { dispatch, getState }) => {
+    let response = await api.get(`/api/pharmacodynamic/${model_id}/`, getState().login.csrf);
     dispatch(fetchPdModelSimulateById(response.id));
     return response;
   }
@@ -43,9 +43,9 @@ export const fetchPdModelById = createAsyncThunk(
 
 export const fetchPdModelSimulateById = createAsyncThunk(
   "pdModels/fetchPdModelSimulateById",
-  async (model_id) => {
+  async (model_id, {getState}) => {
     const response = await api.post(
-      `/api/pharmacodynamic/${model_id}/simulate`
+      `/api/pharmacodynamic/${model_id}/simulate`, getState().login.csrf, {}
     );
     return response;
   }
@@ -53,12 +53,12 @@ export const fetchPdModelSimulateById = createAsyncThunk(
 
 export const addNewPdModel = createAsyncThunk(
   "pdModels/addNewPdModel",
-  async (project, { dispatch }) => {
+  async (project, { dispatch, getState }) => {
     const initialPdModel = {
       name: "new",
       project: project.id,
     };
-    let pdModel = await api.post("/api/pharmacodynamic/", initialPdModel);
+    let pdModel = await api.post("/api/pharmacodynamic/", getState().login.csrf, initialPdModel);
 
     dispatch(fetchVariablesByPdModel(pdModel.id));
     dispatch(fetchUnitsByPdModel(pdModel.id));
@@ -73,18 +73,18 @@ export const deletePdModel = createAsyncThunk(
   async (pdModelId, { dispatch, getState }) => {
     let { modelling } = getState() 
     if (modelling.selectedType === 'pd_model' && modelling.selectedId === pdModelId) {
-      await dispatch(setSelected({id: null, type: null}))
+      dispatch(setSelected({id: null, type: null}))
     }
-    await api.delete(`/api/pharmacodynamic/${pdModelId}`);
+    await api.delete(`/api/pharmacodynamic/${pdModelId}`, getState().login.csrf);
     return pdModelId;
   }
 );
 
 export const uploadPdSbml = createAsyncThunk(
   "pdModels/uploadPdSbml",
-  async ({ id, sbml }, { rejectWithValue, dispatch }) => {
-    await api.putMultiPart(`/api/pharmacodynamic/${id}/sbml/`, { sbml });
-    let pdModel = await api.get(`/api/pharmacodynamic/${id}`);
+  async ({ id, sbml }, { rejectWithValue, dispatch, getState }) => {
+    await api.putMultiPart(`/api/pharmacodynamic/${id}/sbml/`, getState().login.csrf, { sbml });
+    let pdModel = await api.get(`/api/pharmacodynamic/${id}`, getState().login.csrf);
     dispatch(fetchVariablesByPdModel(pdModel.id));
     dispatch(fetchUnitsByPdModel(pdModel.id));
     dispatch(fetchPdModelSimulateById(pdModel.id));
@@ -94,9 +94,9 @@ export const uploadPdSbml = createAsyncThunk(
 
 export const uploadPdMmt = createAsyncThunk(
   "pdModels/uploadPdMmt",
-  async ({ id, mmt }, { rejectWithValue, dispatch }) => {
-    await api.putMultiPart(`/api/pharmacodynamic/${id}/mmt/`, { mmt });
-    let pdModel = await api.get(`/api/pharmacodynamic/${id}`);
+  async ({ id, mmt }, { rejectWithValue, dispatch, getState }) => {
+    await api.putMultiPart(`/api/pharmacodynamic/${id}/mmt/`, getState().login.csrf, { mmt });
+    let pdModel = await api.get(`/api/pharmacodynamic/${id}`, getState().login.csrf);
     dispatch(fetchVariablesByPdModel(pdModel.id));
     dispatch(fetchUnitsByPdModel(pdModel.id));
     dispatch(fetchPdModelSimulateById(pdModel.id));
@@ -106,9 +106,9 @@ export const uploadPdMmt = createAsyncThunk(
 
 export const updatePdModel = createAsyncThunk(
   "pdModels/updatePdModel",
-  async (pdModel, { dispatch }) => {
+  async (pdModel, { dispatch, getState }) => {
     let newPdModel = await api.put(
-      `/api/pharmacodynamic/${pdModel.id}/`,
+      `/api/pharmacodynamic/${pdModel.id}/`, getState().login.csrf,
       pdModel
     );
     dispatch(fetchPdModelSimulateById(newPdModel.id));

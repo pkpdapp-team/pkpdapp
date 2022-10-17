@@ -47,30 +47,15 @@ import { api } from "./Api";
 import InferenceMenu from "./features/menu/InferenceMenu";
 import Projects from "./features/projects/Projects";
 import Project from "./features/projects/Project";
+import RequireLogin from "./features/login/RequireLogin";
 
 
+import { logout, fetchSession } from "./features/login/loginSlice";
 import { fetchAlgorithms } from "./features/inference/algorithmsSlice.js";
 import { fetchUnits } from "./features/projects/unitsSlice.js";
 import { fetchUsers } from "./features/projects/usersSlice.js";
 import { fetchProjects } from "./features/projects/projectsSlice.js";
 
-const PrivateRoute = ({ component: Component, componentProps, ...rest }) => {
-  const logged = api.isLoggedIn();
-  console.log("logged", logged);
-
-  return (
-    <Route
-      {...rest}
-      render={(props) =>
-        logged ? (
-          <Component {...props} {...componentProps} />
-        ) : (
-          <Redirect to="/login" />
-        )
-      }
-    />
-  );
-};
 
 const drawerWidth = 240;
 
@@ -238,13 +223,17 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-export default function App() {
+function LoggedInApp() {
   const classes = useStyles();
   const [open, setOpen] = React.useState(true);
 
   const handleDrawerOpenClose = () => {
     setOpen((prevOpen) => !prevOpen);
   };
+
+  const handleLogout = () => {
+    dispatch(logout());
+  }
 
   let history = useHistory();
   const dispatch = useDispatch();
@@ -281,7 +270,7 @@ export default function App() {
       path: inferencePath,
     });
   }
-  const logged_in = (
+  return (
     <div className={classes.root}>
       <AppBar position="absolute" className={clsx(classes.appBar)}>
         <Toolbar className={classes.toolbar}>
@@ -346,10 +335,7 @@ export default function App() {
           <div className={classes.grow} />
           <Button
             color="inherit"
-            onClick={() => {
-              api.logout();
-              history.push("/login");
-            }}
+            onClick={handleLogout}
           >
             Logout
           </Button>
@@ -360,13 +346,20 @@ export default function App() {
               renders the first one that matches the current URL. */}
         <Container maxWidth={false} className={classes.container}>
         <Switch>
-          <PrivateRoute path="/:id" component={Project} />
-          <PrivateRoute path="/" component={Projects} />
+          <Route path="/:id" component={Project} />
+          <Route path="/" component={Projects} />
         </Switch>
         </Container>
       </MuiPickersUtilsProvider>
     </div>
   );
+}
+
+export default function App() {
+  const dispatch = useDispatch();
+  React.useEffect(() => {
+    dispatch(fetchSession());
+  }, [dispatch]);
 
   return (
     <React.Fragment>
@@ -375,31 +368,11 @@ export default function App() {
         <Route path="/login">
           <Login />
         </Route>
-        <Route path="/reset-password-request">
-          <ResetPasswordRequest />
+        <Route>
+          <RequireLogin>
+            <LoggedInApp />
+          </RequireLogin>
         </Route>
-        <Route path="/reset-password-request-success">
-          <ResetPasswordRequestSuccess />
-        </Route>
-        <Route path="/reset-password/:uid/:token">
-          <ResetPassword />
-        </Route>
-        <Route path="/reset-password-success">
-          <ResetPasswordSuccess />
-        </Route>
-        <Route path="/register">
-          <Register />
-        </Route>
-        <Route path="/activate/:uid/:token">
-          <ActivateUser />
-        </Route>
-        <Route path="/activate-success">
-          <ActivateUserSuccess />
-        </Route>
-        <Route path="/register-success">
-          <RegisterSuccess />
-        </Route>
-        <Route>{logged_in}</Route>
       </Switch>
     </React.Fragment>
   );

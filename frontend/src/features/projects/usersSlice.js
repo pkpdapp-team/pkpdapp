@@ -14,21 +14,21 @@ const initialState = usersAdapter.getInitialState({
   error: null,
 });
 
-export const fetchUsers = createAsyncThunk("users/fetchUsers", async () => {
-  const response = await api.get(`/api/user/`);
+export const fetchUsers = createAsyncThunk("users/fetchUsers", async (_, { getState }) => {
+  const response = await api.get(`/api/user/`, getState().login.csrf);
   return response;
 });
 
-export const addNewUser = createAsyncThunk("users/addNewUser", async () => {
+export const addNewUser = createAsyncThunk("users/addNewUser", async (_, { getState }) => {
   const initialUser = {
     name: "new",
   };
-  const response = await api.post("/api/user/", initialUser);
+  const response = await api.post("/api/user/", getState().login.csrf, initialUser);
   return response;
 });
 
-export const updateUser = createAsyncThunk("users/updateUser", async (user) => {
-  const response = await api.put(`/api/user/${user.id}/`, user);
+export const updateUser = createAsyncThunk("users/updateUser", async (user, { getState }) => {
+  const response = await api.put(`/api/user/${user.id}/`, getState().login.csrf, user);
   return response;
 });
 

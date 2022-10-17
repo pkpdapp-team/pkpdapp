@@ -16,4 +16,5 @@ from .views import (
     AlgorithmView,
     StopInferenceView,
     LogLikelihoodView, InferenceWizardView,
+    login_view, logout_view, get_csrf, SessionView, WhoAmIView,
 )

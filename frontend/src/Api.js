@@ -1,27 +1,5 @@
-let authToken;
-let _loggedInUser;
-
-const isEmpty = (value) =>
-  value === undefined ||
-  value === null ||
-  (typeof value === "object" && Object.keys(value).length === 0) ||
-  (typeof value === "string" && value.trim().length === 0);
-
-// check localStorage
-if (!isEmpty(localStorage.getItem("authToken"))) {
-  authToken = localStorage.getItem("authToken");
-}
-
-if (!isEmpty(localStorage.getItem("loggedInUser"))) {
-  _loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
-}
-
 // derived from https://jasonwatmore.com/post/2020/04/18/fetch-a-lightweight-fetch-wrapper-to-simplify-http-requests
 export const api = {
-  login,
-  logout,
-  isLoggedIn,
-  loggedInUser,
   get,
   post,
   patch,
@@ -30,53 +8,17 @@ export const api = {
   delete: _delete,
 };
 
-function login(username, password) {
-  return fetch("/auth/token/login", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ username, password }),
-  })
-    .then(handleResponse)
-    .then((data) => {
-      authToken = data.auth_token;
-      localStorage.setItem("authToken", authToken);
-      return api.get("auth/users/me/").then((data) => {
-        _loggedInUser = data;
-        localStorage.setItem("loggedInUser", JSON.stringify(_loggedInUser));
-      });
-    });
-}
-
-function logout() {
-  post("/auth/token/logout");
-  authToken = null;
-  localStorage.removeItem("authToken");
-  localStorage.removeItem("loggedInUser");
-  console.log("logout authToken", authToken);
-}
-
-function isLoggedIn() {
-  console.log("authToken", authToken);
-  return !isEmpty(authToken);
-}
-
-function loggedInUser() {
-  return _loggedInUser;
-}
-
-function get(url) {
+function get(url, csrf) {
   const requestOptions = {
     method: "GET",
     headers: {
-      Authorization: `Token ${authToken}`,
+      "X-CSRFToken": csrf,
     },
   };
   return fetch(url, requestOptions).then(handleResponse);
 }
 
-function post(url, body, useToken = true) {
+function post(url, csrf, body) {
   let requestOptions = {
     method: "POST",
     headers: {
@@ -84,25 +26,25 @@ function post(url, body, useToken = true) {
     },
     body: JSON.stringify(body),
   };
-  if (useToken) {
-    requestOptions.headers["Authorization"] = `Token ${authToken}`;
+  if (csrf) {
+    requestOptions.headers["X-CSRFToken"] = csrf;
   }
   return fetch(url, requestOptions).then(handleResponse);
 }
 
-function put(url, body) {
+function put(url, csrf, body) {
   const requestOptions = {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Token ${authToken}`,
+      "X-CSRFToken": csrf,
     },
     body: JSON.stringify(body),
   };
   return fetch(url, requestOptions).then(handleResponse);
 }
 
-function putMultiPart(url, data) {
+function putMultiPart(url, csrf, data) {
   const formData = new FormData();
 
   for (const name in data) {
@@ -111,19 +53,19 @@ function putMultiPart(url, data) {
   const requestOptions = {
     method: "PUT",
     headers: {
-      Authorization: `Token ${authToken}`,
+      "X-CSRFToken": csrf,
     },
     body: formData,
   };
   return fetch(url, requestOptions).then(handleResponse);
 }
 
-function patch(url, body) {
+function patch(url, csrf, body) {
   const requestOptions = {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Token ${authToken}`,
+      "X-CSRFToken": csrf,
     },
     body: JSON.stringify(body),
   };
@@ -131,11 +73,11 @@ function patch(url, body) {
 }
 
 // prefixed with underscored because delete is a reserved word in javascript
-function _delete(url) {
+function _delete(url, csrf) {
   const requestOptions = {
     method: "DELETE",
     headers: {
-      Authorization: `Token ${authToken}`,
+      "X-CSRFToken": csrf,
     },
   };
   return fetch(url, requestOptions).then(handleResponse);
@@ -151,16 +93,10 @@ function handleResponse(response) {
     } catch (e) {
       alert(text);
     }
-    if (response.status === 401) {
-      authToken = null;
-      localStorage.removeItem("authToken");
-      localStorage.removeItem("loggedInUser");
-    }
     if (!response.ok) {
       console.log("API error:", response, response.statusText, data);
       return Promise.reject(data);
     }
-
     return data;
   });
 }

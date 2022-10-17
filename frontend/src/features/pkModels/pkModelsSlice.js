@@ -20,9 +20,9 @@ const initialState = pkModelsAdapter.getInitialState({
 
 export const fetchPkModels = createAsyncThunk(
   "pkModels/fetchPkModels",
-  async (project_id, { dispatch }) => {
+  async (project_id, { dispatch, getState }) => {
     const response = await api.get(
-      `/api/dosed_pharmacokinetic/?project_id=${project_id}`
+      `/api/dosed_pharmacokinetic/?project_id=${project_id}`, getState().login.csrf
     );
     for (var i = 0; i < response.length; i++) {
       if (!response[i].read_only) {
@@ -35,8 +35,8 @@ export const fetchPkModels = createAsyncThunk(
 
 export const fetchPkModelById = createAsyncThunk(
   "pkModels/fetchPkModelById",
-  async (model_id, { dispatch }) => {
-    let response = await api.get(`/api/dosed_pharmacokinetic/${model_id}/`);
+  async (model_id, { dispatch, getState }) => {
+    let response = await api.get(`/api/dosed_pharmacokinetic/${model_id}/`, getState().login.csrf);
     dispatch(fetchVariablesByPkModel(response.id));
     dispatch(fetchUnitsByPkModel(response.id));
     dispatch(fetchPkModelSimulateById(response.id));
@@ -46,9 +46,9 @@ export const fetchPkModelById = createAsyncThunk(
 
 export const fetchPkModelSimulateById = createAsyncThunk(
   "pkModels/fetchPkModelSimulateById",
-  async (model_id, { dispatch }) => {
+  async (model_id, { dispatch, getState }) => {
     const response = await api.post(
-      `/api/dosed_pharmacokinetic/${model_id}/simulate`
+      `/api/dosed_pharmacokinetic/${model_id}/simulate`, getState().login.csrf
     );
     return response;
   }
@@ -61,20 +61,20 @@ export const deletePkModel = createAsyncThunk(
     if (modelling.selectedType === 'pk_model' && modelling.selectedId === pkModelId) {
       await dispatch(setSelected({id: null, type: null}))
     }
-    await api.delete(`/api/dosed_pharmacokinetic/${pkModelId}`);
+    await api.delete(`/api/dosed_pharmacokinetic/${pkModelId}`, getState().login.csrf);
     return pkModelId;
   }
 );
 
 export const addNewPkModel = createAsyncThunk(
   "pkModels/addNewPkModel",
-  async (project, { dispatch }) => {
+  async (project, { dispatch, getState }) => {
     const initialPkModel = {
       name: "new",
       project: project.id,
       mappings: [],
     };
-    let pkModel = await api.post("/api/dosed_pharmacokinetic/", initialPkModel);
+    let pkModel = await api.post("/api/dosed_pharmacokinetic/", getState().login.csrf, initialPkModel);
     dispatch(fetchVariablesByPkModel(pkModel.id));
     dispatch(fetchUnitsByPkModel(pkModel.id));
     dispatch(fetchPkModelSimulateById(pkModel.id));
@@ -84,9 +84,9 @@ export const addNewPkModel = createAsyncThunk(
 
 export const updatePkModel = createAsyncThunk(
   "pkModels/updatePkModel",
-  async (pkModel, { dispatch }) => {
+  async (pkModel, { dispatch, getState }) => {
     let newPkModel = await api.put(
-      `/api/dosed_pharmacokinetic/${pkModel.id}/`,
+      `/api/dosed_pharmacokinetic/${pkModel.id}/`, getState().login.csrf,
       pkModel
     );
     // an update could create new variables

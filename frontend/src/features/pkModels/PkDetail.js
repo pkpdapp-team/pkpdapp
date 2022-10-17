@@ -170,7 +170,7 @@ export default function PkDetail({ project, pk_model }) {
     { key: "peripheral2", value: "peripheral2" },
   ];
 
-  const disableSave = userHasReadOnlyAccess(project);
+  const disableSave = useSelector(state => userHasReadOnlyAccess(state, project));
 
   return (
     <Paper>
