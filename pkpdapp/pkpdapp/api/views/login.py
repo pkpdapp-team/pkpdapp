@@ -1,3 +1,8 @@
+#
+# This file is part of PKPDApp (https://github.com/pkpdapp-team/pkpdapp) which
+# is released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
+#
 import json
 
 from django.contrib.auth import authenticate, login, logout
@@ -5,10 +10,11 @@ from django.http import JsonResponse
 from django.middleware.csrf import get_token
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_POST
-from rest_framework.authentication import SessionAuthentication, BasicAuthentication
+from rest_framework.authentication import (
+    SessionAuthentication, BasicAuthentication
+)
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
-from rest_framework.generics import GenericAPIView
 from pkpdapp.api.serializers import UserSerializer
 
 
@@ -28,7 +34,9 @@ def login_view(request):
     password = data.get('password')
 
     if username is None or password is None:
-        return JsonResponse({'detail': 'Please provide username and password.'}, status=400)
+        return JsonResponse({
+            'detail': 'Please provide username and password.'
+        }, status=400)
 
     user = authenticate(username=username, password=password)
 
@@ -37,7 +45,10 @@ def login_view(request):
 
     login(request, user)
 
-    return JsonResponse({'user': UserSerializer(user).data, 'detail': 'Successfully logged in.'})
+    return JsonResponse({
+        'user': UserSerializer(user).data,
+        'detail': 'Successfully logged in.'
+    })
 
 
 def logout_view(request):

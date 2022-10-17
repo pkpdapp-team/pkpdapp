@@ -5,7 +5,6 @@
 #
 from rest_framework import views, status
 from rest_framework.response import Response
-from rest_framework import authentication, permissions
 from pkpdapp.models import (
     DosedPharmacokineticModel, PharmacodynamicModel,
 )
