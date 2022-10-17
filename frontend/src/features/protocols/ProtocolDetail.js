@@ -106,7 +106,9 @@ export default function ProtocolDetail({ project, protocol }) {
     { title: "Duration", field: "duration" },
   ];
 
-  const disableSave = protocol.dataset || userHasReadOnlyAccess(project);
+  let disableSave = useSelector(state => userHasReadOnlyAccess(state, project));
+  disableSave = protocol.dataset || disableSave;
+
 
   return (
     <Paper>

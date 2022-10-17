@@ -17,7 +17,7 @@ const initialState = unitsAdapter.getInitialState({
 export const fetchUnits = createAsyncThunk(
   "units/fetchUnits",
   async (project, { getState }) => {
-    const response = await api.get(`/api/unit/`);
+    const response = await api.get(`/api/unit/`, getState().login.csrf);
     return response;
   }
 );
@@ -25,7 +25,7 @@ export const fetchUnits = createAsyncThunk(
 export const fetchUnitsByPdModel = createAsyncThunk(
   "units/fetchUnitsByPdModel",
   async (pd_model_id, { getState }) => {
-    const response = await api.get(`/api/unit/?pd_model_id=${pd_model_id}`);
+    const response = await api.get(`/api/unit/?pd_model_id=${pd_model_id}`, getState().login.csrf);
     return response;
   }
 );
@@ -34,22 +34,22 @@ export const fetchUnitsByPkModel = createAsyncThunk(
   "units/fetchUnitsByPkModel",
   async (pk_model_id, { getState }) => {
     const response = await api.get(
-      `/api/unit/?dosed_pk_model_id=${pk_model_id}`
+      `/api/unit/?dosed_pk_model_id=${pk_model_id}`, getState().login.csrf
     );
     return response;
   }
 );
 
-export const addNewUnit = createAsyncThunk("units/addNewUnit", async () => {
+export const addNewUnit = createAsyncThunk("units/addNewUnit", async (_, { getState}) => {
   const initialUnit = {
     name: "new",
   };
-  const unit = await api.post("/api/unit/", initialUnit);
+  const unit = await api.post("/api/unit/", getState().login.csrf, initialUnit);
   return unit;
 });
 
-export const updateUnit = createAsyncThunk("units/updateUnit", async (unit) => {
-  const response = await api.put(`/api/unit/${unit.id}/`, unit);
+export const updateUnit = createAsyncThunk("units/updateUnit", async (unit, { getState }) => {
+  const response = await api.put(`/api/unit/${unit.id}/`, getState().login.csrf, unit);
   return response;
 });
 

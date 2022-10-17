@@ -14,9 +14,11 @@ import variablesReducer from "../features/variables/variablesSlice";
 import inferensesReducer from "../features/inference/inferenceSlice";
 import algorithmsReducer from "../features/inference/algorithmsSlice";
 import chainsReducer from "../features/inference/chainSlice";
+import loginReducer from "../features/login/loginSlice";
 
 export default configureStore({
   reducer: {
+    login: loginReducer,
     projects: projectsReducer,
     datasets: datasetsReducer,
     biomarkerTypes: biomarkerTypesReducer,

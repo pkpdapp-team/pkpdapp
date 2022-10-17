@@ -93,7 +93,8 @@ function Mmt({ item, project }) {
 }
 
 function ModellingMenu({ project }) {
-  const disableSave = project ? userHasReadOnlyAccess(project) : true;
+  const readOnly = useSelector((state) => userHasReadOnlyAccess(state, project));
+  const disableSave = project ? readOnly : true;
   const dispatch = useDispatch();
   const handleProjectClick = () => dispatch(clearSelectItem());
   return (

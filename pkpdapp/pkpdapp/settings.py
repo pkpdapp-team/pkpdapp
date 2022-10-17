@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'djoser',
     'rest_framework',
     'rest_framework.authtoken',
+    'corsheaders',
 
     # internal apps
     'pkpdapp',
@@ -84,9 +85,12 @@ DJOSER = {
 
 # django rest framework library
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework.authentication.TokenAuthentication',
-    ),
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+    ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ]
@@ -143,7 +147,14 @@ MIDDLEWARE = [
 
 CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:3000",
+    "http://localhost:3000",
+    "http://" + os.environ.get('HOST_NAME', 'bamad.herokuapp.com')
 ]
+
+CORS_ALLOW_ALL_ORIGINS = True
+
+CORS_EXPOSE_HEADERS = ['Content-Type', 'X-CSRFToken']
+CORS_ALLOW_CREDENTIALS = True
 
 ROOT_URLCONF = 'pkpdapp.urls'
 
@@ -163,7 +174,21 @@ TEMPLATES = [
     },
 ]
 
+
 X_FRAME_OPTIONS = 'SAMEORIGIN'
+
+# WSGI_APPLICATION = 'bamad.wsgi.application'
+
+# authentication cookie settings
+CSRF_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_HTTPONLY = False
+SESSION_COOKIE_HTTPONLY = True
+
+# PROD ONLY
+# CSRF_COOKIE_SECURE = True
+# SESSION_COOKIE_SECURE = True
+
 
 WSGI_APPLICATION = 'pkpdapp.wsgi.application'
 

@@ -17,27 +17,27 @@ const initialState = algorithmsAdapter.getInitialState({
 export const fetchAlgorithms = createAsyncThunk(
   "algorithms/fetchAlgorithms",
   async (project, { getState }) => {
-    const response = await api.get(`/api/algorithm/`);
+    const response = await api.get(`/api/algorithm/`, getState().login.csrf);
     return response;
   }
 );
 
 export const addNewAlgorithm = createAsyncThunk(
   "algorithms/addNewAlgorithm",
-  async () => {
+  async (_, { getState }) => {
     const initialAlgorithm = {
       name: "new",
     };
-    const algorithm = await api.post("/api/algorithm/", initialAlgorithm);
+    const algorithm = await api.post("/api/algorithm/", getState().login.csrf, initialAlgorithm);
     return algorithm;
   }
 );
 
 export const updateAlgorithm = createAsyncThunk(
   "algorithms/updateAlgorithm",
-  async (algorithm) => {
+  async (algorithm, {getState}) => {
     const response = await api.put(
-      `/api/algorithm/${algorithm.id}/`,
+      `/api/algorithm/${algorithm.id}/`, getState().login.csrf,
       algorithm
     );
     return response;

@@ -19,20 +19,20 @@ const initialState = protocolsAdapter.getInitialState({
 export const fetchProtocols = createAsyncThunk(
   "protocols/fetchProtocols",
   async (project_id, { getState }) => {
-    const response = await api.get(`/api/protocol/?project_id=${project_id}`);
+    const response = await api.get(`/api/protocol/?project_id=${project_id}`, getState().login.csrf);
     return response;
   }
 );
 
 export const addNewProtocol = createAsyncThunk(
   "protocols/addNewProtocol",
-  async (project, { dispatch }) => {
+  async (project, { dispatch, getState }) => {
     const initialProtocol = {
       name: "new",
       dose_ids: [],
       project: project.id,
     };
-    let protocol = await api.post("/api/protocol/", initialProtocol);
+    let protocol = await api.post("/api/protocol/", getState().login.csrf, initialProtocol);
     return protocol;
   }
 );
@@ -44,7 +44,7 @@ export const deleteProtocol = createAsyncThunk(
     if (modelling.selectedType === 'protocol' && modelling.selectedId === protocolId) {
       await dispatch(setSelected({id: null, type: null}))
     }
-    await api.delete(`/api/protocol/${protocolId}`);
+    await api.delete(`/api/protocol/${protocolId}`, getState().login.csrf);
     return protocolId;
   }
 );
@@ -52,6 +52,7 @@ export const deleteProtocol = createAsyncThunk(
 export const updateProtocol = createAsyncThunk(
   "protocols/updateProtocol",
   async (protocol, { getState, dispatch }) => {
+    const csrf = getState().login.csrf
     const dosePromises = protocol.doses.map((dose) => {
       // add or update doses
       const data = {
@@ -59,9 +60,9 @@ export const updateProtocol = createAsyncThunk(
         ...dose,
       };
       if (dose.id) {
-        return api.put(`/api/dose/${dose.id}/`, data);
+        return api.put(`/api/dose/${dose.id}/`, csrf, data);
       } else {
-        return api.post(`/api/dose/`, data);
+        return api.post(`/api/dose/`, csrf, data);
       }
     });
     const dose_ids = await Promise.all(dosePromises).then((doses) =>
@@ -74,14 +75,14 @@ export const updateProtocol = createAsyncThunk(
       .filter((x) => !dose_ids.includes(x));
     await Promise.all(
       toDelete.map((id) => {
-        return api.delete(`api/dose/${id}/`);
+        return api.delete(`api/dose/${id}/`, csrf);
       })
     );
 
     console.log("have dose_ids", dose_ids, toDelete);
     const updatedProtocol = { ...protocol, dose_ids };
     const newProtocol = await api.put(
-      `/api/protocol/${protocol.id}/`,
+      `/api/protocol/${protocol.id}/`, csrf,
       updatedProtocol
     );
     console.log("got new protocol", newProtocol);

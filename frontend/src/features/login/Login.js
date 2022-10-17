@@ -1,14 +1,18 @@
 import { api } from "../../Api";
 import { makeStyles } from "@material-ui/core/styles";
+import { useSelector, useDispatch } from "react-redux";
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation, Redirect } from "react-router-dom";
 import Button from "@material-ui/core/Button";
+import CssBaseline from "@material-ui/core/CssBaseline";
+import Alert from "@material-ui/lab/Alert";
 import { useForm } from "react-hook-form";
 import Typography from "@material-ui/core/Typography";
 import Container from "@material-ui/core/Container";
 import { useHistory } from "react-router-dom";
 import { FormTextField } from "../forms/FormComponents";
 import { ReactComponent as PkpdAppIcon } from "../../logo_pkpdapp_with_text.svg";
+import { isAuthenticated, loginError, setCredentials, login } from "../login/loginSlice"
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -38,20 +42,28 @@ const useStyles = makeStyles((theme) => ({
 
 export default function Login() {
   const classes = useStyles();
+  const dispatch = useDispatch();
   const { control, handleSubmit } = useForm();
 
+  const navigateBack = useSelector(isAuthenticated);
+  const location = useLocation();
+  const error = useSelector(loginError);
   const history = useHistory();
+  const from = location.state?.referrer || "/";
 
-  const onSubmit = (values) => {
-    console.log("You pressed login");
-    api.login(values.username, values.password).then((data) => {
-      console.log("login success", data);
-      history.push("/");
-    });
+  if (navigateBack) {
+    return <Redirect to={from} replace />
+  }
+
+
+  const onSubmit = ({ username, password }) => {
+    console.log("You pressed login", username, password);
+    dispatch(login({ username, password }))
   };
 
   return (
     <Container component="main" maxWidth="xs">
+      <CssBaseline />
       <div className={classes.paper}>
         <PkpdAppIcon className={classes.icon} />
         <Typography component="h1" variant="h5">
@@ -87,11 +99,8 @@ export default function Login() {
           >
             Sign In
           </Button>
+          {error && <Alert severity="error">{error}</Alert>}
         </form>
-        <div className={classes.links}>
-          <Link to="/register">Register new user</Link>
-          <Link to="/reset-password-request">Password reset</Link>
-        </div>
       </div>
     </Container>
   );

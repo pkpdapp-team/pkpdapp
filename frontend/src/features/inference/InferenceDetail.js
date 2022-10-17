@@ -755,7 +755,7 @@ export default function InferenceDetail({ project, inference }) {
     dispatch(updateInference(values));
   };
 
-  const readOnly = userHasReadOnlyAccess(project) || inference.read_only;
+  const readOnly = useSelector(state => userHasReadOnlyAccess(state, project)) || inference.read_only;
 
   const algorithms = useSelector(selectAllAlgorithms);
   const algorithm_options = algorithms

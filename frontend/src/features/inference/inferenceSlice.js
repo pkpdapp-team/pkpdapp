@@ -33,8 +33,8 @@ const inference = new schema.Entity("inferences", {
 
 export const fetchInferences = createAsyncThunk(
   "inferences/fetchInferences",
-  async (project_id, { dispatch }) => {
-    let response = await api.get(`/api/inference/?project_id=${project_id}`);
+  async (project_id, { dispatch, getState }) => {
+    let response = await api.get(`/api/inference/?project_id=${project_id}`, getState().login.csrf);
     //const normalized = normalize(response, [inference]);
     //console.log("fetchInferences got", response, normalized);
 
@@ -44,21 +44,21 @@ export const fetchInferences = createAsyncThunk(
 
 export const fetchInferenceById = createAsyncThunk(
   "inferences/fetchInferenceById",
-  async (inferenceId, { dispatch }) => {
-    let inference = await api.get(`/api/inference/${inferenceId}/`);
+  async (inferenceId, { dispatch, getState }) => {
+    let inference = await api.get(`/api/inference/${inferenceId}/`, getState().login.csrf);
     return inference;
   }
 );
 
 export const addNewInference = createAsyncThunk(
   "inferences/addNewInference",
-  async (project, { dispatch }) => {
+  async (project, { dispatch, getState }) => {
     const initialInference = {
       name: "new",
       project: project.id,
       log_likelihoods: [],
     };
-    let inference = await api.post("/api/inference/", initialInference);
+    let inference = await api.post("/api/inference/", getState().login.csrf, initialInference);
     inference.chosen = true;
 
     return inference;
@@ -67,9 +67,9 @@ export const addNewInference = createAsyncThunk(
 
 export const updateInference = createAsyncThunk(
   "inferences/updateInference",
-  async (inference, { dispatch }) => {
+  async (inference, { dispatch, getState }) => {
     const response = await api.put(
-      `/api/inference/${inference.id}/`,
+      `/api/inference/${inference.id}/`, getState().login.csrf,
       inference
     );
     return response;
@@ -78,8 +78,8 @@ export const updateInference = createAsyncThunk(
 
 export const runInferenceWizard = createAsyncThunk(
   "inferences/runInferenceWizard",
-  async (inference, { dispatch }) => {
-    const newInference = await api.post(`/api/inference/wizard`, inference);
+  async (inference, { dispatch, getState }) => {
+    const newInference = await api.post(`/api/inference/wizard`, getState().login.csrf, inference);
     for (const log_likelihood of newInference.log_likelihoods) {
       if (log_likelihood.model && log_likelihood.model[0] === 'pkpdapp_pharmacodynamicmodel') {
         dispatch(fetchPdModelById(log_likelihood.model[1]))
@@ -99,8 +99,8 @@ export const runInferenceWizard = createAsyncThunk(
 
 export const runInference = createAsyncThunk(
   "inferences/runInference",
-  async (inferenceId, { dispatch }) => {
-    const newInference = await api.post(`/api/inference/${inferenceId}/run`);
+  async (inferenceId, { dispatch, getState }) => {
+    const newInference = await api.post(`/api/inference/${inferenceId}/run`, getState().login.csrf);
     //const normalized = normalize(newInference, inference);
     for (const log_likelihood of newInference.log_likelihoods) {
       if (log_likelihood.pd_model) {
@@ -118,8 +118,8 @@ export const runInference = createAsyncThunk(
 
 export const stopInference = createAsyncThunk(
   "inferences/stopInference",
-  async (inferenceId, { dispatch }) => {
-    const newInference = await api.post(`/api/inference/${inferenceId}/stop`);
+  async (inferenceId, { dispatch, getState }) => {
+    const newInference = await api.post(`/api/inference/${inferenceId}/stop`, getState().login.csrf);
     //const normalized = normalize(newInference, inference);
     return newInference;
   }
@@ -127,8 +127,8 @@ export const stopInference = createAsyncThunk(
 
 export const deleteInference = createAsyncThunk(
   "inferences/deleteInference",
-  async (inferenceId, { dispatch }) => {
-    await api.delete(`/api/inference/${inferenceId}/`);
+  async (inferenceId, { dispatch, getState }) => {
+    await api.delete(`/api/inference/${inferenceId}/`, getState().login.csrf);
     return inferenceId;
   }
 );

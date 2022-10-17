@@ -18,14 +18,14 @@ const initialState = projectsAdapter.getInitialState({
 
 export const fetchProjects = createAsyncThunk(
   "projects/fetchProjects",
-  async () => {
-    return await api.get(`/api/project/`);
+  async (_, { getState }) => {
+    return await api.get(`/api/project/`, getState().login.csrf);
   }
 );
 
 export const addNewProject = createAsyncThunk(
   "projects/addNewProject",
-  async () => {
+  async (_, { getState }) => {
     const initialProject = {
       name: "new",
       user_access: [
@@ -33,26 +33,27 @@ export const addNewProject = createAsyncThunk(
       ],
     };
     console.log("addNewProject", initialProject);
-    return await api.post("/api/project/", initialProject);
+    return await api.post("/api/project/", getState().login.csrf, initialProject);
   }
 );
 
 export const deleteProject = createAsyncThunk(
   "projects/deleteProject",
-  async (projectId, { dispatch }) => {
-    await api.delete(`/api/project/${projectId}`);
+  async (projectId, { dispatch, getState }) => {
+    await api.delete(`/api/project/${projectId}`, getState().login.csrf);
     return projectId;
   }
 );
 
 export const updateProject = createAsyncThunk(
   "projects/updateProject",
-  async (project) => {
+  async (project, { getState }) => {
+    const csrf = getState().login.csrf;
     for (const access of project.user_access) {
       if (project.users.includes(access.user)) {
-        await api.put(`/api/project_access/${access.id}/`, access);
+        await api.put(`/api/project_access/${access.id}/`, csrf, access);
       } else {
-        await api.delete(`/api/project_access/${access.id}/`);
+        await api.delete(`/api/project_access/${access.id}/`, csrf);
       }
     }
     for (const user_id of project.users) {
@@ -61,10 +62,10 @@ export const updateProject = createAsyncThunk(
           project: project.id,
           user: user_id,
         };
-        await api.post(`/api/project_access/`, new_access);
+        await api.post(`/api/project_access/`, csrf,  new_access);
       }
     }
-    const new_project = await api.put(`/api/project/${project.id}/`, project);
+    const new_project = await api.put(`/api/project/${project.id}/`, csrf, project);
     return new_project;
   }
 );
@@ -117,12 +118,12 @@ export const {
 
 export const selectMyProjects = (state) =>
   selectAllProjects(state).filter((p) =>
-    p.users.includes(api.loggedInUser().id)
+    p.users.includes(state.login.user.id)
   );
 
-export const userHasReadOnlyAccess = (project) => {
+export const userHasReadOnlyAccess = (state, project) => {
   const access = project.user_access.find(
-    (x) => x.user === api.loggedInUser().id
+    (x) => x.user === state.login.user.id
   );
   return access.read_only;
 };
