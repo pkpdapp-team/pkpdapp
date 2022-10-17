@@ -20,11 +20,11 @@ class PharmacodynamicModel(MechanisticModel, StoredModel):
         blank=True, null=True,
         help_text='Project that "owns" this model'
     )
-    __original_sbml = None
+    __original_mmt = None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.__original_sbml = self.sbml
+        self.__original_mmt = self.mmt
 
     def get_absolute_url(self):
         return reverse('pd_model-detail', kwargs={'pk': self.pk})
@@ -41,17 +41,17 @@ class PharmacodynamicModel(MechanisticModel, StoredModel):
         if self.read_only:
             return
 
-        if created or self.sbml != self.__original_sbml:
+        if created or self.mmt != self.__original_mmt:
             self.update_model()
 
-        self.__original_sbml = self.sbml
+        self.__original_mmt = self.mmt
 
     def create_stored_model(self):
         stored_model_kwargs = {
             'name': self.name,
             'description': self.description,
             'project': self.project,
-            'sbml': self.sbml,
+            'mmt': self.mmt,
             'time_max': self.time_max,
             'read_only': True,
         }

@@ -69,23 +69,6 @@ export default function ComponentForm({ control, component, disableSave }) {
           );
         })}
       </List>
-
-      <Typography>Equations</Typography>
-      <List>
-        {component.equations.map((eq, index) => {
-          return (
-            <ListItem key={index}>
-              <MathJaxPreview
-                math={eq}
-                style={{
-                  maxWidth: 600,
-                }}
-                config={mathjaxConfig}
-              />
-            </ListItem>
-          );
-        })}
-      </List>
     </div>
   );
 }

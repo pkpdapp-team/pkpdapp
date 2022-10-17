@@ -59,6 +59,7 @@ class Protocol(StoredModel):
 
     time_unit = models.ForeignKey(
         Unit, on_delete=models.PROTECT,
+        blank=True, null=True,
         default=get_h_unit,
         related_name='protocols_time',
         help_text=(
@@ -69,6 +70,7 @@ class Protocol(StoredModel):
     amount_unit = models.ForeignKey(
         Unit, on_delete=models.PROTECT,
         default=get_mg_unit,
+        blank=True, null=True,
         related_name='protocols_amount',
         help_text='unit for the amount value stored in each dose'
     )

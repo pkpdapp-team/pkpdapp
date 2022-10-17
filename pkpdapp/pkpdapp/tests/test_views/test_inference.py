@@ -663,6 +663,9 @@ class TestInferenceWizardView(APITestCase):
             subjects__dataset=dataset,
             subjects__id_in_dataset=1,
         )
+        print('xxxxx')
+        for v in pd_model.variables.all():
+            print(v.qname)
         pkpd_model = DosedPharmacokineticModel.objects.create(
             name='usecase2',
             pk_model=pk_model,

@@ -13,6 +13,7 @@ import Drawer from "@material-ui/core/Drawer";
 import Accordion from "@material-ui/core/Accordion";
 import AccordionSummary from "@material-ui/core/AccordionSummary";
 import AccordionDetails from "@material-ui/core/AccordionDetails";
+import Box from "@material-ui/core/Box";
 import CircularProgress from "@material-ui/core/CircularProgress";
 import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
 import Typography from "@material-ui/core/Typography";
@@ -23,6 +24,8 @@ import ListItemText from "@material-ui/core/ListItemText";
 
 import { makeStyles } from "@material-ui/core/styles";
 
+import Header from "../modelling/Header";
+import Footer from "../modelling/Footer";
 import { selectChosenProject, userHasReadOnlyAccess } from "../projects/projectsSlice.js";
 
 import { selectChosenDatasets, selectChosenDatasetProtocols, selectDatasetById } from "../datasets/datasetsSlice.js";
@@ -61,7 +64,33 @@ const useStyles = makeStyles((theme) => ({
     height: "50vh",
     width: "100%",
   },
+  mmt_box: {
+    width: "100%",
+    padding: theme.spacing(2),
+    maxHeight: '23vh', overflow: 'auto'
+  },
+  mmt: {
+    whiteSpace: 'pre-wrap'
+  },
 }));
+
+function Mmt({ item, project }) {
+  const classes = useStyles();
+  console.log('mmt', item.mmt)
+  return (
+    <Paper>
+      <Header title="Model source" />
+        <Box className={classes.mmt_box}>
+          <Typography className={classes.mmt} display="block">
+            {item.mmt}
+          </Typography>
+        </Box>
+      <Footer
+        buttons={[]}
+      />
+    </Paper>
+  )
+}
 
 function ModellingMenu({ project }) {
   const disableSave = project ? userHasReadOnlyAccess(project) : true;
@@ -150,19 +179,19 @@ function SelectedItem({ project }) {
     )
   }
   let itemDetail = null
-  if (type == 'dataset') {
+  if (type === 'dataset') {
     itemDetail = (
       <DatasetDetail dataset={item} project={project} />
     )
-  } else if (type == 'pk_model') {
+  } else if (type === 'pk_model') {
     itemDetail = (
       <PkDetail pk_model={item} project={project} />
     )
-  } else if (type == 'pd_model') {
+  } else if (type === 'pd_model') {
     itemDetail = (
       <PdDetail pd_model={item} project={project} />
     )
-  } else if (type == 'protocol') {
+  } else if (type === 'protocol') {
     itemDetail = (
       <ProtocolDetail protocol={item} project={project} />
     )
@@ -170,6 +199,43 @@ function SelectedItem({ project }) {
     itemDetail = (
       <ProjectDetail project={project} />
     )
+  }
+  return itemDetail;
+}
+
+function SelectedItemSecondary({ project }) {
+  const id = useSelector((state) => state.modelling.selectedId);
+  const type = useSelector((state) => state.modelling.selectedType);
+  let selector = null;
+  
+  if (type === 'pk_model') {
+    selector = selectPkModelById
+  }
+  if (type === 'pd_model') {
+    selector = selectPdModelById
+  }
+  const item = useSelector((state) => selector ? selector(state, id) : null)
+
+  if (type !== 'pk_model' && type !== 'pd_model' ) {
+    return (null)
+  }
+  
+  if (type && !item) {
+    return (
+      <CircularProgress />
+    )
+  }
+  let itemDetail = null
+  if (type === 'pk_model') {
+    itemDetail = (
+      <Mmt item={item} project={project} />
+    )
+  } else if (type === 'pd_model') {
+    itemDetail = (
+      <Mmt item={item} project={project} />
+    )
+  } else {
+    itemDetail = (null)
   }
   return itemDetail;
 }
@@ -198,7 +264,6 @@ export default function Modelling({project}) {
             />
         </Paper>
       </Grid>
-      
     </Grid>
     </div>
   </div>

@@ -92,6 +92,18 @@ export const uploadPdSbml = createAsyncThunk(
   }
 );
 
+export const uploadPdMmt = createAsyncThunk(
+  "pdModels/uploadPdMmt",
+  async ({ id, mmt }, { rejectWithValue, dispatch }) => {
+    await api.putMultiPart(`/api/pharmacodynamic/${id}/mmt/`, { mmt });
+    let pdModel = await api.get(`/api/pharmacodynamic/${id}`);
+    dispatch(fetchVariablesByPdModel(pdModel.id));
+    dispatch(fetchUnitsByPdModel(pdModel.id));
+    dispatch(fetchPdModelSimulateById(pdModel.id));
+    return pdModel;
+  }
+);
+
 export const updatePdModel = createAsyncThunk(
   "pdModels/updatePdModel",
   async (pdModel, { dispatch }) => {
@@ -172,6 +184,18 @@ export const pdModelsSlice = createSlice({
       state.entities[action.meta.arg.id].errors = action.payload.sbml;
     },
     [uploadPdSbml.fulfilled]: (state, action) => {
+      state.entities[action.meta.arg.id].status = "failed";
+      pdModelsAdapter.upsertOne(state, action);
+    },
+    [uploadPdMmt.pending]: (state, action) => {
+      state.entities[action.meta.arg.id].status = "loading";
+      state.entities[action.meta.arg.id].errors = [];
+    },
+    [uploadPdMmt.rejected]: (state, action) => {
+      state.entities[action.meta.arg.id].status = "failed";
+      state.entities[action.meta.arg.id].errors = action.payload.mmt;
+    },
+    [uploadPdMmt.fulfilled]: (state, action) => {
       state.entities[action.meta.arg.id].status = "failed";
       pdModelsAdapter.upsertOne(state, action);
     },

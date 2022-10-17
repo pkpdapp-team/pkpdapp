@@ -89,7 +89,7 @@ class Migration(migrations.Migration):
                 ('datetime', models.DateTimeField(blank=True, help_text='datetime the object was stored.', null=True)),
                 ('name', models.CharField(help_text='name of the model', max_length=100)),
                 ('dose_compartment', models.CharField(blank=True, default='central', help_text='compartment name to be dosed', max_length=100, null=True)),
-                ('time_max', models.FloatField(default=30, help_text='suggested time to simulate after the last dose (in the time units specified by the sbml model)')),
+                ('time_max', models.FloatField(default=30, help_text='suggested time to simulate after the last dose (in the time units specified by the mmt model)')),
             ],
             options={
                 'abstract': False,
@@ -148,8 +148,8 @@ class Migration(migrations.Migration):
                 ('datetime', models.DateTimeField(blank=True, help_text='datetime the object was stored.', null=True)),
                 ('name', models.CharField(help_text='name of the model', max_length=100)),
                 ('description', models.TextField(blank=True, default='', help_text='short description of the model')),
-                ('sbml', models.TextField(default='<?xml version="1.0" encoding="UTF-8"?><sbml xmlns="http://www.sbml.org/sbml/level3/version2/core" level="3" version="2"><model id="default"></model></sbml>', help_text='the model represented using SBML (see http://sbml.org)')),
-                ('time_max', models.FloatField(default=30, help_text='suggested maximum time to simulate for this model (in the time units specified by the sbml model)')),
+                ('mmt', models.TextField(default='[[model]]\n\n[myokit]\ntime = 0 bind time', help_text='the model represented using mmt (see https://myokit.readthedocs)')),
+                ('time_max', models.FloatField(default=30, help_text='suggested maximum time to simulate for this model (in the time units specified by the mmt model)')),
             ],
             options={
                 'abstract': False,
@@ -164,8 +164,8 @@ class Migration(migrations.Migration):
                 ('datetime', models.DateTimeField(blank=True, help_text='datetime the object was stored.', null=True)),
                 ('name', models.CharField(help_text='name of the model', max_length=100)),
                 ('description', models.TextField(blank=True, default='', help_text='short description of the model')),
-                ('sbml', models.TextField(default='<?xml version="1.0" encoding="UTF-8"?><sbml xmlns="http://www.sbml.org/sbml/level3/version2/core" level="3" version="2"><model id="default"></model></sbml>', help_text='the model represented using SBML (see http://sbml.org)')),
-                ('time_max', models.FloatField(default=30, help_text='suggested maximum time to simulate for this model (in the time units specified by the sbml model)')),
+                ('mmt', models.TextField(default='[[model]]\n\n[myokit]\ntime = 0 bind time', help_text='the model represented using mmt (see https://myokit.readthedocs)')),
+                ('time_max', models.FloatField(default=30, help_text='suggested maximum time to simulate for this model (in the time units specified by the mmt model)')),
             ],
             options={
                 'abstract': False,
@@ -232,6 +232,7 @@ class Migration(migrations.Migration):
                 ('default_value', models.FloatField(default=1, help_text='default value for this variable')),
                 ('is_log', models.BooleanField(default=False, help_text='True if default_value is stored as the log of this value')),
                 ('name', models.CharField(help_text='name of the variable', max_length=100)),
+                ('binding', models.CharField(blank=True, help_text='myokit binding of the variable (e.g. time)', max_length=100, null=True)),
                 ('qname', models.CharField(help_text='fully qualitifed name of the variable', max_length=200)),
                 ('constant', models.BooleanField(default=True, help_text='True for a constant variable of the model, i.e. a parameter. False if non-constant, i.e. an output of the model (default is True)')),
                 ('state', models.BooleanField(default=False, help_text='True for a state variable of the model (default is False)')),
@@ -241,7 +242,7 @@ class Migration(migrations.Migration):
                 ('dosed_pk_model', models.ForeignKey(blank=True, help_text='dosed pharmacokinetic model', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='variables', to='pkpdapp.dosedpharmacokineticmodel')),
                 ('pd_model', models.ForeignKey(blank=True, help_text='pharmacodynamic model', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='variables', to='pkpdapp.pharmacodynamicmodel')),
                 ('pk_model', models.ForeignKey(blank=True, help_text='pharmacokinetic model', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='variables', to='pkpdapp.pharmacokineticmodel')),
-                ('unit', models.ForeignKey(help_text='variable values are in this unit (note this might be different from the unit in the stored sbml)', on_delete=django.db.models.deletion.PROTECT, to='pkpdapp.unit')),
+                ('unit', models.ForeignKey(blank=True, help_text='variable values are in this unit (note this might be different from the unit in the stored sbml)', null=True, on_delete=django.db.models.deletion.PROTECT, to='pkpdapp.unit')),
             ],
         ),
         migrations.CreateModel(
@@ -270,7 +271,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='protocol',
             name='amount_unit',
-            field=models.ForeignKey(default=pkpdapp.models.protocol.get_mg_unit, help_text='unit for the amount value stored in each dose', on_delete=django.db.models.deletion.PROTECT, related_name='protocols_amount', to='pkpdapp.unit'),
+            field=models.ForeignKey(blank=True, default=pkpdapp.models.protocol.get_mg_unit, help_text='unit for the amount value stored in each dose', null=True, on_delete=django.db.models.deletion.PROTECT, related_name='protocols_amount', to='pkpdapp.unit'),
         ),
         migrations.AddField(
             model_name='protocol',
@@ -285,7 +286,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='protocol',
             name='time_unit',
-            field=models.ForeignKey(default=pkpdapp.models.protocol.get_h_unit, help_text='unit for the start_time and duration values stored in each dose', on_delete=django.db.models.deletion.PROTECT, related_name='protocols_time', to='pkpdapp.unit'),
+            field=models.ForeignKey(blank=True, default=pkpdapp.models.protocol.get_h_unit, help_text='unit for the start_time and duration values stored in each dose', null=True, on_delete=django.db.models.deletion.PROTECT, related_name='protocols_time', to='pkpdapp.unit'),
         ),
         migrations.CreateModel(
             name='ProjectAccess',
@@ -431,7 +432,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='compound',
             name='molecular_mass_unit',
-            field=models.ForeignKey(blank=True, default=pkpdapp.models.compound.get_mol_mass_unit, help_text='unit for molecular mass (e.g. g/mol)', null=True, on_delete=django.db.models.deletion.PROTECT, related_name='compounds', to='pkpdapp.unit'),
+            field=models.ForeignKey(default=pkpdapp.models.compound.get_mol_mass_unit, help_text='unit for molecular mass (e.g. g/mol)', on_delete=django.db.models.deletion.PROTECT, related_name='compounds', to='pkpdapp.unit'),
         ),
         migrations.AddField(
             model_name='biomarkertype',

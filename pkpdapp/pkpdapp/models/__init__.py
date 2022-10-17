@@ -21,6 +21,7 @@ from .pharmacokinetic_model import (
     PharmacokineticModel,
     DosedPharmacokineticModel,
     PkpdMapping,
+    set_administration,
 )
 from .variable import Variable
 from .biomarker_type import BiomarkerType
