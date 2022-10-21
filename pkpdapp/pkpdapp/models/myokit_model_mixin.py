@@ -6,6 +6,7 @@
 
 import threading
 from django.core.cache import cache
+from django.db.models import Max
 import myokit
 from myokit.formats.sbml import SBMLParser
 from myokit.formats.mathml import MathMLExpressionWriter
@@ -133,13 +134,30 @@ class MyokitModelMixin:
 
         self.variables.set(all_new_variables)
 
-    @staticmethod
+    def set_variables_from_inference(self, inference):
+        results_for_mle = inference.get_maximum_likelihood()
+        for result in results_for_mle:
+            inference_var = (
+                result.log_likelihood.outputs.first().variable
+            )
+            model_var = self.variables.filter(
+                qname=inference_var.qname
+            ).first()
+            if model_var is not None:
+                model_var.default_value = result.value
+                if model_var.lower_bound > model_var.default_value:
+                    model_var.lower_bound = model_var.default_value
+                if model_var.upper_bound < model_var.default_value:
+                    model_var.upper_bound = model_var.default_value
+                model_var.save()
+
+    @ staticmethod
     def _serialise_equation(equ):
         writer = MathMLExpressionWriter()
         writer.set_mode(presentation=True)
         return writer.eq(equ)
 
-    @staticmethod
+    @ staticmethod
     def _serialise_variable(var):
         return {
             'name': var.name(),
@@ -151,7 +169,7 @@ class MyokitModelMixin:
             'scale': 'LN',
         }
 
-    @classmethod
+    @ classmethod
     def _serialise_component(cls, c):
         states = [
             cls._serialise_variable(s)
