@@ -1,33 +1,39 @@
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Button from "@material-ui/core/Button";
-import Grid from "@material-ui/core/Grid";
-import Box from "@material-ui/core/Box";
-import Alert from "@material-ui/lab/Alert";
-import { useForm } from "react-hook-form";
+import Dialog from '@material-ui/core/Dialog';
+import DialogContent from '@material-ui/core/DialogContent';
 import { makeStyles } from "@material-ui/core/styles";
+import { selectAllInferences } from "../inference/inferenceSlice";
+import Table from '@material-ui/core/Table';
+import TableCell from '@material-ui/core/TableCell';
+import Tooltip from "@material-ui/core/Tooltip";
+import TableContainer from '@material-ui/core/TableContainer';
+import TableBody from '@material-ui/core/TableBody';
+import TableRow from '@material-ui/core/TableRow';
+import TableHead from '@material-ui/core/TableHead';
+
 import Typography from "@material-ui/core/Typography";
-import List from "@material-ui/core/List";
-import ListItem from "@material-ui/core/ListItem";
-import Dialog from "@material-ui/core/Dialog";
-import DialogTitle from "@material-ui/core/DialogTitle";
 import DialogActions from "@material-ui/core/DialogActions";
-import Tab from "@material-ui/core/Tab";
-import Tabs from "@material-ui/core/Tabs";
 
-import Accordion from "@material-ui/core/Accordion";
-import AccordionSummary from "@material-ui/core/AccordionSummary";
-import Paper from "@material-ui/core/Paper";
-import AccordionDetails from "@material-ui/core/AccordionDetails";
-import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
+import LinearProgressWithLabel from '../menu/LinearProgressWithLabel'
 
-import Header from "../modelling/Header";
-import Footer from "../modelling/Footer";
-import SubjectsTable from "./SubjectsTable";
-import BiomarkerTypeSubform from "./BiomarkerTypeSubform";
+const useStyles = makeStyles((theme) => ({
+  container: {
+  },
+  paper: {
+    padding: theme.spacing(2),
+    textAlign: "left",
+  },
+  controlsRoot: {
+    display: "flex",
+    alignItems: "center",
+  },
+  controls: {
+    margin: theme.spacing(1),
+  },
+}));
 
-import AuceDetail from "../dataAnalysis/AuceDetail"
-import NcaDetail from "../dataAnalysis/NcaDetail"
 
 
 export default function InferenceListDialog({ project, onClose, model_type, model, open }) {
@@ -37,29 +43,97 @@ export default function InferenceListDialog({ project, onClose, model_type, mode
     onClose();
   };
 
-  const handleChange = (event, newValue) => {
-    setValue(newValue);
-  };
+  let items = useSelector(selectAllInferences);
+  const pd_models = useSelector(state => state.pdModels.entities);
+  const pk_models = useSelector(state => state.pkModels.entities);
+  const datasets = useSelector(state => state.datasets.entities);
+  // fetch model and dataset name
+  if (items) {
+    items = items.map(item => {
+      const model_id = item.metadata.model.id;
+      const dataset_id = item.dataset;
+      const dataset = datasets[dataset_id];
+      const model_type = item.metadata.model.model_type;
+      let model = null
+      if (model_type === 'PK') {
+        model = pk_models[model_id] 
+      }
+      if (model_type === 'PD') {
+        model = pd_models[model_id] 
+      }
+      return {...item, model, dataset}
+    })
+  }
+
+  const handleRowClick = (item) => {
+    onClose(item);
+  }
+
+  const column_headings = [
+    {label: 'Name', help: 'Name'},
+    {label: 'Description', help: 'Description'},
+    {label: 'Model', help: 'Model'},
+    {label: 'Dataset', help: 'Dataset'},
+    {label: 'Progress', help: 'Progress'},
+  ]
 
   return (
-    <Dialog  onClose={handleClose} open={open} maxWidth='lg' fullWidth>
-      <div className={classes.tabs}>
-        <Tabs value={value} onChange={handleChange} aria-label="basic tabs example">
-          <Tab label="NCA" {...a11yProps(0)} />
-          <Tab label="AUCA" {...a11yProps(1)} />
-        </Tabs>
-      </div>
-      <TabPanel className={classes.rootTab} value={value} index={0}>
-        <NcaDetail project={project} dataset={dataset} />
-      </TabPanel>
-      <TabPanel className={classes.rootTab} value={value} index={1}>
-        <AuceDetail project={project} dataset={dataset} />
-      </TabPanel>
-      <DialogActions className={classes.dialogFooter}>
-        <Button onClick={handleClose} autoFocus>
-          Close
-        </Button>
-      </DialogActions>
-    </Dialog>
+    <Dialog open={open} onClose={handleClose} maxWidth='md' fullWidth>
+    <DialogContent className={classes.dialogPaper}>
+    <Typography variant="h5">
+     Choose an inference 
+    </Typography>
+    <TableContainer>
+      <Table className={classes.table} size="small" >
+        <TableHead>
+          <TableRow >
+            {column_headings.map(heading => (
+            <TableCell key={heading.label}>
+              <Tooltip title={heading.help}>
+                <Typography>
+                  {heading.label}
+                </Typography>
+              </Tooltip>
+            </TableCell>
+            
+            ))
+            }
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {items.map((item) => {
+            const progress =
+              (100 * item.number_of_iterations) /
+              item.max_number_of_iterations;
+            return (
+              <React.Fragment key={item.id}>
+              <TableRow hover onClick={() => handleRowClick(item)}>
+                <TableCell>
+                  {item.name}
+                </TableCell>
+                <TableCell>
+                  {item.description}
+                </TableCell>
+                <TableCell>
+                  {item.model.name}
+                </TableCell>
+                <TableCell>
+                  {item.dataset.name}
+                </TableCell>
+                <TableCell>
+                  <LinearProgressWithLabel value={progress} />
+                </TableCell>
+              </TableRow> 
+              </React.Fragment>
+          )
+          })}
+        </TableBody>
+      </Table>
+    </TableContainer>
+    </DialogContent>
+    <DialogActions>
+    <Button onClick={handleClose}>Close</Button>
+    </DialogActions>
+  </Dialog>
   );
 }

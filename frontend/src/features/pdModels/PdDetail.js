@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Alert from "@material-ui/lab/Alert";
 import Box from "@material-ui/core/Box";
@@ -16,9 +16,11 @@ import {
   uploadPdSbml,
   uploadPdMmt,
   deletePdModel,
+  setPdVariablesByInference,
 } from "../pdModels/pdModelsSlice";
 import { FormTextField } from "../forms/FormComponents";
 import { userHasReadOnlyAccess } from "../projects/projectsSlice";
+import InferenceListDialog from "../inference/InferenceListDialog";
 
 const useStyles = makeStyles((theme) => ({
   topToolbar: {
@@ -59,13 +61,21 @@ export default function PdDetail({ project, pd_model }) {
   const classes = useStyles();
   const { control, handleSubmit, reset } = useForm();
   const dispatch = useDispatch();
+  const [openInferenceDialog, setOpenInferenceDialog] = useState(false);
+
+  const handleCloseInferenceDialog = (inference) => {
+    if (inference) {
+      dispatch(setPdVariablesByInference(pd_model.id, inference.id));
+    }
+    setOpenInferenceDialog(false)
+  }
 
   const handlePdDelete = () => {
     dispatch(deletePdModel(pd_model.id));
   };
 
   const handleSetVariablesFromInference = () => {
-    dispatch(deletePdModel(pd_model.id));
+    setOpenInferenceDialog(true);
   };
 
   const handleSbmlFileUpload = (event) => {
@@ -186,6 +196,13 @@ export default function PdDetail({ project, pd_model }) {
         ]}
       />
     </form>
+      <InferenceListDialog 
+        project={project}
+        onClose={handleCloseInferenceDialog}
+        model_type={'PD'}
+        model={pd_model} 
+        open={openInferenceDialog}
+      />
     </Paper>
   );
 }

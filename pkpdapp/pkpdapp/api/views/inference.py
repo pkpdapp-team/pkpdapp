@@ -453,7 +453,7 @@ class InferenceWizardView(views.APIView):
 
     def post(self, request, format=None):
         errors = {}
-        data = json.loads(request.body)
+        data = request.data
         print('got data', data)
 
         if 'project' in data:
