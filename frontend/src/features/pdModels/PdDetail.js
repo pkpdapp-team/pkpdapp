@@ -53,12 +53,18 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
+
+
 export default function PdDetail({ project, pd_model }) {
   const classes = useStyles();
   const { control, handleSubmit, reset } = useForm();
   const dispatch = useDispatch();
 
   const handlePdDelete = () => {
+    dispatch(deletePdModel(pd_model.id));
+  };
+
+  const handleSetVariablesFromInference = () => {
     dispatch(deletePdModel(pd_model.id));
   };
 
@@ -176,6 +182,7 @@ export default function PdDetail({ project, pd_model }) {
           {label: 'Delete', handle: handlePdDelete},
           {label: 'Upload MMT file', handle: handleMmtFileUpload, variant: 'fileUpload'},
           {label: 'Upload SBML file', handle: handleSbmlFileUpload, variant: 'fileUpload'},
+          {label: 'Set variables from inference', handle: handleSetVariablesFromInference},
         ]}
       />
     </form>

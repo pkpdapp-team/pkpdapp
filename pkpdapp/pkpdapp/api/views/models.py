@@ -22,6 +22,7 @@ from pkpdapp.models import (
     PharmacokineticModel,
     PharmacodynamicModel,
     DosedPharmacokineticModel,
+    Inference,
 )
 
 
@@ -40,6 +41,23 @@ class DosedPharmacokineticView(viewsets.ModelViewSet):
     permission_classes = [
         IsAuthenticated & CheckAccessToProject
     ]
+
+    @decorators.action(
+        detail=True,
+        methods=['PUT'],
+        serializer_class=DosedPharmacokineticSerializer,
+    )
+    def set_variables_from_inference(self, request, pk):
+        obj = self.get_object()
+        try:
+            inference = Inference.objects.get(request.data['inference_id'])
+        except Inference.DoesNotExist:
+            return response.Response({'inference_id': 'inference not found'},
+                                     status.HTTP_400_BAD_REQUEST)
+
+        obj.set_variables_from_inference(inference)
+        serializer = self.serializer_class(obj)
+        return response.Response(serializer.data)
 
 
 class PharmacodynamicView(viewsets.ModelViewSet):
@@ -81,3 +99,20 @@ class PharmacodynamicView(viewsets.ModelViewSet):
             return response.Response(serializer.data)
         return response.Response(serializer.errors,
                                  status.HTTP_400_BAD_REQUEST)
+
+    @decorators.action(
+        detail=True,
+        methods=['PUT'],
+        serializer_class=PharmacodynamicSerializer,
+    )
+    def set_variables_from_inference(self, request, pk):
+        obj = self.get_object()
+        try:
+            inference = Inference.objects.get(request.data['inference_id'])
+        except Inference.DoesNotExist:
+            return response.Response({'inference_id': 'inference not found'},
+                                     status.HTTP_400_BAD_REQUEST)
+
+        obj.set_variables_from_inference(inference)
+        serializer = self.serializer_class(obj)
+        return response.Response(serializer.data)
