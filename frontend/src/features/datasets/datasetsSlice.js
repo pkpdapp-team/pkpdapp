@@ -33,7 +33,7 @@ export const deleteDataset = createAsyncThunk(
   "datasets/deleteDataset",
   async (datasetId, { dispatch, getState }) => {
     let { modelling } = getState() 
-    if (modelling.selectedType == 'dataset' && modelling.selectedId == datasetId) {
+    if (modelling.selectedType === 'dataset' && modelling.selectedId === datasetId) {
       await dispatch(setSelected({id: null, type: null}))
     }
     await api.delete(`/api/dataset/${datasetId}`, getState().login.csrf);

@@ -247,7 +247,7 @@ class Inference(StoredModel):
             InferenceFunctionResult.objects.filter(
                 chain__in=chains
             ).order_by(
-                '-value'
+                'value'
             ).first()
         )
         results_for_mle = (
