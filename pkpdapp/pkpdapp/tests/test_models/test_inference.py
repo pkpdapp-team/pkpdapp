@@ -7,7 +7,7 @@
 from django.test import TestCase
 from pkpdapp.models import (
     Inference, PharmacodynamicModel, LogLikelihood,
-    Project, BiomarkerType, Algorithm, InferenceFunctionResult,
+    Project, BiomarkerType, Algorithm,
     InferenceResult, InferenceMixin
 )
 import numpy as np
@@ -68,10 +68,14 @@ class TestInferenceSerializer(TestCase):
         inference_mixin = InferenceMixin(self.inference)
         inference_mixin.run_inference()
         chains = self.inference.chains.all()
-        results = np.array(InferenceResult.objects.filter(chain__in=chains).order_by(
+        results = np.array(InferenceResult.objects.filter(
+            chain__in=chains
+        ).order_by(
             'iteration', 'chain'
         ).values_list('value', flat=True))
-        fresults = np.array(InferenceResult.objects.filter(chain__in=chains).order_by(
+        fresults = np.array(InferenceResult.objects.filter(
+            chain__in=chains
+        ).order_by(
             'iteration', 'chain'
         ).values_list('value', flat=True))
         max_value = results[np.argmax(fresults)]
@@ -83,9 +87,3 @@ class TestInferenceSerializer(TestCase):
         new_value = fitted_variable.default_value
         self.assertEqual(new_value, max_value)
         self.assertNotEqual(old_value, new_value)
-
-
-
-
-
-

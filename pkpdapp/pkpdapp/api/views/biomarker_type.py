@@ -5,14 +5,10 @@
 #
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
-from pkpdapp.api.views import (
-    ProjectFilter,
-)
-from pkpdapp.api.views import (
-    NotADatasetDose,
-    CheckAccessToProject,
-)
+
 from pkpdapp.api.serializers import BiomarkerTypeSerializer
+from pkpdapp.api.views import ProjectFilter
+from pkpdapp.api.views import CheckAccessToProject
 from pkpdapp.models import BiomarkerType
 
 

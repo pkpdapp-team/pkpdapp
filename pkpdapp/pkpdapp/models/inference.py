@@ -252,7 +252,8 @@ class Inference(StoredModel):
         )
         results_for_mle = (
             InferenceResult.objects.filter(
-                chain=max_function_value.chain, iteration=max_function_value.iteration
+                chain=max_function_value.chain,
+                iteration=max_function_value.iteration
             )
         )
 

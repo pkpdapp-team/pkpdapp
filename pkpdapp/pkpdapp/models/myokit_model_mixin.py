@@ -6,7 +6,6 @@
 
 import threading
 from django.core.cache import cache
-from django.db.models import Max
 import myokit
 from myokit.formats.sbml import SBMLParser
 from myokit.formats.mathml import MathMLExpressionWriter
