@@ -156,6 +156,23 @@ export default function ModellingChart({ datasets, pkModels, pdModels, className
     ],
   };
 
+  const y_unit_symbols = data.datasets.reduce((sum, dataset) => { 
+    const unit = dataset.myMetadata.yunit;
+    sum.add(unit ? unit.symbol : '');
+    return sum;
+  }, new Set());
+  const x_unit_symbols = data.datasets.reduce((sum, dataset) => { 
+    const unit = dataset.myMetadata.xunit;
+    sum.add(unit ? unit.symbol : '');
+    return sum;
+  }, new Set());
+  
+  const incompatible_y_unit = y_unit_symbols.size > 1;
+  const incompatible_x_unit = x_unit_symbols.size > 1;
+
+  const list_of_y_unit = new Array(...y_unit_symbols).join(', ');
+  const list_of_x_unit = new Array(...x_unit_symbols).join(', ');
+
   let options = {
     animation: {
       duration: 0,
@@ -166,14 +183,14 @@ export default function ModellingChart({ datasets, pkModels, pdModels, className
       x: {
         type: "linear",
         title: {
-          text: "Time (units defined below)",
+          text: `Time [${list_of_x_unit}]`,
           display: true,
         },
       },
       yLhs: {
         position: "left",
         title: {
-          text: "Data Variable / Model Output (units described above)",
+          text: `Data Variable / Model Output [${list_of_y_unit}]`,
           display: true,
         },
       },
@@ -210,35 +227,7 @@ export default function ModellingChart({ datasets, pkModels, pdModels, className
     };
   }
 
-  const has_first_dataset = data.datasets.length > 0 && data.datasets[0] && data.datasets[0].myMetadata;
-  const first_x_unit = has_first_dataset ? data.datasets[0].myMetadata.xunit : null;
-  const first_y_unit = has_first_dataset ? data.datasets[0].myMetadata.yunit : null;
-  let incompatible_x_unit = false;
-  let incompatible_y_unit = false;
-  console.log('XXX', has_first_dataset, first_x_unit, first_y_unit)
-  if (has_first_dataset) {
-    for (const dataset of data.datasets) {
-      if (dataset) {
-        // catch when unit is undefined
-        if (typeof dataset.myMetadata.xunit !== typeof first_x_unit) {
-          incompatible_x_unit = true;
-        }
-        if (typeof dataset.myMetadata.yunit !== typeof first_y_unit) {
-          incompatible_y_unit = true;
-        }
-        if (dataset.myMetadata.xunit && first_x_unit) {
-          if (dataset.myMetadata.xunit.id !== first_x_unit.id) {
-            incompatible_x_unit = true;
-          }
-        }
-        if (dataset.myMetadata.yunit && first_y_unit) {
-          if (dataset.myMetadata.yunit.id !== first_y_unit.id) {
-            incompatible_y_unit = true;
-          }
-        }
-      }
-    }
-  }
+  
 
   console.log('data', data, options, renderChart)
   return (
@@ -246,34 +235,16 @@ export default function ModellingChart({ datasets, pkModels, pdModels, className
     <div className={className}>
       {renderChart && <Scatter data={data} options={options} />}
     </div>
-    <Grid container spacing={1}>
-    <Grid item xs={12}>
-      {incompatible_y_unit &&
-          <Alert severity="warning">
-            Different units on y-axis
-          </Alert>
-      } 
-     </Grid>
-     <Grid item xs={12}>
-      <Typography>
-        On the x-axis:
-        </Typography>
-       <List component="div" dense disablePadding>
-       {data.datasets.map(dataset => (
-          <ListItem>
-            <Typography>
-              - {dataset.myMetadata.xlabel}
-            </Typography>
-          </ListItem>
-       ))}
-       </List>
-       {incompatible_x_unit &&
-            <Alert severity="warning">
-              Different units on x-axis
-            </Alert>
-        }
-     </Grid>
-     </Grid>
+    {incompatible_y_unit &&
+        <Alert severity="warning">
+          Different units on y-axis
+        </Alert>
+    } 
+    {incompatible_x_unit &&
+        <Alert severity="warning">
+          Different units on x-axis
+        </Alert>
+    }
     </React.Fragment>
   );
 }

@@ -190,9 +190,9 @@ export default function PdDetail({ project, pd_model }) {
         buttons={[
           {label: 'Save', handle: handleSubmit(onSubmit)},
           {label: 'Delete', handle: handlePdDelete},
-          {label: 'Upload MMT file', handle: handleMmtFileUpload, variant: 'fileUpload'},
-          {label: 'Upload SBML file', handle: handleSbmlFileUpload, variant: 'fileUpload'},
-          {label: 'Set variables from inference', handle: handleSetVariablesFromInference},
+          {label: 'Upload MMT', handle: handleMmtFileUpload, variant: 'fileUpload'},
+          {label: 'Upload SBML', handle: handleSbmlFileUpload, variant: 'fileUpload'},
+          {label: 'Set inferred parameters', handle: handleSetVariablesFromInference},
         ]}
       />
     </form>
