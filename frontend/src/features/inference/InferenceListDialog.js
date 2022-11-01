@@ -51,9 +51,9 @@ export default function InferenceListDialog({ project, onClose, model_type, mode
   if (items) {
     items = items.map(item => {
       const model_id = item.metadata.model.id;
-      const dataset_id = item.dataset;
+      const dataset_id = item.metadata.dataset;
       const dataset = datasets[dataset_id];
-      const model_type = item.metadata.model.model_type;
+      const model_type = item.metadata.model.form;
       let model = null
       if (model_type === 'PK') {
         model = pk_models[model_id] 
@@ -61,6 +61,7 @@ export default function InferenceListDialog({ project, onClose, model_type, mode
       if (model_type === 'PD') {
         model = pd_models[model_id] 
       }
+      console.log(item, model, dataset)
       return {...item, model, dataset}
     })
   }

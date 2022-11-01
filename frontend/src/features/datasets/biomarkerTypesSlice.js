@@ -17,7 +17,7 @@ const initialState = biomarkerTypesAdapter.getInitialState({
 export const fetchBiomarkerType = createAsyncThunk(
   "biomarkerTypes/fetchBiomarkerType",
   async (biomarkerTypeId, { getState }) => {
-    const response = await api.get(`/api/biomarker_type/${biomarkerTypeId}/`);
+    const response = await api.get(`/api/biomarker_type/${biomarkerTypeId}/`, getState().login.csrf);
     return response;
   }
 );
@@ -26,7 +26,7 @@ export const fetchBiomarkerTypesByProject = createAsyncThunk(
   "biomarkerTypes/fetchBiomarkerTypesByProject",
   async (project_id, { getState }) => {
     const response = await api.get(
-      `/api/biomarker_type/?project_id=${project_id}`
+      `/api/biomarker_type/?project_id=${project_id}`, getState().login.csrf
     );
     return response;
   }
@@ -36,7 +36,7 @@ export const fetchBiomarkerTypesByDataset = createAsyncThunk(
   "subjects/fetchBiomarkerTypeByDataset",
   async (dataset, { getState }) => {
     const response = await api.get(
-      `/api/biomarker_type/`,
+      `/api/biomarker_type/`, getState().login.csrf, 
       dataset.biomarker_types
     );
     return response;
@@ -45,9 +45,9 @@ export const fetchBiomarkerTypesByDataset = createAsyncThunk(
 
 export const updateBiomarkerType = createAsyncThunk(
   "biomarkerTypes/updateBiomarkerType",
-  async (biomarker_type) => {
+  async (biomarker_type, { getState }) => {
     const response = await api.put(
-      `/api/biomarker_type/${biomarker_type.id}/`,
+      `/api/biomarker_type/${biomarker_type.id}/`, getState().login.csrf, 
       biomarker_type
     );
     return response;

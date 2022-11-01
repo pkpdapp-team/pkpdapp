@@ -140,9 +140,13 @@ class MyokitModelMixin:
             inference_var = (
                 result.log_likelihood.outputs.first().variable
             )
-            model_var = self.variables.filter(
-                qname=inference_var.qname
-            ).first()
+            # noise variables won't have a model variable
+            if inference_var is not None:
+                model_var = self.variables.filter(
+                    qname=inference_var.qname
+                ).first()
+            else:
+                model_var = None
             if model_var is not None:
                 model_var.default_value = result.value
                 if model_var.lower_bound > model_var.default_value:

@@ -106,7 +106,7 @@ export const uploadPdMmt = createAsyncThunk(
 
 export const setPdVariablesByInference = createAsyncThunk(
   "pdModels/setVariablesByInference",
-  async ({ id, inference_id}, { rejectWithValue, dispatch, getState }) => {
+  async ({ id, inference_id }, { rejectWithValue, dispatch, getState }) => {
     const pdModel = await api.put(`/api/pharmacodynamic/${id}/set_variables_from_inference/`, getState().login.csrf, { inference_id});
     dispatch(fetchVariablesByPdModel(pdModel.id));
     dispatch(fetchPdModelSimulateById(pdModel.id));

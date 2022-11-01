@@ -39,6 +39,9 @@ class Dataset(models.Model):
     def __str__(self):
         return self.name
 
+    def get_project(self):
+        return self.project
+
     def merge_protocols(self):
         unique_protocols = []
         protocol_subjects = []

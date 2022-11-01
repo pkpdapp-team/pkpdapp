@@ -50,7 +50,7 @@ class DosedPharmacokineticView(viewsets.ModelViewSet):
     def set_variables_from_inference(self, request, pk):
         obj = self.get_object()
         try:
-            inference = Inference.objects.get(request.data['inference_id'])
+            inference = Inference.objects.get(id=request.data['inference_id'])
         except Inference.DoesNotExist:
             return response.Response({'inference_id': 'inference not found'},
                                      status.HTTP_400_BAD_REQUEST)
@@ -108,7 +108,8 @@ class PharmacodynamicView(viewsets.ModelViewSet):
     def set_variables_from_inference(self, request, pk):
         obj = self.get_object()
         try:
-            inference = Inference.objects.get(request.data['inference_id'])
+            print('got request', request.data)
+            inference = Inference.objects.get(id=request.data['inference_id'])
         except Inference.DoesNotExist:
             return response.Response({'inference_id': 'inference not found'},
                                      status.HTTP_400_BAD_REQUEST)

@@ -65,7 +65,7 @@ export default function PdDetail({ project, pd_model }) {
 
   const handleCloseInferenceDialog = (inference) => {
     if (inference) {
-      dispatch(setPdVariablesByInference(pd_model.id, inference.id));
+      dispatch(setPdVariablesByInference({id: pd_model.id, inference_id: inference.id}));
     }
     setOpenInferenceDialog(false)
   }
