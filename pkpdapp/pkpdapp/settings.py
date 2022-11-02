@@ -18,6 +18,8 @@ https://docs.djangoproject.com/en/3.0/ref/settings/.
 
 import os
 import dj_database_url
+import ldap
+from django_auth_ldap.config import LDAPSearch
 
 # Set BASE_DIR to two directories up
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -57,6 +59,39 @@ INSTALLED_APPS = [
     'pkpdapp',
 ]
 
+use_ldap = os.environ.get('AUTH_LDAP_USE', False)
+if use_ldap:
+    AUTHENTICATION_BACKENDS = [
+        "django_auth_ldap.backend.LDAPBackend",
+        "django.contrib.auth.backends.ModelBackend",
+    ]
+    AUTH_LDAP_SERVER_URI = os.environ.get(
+        'AUTH_LDAP_SERVER_URI',
+        'ldap://ldap.forumsys.com:389'
+    )
+
+    use_direct_bind = os.environ.get('AUTH_LDAP_DIRECT_BIND', True)
+    if use_direct_bind:
+        AUTH_LDAP_USER_DN_TEMPLATE = os.environ.get(
+            'AUTH_LDAP_BIND_DN_TEMPLATE',
+            'uid=%(user)s,dc=example,dc=com'
+        )
+    else:
+        AUTH_LDAP_BIND_DN = os.environ.get(
+            'AUTH_LDAP_BIND_DN',
+            'cn=read-only-admin,dc=example,dc=com'
+        )
+        AUTH_LDAP_BIND_PASSWORD = os.environ.get(
+            'AUTH_LDAP_BIND_PASSWORD',
+            'password'
+        )
+        AUTH_LDAP_USER_SEARCH = LDAPSearch(
+            os.environ.get(
+                'AUTH_LDAP_SEARCH_BASE',
+                'ou=mathematicians,dc=example,dc=com'
+            ),
+            ldap.SCOPE_SUBTREE, "(uid=%(user)s)"
+        )
 
 DJOSER = {
     'PASSWORD_RESET_CONFIRM_URL': 'reset-password/{uid}/{token}',

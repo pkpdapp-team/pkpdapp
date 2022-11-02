@@ -22,3 +22,4 @@ drf-writable-nested>=0.6.3
 celery>=5.1.2
 tdigest>=0.5.2.2
 pymc3>=3.10
+django-auth-ldap>=4.1.0
