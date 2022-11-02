@@ -19,8 +19,8 @@ const initialState = datasetsAdapter.getInitialState({
 
 export const fetchDatasets = createAsyncThunk(
   "datasets/fetchDatasets",
-  async (project_id, { dispatch }) => {
-    const response = await api.get(`/api/dataset/?project_id=${project_id}`);
+  async (project_id, { dispatch, getState }) => {
+    const response = await api.get(`/api/dataset/?project_id=${project_id}`, getState().login.csrf);
 
     dispatch(fetchBiomarkerTypesByProject(project_id));
     dispatch(fetchSubjectByProject(project_id));
@@ -33,31 +33,31 @@ export const deleteDataset = createAsyncThunk(
   "datasets/deleteDataset",
   async (datasetId, { dispatch, getState }) => {
     let { modelling } = getState() 
-    if (modelling.selectedType == 'dataset' && modelling.selectedId == datasetId) {
+    if (modelling.selectedType === 'dataset' && modelling.selectedId === datasetId) {
       await dispatch(setSelected({id: null, type: null}))
     }
-    await api.delete(`/api/dataset/${datasetId}`);
+    await api.delete(`/api/dataset/${datasetId}`, getState().login.csrf);
     return datasetId;
   }
 );
 
 export const addNewDataset = createAsyncThunk(
   "datasets/addNewDataset",
-  async (project, { dispatch }) => {
+  async (project, { dispatch, getState }) => {
     const initialDataset = {
       name: "new",
       project: project.id,
     };
-    let dataset = await api.post("/api/dataset/", initialDataset);
+    let dataset = await api.post("/api/dataset/", getState().login.csrf, initialDataset);
     return dataset;
   }
 );
 
 export const uploadDatasetCsv = createAsyncThunk(
   "datasets/uploadDatasetCsv",
-  async ({ id, csv }, { dispatch, rejectWithValue }) => {
+  async ({ id, csv }, { dispatch, rejectWithValue, getState }) => {
     const dataset = await api
-      .putMultiPart(`/api/dataset/${id}/csv/`, { csv })
+      .putMultiPart(`/api/dataset/${id}/csv/`, getState().login.csrf, { csv })
       .catch((err) => rejectWithValue(err));
 
     await dispatch(fetchBiomarkerTypesByProject(dataset.project));
@@ -69,8 +69,8 @@ export const uploadDatasetCsv = createAsyncThunk(
 
 export const updateDataset = createAsyncThunk(
   "datasets/updateDataset",
-  async (dataset) => {
-    const response = await api.put(`/api/dataset/${dataset.id}/`, dataset);
+  async (dataset, { getState }) => {
+    const response = await api.put(`/api/dataset/${dataset.id}/`, getState().login.csrf, dataset);
     return response;
   }
 );

@@ -59,6 +59,7 @@ const useStyles = makeStyles((theme) => ({
   },
   paperChart: {
     padding: theme.spacing(2),
+    maxHeight: '90vh', overflow: 'auto'
   },
   chart: {
     height: "50vh",

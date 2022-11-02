@@ -104,6 +104,16 @@ export const uploadPdMmt = createAsyncThunk(
   }
 );
 
+export const setPdVariablesByInference = createAsyncThunk(
+  "pdModels/setVariablesByInference",
+  async ({ id, inference_id }, { rejectWithValue, dispatch, getState }) => {
+    const pdModel = await api.put(`/api/pharmacodynamic/${id}/set_variables_from_inference/`, getState().login.csrf, { inference_id});
+    dispatch(fetchVariablesByPdModel(pdModel.id));
+    dispatch(fetchPdModelSimulateById(pdModel.id));
+    return pdModel;
+  }
+);
+
 export const updatePdModel = createAsyncThunk(
   "pdModels/updatePdModel",
   async (pdModel, { dispatch, getState }) => {
@@ -174,6 +184,7 @@ export const pdModelsSlice = createSlice({
     },
     [addNewPdModel.fulfilled]: pdModelsAdapter.addOne,
     [updatePdModel.fulfilled]: pdModelsAdapter.upsertOne,
+    [setPdVariablesByInference.fulfilled]: pdModelsAdapter.upsertOne,
     [deletePdModel.fulfilled]: pdModelsAdapter.removeOne,
     [uploadPdSbml.pending]: (state, action) => {
       state.entities[action.meta.arg.id].status = "loading";

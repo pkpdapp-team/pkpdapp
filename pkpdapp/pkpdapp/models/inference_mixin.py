@@ -588,7 +588,7 @@ class InferenceMixin:
                 self.inference.number_of_function_evals += len(x)
                 obj.tell(scores)
                 x = obj.xbest()
-                score = obj.fbest()
+                score = -obj.fbest()
 
             x0s.append(self._pints_log_posterior.to_model(x))
             fn_values.append(score)

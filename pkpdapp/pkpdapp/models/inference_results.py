@@ -6,7 +6,6 @@
 
 from django.db import models
 from pkpdapp.models import (
-    Inference,
     LogLikelihood,
     Subject,
 )
@@ -15,7 +14,7 @@ import pandas as pd
 
 class InferenceChain(models.Model):
     inference = models.ForeignKey(
-        Inference,
+        'Inference',
         on_delete=models.CASCADE,
         related_name='chains',
         help_text='inference for this chain'

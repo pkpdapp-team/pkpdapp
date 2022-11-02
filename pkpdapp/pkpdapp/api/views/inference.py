@@ -3,31 +3,34 @@
 # is released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-from rest_framework import viewsets, views, status
-from rest_framework.response import Response
-import json
 import numbers
 import re
-from pyparsing import (
-    ParseException,
-)
-from pkpdapp.utils import (
-    ExpressionParser
-)
-from pkpdapp.api.views import (
-    ProjectFilter, InferenceFilter
-)
+
+from pyparsing import ParseException
+from rest_framework import status, views, viewsets
+from rest_framework.response import Response
+
 from pkpdapp.api.serializers import (
-    InferenceSerializer,
-    InferenceChainSerializer,
     AlgorithmSerializer,
+    InferenceChainSerializer,
+    InferenceSerializer,
 )
+from pkpdapp.api.views import InferenceFilter, ProjectFilter
 from pkpdapp.models import (
-    Inference, InferenceChain, Algorithm, Dataset,
-    DosedPharmacokineticModel, PharmacodynamicModel,
-    SubjectGroup, BiomarkerType, LogLikelihoodParameter,
-    LogLikelihood, Protocol, Project,
+    Algorithm,
+    BiomarkerType,
+    Dataset,
+    DosedPharmacokineticModel,
+    Inference,
+    InferenceChain,
+    LogLikelihood,
+    LogLikelihoodParameter,
+    PharmacodynamicModel,
+    Project,
+    Protocol,
+    SubjectGroup,
 )
+from pkpdapp.utils import ExpressionParser
 
 
 class AlgorithmView(viewsets.ModelViewSet):
@@ -453,7 +456,7 @@ class InferenceWizardView(views.APIView):
 
     def post(self, request, format=None):
         errors = {}
-        data = json.loads(request.body)
+        data = request.data
         print('got data', data)
 
         if 'project' in data:

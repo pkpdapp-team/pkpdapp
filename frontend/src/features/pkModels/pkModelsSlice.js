@@ -54,6 +54,16 @@ export const fetchPkModelSimulateById = createAsyncThunk(
   }
 );
 
+export const setPkVariablesByInference = createAsyncThunk(
+  "pkModels/setVariablesByInference",
+  async ({ id, inference_id}, { rejectWithValue, dispatch, getState }) => {
+    const pkModel = await api.put(`/api/dosed_pharmacokinetic/${id}/set_variables_from_inference/`, getState().login.csrf, { inference_id });
+    dispatch(fetchVariablesByPkModel(pkModel.id));
+    dispatch(fetchPkModelSimulateById(pkModel.id));
+    return pkModel;
+  }
+);
+
 export const deletePkModel = createAsyncThunk(
   "pkModels/deletePkModel",
   async (pkModelId, { dispatch, getState }) => {
@@ -161,6 +171,7 @@ export const pkModelsSlice = createSlice({
       console.log(action.error.message),
     [addNewPkModel.fulfilled]: pkModelsAdapter.addOne,
     [updatePkModel.fulfilled]: pkModelsAdapter.upsertOne,
+    [setPkVariablesByInference.fulfilled]: pkModelsAdapter.upsertOne,
   },
 });
 

@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Alert from "@material-ui/lab/Alert";
 import Box from "@material-ui/core/Box";
@@ -16,9 +16,11 @@ import {
   uploadPdSbml,
   uploadPdMmt,
   deletePdModel,
+  setPdVariablesByInference,
 } from "../pdModels/pdModelsSlice";
 import { FormTextField } from "../forms/FormComponents";
 import { userHasReadOnlyAccess } from "../projects/projectsSlice";
+import InferenceListDialog from "../inference/InferenceListDialog";
 
 const useStyles = makeStyles((theme) => ({
   topToolbar: {
@@ -53,13 +55,27 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
+
+
 export default function PdDetail({ project, pd_model }) {
   const classes = useStyles();
   const { control, handleSubmit, reset } = useForm();
   const dispatch = useDispatch();
+  const [openInferenceDialog, setOpenInferenceDialog] = useState(false);
+
+  const handleCloseInferenceDialog = (inference) => {
+    if (inference) {
+      dispatch(setPdVariablesByInference({id: pd_model.id, inference_id: inference.id}));
+    }
+    setOpenInferenceDialog(false)
+  }
 
   const handlePdDelete = () => {
     dispatch(deletePdModel(pd_model.id));
+  };
+
+  const handleSetVariablesFromInference = () => {
+    setOpenInferenceDialog(true);
   };
 
   const handleSbmlFileUpload = (event) => {
@@ -174,11 +190,19 @@ export default function PdDetail({ project, pd_model }) {
         buttons={[
           {label: 'Save', handle: handleSubmit(onSubmit)},
           {label: 'Delete', handle: handlePdDelete},
-          {label: 'Upload MMT file', handle: handleMmtFileUpload, variant: 'fileUpload'},
-          {label: 'Upload SBML file', handle: handleSbmlFileUpload, variant: 'fileUpload'},
+          {label: 'Upload MMT', handle: handleMmtFileUpload, variant: 'fileUpload'},
+          {label: 'Upload SBML', handle: handleSbmlFileUpload, variant: 'fileUpload'},
+          {label: 'Set inferred parameters', handle: handleSetVariablesFromInference},
         ]}
       />
     </form>
+      <InferenceListDialog 
+        project={project}
+        onClose={handleCloseInferenceDialog}
+        model_type={'PD'}
+        model={pd_model} 
+        open={openInferenceDialog}
+      />
     </Paper>
   );
 }

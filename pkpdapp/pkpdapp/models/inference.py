@@ -9,7 +9,8 @@ from pkpdapp.celery import app
 from pkpdapp.models import (
     Project, PharmacodynamicModel,
     DosedPharmacokineticModel,
-    StoredModel, LogLikelihoodParameter
+    StoredModel, LogLikelihoodParameter,
+    InferenceFunctionResult, InferenceResult
 )
 
 
@@ -238,6 +239,25 @@ class Inference(StoredModel):
                 self.save()
             except run_inference.OperationalError as exc:
                 print('Sending task raised: {}'.format(exc))
+
+    def get_maximum_likelihood(self):
+        chains = self.chains.all()
+
+        max_function_value = (
+            InferenceFunctionResult.objects.filter(
+                chain__in=chains
+            ).order_by(
+                '-value'
+            ).first()
+        )
+        results_for_mle = (
+            InferenceResult.objects.filter(
+                chain=max_function_value.chain,
+                iteration=max_function_value.iteration
+            )
+        )
+
+        return results_for_mle
 
     def stop_inference(self):
         if self.task_id is not None:

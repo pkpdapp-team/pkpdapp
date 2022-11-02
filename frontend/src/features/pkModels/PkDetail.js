@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import Button from "@material-ui/core/Button";
 import List from "@material-ui/core/List";
@@ -22,6 +22,8 @@ import { useForm, useFieldArray } from "react-hook-form";
 import { makeStyles } from "@material-ui/core/styles";
 import Typography from "@material-ui/core/Typography";
 
+
+import InferenceListDialog from "../inference/InferenceListDialog";
 import ComponentForm from "../forms/ComponentForm";
 import Header from "../modelling/Header";
 import Footer from "../modelling/Footer";
@@ -33,7 +35,7 @@ import { selectAllDatasets } from "../datasets/datasetsSlice.js";
 
 import { selectAllProtocols } from "../protocols/protocolsSlice.js";
 
-import { updatePkModel, deletePkModel } from "../pkModels/pkModelsSlice.js";
+import { updatePkModel, deletePkModel, setPkVariablesByInference } from "../pkModels/pkModelsSlice.js";
 
 import { selectAllPdModels } from "../pdModels/pdModelsSlice.js";
 
@@ -139,6 +141,20 @@ export default function PkDetail({ project, pk_model }) {
 
   const handlePkDelete = () => {
     dispatch(deletePkModel(pk_model.id));
+  };
+
+
+  const [openInferenceDialog, setOpenInferenceDialog] = useState(false);
+
+  const handleCloseInferenceDialog = (inference) => {
+    if (inference) {
+      dispatch(setPkVariablesByInference({id: pk_model.id, inference_id: inference.id}));
+    }
+    setOpenInferenceDialog(false)
+  }
+
+  const handleSetVariablesFromInference = () => {
+    setOpenInferenceDialog(true);
   };
 
   const onSubmit = (values) => {
@@ -304,9 +320,17 @@ export default function PkDetail({ project, pk_model }) {
         buttons={[
           {label: 'Save', handle: handleSubmit(onSubmit)},
           {label: 'Delete', handle: handlePkDelete},
+          {label: 'Set inferred parameters', handle: handleSetVariablesFromInference},
         ]}
       />
     </form>
+      <InferenceListDialog 
+        project={project}
+        onClose={handleCloseInferenceDialog}
+        model_type={'PK'}
+        model={pk_model} 
+        open={openInferenceDialog}
+      />
     </Paper>
   );
 }

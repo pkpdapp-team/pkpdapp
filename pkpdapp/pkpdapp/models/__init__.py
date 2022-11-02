@@ -33,17 +33,17 @@ from .likelihoods import (
     LogLikelihood,
     LogLikelihoodParameter,
 )
-from .inference import (
-    Inference,
-    Algorithm,
-)
-
 from .inference_results import (
     InferenceChain,
     InferenceResult,
     InferenceFunctionResult,
     InferenceOutputResult,
 )
+from .inference import (
+    Inference,
+    Algorithm,
+)
+
 
 
 from .inference_mixin import InferenceMixin
