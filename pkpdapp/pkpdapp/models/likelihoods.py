@@ -340,8 +340,16 @@ class LogLikelihood(models.Model):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.__original_form = self.form
-        self.__original_variable = self.variable
+
+    @classmethod
+    def from_db(cls, db, field_names, values):
+        instance = super().from_db(db, field_names, values)
+        # fix for infinite recursion when deleting inference
+        if 'form' in field_names:
+            instance.__original_form = instance.form
+        if 'variable' in field_names:
+            instance.__original_variable = instance.variable
+        return instance
 
     def is_random(self):
         # if fixed or is a distribution answer is easy

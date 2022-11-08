@@ -9,13 +9,17 @@ import re
 from pyparsing import ParseException
 from rest_framework import status, views, viewsets
 from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
 
 from pkpdapp.api.serializers import (
     AlgorithmSerializer,
     InferenceChainSerializer,
     InferenceSerializer,
 )
-from pkpdapp.api.views import InferenceFilter, ProjectFilter
+from pkpdapp.api.views import (
+    InferenceFilter, ProjectFilter,
+    CheckAccessToProject
+)
 from pkpdapp.models import (
     Algorithm,
     BiomarkerType,
@@ -42,6 +46,24 @@ class InferenceView(viewsets.ModelViewSet):
     queryset = Inference.objects.all()
     serializer_class = InferenceSerializer
     filter_backends = [ProjectFilter]
+    permission_classes = [
+        IsAuthenticated & CheckAccessToProject
+    ]
+    def delete(self, request, pk, format=None):
+        print('delete inference', pk)
+        inference = self.get_object(pk)
+        print('got inference', inference)
+        inference.delete()
+        print('deleted it')
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def destroy(self, request, *args, **kwargs):
+        print('destroy inference')
+        instance = self.get_object()
+        print('got inference', instance)
+        self.perform_destroy(instance)
+        print('deleted it')
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class InferenceWizardView(views.APIView):
@@ -340,9 +362,9 @@ class InferenceWizardView(views.APIView):
 
         biomarker_type = None
         if param_form == 'F' and isinstance(noise_params[0], str):
-            if noise_params[0].isnumeric():
+            try:
                 log_likelihood.value = float(noise_params[0])
-            else:
+            except ValueError:
                 biomarker_type = \
                     InferenceWizardView.to_equation_log_likelihood(
                         log_likelihood, noise_params[0], params_info,
@@ -381,9 +403,9 @@ class InferenceWizardView(views.APIView):
         for i, p in enumerate(log_likelihood.parameters.all()):
             param_index = p.parent_index
             if isinstance(noise_params[param_index], str):
-                if noise_params[param_index].isnumeric():
+                try:
                     p.child.value = float(noise_params[param_index])
-                else:
+                except ValueError:
                     InferenceWizardView.to_equation_log_likelihood(
                         p.child, noise_params[param_index], params_info,
                         parser, dataset, inference, observed_biomarkers
