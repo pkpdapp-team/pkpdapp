@@ -49,6 +49,7 @@ class InferenceView(viewsets.ModelViewSet):
     permission_classes = [
         IsAuthenticated & CheckAccessToProject
     ]
+
     def delete(self, request, pk, format=None):
         print('delete inference', pk)
         inference = self.get_object(pk)
