@@ -1,19 +1,17 @@
 gunicorn
-Django==3.2.3
+Django==3.2.16
 django-cors-headers>=3.7.0
 dpd-static-support>=0.0.5
-scipy<1.8.0
-numpy<1.22.2
 pandas>=1.0
-whitenoise==5.0.1
-docutils==0.16
-python-markdown-math==0.8
+whitenoise>=5.0.1
+docutils>=0.16
+python-markdown-math>=0.8
 pints @ git+https://github.com/pints-team/pints@i1403-multi-outputs#egg=pints
 myokit @ git+https://github.com/MichaelClerx/myokit@8cb840b#egg=myokit
-django-extensions==3.1.1
-jsonfield==3.1.0
+django-extensions>=3.1.1
+jsonfield>=3.1.0
 djangorestframework>=3.12.4
-djoser==2.1.0
+djoser>=2.1.0
 python-memcached>=1.16.0
 psycopg2-binary>=2.9.1
 dj-database-url>=0.5.0
