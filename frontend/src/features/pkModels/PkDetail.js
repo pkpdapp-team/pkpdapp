@@ -126,7 +126,7 @@ export default function PkDetail({ project, pk_model }) {
   const pd_model_options = pdModels.map((pd_model) => ({
     key: pd_model.name,
     value: pd_model.id,
-  }));
+  })).concat([{key: 'None', value: ''}]);
 
   const variables = useSelector((state) => {
     return selectVariablesByDosedPkModel(state, pk_model.id);
@@ -217,6 +217,7 @@ export default function PkDetail({ project, pk_model }) {
         options={pd_model_options}
         name="pd_model"
         label="Pharmacodynamic Model"
+        displayEmpty
       />
       </Grid>
 

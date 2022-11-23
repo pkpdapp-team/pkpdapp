@@ -78,6 +78,8 @@ export default function InferenceListDialog({ project, onClose, model_type, mode
     {label: 'Progress', help: 'Progress'},
   ]
 
+  console.log('inference', items)
+
   return (
     <Dialog open={open} onClose={handleClose} maxWidth='md' fullWidth>
     <DialogContent className={classes.dialogPaper}>
@@ -116,7 +118,7 @@ export default function InferenceListDialog({ project, onClose, model_type, mode
                   {item.description}
                 </TableCell>
                 <TableCell>
-                  {item.model.name}
+                  {item.model?.name}
                 </TableCell>
                 <TableCell>
                   {item.dataset.name}

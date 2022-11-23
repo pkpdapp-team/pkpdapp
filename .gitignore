@@ -3,7 +3,7 @@ __pycache__/
 
 # Virtual environments
 venv
-env
+env*
 
 # Setuptools files
 *.egg-info

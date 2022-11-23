@@ -18,11 +18,16 @@ jobs:
     steps:
       - uses: actions/checkout@v1
 
-      - name: Set up Python 3.8
+      - name: Set up Python 3.9
         uses: actions/setup-python@v1
         with:
-          python-version: 3.8
+          python-version: 3.9
           architecture: x64
+
+      - name: install ldap 
+        run: |
+          sudo apt-get update
+          sudo apt-get install libsasl2-dev python3-dev libldap2-dev libssl-dev
 
       - name: install pkpd
         run: |

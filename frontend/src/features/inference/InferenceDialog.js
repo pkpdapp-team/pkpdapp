@@ -513,8 +513,8 @@ export default function InferenceDialog({ project, open, handleCloseDialog, defa
       {chosenPkModel && chosenDataset && 
       <Grid item xs={12}>
         <Typography>
-          Note: there are {chosenDataset.protocols.length} dosing protocols and
-          {chosenDataset.subjects.length} subjects in this dataset. The
+          Note: there are {chosenDataset.protocols.length} dosing protocols 
+          and {chosenDataset.subjects.length} subjects in this dataset. The
           inference will use generate one model per protocol
         </Typography>
       </Grid>

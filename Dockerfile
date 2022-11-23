@@ -10,19 +10,7 @@ RUN npm install --legacy-peer-deps
 COPY frontend /app/frontend/
 RUN npm run build
 
-# This is the builder for the python requirements
-# Note: I'm not sure this adds anything since we don't need to compile any python
-# libraries, but can't hurt to keep
-
-FROM python:3.8-slim AS build-python
-RUN apt-get update && apt-get upgrade -y
-RUN apt-get install -y git
-COPY ./requirements.txt /
-RUN pip wheel --no-cache-dir --no-deps --wheel-dir /wheels -r requirements.txt
-
-# Now pull the python image and we will simply copy the builder results to here
-
-FROM python:3.8-slim
+FROM python:3.9
 
 # install libsundials-dev
 RUN apt-get update && apt-get upgrade -y
@@ -35,7 +23,7 @@ RUN ln -sf /dev/stdout /var/log/nginx/access.log \
 RUN chown www-data:www-data /etc/nginx/sites-available/default
 
 # install envsubst and git
-RUN apt-get install -y gettext-base
+RUN apt-get install -y gettext-base 
 
 # clean up apt
 RUN apt-get clean
@@ -44,15 +32,18 @@ RUN apt-get autoremove
 RUN rm -rf /var/lib/apt/lists/*
 
 # install dependencies
-COPY --from=build-python /wheels /wheels
-COPY --from=build-python requirements.txt .
-RUN pip install --no-cache /wheels/*
+COPY ./requirements.txt /
+RUN apt-get update && apt-get upgrade -y
+RUN apt-get install -y build-essential libsasl2-dev python-dev libldap2-dev libssl-dev
+
+RUN pip install  -r requirements.txt
 
 # install server code
 WORKDIR /app
 COPY ./pkpdapp .
 
 RUN python manage.py collectstatic --noinput
+RUN python manage.py migrate --noinput
 
 # copy the built frontend (needs to be after we install nginx)
 COPY --from=build /app/frontend/build /usr/share/nginx/html

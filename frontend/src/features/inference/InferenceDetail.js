@@ -3,6 +3,8 @@ import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
 import Divider from '@material-ui/core/Divider';
 import Button from "@material-ui/core/Button";
+
+import { useHistory } from "react-router-dom";
 import Grid from "@material-ui/core/Grid";
 import Paper from "@material-ui/core/Paper";
 
@@ -568,6 +570,7 @@ function LogLikelihoodSubform({
 
 export default function InferenceDetail({ project, inference }) {
   const dispatch = useDispatch();
+  let history = useHistory();
   const [openDialog, setOpenDialog] = React.useState(false);
   const handleCloseDialog = () => {
     setOpenDialog(false);
@@ -719,6 +722,7 @@ export default function InferenceDetail({ project, inference }) {
 
   const handleDelete = () => {
     dispatch(deleteInference(inference.id));
+    history.push(`/${project.id}/inference`);
   };
 
 

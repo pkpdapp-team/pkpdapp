@@ -4,6 +4,8 @@ services:
     image: "postgres"
     stop_signal: SIGINT                 # Fast Shutdown mode
     command: -p 5432
+    ports:
+      - "5432:5432"
     env_file:
       - ./.env
     restart: unless-stopped
