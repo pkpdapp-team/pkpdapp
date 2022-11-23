@@ -23,6 +23,11 @@ jobs:
           python-version: 3.8
           architecture: x64
 
+      - name: install ldap 
+        run: |
+          sudo apt-get update
+          sudo apt-get install libsasl2-dev python3-dev libldap2-dev libssl-dev
+
       - name: install pkpdapp
         run: |
           python --version
