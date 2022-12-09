@@ -70,7 +70,7 @@ if use_ldap:
         'ldap://ldap.forumsys.com:389'
     )
 
-    use_direct_bind = os.environ.get('AUTH_LDAP_DIRECT_BIND', True)
+    use_direct_bind = os.environ.get('AUTH_LDAP_DIRECT_BIND', False)
     if use_direct_bind:
         AUTH_LDAP_USER_DN_TEMPLATE = os.environ.get(
             'AUTH_LDAP_BIND_DN_TEMPLATE',
