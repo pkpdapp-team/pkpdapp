@@ -59,7 +59,7 @@ INSTALLED_APPS = [
     'pkpdapp',
 ]
 
-use_ldap = os.environ.get('AUTH_LDAP_USE', False)
+use_ldap = bool(int(os.environ.get('AUTH_LDAP_USE', '0')))
 if use_ldap:
     AUTHENTICATION_BACKENDS = [
         "django_auth_ldap.backend.LDAPBackend",
@@ -90,7 +90,11 @@ if use_ldap:
                 'AUTH_LDAP_SEARCH_BASE',
                 'ou=mathematicians,dc=example,dc=com'
             ),
-            ldap.SCOPE_SUBTREE, "(uid=%(user)s)"
+            ldap.SCOPE_SUBTREE, 
+            os.environ.get(
+                'AUTH_LDAP_SEARCH_FILTER',
+                "(uid=%(user)s)"
+            ),
         )
 
 DJOSER = {
