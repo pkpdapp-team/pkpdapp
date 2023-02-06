@@ -1,4 +1,6 @@
 version: "2"
+volumes:
+  db:
 services:
   pkpdapp_postgres:
     image: "postgres"
