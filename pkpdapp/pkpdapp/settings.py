@@ -341,7 +341,7 @@ CLOUDAMQP_URL = os.environ.get("CLOUDAMQP_URL", default=None)
 if CLOUDAMQP_URL is None:
     CELERY_BROKER_URL = [
         'amqp://',
-        'amqp://{}:{}@pkpdapp_rabbitmq:5672'.format(
+        'amqp://{}:{}@rabbitmq:5672'.format(
             os.environ.get("RABBITMQ_DEFAULT_USER",
                            default='guest'),
             os.environ.get("RABBITMQ_DEFAULT_PASS",
