@@ -2,7 +2,7 @@ version: "2"
 volumes:
   db:
 services:
-  pkpdapp_postgres:
+  postgres:
     image: "postgres"
     stop_signal: SIGINT                 # Fast Shutdown mode
     command: -p 5432
@@ -13,7 +13,7 @@ services:
     restart: unless-stopped
     volumes: 
       - db:/var/lib/postgresql/data
-  pkpdapp_rabbitmq:
+  rabbitmq:
     image: rabbitmq:3-management-alpine
     env_file:
       - ./.env
@@ -21,11 +21,11 @@ services:
         - 5672:5672
         - 15672:15672
     restart: unless-stopped
-  pkpdapp:
+  app:
     image: pkpdapp
     depends_on:
-      - pkpdapp_postgres
-      - pkpdapp_rabbitmq
+      - postgres
+      - rabbitmq
     build:
       dockerfile: Dockerfile
       context: .
