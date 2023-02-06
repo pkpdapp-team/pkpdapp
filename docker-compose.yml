@@ -9,6 +9,8 @@ services:
     env_file:
       - ./.env
     restart: unless-stopped
+    volumes: 
+      - db:/var/lib/postgresql/data
   pkpdapp_rabbitmq:
     image: rabbitmq:3-management-alpine
     env_file:
