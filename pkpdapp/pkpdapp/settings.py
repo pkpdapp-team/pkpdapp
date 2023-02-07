@@ -90,7 +90,7 @@ if use_ldap:
                 'AUTH_LDAP_SEARCH_BASE',
                 'ou=mathematicians,dc=example,dc=com'
             ),
-            ldap.SCOPE_SUBTREE, 
+            ldap.SCOPE_SUBTREE,
             os.environ.get(
                 'AUTH_LDAP_SEARCH_FILTER',
                 "(uid=%(user)s)"
