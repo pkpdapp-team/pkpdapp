@@ -18,15 +18,15 @@ export const fetchSubject = createAsyncThunk(
   "subjects/fetchSubject",
   async (subjectId, { getState }) => {
     console.log("fetchSubject", subjectId);
-    const response = await api.get(`/api/subject/${subjectId}/`);
+    const response = await api.get(`/api/subject/${subjectId}/`, getState().login.csrf);
     return response;
   }
 );
 
 export const updateSubject = createAsyncThunk(
   "subjects/updateSubject",
-  async (subject) => {
-    const response = await api.patch(`/api/subject/${subject.id}/`, subject);
+  async (subject, {dispatch, getState}) => {
+    const response = await api.put(`/api/subject/${subject.id}/`, getState().login.csrf, subject);
     return response;
   }
 );
@@ -34,7 +34,7 @@ export const updateSubject = createAsyncThunk(
 export const fetchSubjectByProject = createAsyncThunk(
   "subjects/fetchSubjectByProject",
   async (project_id, { getState }) => {
-    const response = await api.get(`/api/subject/?project_id=${project_id}`);
+    const response = await api.get(`/api/subject/?project_id=${project_id}`, getState().login.csrf);
     return response;
   }
 );
