@@ -8,7 +8,8 @@ from django.test import TestCase
 from pkpdapp.models import (
     Inference, PharmacodynamicModel, LogLikelihood,
     Project, BiomarkerType, Algorithm,
-    InferenceResult, InferenceMixin
+    InferenceResult, InferenceMixin,
+    InferenceFunctionResult
 )
 import numpy as np
 
@@ -73,7 +74,7 @@ class TestInferenceSerializer(TestCase):
         ).order_by(
             'iteration', 'chain'
         ).values_list('value', flat=True))
-        fresults = np.array(InferenceResult.objects.filter(
+        fresults = np.array(InferenceFunctionResult.objects.filter(
             chain__in=chains
         ).order_by(
             'iteration', 'chain'
