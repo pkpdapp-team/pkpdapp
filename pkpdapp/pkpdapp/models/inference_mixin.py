@@ -513,6 +513,8 @@ class InferenceMixin:
                 fn_val = self._pints_log_posterior(
                     self._pints_log_posterior.to_search(x0)
                 )
+                if self.inference.algorithm.category == 'OP':
+                    fn_val = -fn_val
                 print('starting function value', fn_val)
                 self.write_inference_results(
                     x0, fn_val,
