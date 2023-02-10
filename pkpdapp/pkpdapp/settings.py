@@ -32,7 +32,7 @@ SECRET_KEY = os.environ.get("SECRET_KEY", default='foo')
 
 DEBUG = int(os.environ.get("DEBUG", default=0))
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'pkpdapp.herokuapp.com']
+ALLOWED_HOSTS = [os.environ.get('HOST_NAME', 'localhost'), '127.0.0.1']
 
 # Application definition - to use any of those you need to run `manage.py
 # migrate` first
@@ -59,7 +59,7 @@ INSTALLED_APPS = [
     'pkpdapp',
 ]
 
-use_ldap = os.environ.get('AUTH_LDAP_USE', False)
+use_ldap = bool(int(os.environ.get('AUTH_LDAP_USE', '0')))
 if use_ldap:
     AUTHENTICATION_BACKENDS = [
         "django_auth_ldap.backend.LDAPBackend",
@@ -70,7 +70,7 @@ if use_ldap:
         'ldap://ldap.forumsys.com:389'
     )
 
-    use_direct_bind = os.environ.get('AUTH_LDAP_DIRECT_BIND', True)
+    use_direct_bind = bool(int(os.environ.get('AUTH_LDAP_DIRECT_BIND', '0')))
     if use_direct_bind:
         AUTH_LDAP_USER_DN_TEMPLATE = os.environ.get(
             'AUTH_LDAP_BIND_DN_TEMPLATE',
@@ -90,7 +90,11 @@ if use_ldap:
                 'AUTH_LDAP_SEARCH_BASE',
                 'ou=mathematicians,dc=example,dc=com'
             ),
-            ldap.SCOPE_SUBTREE, "(uid=%(user)s)"
+            ldap.SCOPE_SUBTREE,
+            os.environ.get(
+                'AUTH_LDAP_SEARCH_FILTER',
+                "(uid=%(user)s)"
+            ),
         )
 
 DJOSER = {
@@ -337,7 +341,7 @@ CLOUDAMQP_URL = os.environ.get("CLOUDAMQP_URL", default=None)
 if CLOUDAMQP_URL is None:
     CELERY_BROKER_URL = [
         'amqp://',
-        'amqp://{}:{}@pkpdapp_rabbitmq:5672'.format(
+        'amqp://{}:{}@rabbitmq:5672'.format(
             os.environ.get("RABBITMQ_DEFAULT_USER",
                            default='guest'),
             os.environ.get("RABBITMQ_DEFAULT_PASS",
