@@ -6,9 +6,9 @@ from io import StringIO
 
  
 class DataParser:
-    alternate_names = {
+    alternate_col_names = {
         "ID": ["ID", "Subject_id", "Subject", "SUBJID"],
-        "TIME": ["Time", "TIME"],
+        "TIME": ["Time", "TIME", "TIMEPOINT", "t", "T", "time"],
         "TIME_UNIT": ["Time_unit", "Time_units", "TIMEUNIT"],
         "AMOUNT": ["Amt", "Amount", "AMT"],
         "AMOUNT_UNIT": ["Amt_unit", "Amt_units", "AMTUNIT"],
@@ -34,8 +34,8 @@ class DataParser:
     ]
 
     altername_unit_names = {
-        "h": "hour",
-        "d": "day",
+        "h": ["hour"],
+        "d": ["day"],
     }
 
     def validate(self, data: pd.DataFrame):
@@ -45,7 +45,7 @@ class DataParser:
         error_cols = []
         found_cols = {}
         for col_name in self.required_cols:
-            col_alts = self.alternate_names[col_name]
+            col_alts = self.alternate_col_names[col_name]
             found = False
             for alternate_name in col_alts:
                 if alternate_name in colnames:
@@ -65,7 +65,7 @@ class DataParser:
 
         # search for optional columns
         for col_name in self.optional_cols:
-            col_alts = self.alternate_names[col_name]
+            col_alts = self.alternate_col_names[col_name]
             for alternate_name in col_alts:
                 if alternate_name in colnames:
                     found_cols[col_name] = alternate_name
@@ -77,9 +77,11 @@ class DataParser:
 
 
         # map alternate unit names to standard names
-        inv_altername_unit_names = {
-            v: k for k, v in self.altername_unit_names.items()
-        }
+        inv_altername_unit_names = {}
+        for k, v in self.altername_unit_names.items():
+            for v2 in v:
+                inv_altername_unit_names[v2] = k
+
         def map_unit_names(x):
             if x in inv_altername_unit_names:
                 return inv_altername_unit_names[x]
