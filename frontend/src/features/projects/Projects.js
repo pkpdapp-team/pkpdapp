@@ -96,7 +96,6 @@ export default function Projects() {
                 </Typography>
               </Tooltip>
             </TableCell>
-            
             ))
             }
           </TableRow>

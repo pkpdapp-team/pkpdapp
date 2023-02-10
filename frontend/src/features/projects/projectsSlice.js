@@ -5,6 +5,7 @@ import {
 } from "@reduxjs/toolkit";
 
 import { api } from "../../Api";
+import { selectCurrentUser } from '../login/loginSlice'
 
 const projectsAdapter = createEntityAdapter({
   sortComparer: (a, b) => b.id < a.id,
@@ -26,10 +27,12 @@ export const fetchProjects = createAsyncThunk(
 export const addNewProject = createAsyncThunk(
   "projects/addNewProject",
   async (_, { getState }) => {
+    const user = selectCurrentUser(getState())
+    console.log('user is ', user)
     const initialProject = {
       name: "new",
       user_access: [
-        {user: api.loggedInUser().id, read_only: false}
+        {user: user.id, read_only: false}
       ],
     };
     console.log("addNewProject", initialProject);
