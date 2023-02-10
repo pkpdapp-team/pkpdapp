@@ -12,7 +12,7 @@ from pkpdapp.utils import MonolixParser
 
 
 class TestMonolixParser(unittest.TestCase):
-    def test_parse(self):
+    def test_parse_model(self):
         BASE_URL_DATASETS = 'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/'   # noqa: E501
         with urllib.request.urlopen(
             BASE_URL_DATASETS + 'usecase_monolix/PK_Model.txt', timeout=5
