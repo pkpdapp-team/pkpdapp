@@ -9,9 +9,12 @@ from .stored import StoredModel
 from .units import Unit
 from .compound import Compound
 from .project import Project, ProjectAccess
-from .dataset import Dataset
-from .subject import Subject, SubjectGroup
 from .protocol import Protocol
+from .dose import Dose
+from .subject import Subject, SubjectGroup
+from .biomarker_type import BiomarkerType
+from .biomarker import Biomarker
+from .dataset import Dataset
 from .myokit_model_mixin import MyokitModelMixin
 from .mechanistic_model import MechanisticModel
 from .pharmacodynamic_model import (
@@ -24,10 +27,7 @@ from .pharmacokinetic_model import (
     set_administration,
 )
 from .variable import Variable
-from .biomarker_type import BiomarkerType
-from .biomarker import Biomarker
 from .profile import Profile
-from .dose import Dose
 from .myokit_forward_model import MyokitForwardModel
 from .likelihoods import (
     LogLikelihood,

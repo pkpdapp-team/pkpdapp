@@ -6,7 +6,7 @@
 
 from django.db import models
 from jsonfield import JSONField
-from pkpdapp.models import Dataset, Unit
+from pkpdapp.models import Unit
 from django.db.models import Q
 
 
@@ -16,7 +16,7 @@ class SubjectGroup(models.Model):
         help_text='group name'
     )
     dataset = models.ForeignKey(
-        Dataset, on_delete=models.CASCADE,
+        'Dataset', on_delete=models.CASCADE,
         related_name='subject_groups',
         help_text='dataset containing this subject'
     )
@@ -31,7 +31,7 @@ class Subject(models.Model):
     """
     id_in_dataset = models.IntegerField(help_text='unique id in the dataset')
     dataset = models.ForeignKey(
-        Dataset, on_delete=models.CASCADE,
+        'Dataset', on_delete=models.CASCADE,
         related_name='subjects',
         help_text='dataset containing this subject'
     )

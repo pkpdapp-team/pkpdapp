@@ -6,7 +6,7 @@
 
 from django.db import models
 from django.db.models import OuterRef, Subquery
-from pkpdapp.models import Dataset, Unit
+from pkpdapp.models import Unit
 import pandas as pd
 
 
@@ -29,7 +29,7 @@ class BiomarkerType(models.Model):
         blank=True, null=True
     )
     dataset = models.ForeignKey(
-        Dataset, on_delete=models.CASCADE,
+        'Dataset', on_delete=models.CASCADE,
         related_name='biomarker_types',
         help_text='dataset containing this biomarker measurement'
     )

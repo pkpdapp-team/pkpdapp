@@ -7,14 +7,10 @@
 import pandas as pd
 from django.db import models
 from pkpdapp.models import Project
-from pkpdapp.pkpdapp.models.dose import Dose
-from pkpdapp.pkpdapp.models.biomarker import Biomarker
-from pkpdapp.pkpdapp.models.biomarker_type import BiomarkerType
-from pkpdapp.pkpdapp.models.compound import Compound
-from pkpdapp.pkpdapp.models.protocol import Protocol
-from pkpdapp.pkpdapp.models.subject import Subject, SubjectGroup
-from pkpdapp.pkpdapp.models.units import Unit
-
+from pkpdapp.models import (
+    Dose, Biomarker, BiomarkerType, Subject, SubjectGroup, Protocol, Unit,
+    Compound,
+)
 
 class Dataset(models.Model):
     """
@@ -56,18 +52,18 @@ class Dataset(models.Model):
         Subject.objects.filter(dataset=self).delete()
         SubjectGroup.objects.filter(dataset=self).delete()
 
-        data_without_dose = data.query('DV != "."')
+        data_without_dose = data.query('OBSERVATION != "."')
 
         # create biomarker types
         # assume AMOUNT_UNIT and TIME_UNIT are constant for each bt
         bts_unique = data_without_dose[
-            ['OBERVATION_NAME', 'AMOUNT_UNIT', 'TIME_UNIT']
+            ['OBSERVATION_NAME', 'AMOUNT_UNIT', 'TIME_UNIT']
         ].drop_duplicates()
         biomarker_types = {}
         for i, row in bts_unique.iterrows():
             unit = Unit.objects.get(symbol=row['AMOUNT_UNIT'])
             time_unit = Unit.objects.get(symbol=row['TIME_UNIT'])
-            observation_name = row['OBERVATION_NAME']
+            observation_name = row['OBSERVATION_NAME']
             biomarker_types[observation_name] = BiomarkerType.objects.create(
                 name=observation_name,
                 description="",
@@ -81,12 +77,12 @@ class Dataset(models.Model):
             
         # create subjects
         subjects = {}
-        for i, row in data[['ID', 'DOSE_GROUP']].unique().iterrows():
-            subject_id = row['ID']
+        for i, row in data[['SUBJECT_ID', 'DOSE_GROUP']].drop_duplicates().iterrows():
+            subject_id = row['SUBJECT_ID']
             dose_group = row["DOSE_GROUP"]
             # handle if dose group is '.'
             try:
-                dose_group = float(dose_group)
+                dose_group_value = float(dose_group)
                 # TODO: put it in as dimensionless for now
                 dose_group_unit = Unit.objects.get(symbol='')
             except ValueError:
@@ -103,8 +99,7 @@ class Dataset(models.Model):
             
         # create compounds
         compounds = {}
-        for i, row in data['COMPOUND'].unique().iterrows():
-            compound = row['COMPOUND']
+        for compound in data['COMPOUND'].drop_duplicates():
             # create compound if not already in database
             try:
                 compounds[compound] = Compound.objects.get(name=compound)
@@ -114,8 +109,8 @@ class Dataset(models.Model):
                 )
                 
         # create subject protocol
-        for i, row in data[['ID', 'COMPOUND', 'ROUTE', "AMOUNT_UNIT", "TIME_UNIT"]].unique().iterrows():
-            subject_id = row['ID']
+        for i, row in data[['SUBJECT_ID', 'COMPOUND', 'ROUTE', "AMOUNT_UNIT", "TIME_UNIT"]].drop_duplicates().iterrows():
+            subject_id = row['SUBJECT_ID']
             compound = row['COMPOUND']
             route = row['ROUTE']
             amount_unit = Unit.objects.get(symbol=row['AMOUNT_UNIT'])
@@ -127,7 +122,7 @@ class Dataset(models.Model):
             else:
                 route = Protocol.DoseType.INDIRECT
             if not subject.protocol:
-                Protocol.objects.create(
+                subject.protocol = Protocol.objects.create(
                     name='{}-{}-{}'.format(
                         self.name,
                         compound.name,
@@ -138,11 +133,10 @@ class Dataset(models.Model):
                     amount_unit=amount_unit,
                     dose_type=route
                 )
-                subject.protocol = protocol
                 subject.save()
              
         for i, row in data.iterrows():
-            subject_id = row["ID"]
+            subject_id = row["SUBJECT_ID"]
             time = row["TIME"]
             time_unit = row["TIME_UNIT"]
             amount = row["AMOUNT"]
@@ -159,14 +153,14 @@ class Dataset(models.Model):
 
             subject = subjects[subject_id]
             
-            if observation_name != ".":  # measurement observation
+            if observation != ".":  # measurement observation
                 Biomarker.objects.create(
                     time=time,
                     subject=subject,
                     value=observation,
                     biomarker_type=biomarker_types[observation_name]
                 )
-            if amount != "." or amount != 0:  # dose observation
+            if amount != "." and amount != 0:  # dose observation
                 if route == 'IV':
                     route = Protocol.DoseType.DIRECT
                 else:
@@ -184,7 +178,7 @@ class Dataset(models.Model):
                     protocol=protocol,
                 )
 
-        instance.merge_protocols()
+        self.merge_protocols()
 
 
     def merge_protocols(self):

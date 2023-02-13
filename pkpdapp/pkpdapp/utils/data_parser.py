@@ -2,21 +2,21 @@ import pandas as pd
 from pkpdapp.models import Unit
 from io import StringIO
 
-from pkpdapp.pkpdapp.models.subject import Subject
+from pkpdapp.models import Subject
 
 
 
  
 class DataParser:
     alternate_col_names = {
-        "ID": ["ID", "Subject_id", "Subject", "SUBJID"],
+        "SUBJECT_ID": ["ID", "id", "Subject_id", "Subject", "SUBJID"],
         "TIME": ["Time", "TIME", "TIMEPOINT", "t", "T", "time"],
         "TIME_UNIT": ["Time_unit", "Time_units", "TIMEUNIT"],
         "AMOUNT": ["Amt", "Amount", "AMT"],
-        "AMOUNT_UNIT": ["Amt_unit", "Amt_units", "AMTUNIT"],
+        "AMOUNT_UNIT": ["Amt_unit", "Amt_units", "AMTUNIT", "UNIT"],
         "OBSERVATION": ["DV", "Observation", "Y", "YVAL"],
-        "OBSERVATION_NAME": ["Observation_id", "YTYPE", "YNAME"],
-        "OBSERVATION_UNIT": ["Observation_unit", "YDESC", "YUNIT"],
+        "OBSERVATION_NAME": ["Observation_id", "YDESC", "YNAME"],
+        "OBSERVATION_UNIT": ["Observation_unit", "YUNIT", "UNIT"],
         "DOSE_GROUP": ["Dose_cat", "Dose_group", "DOSEGROUP"],
         "COMPOUND": ["Compound", "COMPOUND"],
         "ROUTE": ["Route", "ROUTE"],
@@ -24,7 +24,7 @@ class DataParser:
     }
 
     required_cols = [
-        "ID",
+        "SUBJECT_ID",
         "TIME",
         "AMOUNT",
         "OBSERVATION",
@@ -78,11 +78,24 @@ class DataParser:
                 if alternate_name in colnames:
                     found_cols[col_name] = alternate_name
                     break
-
+        
         # set dataframe column names to standard names
+        # we support the amount unit and observation unit being the same column
         inv_found_cols = {v: k for k, v in found_cols.items()}
-        data = data.rename(columns=inv_found_cols)
-
+        if (
+            "AMOUNT_UNIT" in found_cols and 
+            "OBSERVATION_UNIT" in found_cols and 
+            found_cols["AMOUNT_UNIT"] == found_cols["OBSERVATION_UNIT"]
+        ):
+            amt_obs_unit_same_col = True
+            amt_obs_unit_col = found_cols["AMOUNT_UNIT"]
+            
+            # manually set column map and then duplicate column
+            inv_found_cols[amt_obs_unit_col] = "AMOUNT_UNIT"
+            data = data.rename(columns=inv_found_cols)
+            data["OBSERVATION_UNIT"] = data["AMOUNT_UNIT"]
+        else:
+            data = data.rename(columns=inv_found_cols)
 
         # map alternate unit names to standard names
         inv_altername_unit_names = {}
@@ -117,7 +130,7 @@ class DataParser:
                 data[unit_col] = ""
                 
         # put in default infusion time if not present
-        min_delta_time = data["TIME", "SUBJECT_ID"].unique().sort_values(by=["SUBJECT_ID", "TIME"]).diff().min()
+        min_delta_time = data[["TIME", "SUBJECT_ID"]].drop_duplicates().sort_values(by=["SUBJECT_ID", "TIME"]).diff().min()["TIME"]
         if "INFUSION_TIME" not in found_cols:
             data["INFUSION_TIME"] = min_delta_time / 100.0
 
@@ -154,9 +167,12 @@ class DataParser:
         
         # check that units are same for each observation type
         if "OBSERVATION_UNIT" in found_cols:
-            obs_units = data.groupby("OBSERVATION_ID")["OBSERVATION_UNIT"].unique()
-            obs_units = obs_units.apply(lambda x: x[0])
-            if len(obs_units.unique()) > 1:
+            obs_units = data.groupby("OBSERVATION_NAME")["OBSERVATION_UNIT"].unique()
+            if amt_obs_unit_same_col:
+                max_num_units = 2
+            else:
+                max_num_units = 1
+            if obs_units.apply(lambda x: len(x) > max_num_units).any():
                 raise RuntimeError(
                     (
                         'Error parsing file, '
@@ -166,9 +182,8 @@ class DataParser:
             
         # check that dose group is constant for each subject id
         if "DOSE_GROUP" in found_cols:
-            dose_groups = data.groupby("ID")["DOSE_GROUP"].unique()
-            dose_groups = dose_groups.apply(lambda x: x[0])
-            if len(dose_groups.unique()) > 1:
+            dose_groups = data.groupby("SUBJECT_ID")["DOSE_GROUP"].unique()
+            if dose_groups.apply(lambda x: len(x) > 1).any():
                 raise RuntimeError(
                     (
                         'Error parsing file, '
@@ -188,6 +203,14 @@ class DataParser:
         data = pd.read_csv(data, delimiter=delimiter)
         data = self.validate(data)
         return data
+    
+    def parse_from_stream(self, data_stream, delimiter=None):
+        data = pd.read_csv(data_stream, delimiter=delimiter)
+        data = self.validate(data)
+        return data
+
+    
+
     
     
 
