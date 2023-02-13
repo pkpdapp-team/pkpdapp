@@ -11,10 +11,10 @@ from .compound import Compound
 from .project import Project, ProjectAccess
 from .protocol import Protocol
 from .dose import Dose
-from .subject import Subject, SubjectGroup
+from .subject import Subject
 from .biomarker_type import BiomarkerType
 from .biomarker import Biomarker
-from .dataset import Dataset
+from .categorical_biomarker import CategoricalBiomarker
 from .myokit_model_mixin import MyokitModelMixin
 from .mechanistic_model import MechanisticModel
 from .pharmacodynamic_model import (
@@ -26,6 +26,7 @@ from .pharmacokinetic_model import (
     PkpdMapping,
     set_administration,
 )
+from .dataset import Dataset
 from .variable import Variable
 from .profile import Profile
 from .myokit_forward_model import MyokitForwardModel

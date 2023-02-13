@@ -10,7 +10,7 @@ import codecs
 import pandas as pd
 from pkpdapp.models import (
     Dataset, BiomarkerType, Protocol, Subject,
-    Unit, Compound, Biomarker, Dose, SubjectGroup,
+    Unit, Compound, Biomarker, Dose,
 )
 from pkpdapp.api.serializers import ProtocolSerializer
 

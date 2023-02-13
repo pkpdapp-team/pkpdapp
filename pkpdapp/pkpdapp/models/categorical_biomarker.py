@@ -8,22 +8,19 @@ from django.db import models
 from pkpdapp.models import BiomarkerType, Subject
 
 
-class Biomarker(models.Model):
+class CategoricalBiomarker(models.Model):
     """
-    A single biomarker measurement value stored in a :model:`pkpdapp.Dataset`.
+    A single categorical biomarker state stored in a :model:`pkpdapp.Dataset`.
     Each biomarker is assigned a type stored in :model:`pkpdapp.BiomarkerType`.
-    
-    For observations, there will be multiple biomarker measurements for each
-    subject at each measurement time.
-    
-    For covariates, there will be only a single biomarker measurement for each
+
+    For categorical covariates, there will be only a single biomarker state for each
     subject. The time point is arbitrary as the value is piecewise constant over time
     
-    For regressors, there will be multiple biomarker measurements for each
-    subject. For time values between measurements the predicted effect is 
+    For categorical regressors, there will be multiple biomarker state for each
+    subject. For time values between measurements the state is 
     piecewise constant over time.
     
-    Note for categorical covariates the :model:`pkpdapp.CategoricalBiomarker`
+    Note for continuous covariates the :model:`pkpdapp.Biomarker`
     is used instead.
     """
     time = models.FloatField(
@@ -31,15 +28,18 @@ class Biomarker(models.Model):
     )
     subject = models.ForeignKey(
         Subject, on_delete=models.CASCADE,
-        related_name='biomarkers',
+        related_name='categorical_biomarkers',
         help_text='subject associated with this biomarker'
     )
     biomarker_type = models.ForeignKey(
         BiomarkerType, on_delete=models.CASCADE,
-        related_name='biomarkers',
-        help_text='biomarker type, for example "concentration in mg"'
+        related_name='categorical_biomarkers',
+        help_text='biomarker type, for example "weight in kg"'
     )
-    value = models.FloatField(help_text='value of the measurement')
+    value = models.CharField(
+        max_length=100,
+        help_text='category name'
+    )
 
     def get_project(self):
         return self.biomarker_type.get_project()

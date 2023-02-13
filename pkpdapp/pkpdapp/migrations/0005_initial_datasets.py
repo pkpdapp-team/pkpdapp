@@ -234,13 +234,13 @@ def load_datasets(apps, schema_editor):
     Dataset = apps.get_model("pkpdapp", "Dataset")
     Subject = apps.get_model("pkpdapp", "Subject")
     Biomarker = apps.get_model("pkpdapp", "Biomarker")
+    CategoricalBiomarker = apps.get_model("pkpdapp", "CategoricalBiomarker")
     BiomarkerType = apps.get_model("pkpdapp", "BiomarkerType")
     Project = apps.get_model("pkpdapp", "Project")
     Compound = apps.get_model("pkpdapp", "Compound")
     Dose = apps.get_model("pkpdapp", "Dose")
     Unit = apps.get_model("pkpdapp", "Unit")
     Protocol = apps.get_model("pkpdapp", "Protocol")
-    SubjectGroup = apps.get_model("pkpdapp", "SubjectGroup")
 
     demo_project = Project.objects.get(name='demo')
     for (datafile_name, datafile_url, datafile_description,
@@ -349,6 +349,7 @@ def load_datasets(apps, schema_editor):
             subject_index = 0
             protocols = {}
             doses = {}
+            dimensionless_unit = Unit.objects.get(symbol='')
             for row in data_reader:
                 biomarker_type_str = row[BIOMARKER_TYPE_COLUMN]
                 if not biomarker_type_str:
@@ -358,6 +359,11 @@ def load_datasets(apps, schema_editor):
                 index = biomarker_index[biomarker_type_str]
                 bt = biomarker_types[index]
                 value = row[VALUE_COLUMN]
+                
+                if TIME_UNIT_COLUMN is None:
+                    time_unit = Unit.objects.get(symbol='h')
+                else:
+                    time_unit = Unit.objects.get(symbol=row[TIME_UNIT_COLUMN])
 
                 subject_id = row[SUBJECT_ID_COLUMN]
                 try:
@@ -366,45 +372,80 @@ def load_datasets(apps, schema_editor):
                         dataset=dataset,
                     )
                 except Subject.DoesNotExist:
-                    group = None
-                    dose_group_amount = None
-                    dose_group_unit = None
+                    subject = Subject.objects.create(
+                        id_in_dataset=subject_id,
+                        dataset=dataset,
+                        shape=subject_index,
+                    )
                     if SUBJECT_GROUP_COLUMN:
                         group_str = row[SUBJECT_GROUP_COLUMN]
                         if group_str != '' and group_str != '.':
                             try:
-                                group = SubjectGroup.objects.get(
-                                    name=group_str,
+                                group_bt = BiomarkerType.objects.get(
+                                    name='group',
                                     dataset=dataset
                                 )
-                            except SubjectGroup.DoesNotExist:
-                                group = SubjectGroup.objects.create(
-                                    name=group_str,
+                            except BiomarkerType.DoesNotExist:
+                                group_bt = BiomarkerType.objects.create(
+                                    name='group',
+                                    description='group',
+                                    stored_unit=dimensionless_unit,
+                                    display_unit=dimensionless_unit,
+                                    stored_time_unit=time_unit,
+                                    display_time_unit=time_unit,
                                     dataset=dataset,
                                 )
+                            try:
+                                group = CategoricalBiomarker.objects.get(
+                                    biomarker_type=group_bt,
+                                    subject=subject,
+                                )
+                            except CategoricalBiomarker.DoesNotExist:
+                                group = CategoricalBiomarker.objects.create(
+                                    value=group_str,
+                                    biomarker_type=group_bt,
+                                    subject=subject,
+                                    time=0,
+                                )
+
                     if DOSE_GROUP_COLUMN:
                         dose_group_amount = row[DOSE_GROUP_COLUMN]
                         dose_group_unit = Unit.objects.get(symbol='')
-
-                    subject = Subject.objects.create(
-                        id_in_dataset=subject_id,
-                        dataset=dataset,
-                        dose_group_amount=dose_group_amount,
-                        dose_group_unit=dose_group_unit,
-                        shape=subject_index,
-                    )
-                    if group is not None:
-                        subject.groups.add(group)
+                        try:
+                            dose_bt = BiomarkerType.objects.get(
+                                name='dose',
+                                dataset=dataset
+                            )
+                        except BiomarkerType.DoesNotExist:
+                            dose_bt = BiomarkerType.objects.create(
+                                name='dose',
+                                description='dose',
+                                stored_unit=dose_group_unit,
+                                display_unit=dose_group_unit,
+                                stored_time_unit=time_unit,
+                                display_time_unit=time_unit,
+                                dataset=dataset,
+                                color=0,
+                            )
+                        try:
+                            dose = Biomarker.objects.get(
+                                biomarker_type=dose_bt,
+                                subject=subject,
+                            )
+                        except Biomarker.DoesNotExist:
+                            dose = Biomarker.objects.create(
+                                value=float(dose_group_amount),
+                                biomarker_type=dose_bt,
+                                subject=subject,
+                                time=0,
+                            )
                     subject_index += 1
                 if UNIT_COLUMN is None:
                     unit = Unit.objects.get(symbol='')
                 else:
                     unit = Unit.objects.get(symbol=row[UNIT_COLUMN])
                     unit == bt.stored_unit
-                if TIME_UNIT_COLUMN is None:
-                    time_unit = Unit.objects.get(symbol='h')
-                else:
-                    time_unit = Unit.objects.get(symbol=row[TIME_UNIT_COLUMN])
+                
                 try:
                     value = float(value)
                     is_number = True

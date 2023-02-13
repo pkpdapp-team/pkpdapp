@@ -8,9 +8,10 @@ import pandas as pd
 from django.db import models
 from pkpdapp.models import Project
 from pkpdapp.models import (
-    Dose, Biomarker, BiomarkerType, Subject, SubjectGroup, Protocol, Unit,
-    Compound,
+    Dose, Biomarker, BiomarkerType, Subject, Protocol, Unit,
+    Compound, CategoricalBiomarker,
 )
+from pkpdapp.utils import DataParser
 
 class Dataset(models.Model):
     """
@@ -108,13 +109,15 @@ class Dataset(models.Model):
                     name=compound
                 )
                 
+                
+        time_unit = Unit.objects.get(symbol=data["TIME_UNIT"].iloc[0])
+                
         # create subject protocol
-        for i, row in data[['SUBJECT_ID', 'COMPOUND', 'ROUTE', "AMOUNT_UNIT", "TIME_UNIT"]].drop_duplicates().iterrows():
+        for i, row in data[['SUBJECT_ID', 'COMPOUND', 'ROUTE', "AMOUNT_UNIT"]].drop_duplicates().iterrows():
             subject_id = row['SUBJECT_ID']
             compound = row['COMPOUND']
             route = row['ROUTE']
             amount_unit = Unit.objects.get(symbol=row['AMOUNT_UNIT'])
-            time_unit = Unit.objects.get(symbol=row['TIME_UNIT'])
             subject = subjects[subject_id]
             compound = compounds[compound]
             if route == 'IV':
@@ -134,11 +137,29 @@ class Dataset(models.Model):
                     dose_type=route
                 )
                 subject.save()
-             
+                
+        # insert covariate columns as categorical for now
+        covariates = {}
+        last_covariate_value = {}
+        parser = DataParser()
+        for covariate_name in data.columns:
+            if parser.is_covariate_column(covariate_name):
+                dimensionless_unit = Unit.objects.get(symbol='')
+                covariates[covariate_name] = BiomarkerType.objects.create(
+                    name=covariate_name,
+                    description="",
+                    stored_unit=dimensionless_unit,
+                    display_unit=dimensionless_unit,
+                    stored_time_unit=time_unit,
+                    display_time_unit=time_unit,
+                    dataset=self,
+                    color=len(covariates),
+                )
+                last_covariate_value[covariate_name] = None
+
         for i, row in data.iterrows():
             subject_id = row["SUBJECT_ID"]
             time = row["TIME"]
-            time_unit = row["TIME_UNIT"]
             amount = row["AMOUNT"]
             amount_unit = row["AMOUNT_UNIT"]
             observation = row["OBSERVATION"]
@@ -148,7 +169,6 @@ class Dataset(models.Model):
             route = row['ROUTE']
             infusion_time = row['INFUSION_TIME']
             
-            time_unit = Unit.objects.get(symbol=time_unit)
             amount_unit = Unit.objects.get(symbol=amount_unit)
 
             subject = subjects[subject_id]
@@ -177,6 +197,21 @@ class Dataset(models.Model):
                     duration=infusion_time,
                     protocol=protocol,
                 )
+                
+            # insert covariate columns as categorical for now
+            for covariate_name in covariates.keys():
+                covariate_value = row[covariate_name]
+                if covariate_value != ".":
+                    # only insert if value has changed
+                    last_value = last_covariate_value[covariate_name]
+                    if last_value is not None and covariate_value != last_value:
+                        last_covariate_value[covariate_name] = covariate_value
+                        CategoricalBiomarker.objects.create(
+                            time=time,
+                            subject=subject,
+                            value=covariate_value,
+                            biomarker_type=covariates[covariate_name]
+                        )
 
         self.merge_protocols()
 

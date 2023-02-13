@@ -74,38 +74,40 @@ class BiomarkerType(models.Model):
 
     def get_project(self):
         return self.dataset.get_project()
-
-    def as_pandas(self, subject_group=None, first_time_only=False):
+    
+    def is_categorical(self):
+        return self.categorical_biomarkers.exists()
+    
+    def is_continuous(self):
+        return self.biomarkers.exists()
+    
+    def data(self, first_time_only=False):
         """
         if first_time_only then ordered by subject
         if not first_time_only then ordered by time
         """
-        if subject_group and first_time_only:
-            earliest = self.biomarkers.filter(
+        is_continuous = self.is_continuous()
+        is_categorical = self.is_categorical()
+        if is_continuous:
+            biomarkers = self.biomarkers
+        elif is_categorical:
+            biomarkers = self.categorical_biomarkers
+        else:
+            return {
+                'times': [],
+                'subjects': [],
+                'values': [],
+            }
+        if first_time_only:
+            earliest = biomarkers.filter(
                 subject=OuterRef('subject')).order_by('time')
-            times_subjects_values = \
-                self.biomarkers.filter(
-                    subject__in=subject_group.subjects.all(),
-                    time=Subquery(earliest.values('time')[:1])
-                ).order_by('subject').values_list(
-                    'time', 'subject__id', 'value'
-                )
-        elif subject_group and not first_time_only:
-            times_subjects_values = self.biomarkers.filter(
-                subject__in=subject_group.subjects.all()
-            ).order_by('time').values_list(
-                'time', 'subject__id', 'value'
-            )
-        elif first_time_only:
-            earliest = self.biomarkers.filter(
-                subject=OuterRef('subject')).order_by('time')
-            times_subjects_values = self.biomarkers.filter(
+            times_subjects_values = biomarkers.filter(
                 time=Subquery(earliest.values('time')[:1])
             ).order_by('subject').values_list(
                 'time', 'subject__id', 'value'
             )
         else:
-            times_subjects_values = self.biomarkers.order_by(
+            times_subjects_values = biomarkers.order_by(
                 'time'
             ).values_list(
                 'time', 'subject__id', 'value'
@@ -121,17 +123,19 @@ class BiomarkerType(models.Model):
             'values': values,
         })
 
-        conversion_factor = self.stored_unit.convert_to(
-            self.display_unit
-        )
         time_conversion_factor = self.stored_time_unit.convert_to(
             self.display_time_unit
         )
-
-        df['values'] *= conversion_factor
         df['times'] *= time_conversion_factor
 
+        if is_continuous:
+            conversion_factor = self.stored_unit.convert_to(
+                self.display_unit
+            )
+            df['values'] *= conversion_factor
+
         return df
+
 
     def __str__(self):
         return str(self.name)

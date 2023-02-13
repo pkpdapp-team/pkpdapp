@@ -45,6 +45,9 @@ class DataParser:
         "h": ["hour"],
         "d": ["day"],
     }
+    
+    def is_covariate_column(self, col_name):
+        return col_name not in self.required_cols + self.optional_cols
 
     def validate(self, data: pd.DataFrame):
         colnames = data.columns.astype(str).tolist()
@@ -52,6 +55,7 @@ class DataParser:
         # check that all required columns are present
         error_cols = []
         found_cols = {}
+        covariate_cols = {}
         for col_name in self.required_cols:
             col_alts = self.alternate_col_names[col_name]
             found = False
@@ -78,6 +82,11 @@ class DataParser:
                 if alternate_name in colnames:
                     found_cols[col_name] = alternate_name
                     break
+                
+        # all remaining columns are covariates
+        for col_name in colnames:
+            if col_name not in found_cols.values():
+                covariate_cols[col_name] = col_name
         
         # set dataframe column names to standard names
         # we support the amount unit and observation unit being the same column
