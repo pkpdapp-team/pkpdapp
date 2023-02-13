@@ -15,9 +15,8 @@ class DataParser:
         "AMOUNT": ["Amt", "Amount", "AMT"],
         "AMOUNT_UNIT": ["Amt_unit", "Amt_units", "AMTUNIT", "UNIT"],
         "OBSERVATION": ["DV", "Observation", "Y", "YVAL"],
-        "OBSERVATION_NAME": ["Observation_id", "YDESC", "YNAME"],
+        "OBSERVATION_NAME": ["Observation_id", "YDESC", "YNAME", "YTYPE", "OBSERVATION_ID", "OBSERVATION_NAME", "OBSERVATIONID", "OBSERVATIONNAME"],
         "OBSERVATION_UNIT": ["Observation_unit", "YUNIT", "UNIT"],
-        "DOSE_GROUP": ["Dose_cat", "Dose_group", "DOSEGROUP"],
         "COMPOUND": ["Compound", "COMPOUND"],
         "ROUTE": ["Route", "ROUTE"],
         "INFUSION_TIME": ["TINF", "Tinf", "tinf", "Infusion_time", "INFUSIONTIME", "INFUSION_TIME"],
@@ -31,7 +30,6 @@ class DataParser:
     ]
 
     optional_cols = [
-        "DOSE_GROUP",
         "TIME_UNIT",
         "AMOUNT_UNIT",
         "OBSERVATION_UNIT",
@@ -189,17 +187,6 @@ class DataParser:
                     ).format(obs_units)
                 )
             
-        # check that dose group is constant for each subject id
-        if "DOSE_GROUP" in found_cols:
-            dose_groups = data.groupby("SUBJECT_ID")["DOSE_GROUP"].unique()
-            if dose_groups.apply(lambda x: len(x) > 1).any():
-                raise RuntimeError(
-                    (
-                        'Error parsing file, '
-                        'contains multiple dose groups: {}'
-                    ).format(dose_groups)
-                )
-
         # check for missing data and drop any rows where data are missing
         num_missing = data.isna().sum().sum()
         if num_missing > 0:

@@ -51,7 +51,6 @@ class Dataset(models.Model):
         # remove existing dataset
         BiomarkerType.objects.filter(dataset=self).delete()
         Subject.objects.filter(dataset=self).delete()
-        SubjectGroup.objects.filter(dataset=self).delete()
 
         data_without_dose = data.query('OBSERVATION != "."')
 
@@ -78,23 +77,12 @@ class Dataset(models.Model):
             
         # create subjects
         subjects = {}
-        for i, row in data[['SUBJECT_ID', 'DOSE_GROUP']].drop_duplicates().iterrows():
+        for i, row in data[['SUBJECT_ID']].drop_duplicates().iterrows():
             subject_id = row['SUBJECT_ID']
-            dose_group = row["DOSE_GROUP"]
-            # handle if dose group is '.'
-            try:
-                dose_group_value = float(dose_group)
-                # TODO: put it in as dimensionless for now
-                dose_group_unit = Unit.objects.get(symbol='')
-            except ValueError:
-                dose_group_value = None
-                dose_group_unit = None
 
             subjects[subject_id] = Subject.objects.create(
                 id_in_dataset=subject_id,
                 dataset=self,
-                dose_group_amount=dose_group_value,
-                dose_group_unit=dose_group_unit,
                 shape=i,
             )
             

@@ -35,7 +35,7 @@ class TestDataParser(unittest.TestCase):
             else:
                 data = parser.parse_from_str(csv_str)
             expected = [
-                "SUBJECT_ID", "TIME", "AMOUNT", "OBSERVATION", "DOSE_GROUP", 
+                "SUBJECT_ID", "TIME", "AMOUNT", "OBSERVATION", 
                 "TIME_UNIT", "AMOUNT_UNIT", "OBSERVATION_UNIT", 
                 "OBSERVATION_NAME", "COMPOUND", "ROUTE", "INFUSION_TIME",
             ]
@@ -52,8 +52,12 @@ class TestDataParser(unittest.TestCase):
                 biomarker_types_in_file = [
                     'IL2', 'IL10', 'IL6', 'IFNg', 'TNFa', 'Cells'
                 ]
+                covariate_columns = [
+                    'SUBJECT_GROUP', 'DOSE_GROUP', 'CL', 'YTYPE', 
+                    'mdv', 'STUDYID'
+                ]
                 self.assertCountEqual(
-                    biomarker_types_in_file,
+                    biomarker_types_in_file + covariate_columns,
                     dataset.biomarker_types.values_list('name', flat=True),
                 )
 
@@ -72,9 +76,23 @@ class TestDataParser(unittest.TestCase):
                     'Monocytes absolute', 'Eosinophils absolute',
                     'Basophils absolute',
                 ]
+                covariate_columns = [
+                    'DOSE',
+                    'EVID',
+                    'CENS',
+                    'WT',
+                    'YTYPE',
+                    'MDV',
+                    'STUDYID',
+                    'SPECIES',
+                    'SEX',
+                    'SUBJECT_GROUP',
+                    'STUDYID.1',
+                    'DOSE_GROUP',
+                ]
                 self.assertCountEqual(
                     dataset.biomarker_types.values_list('name', flat=True),
-                    biomarker_types_in_file
+                    biomarker_types_in_file + covariate_columns
                 )
 
                 # check the right number of subjects and protocols added
