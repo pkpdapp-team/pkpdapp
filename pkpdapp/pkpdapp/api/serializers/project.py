@@ -62,7 +62,7 @@ class ProjectSerializer(serializers.ModelSerializer):
         # delete any old accesses
         for old_access in old_accesses:
             old_access.delete()
-        
+
         project.refresh_from_db()
 
         return project
