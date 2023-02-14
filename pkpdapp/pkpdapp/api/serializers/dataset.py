@@ -7,10 +7,8 @@
 from pkpdapp.utils import DataParser
 from rest_framework import serializers
 import codecs
-import pandas as pd
 from pkpdapp.models import (
-    Dataset, BiomarkerType, Protocol, Subject,
-    Unit, Compound, Biomarker, Dose,
+    Dataset, Protocol,
 )
 from pkpdapp.api.serializers import ProtocolSerializer
 
@@ -35,6 +33,7 @@ class DatasetSerializer(serializers.ModelSerializer):
             if p['protocol'] is not None
         ]
         return ProtocolSerializer(protocols, many=True).data
+
 
 class DatasetCsvSerializer(serializers.ModelSerializer):
     csv = serializers.FileField()

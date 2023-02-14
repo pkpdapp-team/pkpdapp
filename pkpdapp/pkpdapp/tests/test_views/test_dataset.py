@@ -3,16 +3,12 @@
 # is released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-from http import HTTPStatus
 from urllib.request import urlretrieve
 
 from django.contrib.auth.models import User
 from django.core.files import File
-from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
-
-from pkpdapp.models import BiomarkerType, Dataset
 
 BASE_URL_DATASETS = 'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/datasets/'   # noqa: E501
 BASE_URL_MODELS = 'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/models/'   # noqa: E501

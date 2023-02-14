@@ -359,7 +359,7 @@ def load_datasets(apps, schema_editor):
                 index = biomarker_index[biomarker_type_str]
                 bt = biomarker_types[index]
                 value = row[VALUE_COLUMN]
-                
+
                 if TIME_UNIT_COLUMN is None:
                     time_unit = Unit.objects.get(symbol='h')
                 else:
@@ -396,12 +396,12 @@ def load_datasets(apps, schema_editor):
                                     dataset=dataset,
                                 )
                             try:
-                                group = CategoricalBiomarker.objects.get(
+                                CategoricalBiomarker.objects.get(
                                     biomarker_type=group_bt,
                                     subject=subject,
                                 )
                             except CategoricalBiomarker.DoesNotExist:
-                                group = CategoricalBiomarker.objects.create(
+                                CategoricalBiomarker.objects.create(
                                     value=group_str,
                                     biomarker_type=group_bt,
                                     subject=subject,
@@ -445,7 +445,7 @@ def load_datasets(apps, schema_editor):
                 else:
                     unit = Unit.objects.get(symbol=row[UNIT_COLUMN])
                     unit == bt.stored_unit
-                
+
                 try:
                     value = float(value)
                     is_number = True

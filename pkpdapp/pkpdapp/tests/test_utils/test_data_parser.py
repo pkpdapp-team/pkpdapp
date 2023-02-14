@@ -8,22 +8,23 @@ import codecs
 from django.utils import timezone
 import unittest
 import urllib.request
-from pkpdapp.models.biomarker_type import BiomarkerType
 from pkpdapp.models.dataset import Dataset
 
 from pkpdapp.utils import DataParser
 
 BASE_URL_DATASETS = 'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/'   # noqa: E501
+
+
 class TestDataParser(unittest.TestCase):
     def test_parse(self):
         for filename in [
-            'datasets/TCB4dataset.csv', 
+            'datasets/TCB4dataset.csv',
             'datasets/demo_pk_data_upload.csv',
             'usecase_monolix/TE_Data.txt',
             'usecase0/usecase0.csv',
             'usecase1/usecase1.csv',
             'usecase2/PKPD_UseCase_Abx.csv',
-            
+
         ]:
             with urllib.request.urlopen(
                 BASE_URL_DATASETS + filename, timeout=5
@@ -35,13 +36,13 @@ class TestDataParser(unittest.TestCase):
             else:
                 data = parser.parse_from_str(csv_str)
             expected = [
-                "SUBJECT_ID", "TIME", "AMOUNT", "OBSERVATION", 
-                "TIME_UNIT", "AMOUNT_UNIT", "OBSERVATION_UNIT", 
+                "SUBJECT_ID", "TIME", "AMOUNT", "OBSERVATION",
+                "TIME_UNIT", "AMOUNT_UNIT", "OBSERVATION_UNIT",
                 "OBSERVATION_NAME", "COMPOUND", "ROUTE", "INFUSION_TIME",
             ]
             for col in expected:
                 self.assertIn(col, data.columns.tolist())
-            
+
             if filename == 'datasets/TCB4dataset.csv':
                 dataset = Dataset.objects.create(
                     name=filename,
@@ -53,7 +54,7 @@ class TestDataParser(unittest.TestCase):
                     'IL2', 'IL10', 'IL6', 'IFNg', 'TNFa', 'Cells'
                 ]
                 covariate_columns = [
-                    'SUBJECT_GROUP', 'DOSE_GROUP', 'CL', 'YTYPE', 
+                    'SUBJECT_GROUP', 'DOSE_GROUP', 'CL', 'YTYPE',
                     'mdv', 'STUDYID'
                 ]
                 self.assertCountEqual(
@@ -101,4 +102,3 @@ class TestDataParser(unittest.TestCase):
                     subject.protocol for subject in dataset.subjects.all()
                 ])
                 self.assertEqual(len(protocols), 39)
-                

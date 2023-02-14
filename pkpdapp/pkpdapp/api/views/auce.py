@@ -9,8 +9,6 @@ from rest_framework import (
 from rest_framework.response import Response
 from pkpdapp.models import (
     BiomarkerType,
-    Subject,
-    Biomarker,
 )
 from pkpdapp.api.serializers import AuceSerializer
 from pkpdapp.utils import Auce
@@ -33,7 +31,7 @@ class AuceView(views.APIView):
                     "BiomarkerType id {} not found"
                     .format(biomarker_type_id)
                 )
-                
+
         group_type_id = request.data.get('group_type_id', None)
         if group_type_id is None:
             errors['group_type_id'] = "This field is required"
@@ -46,7 +44,7 @@ class AuceView(views.APIView):
                     "BiomarkerType id {} not found"
                     .format(biomarker_type_id)
                 )
-                
+
         concentration_type_id = request.data.get('concentration_type_id', None)
         if concentration_type_id is None:
             errors['concentration_type_id'] = "This field is required"
@@ -59,7 +57,6 @@ class AuceView(views.APIView):
                     "BiomarkerType id {} not found"
                     .format(concentration_type_id)
                 )
-        
 
         if errors:
             return Response(
@@ -76,18 +73,30 @@ class AuceView(views.APIView):
             if group is None:
                 group_subjects = group_data['subjects'].unique()
             else:
-                group_subjects = group_data.loc[group_data['values'] == group]['subjects']
-            group_concentrations = concentration_data[concentration_data['subjects'].isin(group_subjects)]
-            group_obs_data = obs_data[obs_data['subjects'].isin(group_subjects)]
-            
+                group_subjects = group_data.loc[
+                    group_data['values'] == group
+                ]['subjects']
+            group_concentrations = concentration_data[
+                concentration_data['subjects'].isin(group_subjects)
+            ]
+            group_obs_data = obs_data[
+                obs_data['subjects'].isin(group_subjects)
+            ]
+
             subject_times = []
             subject_data = []
             concentrations = []
             subject_ids = []
             for subject in group_subjects:
-                times = group_obs_data.loc[group_obs_data['subjects'] == subject]['times']
-                values = group_obs_data.loc[group_obs_data['subjects'] == subject]['values']
-                concentration = group_concentrations.loc[group_concentrations['subjects'] == subject]['values'].iloc[0]
+                times = group_obs_data.loc[
+                    group_obs_data['subjects'] == subject
+                ]['times']
+                values = group_obs_data.loc[
+                    group_obs_data['subjects'] == subject
+                ]['values']
+                concentration = group_concentrations.loc[
+                    group_concentrations['subjects'] == subject
+                ]['values'].iloc[0]
                 concentrations.append(concentration)
                 subject_times.append(times)
                 subject_data.append(values)

@@ -74,13 +74,13 @@ class BiomarkerType(models.Model):
 
     def get_project(self):
         return self.dataset.get_project()
-    
+
     def is_categorical(self):
         return self.categorical_biomarkers.exists()
-    
+
     def is_continuous(self):
         return self.biomarkers.exists()
-    
+
     def data(self, first_time_only=False):
         """
         if first_time_only then ordered by subject
@@ -135,7 +135,6 @@ class BiomarkerType(models.Model):
             df['values'] *= conversion_factor
 
         return df
-
 
     def __str__(self):
         return str(self.name)

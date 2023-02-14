@@ -13,6 +13,7 @@ from pkpdapp.models import (
 )
 from pkpdapp.utils import DataParser
 
+
 class Dataset(models.Model):
     """
     A PKPD dataset containing one or more :model:`pkpdapp.Biomarker`.
@@ -46,7 +47,7 @@ class Dataset(models.Model):
 
     def get_project(self):
         return self.project
-    
+
     def replace_data(self, data: pd.DataFrame):
         # remove existing dataset
         BiomarkerType.objects.filter(dataset=self).delete()
@@ -76,7 +77,7 @@ class Dataset(models.Model):
                 dataset=self,
                 color=i,
             )
-            
+
         # create subjects
         subjects = {}
         for i, row in data[['SUBJECT_ID']].drop_duplicates().iterrows():
@@ -87,7 +88,7 @@ class Dataset(models.Model):
                 dataset=self,
                 shape=i,
             )
-            
+
         # create compounds
         compounds = {}
         for compound in data['COMPOUND'].drop_duplicates():
@@ -98,11 +99,11 @@ class Dataset(models.Model):
                 compounds[compound] = Compound.objects.create(
                     name=compound
                 )
-                
-                
-                
+
         # create subject protocol
-        for i, row in data[['SUBJECT_ID', 'COMPOUND', 'ROUTE', "AMOUNT_UNIT"]].drop_duplicates().iterrows():
+        for i, row in data[
+            ['SUBJECT_ID', 'COMPOUND', 'ROUTE', "AMOUNT_UNIT"]
+        ].drop_duplicates().iterrows():
             subject_id = row['SUBJECT_ID']
             compound = row['COMPOUND']
             route = row['ROUTE']
@@ -126,7 +127,7 @@ class Dataset(models.Model):
                     dose_type=route
                 )
                 subject.save()
-                
+
         # insert covariate columns as categorical for now
         covariates = {}
         last_covariate_value = {}
@@ -156,11 +157,11 @@ class Dataset(models.Model):
             compound = row['COMPOUND']
             route = row['ROUTE']
             infusion_time = row['INFUSION_TIME']
-            
+
             amount_unit = Unit.objects.get(symbol=amount_unit)
 
             subject = subjects[subject_id]
-            
+
             if observation != ".":  # measurement observation
                 Biomarker.objects.create(
                     time=time,
@@ -185,14 +186,17 @@ class Dataset(models.Model):
                     duration=infusion_time,
                     protocol=protocol,
                 )
-                
+
             # insert covariate columns as categorical for now
             for covariate_name in covariates.keys():
                 covariate_value = row[covariate_name]
                 if covariate_value != ".":
                     # only insert if value has changed
                     last_value = last_covariate_value[covariate_name]
-                    if last_value is not None and covariate_value != last_value:
+                    if (
+                        last_value is not None and
+                        covariate_value != last_value
+                    ):
                         last_covariate_value[covariate_name] = covariate_value
                         CategoricalBiomarker.objects.create(
                             time=time,
@@ -202,7 +206,6 @@ class Dataset(models.Model):
                         )
 
         self.merge_protocols()
-
 
     def merge_protocols(self):
         unique_protocols = []

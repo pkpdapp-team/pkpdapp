@@ -19,7 +19,7 @@ class TestMonolixParser(unittest.TestCase):
         ) as f:
             monolix_str = codecs.decode(f.read(), 'utf-8')
         parser = MonolixParser()
-        model, (admin_id, tlag, direct)= parser.parse(monolix_str)
+        model, (admin_id, tlag, direct) = parser.parse(monolix_str)
         model.validate()
         self.assertEqual(admin_id, 1)
         self.assertEqual(tlag, 0)

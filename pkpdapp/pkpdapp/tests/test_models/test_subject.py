@@ -7,7 +7,7 @@
 from django.test import TestCase
 from pkpdapp.models import (
     Dataset,
-    Subject, Unit,
+    Subject,
 )
 from django.utils import timezone
 from django.db.utils import IntegrityError

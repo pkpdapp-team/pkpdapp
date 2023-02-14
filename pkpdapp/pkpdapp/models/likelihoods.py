@@ -280,7 +280,7 @@ class LogLikelihood(models.Model):
             '(null implies all subjects)'
         )
     )
-    
+
     class Form(models.TextChoices):
         NORMAL = 'N', 'Normal'
         UNIFORM = 'U', 'Uniform'
@@ -801,8 +801,7 @@ class LogLikelihood(models.Model):
             parent=self, variable__qname=qname
         )
         return param
-    
-    
+
     def filter_data_by_protocol(self, df):
         """
         filter data by categorical data

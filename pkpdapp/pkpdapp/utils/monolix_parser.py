@@ -16,7 +16,6 @@ import numbers
 import pyparsing as pp
 import pyparsing.common as ppc
 
-from pkpdapp.models import set_administration
 pp.enable_all_warnings()
 
 binops = {
@@ -130,7 +129,7 @@ class MonolixParser:
             equation.set_parse_action(
                 self.construct_equation
             )
-            
+
         )[...]
 
         output_block = pp.Keyword("OUTPUT:") + (
@@ -285,7 +284,7 @@ class MonolixParser:
 
     def construct_initial_condition(self, toks):
         name, expr = toks
-        # get rid of _0 
+        # get rid of _0
         name = name[:-2]
         var = self.get_or_construct_var(name)
 
@@ -320,4 +319,5 @@ class MonolixParser:
             self.parser.parseString(model_str, parseAll=parseAll)
         except pp.ParseException as err:
             raise RuntimeError(err.explain())
-        return self.myokit_model, (self.administration_id, self.tlag, self.direct_dosing)
+        return self.myokit_model, \
+            (self.administration_id, self.tlag, self.direct_dosing)

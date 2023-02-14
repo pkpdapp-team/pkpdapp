@@ -21,9 +21,9 @@ class BiomarkerTypeSerializer(serializers.ModelSerializer):
 
     def get_data(self, bt):
         return bt.data().to_dict(orient='list')
-    
+
     def get_is_categorical(self, bt):
         return bt.is_categorical()
-    
+
     def get_is_continuous(self, bt):
         return bt.is_continuous()

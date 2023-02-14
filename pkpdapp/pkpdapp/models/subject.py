@@ -6,8 +6,7 @@
 
 from django.db import models
 from jsonfield import JSONField
-from pkpdapp.models import Unit
-from django.db.models import Q
+
 
 class Subject(models.Model):
     """
