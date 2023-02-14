@@ -489,6 +489,10 @@ class Migration(migrations.Migration):
             model_name='subject',
             constraint=models.UniqueConstraint(fields=('id_in_dataset', 'dataset'), name='subject_dataset_unique'),
         ),
+        migrations.AlterUniqueTogether(
+            name='projectaccess',
+            unique_together={('user', 'project')},
+        ),
         migrations.AddConstraint(
             model_name='loglikelihood',
             constraint=models.CheckConstraint(check=models.Q(('form', 'F'), ('value__isnull', True), ('biomarker_type__isnull', True), _negated=True), name='loglikelihood: fixed log_likelihood must have a value or biomarker_type'),

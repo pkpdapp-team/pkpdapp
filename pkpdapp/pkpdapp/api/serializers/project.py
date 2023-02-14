@@ -34,7 +34,6 @@ class ProjectSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         # save method of log_likelihood will create its own parameters,
         # so ignore any parameters that are given
-        print(validated_data)
         users = validated_data.pop('projectaccess_set')
         project = BaseProjectSerializer().create(
             validated_data
@@ -52,9 +51,18 @@ class ProjectSerializer(serializers.ModelSerializer):
             instance, validated_data
         )
         for user in users:
+            user['project_id'] = instance.id
             serializer = ProjectAccessSerializer()
-            old_access = old_accesses.pop(0)
-            new_access = serializer.update(old_access, user)
+            if old_accesses:
+                new_access = serializer.create(user)
+            else:
+                new_access = serializer.update(old_accesses.pop(0), user)
             new_access.save()
+
+        # delete any old accesses
+        for old_access in old_accesses:
+            old_access.delete()
+
+        project.refresh_from_db()
 
         return project
