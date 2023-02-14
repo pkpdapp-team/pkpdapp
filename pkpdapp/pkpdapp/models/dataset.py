@@ -54,6 +54,9 @@ class Dataset(models.Model):
 
         data_without_dose = data.query('OBSERVATION != "."')
 
+        time_unit = Unit.objects.get(symbol=data["TIME_UNIT"].iloc[0])
+        print('upload time unit is', time_unit.symbol)
+
         # create biomarker types
         # assume AMOUNT_UNIT and TIME_UNIT are constant for each bt
         bts_unique = data_without_dose[
@@ -62,7 +65,6 @@ class Dataset(models.Model):
         biomarker_types = {}
         for i, row in bts_unique.iterrows():
             unit = Unit.objects.get(symbol=row['AMOUNT_UNIT'])
-            time_unit = Unit.objects.get(symbol=row['TIME_UNIT'])
             observation_name = row['OBSERVATION_NAME']
             biomarker_types[observation_name] = BiomarkerType.objects.create(
                 name=observation_name,
@@ -98,7 +100,6 @@ class Dataset(models.Model):
                 )
                 
                 
-        time_unit = Unit.objects.get(symbol=data["TIME_UNIT"].iloc[0])
                 
         # create subject protocol
         for i, row in data[['SUBJECT_ID', 'COMPOUND', 'ROUTE', "AMOUNT_UNIT"]].drop_duplicates().iterrows():
@@ -152,7 +153,6 @@ class Dataset(models.Model):
             amount_unit = row["AMOUNT_UNIT"]
             observation = row["OBSERVATION"]
             observation_name = row["OBSERVATION_NAME"]
-            dose_group = row["DOSE_GROUP"]
             compound = row['COMPOUND']
             route = row['ROUTE']
             infusion_time = row['INFUSION_TIME']

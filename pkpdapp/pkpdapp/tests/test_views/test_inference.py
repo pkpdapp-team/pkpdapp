@@ -554,7 +554,7 @@ class TestInferenceWizardView(APITestCase):
             if ll['name'][:len(pk_output_name)] == pk_output_name:
                 found_it += 1
                 db_ll = LogLikelihood.objects.get(id=ll['id'])
-                self.assertEqual(db_ll.subject_group.subjects.count(), 1)
+                self.assertEqual(db_ll.protocol_filter.subjects.count(), 1)
                 self.assertEqual(len(ll['parameters']), 2)
                 self.assertEqual(ll['parameters'][0]['name'],
                                  pk_output_name)
@@ -652,6 +652,7 @@ class TestInferenceWizardView(APITestCase):
                 'sbml': sbml_string
             },
         )
+        print(response.data)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         pd_model.refresh_from_db()
 

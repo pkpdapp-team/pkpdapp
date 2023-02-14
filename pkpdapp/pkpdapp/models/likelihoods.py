@@ -813,7 +813,7 @@ class LogLikelihood(models.Model):
             return df
         else:
             filtered_subjects = self.protocol_filter.subjects.values_list(
-                'id_in_dataset', flat=True
+                'id', flat=True
             )
             return df.loc[df['subjects'].isin(filtered_subjects)]
 
@@ -824,12 +824,12 @@ class LogLikelihood(models.Model):
         """
         if self.biomarker_type:
             df = self.filter_data_by_protocol(
-                self.biomarker_type.as_pandas(
+                self.biomarker_type.data(
                     first_time_only=self.time_independent_data
                 )
             )
 
-            if df is None:
+            if df is None or len(df) == 0:
                 return None, None, None
 
             return (

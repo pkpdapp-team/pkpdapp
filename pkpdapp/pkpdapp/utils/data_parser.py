@@ -9,14 +9,14 @@ from pkpdapp.models import Subject
  
 class DataParser:
     alternate_col_names = {
-        "SUBJECT_ID": ["ID", "id", "Subject_id", "Subject", "SUBJID"],
+        "SUBJECT_ID": ["ID", "id", "Subject_id", "Subject", "SUBJID", "SUBJECT_ID"],
         "TIME": ["Time", "TIME", "TIMEPOINT", "t", "T", "time"],
-        "TIME_UNIT": ["Time_unit", "Time_units", "TIMEUNIT"],
-        "AMOUNT": ["Amt", "Amount", "AMT"],
-        "AMOUNT_UNIT": ["Amt_unit", "Amt_units", "AMTUNIT", "UNIT"],
-        "OBSERVATION": ["DV", "Observation", "Y", "YVAL"],
+        "TIME_UNIT": ["Time_unit", "Time_units", "TIMEUNIT", "TIME_UNIT"],
+        "AMOUNT": ["Amt", "Amount", "AMT", "AMOUNT"],
+        "AMOUNT_UNIT": ["Amt_unit", "Amt_units", "AMTUNIT", "UNIT", "AMOUNT_UNIT"],
+        "OBSERVATION": ["DV", "Observation", "Y", "YVAL", "OBSERVATION", "OBSERVATION_VALUE", "OBSERVATIONVALUE"],
         "OBSERVATION_NAME": ["Observation_id", "YDESC", "YNAME", "YTYPE", "OBSERVATION_ID", "OBSERVATION_NAME", "OBSERVATIONID", "OBSERVATIONNAME"],
-        "OBSERVATION_UNIT": ["Observation_unit", "YUNIT", "UNIT"],
+        "OBSERVATION_UNIT": ["Observation_unit", "YUNIT", "UNIT", "OBSERVATION_UNIT", "OBSERVATIONUNIT"],
         "COMPOUND": ["Compound", "COMPOUND"],
         "ROUTE": ["Route", "ROUTE"],
         "INFUSION_TIME": ["TINF", "Tinf", "tinf", "Infusion_time", "INFUSIONTIME", "INFUSION_TIME"],

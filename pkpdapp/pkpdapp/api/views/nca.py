@@ -56,7 +56,7 @@ class NcaView(views.APIView):
                 errors, status=status.HTTP_400_BAD_REQUEST
             )
         protocol = subject.protocol
-        df = biomarker_type.as_pandas()
+        df = biomarker_type.data()
         df = df.loc[df['subjects'] == subject.id]
 
         if df.shape[0] == 0:

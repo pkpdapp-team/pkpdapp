@@ -22,7 +22,6 @@ class DatasetSerializer(serializers.ModelSerializer):
     subjects = serializers.PrimaryKeyRelatedField(
         many=True, read_only=True
     )
-    subject_groups = serializers.SerializerMethodField('get_groups')
     protocols = serializers.SerializerMethodField('get_protocols')
 
     class Meta:
@@ -36,16 +35,6 @@ class DatasetSerializer(serializers.ModelSerializer):
             if p['protocol'] is not None
         ]
         return ProtocolSerializer(protocols, many=True).data
-
-    def get_groups(self, dataset):
-        groups = {}
-        for s in dataset.subjects.all():
-            for group in s.groups.all():
-                if group.name not in groups:
-                    groups[group.name] = []
-                groups[group.name].append(s.pk)
-        return groups
-
 
 class DatasetCsvSerializer(serializers.ModelSerializer):
     csv = serializers.FileField()
@@ -62,6 +51,8 @@ class DatasetCsvSerializer(serializers.ModelSerializer):
         try:
             data = parser.parse_from_stream(utf8_file)
         except RuntimeError as err:
+            raise serializers.ValidationError(str(err))
+        except UnicodeDecodeError as err:
             raise serializers.ValidationError(str(err))
 
         return data
