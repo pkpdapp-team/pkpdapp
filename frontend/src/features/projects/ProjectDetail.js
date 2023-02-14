@@ -97,6 +97,12 @@ export default function ProjectDetail({ project }) {
   };
 
   const onSubmit = (values) => {
+    const users_in_project = values.user_access.map((ua) => ua.user);
+    const users_to_be_added = values.users.filter(u => !users_in_project.includes(u));
+    const users_to_be_removed = values.user_access.filter(u => !values.users.includes(u.user)).map(u => u.user);
+    let new_user_access = values.user_access.filter((ua) => !users_to_be_removed.includes(ua.user));
+    new_user_access.push(...users_to_be_added.map(u => ({user: u, read_only: true, project: project.id})));
+    values.user_access = new_user_access;
     console.log("project detail submit", values);
     dispatch(updateProject(values));
   };

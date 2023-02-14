@@ -39,6 +39,8 @@ class ProjectAccess(models.Model):
         default=False,
         help_text='True if user has read access only'
     )
+    class Meta:
+        unique_together = ('user', 'project',)
 
     def get_project(self):
         return self.project

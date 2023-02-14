@@ -52,22 +52,6 @@ export const updateProject = createAsyncThunk(
   "projects/updateProject",
   async (project, { getState }) => {
     const csrf = getState().login.csrf;
-    for (const access of project.user_access) {
-      if (project.users.includes(access.user)) {
-        await api.put(`/api/project_access/${access.id}/`, csrf, access);
-      } else {
-        await api.delete(`/api/project_access/${access.id}/`, csrf);
-      }
-    }
-    for (const user_id of project.users) {
-      if (!project.user_access.find((access) => access.user === user_id)) {
-        const new_access = {
-          project: project.id,
-          user: user_id,
-        };
-        await api.post(`/api/project_access/`, csrf,  new_access);
-      }
-    }
     const new_project = await api.put(`/api/project/${project.id}/`, csrf, project);
     return new_project;
   }

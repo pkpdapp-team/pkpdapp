@@ -13,7 +13,7 @@ from pkpdapp.models import (
 class BiomarkerTypeSerializer(serializers.ModelSerializer):
     data = serializers.SerializerMethodField('get_data')
     is_continuous = serializers.SerializerMethodField('get_is_continuous')
-    is_categorical = serializers.SerializerMethodField('get_is_cagegorical')
+    is_categorical = serializers.SerializerMethodField('get_is_categorical')
 
     class Meta:
         model = BiomarkerType
