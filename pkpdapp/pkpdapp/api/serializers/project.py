@@ -53,11 +53,15 @@ class ProjectSerializer(serializers.ModelSerializer):
         for user in users:
             user['project_id'] = instance.id
             serializer = ProjectAccessSerializer()
-            old_access = [i for i, a in enumerate(old_accesses) if a.user == user['user']]
+            old_access = [
+                i for i, a in enumerate(old_accesses) if a.user == user['user']
+            ]
             if not old_access:
                 new_access = serializer.create(user)
             else:
-                new_access = serializer.update(old_accesses.pop(old_access[0]), user)
+                new_access = serializer.update(
+                    old_accesses.pop(old_access[0]), user
+                )
             new_access.save()
 
         # delete any old accesses
