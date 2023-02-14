@@ -57,7 +57,6 @@ export default function Login() {
 
 
   const onSubmit = ({ username, password }) => {
-    console.log("You pressed login", username, password);
     dispatch(login({ username, password }))
   };
 

@@ -58,12 +58,13 @@ RUN chown -R www-data:www-data /var/www
 # gunicorn and nginx needs to write to a few places
 RUN chown -R www-data:www-data /var/lib/nginx /run /tmp
 
-# run as www-data
-USER www-data
-
 # server setup files
 COPY nginx.default.template .
 COPY start-server.sh .
+RUN chown -R www-data:www-data nginx.default.template start-server.sh
+
+# run as www-data
+USER www-data
 
 # start server using the port given by the environment variable $PORT
 # nginx config files don't support env variables so have to do it manually
