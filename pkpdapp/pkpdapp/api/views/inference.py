@@ -32,7 +32,6 @@ from pkpdapp.models import (
     PharmacodynamicModel,
     Project,
     Protocol,
-    SubjectGroup,
 )
 from pkpdapp.utils import ExpressionParser
 
@@ -199,23 +198,8 @@ class InferenceWizardView(views.APIView):
         return stored_model
 
     @staticmethod
-    def _create_sgroup_protocol(dataset, protocol):
-        name = 'subject group for protocol {}'.format(protocol.name)
-        try:
-            group = SubjectGroup.objects.get(
-                name=name, dataset=dataset
-            )
-        except SubjectGroup.DoesNotExist:
-            group = SubjectGroup.objects.create(
-                name=name, dataset=dataset
-            )
-            for s in protocol.subjects.all():
-                s.groups.add(group)
-        return group
-
-    @staticmethod
     def _set_observed_loglikelihoods(
-        obs, models, dataset, inference, subject_groups,
+        obs, models, dataset, inference, protocols,
     ):
         # create noise param models
         sigma_models = []
@@ -262,10 +246,10 @@ class InferenceWizardView(views.APIView):
 
         print('found biomarkers', biomarkers)
 
-        for model, group in zip(models, subject_groups):
+        for model, protocol in zip(models, protocols):
             # remove all outputs (and their parameters)
             # except those in output_names
-            # and set the right biomarkers and subject groups
+            # and set the right biomarkers and protocol
             for output in model.outputs.all():
                 try:
                     index = output_names.index(output.variable.qname)
@@ -273,15 +257,15 @@ class InferenceWizardView(views.APIView):
                     index = None
                 if index is not None:
                     parent = output.parent
-                    if group is not None:
+                    if protocol is not None:
                         parent.name = '{} ({})'.format(
-                            parent.name, group.name
+                            parent.name, protocol.name
                         )
                     parent.biomarker_type = biomarkers[index]
                     print('setting biomarker', biomarkers[index],
                           biomarkers[index].name)
                     parent.observed = True
-                    parent.subject_group = group
+                    parent.protocol_filter = protocol
                     parent.form = output_forms[index]
                     parent.save()
 
@@ -629,8 +613,6 @@ class InferenceWizardView(views.APIView):
             return Response(errors, status=status.HTTP_400_BAD_REQUEST)
 
         # create necessary models, one for each protocol
-        # create subject groups so we can refer to the subjects
-        # belonging to each protocol
         protocols = [
             Protocol.objects.get(pk=p['protocol'])
             for p in dataset.subjects.values('protocol').distinct()
@@ -639,15 +621,12 @@ class InferenceWizardView(views.APIView):
         rename_models = len(protocols) > 1
         if len(protocols) == 0 or data['model']['form'] == 'PD':
             models = [model.create_stored_model()]
-            subject_groups = [None]
+            protocols = [None]
         else:
             models = [
                 self._create_dosed_model(
                     model, p, rename_model=rename_models)
                 for p in protocols
-            ]
-            subject_groups = [
-                self._create_sgroup_protocol(dataset, p) for p in protocols
             ]
 
         # start creating inference object
@@ -698,7 +677,7 @@ class InferenceWizardView(views.APIView):
 
         biomarkers = self._set_observed_loglikelihoods(
             data['observations'], model_loglikelihoods,
-            dataset, inference, subject_groups
+            dataset, inference, protocols
         )
 
         self._set_parameters(

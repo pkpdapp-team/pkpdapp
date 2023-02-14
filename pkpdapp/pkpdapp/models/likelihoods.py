@@ -14,7 +14,7 @@ import numpy as np
 import scipy.stats as sps
 from pkpdapp.models import (
     Variable, BiomarkerType,
-    MyokitForwardModel, SubjectGroup,
+    MyokitForwardModel, Protocol,
 )
 
 
@@ -271,12 +271,12 @@ class LogLikelihood(models.Model):
         )
     )
 
-    subject_group = models.ForeignKey(
-        SubjectGroup,
+    protocol_filter = models.ForeignKey(
+        Protocol,
         on_delete=models.PROTECT,
         blank=True, null=True,
         help_text=(
-            'filter data on this subject group '
+            'filter subject data on this protocol'
             '(null implies all subjects)'
         )
     )
@@ -326,7 +326,7 @@ class LogLikelihood(models.Model):
                             Q(form='F') | Q(form='S') | Q(form='M')
                         ) &
                         Q(biomarker_type__isnull=False) &
-                        Q(subject_group__isnull=False)
+                        Q(protocol_filter=False)
                     )
                 ),
                 name=(
@@ -802,17 +802,33 @@ class LogLikelihood(models.Model):
         )
         return param
 
+    def filter_data_by_protocol(self, df):
+        """
+        filter data by categorical data
+        """
+        if df is None:
+            return None
+        if self.protocol_filter is None:
+            return df
+        else:
+            filtered_subjects = self.protocol_filter.subjects.values_list(
+                'id', flat=True
+            )
+            return df.loc[df['subjects'].isin(filtered_subjects)]
+
     def get_data(self, fake=False):
         """
         return data. if fake=True and no data return
         some fake times
         """
         if self.biomarker_type:
-            df = self.biomarker_type.as_pandas(
-                subject_group=self.subject_group,
-                first_time_only=self.time_independent_data
+            df = self.filter_data_by_protocol(
+                self.biomarker_type.data(
+                    first_time_only=self.time_independent_data
+                )
             )
-            if df is None:
+
+            if df is None or len(df) == 0:
                 return None, None, None
 
             return (
@@ -1106,7 +1122,7 @@ class LogLikelihood(models.Model):
             'variable': new_variable,
             'biomarker_type': self.biomarker_type,
             'observed': self.observed,
-            'subject_group': self.subject_group,
+            'protocol_filter': self.protocol_filter,
             'form': self.form,
         }
 

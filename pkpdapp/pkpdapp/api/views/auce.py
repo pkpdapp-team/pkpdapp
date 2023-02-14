@@ -9,8 +9,6 @@ from rest_framework import (
 from rest_framework.response import Response
 from pkpdapp.models import (
     BiomarkerType,
-    Subject,
-    Biomarker,
 )
 from pkpdapp.api.serializers import AuceSerializer
 from pkpdapp.utils import Auce
@@ -34,54 +32,77 @@ class AuceView(views.APIView):
                     .format(biomarker_type_id)
                 )
 
+        group_type_id = request.data.get('group_type_id', None)
+        if group_type_id is None:
+            errors['group_type_id'] = "This field is required"
+        else:
+            try:
+                group_type = \
+                    BiomarkerType.objects.get(id=group_type_id)
+            except BiomarkerType.DoesNotExist:
+                errors['group_type_id'] = (
+                    "BiomarkerType id {} not found"
+                    .format(biomarker_type_id)
+                )
+
+        concentration_type_id = request.data.get('concentration_type_id', None)
+        if concentration_type_id is None:
+            errors['concentration_type_id'] = "This field is required"
+        else:
+            try:
+                concentration_type = \
+                    BiomarkerType.objects.get(id=concentration_type_id)
+            except BiomarkerType.DoesNotExist:
+                errors['group_type_id'] = (
+                    "BiomarkerType id {} not found"
+                    .format(concentration_type_id)
+                )
+
         if errors:
             return Response(
                 errors, status=status.HTTP_400_BAD_REQUEST
             )
 
-        subjects = Subject.objects.filter(
-            dataset=biomarker_type.dataset
-        ).order_by(
-            'dose_group_amount'
-        )
-
-        # include all subjects as well
-        groups = set([g for s in subjects for g in s.groups.all()] + [None])
+        group_data = group_type.data(first_time_only=True)
+        groups = list(group_data['values'].unique()) + [None]
+        obs_data = biomarker_type.data()
+        concentration_data = concentration_type.data(first_time_only=True)
 
         auces = []
         for group in groups:
+            if group is None:
+                group_subjects = group_data['subjects'].unique()
+            else:
+                group_subjects = group_data.loc[
+                    group_data['values'] == group
+                ]['subjects']
+            group_concentrations = concentration_data[
+                concentration_data['subjects'].isin(group_subjects)
+            ]
+            group_obs_data = obs_data[
+                obs_data['subjects'].isin(group_subjects)
+            ]
+
             subject_times = []
             subject_data = []
-            subject_ids = []
             concentrations = []
-            for subject in subjects.filter(groups=group):
-                times_and_values = (
-                    Biomarker.objects
-                    .filter(
-                        biomarker_type=biomarker_type,
-                        subject=subject.id
-                    )
-                    .order_by('time')
-                    .values_list('time', 'value')
-                )
-                if not times_and_values:
-                    continue
-
-                if subject.dose_group_amount is None:
-                    errors['biomarker_type_id'] = (
-                        "BiomarkerType id {} has a subject "
-                        "with no dose group amount"
-                        .format(biomarker_type_id)
-                    )
-                    break
-
-                times, values = list(zip(*times_and_values))
-                concentrations.append(subject.dose_group_amount)
-                subject_ids.append(subject.id)
+            subject_ids = []
+            for subject in group_subjects:
+                times = group_obs_data.loc[
+                    group_obs_data['subjects'] == subject
+                ]['times']
+                values = group_obs_data.loc[
+                    group_obs_data['subjects'] == subject
+                ]['values']
+                concentration = group_concentrations.loc[
+                    group_concentrations['subjects'] == subject
+                ]['values'].iloc[0]
+                concentrations.append(concentration)
                 subject_times.append(times)
                 subject_data.append(values)
+                subject_ids.append(subject)
             auces.append(Auce(
-                group.name if group is not None else 'All',
+                group if group is not None else 'All',
                 subject_ids, concentrations,
                 subject_times, subject_data
             ))

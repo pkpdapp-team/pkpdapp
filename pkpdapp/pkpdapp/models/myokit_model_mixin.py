@@ -349,9 +349,9 @@ class MyokitModelMixin:
         # Set initial conditions
         try:
             sim.set_default_state(initial_conditions)
-        except ValueError:
+        except ValueError as e:
             print('WARNING: in simulate: '
-                  'sim.set_default_state returned ValueError')
+                  'sim.set_default_state returned ValueError:', e)
             return {}
 
         # Set constants in model

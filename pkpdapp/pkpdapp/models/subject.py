@@ -6,23 +6,6 @@
 
 from django.db import models
 from jsonfield import JSONField
-from pkpdapp.models import Dataset, Unit
-from django.db.models import Q
-
-
-class SubjectGroup(models.Model):
-    name = models.CharField(
-        max_length=100,
-        help_text='group name'
-    )
-    dataset = models.ForeignKey(
-        Dataset, on_delete=models.CASCADE,
-        related_name='subject_groups',
-        help_text='dataset containing this subject'
-    )
-
-    class Meta:
-        models.UniqueConstraint(fields=['name', 'dataset'], name='unique_name')
 
 
 class Subject(models.Model):
@@ -31,31 +14,15 @@ class Subject(models.Model):
     """
     id_in_dataset = models.IntegerField(help_text='unique id in the dataset')
     dataset = models.ForeignKey(
-        Dataset, on_delete=models.CASCADE,
+        'Dataset', on_delete=models.CASCADE,
         related_name='subjects',
         help_text='dataset containing this subject'
-    )
-    dose_group_amount = models.FloatField(
-        help_text='dosing amount for this subject (for constant dosing)',
-        blank=True, null=True,
-    )
-    dose_group_unit = models.ForeignKey(
-        Unit, on_delete=models.SET_NULL,
-        blank=True, null=True,
-        help_text=(
-            'unit for dose_group_amount'
-        )
     )
     protocol = models.ForeignKey(
         'Protocol', on_delete=models.SET_NULL,
         related_name='subjects',
         blank=True, null=True,
         help_text='dosing protocol for this subject.'
-    )
-    groups = models.ManyToManyField(
-        SubjectGroup,
-        related_name='subjects',
-        help_text='groups this subject belongs to'
     )
     shape = models.IntegerField(
         default=0,
@@ -83,15 +50,6 @@ class Subject(models.Model):
         constraints = [
             models.UniqueConstraint(fields=['id_in_dataset', 'dataset'],
                                     name='subject_dataset_unique'),
-            models.CheckConstraint(
-                check=(
-                    (Q(dose_group_unit__isnull=True) &
-                        Q(dose_group_unit__isnull=True)) |
-                    (Q(dose_group_unit__isnull=False) &
-                        Q(dose_group_unit__isnull=False))
-                ),
-                name='amount must have a unit and visa versa'
-            )
         ]
 
     def __str__(self):

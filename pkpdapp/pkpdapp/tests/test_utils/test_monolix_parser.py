@@ -12,17 +12,15 @@ from pkpdapp.utils import MonolixParser
 
 
 class TestMonolixParser(unittest.TestCase):
-    def test_parse(self):
+    def test_parse_model(self):
         BASE_URL_DATASETS = 'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/'   # noqa: E501
         with urllib.request.urlopen(
             BASE_URL_DATASETS + 'usecase_monolix/PK_Model.txt', timeout=5
         ) as f:
             monolix_str = codecs.decode(f.read(), 'utf-8')
         parser = MonolixParser()
-        parser.initialise_model()
-        print('model is', parser.myokit_model)
-        print(parser.myokit_model.code())
-        parser.parse(monolix_str)
-        print('model is', parser.myokit_model)
-        print(parser.myokit_model.code())
-        parser.myokit_model.validate()
+        model, (admin_id, tlag, direct) = parser.parse(monolix_str)
+        model.validate()
+        self.assertEqual(admin_id, 1)
+        self.assertEqual(tlag, 0)
+        self.assertEqual(direct, True)

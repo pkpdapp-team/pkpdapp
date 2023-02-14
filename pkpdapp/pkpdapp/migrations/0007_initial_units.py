@@ -111,6 +111,10 @@ def load_units(apps, schema_editor):
             'symbol': 'g/nmol',
             'unit': g / (1e-6 * mol),
         },
+        {
+            'symbol': 'nmol',
+            'unit': 1e-6 * mol,
+        },
 
     ]
 
