@@ -173,7 +173,8 @@ class Dataset(models.Model):
                 amount_convertable_to_float = True
             except ValueError:
                 amount_convertable_to_float = False
-            if amount_convertable_to_float and float(amount) > 0.0:  # dose observation
+            if amount_convertable_to_float and float(amount) > 0.0:
+                # dose observation
                 if route == 'IV':
                     route = Protocol.DoseType.DIRECT
                 else:

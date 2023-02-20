@@ -63,7 +63,6 @@ class TestDataParser(unittest.TestCase):
                 )
 
             if filename == 'datasets/demo_pk_data_upload.csv':
-                
 
                 # check the right biomarker_types are there
                 biomarker_types_in_file = [
