@@ -8,7 +8,7 @@ import codecs
 import unittest
 import urllib.request
 
-from pkpdapp.utils import MonolixParser
+from pkpdapp.utils import MonolixModelParser
 
 
 class TestMonolixParser(unittest.TestCase):
@@ -18,7 +18,7 @@ class TestMonolixParser(unittest.TestCase):
             BASE_URL_DATASETS + 'usecase_monolix/PK_Model.txt', timeout=5
         ) as f:
             monolix_str = codecs.decode(f.read(), 'utf-8')
-        parser = MonolixParser()
+        parser = MonolixModelParser()
         model, (admin_id, tlag, direct) = parser.parse(monolix_str)
         model.validate()
         self.assertEqual(admin_id, 1)
