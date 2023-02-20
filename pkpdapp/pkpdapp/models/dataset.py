@@ -56,7 +56,6 @@ class Dataset(models.Model):
         data_without_dose = data.query('OBSERVATION != "."')
 
         time_unit = Unit.objects.get(symbol=data["TIME_UNIT"].iloc[0])
-        print('upload time unit is', time_unit.symbol)
 
         # create biomarker types
         # assume AMOUNT_UNIT and TIME_UNIT are constant for each bt
@@ -169,7 +168,12 @@ class Dataset(models.Model):
                     value=observation,
                     biomarker_type=biomarker_types[observation_name]
                 )
-            if amount != "." and amount != 0:  # dose observation
+            try:
+                float(amount)
+                amount_convertable_to_float = True
+            except ValueError:
+                amount_convertable_to_float = False
+            if amount_convertable_to_float and float(amount) > 0.0:  # dose observation
                 if route == 'IV':
                     route = Protocol.DoseType.DIRECT
                 else:
@@ -229,6 +233,5 @@ class Dataset(models.Model):
         # migrate subjects to unique_protocols
         for protocol, subjects in zip(unique_protocols, protocol_subjects):
             for subject in subjects:
-                print('updating protocol for subject', subject, protocol)
                 subject.protocol = protocol
                 subject.save()

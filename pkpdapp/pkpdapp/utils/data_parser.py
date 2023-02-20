@@ -166,10 +166,19 @@ class DataParser:
                 data[unit_col] = ""
 
         # put in default infusion time if not present
-        min_delta_time = data[["TIME", "SUBJECT_ID"]].drop_duplicates(
-        ).sort_values(by=["SUBJECT_ID", "TIME"]).diff().min()["TIME"]
+        delta_time = data.sort_values(by=["TIME"]).groupby(["SUBJECT_ID"])["TIME"].diff().dropna()
+        min_delta_time = delta_time[delta_time > 0].min()
         if "INFUSION_TIME" not in found_cols:
             data["INFUSION_TIME"] = min_delta_time / 100.0
+
+        # check that infusion time is not zero or negative
+        if (data["INFUSION_TIME"].apply(pd.to_numeric, errors='coerce') <= 0).any():
+            raise RuntimeError(
+                (
+                    'Error parsing file, '
+                    'contains zero infusion time'
+                )
+            )
 
         # check that units are in database
         for unit_col in ["TIME_UNIT", "AMOUNT_UNIT", "OBSERVATION_UNIT"]:

@@ -43,13 +43,13 @@ class TestDataParser(unittest.TestCase):
             for col in expected:
                 self.assertIn(col, data.columns.tolist())
 
-            if filename == 'datasets/TCB4dataset.csv':
-                dataset = Dataset.objects.create(
-                    name=filename,
-                    datetime=timezone.now(),
-                )
-                dataset.replace_data(data)
+            dataset = Dataset.objects.create(
+                name=filename,
+                datetime=timezone.now(),
+            )
+            dataset.replace_data(data)
 
+            if filename == 'datasets/TCB4dataset.csv':
                 biomarker_types_in_file = [
                     'IL2', 'IL10', 'IL6', 'IFNg', 'TNFa', 'Cells'
                 ]
@@ -63,11 +63,7 @@ class TestDataParser(unittest.TestCase):
                 )
 
             if filename == 'datasets/demo_pk_data_upload.csv':
-                dataset = Dataset.objects.create(
-                    name=filename,
-                    datetime=timezone.now(),
-                )
-                dataset.replace_data(data)
+                
 
                 # check the right biomarker_types are there
                 biomarker_types_in_file = [
