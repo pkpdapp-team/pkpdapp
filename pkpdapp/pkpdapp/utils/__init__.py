@@ -9,4 +9,5 @@ from .nca import NCA
 from .auce import Auce
 from .expression_parser import ExpressionParser
 from .monolix_model_parser import MonolixModelParser
+from .monolix_project_parser import MonolixProjectParser
 from .data_parser import DataParser

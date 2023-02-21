@@ -8,7 +8,9 @@
 # (https://github.com/pyparsing/pyparsing/blob/master/examples/fourFn.py)
 # Copyright 2003-2019 by Paul McGuire
 #
+from configparser import ParsingError
 from dataclasses import dataclass
+import pprint
 from re import S
 
 import myokit
@@ -22,42 +24,55 @@ pp.enable_all_warnings()
 class MonolixProjectParser:
     def __init__(self):
         fnumber = ppc.number()
-        ident = pp.Regex("[_a-zA-Z][_a-zA-Z0-9]*")
+        ident = pp.Regex("[_a-zA-Z][-_a-zA-Z0-9]*")
 
         lpar, rpar = map(pp.Suppress, "()")
+        quote= pp.Suppress("'")
         lcpar, rcpar = map(pp.Suppress, "{}")
         equals = pp.Suppress("=")
 
-        structured_value = pp.Forward()
-        arg = structured_value | (ident + equals + ident) | ident
-        structured_value <<= lcpar + pp.delimited_list(arg, delim=',') + rcpar
-        entry = (ident + equals + ( 
-          structured_value.set_parse_action(self.parse_as_dict)
-          | ident.set_parse_action(self.parse_as_dict)
-          ))
+        array = pp.Forward()
+        func_arg = ident
+        func = (
+            ident + lpar -
+            pp.delimited_list(pp.Group(func_arg), delim=',') + rpar
+        )
+        array_or_ident_or_number_or_func = (func | ident | fnumber | array)
+        array_entry = (ident + equals + array_or_ident_or_number_or_func) | ident | fnumber
+        array <<= (lcpar + pp.delimited_list(pp.Group(array_entry), delim=',') + rcpar).add_condition(self.validate_array).set_parse_action(self.parse_array)
+        entry_value = ident | pp.QuotedString("'") | array
+        entry = (ident + equals + entry_value)
+        
 
-        entry_list = pp.Group(pp.ZeroOrMore(entry)).set_parse_action(self.parse_as_dict)
+        entry_list = pp.ZeroOrMore(entry).set_parse_action(self.parse_list_of_key_values)
         definition_block = pp.Keyword("DEFINITION:") + entry_list 
-        file_info = pp.Keyword("[FILE_INFO]") + entry_list
+        file_info = pp.Keyword("[FILEINFO]") + entry_list
         file_content = pp.Keyword("[CONTENT]") + entry_list
-        data = pp.Keyword("<DATAFILE>") + (file_info & file_content)
-        covariate = pp.Keyword("[COVARIATE]") + entry_list + pp.Opt(definition_block)
-        individual = pp.Keyword("[INDIVIDUAL]") + entry_list + pp.Opt(definition_block)
-        longitudinal = pp.Keyword("[LONGITUDINAL]") + entry_list + pp.Opt(definition_block)
-        model = pp.Keyword("<MODEL>") + (covariate & individual & longitudinal)
+        data = (
+            pp.Keyword("<DATAFILE>") + (file_info + file_content).set_parse_action(self.parse_list_of_key_values)
+        )
+        covariate = pp.Keyword("[COVARIATE]") + (entry_list + pp.Opt(definition_block)).set_parse_action(self.parse_list_of_key_values)
+        individual = pp.Keyword("[INDIVIDUAL]") + (entry_list + pp.Opt(definition_block)).set_parse_action(self.parse_list_of_key_values)
+        longitudinal = pp.Keyword("[LONGITUDINAL]") + (entry_list + pp.Opt(definition_block)).set_parse_action(self.parse_list_of_key_values)
+        model = pp.Keyword("<MODEL>") + (covariate + individual + longitudinal).set_parse_action(self.parse_list_of_key_values)
       
-        task_arg = ident + equals + structured_value
+        task_arg = (ident + equals + array_or_ident_or_number_or_func)
         task = (
             ident + lpar -
-            pp.delimited_list(pp.Group(task_arg), delim=',') + rpar
+            pp.Opt(pp.delimited_list(pp.Group(task_arg), delim=',')) + rpar
         )
-        tasks = pp.Keyword("[TASK]") + pp.Group(pp.ZeroOrMore(task))
-        key_value = ident + equals + ident
+        tasks = pp.Keyword("[TASKS]") + pp.Group(pp.ZeroOrMore(task))
+
+        ident_or_string_or_number = ident | fnumber | pp.QuotedString("'")
+        key_value = ident + equals + ident_or_string_or_number
         global_settings = pp.Keyword("GLOBAL:") + pp.Group(pp.ZeroOrMore(key_value))
         population_settings = pp.Keyword("POPULATION:") + pp.Group(pp.ZeroOrMore(key_value))
         settings = pp.Keyword("[SETTINGS]") + pp.Opt(global_settings) + pp.Opt(population_settings)
-        monolix = pp.Keyword("<MONOLIX>") + (tasks & settings)
-        src = data & model & monolix
+        monolix = pp.Keyword("<MONOLIX>") + tasks + settings
+
+        fit = pp.Keyword("<FIT>") + pp.Group(pp.ZeroOrMore(entry))
+        parameter = pp.Keyword("<PARAMETER>") + pp.Group(pp.ZeroOrMore(entry))
+        src = (data + model + fit + parameter + monolix).set_parse_action(self.parse_list_of_key_values)
 
         monolix_comment = ';' + pp.restOfLine()
         src.ignore(monolix_comment)
@@ -72,6 +87,29 @@ class MonolixProjectParser:
         self.administration_id = None
         self.tlag = None
         self.direct_dosing = None
+
+    def validate_array(self, toks):
+        return (
+            all([len(x) == 1 for x in toks]) or 
+            all([len(x) == 2 for x in toks])
+        )
+
+    def parse_array(self, s: str, loc: int, toks):
+        print('parse_array', toks)
+        print('parse_array', pprint.pprint(toks.asList()))
+        # if all elements are singletons, return a list of the elements
+        if all([len(x) == 1 for x in toks]):
+            return [[x[0] for x in toks]]
+        # if all elements are tuples, return a dict of the elements
+        if all([len(x) == 2 for x in toks]):
+            return [{x[0]: x[1] for x in toks}]
+        return None
+
+    def parse_list_of_key_values(self, toks):
+        return [{toks[2*i]: toks[2*i + 1] for i in range(len(toks)//2)}]
+
+    def parse_data(self, toks):
+        print('parse_data', toks)
 
     def initialise_model(self):
         self.myokit_model = myokit.Model()
@@ -214,10 +252,12 @@ class MonolixProjectParser:
         else:
             raise pp.ParseException(f'unknown op {op}')
 
-    def parse(self, model_str, parseAll=True) -> myokit.Model:
+    def parse(self, project_str, parseAll=True) -> myokit.Model:
         try:
             self.initialise_model()
-            self.parser.parseString(model_str, parseAll=parseAll)
+            print('parsing model', project_str)
+            result = self.parser.parseString(project_str, parseAll=parseAll)
+            pprint.pprint(result)
         except pp.ParseException as err:
             raise RuntimeError(err.explain())
         return self.myokit_model, \
