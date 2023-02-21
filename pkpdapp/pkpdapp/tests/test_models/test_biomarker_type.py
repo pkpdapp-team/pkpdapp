@@ -36,6 +36,15 @@ class TestBiomarkerTypeModel(TestCase):
             stored_time_unit=self.time_unit,
             display_time_unit=self.time_unit,
         )
+        self.biomarker_type2 = BiomarkerType.objects.create(
+            name='my_cool_biomarker_type 2',
+            description='description for my cool biomarker_type',
+            dataset=self.dataset,
+            stored_unit=self.unit,
+            display_unit=self.unit,
+            stored_time_unit=self.time_unit,
+            display_time_unit=self.time_unit,
+        )
         self.subjects = [
             Subject.objects.create(
                 id_in_dataset=1,
@@ -118,3 +127,8 @@ class TestBiomarkerTypeModel(TestCase):
         np.testing.assert_array_equal(
             df['values'], [self.values[0], self.values[3]]
         )
+
+    def test_empty_data(self):
+        df = self.biomarker_type2.data()
+        for key in ['values', 'times', 'subjects']:
+            self.assertEqual(len(df[key]), 0)

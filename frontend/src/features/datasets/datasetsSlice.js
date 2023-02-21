@@ -56,14 +56,15 @@ export const addNewDataset = createAsyncThunk(
 export const uploadDatasetCsv = createAsyncThunk(
   "datasets/uploadDatasetCsv",
   async ({ id, csv }, { dispatch, rejectWithValue, getState }) => {
-    const dataset = await api
-      .putMultiPart(`/api/dataset/${id}/csv/`, getState().login.csrf, { csv })
-      .catch((err) => rejectWithValue(err));
-
-    await dispatch(fetchBiomarkerTypesByProject(dataset.project));
-    await dispatch(fetchSubjectByDataset(dataset));
-
-    return dataset;
+    try {
+      const dataset = await api
+        .putMultiPart(`/api/dataset/${id}/csv/`, getState().login.csrf, { csv })
+      await dispatch(fetchBiomarkerTypesByProject(dataset.project));
+      await dispatch(fetchSubjectByDataset(dataset));
+      return dataset;
+    } catch (err) {
+      return rejectWithValue(err)
+    }
   }
 );
 
@@ -84,6 +85,7 @@ export const datasetsSlice = createSlice({
       dataset.chosen = !dataset.chosen;
     },
     setSelectDataset(state, action) {
+      console.log("setSelectDataset", action.payload)
       let dataset = state.entities[action.payload.id];
       dataset.selected = action.payload.select;
     },

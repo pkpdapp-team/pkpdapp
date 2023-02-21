@@ -93,11 +93,11 @@ class BiomarkerType(models.Model):
         elif is_categorical:
             biomarkers = self.categorical_biomarkers
         else:
-            return {
+            return pd.DataFrame.from_dict({
                 'times': [],
                 'subjects': [],
                 'values': [],
-            }
+            })
         if first_time_only:
             earliest = biomarkers.filter(
                 subject=OuterRef('subject')).order_by('time')

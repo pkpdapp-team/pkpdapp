@@ -47,11 +47,6 @@ export default function SubjectsTable ({ dataset, disableSave }) {
 
   const classes = useStyles();
   const subjects = useSelector((state) => selectSubjectsByDataset(state, dataset));
-  const groups = [...subjects.reduce((sum, subject) => {
-    subject.groups.forEach(group => sum.add(group.name))
-    return sum
-  }, new Set()).values()]
-  console.log('groups', groups)
 
   return (
     <React.Fragment>
@@ -61,9 +56,6 @@ export default function SubjectsTable ({ dataset, disableSave }) {
         <TableHead>
           <TableRow>
               <TableCell >Id</TableCell>
-              {groups.map((col) => (
-                <TableCell key={col}>{col}</TableCell>
-              ))}
               <TableCell>Protocol</TableCell>
               <TableCell>Display</TableCell>
               <TableCell>Shape</TableCell>
@@ -74,7 +66,6 @@ export default function SubjectsTable ({ dataset, disableSave }) {
           {subjects.map((subject, index) => (
             <SubjectSubform
               key={index}
-              groups={groups}
               dataset={dataset}
               subject={subject}
               disableSave={disableSave}
