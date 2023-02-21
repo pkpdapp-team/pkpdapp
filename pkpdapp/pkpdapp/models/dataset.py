@@ -141,6 +141,7 @@ class Dataset(models.Model):
                     display_unit=dimensionless_unit,
                     stored_time_unit=time_unit,
                     display_time_unit=time_unit,
+                    display=False,
                     dataset=self,
                     color=len(covariates),
                 )
@@ -199,8 +200,9 @@ class Dataset(models.Model):
                     # only insert if value has changed
                     last_value = last_covariate_value[covariate_name]
                     if (
-                        last_value is not None and
-                        covariate_value != last_value
+                        last_value is None or
+                        (last_value is not None and
+                         covariate_value != last_value)
                     ):
                         last_covariate_value[covariate_name] = covariate_value
                         CategoricalBiomarker.objects.create(

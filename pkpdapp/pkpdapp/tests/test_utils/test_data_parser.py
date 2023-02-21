@@ -62,6 +62,24 @@ class TestDataParser(unittest.TestCase):
                     dataset.biomarker_types.values_list('name', flat=True),
                 )
 
+            if filename == 'usecase0/usecase0.csv':
+                # check that categorical covariate SEX is added
+                self.assertIn(
+                    "SEX",
+                    dataset.biomarker_types.values_list(
+                        'name', flat=True
+                    )
+                )
+
+                # check that SEX is "Male" for single subjects
+                sex_bt = dataset.biomarker_types.get(name="SEX")
+                sex_data = sex_bt.data()
+                self.assertEqual(len(sex_data["values"]), 1)
+                self.assertEqual(sex_data["values"].iloc[0], "Male")
+
+                # default display for covariates is false
+                self.assertFalse(sex_bt.display)
+
             if filename == 'datasets/demo_pk_data_upload.csv':
 
                 # check the right biomarker_types are there
