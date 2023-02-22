@@ -31,5 +31,18 @@ class TestMonolixParser(unittest.TestCase):
         ) as f:
             monolix_str = codecs.decode(f.read(), 'ascii')
         parser = MonolixProjectParser()
-        parser.parse(monolix_str)
+        project = parser.parse(monolix_str)
+        self.assertCountEqual(
+            project.keys(),
+            ['<DATAFILE>', '<MODEL>', '<MONOLIX>', '<PARAMETER>', '<FIT>', ]
+        )
+        self.assertCountEqual(
+            project['<DATAFILE>'].keys(),
+            ['[CONTENT]', '[FILEINFO]']
+        )
+        self.assertCountEqual(
+            project['<MODEL>'].keys(),
+            ['[COVARIATE]', '[INDIVIDUAL]',  '[LONGITUDINAL]']
+        )
+
 
