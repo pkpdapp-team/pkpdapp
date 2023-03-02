@@ -8,6 +8,7 @@ import codecs
 from django.utils import timezone
 import unittest
 import urllib.request
+from django.test import TestCase
 from pkpdapp.models.dataset import Dataset
 
 from pkpdapp.utils import DataParser
@@ -15,7 +16,7 @@ from pkpdapp.utils import DataParser
 BASE_URL_DATASETS = 'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/'   # noqa: E501
 
 
-class TestDataParser(unittest.TestCase):
+class TestDataParser(TestCase):
     def test_parse(self):
         for filename in [
             'datasets/TCB4dataset.csv',

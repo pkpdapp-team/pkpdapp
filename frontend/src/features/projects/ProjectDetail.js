@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Switch,
   Route,
@@ -25,6 +25,7 @@ import Inference from "../inference/Inference";
 import Modelling from "../modelling/Modelling";
 import Header from "../modelling/Header";
 import Footer from "../modelling/Footer";
+import ImportMonolixDialog from "./ImportMonolixDialog";
 
 import {
   FormTextField,
@@ -90,6 +91,16 @@ export default function ProjectDetail({ project }) {
   useEffect(() => {
     reset(project);
   }, [reset, project]);
+
+  const [openMonolixDialog, setOpenMonolixDialog] = useState(false);
+
+  const handleCloseMonolixDialog = (arg) => {
+    setOpenMonolixDialog(false)
+  }
+
+  const handleImportMonolix = () => {
+    setOpenMonolixDialog(true)
+  }
 
   const handleDeleteProject = () => {
     console.log('delete project', project)
@@ -158,9 +169,15 @@ export default function ProjectDetail({ project }) {
         buttons={[
           {label: 'Save', handle: handleSubmit(onSubmit)},
           {label: 'Delete', handle: handleDeleteProject},
+          {label: 'Import Monolix Project', handle: handleImportMonolix},
         ]}
       />
     </form>
+    <ImportMonolixDialog
+        project={project}
+        onClose={handleCloseMonolixDialog}
+        open={openMonolixDialog}
+    />
     </Paper>
   )
 }

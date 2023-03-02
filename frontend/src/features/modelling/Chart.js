@@ -101,11 +101,11 @@ export default function ModellingChart({ datasets, pkModels, pdModels, className
     return dataset.biomarker_types
       .map((id) => {
         const biomarker = biomarkers[id];
-        const display_unit = units[biomarker.display_unit];
-        const display_time_unit = units[biomarker.display_time_unit];
         if (!biomarker) {
           return null;
         }
+        const display_unit = units[biomarker.display_unit];
+        const display_time_unit = units[biomarker.display_time_unit];
         const subjectsDisplay = biomarker.data.subjects.map((id) =>
           subjects[id] ? subjects[id].display : false
         );
@@ -157,11 +157,17 @@ export default function ModellingChart({ datasets, pkModels, pdModels, className
   };
 
   const y_unit_symbols = data.datasets.reduce((sum, dataset) => { 
+    if (!dataset?.myMetadata) {
+      return sum;
+    }
     const unit = dataset.myMetadata.yunit;
     sum.add(unit ? unit.symbol : '');
     return sum;
   }, new Set());
   const x_unit_symbols = data.datasets.reduce((sum, dataset) => { 
+    if (!dataset?.myMetadata) {
+      return sum;
+    }
     const unit = dataset.myMetadata.xunit;
     sum.add(unit ? unit.symbol : '');
     return sum;

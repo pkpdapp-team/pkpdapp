@@ -211,7 +211,7 @@ class DosedPharmacokineticModel(MyokitModelMixin, StoredModel):
 
         # remove time binding if
         if have_both_models:
-            time_var = pd_model.get('myokit.time')
+            time_var = pd_model.binding('time')
             time_var.set_binding(None)
 
         pd_components = list(pd_model.components())
@@ -314,19 +314,25 @@ class DosedPharmacokineticModel(MyokitModelMixin, StoredModel):
                 if compartment + '.' in v.qname():
                     amount_var = v
 
-            time_var = model.get('myokit.time')
+            time_var = model.binding('time')
 
-            amount_conversion_factor = \
-                myokit.Unit.conversion_factor(
-                    self.protocol.amount_unit.get_myokit_unit(),
-                    amount_var.unit(),
-                ).value()
+            if amount_var.unit() is None:
+                amount_conversion_factor = 1.0
+            else:
+                amount_conversion_factor = \
+                    myokit.Unit.conversion_factor(
+                        self.protocol.amount_unit.get_myokit_unit(),
+                        amount_var.unit(),
+                    ).value()
 
-            time_conversion_factor = \
-                myokit.Unit.conversion_factor(
-                    self.protocol.time_unit.get_myokit_unit(),
-                    time_var.unit(),
-                ).value()
+            if time_var.unit() is None:
+                time_conversion_factor = 1.0
+            else:
+                time_conversion_factor = \
+                    myokit.Unit.conversion_factor(
+                        self.protocol.time_unit.get_myokit_unit(),
+                        time_var.unit(),
+                    ).value()
 
             dosing_events = [
                 (

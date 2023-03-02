@@ -103,6 +103,7 @@ class MyokitModelMixin:
         new_variables = [
             Variable.get_variable(self, v)
             for v in self.get_myokit_model().variables(const=True, sort=True)
+            if v.is_literal()
         ]
         # parameters could originally be outputs
         for v in new_variables:

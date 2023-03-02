@@ -41,7 +41,7 @@ class MonolixProjectParser:
         array_entry = (ident + equals +
                        array_or_ident_or_number_or_func) | ident | fnumber
         array <<= (lcpar + pp.delimited_list(pp.Group(array_entry), delim=',') +
-                   rcpar).add_condition(self.validate_array).set_parse_action(self.parse_array)
+                   rcpar).set_parse_action(self.parse_array)
         entry_value = ident | pp.QuotedString("'") | array
         entry = (ident + equals + entry_value)
 
@@ -94,20 +94,12 @@ class MonolixProjectParser:
         pp.autoname_elements()
         self.parser = src
 
-    def validate_array(self, toks):
-        return (
-            all([len(x) == 1 for x in toks]) or
-            all([len(x) == 2 for x in toks])
-        )
-
     def parse_array(self, s: str, loc: int, toks):
         # if all elements are singletons, return a list of the elements
         if all([len(x) == 1 for x in toks]):
             return [[x[0] for x in toks]]
         # if all elements are tuples, return a dict of the elements
-        if all([len(x) == 2 for x in toks]):
-            return [{x[0]: x[1] for x in toks}]
-        return [None]
+        return [{x[0]: x[1] if len(x) > 1 else True for x in toks}]
 
     def parse_list_of_key_values(self, toks):
         return [{toks[2 * i]: toks[2 * i + 1] for i in range(len(toks) // 2)}]
