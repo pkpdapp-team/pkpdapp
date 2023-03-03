@@ -51,11 +51,11 @@ class TestMonolixImport(TestCase):
         ]
         self.assertCountEqual(constant_variables, expected_constant_variables)
         state_variables = pd_model.variables.filter(state=True).values_list('qname', flat=True)
-        expected_state_variables = ['cmt1.A1', 'root.A2', 'root.A3', 'root.A4', 'root.A5']
+        expected_state_variables = ['cmt1.A1', 'root.A2', 'root.A4', 'root.A5']
         self.assertCountEqual(state_variables, expected_state_variables)
         other_variables = pd_model.variables.filter(constant=False, state=False).values_list('qname', flat=True)
         expected_other_variables = [
-            'root.C2', 'root.C3', 'root.C4', 'root.C5', 'root.CD_t', 'root.CR_t', 'root.PRR', 'root.RR', 'root.t'
+            'root.A3', 'root.C2', 'root.C3', 'root.C4', 'root.C5', 'root.CD_t', 'root.CR_t', 'root.PRR', 'root.RR', 'root.t'
         ]
         self.assertCountEqual(other_variables, expected_other_variables)
         self.assertEqual(pk_model.dose_compartment, 'cmt1')
@@ -68,6 +68,12 @@ class TestMonolixImport(TestCase):
         expected_variables = ['root.PRR']
         self.assertCountEqual(displayed_pd_variables, expected_variables)
         self.assertCountEqual(displayed_pk_variables, expected_variables)
-        print(pd_model.mmt)
         
-        
+        pd_states = pd_model.variables.filter(state=True).values_list('qname', flat=True)
+        pk_states = pk_model.variables.filter(state=True).values_list('qname', flat=True)
+        expected_states = ['cmt1.A1', 'root.A2', 'root.A4', 'root.A5']
+        self.assertCountEqual(pd_states, expected_states)
+        self.assertCountEqual(pk_states, expected_states)
+
+        result = pk_model.simulate()
+        print(result)

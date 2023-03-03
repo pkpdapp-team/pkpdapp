@@ -41,7 +41,7 @@ export default function VariableSubform({ variable_id, disableSave }) {
   let unit = useSelector((state) => selectUnitById(state, unit_id));
   if (!unit) {
     unit = {
-      symbol: "X",
+      symbol: "",
     };
   }
   const label = variable.name === 'size' ? 

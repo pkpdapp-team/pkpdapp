@@ -40,8 +40,11 @@ class MonolixProjectParser:
         array_or_ident_or_number_or_func = (func | ident | fnumber | array)
         array_entry = (ident + equals +
                        array_or_ident_or_number_or_func) | ident | fnumber
-        array <<= (lcpar + pp.delimited_list(pp.Group(array_entry), delim=',') +
-                   rcpar).set_parse_action(self.parse_array)
+        array <<= (
+            lcpar +
+            pp.delimited_list(pp.Group(array_entry), delim=',') +
+            rcpar
+        ).set_parse_action(self.parse_array)
         entry_value = ident | pp.QuotedString("'") | array
         entry = (ident + equals + entry_value)
 
@@ -51,17 +54,22 @@ class MonolixProjectParser:
         file_info = pp.Keyword("[FILEINFO]") + entry_list
         file_content = pp.Keyword("[CONTENT]") + entry_list
         data = (
-            pp.Keyword("<DATAFILE>") + (file_info +
-                                        file_content).set_parse_action(self.parse_list_of_key_values)
+            pp.Keyword("<DATAFILE>") + (
+                file_info + file_content
+            ).set_parse_action(self.parse_list_of_key_values)
         )
-        covariate = pp.Keyword("[COVARIATE]") + (entry_list + pp.Opt(
-            definition_block)).set_parse_action(self.parse_add_list_of_key_values)
-        individual = pp.Keyword("[INDIVIDUAL]") + (entry_list + pp.Opt(
-            definition_block)).set_parse_action(self.parse_add_list_of_key_values)
-        longitudinal = pp.Keyword("[LONGITUDINAL]") + (entry_list + pp.Opt(
-            definition_block)).set_parse_action(self.parse_add_list_of_key_values)
-        model = pp.Keyword("<MODEL>") + (covariate + individual +
-                                         longitudinal).set_parse_action(self.parse_list_of_key_values)
+        covariate = pp.Keyword("[COVARIATE]") + (
+            entry_list + pp.Opt(definition_block)
+        ).set_parse_action(self.parse_add_list_of_key_values)
+        individual = pp.Keyword("[INDIVIDUAL]") + (
+            entry_list + pp.Opt(definition_block)
+        ).set_parse_action(self.parse_add_list_of_key_values)
+        longitudinal = pp.Keyword("[LONGITUDINAL]") + (
+            entry_list + pp.Opt(definition_block)
+        ).set_parse_action(self.parse_add_list_of_key_values)
+        model = pp.Keyword("<MODEL>") + (
+            covariate + individual + longitudinal
+        ).set_parse_action(self.parse_list_of_key_values)
 
         task_arg = (ident + equals + array_or_ident_or_number_or_func)
         task = (
@@ -78,10 +86,13 @@ class MonolixProjectParser:
             self.parse_list_of_key_values)
         global_settings = pp.Keyword("GLOBAL:") + key_value_list
         population_settings = pp.Keyword("POPULATION:") + key_value_list
-        settings = pp.Keyword("[SETTINGS]") + (pp.Opt(global_settings) + pp.Opt(
-            population_settings)).set_parse_action(self.parse_list_of_key_values)
+        settings = pp.Keyword("[SETTINGS]") + (
+            pp.Opt(global_settings) + pp.Opt(population_settings)
+        ).set_parse_action(self.parse_list_of_key_values)
         monolix = pp.Keyword(
-            "<MONOLIX>") + (tasks + settings).set_parse_action(self.parse_list_of_key_values)
+            "<MONOLIX>") + (
+                tasks + settings
+        ).set_parse_action(self.parse_list_of_key_values)
 
         fit = pp.Keyword("<FIT>") + entry_list
         parameter = pp.Keyword("<PARAMETER>") + entry_list
@@ -105,7 +116,10 @@ class MonolixProjectParser:
         return [{toks[2 * i]: toks[2 * i + 1] for i in range(len(toks) // 2)}]
 
     def parse_add_list_of_key_values(self, toks):
-        return [toks[0] | {toks[2 * i + 1]: toks[2 * i + 2] for i in range((len(toks) - 1) // 2)}]
+        return [
+            toks[0] | {toks[2 * i + 1]: toks[2 * i + 2] 
+            for i in range((len(toks) - 1) // 2)}
+        ]
 
     def parse(self, project_str, parseAll=True) -> dict:
         try:

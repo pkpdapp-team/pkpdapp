@@ -23,7 +23,22 @@ import {Typography} from "@material-ui/core";
 Chart.register(...registerables, CrosshairPlugin);
 Interaction.modes.interpolate = Interpolate;
 
-export default function ModellingChart({ datasets, pkModels, pdModels, className }) {
+const useStyles = makeStyles((theme) => ({
+  chart: {
+    height: "50vh",
+    width: "100%",
+  },
+  protocolChart: {
+    height: "30vh",
+    width: "100%",
+    marginTop: theme.spacing(2),
+  },
+}));
+
+
+
+export default function ModellingChart({ datasets, pkModels, pdModels }) {
+  const classes = useStyles();
   let renderChart = true;
 
   let showRhsAxis = false;
@@ -34,6 +49,12 @@ export default function ModellingChart({ datasets, pkModels, pdModels, className
   const units = useSelector((state) => state.units.entities);
 
   let labelsShown = {}
+
+  let xLimits = [0, 0];
+  let updateXLimits = (data) => {
+    xLimits[0] = Math.min(xLimits[0], Math.min(...data));
+    xLimits[1] = Math.max(xLimits[1], Math.max(...data));
+  };
 
   const getChartData = (model) => {
     console.log("getChartData");
@@ -75,6 +96,7 @@ export default function ModellingChart({ datasets, pkModels, pdModels, className
         } else {
           labelsShown[label] = 1
         }
+        updateXLimits(model_simulate[time_id]);
         return {
           yAxisID: yAxisID,
           type: "line",
@@ -127,6 +149,7 @@ export default function ModellingChart({ datasets, pkModels, pdModels, className
           showRhsAxis = true;
         }
         const label = `${dataset.name}.${biomarker.name} [${display_unit ? display_unit.symbol : ''}]`;
+        updateXLimits(times);
         return {
           yAxisID: yAxisID,
           label: label,
@@ -136,6 +159,52 @@ export default function ModellingChart({ datasets, pkModels, pdModels, className
           myMetadata: {
             ylabel: label,
             xlabel: `${dataset.name}.time [${display_time_unit ? display_time_unit.symbol : ''}]`,
+            yunit: display_unit,
+            xunit: display_time_unit,
+          },
+          data: values.map((y, i) => ({ x: times[i], y: y })),
+        };
+      })
+      .filter((x) => x);
+  };
+  
+  const getChartDataProtocol = (dataset) => {
+    return dataset.protocols
+      .map((protocol, index) => {
+        const display_unit = units[protocol.amount_unit];
+        const display_time_unit = units[protocol.time_unit];
+        const subjectsDisplay = protocol.subjects.map(id => subjects[id] ? subjects[id].display : false)
+        console.log("subjectsDisplay", subjectsDisplay)
+        const protocolDisplay = subjectsDisplay.some((x) => x);
+        if (!protocolDisplay) {
+          return null;
+        }
+        let times = protocol.doses.map(dose => [dose.start_time, dose.start_time, dose.start_time + dose.duration, dose.start_time + dose.duration]).flat();
+        let values = protocol.doses.map(dose => [0, dose.amount, dose.amount, 0]).flat();
+        times.unshift(xLimits[0]);
+        times.push(xLimits[1]);
+        values.unshift(0);
+        values.push(0);
+        console.log("times", times)
+        console.log("values", values)
+        const color = getColor(index);
+        if (values.length === 0) {
+          return null;
+        }
+        const yAxisID = "yLhs";
+        const label = `${protocol.name} [${display_unit ? display_unit.symbol : ''}]`;
+        return {
+          yAxisID: yAxisID,
+          label: label,
+          type: "line",
+          fill: true,
+          lineTension: 0,
+          interpolate: true,
+          borderColor: color,
+          backgroundColor: color,
+          myMetadata: {
+            ylabel: label,
+            xlabel: `${protocol.name}.time [${display_time_unit ? display_time_unit.symbol : ''}]`,
             yunit: display_unit,
             xunit: display_time_unit,
           },
@@ -155,6 +224,14 @@ export default function ModellingChart({ datasets, pkModels, pdModels, className
       ...pdModels.map((m) => getChartData(m)).flat(),
     ],
   };
+  
+  const data_protocols = {
+    datasets: [
+      ...datasets.map((d) => getChartDataProtocol(d)).flat().flat(),
+    ]
+  }
+  
+  const showProtocols = datasets.length > 0;
 
   const y_unit_symbols = data.datasets.reduce((sum, dataset) => { 
     if (!dataset?.myMetadata) {
@@ -164,6 +241,16 @@ export default function ModellingChart({ datasets, pkModels, pdModels, className
     sum.add(unit ? unit.symbol : '');
     return sum;
   }, new Set());
+
+  const y_amount_unit_symbols = data_protocols.datasets.reduce((sum, dataset) => { 
+    if (!dataset?.myMetadata) {
+      return sum;
+    }
+    const unit = dataset.myMetadata.yunit;
+    sum.add(unit ? unit.symbol : '');
+    return sum;
+  }, new Set());
+
   const x_unit_symbols = data.datasets.reduce((sum, dataset) => { 
     if (!dataset?.myMetadata) {
       return sum;
@@ -177,7 +264,71 @@ export default function ModellingChart({ datasets, pkModels, pdModels, className
   const incompatible_x_unit = x_unit_symbols.size > 1;
 
   const list_of_y_unit = new Array(...y_unit_symbols).join(', ');
+  const list_of_y_amount_unit = new Array(...y_amount_unit_symbols).join(', ');
   const list_of_x_unit = new Array(...x_unit_symbols).join(', ');
+
+  let crosshair = {
+    line: {
+      color: '#F66',  // crosshair line color
+      width: 1        // crosshair line width
+    },
+    sync: {
+      enabled: true,            // enable trace line syncing with other charts
+      suppressTooltips: false   // suppress tooltips when showing a synced tracer
+    },
+    zoom: {
+      enabled: true,                                      // enable zooming
+      zoomboxBackgroundColor: 'rgba(66,133,244,0.2)',     // background color of zoom box 
+      zoomboxBorderColor: '#48F',                         // border color of zoom box
+      zoomButtonText: 'Reset Zoom',                       // reset zoom button text
+      zoomButtonClass: 'reset-zoom',                      // reset zoom button class
+    },
+  }
+
+  let plugins = {
+    legend: {
+      labels: {
+        usePointStyle: true,
+      },
+    },
+    tooltip: {
+      mode: "interpolate",
+      callbacks: {
+        title: function (a, d) {
+          return a[0].element.x.toPrecision(4);
+        },
+        label: function (d) {
+          return d.dataset.label + ": " + d.element.y.toPrecision(4);
+        },
+      },
+    },
+    crosshair,
+  };
+  
+  let options_protocols = {
+    animation: {
+      duration: 0,
+    },
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+      x: {
+        type: "linear",
+        title: {
+          text: `Time [${list_of_x_unit}]`,
+          display: false,
+        },
+      },
+      yLhs: {
+        position: "left",
+        title: {
+          text: `Dose Amount [${list_of_y_amount_unit}]`,
+          display: true,
+        }
+      }
+    },
+    plugins,
+  }
 
   let options = {
     animation: {
@@ -201,26 +352,7 @@ export default function ModellingChart({ datasets, pkModels, pdModels, className
         },
       },
     },
-    plugins: {
-      legend: {
-        labels: {
-          usePointStyle: true,
-        },
-      },
-      tooltip: {
-        mode: "interpolate",
-        callbacks: {
-          title: function (a, d) {
-            return a[0].element.x.toPrecision(4);
-          },
-          label: function (d) {
-            return d.dataset.label + ": " + d.element.y.toPrecision(4);
-          },
-        },
-      },
-      crosshair: {
-      },
-    },
+    plugins,
   };
 
   if (showRhsAxis) {
@@ -233,14 +365,18 @@ export default function ModellingChart({ datasets, pkModels, pdModels, className
     };
   }
 
-  
 
   console.log('data', data, options, renderChart)
   return (
     <React.Fragment>
-    <div className={className}>
+    <div className={classes.chart}>
       {renderChart && <Scatter data={data} options={options} />}
     </div>
+    {showProtocols &&
+      <div className={classes.protocolChart}>
+        {renderChart && <Scatter data={data_protocols} options={options_protocols} />}
+      </div>
+    }
     {incompatible_y_unit &&
         <Alert severity="warning">
           Different units on y-axis

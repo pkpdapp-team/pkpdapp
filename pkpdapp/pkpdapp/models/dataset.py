@@ -60,11 +60,11 @@ class Dataset(models.Model):
         # create biomarker types
         # assume AMOUNT_UNIT and TIME_UNIT are constant for each bt
         bts_unique = data_without_dose[
-            ['OBSERVATION_NAME', 'AMOUNT_UNIT', 'TIME_UNIT']
+            ['OBSERVATION_NAME', 'OBSERVATION_UNIT', 'TIME_UNIT']
         ].drop_duplicates()
         biomarker_types = {}
         for i, row in bts_unique.iterrows():
-            unit = Unit.objects.get(symbol=row['AMOUNT_UNIT'])
+            unit = Unit.objects.get(symbol=row['OBSERVATION_UNIT'])
             observation_name = row['OBSERVATION_NAME']
             biomarker_types[observation_name] = BiomarkerType.objects.create(
                 name=observation_name,

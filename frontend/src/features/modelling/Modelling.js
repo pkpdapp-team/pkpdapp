@@ -65,6 +65,11 @@ const useStyles = makeStyles((theme) => ({
     height: "50vh",
     width: "100%",
   },
+  protocolChart: {
+    height: "40vh",
+    width: "100%",
+    marginTop: theme.spacing(2),
+  },
   mmt_box: {
     width: "100%",
     padding: theme.spacing(2),
@@ -261,9 +266,7 @@ export default function Modelling({project}) {
       </Grid>
       <Grid item xs={12} md={6}>
         <Paper className={classes.paperChart}>
-            <ModellingChart
-              className={classes.chart}
-            />
+            <ModellingChart/>
         </Paper>
       </Grid>
     </Grid>

@@ -322,4 +322,7 @@ class MonolixModelParser:
         except pp.ParseException as err:
             raise RuntimeError(err.explain())
         return self.myokit_model, \
-            (self.administration_id, self.dosed_compartment, self.tlag, self.direct_dosing)
+            (
+                self.administration_id, self.dosed_compartment, 
+                self.tlag, self.direct_dosing
+            )

@@ -116,3 +116,10 @@ class TestDataParser(TestCase):
                     subject.protocol for subject in dataset.subjects.all()
                 ])
                 self.assertEqual(len(protocols), 39)
+            if filename == 'usecase_monolix/TE_Data.txt':
+                expected_names = ['observation', 'Dose', 'Dose_units', 'Dose_cat']
+                biomarker_names = dataset.biomarker_types.values_list('name', flat=True)
+                self.assertCountEqual(biomarker_names, expected_names)
+                expected_units = ['', '', '', '']
+                biomarker_units = dataset.biomarker_types.values_list('stored_unit__symbol', flat=True)
+                self.assertCountEqual(biomarker_units, expected_units)
