@@ -12,6 +12,8 @@ from pkpdapp.utils import (
 )
 
 BASE_URL_DATASETS = 'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/'   # noqa: E501
+
+
 class TestMonolixParser(unittest.TestCase):
     def test_parse_model(self):
         with urllib.request.urlopen(
@@ -42,9 +44,5 @@ class TestMonolixParser(unittest.TestCase):
         )
         self.assertCountEqual(
             project['<MODEL>'].keys(),
-            ['[COVARIATE]', '[INDIVIDUAL]',  '[LONGITUDINAL]']
+            ['[COVARIATE]', '[INDIVIDUAL]', '[LONGITUDINAL]']
         )
-
-
-
-

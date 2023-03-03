@@ -116,7 +116,7 @@ class MyokitModelMixin:
         new_states = [
             Variable.get_variable(self, eqn.lhs.var())
             for eqn in model.inits()
-            if eqn.rhs.is_literal()   
+            if eqn.rhs.is_literal()
         ]
         print([s.qname for s in new_states])
         new_outputs = [
@@ -125,7 +125,7 @@ class MyokitModelMixin:
         ]
         for v in new_outputs:
             # if output not in states set state false
-            # so only states with initial conditions as 
+            # so only states with initial conditions as
             # parameters will have state set to true
             if v not in new_states and v.state is True:
                 v.state = False
@@ -364,7 +364,8 @@ class MyokitModelMixin:
         default_state = sim.default_state()
         for i, state in enumerate(model.states()):
             if state.qname() in initial_conditions:
-                default_state[i] = myokit.Number(initial_conditions[state.qname()])
+                default_state[i] = myokit.Number(
+                    initial_conditions[state.qname()])
         sim.set_default_state(default_state)
 
         # Set constants in model

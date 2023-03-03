@@ -4,11 +4,14 @@
 # copyright notice and full license details.
 #
 
-from pkpdapp.utils import DataParser, MonolixModelParser, MonolixProjectParser, monolix_import
+from pkpdapp.utils import (
+    MonolixModelParser,
+    monolix_import,
+)
 from rest_framework import serializers
 import codecs
 from pkpdapp.models import (
-    Dataset, Project, PharmacodynamicModel, DosedPharmacokineticModel
+    Project,
 )
 
 
@@ -22,12 +25,11 @@ class MonolixSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Project
-        fields = ['data_csv', 'model_txt', 'project_mlxtran', 'data', 'pd_model', 'pk_model']
+        fields = ['data_csv', 'model_txt', 'project_mlxtran',
+                  'data', 'pd_model', 'pk_model']
 
     def validate_data_csv(self, data_csv):
         utf8_file = codecs.EncodedFile(data_csv.open(), "utf-8")
-        parser = DataParser()
-
         # error in columns
         try:
             utf8_str = codecs.decode(utf8_file.read(), 'utf-8')
@@ -55,12 +57,9 @@ class MonolixSerializer(serializers.ModelSerializer):
 
     def validate_project_mlxtran(self, project_mlxtran):
         utf8_file = codecs.EncodedFile(project_mlxtran.open(), "utf-8")
-        parser = MonolixProjectParser()
-
         # error in columns
         try:
             utf8_str = codecs.decode(utf8_file.read(), 'utf-8')
-            data = parser.parse(utf8_str)
         except RuntimeError as err:
             raise serializers.ValidationError(str(err))
         except UnicodeDecodeError as err:
@@ -84,7 +83,7 @@ class MonolixSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         result = monolix_import(
             instance, validated_data['project_mlxtran'],
-            validated_data['model_txt'], validated_data['data_csv'], 
+            validated_data['model_txt'], validated_data['data_csv'],
             validate=False
         )
         if result is None:

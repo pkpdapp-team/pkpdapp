@@ -9,7 +9,6 @@
 # Copyright 2003-2019 by Paul McGuire
 #
 from dataclasses import dataclass
-from typing import Tuple
 
 import myokit
 import numbers
@@ -323,6 +322,6 @@ class MonolixModelParser:
             raise RuntimeError(err.explain())
         return self.myokit_model, \
             (
-                self.administration_id, self.dosed_compartment, 
+                self.administration_id, self.dosed_compartment,
                 self.tlag, self.direct_dosing
             )

@@ -36,7 +36,8 @@ class DataParser:
             "OBSERVATION_NAME", "OBSERVATIONID", "OBSERVATIONNAME"
         ],
         "OBSERVATION_UNIT": [
-            "DV_units", "Observation_unit", "YUNIT", "UNIT", "OBSERVATION_UNIT",
+            "DV_units", "Observation_unit", "YUNIT", "UNIT",
+            "OBSERVATION_UNIT",
             "OBSERVATIONUNIT"
         ],
         "COMPOUND": [
@@ -161,7 +162,7 @@ class DataParser:
         if "ROUTE" not in found_cols:
             data["ROUTE"] = "IV"
 
-        # put in default units if not present, convert any percentage units 
+        # put in default units if not present, convert any percentage units
         # to dimensionless
         for unit_col in ["TIME_UNIT", "AMOUNT_UNIT", "OBSERVATION_UNIT"]:
             if unit_col not in found_cols:
@@ -170,8 +171,8 @@ class DataParser:
                 def convert_percent_to_dim(x):
                     xl = x.lower()
                     if (
-                        "percent" in xl or 
-                        "fraction" in xl or 
+                        "percent" in xl or
+                        "fraction" in xl or
                         "ratio" in xl or
                         "%" in xl
                     ):

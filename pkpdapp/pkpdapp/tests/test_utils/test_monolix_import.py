@@ -5,12 +5,10 @@
 #
 
 import codecs
-from django.utils import timezone
-import unittest
 import urllib.request
 from django.test import TestCase
 from pkpdapp.models import (
-    Dataset, Project
+    Project
 )
 
 from pkpdapp.utils import (
@@ -44,33 +42,47 @@ class TestMonolixImport(TestCase):
         )
         self.assertIsNotNone(result)
         pd_model, pk_model, dataset = result
-        constant_variables = pd_model.variables.filter(constant=True).values_list('qname', flat=True)
+        constant_variables = pd_model.variables.filter(
+            constant=True).values_list('qname', flat=True)
         expected_constant_variables = [
-            'root.Cl', 'root.KD', 'root.R0', 'root.V', 'root.fres', 
+            'root.Cl', 'root.KD', 'root.R0', 'root.V', 'root.fres',
             'root.hind', 'root.ka', 'root.kdeg', 'root.koff'
         ]
         self.assertCountEqual(constant_variables, expected_constant_variables)
-        state_variables = pd_model.variables.filter(state=True).values_list('qname', flat=True)
+        state_variables = pd_model.variables.filter(
+            state=True).values_list('qname', flat=True)
         expected_state_variables = ['cmt1.A1', 'root.A2', 'root.A4', 'root.A5']
         self.assertCountEqual(state_variables, expected_state_variables)
-        other_variables = pd_model.variables.filter(constant=False, state=False).values_list('qname', flat=True)
+        other_variables = pd_model.variables.filter(
+            constant=False, state=False).values_list('qname', flat=True)
         expected_other_variables = [
-            'root.A3', 'root.C2', 'root.C3', 'root.C4', 'root.C5', 'root.CD_t', 'root.CR_t', 'root.PRR', 'root.RR', 'root.t'
+            'root.A3', 'root.C2', 'root.C3', 'root.C4', 'root.C5',
+            'root.CD_t', 'root.CR_t', 'root.PRR', 'root.RR', 'root.t'
         ]
         self.assertCountEqual(other_variables, expected_other_variables)
         self.assertEqual(pk_model.dose_compartment, 'cmt1')
 
-        displayed_biomarkers = dataset.biomarker_types.filter(display=True).values_list('name', flat=True)
+        displayed_biomarkers = dataset.biomarker_types.filter(
+            display=True
+        ).values_list('name', flat=True)
         expected_biomarkers = ['observation']
         self.assertCountEqual(displayed_biomarkers, expected_biomarkers)
-        displayed_pd_variables = pd_model.variables.filter(constant=False, display=True).values_list('qname', flat=True)
-        displayed_pk_variables = pk_model.variables.filter(constant=False, display=True).values_list('qname', flat=True)
+        displayed_pd_variables = pd_model.variables.filter(
+            constant=False, display=True
+        ).values_list('qname', flat=True)
+        displayed_pk_variables = pk_model.variables.filter(
+            constant=False, display=True
+        ).values_list('qname', flat=True)
         expected_variables = ['root.PRR']
         self.assertCountEqual(displayed_pd_variables, expected_variables)
         self.assertCountEqual(displayed_pk_variables, expected_variables)
-        
-        pd_states = pd_model.variables.filter(state=True).values_list('qname', flat=True)
-        pk_states = pk_model.variables.filter(state=True).values_list('qname', flat=True)
+
+        pd_states = pd_model.variables.filter(
+            state=True
+        ).values_list('qname', flat=True)
+        pk_states = pk_model.variables.filter(
+            state=True
+        ).values_list('qname', flat=True)
         expected_states = ['cmt1.A1', 'root.A2', 'root.A4', 'root.A5']
         self.assertCountEqual(pd_states, expected_states)
         self.assertCountEqual(pk_states, expected_states)

@@ -53,7 +53,6 @@ class ProjectView(EnablePartialUpdateMixin, viewsets.ModelViewSet):
                                  status.HTTP_400_BAD_REQUEST)
 
 
-
 class ProjectAccessView(viewsets.ModelViewSet):
     queryset = ProjectAccess.objects.all()
     serializer_class = ProjectAccessSerializer

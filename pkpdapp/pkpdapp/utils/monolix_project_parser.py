@@ -8,13 +8,6 @@
 # (https://github.com/pyparsing/pyparsing/blob/master/examples/fourFn.py)
 # Copyright 2003-2019 by Paul McGuire
 #
-from configparser import ParsingError
-from dataclasses import dataclass
-import pprint
-from re import S
-
-import myokit
-import numbers
 import pyparsing as pp
 import pyparsing.common as ppc
 
@@ -27,7 +20,6 @@ class MonolixProjectParser:
         ident = pp.Regex("[_a-zA-Z][-_a-zA-Z0-9]*")
 
         lpar, rpar = map(pp.Suppress, "()")
-        quote = pp.Suppress("'")
         lcpar, rcpar = map(pp.Suppress, "{}")
         equals = pp.Suppress("=")
 
@@ -117,8 +109,8 @@ class MonolixProjectParser:
 
     def parse_add_list_of_key_values(self, toks):
         return [
-            toks[0] | {toks[2 * i + 1]: toks[2 * i + 2] 
-            for i in range((len(toks) - 1) // 2)}
+            toks[0] | {toks[2 * i + 1]: toks[2 * i + 2]
+                       for i in range((len(toks) - 1) // 2)}
         ]
 
     def parse(self, project_str, parseAll=True) -> dict:

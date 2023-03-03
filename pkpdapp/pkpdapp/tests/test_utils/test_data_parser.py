@@ -6,7 +6,6 @@
 
 import codecs
 from django.utils import timezone
-import unittest
 import urllib.request
 from django.test import TestCase
 from pkpdapp.models.dataset import Dataset
@@ -117,9 +116,15 @@ class TestDataParser(TestCase):
                 ])
                 self.assertEqual(len(protocols), 39)
             if filename == 'usecase_monolix/TE_Data.txt':
-                expected_names = ['observation', 'Dose', 'Dose_units', 'Dose_cat']
-                biomarker_names = dataset.biomarker_types.values_list('name', flat=True)
+                expected_names = [
+                    'observation', 'Dose', 'Dose_units', 'Dose_cat'
+                ]
+                biomarker_names = dataset.biomarker_types.values_list(
+                    'name', flat=True
+                )
                 self.assertCountEqual(biomarker_names, expected_names)
                 expected_units = ['', '', '', '']
-                biomarker_units = dataset.biomarker_types.values_list('stored_unit__symbol', flat=True)
+                biomarker_units = dataset.biomarker_types.values_list(
+                    'stored_unit__symbol', flat=True
+                )
                 self.assertCountEqual(biomarker_units, expected_units)

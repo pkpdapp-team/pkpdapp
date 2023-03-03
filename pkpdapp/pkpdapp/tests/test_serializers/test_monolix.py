@@ -4,10 +4,8 @@
 # copyright notice and full license details.
 #
 
-from io import StringIO
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
-import codecs
 import urllib.request
 from pkpdapp.models import (
     Project,
@@ -18,6 +16,7 @@ from pkpdapp.api.serializers import (
 
 BASE_URL_DATASETS = 'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/'   # noqa: E501
 
+
 class TestMonolixSerializer(TestCase):
     def test_import(self):
         project = Project.objects.create(
@@ -25,7 +24,7 @@ class TestMonolixSerializer(TestCase):
         )
         model_f = urllib.request.urlopen(
             BASE_URL_DATASETS + 'usecase_monolix/PK_Model.txt', timeout=5
-        ) 
+        )
         project_f = urllib.request.urlopen(
             BASE_URL_DATASETS + 'usecase_monolix/Model_208.mlxtran', timeout=5
         )
@@ -34,9 +33,12 @@ class TestMonolixSerializer(TestCase):
         )
 
         files = []
-        for f, n in zip([model_f, project_f, data_f], ['model_txt', 'project_mlxtran', 'data_csv']):
-          content = SimpleUploadedFile(n, f.read())
-          files.append(content)
+        for f, n in zip(
+            [model_f, project_f, data_f],
+            ['model_txt', 'project_mlxtran', 'data_csv']
+        ):
+            content = SimpleUploadedFile(n, f.read())
+            files.append(content)
 
         data = {
             'model_txt': files[0],
