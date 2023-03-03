@@ -6,8 +6,8 @@
 
 import codecs
 from django.utils import timezone
-import unittest
 import urllib.request
+from django.test import TestCase
 from pkpdapp.models.dataset import Dataset
 
 from pkpdapp.utils import DataParser
@@ -15,7 +15,7 @@ from pkpdapp.utils import DataParser
 BASE_URL_DATASETS = 'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/'   # noqa: E501
 
 
-class TestDataParser(unittest.TestCase):
+class TestDataParser(TestCase):
     def test_parse(self):
         for filename in [
             'datasets/TCB4dataset.csv',
@@ -115,3 +115,16 @@ class TestDataParser(unittest.TestCase):
                     subject.protocol for subject in dataset.subjects.all()
                 ])
                 self.assertEqual(len(protocols), 39)
+            if filename == 'usecase_monolix/TE_Data.txt':
+                expected_names = [
+                    'observation', 'Dose', 'Dose_units', 'Dose_cat'
+                ]
+                biomarker_names = dataset.biomarker_types.values_list(
+                    'name', flat=True
+                )
+                self.assertCountEqual(biomarker_names, expected_names)
+                expected_units = ['', '', '', '']
+                biomarker_units = dataset.biomarker_types.values_list(
+                    'stored_unit__symbol', flat=True
+                )
+                self.assertCountEqual(biomarker_units, expected_units)

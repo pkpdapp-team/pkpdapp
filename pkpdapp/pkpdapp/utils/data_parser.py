@@ -36,7 +36,8 @@ class DataParser:
             "OBSERVATION_NAME", "OBSERVATIONID", "OBSERVATIONNAME"
         ],
         "OBSERVATION_UNIT": [
-            "Observation_unit", "YUNIT", "UNIT", "OBSERVATION_UNIT",
+            "DV_units", "Observation_unit", "YUNIT", "UNIT",
+            "OBSERVATION_UNIT",
             "OBSERVATIONUNIT"
         ],
         "COMPOUND": [
@@ -131,6 +132,7 @@ class DataParser:
             data = data.rename(columns=inv_found_cols)
             data["OBSERVATION_UNIT"] = data["AMOUNT_UNIT"]
         else:
+            amt_obs_unit_same_col = False
             data = data.rename(columns=inv_found_cols)
 
         # map alternate unit names to standard names
@@ -160,10 +162,24 @@ class DataParser:
         if "ROUTE" not in found_cols:
             data["ROUTE"] = "IV"
 
-        # put in default units if not present
+        # put in default units if not present, convert any percentage units
+        # to dimensionless
         for unit_col in ["TIME_UNIT", "AMOUNT_UNIT", "OBSERVATION_UNIT"]:
             if unit_col not in found_cols:
                 data[unit_col] = ""
+            else:
+                def convert_percent_to_dim(x):
+                    xl = x.lower()
+                    if (
+                        "percent" in xl or
+                        "fraction" in xl or
+                        "ratio" in xl or
+                        "%" in xl
+                    ):
+                        return ""
+                    else:
+                        return x
+                data[unit_col] = data[unit_col].map(convert_percent_to_dim)
 
         # put in default infusion time if not present
         delta_time = data.sort_values(by=["TIME"]).groupby(

@@ -6,6 +6,9 @@ import {
 
 import { api } from "../../Api";
 import { selectCurrentUser } from '../login/loginSlice'
+import { fetchPdModelById } from "../pdModels/pdModelsSlice";
+import { fetchPkModelById } from "../pkModels/pkModelsSlice";
+import { fetchDatasetById } from "../datasets/datasetsSlice";
 
 const projectsAdapter = createEntityAdapter({
   sortComparer: (a, b) => b.id < a.id,
@@ -15,6 +18,8 @@ const initialState = projectsAdapter.getInitialState({
   status: "idle",
   selected: null,
   error: null,
+  monolix_errors: null,
+  monolix_status: null,
 });
 
 export const fetchProjects = createAsyncThunk(
@@ -57,6 +62,22 @@ export const updateProject = createAsyncThunk(
   }
 );
 
+export const importMonolix = createAsyncThunk(
+  "projects/importMonolix",
+  async ({ id, project_mlxtran, model_txt, data_csv }, { rejectWithValue, dispatch, getState }) => {
+    try {
+      let response = await api.putMultiPart(`/api/project/${id}/monolix/`, getState().login.csrf, { project_mlxtran, model_txt, data_csv });
+      console.log('response is ', response)
+      dispatch(fetchPdModelById(response.pd_model));
+      dispatch(fetchPkModelById(response.pk_model));
+      dispatch(fetchDatasetById(response.data));
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
 export const projectsSlice = createSlice({
   name: "projects",
   initialState,
@@ -83,6 +104,19 @@ export const projectsSlice = createSlice({
     [deleteProject.fulfilled]: projectsAdapter.removeOne,
     [addNewProject.fulfilled]: projectsAdapter.addOne,
     [updateProject.fulfilled]: projectsAdapter.upsertOne,
+    [importMonolix.pending]: (state, action) => {
+      state.entities[action.meta.arg.id].monolix_status = "loading";
+      state.entities[action.meta.arg.id].monolix_errors = null;
+    },
+    [importMonolix.rejected]: (state, action) => {
+      state.entities[action.meta.arg.id].monolix_status = "failed";
+      state.entities[action.meta.arg.id].monolix_errors = action.payload;
+    },
+    [importMonolix.fulfilled]: (state, action) => {
+      state.entities[action.meta.arg.id].monolix_status = "succeeded";
+      state.entities[action.meta.arg.id].monolix_errors = null;
+    },
+
   },
 });
 
@@ -114,3 +148,11 @@ export const userHasReadOnlyAccess = (state, project) => {
   );
   return access.read_only;
 };
+
+export const importMonolixStatus = (state, project) => {
+  return state.projects.entities[project.id].monolix_status;
+}
+
+export const importMonolixErrors = (state, project) => {
+  return state.projects.entities[project.id].monolix_errors;
+}

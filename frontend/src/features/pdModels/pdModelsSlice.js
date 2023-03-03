@@ -36,6 +36,8 @@ export const fetchPdModelById = createAsyncThunk(
   "pdModels/fetchPdModelById",
   async (model_id, { dispatch, getState }) => {
     let response = await api.get(`/api/pharmacodynamic/${model_id}/`, getState().login.csrf);
+    dispatch(fetchVariablesByPdModel(pdModel.id));
+    dispatch(fetchUnitsByPdModel(pdModel.id));
     dispatch(fetchPdModelSimulateById(response.id));
     return response;
   }

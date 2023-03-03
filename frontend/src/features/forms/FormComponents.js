@@ -6,6 +6,7 @@ import Tooltip from "@material-ui/core/Tooltip";
 import MenuItem from "@material-ui/core/MenuItem";
 import Typography from "@material-ui/core/Typography";
 import FormControl from "@material-ui/core/FormControl";
+import FormHelperText from "@material-ui/core/FormHelperText";
 import Slider from "@material-ui/core/Slider";
 import ListSubheader from "@material-ui/core/ListSubheader";
 import Button from "@material-ui/core/Button";
@@ -399,7 +400,9 @@ export function FormSelectField({
           fieldState: { invalid, isTouched, isDirty, error },
           formState,
         }) => {
+          console.log("error in select", error);
           return (
+          <div>
           <Select
             labelId={name.concat("-select-label")}
             value={value}
@@ -434,6 +437,10 @@ export function FormSelectField({
                   </MenuItem>
                 ))}
           </Select>
+          {error?.message && 
+            <FormHelperText>{error?.message}</FormHelperText>
+          }
+          </div>
           )
         }
         }

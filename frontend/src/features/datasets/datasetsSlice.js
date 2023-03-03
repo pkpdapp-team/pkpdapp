@@ -3,7 +3,7 @@ import {
   createEntityAdapter,
   createAsyncThunk,
 } from "@reduxjs/toolkit";
-import { fetchBiomarkerTypesByProject } from "./biomarkerTypesSlice";
+import { fetchBiomarkerTypesByProject, fetchBiomarkerTypesByDataset } from "./biomarkerTypesSlice";
 import { fetchSubjectByProject, fetchSubjectByDataset } from "./subjectsSlice";
 import { setSelected } from "../modelling/modellingSlice";
 import { api } from "../../Api";
@@ -25,6 +25,16 @@ export const fetchDatasets = createAsyncThunk(
     dispatch(fetchBiomarkerTypesByProject(project_id));
     dispatch(fetchSubjectByProject(project_id));
 
+    return response;
+  }
+);
+
+export const fetchDatasetById = createAsyncThunk(
+  "datasets/fetchDatasetById",
+  async (datasetId, { dispatch, getState }) => {
+    dispatch(fetchBiomarkerTypesByDataset(datasetId));
+    dispatch(fetchSubjectByDataset(datasetId));
+    const response = await api.get(`/api/dataset/${datasetId}/`, getState().login.csrf);
     return response;
   }
 );
@@ -127,6 +137,7 @@ export const datasetsSlice = createSlice({
       state.status = "succeeded";
       datasetsAdapter.setAll(state, action.payload);
     },
+    [fetchDatasetById.fulfilled]: datasetsAdapter.upsertOne,
     [deleteDataset.fulfilled]: datasetsAdapter.removeOne,
     [addNewDataset.fulfilled]: datasetsAdapter.addOne,
     [updateDataset.fulfilled]: datasetsAdapter.upsertOne,
