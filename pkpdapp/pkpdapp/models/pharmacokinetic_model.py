@@ -160,30 +160,11 @@ class DosedPharmacokineticModel(MyokitModelMixin, StoredModel):
 
         return stored_model
 
-    def create_myokit_dosed_pk_model(self):
-        pk_model = self.pk_model.create_myokit_model()
-        if self.protocol:
-            compartment = self.dose_compartment
-            amount_var = None
-            for v in pk_model.variables(state=True):
-                if compartment + '.' in v.qname():
-                    amount_var = v
-
-            direct = self.protocol.dose_type == Protocol.DoseType.DIRECT
-
-            if amount_var is not None:
-                set_administration(
-                    pk_model, compartment, direct=direct,
-                    amount_var=amount_var.name()
-                )
-
-        return pk_model
-
     def create_myokit_model(self):
         if self.pk_model is None:
             pk_model = myokit.Model()
         else:
-            pk_model = self.create_myokit_dosed_pk_model()
+            pk_model = self.pk_model.create_myokit_model()
         if self.pd_model is None:
             pd_model = myokit.Model()
         else:
@@ -211,7 +192,7 @@ class DosedPharmacokineticModel(MyokitModelMixin, StoredModel):
 
         # remove time binding if
         if have_both_models:
-            time_var = pd_model.get('myokit.time')
+            time_var = pd_model.binding('time')
             time_var.set_binding(None)
 
         pd_components = list(pd_model.components())
@@ -300,6 +281,21 @@ class DosedPharmacokineticModel(MyokitModelMixin, StoredModel):
                 )
             )
 
+        if self.protocol:
+            compartment = self.dose_compartment
+            amount_var = None
+            for v in pk_model.variables(state=True):
+                if compartment + '.' in v.qname():
+                    amount_var = v
+
+            direct = self.protocol.dose_type == Protocol.DoseType.DIRECT
+
+            if amount_var is not None:
+                set_administration(
+                    pk_model, compartment, direct=direct,
+                    amount_var=amount_var.name()
+                )
+
         pkpd_model.validate()
         return pkpd_model
 
@@ -314,19 +310,25 @@ class DosedPharmacokineticModel(MyokitModelMixin, StoredModel):
                 if compartment + '.' in v.qname():
                     amount_var = v
 
-            time_var = model.get('myokit.time')
+            time_var = model.binding('time')
 
-            amount_conversion_factor = \
-                myokit.Unit.conversion_factor(
-                    self.protocol.amount_unit.get_myokit_unit(),
-                    amount_var.unit(),
-                ).value()
+            if amount_var.unit() is None:
+                amount_conversion_factor = 1.0
+            else:
+                amount_conversion_factor = \
+                    myokit.Unit.conversion_factor(
+                        self.protocol.amount_unit.get_myokit_unit(),
+                        amount_var.unit(),
+                    ).value()
 
-            time_conversion_factor = \
-                myokit.Unit.conversion_factor(
-                    self.protocol.time_unit.get_myokit_unit(),
-                    time_var.unit(),
-                ).value()
+            if time_var.unit() is None:
+                time_conversion_factor = 1.0
+            else:
+                time_conversion_factor = \
+                    myokit.Unit.conversion_factor(
+                        self.protocol.time_unit.get_myokit_unit(),
+                        time_var.unit(),
+                    ).value()
 
             dosing_events = [
                 (

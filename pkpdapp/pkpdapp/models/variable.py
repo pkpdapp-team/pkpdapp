@@ -70,7 +70,11 @@ class Variable(StoredModel):
     )
     state = models.BooleanField(
         default=False,
-        help_text='True for a state variable of the model (default is False)'
+        help_text=(
+            'True if it is a state variable of the model '
+            'and has an initial condition parameter '
+            '(default is False)'
+        )
     )
 
     color = models.IntegerField(

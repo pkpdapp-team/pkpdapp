@@ -77,7 +77,6 @@ urlpatterns = [
     ),
     path('api/pharmacodynamic/<int:pk>/simulate',
          api.SimulatePdView.as_view(), name='simulate-pharmacodynamic'),
-
     path('api/csrf/', api.get_csrf, name='auth-csrf'),
     path('api/login/', api.login_view, name='auth-login'),
     path('api/logout/', api.logout_view, name='auth-logout'),
