@@ -1,4 +1,3 @@
-# type: ignore
 #
 # This file is part of PKPDApp (https://github.com/pkpdapp-team/pkpdapp) which
 # is released under the BSD 3-clause license. See accompanying LICENSE.md for
@@ -16,7 +15,6 @@ import numbers
 import pyparsing as pp
 import pyparsing.common as ppc
 
-from pkpdapp.models import set_administration
 pp.enable_all_warnings()
 
 binops = {
@@ -34,7 +32,7 @@ class Variable:
     state: bool
 
 
-class MonolixParser:
+class MonolixModelParser:
     """
     expop   :: '^'
     multop  :: '*' | '/'
@@ -121,15 +119,16 @@ class MonolixParser:
 
         equation_block = pp.Keyword("EQUATION:") + (
             ode_type |
-            equation.set_parse_action(
-                self.construct_equation
-            ) |
             rate_equation.set_parse_action(
                 self.construct_rate_equation
             ) |
             initial_condition.set_parse_action(
                 self.construct_initial_condition
+            ) |
+            equation.set_parse_action(
+                self.construct_equation
             )
+
         )[...]
 
         output_block = pp.Keyword("OUTPUT:") + (
@@ -150,10 +149,10 @@ class MonolixParser:
 
         longitudinal = (
             longitudinal_keyword +
-            inputs.set_debug(True) +
+            inputs +
             (
                 pk_block & equation_block & output_block
-            ).set_debug(True)
+            )
         )
 
         src = "DESCRIPTION:" + pp.SkipTo(longitudinal_keyword) + longitudinal
@@ -166,13 +165,15 @@ class MonolixParser:
         self.exprStack = []
         self.variables = {}
         self.pk = []
-        self.myokit_model = None
+        self.myokit_model: myokit.Model = myokit.Model()
         self.units = {}
         self.administration_id = None
         self.tlag = None
+        self.direct_dosing = None
+        self.dosed_compartment = None
 
     def initialise_model(self):
-        self.myokit_model = myokit.Model()
+        self.myokit_model: myokit.Model = myokit.Model()
         root_cmp = self.myokit_model.add_component('root')
         t = self.get_or_construct_var('t', root_cmp)
         t.set_binding('time')
@@ -231,9 +232,9 @@ class MonolixParser:
                     raise pp.ParseException(
                         'only a single administration id supported'
                     )
-                self.administration_id = adm
+                self.administration_id = str(adm)
                 tlag = args.get('Tlag', args.get(2, 0))
-                self.tlag = tlag
+                self.tlag = float(tlag)
                 # p = args.get('p', args.get(3, 1))
 
                 if cmt not in compartments:
@@ -244,10 +245,8 @@ class MonolixParser:
                 if not amount_var.is_state():
                     amount_var.promote(0)
                 direct = True
-                set_administration(
-                    self.myokit_model, cmt, direct=direct,
-                    amount_var=amount_var.name()
-                )
+                self.direct_dosing = direct
+                self.dosed_compartment = cmt
 
     def construct_inputs(self, toks):
         for name in toks:
@@ -277,6 +276,8 @@ class MonolixParser:
 
     def construct_rate_equation(self, toks):
         name, expr = toks
+        # get rid of ddt_
+        name = name[4:]
         var = self.get_or_construct_var(name)
         if not var.is_state():
             var.promote(0)
@@ -284,10 +285,17 @@ class MonolixParser:
 
     def construct_initial_condition(self, toks):
         name, expr = toks
+        # get rid of _0
+        name = name[:-2]
         var = self.get_or_construct_var(name)
-        if not var.is_state():
-            var.promote(0)
-        var.set_rhs(expr)
+
+        if var == self.myokit_model.time():
+            var.set_rhs(expr)
+        elif var.is_state():
+            var.demote()
+            var.promote(expr)
+        else:
+            var.promote(expr)
 
     def construct_myokit_expr(self, s):
         op = s.pop()
@@ -312,3 +320,8 @@ class MonolixParser:
             self.parser.parseString(model_str, parseAll=parseAll)
         except pp.ParseException as err:
             raise RuntimeError(err.explain())
+        return self.myokit_model, \
+            (
+                self.administration_id, self.dosed_compartment,
+                self.tlag, self.direct_dosing
+            )

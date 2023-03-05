@@ -11,6 +11,7 @@ from .polymorphicserializer import PolymorphicSerializer
 from .validators import (
     ValidSbml, ValidMmt
 )
+from .monolix import MonolixSerializer
 from .auce import AuceSerializer
 from .biomarker_type import BiomarkerTypeSerializer
 from .dose import DoseSerializer

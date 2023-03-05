@@ -100,30 +100,44 @@ class MyokitModelMixin:
 
         # update the variables of the model
         from pkpdapp.models import Variable
+        model = self.get_myokit_model()
         new_variables = [
             Variable.get_variable(self, v)
-            for v in self.get_myokit_model().variables(const=True, sort=True)
+            for v in model.variables(const=True, sort=True)
+            if v.is_literal()
         ]
         # parameters could originally be outputs
         for v in new_variables:
             if not v.constant:
                 v.constant = True
                 v.save()
+        for eqn in model.inits():
+            print(eqn.lhs.var(), eqn.rhs.is_literal(), eqn.rhs)
         new_states = [
-            Variable.get_variable(self, v)
-            for v in self.get_myokit_model().variables(state=True, sort=True)
+            Variable.get_variable(self, eqn.lhs.var())
+            for eqn in model.inits()
+            if eqn.rhs.is_literal()
         ]
+        print([s.qname for s in new_states])
         new_outputs = [
             Variable.get_variable(self, v)
             for v in self.get_myokit_model().variables(const=False, sort=True)
         ]
-        # parameters could originally be variables
         for v in new_outputs:
+            # if output not in states set state false
+            # so only states with initial conditions as
+            # parameters will have state set to true
+            if v not in new_states and v.state is True:
+                v.state = False
+                v.save()
+
+            # parameters could originally be variables
             if v.constant:
                 v.constant = False
                 v.save()
 
         all_new_variables = new_variables + new_states + new_outputs
+        print([s.qname for s in all_new_variables])
 
         # delete all variables that are not in new
         for variable in self.variables.all():
@@ -346,13 +360,13 @@ class MyokitModelMixin:
             'time', self.get_time_max(), model
         )
 
-        # Set initial conditions
-        try:
-            sim.set_default_state(initial_conditions)
-        except ValueError:
-            print('WARNING: in simulate: '
-                  'sim.set_default_state returned ValueError')
-            return {}
+        # override initial conditions
+        default_state = sim.default_state()
+        for i, state in enumerate(model.states()):
+            if state.qname() in initial_conditions:
+                default_state[i] = myokit.Number(
+                    initial_conditions[state.qname()])
+        sim.set_default_state(default_state)
 
         # Set constants in model
         for var_name, var_value in variables.items():

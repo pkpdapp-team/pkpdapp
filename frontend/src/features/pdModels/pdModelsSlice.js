@@ -36,6 +36,8 @@ export const fetchPdModelById = createAsyncThunk(
   "pdModels/fetchPdModelById",
   async (model_id, { dispatch, getState }) => {
     let response = await api.get(`/api/pharmacodynamic/${model_id}/`, getState().login.csrf);
+    dispatch(fetchVariablesByPdModel(pdModel.id));
+    dispatch(fetchUnitsByPdModel(pdModel.id));
     dispatch(fetchPdModelSimulateById(response.id));
     return response;
   }
@@ -83,7 +85,11 @@ export const deletePdModel = createAsyncThunk(
 export const uploadPdSbml = createAsyncThunk(
   "pdModels/uploadPdSbml",
   async ({ id, sbml }, { rejectWithValue, dispatch, getState }) => {
-    await api.putMultiPart(`/api/pharmacodynamic/${id}/sbml/`, getState().login.csrf, { sbml });
+    try {
+      await api.putMultiPart(`/api/pharmacodynamic/${id}/sbml/`, getState().login.csrf, { sbml });
+    } catch (error) {
+      return rejectWithValue(error);
+    }
     let pdModel = await api.get(`/api/pharmacodynamic/${id}`, getState().login.csrf);
     dispatch(fetchVariablesByPdModel(pdModel.id));
     dispatch(fetchUnitsByPdModel(pdModel.id));
@@ -95,8 +101,13 @@ export const uploadPdSbml = createAsyncThunk(
 export const uploadPdMmt = createAsyncThunk(
   "pdModels/uploadPdMmt",
   async ({ id, mmt }, { rejectWithValue, dispatch, getState }) => {
-    await api.putMultiPart(`/api/pharmacodynamic/${id}/mmt/`, getState().login.csrf, { mmt });
+    try {
+      await api.putMultiPart(`/api/pharmacodynamic/${id}/mmt/`, getState().login.csrf, { mmt });
+    } catch (error) {
+      return rejectWithValue(error);
+    }
     let pdModel = await api.get(`/api/pharmacodynamic/${id}`, getState().login.csrf);
+    console.log('pdModel', pdModel)
     dispatch(fetchVariablesByPdModel(pdModel.id));
     dispatch(fetchUnitsByPdModel(pdModel.id));
     dispatch(fetchPdModelSimulateById(pdModel.id));
@@ -200,10 +211,12 @@ export const pdModelsSlice = createSlice({
     },
     [uploadPdMmt.pending]: (state, action) => {
       state.entities[action.meta.arg.id].status = "loading";
+      state.entities[action.meta.arg.id].status = "failed";
       state.entities[action.meta.arg.id].errors = [];
     },
     [uploadPdMmt.rejected]: (state, action) => {
       state.entities[action.meta.arg.id].status = "failed";
+      console.log('rejected', action)
       state.entities[action.meta.arg.id].errors = action.payload.mmt;
     },
     [uploadPdMmt.fulfilled]: (state, action) => {

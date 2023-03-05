@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Switch,
   Route,
@@ -25,6 +25,7 @@ import Inference from "../inference/Inference";
 import Modelling from "../modelling/Modelling";
 import Header from "../modelling/Header";
 import Footer from "../modelling/Footer";
+import ImportMonolixDialog from "./ImportMonolixDialog";
 
 import {
   FormTextField,
@@ -91,12 +92,28 @@ export default function ProjectDetail({ project }) {
     reset(project);
   }, [reset, project]);
 
+  const [openMonolixDialog, setOpenMonolixDialog] = useState(false);
+
+  const handleCloseMonolixDialog = (arg) => {
+    setOpenMonolixDialog(false)
+  }
+
+  const handleImportMonolix = () => {
+    setOpenMonolixDialog(true)
+  }
+
   const handleDeleteProject = () => {
     console.log('delete project', project)
     dispatch(deleteProject(project.id));
   };
 
   const onSubmit = (values) => {
+    const users_in_project = values.user_access.map((ua) => ua.user);
+    const users_to_be_added = values.users.filter(u => !users_in_project.includes(u));
+    const users_to_be_removed = values.user_access.filter(u => !values.users.includes(u.user)).map(u => u.user);
+    let new_user_access = values.user_access.filter((ua) => !users_to_be_removed.includes(ua.user));
+    new_user_access.push(...users_to_be_added.map(u => ({user: u, read_only: true, project: project.id})));
+    values.user_access = new_user_access;
     console.log("project detail submit", values);
     dispatch(updateProject(values));
   };
@@ -152,9 +169,15 @@ export default function ProjectDetail({ project }) {
         buttons={[
           {label: 'Save', handle: handleSubmit(onSubmit)},
           {label: 'Delete', handle: handleDeleteProject},
+          {label: 'Import Monolix Project', handle: handleImportMonolix},
         ]}
       />
     </form>
+    <ImportMonolixDialog
+        project={project}
+        onClose={handleCloseMonolixDialog}
+        open={openMonolixDialog}
+    />
     </Paper>
   )
 }

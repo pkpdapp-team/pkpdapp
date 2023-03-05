@@ -169,7 +169,6 @@ class PharmacodynamicSbmlSerializer(serializers.ModelSerializer):
         sbml = validated_data.pop('sbml')
         mmt = MyokitModelMixin.sbml_string_to_mmt(sbml)
         validated_data['mmt'] = mmt
-        print('create', sbml, mmt)
         return PharmacodynamicModel(**validated_data)
 
     def update(self, instance, validated_data):
@@ -177,5 +176,4 @@ class PharmacodynamicSbmlSerializer(serializers.ModelSerializer):
         mmt = MyokitModelMixin.sbml_string_to_mmt(sbml)
         instance.mmt = mmt
         instance.save()
-        print('update', sbml, mmt)
         return instance

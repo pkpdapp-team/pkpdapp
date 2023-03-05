@@ -11,7 +11,6 @@ from pkpdapp.models import (
     Biomarker,
     Unit,
     Subject,
-    SubjectGroup,
 )
 from django.utils import timezone
 from django.db.utils import IntegrityError
@@ -37,9 +36,14 @@ class TestBiomarkerTypeModel(TestCase):
             stored_time_unit=self.time_unit,
             display_time_unit=self.time_unit,
         )
-        self.subject_group = SubjectGroup.objects.create(
-            name='test',
+        self.biomarker_type2 = BiomarkerType.objects.create(
+            name='my_cool_biomarker_type 2',
+            description='description for my cool biomarker_type',
             dataset=self.dataset,
+            stored_unit=self.unit,
+            display_unit=self.unit,
+            stored_time_unit=self.time_unit,
+            display_time_unit=self.time_unit,
         )
         self.subjects = [
             Subject.objects.create(
@@ -51,7 +55,6 @@ class TestBiomarkerTypeModel(TestCase):
                 dataset=self.dataset,
             ),
         ]
-        self.subject_group.subjects.add(self.subjects[0])
 
         self.values = [0, 1, 2, 3]
         self.times = [0, 2, 4, 6]
@@ -96,16 +99,16 @@ class TestBiomarkerTypeModel(TestCase):
 
     def test_unit_conversion(self):
         new_unit = Unit.objects.get(symbol='g')
-        old_values = self.biomarker_type.as_pandas()['values']
+        old_values = self.biomarker_type.data()['values']
         self.biomarker_type.display_unit = new_unit
         self.biomarker_type.save()
-        new_values = self.biomarker_type.as_pandas()['values']
+        new_values = self.biomarker_type.data()['values']
         np.testing.assert_array_equal(
             old_values, 1e3 * new_values
         )
 
     def test_as_pandas(self):
-        df = self.biomarker_type.as_pandas()
+        df = self.biomarker_type.data()
         np.testing.assert_array_equal(
             df['values'], np.array(self.values)
         )
@@ -116,20 +119,7 @@ class TestBiomarkerTypeModel(TestCase):
             df['subjects'], np.array(self.biomarker_subjects)
         )
 
-        df = self.biomarker_type.as_pandas(
-            subject_group=self.subject_group
-        )
-        np.testing.assert_array_equal(
-            df['values'], np.array(self.values[:-1])
-        )
-        np.testing.assert_array_equal(
-            df['times'], np.array(self.times[:-1])
-        )
-        np.testing.assert_array_equal(
-            df['subjects'], np.array(self.biomarker_subjects[:-1])
-        )
-
-        df = self.biomarker_type.as_pandas(first_time_only=True)
+        df = self.biomarker_type.data(first_time_only=True)
 
         np.testing.assert_array_equal(
             df['times'], [self.times[0], self.times[3]]
@@ -138,13 +128,7 @@ class TestBiomarkerTypeModel(TestCase):
             df['values'], [self.values[0], self.values[3]]
         )
 
-        df = self.biomarker_type.as_pandas(
-            subject_group=self.subject_group, first_time_only=True
-        )
-
-        np.testing.assert_array_equal(
-            df['times'], [self.times[0]]
-        )
-        np.testing.assert_array_equal(
-            df['values'], [self.values[0]]
-        )
+    def test_empty_data(self):
+        df = self.biomarker_type2.data()
+        for key in ['values', 'times', 'subjects']:
+            self.assertEqual(len(df[key]), 0)

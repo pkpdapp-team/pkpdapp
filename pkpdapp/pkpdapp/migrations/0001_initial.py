@@ -7,6 +7,7 @@
 # flake8: noqa
 
 
+
 from django.conf import settings
 from django.db import migrations, models
 import django.db.models.deletion
@@ -39,7 +40,7 @@ class Migration(migrations.Migration):
             name='Biomarker',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('time', models.FloatField(help_text='time point of measurement, in hours')),
+                ('time', models.FloatField(help_text='time point of measurement, in hours.')),
                 ('value', models.FloatField(help_text='value of the measurement')),
             ],
         ),
@@ -52,6 +53,14 @@ class Migration(migrations.Migration):
                 ('display', models.BooleanField(default=True, help_text='True if this biomarker type will be displayed in the frontend, False otherwise')),
                 ('color', models.IntegerField(default=0, help_text='Color index associated with this biomarker type. For plotting purposes in the frontend')),
                 ('axis', models.BooleanField(default=False, help_text='True/False if biomarker type displayed on LHS/RHS axis')),
+            ],
+        ),
+        migrations.CreateModel(
+            name='CategoricalBiomarker',
+            fields=[
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('time', models.FloatField(help_text='time point of measurement, in hours.')),
+                ('value', models.CharField(help_text='category name', max_length=100)),
             ],
         ),
         migrations.CreateModel(
@@ -246,25 +255,14 @@ class Migration(migrations.Migration):
             ],
         ),
         migrations.CreateModel(
-            name='SubjectGroup',
-            fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(help_text='group name', max_length=100)),
-                ('dataset', models.ForeignKey(help_text='dataset containing this subject', on_delete=django.db.models.deletion.CASCADE, related_name='subject_groups', to='pkpdapp.dataset')),
-            ],
-        ),
-        migrations.CreateModel(
             name='Subject',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('id_in_dataset', models.IntegerField(help_text='unique id in the dataset')),
-                ('dose_group_amount', models.FloatField(blank=True, help_text='dosing amount for this subject (for constant dosing)', null=True)),
                 ('shape', models.IntegerField(default=0, help_text='Shape index associated with this subject. For plotting purposes in the frontend')),
                 ('display', models.BooleanField(default=True, help_text='True if this subject will be displayed in the frontend, False otherwise')),
                 ('metadata', jsonfield.fields.JSONField(default=dict, help_text='subject metadata')),
                 ('dataset', models.ForeignKey(help_text='dataset containing this subject', on_delete=django.db.models.deletion.CASCADE, related_name='subjects', to='pkpdapp.dataset')),
-                ('dose_group_unit', models.ForeignKey(blank=True, help_text='unit for dose_group_amount', null=True, on_delete=django.db.models.deletion.SET_NULL, to='pkpdapp.unit')),
-                ('groups', models.ManyToManyField(help_text='groups this subject belongs to', related_name='subjects', to='pkpdapp.SubjectGroup')),
                 ('protocol', models.ForeignKey(blank=True, help_text='dosing protocol for this subject.', null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='subjects', to='pkpdapp.protocol')),
             ],
         ),
@@ -353,8 +351,8 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='loglikelihood',
-            name='subject_group',
-            field=models.ForeignKey(blank=True, help_text='filter data on this subject group (null implies all subjects)', null=True, on_delete=django.db.models.deletion.PROTECT, to='pkpdapp.subjectgroup'),
+            name='protocol_filter',
+            field=models.ForeignKey(blank=True, help_text='filter subject data on this protocol(null implies all subjects)', null=True, on_delete=django.db.models.deletion.PROTECT, to='pkpdapp.protocol'),
         ),
         migrations.AddField(
             model_name='loglikelihood',
@@ -422,7 +420,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='dosebase',
-            constraint=models.CheckConstraint(check=models.Q(duration__gt=0), name='Duration must be greater than 0'),
+            constraint=models.CheckConstraint(check=models.Q(('duration__gt', 0)), name='Duration must be greater than 0'),
         ),
         migrations.AddField(
             model_name='dataset',
@@ -433,6 +431,16 @@ class Migration(migrations.Migration):
             model_name='compound',
             name='molecular_mass_unit',
             field=models.ForeignKey(default=pkpdapp.models.compound.get_mol_mass_unit, help_text='unit for molecular mass (e.g. g/mol)', on_delete=django.db.models.deletion.PROTECT, related_name='compounds', to='pkpdapp.unit'),
+        ),
+        migrations.AddField(
+            model_name='categoricalbiomarker',
+            name='biomarker_type',
+            field=models.ForeignKey(help_text='biomarker type, for example "weight in kg"', on_delete=django.db.models.deletion.CASCADE, related_name='categorical_biomarkers', to='pkpdapp.biomarkertype'),
+        ),
+        migrations.AddField(
+            model_name='categoricalbiomarker',
+            name='subject',
+            field=models.ForeignKey(help_text='subject associated with this biomarker', on_delete=django.db.models.deletion.CASCADE, related_name='categorical_biomarkers', to='pkpdapp.subject'),
         ),
         migrations.AddField(
             model_name='biomarkertype',
@@ -481,9 +489,9 @@ class Migration(migrations.Migration):
             model_name='subject',
             constraint=models.UniqueConstraint(fields=('id_in_dataset', 'dataset'), name='subject_dataset_unique'),
         ),
-        migrations.AddConstraint(
-            model_name='subject',
-            constraint=models.CheckConstraint(check=models.Q(models.Q(('dose_group_unit__isnull', True), ('dose_group_unit__isnull', True)), models.Q(('dose_group_unit__isnull', False), ('dose_group_unit__isnull', False)), _connector='OR'), name='amount must have a unit and visa versa'),
+        migrations.AlterUniqueTogether(
+            name='projectaccess',
+            unique_together={('user', 'project')},
         ),
         migrations.AddConstraint(
             model_name='loglikelihood',
@@ -495,7 +503,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='loglikelihood',
-            constraint=models.CheckConstraint(check=models.Q(models.Q(('form', 'F'), ('form', 'S'), ('form', 'M'), _connector='OR'), ('biomarker_type__isnull', False), ('subject_group__isnull', False), _negated=True), name='loglikelihood: deterministic log_likelihoods cannot have data'),
+            constraint=models.CheckConstraint(check=models.Q(models.Q(('form', 'F'), ('form', 'S'), ('form', 'M'), _connector='OR'), ('biomarker_type__isnull', False), ('protocol_filter', False), _negated=True), name='loglikelihood: deterministic log_likelihoods cannot have data'),
         ),
         migrations.AddField(
             model_name='dose',

@@ -12,7 +12,7 @@ import { FormCheckboxField, FormTextField } from "../forms/FormComponents";
 import { selectSubjectById, updateSubject } from "./subjectsSlice";
 import { selectDatasetProtocolById } from "../protocols/DatasetProtocols";
 
-export default function SubjectSubform({ subject, disableSave, groups, dataset }) {
+export default function SubjectSubform({ subject, disableSave, dataset }) {
   const dispatch = useDispatch();
 
   const { control, handleSubmit, reset } = useForm({
@@ -24,10 +24,6 @@ export default function SubjectSubform({ subject, disableSave, groups, dataset }
     },
   });
 
-  const hasGroup = groups.reduce((sum, group) => {
-    sum[group] = subject.groups.find(g => g.name === group) !== undefined
-    return sum
-  }, {})
 
   const { isDirty } = useFormState({ control });
 
@@ -47,11 +43,6 @@ export default function SubjectSubform({ subject, disableSave, groups, dataset }
       <TableCell>
         {subject.id_in_dataset}
       </TableCell>
-      {groups.map((group) => (
-        <TableCell>
-          {hasGroup[group] && <DoneIcon/>}
-        </TableCell>
-      ))}
       <TableCell>
         {protocol?.name}
       </TableCell>

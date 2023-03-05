@@ -58,6 +58,7 @@ import { fetchVariables } from "../variables/variablesSlice.js";
 import { fetchInferences } from "../inference/inferenceSlice.js";
 
 import { fetchChains } from "../inference/chainSlice.js";
+import { clearSelectItem } from "../modelling/modellingSlice";
 
 const useStyles = makeStyles((theme) => ({
 }));
@@ -79,6 +80,7 @@ export default function Project() {
     dispatch(fetchProtocols(id));
     dispatch(fetchUnits(id));
     dispatch(fetchInferences(id));
+    dispatch(clearSelectItem());
   }, [id]);
 
   if (!project) {

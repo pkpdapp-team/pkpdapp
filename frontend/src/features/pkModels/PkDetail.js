@@ -180,11 +180,9 @@ export default function PkDetail({ project, pk_model }) {
     protocol_options = protocol_options.concat(dataset_protocols);
   }
 
-  const dose_compartment_options = [
-    { key: "central", value: "central" },
-    { key: "peripheral1", value: "peripheral1" },
-    { key: "peripheral2", value: "peripheral2" },
-  ];
+  const dose_compartment_options = pk_model.components.map(c => (
+    { key: c.name, value: c.name }
+  ));
 
   const disableSave = useSelector(state => userHasReadOnlyAccess(state, project));
 

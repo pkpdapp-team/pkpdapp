@@ -7,7 +7,7 @@
 from django.test import TestCase
 from pkpdapp.models import (
     Dataset,
-    Subject, Unit,
+    Subject,
 )
 from django.utils import timezone
 from django.db.utils import IntegrityError
@@ -54,17 +54,3 @@ class TestSubjectModel(TestCase):
             Subject.objects.create(
                 id_in_dataset=2, dataset=self.dataset, metadata=metadata
             )
-
-    def test_subject_dose_group_constraint(self):
-
-        au = Unit.objects.get(symbol='mg')
-
-        Subject.objects.create(
-            id_in_dataset=3, dataset=self.dataset,
-            dose_group_amount=3.0
-        )
-
-        Subject.objects.create(
-            id_in_dataset=4, dataset=self.dataset,
-            dose_group_unit=au
-        )

@@ -21,5 +21,5 @@ class ValidMmt:
     def __call__(self, value):
         try:
             MyokitModelMixin.parse_mmt_string(value)
-        except myokit.ParsingError as e:
+        except myokit.ParseError as e:
             raise serializers.ValidationError(e)
