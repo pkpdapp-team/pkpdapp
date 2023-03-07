@@ -1,20 +1,20 @@
 import React, { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import Paper from "@material-ui/core/Paper";
-import Button from "@material-ui/core/Button";
-import IconButton from "@material-ui/core/IconButton";
+import Paper from "@mui/material/Paper";
+import Button from "@mui/material/Button";
+import IconButton from "@mui/material/IconButton";
 import { useForm, useFieldArray } from "react-hook-form";
-import Box from "@material-ui/core/Box";
-import { makeStyles } from "@material-ui/core/styles";
-import DeleteIcon from "@material-ui/icons/Delete";
-import AddIcon from "@material-ui/icons/Add";
-import Typography from "@material-ui/core/Typography";
-import Table from "@material-ui/core/Table";
-import TableBody from "@material-ui/core/TableBody";
-import TableCell from "@material-ui/core/TableCell";
-import TableContainer from "@material-ui/core/TableContainer";
-import TableHead from "@material-ui/core/TableHead";
-import TableRow from "@material-ui/core/TableRow";
+import Box from "@mui/material/Box";
+import makeStyles from '@mui/styles/makeStyles';
+import DeleteIcon from "@mui/icons-material/Delete";
+import AddIcon from "@mui/icons-material/Add";
+import Typography from "@mui/material/Typography";
+import Table from "@mui/material/Table";
+import TableBody from "@mui/material/TableBody";
+import TableCell from "@mui/material/TableCell";
+import TableContainer from "@mui/material/TableContainer";
+import TableHead from "@mui/material/TableHead";
+import TableRow from "@mui/material/TableRow";
 
 import Header from "../modelling/Header";
 import Footer from "../modelling/Footer";
@@ -181,7 +181,7 @@ export default function ProtocolDetail({ project, protocol }) {
           onClick={() =>
             append({ id: null, start_time: 0, amount: 0, duration: 1.0 })
           }
-        >
+          size="large">
           <AddIcon />
         </IconButton>
       </TableContainer>

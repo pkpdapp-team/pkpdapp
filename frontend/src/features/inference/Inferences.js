@@ -1,29 +1,29 @@
 import React, { useEffect } from "react";
 import { useSelector } from "react-redux";
-import Paper from "@material-ui/core/Paper";
-import Grid from "@material-ui/core/Grid";
-import Table from '@material-ui/core/Table';
+import Paper from "@mui/material/Paper";
+import Grid from "@mui/material/Grid";
+import Table from '@mui/material/Table';
 import { useHistory, useParams } from "react-router-dom";
-import Typography from '@material-ui/core/Typography';
-import Container from '@material-ui/core/Container';
-import LinearProgress from "@material-ui/core/LinearProgress";
-import TableBody from '@material-ui/core/TableBody';
+import Typography from '@mui/material/Typography';
+import Container from '@mui/material/Container';
+import LinearProgress from "@mui/material/LinearProgress";
+import TableBody from '@mui/material/TableBody';
 import ProjectDetail from "../projects/ProjectDetail";
-import Tooltip from "@material-ui/core/Tooltip";
-import { useTheme } from "@material-ui/core/styles";
-import Box from "@material-ui/core/Box";
+import Tooltip from "@mui/material/Tooltip";
+import { useTheme } from "@mui/material/styles";
+import Box from "@mui/material/Box";
 import { useDispatch } from "react-redux";
-import TableCell from '@material-ui/core/TableCell';
-import SaveIcon from '@material-ui/icons/Save';
-import TableContainer from '@material-ui/core/TableContainer';
-import TableHead from '@material-ui/core/TableHead';
-import DeleteIcon from '@material-ui/icons/Delete';
-import TableRow from '@material-ui/core/TableRow';
+import TableCell from '@mui/material/TableCell';
+import SaveIcon from '@mui/icons-material/Save';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import DeleteIcon from '@mui/icons-material/Delete';
+import TableRow from '@mui/material/TableRow';
 
-import AddIcon from "@material-ui/icons/Add";
+import AddIcon from "@mui/icons-material/Add";
 
-import IconButton from "@material-ui/core/IconButton";
-import { makeStyles } from "@material-ui/core/styles";
+import IconButton from "@mui/material/IconButton";
+import makeStyles from '@mui/styles/makeStyles';
 
 import LinearProgressWithLabel from '../menu/LinearProgressWithLabel'
 import InferenceDialog from './InferenceDialog'
@@ -126,20 +126,20 @@ export default function Inferences({ project }) {
 
                 <TableCell>
                 <Tooltip title="delete item">
-                  <IconButton aria-label="delete" onClick={handleDelete(item.id)}>
+                  <IconButton aria-label="delete" onClick={handleDelete(item.id)} size="large">
                   <DeleteIcon/>
                   </IconButton>
                 </Tooltip>
                 </TableCell>
               </TableRow> 
               </React.Fragment>
-          )
+            );
           })}
         </TableBody>
       </Table>
     </TableContainer>
     <Tooltip title="Create new item">
-      <IconButton aria-label="add" onClick={handleNewRow}>
+      <IconButton aria-label="add" onClick={handleNewRow} size="large">
       <AddIcon/>
     </IconButton>
     </Tooltip>

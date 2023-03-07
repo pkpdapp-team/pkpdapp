@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
 import PropTypes from 'prop-types';
-import Tab from '@material-ui/core/Tab';
-import Typography from '@material-ui/core/Typography';
-import Tabs from '@material-ui/core/Tabs';
-import Box from '@material-ui/core/Box';
-import Button from '@material-ui/core/Button';
-import Alert from "@material-ui/lab/Alert";
+import Tab from '@mui/material/Tab';
+import Typography from '@mui/material/Typography';
+import Tabs from '@mui/material/Tabs';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Alert from '@mui/material/Alert';
 import { useSelector, useDispatch } from "react-redux";
 import InferenceChartOptimisationResults from './InferenceChartOptimisationResults'
 import InferenceChartSamplingResults from './InferenceChartSamplingResults'

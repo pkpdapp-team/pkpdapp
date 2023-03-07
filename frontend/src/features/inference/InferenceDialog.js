@@ -1,31 +1,31 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useForm, useFieldArray } from "react-hook-form";
-import Dialog from '@material-ui/core/Dialog';
-import DialogActions from '@material-ui/core/DialogActions';
-import { makeStyles } from "@material-ui/core/styles";
-import DialogContent from '@material-ui/core/DialogContent';
-import Container from "@material-ui/core/Container";
-import DialogContentText from '@material-ui/core/DialogContentText';
-import DialogTitle from '@material-ui/core//DialogTitle';
-import Button from '@material-ui/core/Button';
-import Popover from '@material-ui/core/Popover';
-import Alert from '@material-ui/lab/Alert';
-import AlertTitle from '@material-ui/lab/AlertTitle';
-import List from "@material-ui/core/List";
-import IconButton from "@material-ui/core/IconButton";
-import Tooltip from "@material-ui/core/Tooltip";
-import AddIcon from "@material-ui/icons/Add";
-import HelpIcon from "@material-ui/icons/Help";
-import DeleteIcon from "@material-ui/icons/Delete";
-import ListItem from "@material-ui/core/ListItem";
-import Grid from "@material-ui/core/Grid";
-import Stepper from '@material-ui/core/Stepper';
-import Step from '@material-ui/core/Step';
-import StepLabel from '@material-ui/core/StepLabel';
-import Typography from '@material-ui/core/Typography';
-import Divider from '@material-ui/core/Divider';
-import Paper from '@material-ui/core/Paper';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import makeStyles from '@mui/styles/makeStyles';
+import DialogContent from '@mui/material/DialogContent';
+import Container from "@mui/material/Container";
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogTitle from '@mui/material//DialogTitle';
+import Button from '@mui/material/Button';
+import Popover from '@mui/material/Popover';
+import Alert from '@mui/material/Alert';
+import AlertTitle from '@mui/material/AlertTitle';
+import List from "@mui/material/List";
+import IconButton from "@mui/material/IconButton";
+import Tooltip from "@mui/material/Tooltip";
+import AddIcon from "@mui/icons-material/Add";
+import HelpIcon from "@mui/icons-material/Help";
+import DeleteIcon from "@mui/icons-material/Delete";
+import ListItem from "@mui/material/ListItem";
+import Grid from "@mui/material/Grid";
+import Stepper from '@mui/material/Stepper';
+import Step from '@mui/material/Step';
+import StepLabel from '@mui/material/StepLabel';
+import Typography from '@mui/material/Typography';
+import Divider from '@mui/material/Divider';
+import Paper from '@mui/material/Paper';
 
 import ModellingChart from '../modelling/Chart';
 import { FormTextField, FormSelectField, FormSliderField } from "../forms/FormComponents";
@@ -92,7 +92,7 @@ function HelpPopover() {
 
   return (
     <React.Fragment>
-      <IconButton onClick={handleClick}>
+      <IconButton onClick={handleClick} size="large">
         <HelpIcon />
       </IconButton>
       <Popover
@@ -584,9 +584,9 @@ export default function InferenceDialog({ project, open, handleCloseDialog, defa
         )
       })}
        <IconButton
-        disabled={variablesRemain.length === 0}
-        onClick={handleNewObservation}
-       >
+         disabled={variablesRemain.length === 0}
+         onClick={handleNewObservation}
+         size="large">
           <AddIcon />
       </IconButton>
       <HelpPopover />
@@ -624,9 +624,7 @@ export default function InferenceDialog({ project, open, handleCloseDialog, defa
         </ListItem>
         )
       })}
-      <IconButton
-        onClick={handleNewParameter}
-       >
+      <IconButton onClick={handleNewParameter} size="large">
           <AddIcon />
       </IconButton>
       <HelpPopover />

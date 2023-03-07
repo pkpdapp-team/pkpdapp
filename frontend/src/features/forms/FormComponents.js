@@ -1,22 +1,29 @@
 import React from "react";
-import TextField from "@material-ui/core/TextField";
-import { makeStyles } from "@material-ui/core/styles";
-import InputLabel from "@material-ui/core/InputLabel";
-import Tooltip from "@material-ui/core/Tooltip";
-import MenuItem from "@material-ui/core/MenuItem";
-import Typography from "@material-ui/core/Typography";
-import FormControl from "@material-ui/core/FormControl";
-import FormHelperText from "@material-ui/core/FormHelperText";
-import Slider from "@material-ui/core/Slider";
-import ListSubheader from "@material-ui/core/ListSubheader";
-import Button from "@material-ui/core/Button";
-import Select from "@material-ui/core/Select";
+import TextField from "@mui/material/TextField";
+
+import makeStyles from '@mui/styles/makeStyles';
+import InputLabel from "@mui/material/InputLabel";
+import Tooltip from "@mui/material/Tooltip";
+import MenuItem from "@mui/material/MenuItem";
+import Typography from "@mui/material/Typography";
+import FormControl from "@mui/material/FormControl";
+import FormHelperText from "@mui/material/FormHelperText";
+import Slider from "@mui/material/Slider";
+import ListSubheader from "@mui/material/ListSubheader";
+import Button from "@mui/material/Button";
+import Select from "@mui/material/Select";
 import { Controller } from "react-hook-form";
-import { DateTimePicker } from "@material-ui/pickers";
-import Chip from "@material-ui/core/Chip";
-import Checkbox from "@material-ui/core/Checkbox";
-import FormControlLabel from "@material-ui/core/FormControlLabel";
-import Box from "@material-ui/core/Box";
+import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
+
+import Chip from "@mui/material/Chip";
+import Checkbox from "@mui/material/Checkbox";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import Box from "@mui/material/Box";
+
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+
+dayjs.extend(utc);
 
 const useStyles = makeStyles((theme) => ({
   container: {
@@ -210,12 +217,14 @@ export function FormDateTimeField({
       control={control}
       defaultValue={defaultValue}
       name={name}
-      render={({ field }) => (
+      render={({ 
+        field,
+      }) => (
         <DateTimePicker
           className={classes.formInput}
-          format="dd/MM/yyyy HH:mm"
           {...rest}
           {...field}
+          value={dayjs.utc(field.value)}
           label={label}
         />
       )}

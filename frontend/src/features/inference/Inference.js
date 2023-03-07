@@ -6,24 +6,24 @@ import {
 } from "react-router-dom";
 
 import PropTypes from "prop-types";
-import Grid from "@material-ui/core/Grid";
+import Grid from "@mui/material/Grid";
 import InferenceDetail from "./InferenceDetail";
 import InferenceChart from "./InferenceChart";
-import Paper from "@material-ui/core/Paper";
-import Toolbar from '@material-ui/core/Toolbar';
-import AccordionSummary from "@material-ui/core/AccordionSummary";
-import Drawer from "@material-ui/core/Drawer";
-import AccordionDetails from "@material-ui/core/AccordionDetails";
-import CircularProgress from "@material-ui/core/CircularProgress";
-import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
-import Typography from "@material-ui/core/Typography";
-import Box from "@material-ui/core/Box";
+import Paper from "@mui/material/Paper";
+import Toolbar from '@mui/material/Toolbar';
+import AccordionSummary from "@mui/material/AccordionSummary";
+import Drawer from "@mui/material/Drawer";
+import AccordionDetails from "@mui/material/AccordionDetails";
+import CircularProgress from "@mui/material/CircularProgress";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import Typography from "@mui/material/Typography";
+import Box from "@mui/material/Box";
 import Inferences from "../inference/Inferences";
-import List from "@material-ui/core/List";
+import List from "@mui/material/List";
 
 import LinearProgressWithLabel from '../menu/LinearProgressWithLabel'
 
-import { makeStyles } from "@material-ui/core/styles";
+import makeStyles from '@mui/styles/makeStyles';
 
 
 import { selectChosenProject, userHasReadOnlyAccess } from "../projects/projectsSlice.js";

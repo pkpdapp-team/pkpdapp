@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import Alert from "@material-ui/lab/Alert";
-import Box from "@material-ui/core/Box";
-import Grid from "@material-ui/core/Grid";
+import Alert from '@mui/material/Alert';
+import Box from "@mui/material/Box";
+import Grid from "@mui/material/Grid";
 import { useForm } from "react-hook-form";
-import { makeStyles } from "@material-ui/core/styles";
-import Typography from "@material-ui/core/Typography";
-import Paper from "@material-ui/core/Paper";
+import makeStyles from '@mui/styles/makeStyles';
+import Typography from "@mui/material/Typography";
+import Paper from "@mui/material/Paper";
 
 import Header from "../modelling/Header";
 import Footer from "../modelling/Footer";

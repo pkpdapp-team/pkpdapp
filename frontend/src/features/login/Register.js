@@ -1,11 +1,11 @@
 import { api } from "../../Api";
-import { makeStyles } from "@material-ui/core/styles";
+import makeStyles from '@mui/styles/makeStyles';
 import React from "react";
 import { Link } from "react-router-dom";
-import Button from "@material-ui/core/Button";
+import Button from "@mui/material/Button";
 import { useForm } from "react-hook-form";
-import Typography from "@material-ui/core/Typography";
-import Container from "@material-ui/core/Container";
+import Typography from "@mui/material/Typography";
+import Container from "@mui/material/Container";
 import { useHistory } from "react-router-dom";
 import { FormTextField } from "../forms/FormComponents";
 import { ReactComponent as PkpdAppIcon } from "../../logo_pkpdapp_with_text.svg";

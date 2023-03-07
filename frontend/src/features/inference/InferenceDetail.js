@@ -1,29 +1,29 @@
 import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
-import Divider from '@material-ui/core/Divider';
-import Button from "@material-ui/core/Button";
+import Divider from '@mui/material/Divider';
+import Button from "@mui/material/Button";
 
 import { useHistory } from "react-router-dom";
-import Grid from "@material-ui/core/Grid";
-import Paper from "@material-ui/core/Paper";
+import Grid from "@mui/material/Grid";
+import Paper from "@mui/material/Paper";
 
-import FormControl from "@material-ui/core/FormControl";
+import FormControl from "@mui/material/FormControl";
 import ReactFlow, { MarkerType, applyEdgeChanges, applyNodeChanges } from 'react-flow-renderer';
 import * as ELK from 'elkjs';
-import InputLabel from "@material-ui/core/InputLabel";
-import Alert from "@material-ui/lab/Alert";
+import InputLabel from "@mui/material/InputLabel";
+import Alert from '@mui/material/Alert';
 import { useForm, useFieldArray } from "react-hook-form";
-import { makeStyles } from "@material-ui/core/styles";
-import Typography from "@material-ui/core/Typography";
-import List from "@material-ui/core/List";
-import ListItem from "@material-ui/core/ListItem";
-import Tooltip from "@material-ui/core/Tooltip";
-import Select from "@material-ui/core/Select";
-import IconButton from "@material-ui/core/IconButton";
-import MenuItem from "@material-ui/core/MenuItem";
-import AddIcon from "@material-ui/icons/Add";
-import DeleteIcon from "@material-ui/icons/Delete";
+import makeStyles from '@mui/styles/makeStyles';
+import Typography from "@mui/material/Typography";
+import List from "@mui/material/List";
+import ListItem from "@mui/material/ListItem";
+import Tooltip from "@mui/material/Tooltip";
+import Select from "@mui/material/Select";
+import IconButton from "@mui/material/IconButton";
+import MenuItem from "@mui/material/MenuItem";
+import AddIcon from "@mui/icons-material/Add";
+import DeleteIcon from "@mui/icons-material/Delete";
 
 
 import InferenceDialog from "./InferenceDialog";
@@ -178,7 +178,7 @@ function PriorSubform({
           variant="rounded"
           disabled={disabled}
           onClick={() => remove(index)}
-        >
+          size="large">
           <DeleteIcon />
         </IconButton>
         </span>
@@ -537,13 +537,13 @@ function LogLikelihoodSubform({
                   onClick={handleNewParamPrior(
                     watchParam, `${baseName}.parameters[${index}]`
                   )}
-                >
+                  size="large">
                   <AddIcon />
                 </IconButton>
                 </span>
               </Tooltip>
               </ListItem>
-            )
+            );
           }
         })}
       </Grid>
@@ -555,7 +555,7 @@ function LogLikelihoodSubform({
           variant="rounded"
           disabled={disabled}
           onClick={() => remove()}
-        >
+          size="large">
           <DeleteIcon />
         </IconButton>
         </span>
@@ -564,7 +564,6 @@ function LogLikelihoodSubform({
       </Grid>
     </Paper>
     </ListItem>
-
   );
 }
 

@@ -1,7 +1,7 @@
 import React from "react";
 import { useSelector, useDispatch } from "react-redux";
 
-import AccessibilityIcon from "@material-ui/icons/Accessibility";
+import AccessibilityIcon from "@mui/icons-material/Accessibility";
 
 import ExpandableListItem from "../menu/ExpandableListItem";
 

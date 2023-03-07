@@ -1,14 +1,14 @@
 import React from "react";
 import { useSelector } from "react-redux";
 
-import { makeStyles } from "@material-ui/core/styles";
-import List from "@material-ui/core/List";
-import Alert from "@material-ui/lab/Alert";
-import Tooltip from "@material-ui/core/Tooltip";
-import Grid from "@material-ui/core/Grid";
-import ListItem from "@material-ui/core/ListItem";
-import ListItemIcon from "@material-ui/core/ListItemIcon";
-import ListItemText from "@material-ui/core/ListItemText";
+import makeStyles from '@mui/styles/makeStyles';
+import List from "@mui/material/List";
+import Alert from '@mui/material/Alert';
+import Tooltip from "@mui/material/Tooltip";
+import Grid from "@mui/material/Grid";
+import ListItem from "@mui/material/ListItem";
+import ListItemIcon from "@mui/material/ListItemIcon";
+import ListItemText from "@mui/material/ListItemText";
 
 
 
@@ -18,7 +18,7 @@ import Header from "../modelling/Header";
 import { Chart, registerables, Interaction } from "chart.js";
 import { CrosshairPlugin, Interpolate } from "chartjs-plugin-crosshair";
 import { getColor, getShape } from "./ShapesAndColors";
-import {Typography} from "@material-ui/core";
+import {Typography} from "@mui/material";
 
 Chart.register(...registerables, CrosshairPlugin);
 Interaction.modes.interpolate = Interpolate;

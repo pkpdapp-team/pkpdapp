@@ -6,8 +6,8 @@ import {
   FormSelectField,
 } from "../forms/FormComponents";
 import { useForm, useFormState } from "react-hook-form";
-import SaveIcon from "@material-ui/icons/Save";
-import IconButton from "@material-ui/core/IconButton";
+import SaveIcon from "@mui/icons-material/Save";
+import IconButton from "@mui/material/IconButton";
 import { useDispatch } from "react-redux";
 import { selectUnitById } from "../projects/unitsSlice";
 import { selectVariableById, updateVariable } from "./variablesSlice";

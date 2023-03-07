@@ -1,26 +1,26 @@
 import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import Button from "@material-ui/core/Button";
-import List from "@material-ui/core/List";
-import Box from "@material-ui/core/Box";
-import IconButton from "@material-ui/core/IconButton";
-import Grid from "@material-ui/core/Grid";
-import ListItem from "@material-ui/core/ListItem";
-import Accordion from "@material-ui/core/Accordion";
-import AccordionSummary from "@material-ui/core/AccordionSummary";
-import AccordionDetails from "@material-ui/core/AccordionDetails";
-import Paper from "@material-ui/core/Paper";
-import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
-import AddIcon from "@material-ui/icons/Add";
-import AppBar from "@material-ui/core/AppBar";
-import BottomNavigation from "@material-ui/core/BottomNavigation";
-import BottomNavigationAction from "@material-ui/core/BottomNavigationAction";
-import Toolbar from "@material-ui/core/Toolbar";
-import DeleteIcon from "@material-ui/icons/Delete";
+import Button from "@mui/material/Button";
+import List from "@mui/material/List";
+import Box from "@mui/material/Box";
+import IconButton from "@mui/material/IconButton";
+import Grid from "@mui/material/Grid";
+import ListItem from "@mui/material/ListItem";
+import Accordion from "@mui/material/Accordion";
+import AccordionSummary from "@mui/material/AccordionSummary";
+import AccordionDetails from "@mui/material/AccordionDetails";
+import Paper from "@mui/material/Paper";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import AddIcon from "@mui/icons-material/Add";
+import AppBar from "@mui/material/AppBar";
+import BottomNavigation from "@mui/material/BottomNavigation";
+import BottomNavigationAction from "@mui/material/BottomNavigationAction";
+import Toolbar from "@mui/material/Toolbar";
+import DeleteIcon from "@mui/icons-material/Delete";
 
 import { useForm, useFieldArray } from "react-hook-form";
-import { makeStyles } from "@material-ui/core/styles";
-import Typography from "@material-ui/core/Typography";
+import makeStyles from '@mui/styles/makeStyles';
+import Typography from "@mui/material/Typography";
 
 
 import InferenceListDialog from "../inference/InferenceListDialog";

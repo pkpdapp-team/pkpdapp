@@ -1,31 +1,31 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import Button from "@material-ui/core/Button";
-import Card from "@material-ui/core/Card";
-import CardContent from "@material-ui/core/CardContent";
-import CardMedia from "@material-ui/core/CardMedia";
-import CardActions from "@material-ui/core/CardActions";
-import Divider from "@material-ui/core/Divider";
-import TextField from "@material-ui/core/TextField";
+import Button from "@mui/material/Button";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import CardMedia from "@mui/material/CardMedia";
+import CardActions from "@mui/material/CardActions";
+import Divider from "@mui/material/Divider";
+import TextField from "@mui/material/TextField";
 import { useForm, useFieldArray } from "react-hook-form";
-import Dialog from '@material-ui/core/Dialog';
-import DialogContent from '@material-ui/core/DialogContent';
-import { makeStyles } from "@material-ui/core/styles";
+import Dialog from '@mui/material/Dialog';
+import DialogContent from '@mui/material/DialogContent';
+import makeStyles from '@mui/styles/makeStyles';
 import { selectAllInferences } from "../inference/inferenceSlice";
-import Table from '@material-ui/core/Table';
-import TableCell from '@material-ui/core/TableCell';
-import Tooltip from "@material-ui/core/Tooltip";
-import TableContainer from '@material-ui/core/TableContainer';
-import TableBody from '@material-ui/core/TableBody';
-import TableRow from '@material-ui/core/TableRow';
-import TableHead from '@material-ui/core/TableHead';
+import Table from '@mui/material/Table';
+import TableCell from '@mui/material/TableCell';
+import Tooltip from "@mui/material/Tooltip";
+import TableContainer from '@mui/material/TableContainer';
+import TableBody from '@mui/material/TableBody';
+import TableRow from '@mui/material/TableRow';
+import TableHead from '@mui/material/TableHead';
 
-import Typography from "@material-ui/core/Typography";
-import DialogActions from "@material-ui/core/DialogActions";
+import Typography from "@mui/material/Typography";
+import DialogActions from "@mui/material/DialogActions";
 
 import LinearProgressWithLabel from '../menu/LinearProgressWithLabel'
 import { FormSelectField } from "../forms/FormComponents";
-import { CardActionArea } from "@material-ui/core";
+import { CardActionArea } from "@mui/material";
 import { importMonolix, importMonolixStatus, importMonolixErrors } from "./projectsSlice";
 
 const useStyles = makeStyles((theme) => ({
@@ -255,7 +255,7 @@ export default function ImportMonolixDialog({ project, onClose, open }) {
   };
 
 
-  let uploadButtonColor = 'default'
+  let uploadButtonColor = 'primary'
   if (uploadStatus === 'loading') {
     uploadButtonColor = 'secondary'
   } else if (uploadStatus === 'success') {
