@@ -15,6 +15,8 @@ import Select from "@mui/material/Select";
 import { Controller } from "react-hook-form";
 import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 
+import OutlinedInput from "@mui/material/OutlinedInput";
+import Stack from "@mui/material/Stack";
 import Chip from "@mui/material/Chip";
 import Checkbox from "@mui/material/Checkbox";
 import FormControlLabel from "@mui/material/FormControlLabel";
@@ -295,7 +297,6 @@ export function FormFileField({
 }
 
 export function FormTextField({ control, name, defaultValue, label, ...rest }) {
-  const classes = useStyles();
   return (
     <Controller
       control={control}
@@ -303,7 +304,6 @@ export function FormTextField({ control, name, defaultValue, label, ...rest }) {
       name={name}
       render={({ field }) => (
         <TextField
-          className={classes.formInput}
           {...rest}
           {...field}
           label={label}
@@ -323,7 +323,8 @@ export function FormMultiSelectField({
 }) {
   const classes = useStyles();
   return (
-    <FormControl className={classes.formInput}>
+    <div>
+    <FormControl fullWidth>
       <InputLabel id={name.concat("-select-label")}>{label}</InputLabel>
       <Controller
         control={control}
@@ -332,10 +333,11 @@ export function FormMultiSelectField({
         render={({ field }) => (
           <Select
             labelId={name.concat("-select-label")}
-            autoWidth={true}
+            id={name.concat("-select")}
             multiple
+            input={<OutlinedInput label="Name" />}
             renderValue={(selected) => (
-              <div className={classes.chips}>
+              <Stack direction="row" spacing={1}>
                 {selected.map((value) => {
                   const option_list = options.filter((x) => x.value === value);
                   let option = {
@@ -349,11 +351,10 @@ export function FormMultiSelectField({
                     <Chip
                       key={option.value}
                       label={option.key}
-                      className={classes.chip}
                     />
                   );
                 })}
-              </div>
+              </Stack>
             )}
             {...rest}
             {...field}
@@ -369,6 +370,7 @@ export function FormMultiSelectField({
         )}
       />
     </FormControl>
+    </div>
   );
 }
 
@@ -383,7 +385,6 @@ export function FormSelectField({
   onChangeUser,
   ...rest
 }) {
-  const classes = useStyles();
   let groups = {};
   if (useGroups) {
     for (const option of options) {
@@ -394,8 +395,12 @@ export function FormSelectField({
     }
   }
   return (
-    <FormControl className={classes.formInput}>
-      <InputLabel id={name.concat("-select-label")} shrink={displayEmpty}>{label}</InputLabel>
+    <div>
+    <FormControl fullWidth>
+      <InputLabel 
+        id={name.concat("-select-label")} 
+        shrink={displayEmpty}
+      >{label}</InputLabel>
       <Controller
         control={control}
         defaultValue={defaultValue}
@@ -413,11 +418,13 @@ export function FormSelectField({
           return (
           <div>
           <Select
+            id={name.concat("-select")}
             labelId={name.concat("-select-label")}
             value={value}
             error={error}
             autoWidth={true}
             onBlur={onBlur}
+            input={<OutlinedInput label={label} />}
             checked={value}
             displayEmpty
             inputRef={ref}
@@ -455,5 +462,6 @@ export function FormSelectField({
         }
       />
     </FormControl>
+    </div>
   );
 }

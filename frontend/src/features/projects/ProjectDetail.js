@@ -68,7 +68,7 @@ export default function ProjectDetail({ project }) {
     <Paper>
     <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
       <Header title={`Project: ${project.name}`} />
-      <Stack>
+      <Stack spacing={1} sx={{p: 1}}>
         <FormTextField
           control={control}
           defaultValue={project.name}

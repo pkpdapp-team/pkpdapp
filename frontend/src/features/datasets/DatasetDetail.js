@@ -14,6 +14,7 @@ import DialogTitle from "@mui/material/DialogTitle";
 import DialogActions from "@mui/material/DialogActions";
 import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
+import Stack from "@mui/material/Stack";
 
 import Accordion from "@mui/material/Accordion";
 import AccordionSummary from "@mui/material/AccordionSummary";
@@ -125,7 +126,6 @@ function DataAnalysisDialog({ project, onClose, dataset, open }) {
 
 
 export default function DatasetDetail({ project, dataset }) {
-  const classes = useStyles();
   const { control, handleSubmit, reset } = useForm();
   const dispatch = useDispatch();
 
@@ -163,7 +163,7 @@ export default function DatasetDetail({ project, dataset }) {
     <Paper>
     <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
       <Header title={`Dataset: ${dataset.name}`} />
-      <Box className={classes.root}>
+      <Stack spacing={2} sx={{p: 1}}>
       <FormTextField
         control={control}
         defaultValue={dataset.name}
@@ -177,26 +177,20 @@ export default function DatasetDetail({ project, dataset }) {
         label="DateTime"
       />
 
-      <Grid container item xs={12} spacing={3}>
-        <Grid item xs={12}>
-          <Typography>Variables</Typography>
-          <List>
-            {dataset.biomarker_types.map((biomarker_id, index) => {
-              return (
-                <ListItem key={index} role={undefined} dense>
-                  <BiomarkerTypeSubform
-                    biomarker_id={biomarker_id}
-                    disableSave={disableSave}
-                  />
-                </ListItem>
-              );
-            })}
-          </List>
-        </Grid>
-        <Grid item xs={12}>
-          <SubjectsTable dataset={dataset} disableSave={disableSave}/>
-        </Grid>
-      </Grid>
+      <Typography>Variables</Typography>
+      <List>
+        {dataset.biomarker_types.map((biomarker_id, index) => {
+          return (
+            <ListItem key={index} role={undefined} dense>
+              <BiomarkerTypeSubform
+                biomarker_id={biomarker_id}
+                disableSave={disableSave}
+              />
+            </ListItem>
+          );
+        })}
+      </List>
+      <SubjectsTable dataset={dataset} disableSave={disableSave}/>
 
       {dataset.errors &&
         dataset.errors.map((error, index) => (
@@ -204,7 +198,7 @@ export default function DatasetDetail({ project, dataset }) {
             {error}
           </Alert>
         ))}
-      </Box>
+      </Stack>
       <Footer
         buttons={[
           {label: 'Save', handle: handleSubmit(onSubmit)},

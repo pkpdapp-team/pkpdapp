@@ -3,6 +3,7 @@ import { useSelector, useDispatch } from "react-redux";
 import IconButton from "@mui/material/IconButton";
 import { useForm, useFormState } from "react-hook-form";
 import SaveIcon from "@mui/icons-material/Save";
+import Stack from "@mui/material/Stack";
 
 import {
   FormCheckboxField,
@@ -79,19 +80,21 @@ export default function BiomarkerTypeSubform({ biomarker_id, disableSave }) {
   ];
 
   return (
-    <React.Fragment>
+    <Stack direction="row" spacing={1}>
       <FormCheckboxField
         control={control}
         name={"display"}
         label={biomarker_type.name}
       />
       <FormSelectField
+        sx = {{minWidth: 60}}
         control={control}
         name={"display_unit"}
         label={"Unit"}
         options={unitOptions}
       />
       <FormSelectField
+        sx = {{minWidth: 90}}
         control={control}
         name={"display_time_unit"}
         label={"Time Unit"}
@@ -118,6 +121,6 @@ export default function BiomarkerTypeSubform({ biomarker_id, disableSave }) {
           <SaveIcon />
         </IconButton>
       )}
-    </React.Fragment>
+    </Stack>
   );
 }
