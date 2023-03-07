@@ -1,28 +1,11 @@
 import React, { useEffect, useState } from "react";
-import {
-  Switch,
-  Route,
-  useParams,
-  Link,
-  matchPath,
-  useRouteMatch,
-  Redirect,
-  useLocation,
-  useHistory,
-} from "react-router-dom";
-
 import { useSelector, useDispatch } from "react-redux";
-import Button from "@mui/material/Button";
-import Box from "@mui/material/Box";
+import Stack from "@mui/material/Stack";
 import Paper from "@mui/material/Paper";
 import { useForm } from "react-hook-form";
-import makeStyles from '@mui/styles/makeStyles';
 import List from "@mui/material/List";
-import CircularProgress from "@mui/material/CircularProgress";
 import ListItem from "@mui/material/ListItem";
 
-import Inference from "../inference/Inference";
-import Modelling from "../modelling/Modelling";
 import Header from "../modelling/Header";
 import Footer from "../modelling/Footer";
 import ImportMonolixDialog from "./ImportMonolixDialog";
@@ -35,49 +18,13 @@ import {
 import { selectAllUsers } from "../projects/usersSlice.js";
 
 import {
-  selectProjectById,
   updateProject,
-  chooseProject,
   deleteProject,
   userHasReadOnlyAccess,
 } from "../projects/projectsSlice.js";
 
-import { fetchDatasets } from "../datasets/datasetsSlice.js";
-
-import { fetchUnits} from "../projects/unitsSlice.js";
-
-import { fetchPkModels } from "../pkModels/pkModelsSlice.js";
-
-import { fetchPdModels } from "../pdModels/pdModelsSlice.js";
-
-import { fetchBasePkModels } from "../pkModels/basePkModelsSlice.js";
-
-import { fetchProtocols } from "../protocols/protocolsSlice.js";
-
-import { fetchVariables } from "../variables/variablesSlice.js";
-
-import { fetchInferences } from "../inference/inferenceSlice.js";
-
-import { fetchChains } from "../inference/chainSlice.js";
-
-const useStyles = makeStyles((theme) => ({
-  table: {
-    width: "100%",
-  },
-  tableCell: {
-    width: "100pt",
-  },
-  controlsRoot: {
-    display: "flex",
-    alignItems: "center",
-  },
-  controls: {
-    margin: theme.spacing(1),
-  },
-}));
 
 export default function ProjectDetail({ project }) {
-  const classes = useStyles();
   const users = useSelector(selectAllUsers);
   const userEntities = useSelector((state) => state.users.entities);
   const dispatch = useDispatch();
@@ -121,23 +68,24 @@ export default function ProjectDetail({ project }) {
     <Paper>
     <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
       <Header title={`Project: ${project.name}`} />
-      <Box className={classes.root}>
-      <FormTextField
-        control={control}
-        defaultValue={project.name}
-        name="name"
-        label="Name"
-      />
-      {user_options.length > 0 && (
-        <FormMultiSelectField
+      <Stack>
+        <FormTextField
           control={control}
-          defaultValue={project.users}
-          options={user_options}
-          name="users"
-          label="Users"
+          defaultValue={project.name}
+          name="name"
+          label="Name"
         />
-      )}
-      <List dense>
+        {user_options.length > 0 && (
+          <FormMultiSelectField
+            control={control}
+            defaultValue={project.users}
+            options={user_options}
+            name="users"
+            label="Users"
+          />
+        )}
+
+        <List dense>
         {project.user_access.map((ua, i) => {
           const user = userEntities[ua.user];
           if (!user) {
@@ -155,16 +103,15 @@ export default function ProjectDetail({ project }) {
             </ListItem>
           );
         })}
-      </List>
-      <FormTextField
-        control={control}
-        className={classes.description}
-        fullWidth
-        multiline
-        name="description"
-        label="Description"
-      />
-      </Box>
+        </List>
+
+        <FormTextField
+          control={control}
+          multiline
+          name="description"
+          label="Description"
+        />
+      </Stack>
       <Footer
         buttons={[
           {label: 'Save', handle: handleSubmit(onSubmit)},

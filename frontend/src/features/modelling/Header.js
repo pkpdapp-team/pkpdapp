@@ -11,6 +11,7 @@ const useStyles = makeStyles((theme) => ({
     top: 0,
     borderRadius: '5px 5px 0 0',
     zIndex: 10,
+    marginBottom: theme.spacing(1),
   },
   header: {
     fontWeight:'bold',

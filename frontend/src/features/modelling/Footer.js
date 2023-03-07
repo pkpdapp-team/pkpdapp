@@ -13,6 +13,7 @@ const useStyles = makeStyles((theme) => ({
     },
   },
   toolbar: {
+    marginTop: theme.spacing(1),
     backgroundColor: theme.palette.primary.main,
     position: 'sticky',
     bottom: 0,
