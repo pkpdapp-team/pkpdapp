@@ -91,7 +91,7 @@ export default function ProtocolDetail({ project, protocol }) {
 
 
   return (
-    <Paper sx={{maxHeight: '85vh', overflow: 'auto'}}>
+    <Paper sx={{maxHeight: '87vh', overflow: 'auto'}}>
     <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
       <Header title={`Protocol: ${protocol.name}`}/>
       <Grid container spacing={1} sx={{p: 1}}>

@@ -158,6 +158,7 @@ function ModellingChart({ project }) {
       datasets={chosenDatasets}
       pkModels={chosenPkModels}
       pdModels={chosenPdModels}
+      visualHeight={79}
     />
   );
 }

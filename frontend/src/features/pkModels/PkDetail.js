@@ -152,7 +152,7 @@ export default function PkDetail({ project, pk_model }) {
   const disableSave = useSelector(state => userHasReadOnlyAccess(state, project));
 
   return (
-    <Paper sx={{maxHeight: '85vh', overflow: 'auto'}}>
+    <Paper sx={{maxHeight: '87vh', overflow: 'auto'}}>
     <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
       <Header title={`PK Model: ${pk_model.name}`}/>
       <Grid container spacing={1} sx={{p: 1}}>

@@ -10,6 +10,8 @@ import TextField from "@mui/material/TextField";
 import { useForm, useFieldArray } from "react-hook-form";
 import Dialog from '@mui/material/Dialog';
 import DialogContent from '@mui/material/DialogContent';
+import Box from "@mui/material/Box";
+import Stack from "@mui/material/Stack";
 import makeStyles from '@mui/styles/makeStyles';
 import { selectAllInferences } from "../inference/inferenceSlice";
 import Table from '@mui/material/Table';
@@ -104,25 +106,29 @@ function FileCard({ index, file, control, api_errors, errors, clearErrors }) {
   }
 
   return (
-    <Card className={classes.fileCard}>
+    <Card sx={{p: 1}}>
       <CardContent>
-        <div className={classes.fileCardContent}>
+        <Stack spacing={1}>
           <Typography className={classes.title} variant="h6">
             {file.file.name}
           </Typography>
           <Divider />
-          <Typography className={classes.content}  variant="body2">
-            {content}
-          </Typography>
-        </div>
+          {content &&
+            <Box maxHeight={100} overflow="auto">
+            <Typography variant="body2">
+              {content}
+            </Typography>
+            </Box>
+          }
+        </Stack>
         {error && 
-          <Typography color="error" variant="body2">{error}</Typography>
+          <Typography color="error" variant="body2" display="block">{error.replace(/\n/g, "<br />")}</Typography>
         } 
       </CardContent>
       <CardActions>
-        <div className={classes.controlsRoot}>
+        <Box width="33%">
         <FormSelectField
-          className={classes.controls}
+          fullWidth
           control={control}
           name={`files[${index}].monolix_type`}
           onChangeUser={handleOnChange}
@@ -135,7 +141,7 @@ function FileCard({ index, file, control, api_errors, errors, clearErrors }) {
             { value: "data_csv", key: "CSV data file" },
           ]}
         />
-        </div>
+        </Box>
       </CardActions>
     </Card>
   );

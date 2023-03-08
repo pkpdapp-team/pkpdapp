@@ -4,6 +4,7 @@ import { useSelector } from "react-redux";
 import makeStyles from '@mui/styles/makeStyles';
 import List from "@mui/material/List";
 import Alert from '@mui/material/Alert';
+import Box from "@mui/material/Box";
 import Tooltip from "@mui/material/Tooltip";
 import Grid from "@mui/material/Grid";
 import ListItem from "@mui/material/ListItem";
@@ -23,22 +24,8 @@ import {Typography} from "@mui/material";
 Chart.register(...registerables, CrosshairPlugin);
 Interaction.modes.interpolate = Interpolate;
 
-const useStyles = makeStyles((theme) => ({
-  chart: {
-    height: "50vh",
-    width: "100%",
-  },
-  protocolChart: {
-    height: "30vh",
-    width: "100%",
-    marginTop: theme.spacing(2),
-  },
-}));
 
-
-
-export default function ModellingChart({ datasets, pkModels, pdModels }) {
-  const classes = useStyles();
+export default function ModellingChart({ datasets, pkModels, pdModels, visualHeight }) {
   let renderChart = true;
 
   let showRhsAxis = false;
@@ -365,17 +352,21 @@ export default function ModellingChart({ datasets, pkModels, pdModels }) {
     };
   }
 
+  const chartVisualHeight = visualHeight * 3.0 / 4.0;
+  const chartVisualHeightStr = `${chartVisualHeight}vh}`;
+  const protocolVisualHeight = visualHeight * 1.0 / 4.0;
+  const protocolVisualHeightStr = `${protocolVisualHeight}vh}`;
 
   console.log('data', data, options, renderChart)
   return (
     <React.Fragment>
-    <div className={classes.chart}>
+    <Box height={chartVisualHeightStr} width="100%">
       {renderChart && <Scatter data={data} options={options} />}
-    </div>
+    </Box>
     {showProtocols &&
-      <div className={classes.protocolChart}>
+      <Box height={protocolVisualHeightStr} width="100%">
         {renderChart && <Scatter data={data_protocols} options={options_protocols} />}
-      </div>
+      </Box>
     }
     {incompatible_y_unit &&
         <Alert severity="warning">

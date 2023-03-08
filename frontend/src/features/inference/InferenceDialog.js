@@ -422,6 +422,7 @@ export default function InferenceDialog({ project, open, handleCloseDialog, defa
     const pooled = (
       <Grid item xs={3}>
         <FormSelectField
+          fullWidth
           name={`${baseName}.pooled`}
           label="Pooled"
           control={control}
@@ -435,6 +436,7 @@ export default function InferenceDialog({ project, open, handleCloseDialog, defa
         {showPooled && pooled}
         <Grid item xs={3}>
         <FormTextField
+          fullWidth
           control={control}
           name={`${baseName}.parameters[0]`}
           label="Value"
@@ -448,6 +450,7 @@ export default function InferenceDialog({ project, open, handleCloseDialog, defa
         {showPooled && pooled}
         <Grid item xs={3}>
         <FormTextField
+          fullWidth
           control={control}
           name={`${baseName}.parameters[0]`}
           label="Mean"
@@ -455,6 +458,7 @@ export default function InferenceDialog({ project, open, handleCloseDialog, defa
         </Grid>
         <Grid item xs={3}>
         <FormTextField
+          fullWidth
           control={control}
           name={`${baseName}.parameters[1]`}
           label="Sigma"
@@ -468,6 +472,7 @@ export default function InferenceDialog({ project, open, handleCloseDialog, defa
         {showPooled && pooled}
         <Grid item xs={3}>
         <FormTextField
+          fullWidth
           control={control}
           name={`${baseName}.parameters[0]`}
           label="Lower"
@@ -475,6 +480,7 @@ export default function InferenceDialog({ project, open, handleCloseDialog, defa
         </Grid>
         <Grid item xs={3}>
         <FormTextField
+          fullWidth
           control={control}
           name={`${baseName}.parameters[1]`}
           label="Upper"
@@ -490,6 +496,7 @@ export default function InferenceDialog({ project, open, handleCloseDialog, defa
       <Grid container spacing={1}>
       <Grid item xs={6}>
       <FormSelectField
+        fullWidth
         control={control}
         useGroups
         options={model_options}
@@ -501,6 +508,7 @@ export default function InferenceDialog({ project, open, handleCloseDialog, defa
       </Grid>
       <Grid item xs={6}>
       <FormSelectField
+        fullWidth
         control={control}
         defaultValue={defaultValues.dataset}
         rules={{required: true}}
@@ -521,10 +529,10 @@ export default function InferenceDialog({ project, open, handleCloseDialog, defa
       }
       <Grid item xs={12}>
       <ModellingChart 
-        className={classes.chart}
         datasets={chosenDataset ? [chosenDataset] : []}
         pkModels={chosenPkModel ? [chosenPkModel] : []}
         pdModels={chosenPdModel ? [chosenPdModel] : []} 
+        visualHeight={50}
       />
       </Grid>
       </Grid>
@@ -541,6 +549,7 @@ export default function InferenceDialog({ project, open, handleCloseDialog, defa
           <Grid container spacing={1}>
           <Grid item xs={6}>
           <FormSelectField
+            fullWidth
             control={control}
             rules={{required: true}}
             options={model_output_options}
@@ -550,6 +559,7 @@ export default function InferenceDialog({ project, open, handleCloseDialog, defa
           </Grid>
           <Grid item xs={6}>
           <FormSelectField
+            fullWidth
             control={control}
             rules={{required: true}}
             options={biomarker_type_options}
@@ -559,6 +569,7 @@ export default function InferenceDialog({ project, open, handleCloseDialog, defa
           </Grid>
           <Grid item xs={3}>
           <FormSelectField
+            fullWidth
             control={control}
             options={obs_form_options}
             name={`${baseName}.noise_form`}
@@ -567,6 +578,7 @@ export default function InferenceDialog({ project, open, handleCloseDialog, defa
           </Grid>
           <Grid item xs={3}>
           <FormSelectField
+            fullWidth
             control={control}
             options={form_options}
             onChangeUser={handleFormChange(baseName, variable, false)}
@@ -595,6 +607,7 @@ export default function InferenceDialog({ project, open, handleCloseDialog, defa
         datasets={chosenDataset ? [chosenDataset] : []}
         pkModels={chosenPkModel ? [chosenPkModel] : []}
         pdModels={chosenPdModel ? [chosenPdModel] : []} 
+        visualHeight={50}
       />
       </List>
     ),
@@ -609,6 +622,7 @@ export default function InferenceDialog({ project, open, handleCloseDialog, defa
           <Grid container spacing={1}>
           <Grid item xs={3}>
           <FormSelectField
+            fullWidth
             control={control}
             options={form_options}
             name={`parameters[${index}].form`}
@@ -637,6 +651,7 @@ export default function InferenceDialog({ project, open, handleCloseDialog, defa
       <Grid container spacing={1}>
       <Grid item xs={6}>
       <FormTextField
+        fullWidth
         control={control}
         name="name"
         label="Name"
@@ -644,6 +659,7 @@ export default function InferenceDialog({ project, open, handleCloseDialog, defa
       </Grid>
       <Grid item xs={12}>
       <FormTextField
+        fullWidth
         control={control}
         fullWidth
         multiline
@@ -653,6 +669,7 @@ export default function InferenceDialog({ project, open, handleCloseDialog, defa
       </Grid>
       <Grid item xs={12}>
       <FormSelectField
+        fullWidth
         control={control}
         useGroups
         options={algorithm_options}
@@ -663,6 +680,7 @@ export default function InferenceDialog({ project, open, handleCloseDialog, defa
       </Grid>
       <Grid item xs={6}>
       <FormSelectField
+        fullWidth
         control={control}
         options={initialization_options}
         defaultValue={defaultValues.initialization_strategy}
@@ -672,6 +690,7 @@ export default function InferenceDialog({ project, open, handleCloseDialog, defa
       </Grid>
       <Grid item xs={6}>
       <FormSelectField
+        fullWidth
         control={control}
         defaultValue={defaultValues.initialization_inference}
         options={inference_options}
@@ -682,6 +701,7 @@ export default function InferenceDialog({ project, open, handleCloseDialog, defa
       </Grid>
       <Grid item xs={6}>
       <FormSliderField
+        fullWidth
         control={control}
         name={"burn_in"}
         tooltip={"choose burn-in"}
@@ -693,6 +713,7 @@ export default function InferenceDialog({ project, open, handleCloseDialog, defa
       </Grid>
       <Grid item xs={4}>
       <FormTextField
+        fullWidth
         control={control}
         name="max_number_of_iterations"
         defaultValue={defaultValues.max_number_of_iterations}
@@ -702,6 +723,7 @@ export default function InferenceDialog({ project, open, handleCloseDialog, defa
       </Grid>
       <Grid item xs={3}>
       <FormTextField
+        fullWidth
         control={control}
         name="number_of_chains"
         label="Number of chains"
@@ -729,7 +751,7 @@ export default function InferenceDialog({ project, open, handleCloseDialog, defa
             );
           })}
         </Stepper>
-        <Divider/>
+        <Divider sx={{mt: 2, mb: 3}}/>
         {stepRenders[activeStep]}
       </DialogContent>
       <DialogActions>
