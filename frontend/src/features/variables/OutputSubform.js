@@ -11,6 +11,7 @@ import IconButton from "@mui/material/IconButton";
 import { useDispatch } from "react-redux";
 import { selectUnitById } from "../projects/unitsSlice";
 import { selectVariableById, updateVariable } from "./variablesSlice";
+import Stack from "@mui/material/Stack";
 
 export default function OutputSubform({ variable_id, disableSave }) {
   const dispatch = useDispatch();
@@ -66,7 +67,8 @@ export default function OutputSubform({ variable_id, disableSave }) {
   ];
 
   return (
-    <React.Fragment>
+    <Stack direction="row" spacing={1}>
+
       <FormCheckboxField control={control} name={"display"} label={label} />
       <FormSelectField
         control={control}
@@ -95,6 +97,6 @@ export default function OutputSubform({ variable_id, disableSave }) {
           <SaveIcon />
         </IconButton>
       )}
-    </React.Fragment>
+    </Stack>
   );
 }

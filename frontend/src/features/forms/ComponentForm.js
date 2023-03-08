@@ -10,14 +10,7 @@ import MathJaxPreview from "react-mathjax-preview";
 import VariableSubform from "../variables/VariableSubform";
 import OutputSubform from "../variables/OutputSubform";
 
-const useStyles = makeStyles((theme) => ({
-  root: {
-    width: "100%",
-  },
-}));
-
 export default function ComponentForm({ control, component, disableSave }) {
-  const classes = useStyles();
 
   const mathjaxConfig = {
     CommonHTML: { linebreaks: { automatic: true } },
@@ -29,7 +22,7 @@ export default function ComponentForm({ control, component, disableSave }) {
   const sortedOutputs = [...component.outputs].sort();
 
   return (
-    <div id="component-form-root" className={classes.root}>
+    <div id="component-form-root">
       <Grid container item xs={12} spacing={3}>
         <Grid item xs={6}>
           <Typography>Variables</Typography>
