@@ -15,6 +15,8 @@ import TableCell from "@mui/material/TableCell";
 import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
+import Stack from "@mui/material/Stack"
+import Grid from "@mui/material/Grid";
 
 import Header from "../modelling/Header";
 import Footer from "../modelling/Footer";
@@ -111,37 +113,50 @@ export default function ProtocolDetail({ project, protocol }) {
 
 
   return (
-    <Paper>
+    <Paper sx={{maxHeight: '85vh', overflow: 'auto'}}>
     <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
       <Header title={`Protocol: ${protocol.name}`}/>
-      <Box className={classes.root}>
+      <Grid container spacing={1} sx={{p: 1}}>
+      <Grid item xs={12}>
       <FormTextField
+        fullWidth
         control={control}
         defaultValue={protocol.name}
         name="name"
         label="Name"
       />
+      </Grid>
+      <Grid item xs={4}>
       <FormSelectField
+        fullWidth
         control={control}
         options={dose_type_options}
         defaultValue={protocol.dose_type}
         name="dose_type"
         label="Dosing Type"
       />
+      </Grid>
+      <Grid item xs={4}>
       <FormSelectField
+        fullWidth
         control={control}
         options={amount_unit_options}
         defaultValue={protocol.amount_unit}
         name="amount_unit"
         label="Amount Unit"
       />
+      </Grid>
+      <Grid item xs={4}>
       <FormSelectField
+        fullWidth
         control={control}
         options={time_unit_options}
         defaultValue={protocol.time_unit}
         name="time_unit"
         label="Time Unit"
       />
+      </Grid>
+      <Grid item xs={12}>
       <Typography>Doses</Typography>
       <TableContainer component={Paper} variant="outlined">
         <Table className={classes.table} size="small">
@@ -185,7 +200,8 @@ export default function ProtocolDetail({ project, protocol }) {
           <AddIcon />
         </IconButton>
       </TableContainer>
-      </Box>
+      </Grid>
+      </Grid>
       <Footer
         buttons={[
           {label: 'Save', handle: handleSubmit(onSubmit)},

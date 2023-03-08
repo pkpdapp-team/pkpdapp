@@ -160,7 +160,7 @@ export default function DatasetDetail({ project, dataset }) {
   const disableSave = useSelector(state => userHasReadOnlyAccess(state, project));
 
   return (
-    <Paper>
+    <Paper sx={{maxHeight: '85vh', overflow: 'auto'}}>
     <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
       <Header title={`Dataset: ${dataset.name}`} />
       <Stack spacing={2} sx={{p: 1}}>

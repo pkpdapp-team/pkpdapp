@@ -46,42 +46,7 @@ import {
 } from "../variables/variablesSlice.js";
 
 
-
-const useStyles = makeStyles((theme) => ({
-  topToolbar: {
-    backgroundColor: theme.palette.primary.main,
-    position: 'sticky',
-    top: 0,
-  },
-  header: {
-    fontWeight:'bold',
-    color: theme.palette.primary.contrastText,
-  },
-  root: {
-    maxHeight: '75vh', overflow: 'auto',
-    padding: theme.spacing(2),
-  },
-  paper: {
-    padding: theme.spacing(2)
-  },
-  components: {
-    width: "100%",
-  },
-  toolbar: {
-    backgroundColor: theme.palette.primary.main,
-    position: 'sticky',
-    bottom: 0,
-  },
-  controls: {
-    justifyContent: 'center',
-    "& > *": {
-      margin: theme.spacing(1),
-    },
-  },
-}));
-
 export default function PkDetail({ project, pk_model }) {
-  const classes = useStyles();
   const mappings_no_null = pk_model.mappings.map(m =>
     Object.keys(m).reduce((sum, key) => {
       sum[key] = m[key] || ""
@@ -187,11 +152,10 @@ export default function PkDetail({ project, pk_model }) {
   const disableSave = useSelector(state => userHasReadOnlyAccess(state, project));
 
   return (
-    <Paper sx={{p: 1}}>
+    <Paper sx={{maxHeight: '85vh', overflow: 'auto'}}>
     <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
       <Header title={`PK Model: ${pk_model.name}`}/>
-      <Box  sx={{ flexGrow: 1 }}> 
-      <Grid container spacing={1}>
+      <Grid container spacing={1} sx={{p: 1}}>
       <Grid item xs={12}>
       <FormTextField
         fullWidth
@@ -296,8 +260,8 @@ export default function PkDetail({ project, pk_model }) {
       {pk_model.components.map((component, index) => {
         return (
           <Grid item xs={12}>
-          <Paper key={index} variant={'outlined'} className={classes.paper}>
-            <Typography className={classes.heading} variant='h5' gutterBottom component="div">
+          <Paper key={index} variant={'outlined'} sx={{p: 1}}>
+            <Typography variant='h5' gutterBottom component="div">
                     {component.name === "myokit" ? "root" : component.name}
             </Typography>
             <ComponentForm
@@ -321,7 +285,6 @@ export default function PkDetail({ project, pk_model }) {
       </Grid>
 
       </Grid>
-      </Box>
       <Footer
         buttons={[
           {label: 'Save', handle: handleSubmit(onSubmit)},

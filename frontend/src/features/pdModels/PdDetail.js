@@ -89,7 +89,7 @@ export default function PdDetail({ project, pd_model }) {
   const disableSave = useSelector(state => userHasReadOnlyAccess(state, project));
 
   return (
-    <Paper>
+    <Paper sx={{maxHeight: '85vh', overflow: 'auto'}}>
     <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
       <Header title={`PD Model: ${pd_model.name}`} />
       <Stack spacing={1} sx={{p: 1}}>
