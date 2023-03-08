@@ -70,6 +70,7 @@ export default function ProjectDetail({ project }) {
       <Header title={`Project: ${project.name}`} />
       <Stack spacing={1} sx={{p: 1}}>
         <FormTextField
+          fullWidth
           control={control}
           defaultValue={project.name}
           name="name"
@@ -108,6 +109,7 @@ export default function ProjectDetail({ project }) {
         <FormTextField
           control={control}
           multiline
+          fullWidth
           name="description"
           label="Description"
         />

@@ -165,6 +165,7 @@ export default function DatasetDetail({ project, dataset }) {
       <Header title={`Dataset: ${dataset.name}`} />
       <Stack spacing={2} sx={{p: 1}}>
       <FormTextField
+        fullWidth
         control={control}
         defaultValue={dataset.name}
         name="name"

@@ -187,14 +187,14 @@ export default function PkDetail({ project, pk_model }) {
   const disableSave = useSelector(state => userHasReadOnlyAccess(state, project));
 
   return (
-    <Paper>
+    <Paper sx={{p: 1}}>
     <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
       <Header title={`PK Model: ${pk_model.name}`}/>
-
-      <Box className={classes.root}>
+      <Box  sx={{ flexGrow: 1 }}> 
       <Grid container spacing={1}>
       <Grid item xs={12}>
       <FormTextField
+        fullWidth
         control={control}
         name="name"
         label="Name"
@@ -203,6 +203,7 @@ export default function PkDetail({ project, pk_model }) {
 
       <Grid item xs={6}>
       <FormSelectField
+        fullWidth
         control={control}
         options={base_pk_model_options}
         name="pk_model"
@@ -211,6 +212,8 @@ export default function PkDetail({ project, pk_model }) {
       </Grid>
       <Grid item xs={6}>
       <FormSelectField
+        fullWidth
+        control={control}
         control={control}
         options={pd_model_options}
         name="pd_model"
@@ -225,25 +228,27 @@ export default function PkDetail({ project, pk_model }) {
       {mappings.map((mapping, i) => {
         return (
           <React.Fragment key={i}>
-          <Grid item xs={2}>
+          <Grid item xs={1}>
           </Grid>
-          <Grid item xs={4}>
+          <Grid item xs={5}>
           <FormSelectField
+            fullWidth
             control={control}
             options={variablesOptions}
             name={`mappings[${i}].pk_variable`}
             label="Pharmacokinetic Variable"
           />
           </Grid>
-          <Grid item xs={4}>
+          <Grid item xs={5}>
           <FormSelectField
+            fullWidth
             control={control}
             options={variablesOptions}
             name={`mappings[${i}].pd_variable`}
             label="Pharmacodynamic Variable"
           />
           </Grid>
-          <Grid item xs={2}>
+          <Grid item xs={1}>
           <IconButton size="small" onClick={() => mappingsRemove(i)}>
             <DeleteIcon />
           </IconButton>
@@ -259,6 +264,7 @@ export default function PkDetail({ project, pk_model }) {
 
       <Grid item xs={6}>
       <FormSelectField
+        fullWidth
         control={control}
         options={dose_compartment_options}
         name="dose_compartment"
@@ -267,6 +273,7 @@ export default function PkDetail({ project, pk_model }) {
       </Grid>
       <Grid item xs={6}>
       <FormSelectField
+        fullWidth
         control={control}
         options={protocol_options}
         name="protocol"
@@ -275,6 +282,7 @@ export default function PkDetail({ project, pk_model }) {
       </Grid>
       <Grid item xs={6}>
       <FormTextField
+        fullWidth
         control={control}
         name="time_max"
         label="Maximum Time"
@@ -314,7 +322,6 @@ export default function PkDetail({ project, pk_model }) {
 
       </Grid>
       </Box>
-
       <Footer
         buttons={[
           {label: 'Save', handle: handleSubmit(onSubmit)},

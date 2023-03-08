@@ -94,6 +94,7 @@ export default function PdDetail({ project, pd_model }) {
       <Header title={`PD Model: ${pd_model.name}`} />
       <Stack spacing={1} sx={{p: 1}}>
       <FormTextField
+        fullWidth
         control={control}
         defaultValue={pd_model.name}
         name="name"
@@ -101,6 +102,7 @@ export default function PdDetail({ project, pd_model }) {
       />
 
       <FormTextField
+        fullWidth
         control={control}
         defaultValue={pd_model.time_max}
         name="time_max"
@@ -125,6 +127,7 @@ export default function PdDetail({ project, pd_model }) {
       })}
 
       <FormTextField
+        fullWidth
         control={control}
         defaultValue={pd_model.mmt}
         name="mmt"

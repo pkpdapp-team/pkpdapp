@@ -298,6 +298,7 @@ export function FormFileField({
 
 export function FormTextField({ control, name, defaultValue, label, ...rest }) {
   return (
+    <div>
     <Controller
       control={control}
       defaultValue={defaultValue}
@@ -310,6 +311,7 @@ export function FormTextField({ control, name, defaultValue, label, ...rest }) {
         />
       )}
     />
+    </div>
   );
 }
 
