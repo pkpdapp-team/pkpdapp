@@ -10,6 +10,7 @@ import Paper from "@mui/material/Paper";
 
 import FormControl from "@mui/material/FormControl";
 import ReactFlow, { MarkerType, applyEdgeChanges, applyNodeChanges } from 'react-flow-renderer';
+import Stack from "@mui/material/Stack";
 import * as ELK from 'elkjs';
 import InputLabel from "@mui/material/InputLabel";
 import Alert from '@mui/material/Alert';
@@ -51,521 +52,6 @@ import { FormTextField, FormSelectField, FormSliderField } from "../forms/FormCo
 import { userHasReadOnlyAccess } from "../projects/projectsSlice";
 
 const elk = new ELK()
-
-const useStyles = makeStyles((theme) => ({
-  controlsRoot: {
-    display: "flex",
-    alignItems: "center",
-  },
-  controls: {
-    margin: theme.spacing(1),
-  },
-  modelSelect: {
-    display: "flex",
-  },
-  components: {
-    width: "100%",
-  },
-  root: {
-    width: '100%',
-  },
-  formRoot: {
-    display: "flex",
-    '& .MuiFormControl-root': { flex: 1 },
-  },
-  
-  formInput: {
-    margin: theme.spacing(1),
-    flex: 1,
-  },
-  graph: {
-    height: "30vh",
-    width: "100%",
-  },
-}));
-
-
-function variableGetDefaultValue(variable) {
-  if (variable.is_log) {
-    return Math.exp(variable.default_value)
-  } else {
-    return variable.default_value
-  }
-}
-
-function PriorSubform({
-  control,
-  prior,
-  index,
-  variable,
-  log_likelihood_parameter,
-  baseName,
-  remove,
-  watch,
-  setValue,
-  disabled,
-}) {
-  const [type, setType] = useState(prior.type);
-
-  const type_options = [
-    { key: "Normal", value: "PriorNormal" },
-    { key: "Uniform", value: "PriorUniform" },
-  ];
-  
-  const handleTypeChange = (event) => {
-    const newType = event.target.value;
-    setType(newType)
-  };
-
-  return (
-    <ListItem key={prior.id} role={undefined}>
-      <Typography>
-        {variable ? variable.name : log_likelihood_parameter.name} prior
-      </Typography>
-      <FormSelectField
-        control={control}
-        defaultValue={prior.type || ""}
-        disabled={disabled}
-        options={type_options}
-        onChangeUser={handleTypeChange}
-        name={`${baseName}.type`}
-        label="Type"
-      />
-      {type === "PriorNormal" && (
-        <React.Fragment>
-          <FormTextField
-            control={control}
-            name={`${baseName}.mean`}
-            defaultValue={prior.mean || ""}
-            disabled={disabled}
-            label="Mean"
-            type="number"
-          />
-          <FormTextField
-            control={control}
-            name={`${baseName}.sd`}
-            disabled={disabled}
-            defaultValue={prior.sd || ""}
-            label="Standard Deviation"
-            type="number"
-          />
-        </React.Fragment>
-      )}
-      {type === "PriorUniform" && (
-        <React.Fragment>
-          <FormTextField
-            control={control}
-            name={`${baseName}.lower`}
-            disabled={disabled}
-            defaultValue={prior.lower || ""}
-            label="Lower"
-            type="number"
-          />
-          <FormTextField
-            control={control}
-            name={`${baseName}.upper`}
-            defaultValue={prior.upper || ""}
-            disabled={disabled}
-            label="Upper"
-            type="number"
-          />
-        </React.Fragment>
-      )}
-
-      <Tooltip title={`delete prior`} placement="right">
-        <span>
-        <IconButton
-          variant="rounded"
-          disabled={disabled}
-          onClick={() => remove(index)}
-          size="large">
-          <DeleteIcon />
-        </IconButton>
-        </span>
-      </Tooltip>
-    </ListItem>
-  );
-}
-
-
-function LogLikelihoodSubform({
-  control,
-  objects,
-  logLikelihood,
-  datasets,
-  datasetOptions,
-  models,
-  modelOptions,
-  baseName,
-  remove,
-  watch,
-  setValue,
-  disabled,
-}) {
-
-  const classes = useStyles();
-  const watchForm = watch(`${baseName}.form`);
-  const watchVariable = watch(`${baseName}.variable`);
-  const {
-    fields: parameters,
-    replace: parametersReplace,
-  } = useFieldArray({
-    control,
-    name: `${baseName}.parameters`,
-  });
-
-  const variable = useSelector((state) => {
-    if (watchVariable) {
-        return selectVariableById(state, watchVariable);
-    }
-  });
-
-  let variableModelType = null
-  let variableModelId = null
-  if (logLikelihood.pd_model) {
-    variableModelType = 'PD'
-    variableModelId = logLikelihood.pd_model
-  }
-  if (logLikelihood.dosed_pk_model) {
-    variableModelType = 'PK'
-    variableModelId = logLikelihood.dosed_pk_model
-  }
-    
-  const defaultModelID = variableModelId ? 
-      `${variableModelId}:${variableModelType}`
-      : ''
-
-  // model 
-  
-  const [modelId, setModelId] = useState(defaultModelID);
-  const [changedModel, setChangedModel] = useState(false);
-  const pd_models = useSelector(state => 
-    disabled ? selectReadOnlyPdModels(state) : selectWritablePdModels(state)
-  );
-  const dosed_pk_models = useSelector(state => 
-    disabled ? selectReadOnlyPkModels(state) : selectWritablePkModels(state)
-  );
-  const model_options = pd_models.map((model) => ({
-    key: model.name,
-    value: `${model.id}:PD`,
-    group: 'Pharmacodynamic',
-  })).concat(dosed_pk_models.map((model) => ({
-    key: model.name,
-    value: `${model.id}:PK`,
-    group: 'Pharmacokinetic',
-  })));
-
-  const modelIdParse = modelId ? parseInt(modelId.split(':')[0]) : null
-  const modelType = modelId ? modelId.split(':')[1] : null
-
-  const model = modelId ? 
-    modelType == 'PD' ?
-        pd_models.find(m => m.id === modelIdParse)
-      :
-        dosed_pk_models.find(m => m.id === modelIdParse)
-    : null
-
-  // model variables
-  const variablesAll = useSelector((state) => {
-    if (modelId) {
-      if (modelType === 'PD') {
-        return selectVariablesByPdModel(state, modelIdParse);
-      } else if (modelType === 'PK') {
-        return selectVariablesByDosedPkModel(state, modelIdParse);
-      }
-    } else {
-      return [];
-    }
-  });
-  const variables = useMemo(
-    () => {
-      return variablesAll.filter(variable => variable.name !== "time")
-    },
-    [JSON.stringify(variablesAll)]
-  );
-
-  useEffect(() => {
-    if (defaultModelID === modelId && !changedModel) {
-      return
-    }
-    const noise_params = [
-      {
-        name: 'standard deviation',
-        value: null,
-        prior: null
-      }
-    ]
-    const model_params = variables.filter(variable => 
-      variable.constant || variable.state
-    ).map(variable => ({
-      name: variable.qname, 
-      value: variableGetDefaultValue(variable),
-      variable: variable.id,
-      prior: null,
-    }))
-    parametersReplace(noise_params.concat(model_params))
-    }
-  , [JSON.stringify(variables)]);
-
-
-  const handleModelChange = (event) => {
-    const value = event.target.value;
-    setChangedModel(true)
-    setModelId(value)
-  };
-
-  
-  const variable_options = variables ? variables
-    .filter((variable) => 
-      variable.name !== "time" && (!variable.constant)
-    ).map((variable) => 
-      ({ 
-        key: variable.qname.replace('.size', '.volume'), 
-        value: variable.id 
-      })
-    )
-  : []
-      
-  // dataset
-  const [datasetId, setDatasetId] = useState(logLikelihood.dataset || '');
-  const handleDatasetChange = (event) => {
-    const value = event.target.value;
-    setDatasetId(value);
-  };
-
-  // dataset biomarkers
-  const biomarker_types = useSelector((state) =>
-    datasetId ? selectBiomarkerTypesByDatasetId(state, datasetId) : []
-  );
-  const biomarker_type_options = biomarker_types.map((biomarker_type) => ({
-    key: biomarker_type.name,
-    value: biomarker_type.id,
-  })).concat([
-    {key: "None", value: ""}
-  ]);
-
-  
-  const form_options = [
-    { key: "Normal", value: "N" },
-    { key: "LogNormal", value: "LN" },
-  ];
-  
-  const setDefaults = (form, variable) => {
-    if (form === "N") {
-      const standardDeviation = Math.sqrt(
-        Math.pow(variable.upper_bound - variable.lower_bound, 2) / 12
-      );
-      setValue(`${baseName}.parameters[0].name`, 'standard deviation');
-      setValue(`${baseName}.parameters[0].value`, standardDeviation);
-    } else if (form === "LN") {
-      const standardDeviation = Math.sqrt(
-        Math.pow(variable.upper_bound - variable.lower_bound, 2) / 12
-      );
-      setValue(`${baseName}.parameters[0].name`, 'sigma');
-      setValue(`${baseName}.parameters[0].value`, standardDeviation);
-    }
-  };
-  const handleFormChange = (event) => {
-    const newForm = event.target.value;
-    if (variable) {
-      setDefaults(newForm, variable);
-    }
-  };
-  const handleVariableChange = (event) => {
-    const newVariable = event.target.value;
-    if (newVariable) {
-      setDefaults(watchForm, newVariable);
-    }
-  };
-
-  
-  const handleNewParamPrior = (param, baseName) => (() => {
-    if (param.variable) {
-      const variable = variables.find(v => v.id === param.variable)
-      setValue(`${baseName}.prior`, 
-        {
-          type: "PriorUniform",
-          sd: Math.sqrt(
-            Math.pow(variable.upper_bound - variable.lower_bound, 2),
-          ) / 12.0,
-          mean: variableGetDefaultValue(variable),
-          lower: variable.lower_bound,
-          upper: variable.upper_bound,
-        }
-      );
-    } else {
-      if (variable) {
-        setValue(`${baseName}.prior`, 
-          {
-            type: "PriorUniform",
-            sd: Math.sqrt(
-              Math.pow(variable.upper_bound - variable.lower_bound, 2),
-            ) / 12.0,
-            mean: variableGetDefaultValue(variable),
-            lower: variable.lower_bound,
-            upper: variable.upper_bound,
-          }
-        );
-      } else {
-        setValue(`${baseName}.prior`, 
-          {
-            type: "PriorUniform",
-            sd: param.value,
-            mean: param.value,
-            lower: param.value,
-            upper: param.value,
-          }
-        );
-      }
-    }
-  });
-
-
-  const handleRemoveParamPrior = (baseName) => (() => {
-    setValue(`${baseName}.prior`, null);
-  });
-
-  return (
-    <ListItem  role={undefined} dense>
-      <Paper className={classes.root}>
-      <Grid container spacing={1}>
-      <Grid item xs={11}>
-      <Grid item xs={12} className={classes.formRoot}>
-      <FormControl className={classes.formInput}>
-        <InputLabel id="dataset-label" shrink={true}>
-        Dataset
-        </InputLabel>
-        <Select
-          labelId="dataset-label"
-          onChange={handleDatasetChange}
-          disabled={disabled}
-          value={datasetId}
-          displayEmpty
-        >
-          {datasetOptions.map((option, i) => {
-            return (
-              <MenuItem key={i} value={option.value}>
-                {option.key}
-              </MenuItem>
-            );
-          })}
-        </Select>
-      </FormControl>
-      <FormControl className={classes.formInput}>
-        <InputLabel id="model-label">Model</InputLabel>
-        <Select
-          labelId="model-label"
-          onChange={handleModelChange}
-          disabled={disabled}
-          value={modelId}
-        >
-          {model_options.map((option, i) => {
-            return (
-              <MenuItem key={i} value={option.value}>
-                {option.key}
-              </MenuItem>
-            );
-          })}
-        </Select>
-      </FormControl>
-      </Grid>
-      <Grid item xs={12} className={classes.formRoot}>
-      <FormSelectField
-        control={control}
-        defaultValue={logLikelihood.form || ""}
-        onChangeUser={handleFormChange}
-        disabled={disabled}
-        options={form_options}
-        name={`${baseName}.form`}
-        label="Form"
-      />
-      <FormSelectField
-        control={control}
-        defaultValue={logLikelihood.variable || ""}
-        onChangeUser={handleVariableChange}
-        disabled={disabled}
-        options={variable_options}
-        name={`${baseName}.variable`}
-        label="Variable"
-      />
-      <FormSelectField
-        control={control}
-        defaultValue={logLikelihood.biomarker_type || ""}
-        options={biomarker_type_options}
-        displayEmpty
-        disabled={disabled}
-        name={`${baseName}.biomarker_type`}
-        label="Biomarker Type"
-      />
-      </Grid>
-      <Grid item xs={12}>
-      <Typography>Log-likelihood Parameters</Typography>
-        {parameters.map((param, index) => {
-          
-          const paramBaseName = `${baseName}.parameters[${index}]`;
-          const watchParam = watch(`${paramBaseName}`)
-          const prior = watchParam.prior
-          if (prior) {
-            return (
-              <PriorSubform
-                key={variables.length + index}
-                control={control}
-                prior={prior}
-                baseName={paramBaseName + `.prior`}
-                log_likelihood_parameter={param}
-                remove={handleRemoveParamPrior(paramBaseName)}
-                setValue={setValue}
-                disabled={disabled}
-              />
-            )
-          } else {
-            return (
-              <ListItem key={variables.length + index} dense>
-              <FormTextField
-                control={control}
-                name={`${paramBaseName}.value`}
-                disabled={disabled}
-                defaultValue={param.value || ""}
-                label={watchParam.name}
-                type="number"
-              />
-              <Tooltip title={`create new prior`} placement="right">
-                <span>
-                <IconButton
-                  variant="rounded"
-                  disabled={disabled}
-                  onClick={handleNewParamPrior(
-                    watchParam, `${baseName}.parameters[${index}]`
-                  )}
-                  size="large">
-                  <AddIcon />
-                </IconButton>
-                </span>
-              </Tooltip>
-              </ListItem>
-            );
-          }
-        })}
-      </Grid>
-      </Grid>
-      <Grid item xs={1}>
-      <Tooltip title={`delete log-likelihood`} placement="right">
-        <span>
-        <IconButton
-          variant="rounded"
-          disabled={disabled}
-          onClick={() => remove()}
-          size="large">
-          <DeleteIcon />
-        </IconButton>
-        </span>
-      </Tooltip>
-      </Grid>
-      </Grid>
-    </Paper>
-    </ListItem>
-  );
-}
 
 export default function InferenceDetail({ project, inference }) {
   const dispatch = useDispatch();
@@ -706,9 +192,6 @@ export default function InferenceDetail({ project, inference }) {
     { key: "None", value: "" } 
   ]);
 
-  const classes = useStyles();
-
-  
   const {
     fields: logLikelihoods,
     append: logLikelihoodsAppend,
@@ -781,12 +264,16 @@ export default function InferenceDetail({ project, inference }) {
   return (
     <div>
     <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
+      <Grid container spacing={1}>
+      <Grid item xs={12}>
       <FormTextField
         control={control}
         name="name"
         label="Name"
       />
+      </Grid>
 
+      <Grid item xs={12}>
       <FormTextField
         control={control}
         fullWidth
@@ -794,10 +281,12 @@ export default function InferenceDetail({ project, inference }) {
         name="description"
         label="Description"
       />
+      </Grid>
 
 
+      <Grid item xs={12}>
       <Typography>Statistical model</Typography>
-      <div className={classes.graph}>
+      <div sx={{height: "30vh", width: "100%"}}>
       {nodes && <ReactFlow 
         nodes={nodes} 
         edges={edges} 
@@ -806,8 +295,11 @@ export default function InferenceDetail({ project, inference }) {
         fitView
       />}
       </div>
+      </Grid>
 
+      <Grid item xs={3}>
       <FormSelectField
+        fullWidth
         control={control}
         disabled={readOnly}
         defaultValue={inference.algorithm || ""}
@@ -816,8 +308,11 @@ export default function InferenceDetail({ project, inference }) {
         name="algorithm"
         label="Algorithm"
       />
+      </Grid>
 
+      <Grid item xs={3}>
       <FormSelectField
+        fullWidth
         control={control}
         options={initialization_options}
         defaultValue={inference.initialization_strategy || ""}
@@ -825,8 +320,11 @@ export default function InferenceDetail({ project, inference }) {
         disabled={readOnly}
         label="Initialization Strategy"
       />
+      </Grid>
 
+      <Grid item xs={3}>
       <FormSelectField
+        fullWidth
         control={control}
         options={inference_options}
         defaultValue={inference.initialization_inference || ""}
@@ -835,8 +333,21 @@ export default function InferenceDetail({ project, inference }) {
         disabled={readOnly}
         label="Initialize from"
       />
+      </Grid>
 
-      <Grid container spacing={0}>
+      <Grid item xs={3}>
+      <FormTextField
+        fullWidth
+        control={control}
+        disabled={readOnly}
+        name="number_of_chains"
+        label="Number of chains"
+        type="number"
+      />
+      </Grid>
+
+
+
       <Grid item xs={6}>
       <FormSliderField
         control={control}
@@ -848,6 +359,7 @@ export default function InferenceDetail({ project, inference }) {
         max={max_number_of_iterations}
       />
       </Grid>
+
       <Grid item xs={4}>
       <FormTextField
         control={control}
@@ -857,19 +369,12 @@ export default function InferenceDetail({ project, inference }) {
         type="number"
       />
       </Grid>
-      </Grid>
 
-      <FormTextField
-        control={control}
-        disabled={readOnly}
-        name="number_of_chains"
-        label="Number of chains"
-        type="number"
-      />
 
-      <div className={classes.controlsRoot}>
+
+      <Grid item xs={12}> 
+        <Stack direction="row" spacing={1}> 
         <Button
-          className={classes.controls}
           type="submit"
           disabled={false}
           variant="contained"
@@ -877,14 +382,12 @@ export default function InferenceDetail({ project, inference }) {
           Save
         </Button>
         <Button
-          className={classes.controls}
           onClick={handleEdit}
           variant="contained"
         >
           Edit
         </Button>
         <Button
-          className={classes.controls}
           disabled={readOnly}
           onClick={handleStop}
           variant="contained"
@@ -892,15 +395,15 @@ export default function InferenceDetail({ project, inference }) {
           Stop
         </Button>
         <Button
-          className={classes.controls}
           variant="contained"
           onClick={handleDelete}
           disabled={false}
         >
           Delete
         </Button>
-      </div>
-
+        </Stack>
+      </Grid>
+      </Grid>
       {inference.errors &&
         inference.errors.map((error, index) => (
           <Alert key={index} severity="error">

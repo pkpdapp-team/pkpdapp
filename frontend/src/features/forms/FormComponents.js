@@ -68,9 +68,8 @@ export function FormCheckboxField({
   label,
   ...rest
 }) {
-  const classes = useStyles();
   return (
-    <div className={classes.formInput}>
+    <div>
       <Controller
         control={control}
         defaultValue={defaultValue}
@@ -112,7 +111,6 @@ export function FormSliderField({
   label,
   tooltip,
 }) {
-  const classes = useStyles();
   const roundNumber = (x) => {
     if (x === 0 || x === 0.0) {
       return x;
@@ -160,7 +158,7 @@ export function FormSliderField({
   const internalStep = log ? (Math.log(max) - Math.log(min)) / 100.0 : (max - min) / 100.0;
 
   return (
-    <div className={classes.formInput}>
+    <div>
       {label && (
         <Tooltip title={tooltip} placement="top">
           <Typography id={`input-slider-${name}`} gutterBottom>
@@ -213,7 +211,6 @@ export function FormDateTimeField({
   label,
   ...rest
 }) {
-  const classes = useStyles();
   return (
     <Controller
       control={control}
@@ -223,7 +220,6 @@ export function FormDateTimeField({
         field,
       }) => (
         <DateTimePicker
-          className={classes.formInput}
           {...rest}
           {...field}
           value={dayjs.utc(field.value)}
@@ -242,7 +238,6 @@ export function FormFileField({
   clearErrors,
   ...rest
 }) {
-  const classes = useStyles();
 
   return (
     <Controller
@@ -261,8 +256,13 @@ export function FormFileField({
           if (!!onChange) onChange({ target: { value: file } });
         };
         return (
+
           <Box
-            className={classes.fileFieldBox}
+            sx={{
+              m: 1,
+              width: "200pt",
+              display: "inline-block",
+            }}
             component="span"
             position="relative"
             height={58}
@@ -276,7 +276,6 @@ export function FormFileField({
               mx={2}
             >
               <TextField
-                className={classes.fileFieldField}
                 margin="normal"
                 fullWidth
                 disabled
@@ -286,7 +285,7 @@ export function FormFileField({
                 helperText={error?.message || " "}
               />
             </Box>
-            <Button className={classes.fileFieldButton} component="label">
+            <Button sx={{width: "100%", height: "100%", overflow: "hidden"}} component="label">
               <input type="file" hidden onChange={handleChange} {...rest} />
             </Button>
           </Box>
@@ -323,7 +322,6 @@ export function FormMultiSelectField({
   options,
   ...rest
 }) {
-  const classes = useStyles();
   return (
     <div>
     <FormControl fullWidth>
@@ -426,7 +424,7 @@ export function FormSelectField({
             error={error}
             autoWidth={true}
             onBlur={onBlur}
-            input={<OutlinedInput label={label} />}
+            input={<OutlinedInput label={label} notched={displayEmpty} />}
             checked={value}
             displayEmpty
             inputRef={ref}

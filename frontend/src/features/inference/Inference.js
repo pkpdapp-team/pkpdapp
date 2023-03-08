@@ -20,6 +20,7 @@ import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
 import Inferences from "../inference/Inferences";
 import List from "@mui/material/List";
+import Stack from "@mui/material/Stack";
 
 import LinearProgressWithLabel from '../menu/LinearProgressWithLabel'
 
@@ -34,41 +35,9 @@ import ExpandableListItem from "../menu/ExpandableListItem"
 
 const drawerWidth = 200;
 
-const useStyles = makeStyles((theme) => ({
-  root: {
-    marginTop: theme.spacing(2),
-    flexGrow: 1,
-  },
-  drawer: {
-    width: drawerWidth,
-    flexShrink: 0,
-    '& .MuiDrawer-paper': {
-      width: drawerWidth,
-      boxSizing: 'border-box',
-    },
-  },
-  main: {
-    marginLeft: drawerWidth,
-    flexGrow: 1,
-  },
-  linearProgress: {
-    marginLeft: "auto",
-    marginRight: theme.spacing(2),
-    width: "70%",
-    alignItems: "center",
-  },
-  paper: {
-    padding: theme.spacing(2),
-  },
-}));
-
-
-
-
 export default function Inference({project}) {
   let { id } = useParams();
   const inference = useSelector((state) => selectInferenceById(state, id));
-  const classes = useStyles();
   const dispatch = useDispatch();
 
   if (!inference) {
@@ -79,13 +48,19 @@ export default function Inference({project}) {
               inference.max_number_of_iterations;
 
   return (
-    <Paper className={classes.paper}>
+    <Paper sx={{p: 1}}>
     <Grid container spacing={3}>
       <Grid item xs={12} md={6}>
-        <div className={classes.linearProgress}>
-          <LinearProgressWithLabel value={progress} />
+        <Stack spacing={1}>
+        <div 
+          sx={{
+            width: "75%"
+          }}
+        >
+          <LinearProgressWithLabel sx={{width: "75%"}} value={progress} />
         </div>
         <InferenceChart inference={inference} />
+        </Stack>
       </Grid>
       <Grid item xs={12} md={6} >
         <InferenceDetail inference={inference} project={project} />

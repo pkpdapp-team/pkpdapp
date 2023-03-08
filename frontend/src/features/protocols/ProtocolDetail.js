@@ -28,30 +28,8 @@ import { userHasReadOnlyAccess } from "../projects/projectsSlice";
 
 import { updateProtocol, deleteProtocol } from "../protocols/protocolsSlice.js";
 
-const useStyles = makeStyles((theme) => ({
-  root: {
-    maxHeight: '75vh', overflow: 'auto',
-    padding: theme.spacing(2),
-  },
-  table: {
-    width: "100%",
-  },
-  tableCell: {
-    width: "100pt",
-  },
-  controls: {
-    display: "flex",
-    alignItems: "center",
-    paddingLeft: theme.spacing(1),
-    paddingBottom: theme.spacing(1),
-    "& > *": {
-      margin: theme.spacing(1),
-    },
-  },
-}));
 
 export default function ProtocolDetail({ project, protocol }) {
-  const classes = useStyles();
   const dispatch = useDispatch();
   console.log("protocol", protocol);
   const { control, handleSubmit, reset } = useForm(protocol);
@@ -159,7 +137,7 @@ export default function ProtocolDetail({ project, protocol }) {
       <Grid item xs={12}>
       <Typography>Doses</Typography>
       <TableContainer component={Paper} variant="outlined">
-        <Table className={classes.table} size="small">
+        <Table size="small">
           <TableHead>
             <TableRow>
               <TableCell>Actions</TableCell>
@@ -179,7 +157,6 @@ export default function ProtocolDetail({ project, protocol }) {
                 {dose_columns.map((col) => (
                   <TableCell>
                     <FormTextField
-                      className={classes.tableCell}
                       control={control}
                       defaultValue={dose[col.field]}
                       name={`doses[${index}].${col.field}`}
