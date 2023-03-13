@@ -99,7 +99,7 @@ export default function VariableSubform({ variable_id, disableSave }) {
             size="small"
           />
         </Box>
-        <Box position="absolute" top={5} bottom={0} left={"90%"} right={0}>
+        <Box position="absolute" top={5} bottom={0} left={"95%"} right={0}>
           {isDirty && (
             <IconButton
               onClick={handleSubmit(onSubmit)}

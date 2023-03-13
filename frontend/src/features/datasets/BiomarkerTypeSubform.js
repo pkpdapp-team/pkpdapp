@@ -4,6 +4,7 @@ import IconButton from "@mui/material/IconButton";
 import { useForm, useFormState } from "react-hook-form";
 import SaveIcon from "@mui/icons-material/Save";
 import Stack from "@mui/material/Stack";
+import Grid from "@mui/material/Grid";
 
 import {
   FormCheckboxField,
@@ -80,14 +81,18 @@ export default function BiomarkerTypeSubform({ biomarker_id, disableSave }) {
   ];
 
   return (
-    <Stack direction="row" spacing={1}>
+    <Grid container spacing={1} alignItems="center">
+      <Grid item xs={3}>
       <FormCheckboxField
         control={control}
         name={"display"}
         label={biomarker_type.name}
       />
+      </Grid>
+      <Grid item xs={8}>
+      <Stack direction="row" spacing={1}>
       <FormSelectField
-        sx = {{minWidth: 60}}
+        sx = {{width: 200}}
         control={control}
         name={"display_unit"}
         label={"Unit"}
@@ -102,6 +107,7 @@ export default function BiomarkerTypeSubform({ biomarker_id, disableSave }) {
       />
       <FormTextField
         control={control}
+        sx = {{width: 60}}
         name={"color"}
         label={"Color"}
         type="number"
@@ -112,6 +118,9 @@ export default function BiomarkerTypeSubform({ biomarker_id, disableSave }) {
         label={"Axis"}
         options={axisOptions}
       />
+      </Stack>
+      </Grid>
+      <Grid item xs={1}>
       {isDirty && (
         <IconButton
           onClick={handleSubmit(onSubmit)}
@@ -121,6 +130,7 @@ export default function BiomarkerTypeSubform({ biomarker_id, disableSave }) {
           <SaveIcon />
         </IconButton>
       )}
-    </Stack>
+      </Grid>
+    </Grid>
   );
 }
