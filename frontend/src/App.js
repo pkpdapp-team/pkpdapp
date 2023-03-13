@@ -10,10 +10,18 @@ import {
   useHistory,
 } from "react-router-dom";
 import { useDispatch } from "react-redux";
+import { ThemeProvider, StyledEngineProvider, createTheme } from '@mui/material/styles';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
+//import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+//import enUS from 'date-fns/locale/en-US';
+import 'dayjs/locale/en-gb';
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
 
-import { MuiPickersUtilsProvider } from "@material-ui/pickers";
+
 import DateFnsUtils from "@date-io/date-fns";
-import Container from "@material-ui/core/Container";
+import Container from "@mui/material/Container";
 import Login from "./features/login/Login";
 import Register from "./features/login/Register";
 import RegisterSuccess from "./features/login/RegisterSuccess";
@@ -24,24 +32,25 @@ import ResetPasswordRequestSuccess from "./features/login/ResetPasswordRequestSu
 import ResetPassword from "./features/login/ResetPassword";
 import ResetPasswordSuccess from "./features/login/ResetPasswordSuccess";
 
-import { makeStyles, fade } from "@material-ui/core/styles";
-import CssBaseline from "@material-ui/core/CssBaseline";
+import { alpha } from "@mui/material/styles";
+import makeStyles from '@mui/styles/makeStyles';
+import CssBaseline from "@mui/material/CssBaseline";
 
-import SearchIcon from "@material-ui/icons/Search";
+import SearchIcon from "@mui/icons-material/Search";
 
-import InputBase from "@material-ui/core/InputBase";
+import InputBase from "@mui/material/InputBase";
 
 import clsx from "clsx";
-import Drawer from "@material-ui/core/Drawer";
-import AppBar from "@material-ui/core/AppBar";
-import Toolbar from "@material-ui/core/Toolbar";
-import Typography from "@material-ui/core/Typography";
-import Divider from "@material-ui/core/Divider";
-import IconButton from "@material-ui/core/IconButton";
-import Button from "@material-ui/core/Button";
-import ButtonGroup from "@material-ui/core/ButtonGroup";
-import MenuIcon from "@material-ui/icons/Menu";
-import ChevronLeftIcon from "@material-ui/icons/ChevronLeft";
+import Drawer from "@mui/material/Drawer";
+import AppBar from "@mui/material/AppBar";
+import Toolbar from "@mui/material/Toolbar";
+import Typography from "@mui/material/Typography";
+import Divider from "@mui/material/Divider";
+import IconButton from "@mui/material/IconButton";
+import Button from "@mui/material/Button";
+import ButtonGroup from "@mui/material/ButtonGroup";
+import MenuIcon from "@mui/icons-material/Menu";
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 
 import { api } from "./Api";
 import InferenceMenu from "./features/menu/InferenceMenu";
@@ -56,6 +65,7 @@ import { fetchUnits } from "./features/projects/unitsSlice.js";
 import { fetchUsers } from "./features/projects/usersSlice.js";
 import { fetchProjects } from "./features/projects/projectsSlice.js";
 
+dayjs.extend(utc);
 
 const drawerWidth = 240;
 
@@ -75,9 +85,9 @@ const useStyles = makeStyles((theme) => ({
   search: {
     position: "relative",
     borderRadius: theme.shape.borderRadius,
-    backgroundColor: fade(theme.palette.common.white, 0.15),
+    backgroundColor: alpha(theme.palette.common.white, 0.15),
     "&:hover": {
-      backgroundColor: fade(theme.palette.common.white, 0.25),
+      backgroundColor: alpha(theme.palette.common.white, 0.25),
     },
     marginRight: theme.spacing(2),
     marginLeft: 0,
@@ -102,7 +112,7 @@ const useStyles = makeStyles((theme) => ({
   inputInput: {
     padding: theme.spacing(1, 1, 1, 0),
     // vertical padding + font size from searchIcon
-    paddingLeft: `calc(1em + ${theme.spacing(4)}px)`,
+    paddingLeft: `calc(1em + ${theme.spacing(4)})`,
     transition: theme.transitions.create("width"),
     width: "100%",
     [theme.breakpoints.up("md")]: {
@@ -280,7 +290,7 @@ function LoggedInApp() {
             aria-label="open drawer"
             onClick={handleDrawerOpenClose}
             className={clsx(classes.menuButton)}
-          >
+            size="large">
             <MenuIcon />
           </IconButton>
           <Typography className={classes.title} variant="h6" noWrap>
@@ -341,19 +351,30 @@ function LoggedInApp() {
           </Button>
         </Toolbar>
       </AppBar>
-      <MuiPickersUtilsProvider utils={DateFnsUtils}>
         {/* A <Switch> looks through its children <Route>s and
               renders the first one that matches the current URL. */}
+
+        <LocalizationProvider
+          dateAdapter={AdapterDayjs}
+          //adapterLocale={'en-gb'}
+          dateLibInstance={dayjs.utc}
+        >
         <Container maxWidth={false} className={classes.container}>
         <Switch>
           <Route path="/:id" component={Project} />
           <Route path="/" component={Projects} />
         </Switch>
         </Container>
-      </MuiPickersUtilsProvider>
+        </LocalizationProvider>
     </div>
   );
 }
+
+const theme = createTheme(
+  {
+  },
+);
+
 
 export default function App() {
   const dispatch = useDispatch();
@@ -362,18 +383,20 @@ export default function App() {
   }, [dispatch]);
 
   return (
-    <React.Fragment>
-      <CssBaseline />
-      <Switch>
-        <Route path="/login">
-          <Login />
-        </Route>
-        <Route>
-          <RequireLogin>
-            <LoggedInApp />
-          </RequireLogin>
-        </Route>
-      </Switch>
-    </React.Fragment>
+    <StyledEngineProvider injectFirst>
+      <ThemeProvider theme={theme}>;
+        <CssBaseline />
+        <Switch>
+          <Route path="/login">
+            <Login />
+          </Route>
+          <Route>
+            <RequireLogin>
+              <LoggedInApp />
+            </RequireLogin>
+          </Route>
+        </Switch>
+      </ThemeProvider>
+    </StyledEngineProvider>
   );
 }

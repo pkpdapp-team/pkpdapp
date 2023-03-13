@@ -1,25 +1,26 @@
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import Button from "@material-ui/core/Button";
-import Grid from "@material-ui/core/Grid";
-import Box from "@material-ui/core/Box";
-import Alert from "@material-ui/lab/Alert";
+import Button from "@mui/material/Button";
+import Grid from "@mui/material/Grid";
+import Box from "@mui/material/Box";
+import Alert from '@mui/material/Alert';
 import { useForm } from "react-hook-form";
-import { makeStyles } from "@material-ui/core/styles";
-import Typography from "@material-ui/core/Typography";
-import List from "@material-ui/core/List";
-import ListItem from "@material-ui/core/ListItem";
-import Dialog from "@material-ui/core/Dialog";
-import DialogTitle from "@material-ui/core/DialogTitle";
-import DialogActions from "@material-ui/core/DialogActions";
-import Tab from "@material-ui/core/Tab";
-import Tabs from "@material-ui/core/Tabs";
+import makeStyles from '@mui/styles/makeStyles';
+import Typography from "@mui/material/Typography";
+import List from "@mui/material/List";
+import ListItem from "@mui/material/ListItem";
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogActions from "@mui/material/DialogActions";
+import Tab from "@mui/material/Tab";
+import Tabs from "@mui/material/Tabs";
+import Stack from "@mui/material/Stack";
 
-import Accordion from "@material-ui/core/Accordion";
-import AccordionSummary from "@material-ui/core/AccordionSummary";
-import Paper from "@material-ui/core/Paper";
-import AccordionDetails from "@material-ui/core/AccordionDetails";
-import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
+import Accordion from "@mui/material/Accordion";
+import AccordionSummary from "@mui/material/AccordionSummary";
+import Paper from "@mui/material/Paper";
+import AccordionDetails from "@mui/material/AccordionDetails";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
 import Header from "../modelling/Header";
 import Footer from "../modelling/Footer";
@@ -125,7 +126,6 @@ function DataAnalysisDialog({ project, onClose, dataset, open }) {
 
 
 export default function DatasetDetail({ project, dataset }) {
-  const classes = useStyles();
   const { control, handleSubmit, reset } = useForm();
   const dispatch = useDispatch();
 
@@ -160,11 +160,12 @@ export default function DatasetDetail({ project, dataset }) {
   const disableSave = useSelector(state => userHasReadOnlyAccess(state, project));
 
   return (
-    <Paper>
+    <Paper sx={{maxHeight: '85vh', overflow: 'auto'}}>
     <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
       <Header title={`Dataset: ${dataset.name}`} />
-      <Box className={classes.root}>
+      <Stack spacing={2} sx={{p: 1}}>
       <FormTextField
+        fullWidth
         control={control}
         defaultValue={dataset.name}
         name="name"
@@ -177,26 +178,20 @@ export default function DatasetDetail({ project, dataset }) {
         label="DateTime"
       />
 
-      <Grid container item xs={12} spacing={3}>
-        <Grid item xs={12}>
-          <Typography>Variables</Typography>
-          <List>
-            {dataset.biomarker_types.map((biomarker_id, index) => {
-              return (
-                <ListItem key={index} role={undefined} dense>
-                  <BiomarkerTypeSubform
-                    biomarker_id={biomarker_id}
-                    disableSave={disableSave}
-                  />
-                </ListItem>
-              );
-            })}
-          </List>
-        </Grid>
-        <Grid item xs={12}>
-          <SubjectsTable dataset={dataset} disableSave={disableSave}/>
-        </Grid>
-      </Grid>
+      <Typography>Variables</Typography>
+      <List>
+        {dataset.biomarker_types.map((biomarker_id, index) => {
+          return (
+            <ListItem key={index} role={undefined} dense>
+              <BiomarkerTypeSubform
+                biomarker_id={biomarker_id}
+                disableSave={disableSave}
+              />
+            </ListItem>
+          );
+        })}
+      </List>
+      <SubjectsTable dataset={dataset} disableSave={disableSave}/>
 
       {dataset.errors &&
         dataset.errors.map((error, index) => (
@@ -204,7 +199,7 @@ export default function DatasetDetail({ project, dataset }) {
             {error}
           </Alert>
         ))}
-      </Box>
+      </Stack>
       <Footer
         buttons={[
           {label: 'Save', handle: handleSubmit(onSubmit)},

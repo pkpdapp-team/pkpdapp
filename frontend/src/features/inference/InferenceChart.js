@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
 import PropTypes from 'prop-types';
-import Tab from '@material-ui/core/Tab';
-import Typography from '@material-ui/core/Typography';
-import Tabs from '@material-ui/core/Tabs';
-import Box from '@material-ui/core/Box';
-import Button from '@material-ui/core/Button';
-import Alert from "@material-ui/lab/Alert";
+import Tab from '@mui/material/Tab';
+import Typography from '@mui/material/Typography';
+import Tabs from '@mui/material/Tabs';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Alert from '@mui/material/Alert';
+import Stack from '@mui/material/Stack';
 import { useSelector, useDispatch } from "react-redux";
 import InferenceChartOptimisationResults from './InferenceChartOptimisationResults'
 import InferenceChartSamplingResults from './InferenceChartSamplingResults'
@@ -121,17 +122,25 @@ export default function InferenceChart({inference}) {
   const noData = chains.length === 0
 
   return (
-  <Box sx={{ width: '100%' }}>
-  <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-  <Button
-    variant="contained"
-    onClick={handleRefresh}
+  <Stack spacing={1}>
+  <Box
+    display="flex"
+    justifyContent="center"
+    alignItems="center"
   >
-    Refresh
-  </Button>
+    <Button
+      sx={{ width: '50%'}}
+      variant="contained"
+      onClick={handleRefresh}
+    >
+      Refresh
+    </Button>
+  </Box>
   { noData &&
       <Alert severity="warning">No data, refresh to get chain data</Alert>
   }
+  <Box sx={{ width: '100%' }}>
+  <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
   <Tabs value={value} onChange={handleChange}>
     { tabs.map(tab => (
       <Tab key={tab.label} label={tab.label} />
@@ -149,5 +158,6 @@ export default function InferenceChart({inference}) {
     </TabPanel>
     ))}
   </Box>
+  </Stack>
   )
 }

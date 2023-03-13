@@ -1,27 +1,27 @@
 import React, { useEffect } from "react";
 import { useSelector } from "react-redux";
-import Paper from "@material-ui/core/Paper";
-import Grid from "@material-ui/core/Grid";
-import Table from '@material-ui/core/Table';
+import Paper from "@mui/material/Paper";
+import Grid from "@mui/material/Grid";
+import Table from '@mui/material/Table';
 import { useHistory } from "react-router-dom";
-import Typography from '@material-ui/core/Typography';
-import Container from '@material-ui/core/Container';
-import TableBody from '@material-ui/core/TableBody';
+import Typography from '@mui/material/Typography';
+import Container from '@mui/material/Container';
+import TableBody from '@mui/material/TableBody';
 import ProjectDetail from "../projects/ProjectDetail";
-import Tooltip from "@material-ui/core/Tooltip";
-import { useTheme } from "@material-ui/core/styles";
+import Tooltip from "@mui/material/Tooltip";
+import { useTheme } from "@mui/material/styles";
 import { useDispatch } from "react-redux";
-import TableCell from '@material-ui/core/TableCell';
-import SaveIcon from '@material-ui/icons/Save';
-import TableContainer from '@material-ui/core/TableContainer';
-import TableHead from '@material-ui/core/TableHead';
-import DeleteIcon from '@material-ui/icons/Delete';
-import TableRow from '@material-ui/core/TableRow';
+import TableCell from '@mui/material/TableCell';
+import SaveIcon from '@mui/icons-material/Save';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import DeleteIcon from '@mui/icons-material/Delete';
+import TableRow from '@mui/material/TableRow';
 
-import AddIcon from "@material-ui/icons/Add";
+import AddIcon from "@mui/icons-material/Add";
 
-import IconButton from "@material-ui/core/IconButton";
-import { makeStyles } from "@material-ui/core/styles";
+import IconButton from "@mui/material/IconButton";
+import makeStyles from '@mui/styles/makeStyles';
 
 
 
@@ -113,7 +113,7 @@ export default function Projects() {
 
               <TableCell>
               <Tooltip title="delete project">
-                <IconButton aria-label="delete" onClick={handleDelete(project.id)}>
+                <IconButton aria-label="delete" onClick={handleDelete(project.id)} size="large">
                 <DeleteIcon/>
                 </IconButton>
               </Tooltip>
@@ -125,7 +125,7 @@ export default function Projects() {
       </Table>
     </TableContainer>
     <Tooltip title="Create new project">
-      <IconButton aria-label="add" onClick={handleNewProject}>
+      <IconButton aria-label="add" onClick={handleNewProject} size="large">
       <AddIcon/>
     </IconButton>
     </Tooltip>
