@@ -1,17 +1,17 @@
 import React from "react";
 
-import ListItem from "@material-ui/core/ListItem";
-import ListItemSecondaryAction from "@material-ui/core/ListItemSecondaryAction";
-import ListItemIcon from "@material-ui/core/ListItemIcon";
-import ListItemText from "@material-ui/core/ListItemText";
-import Checkbox from "@material-ui/core/Checkbox";
-import Box from "@material-ui/core/Box";
+import ListItem from "@mui/material/ListItem";
+import ListItemSecondaryAction from "@mui/material/ListItemSecondaryAction";
+import ListItemIcon from "@mui/material/ListItemIcon";
+import ListItemText from "@mui/material/ListItemText";
+import Checkbox from "@mui/material/Checkbox";
+import Box from "@mui/material/Box";
 import classNames from "classnames";
-import Tooltip from "@material-ui/core/Tooltip";
-import CircularProgress from "@material-ui/core/CircularProgress";
-import ListItemAvatar from "@material-ui/core/ListItemAvatar";
-import Avatar from "@material-ui/core/Avatar";
-import { makeStyles } from "@material-ui/core/styles";
+import Tooltip from "@mui/material/Tooltip";
+import CircularProgress from "@mui/material/CircularProgress";
+import ListItemAvatar from "@mui/material/ListItemAvatar";
+import Avatar from "@mui/material/Avatar";
+import makeStyles from '@mui/styles/makeStyles';
 
 const useStyles = makeStyles((theme) => ({
   nested: {

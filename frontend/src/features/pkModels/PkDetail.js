@@ -1,26 +1,26 @@
 import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import Button from "@material-ui/core/Button";
-import List from "@material-ui/core/List";
-import Box from "@material-ui/core/Box";
-import IconButton from "@material-ui/core/IconButton";
-import Grid from "@material-ui/core/Grid";
-import ListItem from "@material-ui/core/ListItem";
-import Accordion from "@material-ui/core/Accordion";
-import AccordionSummary from "@material-ui/core/AccordionSummary";
-import AccordionDetails from "@material-ui/core/AccordionDetails";
-import Paper from "@material-ui/core/Paper";
-import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
-import AddIcon from "@material-ui/icons/Add";
-import AppBar from "@material-ui/core/AppBar";
-import BottomNavigation from "@material-ui/core/BottomNavigation";
-import BottomNavigationAction from "@material-ui/core/BottomNavigationAction";
-import Toolbar from "@material-ui/core/Toolbar";
-import DeleteIcon from "@material-ui/icons/Delete";
+import Button from "@mui/material/Button";
+import List from "@mui/material/List";
+import Box from "@mui/material/Box";
+import IconButton from "@mui/material/IconButton";
+import Grid from "@mui/material/Grid";
+import ListItem from "@mui/material/ListItem";
+import Accordion from "@mui/material/Accordion";
+import AccordionSummary from "@mui/material/AccordionSummary";
+import AccordionDetails from "@mui/material/AccordionDetails";
+import Paper from "@mui/material/Paper";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import AddIcon from "@mui/icons-material/Add";
+import AppBar from "@mui/material/AppBar";
+import BottomNavigation from "@mui/material/BottomNavigation";
+import BottomNavigationAction from "@mui/material/BottomNavigationAction";
+import Toolbar from "@mui/material/Toolbar";
+import DeleteIcon from "@mui/icons-material/Delete";
 
 import { useForm, useFieldArray } from "react-hook-form";
-import { makeStyles } from "@material-ui/core/styles";
-import Typography from "@material-ui/core/Typography";
+import makeStyles from '@mui/styles/makeStyles';
+import Typography from "@mui/material/Typography";
 
 
 import InferenceListDialog from "../inference/InferenceListDialog";
@@ -46,42 +46,7 @@ import {
 } from "../variables/variablesSlice.js";
 
 
-
-const useStyles = makeStyles((theme) => ({
-  topToolbar: {
-    backgroundColor: theme.palette.primary.main,
-    position: 'sticky',
-    top: 0,
-  },
-  header: {
-    fontWeight:'bold',
-    color: theme.palette.primary.contrastText,
-  },
-  root: {
-    maxHeight: '75vh', overflow: 'auto',
-    padding: theme.spacing(2),
-  },
-  paper: {
-    padding: theme.spacing(2)
-  },
-  components: {
-    width: "100%",
-  },
-  toolbar: {
-    backgroundColor: theme.palette.primary.main,
-    position: 'sticky',
-    bottom: 0,
-  },
-  controls: {
-    justifyContent: 'center',
-    "& > *": {
-      margin: theme.spacing(1),
-    },
-  },
-}));
-
 export default function PkDetail({ project, pk_model }) {
-  const classes = useStyles();
   const mappings_no_null = pk_model.mappings.map(m =>
     Object.keys(m).reduce((sum, key) => {
       sum[key] = m[key] || ""
@@ -187,14 +152,13 @@ export default function PkDetail({ project, pk_model }) {
   const disableSave = useSelector(state => userHasReadOnlyAccess(state, project));
 
   return (
-    <Paper>
+    <Paper sx={{maxHeight: '87vh', overflow: 'auto'}}>
     <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
       <Header title={`PK Model: ${pk_model.name}`}/>
-
-      <Box className={classes.root}>
-      <Grid container spacing={1}>
+      <Grid container spacing={1} sx={{p: 1}}>
       <Grid item xs={12}>
       <FormTextField
+        fullWidth
         control={control}
         name="name"
         label="Name"
@@ -203,6 +167,7 @@ export default function PkDetail({ project, pk_model }) {
 
       <Grid item xs={6}>
       <FormSelectField
+        fullWidth
         control={control}
         options={base_pk_model_options}
         name="pk_model"
@@ -211,6 +176,8 @@ export default function PkDetail({ project, pk_model }) {
       </Grid>
       <Grid item xs={6}>
       <FormSelectField
+        fullWidth
+        control={control}
         control={control}
         options={pd_model_options}
         name="pd_model"
@@ -225,25 +192,27 @@ export default function PkDetail({ project, pk_model }) {
       {mappings.map((mapping, i) => {
         return (
           <React.Fragment key={i}>
-          <Grid item xs={2}>
+          <Grid item xs={1}>
           </Grid>
-          <Grid item xs={4}>
+          <Grid item xs={5}>
           <FormSelectField
+            fullWidth
             control={control}
             options={variablesOptions}
             name={`mappings[${i}].pk_variable`}
             label="Pharmacokinetic Variable"
           />
           </Grid>
-          <Grid item xs={4}>
+          <Grid item xs={5}>
           <FormSelectField
+            fullWidth
             control={control}
             options={variablesOptions}
             name={`mappings[${i}].pd_variable`}
             label="Pharmacodynamic Variable"
           />
           </Grid>
-          <Grid item xs={2}>
+          <Grid item xs={1}>
           <IconButton size="small" onClick={() => mappingsRemove(i)}>
             <DeleteIcon />
           </IconButton>
@@ -259,6 +228,7 @@ export default function PkDetail({ project, pk_model }) {
 
       <Grid item xs={6}>
       <FormSelectField
+        fullWidth
         control={control}
         options={dose_compartment_options}
         name="dose_compartment"
@@ -267,6 +237,7 @@ export default function PkDetail({ project, pk_model }) {
       </Grid>
       <Grid item xs={6}>
       <FormSelectField
+        fullWidth
         control={control}
         options={protocol_options}
         name="protocol"
@@ -275,6 +246,7 @@ export default function PkDetail({ project, pk_model }) {
       </Grid>
       <Grid item xs={6}>
       <FormTextField
+        fullWidth
         control={control}
         name="time_max"
         label="Maximum Time"
@@ -288,8 +260,8 @@ export default function PkDetail({ project, pk_model }) {
       {pk_model.components.map((component, index) => {
         return (
           <Grid item xs={12}>
-          <Paper key={index} variant={'outlined'} className={classes.paper}>
-            <Typography className={classes.heading} variant='h5' gutterBottom component="div">
+          <Paper key={index} variant={'outlined'} sx={{p: 1}}>
+            <Typography variant='h5' gutterBottom component="div">
                     {component.name === "myokit" ? "root" : component.name}
             </Typography>
             <ComponentForm
@@ -313,8 +285,6 @@ export default function PkDetail({ project, pk_model }) {
       </Grid>
 
       </Grid>
-      </Box>
-
       <Footer
         buttons={[
           {label: 'Save', handle: handleSubmit(onSubmit)},

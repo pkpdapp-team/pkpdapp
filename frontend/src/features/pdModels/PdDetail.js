@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import Alert from "@material-ui/lab/Alert";
-import Box from "@material-ui/core/Box";
-import Grid from "@material-ui/core/Grid";
+import Alert from '@mui/material/Alert';
+import Box from "@mui/material/Box";
+import Grid from "@mui/material/Grid";
 import { useForm } from "react-hook-form";
-import { makeStyles } from "@material-ui/core/styles";
-import Typography from "@material-ui/core/Typography";
-import Paper from "@material-ui/core/Paper";
+import makeStyles from '@mui/styles/makeStyles';
+import Typography from "@mui/material/Typography";
+import Paper from "@mui/material/Paper";
+import Stack from "@mui/material/Stack";
 
 import Header from "../modelling/Header";
 import Footer from "../modelling/Footer";
@@ -22,43 +23,8 @@ import { FormTextField } from "../forms/FormComponents";
 import { userHasReadOnlyAccess } from "../projects/projectsSlice";
 import InferenceListDialog from "../inference/InferenceListDialog";
 
-const useStyles = makeStyles((theme) => ({
-  topToolbar: {
-    backgroundColor: theme.palette.primary.light,
-    position: 'sticky',
-    top: 0,
-  },
-  toolbar: {
-    backgroundColor: theme.palette.primary.light,
-    position: 'sticky',
-    bottom: 0,
-  },
-  controls: {
-    justifyContent: 'center',
-    "& > *": {
-      margin: theme.spacing(1),
-    },
-  },
-  root: {
-    width: "100%",
-    padding: theme.spacing(2),
-    maxHeight: '75vh', overflow: 'auto'
-  },
-  paper: {
-    padding: theme.spacing(2)
-  },
-  heading: {
-    fontWeight: 'bold'
-  },
-  components: {
-    width: "100%",
-  },
-}));
-
-
 
 export default function PdDetail({ project, pd_model }) {
-  const classes = useStyles();
   const { control, handleSubmit, reset } = useForm();
   const dispatch = useDispatch();
   const [openInferenceDialog, setOpenInferenceDialog] = useState(false);
@@ -123,38 +89,32 @@ export default function PdDetail({ project, pd_model }) {
   const disableSave = useSelector(state => userHasReadOnlyAccess(state, project));
 
   return (
-    <Paper>
+    <Paper sx={{maxHeight: '87vh', overflow: 'auto'}}>
     <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
       <Header title={`PD Model: ${pd_model.name}`} />
-      <Box className={classes.root}>
-      <Grid container spacing={1}>
-      <Grid item xs={12}>
+      <Stack spacing={1} sx={{p: 1}}>
       <FormTextField
+        fullWidth
         control={control}
         defaultValue={pd_model.name}
         name="name"
         label="Name"
       />
-      </Grid>
 
-      <Grid item xs={12}>
       <FormTextField
+        fullWidth
         control={control}
         defaultValue={pd_model.time_max}
         name="time_max"
         label="Maximum Time"
         type="number"
       />
-      </Grid>
 
-      <Grid item xs={12}>
       <Typography>Components</Typography>
-      </Grid>
       {pd_model.components.map((component, index) => {
         return (
-          <Grid item xs={12}>
-          <Paper key={index} variant={'outlined'} className={classes.paper}>
-            <Typography className={classes.heading} variant='h5' gutterBottom component="div">
+          <Paper key={index} variant={'outlined'} sx={{p: 1}}>
+            <Typography variant='h5' gutterBottom component="div">
                     {component.name === "myokit" ? "root" : component.name}
             </Typography>
             <ComponentForm
@@ -163,20 +123,17 @@ export default function PdDetail({ project, pd_model }) {
               disableSave={disableSave}
             />
           </Paper>
-          </Grid>
         );
       })}
 
-      <Grid item xs={12}>
       <FormTextField
+        fullWidth
         control={control}
         defaultValue={pd_model.mmt}
         name="mmt"
         label="Source (mmt format)"
         multiline
       />
-      </Grid>
-      </Grid>
 
       {pd_model.errors &&
         pd_model.errors.map((error, index) => (
@@ -184,7 +141,7 @@ export default function PdDetail({ project, pd_model }) {
             {error}
           </Alert>
         ))}
-      </Box>
+      </Stack>
 
       <Footer
         buttons={[

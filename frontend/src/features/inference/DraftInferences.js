@@ -1,7 +1,7 @@
 import React from "react";
 import { useSelector, useDispatch } from "react-redux";
 
-import TableChartIcon from "@material-ui/icons/TableChart";
+import TableChartIcon from "@mui/icons-material/TableChart";
 
 import ExpandableListItem from "../menu/ExpandableListItem";
 

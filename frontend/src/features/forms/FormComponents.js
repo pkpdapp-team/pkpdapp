@@ -1,22 +1,31 @@
 import React from "react";
-import TextField from "@material-ui/core/TextField";
-import { makeStyles } from "@material-ui/core/styles";
-import InputLabel from "@material-ui/core/InputLabel";
-import Tooltip from "@material-ui/core/Tooltip";
-import MenuItem from "@material-ui/core/MenuItem";
-import Typography from "@material-ui/core/Typography";
-import FormControl from "@material-ui/core/FormControl";
-import FormHelperText from "@material-ui/core/FormHelperText";
-import Slider from "@material-ui/core/Slider";
-import ListSubheader from "@material-ui/core/ListSubheader";
-import Button from "@material-ui/core/Button";
-import Select from "@material-ui/core/Select";
+import TextField from "@mui/material/TextField";
+
+import makeStyles from '@mui/styles/makeStyles';
+import InputLabel from "@mui/material/InputLabel";
+import Tooltip from "@mui/material/Tooltip";
+import MenuItem from "@mui/material/MenuItem";
+import Typography from "@mui/material/Typography";
+import FormControl from "@mui/material/FormControl";
+import FormHelperText from "@mui/material/FormHelperText";
+import Slider from "@mui/material/Slider";
+import ListSubheader from "@mui/material/ListSubheader";
+import Button from "@mui/material/Button";
+import Select from "@mui/material/Select";
 import { Controller } from "react-hook-form";
-import { DateTimePicker } from "@material-ui/pickers";
-import Chip from "@material-ui/core/Chip";
-import Checkbox from "@material-ui/core/Checkbox";
-import FormControlLabel from "@material-ui/core/FormControlLabel";
-import Box from "@material-ui/core/Box";
+import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
+
+import OutlinedInput from "@mui/material/OutlinedInput";
+import Stack from "@mui/material/Stack";
+import Chip from "@mui/material/Chip";
+import Checkbox from "@mui/material/Checkbox";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import Box from "@mui/material/Box";
+
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+
+dayjs.extend(utc);
 
 const useStyles = makeStyles((theme) => ({
   container: {
@@ -59,9 +68,8 @@ export function FormCheckboxField({
   label,
   ...rest
 }) {
-  const classes = useStyles();
   return (
-    <div className={classes.formInput}>
+    <div>
       <Controller
         control={control}
         defaultValue={defaultValue}
@@ -103,7 +111,6 @@ export function FormSliderField({
   label,
   tooltip,
 }) {
-  const classes = useStyles();
   const roundNumber = (x) => {
     if (x === 0 || x === 0.0) {
       return x;
@@ -151,7 +158,7 @@ export function FormSliderField({
   const internalStep = log ? (Math.log(max) - Math.log(min)) / 100.0 : (max - min) / 100.0;
 
   return (
-    <div className={classes.formInput}>
+    <div>
       {label && (
         <Tooltip title={tooltip} placement="top">
           <Typography id={`input-slider-${name}`} gutterBottom>
@@ -204,18 +211,18 @@ export function FormDateTimeField({
   label,
   ...rest
 }) {
-  const classes = useStyles();
   return (
     <Controller
       control={control}
       defaultValue={defaultValue}
       name={name}
-      render={({ field }) => (
+      render={({ 
+        field,
+      }) => (
         <DateTimePicker
-          className={classes.formInput}
-          format="dd/MM/yyyy HH:mm"
           {...rest}
           {...field}
+          value={dayjs.utc(field.value)}
           label={label}
         />
       )}
@@ -231,7 +238,6 @@ export function FormFileField({
   clearErrors,
   ...rest
 }) {
-  const classes = useStyles();
 
   return (
     <Controller
@@ -250,8 +256,13 @@ export function FormFileField({
           if (!!onChange) onChange({ target: { value: file } });
         };
         return (
+
           <Box
-            className={classes.fileFieldBox}
+            sx={{
+              m: 1,
+              width: "200pt",
+              display: "inline-block",
+            }}
             component="span"
             position="relative"
             height={58}
@@ -265,7 +276,6 @@ export function FormFileField({
               mx={2}
             >
               <TextField
-                className={classes.fileFieldField}
                 margin="normal"
                 fullWidth
                 disabled
@@ -275,7 +285,7 @@ export function FormFileField({
                 helperText={error?.message || " "}
               />
             </Box>
-            <Button className={classes.fileFieldButton} component="label">
+            <Button sx={{width: "100%", height: "100%", overflow: "hidden"}} component="label">
               <input type="file" hidden onChange={handleChange} {...rest} />
             </Button>
           </Box>
@@ -286,21 +296,21 @@ export function FormFileField({
 }
 
 export function FormTextField({ control, name, defaultValue, label, ...rest }) {
-  const classes = useStyles();
   return (
+    <div>
     <Controller
       control={control}
       defaultValue={defaultValue}
       name={name}
       render={({ field }) => (
         <TextField
-          className={classes.formInput}
           {...rest}
           {...field}
           label={label}
         />
       )}
     />
+    </div>
   );
 }
 
@@ -312,9 +322,9 @@ export function FormMultiSelectField({
   options,
   ...rest
 }) {
-  const classes = useStyles();
   return (
-    <FormControl className={classes.formInput}>
+    <div>
+    <FormControl fullWidth>
       <InputLabel id={name.concat("-select-label")}>{label}</InputLabel>
       <Controller
         control={control}
@@ -323,10 +333,11 @@ export function FormMultiSelectField({
         render={({ field }) => (
           <Select
             labelId={name.concat("-select-label")}
-            autoWidth={true}
+            id={name.concat("-select")}
             multiple
+            input={<OutlinedInput label="Name" />}
             renderValue={(selected) => (
-              <div className={classes.chips}>
+              <Stack direction="row" spacing={1}>
                 {selected.map((value) => {
                   const option_list = options.filter((x) => x.value === value);
                   let option = {
@@ -340,11 +351,10 @@ export function FormMultiSelectField({
                     <Chip
                       key={option.value}
                       label={option.key}
-                      className={classes.chip}
                     />
                   );
                 })}
-              </div>
+              </Stack>
             )}
             {...rest}
             {...field}
@@ -360,6 +370,7 @@ export function FormMultiSelectField({
         )}
       />
     </FormControl>
+    </div>
   );
 }
 
@@ -374,7 +385,6 @@ export function FormSelectField({
   onChangeUser,
   ...rest
 }) {
-  const classes = useStyles();
   let groups = {};
   if (useGroups) {
     for (const option of options) {
@@ -385,8 +395,12 @@ export function FormSelectField({
     }
   }
   return (
-    <FormControl className={classes.formInput}>
-      <InputLabel id={name.concat("-select-label")} shrink={displayEmpty}>{label}</InputLabel>
+    <div>
+    <FormControl fullWidth>
+      <InputLabel 
+        id={name.concat("-select-label")} 
+        shrink={displayEmpty}
+      >{label}</InputLabel>
       <Controller
         control={control}
         defaultValue={defaultValue}
@@ -404,11 +418,13 @@ export function FormSelectField({
           return (
           <div>
           <Select
+            id={name.concat("-select")}
             labelId={name.concat("-select-label")}
             value={value}
             error={error}
             autoWidth={true}
             onBlur={onBlur}
+            input={<OutlinedInput label={label} notched={displayEmpty} />}
             checked={value}
             displayEmpty
             inputRef={ref}
@@ -446,5 +462,6 @@ export function FormSelectField({
         }
       />
     </FormControl>
+    </div>
   );
 }

@@ -1,12 +1,12 @@
 import React, { useEffect } from "react";
 import { useSelector } from "react-redux";
 import { FormSliderField, FormTextField, FormCheckboxField } from "../forms/FormComponents";
-import Box from "@material-ui/core/Box";
-import Grid from "@material-ui/core/Grid";
+import Box from "@mui/material/Box";
+import Grid from "@mui/material/Grid";
 import { useForm, useFormState } from "react-hook-form";
-import SaveIcon from "@material-ui/icons/Save";
+import SaveIcon from "@mui/icons-material/Save";
 import { useDispatch } from "react-redux";
-import IconButton from "@material-ui/core/IconButton";
+import IconButton from "@mui/material/IconButton";
 import { selectUnitById } from "../projects/unitsSlice";
 import { selectVariableById, updateVariable } from "./variablesSlice";
 
@@ -99,7 +99,7 @@ export default function VariableSubform({ variable_id, disableSave }) {
             size="small"
           />
         </Box>
-        <Box position="absolute" top={5} bottom={0} left={"90%"} right={0}>
+        <Box position="absolute" top={5} bottom={0} left={"95%"} right={0}>
           {isDirty && (
             <IconButton
               onClick={handleSubmit(onSubmit)}

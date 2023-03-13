@@ -1,9 +1,9 @@
-import { makeStyles } from "@material-ui/core/styles";
+import makeStyles from '@mui/styles/makeStyles';
 import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
-import Typography from "@material-ui/core/Typography";
+import Typography from "@mui/material/Typography";
 import { useHistory, useParams } from "react-router-dom";
-import Container from "@material-ui/core/Container";
+import Container from "@mui/material/Container";
 import { ReactComponent as PkpdAppIcon } from "../../logo_pkpdapp_with_text.svg";
 import { api } from "../../Api";
 

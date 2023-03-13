@@ -1,23 +1,16 @@
 import React from "react";
-import Grid from "@material-ui/core/Grid";
-import Typography from "@material-ui/core/Typography";
-import { makeStyles } from "@material-ui/core/styles";
-import List from "@material-ui/core/List";
-import ListItem from "@material-ui/core/ListItem";
+import Grid from "@mui/material/Grid";
+import Typography from "@mui/material/Typography";
+import makeStyles from '@mui/styles/makeStyles';
+import List from "@mui/material/List";
+import ListItem from "@mui/material/ListItem";
 
 import MathJaxPreview from "react-mathjax-preview";
 
 import VariableSubform from "../variables/VariableSubform";
 import OutputSubform from "../variables/OutputSubform";
 
-const useStyles = makeStyles((theme) => ({
-  root: {
-    width: "100%",
-  },
-}));
-
 export default function ComponentForm({ control, component, disableSave }) {
-  const classes = useStyles();
 
   const mathjaxConfig = {
     CommonHTML: { linebreaks: { automatic: true } },
@@ -29,7 +22,7 @@ export default function ComponentForm({ control, component, disableSave }) {
   const sortedOutputs = [...component.outputs].sort();
 
   return (
-    <div id="component-form-root" className={classes.root}>
+    <div id="component-form-root">
       <Grid container item xs={12} spacing={3}>
         <Grid item xs={6}>
           <Typography>Variables</Typography>

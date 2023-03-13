@@ -12,13 +12,13 @@ import {
 } from "react-router-dom";
 
 import { useSelector, useDispatch } from "react-redux";
-import Button from "@material-ui/core/Button";
-import Paper from "@material-ui/core/Paper";
+import Button from "@mui/material/Button";
+import Paper from "@mui/material/Paper";
 import { useForm } from "react-hook-form";
-import { makeStyles } from "@material-ui/core/styles";
-import List from "@material-ui/core/List";
-import CircularProgress from "@material-ui/core/CircularProgress";
-import ListItem from "@material-ui/core/ListItem";
+import makeStyles from '@mui/styles/makeStyles';
+import List from "@mui/material/List";
+import CircularProgress from "@mui/material/CircularProgress";
+import ListItem from "@mui/material/ListItem";
 
 import Inferences from "../inference/Inferences";
 import Inference from "../inference/Inference";

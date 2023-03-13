@@ -1,14 +1,14 @@
 import React from "react";
 
 import { useSelector } from "react-redux";
-import AccountTreeIcon from "@material-ui/icons/AccountTree";
+import AccountTreeIcon from "@mui/icons-material/AccountTree";
 
-import List from "@material-ui/core/List";
-import ListItem from "@material-ui/core/ListItem";
-import ListItemIcon from "@material-ui/core/ListItemIcon";
-import ListItemText from "@material-ui/core/ListItemText";
+import List from "@mui/material/List";
+import ListItem from "@mui/material/ListItem";
+import ListItemIcon from "@mui/material/ListItemIcon";
+import ListItemText from "@mui/material/ListItemText";
 
-import Divider from "@material-ui/core/Divider";
+import Divider from "@mui/material/Divider";
 
 import Inferences from "../inference/Inferences";
 import DraftInferences from "../inference/DraftInferences";

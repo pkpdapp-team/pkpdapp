@@ -1,12 +1,12 @@
 import React,{ useEffect }  from "react";
 import { useSelector, useDispatch } from "react-redux";
-import IconButton from "@material-ui/core/IconButton";
+import IconButton from "@mui/material/IconButton";
 import { useForm, useFormState } from "react-hook-form";
-import SaveIcon from "@material-ui/icons/Save";
-import AddIcon from "@material-ui/icons/Add";
-import DoneIcon from "@material-ui/icons/Done";
-import TableCell from "@material-ui/core/TableCell";
-import TableRow from "@material-ui/core/TableRow";
+import SaveIcon from "@mui/icons-material/Save";
+import AddIcon from "@mui/icons-material/Add";
+import DoneIcon from "@mui/icons-material/Done";
+import TableCell from "@mui/material/TableCell";
+import TableRow from "@mui/material/TableRow";
 
 import { FormCheckboxField, FormTextField } from "../forms/FormComponents";
 import { selectSubjectById, updateSubject } from "./subjectsSlice";

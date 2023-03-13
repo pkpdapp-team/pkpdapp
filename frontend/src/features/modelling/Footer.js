@@ -1,9 +1,9 @@
 import React, { useEffect } from "react";
-import Paper from "@material-ui/core/Paper";
-import { makeStyles } from "@material-ui/core/styles";
-import Button from "@material-ui/core/Button";
-import Toolbar from "@material-ui/core/Toolbar";
-import Typography from "@material-ui/core/Typography";
+import Paper from "@mui/material/Paper";
+import makeStyles from '@mui/styles/makeStyles';
+import Button from "@mui/material/Button";
+import Toolbar from "@mui/material/Toolbar";
+import Typography from "@mui/material/Typography";
 
 const useStyles = makeStyles((theme) => ({
   controls: {
@@ -13,6 +13,7 @@ const useStyles = makeStyles((theme) => ({
     },
   },
   toolbar: {
+    marginTop: theme.spacing(1),
     backgroundColor: theme.palette.primary.main,
     position: 'sticky',
     bottom: 0,
