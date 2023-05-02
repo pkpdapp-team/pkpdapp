@@ -25,6 +25,10 @@ class Project(models.Model):
         help_text='users with access to this project'
     )
 
+    compound = models.OneToOneField(
+        'Compound', on_delete=models.CASCADE,
+    )
+
     def get_absolute_url(self):
         return reverse('project-detail', kwargs={'pk': self.pk})
 

@@ -39,6 +39,17 @@ class Compound(models.Model):
         related_name='compounds',
         help_text='unit for molecular mass (e.g. g/mol)'
     )
+    class CompoundType(models.TextChoices):
+        SMALL_MOLECULE = 'SM', 'Small Molecule'
+        LARGE_MOLECULE = 'LM', 'Large Molecule'
+    
+    compound_type = models.CharField(
+        max_length=2,
+        choices=CompoundType.choices,
+        default=CompoundType.SMALL_MOLECULE,
+    )
+
+
 
     def __str__(self):
         return str(self.name)
