@@ -129,6 +129,26 @@ a file (say) called `test_models.py` use
 `python manage.py test pkpdapp.tests.test_models`
 - code coverage tests: can't be done locally
 
+## Generating OpenAPI spec
+
+The front-end communicates with the back-end using a REST API. The API can be
+described using the OpenAPI specification. To generate the OpenAPI
+specification, run the following command:
+
+```bash
+python manage.py generateschema --file schema.yml
+```
+
+## Generating RTX Query API class
+
+The front-end uses the Redux Toolkit RTX Query tool to automatically generate a
+client for the api based on the OpenAPI spec described above. To generate the
+client, run the following command in the frontend directory:
+
+```bash
+npx @rtk-query/codegen-openapi openapi-config.json
+```
+
 # Running the cache
 
 Install the cache using

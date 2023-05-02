@@ -226,7 +226,6 @@ class LogLikelihood(models.Model):
         related_name='parents',
         symmetrical=False,
         through=LogLikelihoodParameter,
-        blank=True, null=True,
         through_fields=('parent', 'child'),
     )
 

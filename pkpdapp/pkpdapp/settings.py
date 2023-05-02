@@ -24,6 +24,9 @@ from django_auth_ldap.config import LDAPSearch
 # Set BASE_DIR to two directories up
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+# setup automatic pk column for models
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
