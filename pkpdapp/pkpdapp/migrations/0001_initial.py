@@ -70,6 +70,7 @@ class Migration(migrations.Migration):
                 ('name', models.CharField(help_text='name of the compound', max_length=100)),
                 ('description', models.TextField(help_text='short description of the compound')),
                 ('molecular_mass', models.FloatField(blank=True, help_text='molecular mass for compound for conversion from mol to grams', null=True)),
+                ('compound_type', models.CharField(choices=[('SM', 'Small Molecule'), ('LM', 'Large Molecule')], default='SM', max_length=2)),
             ],
         ),
         migrations.CreateModel(
@@ -187,6 +188,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(help_text='name of the project', max_length=100)),
                 ('description', models.TextField(blank=True, default='', help_text='short description of the project')),
+                ('compound', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.compound')),
             ],
         ),
         migrations.CreateModel(
@@ -244,7 +246,7 @@ class Migration(migrations.Migration):
                 ('binding', models.CharField(blank=True, help_text='myokit binding of the variable (e.g. time)', max_length=100, null=True)),
                 ('qname', models.CharField(help_text='fully qualitifed name of the variable', max_length=200)),
                 ('constant', models.BooleanField(default=True, help_text='True for a constant variable of the model, i.e. a parameter. False if non-constant, i.e. an output of the model (default is True)')),
-                ('state', models.BooleanField(default=False, help_text='True for a state variable of the model (default is False)')),
+                ('state', models.BooleanField(default=False, help_text='True if it is a state variable of the model and has an initial condition parameter (default is False)')),
                 ('color', models.IntegerField(default=0, help_text='Color index associated with this variable. For display purposes in the frontend')),
                 ('display', models.BooleanField(default=True, help_text='True if this variable will be displayed in the frontend, False otherwise')),
                 ('axis', models.BooleanField(default=False, help_text='False/True if biomarker type displayed on LHS/RHS axis')),
@@ -342,7 +344,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='loglikelihood',
             name='children',
-            field=models.ManyToManyField(blank=True, null=True, related_name='parents', through='pkpdapp.LogLikelihoodParameter', to='pkpdapp.LogLikelihood'),
+            field=models.ManyToManyField(related_name='parents', through='pkpdapp.LogLikelihoodParameter', to='pkpdapp.LogLikelihood'),
         ),
         migrations.AddField(
             model_name='loglikelihood',
