@@ -1,0 +1,8 @@
+{
+  "schemaFile": "../pkpdapp/schema.yml",
+  "apiFile": "./src/app/emptyApi.ts",
+  "apiImport": "emptySplitApi",
+  "outputFile": "./src/app/backendApi.ts",
+  "exportName": "backendApi",
+  "hooks": true
+}
