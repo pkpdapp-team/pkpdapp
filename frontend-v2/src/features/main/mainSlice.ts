@@ -4,6 +4,9 @@ export enum PageName {
   PROJECTS = 'Projects',
   DRUG = 'Drug',
   MODEL = 'Model',
+  DATA = 'Data',
+  TRIAL_DESIGN = 'Trial Design',
+  SIMULATIONS = 'Simulations',
 }
 
 interface MainState {

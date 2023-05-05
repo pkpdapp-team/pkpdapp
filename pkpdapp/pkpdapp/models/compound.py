@@ -25,7 +25,8 @@ class Compound(models.Model):
         max_length=100, help_text='name of the compound'
     )
     description = models.TextField(
-        help_text='short description of the compound'
+        help_text='short description of the compound',
+        blank=True, default=''
     )
     molecular_mass = models.FloatField(
         blank=True, null=True,
@@ -49,7 +50,8 @@ class Compound(models.Model):
         default=CompoundType.SMALL_MOLECULE,
     )
 
-
+    def get_project(self):
+        return self.project
 
     def __str__(self):
         return str(self.name)

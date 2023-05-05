@@ -10,7 +10,7 @@ from django.contrib.auth.hashers import make_password
 
 def load_users_and_projects(apps, schema_editor):
     compound = {
-        'name': 'demo',
+        'name': 'demoCompound',
         'description': '''This is an example compound demonstrating
         some of the capabilities of pkpdapp''',
         'molecular_mass': 100,

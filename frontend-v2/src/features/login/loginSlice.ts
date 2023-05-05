@@ -1,10 +1,12 @@
 import { createSlice, PayloadAction, createAsyncThunk } from "@reduxjs/toolkit";
 
-import { api } from "app/api"
+import { RootState } from "../../app/store";
+import { User } from "../../app/backendApi";
 
-export const fetchCsrf = createAsyncThunk(
+
+export const fetchCsrf = createAsyncThunk<string, undefined>(
   "login/fetchCsrf",
-  async (project, { dispatch }) => {
+  async (_, { dispatch }) => {
     const response = await fetch("/api/csrf/", {
       method: "GET",
       credentials: "include",
@@ -14,10 +16,19 @@ export const fetchCsrf = createAsyncThunk(
   }
 );
 
-export const fetchSession = createAsyncThunk(
+interface Login {
+  isAuthenticated: boolean;
+  user: any;
+}
+
+interface LoginErrorResponse {
+  error: string;
+}
+
+export const fetchSession = createAsyncThunk<Login, undefined, { rejectValue: LoginErrorResponse}>(
   "login/fetchSession",
-  async (_, { dispatch }) => {
-    const { isAuthenticated, user } = await fetch("/api/session/", {
+  async (_, { dispatch, rejectWithValue  }) => {
+    const response = await fetch("/api/session/", {
       method: "GET",
       credentials: "include",
     }).then((response) => {
@@ -25,15 +36,15 @@ export const fetchSession = createAsyncThunk(
       return isResponseOk(response)
     }).then(data =>
       ({ isAuthenticated: true, user: data.user })
-    ).catch((err) => 
-      ({ isAuthenticated: false, user: null })
-    );
-    console.log('fetchSession', isAuthenticated, user)
-    return { isAuthenticated, user };
+    ).catch((err) => {
+      return rejectWithValue({ error: err.error })
+    });
+    console.log('fetchSession', response)
+    return response;
   }
 );
 
-function isResponseOk(response) {
+function isResponseOk(response: Response) {
   if (response.status >= 200 && response.status <= 299) {
     return response.json();
   } else {
@@ -41,16 +52,25 @@ function isResponseOk(response) {
   }
 }
 
-export const login = createAsyncThunk(
+
+
+interface LoginArgs {
+  username: string;
+  password: string;
+}
+
+
+
+export const login = createAsyncThunk<Login, LoginArgs, { rejectValue: LoginErrorResponse}>(
   "login/login",
-  async ({username, password}, { getState, dispatch }) => {
-    const csrf = getState().login.csrf;
+  async ({username, password}, { getState, dispatch, rejectWithValue }) => {
+    const csrf = (getState() as RootState).login.csrf;
     const response = await fetch("/api/login/", {
       method: "POST",
       credentials: "include",
       headers: {
         "Content-Type": "application/json",
-        "X-CSRFToken": csrf,
+        "X-CSRFToken": csrf ? csrf : "",
       },
       body: JSON.stringify({username: username, password: password}),
 
@@ -58,10 +78,10 @@ export const login = createAsyncThunk(
     .then(isResponseOk)
     .then((data) => {
       dispatch(fetchCsrf());
-      return {isAuthenticated: true, user: data.user, error: null}
+      return {isAuthenticated: true, user: data.user}
     })
     .catch((err) => {
-      return {isAuthenticated: false, user: null, error: "Wrong usename or password"}
+      return rejectWithValue({ error: err.message })
     });
     return response;
   }
@@ -83,10 +103,16 @@ export const logout = createAsyncThunk(
   }
 );
 
-const slice = createSlice({
+interface LoginState {
+  user: User | undefined;
+  csrf: string | undefined;
+  isAuthenticated: boolean;
+  error: string | undefined;
+}
 
+const slice = createSlice({
   name: "login",
-  initialState: { user: null, csrf: null, isAuthenticated: false, error: null },
+  initialState: { user: undefined, csrf: undefined, isAuthenticated: false, error: undefined } as LoginState,
   reducers: {
     setCredentials: (state, action) => {
       const user = action.payload.user;
@@ -96,39 +122,46 @@ const slice = createSlice({
       state.csrf = csrf;
     }
   },
-  extraReducers: {
-    [fetchCsrf.fulfilled]: (state, action) => {
-      state.csrf = action.payload 
-    },
-    [fetchSession.fulfilled]: (state, action) => {
+  extraReducers: (builder) => {
+    builder.addCase(fetchCsrf.rejected, (state, action) => {
+      state.csrf = undefined;
+    })
+    builder.addCase(fetchCsrf.fulfilled, (state, action) => {
+      state.csrf = action.payload;
+    })
+    builder.addCase(fetchSession.fulfilled, (state, action) => {
       state.isAuthenticated = action.payload.isAuthenticated 
       state.user = action.payload.user
-    },
-    [login.fulfilled]: (state, action) => {
+    })
+    builder.addCase(login.fulfilled, (state, action) => {
       console.log('login.fulfilled', action.payload)
       state.isAuthenticated = action.payload.isAuthenticated;
       state.user = action.payload.user;
-      state.error = action.payload.error;
-    },
-    [logout.fulfilled]: (state, action) => {
+      state.error = undefined;
+    })
+    builder.addCase(login.rejected, (state, action) => {
+      console.log('login.rejected', action.payload)
+      state.error = action.payload?.error;
+    })
+    builder.addCase(logout.fulfilled, (state, action) => {
       state.isAuthenticated = action.payload.isAuthenticated;
-    },
-  }
+    })
+  },
 });
 
 export const { setCredentials } = slice.actions;
 
 export default slice.reducer;
 
-export const selectCurrentUser = (state) => state.login.user;
-export const selectCsrf = (state) => state.login.csrf;
-export const selectAuthHeaders = (state) => {
-  let headers = {}
+export const selectCurrentUser = (state: RootState) => state.login.user;
+export const selectCsrf = (state: RootState) => state.login.csrf;
+export const selectAuthHeaders = (state: RootState) => {
+  let headers = {"X-CSRFToken": ""}
   const csrf = state.login.csrf;
   if (csrf) {
     headers["X-CSRFToken"] = csrf;
   }
   return headers
 }
-export const isAuthenticated = (state) => state.login.isAuthenticated;
-export const loginError = (state) => state.login.error;
+export const isAuthenticated = (state: RootState) => state.login.isAuthenticated;
+export const loginError = (state: RootState) => state.login.error;

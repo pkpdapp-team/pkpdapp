@@ -45,6 +45,7 @@ class ProjectSerializer(serializers.ModelSerializer):
         return project
 
     def update(self, instance, validated_data):
+        print('project update', validated_data)
         users = validated_data.pop('projectaccess_set')
         old_accesses = list(instance.projectaccess_set.all())
         project = BaseProjectSerializer().update(

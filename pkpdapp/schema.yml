@@ -408,6 +408,141 @@ paths:
           description: ''
       tags:
       - api
+  /api/compound/:
+    get:
+      operationId: listCompounds
+      description: ''
+      parameters: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Compound'
+          description: ''
+      tags:
+      - api
+    post:
+      operationId: createCompound
+      description: ''
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Compound'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Compound'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Compound'
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Compound'
+          description: ''
+      tags:
+      - api
+  /api/compound/{id}/:
+    get:
+      operationId: retrieveCompound
+      description: ''
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: A unique integer value identifying this compound.
+        schema:
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Compound'
+          description: ''
+      tags:
+      - api
+    put:
+      operationId: updateCompound
+      description: ''
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: A unique integer value identifying this compound.
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Compound'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Compound'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Compound'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Compound'
+          description: ''
+      tags:
+      - api
+    patch:
+      operationId: partialUpdateCompound
+      description: ''
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: A unique integer value identifying this compound.
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Compound'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Compound'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Compound'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Compound'
+          description: ''
+      tags:
+      - api
+    delete:
+      operationId: destroyCompound
+      description: ''
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: A unique integer value identifying this compound.
+        schema:
+          type: string
+      responses:
+        '204':
+          description: ''
+      tags:
+      - api
   /api/project/:
     get:
       operationId: listProjects
@@ -2650,6 +2785,34 @@ components:
       required:
       - id_in_dataset
       - dataset
+    Compound:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          description: name of the compound
+          maxLength: 100
+        description:
+          type: string
+          description: short description of the compound
+        molecular_mass:
+          type: number
+          nullable: true
+          description: molecular mass for compound for conversion from mol to grams
+        compound_type:
+          enum:
+          - SM
+          - LM
+          type: string
+        molecular_mass_unit:
+          type: integer
+          description: unit for molecular mass (e.g. g/mol)
+      required:
+      - name
+      - description
     Project:
       type: object
       properties:
@@ -2681,6 +2844,8 @@ components:
         description:
           type: string
           description: short description of the project
+        compound:
+          type: integer
         users:
           type: array
           items:
@@ -2690,6 +2855,7 @@ components:
       required:
       - user_access
       - name
+      - compound
     ProjectAccess:
       type: object
       properties:

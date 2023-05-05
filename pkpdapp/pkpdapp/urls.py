@@ -19,6 +19,7 @@ router = routers.DefaultRouter()
 router.register('dataset', api.DatasetView, basename='dataset')
 router.register('user', api.UserView, basename='user')
 router.register('subject', api.SubjectView, basename='subject')
+router.register('compound', api.CompoundView, basename='compound')
 router.register('project', api.ProjectView, basename='project')
 router.register('project_access', api.ProjectAccessView,
                 basename='project_access')

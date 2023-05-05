@@ -23,6 +23,7 @@ from .auce import AuceView
 from .biomarker_type import BiomarkerTypeView
 from .dataset import DatasetView
 from .dose import DoseView
+from .compound import CompoundView
 
 from .models import (
     PharmacokineticView,

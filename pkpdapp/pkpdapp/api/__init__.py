@@ -6,7 +6,7 @@
 # flake8: noqa F401
 
 from .views import (
-    DatasetView, UserView, ProjectView,
+    DatasetView, UserView, ProjectView, CompoundView,
     PharmacokineticView, DosedPharmacokineticView,
     PharmacodynamicView, DoseView,
     ProtocolView, SimulatePkView, SimulatePdView,

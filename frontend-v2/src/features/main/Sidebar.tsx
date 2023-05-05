@@ -15,6 +15,8 @@ import MailIcon from '@mui/icons-material/Mail';
 import MenuIcon from '@mui/icons-material/Menu';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
+import MainContent from './MainContent';
+import { PageName } from './mainSlice';
 
 const drawerWidth = 240;
 
@@ -25,40 +27,34 @@ export default function Sidebar() {
     setMobileOpen(!mobileOpen);
   };
 
+  const pageKeys = Object.keys(PageName);
+  const pageValues = Object.values(PageName);
+
+  const pages = pageKeys.map((key, index) => {
+    return {
+      key,
+      value: pageValues[index],
+    };
+  });
+
   const drawer = (
     <div>
       <Toolbar />
       <Divider />
       <List>
-        {['Inbox', 'Starred', 'Send email', 'Drafts'].map((text, index) => (
-          <ListItem key={text} disablePadding>
+        {pages.map(({ key, value }, index) => (
+          <ListItem key={key} disablePadding>
             <ListItemButton>
               <ListItemIcon>
                 {index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
               </ListItemIcon>
-              <ListItemText primary={text} />
-            </ListItemButton>
-          </ListItem>
-        ))}
-      </List>
-      <Divider />
-      <List>
-        {['All mail', 'Trash', 'Spam'].map((text, index) => (
-          <ListItem key={text} disablePadding>
-            <ListItemButton>
-              <ListItemIcon>
-                {index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
-              </ListItemIcon>
-              <ListItemText primary={text} />
+              <ListItemText primary={value} />
             </ListItemButton>
           </ListItem>
         ))}
       </List>
     </div>
   );
-
-  const window = undefined;
-  const container = window !== undefined ? () => window().document.body : undefined;
 
   return (
     <Box sx={{ display: 'flex' }}>
@@ -81,7 +77,7 @@ export default function Sidebar() {
             <MenuIcon />
           </IconButton>
           <Typography variant="h6" noWrap component="div">
-            Responsive drawer
+            PkpdApp
           </Typography>
         </Toolbar>
       </AppBar>
@@ -92,7 +88,6 @@ export default function Sidebar() {
       >
         {/* The implementation can be swapped with js to avoid SEO duplication of links. */}
         <Drawer
-          container={container}
           variant="temporary"
           open={mobileOpen}
           onClose={handleDrawerToggle}

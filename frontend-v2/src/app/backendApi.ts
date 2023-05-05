@@ -133,6 +133,54 @@ const injectedRtkApi = api.injectEndpoints({
         method: "DELETE",
       }),
     }),
+    listCompounds: build.query<ListCompoundsApiResponse, ListCompoundsApiArg>({
+      query: () => ({ url: `/api/compound/` }),
+    }),
+    createCompound: build.mutation<
+      CreateCompoundApiResponse,
+      CreateCompoundApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/compound/`,
+        method: "POST",
+        body: queryArg.compound,
+      }),
+    }),
+    retrieveCompound: build.query<
+      RetrieveCompoundApiResponse,
+      RetrieveCompoundApiArg
+    >({
+      query: (queryArg) => ({ url: `/api/compound/${queryArg.id}/` }),
+    }),
+    updateCompound: build.mutation<
+      UpdateCompoundApiResponse,
+      UpdateCompoundApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/compound/${queryArg.id}/`,
+        method: "PUT",
+        body: queryArg.compound,
+      }),
+    }),
+    partialUpdateCompound: build.mutation<
+      PartialUpdateCompoundApiResponse,
+      PartialUpdateCompoundApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/compound/${queryArg.id}/`,
+        method: "PATCH",
+        body: queryArg.compound,
+      }),
+    }),
+    destroyCompound: build.mutation<
+      DestroyCompoundApiResponse,
+      DestroyCompoundApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/compound/${queryArg.id}/`,
+        method: "DELETE",
+      }),
+    }),
     listProjects: build.query<ListProjectsApiResponse, ListProjectsApiArg>({
       query: () => ({ url: `/api/project/` }),
     }),
@@ -964,6 +1012,34 @@ export type DestroySubjectApiArg = {
   /** A unique integer value identifying this subject. */
   id: string;
 };
+export type ListCompoundsApiResponse = /** status 200  */ Compound[];
+export type ListCompoundsApiArg = void;
+export type CreateCompoundApiResponse = /** status 201  */ Compound;
+export type CreateCompoundApiArg = {
+  compound: Compound;
+};
+export type RetrieveCompoundApiResponse = /** status 200  */ Compound;
+export type RetrieveCompoundApiArg = {
+  /** A unique integer value identifying this compound. */
+  id: string;
+};
+export type UpdateCompoundApiResponse = /** status 200  */ Compound;
+export type UpdateCompoundApiArg = {
+  /** A unique integer value identifying this compound. */
+  id: string;
+  compound: Compound;
+};
+export type PartialUpdateCompoundApiResponse = /** status 200  */ Compound;
+export type PartialUpdateCompoundApiArg = {
+  /** A unique integer value identifying this compound. */
+  id: string;
+  compound: Compound;
+};
+export type DestroyCompoundApiResponse = unknown;
+export type DestroyCompoundApiArg = {
+  /** A unique integer value identifying this compound. */
+  id: string;
+};
 export type ListProjectsApiResponse = /** status 200  */ Project[];
 export type ListProjectsApiArg = void;
 export type CreateProjectApiResponse = /** status 201  */ Project;
@@ -1450,6 +1526,14 @@ export type Subject = {
   dataset: number;
   protocol?: number | null;
 };
+export type Compound = {
+  id?: number;
+  name: string;
+  description: string;
+  molecular_mass?: number | null;
+  compound_type?: "SM" | "LM";
+  molecular_mass_unit?: number;
+};
 export type Project = {
   id?: number;
   user_access: {
@@ -1460,6 +1544,7 @@ export type Project = {
   }[];
   name: string;
   description?: string;
+  compound: number;
   users?: string[];
 };
 export type ProjectAccess = {
@@ -1687,6 +1772,12 @@ export const {
   useUpdateSubjectMutation,
   usePartialUpdateSubjectMutation,
   useDestroySubjectMutation,
+  useListCompoundsQuery,
+  useCreateCompoundMutation,
+  useRetrieveCompoundQuery,
+  useUpdateCompoundMutation,
+  usePartialUpdateCompoundMutation,
+  useDestroyCompoundMutation,
   useListProjectsQuery,
   useCreateProjectMutation,
   useRetrieveProjectQuery,

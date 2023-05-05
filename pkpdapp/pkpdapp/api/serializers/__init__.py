@@ -15,6 +15,7 @@ from .monolix import MonolixSerializer
 from .auce import AuceSerializer
 from .biomarker_type import BiomarkerTypeSerializer
 from .dose import DoseSerializer
+from .compound import CompoundSerializer
 from .models import (
     PharmacokineticSerializer,
     DosedPharmacokineticSerializer,
