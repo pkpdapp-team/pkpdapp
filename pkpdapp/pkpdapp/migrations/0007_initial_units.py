@@ -20,6 +20,14 @@ def load_units(apps, schema_editor):
 
     units = [
         {
+            'symbol': 'nmol/L',
+            'unit': 1e-9 * mol / L,
+        },
+        {
+            'symbol': 'µL/min/mg',
+            'unit': 1e-6 * L / (60 * h * 1e-3 * g),
+        },
+        {
             'symbol': 'h',
             'unit': h,
         },

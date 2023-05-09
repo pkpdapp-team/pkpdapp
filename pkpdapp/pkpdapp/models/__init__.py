@@ -8,6 +8,7 @@
 from .stored import StoredModel
 from .units import Unit
 from .compound import Compound
+from .efficacy_experiment import EfficacyExperiment
 from .project import Project, ProjectAccess
 from .protocol import Protocol
 from .dose import Dose

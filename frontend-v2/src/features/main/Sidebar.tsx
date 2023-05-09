@@ -16,11 +16,13 @@ import MenuIcon from '@mui/icons-material/Menu';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import MainContent from './MainContent';
-import { PageName } from './mainSlice';
+import { PageName, selectPage } from './mainSlice';
+import { useDispatch } from 'react-redux';
 
 const drawerWidth = 240;
 
 export default function Sidebar() {
+  const dispatch = useDispatch();
   const [mobileOpen, setMobileOpen] = React.useState(false);
 
   const handleDrawerToggle = () => {
@@ -37,6 +39,10 @@ export default function Sidebar() {
     };
   });
 
+  const handlePageClick = (key: string) => () => {
+    dispatch(selectPage(PageName[key as keyof typeof PageName]));
+  }; 
+
   const drawer = (
     <div>
       <Toolbar />
@@ -44,7 +50,7 @@ export default function Sidebar() {
       <List>
         {pages.map(({ key, value }, index) => (
           <ListItem key={key} disablePadding>
-            <ListItemButton>
+            <ListItemButton onClick={handlePageClick(key)}>
               <ListItemIcon>
                 {index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
               </ListItemIcon>

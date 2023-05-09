@@ -32,5 +32,5 @@ const mainSlice = createSlice({
   },
 });
 
-export const { selectPage: selectTab } = mainSlice.actions;
+export const { selectPage, selectProject } = mainSlice.actions;
 export default mainSlice.reducer;

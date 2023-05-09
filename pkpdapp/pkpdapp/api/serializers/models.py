@@ -42,7 +42,7 @@ class DosedPharmacokineticSerializer(serializers.ModelSerializer):
         model = DosedPharmacokineticModel
         fields = '__all__'
 
-    def get_mmt(self, m):
+    def get_mmt(self, m) -> str:
         return m.get_mmt()
 
     def get_components(self, m):

@@ -2899,22 +2899,18 @@ components:
           format: double
           nullable: true
           description: blood to plasma ratio (unitless)
-        intrinsic_clearance:
+        intrinsic_clearence:
           type: number
           format: double
           nullable: true
           description: intrinsic clearance
-        intrinsic_clearance_assay:
-          $ref: '#/components/schemas/IntrinsicClearanceAssayEnum'
+        intrinsic_clearence_assay:
+          $ref: '#/components/schemas/IntrinsicClearenceAssayEnum'
         fraction_unbound_including_cells:
           type: number
           format: double
           nullable: true
           description: fraction unbound in plasma and red blood cells (unitless)
-        target_molecular_mass:
-          type: number
-          format: double
-          description: molecular mass for target for conversion from mol to grams
         target_concentration:
           type: number
           format: double
@@ -2925,18 +2921,18 @@ components:
           format: double
           nullable: true
           description: dissociation constant
+        calculate_receptor_occupancy:
+          type: boolean
+          description: calculate receptor occupancy
         is_soluble:
           type: boolean
           description: is the compound target soluble
         molecular_mass_unit:
           type: integer
           description: unit for molecular mass (e.g. g/mol)
-        intrinsic_clearance_unit:
+        intrinsic_clearence_unit:
           type: integer
           description: unit for intrinsic clearance
-        target_molecular_mass_unit:
-          type: integer
-          description: unit for target molecular mass (e.g. g/mol)
         target_concentration_unit:
           type: integer
           description: unit for target concentration
@@ -2948,7 +2944,6 @@ components:
       - id
       - molecular_mass
       - name
-      - target_molecular_mass
     CompoundTypeEnum:
       enum:
       - SM
@@ -3266,7 +3261,7 @@ components:
         * `D` - Default Value of model
         * `R` - Random from prior
         * `F` - From other inference
-    IntrinsicClearanceAssayEnum:
+    IntrinsicClearenceAssayEnum:
       enum:
       - MS
       - HC
@@ -3527,22 +3522,18 @@ components:
           format: double
           nullable: true
           description: blood to plasma ratio (unitless)
-        intrinsic_clearance:
+        intrinsic_clearence:
           type: number
           format: double
           nullable: true
           description: intrinsic clearance
-        intrinsic_clearance_assay:
-          $ref: '#/components/schemas/IntrinsicClearanceAssayEnum'
+        intrinsic_clearence_assay:
+          $ref: '#/components/schemas/IntrinsicClearenceAssayEnum'
         fraction_unbound_including_cells:
           type: number
           format: double
           nullable: true
           description: fraction unbound in plasma and red blood cells (unitless)
-        target_molecular_mass:
-          type: number
-          format: double
-          description: molecular mass for target for conversion from mol to grams
         target_concentration:
           type: number
           format: double
@@ -3553,18 +3544,18 @@ components:
           format: double
           nullable: true
           description: dissociation constant
+        calculate_receptor_occupancy:
+          type: boolean
+          description: calculate receptor occupancy
         is_soluble:
           type: boolean
           description: is the compound target soluble
         molecular_mass_unit:
           type: integer
           description: unit for molecular mass (e.g. g/mol)
-        intrinsic_clearance_unit:
+        intrinsic_clearence_unit:
           type: integer
           description: unit for intrinsic clearance
-        target_molecular_mass_unit:
-          type: integer
-          description: unit for target molecular mass (e.g. g/mol)
         target_concentration_unit:
           type: integer
           description: unit for target concentration

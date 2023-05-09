@@ -4,6 +4,7 @@
 # copyright notice and full license details.
 #
 
+from typing import Dict, List
 from rest_framework import serializers
 from pkpdapp.models import (
     BiomarkerType
@@ -19,11 +20,11 @@ class BiomarkerTypeSerializer(serializers.ModelSerializer):
         model = BiomarkerType
         fields = '__all__'
 
-    def get_data(self, bt):
+    def get_data(self, bt) -> Dict[str, List] | None:
         return bt.data().to_dict(orient='list')
 
-    def get_is_categorical(self, bt):
+    def get_is_categorical(self, bt) -> bool:
         return bt.is_categorical()
 
-    def get_is_continuous(self, bt):
+    def get_is_continuous(self, bt) -> bool:
         return bt.is_continuous()

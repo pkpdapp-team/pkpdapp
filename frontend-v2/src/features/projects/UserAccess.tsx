@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, FormControl, InputLabel, Select, MenuItem, DialogContentText, useTheme } from '@mui/material';
-import { ProjectAccess, useListUsersQuery } from '../../app/backendApi';
+import { Project, ProjectAccess, useUserListQuery } from '../../app/backendApi';
 import { Control } from 'react-hook-form';
 import { FormData } from './Project';
 import SelectField from '../../components/SelectField';
@@ -8,6 +8,7 @@ import SelectField from '../../components/SelectField';
 
 interface Props {
   open: boolean;
+  project: Project;
   userAccess: ProjectAccess[];
   append: (value: ProjectAccess) => void;
   remove: (index: number) => void;
@@ -15,10 +16,10 @@ interface Props {
   onClose: () => void;
 }
 
-const UserAccess: React.FC<Props> = ({ open, userAccess, append, remove, control, onClose }) => {
+const UserAccess: React.FC<Props> = ({ open, userAccess, append, remove, control, onClose, project }) => {
   const theme = useTheme();
 
-  const { data: users, error, isLoading } = useListUsersQuery()
+  const { data: users, error, isLoading } = useUserListQuery()
 
   // create map from user id to user object
   const userMap = new Map()
@@ -39,7 +40,7 @@ const UserAccess: React.FC<Props> = ({ open, userAccess, append, remove, control
   ]
 
   const addUser = (id: number) => {
-    append({ user: id, read_only: false })
+    append({ id: 0, user: id, read_only: false, project: project.id })
   }
 
   console.log('userAccess', userAccess)

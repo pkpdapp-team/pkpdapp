@@ -4,6 +4,7 @@
 # copyright notice and full license details.
 #
 
+from drf_spectacular.utils import extend_schema_field
 from pkpdapp.utils import (
     MonolixModelParser,
     monolix_import,

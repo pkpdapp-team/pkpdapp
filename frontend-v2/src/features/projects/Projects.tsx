@@ -17,18 +17,18 @@ import {
 import TextField from "../../components/TextField";
 import { Delete, Save } from "@mui/icons-material";
 import { api } from "../../app/api";
-import { Compound, Project, ProjectAccess, useCreateCompoundMutation, useCreateProjectMutation, useDestroyProjectMutation, useListProjectsQuery, useRetrieveCompoundQuery, useUpdateCompoundMutation, useUpdateProjectMutation } from "../../app/backendApi";
+import { Compound, Project, ProjectAccess, useCompoundCreateMutation, useProjectCreateMutation, useProjectDestroyMutation, useProjectListQuery, useCompoundRetrieveQuery, useCompoundUpdateMutation, useProjectUpdateMutation } from "../../app/backendApi";
 import SelectField from "../../components/SelectField";
 import ProjectRow from "./Project";
 import { RootState } from "../../app/store";
 
 const ProjectTable: React.FC = () => {
   const dispatch = useDispatch();
-  const { data: projects, error, isLoading } = useListProjectsQuery()
+  const { data: projects, error, isLoading } = useProjectListQuery()
   const user = useSelector((state: RootState) => state.login.user);
 
-  const [addProject, { isLoading: isAdding }] = useCreateProjectMutation()
-  const [addCompound, { isLoading: isAddingCompound }] = useCreateCompoundMutation()
+  const [addProject, { isLoading: isAdding }] = useProjectCreateMutation()
+  const [addCompound, { isLoading: isAddingCompound }] = useCompoundCreateMutation()
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -42,12 +42,12 @@ const ProjectTable: React.FC = () => {
   ]
   
   const handleAddRow = () => {
-    const user_access = [{ id: user?.id || 0, read_only: false, user: user?.id || 0 , project: '0'}]
-    let project: Project = {id: 0, name: 'new', description: '', compound: 0, user_access}
-    const compound: Compound = {id: 0, name: 'new', description: '', compound_type: 'SM'}
+    const user_access = [{ id: user?.id || 0, read_only: false, user: user?.id || 0 , project: 0}]
+    let project: Project = {id: 0, name: 'new', description: '', compound: 0, user_access, users: [user?.id || 0]}
+    const compound: Compound = {id: 0, name: 'new', description: '', compound_type: 'SM', efficacy_experiments: [], molecular_mass: 100, target_molecular_mass: 100}
     addCompound({ compound }).unwrap().then((compound) => {
       project.compound = compound.id || 0
-      project.user_access[0].project = `${project.id}`
+      project.user_access[0].project = project.id
       addProject({ project })
     })
   }

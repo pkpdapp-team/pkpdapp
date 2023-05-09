@@ -68,9 +68,18 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(help_text='name of the compound', max_length=100)),
-                ('description', models.TextField(help_text='short description of the compound')),
-                ('molecular_mass', models.FloatField(blank=True, help_text='molecular mass for compound for conversion from mol to grams', null=True)),
+                ('description', models.TextField(blank=True, default='', help_text='short description of the compound')),
+                ('molecular_mass', models.FloatField(help_text='molecular mass for compound for conversion from mol to grams')),
                 ('compound_type', models.CharField(choices=[('SM', 'Small Molecule'), ('LM', 'Large Molecule')], default='SM', max_length=2)),
+                ('fraction_unbound_plasma', models.FloatField(blank=True, default=1.0, help_text='fraction unbound plasma (unitless)', null=True)),
+                ('blood_to_plasma_ratio', models.FloatField(blank=True, help_text='blood to plasma ratio (unitless)', null=True)),
+                ('intrinsic_clearance', models.FloatField(blank=True, help_text='intrinsic clearance', null=True)),
+                ('intrinsic_clearance_assay', models.CharField(choices=[('MS', 'Microsomes'), ('HC', 'Hepatocytes')], default='MS', max_length=2)),
+                ('fraction_unbound_including_cells', models.FloatField(blank=True, default=1.0, help_text='fraction unbound in plasma and red blood cells (unitless)', null=True)),
+                ('target_molecular_mass', models.FloatField(help_text='molecular mass for target for conversion from mol to grams')),
+                ('target_concentration', models.FloatField(blank=True, help_text='target concentration', null=True)),
+                ('dissociation_constant', models.FloatField(blank=True, help_text='dissociation constant', null=True)),
+                ('is_soluble', models.BooleanField(default=True, help_text='is the compound target soluble')),
             ],
         ),
         migrations.CreateModel(
@@ -400,6 +409,17 @@ class Migration(migrations.Migration):
             name='project',
             field=models.ForeignKey(help_text='Project that "owns" this inference object', on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.project'),
         ),
+        migrations.CreateModel(
+            name='EfficacyExperiment',
+            fields=[
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('name', models.CharField(help_text='name of the experiment', max_length=100)),
+                ('c50', models.FloatField(help_text='half maximal effective concentration')),
+                ('hill_coefficient', models.FloatField(default=1.0, help_text='Hill coefficient measure of binding')),
+                ('c50_unit', models.ForeignKey(help_text='unit for c50', on_delete=django.db.models.deletion.PROTECT, related_name='efficacy_experiments', to='pkpdapp.unit')),
+                ('compound', models.ForeignKey(help_text='compound for efficacy experiment', on_delete=django.db.models.deletion.CASCADE, related_name='efficacy_experiments', to='pkpdapp.compound')),
+            ],
+        ),
         migrations.AddField(
             model_name='dosedpharmacokineticmodel',
             name='pd_model',
@@ -431,8 +451,28 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='compound',
+            name='dissociation_unit',
+            field=models.ForeignKey(default=pkpdapp.models.compound.get_dissociation_constant_unit, help_text='unit for dissociation constant', on_delete=django.db.models.deletion.PROTECT, related_name='compounds_kd', to='pkpdapp.unit'),
+        ),
+        migrations.AddField(
+            model_name='compound',
+            name='intrinsic_clearance_unit',
+            field=models.ForeignKey(default=pkpdapp.models.compound.get_intrinsic_clearence_unit, help_text='unit for intrinsic clearance', on_delete=django.db.models.deletion.PROTECT, related_name='compounds_clint', to='pkpdapp.unit'),
+        ),
+        migrations.AddField(
+            model_name='compound',
             name='molecular_mass_unit',
-            field=models.ForeignKey(default=pkpdapp.models.compound.get_mol_mass_unit, help_text='unit for molecular mass (e.g. g/mol)', on_delete=django.db.models.deletion.PROTECT, related_name='compounds', to='pkpdapp.unit'),
+            field=models.ForeignKey(default=pkpdapp.models.compound.get_mol_mass_unit, help_text='unit for molecular mass (e.g. g/mol)', on_delete=django.db.models.deletion.PROTECT, related_name='compound_mol_mass', to='pkpdapp.unit'),
+        ),
+        migrations.AddField(
+            model_name='compound',
+            name='target_concentration_unit',
+            field=models.ForeignKey(default=pkpdapp.models.compound.get_target_concentration_unit, help_text='unit for target concentration', on_delete=django.db.models.deletion.PROTECT, related_name='compounds_target_conc', to='pkpdapp.unit'),
+        ),
+        migrations.AddField(
+            model_name='compound',
+            name='target_molecular_mass_unit',
+            field=models.ForeignKey(default=pkpdapp.models.compound.get_mol_mass_unit, help_text='unit for target molecular mass (e.g. g/mol)', on_delete=django.db.models.deletion.PROTECT, related_name='compounds_target_mol_mass', to='pkpdapp.unit'),
         ),
         migrations.AddField(
             model_name='categoricalbiomarker',

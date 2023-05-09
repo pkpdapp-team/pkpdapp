@@ -470,10 +470,19 @@ def load_datasets(apps, schema_editor):
                         compound = Compound.objects.create(
                             name=compound_str,
                             # TODO how to get molecular_mass?
-                            molecular_mass=1.0,
-                            molecular_mass_unit=Unit.objects.get(
-                                symbol='g/mol'
-                            )
+                            molecular_mass=100,
+                            compound_type='SM',
+                            molecular_mass_unit=Unit.objects.get(symbol='g/mol'),
+                            intrinsic_clearance_unit=Unit.objects.get(symbol='µL/min/mg'),
+                            intrinsic_clearance_assay='MS',
+                            fraction_unbound_plasma=1.0,
+                            fraction_unbound_including_cells=1.0,
+                            target_molecular_mass=100,
+                            target_molecular_mass_unit=Unit.objects.get(symbol='g/mol'),
+                            target_concentration=1e-9,
+                            target_concentration_unit=Unit.objects.get(symbol='nmol/L'),
+                            dissociation_unit=Unit.objects.get(symbol='nmol/L'),
+                            is_soluble=True,
                         )
                     if subject.id in protocols:
                         protocol = protocols[subject.id]

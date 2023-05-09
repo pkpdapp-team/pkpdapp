@@ -16,6 +16,16 @@ def load_users_and_projects(apps, schema_editor):
         'molecular_mass': 100,
         'molecular_mass_unit': 'g/mol',
         'compound_type': 'SM',
+        'intrinsic_clearance_unit': 'µL/min/mg',
+        'intrinsic_clearance_assay': 'MS',
+        'fraction_unbound_plasma': 1.0,
+        'fraction_unbound_including_cells': 1.0,
+        'target_molecular_mass': 100,
+        'target_molecular_mass_unit': 'g/mol',
+        'target_concentration': 1e-9,
+        'target_concentration_unit': 'nmol/L',
+        'dissociation_constant_unit': 'nmol/L',
+        'is_soluble': True,
     }
     users = [
         {
@@ -54,7 +64,17 @@ def load_users_and_projects(apps, schema_editor):
         description=compound['description'],
         molecular_mass=compound['molecular_mass'],
         compound_type=compound['compound_type'],
-        molecular_mass_unit=Unit.objects.get(symbol=compound['molecular_mass_unit'])
+        molecular_mass_unit=Unit.objects.get(symbol=compound['molecular_mass_unit']),
+        intrinsic_clearance_unit=Unit.objects.get(symbol=compound['intrinsic_clearance_unit']),
+        intrinsic_clearance_assay='MS',
+        fraction_unbound_plasma=1.0,
+        fraction_unbound_including_cells=1.0,
+        target_molecular_mass=100,
+        target_molecular_mass_unit=Unit.objects.get(symbol=compound['target_molecular_mass_unit']),
+        target_concentration=1e-9,
+        target_concentration_unit=Unit.objects.get(symbol=compound['target_concentration_unit']),
+        dissociation_unit=Unit.objects.get(symbol=compound['dissociation_constant_unit']),
+        is_soluble=True,
     )
     for u in users:
         user = User.objects.create(

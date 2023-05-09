@@ -17,7 +17,7 @@ import {
 import TextField from "../../components/TextField";
 import { Delete, PersonAdd, Save } from "@mui/icons-material";
 import { api } from "../../app/api";
-import { Compound, Project, ProjectAccess, useDestroyProjectMutation, useListProjectsQuery, useRetrieveCompoundQuery, useUpdateCompoundMutation, useUpdateProjectMutation } from "../../app/backendApi";
+import { Compound, Project, ProjectAccess, useProjectDestroyMutation, useProjectListQuery, useCompoundRetrieveQuery, useCompoundUpdateMutation, useProjectUpdateMutation } from "../../app/backendApi";
 import SelectField from "../../components/SelectField";
 import UserAccess from "./UserAccess";
 
@@ -34,18 +34,18 @@ const ProjectRow: React.FC<Props> = ({ project }) => {
   const [
     updateProject, // This is the mutation trigger
     { isLoading: isUpdatingProject }, // This is the destructured mutation result
-  ] = useUpdateProjectMutation()
+  ] = useProjectUpdateMutation()
   
    const [
     updateCompound, // This is the mutation trigger
     { isLoading: isUpdatingCompound }, // This is the destructured mutation result
-  ] = useUpdateCompoundMutation()
+  ] = useCompoundUpdateMutation()
 
 
   const [
     destroyProject, // This is the mutation trigger
     { isLoading: isDestroying }, // This is the destructured mutation result
-  ] = useDestroyProjectMutation()
+  ] = useProjectDestroyMutation()
   
   const modalityOptions = [
     { value: "SM", label: "Small Molecule" },
@@ -53,8 +53,16 @@ const ProjectRow: React.FC<Props> = ({ project }) => {
   ]
 
 
-  const { data: compound, error, isLoading } = useRetrieveCompoundQuery({id: `${project.compound}`})
-  const defaultCompound: Compound = {id: 1, name: '', description: '', compound_type: 'SM'}
+  const { data: compound, error, isLoading } = useCompoundRetrieveQuery({id: project.compound})
+  const defaultCompound: Compound = {
+    id: 1, 
+    name: '', 
+    description: '', 
+    compound_type: 'SM',
+    efficacy_experiments: [],
+    molecular_mass: 100,
+    target_molecular_mass: 100,
+  }
   const { reset, handleSubmit, control } = useForm<FormData>({
     defaultValues: { project, compound: defaultCompound },
   });
@@ -80,12 +88,12 @@ const ProjectRow: React.FC<Props> = ({ project }) => {
   }
 
   const handleSave = (data: FormData) => {
-    updateCompound({ id: `${compound?.id}`, compound: data.compound });
-    updateProject({ id: `${project.id}`, project: data.project });
+    updateCompound({ id: compound?.id, compound: data.compound });
+    updateProject({ id: project.id, project: data.project });
   };
 
   const handleDelete = () => {
-    destroyProject({id: `${project.id}`});
+    destroyProject({id: project.id});
   };
 
   const userAccessClose = () => {
@@ -114,7 +122,7 @@ const ProjectRow: React.FC<Props> = ({ project }) => {
         <IconButton onClick={() => setUserAccessOpen(true)}>
           <PersonAdd />
         </IconButton>
-        <UserAccess open={userAccessOpen} control={control} onClose={userAccessClose} userAccess={userAccess} append={append} remove={remove} />
+        <UserAccess open={userAccessOpen} control={control} onClose={userAccessClose} userAccess={userAccess as ProjectAccess[]} append={append} remove={remove} project={project}/>
       </TableCell>
       <TableCell>
         <SelectField label="Modality" options={modalityOptions} name="compound.compound_type" control={control} /> 

@@ -4,7 +4,7 @@ export const api = backendApi.enhanceEndpoints({
   addTagTypes: ['Project', 'Compound', 'Dataset'],
   endpoints: {
     // Projects
-    listProjects: {
+    projectList: {
       providesTags: (result) =>
         result
           ? [
@@ -13,23 +13,23 @@ export const api = backendApi.enhanceEndpoints({
           ]
           : [{ type: 'Project', id: 'LIST' }],
     },
-    retrieveProject: {
+    projectRetrieve: {
       providesTags: (result, error, { id }) => [{ type: 'Project', id }],
     },
-    updateProject: {
+    projectUpdate: {
       invalidatesTags: (result, error, { id }) => [{ type: 'Project', id }],
     },
-    createProject: {
+    projectCreate: {
       invalidatesTags: [{ type: 'Project', id: 'LIST' }],
     },
-    destroyProject: {
+    projectDestroy: {
       invalidatesTags: (result, error, { id }) => [
         { type: 'Project', id },
         { type: 'Project', id: 'LIST' }
       ],
     },
     // Compounds
-    listCompounds: {
+    compoundList: {
       providesTags: (result) =>
         result
           ? [
@@ -38,17 +38,17 @@ export const api = backendApi.enhanceEndpoints({
           ]
           : [{ type: 'Compound', id: 'LIST' }],
     },
-    retrieveCompound: {
+    compoundRetrieve: {
       providesTags: (result, error, { id }) => [{ type: 'Compound', id }],
     },
-    updateCompound: {
+    compoundUpdate: {
       invalidatesTags: (result, error, { id }) => [{ type: 'Compound', id }],
     },
-    createCompound: {
+    compoundCreate: {
       invalidatesTags: [{ type: 'Compound', id: 'LIST' }],
     },
     // Datasets
-    listDatasets: {
+    datasetList: {
       providesTags: (result) =>
         result
           ? [
@@ -57,13 +57,13 @@ export const api = backendApi.enhanceEndpoints({
           ]
           : [{ type: 'Dataset', id: 'LIST' }],
     },
-    retrieveDataset: {
+    datasetRetrieve: {
       providesTags: (result, error, { id }) => [{ type: 'Dataset', id }],
     },
-    updateDataset: {
+    datasetUpdate: {
       invalidatesTags: (result, error, { id }) => [{ type: 'Dataset', id }],
     },
-    createDataset: {
+    datasetCreate: {
       invalidatesTags: [{ type: 'Dataset', id: 'LIST' }],
     },
   },

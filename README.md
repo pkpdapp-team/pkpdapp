@@ -136,7 +136,7 @@ described using the OpenAPI specification. To generate the OpenAPI
 specification, run the following command:
 
 ```bash
-python manage.py generateschema --file schema.yml
+python manage.py spectacular --color --file schema.yml
 ```
 
 ## Generating RTX Query API class
