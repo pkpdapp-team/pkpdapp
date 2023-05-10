@@ -296,6 +296,202 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/combined_model/:
+    get:
+      operationId: combined_model_list
+      parameters:
+      - in: query
+        name: project_id
+        schema:
+          type: integer
+        description: Filter results by project ID
+      tags:
+      - combined_model
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CombinedModel'
+          description: ''
+    post:
+      operationId: combined_model_create
+      tags:
+      - combined_model
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CombinedModel'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CombinedModel'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CombinedModel'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CombinedModel'
+          description: ''
+  /api/combined_model/{id}/:
+    get:
+      operationId: combined_model_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this combined model.
+        required: true
+      tags:
+      - combined_model
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CombinedModel'
+          description: ''
+    put:
+      operationId: combined_model_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this combined model.
+        required: true
+      tags:
+      - combined_model
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CombinedModel'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CombinedModel'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CombinedModel'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CombinedModel'
+          description: ''
+    patch:
+      operationId: combined_model_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this combined model.
+        required: true
+      tags:
+      - combined_model
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCombinedModel'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedCombinedModel'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedCombinedModel'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CombinedModel'
+          description: ''
+    delete:
+      operationId: combined_model_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this combined model.
+        required: true
+      tags:
+      - combined_model
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/combined_model/{id}/set_variables_from_inference/:
+    put:
+      operationId: combined_model_set_variables_from_inference_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this combined model.
+        required: true
+      tags:
+      - combined_model
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CombinedModel'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CombinedModel'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CombinedModel'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CombinedModel'
+          description: ''
+  /api/combined_model/{id}/simulate:
+    post:
+      operationId: combined_model_simulate_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - combined_model
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
   /api/compound/:
     get:
       operationId: compound_list
@@ -745,201 +941,6 @@ paths:
       - cookieAuth: []
       responses:
         '204':
-          description: No response body
-  /api/dosed_pharmacokinetic/:
-    get:
-      operationId: dosed_pharmacokinetic_list
-      tags:
-      - dosed_pharmacokinetic
-      security:
-      - cookieAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/DosedPharmacokinetic'
-          description: ''
-    post:
-      operationId: dosed_pharmacokinetic_create
-      tags:
-      - dosed_pharmacokinetic
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/DosedPharmacokinetic'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/DosedPharmacokinetic'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/DosedPharmacokinetic'
-        required: true
-      security:
-      - cookieAuth: []
-      responses:
-        '201':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DosedPharmacokinetic'
-          description: ''
-  /api/dosed_pharmacokinetic/{id}/:
-    get:
-      operationId: dosed_pharmacokinetic_retrieve
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: A unique integer value identifying this dosed pharmacokinetic
-          model.
-        required: true
-      tags:
-      - dosed_pharmacokinetic
-      security:
-      - cookieAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DosedPharmacokinetic'
-          description: ''
-    put:
-      operationId: dosed_pharmacokinetic_update
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: A unique integer value identifying this dosed pharmacokinetic
-          model.
-        required: true
-      tags:
-      - dosed_pharmacokinetic
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/DosedPharmacokinetic'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/DosedPharmacokinetic'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/DosedPharmacokinetic'
-        required: true
-      security:
-      - cookieAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DosedPharmacokinetic'
-          description: ''
-    patch:
-      operationId: dosed_pharmacokinetic_partial_update
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: A unique integer value identifying this dosed pharmacokinetic
-          model.
-        required: true
-      tags:
-      - dosed_pharmacokinetic
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedDosedPharmacokinetic'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedDosedPharmacokinetic'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedDosedPharmacokinetic'
-      security:
-      - cookieAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DosedPharmacokinetic'
-          description: ''
-    delete:
-      operationId: dosed_pharmacokinetic_destroy
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: A unique integer value identifying this dosed pharmacokinetic
-          model.
-        required: true
-      tags:
-      - dosed_pharmacokinetic
-      security:
-      - cookieAuth: []
-      responses:
-        '204':
-          description: No response body
-  /api/dosed_pharmacokinetic/{id}/set_variables_from_inference/:
-    put:
-      operationId: dosed_pharmacokinetic_set_variables_from_inference_update
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: A unique integer value identifying this dosed pharmacokinetic
-          model.
-        required: true
-      tags:
-      - dosed_pharmacokinetic
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/DosedPharmacokinetic'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/DosedPharmacokinetic'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/DosedPharmacokinetic'
-        required: true
-      security:
-      - cookieAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DosedPharmacokinetic'
-          description: ''
-  /api/dosed_pharmacokinetic/{id}/simulate:
-    post:
-      operationId: dosed_pharmacokinetic_simulate_create
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        required: true
-      tags:
-      - dosed_pharmacokinetic
-      security:
-      - cookieAuth: []
-      responses:
-        '200':
           description: No response body
   /api/inference/:
     get:
@@ -2866,6 +2867,76 @@ components:
         * `SA` - Sampling
         * `OP` - Optimisation
         * `OT` - Optimisation
+    CombinedModel:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        mappings:
+          type: array
+          items:
+            $ref: '#/components/schemas/PkpdMapping'
+        components:
+          type: string
+          readOnly: true
+        variables:
+          type: array
+          items:
+            type: integer
+          readOnly: true
+        mmt:
+          type: string
+          readOnly: true
+        read_only:
+          type: boolean
+          description: true if object has been stored
+        datetime:
+          type: string
+          format: date-time
+          nullable: true
+          description: datetime the object was stored.
+        name:
+          type: string
+          description: name of the model
+          maxLength: 100
+        dose_compartment:
+          type: string
+          nullable: true
+          description: compartment name to be dosed
+          maxLength: 100
+        time_max:
+          type: number
+          format: double
+          description: suggested time to simulate after the last dose (in the time
+            units specified by the mmt model)
+        project:
+          type: integer
+          nullable: true
+          description: Project that "owns" this model
+        pk_model:
+          type: integer
+          nullable: true
+          description: model
+        pd_model:
+          type: integer
+          nullable: true
+          description: PD part of model
+        pd_model2:
+          type: integer
+          nullable: true
+          description: second PD part of model
+        protocol:
+          type: integer
+          nullable: true
+          description: dosing protocol
+      required:
+      - components
+      - id
+      - mappings
+      - mmt
+      - name
+      - variables
     Compound:
       type: object
       properties:
@@ -3054,72 +3125,6 @@ components:
       description: |-
         * `D` - IV
         * `I` - Extravascular
-    DosedPharmacokinetic:
-      type: object
-      properties:
-        id:
-          type: integer
-          readOnly: true
-        mappings:
-          type: array
-          items:
-            $ref: '#/components/schemas/PkpdMapping'
-        components:
-          type: string
-          readOnly: true
-        variables:
-          type: array
-          items:
-            type: integer
-          readOnly: true
-        mmt:
-          type: string
-          readOnly: true
-        read_only:
-          type: boolean
-          description: true if object has been stored
-        datetime:
-          type: string
-          format: date-time
-          nullable: true
-          description: datetime the object was stored.
-        name:
-          type: string
-          description: name of the model
-          maxLength: 100
-        dose_compartment:
-          type: string
-          nullable: true
-          description: compartment name to be dosed
-          maxLength: 100
-        time_max:
-          type: number
-          format: double
-          description: suggested time to simulate after the last dose (in the time
-            units specified by the mmt model)
-        project:
-          type: integer
-          nullable: true
-          description: Project that "owns" this model
-        pk_model:
-          type: integer
-          nullable: true
-          description: model
-        pd_model:
-          type: integer
-          nullable: true
-          description: PD part of model
-        protocol:
-          type: integer
-          nullable: true
-          description: dosing protocol
-      required:
-      - components
-      - id
-      - mappings
-      - mmt
-      - name
-      - variables
     Efficacy:
       type: object
       properties:
@@ -3494,6 +3499,69 @@ components:
         display_time_unit:
           type: integer
           description: unit to use when sending or displaying time values
+    PatchedCombinedModel:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        mappings:
+          type: array
+          items:
+            $ref: '#/components/schemas/PkpdMapping'
+        components:
+          type: string
+          readOnly: true
+        variables:
+          type: array
+          items:
+            type: integer
+          readOnly: true
+        mmt:
+          type: string
+          readOnly: true
+        read_only:
+          type: boolean
+          description: true if object has been stored
+        datetime:
+          type: string
+          format: date-time
+          nullable: true
+          description: datetime the object was stored.
+        name:
+          type: string
+          description: name of the model
+          maxLength: 100
+        dose_compartment:
+          type: string
+          nullable: true
+          description: compartment name to be dosed
+          maxLength: 100
+        time_max:
+          type: number
+          format: double
+          description: suggested time to simulate after the last dose (in the time
+            units specified by the mmt model)
+        project:
+          type: integer
+          nullable: true
+          description: Project that "owns" this model
+        pk_model:
+          type: integer
+          nullable: true
+          description: model
+        pd_model:
+          type: integer
+          nullable: true
+          description: PD part of model
+        pd_model2:
+          type: integer
+          nullable: true
+          description: second PD part of model
+        protocol:
+          type: integer
+          nullable: true
+          description: dosing protocol
     PatchedCompound:
       type: object
       properties:
@@ -3641,65 +3709,6 @@ components:
         protocol:
           type: integer
           description: protocol containing this dose
-    PatchedDosedPharmacokinetic:
-      type: object
-      properties:
-        id:
-          type: integer
-          readOnly: true
-        mappings:
-          type: array
-          items:
-            $ref: '#/components/schemas/PkpdMapping'
-        components:
-          type: string
-          readOnly: true
-        variables:
-          type: array
-          items:
-            type: integer
-          readOnly: true
-        mmt:
-          type: string
-          readOnly: true
-        read_only:
-          type: boolean
-          description: true if object has been stored
-        datetime:
-          type: string
-          format: date-time
-          nullable: true
-          description: datetime the object was stored.
-        name:
-          type: string
-          description: name of the model
-          maxLength: 100
-        dose_compartment:
-          type: string
-          nullable: true
-          description: compartment name to be dosed
-          maxLength: 100
-        time_max:
-          type: number
-          format: double
-          description: suggested time to simulate after the last dose (in the time
-            units specified by the mmt model)
-        project:
-          type: integer
-          nullable: true
-          description: Project that "owns" this model
-        pk_model:
-          type: integer
-          nullable: true
-          description: model
-        pd_model:
-          type: integer
-          nullable: true
-          description: PD part of model
-        protocol:
-          type: integer
-          nullable: true
-          description: dosing protocol
     PatchedInference:
       type: object
       properties:

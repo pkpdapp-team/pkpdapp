@@ -8,7 +8,7 @@ from django.db import models
 from pkpdapp.celery import app
 from pkpdapp.models import (
     Project, PharmacodynamicModel,
-    DosedPharmacokineticModel,
+    CombinedModel,
     StoredModel, LogLikelihoodParameter,
     InferenceFunctionResult, InferenceResult
 )
@@ -146,7 +146,7 @@ class Inference(StoredModel):
             variables__log_likelihoods__inference=self
         ).distinct())
 
-        old_pk_models = list(DosedPharmacokineticModel.objects.filter(
+        old_pk_models = list(CombinedModel.objects.filter(
             variables__log_likelihoods__inference=self
         ).distinct())
         # old_models += list(PkpdModel.objects.filter(

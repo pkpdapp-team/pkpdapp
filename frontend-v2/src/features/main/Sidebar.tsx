@@ -48,6 +48,15 @@ export default function Sidebar() {
   
   const isPageDisabled = (key: string) => { 
     const page = PageName[key as keyof typeof PageName];
+    if (page === PageName.SIMULATIONS) {
+      return true;
+    }
+    if (page === PageName.TRIAL_DESIGN) {
+      return true;
+    }
+    if (page === PageName.DATA) {
+      return true;
+    }
     if (selectedProject === null) {
       return page !== PageName.PROJECTS;
     } else {

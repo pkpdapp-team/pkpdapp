@@ -8,6 +8,7 @@
 
 
 
+
 from django.conf import settings
 from django.db import migrations, models
 import django.db.models.deletion
@@ -64,6 +65,21 @@ class Migration(migrations.Migration):
             ],
         ),
         migrations.CreateModel(
+            name='CombinedModel',
+            fields=[
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('read_only', models.BooleanField(default=False, help_text='true if object has been stored')),
+                ('datetime', models.DateTimeField(blank=True, help_text='datetime the object was stored.', null=True)),
+                ('name', models.CharField(help_text='name of the model', max_length=100)),
+                ('dose_compartment', models.CharField(blank=True, default='central', help_text='compartment name to be dosed', max_length=100, null=True)),
+                ('time_max', models.FloatField(default=30, help_text='suggested time to simulate after the last dose (in the time units specified by the mmt model)')),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=(pkpdapp.models.myokit_model_mixin.MyokitModelMixin, models.Model),
+        ),
+        migrations.CreateModel(
             name='Compound',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
@@ -99,21 +115,6 @@ class Migration(migrations.Migration):
                 ('amount', models.FloatField(help_text='amount of compound administered over the duration, see protocol for units. Rate of administration is assumed constant')),
                 ('duration', models.FloatField(default=1.0, help_text='Duration of dose administration, see protocol for units. Duration must be greater than 0.', validators=[pkpdapp.models.dose.validate_duration])),
             ],
-        ),
-        migrations.CreateModel(
-            name='DosedPharmacokineticModel',
-            fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('read_only', models.BooleanField(default=False, help_text='true if object has been stored')),
-                ('datetime', models.DateTimeField(blank=True, help_text='datetime the object was stored.', null=True)),
-                ('name', models.CharField(help_text='name of the model', max_length=100)),
-                ('dose_compartment', models.CharField(blank=True, default='central', help_text='compartment name to be dosed', max_length=100, null=True)),
-                ('time_max', models.FloatField(default=30, help_text='suggested time to simulate after the last dose (in the time units specified by the mmt model)')),
-            ],
-            options={
-                'abstract': False,
-            },
-            bases=(pkpdapp.models.myokit_model_mixin.MyokitModelMixin, models.Model),
         ),
         migrations.CreateModel(
             name='Inference',
@@ -259,7 +260,7 @@ class Migration(migrations.Migration):
                 ('color', models.IntegerField(default=0, help_text='Color index associated with this variable. For display purposes in the frontend')),
                 ('display', models.BooleanField(default=True, help_text='True if this variable will be displayed in the frontend, False otherwise')),
                 ('axis', models.BooleanField(default=False, help_text='False/True if biomarker type displayed on LHS/RHS axis')),
-                ('dosed_pk_model', models.ForeignKey(blank=True, help_text='dosed pharmacokinetic model', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='variables', to='pkpdapp.dosedpharmacokineticmodel')),
+                ('dosed_pk_model', models.ForeignKey(blank=True, help_text='dosed pharmacokinetic model', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='variables', to='pkpdapp.combinedmodel')),
                 ('pd_model', models.ForeignKey(blank=True, help_text='pharmacodynamic model', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='variables', to='pkpdapp.pharmacodynamicmodel')),
                 ('pk_model', models.ForeignKey(blank=True, help_text='pharmacokinetic model', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='variables', to='pkpdapp.pharmacokineticmodel')),
                 ('unit', models.ForeignKey(blank=True, help_text='variable values are in this unit (note this might be different from the unit in the stored sbml)', null=True, on_delete=django.db.models.deletion.PROTECT, to='pkpdapp.unit')),
@@ -326,7 +327,7 @@ class Migration(migrations.Migration):
                 ('datetime', models.DateTimeField(blank=True, help_text='datetime the object was stored.', null=True)),
                 ('pd_variable', models.ForeignKey(help_text='variable in PD part of model', on_delete=django.db.models.deletion.CASCADE, related_name='pd_mappings', to='pkpdapp.variable')),
                 ('pk_variable', models.ForeignKey(help_text='variable in PK part of model', on_delete=django.db.models.deletion.CASCADE, related_name='pk_mappings', to='pkpdapp.variable')),
-                ('pkpd_model', models.ForeignKey(help_text='PKPD model that this mapping is for', on_delete=django.db.models.deletion.CASCADE, related_name='mappings', to='pkpdapp.dosedpharmacokineticmodel')),
+                ('pkpd_model', models.ForeignKey(help_text='PKPD model that this mapping is for', on_delete=django.db.models.deletion.CASCADE, related_name='mappings', to='pkpdapp.combinedmodel')),
             ],
             options={
                 'abstract': False,
@@ -420,26 +421,6 @@ class Migration(migrations.Migration):
                 ('compound', models.ForeignKey(help_text='compound for efficacy experiment', on_delete=django.db.models.deletion.CASCADE, related_name='efficacy_experiments', to='pkpdapp.compound')),
             ],
         ),
-        migrations.AddField(
-            model_name='dosedpharmacokineticmodel',
-            name='pd_model',
-            field=models.ForeignKey(blank=True, help_text='PD part of model', null=True, on_delete=django.db.models.deletion.PROTECT, related_name='pkpd_models', to='pkpdapp.pharmacodynamicmodel'),
-        ),
-        migrations.AddField(
-            model_name='dosedpharmacokineticmodel',
-            name='pk_model',
-            field=models.ForeignKey(blank=True, default=1, help_text='model', null=True, on_delete=django.db.models.deletion.PROTECT, to='pkpdapp.pharmacokineticmodel'),
-        ),
-        migrations.AddField(
-            model_name='dosedpharmacokineticmodel',
-            name='project',
-            field=models.ForeignKey(blank=True, help_text='Project that "owns" this model', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='pk_models', to='pkpdapp.project'),
-        ),
-        migrations.AddField(
-            model_name='dosedpharmacokineticmodel',
-            name='protocol',
-            field=models.ForeignKey(blank=True, help_text='dosing protocol', null=True, on_delete=django.db.models.deletion.PROTECT, related_name='dosed_pk_models', to='pkpdapp.protocol'),
-        ),
         migrations.AddConstraint(
             model_name='dosebase',
             constraint=models.CheckConstraint(check=models.Q(('duration__gt', 0)), name='Duration must be greater than 0'),
@@ -473,6 +454,31 @@ class Migration(migrations.Migration):
             model_name='compound',
             name='target_molecular_mass_unit',
             field=models.ForeignKey(default=pkpdapp.models.compound.get_mol_mass_unit, help_text='unit for target molecular mass (e.g. g/mol)', on_delete=django.db.models.deletion.PROTECT, related_name='compounds_target_mol_mass', to='pkpdapp.unit'),
+        ),
+        migrations.AddField(
+            model_name='combinedmodel',
+            name='pd_model',
+            field=models.ForeignKey(blank=True, help_text='PD part of model', null=True, on_delete=django.db.models.deletion.PROTECT, related_name='pkpd_models', to='pkpdapp.pharmacodynamicmodel'),
+        ),
+        migrations.AddField(
+            model_name='combinedmodel',
+            name='pd_model2',
+            field=models.ForeignKey(blank=True, help_text='second PD part of model', null=True, on_delete=django.db.models.deletion.PROTECT, related_name='pkpd_models2', to='pkpdapp.pharmacodynamicmodel'),
+        ),
+        migrations.AddField(
+            model_name='combinedmodel',
+            name='pk_model',
+            field=models.ForeignKey(blank=True, default=1, help_text='model', null=True, on_delete=django.db.models.deletion.PROTECT, to='pkpdapp.pharmacokineticmodel'),
+        ),
+        migrations.AddField(
+            model_name='combinedmodel',
+            name='project',
+            field=models.ForeignKey(blank=True, help_text='Project that "owns" this model', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='pk_models', to='pkpdapp.project'),
+        ),
+        migrations.AddField(
+            model_name='combinedmodel',
+            name='protocol',
+            field=models.ForeignKey(blank=True, help_text='dosing protocol', null=True, on_delete=django.db.models.deletion.PROTECT, related_name='dosed_pk_models', to='pkpdapp.protocol'),
         ),
         migrations.AddField(
             model_name='categoricalbiomarker',

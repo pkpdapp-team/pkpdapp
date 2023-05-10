@@ -8,7 +8,7 @@ from rest_framework.test import APITestCase, APIClient
 from django.contrib.auth.models import User
 from pkpdapp.models import (
     PharmacodynamicModel, Protocol, PharmacokineticModel,
-    Compound, DosedPharmacokineticModel,
+    Compound, CombinedModel,
     Unit
 )
 
@@ -34,7 +34,7 @@ class VariableTestCase(APITestCase):
         )
 
         self.dosed_pk_model = \
-            DosedPharmacokineticModel.objects.create(
+            CombinedModel.objects.create(
                 pk_model=pk,
                 dose_compartment='central',
                 protocol=p,

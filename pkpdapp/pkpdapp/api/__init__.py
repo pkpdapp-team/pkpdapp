@@ -7,9 +7,9 @@
 
 from .views import (
     DatasetView, UserView, ProjectView, CompoundView,
-    PharmacokineticView, DosedPharmacokineticView,
+    PharmacokineticView, CombinedModelView,
     PharmacodynamicView, DoseView,
-    ProtocolView, SimulatePkView, SimulatePdView,
+    ProtocolView, SimulateCombinedView, SimulatePdView,
     UnitView, BiomarkerTypeView, VariableView, SubjectView,
     ProjectAccessView, NcaView, AuceView,
     InferenceView, InferenceChainView,

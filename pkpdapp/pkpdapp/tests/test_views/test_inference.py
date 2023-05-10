@@ -17,7 +17,7 @@ from pkpdapp.models import (
     Algorithm,
     BiomarkerType,
     Dataset,
-    DosedPharmacokineticModel,
+    CombinedModel,
     Inference,
     InferenceMixin,
     LogLikelihood,
@@ -317,7 +317,7 @@ class TestInferenceWizardView(APITestCase):
             subjects__id_in_dataset=1,
         )
 
-        pk_model = DosedPharmacokineticModel.objects.create(
+        pk_model = CombinedModel.objects.create(
             name='my wonderful model',
             pk_model=pk,
             dose_compartment='central',
@@ -456,7 +456,7 @@ class TestInferenceWizardView(APITestCase):
             subjects__id_in_dataset=1,
         )
 
-        pk_model = DosedPharmacokineticModel.objects.create(
+        pk_model = CombinedModel.objects.create(
             name='my wonderful model',
             pk_model=pk,
             dose_compartment='central',
@@ -538,7 +538,7 @@ class TestInferenceWizardView(APITestCase):
         for ll in response_data['log_likelihoods']:
             if ll['name'][:len(model_name)] == model_name:
                 found_it += 1
-                dbmodel = DosedPharmacokineticModel.objects.get(
+                dbmodel = CombinedModel.objects.get(
                     id=ll['model'][1]
                 )
                 if dbmodel.protocol.dose_type == 'D':
@@ -667,7 +667,7 @@ class TestInferenceWizardView(APITestCase):
         print('xxxxx')
         for v in pd_model.variables.all():
             print(v.qname)
-        pkpd_model = DosedPharmacokineticModel.objects.create(
+        pkpd_model = CombinedModel.objects.create(
             name='usecase2',
             pk_model=pk_model,
             pd_model=pd_model,

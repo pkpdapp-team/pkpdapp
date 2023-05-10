@@ -28,7 +28,7 @@ from .compound import CompoundView
 from .models import (
     PharmacokineticView,
     PharmacodynamicView,
-    DosedPharmacokineticView,
+    CombinedModelView,
 )
 from .nca import NcaView
 from .project import ProjectView, ProjectAccessView
@@ -38,7 +38,7 @@ from .inference import (
     StopInferenceView, InferenceWizardView,
 )
 from .simulate import (
-    SimulatePkView,
+    SimulateCombinedView,
     SimulatePdView,
 )
 from .subject import SubjectView

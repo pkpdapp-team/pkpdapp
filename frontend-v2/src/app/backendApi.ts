@@ -103,6 +103,79 @@ const injectedRtkApi = api.injectEndpoints({
         method: "DELETE",
       }),
     }),
+    combinedModelList: build.query<
+      CombinedModelListApiResponse,
+      CombinedModelListApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/combined_model/`,
+        params: { project_id: queryArg.projectId },
+      }),
+    }),
+    combinedModelCreate: build.mutation<
+      CombinedModelCreateApiResponse,
+      CombinedModelCreateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/combined_model/`,
+        method: "POST",
+        body: queryArg.combinedModel,
+      }),
+    }),
+    combinedModelRetrieve: build.query<
+      CombinedModelRetrieveApiResponse,
+      CombinedModelRetrieveApiArg
+    >({
+      query: (queryArg) => ({ url: `/api/combined_model/${queryArg.id}/` }),
+    }),
+    combinedModelUpdate: build.mutation<
+      CombinedModelUpdateApiResponse,
+      CombinedModelUpdateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/combined_model/${queryArg.id}/`,
+        method: "PUT",
+        body: queryArg.combinedModel,
+      }),
+    }),
+    combinedModelPartialUpdate: build.mutation<
+      CombinedModelPartialUpdateApiResponse,
+      CombinedModelPartialUpdateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/combined_model/${queryArg.id}/`,
+        method: "PATCH",
+        body: queryArg.patchedCombinedModel,
+      }),
+    }),
+    combinedModelDestroy: build.mutation<
+      CombinedModelDestroyApiResponse,
+      CombinedModelDestroyApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/combined_model/${queryArg.id}/`,
+        method: "DELETE",
+      }),
+    }),
+    combinedModelSetVariablesFromInferenceUpdate: build.mutation<
+      CombinedModelSetVariablesFromInferenceUpdateApiResponse,
+      CombinedModelSetVariablesFromInferenceUpdateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/combined_model/${queryArg.id}/set_variables_from_inference/`,
+        method: "PUT",
+        body: queryArg.combinedModel,
+      }),
+    }),
+    combinedModelSimulateCreate: build.mutation<
+      CombinedModelSimulateCreateApiResponse,
+      CombinedModelSimulateCreateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/combined_model/${queryArg.id}/simulate`,
+        method: "POST",
+      }),
+    }),
     compoundList: build.query<CompoundListApiResponse, CompoundListApiArg>({
       query: () => ({ url: `/api/compound/` }),
     }),
@@ -243,78 +316,6 @@ const injectedRtkApi = api.injectEndpoints({
       query: (queryArg) => ({
         url: `/api/dose/${queryArg.id}/`,
         method: "DELETE",
-      }),
-    }),
-    dosedPharmacokineticList: build.query<
-      DosedPharmacokineticListApiResponse,
-      DosedPharmacokineticListApiArg
-    >({
-      query: () => ({ url: `/api/dosed_pharmacokinetic/` }),
-    }),
-    dosedPharmacokineticCreate: build.mutation<
-      DosedPharmacokineticCreateApiResponse,
-      DosedPharmacokineticCreateApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/dosed_pharmacokinetic/`,
-        method: "POST",
-        body: queryArg.dosedPharmacokinetic,
-      }),
-    }),
-    dosedPharmacokineticRetrieve: build.query<
-      DosedPharmacokineticRetrieveApiResponse,
-      DosedPharmacokineticRetrieveApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/dosed_pharmacokinetic/${queryArg.id}/`,
-      }),
-    }),
-    dosedPharmacokineticUpdate: build.mutation<
-      DosedPharmacokineticUpdateApiResponse,
-      DosedPharmacokineticUpdateApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/dosed_pharmacokinetic/${queryArg.id}/`,
-        method: "PUT",
-        body: queryArg.dosedPharmacokinetic,
-      }),
-    }),
-    dosedPharmacokineticPartialUpdate: build.mutation<
-      DosedPharmacokineticPartialUpdateApiResponse,
-      DosedPharmacokineticPartialUpdateApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/dosed_pharmacokinetic/${queryArg.id}/`,
-        method: "PATCH",
-        body: queryArg.patchedDosedPharmacokinetic,
-      }),
-    }),
-    dosedPharmacokineticDestroy: build.mutation<
-      DosedPharmacokineticDestroyApiResponse,
-      DosedPharmacokineticDestroyApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/dosed_pharmacokinetic/${queryArg.id}/`,
-        method: "DELETE",
-      }),
-    }),
-    dosedPharmacokineticSetVariablesFromInferenceUpdate: build.mutation<
-      DosedPharmacokineticSetVariablesFromInferenceUpdateApiResponse,
-      DosedPharmacokineticSetVariablesFromInferenceUpdateApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/dosed_pharmacokinetic/${queryArg.id}/set_variables_from_inference/`,
-        method: "PUT",
-        body: queryArg.dosedPharmacokinetic,
-      }),
-    }),
-    dosedPharmacokineticSimulateCreate: build.mutation<
-      DosedPharmacokineticSimulateCreateApiResponse,
-      DosedPharmacokineticSimulateCreateApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/dosed_pharmacokinetic/${queryArg.id}/simulate`,
-        method: "POST",
       }),
     }),
     inferenceList: build.query<InferenceListApiResponse, InferenceListApiArg>({
@@ -975,6 +976,49 @@ export type BiomarkerTypeDestroyApiArg = {
   /** A unique integer value identifying this biomarker type. */
   id: number;
 };
+export type CombinedModelListApiResponse = /** status 200  */ CombinedModel[];
+export type CombinedModelListApiArg = {
+  /** Filter results by project ID */
+  projectId?: number;
+};
+export type CombinedModelCreateApiResponse = /** status 201  */ CombinedModel;
+export type CombinedModelCreateApiArg = {
+  combinedModel: CombinedModel;
+};
+export type CombinedModelRetrieveApiResponse = /** status 200  */ CombinedModel;
+export type CombinedModelRetrieveApiArg = {
+  /** A unique integer value identifying this combined model. */
+  id: number;
+};
+export type CombinedModelUpdateApiResponse = /** status 200  */ CombinedModel;
+export type CombinedModelUpdateApiArg = {
+  /** A unique integer value identifying this combined model. */
+  id: number;
+  combinedModel: CombinedModel;
+};
+export type CombinedModelPartialUpdateApiResponse =
+  /** status 200  */ CombinedModel;
+export type CombinedModelPartialUpdateApiArg = {
+  /** A unique integer value identifying this combined model. */
+  id: number;
+  patchedCombinedModel: PatchedCombinedModel;
+};
+export type CombinedModelDestroyApiResponse = unknown;
+export type CombinedModelDestroyApiArg = {
+  /** A unique integer value identifying this combined model. */
+  id: number;
+};
+export type CombinedModelSetVariablesFromInferenceUpdateApiResponse =
+  /** status 200  */ CombinedModel;
+export type CombinedModelSetVariablesFromInferenceUpdateApiArg = {
+  /** A unique integer value identifying this combined model. */
+  id: number;
+  combinedModel: CombinedModel;
+};
+export type CombinedModelSimulateCreateApiResponse = unknown;
+export type CombinedModelSimulateCreateApiArg = {
+  id: number;
+};
 export type CompoundListApiResponse = /** status 200  */ Compound[];
 export type CompoundListApiArg = void;
 export type CompoundCreateApiResponse = /** status 201  */ Compound;
@@ -1063,50 +1107,6 @@ export type DosePartialUpdateApiArg = {
 export type DoseDestroyApiResponse = unknown;
 export type DoseDestroyApiArg = {
   /** A unique integer value identifying this dose. */
-  id: number;
-};
-export type DosedPharmacokineticListApiResponse =
-  /** status 200  */ DosedPharmacokinetic[];
-export type DosedPharmacokineticListApiArg = void;
-export type DosedPharmacokineticCreateApiResponse =
-  /** status 201  */ DosedPharmacokinetic;
-export type DosedPharmacokineticCreateApiArg = {
-  dosedPharmacokinetic: DosedPharmacokinetic;
-};
-export type DosedPharmacokineticRetrieveApiResponse =
-  /** status 200  */ DosedPharmacokinetic;
-export type DosedPharmacokineticRetrieveApiArg = {
-  /** A unique integer value identifying this dosed pharmacokinetic model. */
-  id: number;
-};
-export type DosedPharmacokineticUpdateApiResponse =
-  /** status 200  */ DosedPharmacokinetic;
-export type DosedPharmacokineticUpdateApiArg = {
-  /** A unique integer value identifying this dosed pharmacokinetic model. */
-  id: number;
-  dosedPharmacokinetic: DosedPharmacokinetic;
-};
-export type DosedPharmacokineticPartialUpdateApiResponse =
-  /** status 200  */ DosedPharmacokinetic;
-export type DosedPharmacokineticPartialUpdateApiArg = {
-  /** A unique integer value identifying this dosed pharmacokinetic model. */
-  id: number;
-  patchedDosedPharmacokinetic: PatchedDosedPharmacokinetic;
-};
-export type DosedPharmacokineticDestroyApiResponse = unknown;
-export type DosedPharmacokineticDestroyApiArg = {
-  /** A unique integer value identifying this dosed pharmacokinetic model. */
-  id: number;
-};
-export type DosedPharmacokineticSetVariablesFromInferenceUpdateApiResponse =
-  /** status 200  */ DosedPharmacokinetic;
-export type DosedPharmacokineticSetVariablesFromInferenceUpdateApiArg = {
-  /** A unique integer value identifying this dosed pharmacokinetic model. */
-  id: number;
-  dosedPharmacokinetic: DosedPharmacokinetic;
-};
-export type DosedPharmacokineticSimulateCreateApiResponse = unknown;
-export type DosedPharmacokineticSimulateCreateApiArg = {
   id: number;
 };
 export type InferenceListApiResponse = /** status 200  */ Inference[];
@@ -1520,6 +1520,48 @@ export type PatchedBiomarkerType = {
   stored_time_unit?: number;
   display_time_unit?: number;
 };
+export type PkpdMapping = {
+  id: number;
+  datetime: string;
+  read_only: boolean;
+  pkpd_model: number;
+  pk_variable: number;
+  pd_variable: number;
+};
+export type CombinedModel = {
+  id: number;
+  mappings: PkpdMapping[];
+  components: string;
+  variables: number[];
+  mmt: string;
+  read_only?: boolean;
+  datetime?: string | null;
+  name: string;
+  dose_compartment?: string | null;
+  time_max?: number;
+  project?: number | null;
+  pk_model?: number | null;
+  pd_model?: number | null;
+  pd_model2?: number | null;
+  protocol?: number | null;
+};
+export type PatchedCombinedModel = {
+  id?: number;
+  mappings?: PkpdMapping[];
+  components?: string;
+  variables?: number[];
+  mmt?: string;
+  read_only?: boolean;
+  datetime?: string | null;
+  name?: string;
+  dose_compartment?: string | null;
+  time_max?: number;
+  project?: number | null;
+  pk_model?: number | null;
+  pd_model?: number | null;
+  pd_model2?: number | null;
+  protocol?: number | null;
+};
 export type Efficacy = {
   id: number;
   name: string;
@@ -1631,46 +1673,6 @@ export type PatchedDose = {
   read_only?: boolean;
   datetime?: string | null;
   protocol?: number;
-};
-export type PkpdMapping = {
-  id: number;
-  datetime: string;
-  read_only: boolean;
-  pkpd_model: number;
-  pk_variable: number;
-  pd_variable: number;
-};
-export type DosedPharmacokinetic = {
-  id: number;
-  mappings: PkpdMapping[];
-  components: string;
-  variables: number[];
-  mmt: string;
-  read_only?: boolean;
-  datetime?: string | null;
-  name: string;
-  dose_compartment?: string | null;
-  time_max?: number;
-  project?: number | null;
-  pk_model?: number | null;
-  pd_model?: number | null;
-  protocol?: number | null;
-};
-export type PatchedDosedPharmacokinetic = {
-  id?: number;
-  mappings?: PkpdMapping[];
-  components?: string;
-  variables?: number[];
-  mmt?: string;
-  read_only?: boolean;
-  datetime?: string | null;
-  name?: string;
-  dose_compartment?: string | null;
-  time_max?: number;
-  project?: number | null;
-  pk_model?: number | null;
-  pd_model?: number | null;
-  protocol?: number | null;
 };
 export type LogLikelihoodParameter = {
   id: number;
@@ -1984,6 +1986,14 @@ export const {
   useBiomarkerTypeUpdateMutation,
   useBiomarkerTypePartialUpdateMutation,
   useBiomarkerTypeDestroyMutation,
+  useCombinedModelListQuery,
+  useCombinedModelCreateMutation,
+  useCombinedModelRetrieveQuery,
+  useCombinedModelUpdateMutation,
+  useCombinedModelPartialUpdateMutation,
+  useCombinedModelDestroyMutation,
+  useCombinedModelSetVariablesFromInferenceUpdateMutation,
+  useCombinedModelSimulateCreateMutation,
   useCompoundListQuery,
   useCompoundCreateMutation,
   useCompoundRetrieveQuery,
@@ -2003,14 +2013,6 @@ export const {
   useDoseUpdateMutation,
   useDosePartialUpdateMutation,
   useDoseDestroyMutation,
-  useDosedPharmacokineticListQuery,
-  useDosedPharmacokineticCreateMutation,
-  useDosedPharmacokineticRetrieveQuery,
-  useDosedPharmacokineticUpdateMutation,
-  useDosedPharmacokineticPartialUpdateMutation,
-  useDosedPharmacokineticDestroyMutation,
-  useDosedPharmacokineticSetVariablesFromInferenceUpdateMutation,
-  useDosedPharmacokineticSimulateCreateMutation,
   useInferenceListQuery,
   useInferenceCreateMutation,
   useInferenceRetrieveQuery,

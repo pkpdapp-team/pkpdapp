@@ -9,7 +9,7 @@ from django.db.models import Q
 import myokit
 import numpy as np
 from pkpdapp.models import (
-    Unit, DosedPharmacokineticModel,
+    Unit, CombinedModel,
     PharmacokineticModel, PharmacodynamicModel,
     StoredModel
 )
@@ -113,7 +113,7 @@ class Variable(StoredModel):
         help_text='pharmacokinetic model'
     )
     dosed_pk_model = models.ForeignKey(
-        DosedPharmacokineticModel,
+        CombinedModel,
         blank=True, null=True,
         on_delete=models.CASCADE,
         related_name='variables',
@@ -299,7 +299,7 @@ class Variable(StoredModel):
     def get_variable(model, myokit_variable):
         if isinstance(model, PharmacokineticModel):
             return Variable.get_variable_pk(model, myokit_variable)
-        elif isinstance(model, DosedPharmacokineticModel):
+        elif isinstance(model, CombinedModel):
             return Variable.get_variable_dosed_pk(model, myokit_variable)
         elif isinstance(model, PharmacodynamicModel):
             return Variable.get_variable_pd(model, myokit_variable)
@@ -329,6 +329,6 @@ class Variable(StoredModel):
         }
         if isinstance(stored_model, PharmacodynamicModel):
             stored_variable_kwargs['pd_model'] = stored_model
-        elif isinstance(stored_model, DosedPharmacokineticModel):
+        elif isinstance(stored_model, CombinedModel):
             stored_variable_kwargs['dosed_pk_model'] = stored_model
         return Variable.objects.create(**stored_variable_kwargs)

@@ -24,7 +24,7 @@ from pkpdapp.models import (
     Algorithm,
     BiomarkerType,
     Dataset,
-    DosedPharmacokineticModel,
+    CombinedModel,
     Inference,
     InferenceChain,
     LogLikelihood,
@@ -496,7 +496,7 @@ class InferenceWizardView(views.APIView):
         if 'model' in data:
             if 'form' in data['model']:
                 if data['model']['form'] == 'PK':
-                    model_table = DosedPharmacokineticModel
+                    model_table = CombinedModel
                 else:
                     model_table = PharmacodynamicModel
             else:

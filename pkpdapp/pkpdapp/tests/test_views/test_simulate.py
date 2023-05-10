@@ -7,7 +7,7 @@
 from pkpdapp.models import (
     PharmacodynamicModel, Variable,
     Project,
-    DosedPharmacokineticModel,
+    CombinedModel,
     PharmacokineticModel,
     BiomarkerType,
     Protocol,
@@ -79,7 +79,7 @@ class TestSimulateView(APITestCase):
         pd_model = PharmacodynamicModel.objects.get(
             name='tumour_growth_inhibition_model_koch',
         )
-        pkpd_model = DosedPharmacokineticModel.objects.create(
+        pkpd_model = CombinedModel.objects.create(
             name='my wonderful model',
             pk_model=pk_model,
             pd_model=pd_model,

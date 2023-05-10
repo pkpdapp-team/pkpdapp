@@ -6,7 +6,7 @@
 from rest_framework import serializers
 from pkpdapp.models import (
     PharmacokineticModel,
-    DosedPharmacokineticModel,
+    CombinedModel,
     PharmacodynamicModel, PkpdMapping,
     MyokitModelMixin,
 )
@@ -26,11 +26,11 @@ class PkpdMappingSerializer(serializers.ModelSerializer):
 
 class BaseDosedPharmacokineticSerializer(serializers.ModelSerializer):
     class Meta:
-        model = DosedPharmacokineticModel
+        model = CombinedModel
         fields = '__all__'
 
 
-class DosedPharmacokineticSerializer(serializers.ModelSerializer):
+class CombinedModelSerializer(serializers.ModelSerializer):
     mappings = PkpdMappingSerializer(many=True)
     components = serializers.SerializerMethodField('get_components')
     variables = serializers.PrimaryKeyRelatedField(
@@ -39,7 +39,7 @@ class DosedPharmacokineticSerializer(serializers.ModelSerializer):
     mmt = serializers.SerializerMethodField('get_mmt')
 
     class Meta:
-        model = DosedPharmacokineticModel
+        model = CombinedModel
         fields = '__all__'
 
     def get_mmt(self, m) -> str:

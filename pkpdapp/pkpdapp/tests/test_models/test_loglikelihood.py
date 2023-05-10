@@ -9,7 +9,7 @@ from django.test import TestCase
 from pkpdapp.models import (
     Algorithm,
     BiomarkerType,
-    DosedPharmacokineticModel,
+    CombinedModel,
     Inference,
     LogLikelihood,
     LogLikelihoodParameter,
@@ -36,7 +36,7 @@ class TestInferenceMixinPkModel(TestCase):
             subjects__dataset=self.biomarker_type.dataset,
             subjects__id_in_dataset=1,
         )
-        self.model = DosedPharmacokineticModel.objects.create(
+        self.model = CombinedModel.objects.create(
             name='test model',
             pk_model=pk,
             dose_compartment='central',

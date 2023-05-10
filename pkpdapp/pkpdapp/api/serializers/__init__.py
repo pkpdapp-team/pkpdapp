@@ -19,7 +19,7 @@ from .efficacy_experiment import EfficacySerializer
 from .compound import CompoundSerializer
 from .models import (
     PharmacokineticSerializer,
-    DosedPharmacokineticSerializer,
+    CombinedModelSerializer,
     PharmacodynamicSerializer,
     PharmacodynamicSbmlSerializer,
 )

@@ -39,10 +39,9 @@ router.register(
 )
 
 router.register(
-    'dosed_pharmacokinetic', api.DosedPharmacokineticView,
-    basename='dosed_pharmacodynamic'
+    'combined_model', api.CombinedModelView,
+    basename='combined_model'
 )
-
 
 router.register(
     'inference', api.InferenceView,
@@ -64,8 +63,8 @@ urlpatterns = [
     path('api/', include(router.urls), name='api'),
     path('api/nca/', api.NcaView.as_view(), name='nca'),
     path('api/auce/', api.AuceView.as_view(), name='auce'),
-    path('api/dosed_pharmacokinetic/<int:pk>/simulate',
-         api.SimulatePkView.as_view(), name='simulate-dosed-pharmacokinetic'),
+    path('api/combined_model/<int:pk>/simulate',
+         api.SimulateCombinedView.as_view(), name='simulate-combined-model'),
     path(
         'api/inference/wizard',
         api.InferenceWizardView.as_view(),

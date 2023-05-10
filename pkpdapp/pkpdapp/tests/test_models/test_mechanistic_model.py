@@ -7,7 +7,7 @@
 from django.test import TestCase
 from pkpdapp.models import (
     PharmacodynamicModel, Protocol, PharmacokineticModel,
-    Compound, DosedPharmacokineticModel,
+    Compound, CombinedModel,
     Dose, Unit, Variable,
 )
 import myokit
@@ -159,12 +159,12 @@ class TestDosedPharmokineticModel(TestCase):
             time_unit=Unit.objects.get(symbol='h'),
         )
 
-        m = DosedPharmacokineticModel.objects.create(
+        m = CombinedModel.objects.create(
             pk_model=pk,
             dose_compartment='central',
             protocol=p,
         )
-        self.assertTrue(isinstance(m, DosedPharmacokineticModel))
+        self.assertTrue(isinstance(m, CombinedModel))
 
     def test_store_model(self):
         pk = PharmacokineticModel.objects.get(
@@ -178,13 +178,13 @@ class TestDosedPharmokineticModel(TestCase):
             dose_type=Protocol.DoseType.INDIRECT,
         )
 
-        model = DosedPharmacokineticModel.objects.create(
+        model = CombinedModel.objects.create(
             pk_model=pk,
             dose_compartment='central',
             protocol=p,
         )
         stored_model = model.create_stored_model()
-        self.assertTrue(isinstance(stored_model, DosedPharmacokineticModel))
+        self.assertTrue(isinstance(stored_model, CombinedModel))
         self.assertTrue(stored_model.read_only)
         self.assertEqual(len(stored_model.variables.all()), 10)
         self.assertEqual(stored_model.protocol.name, 'my_cool_protocol')
@@ -202,7 +202,7 @@ class TestDosedPharmokineticModel(TestCase):
             dose_type=Protocol.DoseType.INDIRECT,
         )
 
-        m = DosedPharmacokineticModel.objects.create(
+        m = CombinedModel.objects.create(
             pk_model=pk,
             dose_compartment='central',
             protocol=p,
@@ -260,7 +260,7 @@ class TestDosedPharmokineticModel(TestCase):
             dose_type=Protocol.DoseType.INDIRECT,
         )
 
-        m = DosedPharmacokineticModel.objects.create(
+        m = CombinedModel.objects.create(
             pk_model=pk,
             dose_compartment='central',
             protocol=p,

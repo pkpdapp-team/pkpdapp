@@ -8,7 +8,7 @@ from django.test import TestCase
 import numpy as np
 from pkpdapp.models import (
     Inference, PharmacodynamicModel,
-    PharmacokineticModel, DosedPharmacokineticModel,
+    PharmacokineticModel, CombinedModel,
     Protocol, Unit,
     LogLikelihood,
     Project, BiomarkerType,
@@ -42,7 +42,7 @@ class TestInferenceMixinPkModel(TestCase):
             subjects__id_in_dataset=1,
         )
 
-        model = DosedPharmacokineticModel.objects.create(
+        model = CombinedModel.objects.create(
             name='my wonderful model',
             pk_model=pk,
             dose_compartment='central',

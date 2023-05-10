@@ -4,6 +4,7 @@ import { Button, Box, Typography, CircularProgress, Container, CssBaseline, Stac
 import FloatField from '../../components/FloatField';
 import { ReactComponent as PkpdAppIcon } from "../../logo_pkpdapp_with_text.svg";
 import { css } from '@emotion/react';
+import TextField from '../../components/TextField';
 
 interface LoginFormInputs {
   username: string;
@@ -36,8 +37,8 @@ const Login: React.FC<LoginProps> = ({ onLogin, isLoading, errorMessage }) => {
       <PkpdAppIcon style={{ width: 250 }}/>
     </Box>
       <Typography variant="h5">Login</Typography>
-      <FloatField label="Username" name="username" control={control} textFieldProps={{autoComplete: "username"}}/>
-      <FloatField label="Password" name="password" control={control} textFieldProps={{autoComplete: "password", type: "password"}}/>
+      <TextField label="Username" name="username" control={control} textFieldProps={{autoComplete: "username"}}/>
+      <TextField label="Password" name="password" control={control} textFieldProps={{autoComplete: "password", type: "password"}}/>
       <Button
         type="submit"
         variant="contained"

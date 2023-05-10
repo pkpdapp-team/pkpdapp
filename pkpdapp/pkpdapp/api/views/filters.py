@@ -11,7 +11,7 @@ from django.db.models import Q
 from pkpdapp.models import (
     Dataset, Project,
     PharmacodynamicModel,
-    DosedPharmacokineticModel,
+    CombinedModel,
     Protocol,
     Unit,
     BiomarkerType,
@@ -50,7 +50,7 @@ class DosedPkModelFilter(filters.BaseFilterBackend):
             request.query_params.get('dosed_pk_model_id')
         if dosed_pk_model_id is not None:
             try:
-                dosed_pk_model = DosedPharmacokineticModel.objects.get(
+                dosed_pk_model = CombinedModel.objects.get(
                     id=dosed_pk_model_id
                 )
                 if queryset.model == Variable:
@@ -63,7 +63,7 @@ class DosedPkModelFilter(filters.BaseFilterBackend):
                     queryset = Unit.objects.filter(id__in=unit_ids)
                 else:
                     raise RuntimeError('queryset model {} not recognised')
-            except DosedPharmacokineticModel.DoesNotExist:
+            except CombinedModel.DoesNotExist:
                 queryset = queryset.model.objects.none()
 
         return queryset
@@ -145,7 +145,7 @@ class ProjectFilter(filters.BaseFilterBackend):
                     queryset = project.datasets
                 elif queryset.model == PharmacodynamicModel:
                     queryset = project.pd_models
-                elif queryset.model == DosedPharmacokineticModel:
+                elif queryset.model == CombinedModel:
                     queryset = project.pk_models
                 elif queryset.model == Protocol:
                     queryset = project.protocols

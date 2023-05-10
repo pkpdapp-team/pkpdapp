@@ -23,7 +23,9 @@ from .pharmacodynamic_model import (
 )
 from .pharmacokinetic_model import (
     PharmacokineticModel,
-    DosedPharmacokineticModel,
+)
+from .combined_model import (
+    CombinedModel,
     PkpdMapping,
     set_administration,
 )
