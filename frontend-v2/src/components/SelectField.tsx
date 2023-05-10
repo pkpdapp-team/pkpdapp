@@ -8,7 +8,7 @@ type Option = {
 };
 
 type Props<T extends FieldValues> = {
-  label: string;
+  label?: string;
   name: FieldPath<T>;
   options: Option[];
   control: Control<T>;
@@ -23,7 +23,6 @@ function SelectField<T extends FieldValues>({ label, name, options, control, rul
       control={control}
       rules={rules}
       render={({ field: { onChange, onBlur, value }, fieldState: { error } }) => {
-        console.log('select value', name, value)
         return (
           <Select
             label={label}

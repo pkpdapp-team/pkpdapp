@@ -17,13 +17,16 @@ import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import MainContent from './MainContent';
 import { PageName, selectPage } from './mainSlice';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '../../app/store';
 
 const drawerWidth = 240;
 
 export default function Sidebar() {
   const dispatch = useDispatch();
   const [mobileOpen, setMobileOpen] = React.useState(false);
+  const selectedPage = useSelector((state: RootState) => state.main.selectedPage);
+  const selectedProject = useSelector((state: RootState) => state.main.selectedProject);
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -42,6 +45,21 @@ export default function Sidebar() {
   const handlePageClick = (key: string) => () => {
     dispatch(selectPage(PageName[key as keyof typeof PageName]));
   }; 
+  
+  const isPageDisabled = (key: string) => { 
+    const page = PageName[key as keyof typeof PageName];
+    if (selectedProject === null) {
+      return page !== PageName.PROJECTS;
+    } else {
+      return false;
+    }
+  }
+  
+  const isPageSelected = (key: string) => {
+    const page = PageName[key as keyof typeof PageName];
+    return page === selectedPage;
+  }
+    
 
   const drawer = (
     <div>
@@ -49,8 +67,8 @@ export default function Sidebar() {
       <Divider />
       <List>
         {pages.map(({ key, value }, index) => (
-          <ListItem key={key} disablePadding>
-            <ListItemButton onClick={handlePageClick(key)}>
+          <ListItem key={key} disablePadding selected={isPageSelected(key)}>
+            <ListItemButton onClick={handlePageClick(key)} disabled={isPageDisabled(key)} disableRipple={true}>
               <ListItemIcon>
                 {index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
               </ListItemIcon>

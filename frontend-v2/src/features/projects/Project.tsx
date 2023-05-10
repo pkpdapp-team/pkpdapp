@@ -13,16 +13,19 @@ import {
   Select,
   MenuItem,
   Stack,
+  Radio,
 } from "@mui/material";
-import TextField from "../../components/TextField";
-import { Delete, PersonAdd, Save } from "@mui/icons-material";
+import { Delete, PersonAdd } from "@mui/icons-material";
 import { api } from "../../app/api";
 import { Compound, Project, ProjectAccess, useProjectDestroyMutation, useProjectListQuery, useCompoundRetrieveQuery, useCompoundUpdateMutation, useProjectUpdateMutation } from "../../app/backendApi";
 import SelectField from "../../components/SelectField";
 import UserAccess from "./UserAccess";
+import { selectProject } from "../main/mainSlice";
+import TextField from "../../components/TextField";
 
 interface Props {
   project: Project;
+  isSelected: boolean;
 }
 
 export interface FormData {
@@ -30,7 +33,8 @@ export interface FormData {
   compound: Compound;
 }
 
-const ProjectRow: React.FC<Props> = ({ project }) => {
+const ProjectRow: React.FC<Props> = ({ project, isSelected }) => {
+  const dispatch = useDispatch();
   const [
     updateProject, // This is the mutation trigger
     { isLoading: isUpdatingProject }, // This is the destructured mutation result
@@ -63,7 +67,7 @@ const ProjectRow: React.FC<Props> = ({ project }) => {
     molecular_mass: 100,
     target_molecular_mass: 100,
   }
-  const { reset, handleSubmit, control } = useForm<FormData>({
+  const { reset, handleSubmit, control, formState: { isDirty } } = useForm<FormData>({
     defaultValues: { project, compound: defaultCompound },
   });
 
@@ -77,8 +81,18 @@ const ProjectRow: React.FC<Props> = ({ project }) => {
   useEffect(() => {
     reset({ project, compound });
   }, [project, compound, reset]);
-
   
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      if (isDirty) {
+        handleSubmit(handleSave)();
+      }
+    }, 1000);
+
+    return () => clearInterval(intervalId);
+  }, [handleSubmit, isDirty, updateCompound]);
+
+
   if (isLoading) {
     return <div>Loading...</div>;
   }
@@ -100,22 +114,29 @@ const ProjectRow: React.FC<Props> = ({ project }) => {
     setUserAccessOpen(false);
   }
 
+  const handleSelectProject = () => {
+    dispatch(selectProject(project.id));
+  }
+
+  const defaultProps = {
+    fullWidth: true,
+  }
 
   return (
     <TableRow>
       <TableCell>
-      <TextField label="Name" name="project.name" control={control} /> 
+      <Radio checked={isSelected} onClick={handleSelectProject}/> 
       </TableCell>
       <TableCell>
-        <TextField label="Description" name="project.description" control={control} /> 
+        <TextField name="project.name" control={control} textFieldProps={defaultProps} /> 
       </TableCell>
       <TableCell>
-        <TextField label="Compound" name="compound.name" control={control} /> 
+        <TextField name="project.description" control={control} textFieldProps={defaultProps} /> 
       </TableCell>
       <TableCell>
-        <IconButton onClick={handleSubmit(handleSave)}>
-          <Save />
-        </IconButton>
+        <TextField name="compound.name" control={control} textFieldProps={defaultProps} /> 
+      </TableCell>
+      <TableCell>
         <IconButton onClick={handleDelete}>
           <Delete />
         </IconButton>
@@ -125,7 +146,7 @@ const ProjectRow: React.FC<Props> = ({ project }) => {
         <UserAccess open={userAccessOpen} control={control} onClose={userAccessClose} userAccess={userAccess as ProjectAccess[]} append={append} remove={remove} project={project}/>
       </TableCell>
       <TableCell>
-        <SelectField label="Modality" options={modalityOptions} name="compound.compound_type" control={control} /> 
+        <SelectField options={modalityOptions} name="compound.compound_type" control={control} selectProps={defaultProps}/> 
       </TableCell>
     </TableRow>
   );

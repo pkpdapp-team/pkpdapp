@@ -10,7 +10,7 @@ type Props<T extends FieldValues> = {
   textFieldProps?: material.TextFieldProps;
 };
 
-function TextField<T extends FieldValues>({ label, name, control, rules, textFieldProps }: Props<T>): React.ReactElement {
+function FloatField<T extends FieldValues>({ label, name, control, rules, textFieldProps }: Props<T>): React.ReactElement {
   return (
     <Controller
       name={name}
@@ -23,12 +23,16 @@ function TextField<T extends FieldValues>({ label, name, control, rules, textFie
             name={name}
             id={name}
             variant="outlined"
-            value={value || ''}
-            onChange={onChange}
+            value={value || 0}
+            onChange={(e) => { 
+              const value = parseFloat(e.target.value)
+              return onChange(value)
+            }}
             onBlur={onBlur}
             error={!!error}
             helperText={error?.message}
             {...textFieldProps}
+            type='number'
           />
         );
       }}
@@ -36,4 +40,4 @@ function TextField<T extends FieldValues>({ label, name, control, rules, textFie
   );
 };
 
-export default TextField;
+export default FloatField;

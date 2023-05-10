@@ -14,7 +14,7 @@ import {
   MenuItem,
   Button,
 } from "@mui/material";
-import TextField from "../../components/TextField";
+import FloatField from "../../components/FloatField";
 import { Delete, Save } from "@mui/icons-material";
 import { api } from "../../app/api";
 import { Compound, Project, ProjectAccess, useCompoundCreateMutation, useProjectCreateMutation, useProjectDestroyMutation, useProjectListQuery, useCompoundRetrieveQuery, useCompoundUpdateMutation, useProjectUpdateMutation } from "../../app/backendApi";
@@ -23,6 +23,7 @@ import ProjectRow from "./Project";
 import { RootState } from "../../app/store";
 
 const ProjectTable: React.FC = () => {
+  const selectedProject = useSelector((state: RootState) => state.main.selectedProject);
   const dispatch = useDispatch();
   const { data: projects, error, isLoading } = useProjectListQuery()
   const user = useSelector((state: RootState) => state.login.user);
@@ -58,6 +59,7 @@ const ProjectTable: React.FC = () => {
       <Table>
         <TableHead>
           <TableRow>
+            <TableCell>Selected</TableCell>
             <TableCell>Name</TableCell>
             <TableCell>Description</TableCell>
             <TableCell>Compound</TableCell>
@@ -75,7 +77,7 @@ const ProjectTable: React.FC = () => {
             </TableRow>
           )}
           {projects?.map((project) => (
-            <ProjectRow key={project.id} project={project} />
+            <ProjectRow key={project.id} project={project} isSelected={selectedProject == project.id} />
           ))}
         </TableBody>
       

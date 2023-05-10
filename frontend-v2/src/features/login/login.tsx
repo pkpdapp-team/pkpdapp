@@ -1,7 +1,7 @@
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { Button, Box, Typography, CircularProgress, Container, CssBaseline, Stack, Alert } from '@mui/material';
-import TextField from '../../components/TextField';
+import FloatField from '../../components/FloatField';
 import { ReactComponent as PkpdAppIcon } from "../../logo_pkpdapp_with_text.svg";
 import { css } from '@emotion/react';
 
@@ -36,8 +36,8 @@ const Login: React.FC<LoginProps> = ({ onLogin, isLoading, errorMessage }) => {
       <PkpdAppIcon style={{ width: 250 }}/>
     </Box>
       <Typography variant="h5">Login</Typography>
-      <TextField label="Username" name="username" control={control} textFieldProps={{autoComplete: "username"}}/>
-      <TextField label="Password" name="password" control={control} textFieldProps={{autoComplete: "password", type: "password"}}/>
+      <FloatField label="Username" name="username" control={control} textFieldProps={{autoComplete: "username"}}/>
+      <FloatField label="Password" name="password" control={control} textFieldProps={{autoComplete: "password", type: "password"}}/>
       <Button
         type="submit"
         variant="contained"

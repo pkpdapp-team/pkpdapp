@@ -67,7 +67,7 @@ class Compound(models.Model):
         choices=CompoundType.choices,
         default=CompoundType.SMALL_MOLECULE,
     )
-
+    
     fraction_unbound_plasma = models.FloatField(
         default=1.0,
         blank=True, null=True,
