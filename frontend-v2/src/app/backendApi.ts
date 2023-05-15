@@ -1528,6 +1528,7 @@ export type PkpdMapping = {
   pk_variable: number;
   pd_variable: number;
 };
+export type SpeciesEnum = "H" | "R" | "N" | "M";
 export type CombinedModel = {
   id: number;
   mappings: PkpdMapping[];
@@ -1537,13 +1538,16 @@ export type CombinedModel = {
   read_only?: boolean;
   datetime?: string | null;
   name: string;
-  dose_compartment?: string | null;
+  species?: SpeciesEnum;
+  has_saturation?: boolean;
+  has_effect?: boolean;
+  has_lag?: boolean;
+  has_hill_coefficient?: boolean;
   time_max?: number;
   project?: number | null;
   pk_model?: number | null;
   pd_model?: number | null;
   pd_model2?: number | null;
-  protocol?: number | null;
 };
 export type PatchedCombinedModel = {
   id?: number;
@@ -1554,13 +1558,16 @@ export type PatchedCombinedModel = {
   read_only?: boolean;
   datetime?: string | null;
   name?: string;
-  dose_compartment?: string | null;
+  species?: SpeciesEnum;
+  has_saturation?: boolean;
+  has_effect?: boolean;
+  has_lag?: boolean;
+  has_hill_coefficient?: boolean;
   time_max?: number;
   project?: number | null;
   pk_model?: number | null;
   pd_model?: number | null;
   pd_model2?: number | null;
-  protocol?: number | null;
 };
 export type Efficacy = {
   id: number;
@@ -1630,7 +1637,7 @@ export type Protocol = {
   id: number;
   doses: Dose[];
   dose_ids: number[];
-  dosed_pk_models: number[];
+  dosed_pk_models: string[];
   dataset: string;
   subjects: number[];
   read_only?: boolean;
@@ -1846,7 +1853,7 @@ export type PatchedProtocol = {
   id?: number;
   doses?: Dose[];
   dose_ids?: number[];
-  dosed_pk_models?: number[];
+  dosed_pk_models?: string[];
   dataset?: string;
   subjects?: number[];
   read_only?: boolean;
@@ -1945,10 +1952,12 @@ export type Variable = {
   color?: number;
   display?: boolean;
   axis?: boolean;
+  link_to_ro?: boolean;
   unit?: number | null;
   pd_model?: number | null;
   pk_model?: number | null;
   dosed_pk_model?: number | null;
+  protocol?: number | null;
 };
 export type PatchedVariable = {
   id?: number;
@@ -1967,10 +1976,12 @@ export type PatchedVariable = {
   color?: number;
   display?: boolean;
   axis?: boolean;
+  link_to_ro?: boolean;
   unit?: number | null;
   pd_model?: number | null;
   pk_model?: number | null;
   dosed_pk_model?: number | null;
+  protocol?: number | null;
 };
 export const {
   useAlgorithmListQuery,

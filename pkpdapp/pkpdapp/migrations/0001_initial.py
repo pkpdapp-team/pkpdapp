@@ -8,7 +8,6 @@
 
 
 
-
 from django.conf import settings
 from django.db import migrations, models
 import django.db.models.deletion
@@ -71,7 +70,11 @@ class Migration(migrations.Migration):
                 ('read_only', models.BooleanField(default=False, help_text='true if object has been stored')),
                 ('datetime', models.DateTimeField(blank=True, help_text='datetime the object was stored.', null=True)),
                 ('name', models.CharField(help_text='name of the model', max_length=100)),
-                ('dose_compartment', models.CharField(blank=True, default='central', help_text='compartment name to be dosed', max_length=100, null=True)),
+                ('species', models.CharField(choices=[('H', 'human'), ('R', 'rat'), ('N', 'non-human primate'), ('M', 'mouse')], default='H', help_text='species', max_length=1)),
+                ('has_saturation', models.BooleanField(default=True, help_text='whether the pk model has saturation')),
+                ('has_effect', models.BooleanField(default=True, help_text='whether the pk model has effect compartment')),
+                ('has_lag', models.BooleanField(default=True, help_text='whether the pk model has lag')),
+                ('has_hill_coefficient', models.BooleanField(default=True, help_text='whether the pd model has hill coefficient')),
                 ('time_max', models.FloatField(default=30, help_text='suggested time to simulate after the last dose (in the time units specified by the mmt model)')),
             ],
             options={
@@ -260,9 +263,11 @@ class Migration(migrations.Migration):
                 ('color', models.IntegerField(default=0, help_text='Color index associated with this variable. For display purposes in the frontend')),
                 ('display', models.BooleanField(default=True, help_text='True if this variable will be displayed in the frontend, False otherwise')),
                 ('axis', models.BooleanField(default=False, help_text='False/True if biomarker type displayed on LHS/RHS axis')),
+                ('link_to_ro', models.BooleanField(default=False, help_text='True if variable is linked to a Receptor Occupancy (RO) variable')),
                 ('dosed_pk_model', models.ForeignKey(blank=True, help_text='dosed pharmacokinetic model', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='variables', to='pkpdapp.combinedmodel')),
                 ('pd_model', models.ForeignKey(blank=True, help_text='pharmacodynamic model', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='variables', to='pkpdapp.pharmacodynamicmodel')),
                 ('pk_model', models.ForeignKey(blank=True, help_text='pharmacokinetic model', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='variables', to='pkpdapp.pharmacokineticmodel')),
+                ('protocol', models.ForeignKey(blank=True, help_text='dosing protocol', null=True, on_delete=django.db.models.deletion.PROTECT, related_name='variables', to='pkpdapp.protocol')),
                 ('unit', models.ForeignKey(blank=True, help_text='variable values are in this unit (note this might be different from the unit in the stored sbml)', null=True, on_delete=django.db.models.deletion.PROTECT, to='pkpdapp.unit')),
             ],
         ),
@@ -474,11 +479,6 @@ class Migration(migrations.Migration):
             model_name='combinedmodel',
             name='project',
             field=models.ForeignKey(blank=True, help_text='Project that "owns" this model', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='pk_models', to='pkpdapp.project'),
-        ),
-        migrations.AddField(
-            model_name='combinedmodel',
-            name='protocol',
-            field=models.ForeignKey(blank=True, help_text='dosing protocol', null=True, on_delete=django.db.models.deletion.PROTECT, related_name='dosed_pk_models', to='pkpdapp.protocol'),
         ),
         migrations.AddField(
             model_name='categoricalbiomarker',

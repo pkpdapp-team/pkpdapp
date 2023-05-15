@@ -146,6 +146,7 @@ Description of a three compartment PK model here.
 
     PharmacodynamicModel = apps.get_model("pkpdapp", "PharmacodynamicModel")
     PharmacokineticModel = apps.get_model("pkpdapp", "PharmacokineticModel")
+    CombinedModel = apps.get_model("pkpdapp", "CombinedModel")
     Unit = apps.get_model("pkpdapp", "Unit")
     Variable = apps.get_model("pkpdapp", "Variable")
     Project = apps.get_model("pkpdapp", "Project")
@@ -241,6 +242,11 @@ Description of a three compartment PK model here.
                 )
         except urllib.error.URLError:
             print('WARNING: urlopen timed-out, no data loaded')
+
+    model = CombinedModel.objects.create(
+        name='demo',
+        project=demo_project,
+    )
 
     # three_comp_model = PharmacokineticModel.objects.get(
     #    name='three_compartment_pk_model'

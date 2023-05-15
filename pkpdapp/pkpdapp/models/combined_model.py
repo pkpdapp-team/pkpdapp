@@ -30,6 +30,20 @@ class CombinedModel(MyokitModelMixin, StoredModel):
         blank=True, null=True,
         help_text='Project that "owns" this model'
     )
+
+    class SpeciesType(models.TextChoices):
+        HUMAN = 'H', 'human'
+        RAT = 'R', 'rat'
+        NHP = 'N', 'non-human primate'
+        MOUSE = 'M', 'mouse'
+
+    species = models.CharField(
+        max_length=1,
+        choices=SpeciesType.choices,
+        default=SpeciesType.HUMAN,
+        help_text='species'
+    )
+
     pk_model = models.ForeignKey(
         PharmacokineticModel,
         default=DEFAULT_PK_MODEL,
@@ -37,31 +51,39 @@ class CombinedModel(MyokitModelMixin, StoredModel):
         blank=True, null=True,
         help_text='model'
     )
+
+    has_saturation = models.BooleanField(
+        default=True,
+        help_text='whether the pk model has saturation'
+    )
+    has_effect = models.BooleanField(
+        default=True,
+        help_text='whether the pk model has effect compartment'
+    )
+    has_lag = models.BooleanField(
+        default=True,
+        help_text='whether the pk model has lag'
+    )
+
     pd_model = models.ForeignKey(
         PharmacodynamicModel, on_delete=models.PROTECT,
         related_name='pkpd_models',
         blank=True, null=True,
         help_text='PD part of model'
     )
+
+    has_hill_coefficient = models.BooleanField(
+        default=True,
+        help_text='whether the pd model has hill coefficient'
+    )
+
     pd_model2 = models.ForeignKey(
         PharmacodynamicModel, on_delete=models.PROTECT,
         related_name='pkpd_models2',
         blank=True, null=True,
         help_text='second PD part of model'
     )
-    dose_compartment = models.CharField(
-        max_length=100,
-        default='central',
-        blank=True, null=True,
-        help_text='compartment name to be dosed'
-    )
-    protocol = models.ForeignKey(
-        Protocol,
-        on_delete=models.PROTECT,
-        related_name='dosed_pk_models',
-        blank=True, null=True,
-        help_text='dosing protocol'
-    )
+    
     time_max = models.FloatField(
         default=30,
         help_text=(
@@ -74,6 +96,11 @@ class CombinedModel(MyokitModelMixin, StoredModel):
     __original_dose_compartment = None
     __original_pd_model = None
     __original_pd_model2 = None
+    __original_species = None
+    __original_has_saturation = None
+    __original_has_effect = None
+    __original_has_lag = None
+    __original_has_hill_coefficient = None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -82,6 +109,12 @@ class CombinedModel(MyokitModelMixin, StoredModel):
         self.__original_dose_compartment = self.dose_compartment
         self.__original_pd_model = self.pd_model
         self.__original_pd_model2 = self.pd_model2
+        self.__original_species = self.species
+        self.__original_has_saturation = self.has_saturation
+        self.__original_has_effect = self.has_effect
+        self.__original_has_lag = self.has_lag
+        self.__original_has_hill_coefficient = self.has_hill_coefficient
+
 
     def get_project(self):
         return self.project
@@ -337,6 +370,11 @@ class CombinedModel(MyokitModelMixin, StoredModel):
         self.__original_pk_model = self.pk_model
         self.__original_protocol = self.protocol
         self.__original_dose_compartment = self.dose_compartment
+        self.__original_species = self.species
+        self.__original_has_saturation = self.has_saturation
+        self.__original_has_effect = self.has_effect
+        self.__original_has_lag = self.has_lag
+        self.__original_has_hill_coefficient = self.has_hill_coefficient
 
 class PkpdMapping(StoredModel):
     pkpd_model = models.ForeignKey(

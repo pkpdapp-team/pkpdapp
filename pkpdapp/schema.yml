@@ -2900,11 +2900,28 @@ components:
           type: string
           description: name of the model
           maxLength: 100
-        dose_compartment:
-          type: string
-          nullable: true
-          description: compartment name to be dosed
-          maxLength: 100
+        species:
+          allOf:
+          - $ref: '#/components/schemas/SpeciesEnum'
+          description: |-
+            species
+
+            * `H` - human
+            * `R` - rat
+            * `N` - non-human primate
+            * `M` - mouse
+        has_saturation:
+          type: boolean
+          description: whether the pk model has saturation
+        has_effect:
+          type: boolean
+          description: whether the pk model has effect compartment
+        has_lag:
+          type: boolean
+          description: whether the pk model has lag
+        has_hill_coefficient:
+          type: boolean
+          description: whether the pd model has hill coefficient
         time_max:
           type: number
           format: double
@@ -2926,10 +2943,6 @@ components:
           type: integer
           nullable: true
           description: second PD part of model
-        protocol:
-          type: integer
-          nullable: true
-          description: dosing protocol
       required:
       - components
       - id
@@ -3532,11 +3545,28 @@ components:
           type: string
           description: name of the model
           maxLength: 100
-        dose_compartment:
-          type: string
-          nullable: true
-          description: compartment name to be dosed
-          maxLength: 100
+        species:
+          allOf:
+          - $ref: '#/components/schemas/SpeciesEnum'
+          description: |-
+            species
+
+            * `H` - human
+            * `R` - rat
+            * `N` - non-human primate
+            * `M` - mouse
+        has_saturation:
+          type: boolean
+          description: whether the pk model has saturation
+        has_effect:
+          type: boolean
+          description: whether the pk model has effect compartment
+        has_lag:
+          type: boolean
+          description: whether the pk model has lag
+        has_hill_coefficient:
+          type: boolean
+          description: whether the pd model has hill coefficient
         time_max:
           type: number
           format: double
@@ -3558,10 +3588,6 @@ components:
           type: integer
           nullable: true
           description: second PD part of model
-        protocol:
-          type: integer
-          nullable: true
-          description: dosing protocol
     PatchedCompound:
       type: object
       properties:
@@ -3915,7 +3941,7 @@ components:
         dosed_pk_models:
           type: array
           items:
-            type: integer
+            type: string
           readOnly: true
         dataset:
           type: string
@@ -4127,6 +4153,9 @@ components:
         axis:
           type: boolean
           description: False/True if biomarker type displayed on LHS/RHS axis
+        link_to_ro:
+          type: boolean
+          description: True if variable is linked to a Receptor Occupancy (RO) variable
         unit:
           type: integer
           nullable: true
@@ -4144,6 +4173,10 @@ components:
           type: integer
           nullable: true
           description: dosed pharmacokinetic model
+        protocol:
+          type: integer
+          nullable: true
+          description: dosing protocol
     Pharmacodynamic:
       type: object
       properties:
@@ -4338,7 +4371,7 @@ components:
         dosed_pk_models:
           type: array
           items:
-            type: integer
+            type: string
           readOnly: true
         dataset:
           type: string
@@ -4387,6 +4420,18 @@ components:
       - id
       - name
       - subjects
+    SpeciesEnum:
+      enum:
+      - H
+      - R
+      - N
+      - M
+      type: string
+      description: |-
+        * `H` - human
+        * `R` - rat
+        * `N` - non-human primate
+        * `M` - mouse
     Subject:
       type: object
       properties:
@@ -4571,6 +4616,9 @@ components:
         axis:
           type: boolean
           description: False/True if biomarker type displayed on LHS/RHS axis
+        link_to_ro:
+          type: boolean
+          description: True if variable is linked to a Receptor Occupancy (RO) variable
         unit:
           type: integer
           nullable: true
@@ -4588,6 +4636,10 @@ components:
           type: integer
           nullable: true
           description: dosed pharmacokinetic model
+        protocol:
+          type: integer
+          nullable: true
+          description: dosing protocol
       required:
       - id
       - name

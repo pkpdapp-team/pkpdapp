@@ -1,6 +1,6 @@
 import React from 'react';
 import { Control, Controller, FieldPath, FieldValues } from 'react-hook-form';
-import { Select, SelectProps, MenuItem } from '@mui/material';
+import { Select, SelectProps, MenuItem, InputLabel, FormControl, OutlinedInput } from '@mui/material';
 
 type Option = {
   value: any;
@@ -17,20 +17,24 @@ type Props<T extends FieldValues> = {
 };
 
 function SelectField<T extends FieldValues>({ label, name, options, control, rules, selectProps }: Props<T>): React.ReactElement {
+  const labelId = `${name}-label`;
+  const displayEmpty = selectProps?.displayEmpty || true;
   return (
     <Controller
       name={name}
       control={control}
       rules={rules}
-      render={({ field: { onChange, onBlur, value }, fieldState: { error } }) => {
-        return (
+      render={({ field: { onChange, onBlur, value }, fieldState: { error } }) => (
+        <FormControl fullWidth>
+          <InputLabel id={labelId} shrink={displayEmpty}>{label}</InputLabel>
           <Select
-            label={label}
+            labelId={labelId}
             name={name}
             id={name}
-            value={value === undefined ?  '' : value}
+            value={value === undefined ? '' : value}
             onChange={onChange}
             onBlur={onBlur}
+            input={<OutlinedInput label={label} notched={displayEmpty} />}
             error={!!error}
             {...selectProps}
           >
@@ -40,8 +44,8 @@ function SelectField<T extends FieldValues>({ label, name, options, control, rul
               </MenuItem>
             ))}
           </Select>
-        )
-      }}
+        </FormControl>
+      )}
     />
   );
 };

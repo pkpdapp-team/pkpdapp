@@ -11,7 +11,7 @@ import numpy as np
 from pkpdapp.models import (
     Unit, CombinedModel,
     PharmacokineticModel, PharmacodynamicModel,
-    StoredModel
+    StoredModel, Protocol,
 )
 
 
@@ -118,6 +118,19 @@ class Variable(StoredModel):
         on_delete=models.CASCADE,
         related_name='variables',
         help_text='dosed pharmacokinetic model'
+    )
+
+    protocol = models.ForeignKey(
+        Protocol,
+        on_delete=models.PROTECT,
+        related_name='variables',
+        blank=True, null=True,
+        help_text='dosing protocol'
+    )
+
+    link_to_ro = models.BooleanField(
+        default=False,
+        help_text='True if variable is linked to a Receptor Occupancy (RO) variable'
     )
 
     class Meta:

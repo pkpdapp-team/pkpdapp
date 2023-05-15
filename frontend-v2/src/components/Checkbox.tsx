@@ -16,16 +16,23 @@ function Checkbox<T extends FieldValues>({ label, name, control, rules, checkbox
       name={name}
       control={control}
       rules={rules}
-      render={({ field: { onChange, onBlur, value }, fieldState: { error } }) => (
-        <material.Checkbox
-          name={name}
-          id={name}
-          value={value === undefined ?  false : value}
-          onChange={onChange}
-          onBlur={onBlur}
-          {...checkboxFieldProps}
-        />
-      )}
+      render={({ field: { onChange, onBlur, value }, fieldState: { error } }) => {
+        return (
+          <material.FormControlLabel
+            control={
+              <material.Checkbox
+                name={name}
+                id={name}
+                checked={value === undefined ?  false : value}
+                onChange={onChange}
+                onBlur={onBlur}
+                {...checkboxFieldProps}
+              />
+            }
+            label={label}
+          />
+        )
+      }}
     />
   );
 };

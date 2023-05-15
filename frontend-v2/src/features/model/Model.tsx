@@ -9,7 +9,7 @@ import SelectField from '../../components/SelectField';
 import { useEffect } from 'react';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
-import { DynamicTabs } from '../../components/DynamicTabs';
+import { DynamicTabs, TabPanel } from '../../components/DynamicTabs';
 import TranslationTab from './TranslationTab';
 import MapVariablesTab from './MapVariablesTab';
 import PKPDModelTab from './PKPDModelTab';
@@ -23,10 +23,6 @@ const Model: React.FC = () => {
   const model = models?.[0] || null;
   const [ updateModel, { isLoading: updateModelLoading } ]  = useCombinedModelUpdateMutation()
 
-  console.log('models', models)
-  console.log('model', model)
-
-
   const defaultModel: CombinedModel = {
     id: 0,
     name: '',
@@ -39,13 +35,12 @@ const Model: React.FC = () => {
   const { reset, watch, handleSubmit, control, formState: { isDirty } } = useForm<CombinedModel>({
     defaultValues: model || defaultModel
   });
+
   
-  const { fields: mappings, append, remove } = useFieldArray({
-    control,
-    name: "mappings",
-  });
+
 
   useEffect(() => {
+    console.log('resetting model')
     if (model) {
       reset(model);
     }
@@ -54,6 +49,7 @@ const Model: React.FC = () => {
   useEffect(() => {
     const intervalId = setInterval(() => {
       if (isDirty) {
+        console.log('saving model')
         handleSubmit((data) => updateModel({ id: data.id, combinedModel: data }))();
       }
     }, 1000);
@@ -72,10 +68,18 @@ const Model: React.FC = () => {
 
   return (
     <DynamicTabs tabNames={["PK/PK Model", "Map Variables", "Parameters", "Translation"]}>
-      <PKPDModelTab model={model} project={project} control={control} updateModel={updateModel} />
-      <MapVariablesTab model={model} project={project} control={control} />
-      <ParametersTab model={model} project={project} control={control} />
-      <TranslationTab model={model} project={project} control={control} />
+      <TabPanel>
+        <PKPDModelTab model={model} project={project} control={control} updateModel={updateModel} />
+      </TabPanel>
+      <TabPanel>
+        <MapVariablesTab model={model} project={project} control={control} />
+      </TabPanel>
+      <TabPanel>
+        <ParametersTab model={model} project={project} control={control} />
+      </TabPanel>
+      <TabPanel>
+        <TranslationTab model={model} project={project} control={control} />
+      </TabPanel>
     </DynamicTabs>
   );
 }

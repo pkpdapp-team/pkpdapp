@@ -7,7 +7,6 @@
 from django.db import migrations
 from django.contrib.auth.hashers import make_password
 
-
 def load_users_and_projects(apps, schema_editor):
     compound = {
         'name': 'demoCompound',
@@ -93,6 +92,7 @@ def load_users_and_projects(apps, schema_editor):
                     description=p['description'],
                     compound=compound,
                 )
+                
             project.users.add(
                 user,
                 through_defaults={'read_only': p['read_only']}
