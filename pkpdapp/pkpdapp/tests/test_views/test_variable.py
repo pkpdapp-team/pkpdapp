@@ -26,6 +26,8 @@ class VariableTestCase(APITestCase):
         c = Compound.objects.create(
             name='test_dosed_pk_model',
             description='placebo',
+            molecular_mass=100,
+            target_molecular_mass=100,
         )
 
         p = Protocol.objects.create(
@@ -38,9 +40,12 @@ class VariableTestCase(APITestCase):
         self.dosed_pk_model = \
             CombinedModel.objects.create(
                 pk_model=pk,
-                dose_compartment='central',
-                protocol=p,
             )
+        drug = self.dosed_pk_model.variables.get(
+            qname='central.drug_amount'
+        )
+        drug.protocol = p
+        drug.save()
 
         user = User.objects.get(username='demo')
         self.client = APIClient()

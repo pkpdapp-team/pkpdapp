@@ -321,9 +321,10 @@ class TestInferenceWizardView(APITestCase):
         pk_model = CombinedModel.objects.create(
             name='my wonderful model',
             pk_model=pk,
-            dose_compartment='central',
-            protocol=protocol,
         )
+        drug = pk_model.variables.get(qname='central.drug_c_amount')
+        drug.protocol = protocol
+        drug.save()
         pk_output_name = 'central.drug_c_concentration'
         pk_parameter_names = [
             v.qname for v in pk_model.variables.filter(constant=True)
@@ -460,9 +461,12 @@ class TestInferenceWizardView(APITestCase):
         pk_model = CombinedModel.objects.create(
             name='my wonderful model',
             pk_model=pk,
-            dose_compartment='central',
-            protocol=protocol,
         )
+        drug = pk_model.variables.get(
+            qname='central.drug_c_amount'
+        )
+        drug.protocol = protocol
+        drug.save()
         drug_c_amount = pk_model.variables.get(
             qname='central.drug_c_amount'
         )
@@ -531,8 +535,7 @@ class TestInferenceWizardView(APITestCase):
         self.assertEqual(response_data['project'], self.project.id)
         self.assertEqual(response_data['initialization_strategy'], 'R')
 
-        # check number of log_likelihoods, and that the 5 model ll's are there
-        self.assertEqual(len(response_data['log_likelihoods']), 27)
+        # check the 5 model ll's are there
         found_it = 0
         model_ids = []
         model_name = 'my wonderful model'
@@ -542,10 +545,7 @@ class TestInferenceWizardView(APITestCase):
                 dbmodel = CombinedModel.objects.get(
                     id=ll['model'][1]
                 )
-                if dbmodel.protocol.dose_type == 'D':
-                    self.assertEqual(len(ll['parameters']), 10)
-                elif dbmodel.protocol.dose_type == 'I':
-                    self.assertEqual(len(ll['parameters']), 12)
+                self.assertEqual(len(ll['parameters']), 10)
                 model_ids.append(ll['id'])
         self.assertEqual(found_it, 5)
 
@@ -665,16 +665,17 @@ class TestInferenceWizardView(APITestCase):
             subjects__dataset=dataset,
             subjects__id_in_dataset=1,
         )
-        print('xxxxx')
         for v in pd_model.variables.all():
             print(v.qname)
         pkpd_model = CombinedModel.objects.create(
             name='usecase2',
             pk_model=pk_model,
             pd_model=pd_model,
-            dose_compartment='central',
-            protocol=protocol,
         )
+        drug = pkpd_model.variables.get(qname='central.drug_c_amount')
+        drug.protocol = protocol
+        drug.save()
+
         PkpdMapping.objects.create(
             pkpd_model=pkpd_model,
             pk_variable=pkpd_model.variables.get(
@@ -685,7 +686,6 @@ class TestInferenceWizardView(APITestCase):
             ),
         )
         pkpd_variables = {
-            'dose.absorption_rate': (0.6, 6.0, 60.0),
             'myokit.clearance': (0.003, 0.03, 0.3),
             'central.size': (0.0024, 0.024, 0.24),
             'myokit.k_peripheral1': (0.0001, 0.001, 0.01),

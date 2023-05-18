@@ -84,12 +84,13 @@ class TestSimulateView(APITestCase):
             name='my wonderful model',
             pk_model=pk_model,
             pd_model=pd_model,
-            dose_compartment='central',
-            protocol=protocol,
             project=project,
         )
+        drug = pkpd_model.variables.get(qname='central.drug_c_amount')
+        drug.protocol = protocol
+        drug.save()
 
-        url = reverse('simulate-dosed-pharmacokinetic', args=(pkpd_model.pk,))
+        url = reverse('simulate-combined-model', args=(pkpd_model.pk,))
         data = {
             'outputs': ['PD.tumour_volume', 'myokit.time'],
         }
