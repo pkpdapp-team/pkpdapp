@@ -210,10 +210,9 @@ class CombinedModel(MyokitModelMixin, StoredModel):
 
             helpers = None
 
-            # if pd unit is in mol, then use the compound listed in the
-            # protocol to convert to grams
+            # if pd unit is in mol, then use the project compound to convert to grams
             if pd_var.unit().exponents()[-1] != 0:
-                compound = self.protocol.compound
+                compound = self.project.compound
                 if compound is None:
                     raise RuntimeError(
                         'PD unit is in mol, but no compound listed for '
@@ -400,22 +399,5 @@ def _add_dose_compartment(model, drug_amount, time_unit):
                             myokit.Name(dose_drug_amount))))
 
     return dose_drug_amount
-
-
-
-
-
-def _get_time_unit(model):
-    """
-    Gets the model's time unit.
-    """
-    # Get bound variables
-    bound_variables = [var for var in model.variables(bound=True)]
-
-    # Get the variable that is bound to time
-    # (only one can exist in myokit.Model)
-    for var in bound_variables:
-        if var._binding == 'time':
-            return var.unit()
 
 

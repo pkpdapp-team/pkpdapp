@@ -45,15 +45,18 @@ class MyokitModelMixin:
         return model
 
     def create_myokit_model(self):
-        model = self.parse_mmt_string(self.mmt)
-        for v in self.variables.filter(state=True):
-            if v.protocol:
-                myokit_v = model.get(v.qname)
-                set_administration(model, myokit_v)
         return self.parse_mmt_string(self.mmt)
 
     def create_myokit_simulator(self):
         model = self.get_myokit_model()
+
+        # add a dose_rate variable to the model for each
+        # dosed variable
+        for v in self.variables.filter(state=True):
+            if v.protocol:
+                myokit_v = model.get(v.qname)
+                set_administration(model, myokit_v)
+
         with lock:
             sim = myokit.Simulation(model)
         for v in self.variables.filter(state=True):
@@ -82,7 +85,7 @@ class MyokitModelMixin:
                 dosing_events = [
                     (
                         (amount_conversion_factor /
-                        time_conversion_factor) *
+                         time_conversion_factor) *
                         (d.amount / d.duration),
                         time_conversion_factor * d.start_time,
                         time_conversion_factor * d.duration
@@ -185,6 +188,7 @@ class MyokitModelMixin:
                 print('DELETING VARIABLE', variable.qname)
                 variable.delete()
 
+        print('SETTING VARIABLES', all_new_variables)
         self.variables.set(all_new_variables)
 
     def set_variables_from_inference(self, inference):
@@ -421,6 +425,7 @@ class MyokitModelMixin:
             sim.run(time_max, log=outputs), model
         )
 
+
 def set_administration(model,
                        drug_amount,
                        direct=True):
@@ -484,7 +489,7 @@ def set_administration(model,
         drug_amount = _add_dose_compartment(model, drug_amount, time_unit)
 
     # Add dose rate variable to the right hand side of the drug amount
-    _add_dose_rate(compartment, drug_amount, time_unit)
+    _add_dose_rate(drug_amount, time_unit)
 
 
 def set_dosing_events(simulator, events):
@@ -503,7 +508,8 @@ def set_dosing_events(simulator, events):
 
     simulator.set_protocol(myokit_protocol)
 
-def _add_dose_rate(compartment, drug_amount, time_unit):
+
+def _add_dose_rate(drug_amount, time_unit):
     """
     Adds a dose rate variable to the state variable, which is bound to the
     dosing regimen.
@@ -525,3 +531,17 @@ def _add_dose_rate(compartment, drug_amount, time_unit):
     # Add the dose rate to the rhs of the drug amount variable
     rhs = drug_amount.rhs()
     drug_amount.set_rhs(myokit.Plus(rhs, myokit.Name(dose_rate)))
+
+
+def _get_time_unit(model):
+    """
+    Gets the model's time unit.
+    """
+    # Get bound variables
+    bound_variables = [var for var in model.variables(bound=True)]
+
+    # Get the variable that is bound to time
+    # (only one can exist in myokit.Model)
+    for var in bound_variables:
+        if var._binding == 'time':
+            return var.unit()

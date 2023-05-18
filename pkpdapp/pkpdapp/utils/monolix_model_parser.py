@@ -171,6 +171,7 @@ class MonolixModelParser:
         self.tlag = None
         self.direct_dosing = None
         self.dosed_compartment = None
+        self.dosed_qname = None
 
     def initialise_model(self):
         self.myokit_model: myokit.Model = myokit.Model()
@@ -247,6 +248,7 @@ class MonolixModelParser:
                 direct = True
                 self.direct_dosing = direct
                 self.dosed_compartment = cmt
+                self.dosed_qname = amount_var.qname()
 
     def construct_inputs(self, toks):
         for name in toks:
@@ -323,5 +325,5 @@ class MonolixModelParser:
         return self.myokit_model, \
             (
                 self.administration_id, self.dosed_compartment,
-                self.tlag, self.direct_dosing
+                self.tlag, self.direct_dosing, self.dosed_qname
             )

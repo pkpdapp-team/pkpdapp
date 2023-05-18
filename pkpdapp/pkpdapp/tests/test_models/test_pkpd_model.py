@@ -54,10 +54,13 @@ class TestPkpdModel(TestCase):
             name='my wonderful model',
             pk_model=pk_model,
             pd_model=pd_model,
-            dose_compartment='central',
-            protocol=protocol,
             project=self.project,
         )
+
+        drug = pkpd_model.variables.get(qname='central.drug_c_amount')
+        drug.protocol = protocol
+        drug.save()
+
         pk_variable = pkpd_model.variables.get(
             qname='central.drug_c_concentration',
         )
@@ -210,10 +213,12 @@ class TestPkpdModel(TestCase):
             name='my wonderful model',
             pk_model=pk_model,
             pd_model=pd_model,
-            dose_compartment='central',
-            protocol=protocol,
             project=self.project,
         )
+
+        drug = pkpd_model.variables.get(qname='central.drug_c_amount')
+        drug.protocol = protocol
+        drug.save()
 
         pk_variable = pkpd_model.variables.get(
             qname='central.drug_c_amount',

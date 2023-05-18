@@ -204,8 +204,6 @@ class TestDosedPharmokineticModel(TestCase):
         pk_model = pk.get_myokit_model()
         model_variables = [v.name() for v in model.variables()]
         pk_model_variables = [v.name() for v in pk_model.variables()]
-        model_components = [c.name() for c in model.components()]
-        pk_model_components = [c.name() for c in pk_model.components()]
 
         # check that the absorption_rate and dose_rate variable has been added,
         # and the extra drug_amount state variable
@@ -225,6 +223,11 @@ class TestDosedPharmokineticModel(TestCase):
         # dosed model should have a concentration at t ~ 0.5
         # of greater than 0.01
         sim = m.get_myokit_simulator()
+
+        # the model in the simulator should have added a dose_rate variable
+        model_variables = [v.name() for v in sim._model.variables()]
+        self.assertIn('dose_rate', model_variables)
+
         output = sim.run(m.time_max)
         index = np.where(np.array(output['myokit.time']) > 0.5)[0][0]
         self.assertGreater(output['central.drug_concentration'][index], 0.01)
@@ -264,19 +267,19 @@ class TestDosedPharmokineticModel(TestCase):
 
         variables = [v['qname'] for v in m.myokit_variables()]
         test_model_variables = [
-            'central.size', 'dose.absorption_rate',
+            'central.size',
             'myokit.clearance', 'myokit.drug_scale_factor',
         ]
         self.assertCountEqual(variables, test_model_variables)
 
         states = [s['qname'] for s in m.states()]
-        test_model_states = ['central.drug_amount', 'dose.drug_amount']
+        test_model_states = ['central.drug_amount']
         self.assertCountEqual(states, test_model_states)
 
         outpts = [o['qname'] for o in m.outputs()]
         test_model_outputs = [
             'central.drug_amount', 'central.drug_concentration',
-            'dose.dose_rate', 'dose.drug_amount', 'myokit.time',
+            'myokit.time',
             'myokit.scaled_drug_concentration',
         ]
         self.assertCountEqual(outpts, test_model_outputs)

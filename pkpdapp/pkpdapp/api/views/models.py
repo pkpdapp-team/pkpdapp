@@ -98,6 +98,7 @@ class PharmacodynamicView(viewsets.ModelViewSet):
         if serializer.is_valid():
             serializer.save()
             return response.Response(serializer.data)
+        print('xXXXXXx', serializer.errors)
         return response.Response(serializer.errors,
                                  status.HTTP_400_BAD_REQUEST)
 

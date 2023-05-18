@@ -39,9 +39,12 @@ class TestInferenceMixinPkModel(TestCase):
         self.model = CombinedModel.objects.create(
             name='test model',
             pk_model=pk,
-            dose_compartment='central',
-            protocol=protocol,
         )
+
+        drug = self.model.variables.get(qname='central.drug_c_amount')
+        drug.protocol = protocol
+        drug.save()
+
         self.inference = Inference.objects.create(
             name='test',
             project=project,
@@ -61,7 +64,7 @@ class TestInferenceMixinPkModel(TestCase):
             log_likelihood.parameters.filter(name='central.size').count(),
             1
         )
-        self.assertEqual(log_likelihood.outputs.count(), 8)
+        self.assertEqual(log_likelihood.outputs.count(), 7)
 
     def test_add_output_model(self):
         log_likelihood = LogLikelihood.objects.create(

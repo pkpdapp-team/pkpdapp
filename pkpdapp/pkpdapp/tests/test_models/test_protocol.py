@@ -21,6 +21,8 @@ class TestProtocolModel(TestCase):
         c = Compound.objects.create(
             name='my_cool_compound',
             description='placebo',
+            molecular_mass=100,
+            target_molecular_mass=100,
         )
 
         # test optional dataset

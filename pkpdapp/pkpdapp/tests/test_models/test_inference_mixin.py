@@ -46,9 +46,11 @@ class TestInferenceMixinPkModel(TestCase):
         model = CombinedModel.objects.create(
             name='my wonderful model',
             pk_model=pk,
-            dose_compartment='central',
-            protocol=protocol,
         )
+
+        drug = model.variables.get(qname='central.drug_c_amount')
+        drug.protocol = protocol
+        drug.save()
 
         self.inference = Inference.objects.create(
             name='bob',
