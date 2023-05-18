@@ -58,8 +58,12 @@ class DoseBase(models.Model):
     def save(self, force_insert=False, force_update=False, *args, **kwargs):
         super().save(force_insert, force_update, *args, **kwargs)
 
-        for dosed_pk_model in self.protocol.dosed_pk_models.all():
-            dosed_pk_model.update_simulator()
+        models = set(
+            self.protocol.variables.all()
+            .prefetch_related('dosed_pk_model')
+            .values_list('dosed_pk_model', flat=True))
+        for m in models:
+            m.update_simulator()
 
     def is_same_as(self, other_dose):
         if self.duration != other_dose.duration:

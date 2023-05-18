@@ -4,8 +4,8 @@
 # copyright notice and full license details.
 #
 
+import pkpdapp.tests
 from django.test import TestCase
-
 from pkpdapp.models import (
     Algorithm,
     BiomarkerType,

@@ -9,14 +9,14 @@ services:
     ports:
       - "5432:5432"
     env_file:
-      - ./.env
+      - ./.env.prod
     restart: unless-stopped
     volumes: 
       - db:/var/lib/postgresql/data
   rabbitmq:
     image: rabbitmq:3-management-alpine
     env_file:
-      - ./.env
+      - ./.env.prod
     ports:
         - 5672:5672
         - 15672:15672
@@ -33,6 +33,6 @@ services:
       - "80:${PORT}"
     restart: unless-stopped
     env_file:
-     - ./.env
+     - ./.env.prod
  
   

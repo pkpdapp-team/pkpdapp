@@ -4,6 +4,7 @@
 # copyright notice and full license details.
 #
 
+import pkpdapp.tests
 from django.test import TestCase
 from numpy.testing import assert_almost_equal
 from pkpdapp.models import (

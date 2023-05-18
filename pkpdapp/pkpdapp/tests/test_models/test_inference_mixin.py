@@ -4,6 +4,7 @@
 # copyright notice and full license details.
 #
 
+import pkpdapp.tests
 from django.test import TestCase
 import numpy as np
 from pkpdapp.models import (

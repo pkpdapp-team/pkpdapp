@@ -4,6 +4,7 @@
 # copyright notice and full license details.
 #
 
+import pkpdapp.tests
 from pkpdapp.models import (
     PharmacodynamicModel, Variable,
     Project,

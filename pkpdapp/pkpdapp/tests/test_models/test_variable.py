@@ -3,13 +3,12 @@
 # is released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-
+import pkpdapp.tests
 from django.db.utils import IntegrityError
 from pkpdapp.models import (
     Variable, Unit,
     PharmacokineticModel,
 )
-
 
 def TestVariableModel(TestCase):
     def test_variable_creation(self):

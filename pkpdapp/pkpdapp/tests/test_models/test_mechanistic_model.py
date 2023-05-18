@@ -3,7 +3,7 @@
 # is released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-
+import pkpdapp.tests
 from django.test import TestCase
 from pkpdapp.models import (
     PharmacodynamicModel, Protocol, PharmacokineticModel,
@@ -147,22 +147,8 @@ class TestDosedPharmokineticModel(TestCase):
         pk = PharmacokineticModel.objects\
             .get(name='one_compartment_pk_model')
 
-        c = Compound.objects.create(
-            name='test_dosed_pk_model',
-            description='placebo',
-        )
-
-        p = Protocol.objects.create(
-            name='my_cool_protocol',
-            compound=c,
-            amount_unit=Unit.objects.get(symbol='mg'),
-            time_unit=Unit.objects.get(symbol='h'),
-        )
-
         m = CombinedModel.objects.create(
             pk_model=pk,
-            dose_compartment='central',
-            protocol=p,
         )
         self.assertTrue(isinstance(m, CombinedModel))
 
@@ -180,15 +166,19 @@ class TestDosedPharmokineticModel(TestCase):
 
         model = CombinedModel.objects.create(
             pk_model=pk,
-            dose_compartment='central',
-            protocol=p,
         )
+
+        drug = model.variables.get(qname='central.drug_amount')
+        drug.protocol = p
+        drug.save()
+
         stored_model = model.create_stored_model()
         self.assertTrue(isinstance(stored_model, CombinedModel))
         self.assertTrue(stored_model.read_only)
-        self.assertEqual(len(stored_model.variables.all()), 10)
-        self.assertEqual(stored_model.protocol.name, 'my_cool_protocol')
-        self.assertNotEqual(stored_model.protocol.id, p.id)
+        self.assertEqual(len(stored_model.variables.all()), len(model.variables.all()))
+        drug = stored_model.variables.get(qname='central.drug_amount')
+        self.assertEqual(drug.protocol.name, 'my_cool_protocol')
+        self.assertNotEqual(drug.protocol.id, p.id)
 
     def test_myokit_model(self):
         pk = PharmacokineticModel.objects.get(
@@ -204,9 +194,11 @@ class TestDosedPharmokineticModel(TestCase):
 
         m = CombinedModel.objects.create(
             pk_model=pk,
-            dose_compartment='central',
-            protocol=p,
         )
+
+        drug = m.variables.get(qname='central.drug_amount')
+        drug.protocol = p
+        drug.save()
 
         model = m.get_myokit_model()
         pk_model = pk.get_myokit_model()
@@ -219,12 +211,7 @@ class TestDosedPharmokineticModel(TestCase):
         # and the extra drug_amount state variable
         self.assertCountEqual(
             model_variables,
-            pk_model_variables +
-            ['absorption_rate', 'drug_amount', 'dose_rate']
-        )
-        # check that the dose compartment has been added
-        self.assertCountEqual(
-            model_components, pk_model_components + ['dose']
+            pk_model_variables,
         )
 
         # run a simulation with a a dose events
@@ -262,9 +249,11 @@ class TestDosedPharmokineticModel(TestCase):
 
         m = CombinedModel.objects.create(
             pk_model=pk,
-            dose_compartment='central',
-            protocol=p,
         )
+
+        drug = m.variables.get(qname='central.drug_amount')
+        drug.protocol = p
+        drug.save()
 
         Dose.objects.create(
             protocol=p,

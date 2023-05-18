@@ -3,6 +3,7 @@
 # is released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
+import re
 from rest_framework import serializers
 from pkpdapp.models import (
     PharmacokineticModel,
@@ -16,8 +17,8 @@ from pkpdapp.api.serializers import (
 
 
 class PkpdMappingSerializer(serializers.ModelSerializer):
-    datetime = serializers.DateField(read_only=True)
-    read_only = serializers.BooleanField(read_only=True)
+    datetime = serializers.DateField(read_only=True, required=False)
+    read_only = serializers.BooleanField(read_only=True, required=False)
 
     class Meta:
         model = PkpdMapping

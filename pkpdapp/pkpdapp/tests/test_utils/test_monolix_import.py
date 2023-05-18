@@ -4,6 +4,9 @@
 # copyright notice and full license details.
 #
 
+import django
+django.setup()
+
 import codecs
 import urllib.request
 from django.test import TestCase

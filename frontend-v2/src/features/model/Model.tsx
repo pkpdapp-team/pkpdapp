@@ -23,6 +23,9 @@ const Model: React.FC = () => {
   const model = models?.[0] || null;
   const [ updateModel, { isLoading: updateModelLoading } ]  = useCombinedModelUpdateMutation()
 
+  console.log('models', models)
+  console.log('model', model)
+
   const defaultModel: CombinedModel = {
     id: 0,
     name: '',
@@ -37,8 +40,6 @@ const Model: React.FC = () => {
   });
 
   
-
-
   useEffect(() => {
     console.log('resetting model')
     if (model) {

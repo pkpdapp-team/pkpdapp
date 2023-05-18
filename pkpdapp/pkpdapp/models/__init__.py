@@ -27,7 +27,6 @@ from .pharmacokinetic_model import (
 from .combined_model import (
     CombinedModel,
     PkpdMapping,
-    set_administration,
 )
 from .dataset import Dataset
 from .variable import Variable

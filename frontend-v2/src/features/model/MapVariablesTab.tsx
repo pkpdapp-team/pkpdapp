@@ -2,7 +2,7 @@ import * as React from 'react';
 import { CombinedModel, Project } from '../../app/backendApi';
 import { Control, useFieldArray } from 'react-hook-form';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
-import Variable from './Variable';
+import VariableRow from './VariableRow';
 
 interface Props {
     model: CombinedModel;
@@ -36,7 +36,7 @@ const MapVariablesTab: React.FC<Props> = ({ model, project, control }: Props ) =
             </TableRow>
           )}
           {model.variables.map((variable) => (
-            <Variable key={variable} variableId={variable} model={model} mappings={mappings} project={project} appendMapping={append} removeMapping={remove}/>
+            <VariableRow key={variable} variableId={variable} model={model} mappings={mappings} project={project} appendMapping={append} removeMapping={remove}/>
             ))}
         </TableBody>
       

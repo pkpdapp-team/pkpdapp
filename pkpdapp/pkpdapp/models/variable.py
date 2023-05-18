@@ -339,6 +339,10 @@ class Variable(StoredModel):
             'state': self.state,
             'constant': self.constant,
             'read_only': True,
+            'protocol': (
+                self.protocol.create_stored_protocol()
+                if self.protocol is not None else None
+            ),
         }
         if isinstance(stored_model, PharmacodynamicModel):
             stored_variable_kwargs['pd_model'] = stored_model

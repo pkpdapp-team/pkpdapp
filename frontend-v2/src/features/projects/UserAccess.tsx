@@ -43,10 +43,6 @@ const UserAccess: React.FC<Props> = ({ open, userAccess, append, remove, control
     append({ id: 0, user: id, read_only: false, project: project.id })
   }
 
-  console.log('userAccess', userAccess)
-  console.log('userOptions', userOptions)
-  console.log('userMap', userMap)
-
   return (
     <Dialog open={open} onClose={onClose}>
       <DialogTitle>User Access</DialogTitle>
