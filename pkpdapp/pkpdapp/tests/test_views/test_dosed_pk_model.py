@@ -18,10 +18,10 @@ class DosedPkModelTestCase(APITestCase):
         self.client.force_authenticate(user=user)
 
     def test_pk_project_filter(self):
-        response = self.client.get("/api/dosed_pharmacokinetic/?project_id=1")
+        response = self.client.get("/api/combined_model/?project_id=1")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_data = response.data
-        self.assertEqual(len(response_data), 0)
+        self.assertEqual(len(response_data), 1)
 
     def test_cannot_create_in_read_only_project(self):
         user = User.objects.get(username='demo2')
@@ -30,7 +30,7 @@ class DosedPkModelTestCase(APITestCase):
 
         project = Project.objects.get(name='demo')
         response = self.client.post(
-            "/api/dosed_pharmacokinetic/",
+            "/api/combined_model/",
             data={
                 'name': 'test',
                 'project': project.id
