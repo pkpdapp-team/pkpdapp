@@ -16,7 +16,7 @@ import PKPDModelTab from './PKPDModelTab';
 import ParametersTab from './ParametersTab';
 
 
-const Model: React.FC = () => {
+const Simulation: React.FC = () => {
   const projectId = useSelector((state: RootState) => state.main.selectedProject);
   const { data: project, error: projectError, isLoading: isProjectLoading } = useProjectRetrieveQuery({id: projectId || 0})
   const { data: models, error: modelsError, isLoading: isModelsLoading } = useCombinedModelListQuery({projectId: projectId || 0})
@@ -82,4 +82,4 @@ const Model: React.FC = () => {
   );
 }
 
-export default Model;
+export default Simulation;

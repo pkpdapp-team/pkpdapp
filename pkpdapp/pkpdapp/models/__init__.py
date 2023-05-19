@@ -42,6 +42,12 @@ from .inference_results import (
     InferenceFunctionResult,
     InferenceOutputResult,
 )
+from .simulation import (
+    Simulation,
+    SimulationYAxis,
+    SimulationCxLine,
+    SimulationSlider,
+)
 from .inference import (
     Inference,
     Algorithm,

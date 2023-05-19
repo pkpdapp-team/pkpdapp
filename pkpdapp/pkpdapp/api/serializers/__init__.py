@@ -40,5 +40,11 @@ from .dataset import DatasetSerializer, DatasetCsvSerializer
 from .subject import SubjectSerializer
 from .unit import UnitSerializer
 from .user import UserSerializer
+from .simulation import (
+    SimulationSerializer,
+    SimulationYAxisSerializer,
+    SimulationCxLineSerializer,
+    SimulationSliderSerializer,
+)
 
 

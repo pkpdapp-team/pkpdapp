@@ -17,4 +17,6 @@ from .views import (
     StopInferenceView,
     LogLikelihoodView, InferenceWizardView, 
     login_view, logout_view, get_csrf, SessionView, WhoAmIView,
+    SimulationCxLineViewSet, SimulationSliderViewSet,
+    SimulationYAxisViewSet, SimulationViewSet,
 )

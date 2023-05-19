@@ -29,6 +29,7 @@ class Project(models.Model):
         'Compound', on_delete=models.CASCADE,
     )
 
+
     def get_absolute_url(self):
         return reverse('project-detail', kwargs={'pk': self.pk})
 

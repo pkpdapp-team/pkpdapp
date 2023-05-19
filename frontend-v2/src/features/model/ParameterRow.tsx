@@ -1,4 +1,3 @@
-// src/components/ProjectTable.tsx
 import React, { useEffect, useState } from "react";
 import { useForm, Controller, useFieldArray, set, useFormState } from "react-hook-form";
 import { useSelector, useDispatch } from "react-redux";
@@ -24,33 +23,28 @@ import SelectField from "../../components/SelectField";
 import { selectProject } from "../main/mainSlice";
 import TextField from "../../components/TextField";
 import Checkbox from "../../components/Checkbox";
+import UnitField from "../../components/UnitField";
 
 interface Props {
   project: Project;
   model: CombinedModel;
   variableId: number;
-  mappings: PkpdMapping[];
-  appendMapping: (value: PkpdMapping) => void;
-  removeMapping: (index: number) => void;
 }
 
 
-const VariableRow: React.FC<Props> = ({ project, model, variableId, appendMapping, removeMapping, mappings }) => {
+const ParameterRow: React.FC<Props> = ({ project, model, variableId }) => {
 
   const { data: variable, error, isLoading } = useVariableRetrieveQuery({id: variableId});
   const { control, handleSubmit, reset, setValue, getValues, formState: { isDirty: isDirtyForm }, watch} = useForm<Variable>(
     { defaultValues: variable || { id: 0, name: ''}}
   );
   const [updateVariable, { isLoading: isUpdatingVariable }] = useVariableUpdateMutation();
-  const [createProtocol, { isLoading: isCreatingProtocol }] = useProtocolCreateMutation();
-  const [destroyProtocol, { isLoading: isDestroyingProtocol }] = useProtocolDestroyMutation();
 
   useEffect(() => {
     reset(variable);
   }, [variable, reset]);
 
-  const watchProtocolId = watch('protocol');
-  const isDirty = watchProtocolId !== variable?.protocol || isDirtyForm;
+  const isDirty = isDirtyForm;
 
   useEffect(() => {
     const intervalId = setInterval(() => {
@@ -68,7 +62,7 @@ const VariableRow: React.FC<Props> = ({ project, model, variableId, appendMappin
     return <div>Variable not found</div>;
   }
 
-  if (variable.state !== true) {
+  if (variable.constant !== true) {
     return (null);
   }
 
@@ -77,35 +71,6 @@ const VariableRow: React.FC<Props> = ({ project, model, variableId, appendMappin
   }
 
   const isPD = variable.qname.startsWith("PD");
-  const hasProtocol: boolean = watchProtocolId != null;
-  const linkToPD = isPD ? false : mappings.find((mapping) => mapping.pd_variable === variable.id) != undefined;
-
-  const addProtocol = () => {
-    createProtocol({ protocol: { id: 0, dataset: '', doses: [], dose_ids: [], dosed_pk_models: [], subjects: [], name: variable.name, project: project.id } })
-    .then((value) => {
-      if ('data' in value) {
-        setValue("protocol", value.data.id ) 
-      }
-    });
-  };
-
-  const removeProtocol = () => {
-    if (hasProtocol && watchProtocolId) {
-      destroyProtocol({ id: watchProtocolId }).then((value) => 'data' in value && setValue("protocol", null) );
-    }
-  };
-
-  const addPDMapping = () => {
-    appendMapping({ id: 0, pk_variable: variable.id, pd_variable: 0, pkpd_model: model.id, datetime: '', read_only: false });
-  };
-
-  const removePDMapping = () => {
-    const mapping_index = mappings.findIndex((mapping) => mapping.pk_variable === variable.id);
-    if (mapping_index >= 0) {
-      removeMapping(mapping_index);
-    }
-  };
-
 
   return (
     <TableRow>
@@ -116,16 +81,13 @@ const VariableRow: React.FC<Props> = ({ project, model, variableId, appendMappin
         {isPD ? "PD" : "PK"}
       </TableCell>
       <TableCell>
-        <FormControlLabel control={<MuiCheckbox checked={hasProtocol} onClick={() => hasProtocol ? removeProtocol() : addProtocol()} />} label="Dosing" />
+        <TextField name="default_value" control={control} label="Value" />
       </TableCell>
       <TableCell>
-        <FormControlLabel control={<MuiCheckbox checked={linkToPD} onClick={() => linkToPD ? removePDMapping() : addPDMapping()} />} label="Map to PD Effect" />
-      </TableCell>
-      <TableCell>
-        <Checkbox name="link_to_ro" control={control} label="Link to RO" />
+        <UnitField label={'Unit'} name={'unit'} control={control} baseUnitId={variable.unit === null ? undefined : variable.unit} />
       </TableCell>
     </TableRow>
   );
 }
 
-export default VariableRow;
+export default ParameterRow;

@@ -19,6 +19,12 @@ from .permissions import (
     NotADatasetProtocol,
     CheckAccessToProject,
 )
+from .simulation import (
+    SimulationViewSet,
+    SimulationYAxisViewSet,
+    SimulationSliderViewSet,
+    SimulationCxLineViewSet,
+)
 from .auce import AuceView
 from .biomarker_type import BiomarkerTypeView
 from .dataset import DatasetView
