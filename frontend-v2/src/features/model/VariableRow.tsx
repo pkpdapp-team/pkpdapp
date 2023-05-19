@@ -1,6 +1,6 @@
 // src/components/ProjectTable.tsx
 import React, { useEffect, useState } from "react";
-import { useForm, Controller, useFieldArray, set } from "react-hook-form";
+import { useForm, Controller, useFieldArray, set, useFormState } from "react-hook-form";
 import { useSelector, useDispatch } from "react-redux";
 import {
   Table,
@@ -38,7 +38,9 @@ interface Props {
 const VariableRow: React.FC<Props> = ({ project, model, variableId, appendMapping, removeMapping, mappings }) => {
 
   const { data: variable, error, isLoading } = useVariableRetrieveQuery({id: variableId});
-  const { control, handleSubmit, reset, setValue, getValues, formState: { isDirty } } = useForm<Variable>();
+  const { control, handleSubmit, reset, setValue, getValues, formState: { isDirty: isDirtyForm }, watch} = useForm<Variable>(
+    { defaultValues: variable || { id: 0, name: ''}}
+  );
   const [updateVariable, { isLoading: isUpdatingVariable }] = useVariableUpdateMutation();
   const [createProtocol, { isLoading: isCreatingProtocol }] = useProtocolCreateMutation();
   const [destroyProtocol, { isLoading: isDestroyingProtocol }] = useProtocolDestroyMutation();
@@ -46,7 +48,10 @@ const VariableRow: React.FC<Props> = ({ project, model, variableId, appendMappin
   useEffect(() => {
     reset(variable);
   }, [variable, reset]);
-  
+
+  const watchProtocolId = watch('protocol');
+  const isDirty = watchProtocolId !== variable?.protocol || isDirtyForm;
+
   useEffect(() => {
     const intervalId = setInterval(() => {
       if (isDirty) {
@@ -68,16 +73,21 @@ const VariableRow: React.FC<Props> = ({ project, model, variableId, appendMappin
   }
 
   const isPD = variable.pd_model ? true : false;
-  const hasProtocol: boolean = variable.protocol ? true : false;
+  const hasProtocol: boolean = watchProtocolId != null;
   const linkToPD = isPD ? false : mappings.find((mapping) => mapping.pd_variable === variable.id) != undefined;
 
   const addProtocol = () => {
-    createProtocol({ protocol: { id: 0, dataset: '', doses: [], dose_ids: [], dosed_pk_models: [], subjects: [], name: variable.name, project: project.id } }).then((value) => 'data' in value && setValue("protocol", value.data.id ) );
+    createProtocol({ protocol: { id: 0, dataset: '', doses: [], dose_ids: [], dosed_pk_models: [], subjects: [], name: variable.name, project: project.id } })
+    .then((value) => {
+      if ('data' in value) {
+        setValue("protocol", value.data.id ) 
+      }
+    });
   };
 
   const removeProtocol = () => {
-    if (variable.protocol) {
-      destroyProtocol({ id: variable.protocol }).then((value) => 'data' in value && setValue("protocol", null) );
+    if (hasProtocol && watchProtocolId) {
+      destroyProtocol({ id: watchProtocolId }).then((value) => 'data' in value && setValue("protocol", null) );
     }
   };
 
@@ -102,10 +112,10 @@ const VariableRow: React.FC<Props> = ({ project, model, variableId, appendMappin
         {isPD ? "PD" : "PK"}
       </TableCell>
       <TableCell>
-        <FormControlLabel control={<MuiCheckbox checked={hasProtocol} onClick={() => hasProtocol ? addProtocol() : removeProtocol()} />} label="Dosing" />
+        <FormControlLabel control={<MuiCheckbox checked={hasProtocol} onClick={() => hasProtocol ? removeProtocol() : addProtocol()} />} label="Dosing" />
       </TableCell>
       <TableCell>
-        <FormControlLabel control={<MuiCheckbox checked={linkToPD} onClick={() => linkToPD ? addPDMapping() : removePDMapping()} />} label="Map to PD Effect" />
+        <FormControlLabel control={<MuiCheckbox checked={linkToPD} onClick={() => linkToPD ? removePDMapping() : addPDMapping()} />} label="Map to PD Effect" />
       </TableCell>
       <TableCell>
         <Checkbox name="link_to_ro" control={control} label="Link to RO" />

@@ -31,7 +31,7 @@ function SelectField<T extends FieldValues>({ label, name, options, control, rul
             labelId={labelId}
             name={name}
             id={name}
-            value={value === undefined ? '' : value}
+            value={value === undefined || value === null ? '' : value}
             onChange={onChange}
             onBlur={onBlur}
             input={<OutlinedInput label={label} notched={displayEmpty} />}

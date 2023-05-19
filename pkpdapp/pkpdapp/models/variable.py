@@ -122,7 +122,7 @@ class Variable(StoredModel):
 
     protocol = models.ForeignKey(
         Protocol,
-        on_delete=models.PROTECT,
+        on_delete=models.SET_NULL,
         related_name='variables',
         blank=True, null=True,
         help_text='dosing protocol'

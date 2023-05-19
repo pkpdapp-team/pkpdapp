@@ -1,7 +1,7 @@
 import { backendApi } from './backendApi'
 
 export const api = backendApi.enhanceEndpoints({
-  addTagTypes: ['Project', 'Compound', 'Dataset', 'CombinedModel'],
+  addTagTypes: ['Project', 'Compound', 'Dataset', 'CombinedModel', 'Variable'],
   endpoints: {
     // Projects
     projectList: {
@@ -85,6 +85,24 @@ export const api = backendApi.enhanceEndpoints({
     combinedModelCreate: {
       invalidatesTags: [{ type: 'CombinedModel', id: 'LIST' }],
     },
+    variableList: {
+      providesTags: (result) =>
+        result
+          ? [
+            ...result.map(({ id }) => ({ type: 'Variable' as const, id })),
+            { type: 'Variable', id: 'LIST' },
+          ]
+          : [{ type: 'Variable', id: 'LIST' }],
+      },
+      variableRetrieve: {
+        providesTags: (result, error, { id }) => [{ type: 'Variable', id }],
+      },
+      variableUpdate: {
+        invalidatesTags: (result, error, { id }) => [{ type: 'Variable', id }],
+      },
+      variableCreate: {
+        invalidatesTags: [{ type: 'Variable', id: 'LIST' }],
+      },
   },
   //addTagTypes: ['User'],
   //endpoints: {
