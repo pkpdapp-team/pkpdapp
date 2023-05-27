@@ -3,11 +3,11 @@ import { SimulationSlider, useVariableRetrieveQuery } from '../../app/backendApi
 import { Slider, Typography } from '@mui/material';
 
 interface SimulationSliderProps {
-  slider: SimulationSlider;
+  slider: SimulationSliderView;
   onChange: (value: number) => void;
 }
 
-const SimulationSlider: React.FC<SimulationSliderProps> = ({ slider, onChange }) => {
+const SimulationSliderView: React.FC<SimulationSliderProps> = ({ slider, onChange }) => {
   const { data: variable, error, isLoading } = useVariableRetrieveQuery({id: slider.variable});
 
   if (isLoading) {
@@ -41,4 +41,4 @@ const SimulationSlider: React.FC<SimulationSliderProps> = ({ slider, onChange })
   );
 };
 
-export default SimulationSlider;
+export default SimulationSliderView;

@@ -9,7 +9,7 @@ interface SimulationPlotProps {
   variables: Variable[];
 }
 
-const SimulationPlot: React.FC<SimulationPlotProps> = ({ plot, data, variables }) => {
+const SimulationPlotView: React.FC<SimulationPlotProps> = ({ plot, data, variables }) => {
 
   const plotData: Data[] = plot.y_axes.map((y_axis) => {
     const variableValues = data.outputs[y_axis.variable];
@@ -46,4 +46,4 @@ const SimulationPlot: React.FC<SimulationPlotProps> = ({ plot, data, variables }
   );
 };
 
-export default SimulationPlot;
+export default SimulationPlotView;

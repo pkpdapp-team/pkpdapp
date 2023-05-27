@@ -50,11 +50,13 @@ const ProjectTable: React.FC = () => {
     const user_access = [{ id: user?.id || 0, read_only: false, user: user?.id || 0 , project: 0}]
     let project: Project = {id: 0, name: 'new', description: '', compound: 0, user_access, users: [user?.id || 0]}
     const compound: Compound = {id: 0, name: 'new', description: '', compound_type: 'SM', efficacy_experiments: [], molecular_mass: 100, target_molecular_mass: 100}
-    addCompound({ compound }).unwrap().then((compound) => {
+    addCompound({ compound }).unwrap()
+    .then((compound) => {
       project.compound = compound.id || 0
       project.user_access[0].project = project.id
       return addProject({ project })
-    }).then((project) => {
+    })
+    .then((project) => {
       if ('data' in project) {
         addCombinedModel({ combinedModel: { id: 0, name: `model for project ${project.data.id}`, project: project.data.id, mappings: [], components: '', variables: [], mmt: '' }})
         const defaultXUnit = units?.find((unit) => unit.symbol === 'h')?.id || 0
@@ -71,9 +73,7 @@ const ProjectTable: React.FC = () => {
         }
         addSimulation({ simulation: { id: 0, name: `default`, project: project.data.id, sliders: [], plots: [ defaultPlot ] }})
       }
-    }).then((simulation) => {
-      
-      ));
+    });
   }
 
   return (

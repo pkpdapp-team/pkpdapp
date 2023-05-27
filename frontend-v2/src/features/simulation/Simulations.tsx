@@ -5,8 +5,8 @@ import { Simulate, SimulateResponse, Simulation, Unit, Variable, useCombinedMode
 import { useFieldArray, useForm, useFormState } from 'react-hook-form';
 import { useEffect, useMemo, useState } from 'react';
 import AddIcon from '@mui/icons-material/Add';
-import SimulationPlot from './SimulationPlot';
-import SimulationSlider from './SimulationSlider';
+import SimulationPlotView from './SimulationPlotView';
+import SimulationSliderView from './SimulationSliderView';
 import { get } from 'http';
 
 type SliderValues = {[key: number]: number};
@@ -146,7 +146,7 @@ const Simulations: React.FC = () => {
 
   const handleAddPlot = (variableId: number) => {
     const defaultXUnit = units?.find((unit: Unit) => unit.symbol === 'h')?.id || 0
-    const defaultPlot: SimulationPlot = {
+    const defaultPlot: SimulationPlotView = {
       id: 0,
       simulation: simulation?.id || 0,
       y_axes: [
@@ -167,7 +167,7 @@ const Simulations: React.FC = () => {
   }
 
   const handleAddSlider = (variableId: number) => {
-    const defaultSlider: SimulationSlider = {
+    const defaultSlider: SimulationSliderView = {
       id: 0,
       simulation: simulation?.id || 0,
       variable: variableId,
@@ -176,7 +176,7 @@ const Simulations: React.FC = () => {
     addSimulationSlider(defaultSlider);
   }
 
-  const handleChangeSlider = (slider: SimulationSlider) => (value: number) => {
+  const handleChangeSlider = (slider: SimulationSliderView) => (value: number) => {
     setSliderValues({ ...sliderValues, [slider.variable]: value });
   }
     
@@ -187,7 +187,7 @@ const Simulations: React.FC = () => {
         {simulation.plots.map((plot, index) => (
           <Grid item xs={12} md={6} key={index}>
             {data ? 
-              <SimulationPlot plot={plot} data={data} variables={variables || []} />
+              <SimulationPlotView plot={plot} data={data} variables={variables || []} />
               :
               <div>Loading...</div>
             }
@@ -204,7 +204,7 @@ const Simulations: React.FC = () => {
       <Grid container spacing={2}>
         {simulation.sliders.map((slider, index) => (
           <Grid item xs={12} md={6} lg={3} key={index}>
-            <SimulationSlider slider={slider} onChange={handleChangeSlider(slider)} />
+            <SimulationSliderView slider={slider} onChange={handleChangeSlider(slider)} />
           </Grid>
         ))}
         <Select onChange={(e) => handleAddSlider(e.target.value as number)}>

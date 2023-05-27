@@ -16,7 +16,7 @@ const MainContent: React.FC = () => {
   if (page === PageName.MODEL) {
     pageComponent = (<Model />)
   }
-  if (page === PageName.SIMULATION) {
+  if (page === PageName.SIMULATIONS) {
     pageComponent = (<Simulations />)
   }
 
