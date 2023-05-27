@@ -59,18 +59,6 @@ router.register(
     'simulation', api.SimulationViewSet,
     basename='simulation'
 )
-router.register(
-    'simulation_y_axis', api.SimulationYAxisViewSet,
-    basename='simulation_y_axis'
-)
-router.register(
-    'simulation_slider', api.SimulationSliderViewSet,
-    basename='simulation_slider'
-)
-router.register(
-    'simulation_cx_line', api.SimulationCxLineViewSet,
-    basename='simulation_cx_line'
-)
 
 urlpatterns = [
     path('admin/doc/', include('django.contrib.admindocs.urls')),

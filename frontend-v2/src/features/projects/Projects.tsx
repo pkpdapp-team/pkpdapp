@@ -17,7 +17,7 @@ import {
 import FloatField from "../../components/FloatField";
 import { Delete, Save } from "@mui/icons-material";
 import { api } from "../../app/api";
-import { Compound, Project, ProjectAccess, useCompoundCreateMutation, useProjectCreateMutation, useProjectDestroyMutation, useProjectListQuery, useCompoundRetrieveQuery, useCompoundUpdateMutation, useProjectUpdateMutation, useCombinedModelCreateMutation } from "../../app/backendApi";
+import { Compound, Project, ProjectAccess, useCompoundCreateMutation, useProjectCreateMutation, useProjectDestroyMutation, useProjectListQuery, useCompoundRetrieveQuery, useCompoundUpdateMutation, useProjectUpdateMutation, useCombinedModelCreateMutation, useSimulationCreateMutation, SimulationPlot, useUnitListQuery } from "../../app/backendApi";
 import SelectField from "../../components/SelectField";
 import ProjectRow from "./Project";
 import { RootState } from "../../app/store";
@@ -28,11 +28,14 @@ const ProjectTable: React.FC = () => {
   const { data: projects, error, isLoading } = useProjectListQuery()
   const user = useSelector((state: RootState) => state.login.user);
 
+  const { data: units, error: unitsError, isLoading: unitsLoading } = useUnitListQuery()
+
   const [addProject, { isLoading: isAdding }] = useProjectCreateMutation()
   const [addCombinedModel, { isLoading: isAddingCombinedModel }] = useCombinedModelCreateMutation()
   const [addCompound, { isLoading: isAddingCompound }] = useCompoundCreateMutation()
+  const [addSimulation, { isLoading: isAddingSimulation }] = useSimulationCreateMutation()
 
-  if (isLoading) {
+  if (isLoading || unitsLoading) {
     return <div>Loading...</div>;
   }
   
@@ -54,8 +57,23 @@ const ProjectTable: React.FC = () => {
     }).then((project) => {
       if ('data' in project) {
         addCombinedModel({ combinedModel: { id: 0, name: `model for project ${project.data.id}`, project: project.data.id, mappings: [], components: '', variables: [], mmt: '' }})
+        const defaultXUnit = units?.find((unit) => unit.symbol === 'h')?.id || 0
+        const defaultPlot: SimulationPlot = {
+          id: 0,
+          simulation: 0,
+          y_axes: [],
+          cx_lines: [],
+          index: 0,
+          receptor_occupancy: false,
+          x_unit: defaultXUnit,
+          y_unit: null,
+          y_unit2: null,
+        }
+        addSimulation({ simulation: { id: 0, name: `default`, project: project.data.id, sliders: [], plots: [ defaultPlot ] }})
       }
-    });
+    }).then((simulation) => {
+      
+      ));
   }
 
   return (

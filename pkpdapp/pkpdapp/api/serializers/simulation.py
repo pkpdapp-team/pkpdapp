@@ -6,7 +6,7 @@
 
 from rest_framework import serializers
 from pkpdapp.models import (
-    Simulation, SimulationYAxis, SimulationSlider, SimulationCxLine
+    Simulation, SimulationYAxis, SimulationSlider, SimulationCxLine, SimulationPlot
 )
 
 
@@ -25,15 +25,44 @@ class SimulationCxLineSerializer(serializers.ModelSerializer):
         model = SimulationCxLine
         fields = '__all__'
 
+class SimulationPlotSerializer(serializers.ModelSerializer):
+    y_axes = SimulationYAxisSerializer(
+        many=True
+    )
+    cx_lines = SimulationCxLineSerializer(
+        many=True
+    )
+    class Meta:
+        model = SimulationPlot
+        fields = '__all__'
+
+    def create(self, validated_data):
+        y_axes_data = validated_data.pop('y_axes')
+        cx_lines_data = validated_data.pop('cx_lines')
+        simulation_plot = SimulationPlot.objects.create(**validated_data)
+        for y_axis in y_axes_data:
+            SimulationYAxis.objects.create(simulation_plot=simulation_plot, **y_axis)
+        for cx_line in cx_lines_data:
+            SimulationCxLine.objects.create(simulation_plot=simulation_plot, **cx_line)
+        return simulation_plot
+
+    def update(self, instance, validated_data):
+        y_axes_data = validated_data.pop('y_axes')
+        cx_lines_data = validated_data.pop('cx_lines')
+        SimulationYAxis.objects.filter(simulation_plot=instance).delete()
+        SimulationCxLine.objects.filter(simulation_plot=instance).delete()
+        for y_axis in y_axes_data:
+            SimulationYAxis.objects.create(simulation_plot=instance, **y_axis)
+        for cx_line in cx_lines_data:
+            SimulationCxLine.objects.create(simulation_plot=instance, **cx_line)
+        return super().update(instance, validated_data)
+
 
 class SimulationSerializer(serializers.ModelSerializer):
-    y_axis = SimulationYAxisSerializer(
+    sliders = SimulationSliderSerializer(
         many=True
     )
-    slider = SimulationSliderSerializer(
-        many=True
-    )
-    cx_line = SimulationCxLineSerializer(
+    plots = SimulationPlotSerializer(
         many=True
     )
     class Meta:
@@ -41,29 +70,21 @@ class SimulationSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def create(self, validated_data):
-        y_axis_data = validated_data.pop('y_axis')
         slider_data = validated_data.pop('slider')
-        cx_line_data = validated_data.pop('cx_line')
+        plot_data = validated_data.pop('plots')
         simulation = Simulation.objects.create(**validated_data)
-        for y_axis in y_axis_data:
-            SimulationYAxis.objects.create(simulation=simulation, **y_axis)
         for slider in slider_data:
             SimulationSlider.objects.create(simulation=simulation, **slider)
-        for cx_line in cx_line_data:
-            SimulationCxLine.objects.create(simulation=simulation, **cx_line)
+        for plot in plot_data:
+            SimulationPlot.objects.create(simulation=simulation, **plot)
         return simulation
     
     def update(self, instance, validated_data):
-        y_axis_data = validated_data.pop('y_axis')
         slider_data = validated_data.pop('slider')
-        cx_line_data = validated_data.pop('cx_line')
+        plot_data = validated_data.pop('plots')
         SimulationYAxis.objects.filter(simulation=instance).delete()
-        SimulationSlider.objects.filter(simulation=instance).delete()
-        SimulationCxLine.objects.filter(simulation=instance).delete()
-        for y_axis in y_axis_data:
-            SimulationYAxis.objects.create(simulation=instance, **y_axis)
         for slider in slider_data:
             SimulationSlider.objects.create(simulation=instance, **slider)
-        for cx_line in cx_line_data:
-            SimulationCxLine.objects.create(simulation=instance, **cx_line)
+        for plot in plot_data:
+            SimulationPlot.objects.create(simulation=instance, **plot)  
         return super().update(instance, validated_data)

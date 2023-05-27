@@ -57,6 +57,9 @@ export default function Sidebar() {
     if (page === PageName.DATA) {
       return true;
     }
+    if (page === PageName.SIMULATION) {
+      return true;
+    }
     if (selectedProject === null) {
       return page !== PageName.PROJECTS;
     } else {

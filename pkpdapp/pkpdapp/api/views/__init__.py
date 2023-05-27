@@ -21,9 +21,6 @@ from .permissions import (
 )
 from .simulation import (
     SimulationViewSet,
-    SimulationYAxisViewSet,
-    SimulationSliderViewSet,
-    SimulationCxLineViewSet,
 )
 from .auce import AuceView
 from .biomarker_type import BiomarkerTypeView

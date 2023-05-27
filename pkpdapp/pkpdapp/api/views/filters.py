@@ -19,6 +19,7 @@ from pkpdapp.models import (
     Subject,
     Inference, InferenceChain,
     LogLikelihood,
+    Simulation,
 )
 
 
@@ -143,6 +144,8 @@ class ProjectFilter(filters.BaseFilterBackend):
                 )
                 if queryset.model == Dataset:
                     queryset = project.datasets
+                elif queryset.model == Simulation:
+                    queryset = project.simulations
                 elif queryset.model == PharmacodynamicModel:
                     queryset = project.pd_models
                 elif queryset.model == CombinedModel:

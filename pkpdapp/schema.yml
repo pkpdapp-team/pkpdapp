@@ -487,10 +487,28 @@ paths:
         required: true
       tags:
       - combined_model
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Simulate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Simulate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Simulate'
+        required: true
       security:
       - cookieAuth: []
       responses:
         '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimulateResponse'
+          description: ''
+        '404':
           description: No response body
   /api/compound/:
     get:
@@ -1586,10 +1604,28 @@ paths:
         required: true
       tags:
       - pharmacodynamic
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Simulate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Simulate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Simulate'
+        required: true
       security:
       - cookieAuth: []
       responses:
         '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimulateResponse'
+          description: ''
+        '404':
           description: No response body
   /api/pharmacokinetic/:
     get:
@@ -2200,6 +2236,153 @@ paths:
       responses:
         '200':
           description: No response body
+  /api/simulation/:
+    get:
+      operationId: simulation_list
+      parameters:
+      - in: query
+        name: project_id
+        schema:
+          type: integer
+        description: Filter results by project ID
+      tags:
+      - simulation
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Simulation'
+          description: ''
+    post:
+      operationId: simulation_create
+      tags:
+      - simulation
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Simulation'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Simulation'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Simulation'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Simulation'
+          description: ''
+  /api/simulation/{id}/:
+    get:
+      operationId: simulation_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this simulation.
+        required: true
+      tags:
+      - simulation
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Simulation'
+          description: ''
+    put:
+      operationId: simulation_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this simulation.
+        required: true
+      tags:
+      - simulation
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Simulation'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Simulation'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Simulation'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Simulation'
+          description: ''
+    patch:
+      operationId: simulation_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this simulation.
+        required: true
+      tags:
+      - simulation
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedSimulation'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedSimulation'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedSimulation'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Simulation'
+          description: ''
+    delete:
+      operationId: simulation_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this simulation.
+        required: true
+      tags:
+      - simulation
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
   /api/subject/:
     get:
       operationId: subject_list
@@ -2626,6 +2809,12 @@ paths:
   /api/variable/:
     get:
       operationId: variable_list
+      parameters:
+      - in: query
+        name: project_id
+        schema:
+          type: integer
+        description: Filter results by project ID
       tags:
       - variable
       security:
@@ -3982,6 +4171,32 @@ components:
           type: integer
           nullable: true
           description: unit for the amount value stored in each dose
+    PatchedSimulation:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        sliders:
+          type: array
+          items:
+            $ref: '#/components/schemas/SimulationSlider'
+        plots:
+          type: array
+          items:
+            $ref: '#/components/schemas/SimulationPlot'
+        name:
+          type: string
+          description: name of the simulation
+          maxLength: 100
+        nrows:
+          type: integer
+          description: number of subplot rows
+        ncols:
+          type: integer
+          description: number of subplot columns
+        project:
+          type: integer
     PatchedSubject:
       type: object
       properties:
@@ -4420,6 +4635,164 @@ components:
       - id
       - name
       - subjects
+    Simulate:
+      type: object
+      properties:
+        outputs:
+          type: array
+          items:
+            type: string
+        initial_conditions:
+          type: object
+          additionalProperties:
+            type: number
+            format: double
+        variables:
+          type: object
+          additionalProperties:
+            type: number
+            format: double
+      required:
+      - initial_conditions
+      - outputs
+      - variables
+    SimulateResponse:
+      type: object
+      properties:
+        time:
+          type: array
+          items:
+            type: number
+            format: double
+        outputs:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: number
+              format: double
+      required:
+      - outputs
+      - time
+    Simulation:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        sliders:
+          type: array
+          items:
+            $ref: '#/components/schemas/SimulationSlider'
+        plots:
+          type: array
+          items:
+            $ref: '#/components/schemas/SimulationPlot'
+        name:
+          type: string
+          description: name of the simulation
+          maxLength: 100
+        nrows:
+          type: integer
+          description: number of subplot rows
+        ncols:
+          type: integer
+          description: number of subplot columns
+        project:
+          type: integer
+      required:
+      - id
+      - name
+      - plots
+      - project
+      - sliders
+    SimulationCxLine:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        value:
+          type: number
+          format: double
+          description: value of the line
+        plot:
+          type: integer
+      required:
+      - id
+      - plot
+      - value
+    SimulationPlot:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        y_axes:
+          type: array
+          items:
+            $ref: '#/components/schemas/SimulationYAxis'
+        cx_lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/SimulationCxLine'
+        index:
+          type: integer
+          description: index of the plot in the simulation
+        receptor_occupancy:
+          type: boolean
+          description: True if receptor occupancy should be plotted
+        simulation:
+          type: integer
+        x_unit:
+          type: integer
+          description: unit for x axis
+        y_unit:
+          type: integer
+          nullable: true
+          description: unit for y axis
+        y_unit2:
+          type: integer
+          nullable: true
+          description: unit for rhs y axis
+      required:
+      - cx_lines
+      - id
+      - index
+      - simulation
+      - x_unit
+      - y_axes
+    SimulationSlider:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        simulation:
+          type: integer
+        variable:
+          type: integer
+      required:
+      - id
+      - simulation
+      - variable
+    SimulationYAxis:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        right:
+          type: boolean
+          description: True if the variable is plotted on the right y axis
+        plot:
+          type: integer
+        variable:
+          type: integer
+      required:
+      - id
+      - plot
+      - variable
     SpeciesEnum:
       enum:
       - H

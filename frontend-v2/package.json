@@ -16,9 +16,11 @@
     "@types/react": "^18.0.6",
     "@types/react-dom": "^18.0.2",
     "http-proxy-middleware": "^2.0.6",
+    "plotly.js": "^2.23.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.43.9",
+    "react-plotly.js": "^2.6.0",
     "react-redux": "^8.0.1",
     "react-scripts": "5.0.1",
     "typescript": "^4.6.0",
@@ -47,5 +49,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "@types/react-plotly.js": "^2.6.0"
   }
 }

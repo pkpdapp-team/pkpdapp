@@ -47,6 +47,7 @@ from .simulation import (
     SimulationYAxis,
     SimulationCxLine,
     SimulationSlider,
+    SimulationPlot,
 )
 from .inference import (
     Inference,

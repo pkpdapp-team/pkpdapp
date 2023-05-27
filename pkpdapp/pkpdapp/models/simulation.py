@@ -22,47 +22,60 @@ class Simulation(models.Model):
 
     project = models.ForeignKey(
         'Project', on_delete=models.CASCADE,
+        related_name='simulations',
     )
 
-    # enum class for different plot layouts
-    class PlotLayout(models.TextChoices):
-        ONE_BY_ONE = '1x1', '1x1'
-        TWO_BY_ONE = '2x1', '2x1'
-        ONE_BY_TUE = '1x2', '1x2'
-
-    plot_layout = models.CharField(
-        max_length=3,
-        choices=PlotLayout.choices,
-        default=PlotLayout.ONE_BY_ONE,
-        help_text='layout of plots'
+    nrows = models.IntegerField(
+        default=1,
+        help_text='number of subplot rows'
     )
 
-    # unit for x axis (common for all plots)
+    ncols = models.IntegerField(
+        default=1,
+        help_text='number of subplot columns'
+    )
+
+
+# model for a simulation plot
+class SimulationPlot(models.Model):
+    simulation = models.ForeignKey(
+        'Simulation', on_delete=models.CASCADE,
+        related_name='plots'
+    )
+    index = models.IntegerField(
+        help_text='index of the plot in the simulation'
+    )
+
     x_unit = models.ForeignKey(
         'Unit', on_delete=models.PROTECT,
-        related_name='simulations'
+        related_name='simulation_plots',
+        help_text='unit for x axis'
     )
 
     y_unit = models.ForeignKey(
         'Unit', on_delete=models.PROTECT,
-        related_name='simulations_y'
+        related_name='simulation_plots_y',
+        null=True, blank=True,
+        help_text='unit for y axis'
     )
 
     y_unit2 = models.ForeignKey(
         'Unit', on_delete=models.PROTECT,
-        related_name='simulations_y2',
-        null=True, blank=True
+        related_name='simulation_plots_y2',
+        null=True, blank=True,
+        help_text='unit for rhs y axis'
     )
 
     receptor_occupancy = models.BooleanField(
         default=False,
-        help_text='True if receptor occupancy should be plotted'
+        help_text='True if receptor occupancy should be plotted',
     )
+
 
 # model for mapping a variable to a y axis
 class SimulationYAxis(models.Model):
-    simulation = models.ForeignKey(
-        'Simulation', on_delete=models.CASCADE,
+    plot = models.ForeignKey(
+        'SimulationPlot', on_delete=models.CASCADE,
         related_name='y_axes'
     )
 
@@ -71,20 +84,12 @@ class SimulationYAxis(models.Model):
         related_name='y_axes'
     )
 
-    display_unit = models.ForeignKey(
-        'Unit', on_delete=models.PROTECT,
-        related_name='y_axes'
+    # if true, the variable is plotted on the right y axis
+    right = models.BooleanField(
+        default=False,
+        help_text='True if the variable is plotted on the right y axis'
     )
 
-    axis_row = models.IntegerField(
-        help_text='row of the axis in the plot layout',
-        default=0
-    )
-
-    axis_col = models.IntegerField(
-        help_text='column of the axis in the plot layout',
-        default=0
-    )
 
 # model for a slider on the plot. the sliders alter the value of a variable
 # in the model
@@ -101,10 +106,11 @@ class SimulationSlider(models.Model):
 
 
 class SimulationCxLine(models.Model):
-    simulation = models.ForeignKey(
-        'Simulation', on_delete=models.CASCADE,
+    plot = models.ForeignKey(
+        'SimulationPlot', on_delete=models.CASCADE,
         related_name='cx_lines'
     )
+
     value = models.FloatField(
         help_text='value of the line'
     )

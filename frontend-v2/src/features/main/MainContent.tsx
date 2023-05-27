@@ -5,6 +5,7 @@ import { PageName } from './mainSlice';
 import ProjectTable from '../projects/Projects';
 import Drug from '../drug/Drug';
 import Model from '../model/Model';
+import Simulations from '../simulation/Simulations';
 
 const MainContent: React.FC = () => {
   const page = useSelector((state: RootState) => state.main.selectedPage);
@@ -14,6 +15,9 @@ const MainContent: React.FC = () => {
   }
   if (page === PageName.MODEL) {
     pageComponent = (<Model />)
+  }
+  if (page === PageName.SIMULATION) {
+    pageComponent = (<Simulations />)
   }
 
   return (

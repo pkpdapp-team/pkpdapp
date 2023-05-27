@@ -174,6 +174,7 @@ const injectedRtkApi = api.injectEndpoints({
       query: (queryArg) => ({
         url: `/api/combined_model/${queryArg.id}/simulate`,
         method: "POST",
+        body: queryArg.simulate,
       }),
     }),
     compoundList: build.query<CompoundListApiResponse, CompoundListApiArg>({
@@ -523,6 +524,7 @@ const injectedRtkApi = api.injectEndpoints({
       query: (queryArg) => ({
         url: `/api/pharmacodynamic/${queryArg.id}/simulate`,
         method: "POST",
+        body: queryArg.simulate,
       }),
     }),
     pharmacokineticList: build.query<
@@ -739,6 +741,60 @@ const injectedRtkApi = api.injectEndpoints({
     >({
       query: () => ({ url: `/api/session/` }),
     }),
+    simulationList: build.query<
+      SimulationListApiResponse,
+      SimulationListApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/simulation/`,
+        params: { project_id: queryArg.projectId },
+      }),
+    }),
+    simulationCreate: build.mutation<
+      SimulationCreateApiResponse,
+      SimulationCreateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/simulation/`,
+        method: "POST",
+        body: queryArg.simulation,
+      }),
+    }),
+    simulationRetrieve: build.query<
+      SimulationRetrieveApiResponse,
+      SimulationRetrieveApiArg
+    >({
+      query: (queryArg) => ({ url: `/api/simulation/${queryArg.id}/` }),
+    }),
+    simulationUpdate: build.mutation<
+      SimulationUpdateApiResponse,
+      SimulationUpdateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/simulation/${queryArg.id}/`,
+        method: "PUT",
+        body: queryArg.simulation,
+      }),
+    }),
+    simulationPartialUpdate: build.mutation<
+      SimulationPartialUpdateApiResponse,
+      SimulationPartialUpdateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/simulation/${queryArg.id}/`,
+        method: "PATCH",
+        body: queryArg.patchedSimulation,
+      }),
+    }),
+    simulationDestroy: build.mutation<
+      SimulationDestroyApiResponse,
+      SimulationDestroyApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/simulation/${queryArg.id}/`,
+        method: "DELETE",
+      }),
+    }),
     subjectList: build.query<SubjectListApiResponse, SubjectListApiArg>({
       query: () => ({ url: `/api/subject/` }),
     }),
@@ -860,7 +916,10 @@ const injectedRtkApi = api.injectEndpoints({
       }),
     }),
     variableList: build.query<VariableListApiResponse, VariableListApiArg>({
-      query: () => ({ url: `/api/variable/` }),
+      query: (queryArg) => ({
+        url: `/api/variable/`,
+        params: { project_id: queryArg.projectId },
+      }),
     }),
     variableCreate: build.mutation<
       VariableCreateApiResponse,
@@ -1015,9 +1074,11 @@ export type CombinedModelSetVariablesFromInferenceUpdateApiArg = {
   id: number;
   combinedModel: CombinedModel;
 };
-export type CombinedModelSimulateCreateApiResponse = unknown;
+export type CombinedModelSimulateCreateApiResponse =
+  /** status 200  */ SimulateResponse;
 export type CombinedModelSimulateCreateApiArg = {
   id: number;
+  simulate: Simulate;
 };
 export type CompoundListApiResponse = /** status 200  */ Compound[];
 export type CompoundListApiArg = void;
@@ -1229,9 +1290,11 @@ export type PharmacodynamicSetVariablesFromInferenceUpdateApiArg = {
   id: number;
   pharmacodynamic: Pharmacodynamic;
 };
-export type PharmacodynamicSimulateCreateApiResponse = unknown;
+export type PharmacodynamicSimulateCreateApiResponse =
+  /** status 200  */ SimulateResponse;
 export type PharmacodynamicSimulateCreateApiArg = {
   id: number;
+  simulate: Simulate;
 };
 export type PharmacokineticListApiResponse =
   /** status 200  */ Pharmacokinetic[];
@@ -1359,6 +1422,37 @@ export type ProtocolDestroyApiArg = {
 };
 export type SessionRetrieveApiResponse = unknown;
 export type SessionRetrieveApiArg = void;
+export type SimulationListApiResponse = /** status 200  */ Simulation[];
+export type SimulationListApiArg = {
+  /** Filter results by project ID */
+  projectId?: number;
+};
+export type SimulationCreateApiResponse = /** status 201  */ Simulation;
+export type SimulationCreateApiArg = {
+  simulation: Simulation;
+};
+export type SimulationRetrieveApiResponse = /** status 200  */ Simulation;
+export type SimulationRetrieveApiArg = {
+  /** A unique integer value identifying this simulation. */
+  id: number;
+};
+export type SimulationUpdateApiResponse = /** status 200  */ Simulation;
+export type SimulationUpdateApiArg = {
+  /** A unique integer value identifying this simulation. */
+  id: number;
+  simulation: Simulation;
+};
+export type SimulationPartialUpdateApiResponse = /** status 200  */ Simulation;
+export type SimulationPartialUpdateApiArg = {
+  /** A unique integer value identifying this simulation. */
+  id: number;
+  patchedSimulation: PatchedSimulation;
+};
+export type SimulationDestroyApiResponse = unknown;
+export type SimulationDestroyApiArg = {
+  /** A unique integer value identifying this simulation. */
+  id: number;
+};
 export type SubjectListApiResponse = /** status 200  */ Subject[];
 export type SubjectListApiArg = void;
 export type SubjectCreateApiResponse = /** status 201  */ Subject;
@@ -1444,7 +1538,10 @@ export type UserDestroyApiArg = {
   id: number;
 };
 export type VariableListApiResponse = /** status 200  */ Variable[];
-export type VariableListApiArg = void;
+export type VariableListApiArg = {
+  /** Filter results by project ID */
+  projectId?: number;
+};
 export type VariableCreateApiResponse = /** status 201  */ Variable;
 export type VariableCreateApiArg = {
   variable: Variable;
@@ -1568,6 +1665,21 @@ export type PatchedCombinedModel = {
   pk_model?: number | null;
   pd_model?: number | null;
   pd_model2?: number | null;
+};
+export type SimulateResponse = {
+  time: number[];
+  outputs: {
+    [key: string]: number[];
+  };
+};
+export type Simulate = {
+  outputs: string[];
+  initial_conditions: {
+    [key: string]: number;
+  };
+  variables: {
+    [key: string]: number;
+  };
 };
 export type Efficacy = {
   id: number;
@@ -1865,6 +1977,51 @@ export type PatchedProtocol = {
   time_unit?: number | null;
   amount_unit?: number | null;
 };
+export type SimulationSlider = {
+  id: number;
+  simulation: number;
+  variable: number;
+};
+export type SimulationYAxis = {
+  id: number;
+  right?: boolean;
+  plot: number;
+  variable: number;
+};
+export type SimulationCxLine = {
+  id: number;
+  value: number;
+  plot: number;
+};
+export type SimulationPlot = {
+  id: number;
+  y_axes: SimulationYAxis[];
+  cx_lines: SimulationCxLine[];
+  index: number;
+  receptor_occupancy?: boolean;
+  simulation: number;
+  x_unit: number;
+  y_unit?: number | null;
+  y_unit2?: number | null;
+};
+export type Simulation = {
+  id: number;
+  sliders: SimulationSlider[];
+  plots: SimulationPlot[];
+  name: string;
+  nrows?: number;
+  ncols?: number;
+  project: number;
+};
+export type PatchedSimulation = {
+  id?: number;
+  sliders?: SimulationSlider[];
+  plots?: SimulationPlot[];
+  name?: string;
+  nrows?: number;
+  ncols?: number;
+  project?: number;
+};
 export type Subject = {
   id: number;
   id_in_dataset: number;
@@ -2075,6 +2232,12 @@ export const {
   useProtocolPartialUpdateMutation,
   useProtocolDestroyMutation,
   useSessionRetrieveQuery,
+  useSimulationListQuery,
+  useSimulationCreateMutation,
+  useSimulationRetrieveQuery,
+  useSimulationUpdateMutation,
+  useSimulationPartialUpdateMutation,
+  useSimulationDestroyMutation,
   useSubjectListQuery,
   useSubjectCreateMutation,
   useSubjectRetrieveQuery,

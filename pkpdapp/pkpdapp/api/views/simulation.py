@@ -5,23 +5,38 @@
 #
 
 from rest_framework import viewsets
+from rest_framework.permissions import IsAuthenticated
+
+from drf_spectacular.utils import extend_schema, OpenApiParameter
+from drf_spectacular.types import OpenApiTypes
 from pkpdapp.models import Simulation, SimulationYAxis, SimulationSlider, SimulationCxLine
 from pkpdapp.api.serializers import (
     SimulationSerializer, SimulationYAxisSerializer, SimulationSliderSerializer, SimulationCxLineSerializer
+)
+from pkpdapp.api.views import (
+    ProjectFilter,
+    CheckAccessToProject
 )
 
 class SimulationViewSet(viewsets.ModelViewSet):
     queryset = Simulation.objects.all()
     serializer_class = SimulationSerializer
+    filter_backends = [ProjectFilter]
+    permission_classes = [
+        IsAuthenticated & CheckAccessToProject
+    ]
 
-class SimulationYAxisViewSet(viewsets.ModelViewSet):
-    queryset = SimulationYAxis.objects.all()
-    serializer_class = SimulationYAxisSerializer
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='project_id',
+                description='Filter results by project ID',
+                required=False,
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY
+            ),
+        ],
+    )
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
 
-class SimulationSliderViewSet(viewsets.ModelViewSet):
-    queryset = SimulationSlider.objects.all()
-    serializer_class = SimulationSliderSerializer
-
-class SimulationCxLineViewSet(viewsets.ModelViewSet):
-    queryset = SimulationCxLine.objects.all()
-    serializer_class = SimulationCxLineSerializer
