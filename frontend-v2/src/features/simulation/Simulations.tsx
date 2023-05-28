@@ -89,12 +89,12 @@ const Simulations: React.FC = () => {
     defaultValues: simulation || defaultSimulation,
   });
 
-  const { append: addSimulationSlider } = useFieldArray({
+  const { fields: sliders, append: addSimulationSlider, remove: removeSimulationSlider } = useFieldArray({
     control,
     name: "sliders",
   });
 
-  const { fields: plots, append: addSimulationPlot } = useFieldArray({
+  const { fields: plots, append: addSimulationPlot, remove: removeSimulationPlot } = useFieldArray({
     control,
     name: "plots",
   });
@@ -194,7 +194,7 @@ const Simulations: React.FC = () => {
         {plots.map((plot, index) => (
           <Grid item xs={12} md={6} key={index}>
             {data ? 
-              <SimulationPlotView index={index} plot={plot} data={data} variables={variables || []} control={control} setValue={setValue}/>
+              <SimulationPlotView index={index} plot={plot} data={data} variables={variables || []} control={control} />
               :
               <div>Loading...</div>
             }

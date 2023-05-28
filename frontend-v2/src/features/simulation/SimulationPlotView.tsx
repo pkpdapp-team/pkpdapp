@@ -3,8 +3,9 @@ import Plot from 'react-plotly.js';
 import { SimulateResponse, Simulation, SimulationPlot, Variable } from '../../app/backendApi';
 import Plotly, { Config, Data, Layout, Icon as PlotlyIcon } from 'plotly.js';
 import { Add } from '@mui/icons-material';
-import { Icon, createSvgIcon } from '@mui/material';
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Icon, createSvgIcon } from '@mui/material';
 import { Control, UseFormSetValue, useFormContext } from 'react-hook-form';
+import SimulationPlotForm from './SimulationPlotForm.tsx';
 
 interface SimulationPlotProps {
   index: number;
@@ -12,15 +13,22 @@ interface SimulationPlotProps {
   data: SimulateResponse;
   variables: Variable[];
   control: Control<Simulation>,
-  setValue: UseFormSetValue<Simulation>,
 
 }
 
-const SimulationPlotView: React.FC<SimulationPlotProps> = ({ index, plot, data, variables, control, setValue }) => {
+const SimulationPlotView: React.FC<SimulationPlotProps> = ({ index, plot, data, variables, control }) => {
+
+  const [open, setOpen] = useState(false);
+
 
   const handleAddVariableToYAxis = () => {
     console.log('add variable to y axis');
-    setValue(`plots.${index}.y_axes`, [...plot.y_axes, {variable: ''}]);
+    setOpen(true);
+
+  }
+
+  const handleClose = () => {
+    setOpen(false);
   }
 
   const plotData: Data[] = plot.y_axes.map((y_axis) => {
@@ -67,12 +75,24 @@ const SimulationPlotView: React.FC<SimulationPlotProps> = ({ index, plot, data, 
     ],
   }
   return (
-    <Plot
-      data={plotData}
-      layout={plotLayout}
-      style={{ width: '100%', height: '100%' }}
-      config={config}
-    />
+    <>
+      <Plot
+        data={plotData}
+        layout={plotLayout}
+        style={{ width: '100%', height: '100%' }}
+        config={config}
+      />
+      <Dialog open={open} onClose={handleClose}>
+        <DialogTitle>Add Variable to Y Axis</DialogTitle>
+        <DialogContent>
+          <SimulationPlotForm index={index} variables={variables} plot={plot} control={control} />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose}>Cancel</Button>
+          <Button onClick={handleClose}>Add</Button>
+        </DialogActions>
+      </Dialog>
+    </>
   );
 };
 
