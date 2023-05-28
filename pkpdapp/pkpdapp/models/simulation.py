@@ -35,6 +35,8 @@ class Simulation(models.Model):
         help_text='number of subplot columns'
     )
 
+    def get_project(self):
+        return self.project
 
 # model for a simulation plot
 class SimulationPlot(models.Model):
@@ -70,6 +72,9 @@ class SimulationPlot(models.Model):
         default=False,
         help_text='True if receptor occupancy should be plotted',
     )
+
+    def get_project(self):
+        return self.simulation.project
 
 
 # model for mapping a variable to a y axis

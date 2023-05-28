@@ -1,11 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Plot from 'react-plotly.js';
 import { SimulateResponse, Simulation, SimulationPlot, Variable } from '../../app/backendApi';
-import Plotly, { Config, Data, Layout, Icon as PlotlyIcon } from 'plotly.js';
-import { Add } from '@mui/icons-material';
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Icon, createSvgIcon } from '@mui/material';
-import { Control, UseFormSetValue, useFormContext } from 'react-hook-form';
-import SimulationPlotForm from './SimulationPlotForm.tsx';
+import { Config, Data, Layout, Icon as PlotlyIcon } from 'plotly.js';
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
+import { Control } from 'react-hook-form';
+import SimulationPlotForm from './SimulationPlotForm';
 
 interface SimulationPlotProps {
   index: number;
@@ -19,7 +18,6 @@ interface SimulationPlotProps {
 const SimulationPlotView: React.FC<SimulationPlotProps> = ({ index, plot, data, variables, control }) => {
 
   const [open, setOpen] = useState(false);
-
 
   const handleAddVariableToYAxis = () => {
     console.log('add variable to y axis');

@@ -1,4 +1,4 @@
-import { Grid, MenuItem, Select } from '@mui/material';
+import { Grid } from '@mui/material';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../app/store';
 import { Simulate, SimulateResponse, Simulation, SimulationPlot, SimulationSlider, Unit, Variable, useCombinedModelListQuery, useCombinedModelSimulateCreateMutation, useProjectRetrieveQuery, useSimulationListQuery, useSimulationUpdateMutation, useUnitListQuery, useVariableListQuery } from '../../app/backendApi';
@@ -7,7 +7,6 @@ import { useEffect, useMemo, useState } from 'react';
 import SimulationPlotView from './SimulationPlotView';
 import SimulationSliderView from './SimulationSliderView';
 import DropdownButton from '../../components/DropdownButton';
-import { Add } from '@mui/icons-material';
 
 type SliderValues = {[key: number]: number};
 
@@ -62,7 +61,7 @@ const Simulations: React.FC = () => {
     return simulations?.[0] || undefined
   }, [simulations]);
 
-  const { data: models, error: modelsError, isLoading: isModelsLoading } = useCombinedModelListQuery({projectId: projectId || 0})
+  const { data: models, isLoading: isModelsLoading } = useCombinedModelListQuery({projectId: projectId || 0})
   const model = useMemo(() => {
     return models?.[0] || null;
   }, [models]);
@@ -71,7 +70,6 @@ const Simulations: React.FC = () => {
   const [ simulate ] = useCombinedModelSimulateCreateMutation();
   const [ data, setData ] = useState<SimulateResponse | null>(null);
 
-  console.log('simulations', simulations)
 
   const [ sliderValues, setSliderValues ] = useState<{[key: number]: number} | undefined>(undefined);
 
@@ -85,16 +83,16 @@ const Simulations: React.FC = () => {
     project: projectId || 0,
   };
 
-  const { reset, handleSubmit, control, setValue, formState: { isDirty } } = useForm<Simulation>({
+  const { reset, handleSubmit, control, formState: { isDirty } } = useForm<Simulation>({
     defaultValues: simulation || defaultSimulation,
   });
 
-  const { fields: sliders, append: addSimulationSlider, remove: removeSimulationSlider } = useFieldArray({
+  const { append: addSimulationSlider } = useFieldArray({
     control,
     name: "sliders",
   });
 
-  const { fields: plots, append: addSimulationPlot, remove: removeSimulationPlot } = useFieldArray({
+  const { fields: plots, append: addSimulationPlot } = useFieldArray({
     control,
     name: "plots",
   });
@@ -137,14 +135,13 @@ const Simulations: React.FC = () => {
   }, [handleSubmit, isDirty, updateSimulation]);
   
 
-  if (isProjectLoading || isSimulationsLoading) {
+  if (isProjectLoading || isSimulationsLoading || isModelsLoading) {
     return <div>Loading...</div>;
   }
 
-  if (!simulation || !project) {
+  if (!simulation || !project || !models || !variables || !units) {
     return <div>Not found</div>;
   }
-
   
   const outputs = variables?.filter((variable) => !variable.constant) || [];
   const inputs = variables?.filter((variable) => variable.constant) || [];

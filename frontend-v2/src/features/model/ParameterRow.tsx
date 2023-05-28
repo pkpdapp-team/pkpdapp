@@ -1,28 +1,11 @@
-import React, { useEffect, useState } from "react";
-import { useForm, Controller, useFieldArray, set, useFormState } from "react-hook-form";
-import { useSelector, useDispatch } from "react-redux";
+import React, { useEffect } from "react";
+import { useForm } from "react-hook-form";
 import {
-  Table,
-  TableBody,
   TableCell,
-  TableContainer,
-  TableHead,
   TableRow,
-  IconButton,
-  Select,
-  MenuItem,
-  Stack,
-  Radio,
-  Checkbox as MuiCheckbox,
-  FormControlLabel,
 } from "@mui/material";
-import { Delete, PersonAdd } from "@mui/icons-material";
-import { api } from "../../app/api";
-import { Compound, Project, ProjectAccess, useProjectDestroyMutation, useProjectListQuery, useCompoundRetrieveQuery, useCompoundUpdateMutation, useProjectUpdateMutation, PkpdMapping, useVariableRetrieveQuery, CombinedModel, Variable, useVariableUpdateMutation, Protocol, useProtocolCreateMutation, useProtocolDestroyMutation } from "../../app/backendApi";
-import SelectField from "../../components/SelectField";
-import { selectProject } from "../main/mainSlice";
+import { Project, useVariableRetrieveQuery, CombinedModel, Variable, useVariableUpdateMutation } from "../../app/backendApi";
 import TextField from "../../components/TextField";
-import Checkbox from "../../components/Checkbox";
 import UnitField from "../../components/UnitField";
 
 interface Props {
@@ -32,13 +15,13 @@ interface Props {
 }
 
 
-const ParameterRow: React.FC<Props> = ({ project, model, variableId }) => {
+const ParameterRow: React.FC<Props> = ({ variableId }) => {
 
-  const { data: variable, error, isLoading } = useVariableRetrieveQuery({id: variableId});
-  const { control, handleSubmit, reset, setValue, getValues, formState: { isDirty: isDirtyForm }, watch} = useForm<Variable>(
+  const { data: variable, isLoading } = useVariableRetrieveQuery({id: variableId});
+  const { control, handleSubmit, reset, formState: { isDirty: isDirtyForm }} = useForm<Variable>(
     { defaultValues: variable || { id: 0, name: ''}}
   );
-  const [updateVariable, { isLoading: isUpdatingVariable }] = useVariableUpdateMutation();
+  const [updateVariable] = useVariableUpdateMutation();
 
   useEffect(() => {
     reset(variable);
@@ -66,9 +49,6 @@ const ParameterRow: React.FC<Props> = ({ project, model, variableId }) => {
     return (null);
   }
 
-  const defaultProps = {
-    fullWidth: true,
-  }
 
   const isPD = variable.qname.startsWith("PD");
 

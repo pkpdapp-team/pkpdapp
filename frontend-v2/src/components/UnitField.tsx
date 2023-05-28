@@ -6,7 +6,7 @@ import SelectField from './SelectField';
 
 type Props<T extends FieldValues> = {
   label: string;
-  baseUnitId: number | undefined;
+  baseUnitId?: number;
   name: FieldPath<T>;
   control: Control<T>;
   rules?: Object;

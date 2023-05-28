@@ -1,11 +1,12 @@
 import React from 'react';
-import { Control, UseFormSetValue, useFieldArray } from 'react-hook-form';
-import { Simulation, SimulationPlot, Variable } from '../../app/backendApi';
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Grid, Typography } from '@mui/material';
+import { Control, useFieldArray } from 'react-hook-form';
+import { Simulation, SimulationPlot, Variable, useUnitListQuery } from '../../app/backendApi';
+import { Button, Grid, Typography } from '@mui/material';
 import TextField from '../../components/TextField';
 import UnitField from '../../components/UnitField';
 import SelectField from '../../components/SelectField';
 import Checkbox from '../../components/Checkbox';
+import DropdownButton from '../../components/DropdownButton';
 
 interface SimulationPlotFormProps {
   index: number;
@@ -15,6 +16,8 @@ interface SimulationPlotFormProps {
 }
 
 const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({ index, plot, variables, control }) => {
+  const { data: units, isLoading: unitsLoading } = useUnitListQuery()
+  const baseXUnitId = units ? units.find((u) => u.symbol === 'h')?.id : undefined;
 
   const { fields: y_axes, append: addYAxis, remove: removeYAxis } = useFieldArray({
     control,
@@ -26,12 +29,25 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({ index, plot, va
     name: `plots.${index}.cx_lines`,
   });
 
+  if (unitsLoading) {
+    return <div>Loading...</div>
+  }
 
-  const handleAddYAxis = () => {
+  let baseYUnitId = y_axes.length > 0 ? variables.find(v => v.id === y_axes[0].variable)?.unit : undefined; 
+  if (baseYUnitId === null) {
+    baseYUnitId = undefined;
+  }
+  let baseY2UnitId = y_axes.length > 0 ? variables.find(v => v.id === y_axes[0].variable)?.unit : undefined;
+  if (baseY2UnitId === null) {
+    baseY2UnitId = undefined;
+  }
+
+  const handleAddYAxis = (variableId: number) => {
     addYAxis({
-        variable: '',
-        unit: '',
-        scale: 'linear',
+      id: 0,
+      variable: variableId,
+      plot: 0,
+      right: false,
     });
   }
 
@@ -39,17 +55,20 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({ index, plot, va
     removeYAxis(yAxisIndex);
   }
 
-  const handleAddCxLine = () => {
+  const handleAddCxLine = (value: number) => {
     addCxLines({
-      x: '',
-      x_unit: '',
-      color: '',
+      value,
+      id: 0,
+      plot: 0,
     });
   }
 
   const handleRemoveCxLine = (cxLineIndex: number) => {
     removeCxLines(cxLineIndex);
   }
+
+  const addYAxisOptions = variables.filter(v => !v.constant).map((v) => ({ label: v.name, value: v.id }));
+  const addCxLineOptions = Array.from({ length: 6 }, (_, i) => i / 5).map((v) => ({ label: v.toString(), value: v })); 
 
   return (
     <>
@@ -59,6 +78,7 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({ index, plot, va
             label="Name"
             name={`plots.${index}.x_unit`}
             control={control}
+            baseUnitId={baseXUnitId}
         />
         </Grid>
         <Grid item xs={4}>
@@ -66,6 +86,8 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({ index, plot, va
             label="Y Axis Unit"
             name={`plots.${index}.y_unit`}
             control={control}
+            baseUnitId={baseYUnitId}
+            selectProps={{disabled: y_axes.length === 0}}
         />
         </Grid>
         <Grid item xs={4}>
@@ -73,6 +95,8 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({ index, plot, va
             label="Y2 Axis Unit"
             name={`plots.${index}.y_unit2`}
             control={control}
+            baseUnitId={baseY2UnitId}
+            selectProps={{disabled: y_axes.length === 0}}
         />
         </Grid>
         <Grid item xs={4}>
@@ -96,12 +120,21 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({ index, plot, va
             />
             </Grid>
             <Grid item xs={6}>
+            <Checkbox
+                label="Right"
+                name={`plots.${index}.y_axes.${yAxisIndex}.right`}
+                control={control}
+            />
+            </Grid>
+            <Grid item xs={6}>
             <Button onClick={() => handleRemoveYAxis(yAxisIndex)}>Remove</Button>
             </Grid>
         </Grid>
         </div>
     ))}
-    <Button onClick={handleAddYAxis}>Add Y Axis</Button>
+    <DropdownButton options={addYAxisOptions} onOptionSelected={handleAddYAxis} >
+      {"add y axis"}
+    </DropdownButton>
     <Typography variant='h3'>Cx Lines</Typography>
     {cx_lines.map((cxLine, cxLineIndex) => (
         <div key={cxLineIndex}>
@@ -111,6 +144,7 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({ index, plot, va
                 label="Cx"
                 name={`plots.${index}.cx_lines.${cxLineIndex}.value`}
                 control={control}
+                textFieldProps={{ type: 'number' }}
             />
             </Grid>
             <Grid item xs={6}>
@@ -119,7 +153,9 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({ index, plot, va
         </Grid>
         </div>
     ))}
-    <Button onClick={handleAddCxLine}>Add Cx Line</Button>
+    <DropdownButton options={addCxLineOptions} onOptionSelected={handleAddCxLine} >
+      {"add Cx line"}
+    </DropdownButton>
     </>
   );
 }
