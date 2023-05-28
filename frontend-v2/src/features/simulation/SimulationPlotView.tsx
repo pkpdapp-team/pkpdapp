@@ -1,15 +1,27 @@
 import React from 'react';
 import Plot from 'react-plotly.js';
-import { SimulateResponse, SimulationPlot, Variable } from '../../app/backendApi';
-import { Data, Layout, PlotData, PlotType } from 'plotly.js';
+import { SimulateResponse, Simulation, SimulationPlot, Variable } from '../../app/backendApi';
+import Plotly, { Config, Data, Layout, Icon as PlotlyIcon } from 'plotly.js';
+import { Add } from '@mui/icons-material';
+import { Icon, createSvgIcon } from '@mui/material';
+import { Control, UseFormSetValue, useFormContext } from 'react-hook-form';
 
 interface SimulationPlotProps {
+  index: number;
   plot: SimulationPlot;
   data: SimulateResponse;
   variables: Variable[];
+  control: Control<Simulation>,
+  setValue: UseFormSetValue<Simulation>,
+
 }
 
-const SimulationPlotView: React.FC<SimulationPlotProps> = ({ plot, data, variables }) => {
+const SimulationPlotView: React.FC<SimulationPlotProps> = ({ index, plot, data, variables, control, setValue }) => {
+
+  const handleAddVariableToYAxis = () => {
+    console.log('add variable to y axis');
+    setValue(`plots.${index}.y_axes`, [...plot.y_axes, {variable: ''}]);
+  }
 
   const plotData: Data[] = plot.y_axes.map((y_axis) => {
     const variableValues = data.outputs[y_axis.variable];
@@ -37,11 +49,29 @@ const SimulationPlotView: React.FC<SimulationPlotProps> = ({ plot, data, variabl
       title: plotData.map((d) => d.name).join(', '),
     },
   }
+
+  const plus: PlotlyIcon = {
+    'width': 500,
+    'height': 600,
+    'path': 'M 0,0 500,0 500,500 0,500 z M 250,100 400,100 400,250 250,250 250,400 100,400 100,250 250,250 250,100 z',
+  }
+
+  const config: Partial<Config> = {
+    modeBarButtonsToAdd: [
+      {
+        name: 'Add Variable to Y Axis',
+        title: 'Add Variable to Y Axis',
+        click: handleAddVariableToYAxis,
+        icon: plus,
+      },
+    ],
+  }
   return (
     <Plot
       data={plotData}
       layout={plotLayout}
       style={{ width: '100%', height: '100%' }}
+      config={config}
     />
   );
 };

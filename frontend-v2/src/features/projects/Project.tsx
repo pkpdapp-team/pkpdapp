@@ -1,23 +1,15 @@
 // src/components/ProjectTable.tsx
 import React, { useEffect, useState } from "react";
-import { useForm, Controller, useFieldArray, set } from "react-hook-form";
-import { useSelector, useDispatch } from "react-redux";
+import { useForm, useFieldArray } from "react-hook-form";
+import { useDispatch } from "react-redux";
 import {
-  Table,
-  TableBody,
   TableCell,
-  TableContainer,
-  TableHead,
   TableRow,
   IconButton,
-  Select,
-  MenuItem,
-  Stack,
   Radio,
 } from "@mui/material";
 import { Delete, PersonAdd } from "@mui/icons-material";
-import { api } from "../../app/api";
-import { Compound, Project, ProjectAccess, useProjectDestroyMutation, useProjectListQuery, useCompoundRetrieveQuery, useCompoundUpdateMutation, useProjectUpdateMutation } from "../../app/backendApi";
+import { Compound, Project, ProjectAccess, useProjectDestroyMutation, useCompoundRetrieveQuery, useCompoundUpdateMutation, useProjectUpdateMutation } from "../../app/backendApi";
 import SelectField from "../../components/SelectField";
 import UserAccess from "./UserAccess";
 import { selectProject } from "../main/mainSlice";
@@ -107,6 +99,7 @@ const ProjectRow: React.FC<Props> = ({ project, isSelected }) => {
   };
 
   const handleDelete = () => {
+    console.log('destroying project', project.id)
     destroyProject({id: project.id});
   };
 

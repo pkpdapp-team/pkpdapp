@@ -1,9 +1,8 @@
 import React, { useEffect } from 'react';
-import logo from './logo.svg';
 import './App.css';
 
 import { fetchSession, isAuthenticated, login } from './features/login/loginSlice';  
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import Login from './features/login/login';
 import Sidebar from './features/main/Sidebar';
 import { useAppDispatch } from './app/hooks';

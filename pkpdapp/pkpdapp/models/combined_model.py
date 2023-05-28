@@ -102,15 +102,28 @@ class CombinedModel(MyokitModelMixin, StoredModel):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.__original_pk_model = self.pk_model
-        self.__original_pd_model = self.pd_model
-        self.__original_pd_model2 = self.pd_model2
-        self.__original_species = self.species
-        self.__original_has_saturation = self.has_saturation
-        self.__original_has_effect = self.has_effect
-        self.__original_has_lag = self.has_lag
-        self.__original_has_hill_coefficient = self.has_hill_coefficient
 
+    @classmethod
+    def from_db(cls, db, field_names, values):
+        instance = super().from_db(db, field_names, values)
+        # fix for infinite recursion when deleting project
+        if 'pk_model' in field_names:
+            instance.__original_pk_model = instance.pk_model
+        if 'pd_model' in field_names:
+            instance.__original_pd_model = instance.pd_model
+        if 'pd_model2' in field_names:
+            instance.__original_pd_model2 = instance.pd_model2
+        if 'species' in field_names:
+            instance.__original_species = instance.species
+        if 'has_saturation' in field_names:
+            instance.__original_has_saturation = instance.has_saturation
+        if 'has_effect' in field_names:
+            instance.__original_has_effect = instance.has_effect
+        if 'has_lag' in field_names:
+            instance.__original_has_lag = instance.has_lag
+        if 'has_hill_coefficient' in field_names:
+            instance.__original_has_hill_coefficient = instance.has_hill_coefficient
+        return instance
 
     def get_project(self):
         return self.project

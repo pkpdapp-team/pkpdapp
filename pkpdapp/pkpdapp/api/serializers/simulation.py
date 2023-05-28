@@ -34,7 +34,8 @@ class SimulationPlotSerializer(serializers.ModelSerializer):
     )
     class Meta:
         model = SimulationPlot
-        fields = '__all__'
+        #fields = '__all__'
+        exclude = ['simulation']
 
     def create(self, validated_data):
         y_axes_data = validated_data.pop('y_axes')
@@ -70,13 +71,14 @@ class SimulationSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def create(self, validated_data):
-        slider_data = validated_data.pop('slider')
+        slider_data = validated_data.pop('sliders')
         plot_data = validated_data.pop('plots')
         simulation = Simulation.objects.create(**validated_data)
         for slider in slider_data:
             SimulationSlider.objects.create(simulation=simulation, **slider)
         for plot in plot_data:
-            SimulationPlot.objects.create(simulation=simulation, **plot)
+            plot['simulation'] = simulation
+            SimulationPlotSerializer.create(SimulationPlotSerializer(), plot)
         return simulation
     
     def update(self, instance, validated_data):

@@ -216,6 +216,25 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
+            name='Simulation',
+            fields=[
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('name', models.CharField(help_text='name of the simulation', max_length=100)),
+                ('nrows', models.IntegerField(default=1, help_text='number of subplot rows')),
+                ('ncols', models.IntegerField(default=1, help_text='number of subplot columns')),
+                ('project', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='simulations', to='pkpdapp.project')),
+            ],
+        ),
+        migrations.CreateModel(
+            name='SimulationPlot',
+            fields=[
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('index', models.IntegerField(help_text='index of the plot in the simulation')),
+                ('receptor_occupancy', models.BooleanField(default=False, help_text='True if receptor occupancy should be plotted')),
+                ('simulation', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='plots', to='pkpdapp.simulation')),
+            ],
+        ),
+        migrations.CreateModel(
             name='Unit',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
@@ -279,6 +298,46 @@ class Migration(migrations.Migration):
                 ('metadata', jsonfield.fields.JSONField(default=dict, help_text='subject metadata')),
                 ('dataset', models.ForeignKey(help_text='dataset containing this subject', on_delete=django.db.models.deletion.CASCADE, related_name='subjects', to='pkpdapp.dataset')),
                 ('protocol', models.ForeignKey(blank=True, help_text='dosing protocol for this subject.', null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='subjects', to='pkpdapp.protocol')),
+            ],
+        ),
+        migrations.CreateModel(
+            name='SimulationYAxis',
+            fields=[
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('right', models.BooleanField(default=False, help_text='True if the variable is plotted on the right y axis')),
+                ('plot', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='y_axes', to='pkpdapp.simulationplot')),
+                ('variable', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='y_axes', to='pkpdapp.variable')),
+            ],
+        ),
+        migrations.CreateModel(
+            name='SimulationSlider',
+            fields=[
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('simulation', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='sliders', to='pkpdapp.simulation')),
+                ('variable', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='sliders', to='pkpdapp.variable')),
+            ],
+        ),
+        migrations.AddField(
+            model_name='simulationplot',
+            name='x_unit',
+            field=models.ForeignKey(help_text='unit for x axis', on_delete=django.db.models.deletion.PROTECT, related_name='simulation_plots', to='pkpdapp.unit'),
+        ),
+        migrations.AddField(
+            model_name='simulationplot',
+            name='y_unit',
+            field=models.ForeignKey(blank=True, help_text='unit for y axis', null=True, on_delete=django.db.models.deletion.PROTECT, related_name='simulation_plots_y', to='pkpdapp.unit'),
+        ),
+        migrations.AddField(
+            model_name='simulationplot',
+            name='y_unit2',
+            field=models.ForeignKey(blank=True, help_text='unit for rhs y axis', null=True, on_delete=django.db.models.deletion.PROTECT, related_name='simulation_plots_y2', to='pkpdapp.unit'),
+        ),
+        migrations.CreateModel(
+            name='SimulationCxLine',
+            fields=[
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('value', models.FloatField(help_text='value of the line')),
+                ('plot', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='cx_lines', to='pkpdapp.simulationplot')),
             ],
         ),
         migrations.AddField(

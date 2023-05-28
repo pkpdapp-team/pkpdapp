@@ -1,16 +1,9 @@
-import { Button, Grid, IconButton, List, ListItem, ListItemSecondaryAction, Stack, Typography } from '@mui/material';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../app/store';
-import { CombinedModel, Compound, useCombinedModelListQuery, useCombinedModelRetrieveQuery, useCombinedModelUpdateMutation, useCompoundRetrieveQuery, useCompoundUpdateMutation, useProjectRetrieveQuery } from '../../app/backendApi';
-import { useFieldArray, useForm, useFormState } from 'react-hook-form';
-import FloatField from '../../components/FloatField';
-import UnitField from '../../components/UnitField';
-import SelectField from '../../components/SelectField';
+import { CombinedModel, useCombinedModelListQuery, useCombinedModelUpdateMutation, useProjectRetrieveQuery } from '../../app/backendApi';
+import { useForm } from 'react-hook-form';
 import { useEffect } from 'react';
-import DeleteIcon from '@mui/icons-material/Delete';
-import AddIcon from '@mui/icons-material/Add';
 import { DynamicTabs, TabPanel } from '../../components/DynamicTabs';
-import TranslationTab from './TranslationTab';
 import MapVariablesTab from './MapVariablesTab';
 import PKPDModelTab from './PKPDModelTab';
 import ParametersTab from './ParametersTab';

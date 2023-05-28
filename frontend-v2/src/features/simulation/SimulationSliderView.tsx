@@ -3,12 +3,12 @@ import { SimulationSlider, useVariableRetrieveQuery } from '../../app/backendApi
 import { Slider, Typography } from '@mui/material';
 
 interface SimulationSliderProps {
-  slider: SimulationSliderView;
+  slider: SimulationSlider;
   onChange: (value: number) => void;
 }
 
 const SimulationSliderView: React.FC<SimulationSliderProps> = ({ slider, onChange }) => {
-  const { data: variable, error, isLoading } = useVariableRetrieveQuery({id: slider.variable});
+  const { data: variable, isLoading } = useVariableRetrieveQuery({id: slider.variable});
 
   if (isLoading) {
     return <div>Loading...</div>;

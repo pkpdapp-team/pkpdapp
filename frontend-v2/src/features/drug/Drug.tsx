@@ -1,4 +1,4 @@
-import { Button, Grid, IconButton, List, ListItem, ListItemSecondaryAction, Stack, Typography } from '@mui/material';
+import { Grid, IconButton, List, ListItem, ListItemSecondaryAction, Stack, Typography } from '@mui/material';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../app/store';
 import { Compound, useCompoundRetrieveQuery, useCompoundUpdateMutation, useProjectRetrieveQuery } from '../../app/backendApi';
@@ -13,13 +13,13 @@ import AddIcon from '@mui/icons-material/Add';
 
 const Drug: React.FC = () => {
   const projectId = useSelector((state: RootState) => state.main.selectedProject);
-  const { data: project, error: projectError, isLoading: isProjectLoading } = useProjectRetrieveQuery({id: projectId || 0})
-  const { data: compound, error: compoundError, isLoading: isCompoundLoading } = useCompoundRetrieveQuery({id: project?.compound || 0})
-  const [ updateCompound, { isLoading: isUpdatingCompound } ] = useCompoundUpdateMutation()
+  const { data: project, isLoading: isProjectLoading } = useProjectRetrieveQuery({id: projectId || 0})
+  const { data: compound, isLoading: isCompoundLoading } = useCompoundRetrieveQuery({id: project?.compound || 0})
+  const [ updateCompound ] = useCompoundUpdateMutation()
 
 
   // create a form for the compound data using react-hook-form
-  const { reset, watch, handleSubmit, control } = useForm<Compound>({
+  const { reset, handleSubmit, control } = useForm<Compound>({
     defaultValues: compound || { name: '', description: '', compound_type: 'SM' }
   });
   const { isDirty } = useFormState({ control });

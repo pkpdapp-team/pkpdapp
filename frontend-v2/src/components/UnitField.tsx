@@ -1,7 +1,7 @@
 import React from 'react';
-import { Control, Controller, FieldPath, FieldValues } from 'react-hook-form';
-import { Select, SelectProps, MenuItem } from '@mui/material';
-import { Unit, useUnitRetrieveQuery } from '../app/backendApi';
+import { Control, FieldPath, FieldValues } from 'react-hook-form';
+import { SelectProps } from '@mui/material';
+import { useUnitRetrieveQuery } from '../app/backendApi';
 import SelectField from './SelectField';
 
 type Props<T extends FieldValues> = {

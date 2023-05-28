@@ -1,9 +1,7 @@
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { Button, Box, Typography, CircularProgress, Container, CssBaseline, Stack, Alert } from '@mui/material';
-import FloatField from '../../components/FloatField';
 import { ReactComponent as PkpdAppIcon } from "../../logo_pkpdapp_with_text.svg";
-import { css } from '@emotion/react';
 import TextField from '../../components/TextField';
 
 interface LoginFormInputs {
@@ -18,7 +16,7 @@ interface LoginProps {
 }
 
 const Login: React.FC<LoginProps> = ({ onLogin, isLoading, errorMessage }) => {
-  const { register, handleSubmit, control } = useForm<LoginFormInputs>();
+  const { handleSubmit, control } = useForm<LoginFormInputs>();
 
   const onSubmit = (data: LoginFormInputs) => {
     onLogin(data.username, data.password);

@@ -22,3 +22,5 @@ pkpdapp/static
 
 # nodemodules
 frontend/node_modules
+
+logfile.log*

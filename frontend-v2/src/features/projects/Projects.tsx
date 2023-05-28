@@ -1,7 +1,6 @@
 // src/components/ProjectTable.tsx
-import React, { useEffect } from "react";
-import { useForm, Controller } from "react-hook-form";
-import { useSelector, useDispatch } from "react-redux";
+import React from "react";
+import { useSelector } from "react-redux";
 import {
   Table,
   TableBody,
@@ -9,31 +8,23 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  IconButton,
-  Select,
-  MenuItem,
   Button,
 } from "@mui/material";
-import FloatField from "../../components/FloatField";
-import { Delete, Save } from "@mui/icons-material";
-import { api } from "../../app/api";
-import { Compound, Project, ProjectAccess, useCompoundCreateMutation, useProjectCreateMutation, useProjectDestroyMutation, useProjectListQuery, useCompoundRetrieveQuery, useCompoundUpdateMutation, useProjectUpdateMutation, useCombinedModelCreateMutation, useSimulationCreateMutation, SimulationPlot, useUnitListQuery } from "../../app/backendApi";
-import SelectField from "../../components/SelectField";
+import { Compound, Project, useCompoundCreateMutation, useProjectCreateMutation, useProjectListQuery, useCombinedModelCreateMutation, useSimulationCreateMutation, SimulationPlot, useUnitListQuery } from "../../app/backendApi";
 import ProjectRow from "./Project";
 import { RootState } from "../../app/store";
 
 const ProjectTable: React.FC = () => {
   const selectedProject = useSelector((state: RootState) => state.main.selectedProject);
-  const dispatch = useDispatch();
-  const { data: projects, error, isLoading } = useProjectListQuery()
+  const { data: projects, isLoading } = useProjectListQuery()
   const user = useSelector((state: RootState) => state.login.user);
 
-  const { data: units, error: unitsError, isLoading: unitsLoading } = useUnitListQuery()
+  const { data: units, isLoading: unitsLoading } = useUnitListQuery()
 
-  const [addProject, { isLoading: isAdding }] = useProjectCreateMutation()
-  const [addCombinedModel, { isLoading: isAddingCombinedModel }] = useCombinedModelCreateMutation()
-  const [addCompound, { isLoading: isAddingCompound }] = useCompoundCreateMutation()
-  const [addSimulation, { isLoading: isAddingSimulation }] = useSimulationCreateMutation()
+  const [addProject] = useProjectCreateMutation()
+  const [addCombinedModel] = useCombinedModelCreateMutation()
+  const [addCompound] = useCompoundCreateMutation()
+  const [addSimulation] = useSimulationCreateMutation()
 
   if (isLoading || unitsLoading) {
     return <div>Loading...</div>;
@@ -41,10 +32,6 @@ const ProjectTable: React.FC = () => {
   
   
   
-  const modalityOptions = [
-    { value: "SM", label: "Small Molecule" },
-    { value: "LM", label: "Large Molecule" },
-  ]
   
   const handleAddRow = () => {
     const user_access = [{ id: user?.id || 0, read_only: false, user: user?.id || 0 , project: 0}]
@@ -71,6 +58,7 @@ const ProjectTable: React.FC = () => {
           y_unit: null,
           y_unit2: null,
         }
+        console.log('adding simulation')
         addSimulation({ simulation: { id: 0, name: `default`, project: project.data.id, sliders: [], plots: [ defaultPlot ] }})
       }
     });
@@ -99,7 +87,7 @@ const ProjectTable: React.FC = () => {
             </TableRow>
           )}
           {projects?.map((project) => (
-            <ProjectRow key={project.id} project={project} isSelected={selectedProject == project.id} />
+            <ProjectRow key={project.id} project={project} isSelected={selectedProject === project.id} />
           ))}
         </TableBody>
       

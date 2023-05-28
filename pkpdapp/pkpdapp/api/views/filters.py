@@ -29,7 +29,6 @@ class UserAccessFilter(filters.BaseFilterBackend):
     """
 
     def filter_queryset(self, request, queryset, view):
-
         if request.user.is_superuser:
             return queryset
 
