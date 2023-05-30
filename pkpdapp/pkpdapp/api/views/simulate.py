@@ -28,8 +28,7 @@ class SimulateResponseSerializer(serializers.Serializer):
             variable = Variable.objects.get(pk=var_id)
             if variable.name == 'time':
                 times = values
-            else:
-                outputs[var_id] = values
+            outputs[var_id] = values
         return {
             'outputs': outputs,
             'time': times,

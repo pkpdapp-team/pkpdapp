@@ -1,4 +1,4 @@
-import { Grid } from '@mui/material';
+import { Button, Container, Grid, Stack, Typography } from '@mui/material';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../app/store';
 import { Simulate, SimulateResponse, Simulation, SimulationPlot, SimulationSlider, Unit, Variable, useCombinedModelListQuery, useCombinedModelSimulateCreateMutation, useProjectRetrieveQuery, useSimulationListQuery, useSimulationUpdateMutation, useUnitListQuery, useVariableListQuery } from '../../app/backendApi';
@@ -7,6 +7,7 @@ import { useEffect, useMemo, useState } from 'react';
 import SimulationPlotView from './SimulationPlotView';
 import SimulationSliderView from './SimulationSliderView';
 import DropdownButton from '../../components/DropdownButton';
+import { Add } from '@mui/icons-material';
 
 type SliderValues = {[key: number]: number};
 
@@ -16,7 +17,10 @@ const getSimulateInput = (simulation: Simulation, sliderValues: SliderValues, va
     let initial_conditions: {[key: string]: number} = {};
     for (const slider of simulation?.sliders || []) {
       if (sliderValues[slider.variable]) {
-        simulateVariables[slider.variable] = sliderValues[slider.variable];
+        const variable = variables?.find((v) => v.id === slider.variable);
+        if (variable) {
+          simulateVariables[variable.qname] = sliderValues[slider.variable];
+        }
       }
     }
     for (const plot of simulation?.plots || []) {
@@ -90,12 +94,12 @@ const Simulations: React.FC = () => {
     defaultValues: simulation || defaultSimulation,
   });
 
-  const { append: addSimulationSlider } = useFieldArray({
+  const { fields: sliders, append: addSimulationSlider, remove: removeSlider } = useFieldArray({
     control,
     name: "sliders",
   });
 
-  const { fields: plots, append: addSimulationPlot } = useFieldArray({
+  const { fields: plots, append: addSimulationPlot, remove: removePlot } = useFieldArray({
     control,
     name: "plots",
   });
@@ -183,7 +187,6 @@ const Simulations: React.FC = () => {
       simulation: simulation?.id || 0,
       variable: variableId,
     }
-
     addSimulationSlider(defaultSlider);
   }
 
@@ -193,32 +196,40 @@ const Simulations: React.FC = () => {
     
 
   return (
-    <div>
+    <Container maxWidth={false}>
+      <Stack spacing={1}>
+      <Stack direction={'row'} alignItems={'center'}>
+        <Typography variant="h6">Plots</Typography>
+        <DropdownButton options={addPlotOptions} onOptionSelected={handleAddPlot}>
+          <Add />
+        </DropdownButton>
+      </Stack>
       <Grid container spacing={2}>
         {plots.map((plot, index) => (
           <Grid item xs={12} md={6} key={index}>
             {data ? 
-              <SimulationPlotView index={index} plot={plot} data={data} variables={variables || []} control={control} setValue={setValue} />
+              <SimulationPlotView index={index} plot={plot} data={data} variables={variables || []} control={control} setValue={setValue} remove={removePlot}/>
               :
               <div>Loading...</div>
             }
           </Grid>
         ))}
       </Grid>
-      <DropdownButton options={addPlotOptions} onOptionSelected={handleAddPlot}>
-        {"add plot"}
-      </DropdownButton>
-      <Grid container spacing={2}>
-        {simulation.sliders.map((slider, index) => (
+      <Stack direction={'row'} alignItems={'center'}>
+        <Typography variant="h6">Parameters</Typography>
+        <DropdownButton options={addSliderOptions} onOptionSelected={handleAddSlider}>
+          <Add />
+        </DropdownButton>
+      </Stack>
+      <Grid container spacing={6}>
+        {sliders.map((slider, index) => (
           <Grid item xs={12} md={6} lg={3} key={index}>
-            <SimulationSliderView slider={slider} onChange={handleChangeSlider(slider)} />
+            <SimulationSliderView index={index} slider={slider} onChange={handleChangeSlider(slider)} remove={removeSlider} />
           </Grid>
         ))}
       </Grid>
-      <DropdownButton options={addSliderOptions} onOptionSelected={handleAddSlider} >
-        {"add slider"}
-      </DropdownButton>
-    </div>
+      </Stack>
+    </Container>
   );
 }
 

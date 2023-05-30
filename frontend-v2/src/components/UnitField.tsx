@@ -21,11 +21,11 @@ function UnitField<T extends FieldValues>({ label, name, baseUnitId, control, ru
   }
 
   if (!baseUnit) {
-    return <div>Unit not found</div>;
+    selectProps = { ...selectProps, disabled: true };
   }
 
-  const options = baseUnit.compatible_units ? 
-    baseUnit.compatible_units.map((unit: { [key: string]: string }) => {
+  const options = baseUnit?.compatible_units ? 
+    baseUnit?.compatible_units.map((unit: { [key: string]: string }) => {
       return { value: unit.id, label: unit.symbol } 
     }) : [];
 

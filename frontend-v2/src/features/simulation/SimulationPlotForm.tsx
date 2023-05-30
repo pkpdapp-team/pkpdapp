@@ -54,7 +54,11 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({ index, plot, va
       return;
     }
     if (first) {
-      setValue(`plots.${index}.y_unit`, variable.unit)
+      if (right) {
+        setValue(`plots.${index}.y_unit2`, variable.unit)
+      } else {
+        setValue(`plots.${index}.y_unit`, variable.unit)
+      }
     }
     addYAxis({
       id: 0,
@@ -88,27 +92,25 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({ index, plot, va
     removeCxLines(cxLineIndex);
   }
 
-  let addYAxisVars = variables.filter(v => !v.constant);
-  let addY2AxisVars = variables.filter(v => !v.constant);
-  if (lhs_y_axes.length > 0) {
-    const unitId = variables.find(v => v.id === lhs_y_axes[0].variable)?.unit;
-    const unit = units?.find(u => u.id === unitId);
-    if (unit) {
-      const compatibleUnits = unit.compatible_units.map(u => u.id)
-      addYAxisVars = addYAxisVars.filter((v) => compatibleUnits.includes(`${v.unit}`));
-    }
-  }
-  if (rhs_y_axes.length > 0) {
-    const unitId = variables.find(v => v.id === rhs_y_axes[0].variable)?.unit;
-    const unit = units?.find(u => u.id === unitId);
-    if (unit) {
-      const compatibleUnits = unit.compatible_units.map(u => u.id)
-      addY2AxisVars = addY2AxisVars.filter((v) => compatibleUnits.includes(`${v.unit}`));
-    }
-  }
-  const addY2AxisOptions = addY2AxisVars.map((v) => ({ label: v.name, value: v.id }));
-  const addYAxisOptions = addYAxisVars.map((v) => ({ label: v.name, value: v.id }));
+  const getAddAxisOptions = (axes: SimulationYAxisWithIndex[]) => {
+    // start with all variables that are not constants and are not already on the axis
+    const varIdsOnAxes = axes.map(a => a.variable);
+    let addAxisVars = variables.filter(v => !v.constant && !varIdsOnAxes.includes(v.id));
 
+    // filter out any variables that have incompatible units with the first variable on the axis
+    if (axes.length > 0) {
+      const unitId = variables.find(v => v.id === axes[0].variable)?.unit;
+      const unit = units?.find(u => u.id === unitId);
+      if (unit) {
+        const compatibleUnits = unit.compatible_units.map(u => parseInt(u.id))
+        addAxisVars = addAxisVars.filter((v) => v.unit ? compatibleUnits.includes(v.unit) : true);
+      }
+    }
+    return addAxisVars.map((v) => ({ label: v.name, value: v.id }));
+  }
+
+  const addY2AxisOptions = getAddAxisOptions(rhs_y_axes);
+  const addYAxisOptions = getAddAxisOptions(lhs_y_axes);
   const addCxLineOptions = Array.from({ length: 6 }, (_, i) => i / 5).map((v) => ({ label: v.toString(), value: v })); 
 
   return (

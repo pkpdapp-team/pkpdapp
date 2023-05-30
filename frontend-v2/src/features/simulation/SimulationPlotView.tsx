@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Plot from 'react-plotly.js';
 import { SimulateResponse, Simulation, SimulationPlot, Variable } from '../../app/backendApi';
-import { Config, Data, Layout, Icon as PlotlyIcon } from 'plotly.js';
+import Plotly, { Config, Data, Layout, Icon as PlotlyIcon } from 'plotly.js';
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
 import { Control, UseFormSetValue } from 'react-hook-form';
 import SimulationPlotForm from './SimulationPlotForm';
@@ -13,20 +13,25 @@ interface SimulationPlotProps {
   variables: Variable[];
   control: Control<Simulation>,
   setValue: UseFormSetValue<Simulation>,
+  remove: (index: number) => void,
 
 }
 
-const SimulationPlotView: React.FC<SimulationPlotProps> = ({ index, plot, data, variables, control, setValue }) => {
+const SimulationPlotView: React.FC<SimulationPlotProps> = ({ index, plot, data, variables, control, setValue, remove }) => {
 
   const [open, setOpen] = useState(false);
 
-  const handleAddVariableToYAxis = () => {
-    console.log('add variable to y axis');
+  const handleCustomisePlot = () => {
     setOpen(true);
 
   }
 
   const handleClose = () => {
+    setOpen(false);
+  }
+
+  const handleDelete = () => {
+    remove(index);
     setOpen(false);
   }
 
@@ -55,6 +60,13 @@ const SimulationPlotView: React.FC<SimulationPlotProps> = ({ index, plot, data, 
     yaxis: {
       title: plotData.map((d) => d.name).join(', '),
     },
+    margin: {
+      l: 50,
+      r: 50,
+      b: 50,
+      t: 50,
+      pad: 4
+    }
   }
 
   const plus: PlotlyIcon = {
@@ -66,10 +78,12 @@ const SimulationPlotView: React.FC<SimulationPlotProps> = ({ index, plot, data, 
   const config: Partial<Config> = {
     modeBarButtonsToAdd: [
       {
-        name: 'Add Variable to Y Axis',
-        title: 'Add Variable to Y Axis',
-        click: handleAddVariableToYAxis,
+        name: 'Customise Plot',
+        title: 'Customise Plot',
+        click: handleCustomisePlot,
+        //icon: Plotly.Icons.pencil,
         icon: plus,
+
       },
     ],
   }
@@ -87,6 +101,7 @@ const SimulationPlotView: React.FC<SimulationPlotProps> = ({ index, plot, data, 
           <SimulationPlotForm index={index} variables={variables} plot={plot} control={control} setValue={setValue} />
         </DialogContent>
         <DialogActions>
+          <Button onClick={handleDelete}>Delete</Button>
           <Button onClick={handleClose}>Done</Button>
         </DialogActions>
       </Dialog>
