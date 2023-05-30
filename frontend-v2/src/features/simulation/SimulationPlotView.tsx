@@ -3,7 +3,7 @@ import Plot from 'react-plotly.js';
 import { SimulateResponse, Simulation, SimulationPlot, Variable } from '../../app/backendApi';
 import { Config, Data, Layout, Icon as PlotlyIcon } from 'plotly.js';
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
-import { Control } from 'react-hook-form';
+import { Control, UseFormSetValue } from 'react-hook-form';
 import SimulationPlotForm from './SimulationPlotForm';
 
 interface SimulationPlotProps {
@@ -12,10 +12,11 @@ interface SimulationPlotProps {
   data: SimulateResponse;
   variables: Variable[];
   control: Control<Simulation>,
+  setValue: UseFormSetValue<Simulation>,
 
 }
 
-const SimulationPlotView: React.FC<SimulationPlotProps> = ({ index, plot, data, variables, control }) => {
+const SimulationPlotView: React.FC<SimulationPlotProps> = ({ index, plot, data, variables, control, setValue }) => {
 
   const [open, setOpen] = useState(false);
 
@@ -80,14 +81,13 @@ const SimulationPlotView: React.FC<SimulationPlotProps> = ({ index, plot, data, 
         style={{ width: '100%', height: '100%' }}
         config={config}
       />
-      <Dialog open={open} onClose={handleClose}>
-        <DialogTitle>Add Variable to Y Axis</DialogTitle>
+      <Dialog open={open} onClose={handleClose} fullWidth maxWidth='sm'>
+        <DialogTitle>Customise Plot</DialogTitle>
         <DialogContent>
-          <SimulationPlotForm index={index} variables={variables} plot={plot} control={control} />
+          <SimulationPlotForm index={index} variables={variables} plot={plot} control={control} setValue={setValue} />
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleClose}>Cancel</Button>
-          <Button onClick={handleClose}>Add</Button>
+          <Button onClick={handleClose}>Done</Button>
         </DialogActions>
       </Dialog>
     </>

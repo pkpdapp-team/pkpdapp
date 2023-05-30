@@ -1,21 +1,23 @@
 import React from 'react';
-import { Control, useFieldArray } from 'react-hook-form';
-import { Simulation, SimulationPlot, Variable, useUnitListQuery } from '../../app/backendApi';
-import { Button, Grid, Typography } from '@mui/material';
+import { Control, UseFormSetValue, useFieldArray, useFormContext } from 'react-hook-form';
+import { Simulation, SimulationPlot, SimulationYAxis, Variable, useUnitListQuery } from '../../app/backendApi';
+import { Button, Divider, Grid, IconButton, List, ListItem, Stack, Typography } from '@mui/material';
 import TextField from '../../components/TextField';
 import UnitField from '../../components/UnitField';
 import SelectField from '../../components/SelectField';
 import Checkbox from '../../components/Checkbox';
 import DropdownButton from '../../components/DropdownButton';
+import { Add, Delete } from '@mui/icons-material';
 
 interface SimulationPlotFormProps {
   index: number;
   plot: SimulationPlot;
   variables: Variable[];
   control: Control<Simulation>,
+  setValue: UseFormSetValue<Simulation>,
 }
 
-const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({ index, plot, variables, control }) => {
+const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({ index, plot, variables, control, setValue }) => {
   const { data: units, isLoading: unitsLoading } = useUnitListQuery()
   const baseXUnitId = units ? units.find((u) => u.symbol === 'h')?.id : undefined;
 
@@ -33,26 +35,45 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({ index, plot, va
     return <div>Loading...</div>
   }
 
-  let baseYUnitId = y_axes.length > 0 ? variables.find(v => v.id === y_axes[0].variable)?.unit : undefined; 
+  type SimulationYAxisWithIndex = SimulationYAxis & { index: number };
+  const lhs_y_axes: SimulationYAxisWithIndex[] = y_axes.map((y, i) => ({...y, index: i })).filter((y) => !y.right);
+  const rhs_y_axes: SimulationYAxisWithIndex[] = y_axes.map((y, i) => ({...y, index: i })).filter((y) => y.right);
+
+  let baseYUnitId = lhs_y_axes.length > 0 ? variables.find(v => v.id === lhs_y_axes[0].variable)?.unit : undefined; 
   if (baseYUnitId === null) {
     baseYUnitId = undefined;
   }
-  let baseY2UnitId = y_axes.length > 0 ? variables.find(v => v.id === y_axes[0].variable)?.unit : undefined;
+  let baseY2UnitId = rhs_y_axes.length > 0 ? variables.find(v => v.id === rhs_y_axes[0].variable)?.unit : undefined;
   if (baseY2UnitId === null) {
     baseY2UnitId = undefined;
   }
 
-  const handleAddYAxis = (variableId: number) => {
+  const commonAddYAxis = (variableId: number, first: boolean, right: boolean) => {
+    const variable = variables.find(v => v.id === variableId);
+    if (!variable) {
+      return;
+    }
+    if (first) {
+      setValue(`plots.${index}.y_unit`, variable.unit)
+    }
     addYAxis({
       id: 0,
-      variable: variableId,
+      variable: variable.id,
       plot: 0,
-      right: false,
+      right,
     });
   }
 
-  const handleRemoveYAxis = (yAxisIndex: number) => {
-    removeYAxis(yAxisIndex);
+  const handleAddYAxis = (variableId: number) => {
+    commonAddYAxis(variableId, lhs_y_axes.length === 0, false);
+  }
+
+  const handleAddY2Axis = (variableId: number) => {
+    commonAddYAxis(variableId, rhs_y_axes.length === 0, true);
+  }
+
+  const handleRemoveYAxis = (yAxis: SimulationYAxisWithIndex) => {
+    removeYAxis(yAxis.index);
   }
 
   const handleAddCxLine = (value: number) => {
@@ -67,39 +88,41 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({ index, plot, va
     removeCxLines(cxLineIndex);
   }
 
-  const addYAxisOptions = variables.filter(v => !v.constant).map((v) => ({ label: v.name, value: v.id }));
+  let addYAxisVars = variables.filter(v => !v.constant);
+  let addY2AxisVars = variables.filter(v => !v.constant);
+  if (lhs_y_axes.length > 0) {
+    const unitId = variables.find(v => v.id === lhs_y_axes[0].variable)?.unit;
+    const unit = units?.find(u => u.id === unitId);
+    if (unit) {
+      const compatibleUnits = unit.compatible_units.map(u => u.id)
+      addYAxisVars = addYAxisVars.filter((v) => compatibleUnits.includes(`${v.unit}`));
+    }
+  }
+  if (rhs_y_axes.length > 0) {
+    const unitId = variables.find(v => v.id === rhs_y_axes[0].variable)?.unit;
+    const unit = units?.find(u => u.id === unitId);
+    if (unit) {
+      const compatibleUnits = unit.compatible_units.map(u => u.id)
+      addY2AxisVars = addY2AxisVars.filter((v) => compatibleUnits.includes(`${v.unit}`));
+    }
+  }
+  const addY2AxisOptions = addY2AxisVars.map((v) => ({ label: v.name, value: v.id }));
+  const addYAxisOptions = addYAxisVars.map((v) => ({ label: v.name, value: v.id }));
+
   const addCxLineOptions = Array.from({ length: 6 }, (_, i) => i / 5).map((v) => ({ label: v.toString(), value: v })); 
 
   return (
-    <>
-    <Grid container spacing={2}>
-        <Grid item xs={4}>
+    <Stack sx={{marginTop: 2}}>
+    <Grid container spacing={4}>
+        <Grid item xs={3}>
         <UnitField
-            label="Name"
+            label="X Axis Unit"
             name={`plots.${index}.x_unit`}
             control={control}
             baseUnitId={baseXUnitId}
         />
         </Grid>
-        <Grid item xs={4}>
-        <UnitField
-            label="Y Axis Unit"
-            name={`plots.${index}.y_unit`}
-            control={control}
-            baseUnitId={baseYUnitId}
-            selectProps={{disabled: y_axes.length === 0}}
-        />
-        </Grid>
-        <Grid item xs={4}>
-        <UnitField
-            label="Y2 Axis Unit"
-            name={`plots.${index}.y_unit2`}
-            control={control}
-            baseUnitId={baseY2UnitId}
-            selectProps={{disabled: y_axes.length === 0}}
-        />
-        </Grid>
-        <Grid item xs={4}>
+        <Grid item xs={8}>
         <Checkbox
             label="Calculate Receptor Occupancy"
             name={`plots.${index}.receptor_occupancy`}
@@ -107,56 +130,117 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({ index, plot, va
         />  
         </Grid>
     </Grid>
-    <Typography variant='h3'>Y Axes</Typography>
-    {y_axes.map((yAxis, yAxisIndex) => (
-        <div key={yAxisIndex}>
+    <Divider sx={{margin: 2}} />
+    <Grid container spacing={1} alignItems={'center'}>
+      <Grid item xs={2}>
+        <Typography variant='h6'>Y Axis</Typography>
+      </Grid>
+      <Grid item xs={3}>
+      <UnitField
+          label="Y Axis Unit"
+          name={`plots.${index}.y_unit`}
+          control={control}
+          baseUnitId={baseYUnitId}
+          selectProps={{disabled: lhs_y_axes.length === 0}}
+      />
+      </Grid>
+      <Grid item xs={2}>
+      <DropdownButton options={addYAxisOptions} onOptionSelected={handleAddYAxis}>
+        <Add />
+      </DropdownButton>
+      </Grid>
+    </Grid>
+    <List>
+    {lhs_y_axes.map((yAxis, yAxisIndex) => (
+        <ListItem key={yAxisIndex}>
         <Grid container spacing={2}>
-            <Grid item xs={6}>
+            <Grid item xs={7}>
             <SelectField
                 label="Variable"
-                name={`plots.${index}.y_axes.${yAxisIndex}.variable`}
+                name={`plots.${index}.y_axes.${yAxis.index}.variable`}
                 options={variables.filter((v) => !v.constant).map((v) => ({ value: v.id, label: v.name }))}
                 control={control}
             />
             </Grid>
-            <Grid item xs={6}>
-            <Checkbox
-                label="Right"
-                name={`plots.${index}.y_axes.${yAxisIndex}.right`}
+            <Grid item xs={2}>
+            <IconButton onClick={() => handleRemoveYAxis(yAxis)}>
+              <Delete />
+            </IconButton>
+            </Grid>
+        </Grid>
+        </ListItem>
+    ))}
+    </List>
+    <Divider sx={{margin: 2}} />
+    <Grid container spacing={1} alignItems={'center'}>
+      <Grid item xs={2}>
+        <Typography variant='h6'>Y2 Axis</Typography>
+      </Grid>
+      <Grid item xs={3}>
+      <UnitField
+          label="Unit"
+          name={`plots.${index}.y_unit2`}
+          control={control}
+          baseUnitId={baseY2UnitId}
+          selectProps={{disabled: rhs_y_axes.length === 0}}
+      />
+      </Grid>
+      <Grid item xs={3}>
+      <DropdownButton options={addY2AxisOptions} onOptionSelected={handleAddY2Axis} >
+        <Add />
+      </DropdownButton>
+      </Grid>
+    </Grid>
+    <List>
+    {rhs_y_axes.map((yAxis, yAxisIndex) => (
+        <ListItem key={yAxisIndex}>
+        <Grid container spacing={2}>
+            <Grid item xs={7}>
+            <SelectField
+                label="Variable"
+                name={`plots.${index}.y_axes.${yAxis.index}.variable`}
+                options={variables.filter((v) => !v.constant).map((v) => ({ value: v.id, label: v.name }))}
                 control={control}
             />
             </Grid>
-            <Grid item xs={6}>
-            <Button onClick={() => handleRemoveYAxis(yAxisIndex)}>Remove</Button>
+            <Grid item xs={2}>
+            <IconButton onClick={() => handleRemoveYAxis(yAxis)}>
+              <Delete />
+            </IconButton>
             </Grid>
         </Grid>
-        </div>
+        </ListItem>
     ))}
-    <DropdownButton options={addYAxisOptions} onOptionSelected={handleAddYAxis} >
-      {"add y axis"}
-    </DropdownButton>
-    <Typography variant='h3'>Cx Lines</Typography>
+    </List>
+    <Divider sx={{margin: 2}} />
+    <Stack direction={'row'} spacing={1} alignItems={'center'}>
+      <Typography variant='h6'>Cx Reference Lines</Typography>
+      <DropdownButton options={addCxLineOptions} onOptionSelected={handleAddCxLine} >
+        <Add />
+      </DropdownButton>
+    </Stack>
+    <List>
     {cx_lines.map((cxLine, cxLineIndex) => (
-        <div key={cxLineIndex}>
+        <ListItem key={cxLineIndex}>
         <Grid container spacing={2}>
-            <Grid item xs={6}>
+            <Grid item xs={3}>
             <TextField
                 label="Cx"
                 name={`plots.${index}.cx_lines.${cxLineIndex}.value`}
                 control={control}
-                textFieldProps={{ type: 'number' }}
+                textFieldProps={{ type: 'number', inputProps: {step: 0.1} }}
             />
             </Grid>
-            <Grid item xs={6}>
-            <Button onClick={() => handleRemoveCxLine(cxLineIndex)}>Remove</Button>
+            <Grid item xs={2}>
+            <IconButton onClick={() => handleRemoveCxLine(cxLineIndex)}>
+              <Delete />
+            </IconButton>
             </Grid>
         </Grid>
-        </div>
+        </ListItem>
     ))}
-    <DropdownButton options={addCxLineOptions} onOptionSelected={handleAddCxLine} >
-      {"add Cx line"}
-    </DropdownButton>
-    </>
+    </List>
+    </Stack>
   );
 }
 

@@ -23,10 +23,13 @@ const getSimulateInput = (simulation: Simulation, sliderValues: SliderValues, va
       for (const y_axis of plot.y_axes) {
         const variable = variables?.find((v) => v.id === y_axis.variable);
         if (variable && !outputs.includes(variable.name)) {
-          outputs.push(variable.name);
+          outputs.push(variable.qname);
         }
       }
     }
+    // add time as an output
+    const timeVariable = variables?.find((v) => v.name === 'time');
+    outputs.push(timeVariable?.qname || 'time');
     return {
       variables: simulateVariables, outputs, initial_conditions
     }
@@ -83,7 +86,7 @@ const Simulations: React.FC = () => {
     project: projectId || 0,
   };
 
-  const { reset, handleSubmit, control, formState: { isDirty } } = useForm<Simulation>({
+  const { reset, handleSubmit, control, formState: { isDirty }, setValue } = useForm<Simulation>({
     defaultValues: simulation || defaultSimulation,
   });
 
@@ -149,6 +152,10 @@ const Simulations: React.FC = () => {
   const addSliderOptions = inputs.map((variable) => ({ value: variable.id, label: variable.name }));
 
   const handleAddPlot = (variableId: number) => {
+    const variable = variables?.find((v) => v.id === variableId);
+    if (!variable) {
+      return;
+    }
     const defaultXUnit = units?.find((unit: Unit) => unit.symbol === 'h')?.id || 0
     const defaultPlot: SimulationPlot = {
       id: 0,
@@ -156,7 +163,7 @@ const Simulations: React.FC = () => {
       y_axes: [
         {
           id: 0,
-          variable: variableId,
+          variable: variable.id,
           plot: 0,
         }
       ],
@@ -164,7 +171,7 @@ const Simulations: React.FC = () => {
       index: 0,
       receptor_occupancy: false,
       x_unit: defaultXUnit,
-      y_unit: null,
+      y_unit: variable.unit,
       y_unit2: null,
     }
     addSimulationPlot(defaultPlot);
@@ -191,7 +198,7 @@ const Simulations: React.FC = () => {
         {plots.map((plot, index) => (
           <Grid item xs={12} md={6} key={index}>
             {data ? 
-              <SimulationPlotView index={index} plot={plot} data={data} variables={variables || []} control={control} />
+              <SimulationPlotView index={index} plot={plot} data={data} variables={variables || []} control={control} setValue={setValue} />
               :
               <div>Loading...</div>
             }

@@ -1,7 +1,7 @@
 import { backendApi } from './backendApi'
 
 export const api = backendApi.enhanceEndpoints({
-  addTagTypes: ['Project', 'Compound', 'Dataset', 'CombinedModel', 'Variable'],
+  addTagTypes: ['Project', 'Compound', 'Dataset', 'CombinedModel', 'Variable', 'Simulation'],
   endpoints: {
     // Projects
     projectList: {
@@ -94,15 +94,36 @@ export const api = backendApi.enhanceEndpoints({
           ]
           : [{ type: 'Variable', id: 'LIST' }],
       },
-      variableRetrieve: {
-        providesTags: (result, error, { id }) => [{ type: 'Variable', id }],
-      },
-      variableUpdate: {
-        invalidatesTags: (result, error, { id }) => [{ type: 'Variable', id }],
-      },
-      variableCreate: {
-        invalidatesTags: [{ type: 'Variable', id: 'LIST' }],
-      },
+    variableRetrieve: {
+      providesTags: (result, error, { id }) => [{ type: 'Variable', id }],
+    },
+    variableUpdate: {
+      invalidatesTags: (result, error, { id }) => [{ type: 'Variable', id }],
+    },
+    variableCreate: {
+      invalidatesTags: [{ type: 'Variable', id: 'LIST' }],
+    },
+    simulationList: {
+      providesTags: (result) =>
+        result
+          ? [
+            ...result.map(({ id }) => ({ type: 'Simulation' as const, id })),
+            { type: 'Simulation', id: 'LIST' },
+          ]
+          : [{ type: 'Simulation', id: 'LIST' }],
+        },
+    simulationRetrieve: {
+      providesTags: (result, error, { id }) => [{ type: 'Simulation', id }],
+    },
+    simulationUpdate: {
+      invalidatesTags: (result, error, { id }) => [{ type: 'Simulation', id }],
+    },
+    simulationCreate: {
+      invalidatesTags: [{ type: 'Simulation', id: 'LIST' }],
+    },
+    
+
+
   },
   //addTagTypes: ['User'],
   //endpoints: {

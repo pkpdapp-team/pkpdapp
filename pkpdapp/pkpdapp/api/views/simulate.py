@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from rest_framework import serializers
 from drf_spectacular.utils import extend_schema
 from pkpdapp.models import (
-    CombinedModel, PharmacodynamicModel,
+    CombinedModel, PharmacodynamicModel, Variable
 )
 
 class SimulateSerializer(serializers.Serializer):

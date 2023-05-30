@@ -1,4 +1,4 @@
-import { Button, ListItem, ListItemButton, ListItemText, Popover } from '@mui/material';
+import { Button, IconButton, ListItem, ListItemButton, ListItemText, Popover } from '@mui/material';
 import React, { useState } from 'react';
 
 type Option = {
@@ -15,6 +15,7 @@ type Props = {
 const DropdownButton: React.FC<Props> = ({ options, onOptionSelected, children }) => {
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
 
+
   const handleButtonClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
   };
@@ -25,10 +26,11 @@ const DropdownButton: React.FC<Props> = ({ options, onOptionSelected, children }
   };
 
   const open = Boolean(anchorEl);
+  const disabled = options.length === 0;
 
   return (
     <div>
-      <Button onClick={handleButtonClick} variant='contained'>{children}</Button>
+      <IconButton onClick={handleButtonClick} disabled={disabled}>{children}</IconButton>
       <Popover
         open={open}
         anchorEl={anchorEl}
