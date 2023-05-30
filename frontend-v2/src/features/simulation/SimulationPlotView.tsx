@@ -86,6 +86,7 @@ const SimulationPlotView: React.FC<SimulationPlotProps> = ({ index, plot, data, 
 
       },
     ],
+    displaylogo: false,
   }
   return (
     <>

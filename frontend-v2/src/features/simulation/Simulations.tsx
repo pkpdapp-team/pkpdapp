@@ -153,7 +153,8 @@ const Simulations: React.FC = () => {
   const outputs = variables?.filter((variable) => !variable.constant) || [];
   const inputs = variables?.filter((variable) => variable.constant) || [];
   const addPlotOptions = outputs.map((variable) => ({ value: variable.id, label: variable.name }));
-  const addSliderOptions = inputs.map((variable) => ({ value: variable.id, label: variable.name }));
+  const sliderVarIds = sliders.map(v => v.variable)
+  const addSliderOptions = inputs.filter(v => !sliderVarIds.includes(v.id)).map((variable) => ({ value: variable.id, label: variable.name }));
 
   const handleAddPlot = (variableId: number) => {
     const variable = variables?.find((v) => v.id === variableId);
@@ -204,9 +205,9 @@ const Simulations: React.FC = () => {
           <Add />
         </DropdownButton>
       </Stack>
-      <Grid container spacing={2}>
+      <Grid container spacing={1}>
         {plots.map((plot, index) => (
-          <Grid item xs={12} md={6} key={index}>
+          <Grid item md={12} lg={6} key={index}>
             {data ? 
               <SimulationPlotView index={index} plot={plot} data={data} variables={variables || []} control={control} setValue={setValue} remove={removePlot}/>
               :
@@ -221,7 +222,7 @@ const Simulations: React.FC = () => {
           <Add />
         </DropdownButton>
       </Stack>
-      <Grid container spacing={6}>
+      <Grid container spacing={2}>
         {sliders.map((slider, index) => (
           <Grid item xs={12} md={6} lg={3} key={index}>
             <SimulationSliderView index={index} slider={slider} onChange={handleChangeSlider(slider)} remove={removeSlider} />
