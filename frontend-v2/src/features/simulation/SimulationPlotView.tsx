@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Plot from 'react-plotly.js';
 import { SimulateResponse, Simulation, SimulationPlot, Variable } from '../../app/backendApi';
-import Plotly, { Config, Data, Layout, Icon as PlotlyIcon } from 'plotly.js';
+import { Config, Data, Layout, Icon as PlotlyIcon } from 'plotly.js';
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
 import { Control, UseFormSetValue } from 'react-hook-form';
 import SimulationPlotForm from './SimulationPlotForm';
@@ -54,6 +54,13 @@ const SimulationPlotView: React.FC<SimulationPlotProps> = ({ index, plot, data, 
     }
   });
   const plotLayout: Partial<Layout> = {
+    legend: {
+      orientation: 'v',
+      yanchor: 'top',
+      xanchor: 'right',
+      y: 1,
+      x: 1,
+    },
     xaxis: {
       title: 'Time',
     },

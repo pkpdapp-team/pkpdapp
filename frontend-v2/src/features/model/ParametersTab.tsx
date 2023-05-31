@@ -2,7 +2,6 @@ import * as React from 'react';
 import { CombinedModel, Project } from '../../app/backendApi';
 import { Control } from 'react-hook-form';
 import { TableContainer, Table, TableHead, TableRow, TableCell, TableBody } from '@mui/material';
-import VariableRow from './VariableRow';
 import ParameterRow from './ParameterRow';
 
 interface Props {

@@ -1,7 +1,7 @@
 import { backendApi } from './backendApi'
 
 export const api = backendApi.enhanceEndpoints({
-  addTagTypes: ['Project', 'Compound', 'Dataset', 'CombinedModel', 'Variable', 'Simulation'],
+  addTagTypes: ['Project', 'Compound', 'Dataset', 'CombinedModel', 'Variable', 'Simulation', 'Protocol'],
   endpoints: {
     // Projects
     projectList: {
@@ -121,9 +121,24 @@ export const api = backendApi.enhanceEndpoints({
     simulationCreate: {
       invalidatesTags: [{ type: 'Simulation', id: 'LIST' }],
     },
-    
-
-
+    protocolList: {
+      providesTags: (result) =>
+        result
+          ? [
+            ...result.map(({ id }) => ({ type: 'Protocol' as const, id })),
+            { type: 'Protocol', id: 'LIST' },
+          ]
+          : [{ type: 'Protocol', id: 'LIST' }],
+        },
+    protocolRetrieve: {
+      providesTags: (result, error, { id }) => [{ type: 'Protocol', id }],
+    },
+    protocolUpdate: {
+      invalidatesTags: (result, error, { id }) => [{ type: 'Protocol', id }],
+    },
+    protocolCreate: {
+      invalidatesTags: [{ type: 'Protocol', id: 'LIST' }],
+    }, 
   },
   //addTagTypes: ['User'],
   //endpoints: {

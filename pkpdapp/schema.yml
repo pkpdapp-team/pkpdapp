@@ -2087,6 +2087,12 @@ paths:
   /api/protocol/:
     get:
       operationId: protocol_list
+      parameters:
+      - in: query
+        name: project_id
+        schema:
+          type: integer
+        description: Filter results by project ID
       tags:
       - protocol
       security:
@@ -3303,6 +3309,13 @@ components:
           format: double
           description: Duration of dose administration, see protocol for units. Duration
             must be greater than 0.
+        repeats:
+          type: integer
+          description: 'Number of times to repeat the dose. '
+        repeat_interval:
+          type: number
+          format: double
+          description: 'Interval between repeated doses. See protocol for units. '
         read_only:
           type: boolean
           description: true if object has been stored
@@ -3311,13 +3324,9 @@ components:
           format: date-time
           nullable: true
           description: datetime the object was stored.
-        protocol:
-          type: integer
-          description: protocol containing this dose
       required:
       - amount
       - id
-      - protocol
       - start_time
     DoseTypeEnum:
       enum:
@@ -3913,6 +3922,13 @@ components:
           format: double
           description: Duration of dose administration, see protocol for units. Duration
             must be greater than 0.
+        repeats:
+          type: integer
+          description: 'Number of times to repeat the dose. '
+        repeat_interval:
+          type: number
+          format: double
+          description: 'Interval between repeated doses. See protocol for units. '
         read_only:
           type: boolean
           description: true if object has been stored
@@ -3921,9 +3937,6 @@ components:
           format: date-time
           nullable: true
           description: datetime the object was stored.
-        protocol:
-          type: integer
-          description: protocol containing this dose
     PatchedInference:
       type: object
       properties:
@@ -4081,6 +4094,11 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ProjectAccess'
+        protocols:
+          type: array
+          items:
+            type: integer
+          readOnly: true
         name:
           type: string
           description: name of the project
@@ -4120,20 +4138,13 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Dose'
+        dataset:
+          type: string
           readOnly: true
-        dose_ids:
+        variables:
           type: array
           items:
             type: integer
-            writeOnly: true
-          writeOnly: true
-        dosed_pk_models:
-          type: array
-          items:
-            type: string
-          readOnly: true
-        dataset:
-          type: string
           readOnly: true
         subjects:
           type: array
@@ -4527,6 +4538,11 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ProjectAccess'
+        protocols:
+          type: array
+          items:
+            type: integer
+          readOnly: true
         name:
           type: string
           description: name of the project
@@ -4546,6 +4562,7 @@ components:
       - compound
       - id
       - name
+      - protocols
       - user_access
       - users
     ProjectAccess:
@@ -4576,20 +4593,13 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Dose'
+        dataset:
+          type: string
           readOnly: true
-        dose_ids:
+        variables:
           type: array
           items:
             type: integer
-            writeOnly: true
-          writeOnly: true
-        dosed_pk_models:
-          type: array
-          items:
-            type: string
-          readOnly: true
-        dataset:
-          type: string
           readOnly: true
         subjects:
           type: array
@@ -4629,12 +4639,11 @@ components:
           description: unit for the amount value stored in each dose
       required:
       - dataset
-      - dose_ids
-      - dosed_pk_models
       - doses
       - id
       - name
       - subjects
+      - variables
     Simulate:
       type: object
       properties:
@@ -4716,11 +4725,8 @@ components:
           type: number
           format: double
           description: value of the line
-        plot:
-          type: integer
       required:
       - id
-      - plot
       - value
     SimulationPlot:
       type: object
@@ -4742,8 +4748,6 @@ components:
         receptor_occupancy:
           type: boolean
           description: True if receptor occupancy should be plotted
-        simulation:
-          type: integer
         x_unit:
           type: integer
           description: unit for x axis
@@ -4759,7 +4763,6 @@ components:
       - cx_lines
       - id
       - index
-      - simulation
       - x_unit
       - y_axes
     SimulationSlider:
@@ -4768,13 +4771,10 @@ components:
         id:
           type: integer
           readOnly: true
-        simulation:
-          type: integer
         variable:
           type: integer
       required:
       - id
-      - simulation
       - variable
     SimulationYAxis:
       type: object
@@ -4785,13 +4785,10 @@ components:
         right:
           type: boolean
           description: True if the variable is plotted on the right y axis
-        plot:
-          type: integer
         variable:
           type: integer
       required:
       - id
-      - plot
       - variable
     SpeciesEnum:
       enum:

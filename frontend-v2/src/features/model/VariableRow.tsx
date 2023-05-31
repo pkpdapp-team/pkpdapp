@@ -1,28 +1,13 @@
 // src/components/ProjectTable.tsx
-import React, { useEffect, useState } from "react";
-import { useForm, Controller, useFieldArray, set, useFormState } from "react-hook-form";
-import { useSelector, useDispatch } from "react-redux";
+import React, { useEffect } from "react";
+import { useForm } from "react-hook-form";
 import {
-  Table,
-  TableBody,
   TableCell,
-  TableContainer,
-  TableHead,
   TableRow,
-  IconButton,
-  Select,
-  MenuItem,
-  Stack,
-  Radio,
   Checkbox as MuiCheckbox,
   FormControlLabel,
 } from "@mui/material";
-import { Delete, PersonAdd } from "@mui/icons-material";
-import { api } from "../../app/api";
-import { Compound, Project, ProjectAccess, useProjectDestroyMutation, useProjectListQuery, useCompoundRetrieveQuery, useCompoundUpdateMutation, useProjectUpdateMutation, PkpdMapping, useVariableRetrieveQuery, CombinedModel, Variable, useVariableUpdateMutation, Protocol, useProtocolCreateMutation, useProtocolDestroyMutation } from "../../app/backendApi";
-import SelectField from "../../components/SelectField";
-import { selectProject } from "../main/mainSlice";
-import TextField from "../../components/TextField";
+import { Project, PkpdMapping, useVariableRetrieveQuery, CombinedModel, Variable, useVariableUpdateMutation, useProtocolCreateMutation, useProtocolDestroyMutation, Dose, useUnitListQuery } from "../../app/backendApi";
 import Checkbox from "../../components/Checkbox";
 
 interface Props {
@@ -37,13 +22,16 @@ interface Props {
 
 const VariableRow: React.FC<Props> = ({ project, model, variableId, appendMapping, removeMapping, mappings }) => {
 
-  const { data: variable, error, isLoading } = useVariableRetrieveQuery({id: variableId});
-  const { control, handleSubmit, reset, setValue, getValues, formState: { isDirty: isDirtyForm }, watch} = useForm<Variable>(
+  const { data: variable, isLoading } = useVariableRetrieveQuery({id: variableId});
+  const { data: units } = useUnitListQuery();
+  const { control, handleSubmit, reset, setValue, formState: { isDirty: isDirtyForm }, watch} = useForm<Variable>(
     { defaultValues: variable || { id: 0, name: ''}}
   );
-  const [updateVariable, { isLoading: isUpdatingVariable }] = useVariableUpdateMutation();
-  const [createProtocol, { isLoading: isCreatingProtocol }] = useProtocolCreateMutation();
-  const [destroyProtocol, { isLoading: isDestroyingProtocol }] = useProtocolDestroyMutation();
+  const [updateVariable] = useVariableUpdateMutation();
+  const [createProtocol] = useProtocolCreateMutation();
+  const [destroyProtocol] = useProtocolDestroyMutation();
+
+  const defaultTimeUnit = units?.find((unit) => unit.symbol === 'h');
 
   useEffect(() => {
     reset(variable);
@@ -72,16 +60,14 @@ const VariableRow: React.FC<Props> = ({ project, model, variableId, appendMappin
     return (null);
   }
 
-  const defaultProps = {
-    fullWidth: true,
-  }
 
   const isPD = variable.qname.startsWith("PD");
   const hasProtocol: boolean = watchProtocolId != null;
-  const linkToPD = isPD ? false : mappings.find((mapping) => mapping.pd_variable === variable.id) != undefined;
+  const linkToPD = isPD ? false : mappings.find((mapping) => mapping.pd_variable === variable.id) !== undefined;
 
   const addProtocol = () => {
-    createProtocol({ protocol: { id: 0, dataset: '', doses: [], dose_ids: [], dosed_pk_models: [], subjects: [], name: variable.name, project: project.id } })
+    const defaultDose: Dose = { id: 0, amount: 0, start_time: 0, repeat_interval: 0, repeats: 0 };
+    createProtocol({ protocol: { id: 0, dataset: '', doses: [ defaultDose ], amount_unit: variable.unit, time_unit: defaultTimeUnit?.id || undefined, subjects: [], name: variable.name, project: project.id, variables: [] } })
     .then((value) => {
       if ('data' in value) {
         setValue("protocol", value.data.id ) 

@@ -26,6 +26,9 @@ class ProjectSerializer(serializers.ModelSerializer):
     user_access = ProjectAccessSerializer(
         source='projectaccess_set', many=True
     )
+    protocols = serializers.PrimaryKeyRelatedField(
+        many=True, read_only=True
+    )
 
     class Meta:
         model = Project

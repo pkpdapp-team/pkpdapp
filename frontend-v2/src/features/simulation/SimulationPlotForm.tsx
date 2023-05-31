@@ -1,7 +1,7 @@
 import React from 'react';
-import { Control, UseFormSetValue, useFieldArray, useFormContext } from 'react-hook-form';
+import { Control, UseFormSetValue, useFieldArray } from 'react-hook-form';
 import { Simulation, SimulationPlot, SimulationYAxis, Variable, useUnitListQuery } from '../../app/backendApi';
-import { Button, Divider, Grid, IconButton, List, ListItem, Stack, Typography } from '@mui/material';
+import { Divider, Grid, IconButton, List, ListItem, Stack, Typography } from '@mui/material';
 import TextField from '../../components/TextField';
 import UnitField from '../../components/UnitField';
 import SelectField from '../../components/SelectField';
@@ -63,7 +63,6 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({ index, plot, va
     addYAxis({
       id: 0,
       variable: variable.id,
-      plot: 0,
       right,
     });
   }
@@ -84,7 +83,6 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({ index, plot, va
     addCxLines({
       value,
       id: 0,
-      plot: 0,
     });
   }
 

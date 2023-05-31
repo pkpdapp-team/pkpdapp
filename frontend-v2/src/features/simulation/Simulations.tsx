@@ -1,4 +1,4 @@
-import { Button, Container, Grid, Stack, Typography } from '@mui/material';
+import { Container, Grid, Stack, Typography } from '@mui/material';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../app/store';
 import { Simulate, SimulateResponse, Simulation, SimulationPlot, SimulationSlider, Unit, Variable, useCombinedModelListQuery, useCombinedModelSimulateCreateMutation, useProjectRetrieveQuery, useSimulationListQuery, useSimulationUpdateMutation, useUnitListQuery, useVariableListQuery } from '../../app/backendApi';
@@ -164,12 +164,10 @@ const Simulations: React.FC = () => {
     const defaultXUnit = units?.find((unit: Unit) => unit.symbol === 'h')?.id || 0
     const defaultPlot: SimulationPlot = {
       id: 0,
-      simulation: simulation?.id || 0,
       y_axes: [
         {
           id: 0,
           variable: variable.id,
-          plot: 0,
         }
       ],
       cx_lines: [],
@@ -185,7 +183,6 @@ const Simulations: React.FC = () => {
   const handleAddSlider = (variableId: number) => {
     const defaultSlider: SimulationSlider = {
       id: 0,
-      simulation: simulation?.id || 0,
       variable: variableId,
     }
     addSimulationSlider(defaultSlider);

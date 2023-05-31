@@ -1,6 +1,6 @@
 import React, { SyntheticEvent, useEffect } from 'react';
 import { SimulationSlider, useVariableRetrieveQuery } from '../../app/backendApi';
-import { Grid, Icon, IconButton, Input, Slider, Stack, Typography } from '@mui/material';
+import { Grid, IconButton, Input, Slider, Stack, Typography } from '@mui/material';
 import { Delete } from '@mui/icons-material';
 
 interface SimulationSliderProps {

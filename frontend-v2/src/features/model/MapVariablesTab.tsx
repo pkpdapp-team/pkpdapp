@@ -16,7 +16,6 @@ const MapVariablesTab: React.FC<Props> = ({ model, project, control }: Props ) =
         name: "mappings",
     });
 
-
     return (
       <TableContainer>
       <Table>

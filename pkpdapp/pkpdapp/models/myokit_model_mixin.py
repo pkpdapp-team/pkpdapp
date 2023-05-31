@@ -82,15 +82,24 @@ class MyokitModelMixin:
                             time_var.unit(),
                         ).value()
 
-                dosing_events = [
+                dosing_events = []
+                last_dose_time = 0.0
+                for d in v.protocol.doses.all():
+                    start_times = np.arange(
+                        d.start_time + last_dose_time,
+                        d.start_time + d.repeat_interval * d.repeats,
+                        d.repeat_interval
+                    )
+                    last_dose_time = start_times[-1]
+                    dosing_events += [
                     (
                         (amount_conversion_factor /
                          time_conversion_factor) *
                         (d.amount / d.duration),
-                        time_conversion_factor * d.start_time,
+                        time_conversion_factor * start_time,
                         time_conversion_factor * d.duration
                     )
-                    for d in v.protocol.doses.all()
+                    for start_time in start_times
                 ]
 
                 set_dosing_events(sim, dosing_events)

@@ -688,7 +688,10 @@ const injectedRtkApi = api.injectEndpoints({
       }),
     }),
     protocolList: build.query<ProtocolListApiResponse, ProtocolListApiArg>({
-      query: () => ({ url: `/api/protocol/` }),
+      query: (queryArg) => ({
+        url: `/api/protocol/`,
+        params: { project_id: queryArg.projectId },
+      }),
     }),
     protocolCreate: build.mutation<
       ProtocolCreateApiResponse,
@@ -1393,7 +1396,10 @@ export type ProjectAccessDestroyApiArg = {
   id: number;
 };
 export type ProtocolListApiResponse = /** status 200  */ Protocol[];
-export type ProtocolListApiArg = void;
+export type ProtocolListApiArg = {
+  /** Filter results by project ID */
+  projectId?: number;
+};
 export type ProtocolCreateApiResponse = /** status 201  */ Protocol;
 export type ProtocolCreateApiArg = {
   protocol: Protocol;
@@ -1740,17 +1746,17 @@ export type Dose = {
   start_time: number;
   amount: number;
   duration?: number;
+  repeats?: number;
+  repeat_interval?: number;
   read_only?: boolean;
   datetime?: string | null;
-  protocol: number;
 };
 export type DoseTypeEnum = "D" | "I";
 export type Protocol = {
   id: number;
   doses: Dose[];
-  dose_ids: number[];
-  dosed_pk_models: string[];
   dataset: string;
+  variables: number[];
   subjects: number[];
   read_only?: boolean;
   datetime?: string | null;
@@ -1789,9 +1795,10 @@ export type PatchedDose = {
   start_time?: number;
   amount?: number;
   duration?: number;
+  repeats?: number;
+  repeat_interval?: number;
   read_only?: boolean;
   datetime?: string | null;
-  protocol?: number;
 };
 export type LogLikelihoodParameter = {
   id: number;
@@ -1934,6 +1941,7 @@ export type ProjectAccess = {
 export type Project = {
   id: number;
   user_access: ProjectAccess[];
+  protocols: number[];
   name: string;
   description?: string;
   compound: number;
@@ -1942,6 +1950,7 @@ export type Project = {
 export type PatchedProject = {
   id?: number;
   user_access?: ProjectAccess[];
+  protocols?: number[];
   name?: string;
   description?: string;
   compound?: number;
@@ -1964,9 +1973,8 @@ export type PatchedProjectAccess = {
 export type PatchedProtocol = {
   id?: number;
   doses?: Dose[];
-  dose_ids?: number[];
-  dosed_pk_models?: string[];
   dataset?: string;
+  variables?: number[];
   subjects?: number[];
   read_only?: boolean;
   datetime?: string | null;
@@ -1979,19 +1987,16 @@ export type PatchedProtocol = {
 };
 export type SimulationSlider = {
   id: number;
-  simulation: number;
   variable: number;
 };
 export type SimulationYAxis = {
   id: number;
   right?: boolean;
-  plot: number;
   variable: number;
 };
 export type SimulationCxLine = {
   id: number;
   value: number;
-  plot: number;
 };
 export type SimulationPlot = {
   id: number;
@@ -1999,7 +2004,6 @@ export type SimulationPlot = {
   cx_lines: SimulationCxLine[];
   index: number;
   receptor_occupancy?: boolean;
-  simulation: number;
   x_unit: number;
   y_unit?: number | null;
   y_unit2?: number | null;

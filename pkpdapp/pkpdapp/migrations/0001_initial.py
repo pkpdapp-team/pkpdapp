@@ -115,6 +115,8 @@ class Migration(migrations.Migration):
                 ('start_time', models.FloatField(help_text='starting time point of dose, see protocol for units')),
                 ('amount', models.FloatField(help_text='amount of compound administered over the duration, see protocol for units. Rate of administration is assumed constant')),
                 ('duration', models.FloatField(default=1.0, help_text='Duration of dose administration, see protocol for units. Duration must be greater than 0.', validators=[pkpdapp.models.dose.validate_duration])),
+                ('repeats', models.IntegerField(default=1, help_text='Number of times to repeat the dose. ')),
+                ('repeat_interval', models.FloatField(default=0.0, help_text='Interval between repeated doses. See protocol for units. ')),
             ],
         ),
         migrations.CreateModel(

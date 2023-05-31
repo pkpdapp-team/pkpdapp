@@ -11,10 +11,10 @@ import ParametersTab from './ParametersTab';
 
 const Model: React.FC = () => {
   const projectId = useSelector((state: RootState) => state.main.selectedProject);
-  const { data: project, error: projectError, isLoading: isProjectLoading } = useProjectRetrieveQuery({id: projectId || 0})
-  const { data: models, error: modelsError, isLoading: isModelsLoading } = useCombinedModelListQuery({projectId: projectId || 0})
+  const { data: project, isLoading: isProjectLoading } = useProjectRetrieveQuery({id: projectId || 0})
+  const { data: models, isLoading: isModelsLoading } = useCombinedModelListQuery({projectId: projectId || 0})
   const model = models?.[0] || null;
-  const [ updateModel, { isLoading: updateModelLoading } ]  = useCombinedModelUpdateMutation()
+  const [ updateModel ]  = useCombinedModelUpdateMutation()
 
   console.log('models', models)
   console.log('model', model)
@@ -28,7 +28,7 @@ const Model: React.FC = () => {
     variables: [],
     mmt: '',
   };
-  const { reset, watch, handleSubmit, control, formState: { isDirty } } = useForm<CombinedModel>({
+  const { reset, handleSubmit, control, formState: { isDirty } } = useForm<CombinedModel>({
     defaultValues: model || defaultModel
   });
 

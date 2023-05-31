@@ -35,7 +35,7 @@ const ProjectTable: React.FC = () => {
   
   const handleAddRow = () => {
     const user_access = [{ id: user?.id || 0, read_only: false, user: user?.id || 0 , project: 0}]
-    let project: Project = {id: 0, name: 'new', description: '', compound: 0, user_access, users: [user?.id || 0]}
+    let project: Project = { id: 0, name: 'new', description: '', compound: 0, user_access, users: [user?.id || 0], protocols: [] }
     const compound: Compound = {id: 0, name: 'new', description: '', compound_type: 'SM', efficacy_experiments: [], molecular_mass: 100, target_molecular_mass: 100}
     addCompound({ compound }).unwrap()
     .then((compound) => {
@@ -49,7 +49,6 @@ const ProjectTable: React.FC = () => {
         const defaultXUnit = units?.find((unit) => unit.symbol === 'h')?.id || 0
         const defaultPlot: SimulationPlot = {
           id: 0,
-          simulation: 0,
           y_axes: [],
           cx_lines: [],
           index: 0,

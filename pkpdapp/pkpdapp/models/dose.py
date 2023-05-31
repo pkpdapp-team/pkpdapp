@@ -44,6 +44,21 @@ class DoseBase(models.Model):
         validators=[validate_duration]
     )
 
+    repeats = models.IntegerField(
+        default=1,
+        help_text=(
+            'Number of times to repeat the dose. '
+        ),
+    )
+
+    repeat_interval = models.FloatField(
+        default=0.0,
+        help_text=(
+            'Interval between repeated doses. '
+            'See protocol for units. '
+        ),
+    )
+
     class Meta:
         constraints = [
             models.CheckConstraint(

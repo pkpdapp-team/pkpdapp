@@ -13,4 +13,4 @@ from pkpdapp.models import (
 class DoseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Dose
-        fields = '__all__'
+        exclude = ['protocol']
