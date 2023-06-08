@@ -2106,6 +2106,7 @@ export type Variable = {
   default_value?: number;
   is_log?: boolean;
   name: string;
+  description?: string | null;
   binding?: string | null;
   qname: string;
   constant?: boolean;
@@ -2130,6 +2131,7 @@ export type PatchedVariable = {
   default_value?: number;
   is_log?: boolean;
   name?: string;
+  description?: string | null;
   binding?: string | null;
   qname?: string;
   constant?: boolean;

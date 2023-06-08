@@ -3,6 +3,8 @@ import { useForm } from "react-hook-form";
 import {
   TableCell,
   TableRow,
+  Tooltip,
+  Typography,
 } from "@mui/material";
 import { Project, useVariableRetrieveQuery, CombinedModel, Variable, useVariableUpdateMutation } from "../../app/backendApi";
 import TextField from "../../components/TextField";
@@ -55,7 +57,11 @@ const ParameterRow: React.FC<Props> = ({ variableId }) => {
   return (
     <TableRow>
       <TableCell>
-        {variable.name}
+        <Tooltip title={variable.description}>
+          <Typography>
+            {variable.name}
+          </Typography>
+        </Tooltip>
       </TableCell>
       <TableCell>
         {isPD ? "PD" : "PK"}

@@ -8,6 +8,7 @@ from django.db import migrations
 import urllib.request
 import codecs
 from myokit.formats.sbml import SBMLParser
+import myokit
 from pkpdapp.models import MyokitModelMixin
 
 
@@ -96,51 +97,63 @@ $$
     models_pk = [
         {
             'name':
-            'one_compartment_pk_model',
+            'one_compartment_model_clinical',
             'description':
             """
-In this model the distribution of the drug is modelled by one
-compartment with a linear elimination rate \(k_e\)
-
-$$
-    \\frac{\\text{d}A}{\\text{d}t} = -k_e A \\quad C = \\frac{A}{V}.
-$$
-
-Here, \(A\) and \(C\) are the amount and the concentration of
-the drug in the body, respectively. \(V\) is the effective volume
-of distribution of the drug in the compartment.
-
-This model may be interpreted as modelling the blood plasma
-concentration of the drug, with the assumption that the clearance of
-the drug through the liver may be approximated by an exponential decay
-with the rate \(k_e\).
-
-With a :class:`erlotinib.PharmacokineticModel` the drug may be either
-directly administered to \(A$ or indirectly through a dosing
-compartment.
+Description of a clinical one compartment PK model here.
 """,  # noqa: W605
-            'sbml_url':
-            'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/models/PK_one_comp.xml'  # noqa: E501
+            'mmt_filename':
+            'pkpdapp/migrations/pk_models/1cmpt_PK_Model_Clinical.mmt'  # noqa: E501
+        },
+    {
+            'name':
+            'one_compartment_model_preclinical',
+            'description':
+            """
+Description of a preclinical one compartment PK model here.
+""",  # noqa: W605
+            'mmt_filename':
+            'pkpdapp/migrations/pk_models/1cmpt_PK_Model_Preclinical.mmt'  # noqa: E501
         },
         {
             'name':
-            'two_compartment_pk_model',
+            'two_compartment_model_clinical',
             'description':
             """
-Description of a two compartment PK model here.
+Description of a clinical two compartment PK model here.
 """,  # noqa: W605
-            'sbml_url':
-            'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/models/PK_two_comp.xml'  # noqa: E501
+            'mmt_filename':
+            'pkpdapp/migrations/pk_models/2cmpt_PK_Model_Clinical.mmt'  # noqa: E501
         },
         {
             'name':
-            'three_compartment_pk_model',
+            'two_compartment_model_preclinical',
             'description':
             """
-Description of a three compartment PK model here.
+Description of a preclinical two compartment PK model here.
 """,  # noqa: W605
-            'sbml_url':
-            'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/models/PK_three_comp.xml'  # noqa: E501
+            'mmt_filename':
+            'pkpdapp/migrations/pk_models/2cmpt_PK_Model_Preclinical.mmt'  # noqa: E501
+        },
+        {
+            'name':
+            'three_compartment_model_clinical',
+            'description':
+            """
+Description of a clinical three compartment PK model here.
+""",  # noqa: W605
+            'mmt_filename':
+            'pkpdapp/migrations/pk_models/3cmpt_PK_Model_Clinical.mmt'  # noqa: E501
+        },
+        {
+            'name':
+            'three_compartment_model_preclinical',
+            'description':
+            """
+Description of a preclinical three compartment PK model here.
+""",  # noqa: W605
+            'mmt_filename':
+            'pkpdapp/migrations/pk_models/3cmpt_PK_Model_Preclinical.mmt'  # noqa: E501
         },
     ]
 
@@ -232,14 +245,14 @@ Description of a three compartment PK model here.
 
     for m in models_pk:
         try:
-            with urllib.request.urlopen(m['sbml_url'], timeout=5) as f:
-                # parse as csv file
-                sbml_string = codecs.decode(f.read(), 'utf-8')
-                model = PharmacokineticModel.objects.create(
-                    name=m['name'],
-                    description=m['description'],
-                    mmt=MyokitModelMixin.sbml_string_to_mmt(sbml_string),
-                )
+            # check myokit can parse the model
+            myokit_model = myokit.load_model(m['mmt_filename']) 
+            myokit_model.validate()
+            model = PharmacokineticModel.objects.create(
+                name=m['name'],
+                description=m['description'],
+                mmt=myokit_model.code(),
+            )
         except urllib.error.URLError:
             print('WARNING: urlopen timed-out, no data loaded')
 

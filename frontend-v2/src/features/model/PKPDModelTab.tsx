@@ -5,6 +5,7 @@ import { Select, Stack, TextField as MuiTextField, Typography, Grid } from '@mui
 import SelectField from '../../components/SelectField';
 import { Check } from '@mui/icons-material';
 import Checkbox from '../../components/Checkbox';
+import FloatField from '../../components/FloatField';
 
 interface Props {
     model: CombinedModel;
@@ -79,6 +80,9 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props ) => {
           <Grid item xs={4}>
           <Checkbox label="Hill Coefficient" name="has_hill_coefficient" control={control} />
           </Grid>
+        </Grid>
+        <Grid item xs={3}>
+          <FloatField label="Simulation Duration" name="time_max" control={control} />
         </Grid>
       </Grid>
     );

@@ -4351,6 +4351,10 @@ components:
           type: string
           description: name of the variable
           maxLength: 100
+        description:
+          type: string
+          nullable: true
+          description: description of the variable
         binding:
           type: string
           nullable: true
@@ -4958,6 +4962,10 @@ components:
           type: string
           description: name of the variable
           maxLength: 100
+        description:
+          type: string
+          nullable: true
+          description: description of the variable
         binding:
           type: string
           nullable: true

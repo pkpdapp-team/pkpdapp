@@ -32,7 +32,7 @@ const getSimulateInput = (simulation: Simulation, sliderValues: SliderValues, va
       }
     }
     // add time as an output
-    const timeVariable = variables?.find((v) => v.name === 'time');
+    const timeVariable = variables?.find((v) => v.name === 'time' || v.name === 't');
     outputs.push(timeVariable?.qname || 'time');
     return {
       variables: simulateVariables, outputs, initial_conditions

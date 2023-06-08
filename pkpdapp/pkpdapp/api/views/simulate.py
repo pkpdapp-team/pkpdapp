@@ -26,7 +26,7 @@ class SimulateResponseSerializer(serializers.Serializer):
         times = [] 
         for var_id, values in instance.items():
             variable = Variable.objects.get(pk=var_id)
-            if variable.name == 'time':
+            if variable.name == 'time' or variable.name == 't':
                 times = values
             outputs[var_id] = values
         return {

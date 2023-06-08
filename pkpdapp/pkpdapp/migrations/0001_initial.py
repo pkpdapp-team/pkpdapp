@@ -275,6 +275,7 @@ class Migration(migrations.Migration):
                 ('default_value', models.FloatField(default=1, help_text='default value for this variable')),
                 ('is_log', models.BooleanField(default=False, help_text='True if default_value is stored as the log of this value')),
                 ('name', models.CharField(help_text='name of the variable', max_length=100)),
+                ('description', models.TextField(blank=True, help_text='description of the variable', null=True)),
                 ('binding', models.CharField(blank=True, help_text='myokit binding of the variable (e.g. time)', max_length=100, null=True)),
                 ('qname', models.CharField(help_text='fully qualitifed name of the variable', max_length=200)),
                 ('constant', models.BooleanField(default=True, help_text='True for a constant variable of the model, i.e. a parameter. False if non-constant, i.e. an output of the model (default is True)')),

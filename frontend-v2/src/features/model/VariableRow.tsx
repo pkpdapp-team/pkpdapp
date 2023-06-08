@@ -6,6 +6,8 @@ import {
   TableRow,
   Checkbox as MuiCheckbox,
   FormControlLabel,
+  Tooltip,
+  Typography,
 } from "@mui/material";
 import { Project, PkpdMapping, useVariableRetrieveQuery, CombinedModel, Variable, useVariableUpdateMutation, useProtocolCreateMutation, useProtocolDestroyMutation, Dose, useUnitListQuery } from "../../app/backendApi";
 import Checkbox from "../../components/Checkbox";
@@ -96,7 +98,11 @@ const VariableRow: React.FC<Props> = ({ project, model, variableId, appendMappin
   return (
     <TableRow>
       <TableCell>
-        {variable.name}
+        <Tooltip title={variable.description}>
+          <Typography>
+            {variable.name}
+          </Typography>
+        </Tooltip>
       </TableCell>
       <TableCell>
         {isPD ? "PD" : "PK"}

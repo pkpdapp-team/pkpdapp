@@ -42,6 +42,10 @@ class Variable(StoredModel):
     )
 
     name = models.CharField(max_length=100, help_text='name of the variable')
+    description = models.TextField(
+        blank=True, null=True,
+        help_text='description of the variable'
+    )
     binding = models.CharField(
         max_length=100,
         help_text='myokit binding of the variable (e.g. time)',
@@ -209,6 +213,7 @@ class Variable(StoredModel):
                 name=myokit_variable.name(),
                 qname=qname,
                 default_value=value,
+                description=myokit_variable.meta['desc'],
                 binding=myokit_variable.binding(),
                 lower_bound=0.1 * value,
                 upper_bound=10.0 * value,
@@ -260,6 +265,7 @@ class Variable(StoredModel):
             return Variable.objects.create(
                 name=myokit_variable.name(),
                 qname=qname,
+                description=myokit_variable.meta['desc'],
                 constant=myokit_variable.is_constant(),
                 binding=myokit_variable.binding(),
                 default_value=value,
@@ -296,6 +302,7 @@ class Variable(StoredModel):
             return Variable.objects.create(
                 name=myokit_variable.name(),
                 qname=qname,
+                description=myokit_variable.meta['desc'],
                 constant=myokit_variable.is_constant(),
                 default_value=value,
                 binding=myokit_variable.binding(),
@@ -326,6 +333,7 @@ class Variable(StoredModel):
         stored_variable_kwargs = {
             'name': self.name,
             'qname': self.qname,
+            'description': self.description,
             'unit': self.unit,
             'is_public': self.is_public,
             'binding': self.binding,
