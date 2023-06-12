@@ -115,6 +115,14 @@ const ProjectRow: React.FC<Props> = ({ project, isSelected }) => {
     fullWidth: true,
   }
 
+  const speciesOptions = [
+    { value: "M", label: "Mouse" },
+    { value: "R", label: "Rat" },
+    { value: "K", label: "Monkey" },
+    { value: "H", label: "Human" },
+    { value: "O", label: "Other" },
+  ]
+
   return (
     <TableRow>
       <TableCell>
@@ -125,6 +133,9 @@ const ProjectRow: React.FC<Props> = ({ project, isSelected }) => {
       </TableCell>
       <TableCell>
         <TextField name="project.description" control={control} textFieldProps={defaultProps} /> 
+      </TableCell>
+      <TableCell>
+        <SelectField name="project.species" options={speciesOptions} control={control} selectProps={defaultProps} /> 
       </TableCell>
       <TableCell>
         <TextField name="compound.name" control={control} textFieldProps={defaultProps} /> 

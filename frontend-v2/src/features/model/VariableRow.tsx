@@ -9,22 +9,21 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import { Project, PkpdMapping, useVariableRetrieveQuery, CombinedModel, Variable, useVariableUpdateMutation, useProtocolCreateMutation, useProtocolDestroyMutation, Dose, useUnitListQuery } from "../../app/backendApi";
+import { Project, PkpdMapping, CombinedModel, Variable, useVariableUpdateMutation, useProtocolCreateMutation, useProtocolDestroyMutation, Dose, useUnitListQuery } from "../../app/backendApi";
 import Checkbox from "../../components/Checkbox";
 
 interface Props {
   project: Project;
   model: CombinedModel;
-  variableId: number;
+  variable: Variable;
   mappings: PkpdMapping[];
   appendMapping: (value: PkpdMapping) => void;
   removeMapping: (index: number) => void;
 }
 
 
-const VariableRow: React.FC<Props> = ({ project, model, variableId, appendMapping, removeMapping, mappings }) => {
+const VariableRow: React.FC<Props> = ({ project, model, variable, appendMapping, removeMapping, mappings }) => {
 
-  const { data: variable, isLoading } = useVariableRetrieveQuery({id: variableId});
   const { data: units } = useUnitListQuery();
   const { control, handleSubmit, reset, setValue, formState: { isDirty: isDirtyForm }, watch} = useForm<Variable>(
     { defaultValues: variable || { id: 0, name: ''}}
@@ -51,17 +50,9 @@ const VariableRow: React.FC<Props> = ({ project, model, variableId, appendMappin
     return () => clearInterval(intervalId);
   }, [handleSubmit, isDirty, updateVariable]);
  
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
-  if (!variable) {
-    return <div>Variable not found</div>;
-  }
-
   if (variable.state !== true) {
     return (null);
   }
-
 
   const isPD = variable.qname.startsWith("PD");
   const hasProtocol: boolean = watchProtocolId != null;

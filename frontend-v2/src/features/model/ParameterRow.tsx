@@ -6,20 +6,19 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import { Project, useVariableRetrieveQuery, CombinedModel, Variable, useVariableUpdateMutation } from "../../app/backendApi";
+import { Project, CombinedModel, Variable, useVariableUpdateMutation } from "../../app/backendApi";
 import TextField from "../../components/TextField";
 import UnitField from "../../components/UnitField";
 
 interface Props {
   project: Project;
   model: CombinedModel;
-  variableId: number;
+  variable: Variable;
 }
 
 
-const ParameterRow: React.FC<Props> = ({ variableId }) => {
+const ParameterRow: React.FC<Props> = ({ project, model, variable }) => {
 
-  const { data: variable, isLoading } = useVariableRetrieveQuery({id: variableId});
   const { control, handleSubmit, reset, formState: { isDirty: isDirtyForm }} = useForm<Variable>(
     { defaultValues: variable || { id: 0, name: ''}}
   );
@@ -40,13 +39,6 @@ const ParameterRow: React.FC<Props> = ({ variableId }) => {
     return () => clearInterval(intervalId);
   }, [handleSubmit, isDirty, updateVariable]);
  
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
-  if (!variable) {
-    return <div>Variable not found</div>;
-  }
-
   if (variable.constant !== true) {
     return (null);
   }

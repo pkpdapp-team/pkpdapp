@@ -3,7 +3,8 @@
 # is released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-
+import logging
+logger = logging.getLogger(__name__)
 from django.db import models
 from django.db.models import Q
 import myokit
@@ -64,6 +65,12 @@ class Variable(StoredModel):
             'in the stored sbml)'
         )
     )
+
+    unit_symbol = models.CharField(
+        max_length=20, blank=True, null=True,
+        help_text='if unit is None then this is the unit of this variable as a string'
+    )
+
     constant = models.BooleanField(
         default=True,
         help_text=(
@@ -213,7 +220,7 @@ class Variable(StoredModel):
                 name=myokit_variable.name(),
                 qname=qname,
                 default_value=value,
-                description=myokit_variable.meta['desc'],
+                description=myokit_variable.meta.get('desc', ''),
                 binding=myokit_variable.binding(),
                 lower_bound=0.1 * value,
                 upper_bound=10.0 * value,
@@ -227,17 +234,19 @@ class Variable(StoredModel):
 
     @staticmethod
     def _find_close_variable(myokit_variable, variables):
+        logger.debug('Looking for variable: {}'.format(myokit_variable))
         found = None
         for i, v in enumerate(variables):
             if v.unit is None:
                 if myokit_variable.unit() is None:
                     found = i
-            elif myokit.Unit.close(
+            elif myokit_variable.unit() is not None and myokit.Unit.close(
                 v.unit.get_myokit_unit(),
                     myokit_variable.unit()
             ):
                 found = i
         if found is not None:
+            logger.debug('Found variable: {}'.format(variables[found]))
             return variables[found]
         return None
 
@@ -265,7 +274,7 @@ class Variable(StoredModel):
             return Variable.objects.create(
                 name=myokit_variable.name(),
                 qname=qname,
-                description=myokit_variable.meta['desc'],
+                description=myokit_variable.meta.get('desc', ''),
                 constant=myokit_variable.is_constant(),
                 binding=myokit_variable.binding(),
                 default_value=value,
@@ -302,7 +311,7 @@ class Variable(StoredModel):
             return Variable.objects.create(
                 name=myokit_variable.name(),
                 qname=qname,
-                description=myokit_variable.meta['desc'],
+                description=myokit_variable.meta.get('desc', ''),
                 constant=myokit_variable.is_constant(),
                 default_value=value,
                 binding=myokit_variable.binding(),
@@ -345,6 +354,7 @@ class Variable(StoredModel):
             'display': self.display,
             'color': self.color,
             'state': self.state,
+            'unit_symbol': self.unit_symbol,
             'constant': self.constant,
             'read_only': True,
             'protocol': (

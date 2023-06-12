@@ -921,7 +921,11 @@ const injectedRtkApi = api.injectEndpoints({
     variableList: build.query<VariableListApiResponse, VariableListApiArg>({
       query: (queryArg) => ({
         url: `/api/variable/`,
-        params: { project_id: queryArg.projectId },
+        params: {
+          dosed_pk_model_id: queryArg.dosedPkModelId,
+          pd_model_id: queryArg.pdModelId,
+          project_id: queryArg.projectId,
+        },
       }),
     }),
     variableCreate: build.mutation<
@@ -1545,6 +1549,10 @@ export type UserDestroyApiArg = {
 };
 export type VariableListApiResponse = /** status 200  */ Variable[];
 export type VariableListApiArg = {
+  /** Filter results by dosed_pk_model ID */
+  dosedPkModelId?: number;
+  /** Filter results by pd_model ID */
+  pdModelId?: number;
   /** Filter results by project ID */
   projectId?: number;
 };
@@ -1631,7 +1639,7 @@ export type PkpdMapping = {
   pk_variable: number;
   pd_variable: number;
 };
-export type SpeciesEnum = "H" | "R" | "N" | "M";
+export type CombinedModelSpeciesEnum = "H" | "R" | "N" | "M";
 export type CombinedModel = {
   id: number;
   mappings: PkpdMapping[];
@@ -1641,7 +1649,7 @@ export type CombinedModel = {
   read_only?: boolean;
   datetime?: string | null;
   name: string;
-  species?: SpeciesEnum;
+  species?: CombinedModelSpeciesEnum;
   has_saturation?: boolean;
   has_effect?: boolean;
   has_lag?: boolean;
@@ -1661,7 +1669,7 @@ export type PatchedCombinedModel = {
   read_only?: boolean;
   datetime?: string | null;
   name?: string;
-  species?: SpeciesEnum;
+  species?: CombinedModelSpeciesEnum;
   has_saturation?: boolean;
   has_effect?: boolean;
   has_lag?: boolean;
@@ -1938,12 +1946,14 @@ export type ProjectAccess = {
   user: number;
   project: number;
 };
+export type ProjectSpeciesEnum = "M" | "R" | "H" | "K" | "O";
 export type Project = {
   id: number;
   user_access: ProjectAccess[];
   protocols: number[];
   name: string;
   description?: string;
+  species?: ProjectSpeciesEnum;
   compound: number;
   users: number[];
 };
@@ -1953,6 +1963,7 @@ export type PatchedProject = {
   protocols?: number[];
   name?: string;
   description?: string;
+  species?: ProjectSpeciesEnum;
   compound?: number;
   users?: number[];
 };
@@ -2109,6 +2120,7 @@ export type Variable = {
   description?: string | null;
   binding?: string | null;
   qname: string;
+  unit_symbol?: string | null;
   constant?: boolean;
   state?: boolean;
   color?: number;
@@ -2134,6 +2146,7 @@ export type PatchedVariable = {
   description?: string | null;
   binding?: string | null;
   qname?: string;
+  unit_symbol?: string | null;
   constant?: boolean;
   state?: boolean;
   color?: number;

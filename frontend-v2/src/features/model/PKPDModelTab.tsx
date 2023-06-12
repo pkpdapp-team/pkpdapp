@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { CombinedModel, CombinedModelUpdateApiArg, Project, usePharmacodynamicListQuery, usePharmacokineticListQuery } from '../../app/backendApi';
+import { CombinedModel, CombinedModelUpdateApiArg, Pharmacokinetic, Project, usePharmacodynamicListQuery, usePharmacokineticListQuery } from '../../app/backendApi';
 import { Control } from 'react-hook-form';
 import { Select, Stack, TextField as MuiTextField, Typography, Grid } from '@mui/material';
 import SelectField from '../../components/SelectField';
@@ -34,10 +34,14 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props ) => {
       );
     }
 
+    const clinical = project.species === 'H';
+    const pkModelsFiltered = pkModels.filter((model: Pharmacokinetic) => !model.name.includes(!clinical ? '_clinical' : '_preclinical'));
+
+
     const pd_model_options = pdModels.map((model) => {
         return { value: model.id, label: model.name };
     });
-    const pk_model_options = pkModels.map((model) => {
+    const pk_model_options = pkModelsFiltered.map((model) => {
         return { value: model.id, label: model.name };
     });
     const pk_model_map = pkModels.reduce((map, model) => {

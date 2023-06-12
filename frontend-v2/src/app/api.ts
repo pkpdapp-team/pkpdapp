@@ -80,10 +80,10 @@ export const api = backendApi.enhanceEndpoints({
       providesTags: (result, error, { id }) => [{ type: 'CombinedModel', id }],
     },
     combinedModelUpdate: {
-      invalidatesTags: (result, error, { id }) => [{ type: 'CombinedModel', id }],
+      invalidatesTags: (result, error, { id }) => [{ type: 'CombinedModel', id }, { type: 'Variable', id: 'LIST' }],
     },
     combinedModelCreate: {
-      invalidatesTags: [{ type: 'CombinedModel', id: 'LIST' }],
+      invalidatesTags: [{ type: 'CombinedModel', id: 'LIST' }, { type: 'Variable', id: 'LIST' }],
     },
     variableList: {
       providesTags: (result) =>

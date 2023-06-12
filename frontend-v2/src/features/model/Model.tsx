@@ -1,6 +1,6 @@
 import { useSelector } from 'react-redux';
 import { RootState } from '../../app/store';
-import { CombinedModel, useCombinedModelListQuery, useCombinedModelUpdateMutation, useProjectRetrieveQuery } from '../../app/backendApi';
+import { CombinedModel, useCombinedModelListQuery, useCombinedModelUpdateMutation, useProjectRetrieveQuery, useVariableListQuery } from '../../app/backendApi';
 import { useForm } from 'react-hook-form';
 import { useEffect } from 'react';
 import { DynamicTabs, TabPanel } from '../../components/DynamicTabs';
@@ -15,6 +15,7 @@ const Model: React.FC = () => {
   const { data: models, isLoading: isModelsLoading } = useCombinedModelListQuery({projectId: projectId || 0})
   const model = models?.[0] || null;
   const [ updateModel ]  = useCombinedModelUpdateMutation()
+  const { data: variables, isLoading: isVariablesLoading } = useVariableListQuery({ dosedPkModelId: model?.id || 0 })
 
   console.log('models', models)
   console.log('model', model)
@@ -52,11 +53,11 @@ const Model: React.FC = () => {
   }, [handleSubmit, isDirty, updateModel]);
   
 
-  if (isProjectLoading || isModelsLoading) {
+  if (isProjectLoading || isModelsLoading || isVariablesLoading) {
     return <div>Loading...</div>;
   }
 
-  if (!model || !project) {
+  if (!model || !project || !variables) {
     return <div>Not found</div>;
   }
 
@@ -66,10 +67,10 @@ const Model: React.FC = () => {
         <PKPDModelTab model={model} project={project} control={control} updateModel={updateModel} />
       </TabPanel>
       <TabPanel>
-        <MapVariablesTab model={model} project={project} control={control} />
+        <MapVariablesTab model={model} project={project} control={control} variables={variables} />
       </TabPanel>
       <TabPanel>
-        <ParametersTab model={model} project={project} control={control} />
+        <ParametersTab model={model} project={project} control={control} variables={variables} />
       </TabPanel>
     </DynamicTabs>
   );

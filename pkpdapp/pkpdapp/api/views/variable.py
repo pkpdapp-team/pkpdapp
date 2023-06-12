@@ -38,6 +38,20 @@ class VariableView(viewsets.ModelViewSet):
                 type=OpenApiTypes.INT,
                 location=OpenApiParameter.QUERY
             ),
+            OpenApiParameter(
+                name='dosed_pk_model_id',
+                description='Filter results by dosed_pk_model ID',
+                required=False,
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY
+            ),
+            OpenApiParameter(
+                name='pd_model_id',
+                description='Filter results by pd_model ID',
+                required=False,
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY
+            ),
         ],
     )
     def list(self, request, *args, **kwargs):

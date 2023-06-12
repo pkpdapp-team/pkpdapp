@@ -6,6 +6,8 @@
 
 import threading
 from django.core.cache import cache
+import logging
+logger = logging.getLogger(__name__)
 import myokit
 from myokit.formats.sbml import SBMLParser
 from myokit.formats.mathml import MathMLExpressionWriter
@@ -145,7 +147,7 @@ class MyokitModelMixin:
         cache.delete(self._get_myokit_simulator_cache_key())
 
     def update_model(self):
-        print('UPDATE MODEL')
+        logger.info('UPDATE MODEL')
         # delete model and simulators from cache
         cache.delete(self._get_myokit_simulator_cache_key())
         cache.delete(self._get_myokit_model_cache_key())
@@ -163,14 +165,11 @@ class MyokitModelMixin:
             if not v.constant:
                 v.constant = True
                 v.save()
-        for eqn in model.inits():
-            print(eqn.lhs.var(), eqn.rhs.is_literal(), eqn.rhs)
         new_states = [
             Variable.get_variable(self, eqn.lhs.var())
             for eqn in model.inits()
             if eqn.rhs.is_literal()
         ]
-        print([s.qname for s in new_states])
         new_outputs = [
             Variable.get_variable(self, v)
             for v in self.get_myokit_model().variables(const=False, sort=True)
@@ -189,15 +188,21 @@ class MyokitModelMixin:
                 v.save()
 
         all_new_variables = new_variables + new_states + new_outputs
-        print([s.qname for s in all_new_variables])
+        logger.debug('ALL NEW VARIABLES')
+        for v in all_new_variables:
+            if v.unit is not None:
+                logger.debug(f'{v.qname} [{v.unit.symbol}], id = {v.id} constant = {v.constant}, state = {v.state}')
+            else:
+                logger.debug(f'{v.qname}, id = {v.id} constant = {v.constant}, state = {v.state}')
 
         # delete all variables that are not in new
         for variable in self.variables.all():
             if variable not in all_new_variables:
-                print('DELETING VARIABLE', variable.qname)
+                logger.debug(f'DELETING VARIABLE {variable.qname} (id = {variable.id}) thing={variable}')
                 variable.delete()
+            else:
+                logger.debug(f'RETAINING VARIABLE {variable.qname} (id = {variable.id}) thing={variable}')
 
-        print('SETTING VARIABLES', all_new_variables)
         self.variables.set(all_new_variables)
 
     def set_variables_from_inference(self, inference):

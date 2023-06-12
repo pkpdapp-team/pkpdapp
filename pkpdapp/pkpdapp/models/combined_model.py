@@ -22,7 +22,6 @@ class CombinedModel(MyokitModelMixin, StoredModel):
     """
     PK model plus dosing and protocol information
     """
-    DEFAULT_PK_MODEL = 1
     name = models.CharField(max_length=100, help_text='name of the model')
     project = models.ForeignKey(
         Project, on_delete=models.CASCADE,
@@ -46,22 +45,21 @@ class CombinedModel(MyokitModelMixin, StoredModel):
 
     pk_model = models.ForeignKey(
         PharmacokineticModel,
-        default=DEFAULT_PK_MODEL,
         on_delete=models.PROTECT,
         blank=True, null=True,
         help_text='model'
     )
 
     has_saturation = models.BooleanField(
-        default=True,
+        default=False,
         help_text='whether the pk model has saturation'
     )
     has_effect = models.BooleanField(
-        default=True,
+        default=False,
         help_text='whether the pk model has effect compartment'
     )
     has_lag = models.BooleanField(
-        default=True,
+        default=False,
         help_text='whether the pk model has lag'
     )
 
@@ -73,7 +71,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
     )
 
     has_hill_coefficient = models.BooleanField(
-        default=True,
+        default=False,
         help_text='whether the pd model has hill coefficient'
     )
 
@@ -297,14 +295,12 @@ class CombinedModel(MyokitModelMixin, StoredModel):
         if self.read_only:
             return
 
-        print('saving model')
         if (
             created or
             self.pk_model != self.__original_pk_model or
             self.pd_model != self.__original_pd_model or
             self.pd_model2 != self.__original_pd_model2
         ):
-            print('update model')
             self.update_model()
 
         self.__original_pd_model = self.pd_model

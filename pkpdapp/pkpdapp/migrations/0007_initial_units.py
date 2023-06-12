@@ -24,12 +24,24 @@ def load_units(apps, schema_editor):
             'unit': 1e-9 * mol / L,
         },
         {
+            'symbol': 'pmol/L',
+            'unit': 1e-12 * mol / L,
+        },
+        {
+            'symbol': 'pmol/L*h',
+            'unit': 1e-12 * mol / L * h,
+        },
+        {
             'symbol': 'µL/min/mg',
             'unit': 1e-6 * L / (60 * h * 1e-3 * g),
         },
         {
             'symbol': 'h',
             'unit': h,
+        },
+        {
+            'symbol': '1/h',
+            'unit': 1 / h,
         },
         {
             'symbol': 'mg',
@@ -50,6 +62,10 @@ def load_units(apps, schema_editor):
         {
             'symbol': 'L/mg/d',
             'unit': L / (1e-3 * g * 24 * h),
+        },
+        {
+            'symbol': 'L/h/kg',
+            'unit': L / (h * 1e3 * g),
         },
         {
             'symbol': 'L',
@@ -123,7 +139,6 @@ def load_units(apps, schema_editor):
             'symbol': 'nmol',
             'unit': 1e-6 * mol,
         },
-
     ]
 
     for u in units:

@@ -2817,6 +2817,16 @@ paths:
       operationId: variable_list
       parameters:
       - in: query
+        name: dosed_pk_model_id
+        schema:
+          type: integer
+        description: Filter results by dosed_pk_model ID
+      - in: query
+        name: pd_model_id
+        schema:
+          type: integer
+        description: Filter results by pd_model ID
+      - in: query
         name: project_id
         schema:
           type: integer
@@ -3097,7 +3107,7 @@ components:
           maxLength: 100
         species:
           allOf:
-          - $ref: '#/components/schemas/SpeciesEnum'
+          - $ref: '#/components/schemas/CombinedModelSpeciesEnum'
           description: |-
             species
 
@@ -3145,6 +3155,18 @@ components:
       - mmt
       - name
       - variables
+    CombinedModelSpeciesEnum:
+      enum:
+      - H
+      - R
+      - N
+      - M
+      type: string
+      description: |-
+        * `H` - human
+        * `R` - rat
+        * `N` - non-human primate
+        * `M` - mouse
     Compound:
       type: object
       properties:
@@ -3745,7 +3767,7 @@ components:
           maxLength: 100
         species:
           allOf:
-          - $ref: '#/components/schemas/SpeciesEnum'
+          - $ref: '#/components/schemas/CombinedModelSpeciesEnum'
           description: |-
             species
 
@@ -4106,6 +4128,17 @@ components:
         description:
           type: string
           description: short description of the project
+        species:
+          allOf:
+          - $ref: '#/components/schemas/ProjectSpeciesEnum'
+          description: |-
+            subject species
+
+            * `M` - Mouse
+            * `R` - Rat
+            * `H` - Human
+            * `K` - Monkey
+            * `O` - Other
         compound:
           type: integer
         users:
@@ -4364,6 +4397,12 @@ components:
           type: string
           description: fully qualitifed name of the variable
           maxLength: 200
+        unit_symbol:
+          type: string
+          nullable: true
+          description: if unit is None then this is the unit of this variable as a
+            string
+          maxLength: 20
         constant:
           type: boolean
           description: True for a constant variable of the model, i.e. a parameter.
@@ -4554,6 +4593,17 @@ components:
         description:
           type: string
           description: short description of the project
+        species:
+          allOf:
+          - $ref: '#/components/schemas/ProjectSpeciesEnum'
+          description: |-
+            subject species
+
+            * `M` - Mouse
+            * `R` - Rat
+            * `H` - Human
+            * `K` - Monkey
+            * `O` - Other
         compound:
           type: integer
         users:
@@ -4587,6 +4637,20 @@ components:
       - id
       - project
       - user
+    ProjectSpeciesEnum:
+      enum:
+      - M
+      - R
+      - H
+      - K
+      - O
+      type: string
+      description: |-
+        * `M` - Mouse
+        * `R` - Rat
+        * `H` - Human
+        * `K` - Monkey
+        * `O` - Other
     Protocol:
       type: object
       properties:
@@ -4794,18 +4858,6 @@ components:
       required:
       - id
       - variable
-    SpeciesEnum:
-      enum:
-      - H
-      - R
-      - N
-      - M
-      type: string
-      description: |-
-        * `H` - human
-        * `R` - rat
-        * `N` - non-human primate
-        * `M` - mouse
     Subject:
       type: object
       properties:
@@ -4975,6 +5027,12 @@ components:
           type: string
           description: fully qualitifed name of the variable
           maxLength: 200
+        unit_symbol:
+          type: string
+          nullable: true
+          description: if unit is None then this is the unit of this variable as a
+            string
+          maxLength: 20
         constant:
           type: boolean
           description: True for a constant variable of the model, i.e. a parameter.

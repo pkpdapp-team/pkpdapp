@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { CombinedModel, Project } from '../../app/backendApi';
+import { CombinedModel, Project, Variable } from '../../app/backendApi';
 import { Control, useFieldArray } from 'react-hook-form';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
 import VariableRow from './VariableRow';
@@ -8,9 +8,10 @@ interface Props {
     model: CombinedModel;
     project: Project;
     control: Control<CombinedModel>;
+    variables: Variable[];
 }
 
-const MapVariablesTab: React.FC<Props> = ({ model, project, control }: Props ) => {
+const MapVariablesTab: React.FC<Props> = ({ model, project, control, variables }: Props ) => {
     const { fields: mappings, append, remove } = useFieldArray({
         control,
         name: "mappings",
@@ -29,13 +30,13 @@ const MapVariablesTab: React.FC<Props> = ({ model, project, control }: Props ) =
           </TableRow>
         </TableHead>
         <TableBody>
-          {model.variables.length === 0 && (
+          {variables.length === 0 && (
             <TableRow>
               <TableCell colSpan={5}>No variables found</TableCell>
             </TableRow>
           )}
-          {model.variables.map((variable) => (
-            <VariableRow key={variable} variableId={variable} model={model} mappings={mappings} project={project} appendMapping={append} removeMapping={remove}/>
+          {variables.filter(variable => variable.state).map((variable) => (
+            <VariableRow key={variable.id} variable={variable} model={model} mappings={mappings} project={project} appendMapping={append} removeMapping={remove}/>
             ))}
         </TableBody>
       

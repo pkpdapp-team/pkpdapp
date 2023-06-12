@@ -48,13 +48,13 @@ LOGGING = {
     'loggers': {
         'django': {
             'handlers': ['console', 'file'],
-            'level': 'DEBUG',
-            'propagate': True,
+            'level': 'INFO',
+            'propagate': False,
         },
-        'myapp': {
+        'pkpdapp': {
             'handlers': ['console', 'file'],
             'level': 'DEBUG',
-            'propagate': True,
+            'propagate': False,
         },
     },
     'formatters': {

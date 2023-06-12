@@ -94,56 +94,90 @@ $$
             'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/models/tgi_Koch_2009_reparametrised.xml'  # noqa: E501
         },
     ]
+    models_pd_mmt = [
+        {
+            'name': 'indirect_effects_stimulation_elimination',
+            'description': 'Indirect effects model with stimulation and elimination',
+            'mmt_filename': 'pkpdapp/migrations/models/IE_StimulationElimination_Emax.mmt'  # noqa: E501
+        },
+        {
+            'name': 'indirect_effects_inhibition_elimination',
+            'description': 'Indirect effects model with inhibition and elimination',
+            'mmt_filename': 'pkpdapp/migrations/models/IE_InhibitionElimination_Emax.mmt'  # noqa: E501
+        },
+        {
+            'name': 'indirect_effects_stimulation_production',
+            'description': 'Indirect effects model with stimulation and production',
+            'mmt_filename': 'pkpdapp/migrations/models/IE_StimulationProduction_Emax.mmt'  # noqa: E501
+        },
+        {
+            'name': 'indirect_effects_inhibition_production',
+            'description': 'Indirect effects model with inhibition and production',
+            'mmt_filename': 'pkpdapp/migrations/models/IE_InhibitionProduction_Emax.mmt'  # noqa: E501
+        },
+        {
+            'name': 'direct_effects_emax',
+            'description': 'Direct effects model with Emax',
+            'mmt_filename': 'pkpdapp/migrations/models/DE_Emax.mmt'  # noqa: E501
+        },
+        {
+            'name': 'direct_effects_imax',
+            'description': 'Direct effects model with Imax',
+            'mmt_filename': 'pkpdapp/migrations/models/DE_Imax.mmt'  # noqa: E501
+        }
+    ]
+
+    model_names = ['one_compartment', 'two_compartment', 'three_comartment', 'indirect_effects_stimulation', 'indirect_effects_inhibition', 'one_compartment_tmdd']
     models_pk = [
         {
             'name':
-            'one_compartment_model_clinical',
+            'one_compartment_clinical',
             'description':
             """
 Description of a clinical one compartment PK model here.
 """,  # noqa: W605
             'mmt_filename':
-            'pkpdapp/migrations/pk_models/1cmpt_PK_Model_Clinical.mmt'  # noqa: E501
+            'pkpdapp/migrations/models/1cmpt_PK_Model_Clinical.mmt'  # noqa: E501
         },
     {
             'name':
-            'one_compartment_model_preclinical',
+            'one_compartment_preclinical',
             'description':
             """
 Description of a preclinical one compartment PK model here.
 """,  # noqa: W605
             'mmt_filename':
-            'pkpdapp/migrations/pk_models/1cmpt_PK_Model_Preclinical.mmt'  # noqa: E501
+            'pkpdapp/migrations/models/1cmpt_PK_Model_Preclinical.mmt'  # noqa: E501
         },
         {
             'name':
-            'two_compartment_model_clinical',
+            'two_compartment_clinical',
             'description':
             """
 Description of a clinical two compartment PK model here.
 """,  # noqa: W605
             'mmt_filename':
-            'pkpdapp/migrations/pk_models/2cmpt_PK_Model_Clinical.mmt'  # noqa: E501
+            'pkpdapp/migrations/models/2cmpt_PK_Model_Clinical.mmt'  # noqa: E501
         },
         {
             'name':
-            'two_compartment_model_preclinical',
+            'two_compartment_preclinical',
             'description':
             """
 Description of a preclinical two compartment PK model here.
 """,  # noqa: W605
             'mmt_filename':
-            'pkpdapp/migrations/pk_models/2cmpt_PK_Model_Preclinical.mmt'  # noqa: E501
+            'pkpdapp/migrations/models/2cmpt_PK_Model_Preclinical.mmt'  # noqa: E501
         },
         {
             'name':
-            'three_compartment_model_clinical',
+            'three_compartment_clinical',
             'description':
             """
 Description of a clinical three compartment PK model here.
 """,  # noqa: W605
             'mmt_filename':
-            'pkpdapp/migrations/pk_models/3cmpt_PK_Model_Clinical.mmt'  # noqa: E501
+            'pkpdapp/migrations/models/3cmpt_PK_Model_Clinical.mmt'  # noqa: E501
         },
         {
             'name':
@@ -153,8 +187,41 @@ Description of a clinical three compartment PK model here.
 Description of a preclinical three compartment PK model here.
 """,  # noqa: W605
             'mmt_filename':
-            'pkpdapp/migrations/pk_models/3cmpt_PK_Model_Preclinical.mmt'  # noqa: E501
+            'pkpdapp/migrations/models/3cmpt_PK_Model_Preclinical.mmt'  # noqa: E501
         },
+        {
+            'name': 'one_compartment_tmdd_full_clinical',
+            'description':
+            """
+Description of a clinical one compartment TMDD model here.
+""",  # noqa: W605
+            'mmt_filename': 'pkpdapp/migrations/models/TMDD_Full_1cmpt_PK_Model_Clinical.mmt'  # noqa: E501
+        },
+        {
+            'name': 'one_compartment_tmdd_full_preclinical',
+            'description':
+            """
+Description of a clinical one compartment TMDD model here.
+""",  # noqa: W605
+            'mmt_filename': 'pkpdapp/migrations/models/TMDD_Full_1cmpt_PK_Model_Preclinical.mmt'  # noqa: E501
+        },
+        {
+            'name': 'one_compartment_tmdd_QSS_clinical',
+            'description':
+            """
+Description of a clinical one compartment TMDD model here.
+""",  # noqa: W605
+            'mmt_filename': 'pkpdapp/migrations/models/TMDD_QSS_1cmpt_PK_Model_Clinical.mmt'  # noqa: E501
+        },
+        {
+            'name': 'one_compartment_tmdd_QSS_preclinical',
+            'description':
+            """
+Description of a clinical one compartment TMDD model here.
+""",  # noqa: W605
+            'mmt_filename': 'pkpdapp/migrations/models/TMDD_QSS_1cmpt_PK_Model_Preclinical.mmt'  # noqa: E501
+        },
+
     ]
 
     PharmacodynamicModel = apps.get_model("pkpdapp", "PharmacodynamicModel")
@@ -243,15 +310,33 @@ Description of a preclinical three compartment PK model here.
         except urllib.error.URLError:
             print('WARNING: urlopen timed-out, no data loaded')
 
-    for m in models_pk:
+    for m in models_pd_mmt:
         try:
             # check myokit can parse the model
-            myokit_model = myokit.load_model(m['mmt_filename']) 
+            print('importing model: {}'.format(m['name']))
+            mmt_string = open(m['mmt_filename'], 'r').read()
+            myokit_model = myokit.parse(mmt_string)[0]
+            myokit_model.validate()
+            model = PharmacodynamicModel.objects.create(
+                name=m['name'],
+                description=m['description'],
+                mmt=mmt_string,
+            )
+        except urllib.error.URLError:
+            print('WARNING: urlopen timed-out, no data loaded')
+
+
+    for m in models_pk:
+        try:
+            print('importing model: {}'.format(m['name']))
+            # check myokit can parse the model
+            mmt_string = open(m['mmt_filename'], 'r').read()
+            myokit_model = myokit.parse(mmt_string)[0]
             myokit_model.validate()
             model = PharmacokineticModel.objects.create(
                 name=m['name'],
                 description=m['description'],
-                mmt=myokit_model.code(),
+                mmt=mmt_string,
             )
         except urllib.error.URLError:
             print('WARNING: urlopen timed-out, no data loaded')

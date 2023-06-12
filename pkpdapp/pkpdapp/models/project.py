@@ -29,6 +29,21 @@ class Project(models.Model):
         'Compound', on_delete=models.CASCADE,
     )
 
+    # species is a enum field
+    class Species(models.TextChoices):
+        MOUSE = 'M', 'Mouse'
+        RAT = 'R', 'Rat'
+        HUMAN = 'H', 'Human'
+        MONKEY = 'K', 'Monkey'
+        OTHER = 'O', 'Other'
+
+    species = models.CharField(
+        max_length=1,
+        choices=Species.choices,
+        default=Species.OTHER,
+        help_text='subject species'
+    )
+
 
     def get_absolute_url(self):
         return reverse('project-detail', kwargs={'pk': self.pk})
