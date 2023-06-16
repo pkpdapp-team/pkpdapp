@@ -17,9 +17,6 @@ const Model: React.FC = () => {
   const [ updateModel ]  = useCombinedModelUpdateMutation()
   const { data: variables, isLoading: isVariablesLoading } = useVariableListQuery({ dosedPkModelId: model?.id || 0 })
 
-  console.log('models', models)
-  console.log('model', model)
-
   const defaultModel: CombinedModel = {
     id: 0,
     name: '',

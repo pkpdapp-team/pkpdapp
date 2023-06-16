@@ -89,13 +89,18 @@ class CombinedModelSerializer(serializers.ModelSerializer):
                     serializer = Serializer()
                     try:
                         old_model = old_models.pop(0)
-                        new_model = serializer.update(
-                            old_model, field_data
+                        variables_exist = (
+                            Variables.objects.filter(id=field_data['pk_variable']).exists() and 
+                            Variables.objects.filter(id=field_data['pd_variable']).exists()
                         )
+                        if variables_exist:
+                            new_model = serializer.update(
+                                old_model, field_data
+                            )
+                            new_model.save()
                     except IndexError:
                         field_data['pkpd_model'] = new_pkpd_model
                         new_model = serializer.create(field_data)
-                    new_model.save()
 
         return new_pkpd_model
 

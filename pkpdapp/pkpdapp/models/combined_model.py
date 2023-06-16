@@ -188,10 +188,14 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 in [s]
         ''')
 
-        # remove time binding if
+        # remove time binding and variable from pd model
         if have_both_models:
             time_var = pd_model.binding('time')
             time_var.set_binding(None)
+            time_component = time_var.parent()
+            time_component.remove_variable(time_var)
+            if time_component.count_variables() == 0:
+                pd_model.remove_component(time_component)
 
         pd_components = list(pd_model.components())
         pd_names = [
@@ -203,12 +207,6 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 pd_components,
                 new_name=pd_names,
             )
-
-        # remove imported time var
-        if have_both_models:
-            imported_pd_component = pkpd_model.get('PD')
-            imported_time = imported_pd_component.get('time')
-            imported_pd_component.remove_variable(imported_time)
 
         # do mappings
         for mapping in self.mappings.all():
@@ -222,7 +220,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
             helpers = None
 
             # if pd unit is in mol, then use the project compound to convert to grams
-            if pd_var.unit().exponents()[-1] != 0:
+            if pd_var.unit() is not None and pd_var.unit().exponents()[-1] != 0:
                 compound = self.project.compound
                 if compound is None:
                     raise RuntimeError(
@@ -299,7 +297,11 @@ class CombinedModel(MyokitModelMixin, StoredModel):
             created or
             self.pk_model != self.__original_pk_model or
             self.pd_model != self.__original_pd_model or
-            self.pd_model2 != self.__original_pd_model2
+            self.pd_model2 != self.__original_pd_model2 or
+            self.has_saturation != self.__original_has_saturation or
+            self.has_effect != self.__original_has_effect or
+            self.has_lag != self.__original_has_lag or
+            self.has_hill_coefficient != self.__original_has_hill_coefficient
         ):
             self.update_model()
 

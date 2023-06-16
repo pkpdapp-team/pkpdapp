@@ -85,8 +85,15 @@ class MyokitModelMixin:
                         ).value()
 
                 dosing_events = []
-                last_dose_time = 0.0
+                from pkpdapp.models import Variable
+                try:
+                    tlag = self.variables.get(qname='PKCompartment.tlag')
+                    last_dose_time = tlag.default_value
+                except Variable.DoesNotExist:
+                    last_dose_time = 0.0
                 for d in v.protocol.doses.all():
+                    if d.repeat_interval <= 0:
+                        continue;
                     start_times = np.arange(
                         d.start_time + last_dose_time,
                         d.start_time + d.repeat_interval * d.repeats,
@@ -154,11 +161,22 @@ class MyokitModelMixin:
 
         # update the variables of the model
         from pkpdapp.models import Variable
+
+        removed_variables = []
+        if not self.has_saturation:
+            removed_variables += ['PKCompartment.Km', 'PKCompartment.CLmax']
+        if not self.has_effect:
+            removed_variables += ['PKCompartment.Ce', 'PKCompartment.AUCe', 'PKCompartment.ke0', 'PKCompartment.Kpu']
+        if not self.has_hill_coefficient:
+            removed_variables += ['PDCompartment.HC']
+        if not self.has_lag:
+            removed_variables += ['PKCompartment.tlag']
+
         model = self.get_myokit_model()
         new_variables = [
             Variable.get_variable(self, v)
             for v in model.variables(const=True, sort=True)
-            if v.is_literal()
+            if v.is_literal() and v.qname() not in removed_variables
         ]
         # parameters could originally be outputs
         for v in new_variables:
@@ -166,13 +184,14 @@ class MyokitModelMixin:
                 v.constant = True
                 v.save()
         new_states = [
-            Variable.get_variable(self, eqn.lhs.var())
-            for eqn in model.inits()
-            if eqn.rhs.is_literal()
+            Variable.get_variable(self, v)
+            for v in self.get_myokit_model().variables(state=True, sort=True)
+            if v.qname() not in removed_variables
         ]
         new_outputs = [
             Variable.get_variable(self, v)
-            for v in self.get_myokit_model().variables(const=False, sort=True)
+            for v in self.get_myokit_model().variables(const=False, state=False, sort=True)
+            if v.qname() not in removed_variables
         ]
         for v in new_outputs:
             # if output not in states set state false
@@ -384,19 +403,29 @@ class MyokitModelMixin:
         """
 
         if outputs is None:
-            outputs = [
-                o.qname
-                for o in self.variables.filter(constant=False)
-            ]
+            outputs = [];
+
+        default_initial_conditions = {
+            s.qname: s.get_default_value()
+            for s in self.variables.filter(state=True)
+        }
         if initial_conditions is None:
+            initial_conditions = default_initial_conditions
+        else:
             initial_conditions = {
-                s.qname: s.get_default_value()
-                for s in self.variables.filter(state=True)
+                **default_initial_conditions,
+                **initial_conditions,
             }
+        default_variables = {
+            v.qname: v.get_default_value()
+            for v in self.variables.filter(constant=True)
+        }
         if variables is None:
+            variables = default_variables
+        else:
             variables = {
-                v.qname: v.get_default_value()
-                for v in self.variables.filter(constant=True)
+                **default_variables,
+                **variables,
             }
 
         model = self.get_myokit_model()

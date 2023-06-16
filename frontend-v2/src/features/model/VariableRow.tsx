@@ -9,7 +9,7 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import { Project, PkpdMapping, CombinedModel, Variable, useVariableUpdateMutation, useProtocolCreateMutation, useProtocolDestroyMutation, Dose, useUnitListQuery } from "../../app/backendApi";
+import { Project, PkpdMapping, CombinedModel, Variable, useVariableUpdateMutation, useProtocolCreateMutation, useProtocolDestroyMutation, Dose, useUnitListQuery, Unit } from "../../app/backendApi";
 import Checkbox from "../../components/Checkbox";
 
 interface Props {
@@ -19,12 +19,13 @@ interface Props {
   mappings: PkpdMapping[];
   appendMapping: (value: PkpdMapping) => void;
   removeMapping: (index: number) => void;
+  effectVariable: Variable | undefined;
+  units: Unit[];
 }
 
 
-const VariableRow: React.FC<Props> = ({ project, model, variable, appendMapping, removeMapping, mappings }) => {
+const VariableRow: React.FC<Props> = ({ project, model, variable, appendMapping, removeMapping, mappings, effectVariable, units }) => {
 
-  const { data: units } = useUnitListQuery();
   const { control, handleSubmit, reset, setValue, formState: { isDirty: isDirtyForm }, watch} = useForm<Variable>(
     { defaultValues: variable || { id: 0, name: ''}}
   );
@@ -50,16 +51,25 @@ const VariableRow: React.FC<Props> = ({ project, model, variable, appendMapping,
     return () => clearInterval(intervalId);
   }, [handleSubmit, isDirty, updateVariable]);
  
-  if (variable.state !== true) {
+  if (variable.constant || variable.name === 't' || variable.name === 'C_Drug') {
     return (null);
+  }
+
+  const concentrationUnit = units.find((unit) => unit.symbol === "pmol/L");
+  const amountUnit = units.find((unit) => unit.symbol === "pmol");
+  const variableUnit = units.find((unit) => unit.id === variable.unit);
+  if (concentrationUnit === undefined || amountUnit === undefined) {
+    return (<>No concentration or amount unit found</>);
   }
 
   const isPD = variable.qname.startsWith("PD");
   const hasProtocol: boolean = watchProtocolId != null;
-  const linkToPD = isPD ? false : mappings.find((mapping) => mapping.pd_variable === variable.id) !== undefined;
+  const linkToPD = isPD ? false : mappings.find((mapping) => mapping.pk_variable === variable.id) !== undefined;
+  const isConcentration = concentrationUnit?.compatible_units.find((unit) => parseInt(unit.id) === variable.unit) !== undefined;
+  const isAmount = amountUnit?.compatible_units.find((unit) => parseInt(unit.id) === variable.unit) !== undefined;
 
   const addProtocol = () => {
-    const defaultDose: Dose = { id: 0, amount: 0, start_time: 0, repeat_interval: 0, repeats: 0 };
+    const defaultDose: Dose = { id: 0, amount: 0, start_time: 0, repeat_interval: 1, repeats: 0 };
     createProtocol({ protocol: { id: 0, dataset: '', doses: [ defaultDose ], amount_unit: variable.unit, time_unit: defaultTimeUnit?.id || undefined, subjects: [], name: variable.name, project: project.id, variables: [] } })
     .then((value) => {
       if ('data' in value) {
@@ -75,7 +85,12 @@ const VariableRow: React.FC<Props> = ({ project, model, variable, appendMapping,
   };
 
   const addPDMapping = () => {
-    appendMapping({ id: 0, pk_variable: variable.id, pd_variable: 0, pkpd_model: model.id, datetime: '', read_only: false });
+    if (effectVariable) {
+      if (mappings.length > 0) {
+        removeMapping(0);
+      }
+      appendMapping({ id: 0, pk_variable: variable.id, pd_variable: effectVariable.id, pkpd_model: model.id, datetime: '', read_only: false });
+    }
   };
 
   const removePDMapping = () => {
@@ -84,6 +99,10 @@ const VariableRow: React.FC<Props> = ({ project, model, variable, appendMapping,
       removeMapping(mapping_index);
     }
   };
+
+  const noMapToPD = isPD || effectVariable === undefined || !isConcentration
+  const noRO =  !isConcentration;
+  const noDosing = !isAmount;
 
 
   return (
@@ -96,16 +115,25 @@ const VariableRow: React.FC<Props> = ({ project, model, variable, appendMapping,
         </Tooltip>
       </TableCell>
       <TableCell>
+        {variableUnit?.symbol}
+      </TableCell>
+      <TableCell>
         {isPD ? "PD" : "PK"}
       </TableCell>
       <TableCell>
+        { !noDosing && (
         <FormControlLabel control={<MuiCheckbox checked={hasProtocol} onClick={() => hasProtocol ? removeProtocol() : addProtocol()} />} label="Dosing" />
+        )}
       </TableCell>
       <TableCell>
+        { !noMapToPD && (
         <FormControlLabel control={<MuiCheckbox checked={linkToPD} onClick={() => linkToPD ? removePDMapping() : addPDMapping()} />} label="Map to PD Effect" />
+        )}
       </TableCell>
       <TableCell>
+        { !noRO && (
         <Checkbox name="link_to_ro" control={control} label="Link to RO" />
+        )}
       </TableCell>
     </TableRow>
   );

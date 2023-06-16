@@ -14,7 +14,7 @@ type Props<T extends FieldValues> = {
 };
 
 function UnitField<T extends FieldValues>({ label, name, baseUnitId, control, rules, selectProps }: Props<T>): React.ReactElement {
-  const { data: baseUnit, isLoading } = useUnitRetrieveQuery({id: baseUnitId || 0});
+  const { data: baseUnit, isLoading } = useUnitRetrieveQuery({id: baseUnitId || 0}, { skip: !baseUnitId });
 
   if (isLoading) {
     return <div>Loading...</div>;

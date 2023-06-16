@@ -82,7 +82,9 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props ) => {
             </Typography>
           </Grid>
           <Grid item xs={4}>
-          <Checkbox label="Hill Coefficient" name="has_hill_coefficient" control={control} />
+            { model.pd_model && (
+              <Checkbox label="Hill Coefficient" name="has_hill_coefficient" control={control} />
+            )}
           </Grid>
         </Grid>
         <Grid item xs={3}>

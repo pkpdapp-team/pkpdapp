@@ -17,7 +17,7 @@ t = 0 bind time
 
 [PKCompartment]
 
-tlag = 1 in [h]
+tlag = 0 in [h]
 	desc: absorption lag time from extravasc compartment (implementation tbd)
 
 ka = 1 in [1/h]
@@ -44,16 +44,16 @@ Q1 = 1 in [L/h/kg]
 Q2 = 1 in [L/h/kg]
     desc: Intercompartmental clearance between central compartment and second peripheral compartment 	
 
-CLmax = 1 in [L/h/kg]
+CLmax = 0 in [L/h/kg]
     desc: maximum nonlinear Michaelis-Menten clearance; Vmax = CLmax*Km 
 
 Km = 1 in [pmol/L]
     desc: Michaelis-Menten constant 	
 	
-ke0 = 1 in [1/h]
+ke0 = 0 in [1/h]
 	desc: equilibration rate constant effect compartment
 	
-Kpu = 1 in [dimensionless]
+Kpu = 0 in [dimensionless]
 	desc: effect compartment to plasma partitioning coefficient
 	
 C1= A1/V1 in [pmol/L]

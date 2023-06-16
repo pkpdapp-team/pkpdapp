@@ -34,6 +34,40 @@ class TestPkpdModel(TestCase):
         self.client = APIClient()
         self.client.force_authenticate(user=user)
 
+    def test_combined_model_creation(self):
+        pk_model = PharmacokineticModel.objects.get(
+            name='one_compartment_clinical'
+        )
+        pd_model = PharmacodynamicModel.objects.get(
+            name='indirect_effects_stimulation_production'
+        )
+        pkpd_model = CombinedModel.objects.create(
+            name='my wonderful model',
+            pk_model=pk_model,
+            pd_model=pd_model,
+            project=self.project,
+        )
+        PkpdMapping.objects.create(
+            pkpd_model=pkpd_model,
+            pk_variable=pkpd_model.variables.get(
+                qname='PKCompartment.C1',
+            ),
+            pd_variable=pkpd_model.variables.get(
+                qname='PDCompartment.C_Drug',
+            ),
+        )
+        vars = pkpd_model.variables.values_list('qname', flat=True)
+        for var in ['PKCompartment.C1', 'PDCompartment.C_Drug', 'PDCompartment.E']:
+            self.assertIn(var, vars)
+        self.assertFalse(pkpd_model.get_myokit_model().get('PKCompartment.C1').is_state())
+        self.assertFalse(pkpd_model.get_myokit_model().get('PKCompartment.C1').is_constant())
+        self.assertTrue(pkpd_model.get_myokit_model().get('PDCompartment.E').is_state())
+        self.assertFalse(pkpd_model.variables.get(qname='PKCompartment.C1').state)
+        self.assertFalse(pkpd_model.variables.get(qname='PKCompartment.C1').constant)
+        self.assertTrue(pkpd_model.variables.get(qname='PDCompartment.E').state)
+        pkpd_model.get_myokit_model().validate()
+        self.assertFalse(pkpd_model.variables.get(qname='PDCompartment.C_Drug').constant)
+
     def test_myokit_model_creation(self):
         pk_model = PharmacokineticModel.objects.get(
             name='three_compartment_pk_model'

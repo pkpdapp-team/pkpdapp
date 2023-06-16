@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { CombinedModel, Project, Variable } from '../../app/backendApi';
+import { CombinedModel, Project, Variable, useUnitListQuery, useUnitRetrieveQuery } from '../../app/backendApi';
 import { Control, useFieldArray } from 'react-hook-form';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
 import VariableRow from './VariableRow';
@@ -16,13 +16,23 @@ const MapVariablesTab: React.FC<Props> = ({ model, project, control, variables }
         control,
         name: "mappings",
     });
+    const { data: units, isLoading: isLoadingUnits } = useUnitListQuery();
 
+    if (isLoadingUnits) {
+      return null;
+    }
+    if (units === undefined) {
+      return null;
+    }
+
+    const effectVariable = variables.find((variable) => variable.qname === "PDCompartment.C_Drug");
     return (
       <TableContainer>
       <Table>
         <TableHead>
           <TableRow>
             <TableCell>Name</TableCell>
+            <TableCell>Unit</TableCell>
             <TableCell>Type</TableCell>
             <TableCell>Dosing Compartment</TableCell>
             <TableCell>Link to PD</TableCell>
@@ -35,8 +45,8 @@ const MapVariablesTab: React.FC<Props> = ({ model, project, control, variables }
               <TableCell colSpan={5}>No variables found</TableCell>
             </TableRow>
           )}
-          {variables.filter(variable => variable.state).map((variable) => (
-            <VariableRow key={variable.id} variable={variable} model={model} mappings={mappings} project={project} appendMapping={append} removeMapping={remove}/>
+          {variables.filter(variable => !variable.constant).map((variable) => (
+            <VariableRow key={variable.id} variable={variable} model={model} mappings={mappings} project={project} appendMapping={append} removeMapping={remove} effectVariable={effectVariable} units={units}/>
             ))}
         </TableBody>
       

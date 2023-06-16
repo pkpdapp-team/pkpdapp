@@ -24,6 +24,18 @@ def load_units(apps, schema_editor):
             'unit': 1e-9 * mol / L,
         },
         {
+            'symbol': 'mol',
+            'unit': mol,
+        },
+        {
+            'symbol': 'nmol',
+            'unit': 1e-9 * mol,
+        },
+        {
+            'symbol': 'pmol',
+            'unit': 1e-12 * mol,
+        },
+        {
             'symbol': 'pmol/L',
             'unit': 1e-12 * mol / L,
         },
@@ -134,10 +146,6 @@ def load_units(apps, schema_editor):
         {
             'symbol': 'g/nmol',
             'unit': g / (1e-6 * mol),
-        },
-        {
-            'symbol': 'nmol',
-            'unit': 1e-6 * mol,
         },
     ]
 

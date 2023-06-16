@@ -1,4 +1,4 @@
-import { Container, Grid, Stack, Typography } from '@mui/material';
+import { Alert, Container, Grid, Snackbar, Stack, Typography } from '@mui/material';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../app/store';
 import { Simulate, SimulateResponse, Simulation, SimulationPlot, SimulationSlider, Unit, Variable, useCombinedModelListQuery, useCombinedModelSimulateCreateMutation, useProjectRetrieveQuery, useSimulationListQuery, useSimulationUpdateMutation, useUnitListQuery, useVariableListQuery } from '../../app/backendApi';
@@ -74,7 +74,7 @@ const Simulations: React.FC = () => {
   }, [models]);
   const [updateSimulation] = useSimulationUpdateMutation();
   const { data: units } = useUnitListQuery()
-  const [ simulate ] = useCombinedModelSimulateCreateMutation();
+  const [ simulate, { isError } ] = useCombinedModelSimulateCreateMutation();
   const [ data, setData ] = useState<SimulateResponse | null>(null);
 
 
@@ -213,6 +213,11 @@ const Simulations: React.FC = () => {
           </Grid>
         ))}
       </Grid>
+      <Snackbar open={isError} autoHideDuration={6000}>
+        <Alert severity="error">
+          Error simulating model
+        </Alert>
+      </Snackbar>
       <Stack direction={'row'} alignItems={'center'}>
         <Typography variant="h6">Parameters</Typography>
         <DropdownButton options={addSliderOptions} onOptionSelected={handleAddSlider}>
