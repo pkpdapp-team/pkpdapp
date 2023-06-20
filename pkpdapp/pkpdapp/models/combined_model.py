@@ -6,6 +6,8 @@
 
 from django.db import models
 from django.urls import reverse
+import logging
+logger = logging.getLogger(__name__)
 from pkpdapp.models import (
     MyokitModelMixin,
     MechanisticModel,
@@ -278,6 +280,8 @@ class CombinedModel(MyokitModelMixin, StoredModel):
 
 
         pkpd_model.validate()
+        
+        logger.debug('Combined model: {}'.format(pkpd_model.code()))
         return pkpd_model
 
 
@@ -373,6 +377,57 @@ class PkpdMapping(StoredModel):
             'read_only': True,
         }
         stored_mapping = PkpdMapping.objects.create(
+            **stored_kwargs)
+        return stored_mapping
+
+class ReceptorOccupancy(StoredModel):
+    pkpd_model = models.ForeignKey(
+        CombinedModel, on_delete=models.CASCADE,
+        related_name='receptor_occupancies',
+        help_text='PKPD model that this mapping is for'
+    )
+    pk_variable = models.ForeignKey(
+        'Variable', on_delete=models.CASCADE,
+        related_name='receptor_occupancies',
+        help_text='variable in PK part of model'
+    )
+
+    __original_pk_variable = None
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.__original_pk_variable = self.pk_variable
+
+    def save(self, force_insert=False, force_update=False, *args, **kwargs):
+        created = not self.pk
+
+        super().save(force_insert, force_update, *args, **kwargs)
+
+        # don't update a stored model
+        if self.read_only:
+            return
+
+        if (
+            created or
+            self.pk_variable != self.__original_pk_variable
+        ):
+            self.pkpd_model.update_model()
+
+        self.__original_pk_variable = self.pk_variable
+
+    def delete(self):
+        pkpd_model = self.pkpd_model
+        super().delete()
+        pkpd_model.update_model()
+
+    def create_stored_mapping(self, new_pkpd_model, new_variables):
+        new_pk_variable = new_variables[self.pk_variable.qname]
+        stored_kwargs = {
+            'pkpd_model': new_pkpd_model,
+            'pk_variable': new_pk_variable,
+            'read_only': True,
+        }
+        stored_mapping = ReceptorOccupancyMapping.objects.create(
             **stored_kwargs)
         return stored_mapping
 

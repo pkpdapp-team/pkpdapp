@@ -3082,6 +3082,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/PkpdMapping'
+        receptor_occupancies:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReceptorOccupancy'
         components:
           type: string
           readOnly: true
@@ -3154,6 +3158,7 @@ components:
       - mappings
       - mmt
       - name
+      - receptor_occupancies
       - variables
     CombinedModelSpeciesEnum:
       enum:
@@ -3742,6 +3747,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/PkpdMapping'
+        receptor_occupancies:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReceptorOccupancy'
         components:
           type: string
           readOnly: true
@@ -4422,9 +4431,6 @@ components:
         axis:
           type: boolean
           description: False/True if biomarker type displayed on LHS/RHS axis
-        link_to_ro:
-          type: boolean
-          description: True if variable is linked to a Receptor Occupancy (RO) variable
         unit:
           type: integer
           nullable: true
@@ -4712,6 +4718,30 @@ components:
       - name
       - subjects
       - variables
+    ReceptorOccupancy:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        read_only:
+          type: boolean
+          description: true if object has been stored
+        datetime:
+          type: string
+          format: date-time
+          nullable: true
+          description: datetime the object was stored.
+        pkpd_model:
+          type: integer
+          description: PKPD model that this mapping is for
+        pk_variable:
+          type: integer
+          description: variable in PK part of model
+      required:
+      - id
+      - pk_variable
+      - pkpd_model
     Simulate:
       type: object
       properties:
@@ -4813,9 +4843,6 @@ components:
         index:
           type: integer
           description: index of the plot in the simulation
-        receptor_occupancy:
-          type: boolean
-          description: True if receptor occupancy should be plotted
         x_unit:
           type: integer
           description: unit for x axis
@@ -5052,9 +5079,6 @@ components:
         axis:
           type: boolean
           description: False/True if biomarker type displayed on LHS/RHS axis
-        link_to_ro:
-          type: boolean
-          description: True if variable is linked to a Receptor Occupancy (RO) variable
         unit:
           type: integer
           nullable: true

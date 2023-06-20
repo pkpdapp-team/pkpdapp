@@ -18,7 +18,18 @@ const ParametersTab: React.FC<Props> = ({ model, project, control, variables }) 
     const [updateVariable] = useVariableUpdateMutation();
     const { data: pkModel } = usePharmacokineticRetrieveQuery({ id: model.pk_model || 0}, { skip: !model.pk_model });
 
-    const constVariables = variables.filter(variable => variable.constant);
+    let constVariables = variables.filter(variable => variable.constant);
+    constVariables.sort((a, b) => {
+      const aisPK = a.qname.startsWith("PK");
+      const bisPK = b.qname.startsWith("PK");
+      if (aisPK && !bisPK) {
+        return -1;
+      }
+      if (!aisPK && bisPK) {
+        return 1;
+      }
+      return a.name > b.name ? 1 : -1;
+    })
 
     const noReset = !pkModel || !project.species || project.species === 'O';
 

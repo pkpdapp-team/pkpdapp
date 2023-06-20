@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Plot from 'react-plotly.js';
-import { SimulateResponse, Simulation, SimulationPlot, Variable } from '../../app/backendApi';
+import { SimulateResponse, Simulation, SimulationPlot, Unit, Variable } from '../../app/backendApi';
 import { Config, Data, Layout, Icon as PlotlyIcon } from 'plotly.js';
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
 import { Control, UseFormSetValue } from 'react-hook-form';
@@ -14,10 +14,10 @@ interface SimulationPlotProps {
   control: Control<Simulation>,
   setValue: UseFormSetValue<Simulation>,
   remove: (index: number) => void,
-
+  units: Unit[],
 }
 
-const SimulationPlotView: React.FC<SimulationPlotProps> = ({ index, plot, data, variables, control, setValue, remove }) => {
+const SimulationPlotView: React.FC<SimulationPlotProps> = ({ index, plot, data, variables, control, setValue, remove, units }) => {
 
   const [open, setOpen] = useState(false);
 
@@ -37,15 +37,23 @@ const SimulationPlotView: React.FC<SimulationPlotProps> = ({ index, plot, data, 
 
   const plotData: Data[] = plot.y_axes.map((y_axis) => {
     const variableValues = data.outputs[y_axis.variable];
-    const variableName = variables.find((v) => v.id === y_axis.variable)?.name;
+    const variable = variables.find((v) => v.id === y_axis.variable);
+    const variableName = variable?.name;
+    const variableUnit = units.find((u) => u.id === variable?.unit);
+    const axisUnit = y_axis.right ? units.find((u) => u.id === plot.y_unit2) : units.find((u) => u.id === plot.y_unit);
+    const compatibleUnit = variableUnit?.compatible_units.find((u) => parseInt(u.id) === axisUnit?.id);
+    const conversionFactor = compatibleUnit ? parseFloat(compatibleUnit.conversion_factor) : 1.0;
+    console.log(`converting from ${variableUnit?.symbol} to ${axisUnit?.symbol} using ${conversionFactor}}`, compatibleUnit)
     if (variableValues) {
       return {
+        yaxis: y_axis.right ? 'y2' : undefined,
         x: data.time,
-        y: variableValues,
+        y: variableValues.map((v) => v * conversionFactor),
         name: variableName || 'unknown',
       }
     } else {
       return {
+        yaxis: y_axis.right ? 'y2' : undefined,
         x: [],
         y: [],
         type: 'scatter',
@@ -53,6 +61,27 @@ const SimulationPlotView: React.FC<SimulationPlotProps> = ({ index, plot, data, 
       }
     }
   });
+
+
+  //@ts-expect-error
+  let yAxisTitle = plotData.filter((d) => !d.yaxis).map((d) => d.name).join(', ');
+  //@ts-expect-error
+  let y2AxisTitle = plotData.filter((d) => d.yaxis).map((d) => d.name).join(', ');
+  let xAxisTitle = 'Time';
+  const yUnit = units.find((u) => u.id === plot.y_unit);
+  const y2Unit = units.find((u) => u.id === plot.y_unit2);
+  const xUnit = units.find((u) => u.id === plot.x_unit);
+  if (yUnit) {
+    yAxisTitle = `${yAxisTitle}  [${yUnit.symbol}]`
+  }
+  if (y2Unit) {
+    y2AxisTitle = `${y2AxisTitle}  [${y2Unit.symbol}]`
+  }
+  if (xUnit) {
+    xAxisTitle = `${xAxisTitle}  [${xUnit.symbol}]`
+  }
+
+
   const plotLayout: Partial<Layout> = {
     legend: {
       orientation: 'v',
@@ -62,10 +91,17 @@ const SimulationPlotView: React.FC<SimulationPlotProps> = ({ index, plot, data, 
       x: 1,
     },
     xaxis: {
-      title: 'Time',
+      title: xAxisTitle,
     },
     yaxis: {
-      title: plotData.map((d) => d.name).join(', '),
+      title: yAxisTitle,
+    },
+    yaxis2: {
+      title: y2AxisTitle,
+      anchor: 'free',
+      overlaying: 'y',
+      side: 'right',
+      position: 1.0
     },
     margin: {
       l: 50,

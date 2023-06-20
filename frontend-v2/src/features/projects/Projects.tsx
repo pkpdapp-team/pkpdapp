@@ -50,13 +50,12 @@ const ProjectTable: React.FC = () => {
           y_axes: [],
           cx_lines: [],
           index: 0,
-          receptor_occupancy: false,
           x_unit: defaultXUnit,
           y_unit: null,
           y_unit2: null,
         }
         console.log('adding simulation')
-        addSimulation({ simulation: { id: 0, name: `default`, project: project.data.id, sliders: [], plots: [ defaultPlot ] }})
+        addSimulation({ simulation: { id: 0, name: `default`, project: project.data.id, sliders: [], plots: [] }})
       }
     });
   }

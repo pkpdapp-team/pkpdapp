@@ -64,6 +64,14 @@ def load_units(apps, schema_editor):
             'unit': 24 * h,
         },
         {
+            'symbol': 'min',
+            'unit': h / 60,
+        },
+        {
+            'symbol': 's',
+            'unit': h / 3600,
+        },
+        {
             'symbol': '1/d',
             'unit': 1 / (24 * h),
         },
@@ -82,6 +90,10 @@ def load_units(apps, schema_editor):
         {
             'symbol': 'L',
             'unit': L
+        },
+        {
+            'symbol': 'L/kg',
+            'unit': L / (1e3 * g)
         },
         {
             'symbol': 'L/h',

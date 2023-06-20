@@ -172,7 +172,6 @@ const Simulations: React.FC = () => {
       ],
       cx_lines: [],
       index: 0,
-      receptor_occupancy: false,
       x_unit: defaultXUnit,
       y_unit: variable.unit,
       y_unit2: null,
@@ -206,7 +205,7 @@ const Simulations: React.FC = () => {
         {plots.map((plot, index) => (
           <Grid item md={12} lg={6} key={index}>
             {data ? 
-              <SimulationPlotView index={index} plot={plot} data={data} variables={variables || []} control={control} setValue={setValue} remove={removePlot}/>
+              <SimulationPlotView index={index} plot={plot} data={data} variables={variables || []} control={control} setValue={setValue} remove={removePlot} units={units}/>
               :
               <div>Loading...</div>
             }

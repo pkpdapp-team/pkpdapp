@@ -25,6 +25,19 @@ const MapVariablesTab: React.FC<Props> = ({ model, project, control, variables }
       return null;
     }
 
+    let timeVaryingVariables = variables.filter(variable => !variable.constant);
+    timeVaryingVariables.sort((a, b) => {
+      const aisPK = a.qname.startsWith("PK");
+      const bisPK = b.qname.startsWith("PK");
+      if (aisPK && !bisPK) {
+        return -1;
+      }
+      if (!aisPK && bisPK) {
+        return 1;
+      }
+      return a.name > b.name ? 1 : -1;
+    })
+
     const effectVariable = variables.find((variable) => variable.qname === "PDCompartment.C_Drug");
     return (
       <TableContainer>
@@ -45,7 +58,7 @@ const MapVariablesTab: React.FC<Props> = ({ model, project, control, variables }
               <TableCell colSpan={5}>No variables found</TableCell>
             </TableRow>
           )}
-          {variables.filter(variable => !variable.constant).map((variable) => (
+          {timeVaryingVariables.map((variable) => (
             <VariableRow key={variable.id} variable={variable} model={model} mappings={mappings} project={project} appendMapping={append} removeMapping={remove} effectVariable={effectVariable} units={units}/>
             ))}
         </TableBody>

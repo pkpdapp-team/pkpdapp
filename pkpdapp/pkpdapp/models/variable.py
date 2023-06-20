@@ -139,11 +139,6 @@ class Variable(StoredModel):
         help_text='dosing protocol'
     )
 
-    link_to_ro = models.BooleanField(
-        default=False,
-        help_text='True if variable is linked to a Receptor Occupancy (RO) variable'
-    )
-
     class Meta:
         constraints = [
             models.CheckConstraint(

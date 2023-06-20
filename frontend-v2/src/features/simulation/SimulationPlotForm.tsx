@@ -34,6 +34,16 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({ index, plot, va
   if (unitsLoading) {
     return <div>Loading...</div>
   }
+  if (!units) {
+    return <div>Failed to load units</div>
+  }
+
+  const concentrationUnit = units.find((unit) => unit.symbol === "pmol/L");
+  if (concentrationUnit === undefined) {
+    return (<>No concentration or amount unit found</>);
+  }
+  const concentrationUnitIds = concentrationUnit.compatible_units.map((unit) => parseInt(unit.id));
+  const concentrationVariables = variables.filter((variable) => variable.unit && concentrationUnitIds.includes(variable.unit));
 
   type SimulationYAxisWithIndex = SimulationYAxis & { index: number };
   const lhs_y_axes: SimulationYAxisWithIndex[] = y_axes.map((y, i) => ({...y, index: i })).filter((y) => !y.right);
@@ -110,6 +120,9 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({ index, plot, va
   const addY2AxisOptions = getAddAxisOptions(rhs_y_axes);
   const addYAxisOptions = getAddAxisOptions(lhs_y_axes);
   const addCxLineOptions = Array.from({ length: 6 }, (_, i) => i / 5).map((v) => ({ label: v.toString(), value: v })); 
+  let receptorOccupancyVariableOptions: { label: string, value: string | number}[] = concentrationVariables.map((v) => ({ label: v.name, value: v.id }));
+  receptorOccupancyVariableOptions.push({ label: 'None', value: '' })
+  
 
   return (
     <Stack sx={{marginTop: 2}}>
@@ -123,11 +136,12 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({ index, plot, va
         />
         </Grid>
         <Grid item xs={8}>
-        <Checkbox
-            label="Calculate Receptor Occupancy"
+        <SelectField
+            label="Receptor Occupancy Variable"
             name={`plots.${index}.receptor_occupancy`}
             control={control}
-        />  
+            options={receptorOccupancyVariableOptions}
+        />
         </Grid>
     </Grid>
     <Divider sx={{margin: 2}} />

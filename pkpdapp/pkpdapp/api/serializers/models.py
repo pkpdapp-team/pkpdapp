@@ -9,7 +9,9 @@ from pkpdapp.models import (
     PharmacokineticModel,
     CombinedModel,
     PharmacodynamicModel, PkpdMapping,
-    MyokitModelMixin,
+    MyokitModelMixin, 
+    ReceptorOccupancy,
+    Variable,
 )
 from pkpdapp.api.serializers import (
     ValidSbml, ValidMmt
@@ -24,6 +26,11 @@ class PkpdMappingSerializer(serializers.ModelSerializer):
         model = PkpdMapping
         fields = '__all__'
 
+class ReceptorOccupancySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ReceptorOccupancy
+        fields = '__all__'
+
 
 class BaseDosedPharmacokineticSerializer(serializers.ModelSerializer):
     class Meta:
@@ -33,6 +40,7 @@ class BaseDosedPharmacokineticSerializer(serializers.ModelSerializer):
 
 class CombinedModelSerializer(serializers.ModelSerializer):
     mappings = PkpdMappingSerializer(many=True)
+    receptor_occupancies = ReceptorOccupancySerializer(many=True)
     components = serializers.SerializerMethodField('get_components')
     variables = serializers.PrimaryKeyRelatedField(
         many=True, read_only=True
@@ -55,11 +63,13 @@ class CombinedModelSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         mappings_data = validated_data.pop('mappings')
+        receptor_occupancies_data = validated_data.pop('receptor_occupancies')
         new_pkpd_model = BaseDosedPharmacokineticSerializer().create(
             validated_data
         )
         for field_datas, Serializer in [
                 (mappings_data, PkpdMappingSerializer),
+                (receptor_occupancies_data, ReceptorOccupancySerializer)
         ]:
             for field_data in field_datas:
                 serializer = Serializer()
@@ -70,10 +80,15 @@ class CombinedModelSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         mappings_data = validated_data.pop('mappings')
+        receptor_occ_data = validated_data.pop('receptor_occupancies')
         old_mappings = list((instance.mappings).all())
         for i in range(len(mappings_data), len(old_mappings)):
             old_mappings[i].delete()
             del old_mappings[i]
+        old_receptor_occ = list((instance.receptor_occupancies).all())
+        for i in range(len(receptor_occ_data), len(old_receptor_occ)):
+            old_receptor_occ[i].delete()
+            del old_receptor_occ[i]
 
         new_pkpd_model = BaseDosedPharmacokineticSerializer().update(
             instance, validated_data
@@ -83,16 +98,21 @@ class CombinedModelSerializer(serializers.ModelSerializer):
         if not instance.read_only:
             for field_datas, old_models, Serializer in [
                     (mappings_data,
-                     old_mappings, PkpdMappingSerializer)
+                     old_mappings, PkpdMappingSerializer),
+                    (receptor_occ_data,
+                      old_receptor_occ, ReceptorOccupancySerializer),
             ]:
                 for field_data in field_datas:
                     serializer = Serializer()
                     try:
                         old_model = old_models.pop(0)
                         variables_exist = (
-                            Variables.objects.filter(id=field_data['pk_variable']).exists() and 
-                            Variables.objects.filter(id=field_data['pd_variable']).exists()
+                            Variable.objects.filter(id=field_data['pk_variable']).exists()
                         )
+                        if 'pd_variable' in field_data:
+                            variables_exist = variables_exist and (
+                                Variable.objects.filter(id=field_data['pd_variable']).exists()
+                            )
                         if variables_exist:
                             new_model = serializer.update(
                                 old_model, field_data

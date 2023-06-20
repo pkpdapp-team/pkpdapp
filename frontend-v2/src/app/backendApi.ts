@@ -1639,10 +1639,18 @@ export type PkpdMapping = {
   pk_variable: number;
   pd_variable: number;
 };
+export type ReceptorOccupancy = {
+  id: number;
+  read_only?: boolean;
+  datetime?: string | null;
+  pkpd_model: number;
+  pk_variable: number;
+};
 export type CombinedModelSpeciesEnum = "H" | "R" | "N" | "M";
 export type CombinedModel = {
   id: number;
   mappings: PkpdMapping[];
+  receptor_occupancies: ReceptorOccupancy[];
   components: string;
   variables: number[];
   mmt: string;
@@ -1663,6 +1671,7 @@ export type CombinedModel = {
 export type PatchedCombinedModel = {
   id?: number;
   mappings?: PkpdMapping[];
+  receptor_occupancies?: ReceptorOccupancy[];
   components?: string;
   variables?: number[];
   mmt?: string;
@@ -2014,7 +2023,6 @@ export type SimulationPlot = {
   y_axes: SimulationYAxis[];
   cx_lines: SimulationCxLine[];
   index: number;
-  receptor_occupancy?: boolean;
   x_unit: number;
   y_unit?: number | null;
   y_unit2?: number | null;
@@ -2126,7 +2134,6 @@ export type Variable = {
   color?: number;
   display?: boolean;
   axis?: boolean;
-  link_to_ro?: boolean;
   unit?: number | null;
   pd_model?: number | null;
   pk_model?: number | null;
@@ -2152,7 +2159,6 @@ export type PatchedVariable = {
   color?: number;
   display?: boolean;
   axis?: boolean;
-  link_to_ro?: boolean;
   unit?: number | null;
   pd_model?: number | null;
   pk_model?: number | null;

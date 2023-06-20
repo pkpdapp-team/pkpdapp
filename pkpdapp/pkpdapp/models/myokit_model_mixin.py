@@ -99,6 +99,8 @@ class MyokitModelMixin:
                         d.start_time + d.repeat_interval * d.repeats,
                         d.repeat_interval
                     )
+                    if len(start_times) == 0:
+                        continue
                     last_dose_time = start_times[-1]
                     dosing_events += [
                     (
@@ -185,14 +187,21 @@ class MyokitModelMixin:
                 v.save()
         new_states = [
             Variable.get_variable(self, v)
-            for v in self.get_myokit_model().variables(state=True, sort=True)
+            for v in model.variables(state=True, sort=True)
             if v.qname() not in removed_variables
         ]
         new_outputs = [
             Variable.get_variable(self, v)
-            for v in self.get_myokit_model().variables(const=False, state=False, sort=True)
+            for v in model.variables(const=False, state=False, sort=True)
             if v.qname() not in removed_variables
         ]
+        logger.debug('ALL NEW OUTPUTS')
+        for v in new_outputs:
+            if v.unit is not None:
+                logger.debug(f'{v.qname} [{v.unit.symbol}], id = {v.id} constant = {v.constant}, state = {v.state}')
+            else:
+                logger.debug(f'{v.qname}, id = {v.id} constant = {v.constant}, state = {v.state}')
+
         for v in new_outputs:
             # if output not in states set state false
             # so only states with initial conditions as

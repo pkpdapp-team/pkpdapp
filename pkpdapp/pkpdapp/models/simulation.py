@@ -68,11 +68,6 @@ class SimulationPlot(models.Model):
         help_text='unit for rhs y axis'
     )
 
-    receptor_occupancy = models.BooleanField(
-        default=False,
-        help_text='True if receptor occupancy should be plotted',
-    )
-
     def get_project(self):
         return self.simulation.project
 

@@ -20,7 +20,8 @@ function UnitField<T extends FieldValues>({ label, name, baseUnitId, control, ru
     return <div>Loading...</div>;
   }
 
-  if (!baseUnit) {
+  const isDimensionless = baseUnit?.symbol === '' || false;
+  if (!baseUnit || isDimensionless) {
     selectProps = { ...selectProps, disabled: true };
   }
 

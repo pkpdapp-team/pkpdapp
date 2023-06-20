@@ -36,12 +36,14 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props ) => {
 
     const clinical = project.species === 'H';
     const pkModelsFiltered = pkModels.filter((model: Pharmacokinetic) => !model.name.includes(!clinical ? '_clinical' : '_preclinical'));
+    const pdModelsFiltered = pdModels.filter((model) => model.name !== 'tumour_growth_inhibition_model_koch' && model.name !== 'tumour_growth_inhibition_model_koch_reparametrised')
 
 
-    const pd_model_options = pdModels.map((model) => {
+    let pd_model_options: { value: number | string, label: string }[] = pdModelsFiltered.map((model) => {
         return { value: model.id, label: model.name };
     });
-    const pk_model_options = pkModelsFiltered.map((model) => {
+    pd_model_options.push({ value: '', label: 'None' });
+    let pk_model_options = pkModelsFiltered.map((model) => {
         return { value: model.id, label: model.name };
     });
     const pk_model_map = pkModels.reduce((map, model) => {
