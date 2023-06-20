@@ -9,6 +9,7 @@ import SelectField from '../../components/SelectField';
 import { useEffect } from 'react';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
+import TextField from '../../components/TextField';
 
 
 const Drug: React.FC = () => {
@@ -129,7 +130,7 @@ const Drug: React.FC = () => {
         {efficacy_experiments.map((efficacy_experiment, index) => (
           <ListItem key={index}>
           <Stack direction="column" spacing={2} key={index}>
-            <FloatField label="Name" name={`efficacy_experiments.${index}.name`} control={control} />
+            <TextField label="Name" name={`efficacy_experiments.${index}.name`} control={control} />
             <Stack direction="row" spacing={2}>
               <FloatField label="C50" name={`efficacy_experiments.${index}.c50`} control={control} />
               <UnitField label={'Unit'} name={`efficacy_experiments.${index}.c50_unit`} control={control} baseUnitId={efficacy_experiment.c50_unit} />

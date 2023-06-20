@@ -23,7 +23,7 @@ function FloatField<T extends FieldValues>({ label, name, control, rules, textFi
             name={name}
             id={name}
             variant="outlined"
-            value={value || 0}
+            value={value === undefined ? '' : value}
             onChange={(e) => { 
               const value = parseFloat(e.target.value)
               return onChange(value)

@@ -1,7 +1,7 @@
 import { Alert, Container, Grid, Snackbar, Stack, Typography } from '@mui/material';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../app/store';
-import { Simulate, SimulateResponse, Simulation, SimulationPlot, SimulationSlider, Unit, Variable, useCombinedModelListQuery, useCombinedModelSimulateCreateMutation, useProjectRetrieveQuery, useSimulationListQuery, useSimulationUpdateMutation, useUnitListQuery, useVariableListQuery } from '../../app/backendApi';
+import { Simulate, SimulateResponse, Simulation, SimulationPlot, SimulationSlider, Unit, Variable, useCombinedModelListQuery, useCombinedModelSimulateCreateMutation, useCompoundRetrieveQuery, useProjectRetrieveQuery, useSimulationListQuery, useSimulationUpdateMutation, useUnitListQuery, useVariableListQuery } from '../../app/backendApi';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { useEffect, useMemo, useState } from 'react';
 import SimulationPlotView from './SimulationPlotView';
@@ -76,6 +76,7 @@ const Simulations: React.FC = () => {
   const { data: units } = useUnitListQuery()
   const [ simulate, { isError } ] = useCombinedModelSimulateCreateMutation();
   const [ data, setData ] = useState<SimulateResponse | null>(null);
+  const { data: compound, isLoading: isLoadingCompound } = useCompoundRetrieveQuery({id: projectId || 0 }, { skip: !projectId })
 
 
   const [ sliderValues, setSliderValues ] = useState<{[key: number]: number} | undefined>(undefined);
@@ -142,11 +143,11 @@ const Simulations: React.FC = () => {
   }, [handleSubmit, isDirty, updateSimulation]);
   
 
-  if (isProjectLoading || isSimulationsLoading || isModelsLoading) {
+  if (isProjectLoading || isSimulationsLoading || isModelsLoading || isLoadingCompound) {
     return <div>Loading...</div>;
   }
 
-  if (!simulation || !project || !models || !variables || !units) {
+  if (!simulation || !project || !models || !variables || !units || !compound) {
     return <div>Not found</div>;
   }
   
@@ -205,7 +206,7 @@ const Simulations: React.FC = () => {
         {plots.map((plot, index) => (
           <Grid item md={12} lg={6} key={index}>
             {data ? 
-              <SimulationPlotView index={index} plot={plot} data={data} variables={variables || []} control={control} setValue={setValue} remove={removePlot} units={units}/>
+              <SimulationPlotView index={index} plot={plot} data={data} variables={variables || []} control={control} setValue={setValue} remove={removePlot} units={units} compound={compound}/>
               :
               <div>Loading...</div>
             }

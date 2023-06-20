@@ -493,7 +493,7 @@ class Migration(migrations.Migration):
             name='EfficacyExperiment',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(help_text='name of the experiment', max_length=100)),
+                ('name', models.CharField(blank=True, default='', help_text='name of the experiment', max_length=100)),
                 ('c50', models.FloatField(help_text='half maximal effective concentration')),
                 ('hill_coefficient', models.FloatField(default=1.0, help_text='Hill coefficient measure of binding')),
                 ('c50_unit', models.ForeignKey(help_text='unit for c50', on_delete=django.db.models.deletion.PROTECT, related_name='efficacy_experiments', to='pkpdapp.unit')),

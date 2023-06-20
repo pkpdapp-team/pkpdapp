@@ -43,7 +43,7 @@ const ProjectTable: React.FC = () => {
     })
     .then((project) => {
       if ('data' in project) {
-        addCombinedModel({ combinedModel: { id: 0, name: `model for project ${project.data.id}`, project: project.data.id, mappings: [], components: '', variables: [], mmt: '' }})
+        addCombinedModel({ combinedModel: { id: 0, name: `model for project ${project.data.id}`, project: project.data.id, mappings: [], receptor_occupancies: [], components: '', variables: [], mmt: '' }})
         const defaultXUnit = units?.find((unit) => unit.symbol === 'h')?.id || 0
         const defaultPlot: SimulationPlot = {
           id: 0,

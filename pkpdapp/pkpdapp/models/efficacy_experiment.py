@@ -11,7 +11,8 @@ from pkpdapp.models import (
 
 class EfficacyExperiment(models.Model):
     name = models.CharField(
-        max_length=100, help_text='name of the experiment'
+        max_length=100, help_text='name of the experiment',
+        blank=True, default=''
     )
     
     c50 = models.FloatField(

@@ -1706,7 +1706,7 @@ export type Simulate = {
 };
 export type Efficacy = {
   id: number;
-  name: string;
+  name?: string;
   c50: number;
   hill_coefficient?: number;
   c50_unit: number;

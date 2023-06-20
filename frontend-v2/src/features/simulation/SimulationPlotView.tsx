@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Plot from 'react-plotly.js';
-import { SimulateResponse, Simulation, SimulationPlot, Unit, Variable } from '../../app/backendApi';
+import { Compound, SimulateResponse, Simulation, SimulationPlot, Unit, Variable } from '../../app/backendApi';
 import { Config, Data, Layout, Icon as PlotlyIcon } from 'plotly.js';
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
 import { Control, UseFormSetValue } from 'react-hook-form';
@@ -15,9 +15,10 @@ interface SimulationPlotProps {
   setValue: UseFormSetValue<Simulation>,
   remove: (index: number) => void,
   units: Unit[],
+  compound: Compound,
 }
 
-const SimulationPlotView: React.FC<SimulationPlotProps> = ({ index, plot, data, variables, control, setValue, remove, units }) => {
+const SimulationPlotView: React.FC<SimulationPlotProps> = ({ index, plot, data, variables, control, setValue, remove, units, compound }) => {
 
   const [open, setOpen] = useState(false);
 
@@ -35,7 +36,7 @@ const SimulationPlotView: React.FC<SimulationPlotProps> = ({ index, plot, data, 
     setOpen(false);
   }
 
-  const plotData: Data[] = plot.y_axes.map((y_axis) => {
+  let plotData: Data[] = plot.y_axes.map((y_axis) => {
     const variableValues = data.outputs[y_axis.variable];
     const variable = variables.find((v) => v.id === y_axis.variable);
     const variableName = variable?.name;
@@ -61,6 +62,18 @@ const SimulationPlotView: React.FC<SimulationPlotProps> = ({ index, plot, data, 
       }
     }
   });
+  let icLines: number[] = [];
+  if (compound.efficacy_experiments.length > 0) {
+    const exp = compound.efficacy_experiments[0];
+    if (exp.hill_coefficient && exp.c50) {
+      icLines = plot.cx_lines.map((cx_line) => {
+        const hc = exp.hill_coefficient || 1.0;
+        const ec50 = exp.c50 || 0.0;
+        const iCx = (cx_line.value / (100 - cx_line.value))^(1/hc) * ec50; 
+        return iCx;
+      });
+    }
+  }
 
 
   //@ts-expect-error
@@ -82,7 +95,22 @@ const SimulationPlotView: React.FC<SimulationPlotProps> = ({ index, plot, data, 
   }
 
 
+  console.log('icLines', icLines)
   const plotLayout: Partial<Layout> = {
+    shapes: icLines.map((icLine) => {
+      return {
+        type: 'line',
+        x0: 0,
+        y0: icLine,
+        x1: 100,
+        y1: icLine,
+        line: {
+          color: 'rgb(255, 0, 0)',
+          width: 1,
+          dash: 'dot'
+        }
+      }
+    }),
     legend: {
       orientation: 'v',
       yanchor: 'top',

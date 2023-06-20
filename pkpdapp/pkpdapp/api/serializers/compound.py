@@ -42,18 +42,16 @@ class CompoundSerializer(serializers.ModelSerializer):
             instance, validated_data
         )
         for exp in experiments:
-            exp['compound'] = instance.id
+            exp['compound'] = instance
             serializer = EfficacySerializer()
-            old_experiment = [
-                i for i, a in enumerate(old_experiments) if a.id == exp['id']
-            ]
-            if not old_experiment:
-                new_exp = serializer.create(exp)
-            else:
+            try:
+                old_experiment = old_experiments.pop(0)
                 new_exp = serializer.update(
-                    old_experiments.pop(old_experiment[0]), exp
+                    old_experiment, exp
                 )
-            new_exp.save()
+                new_exp.save()
+            except IndexError:
+                new_exp = serializer.create(exp)
 
         # delete any old accesses
         for old_exp in old_experiments:

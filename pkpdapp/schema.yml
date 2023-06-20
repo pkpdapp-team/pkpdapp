@@ -3392,7 +3392,6 @@ components:
       - c50_unit
       - compound
       - id
-      - name
     FormEnum:
       enum:
       - N

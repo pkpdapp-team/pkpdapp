@@ -1,6 +1,6 @@
 // src/components/ProjectTable.tsx
 import React, { useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { Control, useFieldArray, useForm } from "react-hook-form";
 import {
   TableCell,
   TableRow,
@@ -9,24 +9,32 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import { Project, PkpdMapping, CombinedModel, Variable, useVariableUpdateMutation, useProtocolCreateMutation, useProtocolDestroyMutation, Dose, useUnitListQuery, Unit } from "../../app/backendApi";
+import { Project, PkpdMapping, CombinedModel, Variable, useVariableUpdateMutation, useProtocolCreateMutation, useProtocolDestroyMutation, Dose, useUnitListQuery, Unit, Compound } from "../../app/backendApi";
 import Checkbox from "../../components/Checkbox";
 
 interface Props {
   project: Project;
+  compound: Compound;
   model: CombinedModel;
   variable: Variable;
-  mappings: PkpdMapping[];
-  appendMapping: (value: PkpdMapping) => void;
-  removeMapping: (index: number) => void;
+  control: Control<CombinedModel>;
   effectVariable: Variable | undefined;
   units: Unit[];
 }
 
 
-const VariableRow: React.FC<Props> = ({ project, model, variable, appendMapping, removeMapping, mappings, effectVariable, units }) => {
+const VariableRow: React.FC<Props> = ({ project, compound, model, variable, control, effectVariable, units }) => {
 
-  const { control, handleSubmit, reset, setValue, formState: { isDirty: isDirtyForm }, watch} = useForm<Variable>(
+  const { fields: mappings, append: appendMapping, remove: removeMapping } = useFieldArray({
+      control,
+      name: "mappings",
+  });
+  const { fields: receptorOccupancies, append: receptorOccupancyAppend, remove: receptorOccupancyRemove } = useFieldArray({
+      control,
+      name: "receptor_occupancies",
+  });
+
+  const { control: controlVariable, handleSubmit, reset, setValue, formState: { isDirty: isDirtyForm }, watch} = useForm<Variable>(
     { defaultValues: variable || { id: 0, name: ''}}
   );
   const [updateVariable] = useVariableUpdateMutation();
@@ -65,6 +73,7 @@ const VariableRow: React.FC<Props> = ({ project, model, variable, appendMapping,
   const isPD = variable.qname.startsWith("PD");
   const hasProtocol: boolean = watchProtocolId != null;
   const linkToPD = isPD ? false : mappings.find((mapping) => mapping.pk_variable === variable.id) !== undefined;
+  const linkToRO = receptorOccupancies.find((ro) => ro.pk_variable === variable.id) !== undefined;
   const isConcentration = concentrationUnit?.compatible_units.find((unit) => parseInt(unit.id) === variable.unit) !== undefined;
   const isAmount = amountUnit?.compatible_units.find((unit) => parseInt(unit.id) === variable.unit) !== undefined;
 
@@ -100,8 +109,20 @@ const VariableRow: React.FC<Props> = ({ project, model, variable, appendMapping,
     }
   };
 
+  const addRO = () => {
+    receptorOccupancyAppend({ id: 0, pk_variable: variable.id, pkpd_model: model.id });
+  };
+
+  const removeRO = () => {
+    const ro_index = receptorOccupancies.findIndex((ro) => ro.pk_variable === variable.id);
+    if (ro_index >= 0) {
+      receptorOccupancyRemove(ro_index);
+    }
+  };
+
   const noMapToPD = isPD || effectVariable === undefined || !isConcentration
-  const noRO =  !isConcentration;
+  const noRO =  !isConcentration || isPD;
+  const disableRo = !compound.dissociation_constant || !compound.target_concentration;
   const noDosing = !isAmount;
 
 
@@ -132,7 +153,7 @@ const VariableRow: React.FC<Props> = ({ project, model, variable, appendMapping,
       </TableCell>
       <TableCell>
         { !noRO && (
-        <Checkbox name="link_to_ro" control={control} label="Link to RO" />
+        <FormControlLabel disabled={disableRo} control={<MuiCheckbox checked={linkToRO} onClick={() => linkToRO ? removeRO() : addRO()} />} label="Link to RO" />
         )}
       </TableCell>
     </TableRow>

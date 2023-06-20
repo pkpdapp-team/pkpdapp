@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { CombinedModel, Project, Variable, useUnitListQuery, useUnitRetrieveQuery } from '../../app/backendApi';
+import { CombinedModel, Project, Variable, useCompoundRetrieveQuery, useUnitListQuery, useUnitRetrieveQuery } from '../../app/backendApi';
 import { Control, useFieldArray } from 'react-hook-form';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
 import VariableRow from './VariableRow';
@@ -12,16 +12,14 @@ interface Props {
 }
 
 const MapVariablesTab: React.FC<Props> = ({ model, project, control, variables }: Props ) => {
-    const { fields: mappings, append, remove } = useFieldArray({
-        control,
-        name: "mappings",
-    });
+    
     const { data: units, isLoading: isLoadingUnits } = useUnitListQuery();
+    const { data: compound, isLoading: isLoadingCompound } = useCompoundRetrieveQuery({id: project.compound})
 
-    if (isLoadingUnits) {
+    if (isLoadingUnits || isLoadingCompound) {
       return null;
     }
-    if (units === undefined) {
+    if (units === undefined || compound === undefined) {
       return null;
     }
 
@@ -59,7 +57,7 @@ const MapVariablesTab: React.FC<Props> = ({ model, project, control, variables }
             </TableRow>
           )}
           {timeVaryingVariables.map((variable) => (
-            <VariableRow key={variable.id} variable={variable} model={model} mappings={mappings} project={project} appendMapping={append} removeMapping={remove} effectVariable={effectVariable} units={units}/>
+            <VariableRow key={variable.id} variable={variable} model={model} control={control} project={project} compound={compound} effectVariable={effectVariable} units={units}/>
             ))}
         </TableBody>
       

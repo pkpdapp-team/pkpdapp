@@ -278,6 +278,32 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 )
             )
 
+        # do receptor occupancies
+        for ro in self.receptor_occupancies.all():
+            myokit_var = pkpd_model.get(ro.pk_variable.qname)
+            myokit_compartment = myokit_var.parent()
+            # add a new variable
+            var_name = ro.pk_variable.name
+            var = myokit_compartment.add_variable(f'{var_name}_RO')
+            var.set_unit(myokit.Unit())
+            kd = self.project.compound.dissociation_constant 
+            kd_unit = self.project.compound.dissociation_unit.get_myokit_unit()
+            kd_factor = myokit.Unit.conversion_factor(
+                kd_unit, myokit_var.unit()
+            ).value()
+            kd_value = kd * kd_factor
+            target_conc = self.project.compound.target_concentration
+            target_conc_unit = self.project.compound.target_concentration_unit.get_myokit_unit()
+            target_conc_factor = myokit.Unit.conversion_factor(
+                target_conc_unit, myokit_var.unit()
+            ).value()
+            target_value = target_conc * target_conc_factor
+            kd_plus_target_value = kd_value + target_value
+            four_times_target_value = 4 * target_value
+            b = f'{kd_plus_target_value} + {var_name}'
+            c = f'{four_times_target_value} * {var_name}'
+            var.set_rhs(f'100 * ({b} - (({b})^2 - {c})^0.5) / (2 * {target_value})')
+
 
         pkpd_model.validate()
         

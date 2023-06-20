@@ -135,14 +135,6 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({ index, plot, va
             baseUnitId={baseXUnitId}
         />
         </Grid>
-        <Grid item xs={8}>
-        <SelectField
-            label="Receptor Occupancy Variable"
-            name={`plots.${index}.receptor_occupancy`}
-            control={control}
-            options={receptorOccupancyVariableOptions}
-        />
-        </Grid>
     </Grid>
     <Divider sx={{margin: 2}} />
     <Grid container spacing={1} alignItems={'center'}>
