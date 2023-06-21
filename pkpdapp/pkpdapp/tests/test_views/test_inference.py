@@ -3,7 +3,7 @@
 # is released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-import pkpdapp.tests
+import pkpdapp.tests  # noqa: F401
 from rest_framework import status
 import codecs
 import urllib.request
@@ -11,7 +11,6 @@ from urllib.request import urlretrieve
 
 from django.contrib.auth.models import User
 from django.core.files import File
-from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
 
 from pkpdapp.models import (
@@ -542,9 +541,6 @@ class TestInferenceWizardView(APITestCase):
         for ll in response_data['log_likelihoods']:
             if ll['name'][:len(model_name)] == model_name:
                 found_it += 1
-                dbmodel = CombinedModel.objects.get(
-                    id=ll['model'][1]
-                )
                 self.assertEqual(len(ll['parameters']), 10)
                 model_ids.append(ll['id'])
         self.assertEqual(found_it, 5)

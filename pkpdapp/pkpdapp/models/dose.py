@@ -74,7 +74,9 @@ class DoseBase(models.Model):
         super().save(force_insert, force_update, *args, **kwargs)
 
         models = set()
-        for v in self.protocol.variables.all().select_related('dosed_pk_model'):
+        for v in self.protocol.variables.all().select_related(
+            'dosed_pk_model'
+        ):
             models.add(v.dosed_pk_model)
         for m in models:
             m.update_simulator()

@@ -4,7 +4,7 @@
 # copyright notice and full license details.
 #
 
-import pkpdapp.tests
+import pkpdapp.tests  # noqa: F401
 import codecs
 import urllib.request
 
@@ -57,16 +57,32 @@ class TestPkpdModel(TestCase):
             ),
         )
         vars = pkpd_model.variables.values_list('qname', flat=True)
-        for var in ['PKCompartment.C1', 'PDCompartment.C_Drug', 'PDCompartment.E']:
+        for var in [
+            'PKCompartment.C1', 'PDCompartment.C_Drug', 'PDCompartment.E'
+        ]:
             self.assertIn(var, vars)
-        self.assertFalse(pkpd_model.get_myokit_model().get('PKCompartment.C1').is_state())
-        self.assertFalse(pkpd_model.get_myokit_model().get('PKCompartment.C1').is_constant())
-        self.assertTrue(pkpd_model.get_myokit_model().get('PDCompartment.E').is_state())
-        self.assertFalse(pkpd_model.variables.get(qname='PKCompartment.C1').state)
-        self.assertFalse(pkpd_model.variables.get(qname='PKCompartment.C1').constant)
-        self.assertTrue(pkpd_model.variables.get(qname='PDCompartment.E').state)
+        self.assertFalse(
+            pkpd_model.get_myokit_model().get('PKCompartment.C1').is_state()
+        )
+        self.assertFalse(
+            pkpd_model.get_myokit_model().get('PKCompartment.C1').is_constant()
+        )
+        self.assertTrue(
+            pkpd_model.get_myokit_model().get('PDCompartment.E').is_state()
+        )
+        self.assertFalse(
+            pkpd_model.variables.get(qname='PKCompartment.C1').state
+        )
+        self.assertFalse(
+            pkpd_model.variables.get(qname='PKCompartment.C1').constant
+        )
+        self.assertTrue(
+            pkpd_model.variables.get(qname='PDCompartment.E').state
+        )
         pkpd_model.get_myokit_model().validate()
-        self.assertFalse(pkpd_model.variables.get(qname='PDCompartment.C_Drug').constant)
+        self.assertFalse(
+            pkpd_model.variables.get(qname='PDCompartment.C_Drug').constant
+        )
 
     def test_myokit_model_creation(self):
         pk_model = PharmacokineticModel.objects.get(

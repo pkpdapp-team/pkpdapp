@@ -3,7 +3,7 @@
 # is released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-import pkpdapp.tests
+import pkpdapp.tests  # noqa: F401
 from rest_framework import status
 from rest_framework.test import APITestCase, APIClient
 from django.contrib.auth.models import User
@@ -45,7 +45,6 @@ class UnitTestCase(APITestCase):
         )
         drug.protocol = p
         drug.save()
-
 
         user = User.objects.get(username='demo')
         self.client = APIClient()

@@ -3,13 +3,13 @@
 # is released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-import pkpdapp.tests
+import pkpdapp.tests  # noqa: F401
 import django
-django.setup()
 from django.contrib.auth.models import User
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
 from pkpdapp.models import Project
+django.setup()
 
 
 class BiomarkerTypeTestCase(APITestCase):

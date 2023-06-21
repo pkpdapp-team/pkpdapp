@@ -5,15 +5,11 @@
 #
 
 from django.db import models
-from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator
-from django.urls import reverse
 
 
-
-
-## class to store options for simulation and plotting of results
-## a project can have multiple simulations
+# class to store options for simulation and plotting of results
+# a project can have multiple simulations
 class Simulation(models.Model):
     """
     A simulation, containing multiple :model:`pkpdapp.Dataset`,
@@ -46,6 +42,8 @@ class Simulation(models.Model):
         return self.project
 
 # model for a simulation plot
+
+
 class SimulationPlot(models.Model):
     simulation = models.ForeignKey(
         'Simulation', on_delete=models.CASCADE,
@@ -121,6 +119,3 @@ class SimulationCxLine(models.Model):
     value = models.FloatField(
         help_text='value of the line'
     )
-
-    
-

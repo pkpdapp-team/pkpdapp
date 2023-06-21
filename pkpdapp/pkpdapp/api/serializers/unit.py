@@ -5,13 +5,12 @@
 #
 from typing import Dict, List
 import myokit
-from drf_spectacular.utils import extend_schema_field
-from drf_spectacular.types import OpenApiTypes
 from rest_framework import serializers
 from rest_framework.schemas.openapi import AutoSchema
 from pkpdapp.models import (
     Unit
 )
+
 
 class UnitSchema(AutoSchema):
     """
@@ -34,6 +33,8 @@ class UnitSerializer(serializers.ModelSerializer):
             {
                 'id': u.id,
                 'symbol': u.symbol,
-                'conversion_factor': myokit.Unit.conversion_factor(myokit_unit, u.get_myokit_unit()).value(),
+                'conversion_factor': myokit.Unit.conversion_factor(
+                    myokit_unit, u.get_myokit_unit()
+                ).value(),
             } for u in unit.get_compatible_units()
         ]

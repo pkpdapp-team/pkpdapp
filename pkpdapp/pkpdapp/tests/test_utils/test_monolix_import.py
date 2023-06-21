@@ -5,8 +5,6 @@
 #
 
 import django
-django.setup()
-
 import codecs
 import urllib.request
 from django.test import TestCase
@@ -18,6 +16,7 @@ from pkpdapp.utils import (
     monolix_import
 )
 
+django.setup()
 BASE_URL_DATASETS = 'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/'   # noqa: E501
 
 

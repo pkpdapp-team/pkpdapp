@@ -23,4 +23,4 @@ tdigest>=0.5.2.2
 pymc3>=3.10
 django-auth-ldap>=4.1.0
 pyyaml>=6.0.0
-drf-spectacular-0.26.2>=0.26.2
+drf-spectacular>=0.26.2

@@ -4,7 +4,7 @@
 # copyright notice and full license details.
 #
 
-import pkpdapp.tests
+import pkpdapp.tests  # noqa: F401
 from pkpdapp.models import (
     PharmacodynamicModel, Variable,
     Project,

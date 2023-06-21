@@ -11,6 +11,7 @@ from pkpdapp.models import (
     CombinedModel, PharmacodynamicModel, Variable
 )
 
+
 class SimulateSerializer(serializers.Serializer):
     outputs = serializers.ListField(child=serializers.CharField())
     initial_conditions = serializers.DictField(child=serializers.FloatField())
@@ -20,11 +21,12 @@ class SimulateSerializer(serializers.Serializer):
 
 class SimulateResponseSerializer(serializers.Serializer):
     time = serializers.ListField(child=serializers.FloatField())
-    outputs = serializers.DictField(child=serializers.ListField(child=serializers.FloatField()))
+    outputs = serializers.DictField(
+        child=serializers.ListField(child=serializers.FloatField()))
 
     def to_representation(self, instance):
         outputs = {}
-        times = [] 
+        times = []
         for var_id, values in instance.items():
             variable = Variable.objects.get(pk=var_id)
             if variable.name == 'time' or variable.name == 't':
@@ -35,7 +37,7 @@ class SimulateResponseSerializer(serializers.Serializer):
             'time': times,
         }
 
- 
+
 @extend_schema(
     request=SimulateSerializer,
     responses={
@@ -65,4 +67,3 @@ class SimulateCombinedView(SimulateBaseView):
 
 class SimulatePdView(SimulateBaseView):
     model = PharmacodynamicModel
-

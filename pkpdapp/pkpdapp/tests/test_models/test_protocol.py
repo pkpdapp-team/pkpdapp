@@ -4,7 +4,7 @@
 # copyright notice and full license details.
 #
 
-import pkpdapp.tests
+import pkpdapp.tests  # noqa: F401
 from django.test import TestCase
 from pkpdapp.models import (
     Protocol,

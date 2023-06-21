@@ -7,6 +7,7 @@
 from django.db import migrations
 from django.contrib.auth.hashers import make_password
 
+
 def load_users_and_projects(apps, schema_editor):
     compound = {
         'name': 'demoCompound',
@@ -63,16 +64,21 @@ def load_users_and_projects(apps, schema_editor):
         description=compound['description'],
         molecular_mass=compound['molecular_mass'],
         compound_type=compound['compound_type'],
-        molecular_mass_unit=Unit.objects.get(symbol=compound['molecular_mass_unit']),
-        intrinsic_clearance_unit=Unit.objects.get(symbol=compound['intrinsic_clearance_unit']),
+        molecular_mass_unit=Unit.objects.get(
+            symbol=compound['molecular_mass_unit']),
+        intrinsic_clearance_unit=Unit.objects.get(
+            symbol=compound['intrinsic_clearance_unit']),
         intrinsic_clearance_assay='MS',
         fraction_unbound_plasma=1.0,
         fraction_unbound_including_cells=1.0,
         target_molecular_mass=100,
-        target_molecular_mass_unit=Unit.objects.get(symbol=compound['target_molecular_mass_unit']),
+        target_molecular_mass_unit=Unit.objects.get(
+            symbol=compound['target_molecular_mass_unit']),
         target_concentration=1e-9,
-        target_concentration_unit=Unit.objects.get(symbol=compound['target_concentration_unit']),
-        dissociation_unit=Unit.objects.get(symbol=compound['dissociation_constant_unit']),
+        target_concentration_unit=Unit.objects.get(
+            symbol=compound['target_concentration_unit']),
+        dissociation_unit=Unit.objects.get(
+            symbol=compound['dissociation_constant_unit']),
         is_soluble=True,
     )
     for u in users:
@@ -80,7 +86,7 @@ def load_users_and_projects(apps, schema_editor):
             username=u['username'],
             password=make_password(u['password']),
         )
-        
+
         for p in u['projects']:
             try:
                 project = Project.objects.get(
@@ -92,7 +98,7 @@ def load_users_and_projects(apps, schema_editor):
                     description=p['description'],
                     compound=compound,
                 )
-                
+
             project.users.add(
                 user,
                 through_defaults={'read_only': p['read_only']}

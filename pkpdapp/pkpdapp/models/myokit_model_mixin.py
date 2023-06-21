@@ -4,14 +4,14 @@
 # copyright notice and full license details.
 #
 
+import numpy as np
+from myokit.formats.mathml import MathMLExpressionWriter
+from myokit.formats.sbml import SBMLParser
+import myokit
 import threading
 from django.core.cache import cache
 import logging
 logger = logging.getLogger(__name__)
-import myokit
-from myokit.formats.sbml import SBMLParser
-from myokit.formats.mathml import MathMLExpressionWriter
-import numpy as np
 
 lock = threading.Lock()
 
@@ -93,7 +93,7 @@ class MyokitModelMixin:
                     last_dose_time = 0.0
                 for d in v.protocol.doses.all():
                     if d.repeat_interval <= 0:
-                        continue;
+                        continue
                     start_times = np.arange(
                         d.start_time + last_dose_time,
                         d.start_time + d.repeat_interval * d.repeats,
@@ -103,15 +103,15 @@ class MyokitModelMixin:
                         continue
                     last_dose_time = start_times[-1]
                     dosing_events += [
-                    (
-                        (amount_conversion_factor /
-                         time_conversion_factor) *
-                        (d.amount / d.duration),
-                        time_conversion_factor * start_time,
-                        time_conversion_factor * d.duration
-                    )
-                    for start_time in start_times
-                ]
+                        (
+                            (amount_conversion_factor /
+                             time_conversion_factor) *
+                            (d.amount / d.duration),
+                            time_conversion_factor * start_time,
+                            time_conversion_factor * d.duration
+                        )
+                        for start_time in start_times
+                    ]
 
                 set_dosing_events(sim, dosing_events)
         return sim
@@ -168,7 +168,8 @@ class MyokitModelMixin:
         if not self.has_saturation:
             removed_variables += ['PKCompartment.Km', 'PKCompartment.CLmax']
         if not self.has_effect:
-            removed_variables += ['PKCompartment.Ce', 'PKCompartment.AUCe', 'PKCompartment.ke0', 'PKCompartment.Kpu']
+            removed_variables += ['PKCompartment.Ce', 'PKCompartment.AUCe',
+                                  'PKCompartment.ke0', 'PKCompartment.Kpu']
         if not self.has_hill_coefficient:
             removed_variables += ['PDCompartment.HC']
         if not self.has_lag:
@@ -198,9 +199,17 @@ class MyokitModelMixin:
         logger.debug('ALL NEW OUTPUTS')
         for v in new_outputs:
             if v.unit is not None:
-                logger.debug(f'{v.qname} [{v.unit.symbol}], id = {v.id} constant = {v.constant}, state = {v.state}')
+                logger.debug(
+                    f'{v.qname} [{v.unit.symbol}], '
+                    f'id = {v.id} constant = {v.constant}, '
+                    f'state = {v.state}'
+                )
             else:
-                logger.debug(f'{v.qname}, id = {v.id} constant = {v.constant}, state = {v.state}')
+                logger.debug(
+                    f'{v.qname}, id = {v.id} '
+                    f'constant = {v.constant}, '
+                    f'state = {v.state}'
+                )
 
         for v in new_outputs:
             # if output not in states set state false
@@ -219,17 +228,27 @@ class MyokitModelMixin:
         logger.debug('ALL NEW VARIABLES')
         for v in all_new_variables:
             if v.unit is not None:
-                logger.debug(f'{v.qname} [{v.unit.symbol}], id = {v.id} constant = {v.constant}, state = {v.state}')
+                logger.debug(
+                    f'{v.qname} [{v.unit.symbol}], id = {v.id} '
+                    f'constant = {v.constant}, state = {v.state}'
+                )
             else:
-                logger.debug(f'{v.qname}, id = {v.id} constant = {v.constant}, state = {v.state}')
+                logger.debug(
+                    f'{v.qname}, id = {v.id} '
+                    f'constant = {v.constant}, state = {v.state}'
+                )
 
         # delete all variables that are not in new
         for variable in self.variables.all():
             if variable not in all_new_variables:
-                logger.debug(f'DELETING VARIABLE {variable.qname} (id = {variable.id}) thing={variable}')
+                logger.debug(
+                    f'DELETING VARIABLE {variable.qname} (id = {variable.id})'
+                )
                 variable.delete()
             else:
-                logger.debug(f'RETAINING VARIABLE {variable.qname} (id = {variable.id}) thing={variable}')
+                logger.debug(
+                    f'RETAINING VARIABLE {variable.qname} (id = {variable.id})'
+                )
 
         self.variables.set(all_new_variables)
 
@@ -393,7 +412,10 @@ class MyokitModelMixin:
     def get_time_max(self):
         return self.time_max
 
-    def simulate(self, outputs=None, initial_conditions=None, variables=None, time_max=None):
+    def simulate(
+            self, outputs=None, initial_conditions=None,
+            variables=None, time_max=None
+    ):
         """
         Arguments
         ---------
@@ -417,7 +439,7 @@ class MyokitModelMixin:
             time_max = self.get_time_max()
 
         if outputs is None:
-            outputs = [];
+            outputs = []
 
         default_initial_conditions = {
             s.qname: s.get_default_value()
@@ -602,3 +624,38 @@ def _get_time_unit(model):
     for var in bound_variables:
         if var._binding == 'time':
             return var.unit()
+
+
+def _add_dose_compartment(model, drug_amount, time_unit):
+    """
+    Adds a dose compartment to the model with a linear absorption rate to
+    the connected compartment.
+    """
+    # Add a dose compartment to the model
+    dose_comp = model.add_component_allow_renaming('dose')
+
+    # Create a state variable for the drug amount in the dose compartment
+    dose_drug_amount = dose_comp.add_variable('drug_amount')
+    dose_drug_amount.set_rhs(0)
+    dose_drug_amount.set_unit(drug_amount.unit())
+    dose_drug_amount.promote()
+
+    # Create an absorption rate variable
+    absorption_rate = dose_comp.add_variable('absorption_rate')
+    absorption_rate.set_rhs(1)
+    absorption_rate.set_unit(1 / time_unit)
+
+    # Add outflow expression to dose compartment
+    dose_drug_amount.set_rhs(
+        myokit.Multiply(myokit.PrefixMinus(myokit.Name(absorption_rate)),
+                        myokit.Name(dose_drug_amount)))
+
+    # Add inflow expression to connected compartment
+    rhs = drug_amount.rhs()
+    drug_amount.set_rhs(
+        myokit.Plus(
+            rhs,
+            myokit.Multiply(myokit.Name(absorption_rate),
+                            myokit.Name(dose_drug_amount))))
+
+    return dose_drug_amount

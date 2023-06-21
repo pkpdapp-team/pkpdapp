@@ -3,11 +3,11 @@
 # is released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-import pkpdapp.tests
+import pkpdapp.tests  # noqa: F401
 from django.test import TestCase
 from pkpdapp.models import (
     PharmacodynamicModel, Protocol, PharmacokineticModel,
-    Compound, CombinedModel,
+    CombinedModel,
     Dose, Unit, Variable,
 )
 import myokit
@@ -175,7 +175,10 @@ class TestDosedPharmokineticModel(TestCase):
         stored_model = model.create_stored_model()
         self.assertTrue(isinstance(stored_model, CombinedModel))
         self.assertTrue(stored_model.read_only)
-        self.assertEqual(len(stored_model.variables.all()), len(model.variables.all()))
+        self.assertEqual(
+            len(stored_model.variables.all()),
+            len(model.variables.all())
+        )
         drug = stored_model.variables.get(qname='central.drug_amount')
         self.assertEqual(drug.protocol.name, 'my_cool_protocol')
         self.assertNotEqual(drug.protocol.id, p.id)

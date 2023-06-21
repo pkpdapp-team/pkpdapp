@@ -3,7 +3,6 @@
 # is released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 from pkpdapp.models import (
     Dose, Protocol
@@ -36,7 +35,7 @@ class ProtocolSerializer(serializers.ModelSerializer):
         for dose in doses:
             Dose.objects.create(protocol=protocol, **dose)
         return protocol
-    
+
     def update(self, instance, validated_data):
         doses = validated_data.pop('doses')
         Dose.objects.filter(protocol=instance).delete()

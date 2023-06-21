@@ -9,14 +9,15 @@ from rest_framework.permissions import IsAuthenticated
 
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from drf_spectacular.types import OpenApiTypes
-from pkpdapp.models import Simulation, SimulationYAxis, SimulationSlider, SimulationCxLine
+from pkpdapp.models import Simulation
 from pkpdapp.api.serializers import (
-    SimulationSerializer, SimulationYAxisSerializer, SimulationSliderSerializer, SimulationCxLineSerializer
+    SimulationSerializer
 )
 from pkpdapp.api.views import (
     ProjectFilter,
     CheckAccessToProject
 )
+
 
 class SimulationViewSet(viewsets.ModelViewSet):
     queryset = Simulation.objects.all()
@@ -39,4 +40,3 @@ class SimulationViewSet(viewsets.ModelViewSet):
     )
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
-

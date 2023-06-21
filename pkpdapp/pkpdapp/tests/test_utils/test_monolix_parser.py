@@ -4,7 +4,6 @@
 # copyright notice and full license details.
 #
 import django
-django.setup()
 import codecs
 import unittest
 import urllib.request
@@ -12,6 +11,7 @@ from pkpdapp.utils import (
     MonolixModelParser, MonolixProjectParser
 )
 
+django.setup()
 BASE_URL_DATASETS = 'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/'   # noqa: E501
 
 

@@ -4,20 +4,17 @@
 # copyright notice and full license details.
 #
 
-from django.db import models
-from django.urls import reverse
-import logging
-logger = logging.getLogger(__name__)
+import myokit
 from pkpdapp.models import (
     MyokitModelMixin,
-    MechanisticModel,
-    Protocol,
     Project, StoredModel,
     PharmacodynamicModel,
     PharmacokineticModel,
 )
-import myokit
-from .myokit_model_mixin import lock
+from django.db import models
+from django.urls import reverse
+import logging
+logger = logging.getLogger(__name__)
 
 
 class CombinedModel(MyokitModelMixin, StoredModel):
@@ -83,7 +80,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
         blank=True, null=True,
         help_text='second PD part of model'
     )
-    
+
     time_max = models.FloatField(
         default=30,
         help_text=(
@@ -122,7 +119,8 @@ class CombinedModel(MyokitModelMixin, StoredModel):
         if 'has_lag' in field_names:
             instance.__original_has_lag = instance.has_lag
         if 'has_hill_coefficient' in field_names:
-            instance.__original_has_hill_coefficient = instance.has_hill_coefficient
+            instance.__original_has_hill_coefficient = \
+                instance.has_hill_coefficient
         return instance
 
     def get_project(self):
@@ -221,8 +219,12 @@ class CombinedModel(MyokitModelMixin, StoredModel):
 
             helpers = None
 
-            # if pd unit is in mol, then use the project compound to convert to grams
-            if pd_var.unit() is not None and pd_var.unit().exponents()[-1] != 0:
+            # if pd unit is in mol, then use the project compound to convert to
+            # grams
+            if (
+                pd_var.unit() is not None and
+                pd_var.unit().exponents()[-1] != 0
+            ):
                 compound = self.project.compound
                 if compound is None:
                     raise RuntimeError(
@@ -286,14 +288,16 @@ class CombinedModel(MyokitModelMixin, StoredModel):
             var_name = ro.pk_variable.name
             var = myokit_compartment.add_variable(f'{var_name}_RO')
             var.set_unit(myokit.Unit())
-            kd = self.project.compound.dissociation_constant 
+            kd = self.project.compound.dissociation_constant
             kd_unit = self.project.compound.dissociation_unit.get_myokit_unit()
             kd_factor = myokit.Unit.conversion_factor(
                 kd_unit, myokit_var.unit()
             ).value()
             kd_value = kd * kd_factor
             target_conc = self.project.compound.target_concentration
-            target_conc_unit = self.project.compound.target_concentration_unit.get_myokit_unit()
+            target_conc_unit = self.project.compound \
+                                   .target_concentration_unit \
+                                   .get_myokit_unit()
             target_conc_factor = myokit.Unit.conversion_factor(
                 target_conc_unit, myokit_var.unit()
             ).value()
@@ -302,12 +306,11 @@ class CombinedModel(MyokitModelMixin, StoredModel):
             four_times_target_value = 4 * target_value
             b = f'{kd_plus_target_value} + {var_name}'
             c = f'{four_times_target_value} * {var_name}'
-            var.set_rhs(f'100 * ({b} - (({b})^2 - {c})^0.5) / (2 * {target_value})')
-
+            var.set_rhs(
+                f'100 * ({b} - (({b})^2 - {c})^0.5) / (2 * {target_value})')
 
         pkpd_model.validate()
         return pkpd_model
-
 
     def get_absolute_url(self):
         return reverse('dosed_pk_model-detail', kwargs={'pk': self.pk})
@@ -341,6 +344,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
         self.__original_has_effect = self.has_effect
         self.__original_has_lag = self.has_lag
         self.__original_has_hill_coefficient = self.has_hill_coefficient
+
 
 class PkpdMapping(StoredModel):
     pkpd_model = models.ForeignKey(
@@ -404,6 +408,7 @@ class PkpdMapping(StoredModel):
             **stored_kwargs)
         return stored_mapping
 
+
 class ReceptorOccupancy(StoredModel):
     pkpd_model = models.ForeignKey(
         CombinedModel, on_delete=models.CASCADE,
@@ -451,43 +456,6 @@ class ReceptorOccupancy(StoredModel):
             'pk_variable': new_pk_variable,
             'read_only': True,
         }
-        stored_mapping = ReceptorOccupancyMapping.objects.create(
+        stored_mapping = ReceptorOccupancy.objects.create(
             **stored_kwargs)
         return stored_mapping
-
-
-def _add_dose_compartment(model, drug_amount, time_unit):
-    """
-    Adds a dose compartment to the model with a linear absorption rate to
-    the connected compartment.
-    """
-    # Add a dose compartment to the model
-    dose_comp = model.add_component_allow_renaming('dose')
-
-    # Create a state variable for the drug amount in the dose compartment
-    dose_drug_amount = dose_comp.add_variable('drug_amount')
-    dose_drug_amount.set_rhs(0)
-    dose_drug_amount.set_unit(drug_amount.unit())
-    dose_drug_amount.promote()
-
-    # Create an absorption rate variable
-    absorption_rate = dose_comp.add_variable('absorption_rate')
-    absorption_rate.set_rhs(1)
-    absorption_rate.set_unit(1 / time_unit)
-
-    # Add outflow expression to dose compartment
-    dose_drug_amount.set_rhs(
-        myokit.Multiply(myokit.PrefixMinus(myokit.Name(absorption_rate)),
-                        myokit.Name(dose_drug_amount)))
-
-    # Add inflow expression to connected compartment
-    rhs = drug_amount.rhs()
-    drug_amount.set_rhs(
-        myokit.Plus(
-            rhs,
-            myokit.Multiply(myokit.Name(absorption_rate),
-                            myokit.Name(dose_drug_amount))))
-
-    return dose_drug_amount
-
-

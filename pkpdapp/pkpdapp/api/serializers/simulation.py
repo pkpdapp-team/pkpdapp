@@ -6,7 +6,8 @@
 
 from rest_framework import serializers
 from pkpdapp.models import (
-    Simulation, SimulationYAxis, SimulationSlider, SimulationCxLine, SimulationPlot
+    Simulation, SimulationYAxis, SimulationSlider,
+    SimulationCxLine, SimulationPlot
 )
 
 
@@ -15,15 +16,18 @@ class SimulationYAxisSerializer(serializers.ModelSerializer):
         model = SimulationYAxis
         exclude = ['plot']
 
+
 class SimulationSliderSerializer(serializers.ModelSerializer):
     class Meta:
         model = SimulationSlider
         exclude = ['simulation']
 
+
 class SimulationCxLineSerializer(serializers.ModelSerializer):
     class Meta:
         model = SimulationCxLine
         exclude = ['plot']
+
 
 class SimulationPlotSerializer(serializers.ModelSerializer):
     y_axes = SimulationYAxisSerializer(
@@ -32,9 +36,10 @@ class SimulationPlotSerializer(serializers.ModelSerializer):
     cx_lines = SimulationCxLineSerializer(
         many=True
     )
+
     class Meta:
         model = SimulationPlot
-        #fields = '__all__'
+        # fields = '__all__'
         exclude = ['simulation']
 
     def create(self, validated_data):
@@ -66,6 +71,7 @@ class SimulationSerializer(serializers.ModelSerializer):
     plots = SimulationPlotSerializer(
         many=True
     )
+
     class Meta:
         model = Simulation
         fields = '__all__'
@@ -80,7 +86,7 @@ class SimulationSerializer(serializers.ModelSerializer):
             plot['simulation'] = simulation
             SimulationPlotSerializer.create(SimulationPlotSerializer(), plot)
         return simulation
-    
+
     def update(self, instance, validated_data):
         slider_data = validated_data.pop('sliders')
         plot_data = validated_data.pop('plots')
@@ -89,6 +95,6 @@ class SimulationSerializer(serializers.ModelSerializer):
         for slider in slider_data:
             SimulationSlider.objects.create(simulation=instance, **slider)
         for plot in plot_data:
-            plot['simulation'] = instance 
+            plot['simulation'] = instance
             SimulationPlotSerializer.create(SimulationPlotSerializer(), plot)
         return super().update(instance, validated_data)

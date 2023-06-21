@@ -16,11 +16,13 @@ def get_mol_mass_unit():
     except Unit.DoesNotExist:
         return None
 
+
 def get_intrinsic_clearence_unit():
     try:
         return Unit.objects.get(symbol='µL/min/mg')
     except Unit.DoesNotExist:
         return None
+
 
 def get_target_concentration_unit():
     try:
@@ -58,16 +60,17 @@ class Compound(models.Model):
         related_name='compound_mol_mass',
         help_text='unit for molecular mass (e.g. g/mol)'
     )
+
     class CompoundType(models.TextChoices):
         SMALL_MOLECULE = 'SM', 'Small Molecule'
         LARGE_MOLECULE = 'LM', 'Large Molecule'
-    
+
     compound_type = models.CharField(
         max_length=2,
         choices=CompoundType.choices,
         default=CompoundType.SMALL_MOLECULE,
     )
-    
+
     fraction_unbound_plasma = models.FloatField(
         default=1.0,
         blank=True, null=True,
@@ -95,22 +98,21 @@ class Compound(models.Model):
         MICROSOMES = 'MS', 'Microsomes'
         HEPATOCYTES = 'HC', 'Hepatocytes'
 
-
     intrinsic_clearance_assay = models.CharField(
         max_length=2,
         choices=AssayType.choices,
         default=AssayType.MICROSOMES,
     )
-    
+
     fraction_unbound_including_cells = models.FloatField(
         default=1.0,
         blank=True, null=True,
         help_text='fraction unbound in plasma and red blood cells (unitless)'
     )
 
-    #-------
+    # -------
     # Target
-    #-------
+    # -------
 
     target_molecular_mass = models.FloatField(
         help_text=(
@@ -128,7 +130,7 @@ class Compound(models.Model):
     target_concentration = models.FloatField(
         blank=True, null=True,
         help_text='target concentration'
-    )   
+    )
 
     target_concentration_unit = models.ForeignKey(
         Unit, on_delete=models.PROTECT,
@@ -154,10 +156,8 @@ class Compound(models.Model):
         help_text='is the compound target soluble'
     )
 
-
     def get_project(self):
         return self.project
 
     def __str__(self):
         return str(self.name)
-

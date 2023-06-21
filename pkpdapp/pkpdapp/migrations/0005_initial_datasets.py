@@ -472,16 +472,16 @@ def load_datasets(apps, schema_editor):
                             # TODO how to get molecular_mass?
                             molecular_mass=100,
                             compound_type='SM',
-                            molecular_mass_unit=Unit.objects.get(symbol='g/mol'),
-                            intrinsic_clearance_unit=Unit.objects.get(symbol='µL/min/mg'),
+                            molecular_mass_unit=Unit.objects.get(symbol='g/mol'),  # noqa: E501
+                            intrinsic_clearance_unit=Unit.objects.get(symbol='µL/min/mg'),  # noqa: E501
                             intrinsic_clearance_assay='MS',
                             fraction_unbound_plasma=1.0,
                             fraction_unbound_including_cells=1.0,
                             target_molecular_mass=100,
-                            target_molecular_mass_unit=Unit.objects.get(symbol='g/mol'),
+                            target_molecular_mass_unit=Unit.objects.get(symbol='g/mol'),  # noqa: E501
                             target_concentration=1e-9,
-                            target_concentration_unit=Unit.objects.get(symbol='nmol/L'),
-                            dissociation_unit=Unit.objects.get(symbol='nmol/L'),
+                            target_concentration_unit=Unit.objects.get(symbol='nmol/L'),  # noqa: E501
+                            dissociation_unit=Unit.objects.get(symbol='nmol/L'),  # noqa: E501
                             is_soluble=True,
                         )
                     if subject.id in protocols:

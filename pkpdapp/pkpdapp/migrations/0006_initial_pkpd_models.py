@@ -97,22 +97,22 @@ $$
     models_pd_mmt = [
         {
             'name': 'indirect_effects_stimulation_elimination',
-            'description': 'Indirect effects model with stimulation and elimination',
+            'description': 'Indirect effects model with stimulation and elimination',  # noqa: E501
             'mmt_filename': 'pkpdapp/migrations/models/IE_StimulationElimination_Emax.mmt'  # noqa: E501
         },
         {
             'name': 'indirect_effects_inhibition_elimination',
-            'description': 'Indirect effects model with inhibition and elimination',
+            'description': 'Indirect effects model with inhibition and elimination',  # noqa: E501
             'mmt_filename': 'pkpdapp/migrations/models/IE_InhibitionElimination_Emax.mmt'  # noqa: E501
         },
         {
             'name': 'indirect_effects_stimulation_production',
-            'description': 'Indirect effects model with stimulation and production',
+            'description': 'Indirect effects model with stimulation and production',  # noqa: E501
             'mmt_filename': 'pkpdapp/migrations/models/IE_StimulationProduction_Emax.mmt'  # noqa: E501
         },
         {
             'name': 'indirect_effects_inhibition_production',
-            'description': 'Indirect effects model with inhibition and production',
+            'description': 'Indirect effects model with inhibition and production',  # noqa: E501
             'mmt_filename': 'pkpdapp/migrations/models/IE_InhibitionProduction_Emax.mmt'  # noqa: E501
         },
         {
@@ -127,7 +127,6 @@ $$
         }
     ]
 
-    model_names = ['one_compartment', 'two_compartment', 'three_comartment', 'indirect_effects_stimulation', 'indirect_effects_inhibition', 'one_compartment_tmdd']
     models_pk = [
         {
             'name':
@@ -139,7 +138,7 @@ Description of a clinical one compartment PK model here.
             'mmt_filename':
             'pkpdapp/migrations/models/1cmpt_PK_Model_Clinical.mmt'  # noqa: E501
         },
-    {
+        {
             'name':
             'one_compartment_preclinical',
             'description':
@@ -324,7 +323,6 @@ Description of a clinical one compartment TMDD model here.
             )
         except urllib.error.URLError:
             print('WARNING: urlopen timed-out, no data loaded')
-
 
     for m in models_pk:
         try:

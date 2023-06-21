@@ -4,17 +4,11 @@
 # copyright notice and full license details.
 #
 
-from django.db import models
 from django.urls import reverse
 from pkpdapp.models import (
-    MyokitModelMixin,
     MechanisticModel,
-    Protocol,
-    Project, StoredModel,
-    PharmacodynamicModel,
+    StoredModel,
 )
-import myokit
-from .myokit_model_mixin import lock
 
 
 class PharmacokineticModel(MechanisticModel, StoredModel):
@@ -61,6 +55,3 @@ class PharmacokineticModel(MechanisticModel, StoredModel):
         # no need to store variables as they will be stored with the dosed pk
         # model
         return stored_model
-
-
-

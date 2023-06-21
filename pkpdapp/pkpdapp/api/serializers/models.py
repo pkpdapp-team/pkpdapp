@@ -3,15 +3,13 @@
 # is released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-import re
 from rest_framework import serializers
 from pkpdapp.models import (
     PharmacokineticModel,
     CombinedModel,
     PharmacodynamicModel, PkpdMapping,
-    MyokitModelMixin, 
+    MyokitModelMixin,
     ReceptorOccupancy,
-    Variable,
 )
 from pkpdapp.api.serializers import (
     ValidSbml, ValidMmt
@@ -25,6 +23,7 @@ class PkpdMappingSerializer(serializers.ModelSerializer):
     class Meta:
         model = PkpdMapping
         fields = '__all__'
+
 
 class ReceptorOccupancySerializer(serializers.ModelSerializer):
     class Meta:
@@ -100,7 +99,7 @@ class CombinedModelSerializer(serializers.ModelSerializer):
                     (mappings_data,
                      old_mappings, PkpdMappingSerializer),
                     (receptor_occ_data,
-                      old_receptor_occ, ReceptorOccupancySerializer),
+                     old_receptor_occ, ReceptorOccupancySerializer),
             ]:
                 for field_data in field_datas:
                     serializer = Serializer()

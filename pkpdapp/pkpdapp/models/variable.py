@@ -3,17 +3,17 @@
 # is released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-import logging
-logger = logging.getLogger(__name__)
-from django.db import models
-from django.db.models import Q
-import myokit
-import numpy as np
 from pkpdapp.models import (
     Unit, CombinedModel,
     PharmacokineticModel, PharmacodynamicModel,
     StoredModel, Protocol,
 )
+import numpy as np
+import myokit
+from django.db.models import Q
+from django.db import models
+import logging
+logger = logging.getLogger(__name__)
 
 
 class Variable(StoredModel):
@@ -68,7 +68,10 @@ class Variable(StoredModel):
 
     unit_symbol = models.CharField(
         max_length=20, blank=True, null=True,
-        help_text='if unit is None then this is the unit of this variable as a string'
+        help_text=(
+            'if unit is None then this is the unit of this '
+            'variable as a string'
+        )
     )
 
     constant = models.BooleanField(

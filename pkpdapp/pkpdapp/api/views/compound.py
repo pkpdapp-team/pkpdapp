@@ -11,6 +11,7 @@ from pkpdapp.api.views import (
 )
 from rest_framework.permissions import IsAuthenticated
 
+
 class CompoundView(viewsets.ModelViewSet):
     queryset = Compound.objects.all()
     serializer_class = CompoundSerializer

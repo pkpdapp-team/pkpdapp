@@ -44,7 +44,6 @@ class Project(models.Model):
         help_text='subject species'
     )
 
-
     def get_absolute_url(self):
         return reverse('project-detail', kwargs={'pk': self.pk})
 

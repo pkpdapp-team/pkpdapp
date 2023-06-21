@@ -4,8 +4,8 @@
 # copyright notice and full license details.
 #
 import os
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'pkpdapp.settings')
 import django
-django.setup()
 
+django.setup()
 dummy = ""
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'pkpdapp.settings')

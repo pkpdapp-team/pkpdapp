@@ -10,10 +10,12 @@ from pkpdapp.models import (
 )
 from pkpdapp.api.serializers import EfficacySerializer
 
+
 class BaseCompoundSerializer(serializers.ModelSerializer):
     class Meta:
         model = Compound
         fields = '__all__'
+
 
 class CompoundSerializer(serializers.ModelSerializer):
     efficacy_experiments = EfficacySerializer(many=True)
@@ -60,4 +62,3 @@ class CompoundSerializer(serializers.ModelSerializer):
         project.refresh_from_db()
 
         return project
-
