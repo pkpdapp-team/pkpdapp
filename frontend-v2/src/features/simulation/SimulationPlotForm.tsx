@@ -44,6 +44,7 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({ index, plot, va
   }
   const concentrationUnitIds = concentrationUnit.compatible_units.map((unit) => parseInt(unit.id));
   const concentrationVariables = variables.filter((variable) => variable.unit && concentrationUnitIds.includes(variable.unit));
+  const yAxisIsConcentration = plot.y_unit ? concentrationUnitIds.includes(plot.y_unit) : false;
 
   type SimulationYAxisWithIndex = SimulationYAxis & { index: number };
   const lhs_y_axes: SimulationYAxisWithIndex[] = y_axes.map((y, i) => ({...y, index: i })).filter((y) => !y.right);
@@ -119,7 +120,7 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({ index, plot, va
 
   const addY2AxisOptions = getAddAxisOptions(rhs_y_axes);
   const addYAxisOptions = getAddAxisOptions(lhs_y_axes);
-  const addCxLineOptions = Array.from({ length: 6 }, (_, i) => i / 5).map((v) => ({ label: v.toString(), value: v })); 
+  const addCxLineOptions = Array.from({ length: 6 }, (_, i) => 100 * i / 5).map((v) => ({ label: v.toString(), value: v })); 
   let receptorOccupancyVariableOptions: { label: string, value: string | number}[] = concentrationVariables.map((v) => ({ label: v.name, value: v.id }));
   receptorOccupancyVariableOptions.push({ label: 'None', value: '' })
   
@@ -177,6 +178,33 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({ index, plot, va
         </ListItem>
     ))}
     </List>
+    <Stack direction={'row'} spacing={1} alignItems={'center'}>
+      <Typography variant='h6'>Cx Reference Lines</Typography>
+      <DropdownButton options={addCxLineOptions} onOptionSelected={handleAddCxLine} disabled={!yAxisIsConcentration} >
+        <Add />
+      </DropdownButton>
+    </Stack>
+    <List>
+    {cx_lines.map((cxLine, cxLineIndex) => (
+        <ListItem key={cxLineIndex}>
+        <Grid container spacing={2}>
+            <Grid item xs={3}>
+            <TextField
+                label="Cx"
+                name={`plots.${index}.cx_lines.${cxLineIndex}.value`}
+                control={control}
+                textFieldProps={{ type: 'number', inputProps: {step: 0.1}, disabled: !yAxisIsConcentration }}
+            />
+            </Grid>
+            <Grid item xs={2}>
+            <IconButton onClick={() => handleRemoveCxLine(cxLineIndex)}>
+              <Delete />
+            </IconButton>
+            </Grid>
+        </Grid>
+        </ListItem>
+    ))}
+    </List>
     <Divider sx={{margin: 2}} />
     <Grid container spacing={1} alignItems={'center'}>
       <Grid item xs={2}>
@@ -196,7 +224,9 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({ index, plot, va
         <Add />
       </DropdownButton>
       </Grid>
+
     </Grid>
+
     <List>
     {rhs_y_axes.map((yAxis, yAxisIndex) => (
         <ListItem key={yAxisIndex}>
@@ -211,34 +241,6 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({ index, plot, va
             </Grid>
             <Grid item xs={2}>
             <IconButton onClick={() => handleRemoveYAxis(yAxis)}>
-              <Delete />
-            </IconButton>
-            </Grid>
-        </Grid>
-        </ListItem>
-    ))}
-    </List>
-    <Divider sx={{margin: 2}} />
-    <Stack direction={'row'} spacing={1} alignItems={'center'}>
-      <Typography variant='h6'>Cx Reference Lines</Typography>
-      <DropdownButton options={addCxLineOptions} onOptionSelected={handleAddCxLine} >
-        <Add />
-      </DropdownButton>
-    </Stack>
-    <List>
-    {cx_lines.map((cxLine, cxLineIndex) => (
-        <ListItem key={cxLineIndex}>
-        <Grid container spacing={2}>
-            <Grid item xs={3}>
-            <TextField
-                label="Cx"
-                name={`plots.${index}.cx_lines.${cxLineIndex}.value`}
-                control={control}
-                textFieldProps={{ type: 'number', inputProps: {step: 0.1} }}
-            />
-            </Grid>
-            <Grid item xs={2}>
-            <IconButton onClick={() => handleRemoveCxLine(cxLineIndex)}>
               <Delete />
             </IconButton>
             </Grid>

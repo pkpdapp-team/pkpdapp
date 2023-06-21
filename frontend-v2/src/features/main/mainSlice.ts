@@ -12,25 +12,33 @@ export enum PageName {
 interface MainState {
   selectedPage: PageName;
   selectedProject: number | null;
+  dirtyCount: number;
 }
 
 const initialState: MainState = {
   selectedPage: PageName.PROJECTS,
   selectedProject: null,
+  dirtyCount: 0,
 };
 
 const mainSlice = createSlice({
   name: 'main',
   initialState,
   reducers: {
-    selectPage: (state, action: PayloadAction<PageName>) => {
+    setPage: (state, action: PayloadAction<PageName>) => {
       state.selectedPage = action.payload;
     },
-    selectProject: (state, action: PayloadAction<number>) => {
+    setProject: (state, action: PayloadAction<number>) => {
       state.selectedProject = action.payload;
+    },
+    incrementDirtyCount: (state) => {
+      state.dirtyCount += 1;
+    },
+    decrementDirtyCount: (state) => {
+      state.dirtyCount -= 1;
     }
   },
 });
 
-export const { selectPage, selectProject } = mainSlice.actions;
+export const { setPage, setProject, incrementDirtyCount, decrementDirtyCount} = mainSlice.actions;
 export default mainSlice.reducer;

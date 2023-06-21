@@ -7,15 +7,16 @@ import { DynamicTabs, TabPanel } from '../../components/DynamicTabs';
 import MapVariablesTab from './MapVariablesTab';
 import PKPDModelTab from './PKPDModelTab';
 import ParametersTab from './ParametersTab';
+import useDirty from '../../hooks/useDirty';
 
 
 const Model: React.FC = () => {
   const projectId = useSelector((state: RootState) => state.main.selectedProject);
-  const { data: project, isLoading: isProjectLoading } = useProjectRetrieveQuery({id: projectId || 0})
-  const { data: models, isLoading: isModelsLoading } = useCombinedModelListQuery({projectId: projectId || 0})
+  const { data: project, isLoading: isProjectLoading } = useProjectRetrieveQuery({id: projectId || 0}, { skip: !projectId })
+  const { data: models, isLoading: isModelsLoading } = useCombinedModelListQuery({projectId: projectId || 0}, { skip: !projectId})
   const model = models?.[0] || null;
   const [ updateModel ]  = useCombinedModelUpdateMutation()
-  const { data: variables, isLoading: isVariablesLoading } = useVariableListQuery({ dosedPkModelId: model?.id || 0 })
+  const { data: variables, isLoading: isVariablesLoading } = useVariableListQuery({ dosedPkModelId: model?.id || 0 }, { skip: !model?.id })
 
   const defaultModel: CombinedModel = {
     id: 0,
@@ -30,6 +31,7 @@ const Model: React.FC = () => {
   const { reset, handleSubmit, control, formState: { isDirty } } = useForm<CombinedModel>({
     defaultValues: model || defaultModel
   });
+  useDirty(isDirty);
 
   
   useEffect(() => {

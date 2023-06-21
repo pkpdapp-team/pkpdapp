@@ -11,6 +11,7 @@ import TextField from "../../components/TextField";
 import UnitField from "../../components/UnitField";
 import FloatField from "../../components/FloatField";
 import IntegerField from "../../components/IntegerField";
+import useDirty from "../../hooks/useDirty";
 
 interface Props {
     project: Project;
@@ -23,6 +24,7 @@ const Doses: React.FC<Props> = ({ project, protocol, units }) => {
   const { control, handleSubmit, reset, formState: { isDirty } } = useForm<Protocol>({
     defaultValues: protocol,
   });
+  useDirty(isDirty);
   const [ updateProtocol ] = useProtocolUpdateMutation();
 
   const { fields: doses, append: appendDose, remove: removeDose } = useFieldArray({
@@ -70,7 +72,7 @@ const Doses: React.FC<Props> = ({ project, protocol, units }) => {
             {variable.name}
           </TableCell>
           <TableCell>
-            <FloatField label={"Dose"} name={`doses.${index}.amount`} control={control} />
+            <FloatField label={"Dose"} name={`doses.${index}.amount`} control={control} rules={{ required: true }} />
           </TableCell>
           <TableCell>
             { protocol.amount_unit && index === 0 && (
@@ -78,16 +80,16 @@ const Doses: React.FC<Props> = ({ project, protocol, units }) => {
             )}
           </TableCell>
           <TableCell>
-            <IntegerField label={"Number of Doses"} name={`doses.${index}.repeats`} control={control} />
+            <IntegerField label={"Number of Doses"} name={`doses.${index}.repeats`} control={control} rules={{ required: true, min: { value: true, message: "One or more required"} }} />
           </TableCell>
           <TableCell>
-            <FloatField label={index === 0 ? "Start Time" : "Time After Last Dose"} name={`doses.${index}.start_time`} control={control} />
+            <FloatField label={index === 0 ? "Start Time" : "Time After Last Dose"} name={`doses.${index}.start_time`} control={control} rules={{ required: true }} />
           </TableCell>
           <TableCell>
-            <FloatField label={"Dosing Duration"} name={`doses.${index}.duration`} control={control} />
+            <FloatField label={"Dosing Duration"} name={`doses.${index}.duration`} control={control} rules={{ required: true }} />
           </TableCell>
           <TableCell>
-            <FloatField label={"Dosing Interval"} name={`doses.${index}.repeat_interval`} control={control} />
+            <FloatField label={"Dosing Interval"} name={`doses.${index}.repeat_interval`} control={control} rules={{ required: true }} />
           </TableCell>
           <TableCell>
             { protocol.time_unit && index === 0 && (

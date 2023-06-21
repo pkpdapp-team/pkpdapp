@@ -8,10 +8,12 @@ import SimulationPlotView from './SimulationPlotView';
 import SimulationSliderView from './SimulationSliderView';
 import DropdownButton from '../../components/DropdownButton';
 import { Add } from '@mui/icons-material';
+import FloatField from '../../components/FloatField';
+import useDirty from '../../hooks/useDirty';
 
 type SliderValues = {[key: number]: number};
 
-const getSimulateInput = (simulation: Simulation, sliderValues: SliderValues, variables?: Variable[] ): Simulate => {
+const getSimulateInput = (simulation: Simulation, sliderValues: SliderValues, variables?: Variable[], timeMax?: number ): Simulate => {
     let outputs: string[] = [];
     let simulateVariables: {[key: string]: number} = {};
     let initial_conditions: {[key: string]: number} = {};
@@ -35,7 +37,7 @@ const getSimulateInput = (simulation: Simulation, sliderValues: SliderValues, va
     const timeVariable = variables?.find((v) => v.name === 'time' || v.name === 't');
     outputs.push(timeVariable?.qname || 'time');
     return {
-      variables: simulateVariables, outputs, initial_conditions
+      variables: simulateVariables, outputs, initial_conditions, time_max: timeMax || undefined,
     }
 }
 
@@ -76,10 +78,11 @@ const Simulations: React.FC = () => {
   const { data: units } = useUnitListQuery()
   const [ simulate, { isError } ] = useCombinedModelSimulateCreateMutation();
   const [ data, setData ] = useState<SimulateResponse | null>(null);
-  const { data: compound, isLoading: isLoadingCompound } = useCompoundRetrieveQuery({id: projectId || 0 }, { skip: !projectId })
+  const { data: compound, isLoading: isLoadingCompound } = useCompoundRetrieveQuery({id: project?.compound || 0 }, { skip: !project?.compound})
 
 
   const [ sliderValues, setSliderValues ] = useState<{[key: number]: number} | undefined>(undefined);
+  const [ loadingSimulate, setLoadingSimulate] = useState<boolean>(false);
 
   const defaultSimulation: Simulation = {
     id: 0,
@@ -94,6 +97,7 @@ const Simulations: React.FC = () => {
   const { reset, handleSubmit, control, formState: { isDirty }, setValue } = useForm<Simulation>({
     defaultValues: simulation || defaultSimulation,
   });
+  useDirty(isDirty || loadingSimulate);
 
   const { fields: sliders, append: addSimulationSlider, remove: removeSlider } = useFieldArray({
     control,
@@ -110,6 +114,7 @@ const Simulations: React.FC = () => {
     console.log('resetting simulation')
     if (simulation) {
       setSliderValues(s => getSliderInitialValues(simulation, s, variables));
+      setLoadingSimulate(true);
       reset(simulation);
     }
   }, [simulation, reset, variables]);
@@ -117,9 +122,10 @@ const Simulations: React.FC = () => {
   // generate a simulation if slider values change
   useEffect(() => {
     if (simulation?.id && sliderValues && variables && model) {
-      console.log('simulate', simulation.id, sliderValues, variables, model)
-      simulate({ id: model.id, simulate: getSimulateInput(simulation, sliderValues, variables)})
+      console.log('simulate', simulation, sliderValues, variables, model)
+      simulate({ id: model.id, simulate: getSimulateInput(simulation, sliderValues, variables, simulation.time_max)})
       .then((response) => {
+        setLoadingSimulate(false);
         if ("data" in response) {
           const data = response.data as SimulateResponse;
           console.log('simulate response', data);
@@ -190,6 +196,7 @@ const Simulations: React.FC = () => {
 
   const handleChangeSlider = (slider: SimulationSlider) => (value: number) => {
     setSliderValues({ ...sliderValues, [slider.variable]: value });
+    setLoadingSimulate(true);
   }
     
 
@@ -198,6 +205,7 @@ const Simulations: React.FC = () => {
       <Stack spacing={1}>
       <Stack direction={'row'} alignItems={'center'}>
         <Typography variant="h6">Plots</Typography>
+        
         <DropdownButton options={addPlotOptions} onOptionSelected={handleAddPlot}>
           <Add />
         </DropdownButton>
@@ -218,19 +226,26 @@ const Simulations: React.FC = () => {
           Error simulating model
         </Alert>
       </Snackbar>
-      <Stack direction={'row'} alignItems={'center'}>
-        <Typography variant="h6">Parameters</Typography>
-        <DropdownButton options={addSliderOptions} onOptionSelected={handleAddSlider}>
-          <Add />
-        </DropdownButton>
-      </Stack>
-      <Grid container spacing={2}>
-        {sliders.map((slider, index) => (
-          <Grid item xs={12} md={6} lg={3} key={index}>
-            <SimulationSliderView index={index} slider={slider} onChange={handleChangeSlider(slider)} remove={removeSlider} />
-          </Grid>
-        ))}
-      </Grid>
+      { plots.length > 0 && (
+        <>
+        <Grid item xs={3}>
+          <FloatField label="Simulation Duration" name="time_max" control={control} />
+        </Grid>
+        <Stack direction={'row'} alignItems={'center'}>
+          <Typography variant="h6">Parameters</Typography>
+          <DropdownButton options={addSliderOptions} onOptionSelected={handleAddSlider}>
+            <Add />
+          </DropdownButton>
+        </Stack>
+        <Grid container spacing={2}>
+          {sliders.map((slider, index) => (
+            <Grid item xs={12} md={6} lg={3} key={index}>
+              <SimulationSliderView index={index} slider={slider} onChange={handleChangeSlider(slider)} remove={removeSlider} />
+            </Grid>
+          ))}
+        </Grid>
+        </>
+      )}
       </Stack>
     </Container>
   );

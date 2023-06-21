@@ -393,7 +393,7 @@ class MyokitModelMixin:
     def get_time_max(self):
         return self.time_max
 
-    def simulate(self, outputs=None, initial_conditions=None, variables=None):
+    def simulate(self, outputs=None, initial_conditions=None, variables=None, time_max=None):
         """
         Arguments
         ---------
@@ -403,6 +403,8 @@ class MyokitModelMixin:
             dict mapping state names to values for initial conditions
         variables: dict
             dict mapping variable names to values for model parameters
+        time_max: float
+            maximum time to simulate to
 
         Returns
         -------
@@ -410,6 +412,9 @@ class MyokitModelMixin:
             a DataLog containing the solution, which is effectivly a dict
             mapping output names to arrays of values
         """
+
+        if time_max is None:
+            time_max = self.get_time_max()
 
         if outputs is None:
             outputs = [];
@@ -453,7 +458,7 @@ class MyokitModelMixin:
         }
 
         time_max = self._convert_bound_unit(
-            'time', self.get_time_max(), model
+            'time', time_max, model
         )
 
         # override initial conditions

@@ -19,7 +19,7 @@ function TextField<T extends FieldValues>({ label, name, control, rules, textFie
       render={({ field: { onChange, onBlur, value }, fieldState: { error, isDirty, isTouched } }) => {
         return (
           <material.TextField
-            label={label}
+            label={ !error ? label : error?.message || (error?.type === 'required' ? 'Required' : '')}
             name={name}
             id={name}
             variant="outlined"
@@ -27,7 +27,6 @@ function TextField<T extends FieldValues>({ label, name, control, rules, textFie
             onChange={onChange}
             onBlur={onBlur}
             error={!!error}
-            helperText={error?.message}
             {...textFieldProps}
           />
         );

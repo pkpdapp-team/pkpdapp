@@ -9,6 +9,8 @@ import {
 import { Project, CombinedModel, Variable, useVariableUpdateMutation } from "../../app/backendApi";
 import TextField from "../../components/TextField";
 import UnitField from "../../components/UnitField";
+import useDirty from "../../hooks/useDirty";
+import FloatField from "../../components/FloatField";
 
 interface Props {
   project: Project;
@@ -29,6 +31,7 @@ const ParameterRow: React.FC<Props> = ({ project, model, variable }) => {
   }, [variable, reset]);
 
   const isDirty = isDirtyForm;
+  useDirty(isDirty)
 
   useEffect(() => {
     const intervalId = setInterval(() => {
@@ -59,7 +62,7 @@ const ParameterRow: React.FC<Props> = ({ project, model, variable }) => {
         {isPD ? "PD" : "PK"}
       </TableCell>
       <TableCell>
-        <TextField name="default_value" control={control} label="Value" />
+        <FloatField name="default_value" control={control} label="Value" rules={{ required: true }} />
       </TableCell>
       <TableCell>
         <UnitField label={'Unit'} name={'unit'} control={control} baseUnitId={variable.unit === null ? undefined : variable.unit} />

@@ -6,6 +6,7 @@
 
 from django.db import models
 from django.contrib.auth.models import User
+from django.core.validators import MinValueValidator
 from django.urls import reverse
 
 
@@ -33,6 +34,12 @@ class Simulation(models.Model):
     ncols = models.IntegerField(
         default=1,
         help_text='number of subplot columns'
+    )
+
+    time_max = models.FloatField(
+        default=30,
+        validators=[MinValueValidator(0)],
+        help_text='maximum time for the simulation'
     )
 
     def get_project(self):

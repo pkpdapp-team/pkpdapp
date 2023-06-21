@@ -15,6 +15,7 @@ class SimulateSerializer(serializers.Serializer):
     outputs = serializers.ListField(child=serializers.CharField())
     initial_conditions = serializers.DictField(child=serializers.FloatField())
     variables = serializers.DictField(child=serializers.FloatField())
+    time_max = serializers.FloatField(required=False)
 
 
 class SimulateResponseSerializer(serializers.Serializer):
@@ -52,7 +53,8 @@ class SimulateBaseView(views.APIView):
         outputs = request.data.get('outputs', None)
         initial_conditions = request.data.get('initial_conditions', None)
         variables = request.data.get('variables', None)
-        result = m.simulate(outputs, initial_conditions, variables)
+        time_max = request.data.get('time_max', None)
+        result = m.simulate(outputs, initial_conditions, variables, time_max)
         serialized_result = SimulateResponseSerializer(result)
         return Response(serialized_result.data)
 

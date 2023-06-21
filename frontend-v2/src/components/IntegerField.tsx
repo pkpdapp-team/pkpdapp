@@ -17,9 +17,10 @@ function IntegerField<T extends FieldValues>({ label, name, control, rules, text
       control={control}
       rules={rules}
       render={({ field: { onChange, onBlur, value }, fieldState: { error, isDirty, isTouched } }) => {
+        console.log('IntegerField', error )
         return (
           <material.TextField
-            label={label}
+            label={ !error ? label : error?.message || (error?.type === 'required' ? 'Required' : '')}
             name={name}
             id={name}
             variant="outlined"
@@ -30,7 +31,6 @@ function IntegerField<T extends FieldValues>({ label, name, control, rules, text
             }}
             onBlur={onBlur}
             error={!!error}
-            helperText={error?.message}
             {...textFieldProps}
             type='number'
           />

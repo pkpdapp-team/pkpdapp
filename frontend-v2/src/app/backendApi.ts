@@ -1703,6 +1703,7 @@ export type Simulate = {
   variables: {
     [key: string]: number;
   };
+  time_max?: number;
 };
 export type Efficacy = {
   id: number;
@@ -2034,6 +2035,7 @@ export type Simulation = {
   name: string;
   nrows?: number;
   ncols?: number;
+  time_max?: number;
   project: number;
 };
 export type PatchedSimulation = {
@@ -2043,6 +2045,7 @@ export type PatchedSimulation = {
   name?: string;
   nrows?: number;
   ncols?: number;
+  time_max?: number;
   project?: number;
 };
 export type Subject = {

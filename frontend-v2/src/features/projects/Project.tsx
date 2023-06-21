@@ -12,8 +12,9 @@ import { Delete, PersonAdd } from "@mui/icons-material";
 import { Compound, Project, ProjectAccess, useProjectDestroyMutation, useCompoundRetrieveQuery, useCompoundUpdateMutation, useProjectUpdateMutation } from "../../app/backendApi";
 import SelectField from "../../components/SelectField";
 import UserAccess from "./UserAccess";
-import { selectProject } from "../main/mainSlice";
+import { setProject } from "../main/mainSlice";
 import TextField from "../../components/TextField";
+import useDirty from "../../hooks/useDirty";
 
 interface Props {
   project: Project;
@@ -62,6 +63,7 @@ const ProjectRow: React.FC<Props> = ({ project, isSelected }) => {
   const { reset, handleSubmit, control, formState: { isDirty } } = useForm<FormData>({
     defaultValues: { project, compound: defaultCompound },
   });
+  useDirty(isDirty);
 
   const [userAccessOpen, setUserAccessOpen] = useState<boolean>(false);
 
@@ -108,7 +110,7 @@ const ProjectRow: React.FC<Props> = ({ project, isSelected }) => {
   }
 
   const handleSelectProject = () => {
-    dispatch(selectProject(project.id));
+    dispatch(setProject(project.id));
   }
 
   const defaultProps = {
@@ -129,7 +131,7 @@ const ProjectRow: React.FC<Props> = ({ project, isSelected }) => {
       <Radio checked={isSelected} onClick={handleSelectProject}/> 
       </TableCell>
       <TableCell>
-        <TextField name="project.name" control={control} textFieldProps={defaultProps} /> 
+        <TextField name="project.name" control={control} textFieldProps={defaultProps} rules={{ required: true }} /> 
       </TableCell>
       <TableCell>
         <TextField name="project.description" control={control} textFieldProps={defaultProps} /> 
@@ -138,7 +140,7 @@ const ProjectRow: React.FC<Props> = ({ project, isSelected }) => {
         <SelectField name="project.species" options={speciesOptions} control={control} selectProps={defaultProps} /> 
       </TableCell>
       <TableCell>
-        <TextField name="compound.name" control={control} textFieldProps={defaultProps} /> 
+        <TextField name="compound.name" control={control} textFieldProps={defaultProps} rules={{ required: true }} /> 
       </TableCell>
       <TableCell>
         <IconButton onClick={handleDelete}>

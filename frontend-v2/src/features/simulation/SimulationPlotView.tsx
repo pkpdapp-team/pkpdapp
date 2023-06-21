@@ -36,6 +36,9 @@ const SimulationPlotView: React.FC<SimulationPlotProps> = ({ index, plot, data, 
     setOpen(false);
   }
 
+  const minX = Math.min(...data.time);
+  const maxX = Math.max(...data.time);
+
   let plotData: Data[] = plot.y_axes.map((y_axis) => {
     const variableValues = data.outputs[y_axis.variable];
     const variable = variables.find((v) => v.id === y_axis.variable);
@@ -63,14 +66,27 @@ const SimulationPlotView: React.FC<SimulationPlotProps> = ({ index, plot, data, 
     }
   });
   let icLines: number[] = [];
-  if (compound.efficacy_experiments.length > 0) {
+
+  const concentrationUnit = units.find((unit) => unit.symbol === "pmol/L");
+  if (concentrationUnit === undefined) {
+    return (<>No concentration or amount unit found</>);
+  }
+  const concentrationUnitIds = concentrationUnit.compatible_units.map((unit) => parseInt(unit.id));
+  const yAxisIsConcentration = plot.y_unit ? concentrationUnitIds.includes(plot.y_unit) : false;
+
+  if (yAxisIsConcentration && compound.efficacy_experiments.length > 0) {
     const exp = compound.efficacy_experiments[0];
-    if (exp.hill_coefficient && exp.c50) {
+    if (exp.hill_coefficient && exp.c50 ) {
+      const yAxisUnit = units.find((unit) => unit.id === plot.y_unit);
+      const c50Unit = units.find((unit) => unit.id === exp.c50_unit);
+      const compatibleUnit = c50Unit?.compatible_units.find((u) => parseInt(u.id) === yAxisUnit?.id);
+      const factor = compatibleUnit ? parseFloat(compatibleUnit.conversion_factor) : 1.0;
       icLines = plot.cx_lines.map((cx_line) => {
         const hc = exp.hill_coefficient || 1.0;
         const ec50 = exp.c50 || 0.0;
-        const iCx = (cx_line.value / (100 - cx_line.value))^(1/hc) * ec50; 
-        return iCx;
+        const cx = cx_line.value / (100.0 - cx_line.value);
+        const iCx = cx^(1.0/hc) * ec50; 
+        return iCx * factor;
       });
     }
   }
@@ -97,13 +113,24 @@ const SimulationPlotView: React.FC<SimulationPlotProps> = ({ index, plot, data, 
 
   console.log('icLines', icLines)
   const plotLayout: Partial<Layout> = {
-    shapes: icLines.map((icLine) => {
+    shapes: icLines.map((icLine, i) => {
       return {
         type: 'line',
-        x0: 0,
+        x0: minX,
         y0: icLine,
-        x1: 100,
+        x1: maxX,
         y1: icLine,
+        yref: 'y',
+        ysizemode: 'scaled',
+        label: {
+          text: `Cx = ${plot.cx_lines[i].value}%`,
+          font: {
+            color: 'rgb(0, 0, 0)',
+          },
+          yanchor: 'top',
+          xanchor: 'middle',
+          textposition: 'middle',
+        },
         line: {
           color: 'rgb(255, 0, 0)',
           width: 1,

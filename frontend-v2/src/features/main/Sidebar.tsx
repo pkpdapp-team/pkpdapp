@@ -16,9 +16,11 @@ import MenuIcon from '@mui/icons-material/Menu';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import MainContent from './MainContent';
-import { PageName, selectPage } from './mainSlice';
+import { PageName, setPage } from './mainSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../app/store';
+import { LinearProgress } from '@mui/material';
+import { ThemeContext } from '@emotion/react';
 
 const drawerWidth = 240;
 
@@ -27,6 +29,7 @@ export default function Sidebar() {
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const selectedPage = useSelector((state: RootState) => state.main.selectedPage);
   const selectedProject = useSelector((state: RootState) => state.main.selectedProject);
+  const dirtyCount = useSelector((state: RootState) => state.main.dirtyCount);
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -43,7 +46,7 @@ export default function Sidebar() {
   });
 
   const handlePageClick = (key: string) => () => {
-    dispatch(selectPage(PageName[key as keyof typeof PageName]));
+    dispatch(setPage(PageName[key as keyof typeof PageName]));
   }; 
   
   const isPageDisabled = (key: string) => { 
@@ -86,6 +89,7 @@ export default function Sidebar() {
   return (
     <Box sx={{ display: 'flex' }}>
       <CssBaseline />
+      
       <AppBar
         position="fixed"
         sx={{
@@ -93,6 +97,7 @@ export default function Sidebar() {
           ml: { sm: `${drawerWidth}px` },
         }}
       >
+        
         <Toolbar>
           <IconButton
             color="inherit"
@@ -107,6 +112,13 @@ export default function Sidebar() {
             PkpdApp
           </Typography>
         </Toolbar>
+        {dirtyCount !== 0 ? (
+          <LinearProgress
+            sx={{ height: 5, zIndex: 10010000}}
+          />
+        ): (
+          <Box sx={{ height: 5}}></Box>
+        )}
       </AppBar>
       <Box
         component="nav"

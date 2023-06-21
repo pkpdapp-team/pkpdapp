@@ -8,6 +8,7 @@
 
 
 from django.conf import settings
+import django.core.validators
 from django.db import migrations, models
 import django.db.models.deletion
 import jsonfield.fields
@@ -226,6 +227,7 @@ class Migration(migrations.Migration):
                 ('name', models.CharField(help_text='name of the simulation', max_length=100)),
                 ('nrows', models.IntegerField(default=1, help_text='number of subplot rows')),
                 ('ncols', models.IntegerField(default=1, help_text='number of subplot columns')),
+                ('time_max', models.FloatField(default=30, help_text='maximum time for the simulation', validators=[django.core.validators.MinValueValidator(0)])),
                 ('project', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='simulations', to='pkpdapp.project')),
             ],
         ),

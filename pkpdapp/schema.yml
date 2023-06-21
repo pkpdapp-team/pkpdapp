@@ -4247,6 +4247,11 @@ components:
         ncols:
           type: integer
           description: number of subplot columns
+        time_max:
+          type: number
+          format: double
+          minimum: 0
+          description: maximum time for the simulation
         project:
           type: integer
     PatchedSubject:
@@ -4758,6 +4763,9 @@ components:
           additionalProperties:
             type: number
             format: double
+        time_max:
+          type: number
+          format: double
       required:
       - initial_conditions
       - outputs
@@ -4804,6 +4812,11 @@ components:
         ncols:
           type: integer
           description: number of subplot columns
+        time_max:
+          type: number
+          format: double
+          minimum: 0
+          description: maximum time for the simulation
         project:
           type: integer
       required:

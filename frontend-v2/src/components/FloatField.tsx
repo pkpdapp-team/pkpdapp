@@ -19,18 +19,21 @@ function FloatField<T extends FieldValues>({ label, name, control, rules, textFi
       render={({ field: { onChange, onBlur, value }, fieldState: { error, isDirty, isTouched } }) => {
         return (
           <material.TextField
-            label={label}
+            label={ !error ? label : error?.message || (error?.type === 'required' ? 'Required' : '')}
             name={name}
             id={name}
             variant="outlined"
             value={value === undefined ? '' : value}
             onChange={(e) => { 
-              const value = parseFloat(e.target.value)
-              return onChange(value)
+              if (e.target.value === '') {
+                return onChange(null)
+              } else {
+                const value = parseFloat(e.target.value)
+                return onChange(value)
+              }
             }}
             onBlur={onBlur}
             error={!!error}
-            helperText={error?.message}
             {...textFieldProps}
             type='number'
           />

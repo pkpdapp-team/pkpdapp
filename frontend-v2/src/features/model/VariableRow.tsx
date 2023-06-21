@@ -11,6 +11,7 @@ import {
 } from "@mui/material";
 import { Project, PkpdMapping, CombinedModel, Variable, useVariableUpdateMutation, useProtocolCreateMutation, useProtocolDestroyMutation, Dose, useUnitListQuery, Unit, Compound } from "../../app/backendApi";
 import Checkbox from "../../components/Checkbox";
+import useDirty from "../../hooks/useDirty";
 
 interface Props {
   project: Project;
@@ -49,6 +50,7 @@ const VariableRow: React.FC<Props> = ({ project, compound, model, variable, cont
 
   const watchProtocolId = watch('protocol');
   const isDirty = watchProtocolId !== variable?.protocol || isDirtyForm;
+  useDirty(isDirty);
 
   useEffect(() => {
     const intervalId = setInterval(() => {

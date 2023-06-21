@@ -89,9 +89,6 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props ) => {
             )}
           </Grid>
         </Grid>
-        <Grid item xs={3}>
-          <FloatField label="Simulation Duration" name="time_max" control={control} />
-        </Grid>
       </Grid>
     );
 }

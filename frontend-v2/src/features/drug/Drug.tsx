@@ -1,4 +1,4 @@
-import { Grid, IconButton, List, ListItem, ListItemSecondaryAction, Stack, Typography } from '@mui/material';
+import { Box, Grid, IconButton, LinearProgress, List, ListItem, ListItemSecondaryAction, Stack, Typography } from '@mui/material';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../app/store';
 import { Compound, useCompoundRetrieveQuery, useCompoundUpdateMutation, useProjectRetrieveQuery } from '../../app/backendApi';
@@ -10,6 +10,7 @@ import { useEffect } from 'react';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import TextField from '../../components/TextField';
+import useDirty from '../../hooks/useDirty';
 
 
 const Drug: React.FC = () => {
@@ -24,6 +25,8 @@ const Drug: React.FC = () => {
     defaultValues: compound || { name: '', description: '', compound_type: 'SM' }
   });
   const { isDirty } = useFormState({ control });
+
+  useDirty(isDirty);
   
   const { fields: efficacy_experiments, append, remove } = useFieldArray({
     control,
@@ -43,6 +46,9 @@ const Drug: React.FC = () => {
 
     return () => clearInterval(intervalId);
   }, [handleSubmit, isDirty, updateCompound]);
+
+
+  
   
   const addNewEfficacyExperiment = () => {
     append({ id: 0, name: '', c50: compound?.target_concentration || 0, c50_unit: compound?.target_concentration_unit || 0,  hill_coefficient: 1, compound: compound?.id || 0 });
@@ -78,7 +84,7 @@ const Drug: React.FC = () => {
         </Typography>
         <Stack direction="column" spacing={2}>
           <Stack direction="row" spacing={2}>
-            <FloatField label={'Molecular Mass'} name={'molecular_mass'} control={control} />
+            <FloatField label={'Molecular Mass'} name={'molecular_mass'} control={control} rules={{ required: true }} />
             <UnitField label={'Unit'} name={'molecular_mass_unit'} control={control} baseUnitId={compound.molecular_mass_unit} />
           </Stack>
 
@@ -100,7 +106,7 @@ const Drug: React.FC = () => {
 
         <Stack direction="column" spacing={2}>
           <Stack direction="row" spacing={2}>
-            <FloatField label={'Molecular Mass'} name={'target_molecular_mass'} control={control} />
+            <FloatField label={'Molecular Mass'} name={'target_molecular_mass'} control={control} rules={{ required: true }} />
             <UnitField label={'Unit'} name={'target_molecular_mass_unit'} control={control} baseUnitId={compound.molecular_mass_unit} />
           </Stack>
 

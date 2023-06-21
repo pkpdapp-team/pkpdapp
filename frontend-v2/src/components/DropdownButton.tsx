@@ -10,9 +10,10 @@ type Props = {
   options: Option[];
   onOptionSelected: (value: any) => void;
   children?: React.ReactNode;
+  disabled?: boolean;
 };
 
-const DropdownButton: React.FC<Props> = ({ options, onOptionSelected, children }) => {
+const DropdownButton: React.FC<Props> = ({ options, onOptionSelected, children, disabled }) => {
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
 
 
@@ -26,11 +27,11 @@ const DropdownButton: React.FC<Props> = ({ options, onOptionSelected, children }
   };
 
   const open = Boolean(anchorEl);
-  const disabled = options.length === 0;
+  const isDisabled = disabled || options.length === 0;
 
   return (
     <div>
-      <IconButton onClick={handleButtonClick} disabled={disabled}>{children}</IconButton>
+      <IconButton onClick={handleButtonClick} disabled={isDisabled}>{children}</IconButton>
       <Popover
         open={open}
         anchorEl={anchorEl}
