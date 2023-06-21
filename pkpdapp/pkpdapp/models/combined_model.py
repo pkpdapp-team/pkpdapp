@@ -306,8 +306,6 @@ class CombinedModel(MyokitModelMixin, StoredModel):
 
 
         pkpd_model.validate()
-        
-        logger.debug('Combined model: {}'.format(pkpd_model.code()))
         return pkpd_model
 
 
