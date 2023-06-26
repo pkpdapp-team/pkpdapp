@@ -94,6 +94,7 @@ $$
             'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/models/tgi_Koch_2009_reparametrised.xml'  # noqa: E501
         },
     ]
+    models_pd = []
     models_pd_mmt = [
         {
             'name': 'indirect_effects_stimulation_elimination',
@@ -312,7 +313,6 @@ Description of a clinical one compartment TMDD model here.
     for m in models_pd_mmt:
         try:
             # check myokit can parse the model
-            print('importing model: {}'.format(m['name']))
             mmt_string = open(m['mmt_filename'], 'r').read()
             myokit_model = myokit.parse(mmt_string)[0]
             myokit_model.validate()
@@ -326,7 +326,6 @@ Description of a clinical one compartment TMDD model here.
 
     for m in models_pk:
         try:
-            print('importing model: {}'.format(m['name']))
             # check myokit can parse the model
             mmt_string = open(m['mmt_filename'], 'r').read()
             myokit_model = myokit.parse(mmt_string)[0]

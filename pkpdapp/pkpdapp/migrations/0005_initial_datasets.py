@@ -20,6 +20,7 @@ datafile_urls = [
     'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/usecase0/usecase0.csv',  # noqa: E501
     'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/usecase1/usecase1.csv',  # noqa: E501
 ]
+datafile_urls = []
 
 datafile_names = [
     'lxf_control_growth',
@@ -29,6 +30,7 @@ datafile_names = [
     'usecase0',
     'usecase1',
 ]
+datafile_names = []
 
 protocol_units = [
     {
@@ -55,9 +57,8 @@ protocol_units = [
         'time': myokit.Unit.parse_simple('h'),
         'amount': myokit.Unit.parse_simple('ng'),
     },
-
-
 ]
+protocol_units = []
 
 datafile_descriptions = [
     '''
@@ -98,6 +99,8 @@ usecase0 dataset
 usecase1 dataset
 ''',  # noqa: W605
 ]
+
+datafile_descriptions = []
 
 biomarkers_for_datasets = [
     [
