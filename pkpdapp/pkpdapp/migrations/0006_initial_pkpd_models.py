@@ -125,7 +125,53 @@ $$
             'name': 'direct_effects_imax',
             'description': 'Direct effects model with Imax',
             'mmt_filename': 'pkpdapp/migrations/models/DE_Imax.mmt'  # noqa: E501
-        }
+        },
+        {
+            'name': 'tumour_growth_gompertz',
+            'description': '',
+            'mmt_filename': 'pkpdapp/migrations/models/TG_Gompertz_PDModel.mmt'  # noqa: E501
+        },
+        {
+            'name': 'tumour_growth_simeoni_logistic',
+            'description': '',
+            'mmt_filename': 'pkpdapp/migrations/models/TG_Simeoni_logistic_PDModel.mmt'  # noqa: E501
+        },
+        {
+            'name': 'tumour_growth_simeoni',
+            'description': '',
+            'mmt_filename': 'pkpdapp/migrations/models/TG_Simeoni_PDModel.mmt'  # noqa: E501
+        },
+        {
+            'name': 'tumour_growth_inhibition_delay_cell_distribution_conc_prop_kill',
+            'description': '',
+            'mmt_filename': 'pkpdapp/migrations/models/TGI_Delay_CellDistribution_ConcPropKill_PDModel.mmt'  # noqa: E501
+        },
+        {
+            'name': 'tumour_growth_inhibition_delay_cell_distribution_emax_kill',
+            'description': '',
+            'mmt_filename': 'pkpdapp/migrations/models/TGI_Delay_CellDistribution_EmaxKill_PDModel.mmt'  # noqa: E501
+        },
+        {
+            'name': 'tumour_growth_inhibition_delay_cell_distribution_exp_conc_kill',
+            'description': '',
+            'mmt_filename': 'pkpdapp/migrations/models/TGI_Delay_CellDistribution_expConcPropKill_PDModel.mmt'  # noqa: E501
+        },
+
+        {
+            'name': 'tumour_growth_inhibition_delay_signal_distribution_conc_prop_kill',
+            'description': '',
+            'mmt_filename': 'pkpdapp/migrations/models/TGI_Delay_SignalDistribution_ConcPropKill_PDModel.mmt'  # noqa: E501
+        },
+        {
+            'name': 'tumour_growth_inhibition_delay_signal_distribution_emax_kill',
+            'description': '',
+            'mmt_filename': 'pkpdapp/migrations/models/TGI_Delay_SignalDistribution_EmaxKill_PDModel.mmt'  # noqa: E501
+        },
+        {
+            'name': 'tumour_growth_inhibition_delay_signal_distribution_exp_conc_kill',
+            'description': '',
+            'mmt_filename': 'pkpdapp/migrations/models/TGI_Delay_SignalDistribution_expConcPropKill_PDModel.mmt'  # noqa: E501
+        },
     ]
 
     models_pk = [
@@ -217,11 +263,42 @@ Description of a clinical one compartment TMDD model here.
             'name': 'one_compartment_tmdd_QSS_preclinical',
             'description':
             """
-Description of a clinical one compartment TMDD model here.
+Description of a clinical two compartment TMDD model here.
 """,  # noqa: W605
             'mmt_filename': 'pkpdapp/migrations/models/TMDD_QSS_1cmpt_PK_Model_Preclinical.mmt'  # noqa: E501
         },
-
+        {
+            'name': 'two_compartment_tmdd_full_clinical',
+            'description':
+            """
+Description of a clinical two compartment TMDD model here.
+""",  # noqa: W605
+            'mmt_filename': 'pkpdapp/migrations/models/TMDD_Full_2cmpt_PK_Model_Clinical.mmt'  # noqa: E501
+        },
+        {
+            'name': 'two_compartment_tmdd_full_preclinical',
+            'description':
+            """
+Description of a clinical two compartment TMDD model here.
+""",  # noqa: W605
+            'mmt_filename': 'pkpdapp/migrations/models/TMDD_Full_2cmpt_PK_Model_Preclinical.mmt'  # noqa: E501
+        },
+        {
+            'name': 'two_compartment_tmdd_QSS_clinical',
+            'description':
+            """
+Description of a clinical two compartment TMDD model here.
+""",  # noqa: W605
+            'mmt_filename': 'pkpdapp/migrations/models/TMDD_QSS_2cmpt_PK_Model_Clinical.mmt'  # noqa: E501
+        },
+        {
+            'name': 'two_compartment_tmdd_QSS_preclinical',
+            'description':
+            """
+Description of a clinical two compartment TMDD model here.
+""",  # noqa: W605
+            'mmt_filename': 'pkpdapp/migrations/models/TMDD_QSS_2cmpt_PK_Model_Preclinical.mmt'  # noqa: E501
+        },
     ]
 
     PharmacodynamicModel = apps.get_model("pkpdapp", "PharmacodynamicModel")
@@ -315,10 +392,11 @@ Description of a clinical one compartment TMDD model here.
             # check myokit can parse the model
             mmt_string = open(m['mmt_filename'], 'r').read()
             myokit_model = myokit.parse(mmt_string)[0]
+            print('loading', m['mmt_filename'], myokit_model.meta['name'])
             myokit_model.validate()
             model = PharmacodynamicModel.objects.create(
                 name=m['name'],
-                description=m['description'],
+                description=myokit_model.meta['name'],
                 mmt=mmt_string,
             )
         except urllib.error.URLError:
@@ -329,10 +407,11 @@ Description of a clinical one compartment TMDD model here.
             # check myokit can parse the model
             mmt_string = open(m['mmt_filename'], 'r').read()
             myokit_model = myokit.parse(mmt_string)[0]
+            print('loading', m['mmt_filename'], myokit_model.meta['name'])
             myokit_model.validate()
             model = PharmacokineticModel.objects.create(
                 name=m['name'],
-                description=m['description'],
+                description=myokit_model.meta['name'],
                 mmt=mmt_string,
             )
         except urllib.error.URLError:
