@@ -167,6 +167,11 @@ class CombinedModel(MyokitModelMixin, StoredModel):
             pd_model = myokit.Model()
         else:
             pd_model = self.pd_model.create_myokit_model()
+        if self.pd_model2 is None:
+            pd_model2 = myokit.Model()
+        else:
+            pd_model2 = self.pd_model2.create_myokit_model()
+
         have_both_models = (
             self.pk_model is not None and
             self.pd_model is not None
@@ -175,6 +180,43 @@ class CombinedModel(MyokitModelMixin, StoredModel):
             self.pk_model is None and
             self.pd_model is None
         )
+
+        # combine the two pd models.
+        # If any constants overlap prefer the pd_model (remove the constant from pd_model2)
+        # If any state variables overlap then add the rhs terms
+        
+        if self.pd_model2 is not None:
+            pd2_time_var = pd_model2.binding('time')
+            pd2_time_var.set_binding(None)
+            pd2_time_component = pd2_time_var.parent()
+            pd2_time_component.remove_variable(pd2_time_var)
+            if pd2_time_component.count_variables() == 0:
+                pd_model2.remove_component(pd2_time_component)
+
+            pd2_components = list(pd_model2.components())
+            pd2_names = [ c.name().replace('PDCompartment', 'PDCompartment2') for c in pd2_components ]
+            pd_model.import_component(
+                pd2_components,
+                new_name=pd2_names,
+            )
+
+            # deal with any state variables that overlap
+            for old_pd2_var in pd_model2.variables(state=True):
+                if pd_model.has_variable(old_pd2_var.qname()):
+                    pd_var = pd_model.get(old_pd2_var.qname())
+                    pd2_var = pd_model.get(pd_var.qname().replace('PDCompartment', 'PDCompartment2'))
+                    pd_var.set_rhs(myokit.Plus(pd_var.rhs(), pd2_var.rhs().clone({myokit.Name(pd2_var): myokit.Name(pd_var)})))
+                    for eqn in pd_model.get('PDCompartment2').equations():
+                        if eqn.rhs.depends_on(myokit.Name(pd2_var)):
+                            lhs_var = eqn.lhs.var()
+                            lhs_var.set_rhs(eqn.rhs.clone({myokit.Name(pd2_var): myokit.Name(pd_var)}))
+                    pd2_var.parent().remove_variable(pd2_var)
+
+            # deal with any constants that overlap
+            for old_pd2_var in pd_model2.variables(const=True):
+                if pd_model.has_variable(old_pd2_var.qname()):
+                    pd2_var = pd_model.get(old_pd2_var.qname().replace('PDCompartment', 'PDCompartment2'))
+                    pd2_var.parent().remove_variable(pd2_var)
 
         # use pk model as the base and import the pd model
         pkpd_model = pk_model

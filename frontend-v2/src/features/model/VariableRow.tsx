@@ -127,7 +127,6 @@ const VariableRow: React.FC<Props> = ({ project, compound, model, variable, cont
   const disableRo = !compound.dissociation_constant || !compound.target_concentration;
   const noDosing = !isAmount;
 
-
   return (
     <TableRow>
       <TableCell>

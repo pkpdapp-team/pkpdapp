@@ -1695,6 +1695,9 @@ export type SimulateResponse = {
     [key: string]: number[];
   };
 };
+export type ErrorResponse = {
+  error: string;
+};
 export type Simulate = {
   outputs: string[];
   initial_conditions: {

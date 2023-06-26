@@ -10,8 +10,13 @@ import DropdownButton from '../../components/DropdownButton';
 import { Add } from '@mui/icons-material';
 import FloatField from '../../components/FloatField';
 import useDirty from '../../hooks/useDirty';
+import { SerializedError } from '@reduxjs/toolkit';
 
 type SliderValues = {[key: number]: number};
+
+interface ErrorObject {
+  error: string;
+};
 
 const getSimulateInput = (simulation: Simulation, sliderValues: SliderValues, variables?: Variable[], timeMax?: number ): Simulate => {
     let outputs: string[] = [];
@@ -76,7 +81,8 @@ const Simulations: React.FC = () => {
   }, [models]);
   const [updateSimulation] = useSimulationUpdateMutation();
   const { data: units } = useUnitListQuery()
-  const [ simulate, { isError } ] = useCombinedModelSimulateCreateMutation();
+  const [ simulate, { error: simulateErrorBase } ] = useCombinedModelSimulateCreateMutation();
+  const simulateError: ErrorObject | undefined = simulateErrorBase  ? ('data' in simulateErrorBase ? simulateErrorBase.data as ErrorObject : { error: 'Unknown error' }) : undefined;
   const [ data, setData ] = useState<SimulateResponse | null>(null);
   const { data: compound, isLoading: isLoadingCompound } = useCompoundRetrieveQuery({id: project?.compound || 0 }, { skip: !project?.compound})
 
@@ -221,9 +227,9 @@ const Simulations: React.FC = () => {
           </Grid>
         ))}
       </Grid>
-      <Snackbar open={isError} autoHideDuration={6000}>
+      <Snackbar open={Boolean(simulateError)} autoHideDuration={6000} >
         <Alert severity="error">
-          Error simulating model
+          Error simulating model: {simulateError?.error || 'unknown error'}
         </Alert>
       </Snackbar>
       { plots.length > 0 && (

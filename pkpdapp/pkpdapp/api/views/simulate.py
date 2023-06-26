@@ -7,6 +7,7 @@ from rest_framework import views, status
 from rest_framework.response import Response
 from rest_framework import serializers
 from drf_spectacular.utils import extend_schema
+import myokit
 from pkpdapp.models import (
     CombinedModel, PharmacodynamicModel, Variable
 )
@@ -37,11 +38,13 @@ class SimulateResponseSerializer(serializers.Serializer):
             'time': times,
         }
 
-
+class ErrorResponseSerializer(serializers.Serializer):
+    error= serializers.CharField()
 @extend_schema(
     request=SimulateSerializer,
     responses={
         200: SimulateResponseSerializer,
+        400: ErrorResponseSerializer,
         404: None,
     },
 
@@ -56,7 +59,11 @@ class SimulateBaseView(views.APIView):
         initial_conditions = request.data.get('initial_conditions', None)
         variables = request.data.get('variables', None)
         time_max = request.data.get('time_max', None)
-        result = m.simulate(outputs, initial_conditions, variables, time_max)
+        try:
+            result = m.simulate(outputs, initial_conditions, variables, time_max)
+        except myokit.SimulationError as e:
+            serialized_result = ErrorResponseSerializer({'error': str(e)})
+            return Response(serialized_result.data, status=status.HTTP_400_BAD_REQUEST)
         serialized_result = SimulateResponseSerializer(result)
         return Response(serialized_result.data)
 

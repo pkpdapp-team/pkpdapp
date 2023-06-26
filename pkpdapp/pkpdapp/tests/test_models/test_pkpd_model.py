@@ -84,6 +84,36 @@ class TestPkpdModel(TestCase):
             pkpd_model.variables.get(qname='PDCompartment.C_Drug').constant
         )
 
+    def test_combine_multiple_pd_models(self):
+        pk = PharmacokineticModel.objects.get(
+            name='one_compartment_preclinical',
+        )
+        pd = PharmacodynamicModel.objects.get(
+            name='tumour_growth_gompertz',
+        )
+        pd2 = PharmacodynamicModel.objects.get(
+            name='tumour_growth_inhibition_delay_cell_distribution_conc_prop_kill',
+        )
+        combined = CombinedModel.objects.create(
+            name='my_combined_model',
+            pk_model=pk,
+            pd_model=pd,
+            pd_model2=pd2,
+        )
+
+        pk_vars = [v.qname() for v in pk.get_myokit_model().variables()]
+        pd_vars = [v.qname() for v in pd.get_myokit_model().variables() if v.qname() != 'environment.t']
+        pd2_vars = [v.qname().replace('PDCompartment', 'PDCompartment2') for v in pd2.get_myokit_model().variables() if v.qname() != 'environment.t']
+        expected_vars = [v for v in pk_vars + pd_vars + pd2_vars]
+        removed_vars = ['PDCompartment2.TS', 'PDCompartment2.TS0']
+        for var in removed_vars:
+            expected_vars.remove(var)
+        model = combined.get_myokit_model()
+        model_vars = [v.qname() for v in model.variables()]
+        self.assertCountEqual(model_vars, expected_vars)
+        print('combined model validated', model.code())
+
+
     def test_myokit_model_creation(self):
         pk_model = PharmacokineticModel.objects.get(
             name='three_compartment_pk_model'

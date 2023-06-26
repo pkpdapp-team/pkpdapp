@@ -143,6 +143,7 @@ class TestDosedPharmokineticModel(TestCase):
     def setUp(self):
         cache.clear()
 
+
     def test_model_creation(self):
         pk = PharmacokineticModel.objects\
             .get(name='one_compartment_pk_model')
@@ -183,9 +184,11 @@ class TestDosedPharmokineticModel(TestCase):
         self.assertEqual(drug.protocol.name, 'my_cool_protocol')
         self.assertNotEqual(drug.protocol.id, p.id)
 
+
+
     def test_myokit_model(self):
         pk = PharmacokineticModel.objects.get(
-            name='one_compartment_pk_model',
+            name='one_compartment_preclinical',
         )
 
         p = Protocol.objects.create(

@@ -36,7 +36,7 @@ const MapVariablesTab: React.FC<Props> = ({ model, project, control, variables }
       return a.name > b.name ? 1 : -1;
     })
 
-    const effectVariable = variables.find((variable) => variable.qname === "PDCompartment.C_Drug");
+    const effectVariable = variables.find((variable) => variable.qname === "PDCompartment.C_Drug" || variable.qname === "PDCompartment2.C_Drug");
     return (
       <TableContainer>
       <Table>
