@@ -16,8 +16,9 @@ import useDirty from '../../hooks/useDirty';
 const Drug: React.FC = () => {
   const projectId = useSelector((state: RootState) => state.main.selectedProject);
   const { data: project, isLoading: isProjectLoading } = useProjectRetrieveQuery({id: projectId || 0})
-  const { data: compound, isLoading: isCompoundLoading } = useCompoundRetrieveQuery({id: project?.compound || 0})
+  const { data: compound, isLoading: isCompoundLoading } = useCompoundRetrieveQuery({id: project?.compound || 0}, { skip: !project })
   const [ updateCompound ] = useCompoundUpdateMutation()
+
 
 
   // create a form for the compound data using react-hook-form
@@ -36,18 +37,21 @@ const Drug: React.FC = () => {
   useEffect(() => {
     reset(compound);
   }, [compound, reset]);
+
+  const submit = handleSubmit((data) => updateCompound({ id: data.id, compound: data }));
   
   useEffect(() => {
     const intervalId = setInterval(() => {
       if (isDirty) {
-        handleSubmit((data) => updateCompound({ id: data.id, compound: data }))();
+        submit();
       }
     }, 1000);
 
     return () => clearInterval(intervalId);
-  }, [handleSubmit, isDirty, updateCompound]);
+  }, [submit, isDirty]);
 
 
+  useEffect(() => () => { submit(); }, []);
   
   
   const addNewEfficacyExperiment = () => {
@@ -62,7 +66,9 @@ const Drug: React.FC = () => {
     return <div>Loading...</div>;
   }
 
+  console.log('got compound', compound)
   if (!compound || !project) {
+    console.log('no compound or project')
     return <div>Not found</div>;
   }
 

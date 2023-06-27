@@ -33,14 +33,18 @@ const ParameterRow: React.FC<Props> = ({ project, model, variable }) => {
   const isDirty = isDirtyForm;
   useDirty(isDirty)
 
+  const submit = handleSubmit((data) => updateVariable({ id: data.id, variable: data }))
+
   useEffect(() => {
     const intervalId = setInterval(() => {
       if (isDirty) {
-        handleSubmit((data) => updateVariable({ id: data.id, variable: data }))();
+        submit();
       }
     }, 1000);
     return () => clearInterval(intervalId);
-  }, [handleSubmit, isDirty, updateVariable]);
+  }, [submit, isDirty]);
+
+  useEffect(() => () => { submit(); }, []);
  
   if (variable.constant !== true) {
     return (null);

@@ -75,16 +75,23 @@ const ProjectRow: React.FC<Props> = ({ project, isSelected }) => {
   useEffect(() => {
     reset({ project, compound });
   }, [project, compound, reset]);
+
+  const handleSave = handleSubmit((data: FormData) => {
+    if (compound && project) {
+      updateCompound({ id: compound?.id || 0, compound: data.compound });
+      updateProject({ id: project.id, project: data.project });
+    }
+  });
   
   useEffect(() => {
     const intervalId = setInterval(() => {
       if (isDirty) {
-        handleSubmit(handleSave)();
+        handleSave();
       }
     }, 1000);
 
     return () => clearInterval(intervalId);
-  }, [handleSubmit, isDirty, updateCompound]);
+  }, [handleSave, isDirty]);
 
 
   if (isLoading) {
@@ -95,10 +102,7 @@ const ProjectRow: React.FC<Props> = ({ project, isSelected }) => {
     return <div>Error: cannot find compound...</div>;
   }
 
-  const handleSave = (data: FormData) => {
-    updateCompound({ id: compound?.id, compound: data.compound });
-    updateProject({ id: project.id, project: data.project });
-  };
+  
 
   const handleDelete = () => {
     console.log('destroying project', project.id)

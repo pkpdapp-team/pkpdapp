@@ -40,28 +40,32 @@ const Model: React.FC = () => {
       reset(model);
     }
   }, [model, reset]);
+
+  const submit = handleSubmit((data: CombinedModel) => {
+    // if either of the pd_models have changed, need to remove the mappings
+    if (data.pd_model !== model?.pd_model || data.pd_model2 !== model?.pd_model2) {
+      data.mappings = [];
+    }
+    // if only pd_model has changed, need to clear pd_model2
+    if (data.pd_model !== model?.pd_model) {
+      data.pd_model2 = null;
+    }
+    return updateModel({ id: data.id, combinedModel: data })
+  });
+
   
   useEffect(() => {
     const intervalId = setInterval(() => {
       if (isDirty) {
         console.log('saving model')
-        handleSubmit((data) => {
-          // if either of the pd_models have changed, need to remove the mappings
-          if (data.pd_model !== model?.pd_model || data.pd_model2 !== model?.pd_model2) {
-            data.mappings = [];
-          }
-          // if only pd_model has changed, need to clear pd_model2
-          if (data.pd_model !== model?.pd_model) {
-            data.pd_model2 = null;
-          }
-          return updateModel({ id: data.id, combinedModel: data })
-        })();
+        submit();
       }
     }, 1000);
 
     return () => clearInterval(intervalId);
-  }, [handleSubmit, isDirty, updateModel]);
-  
+    
+  }, [submit, isDirty]);
+
 
   if (isProjectLoading || isModelsLoading || isVariablesLoading) {
     return <div>Loading...</div>;

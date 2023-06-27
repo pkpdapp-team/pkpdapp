@@ -36,7 +36,7 @@ function TextField<T extends FieldValues>({ label, name, control, rules, textFie
             name={name}
             id={name}
             variant="outlined"
-            value={fieldValue || ''}
+            value={fieldValue === undefined || fieldValue === null ? '' : fieldValue}
             onChange={handleChange}
             onBlur={handleBlur}
             error={!!error}

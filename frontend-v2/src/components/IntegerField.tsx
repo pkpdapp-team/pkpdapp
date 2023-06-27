@@ -46,7 +46,7 @@ function IntegerField<T extends FieldValues>({ label, name, control, rules, text
             id={name}
             defaultValue={0}
             variant="outlined"
-            value={fieldValue}
+            value={fieldValue === undefined || fieldValue === null ? '' : fieldValue}
             onChange={handleChange}
             onBlur={handleBlur}
             error={!!error}
