@@ -80,13 +80,13 @@ const Doses: React.FC<Props> = ({ project, protocol, units }) => {
             )}
           </TableCell>
           <TableCell>
-            <IntegerField label={"Number of Doses"} name={`doses.${index}.repeats`} control={control} rules={{ required: true, min: { value: true, message: "One or more required"} }} />
+            <IntegerField label={"Number of Doses"} name={`doses.${index}.repeats`} control={control} rules={{ required: true, min: { value: 1, message: "One or more required"} }} />
           </TableCell>
           <TableCell>
             <FloatField label={index === 0 ? "Start Time" : "Time After Last Dose"} name={`doses.${index}.start_time`} control={control} rules={{ required: true }} />
           </TableCell>
           <TableCell>
-            <FloatField label={"Dosing Duration"} name={`doses.${index}.duration`} control={control} rules={{ required: true }} />
+            <FloatField label={"Dosing Duration"} name={`doses.${index}.duration`} control={control} rules={{ required: true, min: { value: Number.EPSILON, message: "Must be greater than 0"} }} />
           </TableCell>
           <TableCell>
             <FloatField label={"Dosing Interval"} name={`doses.${index}.repeat_interval`} control={control} rules={{ required: true }} />
