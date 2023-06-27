@@ -10,7 +10,7 @@ RUN npm install --legacy-peer-deps
 COPY frontend-v2 /app/frontend/
 RUN npm run build
 
-FROM python:3.9
+FROM python:3.10
 
 # install libsundials-dev
 RUN apt-get update && apt-get upgrade -y
