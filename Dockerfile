@@ -1,11 +1,11 @@
 # Using a 2-stage build. This is the builder for javascript frontend
 
-FROM node:lts as build
+FROM node:19 as build
 RUN mkdir -p /app/frontend
 WORKDIR /app/frontend
 COPY frontend-v2/package.json /app/frontend
 
-RUN npm install --legacy-peer-deps
+RUN npm install
 
 COPY frontend-v2 /app/frontend/
 RUN npm run build
