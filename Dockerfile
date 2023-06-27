@@ -34,7 +34,7 @@ RUN rm -rf /var/lib/apt/lists/*
 # install dependencies
 COPY ./requirements.txt /
 RUN apt-get update && apt-get upgrade -y
-RUN apt-get install -y build-essential libsasl2-dev python-dev libldap2-dev libssl-dev
+RUN apt-get install -y build-essential libsasl2-dev python3-dev libldap2-dev libssl-dev
 
 RUN pip install  -r requirements.txt
 
