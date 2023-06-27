@@ -54,7 +54,6 @@ const ProjectTable: React.FC = () => {
           y_unit: null,
           y_unit2: null,
         }
-        console.log('adding simulation')
         addSimulation({ simulation: { id: 0, name: `default`, project: project.data.id, sliders: [], plots: [] }})
       }
     });

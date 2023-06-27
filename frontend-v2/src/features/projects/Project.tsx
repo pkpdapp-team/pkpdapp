@@ -78,8 +78,12 @@ const ProjectRow: React.FC<Props> = ({ project, isSelected }) => {
 
   const handleSave = handleSubmit((data: FormData) => {
     if (compound && project) {
-      updateCompound({ id: compound?.id || 0, compound: data.compound });
-      updateProject({ id: project.id, project: data.project });
+      if (JSON.stringify(compound) !== JSON.stringify(data.compound)) {
+        updateCompound({ id: compound.id, compound: data.compound });
+      }
+      if (JSON.stringify(project) !== JSON.stringify(data.project)) {
+        updateProject({ id: project.id, project: data.project });
+      }
     }
   });
   
@@ -93,6 +97,7 @@ const ProjectRow: React.FC<Props> = ({ project, isSelected }) => {
     return () => clearInterval(intervalId);
   }, [handleSave, isDirty]);
 
+  useEffect(() => () => { handleSave(); }, []);
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -105,7 +110,6 @@ const ProjectRow: React.FC<Props> = ({ project, isSelected }) => {
   
 
   const handleDelete = () => {
-    console.log('destroying project', project.id)
     destroyProject({id: project.id});
   };
 

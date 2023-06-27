@@ -35,7 +35,6 @@ const Model: React.FC = () => {
 
   
   useEffect(() => {
-    console.log('resetting model')
     if (model) {
       reset(model);
     }
@@ -57,7 +56,6 @@ const Model: React.FC = () => {
   useEffect(() => {
     const intervalId = setInterval(() => {
       if (isDirty) {
-        console.log('saving model')
         submit();
       }
     }, 1000);

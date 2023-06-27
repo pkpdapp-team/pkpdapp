@@ -33,7 +33,11 @@ const ParameterRow: React.FC<Props> = ({ project, model, variable }) => {
   const isDirty = isDirtyForm;
   useDirty(isDirty)
 
-  const submit = handleSubmit((data) => updateVariable({ id: data.id, variable: data }))
+  const submit = handleSubmit((data) => {
+    if (JSON.stringify(data) !== JSON.stringify(variable)) {
+      updateVariable({ id: data.id, variable: data })
+    }
+  })
 
   useEffect(() => {
     const intervalId = setInterval(() => {

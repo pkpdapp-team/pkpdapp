@@ -38,7 +38,11 @@ const Drug: React.FC = () => {
     reset(compound);
   }, [compound, reset]);
 
-  const submit = handleSubmit((data) => updateCompound({ id: data.id, compound: data }));
+  const submit = handleSubmit((data) => {
+    if (JSON.stringify(data) !== JSON.stringify(compound)) {
+      updateCompound({ id: data.id, compound: data })
+    }
+  });
   
   useEffect(() => {
     const intervalId = setInterval(() => {
@@ -66,9 +70,7 @@ const Drug: React.FC = () => {
     return <div>Loading...</div>;
   }
 
-  console.log('got compound', compound)
   if (!compound || !project) {
-    console.log('no compound or project')
     return <div>Not found</div>;
   }
 
