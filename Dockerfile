@@ -3,11 +3,11 @@
 FROM node:lts as build
 RUN mkdir -p /app/frontend
 WORKDIR /app/frontend
-COPY frontend/package.json /app/frontend
+COPY frontend-v2/package.json /app/frontend
 
 RUN npm install --legacy-peer-deps
 
-COPY frontend /app/frontend/
+COPY frontend-v2 /app/frontend/
 RUN npm run build
 
 FROM python:3.9
