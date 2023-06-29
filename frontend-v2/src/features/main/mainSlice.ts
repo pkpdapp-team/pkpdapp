@@ -2,7 +2,7 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 export enum PageName {
   PROJECTS = 'Projects',
-  DRUG = 'Drug',
+  DRUG = 'Drug and Target',
   MODEL = 'Model',
   DATA = 'Data',
   TRIAL_DESIGN = 'Trial Design',

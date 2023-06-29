@@ -5,7 +5,21 @@
 #
 
 from django.db import models
+from django.db.models import Q
 import myokit
+
+# https://stackoverflow.com/questions/14711203/perform-a-logical-exclusive-or-on-a-django-q-object
+class QQ:
+    def __xor__(self, other):    
+        not_self = self.clone()
+        not_other = other.clone()
+        not_self.negate()
+        not_other.negate()
+
+        x = self & not_other
+        y = not_self & other
+
+        return x | y
 
 
 class Unit(models.Model):
@@ -110,44 +124,109 @@ class Unit(models.Model):
                 multiplier=multiplier
             )
 
-    def convert_to(self, unit):
+    def convert_to(self, unit, compound=None):
+        helpers = []
+        if compound is not None:
+            helpers = [f'{compound.molecular_weight} [{compound.molecular_weight_unit.symbol}]']
         return myokit.Unit.conversion_factor(
             self.get_myokit_unit(),
-            unit.get_myokit_unit()
+            unit.get_myokit_unit(),
+            helpers=helpers,
         ).value()
 
-    def get_compatible_units(self):
+    def get_compatible_units(self, compound=None):
         close_enough = 1e-9
-        return Unit.objects.filter(
-            g__range=(
-                self.g - close_enough,
-                self.g + close_enough,
-            ),
-            m__range=(
-                self.m - close_enough,
-                self.m + close_enough,
-            ),
-            s__range=(
-                self.s - close_enough,
-                self.s + close_enough,
-            ),
-            A__range=(
-                self.A - close_enough,
-                self.A + close_enough,
-            ),
-            K__range=(
-                self.K - close_enough,
-                self.K + close_enough,
-            ),
-            cd__range=(
-                self.cd - close_enough,
-                self.cd + close_enough,
-            ),
-            mol__range=(
-                self.mol - close_enough,
-                self.mol + close_enough,
-            ),
-        )
+        if compound is not None:
+            return Unit.objects.filter(
+                (
+                    (
+                        Q(g__range=(
+                            self.g - close_enough,
+                            self.g + close_enough,
+                        )) | 
+                        Q(g__range=(
+                            self.mol - close_enough,
+                            self.mol + close_enough,
+                        ))
+                    ) &
+                    (
+                        Q(mol__range=(
+                            self.mol - close_enough,
+                            self.mol + close_enough,
+                        ))
+                    )
+                ) |
+                (
+                    (
+                        Q(g__range=(
+                            self.g - close_enough,
+                            self.g + close_enough,
+                        ))
+                    ) &
+                    (
+                        Q(mol__range=(
+                            self.mol - close_enough,
+                            self.mol + close_enough,
+                        )) |
+                        Q(mol__range=(
+                            self.g - close_enough,
+                            self.g + close_enough,
+                        ))
+                    )
+                ),
+                Q(m__range=(
+                    self.m - close_enough,
+                    self.m + close_enough,
+                )),
+                Q(s__range=(
+                    self.s - close_enough,
+                    self.s + close_enough,
+                )),
+                Q(A__range=(
+                    self.A - close_enough,
+                    self.A + close_enough,
+                )),
+                Q(K__range=(
+                    self.K - close_enough,
+                    self.K + close_enough,
+                )),
+                Q(cd__range=(
+                    self.cd - close_enough,
+                    self.cd + close_enough,
+                )),
+            )
+        else:
+            return Unit.objects.filter(
+                Q(g__range=(
+                    self.g - close_enough,
+                    self.g + close_enough,
+                )),
+                Q(mol__range=(
+                    self.mol - close_enough,
+                    self.mol + close_enough,
+                )),
+                Q(m__range=(
+                    self.m - close_enough,
+                    self.m + close_enough,
+                )),
+                Q(s__range=(
+                    self.s - close_enough,
+                    self.s + close_enough,
+                )),
+                Q(A__range=(
+                    self.A - close_enough,
+                    self.A + close_enough,
+                )),
+                Q(K__range=(
+                    self.K - close_enough,
+                    self.K + close_enough,
+                )),
+                Q(cd__range=(
+                    self.cd - close_enough,
+                    self.cd + close_enough,
+                )),
+            )
+
 
     def is_time_unit(self):
         return (

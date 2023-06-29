@@ -1723,14 +1723,14 @@ export type Compound = {
   efficacy_experiments: Efficacy[];
   name: string;
   description?: string;
-  molecular_mass: number;
+  molecular_mass?: number;
   compound_type?: CompoundTypeEnum;
   fraction_unbound_plasma?: number | null;
   blood_to_plasma_ratio?: number | null;
   intrinsic_clearance?: number | null;
   intrinsic_clearance_assay?: IntrinsicClearanceAssayEnum;
   fraction_unbound_including_cells?: number | null;
-  target_molecular_mass: number;
+  target_molecular_mass?: number;
   target_concentration?: number | null;
   dissociation_constant?: number | null;
   is_soluble?: boolean;

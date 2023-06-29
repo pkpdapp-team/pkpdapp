@@ -839,4 +839,277 @@ export const param_default: {[key: string]: {[key: string]: {[key: string]: { va
         },
         
     },
+    two_compartment_tmdd: {
+        tlag: {
+            M: {
+                value: 0,
+                unit: 'h',
+            },
+            R: {
+                value: 0,
+                unit: 'h',
+            },
+            K: {
+                value: 0,
+                unit: 'h',
+            },
+            H: {
+                value: 0,
+                unit: 'h',
+            },
+        },
+        ka: {
+            M: {
+                value: 2.5,
+                unit: '1/h',
+            },
+            R: {
+                value: 0.05,
+                unit: '1/h',
+            },
+            K: {
+                value: 2,
+                unit: '1/h',
+            },
+            H: {
+                value: 0.04,
+                unit: '1/h',
+            },
+        },
+        F: {
+            M: {
+                value: 0.5,
+                unit: 'dimensionless',
+            },
+            R: {
+                value: 0.5,
+                unit: 'dimensionless',
+            },
+            K: {
+                value: 0.5,
+                unit: 'dimensionless',
+            },
+            H: {
+                value: 0.5,
+                unit: 'dimensionless',
+            },
+        },
+        V1: {
+            M: {
+                value: 2,
+                unit: 'L/kg',
+            },
+            R: {
+                value: 40,
+                unit: 'mL/kg',
+            },
+            K: {
+                value: 2,
+                unit: 'L/kg',
+            },
+            H: {
+                value: 40,
+                unit: 'mL/kg',
+            },
+        },
+        V2: {
+            M: {
+                value: 2,
+                unit: 'L/kg',
+            },
+            R: {
+                value: 40,
+                unit: 'mL/kg',
+            },
+            K: {
+                value: 2,
+                unit: 'L/kg',
+            },
+            H: {
+                value: 40,
+                unit: 'mL/kg',
+            },
+        },
+        CL: {
+            M: {
+                value: 540,
+                unit: 'mL/h/kg',
+            },
+            R: {
+                value: 0.35,
+                unit: 'mL/h/kg',
+            },
+            K: {
+                value: 330,
+                unit: 'mL/h/kg',
+            },
+            H: {
+                value: 0.4,
+                unit: 'mL/h/kg',
+            },
+        },
+        Q1: {
+            M: {
+                value: 2700,
+                unit: 'mL/h/kg',
+            },
+            R: {
+                value: 1.8,
+                unit: 'mL/h/kg',
+            },
+            K: {
+                value: 1650,
+                unit: 'mL/h/kg',
+            },
+            H: {
+                value: 2,
+                unit: 'mL/h/kg',
+            },
+        },
+        ke0: {
+            M: {
+                value: 0.1,
+                unit: '1/h',
+            },
+            R: {
+                value: 0.1,
+                unit: '1/h',
+            },
+            K: {
+                value: 0.1,
+                unit: '1/h',
+            },
+            H: {
+                value: 0.1,
+                unit: '1/h',
+            },
+        },
+        Kp: {
+            M: {
+                value: 0.01,
+                unit: 'dimensionless',
+            },
+            R: {
+                value: 0.2,
+                unit: 'dimensionless',
+            },
+            K: {
+                value: 0.01,
+                unit: 'dimensionless',
+            },
+            H: {
+                value: 0.2,
+                unit: 'dimensionless',
+            },
+        },
+        CT1_0: {
+            M: {
+                value: 1,
+                unit: 'nmol/L',
+            },
+            R: {
+                value: 1,
+                unit: 'nmol/L',
+            },
+            K: {
+                value: 1,
+                unit: 'nmol/L',
+            },
+            H: {
+                value: 1,
+                unit: 'nmol/L',
+            },
+        },
+        KD: {
+            M: {
+                value: 0.5,
+                unit: 'nmol/L',
+            },
+            R: {
+                value: 0.5,
+                unit: 'nmol/L',
+            },
+            K: {
+                value: 0.5,
+                unit: 'nmol/L',
+            },
+            H: {
+                value: 0.5,
+                unit: 'nmol/L',
+            },
+        },
+        koff: {
+            M: {
+                value: 0.693,
+                unit: '1/h',
+            },
+            R: {
+                value: 0.693,
+                unit: '1/h',
+            },
+            K: {
+                value: 0.693,
+                unit: '1/h',
+            },
+            H: {
+                value: 0.693,
+                unit: '1/h',
+            },
+        },
+        kdeg: {
+            M: {
+                value: 0.0712,
+                unit: '1/h',
+            },
+            R: {
+                value: 0.0712,
+                unit: '1/h',
+            },
+            K: {
+                value: 0.0401,
+                unit: '1/h',
+            },
+            H: {
+                value: 0.0401,
+                unit: '1/h',
+            },
+        },
+        kint: {
+            M: {
+                value: 0.356,
+                unit: '1/h',
+            },
+            R: {
+                value: 0.356,
+                unit: '1/h',
+            },
+            K: {
+                value: 0.2,
+                unit: '1/h',
+            },
+            H: {
+                value: 0.2,
+                unit: '1/h',
+            },
+        },
+        KSS: {
+            M: {
+                value: 0.5,
+                unit: 'nmol/L',
+            },
+            R: {
+                value: 0.5,
+                unit: 'nmol/L',
+            },
+            K: {
+                value: 0.5,
+                unit: 'nmol/L',
+            },
+            H: {
+                value: 0.5,
+                unit: 'nmol/L',
+            },
+        },
+        
+    },
 };

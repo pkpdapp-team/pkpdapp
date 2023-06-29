@@ -50,6 +50,7 @@ class Compound(models.Model):
         blank=True, default=''
     )
     molecular_mass = models.FloatField(
+        default=500.0,
         help_text=(
             'molecular mass for compound for conversion from mol to grams'
         )
@@ -72,12 +73,13 @@ class Compound(models.Model):
     )
 
     fraction_unbound_plasma = models.FloatField(
-        default=1.0,
+        default=0.02,
         blank=True, null=True,
         help_text='fraction unbound plasma (unitless)'
     )
 
     blood_to_plasma_ratio = models.FloatField(
+        default=1.0,
         blank=True, null=True,
         help_text='blood to plasma ratio (unitless)'
     )
@@ -115,6 +117,7 @@ class Compound(models.Model):
     # -------
 
     target_molecular_mass = models.FloatField(
+        default=25000.0,
         help_text=(
             'molecular mass for target for conversion from mol to grams'
         ),
@@ -128,6 +131,7 @@ class Compound(models.Model):
     )
 
     target_concentration = models.FloatField(
+        default=500.0,
         blank=True, null=True,
         help_text='target concentration'
     )

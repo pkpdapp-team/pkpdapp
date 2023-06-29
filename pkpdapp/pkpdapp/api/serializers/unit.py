@@ -33,8 +33,6 @@ class UnitSerializer(serializers.ModelSerializer):
             {
                 'id': u.id,
                 'symbol': u.symbol,
-                'conversion_factor': myokit.Unit.conversion_factor(
-                    myokit_unit, u.get_myokit_unit()
-                ).value(),
+                'conversion_factor': unit.convert_to(u),
             } for u in unit.get_compatible_units()
         ]

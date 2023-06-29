@@ -3264,9 +3264,7 @@ components:
       required:
       - efficacy_experiments
       - id
-      - molecular_mass
       - name
-      - target_molecular_mass
     CompoundTypeEnum:
       enum:
       - SM

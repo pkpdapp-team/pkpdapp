@@ -49,7 +49,7 @@ class MyokitModelMixin:
     def create_myokit_model(self):
         return self.parse_mmt_string(self.mmt)
 
-    def create_myokit_simulator(self):
+    def create_myokit_simulator(self, override_tlag=None):
         model = self.get_myokit_model()
 
         # add a dose_rate variable to the model for each
@@ -87,8 +87,11 @@ class MyokitModelMixin:
                 dosing_events = []
                 from pkpdapp.models import Variable
                 try:
-                    tlag = self.variables.get(qname='PKCompartment.tlag')
-                    last_dose_time = tlag.default_value
+                    if override_tlag is None:
+                        tlag_value = Variable.objects.get(qname='PKCompartment.tlag').value
+                    else:
+                        tlag_value = override_tlag
+                    last_dose_time = tlag_value
                 except Variable.DoesNotExist:
                     last_dose_time = 0.0
                 for d in v.protocol.doses.all():
@@ -116,12 +119,12 @@ class MyokitModelMixin:
                 set_dosing_events(sim, dosing_events)
         return sim
 
-    def get_myokit_simulator(self):
+    def get_myokit_simulator(self, override_tlag=None):
         key = self._get_myokit_simulator_cache_key()
         with lock:
             myokit_simulator = cache.get(key)
         if myokit_simulator is None:
-            myokit_simulator = self.create_myokit_simulator()
+            myokit_simulator = self.create_myokit_simulator(override_tlag=override_tlag)
             cache.set(
                 key, myokit_simulator, timeout=None
             )
@@ -362,9 +365,14 @@ class MyokitModelMixin:
         if variable.unit is None:
             conversion_factor = 1.0
         else:
+            project = self.get_project()
+            compound = project.compound
+            molecular_mass = compound.molecular_mass
+            molecular_mass_unit = compound.molecular_mass_unit.symbol
             conversion_factor = myokit.Unit.conversion_factor(
                 variable.unit.get_myokit_unit(),
-                myokit_variable_sbml.unit()
+                myokit_variable_sbml.unit(),
+                helpers=[f'{molecular_mass} [{molecular_mass_unit}]']
             ).value()
 
         return conversion_factor * value
@@ -465,7 +473,10 @@ class MyokitModelMixin:
             }
 
         model = self.get_myokit_model()
-        sim = self.get_myokit_simulator()
+        override_tlag = None
+        if 'PKCompartment.tlag' in variables:
+            override_tlag = variables['PKCompartment.tlag']
+        sim = self.get_myokit_simulator(override_tlag=override_tlag)
 
         # convert units for variables, initial_conditions
         # and time_max

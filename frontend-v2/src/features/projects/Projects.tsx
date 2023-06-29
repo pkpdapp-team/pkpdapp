@@ -9,10 +9,14 @@ import {
   TableHead,
   TableRow,
   Button,
+  Stack,
 } from "@mui/material";
 import { Compound, Project, useCompoundCreateMutation, useProjectCreateMutation, useProjectListQuery, useCombinedModelCreateMutation, useSimulationCreateMutation, SimulationPlot, useUnitListQuery } from "../../app/backendApi";
 import ProjectRow from "./Project";
 import { RootState } from "../../app/store";
+import AddIcon from '@mui/icons-material/Add';
+import { PublicOutlined } from "@mui/icons-material";
+import DropdownButton from "../../components/DropdownButton";
 
 const ProjectTable: React.FC = () => {
   const selectedProject = useSelector((state: RootState) => state.main.selectedProject);
@@ -31,10 +35,18 @@ const ProjectTable: React.FC = () => {
   }
   
   
-  const handleAddRow = () => {
+  const handleAddRow = (type: 'SM' | 'LM') => {
     const user_access = [{ id: user?.id || 0, read_only: false, user: user?.id || 0 , project: 0}]
     let project: Project = { id: 0, name: 'new', description: '', compound: 0, user_access, users: [user?.id || 0], protocols: [] }
-    const compound: Compound = {id: 0, name: 'new', description: '', compound_type: 'SM', efficacy_experiments: [], molecular_mass: 100, target_molecular_mass: 100}
+    let compound: Compound | undefined = undefined;
+    if (type === 'SM') {
+      compound = {id: 0, name: 'new', description: '', compound_type: 'SM', efficacy_experiments: []};
+    } else if (type === 'LM') {
+      compound = {id: 0, name: 'new', description: '', compound_type: 'LM', efficacy_experiments: [], molecular_mass: 150000, fraction_unbound_plasma: 1.0, target_concentration: 1.0};
+    }
+    if (!compound) {
+      return
+    }
     addCompound({ compound }).unwrap()
     .then((compound) => {
       project.compound = compound.id || 0
@@ -70,9 +82,15 @@ const ProjectTable: React.FC = () => {
             <TableCell>Species</TableCell>
             <TableCell>Compound</TableCell>
             <TableCell>Actions</TableCell>
-            <TableCell>Modality</TableCell>
+            <TableCell>
+              <Stack direction="row" spacing={2} alignItems={'center'}>
+                Modality
+                <DropdownButton options={[{label: 'Small Molecule', value: 'SM'}, {label: 'Large Molecule', value: 'LM'}]} onOptionSelected={(value: 'SM' | 'LM') => handleAddRow(value)}>
+                  <AddIcon />
+                </DropdownButton>
+              </Stack>
+            </TableCell>
             <TableCell align="right">
-              <Button variant="contained" color="primary" onClick={handleAddRow}>Add Project</Button>
             </TableCell>
           </TableRow>
         </TableHead>

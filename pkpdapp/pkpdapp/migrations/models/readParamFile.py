@@ -6,9 +6,11 @@ workbook = openpyxl.load_workbook(
     'pkpdapp/migrations/models/ParametersValue_Species.xlsx', data_only=True)
 
 sheet_names = ['1cmpt_PK_Model', '2cmpt_PK_Model',
-               '3cmpt_PK_Model', '1cmpt_TMDD_Model']
+               '3cmpt_PK_Model', '1cmpt_TMDD_Model',
+               '2cmpt_TMDD_Model']
 model_names = ['one_compartment', 'two_compartment',
-               'three_comartment', 'one_compartment_tmdd']
+               'three_comartment', 'one_compartment_tmdd', 
+               'two_compartment_tmdd']
 species_list = ['M', 'R', 'K', 'H']
 clinical = [False, False, False, True]
 

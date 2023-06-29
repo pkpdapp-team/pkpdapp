@@ -108,7 +108,6 @@ const ProjectRow: React.FC<Props> = ({ project, isSelected }) => {
   }
 
   
-
   const handleDelete = () => {
     destroyProject({id: project.id});
   };

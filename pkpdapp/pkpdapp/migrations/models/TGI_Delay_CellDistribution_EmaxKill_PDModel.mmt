@@ -17,7 +17,7 @@ t = 0 bind time
 
 TS0 = 0.1 in [mL]
 	desc: initial tumor size 
-	
+
 kmax = 0.05 in [1/h]
 	desc: maximal kill rate constant
 	
@@ -39,7 +39,7 @@ Kill = kmax * C_Drug^HC / (C50^HC + C_Drug^HC) in [1/h]
 dot(TS) = -Kill*TS in [mL]
 	desc: Tumor volume
 	
-dot(TS1) = (Kill*TS-TS1)/tau in [mL]
+dot(TS1) = Kill*TS-TS1/tau in [mL]
 	desc: Transit compartment 1 (delay due to cell distribution) 
 
 dot(TS2) = (TS1-TS2)/tau in [mL]

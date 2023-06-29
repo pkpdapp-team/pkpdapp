@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { CombinedModel, Project, Variable, usePharmacokineticRetrieveQuery, useVariableUpdateMutation } from '../../app/backendApi';
+import { CombinedModel, Project, Variable, usePharmacokineticRetrieveQuery, useUnitListQuery, useVariableUpdateMutation } from '../../app/backendApi';
 import { Control } from 'react-hook-form';
 import { TableContainer, Table, TableHead, TableRow, TableCell, TableBody, Stack, Button } from '@mui/material';
 import ParameterRow from './ParameterRow';
@@ -17,6 +17,15 @@ const ParametersTab: React.FC<Props> = ({ model, project, control, variables }) 
 
     const [updateVariable] = useVariableUpdateMutation();
     const { data: pkModel } = usePharmacokineticRetrieveQuery({ id: model.pk_model || 0}, { skip: !model.pk_model });
+    const { data: units, isLoading: isLoadingUnits } = useUnitListQuery();
+
+    if (isLoadingUnits) {
+        return <div>Loading...</div>;
+    }
+
+    if (!units) {
+        return <div>Units not found</div>;
+    }
 
     let constVariables = variables.filter(variable => variable.constant);
     constVariables.sort((a, b) => {
@@ -41,10 +50,14 @@ const ParametersTab: React.FC<Props> = ({ model, project, control, variables }) 
         const species: string = project.species;
         for (const variable of constVariables) {
             const varName = variable.name;
-            console.log(modelName, varName, species)
-            const defaultVal = paramDefaults[modelName]?.[varName]?.[species];
-            if (defaultVal) {
-                updateVariable({ id: variable.id, variable: { ...variable, default_value: defaultVal.value }});
+            let defaultVal = paramDefaults[modelName]?.[varName]?.[species];
+            if (defaultVal.unit === "dimensionless") {
+              defaultVal.unit = '';
+            }
+            const defaultUnitId = defaultVal ? units.find(unit => unit.symbol === defaultVal.unit)?.id : undefined;
+            console.log(modelName, varName, species, defaultVal, defaultUnitId)
+            if (defaultVal && defaultUnitId) {
+                updateVariable({ id: variable.id, variable: { ...variable, default_value: defaultVal.value, unit: defaultUnitId }});
             }
         }
     }

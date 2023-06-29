@@ -14,7 +14,7 @@ t = 0 bind time
 
 
 [PDCompartment]
-	
+
 TS0 = 0.1 in [mL]
 	desc: initial tumor size 
 	
@@ -33,7 +33,7 @@ Kill = kKill * C_Drug in [1/h]
 dot(TS) = -Kill*TS in [mL]
 	desc: Tumor volume
 	
-dot(TS1) = (Kill*TS-TS1)/tau in [mL]
+dot(TS1) = Kill*TS-TS1/tau in [mL]
 	desc: Transit compartment 1 (delay due to cell distribution > dying cells) 
 
 dot(TS2) = (TS1-TS2)/tau in [mL]
