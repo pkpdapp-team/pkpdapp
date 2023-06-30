@@ -11,6 +11,7 @@ import { Add } from '@mui/icons-material';
 import FloatField from '../../components/FloatField';
 import useDirty from '../../hooks/useDirty';
 import { SerializedError } from '@reduxjs/toolkit';
+import UnitField from '../../components/UnitField';
 
 type SliderValues = {[key: number]: number};
 
@@ -66,9 +67,9 @@ const getSliderInitialValues = (simulation?: Simulation, existingSliderValues?: 
 
 const Simulations: React.FC = () => {
   const projectId = useSelector((state: RootState) => state.main.selectedProject);
-  const { data: project, isLoading: isProjectLoading } = useProjectRetrieveQuery({id: projectId || 0})
-  const { data: variables } = useVariableListQuery({projectId: projectId || 0})
-  const { data: simulations, isLoading: isSimulationsLoading } = useSimulationListQuery({projectId: projectId || 0})
+  const { data: project, isLoading: isProjectLoading } = useProjectRetrieveQuery({id: projectId || 0}, { skip: !projectId })
+  const { data: variables } = useVariableListQuery({projectId: projectId || 0}, { skip: !projectId })
+  const { data: simulations, isLoading: isSimulationsLoading } = useSimulationListQuery({projectId: projectId || 0}, { skip: !projectId })
   const simulation = useMemo(() => {
     console.log('Xsimulation');
     return simulations?.[0] || undefined
@@ -89,6 +90,8 @@ const Simulations: React.FC = () => {
   const [ sliderValues, setSliderValues ] = useState<{[key: number]: number} | undefined>(undefined);
   const [ loadingSimulate, setLoadingSimulate] = useState<boolean>(false);
 
+  const timeVariable = variables?.find((v) => v.binding === 'time');
+
   const defaultSimulation: Simulation = {
     id: 0,
     name: 'default',
@@ -97,6 +100,7 @@ const Simulations: React.FC = () => {
     nrows: 0,
     ncols: 0,
     project: projectId || 0,
+    time_max_unit: model?.time_unit || 0,
   };
 
   const { reset, handleSubmit, control, formState: { isDirty }, setValue } = useForm<Simulation>({
@@ -128,7 +132,11 @@ const Simulations: React.FC = () => {
   useEffect(() => {
     if (simulation?.id && sliderValues && variables && model) {
       console.log('simulate', simulation, sliderValues, variables, model)
-      simulate({ id: model.id, simulate: getSimulateInput(simulation, sliderValues, variables, simulation.time_max)})
+      const timeMaxUnit = units?.find((u) => u.id === simulation.time_max_unit);
+      const compatibleTimeUnit = timeMaxUnit?.compatible_units?.find((u) => parseInt(u.id) === model.time_unit); 
+      const timeMaxConversionFactor = compatibleTimeUnit ? parseFloat(compatibleTimeUnit.conversion_factor) : 1.0;
+      const timeMax = (simulation?.time_max || 0) * timeMaxConversionFactor;
+      simulate({ id: model.id, simulate: getSimulateInput(simulation, sliderValues, variables, timeMax)})
       .then((response) => {
         setLoadingSimulate(false);
         if ("data" in response) {
@@ -233,8 +241,13 @@ const Simulations: React.FC = () => {
       </Snackbar>
       { plots.length > 0 && (
         <>
-        <Grid item xs={3}>
+        <Grid container spacing={2} justifyContent={'flex-start'} alignItems={'center'}>
+        <Grid item xs={1}>
           <FloatField label="Simulation Duration" name="time_max" control={control} />
+        </Grid>
+        <Grid item xs={1}>
+          <UnitField label="Unit" name="time_max_unit" baseUnit={units.find(u => u.id === simulation?.time_max_unit)} control={control} />
+        </Grid>
         </Grid>
         <Stack direction={'row'} alignItems={'center'}>
           <Typography variant="h6">Parameters</Typography>

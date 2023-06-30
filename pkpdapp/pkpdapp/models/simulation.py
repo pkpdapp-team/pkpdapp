@@ -38,6 +38,12 @@ class Simulation(models.Model):
         help_text='maximum time for the simulation'
     )
 
+    time_max_unit = models.ForeignKey(
+        'Unit', on_delete=models.PROTECT,
+        related_name='simulation_time_max',
+        help_text='unit for maximum time'
+    )
+
     def get_project(self):
         return self.project
 

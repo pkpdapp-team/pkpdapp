@@ -3120,6 +3120,9 @@ components:
         mmt:
           type: string
           readOnly: true
+        time_unit:
+          type: integer
+          readOnly: true
         read_only:
           type: boolean
           description: true if object has been stored
@@ -3182,6 +3185,7 @@ components:
       - mmt
       - name
       - receptor_occupancies
+      - time_unit
       - variables
     CombinedModelSpeciesEnum:
       enum:
@@ -3789,6 +3793,9 @@ components:
         mmt:
           type: string
           readOnly: true
+        time_unit:
+          type: integer
+          readOnly: true
         read_only:
           type: boolean
           description: true if object has been stored
@@ -4282,6 +4289,9 @@ components:
           description: maximum time for the simulation
         project:
           type: integer
+        time_max_unit:
+          type: integer
+          description: unit for maximum time
     PatchedSubject:
       type: object
       properties:
@@ -4841,12 +4851,16 @@ components:
           description: maximum time for the simulation
         project:
           type: integer
+        time_max_unit:
+          type: integer
+          description: unit for maximum time
       required:
       - id
       - name
       - plots
       - project
       - sliders
+      - time_max_unit
     SimulationCxLine:
       type: object
       properties:

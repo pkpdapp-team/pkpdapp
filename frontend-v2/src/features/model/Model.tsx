@@ -1,8 +1,8 @@
 import { useSelector } from 'react-redux';
 import { RootState } from '../../app/store';
-import { CombinedModel, useCombinedModelListQuery, useCombinedModelUpdateMutation, useProjectRetrieveQuery, useVariableListQuery } from '../../app/backendApi';
+import { CombinedModel, useCombinedModelListQuery, useCombinedModelUpdateMutation, useProjectRetrieveQuery, useSimulationListQuery, useSimulationUpdateMutation, useVariableListQuery } from '../../app/backendApi';
 import { useForm } from 'react-hook-form';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { DynamicTabs, TabPanel } from '../../components/DynamicTabs';
 import MapVariablesTab from './MapVariablesTab';
 import PKPDModelTab from './PKPDModelTab';
@@ -17,6 +17,12 @@ const Model: React.FC = () => {
   const model = models?.[0] || null;
   const [ updateModel ]  = useCombinedModelUpdateMutation()
   const { data: variables, isLoading: isVariablesLoading } = useVariableListQuery({ dosedPkModelId: model?.id || 0 }, { skip: !model?.id })
+  const { data: simulations, isLoading: isSimulationsLoading } = useSimulationListQuery({projectId: projectId || 0}, { skip: !projectId })
+  const [updateSimulation] = useSimulationUpdateMutation();
+  const simulation = useMemo(() => {
+    return simulations?.[0] || undefined
+  }, [simulations]);
+
 
   const defaultModel: CombinedModel = {
     id: 0,
@@ -27,6 +33,7 @@ const Model: React.FC = () => {
     components: '',
     variables: [],
     mmt: '',
+    time_unit: 0
   };
   const { reset, handleSubmit, control, formState: { isDirty } } = useForm<CombinedModel>({
     defaultValues: model || defaultModel
@@ -49,7 +56,16 @@ const Model: React.FC = () => {
     if (data.pd_model !== model?.pd_model) {
       data.pd_model2 = null;
     }
-    return updateModel({ id: data.id, combinedModel: data })
+
+    return updateModel({ id: data.id, combinedModel: data }).then((response) => {
+      if ('data' in response) {
+        // if the pk_model has changed, need to reset the simulation time_max_unit
+        if ((data.pk_model !== model?.pk_model) && simulation) {
+          const time_max_unit = response.data.time_unit;
+          updateSimulation({ id: simulation.id, simulation: { ...simulation, time_max_unit } });
+        }
+      }
+    });
   });
 
   

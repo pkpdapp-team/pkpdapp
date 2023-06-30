@@ -44,7 +44,8 @@ class CombinedModelSerializer(serializers.ModelSerializer):
     variables = serializers.PrimaryKeyRelatedField(
         many=True, read_only=True
     )
-    mmt = serializers.SerializerMethodField('get_mmt')
+    mmt = serializers.SerializerMethodField('get_mmt', read_only=True)
+    time_unit = serializers.SerializerMethodField('get_time_unit')
 
     class Meta:
         model = CombinedModel
@@ -52,6 +53,9 @@ class CombinedModelSerializer(serializers.ModelSerializer):
 
     def get_mmt(self, m) -> str:
         return m.get_mmt()
+
+    def get_time_unit(self, m) -> int:
+        return m.get_time_unit().id
 
     def get_components(self, m):
         model = m.get_myokit_model()

@@ -132,6 +132,10 @@ class CombinedModel(MyokitModelMixin, StoredModel):
         if self.pd_model:
             time_max = max(time_max, self.pd_model.time_max)
         return time_max
+    
+    def get_time_unit(self):
+        time_var = self.variables.get(binding='time')
+        return time_var.unit
 
     def get_mmt(self):
         myokit_model = self.get_myokit_model()

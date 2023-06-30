@@ -11,12 +11,13 @@ import {
   Button,
   Stack,
 } from "@mui/material";
-import { Compound, Project, useCompoundCreateMutation, useProjectCreateMutation, useProjectListQuery, useCombinedModelCreateMutation, useSimulationCreateMutation, SimulationPlot, useUnitListQuery } from "../../app/backendApi";
+import { Compound, Project, useCompoundCreateMutation, useProjectCreateMutation, useProjectListQuery, useCombinedModelCreateMutation, useSimulationCreateMutation, SimulationPlot, useUnitListQuery, useVariableListQuery } from "../../app/backendApi";
 import ProjectRow from "./Project";
 import { RootState } from "../../app/store";
 import AddIcon from '@mui/icons-material/Add';
 import { PublicOutlined } from "@mui/icons-material";
 import DropdownButton from "../../components/DropdownButton";
+import { api } from "../../app/api";
 
 const ProjectTable: React.FC = () => {
   const selectedProject = useSelector((state: RootState) => state.main.selectedProject);
@@ -55,18 +56,22 @@ const ProjectTable: React.FC = () => {
     })
     .then((project) => {
       if ('data' in project) {
-        addCombinedModel({ combinedModel: { id: 0, name: `model for project ${project.data.id}`, project: project.data.id, mappings: [], receptor_occupancies: [], components: '', variables: [], mmt: '' }})
-        const defaultXUnit = units?.find((unit) => unit.symbol === 'h')?.id || 0
-        const defaultPlot: SimulationPlot = {
-          id: 0,
-          y_axes: [],
-          cx_lines: [],
-          index: 0,
-          x_unit: defaultXUnit,
-          y_unit: null,
-          y_unit2: null,
-        }
-        addSimulation({ simulation: { id: 0, name: `default`, project: project.data.id, sliders: [], plots: [] }})
+        addCombinedModel({ combinedModel: { id: 0, name: `model for project ${project.data.id}`, project: project.data.id, mappings: [], receptor_occupancies: [], components: '', variables: [], mmt: '', time_unit: 0 }})
+        .then((combinedModel) => {
+          if ('data' in combinedModel) {
+            const defaultXUnit = combinedModel.data.time_unit
+            const defaultPlot: SimulationPlot = {
+              id: 0,
+              y_axes: [],
+              cx_lines: [],
+              index: 0,
+              x_unit: defaultXUnit,
+              y_unit: null,
+              y_unit2: null,
+            }
+            addSimulation({ simulation: { id: 0, name: `default`, project: project.data.id, sliders: [], plots: [], time_max_unit: defaultXUnit }})
+          }
+        });
       }
     });
   }

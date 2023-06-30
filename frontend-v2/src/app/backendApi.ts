@@ -1665,6 +1665,7 @@ export type CombinedModel = {
   components: string;
   variables: number[];
   mmt: string;
+  time_unit: number;
   read_only?: boolean;
   datetime?: string | null;
   name: string;
@@ -1686,6 +1687,7 @@ export type PatchedCombinedModel = {
   components?: string;
   variables?: number[];
   mmt?: string;
+  time_unit?: number;
   read_only?: boolean;
   datetime?: string | null;
   name?: string;
@@ -2048,6 +2050,7 @@ export type Simulation = {
   ncols?: number;
   time_max?: number;
   project: number;
+  time_max_unit: number;
 };
 export type PatchedSimulation = {
   id?: number;
@@ -2058,6 +2061,7 @@ export type PatchedSimulation = {
   ncols?: number;
   time_max?: number;
   project?: number;
+  time_max_unit?: number;
 };
 export type Subject = {
   id: number;
