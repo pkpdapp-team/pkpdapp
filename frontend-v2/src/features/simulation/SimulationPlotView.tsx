@@ -39,20 +39,26 @@ const SimulationPlotView: React.FC<SimulationPlotProps> = ({ index, plot, data, 
   const minX = Math.min(...data.time);
   const maxX = Math.max(...data.time);
 
+  const timeVariable = variables.find((v) => v.binding === 'time');
+  const timeUnit = units.find((u) => u.id === timeVariable?.unit);
+  const xaxisUnit = units.find((u) => u.id === plot.x_unit);
+  const xcompatibleUnit = timeUnit?.compatible_units.find((u) => parseInt(u.id) === xaxisUnit?.id);
+  const xconversionFactor = xcompatibleUnit ? parseFloat(xcompatibleUnit.conversion_factor) : 1.0;
   let plotData: Data[] = plot.y_axes.map((y_axis) => {
     const variableValues = data.outputs[y_axis.variable];
     const variable = variables.find((v) => v.id === y_axis.variable);
     const variableName = variable?.name;
     const variableUnit = units.find((u) => u.id === variable?.unit);
-    const axisUnit = y_axis.right ? units.find((u) => u.id === plot.y_unit2) : units.find((u) => u.id === plot.y_unit);
-    const compatibleUnit = variableUnit?.compatible_units.find((u) => parseInt(u.id) === axisUnit?.id);
-    const conversionFactor = compatibleUnit ? parseFloat(compatibleUnit.conversion_factor) : 1.0;
-    console.log(`converting from ${variableUnit?.symbol} to ${axisUnit?.symbol} using ${conversionFactor}}`, compatibleUnit)
+
+    const yaxisUnit = y_axis.right ? units.find((u) => u.id === plot.y_unit2) : units.find((u) => u.id === plot.y_unit);
+    const ycompatibleUnit = variableUnit?.compatible_units.find((u) => parseInt(u.id) === yaxisUnit?.id);
+    const yconversionFactor = ycompatibleUnit ? parseFloat(ycompatibleUnit.conversion_factor) : 1.0;
+
     if (variableValues) {
       return {
         yaxis: y_axis.right ? 'y2' : undefined,
-        x: data.time,
-        y: variableValues.map((v) => v * conversionFactor),
+        x: data.time.map((t) => t * xconversionFactor),
+        y: variableValues.map((v) => v * yconversionFactor),
         name: variableName || 'unknown',
       }
     } else {

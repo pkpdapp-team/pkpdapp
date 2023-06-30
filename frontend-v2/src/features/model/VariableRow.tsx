@@ -21,10 +21,11 @@ interface Props {
   control: Control<CombinedModel>;
   effectVariable: Variable | undefined;
   units: Unit[];
+  timeVariable: Variable | undefined;
 }
 
 
-const VariableRow: React.FC<Props> = ({ project, compound, model, variable, control, effectVariable, units }) => {
+const VariableRow: React.FC<Props> = ({ project, compound, model, variable, control, effectVariable, units, timeVariable }) => {
 
   const { fields: mappings, append: appendMapping, remove: removeMapping } = useFieldArray({
       control,
@@ -42,7 +43,7 @@ const VariableRow: React.FC<Props> = ({ project, compound, model, variable, cont
   const [createProtocol] = useProtocolCreateMutation();
   const [destroyProtocol] = useProtocolDestroyMutation();
 
-  const defaultTimeUnit = units?.find((unit) => unit.symbol === 'h');
+  const defaultTimeUnit = timeVariable ? units?.find(u => u.id === timeVariable.unit) : units?.find((unit) => unit.symbol === 'h');
 
   useEffect(() => {
     reset(variable);

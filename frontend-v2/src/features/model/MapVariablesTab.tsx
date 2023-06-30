@@ -37,6 +37,7 @@ const MapVariablesTab: React.FC<Props> = ({ model, project, control, variables }
     })
 
     const effectVariable = variables.find((variable) => variable.qname === "PDCompartment.C_Drug" || variable.qname === "PDCompartment2.C_Drug");
+    const timeVariable = variables.find((variable) => variable.binding === "time");
     return (
       <TableContainer>
       <Table>
@@ -57,7 +58,7 @@ const MapVariablesTab: React.FC<Props> = ({ model, project, control, variables }
             </TableRow>
           )}
           {timeVaryingVariables.map((variable) => (
-            <VariableRow key={variable.id} variable={variable} model={model} control={control} project={project} compound={compound} effectVariable={effectVariable} units={units}/>
+            <VariableRow key={variable.id} variable={variable} model={model} control={control} project={project} compound={compound} effectVariable={effectVariable} units={units} timeVariable={timeVariable}/>
             ))}
         </TableBody>
       
