@@ -125,55 +125,64 @@ class Unit(models.Model):
             )
 
     def convert_to(self, unit, compound=None):
+        if unit is None:
+            return 1.0
+        if isinstance(unit, myokit.Unit):
+            myokit_unit = unit
+        else:
+            myokit_unit = unit.get_myokit_unit()
         helpers = []
         if compound is not None:
-            helpers = [f'{compound.molecular_weight} [{compound.molecular_weight_unit.symbol}]']
+            helpers = [f'{compound.molecular_mass} [{compound.molecular_mass_unit.symbol}]']
         return myokit.Unit.conversion_factor(
             self.get_myokit_unit(),
-            unit.get_myokit_unit(),
+            myokit_unit,
             helpers=helpers,
         ).value()
+
+    @staticmethod
+    def convert_between_myokit_units(from_unit, to_unit, compound=None):
+        helpers = []
+        if compound is not None:
+            helpers = [f'{compound.molecular_mass} [{compound.molecular_mass_unit.symbol}]']
+        return myokit.Unit.conversion_factor(
+            from_unit,
+            to_unit,
+            helpers=helpers,
+        ).value()
+
 
     def get_compatible_units(self, compound=None):
         close_enough = 1e-9
         if compound is not None:
+            mol_to_g = Q(g__range=(
+                self.mol - close_enough,
+                self.mol + close_enough,
+            ))
+            g_is_same = Q(g__range=(
+                self.g - close_enough,
+                self.g + close_enough,
+            ))
+            g_to_mol= Q(mol__range=(
+                self.g - close_enough,
+                self.g + close_enough,
+            ))
+            mol_is_same = Q(mol__range=(
+                self.mol - close_enough,
+                self.mol + close_enough,
+            ))
+            no_g = Q(g=0)
+            self_has_g = self.g != 0
+            no_mol = Q(mol=0)
+            self_has_mol = self.mol != 0
+            filter = mol_is_same & g_is_same
+            if not (self_has_mol and self_has_g):
+                if self_has_mol:
+                    filter |= mol_to_g & no_mol
+                if self_has_g:
+                    filter |= g_to_mol & no_g
             return Unit.objects.filter(
-                (
-                    (
-                        Q(g__range=(
-                            self.g - close_enough,
-                            self.g + close_enough,
-                        )) | 
-                        Q(g__range=(
-                            self.mol - close_enough,
-                            self.mol + close_enough,
-                        ))
-                    ) &
-                    (
-                        Q(mol__range=(
-                            self.mol - close_enough,
-                            self.mol + close_enough,
-                        ))
-                    )
-                ) |
-                (
-                    (
-                        Q(g__range=(
-                            self.g - close_enough,
-                            self.g + close_enough,
-                        ))
-                    ) &
-                    (
-                        Q(mol__range=(
-                            self.mol - close_enough,
-                            self.mol + close_enough,
-                        )) |
-                        Q(mol__range=(
-                            self.g - close_enough,
-                            self.g + close_enough,
-                        ))
-                    )
-                ),
+                filter,
                 Q(m__range=(
                     self.m - close_enough,
                     self.m + close_enough,

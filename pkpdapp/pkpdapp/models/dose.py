@@ -52,7 +52,7 @@ class DoseBase(models.Model):
     )
 
     repeat_interval = models.FloatField(
-        default=0.0,
+        default=1.0,
         help_text=(
             'Interval between repeated doses. '
             'See protocol for units. '

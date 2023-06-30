@@ -2545,6 +2545,12 @@ paths:
   /api/unit/:
     get:
       operationId: unit_list
+      parameters:
+      - in: query
+        name: compound_id
+        schema:
+          type: integer
+        description: Enable conversions based on compound information
       tags:
       - unit
       security:
@@ -2587,6 +2593,11 @@ paths:
     get:
       operationId: unit_retrieve
       parameters:
+      - in: query
+        name: compound_id
+        schema:
+          type: integer
+        description: Enable conversions based on compound information
       - in: path
         name: id
         schema:
@@ -4770,11 +4781,6 @@ components:
           type: array
           items:
             type: string
-        initial_conditions:
-          type: object
-          additionalProperties:
-            type: number
-            format: double
         variables:
           type: object
           additionalProperties:
@@ -4784,7 +4790,6 @@ components:
           type: number
           format: double
       required:
-      - initial_conditions
       - outputs
       - variables
     SimulateResponse:

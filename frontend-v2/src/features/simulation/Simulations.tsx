@@ -21,7 +21,6 @@ interface ErrorObject {
 const getSimulateInput = (simulation: Simulation, sliderValues: SliderValues, variables?: Variable[], timeMax?: number ): Simulate => {
     let outputs: string[] = [];
     let simulateVariables: {[key: string]: number} = {};
-    let initial_conditions: {[key: string]: number} = {};
     for (const slider of simulation?.sliders || []) {
       if (sliderValues[slider.variable]) {
         const variable = variables?.find((v) => v.id === slider.variable);
@@ -42,7 +41,7 @@ const getSimulateInput = (simulation: Simulation, sliderValues: SliderValues, va
     const timeVariable = variables?.find((v) => v.name === 'time' || v.name === 't');
     outputs.push(timeVariable?.qname || 'time');
     return {
-      variables: simulateVariables, outputs, initial_conditions, time_max: timeMax || undefined,
+      variables: simulateVariables, outputs, time_max: timeMax || undefined,
     }
 }
 
@@ -80,7 +79,7 @@ const Simulations: React.FC = () => {
     return models?.[0] || null;
   }, [models]);
   const [updateSimulation] = useSimulationUpdateMutation();
-  const { data: units } = useUnitListQuery()
+  const { data: units, isLoading: isUnitsLoading } = useUnitListQuery({ compoundId: project?.compound || 0 }, { skip: !project?.compound });
   const [ simulate, { error: simulateErrorBase } ] = useCombinedModelSimulateCreateMutation();
   const simulateError: ErrorObject | undefined = simulateErrorBase  ? ('data' in simulateErrorBase ? simulateErrorBase.data as ErrorObject : { error: 'Unknown error' }) : undefined;
   const [ data, setData ] = useState<SimulateResponse | null>(null);
@@ -155,7 +154,7 @@ const Simulations: React.FC = () => {
   }, [handleSubmit, isDirty, updateSimulation]);
   
 
-  if (isProjectLoading || isSimulationsLoading || isModelsLoading || isLoadingCompound) {
+  if (isProjectLoading || isSimulationsLoading || isModelsLoading || isLoadingCompound || isUnitsLoading) {
     return <div>Loading...</div>;
   }
 

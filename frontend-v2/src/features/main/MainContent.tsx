@@ -7,7 +7,7 @@ import Drug from '../drug/Drug';
 import Model from '../model/Model';
 import Simulations from '../simulation/Simulations';
 import Protocols from '../trial/Protocols';
-import { Box, LinearProgress } from '@mui/material';
+import { Box } from '@mui/material';
 
 
 interface TabPanelProps {

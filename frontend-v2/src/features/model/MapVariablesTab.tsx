@@ -13,7 +13,7 @@ interface Props {
 
 const MapVariablesTab: React.FC<Props> = ({ model, project, control, variables }: Props ) => {
     
-    const { data: units, isLoading: isLoadingUnits } = useUnitListQuery();
+    const { data: units, isLoading: isLoadingUnits } = useUnitListQuery({ compoundId: project.compound}, { skip: !project.compound });
     const { data: compound, isLoading: isLoadingCompound } = useCompoundRetrieveQuery({id: project.compound})
 
     if (isLoadingUnits || isLoadingCompound) {

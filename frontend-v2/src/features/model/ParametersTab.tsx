@@ -17,7 +17,7 @@ const ParametersTab: React.FC<Props> = ({ model, project, control, variables }) 
 
     const [updateVariable] = useVariableUpdateMutation();
     const { data: pkModel } = usePharmacokineticRetrieveQuery({ id: model.pk_model || 0}, { skip: !model.pk_model });
-    const { data: units, isLoading: isLoadingUnits } = useUnitListQuery();
+    const { data: units, isLoading: isLoadingUnits } = useUnitListQuery({ compoundId: project.compound}, { skip: !project.compound});
 
     if (isLoadingUnits) {
         return <div>Loading...</div>;
@@ -82,7 +82,7 @@ const ParametersTab: React.FC<Props> = ({ model, project, control, variables }) 
             </TableRow>
           )}
           {constVariables.map((variable) => (
-            <ParameterRow key={variable.id} variable={variable} model={model} project={project}/>
+            <ParameterRow key={variable.id} variable={variable} model={model} project={project} units={units}/>
             ))}
         </TableBody>
       

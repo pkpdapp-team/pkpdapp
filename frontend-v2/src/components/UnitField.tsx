@@ -1,24 +1,20 @@
 import React from 'react';
 import { Control, FieldPath, FieldValues } from 'react-hook-form';
 import { SelectProps } from '@mui/material';
-import { useUnitRetrieveQuery } from '../app/backendApi';
+import { Compound, Unit, useUnitRetrieveQuery } from '../app/backendApi';
 import SelectField from './SelectField';
 
 type Props<T extends FieldValues> = {
   label: string;
-  baseUnitId?: number;
+  baseUnit?: Unit;
   name: FieldPath<T>;
   control: Control<T>;
   rules?: Object;
   selectProps?: SelectProps;
+  compound?: Compound;
 };
 
-function UnitField<T extends FieldValues>({ label, name, baseUnitId, control, rules, selectProps }: Props<T>): React.ReactElement {
-  const { data: baseUnit, isLoading } = useUnitRetrieveQuery({id: baseUnitId || 0}, { skip: !baseUnitId });
-
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
+function UnitField<T extends FieldValues>({ label, name, baseUnit, control, rules, selectProps }: Props<T>): React.ReactElement {
 
   const isDimensionless = baseUnit?.symbol === '' || false;
   if (!baseUnit || isDimensionless) {

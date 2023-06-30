@@ -49,8 +49,18 @@ class MyokitModelMixin:
     def create_myokit_model(self):
         return self.parse_mmt_string(self.mmt)
 
-    def create_myokit_simulator(self, override_tlag=None):
-        model = self.get_myokit_model()
+    def create_myokit_simulator(self, override_tlag=None, model=None):
+        if model is None:
+            model = self.get_myokit_model()
+
+        from pkpdapp.models import Variable
+        if override_tlag is None:
+            try:
+                tlag_value = self.variables.get(qname='PKCompartment.tlag').default_value
+            except Variable.DoesNotExist:
+                tlag_value = 0.0
+        else:
+            tlag_value = override_tlag
 
         # add a dose_rate variable to the model for each
         # dosed variable
@@ -59,41 +69,28 @@ class MyokitModelMixin:
                 myokit_v = model.get(v.qname)
                 set_administration(model, myokit_v)
 
-        with lock:
-            sim = myokit.Simulation(model)
+
+        protocols = {}
+        compound = self.get_project().compound
         for v in self.variables.filter(state=True):
             if v.protocol:
                 amount_var = model.get(v.qname)
                 time_var = model.binding('time')
 
-                if amount_var.unit() is None:
-                    amount_conversion_factor = 1.0
-                else:
-                    amount_conversion_factor = \
-                        myokit.Unit.conversion_factor(
-                            v.protocol.amount_unit.get_myokit_unit(),
-                            amount_var.unit(),
-                        ).value()
+                amount_conversion_factor = \
+                    v.protocol.amount_unit.convert_to(
+                        amount_var.unit(),
+                        compound=compound
+                    )
 
-                if time_var.unit() is None:
-                    time_conversion_factor = 1.0
-                else:
-                    time_conversion_factor = \
-                        myokit.Unit.conversion_factor(
-                            v.protocol.time_unit.get_myokit_unit(),
-                            time_var.unit(),
-                        ).value()
+                time_conversion_factor = \
+                    v.protocol.time_unit.convert_to(
+                        time_var.unit(),
+                        compound=compound
+                    )
 
                 dosing_events = []
-                from pkpdapp.models import Variable
-                try:
-                    if override_tlag is None:
-                        tlag_value = Variable.objects.get(qname='PKCompartment.tlag').value
-                    else:
-                        tlag_value = override_tlag
-                    last_dose_time = tlag_value
-                except Variable.DoesNotExist:
-                    last_dose_time = 0.0
+                last_dose_time = tlag_value
                 for d in v.protocol.doses.all():
                     if d.repeat_interval <= 0:
                         continue
@@ -116,15 +113,18 @@ class MyokitModelMixin:
                         for start_time in start_times
                     ]
 
-                set_dosing_events(sim, dosing_events)
+                protocols[_get_pacing_label(amount_var)] = get_protocol(dosing_events)
+
+        with lock:
+            sim = myokit.Simulation(model, protocol=protocols)
         return sim
 
-    def get_myokit_simulator(self, override_tlag=None):
+    def get_myokit_simulator(self):
         key = self._get_myokit_simulator_cache_key()
         with lock:
             myokit_simulator = cache.get(key)
         if myokit_simulator is None:
-            myokit_simulator = self.create_myokit_simulator(override_tlag=override_tlag)
+            myokit_simulator = self.create_myokit_simulator()
             cache.set(
                 key, myokit_simulator, timeout=None
             )
@@ -366,14 +366,11 @@ class MyokitModelMixin:
             conversion_factor = 1.0
         else:
             project = self.get_project()
-            compound = project.compound
-            molecular_mass = compound.molecular_mass
-            molecular_mass_unit = compound.molecular_mass_unit.symbol
-            conversion_factor = myokit.Unit.conversion_factor(
-                variable.unit.get_myokit_unit(),
-                myokit_variable_sbml.unit(),
-                helpers=[f'{molecular_mass} [{molecular_mass_unit}]']
-            ).value()
+            if project is None:
+                compound = None
+            else:
+                compound = project.compound
+            conversion_factor = variable.unit.convert_to(myokit_variable_sbml.unit(), compound=compound)
 
         return conversion_factor * value
 
@@ -421,16 +418,13 @@ class MyokitModelMixin:
         return self.time_max
 
     def simulate(
-            self, outputs=None, initial_conditions=None,
-            variables=None, time_max=None
+            self, outputs=None, variables=None, time_max=None
     ):
         """
         Arguments
         ---------
         outputs: list
             list of output names to return
-        initial_conditions: dict
-            dict mapping state names to values for initial conditions
         variables: dict
             dict mapping variable names to values for model parameters
         time_max: float
@@ -453,13 +447,6 @@ class MyokitModelMixin:
             s.qname: s.get_default_value()
             for s in self.variables.filter(state=True)
         }
-        if initial_conditions is None:
-            initial_conditions = default_initial_conditions
-        else:
-            initial_conditions = {
-                **default_initial_conditions,
-                **initial_conditions,
-            }
         default_variables = {
             v.qname: v.get_default_value()
             for v in self.variables.filter(constant=True)
@@ -473,42 +460,26 @@ class MyokitModelMixin:
             }
 
         model = self.get_myokit_model()
-        override_tlag = None
-        if 'PKCompartment.tlag' in variables:
-            override_tlag = variables['PKCompartment.tlag']
-        sim = self.get_myokit_simulator(override_tlag=override_tlag)
-
-        # convert units for variables, initial_conditions
-        # and time_max
-        initial_conditions = {
-            qname: self._convert_unit_qname(qname, value, model)
-            for qname, value in initial_conditions.items()
-        }
-
+        
+        # Convert units
         variables = {
             qname: self._convert_unit_qname(qname, value, model)
             for qname, value in variables.items()
         }
-
         time_max = self._convert_bound_unit(
             'time', time_max, model
         )
 
-        # override initial conditions
-        default_state = sim.default_state()
-        for i, state in enumerate(model.states()):
-            if state.qname() in initial_conditions:
-                default_state[i] = myokit.Number(
-                    initial_conditions[state.qname()])
-        sim.set_default_state(default_state)
-
         # Set constants in model
         for var_name, var_value in variables.items():
-            sim.set_constant(var_name, float(var_value))
+            model.get(var_name).set_rhs(float(var_value))
 
-        # Reset simulation back to t=0, the state will be set to the default
-        # state (set above)
-        sim.reset()
+        # create simulator
+        override_tlag = None
+        if 'PKCompartment.tlag' in variables:
+            override_tlag = variables['PKCompartment.tlag']
+        
+        sim = self.create_myokit_simulator(override_tlag=override_tlag, model=model)
 
         # Simulate, logging only state variables given by `outputs`
         return self.serialize_datalog(
@@ -582,7 +553,7 @@ def set_administration(model,
     _add_dose_rate(drug_amount, time_unit)
 
 
-def set_dosing_events(simulator, events):
+def get_protocol(events):
     """
 
     Parameters
@@ -596,8 +567,10 @@ def set_dosing_events(simulator, events):
             e[0], e[1], e[2]
         )
 
-    simulator.set_protocol(myokit_protocol)
+    return myokit_protocol
 
+def _get_pacing_label(variable):
+    return f'pace_{variable.qname().replace(".", "_")}'
 
 def _add_dose_rate(drug_amount, time_unit):
     """
@@ -609,7 +582,7 @@ def _add_dose_rate(drug_amount, time_unit):
     # myokit.Protocol
     compartment = drug_amount.parent()
     dose_rate = compartment.add_variable_allow_renaming(str('dose_rate'))
-    dose_rate.set_binding('pace')
+    dose_rate.set_binding(_get_pacing_label(drug_amount))
 
     # Set initial value to 0 and unit to unit of drug amount over unit of
     # time

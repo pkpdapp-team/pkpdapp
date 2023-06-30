@@ -847,7 +847,10 @@ const injectedRtkApi = api.injectEndpoints({
       }),
     }),
     unitList: build.query<UnitListApiResponse, UnitListApiArg>({
-      query: () => ({ url: `/api/unit/` }),
+      query: (queryArg) => ({
+        url: `/api/unit/`,
+        params: { compound_id: queryArg.compoundId },
+      }),
     }),
     unitCreate: build.mutation<UnitCreateApiResponse, UnitCreateApiArg>({
       query: (queryArg) => ({
@@ -857,7 +860,10 @@ const injectedRtkApi = api.injectEndpoints({
       }),
     }),
     unitRetrieve: build.query<UnitRetrieveApiResponse, UnitRetrieveApiArg>({
-      query: (queryArg) => ({ url: `/api/unit/${queryArg.id}/` }),
+      query: (queryArg) => ({
+        url: `/api/unit/${queryArg.id}/`,
+        params: { compound_id: queryArg.compoundId },
+      }),
     }),
     unitUpdate: build.mutation<UnitUpdateApiResponse, UnitUpdateApiArg>({
       query: (queryArg) => ({
@@ -1492,13 +1498,18 @@ export type SubjectDestroyApiArg = {
   id: number;
 };
 export type UnitListApiResponse = /** status 200  */ Unit[];
-export type UnitListApiArg = void;
+export type UnitListApiArg = {
+  /** Enable conversions based on compound information */
+  compoundId?: number;
+};
 export type UnitCreateApiResponse = /** status 201  */ Unit;
 export type UnitCreateApiArg = {
   unit: Unit;
 };
 export type UnitRetrieveApiResponse = /** status 200  */ Unit;
 export type UnitRetrieveApiArg = {
+  /** Enable conversions based on compound information */
+  compoundId?: number;
   /** A unique integer value identifying this unit. */
   id: number;
 };
@@ -1700,9 +1711,6 @@ export type ErrorResponse = {
 };
 export type Simulate = {
   outputs: string[];
-  initial_conditions: {
-    [key: string]: number;
-  };
   variables: {
     [key: string]: number;
   };

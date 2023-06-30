@@ -15,7 +15,6 @@ from pkpdapp.models import (
 
 class SimulateSerializer(serializers.Serializer):
     outputs = serializers.ListField(child=serializers.CharField())
-    initial_conditions = serializers.DictField(child=serializers.FloatField())
     variables = serializers.DictField(child=serializers.FloatField())
     time_max = serializers.FloatField(required=False)
 
@@ -56,11 +55,10 @@ class SimulateBaseView(views.APIView):
         except self.model.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
         outputs = request.data.get('outputs', None)
-        initial_conditions = request.data.get('initial_conditions', None)
         variables = request.data.get('variables', None)
         time_max = request.data.get('time_max', None)
         try:
-            result = m.simulate(outputs, initial_conditions, variables, time_max)
+            result = m.simulate(outputs, variables, time_max)
         except myokit.SimulationError as e:
             serialized_result = ErrorResponseSerializer({'error': str(e)})
             return Response(serialized_result.data, status=status.HTTP_400_BAD_REQUEST)
@@ -70,7 +68,6 @@ class SimulateBaseView(views.APIView):
 
 class SimulateCombinedView(SimulateBaseView):
     model = CombinedModel
-
 
 class SimulatePdView(SimulateBaseView):
     model = PharmacodynamicModel

@@ -85,7 +85,7 @@ const SimulationPlotView: React.FC<SimulationPlotProps> = ({ index, plot, data, 
         const hc = exp.hill_coefficient || 1.0;
         const ec50 = exp.c50 || 0.0;
         const cx = cx_line.value / (100.0 - cx_line.value);
-        const iCx = cx^(1.0/hc) * ec50; 
+        const iCx = cx**(1.0/hc) * ec50; 
         return iCx * factor;
       });
     }
@@ -147,9 +147,11 @@ const SimulationPlotView: React.FC<SimulationPlotProps> = ({ index, plot, data, 
     },
     xaxis: {
       title: xAxisTitle,
+      automargin: true,
     },
     yaxis: {
       title: yAxisTitle,
+      automargin: true,
     },
     yaxis2: {
       title: y2AxisTitle,
@@ -197,7 +199,7 @@ const SimulationPlotView: React.FC<SimulationPlotProps> = ({ index, plot, data, 
       <Dialog open={open} onClose={handleClose} fullWidth maxWidth='sm'>
         <DialogTitle>Customise Plot</DialogTitle>
         <DialogContent>
-          <SimulationPlotForm index={index} variables={variables} plot={plot} control={control} setValue={setValue} />
+          <SimulationPlotForm index={index} variables={variables} plot={plot} control={control} setValue={setValue} units={units} />
         </DialogContent>
         <DialogActions>
           <Button onClick={handleDelete}>Delete</Button>

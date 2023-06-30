@@ -5,6 +5,8 @@
 #
 from typing import Dict, List
 import myokit
+import logging
+logger = logging.getLogger(__name__)
 from rest_framework import serializers
 from rest_framework.schemas.openapi import AutoSchema
 from pkpdapp.models import (
@@ -28,11 +30,12 @@ class UnitSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def get_compatible_units(self, unit) -> List[Dict[str, str]]:
+        compound = self.context.get('compound')
         myokit_unit = unit.get_myokit_unit()
         return [
             {
                 'id': u.id,
                 'symbol': u.symbol,
-                'conversion_factor': unit.convert_to(u),
-            } for u in unit.get_compatible_units()
+                'conversion_factor': unit.convert_to(u, compound=compound),
+            } for u in unit.get_compatible_units(compound=compound)
         ]

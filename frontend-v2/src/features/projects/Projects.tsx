@@ -23,7 +23,7 @@ const ProjectTable: React.FC = () => {
   const { data: projects, isLoading } = useProjectListQuery()
   const user = useSelector((state: RootState) => state.login.user);
 
-  const { data: units, isLoading: unitsLoading } = useUnitListQuery()
+  const { data: units, isLoading: unitsLoading } = useUnitListQuery({})
 
   const [addProject] = useProjectCreateMutation()
   const [addCombinedModel] = useCombinedModelCreateMutation()
@@ -73,12 +73,11 @@ const ProjectTable: React.FC = () => {
 
   return (
     <TableContainer>
-      <Table>
+      <Table size="small">
         <TableHead>
           <TableRow>
-            <TableCell>Selected</TableCell>
+            <TableCell padding='checkbox'>Select</TableCell>
             <TableCell>Name</TableCell>
-            <TableCell>Description</TableCell>
             <TableCell>Species</TableCell>
             <TableCell>Compound</TableCell>
             <TableCell>Actions</TableCell>

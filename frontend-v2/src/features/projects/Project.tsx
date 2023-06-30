@@ -7,6 +7,7 @@ import {
   TableRow,
   IconButton,
   Radio,
+  Box,
 } from "@mui/material";
 import { Delete, PersonAdd } from "@mui/icons-material";
 import { Compound, Project, ProjectAccess, useProjectDestroyMutation, useCompoundRetrieveQuery, useCompoundUpdateMutation, useProjectUpdateMutation } from "../../app/backendApi";
@@ -133,15 +134,13 @@ const ProjectRow: React.FC<Props> = ({ project, isSelected }) => {
   ]
 
   return (
+    <>
     <TableRow>
-      <TableCell>
-      <Radio checked={isSelected} onClick={handleSelectProject}/> 
+      <TableCell rowSpan={isSelected ? 2 : 1} sx={{ verticalAlign: 'top'}} padding='checkbox' >
+      <Radio sx={{ marginTop: 4 }} checked={isSelected} onClick={handleSelectProject}/> 
       </TableCell>
       <TableCell>
         <TextField name="project.name" control={control} textFieldProps={defaultProps} rules={{ required: true }} /> 
-      </TableCell>
-      <TableCell>
-        <TextField name="project.description" control={control} textFieldProps={defaultProps} /> 
       </TableCell>
       <TableCell>
         <SelectField name="project.species" options={speciesOptions} control={control} selectProps={defaultProps} /> 
@@ -159,9 +158,18 @@ const ProjectRow: React.FC<Props> = ({ project, isSelected }) => {
         <UserAccess open={userAccessOpen} control={control} onClose={userAccessClose} userAccess={userAccess as ProjectAccess[]} append={append} remove={remove} project={project}/>
       </TableCell>
       <TableCell>
-        <SelectField options={modalityOptions} name="compound.compound_type" control={control} selectProps={defaultProps}/> 
+        { modalityOptions.find(m => m.value === compound.compound_type)?.label }
       </TableCell>
     </TableRow>
+    { isSelected && (
+      <TableRow>
+        <TableCell colSpan={5}>
+          <TextField label="Description" name="project.description" control={control} textFieldProps={{...defaultProps, multiline: true}} /> 
+        </TableCell>
+
+      </TableRow>
+    )}
+    </>
   );
 };
 

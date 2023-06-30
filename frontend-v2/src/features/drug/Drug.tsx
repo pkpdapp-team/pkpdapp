@@ -1,7 +1,7 @@
 import { Box, Grid, IconButton, LinearProgress, List, ListItem, ListItemSecondaryAction, Stack, Typography } from '@mui/material';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../app/store';
-import { Compound, useCompoundRetrieveQuery, useCompoundUpdateMutation, useProjectRetrieveQuery } from '../../app/backendApi';
+import { Compound, useCompoundRetrieveQuery, useCompoundUpdateMutation, useProjectRetrieveQuery, useUnitListQuery } from '../../app/backendApi';
 import { useFieldArray, useForm, useFormState } from 'react-hook-form';
 import FloatField from '../../components/FloatField';
 import UnitField from '../../components/UnitField';
@@ -18,6 +18,8 @@ const Drug: React.FC = () => {
   const { data: project, isLoading: isProjectLoading } = useProjectRetrieveQuery({id: projectId || 0})
   const { data: compound, isLoading: isCompoundLoading } = useCompoundRetrieveQuery({id: project?.compound || 0}, { skip: !project })
   const [ updateCompound ] = useCompoundUpdateMutation()
+  const { data: units, isLoading: isLoadingUnits } = useUnitListQuery({ compoundId: project?.compound}, { skip: !project?.compound});
+
 
 
 
@@ -66,11 +68,11 @@ const Drug: React.FC = () => {
     remove(index);
   };
 
-  if (isProjectLoading || isCompoundLoading) {
+  if (isProjectLoading || isCompoundLoading || isLoadingUnits) {
     return <div>Loading...</div>;
   }
 
-  if (!compound || !project) {
+  if (!compound || !project || !units) {
     return <div>Not found</div>;
   }
 
@@ -93,7 +95,7 @@ const Drug: React.FC = () => {
         <Stack direction="column" spacing={2}>
           <Stack direction="row" spacing={2}>
             <FloatField label={'Molecular Mass'} name={'molecular_mass'} control={control} rules={{ required: true }} />
-            <UnitField label={'Unit'} name={'molecular_mass_unit'} control={control} baseUnitId={compound.molecular_mass_unit} />
+            <UnitField label={'Unit'} name={'molecular_mass_unit'} control={control} baseUnit={units.find(u => u.id == compound.molecular_mass_unit)} compound={compound} />
           </Stack>
 
           <FloatField label="Fraction Unbound Plasma" name="fraction_unbound_plasma" control={control} />
@@ -115,17 +117,17 @@ const Drug: React.FC = () => {
         <Stack direction="column" spacing={2}>
           <Stack direction="row" spacing={2}>
             <FloatField label={'Molecular Mass'} name={'target_molecular_mass'} control={control} rules={{ required: true }} />
-            <UnitField label={'Unit'} name={'target_molecular_mass_unit'} control={control} baseUnitId={compound.molecular_mass_unit} />
+            <UnitField label={'Unit'} name={'target_molecular_mass_unit'} control={control} baseUnit={units.find(u => u.id === compound.molecular_mass_unit)} compound={compound} />
           </Stack>
 
           <Stack direction="row" spacing={2}>
             <FloatField label="Target Concentration" name={'target_concentration'} control={control} />
-            <UnitField label={'Unit'} name={'target_concentration_unit'} control={control} baseUnitId={compound.target_concentration_unit} />
+            <UnitField label={'Unit'} name={'target_concentration_unit'} control={control} baseUnit={units.find(u => u.id === compound.target_concentration_unit)} compound={compound} />
           </Stack>
 
           <Stack direction="row" spacing={2}>
             <FloatField label="Dissociation Constant" name={'dissociation_constant'} control={control} />
-            <UnitField label={'Unit'} name={'dissociation_unit'} control={control} baseUnitId={compound.dissociation_unit} />
+            <UnitField label={'Unit'} name={'dissociation_unit'} control={control} baseUnit={units.find(u => u.id === compound.dissociation_unit)} compound={compound} />
           </Stack>
 
           <SelectField label="Domain" name={'is_soluble'} control={control} options={is_soluble_options} />
@@ -147,7 +149,7 @@ const Drug: React.FC = () => {
             <TextField label="Name" name={`efficacy_experiments.${index}.name`} control={control} />
             <Stack direction="row" spacing={2}>
               <FloatField label="C50" name={`efficacy_experiments.${index}.c50`} control={control} />
-              <UnitField label={'Unit'} name={`efficacy_experiments.${index}.c50_unit`} control={control} baseUnitId={efficacy_experiment.c50_unit} />
+              <UnitField label={'Unit'} name={`efficacy_experiments.${index}.c50_unit`} control={control} baseUnit={units.find(u => u.id === efficacy_experiment.c50_unit)} compound={compound} />
             </Stack>
             <FloatField label="Hill-coefficient" name={`efficacy_experiments.${index}.hill_coefficient`} control={control} />
           </Stack>

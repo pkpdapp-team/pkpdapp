@@ -20,7 +20,7 @@ interface Props {
 }
 
 const Doses: React.FC<Props> = ({ project, protocol, units }) => {
-  const { data: variable, error: variableError, isLoading: isVariableLoading } = useVariableRetrieveQuery({id: protocol.variables[0] || 0})
+  const { data: variable, error: variableError, isLoading: isVariableLoading } = useVariableRetrieveQuery({id: protocol.variables[0] || 0}, { skip: !protocol.variables.length })
   const { control, handleSubmit, reset, formState: { isDirty } } = useForm<Protocol>({
     defaultValues: protocol,
   });
@@ -36,17 +36,26 @@ const Doses: React.FC<Props> = ({ project, protocol, units }) => {
     reset(protocol);
   }, [protocol, reset]);
 
+  const handleSave = handleSubmit((data: Protocol) => {
+    if (JSON.stringify(data) !== JSON.stringify(protocol)) {
+      updateProtocol({ id: data.id, protocol: data })
+    }
+  });
+
   // save protocol every second if dirty
   useEffect(() => {
     const intervalId = setInterval(() => {
       if (isDirty) {
         console.log('saving protocol')
-        handleSubmit((data) => updateProtocol({ id: data.id, protocol: data }))();
+        handleSave();
       }
     }, 1000);
 
     return () => clearInterval(intervalId);
-  }, [handleSubmit, isDirty, updateProtocol]);
+  }, [handleSave, isDirty]);
+
+
+  useEffect(() => () => { handleSave(); }, []);
   
   if (isVariableLoading) {
     return <div>Loading...</div>;
@@ -57,7 +66,7 @@ const Doses: React.FC<Props> = ({ project, protocol, units }) => {
   }
 
   const handleAddRow = () => {
-    appendDose({ id: 0, amount: 0, repeats: 0, start_time: 0, repeat_interval: 0 });
+    appendDose({ id: 0, amount: 0, repeats: 0, start_time: 0, repeat_interval: 1 });
   }
 
   const handleDeleteRow = (index: number) => {
@@ -76,7 +85,7 @@ const Doses: React.FC<Props> = ({ project, protocol, units }) => {
           </TableCell>
           <TableCell>
             { protocol.amount_unit && index === 0 && (
-              <UnitField label={"Unit"} name={`amount_unit`} control={control} baseUnitId={protocol.amount_unit} />
+              <UnitField label={"Unit"} name={`amount_unit`} control={control} baseUnit={units.find(u => u.id === protocol.amount_unit)} />
             )}
           </TableCell>
           <TableCell>
@@ -89,11 +98,11 @@ const Doses: React.FC<Props> = ({ project, protocol, units }) => {
             <FloatField label={"Dosing Duration"} name={`doses.${index}.duration`} control={control} rules={{ required: true, min: { value: Number.EPSILON, message: "Must be greater than 0"} }} />
           </TableCell>
           <TableCell>
-            <FloatField label={"Dosing Interval"} name={`doses.${index}.repeat_interval`} control={control} rules={{ required: true }} />
+            <FloatField label={"Dosing Interval"} name={`doses.${index}.repeat_interval`} control={control} rules={{ required: true, min: { value: Number.EPSILON, message: "Must be greater than 0" } }} />
           </TableCell>
           <TableCell>
             { protocol.time_unit && index === 0 && (
-              <UnitField label={"Time Unit"} name={`time_unit`} control={control} baseUnitId={protocol.time_unit} />
+              <UnitField label={"Time Unit"} name={`time_unit`} control={control} baseUnit={units.find(u => u.id === protocol.time_unit)}/>
             )}
           </TableCell>
           <TableCell align="right">

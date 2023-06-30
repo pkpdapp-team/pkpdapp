@@ -6,7 +6,7 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import { Project, CombinedModel, Variable, useVariableUpdateMutation } from "../../app/backendApi";
+import { Project, CombinedModel, Variable, useVariableUpdateMutation, Unit } from "../../app/backendApi";
 import TextField from "../../components/TextField";
 import UnitField from "../../components/UnitField";
 import useDirty from "../../hooks/useDirty";
@@ -16,10 +16,11 @@ interface Props {
   project: Project;
   model: CombinedModel;
   variable: Variable;
+  units: Unit[];
 }
 
 
-const ParameterRow: React.FC<Props> = ({ project, model, variable }) => {
+const ParameterRow: React.FC<Props> = ({ project, model, variable, units }) => {
 
   const { control, handleSubmit, reset, formState: { isDirty: isDirtyForm }} = useForm<Variable>(
     { defaultValues: variable || { id: 0, name: ''}}
@@ -73,7 +74,7 @@ const ParameterRow: React.FC<Props> = ({ project, model, variable }) => {
         <FloatField name="default_value" control={control} label="Value" rules={{ required: true }} />
       </TableCell>
       <TableCell>
-        <UnitField label={'Unit'} name={'unit'} control={control} baseUnitId={variable.unit === null ? undefined : variable.unit} />
+        <UnitField label={'Unit'} name={'unit'} control={control} baseUnit={variable.unit === null ? undefined : units.find(u => u.id === variable.unit)} />
       </TableCell>
     </TableRow>
   );

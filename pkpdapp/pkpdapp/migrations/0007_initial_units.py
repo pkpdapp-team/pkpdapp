@@ -216,6 +216,10 @@ def load_units(apps, schema_editor):
             'unit': g / (1e-6 * mol),
         },
         {
+            'symbol': 'h*pmol/L',
+            'unit': h * 1e-12 * mol / L,
+        },
+        {
             'symbol': 'h*nmol/L',
             'unit': h * 1e-9 * mol / L,
         },
@@ -230,6 +234,10 @@ def load_units(apps, schema_editor):
         {
             'symbol': 'h*µg/mL',
             'unit': h * 1e-6 * g / (1e-3 * L),
+        },
+        {
+            'symbol': 'day*pmol/L',
+            'unit': 24 * h * 1e-12 * mol / L,
         },
         {
             'symbol': 'day*nmol/L',

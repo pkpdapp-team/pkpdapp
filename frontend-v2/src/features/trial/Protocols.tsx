@@ -17,9 +17,9 @@ import Doses from "./Doses";
 
 const Protocols: React.FC = () => {
   const selectedProject = useSelector((state: RootState) => state.main.selectedProject);
-  const { data: project, error: projectError, isLoading: isProjectLoading } = useProjectRetrieveQuery({id: selectedProject || 0})
-  const { data: protocols, error: protocolsError, isLoading: isProtocolsLoading } = useProtocolListQuery({projectId: selectedProject || 0})
-  const { data: units, isLoading: unitsLoading } = useUnitListQuery()
+  const { data: project, error: projectError, isLoading: isProjectLoading } = useProjectRetrieveQuery({id: selectedProject || 0}, { skip: !selectedProject })
+  const { data: protocols, error: protocolsError, isLoading: isProtocolsLoading } = useProtocolListQuery({projectId: selectedProject || 0}, { skip: !selectedProject })
+  const { data: units, isLoading: unitsLoading } = useUnitListQuery({ compoundId: project?.compound || 0}, { skip: !project?.compound})
 
   if (isProjectLoading || isProtocolsLoading || unitsLoading) {
     return <div>Loading...</div>;

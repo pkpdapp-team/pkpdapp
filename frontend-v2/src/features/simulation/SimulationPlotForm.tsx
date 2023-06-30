@@ -1,6 +1,6 @@
 import React from 'react';
 import { Control, UseFormSetValue, useFieldArray } from 'react-hook-form';
-import { Simulation, SimulationPlot, SimulationYAxis, Variable, useUnitListQuery } from '../../app/backendApi';
+import { Simulation, SimulationPlot, SimulationYAxis, Unit, Variable, useUnitListQuery } from '../../app/backendApi';
 import { Divider, Grid, IconButton, List, ListItem, Stack, Typography } from '@mui/material';
 import TextField from '../../components/TextField';
 import UnitField from '../../components/UnitField';
@@ -15,10 +15,10 @@ interface SimulationPlotFormProps {
   variables: Variable[];
   control: Control<Simulation>,
   setValue: UseFormSetValue<Simulation>,
+  units: Unit[],
 }
 
-const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({ index, plot, variables, control, setValue }) => {
-  const { data: units, isLoading: unitsLoading } = useUnitListQuery()
+const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({ index, plot, variables, control, setValue, units }) => {
   const baseXUnitId = units ? units.find((u) => u.symbol === 'h')?.id : undefined;
 
   const { fields: y_axes, append: addYAxis, remove: removeYAxis } = useFieldArray({
@@ -31,12 +31,7 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({ index, plot, va
     name: `plots.${index}.cx_lines`,
   });
 
-  if (unitsLoading) {
-    return <div>Loading...</div>
-  }
-  if (!units) {
-    return <div>Failed to load units</div>
-  }
+
 
   const concentrationUnit = units.find((unit) => unit.symbol === "pmol/L");
   if (concentrationUnit === undefined) {
@@ -120,7 +115,7 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({ index, plot, va
 
   const addY2AxisOptions = getAddAxisOptions(rhs_y_axes);
   const addYAxisOptions = getAddAxisOptions(lhs_y_axes);
-  const addCxLineOptions = Array.from({ length: 6 }, (_, i) => 100 * i / 5).map((v) => ({ label: v.toString(), value: v })); 
+  const addCxLineOptions = [10, 20, 50, 80, 90, 95, 99].map((v) => ({ label: v.toString(), value: v })); 
   let receptorOccupancyVariableOptions: { label: string, value: string | number}[] = concentrationVariables.map((v) => ({ label: v.name, value: v.id }));
   receptorOccupancyVariableOptions.push({ label: 'None', value: '' })
   
@@ -133,7 +128,7 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({ index, plot, va
             label="X Axis Unit"
             name={`plots.${index}.x_unit`}
             control={control}
-            baseUnitId={baseXUnitId}
+            baseUnit={units.find(u => u.id === baseXUnitId)}
         />
         </Grid>
     </Grid>
@@ -147,7 +142,7 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({ index, plot, va
           label="Y Axis Unit"
           name={`plots.${index}.y_unit`}
           control={control}
-          baseUnitId={baseYUnitId}
+          baseUnit={units.find(u => u.id === baseYUnitId)}
           selectProps={{disabled: lhs_y_axes.length === 0}}
       />
       </Grid>
@@ -215,7 +210,7 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({ index, plot, va
           label="Unit"
           name={`plots.${index}.y_unit2`}
           control={control}
-          baseUnitId={baseY2UnitId}
+          baseUnit={units.find(u => u.id === baseY2UnitId)}
           selectProps={{disabled: rhs_y_axes.length === 0}}
       />
       </Grid>

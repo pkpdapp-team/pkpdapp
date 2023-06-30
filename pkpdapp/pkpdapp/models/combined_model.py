@@ -10,6 +10,7 @@ from pkpdapp.models import (
     Project, StoredModel,
     PharmacodynamicModel,
     PharmacokineticModel,
+    Unit,
 )
 from django.db import models
 from django.urls import reverse
@@ -259,44 +260,11 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 mapping.pk_variable.qname
             )
 
-            helpers = None
-
-            # if pd unit is in mol, then use the project compound to convert to
-            # grams
-            if (
-                pd_var.unit() is not None and
-                pd_var.unit().exponents()[-1] != 0
-            ):
-                compound = self.project.compound
-                if compound is None:
-                    raise RuntimeError(
-                        'PD unit is in mol, but no compound listed for '
-                        'protocol to convert to grams'
-                    )
-                if compound.molecular_mass is None:
-                    raise RuntimeError(
-                        'PD unit is in mol, but no molecular mass '
-                        'is listed for compound '
-                        '{}'.format(compound.name)
-                    )
-                if compound.molecular_mass_unit is None:
-                    raise RuntimeError(
-                        'PD unit is in mol, but no molecular mass unit '
-                        'is listed for compound '
-                        '{}'.format(compound.name)
-                    )
-
-                mol_mass = myokit.Quantity(
-                    compound.molecular_mass,
-                    compound.molecular_mass_unit.get_myokit_unit()
-                )
-                helpers = [mol_mass]
-
-            pk_to_pd_conversion_multiplier = myokit.Unit.conversion_factor(
-                pk_var.unit(), pd_var.unit(), helpers=helpers
+            pk_to_pd_conversion_multiplier = Unit.convert_between_myokit_units(
+                pk_var.unit(), pd_var.unit(), compound=self.project.compound
             )
-            pd_to_pk_conversion_multiplier = myokit.Unit.conversion_factor(
-                pd_var.unit(), pk_var.unit(), helpers=helpers
+            pd_to_pk_conversion_multiplier = Unit.convert_between_myokit_units(
+                pk_var.unit(), pd_var.unit(), compound=self.project.compound
             )
 
             # pd var will be an intermediary variable driven by pk_var
