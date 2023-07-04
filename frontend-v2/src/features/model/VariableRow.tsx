@@ -82,10 +82,11 @@ const VariableRow: React.FC<Props> = ({ project, compound, model, variable, cont
 
   const addProtocol = () => {
     const defaultDose: Dose = { id: 0, amount: 0, start_time: 0, repeat_interval: 1, repeats: 0 };
-    createProtocol({ protocol: { id: 0, dataset: '', doses: [ defaultDose ], amount_unit: variable.unit, time_unit: defaultTimeUnit?.id || undefined, subjects: [], name: variable.name, project: project.id, variables: [] } })
+    createProtocol({ protocol: { id: 0, dataset: '', doses: [ defaultDose ], amount_unit: variable.unit, time_unit: defaultTimeUnit?.id || undefined, subjects: [], name: variable.name, project: project.id, variables: [variable.id] } })
     .then((value) => {
       if ('data' in value) {
         setValue("protocol", value.data.id ) 
+        updateVariable({ id: variable.id, variable: { ...variable, protocol: value.data.id }})
       }
     });
   };

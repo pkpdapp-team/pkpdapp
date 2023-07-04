@@ -1,6 +1,6 @@
 import { useSelector } from 'react-redux';
 import { RootState } from '../../app/store';
-import { CombinedModel, useCombinedModelListQuery, useCombinedModelUpdateMutation, useProjectRetrieveQuery, useSimulationListQuery, useSimulationUpdateMutation, useVariableListQuery } from '../../app/backendApi';
+import { CombinedModel, useCombinedModelListQuery, useCombinedModelUpdateMutation, useProjectRetrieveQuery, useProtocolDestroyMutation, useProtocolListQuery, useSimulationListQuery, useSimulationUpdateMutation, useVariableListQuery } from '../../app/backendApi';
 import { useForm } from 'react-hook-form';
 import { useEffect, useMemo } from 'react';
 import { DynamicTabs, TabPanel } from '../../components/DynamicTabs';
@@ -69,6 +69,7 @@ const Model: React.FC = () => {
   });
 
   
+
   useEffect(() => {
     const intervalId = setInterval(() => {
       if (isDirty) {

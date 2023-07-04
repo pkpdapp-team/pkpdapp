@@ -29,6 +29,8 @@ const Protocols: React.FC = () => {
     return <div>Project not found</div>;
   }
 
+  const filteredProtocols = protocols?.filter((protocol) => protocol.variables.length > 0);
+
   
   return (
     <TableContainer>
@@ -54,7 +56,7 @@ const Protocols: React.FC = () => {
               <TableCell colSpan={5}>No protocols found</TableCell>
             </TableRow>
           )}
-          {protocols?.map((protocol) => (
+          {filteredProtocols?.map((protocol) => (
             <Doses key={protocol.id} project={project} protocol={protocol} units={units} />
           ))}
         </TableBody>

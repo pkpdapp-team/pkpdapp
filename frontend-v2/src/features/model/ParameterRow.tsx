@@ -58,6 +58,8 @@ const ParameterRow: React.FC<Props> = ({ project, model, variable, units }) => {
 
   const isPD = variable.qname.startsWith("PD");
 
+  const unit = variable.unit === null ? undefined : units.find(u => u.id === variable.unit)
+
   return (
     <TableRow>
       <TableCell>
@@ -74,7 +76,7 @@ const ParameterRow: React.FC<Props> = ({ project, model, variable, units }) => {
         <FloatField name="default_value" control={control} label="Value" rules={{ required: true }} />
       </TableCell>
       <TableCell>
-        <UnitField label={'Unit'} name={'unit'} control={control} baseUnit={variable.unit === null ? undefined : units.find(u => u.id === variable.unit)} />
+        <UnitField label={'Unit'} name={'unit'} control={control} baseUnit={unit} />
       </TableCell>
     </TableRow>
   );

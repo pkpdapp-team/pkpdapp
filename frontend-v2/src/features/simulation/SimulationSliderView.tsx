@@ -1,21 +1,25 @@
 import React, { SyntheticEvent, useEffect } from 'react';
 import { SimulationSlider, useVariableRetrieveQuery } from '../../app/backendApi';
-import { Grid, IconButton, Input, Slider, Stack, Typography } from '@mui/material';
-import { Delete } from '@mui/icons-material';
+import { Grid, IconButton, Input, Slider, Stack, Tooltip, Typography } from '@mui/material';
+import { CloseFullscreen, Delete, OpenInFull, Replay, Save } from '@mui/icons-material';
 
 interface SimulationSliderProps {
   index: number;
   slider: SimulationSlider;
   onChange: (value: number) => void;
+  onSave: (value: number) => void;
   remove: (index: number) => void;
 }
 
-const SimulationSliderView: React.FC<SimulationSliderProps> = ({ index, slider, onChange, remove }) => {
+const SimulationSliderView: React.FC<SimulationSliderProps> = ({ index, slider, onChange, remove, onSave }) => {
   const { data: variable, isLoading } = useVariableRetrieveQuery({id: slider.variable});
 
   const [value, setValue] = React.useState<number>(
     variable?.default_value || 1.0,
   );
+
+  const [ range, setRange ] = React.useState<number>(10.0);
+
 
   useEffect(() => {
     setValue(variable?.default_value || 1.0);
@@ -27,15 +31,40 @@ const SimulationSliderView: React.FC<SimulationSliderProps> = ({ index, slider, 
     }
   };
 
+  const handleReset = () => {
+    setValue(variable?.default_value || 1.0);
+    onChange(variable?.default_value || 1.0);
+  };
+
+  const handleSave = () => {
+    setValue(value);
+    onSave(value);
+  };
+
+  const handleDelete = () => {
+    remove(index);
+  };
+
+  const handleWider = () => {
+    setRange(range + 10.0);
+  };
+
+  const handleNarrow = () => {
+    setRange(Math.max(range - 10.0, 10.0));
+  };
+
+
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setValue(Number(event.target.value));
   };
 
   const baseValue = variable?.default_value || 1.0;
-  const minValue = baseValue / 10.0;
-  const maxValue = baseValue * 10.0;
-  const stepValue = baseValue / 100.0;
+  const minValue = baseValue / range;
+  const maxValue = baseValue * range;
+  const stepValue = (maxValue - minValue) / 1000.0;
+
+  console.log("range", range, minValue, maxValue, stepValue);
 
   const handleBlur = () => {
     let truncatedValue = value;
@@ -59,13 +88,38 @@ const SimulationSliderView: React.FC<SimulationSliderProps> = ({ index, slider, 
 
   return (
     <div>
-      <Stack direction="row" spacing={2} alignItems="center">
-        <Typography id="discrete-slider" gutterBottom>
+      <Stack direction="row" spacing={0} alignItems="center">
+        <Tooltip title={variable.description} placement='top'>
+        <Typography id="discrete-slider" gutterBottom sx={{ flexGrow: 1 }}>
           {variable.name}
         </Typography>
-        <IconButton aria-label="delete" onClick={() => remove(index)}>
+        </Tooltip>
+        <Tooltip title={"Reset to saved default value"} placement='top'>
+        <IconButton aria-label="reset" onClick={handleReset}>
+          <Replay />
+        </IconButton>
+        </Tooltip>
+        <Tooltip title={"Save value as default"} placement='top'>
+        <IconButton aria-label="save" onClick={handleSave}>
+          <Save />
+        </IconButton>
+        </Tooltip>
+        <Tooltip title={"Widen range"} placement='top'>
+        <IconButton aria-label="widen" onClick={handleWider}>
+          <OpenInFull />
+        </IconButton>
+        </Tooltip>
+        <Tooltip title={"Narrow range"} placement='top'>
+        <IconButton aria-label="restrict" onClick={handleNarrow}>
+          <CloseFullscreen />
+        </IconButton>
+        </Tooltip>
+        <Tooltip title={"Remove slider"} placement='top'>
+        <IconButton aria-label="delete" onClick={handleDelete}>
           <Delete />
         </IconButton>
+        </Tooltip>
+
       </Stack>
       <Grid container spacing={2} alignItems="center">
         <Grid item xs={8}>

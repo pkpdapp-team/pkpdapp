@@ -79,6 +79,7 @@ const ProjectRow: React.FC<Props> = ({ project, isSelected }) => {
 
   const handleSave = handleSubmit((data: FormData) => {
     if (compound && project) {
+      console.log('save', data, compound)
       if (JSON.stringify(compound) !== JSON.stringify(data.compound)) {
         updateCompound({ id: compound.id, compound: data.compound });
       }
@@ -134,7 +135,7 @@ const ProjectRow: React.FC<Props> = ({ project, isSelected }) => {
   ]
 
   return (
-    <>
+    <React.Fragment>
     <TableRow>
       <TableCell rowSpan={isSelected ? 2 : 1} sx={{ verticalAlign: 'top'}} padding='checkbox' >
       <Radio sx={{ marginTop: 4 }} checked={isSelected} onClick={handleSelectProject}/> 
@@ -169,7 +170,7 @@ const ProjectRow: React.FC<Props> = ({ project, isSelected }) => {
 
       </TableRow>
     )}
-    </>
+    </React.Fragment>
   );
 };
 

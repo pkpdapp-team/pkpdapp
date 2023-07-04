@@ -45,7 +45,6 @@ function FloatField<T extends FieldValues>({ label, name, control, rules, textFi
             name={name}
             id={name}
             variant="outlined"
-            defaultValue={value}
             value={fieldValue === undefined || fieldValue === null ? '' : fieldValue}
             onChange={handleChange}
             onBlur={handleBlur}

@@ -6,12 +6,9 @@ import usePrevious from "./usePrevious";
 function useDirty(isDirty: boolean) {
   const dispatch = useDispatch();
   useEffect(() => {
-    console.log('useDirty', isDirty)
     if (isDirty) {
-      console.log('incrementing dirty count')
       dispatch(incrementDirtyCount())
       return () => {
-        console.log('useDirty cleanup')
         dispatch(decrementDirtyCount())
       };
     }

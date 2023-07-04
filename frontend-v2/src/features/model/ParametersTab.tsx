@@ -51,12 +51,15 @@ const ParametersTab: React.FC<Props> = ({ model, project, control, variables }) 
         for (const variable of constVariables) {
             const varName = variable.name;
             let defaultVal = paramDefaults[modelName]?.[varName]?.[species];
+            if (!defaultVal) {
+              continue;
+            }
             if (defaultVal.unit === "dimensionless") {
               defaultVal.unit = '';
             }
             const defaultUnitId = defaultVal ? units.find(unit => unit.symbol === defaultVal.unit)?.id : undefined;
             console.log(modelName, varName, species, defaultVal, defaultUnitId)
-            if (defaultVal && defaultUnitId) {
+            if (defaultUnitId) {
                 updateVariable({ id: variable.id, variable: { ...variable, default_value: defaultVal.value, unit: defaultUnitId }});
             }
         }

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Plot from 'react-plotly.js';
 import { Compound, SimulateResponse, Simulation, SimulationPlot, Unit, Variable } from '../../app/backendApi';
-import { Config, Data, Layout, Icon as PlotlyIcon } from 'plotly.js';
+import { Config, Data, Icons, Layout, Icon as PlotlyIcon } from 'plotly.js';
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
 import { Control, UseFormSetValue } from 'react-hook-form';
 import SimulationPlotForm from './SimulationPlotForm';
@@ -24,7 +24,10 @@ const SimulationPlotView: React.FC<SimulationPlotProps> = ({ index, plot, data, 
 
   const handleCustomisePlot = () => {
     setOpen(true);
+  }
 
+  const handleRemovePlot = () => {
+    remove(index);
   }
 
   const handleClose = () => {
@@ -117,7 +120,6 @@ const SimulationPlotView: React.FC<SimulationPlotProps> = ({ index, plot, data, 
   }
 
 
-  console.log('icLines', icLines)
   const plotLayout: Partial<Layout> = {
     shapes: icLines.map((icLine, i) => {
       return {
@@ -175,11 +177,17 @@ const SimulationPlotView: React.FC<SimulationPlotProps> = ({ index, plot, data, 
     }
   }
 
-  const plus: PlotlyIcon = {
+  const editIcon: PlotlyIcon = {
     'width': 500,
     'height': 600,
-    'path': 'M 0,0 500,0 500,500 0,500 z M 250,100 400,100 400,250 250,250 250,400 100,400 100,250 250,250 250,100 z',
+    'path': 'm70.064 422.35 374.27-374.26 107.58 107.58-374.26 374.27-129.56 21.97z m70.569 417.81 110.61 110.61 z m491.47 108.37-366.69 366.68 z m54.222 507.26 40.975 39.546 z'
   }
+  const removeIcon: PlotlyIcon = {
+    'width': 500,
+    'height': 600,
+    'path': 'M507.4,411.5L507.4,411.5L351.9,256l155.5-155.5l3.7-5.6c1.9-5.6,0.9-12.1-3.7-16.8L433.8,4.6 C429.2,0,422.7-1,417.1,0.9l-5.6,3.7L256,160.1L100.5,4.6l-5.6-3.7C89.3-1,82.8,0,78.2,4.6L4.6,78.2C0,82.8-1,89.3,0.9,94.9 l3.7,5.6L160.1,256L4.6,411.5l-3.7,5.6c-1.9,5.6-0.9,12.1,3.7,16.8l73.6,73.6c4.7,4.7,11.2,5.6,16.8,3.7l5.6-3.7L256,351.9 l155.5,155.5l5.6,3.7c5.6,1.9,12.1,0.9,16.8-3.7l73.6-73.6c4.7-4.7,5.6-11.2,3.7-16.8L507.4,411.5z'
+  }
+
 
   const config: Partial<Config> = {
     modeBarButtonsToAdd: [
@@ -187,8 +195,14 @@ const SimulationPlotView: React.FC<SimulationPlotProps> = ({ index, plot, data, 
         name: 'Customise Plot',
         title: 'Customise Plot',
         click: handleCustomisePlot,
-        //icon: Plotly.Icons.pencil,
-        icon: plus,
+        icon: editIcon,
+
+      },
+      {
+        name: 'Remove Plot',
+        title: 'Remove Plot',
+        click: handleRemovePlot,
+        icon: removeIcon,
 
       },
     ],

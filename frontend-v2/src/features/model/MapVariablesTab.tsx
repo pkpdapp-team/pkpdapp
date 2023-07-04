@@ -23,6 +23,12 @@ const MapVariablesTab: React.FC<Props> = ({ model, project, control, variables }
       return null;
     }
 
+    const concentrationUnit = units.find((unit) => unit.symbol === "pmol/L");
+    const amountUnit = units.find((unit) => unit.symbol === "pmol");
+    if (concentrationUnit === undefined || amountUnit === undefined) {
+      return (<>No concentration or amount unit found</>);
+    }
+
     let timeVaryingVariables = variables.filter(variable => !variable.constant);
     timeVaryingVariables.sort((a, b) => {
       const aisPK = a.qname.startsWith("PK");
@@ -33,7 +39,20 @@ const MapVariablesTab: React.FC<Props> = ({ model, project, control, variables }
       if (!aisPK && bisPK) {
         return 1;
       }
-      return a.name > b.name ? 1 : -1;
+      const aIsConcentration = concentrationUnit?.compatible_units.find((unit) => parseInt(unit.id) === a.unit) !== undefined;
+      const aIsAmount = amountUnit?.compatible_units.find((unit) => parseInt(unit.id) === a.unit) !== undefined;
+      const bIsConcentration = concentrationUnit?.compatible_units.find((unit) => parseInt(unit.id) === b.unit) !== undefined;
+      const bIsAmount = amountUnit?.compatible_units.find((unit) => parseInt(unit.id) === b.unit) !== undefined;
+
+      const aValue = aIsConcentration ? 1 : (aIsAmount ? 2 : 0);
+      const bValue = bIsConcentration ? 1 : (bIsAmount ? 2 : 0);
+
+      if (aValue !== bValue) {
+        return bValue - aValue;
+      } else {
+        return a.name > b.name ? 1 : -1;
+      }
+      
     })
 
     const effectVariable = variables.find((variable) => variable.qname === "PDCompartment.C_Drug" || variable.qname === "PDCompartment2.C_Drug");

@@ -92,7 +92,7 @@ export const api = backendApi.enhanceEndpoints({
       providesTags: (result, error, { id }) => [{ type: 'CombinedModel', id }],
     },
     combinedModelUpdate: {
-      invalidatesTags: (result, error, { id }) => [{ type: 'CombinedModel', id }, { type: 'Variable', id: 'LIST' }],
+      invalidatesTags: (result, error, { id }) => [{ type: 'CombinedModel', id }, { type: 'Variable', id: 'LIST' }, { type: 'Protocol', id: 'LIST' }],
     },
     combinedModelCreate: {
       invalidatesTags: [{ type: 'CombinedModel', id: 'LIST' }, { type: 'Variable', id: 'LIST' }],
@@ -117,7 +117,7 @@ export const api = backendApi.enhanceEndpoints({
       providesTags: (result, error, { id }) => [{ type: 'Variable', id }],
     },
     variableUpdate: {
-      invalidatesTags: (result, error, { id }) => [{ type: 'Variable', id }],
+      invalidatesTags: (result, error, { id }) => [{ type: 'Variable', id }, { type: 'Protocol', id: 'LIST' }],
     },
     variableCreate: {
       invalidatesTags: [{ type: 'Variable', id: 'LIST' }],

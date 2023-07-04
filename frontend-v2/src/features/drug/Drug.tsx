@@ -11,16 +11,15 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import TextField from '../../components/TextField';
 import useDirty from '../../hooks/useDirty';
+import { CompressOutlined } from '@mui/icons-material';
 
 
 const Drug: React.FC = () => {
   const projectId = useSelector((state: RootState) => state.main.selectedProject);
-  const { data: project, isLoading: isProjectLoading } = useProjectRetrieveQuery({id: projectId || 0})
+  const { data: project, isLoading: isProjectLoading } = useProjectRetrieveQuery({id: projectId || 0}, { skip: !projectId })
   const { data: compound, isLoading: isCompoundLoading } = useCompoundRetrieveQuery({id: project?.compound || 0}, { skip: !project })
   const [ updateCompound ] = useCompoundUpdateMutation()
   const { data: units, isLoading: isLoadingUnits } = useUnitListQuery({ compoundId: project?.compound}, { skip: !project?.compound});
-
-
 
 
   // create a form for the compound data using react-hook-form
@@ -41,7 +40,7 @@ const Drug: React.FC = () => {
   }, [compound, reset]);
 
   const submit = handleSubmit((data) => {
-    if (JSON.stringify(data) !== JSON.stringify(compound)) {
+    if (data && compound && (JSON.stringify(data) !== JSON.stringify(compound))) {
       updateCompound({ id: data.id, compound: data })
     }
   });
@@ -57,6 +56,7 @@ const Drug: React.FC = () => {
   }, [submit, isDirty]);
 
 
+
   useEffect(() => () => { submit(); }, []);
   
   
@@ -67,6 +67,7 @@ const Drug: React.FC = () => {
   const deleteEfficacyExperiment = (index: number) => {
     remove(index);
   };
+
 
   if (isProjectLoading || isCompoundLoading || isLoadingUnits) {
     return <div>Loading...</div>;

@@ -1,7 +1,7 @@
 import { Alert, Container, Grid, Snackbar, Stack, Typography } from '@mui/material';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../app/store';
-import { Simulate, SimulateResponse, Simulation, SimulationPlot, SimulationSlider, Unit, Variable, useCombinedModelListQuery, useCombinedModelSimulateCreateMutation, useCompoundRetrieveQuery, useProjectRetrieveQuery, useSimulationListQuery, useSimulationUpdateMutation, useUnitListQuery, useVariableListQuery } from '../../app/backendApi';
+import { Simulate, SimulateResponse, Simulation, SimulationPlot, SimulationSlider, Unit, Variable, useCombinedModelListQuery, useCombinedModelSimulateCreateMutation, useCompoundRetrieveQuery, useProjectRetrieveQuery, useProtocolListQuery, useSimulationListQuery, useSimulationUpdateMutation, useUnitListQuery, useVariableListQuery, useVariableUpdateMutation } from '../../app/backendApi';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { useEffect, useMemo, useState } from 'react';
 import SimulationPlotView from './SimulationPlotView';
@@ -47,7 +47,6 @@ const getSimulateInput = (simulation: Simulation, sliderValues: SliderValues, va
 }
 
 const getSliderInitialValues = (simulation?: Simulation, existingSliderValues?: SliderValues, variables?: Variable[]): SliderValues => {
-  console.log('XXslider initial values')
   let initialValues: {[key: number]: number} = {};
   for (const slider of simulation?.sliders || []) {
     if (existingSliderValues && existingSliderValues[slider.variable]) {
@@ -68,29 +67,27 @@ const getSliderInitialValues = (simulation?: Simulation, existingSliderValues?: 
 const Simulations: React.FC = () => {
   const projectId = useSelector((state: RootState) => state.main.selectedProject);
   const { data: project, isLoading: isProjectLoading } = useProjectRetrieveQuery({id: projectId || 0}, { skip: !projectId })
-  const { data: variables } = useVariableListQuery({projectId: projectId || 0}, { skip: !projectId })
+  const { data: models, isLoading: isModelsLoading } = useCombinedModelListQuery({projectId: projectId || 0}, { skip: !projectId})
+  const { data: protocols, error: protocolsError, isLoading: isProtocolsLoading } = useProtocolListQuery({projectId: projectId || 0}, { skip: !projectId})
+  const model = useMemo(() => {
+    return models?.[0] || undefined
+  }, [models]);
+  const { data: variables, isLoading: isVariablesLoading } = useVariableListQuery({ dosedPkModelId: model?.id || 0 }, { skip: !model?.id })
   const { data: simulations, isLoading: isSimulationsLoading } = useSimulationListQuery({projectId: projectId || 0}, { skip: !projectId })
   const simulation = useMemo(() => {
-    console.log('Xsimulation');
     return simulations?.[0] || undefined
   }, [simulations]);
-
-  const { data: models, isLoading: isModelsLoading } = useCombinedModelListQuery({projectId: projectId || 0})
-  const model = useMemo(() => {
-    return models?.[0] || null;
-  }, [models]);
   const [updateSimulation] = useSimulationUpdateMutation();
   const { data: units, isLoading: isUnitsLoading } = useUnitListQuery({ compoundId: project?.compound || 0 }, { skip: !project?.compound });
   const [ simulate, { error: simulateErrorBase } ] = useCombinedModelSimulateCreateMutation();
   const simulateError: ErrorObject | undefined = simulateErrorBase  ? ('data' in simulateErrorBase ? simulateErrorBase.data as ErrorObject : { error: 'Unknown error' }) : undefined;
   const [ data, setData ] = useState<SimulateResponse | null>(null);
   const { data: compound, isLoading: isLoadingCompound } = useCompoundRetrieveQuery({id: project?.compound || 0 }, { skip: !project?.compound})
+  const [updateVariable] = useVariableUpdateMutation();
 
 
   const [ sliderValues, setSliderValues ] = useState<{[key: number]: number} | undefined>(undefined);
   const [ loadingSimulate, setLoadingSimulate] = useState<boolean>(false);
-
-  const timeVariable = variables?.find((v) => v.binding === 'time');
 
   const defaultSimulation: Simulation = {
     id: 0,
@@ -108,6 +105,7 @@ const Simulations: React.FC = () => {
   });
   useDirty(isDirty || loadingSimulate);
 
+
   const { fields: sliders, append: addSimulationSlider, remove: removeSlider } = useFieldArray({
     control,
     name: "sliders",
@@ -120,18 +118,16 @@ const Simulations: React.FC = () => {
 
   // reset form and sliders if simulation changes
   useEffect(() => {
-    console.log('resetting simulation')
     if (simulation) {
       setSliderValues(s => getSliderInitialValues(simulation, s, variables));
-      setLoadingSimulate(true);
+      //setLoadingSimulate(true);
       reset(simulation);
     }
-  }, [simulation, reset, variables]);
+  }, [simulation, reset]);
 
   // generate a simulation if slider values change
   useEffect(() => {
-    if (simulation?.id && sliderValues && variables && model) {
-      console.log('simulate', simulation, sliderValues, variables, model)
+    if (simulation?.id && sliderValues && variables && model && protocols) {
       const timeMaxUnit = units?.find((u) => u.id === simulation.time_max_unit);
       const compatibleTimeUnit = timeMaxUnit?.compatible_units?.find((u) => parseInt(u.id) === model.time_unit); 
       const timeMaxConversionFactor = compatibleTimeUnit ? parseFloat(compatibleTimeUnit.conversion_factor) : 1.0;
@@ -141,19 +137,17 @@ const Simulations: React.FC = () => {
         setLoadingSimulate(false);
         if ("data" in response) {
           const data = response.data as SimulateResponse;
-          console.log('simulate response', data);
           setData(data);
         }
       });
     }
-  }, [simulation, simulate, sliderValues, variables, model]);
+  }, [simulation, simulate, sliderValues, model, protocols, variables]);
 
   
   // save simulation every second if dirty
   useEffect(() => {
     const intervalId = setInterval(() => {
       if (isDirty) {
-        console.log('saving simulation')
         handleSubmit((data) => updateSimulation({ id: data.id, simulation: data }))();
       }
     }, 1000);
@@ -211,7 +205,14 @@ const Simulations: React.FC = () => {
     setSliderValues({ ...sliderValues, [slider.variable]: value });
     setLoadingSimulate(true);
   }
-    
+
+  const handleSaveSlider = (slider: SimulationSlider) => (value: number) => {
+    const variable = variables?.find((v) => v.id === slider.variable);
+    if (!variable) {
+      return;
+    }
+    updateVariable({ id: slider.variable, variable: { ...variable, default_value: value }});
+  }
 
   return (
     <Container maxWidth={false}>
@@ -258,7 +259,7 @@ const Simulations: React.FC = () => {
         <Grid container spacing={2}>
           {sliders.map((slider, index) => (
             <Grid item xs={12} md={6} lg={3} key={index}>
-              <SimulationSliderView index={index} slider={slider} onChange={handleChangeSlider(slider)} remove={removeSlider} />
+              <SimulationSliderView index={index} slider={slider} onChange={handleChangeSlider(slider)} remove={removeSlider} onSave={handleSaveSlider(slider)} />
             </Grid>
           ))}
         </Grid>
