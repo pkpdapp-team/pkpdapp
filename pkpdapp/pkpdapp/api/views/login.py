@@ -32,14 +32,15 @@ def login_view(request):
     data = json.loads(request.body)
     username = data.get('username')
     password = data.get('password')
-
+    print('login', username, password)
     if username is None or password is None:
         return JsonResponse({
             'detail': 'Please provide username and password.'
         }, status=400)
 
+    print('authenticating')
     user = authenticate(username=username, password=password)
-
+    print('user', user)
     if user is None:
         return JsonResponse({'detail': 'Invalid credentials.'}, status=400)
 

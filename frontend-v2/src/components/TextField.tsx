@@ -8,11 +8,16 @@ type Props<T extends FieldValues> = {
   name: FieldPath<T>;
   control: Control<T>;
   rules?: Object;
+  mode?: 'onChange' | 'onBlur';
   textFieldProps?: material.TextFieldProps;
 };
 
-function TextField<T extends FieldValues>({ label, name, control, rules, textFieldProps }: Props<T>): React.ReactElement {
+function TextField<T extends FieldValues>({ label, name, control, rules, mode, textFieldProps }: Props<T>): React.ReactElement {
   const [fieldValue, setFieldValue] = useFieldState({ name, control });
+
+  if (mode === undefined) {
+    mode = 'onBlur';
+  }
 
   return (
     <Controller
@@ -20,8 +25,9 @@ function TextField<T extends FieldValues>({ label, name, control, rules, textFie
       control={control}
       rules={rules}
       render={({ field: { onChange, onBlur, value }, fieldState: { error, isDirty, isTouched } }) => {
+
         const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-          if (e.target.value !== value) {
+          if (mode === 'onBlur' && e.target.value !== value) {
             onChange(e);
           }
           onBlur();
@@ -29,6 +35,9 @@ function TextField<T extends FieldValues>({ label, name, control, rules, textFie
 
         const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
           setFieldValue(e.target.value);
+          if (mode === 'onChange') {
+            onChange(e);
+          }
         };
         return (
           <material.TextField
