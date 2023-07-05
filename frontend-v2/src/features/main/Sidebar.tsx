@@ -21,11 +21,14 @@ import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../app/store';
 import { LinearProgress } from '@mui/material';
 import { ThemeContext } from '@emotion/react';
+import { Logout } from '@mui/icons-material';
+import { logout } from '../login/loginSlice';
+import { useAppDispatch } from '../../app/hooks';
 
 const drawerWidth = 240;
 
 export default function Sidebar() {
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const selectedPage = useSelector((state: RootState) => state.main.selectedPage);
   const selectedProject = useSelector((state: RootState) => state.main.selectedProject);
@@ -108,9 +111,15 @@ export default function Sidebar() {
           >
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" noWrap component="div">
+          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
             PkpdApp
           </Typography>
+          <IconButton
+            onClick={() => dispatch(logout())}
+            color="inherit"
+          >
+            <Logout />
+          </IconButton>
         </Toolbar>
         {dirtyCount !== 0 ? (
           <LinearProgress

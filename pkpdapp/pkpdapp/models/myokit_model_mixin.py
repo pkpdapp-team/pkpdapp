@@ -71,7 +71,11 @@ class MyokitModelMixin:
 
 
         protocols = {}
-        compound = self.get_project().compound
+        project = self.get_project()
+        if project is None:
+            compound = None
+        else:
+            compound = project.compound
         for v in self.variables.filter(state=True):
             if v.protocol:
                 amount_var = model.get(v.qname)
@@ -168,14 +172,14 @@ class MyokitModelMixin:
         from pkpdapp.models import Variable
 
         removed_variables = []
-        if not self.has_saturation:
+        if not getattr(self, 'has_saturation', True):
             removed_variables += ['PKCompartment.Km', 'PKCompartment.CLmax']
-        if not self.has_effect:
+        if not getattr(self, 'has_effect', True):
             removed_variables += ['PKCompartment.Ce', 'PKCompartment.AUCe',
                                   'PKCompartment.ke0', 'PKCompartment.Kpu']
-        if not self.has_hill_coefficient:
+        if not getattr(self, 'has_hill_coefficient', True):
             removed_variables += ['PDCompartment.HC']
-        if not self.has_lag:
+        if not getattr(self, 'has_lag', True):
             removed_variables += ['PKCompartment.tlag']
 
         model = self.get_myokit_model()

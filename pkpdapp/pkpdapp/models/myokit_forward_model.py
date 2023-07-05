@@ -105,9 +105,8 @@ class MyokitForwardModel():
             var.qname() for var in model.variables(const=True)
         ]
 
-        # parameters are all const variables plus the number of states
-        # (for initial conditions)
-        self._all_parameter_names = self._state_names + self._const_names
+        # parameters are all const variables 
+        self._all_parameter_names = self._const_names
         self._n_all_parameters = len(self._all_parameter_names)
 
         if fixed_parameter_dict is None:
@@ -173,6 +172,18 @@ class MyokitForwardModel():
         for id_var, var in enumerate(self._const_names):
             self._sim.set_constant(var, float(parameters[id_var]))
 
+
+    def _set_init(self, parameters):
+        """
+        Sets initial conditions of model.
+        """
+        model = self._sim._model
+        for id_var, var in enumerate(self._const_names):
+            model.get(var).set_rhs(float(parameters[id_var]))
+        states = model.initial_values(as_floats=True) 
+
+        self._sim.set_state(states)
+
     def simulate(self, parameters):
         """
         Returns the numerical solution of the model outputs for specified
@@ -225,11 +236,11 @@ class MyokitForwardModel():
             # Reset simulation
             self._sim.reset()
 
-            # Set initial conditions
-            self._sim.set_state(full_parameters[:self._n_states])
-
             # Set constant model parameters
-            self._set_const(full_parameters[self._n_states:])
+            self._set_const(full_parameters)
+
+            # Set initial conditions
+            self._set_init(full_parameters)
 
             # Simulate: need +100*epsilon for times to ensure simulation
             # surpasses last time
@@ -271,11 +282,12 @@ class MyokitForwardModel():
                 # Reset simulation
                 self._sim.reset()
 
-                # Set initial conditions
-                self._sim.set_state(full_parameters[:self._n_states, s])
-
                 # Set constant model parameters
-                self._set_const(full_parameters[self._n_states:, s])
+                self._set_const(full_parameters[:, s])
+
+                # Set initial conditions
+                self._set_init(full_parameters[:, s])
+
 
                 # Simulate: need +100*epsilon for times to ensure simulation
                 # surpasses last time
