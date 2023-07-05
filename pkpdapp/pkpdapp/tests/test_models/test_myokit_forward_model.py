@@ -136,36 +136,39 @@ class TestMyokitForwardModelSingleOutput(TestCase):
 class TestMyokitPintsForwardModelMultipleOutput(TestCase):
     def setUp(self):
         m = PharmacokineticModel.objects.get(
-            name='three_compartment_pk_model',
+            name='three_compartment_model_preclinical',
         )
         self.model = m.get_myokit_model()
         self.simulator = m.get_myokit_simulator()
 
     def test_runs(self):
         # all parameters are:
-        # full_dict = {
-        #     'central.drug_c_amount': 1,
-        #     'peripheral_1.drug_p1_amount': 1,
-        #     'peripheral_2.drug_p2_amount': 1,
-        #     'central.size': 1,
-        #     'myokit.clearance': 1,
-        #     'myokit.drug_c_scale_factor': 1,
-        #     'myokit.k_peripheral1': 1,
-        #     'myokit.k_peripheral2': 1,
-        #     'peripheral_1.size': 1,
-        #     'peripheral_2.size': 1
-        # }
+        #full_dict = {
+        #    'PKCompartment.tlag': 1,
+        #    'PKCompartment.ka': 1,
+        #    'PKCompartment.F': 1,
+        #    'PKCompartment.V1': 1,
+        #    'PKCompartment.V2': 1,
+        #    'PKCompartment.V3': 1,
+        #    'PKCompartment.CL': 1,
+        #    'PKCompartment.Q1': 1,
+        #    'PKCompartment.Q2': 1,
+        #    'PKCompartment.CLmax': 1,
+        #    'PKCompartment.Km': 1,
+        #    'PKCompartment.ke0': 1,
+        #    'PKCompartment.Kpu': 1,
+        #}
         fixed_dict = {
-            'peripheral_1.drug_p1_amount': 1,
-            'peripheral_2.drug_p2_amount': 1,
-            'myokit.drug_c_scale_factor': 1,
+            'PKCompartment.tlag': 1,
+            'PKCompartment.CLmax': 1,
+            'PKCompartment.ke0': 1,
         }
-        variable_parameters = [1, 1, 1, 1, 1, 1, 1]
+        variable_parameters = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 
         desired_outputs = [
-            'central.drug_c_amount',
-            'peripheral_1.drug_p1_amount',
-            'peripheral_2.drug_p2_amount'
+            'PKCompartment.A1',
+            'PKCompartment.A2',
+            'PKCompartment.A3',
         ]
 
         conversion_factors = [
@@ -197,9 +200,9 @@ class TestMyokitPintsForwardModelMultipleOutput(TestCase):
 
         # do another ordering
         desired_outputs = [
-            'peripheral_2.drug_p2_amount',
-            'central.drug_c_amount',
-            'peripheral_1.drug_p1_amount',
+            'PKCompartment.A3',
+            'PKCompartment.A1',
+            'PKCompartment.A2',
         ]
 
         conversion_factors = [

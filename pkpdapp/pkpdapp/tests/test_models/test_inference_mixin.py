@@ -375,9 +375,13 @@ class TestInferenceMixinFakeData(TestCase):
         project = Project.objects.get(
             name='demo',
         )
-        model = PharmacodynamicModel.objects.get(
-            name='tumour_growth_inhibition_model_koch',
+        pd = PharmacodynamicModel.objects.get(
+            name='tumour_growth_gompertz',
             read_only=False,
+        )
+        model = CombinedModel.objects.create(
+            name='my wonderful model',
+            pd_model=pd,
         )
         self.inference = Inference.objects.create(
             name='bob',
@@ -393,7 +397,7 @@ class TestInferenceMixinFakeData(TestCase):
 
         # remove all outputs except
         output_names = [
-            'myokit.tumour_volume',
+            'PDCompartment.TS',
         ]
         outputs = []
         for output in log_likelihood.outputs.all():
