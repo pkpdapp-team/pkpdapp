@@ -87,7 +87,7 @@ const SimulationSliderView: React.FC<SimulationSliderProps> = ({ index, slider, 
   }
 
   return (
-    <div>
+    <div data-cy={`parameter-slider-${variable.name}`}>
       <Stack direction="row" spacing={0} alignItems="center">
         <Tooltip title={variable.description} placement='top'>
         <Typography id="discrete-slider" gutterBottom sx={{ flexGrow: 1 }}>

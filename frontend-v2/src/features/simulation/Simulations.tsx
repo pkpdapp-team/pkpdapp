@@ -220,7 +220,7 @@ const Simulations: React.FC = () => {
       <Stack direction={'row'} alignItems={'center'}>
         <Typography variant="h6">Plots</Typography>
         
-        <DropdownButton options={addPlotOptions} onOptionSelected={handleAddPlot}>
+        <DropdownButton options={addPlotOptions} onOptionSelected={handleAddPlot} data_cy="add-plot">
           <Add />
         </DropdownButton>
       </Stack>
@@ -242,17 +242,13 @@ const Simulations: React.FC = () => {
       </Snackbar>
       { plots.length > 0 && (
         <>
-        <Grid container spacing={2} justifyContent={'flex-start'} alignItems={'center'}>
-        <Grid item xs={1}>
+        <Stack direction={'row'} alignItems={'center'} spacing={2} justifyContent="flex-start">
           <FloatField label="Simulation Duration" name="time_max" control={control} />
-        </Grid>
-        <Grid item xs={1}>
-          <UnitField label="Unit" name="time_max_unit" baseUnit={units.find(u => u.id === simulation?.time_max_unit)} control={control} />
-        </Grid>
-        </Grid>
+          <UnitField label="Unit" name="time_max_unit" baseUnit={units.find(u => u.id === simulation?.time_max_unit)} control={control} selectProps={{ style: { flexShrink: 0 }}} />
+        </Stack>
         <Stack direction={'row'} alignItems={'center'}>
           <Typography variant="h6">Parameters</Typography>
-          <DropdownButton options={addSliderOptions} onOptionSelected={handleAddSlider}>
+          <DropdownButton options={addSliderOptions} onOptionSelected={handleAddSlider}  data_cy="add-parameter-slider">
             <Add />
           </DropdownButton>
         </Stack>

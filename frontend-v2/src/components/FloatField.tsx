@@ -9,6 +9,7 @@ type Props<T extends FieldValues> = {
   control: Control<T>;
   rules?: Object;
   textFieldProps?: material.TextFieldProps;
+  data_cy?: string;
 };
 
 function convert(value: any) {
@@ -19,7 +20,7 @@ function convert(value: any) {
   }
 }
 
-function FloatField<T extends FieldValues>({ label, name, control, rules, textFieldProps }: Props<T>): React.ReactElement {
+function FloatField<T extends FieldValues>({ label, name, control, rules, textFieldProps, data_cy }: Props<T>): React.ReactElement {
   const [fieldValue, setFieldValue] = useFieldState({ name, control });
   return (
     <Controller
@@ -47,6 +48,7 @@ function FloatField<T extends FieldValues>({ label, name, control, rules, textFi
             variant="outlined"
             value={fieldValue === undefined || fieldValue === null ? '' : fieldValue}
             onChange={handleChange}
+            data-cy={data_cy || `float-field-${name}`}
             onBlur={handleBlur}
             error={!!error}
             {...textFieldProps}

@@ -146,12 +146,12 @@ const VariableRow: React.FC<Props> = ({ project, compound, model, variable, cont
       </TableCell>
       <TableCell>
         { !noDosing && (
-        <FormControlLabel control={<MuiCheckbox checked={hasProtocol} onClick={() => hasProtocol ? removeProtocol() : addProtocol()} />} label="Dosing" />
+        <FormControlLabel control={<MuiCheckbox checked={hasProtocol} onClick={() => hasProtocol ? removeProtocol() : addProtocol()} data-cy={`checkbox-dosing-${variable.name}`} />} label="Dosing" />
         )}
       </TableCell>
       <TableCell>
         { !noMapToPD && (
-        <FormControlLabel control={<MuiCheckbox checked={linkToPD} onClick={() => linkToPD ? removePDMapping() : addPDMapping()} />} label="Map to PD Effect" />
+        <FormControlLabel control={<MuiCheckbox checked={linkToPD} onClick={() => linkToPD ? removePDMapping() : addPDMapping()} data-cy={`checkbox-map-to-pd-${variable.name}`}/>} label="Map to PD Effect" />
         )}
       </TableCell>
       <TableCell>

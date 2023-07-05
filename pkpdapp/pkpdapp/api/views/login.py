@@ -52,6 +52,7 @@ def login_view(request):
     })
 
 
+@ensure_csrf_cookie
 def logout_view(request):
     if not request.user.is_authenticated:
         return JsonResponse({'detail': 'You\'re not logged in.'}, status=400)

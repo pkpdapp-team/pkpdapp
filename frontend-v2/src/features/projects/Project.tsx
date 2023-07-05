@@ -136,7 +136,7 @@ const ProjectRow: React.FC<Props> = ({ project, isSelected }) => {
 
   return (
     <React.Fragment>
-    <TableRow>
+    <TableRow data-cy={`project-${project.id}`}>
       <TableCell rowSpan={isSelected ? 2 : 1} sx={{ verticalAlign: 'top'}} padding='checkbox' >
       <Radio sx={{ marginTop: 4 }} checked={isSelected} onClick={handleSelectProject}/> 
       </TableCell>

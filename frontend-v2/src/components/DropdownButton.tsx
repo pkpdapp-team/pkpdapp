@@ -11,9 +11,10 @@ type Props = {
   onOptionSelected: (value: any) => void;
   children?: React.ReactNode;
   disabled?: boolean;
+  data_cy?: string;
 };
 
-const DropdownButton: React.FC<Props> = ({ options, onOptionSelected, children, disabled }) => {
+const DropdownButton: React.FC<Props> = ({ data_cy, options, onOptionSelected, children, disabled }) => {
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
 
 
@@ -29,18 +30,23 @@ const DropdownButton: React.FC<Props> = ({ options, onOptionSelected, children, 
   const open = Boolean(anchorEl);
   const isDisabled = disabled || options.length === 0;
 
+  if (data_cy === undefined) {
+    data_cy = `dropdown-button`;
+  }
+
   return (
-    <div>
+    <div data-cy={data_cy}>
       <IconButton onClick={handleButtonClick} disabled={isDisabled}>{children}</IconButton>
       <Popover
         open={open}
         anchorEl={anchorEl}
         onClose={() => setAnchorEl(null)}
+        data-cy={`dropdown-button-popover`}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
         transformOrigin={{ vertical: 'top', horizontal: 'left' }}
       >
         {options.map((option, index) => (
-          <ListItemButton key={index} onClick={() => handleOptionSelected(option)}>
+          <ListItemButton key={index} onClick={() => handleOptionSelected(option)} data-cy={`${data_cy}-option-${option.label}`}>
             <ListItemText primary={option.label} />
           </ListItemButton>
         ))}

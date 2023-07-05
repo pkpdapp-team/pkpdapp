@@ -26,6 +26,7 @@ function Checkbox<T extends FieldValues>({ label, name, control, rules, checkbox
                 checked={value === undefined ?  false : value}
                 onChange={onChange}
                 onBlur={onBlur}
+                data-cy={`checkbox-${name}`}
                 {...checkboxFieldProps}
               />
             }

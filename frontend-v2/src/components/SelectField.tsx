@@ -25,7 +25,7 @@ function SelectField<T extends FieldValues>({ label, name, options, control, rul
       control={control}
       rules={rules}
       render={({ field: { onChange, onBlur, value }, fieldState: { error } }) => (
-        <FormControl fullWidth>
+        <FormControl>
           <InputLabel id={labelId} shrink={displayEmpty}>{label}</InputLabel>
           <Select
             labelId={labelId}
@@ -37,10 +37,11 @@ function SelectField<T extends FieldValues>({ label, name, options, control, rul
             onBlur={onBlur}
             input={<OutlinedInput label={label} notched={displayEmpty} />}
             error={!!error}
+            data-cy={`select-${name}`}
             {...selectProps}
           >
             {options.map((option) => (
-              <MenuItem key={option.value} value={option.value}>
+              <MenuItem key={option.value} value={option.value} data-cy={`select-option-${name}-${option.label}`}>
                 {option.label}
               </MenuItem>
             ))}
