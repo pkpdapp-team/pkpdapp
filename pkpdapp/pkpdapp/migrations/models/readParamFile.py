@@ -12,6 +12,7 @@ model_names = ['one_compartment', 'two_compartment',
                'three_comartment', 'one_compartment_tmdd', 
                'two_compartment_tmdd']
 species_list = ['M', 'R', 'K', 'H']
+compound_type = ['SM', 'LM']
 clinical = [False, False, False, True]
 
 entry = ''
@@ -25,16 +26,22 @@ for sheet_name, model_name in zip(sheet_names, model_names):
             continue
         param_entry = ''
         for i, species in enumerate(species_list):
-            rowi = i * 2 + 1
-            value = row[rowi].value
-            unit = row[rowi + 1].value
-            if_clinical = clinical[i]
+            species_entry = ''
+            for j, ctype in enumerate(compound_type):
+                rowi = i * 4 + j * 2 + 1
+                value = row[rowi].value
+                unit = row[rowi + 1].value
+                if_clinical = clinical[i]
+                species_entry += f"""{ctype}: {{
+                    value: {value},
+                    unit: '{unit}',
+                }},"""
+                if j != len(compound_type) - 1:
+                    species_entry += """
+                """
             param_entry += f"""{species}: {{
-                value: {value},
-                unit: '{unit}',
-            }},"""
-            if i != len(species_list) - 1:
-                param_entry += """
+                {species_entry}
+            }},
             """
         model_entry += f"""{parameter}: {{
             {param_entry}
@@ -44,7 +51,7 @@ for sheet_name, model_name in zip(sheet_names, model_names):
     {model_name}: {{
         {model_entry}
     }},"""
-type = '{[key: string]: {[key: string]: {[key: string]: { value: number, unit: string}}}}'  # noqa: E501
+type = '{[key: string]: {[key: string]: {[key: string]: {[key: string]: { value: number, unit: string}}}}}'  # noqa: E501
 final_entry = f"""export const param_default: {type} = {{{entry}
 }};"""
 

@@ -181,7 +181,7 @@ class Unit(models.Model):
                     filter |= mol_to_g & no_mol
                 if self_has_g:
                     filter |= g_to_mol & no_g
-            return Unit.objects.filter(
+            compat_units = Unit.objects.filter(
                 filter,
                 Q(m__range=(
                     self.m - close_enough,
@@ -204,6 +204,7 @@ class Unit(models.Model):
                     self.cd + close_enough,
                 )),
             )
+            return compat_units
         else:
             return Unit.objects.filter(
                 Q(g__range=(

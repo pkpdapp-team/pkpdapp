@@ -66,7 +66,7 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props ) => {
       <Grid container spacing={2}>
         <Grid container item spacing={2}>
           <Grid item xs={3}>
-            <SelectField label="PK Model" name="pk_model" control={control} options={pk_model_options} />
+            <SelectField label="PK Model" name="pk_model" control={control} options={pk_model_options} formControlProps={{ fullWidth: true }}/>
           </Grid>
           <Grid item xs={5}>
           <Typography>
@@ -81,7 +81,7 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props ) => {
         </Grid>
         <Grid container item spacing={2}>
           <Grid item xs={3}>
-            <SelectField label="PD Model" name="pd_model" control={control} options={pd_model_options} />
+            <SelectField label="PD Model" name="pd_model" control={control} options={pd_model_options}  formControlProps={{ fullWidth: true }}/>
           </Grid>
           <Grid item xs={5}>
             <Typography>

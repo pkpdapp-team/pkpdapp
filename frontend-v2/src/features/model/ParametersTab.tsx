@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { CombinedModel, Project, Variable, usePharmacokineticRetrieveQuery, useUnitListQuery, useVariableUpdateMutation } from '../../app/backendApi';
+import { CombinedModel, Project, Variable, useCompoundRetrieveQuery, usePharmacokineticRetrieveQuery, useUnitListQuery, useVariableUpdateMutation } from '../../app/backendApi';
 import { Control } from 'react-hook-form';
 import { TableContainer, Table, TableHead, TableRow, TableCell, TableBody, Stack, Button } from '@mui/material';
 import ParameterRow from './ParameterRow';
@@ -15,15 +15,16 @@ interface Props {
 
 const ParametersTab: React.FC<Props> = ({ model, project, control, variables }) => {
 
+    const { data: compound, isLoading: isLoadingCompound } = useCompoundRetrieveQuery({ id: project.compound}, { skip: !project.compound});
     const [updateVariable] = useVariableUpdateMutation();
     const { data: pkModel } = usePharmacokineticRetrieveQuery({ id: model.pk_model || 0}, { skip: !model.pk_model });
     const { data: units, isLoading: isLoadingUnits } = useUnitListQuery({ compoundId: project.compound}, { skip: !project.compound});
 
-    if (isLoadingUnits) {
+    if (isLoadingUnits || isLoadingCompound) {
         return <div>Loading...</div>;
     }
 
-    if (!units) {
+    if (!units || !compound) {
         return <div>Units not found</div>;
     }
 
@@ -48,9 +49,10 @@ const ParametersTab: React.FC<Props> = ({ model, project, control, variables }) 
         }
         const modelName: string = pkModel.name.replace("_clinical", "").replace("_preclinical", "").replace("tmdd_full", "tmdd").replace("tmdd_QSS", "tmdd").replace("production", "").replace("elimination", "");
         const species: string = project.species;
+        const compoundType: string = compound.compound_type || "SM";
         for (const variable of constVariables) {
             const varName = variable.name;
-            let defaultVal = paramDefaults[modelName]?.[varName]?.[species];
+            let defaultVal = paramDefaults[modelName]?.[varName]?.[species]?.[compoundType];
             if (!defaultVal) {
               continue;
             }

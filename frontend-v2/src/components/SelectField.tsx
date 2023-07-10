@@ -1,6 +1,6 @@
 import React from 'react';
 import { Control, Controller, FieldPath, FieldValues } from 'react-hook-form';
-import { Select, SelectProps, MenuItem, InputLabel, FormControl, OutlinedInput } from '@mui/material';
+import { Select, SelectProps, MenuItem, InputLabel, FormControl, OutlinedInput, FormControlProps } from '@mui/material';
 
 type Option = {
   value: any;
@@ -14,9 +14,10 @@ type Props<T extends FieldValues> = {
   control: Control<T>;
   rules?: Object;
   selectProps?: SelectProps;
+  formControlProps?: FormControlProps;
 };
 
-function SelectField<T extends FieldValues>({ label, name, options, control, rules, selectProps }: Props<T>): React.ReactElement {
+function SelectField<T extends FieldValues>({ label, name, options, control, rules, selectProps, formControlProps }: Props<T>): React.ReactElement {
   const labelId = `${name}-label`;
   const displayEmpty = selectProps?.displayEmpty || true;
   return (
@@ -25,7 +26,7 @@ function SelectField<T extends FieldValues>({ label, name, options, control, rul
       control={control}
       rules={rules}
       render={({ field: { onChange, onBlur, value }, fieldState: { error } }) => (
-        <FormControl>
+        <FormControl {...formControlProps}>
           <InputLabel id={labelId} shrink={displayEmpty}>{label}</InputLabel>
           <Select
             labelId={labelId}

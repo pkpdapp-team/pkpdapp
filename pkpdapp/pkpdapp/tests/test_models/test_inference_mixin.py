@@ -12,9 +12,10 @@ from pkpdapp.models import (
     PharmacokineticModel, CombinedModel,
     Protocol, Unit,
     LogLikelihood,
-    Project, BiomarkerType,
+    Project, BiomarkerType, Biomarker,
     InferenceMixin, Algorithm, InferenceChain, InferenceResult,
-    InferenceFunctionResult, LogLikelihoodParameter,
+    InferenceFunctionResult, LogLikelihoodParameter, Dataset,
+    Subject,
 )
 from django.core.cache import cache
 
@@ -210,7 +211,7 @@ class TestInferenceMixinSingleOutputSampling(TestCase):
         self.assertTrue(inference.number_of_function_evals > 0)
 
 
-class TestInferenceMixinSingleOutputOptimisation(TestCase):
+class TestInferenceMixinSingleOutput(TestCase):
     def setUp(self):
         # ensure we've got nothing in the cache
         cache._cache.flush_all()
@@ -222,10 +223,41 @@ class TestInferenceMixinSingleOutputOptimisation(TestCase):
             name='Tumour volume',
             dataset__name='lxf_control_growth'
         )
-        model = PharmacodynamicModel.objects.get(
-            name='tumour_growth_inhibition_model_koch',
+        pd = PharmacodynamicModel.objects.get(
+            name='tumour_growth_gompertz',
             read_only=False,
         )
+        model = CombinedModel.objects.create(
+            name='my wonderful model',
+            pd_model=pd,
+        )
+        # generate some fake data
+        data = model.simulate(outputs=['PDCompartment.TS'])
+        TS = data['PDCompartment.TS']
+        times = data['time']
+        dataset = Dataset.objects.create(
+            name='fake data',
+            project=self.project,
+        )
+        bt = BiomarkerType.objects.create(
+            name='fake data',
+            dataset=dataset,
+            stored_unit=Unit.objects.get(symbol='mL'),
+            display_unit=Unit.objects.get(symbol='mL')
+        )
+        subject  = Subject.objects.create(
+            id_in_dataset=1,
+            dataset=dataset,
+        )
+
+        for i, (t, ts) in enumerate(zip(times, TS)):
+            Biomarker.objects.create(
+                biomarker_type=bt,
+                time=t,
+                value=ts,
+                subject=subject,
+            )
+
         self.inference = Inference.objects.create(
             name='bob',
             project=self.project,
@@ -241,7 +273,7 @@ class TestInferenceMixinSingleOutputOptimisation(TestCase):
 
         # remove all outputs except
         output_names = [
-            'myokit.tumour_volume',
+            'PDCompartment.TS',
         ]
         outputs = []
         for output in log_likelihood.outputs.all():
