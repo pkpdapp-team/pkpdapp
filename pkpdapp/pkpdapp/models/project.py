@@ -29,6 +29,8 @@ class Project(models.Model):
         'Compound', on_delete=models.CASCADE,
     )
 
+    created = models.DateTimeField(auto_now_add=True)
+
     # species is a enum field
     class Species(models.TextChoices):
         MOUSE = 'M', 'Mouse'

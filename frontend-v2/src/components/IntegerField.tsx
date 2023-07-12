@@ -44,7 +44,6 @@ function IntegerField<T extends FieldValues>({ label, name, control, rules, text
             label={ !error ? label : error?.message || (error?.type === 'required' ? 'Required' : '')}
             name={name}
             id={name}
-            defaultValue={0}
             variant="outlined"
             value={fieldValue === undefined || fieldValue === null ? '' : fieldValue}
             onChange={handleChange}

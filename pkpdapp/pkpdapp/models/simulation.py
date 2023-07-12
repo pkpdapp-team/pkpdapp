@@ -59,6 +59,33 @@ class SimulationPlot(models.Model):
         help_text='index of the plot in the simulation'
     )
 
+    class ScaleOptions(models.TextChoices):
+        LINEAR = 'lin', 'Linear'
+        LOG2 = 'lg2', 'Log2'
+        LOG10 = 'lg10', 'Log10'
+        LN = 'ln', 'Ln'
+
+    x_scale = models.CharField(
+        max_length=4,
+        choices=ScaleOptions.choices,
+        default=ScaleOptions.LINEAR,
+        help_text='scale for x axis'
+    )
+
+    y_scale = models.CharField(
+        max_length=4,
+        choices=ScaleOptions.choices,
+        default=ScaleOptions.LINEAR,
+        help_text='scale for y axis'
+    )
+
+    y2_scale = models.CharField(
+        max_length=4,
+        choices=ScaleOptions.choices,
+        default=ScaleOptions.LINEAR,
+        help_text='scale for rhs y axis'
+    )
+
     x_unit = models.ForeignKey(
         'Unit', on_delete=models.PROTECT,
         related_name='simulation_plots',

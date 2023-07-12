@@ -1976,6 +1976,7 @@ export type Project = {
   protocols: number[];
   name: string;
   description?: string;
+  created: string;
   species?: ProjectSpeciesEnum;
   compound: number;
   users: number[];
@@ -1986,6 +1987,7 @@ export type PatchedProject = {
   protocols?: number[];
   name?: string;
   description?: string;
+  created?: string;
   species?: ProjectSpeciesEnum;
   compound?: number;
   users?: number[];
@@ -2032,11 +2034,15 @@ export type SimulationCxLine = {
   id: number;
   value: number;
 };
+export type Y2ScaleEnum = "lin" | "lg2" | "lg10" | "ln";
 export type SimulationPlot = {
   id: number;
   y_axes: SimulationYAxis[];
   cx_lines: SimulationCxLine[];
   index: number;
+  x_scale?: Y2ScaleEnum;
+  y_scale?: Y2ScaleEnum;
+  y2_scale?: Y2ScaleEnum;
   x_unit: number;
   y_unit?: number | null;
   y_unit2?: number | null;

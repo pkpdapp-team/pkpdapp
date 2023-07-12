@@ -21,8 +21,13 @@ import { api } from "../../app/api";
 
 const ProjectTable: React.FC = () => {
   const selectedProject = useSelector((state: RootState) => state.main.selectedProject);
-  const { data: projects, isLoading } = useProjectListQuery()
+  const { data: projectsUnordered, isLoading } = useProjectListQuery()
   const user = useSelector((state: RootState) => state.login.user);
+
+  let projects = projectsUnordered ? [ ...projectsUnordered ] : undefined;
+  projects?.sort((a: Project, b: Project) => {
+    return (Date.parse(a.created) > Date.parse(b.created)) ? -1 : 1;
+  })
 
   const { data: units, isLoading: unitsLoading } = useUnitListQuery({})
 
@@ -38,12 +43,12 @@ const ProjectTable: React.FC = () => {
   
   const handleAddRow = (type: 'SM' | 'LM') => {
     const user_access = [{ id: user?.id || 0, read_only: false, user: user?.id || 0 , project: 0}]
-    let project: Project = { id: 0, name: 'new', description: '', compound: 0, user_access, users: [user?.id || 0], protocols: [] }
+    let project: Project = { id: 0, name: 'new', description: '', compound: 0, user_access, users: [user?.id || 0], protocols: [], created: '' }
     let compound: Compound | undefined = undefined;
     if (type === 'SM') {
-      compound = {id: 0, name: 'new', description: '', compound_type: 'SM', efficacy_experiments: []};
+      compound = {id: 0, name: 'new', description: '', compound_type: 'SM', efficacy_experiments: [], dissociation_constant: 500};
     } else if (type === 'LM') {
-      compound = {id: 0, name: 'new', description: '', compound_type: 'LM', efficacy_experiments: [], molecular_mass: 150000, fraction_unbound_plasma: 1.0, target_concentration: 1.0};
+      compound = {id: 0, name: 'new', description: '', compound_type: 'LM', efficacy_experiments: [], molecular_mass: 150000, fraction_unbound_plasma: 1.0, dissociation_constant: 1};
     }
     if (!compound) {
       return
@@ -59,7 +64,8 @@ const ProjectTable: React.FC = () => {
         addCombinedModel({ combinedModel: { id: 0, name: `model for project ${project.data.id}`, project: project.data.id, mappings: [], receptor_occupancies: [], components: '', variables: [], mmt: '', time_unit: 0 }})
         .then((combinedModel) => {
           if ('data' in combinedModel) {
-            const defaultXUnit = combinedModel.data.time_unit
+            const defaultXUnit = units?.find((u) => u.symbol === 'h')?.id || combinedModel.data.time_unit;
+            const defaultSimultationTime = compound?.compound_type === 'SM' ? 48 : 672;
             const defaultPlot: SimulationPlot = {
               id: 0,
               y_axes: [],
@@ -69,7 +75,7 @@ const ProjectTable: React.FC = () => {
               y_unit: null,
               y_unit2: null,
             }
-            addSimulation({ simulation: { id: 0, name: `default`, project: project.data.id, sliders: [], plots: [], time_max_unit: defaultXUnit }})
+            addSimulation({ simulation: { id: 0, name: `default`, project: project.data.id, sliders: [], plots: [], time_max_unit: defaultXUnit, time_max: defaultSimultationTime }})
           }
         });
       }

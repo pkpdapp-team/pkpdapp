@@ -131,7 +131,7 @@ class Compound(models.Model):
     )
 
     target_concentration = models.FloatField(
-        default=500.0,
+        default=1.0,
         blank=True, null=True,
         help_text='target concentration'
     )

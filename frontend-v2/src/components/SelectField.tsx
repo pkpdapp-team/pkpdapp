@@ -20,13 +20,14 @@ type Props<T extends FieldValues> = {
 function SelectField<T extends FieldValues>({ label, name, options, control, rules, selectProps, formControlProps }: Props<T>): React.ReactElement {
   const labelId = `${name}-label`;
   const displayEmpty = selectProps?.displayEmpty || true;
+  const labelWidth = (label ? label.length : 0) * 9
   return (
     <Controller
       name={name}
       control={control}
       rules={rules}
       render={({ field: { onChange, onBlur, value }, fieldState: { error } }) => (
-        <FormControl {...formControlProps}>
+        <FormControl {...formControlProps} style={{minWidth: labelWidth}}>
           <InputLabel id={labelId} shrink={displayEmpty}>{label}</InputLabel>
           <Select
             labelId={labelId}

@@ -4171,6 +4171,10 @@ components:
         description:
           type: string
           description: short description of the project
+        created:
+          type: string
+          format: date-time
+          readOnly: true
         species:
           allOf:
           - $ref: '#/components/schemas/ProjectSpeciesEnum'
@@ -4641,6 +4645,10 @@ components:
         description:
           type: string
           description: short description of the project
+        created:
+          type: string
+          format: date-time
+          readOnly: true
         species:
           allOf:
           - $ref: '#/components/schemas/ProjectSpeciesEnum'
@@ -4662,6 +4670,7 @@ components:
           description: users with access to this project
       required:
       - compound
+      - created
       - id
       - name
       - protocols
@@ -4891,6 +4900,36 @@ components:
         index:
           type: integer
           description: index of the plot in the simulation
+        x_scale:
+          allOf:
+          - $ref: '#/components/schemas/Y2ScaleEnum'
+          description: |-
+            scale for x axis
+
+            * `lin` - Linear
+            * `lg2` - Log2
+            * `lg10` - Log10
+            * `ln` - Ln
+        y_scale:
+          allOf:
+          - $ref: '#/components/schemas/Y2ScaleEnum'
+          description: |-
+            scale for y axis
+
+            * `lin` - Linear
+            * `lg2` - Log2
+            * `lg10` - Log10
+            * `ln` - Ln
+        y2_scale:
+          allOf:
+          - $ref: '#/components/schemas/Y2ScaleEnum'
+          description: |-
+            scale for rhs y axis
+
+            * `lin` - Linear
+            * `lg2` - Log2
+            * `lg10` - Log10
+            * `ln` - Ln
         x_unit:
           type: integer
           description: unit for x axis
@@ -5152,6 +5191,18 @@ components:
       - id
       - name
       - qname
+    Y2ScaleEnum:
+      enum:
+      - lin
+      - lg2
+      - lg10
+      - ln
+      type: string
+      description: |-
+        * `lin` - Linear
+        * `lg2` - Log2
+        * `lg10` - Log10
+        * `ln` - Ln
   securitySchemes:
     basicAuth:
       type: http

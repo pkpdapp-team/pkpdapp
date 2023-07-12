@@ -100,7 +100,7 @@ class MyokitModelMixin:
                         continue
                     start_times = np.arange(
                         d.start_time + last_dose_time,
-                        d.start_time + d.repeat_interval * d.repeats,
+                        d.start_time + last_dose_time + d.repeat_interval * d.repeats,
                         d.repeat_interval
                     )
                     if len(start_times) == 0:

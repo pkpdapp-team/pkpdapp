@@ -39,14 +39,17 @@ const SimulationPlotView: React.FC<SimulationPlotProps> = ({ index, plot, data, 
     setOpen(false);
   }
 
-  const minX = Math.min(...data.time);
-  const maxX = Math.max(...data.time);
 
   const timeVariable = variables.find((v) => v.binding === 'time');
   const timeUnit = units.find((u) => u.id === timeVariable?.unit);
   const xaxisUnit = units.find((u) => u.id === plot.x_unit);
   const xcompatibleUnit = timeUnit?.compatible_units.find((u) => parseInt(u.id) === xaxisUnit?.id);
   const xconversionFactor = xcompatibleUnit ? parseFloat(xcompatibleUnit.conversion_factor) : 1.0;
+
+  const convertedTime = data.time.map((t) => t * xconversionFactor);
+  const minX = Math.min(...convertedTime);
+  const maxX = Math.max(...convertedTime);
+
   let plotData: Data[] = plot.y_axes.map((y_axis) => {
     const variableValues = data.outputs[y_axis.variable];
     const variable = variables.find((v) => v.id === y_axis.variable);
@@ -60,7 +63,7 @@ const SimulationPlotView: React.FC<SimulationPlotProps> = ({ index, plot, data, 
     if (variableValues) {
       return {
         yaxis: y_axis.right ? 'y2' : undefined,
-        x: data.time.map((t) => t * xconversionFactor),
+        x: convertedTime,
         y: variableValues.map((v) => v * yconversionFactor),
         name: variableName || 'unknown',
       }
@@ -100,6 +103,8 @@ const SimulationPlotView: React.FC<SimulationPlotProps> = ({ index, plot, data, 
     }
   }
 
+  console.log('icLines', icLines, plot.cx_lines)
+
 
   //@ts-expect-error
   let yAxisTitle = plotData.filter((d) => !d.yaxis).map((d) => d.name).join(', ');
@@ -117,6 +122,13 @@ const SimulationPlotView: React.FC<SimulationPlotProps> = ({ index, plot, data, 
   }
   if (xUnit) {
     xAxisTitle = `${xAxisTitle}  [${xUnit.symbol}]`
+  }
+
+  const axisScaleOptions: {[key: string]: { type: 'linear' | 'log', dtick?: number | string}} = {
+    'lin': { type: 'linear' },
+    'lg2': { type: 'log', dtick: Math.log10(2) },
+    'lg10': { type: 'log', dtick: `D${1}` },
+    'ln': { type: 'log', dtick: Math.log10(Math.E) },
   }
 
 
@@ -156,17 +168,20 @@ const SimulationPlotView: React.FC<SimulationPlotProps> = ({ index, plot, data, 
     xaxis: {
       title: xAxisTitle,
       automargin: true,
+      ...axisScaleOptions[plot.x_scale || 'lin'],
     },
     yaxis: {
       title: yAxisTitle,
       automargin: true,
+      ...axisScaleOptions[plot.y_scale || 'lin'],
     },
     yaxis2: {
       title: y2AxisTitle,
       anchor: 'free',
       overlaying: 'y',
       side: 'right',
-      position: 1.0
+      position: 1.0,
+      ...axisScaleOptions[plot.y2_scale || 'lin'],
     },
     margin: {
       l: 50,
@@ -219,7 +234,7 @@ const SimulationPlotView: React.FC<SimulationPlotProps> = ({ index, plot, data, 
       <Dialog open={open} onClose={handleClose} fullWidth maxWidth='sm'>
         <DialogTitle>Customise Plot</DialogTitle>
         <DialogContent>
-          <SimulationPlotForm index={index} variables={variables} plot={plot} control={control} setValue={setValue} units={units} />
+          <SimulationPlotForm index={index} variables={variables} plot={plot} control={control} setValue={setValue} units={units} compound={compound} />
         </DialogContent>
         <DialogActions>
           <Button onClick={handleDelete}>Delete</Button>

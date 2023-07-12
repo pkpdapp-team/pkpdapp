@@ -1,6 +1,6 @@
 import React from 'react';
 import { Control, UseFormSetValue, useFieldArray } from 'react-hook-form';
-import { Simulation, SimulationPlot, SimulationYAxis, Unit, Variable, useUnitListQuery } from '../../app/backendApi';
+import { Compound, Simulation, SimulationPlot, SimulationYAxis, Unit, Variable, useUnitListQuery } from '../../app/backendApi';
 import { Divider, Grid, IconButton, List, ListItem, Stack, Typography } from '@mui/material';
 import TextField from '../../components/TextField';
 import UnitField from '../../components/UnitField';
@@ -16,9 +16,10 @@ interface SimulationPlotFormProps {
   control: Control<Simulation>,
   setValue: UseFormSetValue<Simulation>,
   units: Unit[],
+  compound: Compound,
 }
 
-const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({ index, plot, variables, control, setValue, units }) => {
+const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({ index, plot, variables, control, setValue, units, compound }) => {
   const baseXUnitId = units ? units.find((u) => u.symbol === 'h')?.id : undefined;
 
   const { fields: y_axes, append: addYAxis, remove: removeYAxis } = useFieldArray({
@@ -118,26 +119,30 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({ index, plot, va
   const addCxLineOptions = [10, 20, 50, 80, 90, 95, 99].map((v) => ({ label: v.toString(), value: v })); 
   let receptorOccupancyVariableOptions: { label: string, value: string | number}[] = concentrationVariables.map((v) => ({ label: v.name, value: v.id }));
   receptorOccupancyVariableOptions.push({ label: 'None', value: '' })
+  const haveEfficacyExp = compound.efficacy_experiments.length > 0;
   
+
+  const axisScaleOptions = [
+    { label: 'Linear', value: 'lin' },
+    { label: 'Log2', value: 'lg2' },
+    { label: 'Log10', value: 'lg10' },
+    { label: 'Ln', value: 'ln' },
+  ];
 
   return (
     <Stack sx={{marginTop: 2}}>
-    <Grid container spacing={4}>
-        <Grid item xs={3}>
-        <UnitField
-            label="X Axis Unit"
-            name={`plots.${index}.x_unit`}
-            control={control}
-            baseUnit={units.find(u => u.id === baseXUnitId)}
-        />
-        </Grid>
-    </Grid>
+    <Stack direction={'row'} spacing={2} alignItems={'center'}>
+      <UnitField
+        label="X Axis Unit"
+        name={`plots.${index}.x_unit`}
+        control={control}
+        baseUnit={units.find(u => u.id === baseXUnitId)}
+      />
+      <SelectField label="X Axis Scale" name={`plots.${index}.x_scale`} options={axisScaleOptions} control={control} />
+    </Stack>
     <Divider sx={{margin: 2}} />
-    <Grid container spacing={1} alignItems={'center'}>
-      <Grid item xs={2}>
-        <Typography variant='h6'>Y Axis</Typography>
-      </Grid>
-      <Grid item xs={3}>
+    <Stack direction={'row'} spacing={2} alignItems={'center'}>
+      <Typography variant='h6'>Y Axis</Typography>
       <UnitField
           label="Y Axis Unit"
           name={`plots.${index}.y_unit`}
@@ -145,18 +150,16 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({ index, plot, va
           baseUnit={units.find(u => u.id === baseYUnitId)}
           selectProps={{disabled: lhs_y_axes.length === 0}}
       />
-      </Grid>
-      <Grid item xs={2}>
+      <SelectField label="Y Axis Scale" name={`plots.${index}.y_scale`} options={axisScaleOptions} control={control} />
       <DropdownButton options={addYAxisOptions} onOptionSelected={handleAddYAxis}>
         <Add />
       </DropdownButton>
-      </Grid>
-    </Grid>
+    </Stack>
     <List>
     {lhs_y_axes.map((yAxis, yAxisIndex) => (
         <ListItem key={yAxisIndex}>
         <Grid container spacing={2}>
-            <Grid item xs={7}>
+            <Grid item xs={3}>
             <SelectField
                 label="Variable"
                 name={`plots.${index}.y_axes.${yAxis.index}.variable`}
@@ -173,9 +176,9 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({ index, plot, va
         </ListItem>
     ))}
     </List>
-    <Stack direction={'row'} spacing={1} alignItems={'center'}>
+    <Stack direction={'row'} spacing={2} alignItems={'center'}>
       <Typography variant='h6'>Cx Reference Lines</Typography>
-      <DropdownButton options={addCxLineOptions} onOptionSelected={handleAddCxLine} disabled={!yAxisIsConcentration} >
+      <DropdownButton options={addCxLineOptions} onOptionSelected={handleAddCxLine} disabled={!yAxisIsConcentration || !haveEfficacyExp} >
         <Add />
       </DropdownButton>
     </Stack>
@@ -201,11 +204,8 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({ index, plot, va
     ))}
     </List>
     <Divider sx={{margin: 2}} />
-    <Grid container spacing={1} alignItems={'center'}>
-      <Grid item xs={2}>
-        <Typography variant='h6'>Y2 Axis</Typography>
-      </Grid>
-      <Grid item xs={3}>
+    <Stack direction={'row'} spacing={2} alignItems={'center'}>
+      <Typography variant='h6'>Y2 Axis</Typography>
       <UnitField
           label="Unit"
           name={`plots.${index}.y_unit2`}
@@ -213,15 +213,11 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({ index, plot, va
           baseUnit={units.find(u => u.id === baseY2UnitId)}
           selectProps={{disabled: rhs_y_axes.length === 0}}
       />
-      </Grid>
-      <Grid item xs={3}>
+        <SelectField label="Y2 Axis Scale" name={`plots.${index}.y2_scale`} options={axisScaleOptions} control={control} />
       <DropdownButton options={addY2AxisOptions} onOptionSelected={handleAddY2Axis} >
         <Add />
       </DropdownButton>
-      </Grid>
-
-    </Grid>
-
+    </Stack>
     <List>
     {rhs_y_axes.map((yAxis, yAxisIndex) => (
         <ListItem key={yAxisIndex}>

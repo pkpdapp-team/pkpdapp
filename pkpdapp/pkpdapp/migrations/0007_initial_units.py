@@ -112,6 +112,42 @@ def load_units(apps, schema_editor):
             'unit': 1e-3 * L / (24 * h * 1e3 * g),
         },
         {
+            'symbol': 'L/h/pmol',
+            'unit': L / (h * 1e-12 * mol),
+        },
+        {
+            'symbol': 'L/day/pmol',
+            'unit': L / (24 * h * 1e-12 * mol),
+        },
+        {
+            'symbol': 'mL/day/pmol',
+            'unit': 1e-3 * L / (24 * h * 1e-12 * mol),
+        },
+        {
+            'symbol': 'L/h/nmol',
+            'unit': L / (h * 1e-9 * mol),
+        },
+        {
+            'symbol': 'L/day/nmol',
+            'unit': L / (24 * h * 1e-9 * mol),
+        },
+        {
+            'symbol': 'mL/day/nmol',
+            'unit': 1e-3 * L / (24 * h * 1e-9 * mol),
+        },
+        {
+            'symbol': 'L/h/µmol',
+            'unit': L / (h * 1e-6 * mol),
+        },
+        {
+            'symbol': 'L/day/µmol',
+            'unit': L / (24 * h * 1e-6 * mol),
+        },
+        {
+            'symbol': 'mL/day/µmol',
+            'unit': 1e-3 * L / (24 * h * 1e-6 * mol),
+        },
+        {
             'symbol': 'L',
             'unit': L
         },
@@ -254,18 +290,6 @@ def load_units(apps, schema_editor):
         {
             'symbol': 'day*µg/mL',
             'unit': 24 * h * 1e-6 * g / (1e-3 * L),
-        },
-        {
-            'symbol': '1/h*L/nmol',
-            'unit': 1 / h * L / (1e-9 * mol),
-        },
-        {
-            'symbol': '1/h*mL/µg',
-            'unit': 1 / h * 1e-3 * L / (1e-6 * g),
-        },
-        {
-            'symbol': '1/h*mL/ng',
-            'unit': 1 / h * 1e-3 * L / (1e-9 * g),
         },
         {
             'symbol': 'mg/kg',

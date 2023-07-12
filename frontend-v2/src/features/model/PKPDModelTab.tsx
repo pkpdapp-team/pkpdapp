@@ -61,6 +61,7 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props ) => {
         return { value: model.id, label: model.name };
     });
     pd_model2_options.push({ value: '', label: 'None' });
+    const isTMDDmodel = model.pk_model ? pk_model_map[model.pk_model].name.includes('tmdd') : false;
 
     return (
       <Grid container spacing={2}>
@@ -74,9 +75,9 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props ) => {
           </Typography>
           </Grid>
           <Grid item xs={4}>
-          <Checkbox label="Saturation" name="has_saturation" control={control} />
-          <Checkbox label="Effect Compartment" name="has_effect" control={control} />
-          <Checkbox label="Lag Time" name="has_lag" control={control} />
+          <Checkbox label="Saturation" name="has_saturation" control={control} checkboxFieldProps={{ disabled: isTMDDmodel || !model.pk_model }} />
+          <Checkbox label="Effect Compartment" name="has_effect" control={control} checkboxFieldProps={{ disabled: !model.pk_model }}  />
+          <Checkbox label="Lag Time" name="has_lag" control={control} checkboxFieldProps={{ disabled: !model.pk_model }}  />
           </Grid>
         </Grid>
         <Grid container item spacing={2}>
@@ -90,7 +91,7 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props ) => {
           </Grid>
           <Grid item xs={4}>
             { model.pd_model && (
-              <Checkbox label="Hill Coefficient" name="has_hill_coefficient" control={control} />
+              <Checkbox label="Hill Coefficient" name="has_hill_coefficient" control={control} checkboxFieldProps={{ disabled: !model.pd_model }} />
             )}
           </Grid>
           { pdIsTumourGrowth && (

@@ -53,16 +53,25 @@ const ParametersTab: React.FC<Props> = ({ model, project, control, variables }) 
         for (const variable of constVariables) {
             const varName = variable.name;
             let defaultVal = paramDefaults[modelName]?.[varName]?.[species]?.[compoundType];
-            if (!defaultVal) {
-              continue;
-            }
-            if (defaultVal.unit === "dimensionless") {
+            if (defaultVal?.unit === "dimensionless") {
               defaultVal.unit = '';
             }
-            const defaultUnitId = defaultVal ? units.find(unit => unit.symbol === defaultVal.unit)?.id : undefined;
-            console.log(modelName, varName, species, defaultVal, defaultUnitId)
+            let defaultUnitId: number | undefined = defaultVal ? units.find(unit => unit.symbol === defaultVal.unit)?.id : undefined;
+            let defaultValue: number | undefined = defaultVal?.value;
+            if (varName.endsWith("_RO_KD")) {
+              defaultValue = compound.dissociation_constant || undefined;
+              defaultUnitId = compound.dissociation_unit;
+            } else if (varName.endsWith("_RO_TC")) {
+              defaultValue = compound.target_concentration || undefined;
+              defaultUnitId = compound.target_concentration_unit;
+            }
+            console.log('defaulttttt', modelName, varName, species, defaultValue, defaultUnitId, compound)
+            if (!defaultValue || !defaultUnitId) {
+              continue;
+            }
+            console.log('defaulttttt', modelName, varName, species, defaultVal, defaultUnitId)
             if (defaultUnitId) {
-                updateVariable({ id: variable.id, variable: { ...variable, default_value: defaultVal.value, unit: defaultUnitId }});
+                updateVariable({ id: variable.id, variable: { ...variable, default_value: defaultValue, unit: defaultUnitId }});
             }
         }
     }

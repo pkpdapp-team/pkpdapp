@@ -302,26 +302,24 @@ class CombinedModel(MyokitModelMixin, StoredModel):
             var_name = ro.pk_variable.name
             var = myokit_compartment.add_variable(f'{var_name}_RO')
             var.set_unit(myokit.Unit())
-            kd = self.project.compound.dissociation_constant
-            kd_unit = self.project.compound.dissociation_unit.get_myokit_unit()
-            kd_factor = myokit.Unit.conversion_factor(
-                kd_unit, myokit_var.unit()
-            ).value()
-            kd_value = kd * kd_factor
-            target_conc = self.project.compound.target_concentration
-            target_conc_unit = self.project.compound \
-                                   .target_concentration_unit \
-                                   .get_myokit_unit()
-            target_conc_factor = myokit.Unit.conversion_factor(
-                target_conc_unit, myokit_var.unit()
-            ).value()
-            target_value = target_conc * target_conc_factor
-            kd_plus_target_value = kd_value + target_value
-            four_times_target_value = 4 * target_value
-            b = f'{kd_plus_target_value} + {var_name}'
-            c = f'{four_times_target_value} * {var_name}'
-            var.set_rhs(
-                f'100 * ({b} - (({b})^2 - {c})^0.5) / (2 * {target_value})')
+            kd = myokit_compartment.add_variable(f'{var_name}_RO_KD')
+            kd.set_rhs(self.project.compound.dissociation_constant)
+            kd.set_unit(self.project.compound.dissociation_unit.symbol)
+            target_conc = myokit_compartment.add_variable(f'{var_name}_RO_TC')
+            target_conc.set_rhs(self.project.compound.target_concentration)
+            target_conc.set_unit(self.project.compound.target_concentration_unit.symbol)
+            
+            b = var.add_variable('b')
+            b.set_rhs(myokit.Plus(myokit.Plus(myokit.Name(kd), myokit.Name(target_conc)), myokit.Name(myokit_var)))
+            c = var.add_variable('c')
+            c.set_rhs(myokit.Multiply(myokit.Multiply(myokit.Number(4), myokit.Name(target_conc)), myokit.Name(myokit_var)))
+
+            var.set_rhs(myokit.Multiply(myokit.Number(100), 
+                myokit.Divide(
+                    myokit.Minus(myokit.Name(b), myokit.Sqrt(myokit.Minus(myokit.Power(myokit.Name(b), myokit.Number(2)), myokit.Name(c)))), 
+                    myokit.Multiply(myokit.Number(2), myokit.Name(target_conc))
+                ))
+            )
 
         pkpd_model.validate()
         return pkpd_model
