@@ -63,6 +63,11 @@ class CombinedModel(MyokitModelMixin, StoredModel):
         help_text='whether the pk model has lag'
     )
 
+    has_bioavailability = models.BooleanField(
+        default=False,
+        help_text='whether the pk model has bioavailability'
+    )
+
     pd_model = models.ForeignKey(
         PharmacodynamicModel, on_delete=models.PROTECT,
         related_name='pkpd_models',
@@ -97,6 +102,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
     __original_has_effect = None
     __original_has_lag = None
     __original_has_hill_coefficient = None
+    __original_has_bioavailability = None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -119,6 +125,8 @@ class CombinedModel(MyokitModelMixin, StoredModel):
             instance.__original_has_effect = instance.has_effect
         if 'has_lag' in field_names:
             instance.__original_has_lag = instance.has_lag
+        if 'has_bioavailability' in field_names:
+            instance.__original_has_bioavailability = instance.has_bioavailability
         if 'has_hill_coefficient' in field_names:
             instance.__original_has_hill_coefficient = \
                 instance.has_hill_coefficient
@@ -294,32 +302,48 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 )
             )
 
-        # do receptor occupancies
-        for ro in self.receptor_occupancies.all():
-            myokit_var = pkpd_model.get(ro.pk_variable.qname)
+        # do derived variables
+        for derived_variable in self.derived_variables.all():
+            myokit_var = pkpd_model.get(derived_variable.pk_variable.qname)
             myokit_compartment = myokit_var.parent()
-            # add a new variable
-            var_name = ro.pk_variable.name
-            var = myokit_compartment.add_variable(f'{var_name}_RO')
-            var.set_unit(myokit.Unit())
-            kd = myokit_compartment.add_variable(f'{var_name}_RO_KD')
-            kd.set_rhs(self.project.compound.dissociation_constant)
-            kd.set_unit(self.project.compound.dissociation_unit.symbol)
-            target_conc = myokit_compartment.add_variable(f'{var_name}_RO_TC')
-            target_conc.set_rhs(self.project.compound.target_concentration)
-            target_conc.set_unit(self.project.compound.target_concentration_unit.symbol)
-            
-            b = var.add_variable('b')
-            b.set_rhs(myokit.Plus(myokit.Plus(myokit.Name(kd), myokit.Name(target_conc)), myokit.Name(myokit_var)))
-            c = var.add_variable('c')
-            c.set_rhs(myokit.Multiply(myokit.Multiply(myokit.Number(4), myokit.Name(target_conc)), myokit.Name(myokit_var)))
+            var_name = derived_variable.pk_variable.name
+            if derived_variable.type == DerivedVariable.Type.RECEPTOR_OCCUPANCY:
+                var = myokit_compartment.add_variable(f'{var_name}_RO')
+                var.set_unit(myokit.Unit())
+                kd = myokit_compartment.add_variable(f'{var_name}_RO_KD')
+                kd.set_rhs(self.project.compound.dissociation_constant)
+                kd.set_unit(self.project.compound.dissociation_unit.symbol)
+                target_conc = myokit_compartment.add_variable(f'{var_name}_RO_TC')
+                target_conc.set_rhs(self.project.compound.target_concentration)
+                target_conc.set_unit(self.project.compound.target_concentration_unit.symbol)
+                
+                b = var.add_variable('b')
+                b.set_rhs(myokit.Plus(myokit.Plus(myokit.Name(kd), myokit.Name(target_conc)), myokit.Name(myokit_var)))
+                c = var.add_variable('c')
+                c.set_rhs(myokit.Multiply(myokit.Multiply(myokit.Number(4), myokit.Name(target_conc)), myokit.Name(myokit_var)))
 
-            var.set_rhs(myokit.Multiply(myokit.Number(100), 
-                myokit.Divide(
-                    myokit.Minus(myokit.Name(b), myokit.Sqrt(myokit.Minus(myokit.Power(myokit.Name(b), myokit.Number(2)), myokit.Name(c)))), 
-                    myokit.Multiply(myokit.Number(2), myokit.Name(target_conc))
-                ))
-            )
+                var.set_rhs(myokit.Multiply(myokit.Number(100), 
+                    myokit.Divide(
+                        myokit.Minus(myokit.Name(b), myokit.Sqrt(myokit.Minus(myokit.Power(myokit.Name(b), myokit.Number(2)), myokit.Name(c)))), 
+                        myokit.Multiply(myokit.Number(2), myokit.Name(target_conc))
+                    ))
+                )
+            elif derived_variable.type == DerivedVariable.Type.FRACTION_UNBOUND_PLASMA:
+                var = myokit_compartment.add_variable(f'{var_name}_UB')
+                var.set_unit(myokit_var.unit())
+                fup = myokit_compartment.add_variable(f'{var_name}_UB_FUP')
+                fup.set_rhs(self.project.compound.fraction_unbound_plasma)
+                fup.set_unit(myokit.units.dimensionless)
+                var.set_rhs(myokit.Multiply(myokit.Name(fup), myokit.Name(myokit_var)))
+            elif derived_variable.type == DerivedVariable.Type.BLOOD_PLASMA_RATIO:
+                var = myokit_compartment.add_variable(f'{var_name}_B')
+                var.set_unit(myokit_var.unit())
+                bpr = myokit_compartment.add_variable(f'{var_name}_B_BPR')
+                bpr.set_rhs(self.project.compound.blood_to_plasma_ratio)
+                bpr.set_unit(myokit.units.dimensionless)
+                var.set_rhs(myokit.Multiply(myokit.Name(bpr), myokit.Name(myokit_var)))
+            else:
+                raise ValueError(f'Unknown derived variable type {derived_variable.type}')
 
         pkpd_model.validate()
         return pkpd_model
@@ -344,6 +368,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
             self.has_saturation != self.__original_has_saturation or
             self.has_effect != self.__original_has_effect or
             self.has_lag != self.__original_has_lag or
+            self.has_bioavailability != self.__original_has_bioavailability or
             self.has_hill_coefficient != self.__original_has_hill_coefficient
         ):
             self.update_model()
@@ -356,6 +381,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
         self.__original_has_effect = self.has_effect
         self.__original_has_lag = self.has_lag
         self.__original_has_hill_coefficient = self.has_hill_coefficient
+        self.__original_has_bioavailability = self.has_bioavailability
 
 
 class PkpdMapping(StoredModel):
@@ -421,17 +447,29 @@ class PkpdMapping(StoredModel):
         return stored_mapping
 
 
-class ReceptorOccupancy(StoredModel):
+class DerivedVariable(StoredModel):
     pkpd_model = models.ForeignKey(
         CombinedModel, on_delete=models.CASCADE,
-        related_name='receptor_occupancies',
-        help_text='PKPD model that this mapping is for'
+        related_name='derived_variables',
+        help_text='PKPD model that this derived variable is for'
     )
     pk_variable = models.ForeignKey(
         'Variable', on_delete=models.CASCADE,
-        related_name='receptor_occupancies',
-        help_text='variable in PK part of model'
+        related_name='derived_variables',
+        help_text='base variable in PK part of model'
     )
+
+    class Type(models.TextChoices):
+        RECEPTOR_OCCUPANCY = 'RO', 'receptor occupancy'
+        FRACTION_UNBOUND_PLASMA = 'FUP', 'faction unbound plasma'
+        BLOOD_PLASMA_RATIO = 'BPR', 'blood plasma ratio'
+
+    type = models.CharField(
+        max_length=3,
+        choices=Type.choices,
+        help_text='type of derived variable'
+    )
+
 
     __original_pk_variable = None
 
@@ -468,6 +506,6 @@ class ReceptorOccupancy(StoredModel):
             'pk_variable': new_pk_variable,
             'read_only': True,
         }
-        stored_mapping = ReceptorOccupancy.objects.create(
+        stored_mapping = DerivedVariable.objects.create(
             **stored_kwargs)
         return stored_mapping

@@ -29,7 +29,7 @@ const Model: React.FC = () => {
     name: '',
     project: projectId || 0,
     mappings: [],
-    receptor_occupancies: [],
+    derived_variables: [],
     components: '',
     variables: [],
     mmt: '',

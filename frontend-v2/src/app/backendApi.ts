@@ -1650,10 +1650,12 @@ export type PkpdMapping = {
   pk_variable: number;
   pd_variable: number;
 };
-export type ReceptorOccupancy = {
+export type TypeEnum = "RO" | "FUP" | "BPR";
+export type DerivedVariable = {
   id: number;
   read_only?: boolean;
   datetime?: string | null;
+  type: TypeEnum;
   pkpd_model: number;
   pk_variable: number;
 };
@@ -1661,7 +1663,7 @@ export type CombinedModelSpeciesEnum = "H" | "R" | "N" | "M";
 export type CombinedModel = {
   id: number;
   mappings: PkpdMapping[];
-  receptor_occupancies: ReceptorOccupancy[];
+  derived_variables: DerivedVariable[];
   components: string;
   variables: number[];
   mmt: string;
@@ -1673,6 +1675,7 @@ export type CombinedModel = {
   has_saturation?: boolean;
   has_effect?: boolean;
   has_lag?: boolean;
+  has_bioavailability?: boolean;
   has_hill_coefficient?: boolean;
   time_max?: number;
   project?: number | null;
@@ -1683,7 +1686,7 @@ export type CombinedModel = {
 export type PatchedCombinedModel = {
   id?: number;
   mappings?: PkpdMapping[];
-  receptor_occupancies?: ReceptorOccupancy[];
+  derived_variables?: DerivedVariable[];
   components?: string;
   variables?: number[];
   mmt?: string;
@@ -1695,6 +1698,7 @@ export type PatchedCombinedModel = {
   has_saturation?: boolean;
   has_effect?: boolean;
   has_lag?: boolean;
+  has_bioavailability?: boolean;
   has_hill_coefficient?: boolean;
   time_max?: number;
   project?: number | null;

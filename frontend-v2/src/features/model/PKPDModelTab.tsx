@@ -78,6 +78,7 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props ) => {
           <Checkbox label="Saturation" name="has_saturation" control={control} checkboxFieldProps={{ disabled: isTMDDmodel || !model.pk_model }} />
           <Checkbox label="Effect Compartment" name="has_effect" control={control} checkboxFieldProps={{ disabled: !model.pk_model }}  />
           <Checkbox label="Lag Time" name="has_lag" control={control} checkboxFieldProps={{ disabled: !model.pk_model }}  />
+          <Checkbox label="Bioavailability" name="has_bioavailability" control={control} checkboxFieldProps={{ disabled: !model.pk_model }}  />
           </Grid>
         </Grid>
         <Grid container item spacing={2}>

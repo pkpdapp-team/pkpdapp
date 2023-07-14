@@ -9,7 +9,7 @@ from pkpdapp.models import (
     CombinedModel,
     PharmacodynamicModel, PkpdMapping,
     MyokitModelMixin,
-    ReceptorOccupancy,
+    DerivedVariable,
 )
 from pkpdapp.api.serializers import (
     ValidSbml, ValidMmt
@@ -25,9 +25,9 @@ class PkpdMappingSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class ReceptorOccupancySerializer(serializers.ModelSerializer):
+class DerivedVariableSerializer(serializers.ModelSerializer):
     class Meta:
-        model = ReceptorOccupancy
+        model = DerivedVariable
         fields = '__all__'
 
 
@@ -39,7 +39,7 @@ class BaseDosedPharmacokineticSerializer(serializers.ModelSerializer):
 
 class CombinedModelSerializer(serializers.ModelSerializer):
     mappings = PkpdMappingSerializer(many=True)
-    receptor_occupancies = ReceptorOccupancySerializer(many=True)
+    derived_variables = DerivedVariableSerializer(many=True)
     components = serializers.SerializerMethodField('get_components')
     variables = serializers.PrimaryKeyRelatedField(
         many=True, read_only=True
@@ -66,13 +66,13 @@ class CombinedModelSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         mappings_data = validated_data.pop('mappings')
-        receptor_occupancies_data = validated_data.pop('receptor_occupancies')
+        derived_variables_data = validated_data.pop('derived_variables')
         new_pkpd_model = BaseDosedPharmacokineticSerializer().create(
             validated_data
         )
         for field_datas, Serializer in [
                 (mappings_data, PkpdMappingSerializer),
-                (receptor_occupancies_data, ReceptorOccupancySerializer)
+                (derived_variables_data, DerivedVariableSerializer)
         ]:
             for field_data in field_datas:
                 serializer = Serializer()
@@ -83,15 +83,15 @@ class CombinedModelSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         mappings_data = validated_data.pop('mappings')
-        receptor_occ_data = validated_data.pop('receptor_occupancies')
+        derived_var_data = validated_data.pop('derived_variables')
         old_mappings = list((instance.mappings).all())
         for i in range(len(mappings_data), len(old_mappings)):
             old_mappings[i].delete()
             del old_mappings[i]
-        old_receptor_occ = list((instance.receptor_occupancies).all())
-        for i in range(len(receptor_occ_data), len(old_receptor_occ)):
-            old_receptor_occ[i].delete()
-            del old_receptor_occ[i]
+        old_derived_vars = list((instance.derived_variables).all())
+        for i in range(len(derived_var_data), len(old_derived_vars)):
+            old_derived_vars[i].delete()
+            del old_derived_vars[i]
 
         new_pkpd_model = BaseDosedPharmacokineticSerializer().update(
             instance, validated_data
@@ -102,8 +102,8 @@ class CombinedModelSerializer(serializers.ModelSerializer):
             for field_datas, old_models, Serializer in [
                     (mappings_data,
                      old_mappings, PkpdMappingSerializer),
-                    (receptor_occ_data,
-                     old_receptor_occ, ReceptorOccupancySerializer),
+                    (derived_var_data,
+                     old_derived_vars, DerivedVariableSerializer),
             ]:
                 for field_data in field_datas:
                     serializer = Serializer()

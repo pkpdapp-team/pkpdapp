@@ -83,8 +83,11 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({ index, plot, va
   }
 
   const handleRemoveYAxis = (yAxis: SimulationYAxisWithIndex) => {
+    console.log('remove', yAxis)
     removeYAxis(yAxis.index);
   }
+
+  console.log('y_axes', y_axes)
 
   const handleAddCxLine = (value: number) => {
     addCxLines({
@@ -156,8 +159,8 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({ index, plot, va
       </DropdownButton>
     </Stack>
     <List>
-    {lhs_y_axes.map((yAxis, yAxisIndex) => (
-        <ListItem key={yAxisIndex}>
+    {lhs_y_axes.map((yAxis) => (
+        <ListItem key={yAxis.id}>
         <Grid container spacing={2}>
             <Grid item xs={3}>
             <SelectField
@@ -184,7 +187,7 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({ index, plot, va
     </Stack>
     <List>
     {cx_lines.map((cxLine, cxLineIndex) => (
-        <ListItem key={cxLineIndex}>
+        <ListItem key={cxLine.id}>
         <Grid container spacing={2}>
             <Grid item xs={3}>
             <TextField
@@ -220,7 +223,7 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({ index, plot, va
     </Stack>
     <List>
     {rhs_y_axes.map((yAxis, yAxisIndex) => (
-        <ListItem key={yAxisIndex}>
+        <ListItem key={yAxis.id}>
         <Grid container spacing={2}>
             <Grid item xs={7}>
             <SelectField

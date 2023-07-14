@@ -27,7 +27,7 @@ from .pharmacokinetic_model import (
 from .combined_model import (
     CombinedModel,
     PkpdMapping,
-    ReceptorOccupancy
+    DerivedVariable
 )
 from .dataset import Dataset
 from .variable import Variable

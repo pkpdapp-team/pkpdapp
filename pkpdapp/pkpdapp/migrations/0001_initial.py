@@ -75,6 +75,7 @@ class Migration(migrations.Migration):
                 ('has_saturation', models.BooleanField(default=False, help_text='whether the pk model has saturation')),
                 ('has_effect', models.BooleanField(default=False, help_text='whether the pk model has effect compartment')),
                 ('has_lag', models.BooleanField(default=False, help_text='whether the pk model has lag')),
+                ('has_bioavailability', models.BooleanField(default=False, help_text='whether the pk model has bioavailability')),
                 ('has_hill_coefficient', models.BooleanField(default=False, help_text='whether the pd model has hill coefficient')),
                 ('time_max', models.FloatField(default=30, help_text='suggested time to simulate after the last dose (in the time units specified by the mmt model)')),
             ],
@@ -110,6 +111,18 @@ class Migration(migrations.Migration):
                 ('datetime', models.DateTimeField(blank=True, help_text='date/time the experiment was conducted. All time measurements are relative to this date/time, which is in YYYY-MM-DD HH:MM:SS format. For example, 2020-07-18 14:30:59', null=True)),
                 ('description', models.TextField(blank=True, default='', help_text='short description of the dataset')),
             ],
+        ),
+        migrations.CreateModel(
+            name='DerivedVariable',
+            fields=[
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('read_only', models.BooleanField(default=False, help_text='true if object has been stored')),
+                ('datetime', models.DateTimeField(blank=True, help_text='datetime the object was stored.', null=True)),
+                ('type', models.CharField(choices=[('RO', 'receptor occupancy'), ('FUP', 'faction unbound plasma'), ('BPR', 'blood plasma ratio')], help_text='type of derived variable', max_length=3)),
+            ],
+            options={
+                'abstract': False,
+            },
         ),
         migrations.CreateModel(
             name='DoseBase',
@@ -356,19 +369,6 @@ class Migration(migrations.Migration):
             name='time_max_unit',
             field=models.ForeignKey(help_text='unit for maximum time', on_delete=django.db.models.deletion.PROTECT, related_name='simulation_time_max', to='pkpdapp.unit'),
         ),
-        migrations.CreateModel(
-            name='ReceptorOccupancy',
-            fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('read_only', models.BooleanField(default=False, help_text='true if object has been stored')),
-                ('datetime', models.DateTimeField(blank=True, help_text='datetime the object was stored.', null=True)),
-                ('pk_variable', models.ForeignKey(help_text='variable in PK part of model', on_delete=django.db.models.deletion.CASCADE, related_name='receptor_occupancies', to='pkpdapp.variable')),
-                ('pkpd_model', models.ForeignKey(help_text='PKPD model that this mapping is for', on_delete=django.db.models.deletion.CASCADE, related_name='receptor_occupancies', to='pkpdapp.combinedmodel')),
-            ],
-            options={
-                'abstract': False,
-            },
-        ),
         migrations.AddField(
             model_name='protocol',
             name='amount_unit',
@@ -515,6 +515,16 @@ class Migration(migrations.Migration):
         migrations.AddConstraint(
             model_name='dosebase',
             constraint=models.CheckConstraint(check=models.Q(('duration__gt', 0)), name='Duration must be greater than 0'),
+        ),
+        migrations.AddField(
+            model_name='derivedvariable',
+            name='pk_variable',
+            field=models.ForeignKey(help_text='base variable in PK part of model', on_delete=django.db.models.deletion.CASCADE, related_name='receptor_occupancies', to='pkpdapp.variable'),
+        ),
+        migrations.AddField(
+            model_name='derivedvariable',
+            name='pkpd_model',
+            field=models.ForeignKey(help_text='PKPD model that this derived variable is for', on_delete=django.db.models.deletion.CASCADE, related_name='receptor_occupancies', to='pkpdapp.combinedmodel'),
         ),
         migrations.AddField(
             model_name='dataset',

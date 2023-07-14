@@ -31,9 +31,9 @@ const VariableRow: React.FC<Props> = ({ project, compound, model, variable, cont
       control,
       name: "mappings",
   });
-  const { fields: receptorOccupancies, append: receptorOccupancyAppend, remove: receptorOccupancyRemove } = useFieldArray({
+  const { fields: derivedVariables, append: derivedVariablesAppend, remove: derivedVariablesRemove } = useFieldArray({
       control,
-      name: "receptor_occupancies",
+      name: "derived_variables",
   });
 
   const { control: controlVariable, handleSubmit, reset, setValue, formState: { isDirty: isDirtyForm }, watch} = useForm<Variable>(
@@ -76,7 +76,6 @@ const VariableRow: React.FC<Props> = ({ project, compound, model, variable, cont
   const isPD = variable.qname.startsWith("PD");
   const hasProtocol: boolean = watchProtocolId != null;
   const linkToPD = isPD ? false : mappings.find((mapping) => mapping.pk_variable === variable.id) !== undefined;
-  const linkToRO = receptorOccupancies.find((ro) => ro.pk_variable === variable.id) !== undefined;
   const isConcentration = concentrationUnit?.compatible_units.find((unit) => parseInt(unit.id) === variable.unit) !== undefined;
   const isAmount = amountUnit?.compatible_units.find((unit) => parseInt(unit.id) === variable.unit) !== undefined;
 
@@ -113,16 +112,27 @@ const VariableRow: React.FC<Props> = ({ project, compound, model, variable, cont
     }
   };
 
-  const addRO = () => {
-    receptorOccupancyAppend({ id: 0, pk_variable: variable.id, pkpd_model: model.id });
+  const addDerived = (type: 'RO' | 'FUP' | 'BPR') => {
+    derivedVariablesAppend({ id: 0, pk_variable: variable.id, pkpd_model: model.id, type });
   };
 
-  const removeRO = () => {
-    const ro_index = receptorOccupancies.findIndex((ro) => ro.pk_variable === variable.id);
-    if (ro_index >= 0) {
-      receptorOccupancyRemove(ro_index);
-    }
+  const removeDerived = (index: number) => {
+    derivedVariablesRemove(index);
   };
+
+  const onClickDerived = (type: 'RO' | 'FUP' | 'BPR') => () => {
+    const index = derivedIndex(type);
+    return index >= 0 ? removeDerived(index) : addDerived(type)
+  };
+
+  const derivedIndex = (type: 'RO' | 'FUP' | 'BPR') => {
+    return derivedVariables.findIndex((ro) => ro.pk_variable === variable.id && ro.type === type);
+  };
+
+  const isLinkedTo = (type: 'RO' | 'FUP' | 'BPR') => {
+    return derivedIndex(type) >= 0;
+  };
+
 
   const noMapToPD = isPD || effectVariable === undefined || !isConcentration
   const noRO =  !isConcentration || isPD;
@@ -160,7 +170,17 @@ const VariableRow: React.FC<Props> = ({ project, compound, model, variable, cont
       </TableCell>
       <TableCell>
         { !noRO && (
-        <FormControlLabel disabled={disableRo} control={<MuiCheckbox checked={linkToRO} onClick={() => linkToRO ? removeRO() : addRO()} />} label="Link to RO" />
+        <FormControlLabel disabled={disableRo} control={<MuiCheckbox checked={isLinkedTo('RO')} onClick={onClickDerived('RO')} />} label="Link to RO" />
+        )}
+      </TableCell>
+      <TableCell>
+        { !noRO && (
+        <FormControlLabel disabled={disableRo} control={<MuiCheckbox checked={isLinkedTo('FUP')} onClick={onClickDerived('FUP')} />} label="Link to FUP" />
+        )}
+      </TableCell>
+      <TableCell>
+        { !noRO && (
+        <FormControlLabel disabled={disableRo} control={<MuiCheckbox checked={isLinkedTo('BPR')} onClick={onClickDerived('BPR')} />} label="Link to BPR" />
         )}
       </TableCell>
     </TableRow>

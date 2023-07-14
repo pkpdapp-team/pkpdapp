@@ -103,8 +103,6 @@ const SimulationPlotView: React.FC<SimulationPlotProps> = ({ index, plot, data, 
     }
   }
 
-  console.log('icLines', icLines, plot.cx_lines)
-
 
   //@ts-expect-error
   let yAxisTitle = plotData.filter((d) => !d.yaxis).map((d) => d.name).join(', ');

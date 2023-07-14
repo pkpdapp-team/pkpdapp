@@ -3105,10 +3105,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/PkpdMapping'
-        receptor_occupancies:
+        derived_variables:
           type: array
           items:
-            $ref: '#/components/schemas/ReceptorOccupancy'
+            $ref: '#/components/schemas/DerivedVariable'
         components:
           type: string
           readOnly: true
@@ -3154,6 +3154,9 @@ components:
         has_lag:
           type: boolean
           description: whether the pk model has lag
+        has_bioavailability:
+          type: boolean
+          description: whether the pk model has bioavailability
         has_hill_coefficient:
           type: boolean
           description: whether the pd model has hill coefficient
@@ -3180,11 +3183,11 @@ components:
           description: second PD part of model
       required:
       - components
+      - derived_variables
       - id
       - mappings
       - mmt
       - name
-      - receptor_occupancies
       - time_unit
       - variables
     CombinedModelSpeciesEnum:
@@ -3341,6 +3344,40 @@ components:
           format: uri
       required:
       - csv
+    DerivedVariable:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        read_only:
+          type: boolean
+          description: true if object has been stored
+        datetime:
+          type: string
+          format: date-time
+          nullable: true
+          description: datetime the object was stored.
+        type:
+          allOf:
+          - $ref: '#/components/schemas/TypeEnum'
+          description: |-
+            type of derived variable
+
+            * `RO` - receptor occupancy
+            * `FUP` - faction unbound plasma
+            * `BPR` - blood plasma ratio
+        pkpd_model:
+          type: integer
+          description: PKPD model that this derived variable is for
+        pk_variable:
+          type: integer
+          description: base variable in PK part of model
+      required:
+      - id
+      - pk_variable
+      - pkpd_model
+      - type
     Dose:
       type: object
       properties:
@@ -3778,10 +3815,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/PkpdMapping'
-        receptor_occupancies:
+        derived_variables:
           type: array
           items:
-            $ref: '#/components/schemas/ReceptorOccupancy'
+            $ref: '#/components/schemas/DerivedVariable'
         components:
           type: string
           readOnly: true
@@ -3827,6 +3864,9 @@ components:
         has_lag:
           type: boolean
           description: whether the pk model has lag
+        has_bioavailability:
+          type: boolean
+          description: whether the pk model has bioavailability
         has_hill_coefficient:
           type: boolean
           description: whether the pd model has hill coefficient
@@ -4769,30 +4809,6 @@ components:
       - name
       - subjects
       - variables
-    ReceptorOccupancy:
-      type: object
-      properties:
-        id:
-          type: integer
-          readOnly: true
-        read_only:
-          type: boolean
-          description: true if object has been stored
-        datetime:
-          type: string
-          format: date-time
-          nullable: true
-          description: datetime the object was stored.
-        pkpd_model:
-          type: integer
-          description: PKPD model that this mapping is for
-        pk_variable:
-          type: integer
-          description: variable in PK part of model
-      required:
-      - id
-      - pk_variable
-      - pkpd_model
     Simulate:
       type: object
       properties:
@@ -5003,6 +5019,16 @@ components:
       - dataset
       - id
       - id_in_dataset
+    TypeEnum:
+      enum:
+      - RO
+      - FUP
+      - BPR
+      type: string
+      description: |-
+        * `RO` - receptor occupancy
+        * `FUP` - faction unbound plasma
+        * `BPR` - blood plasma ratio
     Unit:
       type: object
       properties:

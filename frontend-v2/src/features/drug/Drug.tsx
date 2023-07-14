@@ -86,6 +86,8 @@ const Drug: React.FC = () => {
     { value: false, label: "Membrane-bound" },
     { value: true, label: "Soluble" },
   ];
+
+  const isLM = compound.compound_type === 'LM';
   
   return (
     <Grid container spacing={2}>
@@ -99,15 +101,15 @@ const Drug: React.FC = () => {
             <UnitField label={'Unit'} name={'molecular_mass_unit'} control={control} baseUnit={units.find(u => u.id == compound.molecular_mass_unit)} compound={compound} />
           </Stack>
 
-          <FloatField label="Fraction Unbound Plasma" name="fraction_unbound_plasma" control={control} />
-          <FloatField label="Blood to Plasma Ratio" name="blood_to_plasma_ratio" control={control} />
+          <FloatField label="Fraction Unbound Plasma" name="fraction_unbound_plasma" control={control} textFieldProps={{ disabled: isLM }} />
+          <FloatField label="Blood to Plasma Ratio" name="blood_to_plasma_ratio" control={control} textFieldProps={{ disabled: isLM }} />
 
           <Stack direction="row" spacing={2}>
-            <FloatField label="Intrinsic Clearence" name="intrinsic_clearance" control={control} />
-            <SelectField label="Intrinsic Clearence Assay" name="intrinsic_clearance_assay" control={control} options={intrinsic_clearence_assay_options} />
+            <FloatField label="Intrinsic Clearence" name="intrinsic_clearance" control={control} textFieldProps={{ disabled: true }} />
+            <SelectField label="Intrinsic Clearence Assay" name="intrinsic_clearance_assay" control={control} options={intrinsic_clearence_assay_options} selectProps={{ disabled: true }} />
           </Stack>
 
-          <FloatField label="Fraction Unbound Plasma Including Cells" name="fraction_unbound_including_cells" control={control} />
+          <FloatField label="Fraction Unbound Plasma Including Cells" name="fraction_unbound_including_cells" control={control} textFieldProps={{ disabled: true }} />
         </Stack>
       </Grid>
       <Grid item xs={12} md={6}>
@@ -131,7 +133,7 @@ const Drug: React.FC = () => {
             <UnitField label={'Unit'} name={'dissociation_unit'} control={control} baseUnit={units.find(u => u.id === compound.dissociation_unit)} compound={compound} />
           </Stack>
 
-          <SelectField label="Domain" name={'is_soluble'} control={control} options={is_soluble_options} />
+          <SelectField label="Domain" name={'is_soluble'} control={control} options={is_soluble_options} selectProps={{ disabled: true }} />
         </Stack>
       </Grid>
       <Grid item xs={12} md={6}>

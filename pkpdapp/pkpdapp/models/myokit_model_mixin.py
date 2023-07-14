@@ -181,6 +181,8 @@ class MyokitModelMixin:
             removed_variables += ['PDCompartment.HC']
         if not getattr(self, 'has_lag', True):
             removed_variables += ['PKCompartment.tlag']
+        if not getattr(self, 'has_bioavailability', True):
+            removed_variables += ['PKCompartment.F']
 
         model = self.get_myokit_model()
         new_variables = [

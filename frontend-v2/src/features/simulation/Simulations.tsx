@@ -118,12 +118,12 @@ const Simulations: React.FC = () => {
 
   // reset form and sliders if simulation changes
   useEffect(() => {
-    if (simulation) {
+    if (simulation && variables) {
       setSliderValues(s => getSliderInitialValues(simulation, s, variables));
       //setLoadingSimulate(true);
       reset(simulation);
     }
-  }, [simulation, reset]);
+  }, [simulation, reset, variables]);
 
   // generate a simulation if slider values change
   useEffect(() => {
