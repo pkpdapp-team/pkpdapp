@@ -4331,6 +4331,16 @@ components:
           format: double
           minimum: 0
           description: maximum time for the simulation
+        abs_tolerance:
+          type: number
+          format: double
+          minimum: 0
+          description: absolute tolerance for the simulation
+        rel_tolerance:
+          type: number
+          format: double
+          minimum: 0
+          description: relative tolerance for the simulation
         project:
           type: integer
         time_max_unit:
@@ -4874,6 +4884,16 @@ components:
           format: double
           minimum: 0
           description: maximum time for the simulation
+        abs_tolerance:
+          type: number
+          format: double
+          minimum: 0
+          description: absolute tolerance for the simulation
+        rel_tolerance:
+          type: number
+          format: double
+          minimum: 0
+          description: relative tolerance for the simulation
         project:
           type: integer
         time_max_unit:

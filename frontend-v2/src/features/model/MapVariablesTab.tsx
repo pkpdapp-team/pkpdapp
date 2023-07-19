@@ -68,8 +68,8 @@ const MapVariablesTab: React.FC<Props> = ({ model, project, control, variables }
             <TableCell>Dosing Compartment</TableCell>
             <TableCell>Link to PD</TableCell>
             <TableCell>Link to Static Receptor Occupancy</TableCell>
-            <TableCell>Link to FUP</TableCell>
-            <TableCell>Link to BPR</TableCell>
+            <TableCell>Unbound Concentration</TableCell>
+            <TableCell>Blood Concentration</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>

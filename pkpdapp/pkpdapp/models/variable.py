@@ -203,7 +203,8 @@ class Variable(StoredModel):
             pk_model=model,
         )
         found_variable = Variable._find_close_variable(
-            myokit_variable, variables
+            myokit_variable, variables,
+            compound=model.get_project().compound
         )
         if found_variable is not None:
             return variables[0]
@@ -231,16 +232,21 @@ class Variable(StoredModel):
             )
 
     @staticmethod
-    def _find_close_variable(myokit_variable, variables):
-        logger.debug('Looking for variable: {}'.format(myokit_variable))
+    def _find_close_variable(myokit_variable, variables, compound=None):
+        logger.debug('Looking for variable: {} [{}]'.format(myokit_variable, myokit_variable.unit()))
         found = None
         for i, v in enumerate(variables):
+            # todo check if units are compatible...
+            if v.unit is None:
+                logger.debug('\tchecking variable: {}'.format(v.qname))
+            else:
+                logger.debug('\tchecking variable: {} [{}]'.format(v.qname, v.unit.symbol))
             if v.unit is None:
                 if myokit_variable.unit() is None:
                     found = i
-            elif myokit_variable.unit() is not None and myokit.Unit.close(
-                v.unit.get_myokit_unit(),
-                    myokit_variable.unit()
+            elif (
+                myokit_variable.unit() is not None and
+                v.unit.is_convertible_to(myokit_variable.unit(), compound=compound)
             ):
                 found = i
         if found is not None:
@@ -258,7 +264,8 @@ class Variable(StoredModel):
             pd_model=model,
         )
         found_variable = Variable._find_close_variable(
-            myokit_variable, variables
+            myokit_variable, variables,
+            compound=model.get_project().compound
         )
         if found_variable is not None:
             return variables[0]
@@ -295,7 +302,8 @@ class Variable(StoredModel):
             dosed_pk_model=model,
         )
         found_variable = Variable._find_close_variable(
-            myokit_variable, variables
+            myokit_variable, variables,
+            compound=model.get_project().compound
         )
         if found_variable is not None:
             return variables[0]

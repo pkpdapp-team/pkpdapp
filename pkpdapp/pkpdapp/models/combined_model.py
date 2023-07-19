@@ -309,6 +309,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
             var_name = derived_variable.pk_variable.name
             if derived_variable.type == DerivedVariable.Type.RECEPTOR_OCCUPANCY:
                 var = myokit_compartment.add_variable(f'{var_name}_RO')
+                var.meta['desc'] = f'Receptor occupancy for {myokit_var.meta["desc"]}'
                 var.set_unit(myokit.Unit())
                 kd = myokit_compartment.add_variable(f'{var_name}_RO_KD')
                 kd.set_rhs(self.project.compound.dissociation_constant)
@@ -329,16 +330,18 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                     ))
                 )
             elif derived_variable.type == DerivedVariable.Type.FRACTION_UNBOUND_PLASMA:
-                var = myokit_compartment.add_variable(f'{var_name}_UB')
+                var = myokit_compartment.add_variable(f'{var_name}_UN')
+                var.meta['desc'] = f'Unbound {myokit_var.meta["desc"]}'
                 var.set_unit(myokit_var.unit())
-                fup = myokit_compartment.add_variable(f'{var_name}_UB_FUP')
+                fup = myokit_compartment.add_variable(f'{var_name}_UN_FUP')
                 fup.set_rhs(self.project.compound.fraction_unbound_plasma)
                 fup.set_unit(myokit.units.dimensionless)
                 var.set_rhs(myokit.Multiply(myokit.Name(fup), myokit.Name(myokit_var)))
             elif derived_variable.type == DerivedVariable.Type.BLOOD_PLASMA_RATIO:
-                var = myokit_compartment.add_variable(f'{var_name}_B')
+                var = myokit_compartment.add_variable(f'{var_name}_BL')
+                var.meta['desc'] = f'Blood {myokit_var.meta["desc"]}'
                 var.set_unit(myokit_var.unit())
-                bpr = myokit_compartment.add_variable(f'{var_name}_B_BPR')
+                bpr = myokit_compartment.add_variable(f'{var_name}_BL_BPR')
                 bpr.set_rhs(self.project.compound.blood_to_plasma_ratio)
                 bpr.set_unit(myokit.units.dimensionless)
                 var.set_rhs(myokit.Multiply(myokit.Name(bpr), myokit.Name(myokit_var)))

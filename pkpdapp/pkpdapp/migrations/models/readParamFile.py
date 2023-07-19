@@ -9,7 +9,7 @@ sheet_names = ['1cmpt_PK_Model', '2cmpt_PK_Model',
                '3cmpt_PK_Model', '1cmpt_TMDD_Model',
                '2cmpt_TMDD_Model']
 model_names = ['one_compartment', 'two_compartment',
-               'three_comartment', 'one_compartment_tmdd', 
+               'three_compartment', 'one_compartment_tmdd', 
                'two_compartment_tmdd']
 species_list = ['M', 'R', 'K', 'H']
 compound_type = ['SM', 'LM']

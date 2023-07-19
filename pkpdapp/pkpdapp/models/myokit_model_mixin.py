@@ -256,7 +256,7 @@ class MyokitModelMixin:
                 variable.delete()
             else:
                 logger.debug(
-                    f'RETAINING VARIABLE {variable.qname} (id = {variable.id})'
+                    f'RETAINING VARIABLE {variable.qname} (id = {variable.id}, value = {variable.default_value})'
                 )
 
         self.variables.set(all_new_variables)
@@ -486,6 +486,8 @@ class MyokitModelMixin:
             override_tlag = variables['PKCompartment.tlag']
         
         sim = self.create_myokit_simulator(override_tlag=override_tlag, model=model)
+        # TODO: take these from simulation model
+        sim.set_tolerance(abs_tol=1e-06, rel_tol=1e-08)
 
         # Simulate, logging only state variables given by `outputs`
         return self.serialize_datalog(

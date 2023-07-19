@@ -67,7 +67,8 @@ const VariableRow: React.FC<Props> = ({ project, compound, model, variable, cont
   }
 
   const concentrationUnit = units.find((unit) => unit.symbol === "pmol/L");
-  const amountUnit = units.find((unit) => unit.symbol === "pmol");
+  const isClinical = project.species === 'H';
+  const amountUnit = units.find((unit) => unit.symbol === (isClinical ? "pmol" : "pmol/kg"));
   const variableUnit = units.find((unit) => unit.id === variable.unit);
   if (concentrationUnit === undefined || amountUnit === undefined) {
     return (<>No concentration or amount unit found</>);
@@ -135,11 +136,13 @@ const VariableRow: React.FC<Props> = ({ project, compound, model, variable, cont
 
 
   const noMapToPD = isPD || effectVariable === undefined || !isConcentration
-  const noRO =  !isConcentration || isPD;
+  const noDerivedVariables =  !isConcentration || isPD;
   const disableRo = !compound.dissociation_constant || !compound.target_concentration;
+  const disableFUP = !compound.fraction_unbound_plasma || compound.compound_type === 'LM';
+  const disableBPR = !compound.blood_to_plasma_ratio || compound.compound_type === 'LM';
   const noDosing = !isAmount;
 
-  if (noMapToPD && noRO && noDosing) {
+  if (noMapToPD && noDerivedVariables && noDosing) {
     return (null);
   }
 
@@ -169,18 +172,18 @@ const VariableRow: React.FC<Props> = ({ project, compound, model, variable, cont
         )}
       </TableCell>
       <TableCell>
-        { !noRO && (
+        { !noDerivedVariables && (
         <FormControlLabel disabled={disableRo} control={<MuiCheckbox checked={isLinkedTo('RO')} onClick={onClickDerived('RO')} />} label="Link to RO" />
         )}
       </TableCell>
       <TableCell>
-        { !noRO && (
-        <FormControlLabel disabled={disableRo} control={<MuiCheckbox checked={isLinkedTo('FUP')} onClick={onClickDerived('FUP')} />} label="Link to FUP" />
+        { !noDerivedVariables && (
+        <FormControlLabel disabled={disableFUP} control={<MuiCheckbox checked={isLinkedTo('FUP')} onClick={onClickDerived('FUP')} />} label="Calculate unbound concentration" />
         )}
       </TableCell>
       <TableCell>
-        { !noRO && (
-        <FormControlLabel disabled={disableRo} control={<MuiCheckbox checked={isLinkedTo('BPR')} onClick={onClickDerived('BPR')} />} label="Link to BPR" />
+        { !noDerivedVariables && (
+        <FormControlLabel disabled={disableBPR} control={<MuiCheckbox checked={isLinkedTo('BPR')} onClick={onClickDerived('BPR')} />} label="Multiply (observations in plasma)" />
         )}
       </TableCell>
     </TableRow>

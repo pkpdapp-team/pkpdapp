@@ -99,19 +99,19 @@ PerInh_Baseline = (1-CT1_f/CT1_0)*100 in [dimensionless]
 	desc: Percent inhibition relative to the initial steady-state level of target
 	
 
-dot(Aa) = -ka*Aa in [pmol]
+dot(Aa) = -ka*Aa in [pmol/kg]
     desc: Amount of drug in 'depo' compartment
 
-dot(A1_f) = ka*Aa*F -CL*C1_f -Q1*(C1_f*C2) -kon*C1_f*CT1_f*V1 +koff*ADT1 in [pmol]
+dot(A1_f) = ka*Aa*F -CL*C1_f -Q1*(C1_f*C2) -kon*C1_f*CT1_f*V1 +koff*ADT1 in [pmol/kg]
     desc: Amount of free drug in central compartment 
 	
-dot(A2) = Q1*(C1_f*C2) in [pmol]	
+dot(A2) = Q1*(C1_f*C2) in [pmol/kg]	
 	desc: Amount of free drug in the peripheral compartment
 	
-dot(AT1_f) = kdeg*V1*(CT1_0 - CT1_f) -kon*C1_f*CT1_f*V1 +koff*ADT1 in [pmol]
+dot(AT1_f) = kdeg*V1*(CT1_0 - CT1_f) -kon*C1_f*CT1_f*V1 +koff*ADT1 in [pmol/kg]
 	desc: Amount of free target in central compartment
 
-dot(ADT1) = kon*C1_f*CT1_f*V1 -(koff+kint)*ADT1 in [pmol]
+dot(ADT1) = kon*C1_f*CT1_f*V1 -(koff+kint)*ADT1 in [pmol/kg]
 	desc: Amount of bound drug/ target in central compartment
 
 dot(Ce) = ke0*(C1_f*Kp - Ce) in [pmol/L]	

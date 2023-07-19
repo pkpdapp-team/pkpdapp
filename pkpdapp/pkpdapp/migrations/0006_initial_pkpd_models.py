@@ -227,7 +227,7 @@ Description of a clinical three compartment PK model here.
         },
         {
             'name':
-            'three_compartment_model_preclinical',
+            'three_compartment_preclinical',
             'description':
             """
 Description of a preclinical three compartment PK model here.

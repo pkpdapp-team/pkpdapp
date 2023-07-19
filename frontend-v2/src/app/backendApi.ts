@@ -2059,6 +2059,8 @@ export type Simulation = {
   nrows?: number;
   ncols?: number;
   time_max?: number;
+  abs_tolerance?: number;
+  rel_tolerance?: number;
   project: number;
   time_max_unit: number;
 };
@@ -2070,6 +2072,8 @@ export type PatchedSimulation = {
   nrows?: number;
   ncols?: number;
   time_max?: number;
+  abs_tolerance?: number;
+  rel_tolerance?: number;
   project?: number;
   time_max_unit?: number;
 };

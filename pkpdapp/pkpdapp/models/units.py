@@ -124,6 +124,13 @@ class Unit(models.Model):
                 multiplier=multiplier
             )
 
+    def is_convertible_to(self, unit, compound=None):
+        try:
+            self.convert_to(unit, compound=compound)
+        except myokit.IncompatibleUnitError:
+            return False
+        return True
+
     def convert_to(self, unit, compound=None):
         if unit is None:
             return 1.0

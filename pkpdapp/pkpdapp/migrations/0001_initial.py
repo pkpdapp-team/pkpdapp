@@ -7,7 +7,6 @@
 # flake8: noqa
 
 
-
 from django.conf import settings
 import django.core.validators
 from django.db import migrations, models
@@ -243,6 +242,8 @@ class Migration(migrations.Migration):
                 ('nrows', models.IntegerField(default=1, help_text='number of subplot rows')),
                 ('ncols', models.IntegerField(default=1, help_text='number of subplot columns')),
                 ('time_max', models.FloatField(default=30, help_text='maximum time for the simulation', validators=[django.core.validators.MinValueValidator(0)])),
+                ('abs_tolerance', models.FloatField(default=1e-06, help_text='absolute tolerance for the simulation', validators=[django.core.validators.MinValueValidator(0)])),
+                ('rel_tolerance', models.FloatField(default=1e-06, help_text='relative tolerance for the simulation', validators=[django.core.validators.MinValueValidator(0)])),
                 ('project', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='simulations', to='pkpdapp.project')),
             ],
         ),
@@ -519,12 +520,12 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='derivedvariable',
             name='pk_variable',
-            field=models.ForeignKey(help_text='base variable in PK part of model', on_delete=django.db.models.deletion.CASCADE, related_name='receptor_occupancies', to='pkpdapp.variable'),
+            field=models.ForeignKey(help_text='base variable in PK part of model', on_delete=django.db.models.deletion.CASCADE, related_name='derived_variables', to='pkpdapp.variable'),
         ),
         migrations.AddField(
             model_name='derivedvariable',
             name='pkpd_model',
-            field=models.ForeignKey(help_text='PKPD model that this derived variable is for', on_delete=django.db.models.deletion.CASCADE, related_name='receptor_occupancies', to='pkpdapp.combinedmodel'),
+            field=models.ForeignKey(help_text='PKPD model that this derived variable is for', on_delete=django.db.models.deletion.CASCADE, related_name='derived_variables', to='pkpdapp.combinedmodel'),
         ),
         migrations.AddField(
             model_name='dataset',

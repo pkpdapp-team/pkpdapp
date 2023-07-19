@@ -865,7 +865,7 @@ export const param_default: {[key: string]: {[key: string]: {[key: string]: {[ke
         },
         
     },
-    three_comartment: {
+    three_compartment: {
         tlag: {
             M: {
                 SM: {

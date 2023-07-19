@@ -44,6 +44,18 @@ class Simulation(models.Model):
         help_text='unit for maximum time'
     )
 
+    abs_tolerance = models.FloatField(
+        default=1e-6,
+        validators=[MinValueValidator(0)],
+        help_text='absolute tolerance for the simulation'
+    )
+
+    rel_tolerance = models.FloatField(
+        default=1e-6,
+        validators=[MinValueValidator(0)],
+        help_text='relative tolerance for the simulation'
+    )
+
     def get_project(self):
         return self.project
 

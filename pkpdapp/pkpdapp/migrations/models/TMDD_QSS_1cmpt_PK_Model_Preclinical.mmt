@@ -62,62 +62,62 @@ c_term = C1_t * KSS in [pmol/L*pmol/L]
 	desc: c term of quadratic equation
 
 C1_t = A1_t/V1 in [pmol/L]
-    desc: Total concentration of drug in the central compartment	
+    desc: Concentration of TOTAL drug in the central compartment	
 
 CT1_t = AT1_t/V1 in [pmol/L]	
-	desc: Total concentration of target in the central compartment	
+	desc: Concentration of TOTAL target in the central compartment	
 	
 C1_f = 0.5 * (b_term + (b_term^2+4*c_term)^0.5) in [pmol/L]
-	desc: Free concentration of drug in the central compartment
+	desc: Concentration of FREE drug in the central compartment
 
 C1_b = C1_t-C1_f in [pmol/L]
-	desc: Bound concentration of drug in the central compartment
+	desc: Concentration of BOUND drug in the central compartment
 
 CT1_b = C1_b in [pmol/L]
-	desc: Bound concentration of target in the central compartment
+	desc: Concentration of BOUND target in the central compartment
 
 CT1_f = CT1_t-CT1_b in [pmol/L]
-	desc: Free concentration of target in the central compartment
+	desc: Concentration of FREE target in the central compartment
 	
 	
 RO_Model = CT1_b/CT1_t*100 in [dimensionless]
-	desc: Receptor (Target) occupancy
+	desc: Receptor (Target) occupancy from TMDD model
 	
 PerInh = (1-CT1_f/CT1_t)*100 in [dimensionless]
-	desc: Percent inhbition relative to total target	
+	desc: Percent inhbition relative to TOTAL target	
 	
 PerInh_Baseline = (1-CT1_f/CT1_0)*100 in [dimensionless]	
-	desc: Percent inhibition relative to the initial steady-state level of target	
+	desc: Percent inhibition relative to the initial steady-state concentrations of target	
 
-dot(Aa) = -ka*Aa in [pmol]
+dot(Aa) = -ka*Aa in [pmol/kg]
     desc: Amount of drug in 'depo' compartment 
 
-dot(A1_t) = ka*Aa*F -CL*C1_f -kint*CT1_b*V1 in [pmol]
-    desc: Amount of free drug in central compartment 
+dot(A1_t) = ka*Aa*F -CL*C1_f -kint*CT1_b*V1 in [pmol/kg]
+    desc: Amount of TOTAL drug in central compartment 
 	
-dot(AT1_t) = kdeg*V1*(CT1_0 - CT1_f) -kint*CT1_b*V1 in [pmol]
-	desc: Amount of free target in central compartment
+dot(AT1_t) = kdeg*V1*(CT1_0 - CT1_f) -kint*CT1_b*V1 in [pmol/kg]
+	desc: Amount of TOTAL target in central compartment
 
 dot(Ce) = ke0*(C1_f*Kp - Ce) in [pmol/L]	
-	desc: Concentration of drug in effect compartment 
+	desc: Concentration of FREE drug in effect compartment 
 	
 dot(AUC1_f)= C1_f in [pmol/L*h]
-	desc: Free AUC of drug in central the compartment
+	desc: AUC of FREE drug in central the compartment
 	
 dot(AUC1_b)= C1_b in [pmol/L*h]
-	desc: Bound AUC of drug in the central compartment
+	desc: AUC of BOUND drug in the central compartment
 
 dot(AUC1_t)= C1_t in [pmol/L*h]
-	desc: Total AUC of drug in central the central compartment	
+	desc: AUC of TOTAL drug in central the central compartment	
 	
 dot(AUCT1_f)= CT1_f in [pmol/L*h]
-	desc: Free AUC of the target in the central compartment
+	desc: AUC of FREE target in the central compartment
 	
 dot(AUCT1_b)= CT1_b in [pmol/L*h]
-	desc: Bound AUC of the target in the central compartment
+	desc: AUC of BOUND target in the central compartment
 
 dot(AUCT1_t)= CT1_t in [pmol/L*h]
-	desc: Total AUC of the target in the central compartment	
+	desc: AUC of TOTAL target in the central compartment	
 	
 dot(AUCe)= Ce in [pmol/L*h]
-	desc: Free AUC of drug in the effect compartment
+	desc: AUC of FREE drug in the effect compartment
