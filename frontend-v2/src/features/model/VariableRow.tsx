@@ -78,13 +78,13 @@ const VariableRow: React.FC<Props> = ({ project, compound, model, variable, cont
   const hasProtocol: boolean = watchProtocolId != null;
   const linkToPD = isPD ? false : mappings.find((mapping) => mapping.pk_variable === variable.id) !== undefined;
   const isConcentration = concentrationUnit?.compatible_units.find((unit) => parseInt(unit.id) === variable.unit) !== undefined;
-  const isAmount = amountUnit?.compatible_units.find((unit) => parseInt(unit.id) === variable.unit) !== undefined;
+  const isAmount = variableUnit?.symbol != '' && amountUnit?.compatible_units.find((unit) => parseInt(unit.id) === variable.unit) !== undefined;
 
   const addProtocol = () => {
     const isPerKg = variableUnit?.g !== 0;
     const amountUnitSymbol = isPerKg ? "mg/kg" : "mg";
     const amountUnit = units.find((unit) => unit.symbol === amountUnitSymbol);
-    const defaultDose: Dose = { id: 0, amount: 0, start_time: 0, repeat_interval: 1, repeats: 1, duration: 0.833 };
+    const defaultDose: Dose = { id: 0, amount: 0, start_time: 0, repeat_interval: 1, repeats: 1, duration: 0.0833 };
     createProtocol({ protocol: { id: 0, dataset: '', doses: [ defaultDose ], amount_unit: amountUnit?.id || variable.unit, time_unit: defaultTimeUnit?.id || undefined, subjects: [], name: variable.name, project: project.id, variables: [variable.id] } })
     .then((value) => {
       if ('data' in value) {

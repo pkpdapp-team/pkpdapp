@@ -263,45 +263,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 new_name=pd_names,
             )
 
-        # do mappings
-        for mapping in self.mappings.all():
-            pd_var = pkpd_model.get(
-                mapping.pd_variable.qname.replace('myokit', 'PD')
-            )
-            pk_var = pkpd_model.get(
-                mapping.pk_variable.qname
-            )
-
-            pk_to_pd_conversion_multiplier = Unit.convert_between_myokit_units(
-                pk_var.unit(), pd_var.unit(), compound=self.project.compound
-            )
-            pd_to_pk_conversion_multiplier = Unit.convert_between_myokit_units(
-                pk_var.unit(), pd_var.unit(), compound=self.project.compound
-            )
-
-            # pd var will be an intermediary variable driven by pk_var
-            if pd_var.is_state():
-                # add pd_var rate equation to pk_var
-                pk_var.set_rhs(
-                    myokit.Plus(
-                        pk_var.rhs(),
-                        myokit.Multiply(
-                            myokit.Number(pd_to_pk_conversion_multiplier),
-                            pd_var.rhs()
-                        )
-                    )
-                )
-
-                # demote pd_var to an intermediary variable
-                pd_var.demote()
-
-            pd_var.set_rhs(
-                myokit.Multiply(
-                    myokit.Number(pk_to_pd_conversion_multiplier),
-                    myokit.Name(pk_var)
-                )
-            )
-
+        
         # do derived variables
         for derived_variable in self.derived_variables.all():
             myokit_var = pkpd_model.get(derived_variable.pk_variable.qname)
@@ -347,6 +309,45 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 var.set_rhs(myokit.Multiply(myokit.Name(bpr), myokit.Name(myokit_var)))
             else:
                 raise ValueError(f'Unknown derived variable type {derived_variable.type}')
+
+        # do mappings
+        for mapping in self.mappings.all():
+            pd_var = pkpd_model.get(
+                mapping.pd_variable.qname.replace('myokit', 'PD')
+            )
+            pk_var = pkpd_model.get(
+                mapping.pk_variable.qname
+            )
+
+            pk_to_pd_conversion_multiplier = Unit.convert_between_myokit_units(
+                pk_var.unit(), pd_var.unit(), compound=self.project.compound
+            )
+            pd_to_pk_conversion_multiplier = Unit.convert_between_myokit_units(
+                pk_var.unit(), pd_var.unit(), compound=self.project.compound
+            )
+
+            # pd var will be an intermediary variable driven by pk_var
+            if pd_var.is_state():
+                # add pd_var rate equation to pk_var
+                pk_var.set_rhs(
+                    myokit.Plus(
+                        pk_var.rhs(),
+                        myokit.Multiply(
+                            myokit.Number(pd_to_pk_conversion_multiplier),
+                            pd_var.rhs()
+                        )
+                    )
+                )
+
+                # demote pd_var to an intermediary variable
+                pd_var.demote()
+
+            pd_var.set_rhs(
+                myokit.Multiply(
+                    myokit.Number(pk_to_pd_conversion_multiplier),
+                    myokit.Name(pk_var)
+                )
+            )
 
         pkpd_model.validate()
         return pkpd_model

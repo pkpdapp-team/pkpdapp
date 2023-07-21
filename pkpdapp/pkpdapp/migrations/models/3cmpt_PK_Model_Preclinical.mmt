@@ -17,14 +17,14 @@ t = 0 in [h] bind time
 
 [PKCompartment]
 
-tlag = 1 in [h]
-	desc: absorption lag time from extravasc compartment
+tlag = 0 in [h]
+	desc: Absorption lag time from extravasc compartment
 
 ka = 1 in [1/h]
-    desc: first order absorption rate constant  
+    desc: First order absorption rate constant  
 
 F = 1 in [dimensionless]
-    desc: fraction absorbed 
+    desc: Fraction absorbed/ bioavailability 
 	
 V1 = 1 in [L/kg]
     desc: Volume of the central compartment	
@@ -44,17 +44,17 @@ Q1 = 1 in [L/h/kg]
 Q2 = 1 in [L/h/kg]
     desc: Intercompartmental clearance between central compartment and second peripheral compartment 	
 
-CLmax = 1 in [L/h/kg]
-    desc: maximum nonlinear Michaelis-Menten clearance; Vmax = CLmax*Km 
+CLmax = 0 in [L/h/kg]
+    desc: Maximum nonlinear Michaelis-Menten clearance; CLmax = Vmax/Km
 
 Km = 1 in [pmol/L]
     desc: Michaelis-Menten constant 	
 	
 ke0 = 1 in [1/h]
-	desc: equilibration rate constant effect compartment
+	desc: Equilibration rate constant effect compartment
 	
 Kpu = 1 in [dimensionless]
-	desc: effect compartment to plasma partitioning coefficient
+	desc: Effect compartment to plasma partitioning coefficient
 	
 C1= A1/V1 in [pmol/L]
     desc: Concentration of drug in the central compartment
@@ -66,7 +66,7 @@ C3= A3/V3 in [pmol/L]
     desc: Concentration of drug in the 2nd peripheral compartment	
 	
 CL_t = CL+CLmax*(1/(1+(C1/Km))) in [L/h/kg]
-	desc: total clearance as function of time unit [L/h] or [L/h/kg] 	
+	desc: Total clearance as a function of time	
 
 dot(Aa) = -ka*Aa in [pmol/kg]
     desc: Amount of drug in 'depo' compartment
@@ -84,7 +84,7 @@ dot(Ce) = ke0*(C1*Kpu - Ce) in [pmol/L]
 	desc: Concentration of drug in effect compartment
 	
 dot(AUC1)= C1 in [pmol/L*h]
-	desc: AUC of the central compartment
+	desc: AUC of drug in the central compartment
 	
 dot(AUCe)= Ce in [pmol/L*h]
-	desc: AUC of the effect compartment
+	desc: AUC of drug in the effect compartment

@@ -301,9 +301,13 @@ class Variable(StoredModel):
             qname=myokit_variable.qname(),
             dosed_pk_model=model,
         )
+        compound = None
+        project = model.get_project()
+        if project is not None:
+            compound = project.compound
         found_variable = Variable._find_close_variable(
             myokit_variable, variables,
-            compound=model.get_project().compound
+            compound=compound
         )
         if found_variable is not None:
             return variables[0]
