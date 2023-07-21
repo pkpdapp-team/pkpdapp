@@ -858,7 +858,7 @@ export const param_default: {[key: string]: {[key: string]: {[key: string]: {[ke
                 },
                 LM: {
                     value: 0.2,
-                    unit: 'dimensionless',
+                unit: 'dimensionless',
                 },
             },
             

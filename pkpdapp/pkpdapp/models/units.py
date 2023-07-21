@@ -162,15 +162,7 @@ class Unit(models.Model):
     def get_compatible_units(self, compound=None):
         close_enough = 1e-9
         if compound is not None:
-            mol_to_g = Q(g__range=(
-                self.mol - close_enough,
-                self.mol + close_enough,
-            ))
             g_is_same = Q(g__range=(
-                self.g - close_enough,
-                self.g + close_enough,
-            ))
-            g_to_mol= Q(mol__range=(
                 self.g - close_enough,
                 self.g + close_enough,
             ))
@@ -178,16 +170,29 @@ class Unit(models.Model):
                 self.mol - close_enough,
                 self.mol + close_enough,
             ))
+            mol_added_to_g = Q(g__range=(
+                self.g + self.mol - close_enough,
+                self.g + self.mol + close_enough,
+            ))
+            g_added_to_mol = Q(mol__range=(
+                self.mol + self.g - close_enough,
+                self.mol + self.g + close_enough,
+            ))
             no_g = Q(g=0)
             self_has_g = self.g != 0
+            self_no_g_or_mol = self.g == 0 and self.mol == 0
             no_mol = Q(mol=0)
             self_has_mol = self.mol != 0
             filter = mol_is_same & g_is_same
-            if not (self_has_mol and self_has_g):
-                if self_has_mol:
-                    filter |= mol_to_g & no_mol
-                if self_has_g:
-                    filter |= g_to_mol & no_g
+            mol_and_g_add_to_zero = Q(mol=1, g=-1) | Q(mol=-1, g=1)
+
+            # take into account that '' is convertible to 'mol/g' or 'g/mol'
+            if self_no_g_or_mol:
+                filter |= mol_and_g_add_to_zero
+            if self_has_mol:
+                filter |= mol_added_to_g & no_mol
+            if self_has_g:
+                filter |= g_added_to_mol & no_g
             compat_units = Unit.objects.filter(
                 filter,
                 Q(m__range=(
