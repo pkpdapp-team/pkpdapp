@@ -274,11 +274,16 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 var.meta['desc'] = f'Receptor occupancy for {myokit_var.meta["desc"]}'
                 var.set_unit(myokit.Unit())
                 kd = myokit_compartment.add_variable(f'{var_name}_RO_KD')
-                kd.set_rhs(self.project.compound.dissociation_constant)
-                kd.set_unit(self.project.compound.dissociation_unit.symbol)
+                kd_unit = myokit_var.unit()
+                compound = self.project.compound
+                kd_unit_conversion_factor = compound.dissociation_unit.convert_to(kd_unit, compound=compound)
+                kd.set_rhs(compound.dissociation_constant * kd_unit_conversion_factor)
+                kd.set_unit(kd_unit)
                 target_conc = myokit_compartment.add_variable(f'{var_name}_RO_TC')
-                target_conc.set_rhs(self.project.compound.target_concentration)
-                target_conc.set_unit(self.project.compound.target_concentration_unit.symbol)
+                target_conc_unit = myokit_var.unit()
+                target_conc_unit_conversion_factor = compound.target_concentration_unit.convert_to(target_conc_unit, compound=compound)
+                target_conc.set_rhs(compound.target_concentration * target_conc_unit_conversion_factor)
+                target_conc.set_unit(target_conc_unit)
                 
                 b = var.add_variable('b')
                 b.set_rhs(myokit.Plus(myokit.Plus(myokit.Name(kd), myokit.Name(target_conc)), myokit.Name(myokit_var)))

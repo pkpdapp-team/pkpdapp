@@ -383,7 +383,8 @@ class MyokitModelMixin:
     def _convert_unit_qname(self, qname, value, myokit_model):
         variable = self.variables.get(qname=qname)
         myokit_variable_sbml = myokit_model.get(qname)
-        return self._convert_unit(variable, myokit_variable_sbml, value)
+        new_value = self._convert_unit(variable, myokit_variable_sbml, value)
+        return new_value
 
     def _convert_bound_unit(self, binding, value, myokit_model):
         myokit_variable_sbml = myokit_model.binding(binding)
