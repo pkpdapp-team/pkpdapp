@@ -102,10 +102,10 @@ PerInh_Baseline = (1-CT1_f/CT1_0)*100 in [dimensionless]
 dot(Aa) = -ka*Aa in [pmol]
     desc: Amount of drug in 'depo' compartment
 
-dot(A1_f) = ka*Aa*F -CL*C1_f -Q1*(C1_f*C2) -kon*C1_f*CT1_f*V1 +koff*ADT1 in [pmol]
+dot(A1_f) = ka*Aa*F -CL*C1_f -Q1*(C1_f - C2) -kon*C1_f*CT1_f*V1 +koff*ADT1 in [pmol]
     desc: Amount of free drug in central compartment 
 	
-dot(A2) = Q1*(C1_f*C2) in [pmol]	
+dot(A2) = Q1*(C1_f - C2) in [pmol]	
 	desc: Amount of free drug in the peripheral compartment
 	
 dot(AT1_f) = kdeg*V1*(CT1_0 - CT1_f) -kon*C1_f*CT1_f*V1 +koff*ADT1 in [pmol]
