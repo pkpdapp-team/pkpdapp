@@ -131,8 +131,6 @@ class TestMyokitForwardModelSingleOutput(TestCase):
         np.testing.assert_almost_equal(z_subjects[0], z[0])
 
 
-
-
 class TestMyokitPintsForwardModelMultipleOutput(TestCase):
     def setUp(self):
         m = PharmacokineticModel.objects.get(
@@ -143,7 +141,7 @@ class TestMyokitPintsForwardModelMultipleOutput(TestCase):
 
     def test_runs(self):
         # all parameters are:
-        #full_dict = {
+        # full_dict = {
         #    'PKCompartment.tlag': 1,
         #    'PKCompartment.ka': 1,
         #    'PKCompartment.F': 1,
@@ -157,7 +155,7 @@ class TestMyokitPintsForwardModelMultipleOutput(TestCase):
         #    'PKCompartment.Km': 1,
         #    'PKCompartment.ke0': 1,
         #    'PKCompartment.Kpu': 1,
-        #}
+        # }
         fixed_dict = {
             'PKCompartment.tlag': 1,
             'PKCompartment.CLmax': 1,

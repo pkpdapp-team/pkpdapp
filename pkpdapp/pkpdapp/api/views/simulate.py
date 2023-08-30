@@ -37,8 +37,11 @@ class SimulateResponseSerializer(serializers.Serializer):
             'time': times,
         }
 
+
 class ErrorResponseSerializer(serializers.Serializer):
-    error= serializers.CharField()
+    error = serializers.CharField()
+
+
 @extend_schema(
     request=SimulateSerializer,
     responses={
@@ -61,13 +64,16 @@ class SimulateBaseView(views.APIView):
             result = m.simulate(outputs, variables, time_max)
         except myokit.SimulationError as e:
             serialized_result = ErrorResponseSerializer({'error': str(e)})
-            return Response(serialized_result.data, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                serialized_result.data, status=status.HTTP_400_BAD_REQUEST
+            )
         serialized_result = SimulateResponseSerializer(result)
         return Response(serialized_result.data)
 
 
 class SimulateCombinedView(SimulateBaseView):
     model = CombinedModel
+
 
 class SimulatePdView(SimulateBaseView):
     model = PharmacodynamicModel

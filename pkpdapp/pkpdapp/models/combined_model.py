@@ -4,11 +4,6 @@
 # copyright notice and full license details.
 #
 
-import myokit
-from django.db import models
-from django.urls import reverse
-import logging
-logger = logging.getLogger(__name__)
 from pkpdapp.models import (
     MyokitModelMixin,
     Project, StoredModel,
@@ -16,7 +11,11 @@ from pkpdapp.models import (
     PharmacokineticModel,
     Unit,
 )
-
+import myokit
+from django.db import models
+from django.urls import reverse
+import logging
+logger = logging.getLogger(__name__)
 
 
 class CombinedModel(MyokitModelMixin, StoredModel):
@@ -127,7 +126,8 @@ class CombinedModel(MyokitModelMixin, StoredModel):
         if 'has_lag' in field_names:
             instance.__original_has_lag = instance.has_lag
         if 'has_bioavailability' in field_names:
-            instance.__original_has_bioavailability = instance.has_bioavailability
+            instance.__original_has_bioavailability = \
+                instance.has_bioavailability
         if 'has_hill_coefficient' in field_names:
             instance.__original_has_hill_coefficient = \
                 instance.has_hill_coefficient
@@ -141,7 +141,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
         if self.pd_model:
             time_max = max(time_max, self.pd_model.time_max)
         return time_max
-    
+
     def get_time_unit(self):
         from pkpdapp.models import Variable
         try:
@@ -189,7 +189,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
             pd_model2 = myokit.Model()
         else:
             pd_model2 = self.pd_model2.create_myokit_model()
-        
+
         have_both_models = (
             self.pk_model is not None and
             self.pd_model is not None
@@ -199,10 +199,10 @@ class CombinedModel(MyokitModelMixin, StoredModel):
             self.pd_model is None
         )
 
-        # combine the two pd models.
-        # If any constants overlap prefer the pd_model (remove the constant from pd_model2)
-        # If any state variables overlap then add the rhs terms
-        
+        # combine the two pd models. If any constants overlap prefer the
+        # pd_model (remove the constant from pd_model2) If any state variables
+        # overlap then add the rhs terms
+
         if self.pd_model2 is not None:
             pd2_time_var = pd_model2.binding('time')
             pd2_time_var.set_binding(None)
@@ -212,7 +212,8 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 pd_model2.remove_component(pd2_time_component)
 
             pd2_components = list(pd_model2.components())
-            pd2_names = [ c.name().replace('PDCompartment', 'PDCompartment2') for c in pd2_components ]
+            pd2_names = [c.name().replace('PDCompartment', 'PDCompartment2')
+                         for c in pd2_components]
             pd_model.import_component(
                 pd2_components,
                 new_name=pd2_names,
@@ -222,18 +223,28 @@ class CombinedModel(MyokitModelMixin, StoredModel):
             for old_pd2_var in pd_model2.variables(state=True):
                 if pd_model.has_variable(old_pd2_var.qname()):
                     pd_var = pd_model.get(old_pd2_var.qname())
-                    pd2_var = pd_model.get(pd_var.qname().replace('PDCompartment', 'PDCompartment2'))
-                    pd_var.set_rhs(myokit.Plus(pd_var.rhs(), pd2_var.rhs().clone({myokit.Name(pd2_var): myokit.Name(pd_var)})))
+                    pd2_var = pd_model.get(pd_var.qname().replace(
+                        'PDCompartment', 'PDCompartment2'))
+                    pd_var.set_rhs(
+                        myokit.Plus(
+                            pd_var.rhs(),
+                            pd2_var.rhs().clone({
+                                myokit.Name(pd2_var): myokit.Name(pd_var)
+                            })
+                        )
+                    )
                     for eqn in pd_model.get('PDCompartment2').equations():
                         if eqn.rhs.depends_on(myokit.Name(pd2_var)):
                             lhs_var = eqn.lhs.var()
-                            lhs_var.set_rhs(eqn.rhs.clone({myokit.Name(pd2_var): myokit.Name(pd_var)}))
+                            lhs_var.set_rhs(eqn.rhs.clone(
+                                {myokit.Name(pd2_var): myokit.Name(pd_var)}))
                     pd2_var.parent().remove_variable(pd2_var)
 
             # deal with any constants that overlap
             for old_pd2_var in pd_model2.variables(const=True):
                 if pd_model.has_variable(old_pd2_var.qname()):
-                    pd2_var = pd_model.get(old_pd2_var.qname().replace('PDCompartment', 'PDCompartment2'))
+                    pd2_var = pd_model.get(old_pd2_var.qname().replace(
+                        'PDCompartment', 'PDCompartment2'))
                     pd2_var.parent().remove_variable(pd2_var)
 
         # use pk model as the base and import the pd model
@@ -268,57 +279,84 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 new_name=pd_names,
             )
 
-        
         # do derived variables
         for derived_variable in self.derived_variables.all():
             myokit_var = pkpd_model.get(derived_variable.pk_variable.qname)
             myokit_compartment = myokit_var.parent()
             var_name = derived_variable.pk_variable.name
-            if derived_variable.type == DerivedVariable.Type.RECEPTOR_OCCUPANCY:
+            if derived_variable.type == DerivedVariable.Type.RECEPTOR_OCCUPANCY:  # noqa: E501
                 var = myokit_compartment.add_variable(f'{var_name}_RO')
-                var.meta['desc'] = f'Receptor occupancy for {myokit_var.meta["desc"]}'
+                var.meta['desc'] = f'Receptor occupancy for {myokit_var.meta["desc"]}'  # noqa: E501
                 var.set_unit(myokit.Unit())
                 kd = myokit_compartment.add_variable(f'{var_name}_RO_KD')
                 kd_unit = myokit_var.unit()
                 compound = self.project.compound
-                kd_unit_conversion_factor = compound.dissociation_unit.convert_to(kd_unit, compound=compound)
-                kd.set_rhs(compound.dissociation_constant * kd_unit_conversion_factor)
+                kd_unit_conversion_factor = \
+                    compound.dissociation_unit.convert_to(
+                        kd_unit, compound=compound
+                    )
+                kd.set_rhs(compound.dissociation_constant *
+                           kd_unit_conversion_factor)
                 kd.set_unit(kd_unit)
-                target_conc = myokit_compartment.add_variable(f'{var_name}_RO_TC')
+                target_conc = myokit_compartment.add_variable(
+                    f'{var_name}_RO_TC')
                 target_conc_unit = myokit_var.unit()
-                target_conc_unit_conversion_factor = compound.target_concentration_unit.convert_to(target_conc_unit, compound=compound)
-                target_conc.set_rhs(compound.target_concentration * target_conc_unit_conversion_factor)
-                target_conc.set_unit(target_conc_unit)
-                
-                b = var.add_variable('b')
-                b.set_rhs(myokit.Plus(myokit.Plus(myokit.Name(kd), myokit.Name(target_conc)), myokit.Name(myokit_var)))
-                c = var.add_variable('c')
-                c.set_rhs(myokit.Multiply(myokit.Multiply(myokit.Number(4), myokit.Name(target_conc)), myokit.Name(myokit_var)))
-
-                var.set_rhs(myokit.Multiply(myokit.Number(100), 
-                    myokit.Divide(
-                        myokit.Minus(myokit.Name(b), myokit.Sqrt(myokit.Minus(myokit.Power(myokit.Name(b), myokit.Number(2)), myokit.Name(c)))), 
-                        myokit.Multiply(myokit.Number(2), myokit.Name(target_conc))
-                    ))
+                target_conc_unit_conversion_factor = \
+                    compound.target_concentration_unit.convert_to(
+                        target_conc_unit, compound=compound
+                    )
+                target_conc.set_rhs(
+                    compound.target_concentration *
+                    target_conc_unit_conversion_factor
                 )
-            elif derived_variable.type == DerivedVariable.Type.FRACTION_UNBOUND_PLASMA:
+                target_conc.set_unit(target_conc_unit)
+
+                b = var.add_variable('b')
+                b.set_rhs(myokit.Plus(myokit.Plus(myokit.Name(kd),
+                          myokit.Name(target_conc)), myokit.Name(myokit_var)))
+                c = var.add_variable('c')
+                c.set_rhs(myokit.Multiply(myokit.Multiply(myokit.Number(
+                    4), myokit.Name(target_conc)), myokit.Name(myokit_var)))
+
+                var.set_rhs(myokit.Multiply(myokit.Number(100),
+                                            myokit.Divide(
+                    myokit.Minus(
+                        myokit.Name(b),
+                        myokit.Sqrt(
+                            myokit.Minus(
+                                myokit.Power(
+                                    myokit.Name(b),
+                                    myokit.Number(2)
+                                ),
+                                myokit.Name(c)
+                            )
+                        )
+                    ),
+                    myokit.Multiply(myokit.Number(
+                        2), myokit.Name(target_conc))
+                ))
+                )
+            elif derived_variable.type == DerivedVariable.Type.FRACTION_UNBOUND_PLASMA:  # noqa: E501
                 var = myokit_compartment.add_variable(f'{var_name}_UN')
                 var.meta['desc'] = f'Unbound {myokit_var.meta["desc"]}'
                 var.set_unit(myokit_var.unit())
                 fup = myokit_compartment.add_variable(f'{var_name}_UN_FUP')
                 fup.set_rhs(self.project.compound.fraction_unbound_plasma)
                 fup.set_unit(myokit.units.dimensionless)
-                var.set_rhs(myokit.Multiply(myokit.Name(fup), myokit.Name(myokit_var)))
-            elif derived_variable.type == DerivedVariable.Type.BLOOD_PLASMA_RATIO:
+                var.set_rhs(myokit.Multiply(
+                    myokit.Name(fup), myokit.Name(myokit_var)))
+            elif derived_variable.type == DerivedVariable.Type.BLOOD_PLASMA_RATIO:  # noqa: E501
                 var = myokit_compartment.add_variable(f'{var_name}_BL')
                 var.meta['desc'] = f'Blood {myokit_var.meta["desc"]}'
                 var.set_unit(myokit_var.unit())
                 bpr = myokit_compartment.add_variable(f'{var_name}_BL_BPR')
                 bpr.set_rhs(self.project.compound.blood_to_plasma_ratio)
                 bpr.set_unit(myokit.units.dimensionless)
-                var.set_rhs(myokit.Multiply(myokit.Name(bpr), myokit.Name(myokit_var)))
+                var.set_rhs(myokit.Multiply(
+                    myokit.Name(bpr), myokit.Name(myokit_var)))
             else:
-                raise ValueError(f'Unknown derived variable type {derived_variable.type}')
+                raise ValueError(
+                    f'Unknown derived variable type {derived_variable.type}')
 
         # do mappings
         for mapping in self.mappings.all():
@@ -483,7 +521,6 @@ class DerivedVariable(StoredModel):
         choices=Type.choices,
         help_text='type of derived variable'
     )
-
 
     __original_pk_variable = None
 

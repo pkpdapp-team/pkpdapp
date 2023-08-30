@@ -9,7 +9,6 @@ from pkpdapp.models import (
     StoredModel, Protocol,
 )
 import numpy as np
-import myokit
 from django.db.models import Q
 from django.db import models
 import logging
@@ -233,20 +232,26 @@ class Variable(StoredModel):
 
     @staticmethod
     def _find_close_variable(myokit_variable, variables, compound=None):
-        logger.debug('Looking for variable: {} [{}]'.format(myokit_variable, myokit_variable.unit()))
+        logger.debug('Looking for variable: {} [{}]'.format(
+            myokit_variable, myokit_variable.unit()
+        ))
         found = None
         for i, v in enumerate(variables):
             # todo check if units are compatible...
             if v.unit is None:
                 logger.debug('\tchecking variable: {}'.format(v.qname))
             else:
-                logger.debug('\tchecking variable: {} [{}]'.format(v.qname, v.unit.symbol))
+                logger.debug('\tchecking variable: {} [{}]'.format(
+                    v.qname, v.unit.symbol
+                ))
             if v.unit is None:
                 if myokit_variable.unit() is None:
                     found = i
             elif (
                 myokit_variable.unit() is not None and
-                v.unit.is_convertible_to(myokit_variable.unit(), compound=compound)
+                v.unit.is_convertible_to(
+                    myokit_variable.unit(), compound=compound
+                )
             ):
                 found = i
         if found is not None:

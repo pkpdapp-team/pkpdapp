@@ -142,33 +142,33 @@ $$
             'mmt_filename': 'pkpdapp/migrations/models/TG_Simeoni_PDModel.mmt'  # noqa: E501
         },
         {
-            'name': 'tumour_growth_inhibition_delay_cell_distribution_conc_prop_kill',
+            'name': 'tumour_growth_inhibition_delay_cell_distribution_conc_prop_kill',  # noqa: E501
             'description': '',
             'mmt_filename': 'pkpdapp/migrations/models/TGI_Delay_CellDistribution_ConcPropKill_PDModel.mmt'  # noqa: E501
         },
         {
-            'name': 'tumour_growth_inhibition_delay_cell_distribution_emax_kill',
+            'name': 'tumour_growth_inhibition_delay_cell_distribution_emax_kill',  # noqa: E501
             'description': '',
             'mmt_filename': 'pkpdapp/migrations/models/TGI_Delay_CellDistribution_EmaxKill_PDModel.mmt'  # noqa: E501
         },
         {
-            'name': 'tumour_growth_inhibition_delay_cell_distribution_exp_conc_kill',
+            'name': 'tumour_growth_inhibition_delay_cell_distribution_exp_conc_kill',  # noqa: E501
             'description': '',
             'mmt_filename': 'pkpdapp/migrations/models/TGI_Delay_CellDistribution_expConcPropKill_PDModel.mmt'  # noqa: E501
         },
 
         {
-            'name': 'tumour_growth_inhibition_delay_signal_distribution_conc_prop_kill',
+            'name': 'tumour_growth_inhibition_delay_signal_distribution_conc_prop_kill',  # noqa: E501
             'description': '',
             'mmt_filename': 'pkpdapp/migrations/models/TGI_Delay_SignalDistribution_ConcPropKill_PDModel.mmt'  # noqa: E501
         },
         {
-            'name': 'tumour_growth_inhibition_delay_signal_distribution_emax_kill',
+            'name': 'tumour_growth_inhibition_delay_signal_distribution_emax_kill',  # noqa: E501
             'description': '',
             'mmt_filename': 'pkpdapp/migrations/models/TGI_Delay_SignalDistribution_EmaxKill_PDModel.mmt'  # noqa: E501
         },
         {
-            'name': 'tumour_growth_inhibition_delay_signal_distribution_exp_conc_kill',
+            'name': 'tumour_growth_inhibition_delay_signal_distribution_exp_conc_kill',  # noqa: E501
             'description': '',
             'mmt_filename': 'pkpdapp/migrations/models/TGI_Delay_SignalDistribution_expConcPropKill_PDModel.mmt'  # noqa: E501
         },

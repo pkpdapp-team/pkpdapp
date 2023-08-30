@@ -3,30 +3,16 @@
 # is released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-import pkpdapp.tests  # noqa: F401
 from rest_framework import status
-import codecs
-import urllib.request
-from urllib.request import urlretrieve
 
 from django.contrib.auth.models import User
-from django.core.files import File
 from rest_framework.test import APIClient, APITestCase
 
 from pkpdapp.models import (
     Algorithm,
-    BiomarkerType,
-    Dataset,
-    CombinedModel,
     Inference,
     InferenceMixin,
-    LogLikelihood,
-    PharmacodynamicModel,
-    PharmacokineticModel,
-    PkpdMapping,
     Project,
-    Protocol,
-    Unit,
 )
 from pkpdapp.tests import create_pd_inference
 
@@ -42,11 +28,14 @@ class TestInferenceWizardView(APITestCase):
         self.client.force_authenticate(user=user)
 
     def test_population_and_covariates_inference(self):
-        inference, log_likelihood, biomarker_type, covariate_biomarker_type, pd_model, pd_dataset = create_pd_inference(sampling=False)
-        
+        inference, log_likelihood, \
+            biomarker_type, covariate_biomarker_type, \
+            pd_model, pd_dataset = create_pd_inference(
+                sampling=False)
+
         pd_biomarker_names = [
-            biomarker_type.name, 
-            covariate_biomarker_type.name, 
+            biomarker_type.name,
+            covariate_biomarker_type.name,
         ]
 
         pd_output_name = log_likelihood.parents.first().name
@@ -112,7 +101,6 @@ class TestInferenceWizardView(APITestCase):
         response_data = response.data
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-
         # check inference fields
         self.assertEqual(response_data['name'], 'my inference run')
         self.assertEqual(response_data['project'], self.project.id)
@@ -154,8 +142,12 @@ class TestInferenceWizardView(APITestCase):
         )
 
     def test_pd_inference_runs(self):
-        inference, log_likelihood, biomarker_type, covariate_biomarker_type, pd_model, pd_dataset = create_pd_inference(sampling=False)
-        
+        inference, log_likelihood, \
+            biomarker_type, \
+            covariate_biomarker_type, \
+            pd_model, pd_dataset = create_pd_inference(
+                sampling=False)
+
         pd_biomarker_name = biomarker_type.name
         pd_output_name = log_likelihood.parents.first().name
         pd_parameter_names = [
@@ -286,10 +278,12 @@ class TestInferenceWizardView(APITestCase):
             log_posterior.to_search([0.5, 0.12, 0.1])
         )
 
-
     def test_errors(self):
-        inference, log_likelihood, biomarker_type, covariate_biomarker_type, pd_model, pd_dataset = create_pd_inference(sampling=False)
-        
+        inference, log_likelihood, biomarker_type, \
+            covariate_biomarker_type, pd_model, \
+            pd_dataset = create_pd_inference(
+                sampling=False)
+
         pd_parameter_names = [
             v.qname for v in pd_model.variables.filter(constant=True)
         ]

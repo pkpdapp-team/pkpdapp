@@ -4,23 +4,17 @@
 # copyright notice and full license details.
 #
 
-import pkpdapp.tests  # noqa: F401
-import codecs
-import urllib.request
 
 from django.contrib.auth.models import User
 from django.test import TestCase
-from rest_framework import status
 from rest_framework.test import APIClient
 
 from pkpdapp.models import (
-    BiomarkerType,
     CombinedModel,
     PharmacodynamicModel,
     PharmacokineticModel,
     PkpdMapping,
     Project,
-    Protocol,
     DerivedVariable,
 )
 
@@ -123,10 +117,14 @@ class TestPkpdModel(TestCase):
             pkpd_model.get_myokit_model().get('PKCompartment.C1_UN').is_state()
         )
         self.assertFalse(
-            pkpd_model.get_myokit_model().get('PKCompartment.C1_UN').is_constant()
+            pkpd_model.get_myokit_model().get(
+                'PKCompartment.C1_UN'
+            ).is_constant()
         )
         self.assertFalse(
-            pkpd_model.get_myokit_model().get('PDCompartment.C_Drug').is_constant()
+            pkpd_model.get_myokit_model().get(
+                'PDCompartment.C_Drug'
+            ).is_constant()
         )
 
     def test_combine_multiple_pd_models(self):
@@ -137,7 +135,7 @@ class TestPkpdModel(TestCase):
             name='tumour_growth_gompertz',
         )
         pd2 = PharmacodynamicModel.objects.get(
-            name='tumour_growth_inhibition_delay_cell_distribution_conc_prop_kill',
+            name='tumour_growth_inhibition_delay_cell_distribution_conc_prop_kill',  # noqa E501
         )
         combined = CombinedModel.objects.create(
             name='my_combined_model',
@@ -147,8 +145,13 @@ class TestPkpdModel(TestCase):
         )
 
         pk_vars = [v.qname() for v in pk.get_myokit_model().variables()]
-        pd_vars = [v.qname() for v in pd.get_myokit_model().variables() if v.qname() != 'environment.t']
-        pd2_vars = [v.qname().replace('PDCompartment', 'PDCompartment2') for v in pd2.get_myokit_model().variables() if v.qname() != 'environment.t']
+        pd_vars = [v.qname() for v in pd.get_myokit_model(
+        ).variables() if v.qname() != 'environment.t']
+        pd2_vars = [
+            v.qname().replace('PDCompartment', 'PDCompartment2')
+            for v in pd2.get_myokit_model().variables()
+            if v.qname() != 'environment.t'
+        ]
         expected_vars = [v for v in pk_vars + pd_vars + pd2_vars]
         removed_vars = ['PDCompartment2.TS', 'PDCompartment2.TS0']
         for var in removed_vars:
@@ -157,6 +160,3 @@ class TestPkpdModel(TestCase):
         model_vars = [v.qname() for v in model.variables()]
         self.assertCountEqual(model_vars, expected_vars)
         print('combined model validated', model.code())
-
-
-   

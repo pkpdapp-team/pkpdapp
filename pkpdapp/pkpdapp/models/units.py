@@ -9,8 +9,10 @@ from django.db.models import Q
 import myokit
 
 # https://stackoverflow.com/questions/14711203/perform-a-logical-exclusive-or-on-a-django-q-object
+
+
 class QQ:
-    def __xor__(self, other):    
+    def __xor__(self, other):
         not_self = self.clone()
         not_other = other.clone()
         not_self.negate()
@@ -140,7 +142,9 @@ class Unit(models.Model):
             myokit_unit = unit.get_myokit_unit()
         helpers = []
         if compound is not None:
-            helpers = [f'{compound.molecular_mass} [{compound.molecular_mass_unit.symbol}]']
+            helpers = [
+                f'{compound.molecular_mass} [{compound.molecular_mass_unit.symbol}]'  # noqa: E501
+            ]
         return myokit.Unit.conversion_factor(
             self.get_myokit_unit(),
             myokit_unit,
@@ -151,13 +155,14 @@ class Unit(models.Model):
     def convert_between_myokit_units(from_unit, to_unit, compound=None):
         helpers = []
         if compound is not None:
-            helpers = [f'{compound.molecular_mass} [{compound.molecular_mass_unit.symbol}]']
+            helpers = [
+                f'{compound.molecular_mass} [{compound.molecular_mass_unit.symbol}]'  # noqa: E501
+            ]
         return myokit.Unit.conversion_factor(
             from_unit,
             to_unit,
             helpers=helpers,
         ).value()
-
 
     def get_compatible_units(self, compound=None):
         close_enough = 1e-9
@@ -248,7 +253,6 @@ class Unit(models.Model):
                     self.cd + close_enough,
                 )),
             )
-
 
     def is_time_unit(self):
         return (

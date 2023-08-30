@@ -4,18 +4,12 @@
 # copyright notice and full license details.
 #
 
-import pkpdapp.tests  # noqa: F401
 from django.test import TestCase
 import numpy as np
 from pkpdapp.models import (
-    Inference, PharmacodynamicModel,
-    PharmacokineticModel, CombinedModel,
-    Protocol, Unit,
     LogLikelihood,
-    Project, BiomarkerType, Biomarker,
-    InferenceMixin, Algorithm, InferenceChain, InferenceResult,
-    InferenceFunctionResult, LogLikelihoodParameter, Dataset,
-    Subject,
+    InferenceMixin, InferenceChain, InferenceResult,
+    InferenceFunctionResult, LogLikelihoodParameter,
 )
 from pkpdapp.tests import create_pd_inference
 from django.core.cache import cache
@@ -26,7 +20,7 @@ class TestInferenceMixinSingleOutputSampling(TestCase):
         # ensure we've got nothing in the cache
         cache._cache.flush_all()
 
-        self.inference, log_likelihood, _, _, _, _ = create_pd_inference(True) 
+        self.inference, log_likelihood, _, _, _, _ = create_pd_inference(True)
 
         # set uniform prior on everything, except amounts
         for param in log_likelihood.parameters.all():
@@ -95,7 +89,6 @@ class TestInferenceMixinSingleOutput(TestCase):
         # ensure we've got nothing in the cache
         cache._cache.flush_all()
 
-        
         self.inference, log_likelihood, _, _, _, _ = create_pd_inference()
 
         # set uniform prior on everything, except amounts
@@ -214,8 +207,8 @@ class TestInferenceMixinSingleOutputOptimisationPopulation(TestCase):
         # ensure we've got nothing in the cache
         cache._cache.flush_all()
 
-        
-        self.inference, log_likelihood, biomarker_type, _, _, _ = create_pd_inference()
+        self.inference, log_likelihood, biomarker_type, \
+            _, _, _ = create_pd_inference()
 
         # set uniform prior on everything, except
         # we'll do a population prior on the first one
@@ -267,7 +260,8 @@ class TestInferenceMixinSingleOutputOptimisationCovariate(TestCase):
         # ensure we've got nothing in the cache
         cache._cache.flush_all()
 
-        self.inference, log_likelihood, biomarker_type, covariate_biomarker_type, _, _ = create_pd_inference()
+        self.inference, log_likelihood, biomarker_type, \
+            covariate_biomarker_type, _, _ = create_pd_inference()
 
         # set uniform prior on everything, except
         # we'll do a population prior on the first one

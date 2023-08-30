@@ -56,7 +56,8 @@ class MyokitModelMixin:
         from pkpdapp.models import Variable
         if override_tlag is None:
             try:
-                tlag_value = self.variables.get(qname='PKCompartment.tlag').default_value
+                tlag_value = self.variables.get(
+                    qname='PKCompartment.tlag').default_value
             except Variable.DoesNotExist:
                 tlag_value = 0.0
         else:
@@ -68,7 +69,6 @@ class MyokitModelMixin:
             if v.protocol:
                 myokit_v = model.get(v.qname)
                 set_administration(model, myokit_v)
-
 
         protocols = {}
         project = self.get_project()
@@ -100,7 +100,8 @@ class MyokitModelMixin:
                         continue
                     start_times = np.arange(
                         d.start_time + last_dose_time,
-                        d.start_time + last_dose_time + d.repeat_interval * d.repeats,
+                        d.start_time + last_dose_time +
+                        d.repeat_interval * d.repeats,
                         d.repeat_interval
                     )
                     if len(start_times) == 0:
@@ -117,7 +118,8 @@ class MyokitModelMixin:
                         for start_time in start_times
                     ]
 
-                protocols[_get_pacing_label(amount_var)] = get_protocol(dosing_events)
+                protocols[_get_pacing_label(
+                    amount_var)] = get_protocol(dosing_events)
 
         with lock:
             sim = myokit.Simulation(model, protocol=protocols)
@@ -256,7 +258,7 @@ class MyokitModelMixin:
                 variable.delete()
             else:
                 logger.debug(
-                    f'RETAINING VARIABLE {variable.qname} (id = {variable.id}, value = {variable.default_value})'
+                    f'RETAINING VARIABLE {variable.qname} (id = {variable.id}, value = {variable.default_value})'  # noqa: E501
                 )
 
         self.variables.set(all_new_variables)
@@ -375,7 +377,8 @@ class MyokitModelMixin:
             compound = None
             if project is not None:
                 compound = project.compound
-            conversion_factor = variable.unit.convert_to(myokit_variable_sbml.unit(), compound=compound)
+            conversion_factor = variable.unit.convert_to(
+                myokit_variable_sbml.unit(), compound=compound)
 
         return conversion_factor * value
 
@@ -449,10 +452,6 @@ class MyokitModelMixin:
         if outputs is None:
             outputs = []
 
-        default_initial_conditions = {
-            s.qname: s.get_default_value()
-            for s in self.variables.filter(state=True)
-        }
         default_variables = {
             v.qname: v.get_default_value()
             for v in self.variables.filter(constant=True)
@@ -466,7 +465,7 @@ class MyokitModelMixin:
             }
 
         model = self.get_myokit_model()
-        
+
         # Convert units
         variables = {
             qname: self._convert_unit_qname(qname, value, model)
@@ -484,8 +483,9 @@ class MyokitModelMixin:
         override_tlag = None
         if 'PKCompartment.tlag' in variables:
             override_tlag = variables['PKCompartment.tlag']
-        
-        sim = self.create_myokit_simulator(override_tlag=override_tlag, model=model)
+
+        sim = self.create_myokit_simulator(
+            override_tlag=override_tlag, model=model)
         # TODO: take these from simulation model
         sim.set_tolerance(abs_tol=1e-06, rel_tol=1e-08)
 
@@ -577,8 +577,10 @@ def get_protocol(events):
 
     return myokit_protocol
 
+
 def _get_pacing_label(variable):
     return f'pace_{variable.qname().replace(".", "_")}'
+
 
 def _add_dose_rate(drug_amount, time_unit):
     """

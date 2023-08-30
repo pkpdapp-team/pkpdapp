@@ -61,8 +61,6 @@ class CombinedModelSerializer(serializers.ModelSerializer):
         else:
             return unit.id
 
-    
-
     def get_components(self, m):
         model = m.get_myokit_model()
         return [

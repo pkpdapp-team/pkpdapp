@@ -4,27 +4,20 @@
 # copyright notice and full license details.
 #
 
-import pkpdapp.tests  # noqa: F401
 from django.test import TestCase
 from pkpdapp.models import (
-    Algorithm,
-    BiomarkerType,
-    CombinedModel,
-    Inference,
     LogLikelihood,
     LogLikelihoodParameter,
-    PharmacodynamicModel,
-    PharmacokineticModel,
-    Project,
-    Protocol,
 )
 from pkpdapp.tests import create_pd_inference
 
 
-
 class TestInferenceMixinPdModel(TestCase):
     def setUp(self):
-        self.inference, self.log_likelihood, self.biomarker_type, self.covariate_biomarker_type, self.model, _ = create_pd_inference(sampling=True)
+        self.inference, self.log_likelihood, self.biomarker_type, \
+            self.covariate_biomarker_type, self.model, \
+            _ = create_pd_inference(
+                sampling=True)
 
     def test_create_pymc3_model(self):
 
@@ -49,7 +42,7 @@ class TestInferenceMixinPdModel(TestCase):
 
     def test_population_model_with_covariate(self):
         output = self.log_likelihood.parents.first()
-        
+
         values, times, subjects = output.get_data()
         n_subjects = len(set(subjects))
         print('n_subjects', n_subjects)
@@ -59,7 +52,7 @@ class TestInferenceMixinPdModel(TestCase):
         first_param = self.log_likelihood.parameters.first()
         first_param.length = n_subjects
         first_param.save()
-        first_param.child.biomarker_type = self.covariate_biomarker_type 
+        first_param.child.biomarker_type = self.covariate_biomarker_type
         first_param.child.time_independent_data = True
         first_param.child.form = LogLikelihood.Form.NORMAL
         first_param.child.save()
@@ -70,7 +63,7 @@ class TestInferenceMixinPdModel(TestCase):
         mean.form = LogLikelihood.Form.EQUATION
         mean.description = '1.0 if arg0 < 20 else 2.0'
 
-        mean.biomarker_type = self.covariate_biomarker_type 
+        mean.biomarker_type = self.covariate_biomarker_type
         mean.time_independent_data = True
         mean.save()
         body_weight = LogLikelihood.objects.create(

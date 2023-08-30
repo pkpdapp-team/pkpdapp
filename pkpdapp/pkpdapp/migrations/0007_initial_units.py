@@ -309,7 +309,7 @@ def load_units(apps, schema_editor):
         },
         {
             'symbol': 'µg/kg',
-            'unit': 1e-6 * g /  (1e3 * g),
+            'unit': 1e-6 * g / (1e3 * g),
         },
         {
             'symbol': 'pmol/kg',

@@ -46,11 +46,11 @@ def create_pd_inference(sampling=False):
         stored_time_unit=Unit.objects.get(symbol='day'),
         display_time_unit=Unit.objects.get(symbol='day'),
     )
-    subject1  = Subject.objects.create(
+    subject1 = Subject.objects.create(
         id_in_dataset=1,
         dataset=dataset,
     )
-    subject2  = Subject.objects.create(
+    subject2 = Subject.objects.create(
         id_in_dataset=2,
         dataset=dataset,
     )
@@ -68,7 +68,7 @@ def create_pd_inference(sampling=False):
             value=ts,
             subject=subject2,
         )
-    
+
     bt_covariate = BiomarkerType.objects.create(
         name='fake body weight',
         dataset=dataset,
@@ -77,7 +77,7 @@ def create_pd_inference(sampling=False):
         stored_time_unit=Unit.objects.get(symbol='day'),
         display_time_unit=Unit.objects.get(symbol='day'),
     )
-    
+
     for s in [subject1, subject2]:
         Biomarker.objects.create(
             biomarker_type=bt_covariate,
@@ -86,7 +86,9 @@ def create_pd_inference(sampling=False):
             subject=s,
         )
 
-    algorithm = Algorithm.objects.get(name='Haario-Bardenet') if sampling else Algorithm.objects.get(name='XNES')
+    algorithm = Algorithm.objects.get(
+        name='Haario-Bardenet') if sampling \
+        else Algorithm.objects.get(name='XNES')
     inference = Inference.objects.create(
         name='bob',
         project=project,
@@ -119,4 +121,3 @@ def create_pd_inference(sampling=False):
             output.parent.delete()
 
     return inference, log_likelihood, bt, bt_covariate, model, dataset
-

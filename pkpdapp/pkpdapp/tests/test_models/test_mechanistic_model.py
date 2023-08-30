@@ -3,12 +3,11 @@
 # is released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-import pkpdapp.tests  # noqa: F401
 from django.test import TestCase
 from pkpdapp.models import (
     PharmacodynamicModel, Protocol, PharmacokineticModel,
     CombinedModel,
-    Dose, Unit, Variable,
+    Dose, Unit,
 )
 import myokit
 from django.core.exceptions import ValidationError
@@ -57,7 +56,6 @@ class TestPharmodynamicModel(TestCase):
         self.assertCountEqual(model_variables, test_model_variables)
 
 
-
 class TestDosedPharmokineticModel(TestCase):
     def setUp(self):
         cache.clear()
@@ -68,7 +66,6 @@ class TestDosedPharmokineticModel(TestCase):
         self.model = CombinedModel.objects.create(
             pk_model=self.pk,
         )
-
 
         self.p = Protocol.objects.create(
             amount_unit=Unit.objects.get(symbol='pmol'),
@@ -92,8 +89,6 @@ class TestDosedPharmokineticModel(TestCase):
         v = stored_model.variables.get(qname='PKCompartment.A1')
         self.assertEqual(v.protocol.name, 'my_cool_protocol')
         self.assertNotEqual(v.protocol.id, self.p.id)
-
-
 
     def test_myokit_model(self):
         model = self.model.get_myokit_model()
@@ -129,5 +124,3 @@ class TestDosedPharmokineticModel(TestCase):
         output = pk_sim.run(self.pk.time_max)
         index = np.where(np.array(output['environment.t']) > 0.5)[0][0]
         self.assertLess(output['PKCompartment.C1'][index], 1e-6)
-
-

@@ -29,7 +29,6 @@ from pkpdapp.models import (
     InferenceChain,
     LogLikelihood,
     LogLikelihoodParameter,
-    PharmacodynamicModel,
     Project,
     Protocol,
 )

@@ -105,7 +105,7 @@ class MyokitForwardModel():
             var.qname() for var in model.variables(const=True)
         ]
 
-        # parameters are all const variables 
+        # parameters are all const variables
         self._all_parameter_names = self._const_names
         self._n_all_parameters = len(self._all_parameter_names)
 
@@ -172,7 +172,6 @@ class MyokitForwardModel():
         for id_var, var in enumerate(self._const_names):
             self._sim.set_constant(var, float(parameters[id_var]))
 
-
     def _set_init(self, parameters):
         """
         Sets initial conditions of model.
@@ -180,7 +179,7 @@ class MyokitForwardModel():
         model = self._sim._model
         for id_var, var in enumerate(self._const_names):
             model.get(var).set_rhs(float(parameters[id_var]))
-        states = model.initial_values(as_floats=True) 
+        states = model.initial_values(as_floats=True)
 
         self._sim.set_state(states)
 
@@ -287,7 +286,6 @@ class MyokitForwardModel():
 
                 # Set initial conditions
                 self._set_init(full_parameters[:, s])
-
 
                 # Simulate: need +100*epsilon for times to ensure simulation
                 # surpasses last time

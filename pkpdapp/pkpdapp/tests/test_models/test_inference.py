@@ -3,20 +3,20 @@
 # is released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-import pkpdapp.tests  # noqa: F401
 from django.test import TestCase
 from pkpdapp.models import (
-    Inference, PharmacodynamicModel, LogLikelihood,
-    Project, BiomarkerType, Algorithm,
     InferenceResult, InferenceMixin,
     InferenceFunctionResult
 )
 import numpy as np
 from pkpdapp.tests import create_pd_inference
 
+
 class TestInferenceSerializer(TestCase):
     def setUp(self):
-        self.inference, log_likelihood, _, _, self.model, _ = create_pd_inference(sampling=False) 
+        self.inference, log_likelihood, _, _, \
+            self.model, _ = create_pd_inference(
+                sampling=False)
 
         # set uniform prior on first param, except amounts
         self.param = log_likelihood.parameters.first()

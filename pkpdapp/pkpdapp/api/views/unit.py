@@ -36,7 +36,7 @@ class UnitView(viewsets.ModelViewSet):
                 pass
 
         if compound is not None:
-            context['compound'] = compound 
+            context['compound'] = compound
 
         return context
 
@@ -67,4 +67,3 @@ class UnitView(viewsets.ModelViewSet):
     )
     def retrieve(self, request, *args, **kwargs):
         return super().retrieve(request, *args, **kwargs)
-

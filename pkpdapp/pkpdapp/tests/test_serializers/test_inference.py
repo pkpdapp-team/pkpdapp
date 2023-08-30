@@ -3,13 +3,10 @@
 # is released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-import pkpdapp.tests  # noqa: F401
 from django.test import TestCase
 from rest_framework.exceptions import ValidationError
 from pkpdapp.models import (
-    Inference, PharmacodynamicModel, LogLikelihood,
-    Project, BiomarkerType,
-    InferenceMixin, Algorithm
+    InferenceMixin
 )
 from pkpdapp.api.serializers import (
     InferenceSerializer, InferenceChainSerializer,
@@ -19,7 +16,9 @@ from pkpdapp.tests import create_pd_inference
 
 class TestInferenceSerializer(TestCase):
     def setUp(self):
-        self.inference, log_likelihood, biomarker_type, _, self.model, _ = create_pd_inference(sampling=False)
+        self.inference, log_likelihood, biomarker_type, \
+            _, self.model, _ = create_pd_inference(
+                sampling=False)
 
         # set uniform prior on everything, except amounts
         for i, param in enumerate(

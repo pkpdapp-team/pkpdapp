@@ -4,14 +4,9 @@
 # copyright notice and full license details.
 #
 
-import pkpdapp.tests  # noqa: F401
 from pkpdapp.models import (
     PharmacodynamicModel, Variable,
-    Project,
     CombinedModel,
-    PharmacokineticModel,
-    BiomarkerType,
-    Protocol,
 
 )
 from django.contrib.auth.models import User
@@ -33,7 +28,7 @@ class TestSimulateView(APITestCase):
             name='tumour_growth_gompertz',
             read_only=False,
         )
-        m= CombinedModel.objects.create(
+        m = CombinedModel.objects.create(
             name='my wonderful model',
             pd_model=pd,
         )
