@@ -55,7 +55,13 @@ class CombinedModelSerializer(serializers.ModelSerializer):
         return m.get_mmt()
 
     def get_time_unit(self, m) -> int:
-        return m.get_time_unit().id
+        unit = m.get_time_unit()
+        if unit is None:
+            return -1
+        else:
+            return unit.id
+
+    
 
     def get_components(self, m):
         model = m.get_myokit_model()

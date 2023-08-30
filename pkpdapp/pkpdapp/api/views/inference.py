@@ -495,10 +495,7 @@ class InferenceWizardView(views.APIView):
         model_id = None
         if 'model' in data:
             if 'form' in data['model']:
-                if data['model']['form'] == 'PK':
-                    model_table = CombinedModel
-                else:
-                    model_table = PharmacodynamicModel
+                model_table = CombinedModel
             else:
                 errors.get('model', {})['form'] = 'field required'
             if 'id' in data['model']:

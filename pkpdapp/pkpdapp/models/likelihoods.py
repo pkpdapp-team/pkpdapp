@@ -759,6 +759,7 @@ class LogLikelihood(models.Model):
         """
         model = self.get_model()
         myokit_model = model.get_myokit_model()
+        print(myokit_model.code())
         myokit_simulator = model.get_myokit_simulator()
 
         fixed_parameters_dict = {

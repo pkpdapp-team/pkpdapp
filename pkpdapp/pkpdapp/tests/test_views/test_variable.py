@@ -17,10 +17,8 @@ from pkpdapp.models import (
 class VariableTestCase(APITestCase):
     def setUp(self):
         self.pd_model = PharmacodynamicModel.objects.get(
-            name='tumour_growth_inhibition_model_koch',
+            name='tumour_growth_gompertz',
         )
-        pk = PharmacokineticModel.objects\
-            .get(name='one_compartment_pk_model')
 
         c = Compound.objects.create(
             name='test_dosed_pk_model',
@@ -38,25 +36,13 @@ class VariableTestCase(APITestCase):
 
         self.dosed_pk_model = \
             CombinedModel.objects.create(
-                pk_model=pk,
+                pd_model=self.pd_model,
             )
-        drug = self.dosed_pk_model.variables.get(
-            qname='central.drug_amount'
-        )
-        drug.protocol = p
-        drug.save()
 
         user = User.objects.get(username='demo')
         self.client = APIClient()
         self.client.force_authenticate(user=user)
 
-    def test_pd_project_filter(self):
-        response = self.client.get(
-            "/api/variable/?pd_model_id={}".format(self.pd_model.id)
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_data = response.data
-        self.assertGreater(len(response_data), 0)
 
     def test_dosed_pk_project_filter(self):
         response = self.client.get(

@@ -5,6 +5,10 @@
 #
 
 import myokit
+from django.db import models
+from django.urls import reverse
+import logging
+logger = logging.getLogger(__name__)
 from pkpdapp.models import (
     MyokitModelMixin,
     Project, StoredModel,
@@ -12,10 +16,7 @@ from pkpdapp.models import (
     PharmacokineticModel,
     Unit,
 )
-from django.db import models
-from django.urls import reverse
-import logging
-logger = logging.getLogger(__name__)
+
 
 
 class CombinedModel(MyokitModelMixin, StoredModel):
@@ -142,19 +143,23 @@ class CombinedModel(MyokitModelMixin, StoredModel):
         return time_max
     
     def get_time_unit(self):
-        time_var = self.variables.get(binding='time')
-        return time_var.unit
+        from pkpdapp.models import Variable
+        try:
+            time_var = self.variables.get(binding='time')
+            return time_var.unit
+        except Variable.DoesNotExist:
+            return None
 
     def get_mmt(self):
         myokit_model = self.get_myokit_model()
         return myokit_model.code()
 
-    def create_stored_model(self, new_pd_model=None):
+    def create_stored_model(self):
         stored_model_kwargs = {
             'name': self.name,
             'project': self.project,
             'pk_model': self.pk_model,
-            'pd_model': new_pd_model,
+            'pd_model': self.pd_model,
             'time_max': self.time_max,
             'read_only': True,
         }
@@ -184,7 +189,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
             pd_model2 = myokit.Model()
         else:
             pd_model2 = self.pd_model2.create_myokit_model()
-
+        
         have_both_models = (
             self.pk_model is not None and
             self.pd_model is not None

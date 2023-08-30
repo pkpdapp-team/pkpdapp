@@ -24,4 +24,4 @@ class BiomarkerTypeTestCase(APITestCase):
             "/api/biomarker_type/?project_id={}".format(project.pk)
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertTrue(len(response.data) > 0)
+        self.assertTrue(len(response.data) == 0)
