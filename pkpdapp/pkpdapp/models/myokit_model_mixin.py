@@ -372,9 +372,8 @@ class MyokitModelMixin:
             conversion_factor = 1.0
         else:
             project = self.get_project()
-            if project is None:
-                compound = None
-            else:
+            compound = None
+            if project is not None:
                 compound = project.compound
             conversion_factor = variable.unit.convert_to(myokit_variable_sbml.unit(), compound=compound)
 

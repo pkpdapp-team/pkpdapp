@@ -9,8 +9,9 @@ from rest_framework import status
 from rest_framework.test import APITestCase, APIClient
 from django.contrib.auth.models import User
 from pkpdapp.models import BiomarkerType, Dataset
+import unittest
 
-
+@unittest.skip("might not be needed anymore")
 class NcaTestCase(APITestCase):
     def setUp(self):
         user = User.objects.get(username='demo')

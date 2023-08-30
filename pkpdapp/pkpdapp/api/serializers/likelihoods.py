@@ -3,6 +3,7 @@
 # is released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
+from django.db.models import Q
 from typing import Tuple
 from rest_framework import serializers
 from pkpdapp.models import (
@@ -41,7 +42,7 @@ class LogLikelihoodSerializer(serializers.ModelSerializer):
         model = instance.get_model()
         if model is not None:
             time_variable = model.variables.get(
-                name='time'
+                Q(name='time') | Q(name='t')
             )
             return time_variable.id
 

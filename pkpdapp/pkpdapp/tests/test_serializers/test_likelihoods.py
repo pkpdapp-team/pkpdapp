@@ -13,29 +13,12 @@ from pkpdapp.models import (
 from pkpdapp.api.serializers import (
     LogLikelihoodSerializer
 )
+from pkpdapp.tests import create_pd_inference
 
 
 class TestLoglikelihoodSerializer(TestCase):
     def setUp(self):
-        project = Project.objects.get(
-            name='demo',
-        )
-        self.biomarker_type = BiomarkerType.objects.get(
-            name='Tumour volume',
-            dataset__name='lxf_control_growth'
-        )
-        self.model = PharmacodynamicModel.objects.get(
-            name='tumour_growth_inhibition_model_koch',
-        )
-        self.inference = Inference.objects.create(
-            project=project,
-        )
-        self.log_likelihood = LogLikelihood.objects.create(
-            inference=self.inference,
-            variable=self.model.variables.first(),
-            biomarker_type=self.biomarker_type,
-            form=LogLikelihood.Form.MODEL
-        )
+        self.inference, self.log_likelihood, self.biomarker_type, _, self.model, _ = create_pd_inference()
         self.parameters = self.log_likelihood.parameters.all()
         self.prior = self.parameters[0].child
 
@@ -45,7 +28,7 @@ class TestLoglikelihoodSerializer(TestCase):
             many=True
         )
         data = serializer.data
-        self.assertEqual(len(data), 8)
+        self.assertEqual(len(data), 6)
 
     def test_update(self):
         serializer = LogLikelihoodSerializer(self.prior)

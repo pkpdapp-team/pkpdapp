@@ -992,10 +992,9 @@ class LogLikelihood(models.Model):
 
     def create_model_family(self):
         for model_variable in self.get_model_variables():
-            if model_variable.constant:
-                name = model_variable.qname
-            else:
-                name = 'initial ' + model_variable.qname
+            if not model_variable.constant:
+                continue
+            name = model_variable.qname
             child = LogLikelihood.objects.create(
                 name=name,
                 inference=self.inference,

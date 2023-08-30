@@ -20,6 +20,7 @@ datafile_urls = [
     'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/usecase0/usecase0.csv',  # noqa: E501
     'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/usecase1/usecase1.csv',  # noqa: E501
 ]
+
 datafile_urls = []
 
 datafile_names = [
@@ -30,7 +31,6 @@ datafile_names = [
     'usecase0',
     'usecase1',
 ]
-datafile_names = []
 
 protocol_units = [
     {
@@ -58,7 +58,6 @@ protocol_units = [
         'amount': myokit.Unit.parse_simple('ng'),
     },
 ]
-protocol_units = []
 
 datafile_descriptions = [
     '''
@@ -100,7 +99,6 @@ usecase1 dataset
 ''',  # noqa: W605
 ]
 
-datafile_descriptions = []
 
 biomarkers_for_datasets = [
     [
@@ -280,10 +278,10 @@ def load_datasets(apps, schema_editor):
                         symbol=b['unit']
                     ),
                     stored_time_unit=Unit.objects.get(
-                        symbol=b['time']
+                        symbol=b['time'] if b['time'] != 'd' else 'day'
                     ),
                     display_time_unit=Unit.objects.get(
-                        symbol=b['time']
+                        symbol=b['time'] if b['time'] != 'd' else 'day'
                     ),
                     dataset=dataset,
                     color=i,
@@ -366,7 +364,7 @@ def load_datasets(apps, schema_editor):
                 if TIME_UNIT_COLUMN is None:
                     time_unit = Unit.objects.get(symbol='h')
                 else:
-                    time_unit = Unit.objects.get(symbol=row[TIME_UNIT_COLUMN])
+                    time_unit = Unit.objects.get(symbol=row[TIME_UNIT_COLUMN] if row[TIME_UNIT_COLUMN] != 'd' else 'day')  # noqa: E501
 
                 subject_id = row[SUBJECT_ID_COLUMN]
                 try:

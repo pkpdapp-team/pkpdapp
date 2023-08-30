@@ -28,9 +28,9 @@ class TestUnitModel(TestCase):
 
     def test_compatible_units_mols(self):
         self.check_compatible_unit('nmol', ['mol', 'nmol', 'pmol', 'µmol'])
-        self.check_compatible_unit('nmol', ['mol', 'nmol', 'pmol', 'µmol', 'mg', 'g', 'ng'], compound=self.compound)
-        self.check_compatible_unit('mg', ['mg', 'g', 'ng'])
-        self.check_compatible_unit('mg', ['mol', 'nmol', 'pmol', 'µmol', 'mg', 'g', 'ng'], compound=self.compound)
+        self.check_compatible_unit('nmol', ['mol', 'nmol', 'pmol', 'µmol', 'mg', 'g', 'ng', 'kg'], compound=self.compound)
+        self.check_compatible_unit('mg', ['mg', 'g', 'ng', 'kg'])
+        self.check_compatible_unit('mg', ['mol', 'nmol', 'pmol', 'µmol', 'mg', 'g', 'ng', 'kg'], compound=self.compound)
         self.check_compatible_unit('nmol/L', ['nmol/L', 'pmol/L', 'µmol/L', 'mg/L', 'g/L', 'ng/mL', 'ng/L', 'pg/mL', 'µg/mL', 'g/dL'], compound=self.compound)
     
     def test_compatible_units_mols_per_kg(self):

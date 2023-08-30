@@ -136,7 +136,7 @@ class TestMyokitForwardModelSingleOutput(TestCase):
 class TestMyokitPintsForwardModelMultipleOutput(TestCase):
     def setUp(self):
         m = PharmacokineticModel.objects.get(
-            name='three_compartment_model_preclinical',
+            name='three_compartment_preclinical',
         )
         self.model = m.get_myokit_model()
         self.simulator = m.get_myokit_simulator()

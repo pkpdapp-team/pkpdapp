@@ -12,49 +12,11 @@ from pkpdapp.models import (
     InferenceFunctionResult
 )
 import numpy as np
-
+from pkpdapp.tests import create_pd_inference
 
 class TestInferenceSerializer(TestCase):
     def setUp(self):
-        project = Project.objects.get(
-            name='demo',
-        )
-        biomarker_type = BiomarkerType.objects.get(
-            name='Tumour volume',
-            dataset__name='lxf_control_growth'
-        )
-        self.model = PharmacodynamicModel.objects.get(
-            name='tumour_growth_inhibition_model_koch',
-            read_only=False,
-        )
-        self.inference = Inference.objects.create(
-            name='bob',
-            project=project,
-            max_number_of_iterations=10,
-            algorithm=Algorithm.objects.get(name='PSO'),
-        )
-        log_likelihood = LogLikelihood.objects.create(
-            variable=self.model.variables.first(),
-            inference=self.inference,
-            form=LogLikelihood.Form.MODEL
-        )
-
-        # remove all outputs except
-        output_names = [
-            'myokit.tumour_volume',
-        ]
-        outputs = []
-        for output in log_likelihood.outputs.all():
-            if output.variable.qname in output_names:
-                output.parent.biomarker_type = biomarker_type
-                output.parent.observed = True
-                output.parent.save()
-                outputs.append(output.parent)
-            else:
-                for param in output.parent.parameters.all():
-                    if param != output:
-                        param.child.delete()
-                output.parent.delete()
+        self.inference, log_likelihood, _, _, self.model, _ = create_pd_inference(sampling=False) 
 
         # set uniform prior on first param, except amounts
         self.param = log_likelihood.parameters.first()
@@ -63,7 +25,7 @@ class TestInferenceSerializer(TestCase):
     def test_run_inference(self):
         self.inference.run_inference(test=True)
         self.assertEqual(self.inference.name, 'bob')
-        self.assertEqual(self.inference.log_likelihoods.count(), 10)
+        self.assertEqual(self.inference.log_likelihoods.count(), 8)
 
     def test_set_variables_from_inference(self):
         inference_mixin = InferenceMixin(self.inference)

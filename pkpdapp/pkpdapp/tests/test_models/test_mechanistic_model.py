@@ -62,7 +62,7 @@ class TestDosedPharmokineticModel(TestCase):
     def setUp(self):
         cache.clear()
         self.pk = PharmacokineticModel.objects.get(
-            name='one_compartment_preclinical',
+            name='one_compartment_clinical',
         )
 
         self.model = CombinedModel.objects.create(
