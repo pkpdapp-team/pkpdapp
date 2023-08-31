@@ -6,12 +6,14 @@
 from rest_framework import (
     viewsets, response, parsers, status, decorators
 )
+from drf_spectacular.utils import extend_schema, OpenApiParameter
+from drf_spectacular.types import OpenApiTypes
 from rest_framework.permissions import IsAuthenticated
 
 from pkpdapp.api.serializers import (
     PharmacokineticSerializer,
     PharmacodynamicSerializer,
-    DosedPharmacokineticSerializer,
+    CombinedModelSerializer,
     PharmacodynamicSbmlSerializer,
 )
 from pkpdapp.api.views import (
@@ -21,7 +23,7 @@ from pkpdapp.api.views import (
 from pkpdapp.models import (
     PharmacokineticModel,
     PharmacodynamicModel,
-    DosedPharmacokineticModel,
+    CombinedModel,
     Inference,
 )
 
@@ -34,18 +36,32 @@ class PharmacokineticView(viewsets.ModelViewSet):
     ]
 
 
-class DosedPharmacokineticView(viewsets.ModelViewSet):
-    queryset = DosedPharmacokineticModel.objects.all()
-    serializer_class = DosedPharmacokineticSerializer
+class CombinedModelView(viewsets.ModelViewSet):
+    queryset = CombinedModel.objects.all()
+    serializer_class = CombinedModelSerializer
     filter_backends = [ProjectFilter]
     permission_classes = [
         IsAuthenticated & CheckAccessToProject
     ]
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='project_id',
+                description='Filter results by project ID',
+                required=False,
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY
+            ),
+        ],
+    )
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
     @decorators.action(
         detail=True,
         methods=['PUT'],
-        serializer_class=DosedPharmacokineticSerializer,
+        serializer_class=CombinedModelSerializer,
     )
     def set_variables_from_inference(self, request, pk):
         obj = self.get_object()
@@ -81,6 +97,7 @@ class PharmacodynamicView(viewsets.ModelViewSet):
         if serializer.is_valid():
             serializer.save()
             return response.Response(serializer.data)
+        print('xXXXXXx', serializer.errors)
         return response.Response(serializer.errors,
                                  status.HTTP_400_BAD_REQUEST)
 

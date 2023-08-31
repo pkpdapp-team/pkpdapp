@@ -9,7 +9,7 @@ from django.db import models
 from pkpdapp.models import Project
 from pkpdapp.models import (
     Dose, Biomarker, BiomarkerType, Subject, Protocol, Unit,
-    Compound, CategoricalBiomarker,
+    CategoricalBiomarker,
 )
 from pkpdapp.utils import DataParser
 
@@ -88,39 +88,24 @@ class Dataset(models.Model):
                 shape=i,
             )
 
-        # create compounds
-        compounds = {}
-        for compound in data['COMPOUND'].drop_duplicates():
-            # create compound if not already in database
-            try:
-                compounds[compound] = Compound.objects.get(name=compound)
-            except Compound.DoesNotExist:
-                compounds[compound] = Compound.objects.create(
-                    name=compound
-                )
-
         # create subject protocol
         for i, row in data[
-            ['SUBJECT_ID', 'COMPOUND', 'ROUTE', "AMOUNT_UNIT"]
+            ['SUBJECT_ID', 'ROUTE', "AMOUNT_UNIT"]
         ].drop_duplicates().iterrows():
             subject_id = row['SUBJECT_ID']
-            compound = row['COMPOUND']
             route = row['ROUTE']
             amount_unit = Unit.objects.get(symbol=row['AMOUNT_UNIT'])
             subject = subjects[subject_id]
-            compound = compounds[compound]
             if route == 'IV':
                 route = Protocol.DoseType.DIRECT
             else:
                 route = Protocol.DoseType.INDIRECT
             if not subject.protocol:
                 subject.protocol = Protocol.objects.create(
-                    name='{}-{}-{}'.format(
+                    name='{}-{}'.format(
                         self.name,
-                        compound.name,
                         subject
                     ),
-                    compound=compound,
                     time_unit=time_unit,
                     amount_unit=amount_unit,
                     dose_type=route
@@ -154,7 +139,6 @@ class Dataset(models.Model):
             amount_unit = row["AMOUNT_UNIT"]
             observation = row["OBSERVATION"]
             observation_name = row["OBSERVATION_NAME"]
-            compound = row['COMPOUND']
             route = row['ROUTE']
             infusion_time = row['INFUSION_TIME']
 
@@ -181,7 +165,6 @@ class Dataset(models.Model):
                 else:
                     route = Protocol.DoseType.INDIRECT
 
-                compound = compounds[compound]
                 protocol = subject.protocol
                 start_time = float(time)
                 amount = float(amount)

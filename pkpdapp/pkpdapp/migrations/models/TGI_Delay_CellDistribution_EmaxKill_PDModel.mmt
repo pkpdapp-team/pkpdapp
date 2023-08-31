@@ -1,0 +1,52 @@
+[[model]]
+name: Tumor growth inhbition model: growth-independent, delayed response (Cell Distribution Model), Kmax model
+author: Michael Gertz
+
+# Initial values:
+PDCompartment.TS = PDCompartment.TS0
+PDCompartment.TS1 = 0
+PDCompartment.TS2 = 0
+PDCompartment.TS3 = 0
+
+
+[environment]
+t = 0 bind time
+
+
+[PDCompartment]
+
+TS0 = 0.1 in [mL]
+	desc: initial tumor size 
+
+kmax = 0.05 in [1/h]
+	desc: maximal kill rate constant
+	
+C50 = 1000000 in [pmol/L]
+	desc: concentration of half-maximal effect
+	
+HC = 1 in [dimensionless]
+	desc: Hill coefficient
+	
+Mtt = 72 in [h]
+	desc: average life span 
+	
+tau = Mtt/3 in [h]
+
+C_Drug = 1 in [pmol/L]	
+
+Kill = kmax * C_Drug^HC / (C50^HC + C_Drug^HC) in [1/h]
+
+dot(TS) = -Kill*TS in [mL]
+	desc: Tumor volume
+	
+dot(TS1) = Kill*TS-TS1/tau in [mL]
+	desc: Transit compartment 1 (delay due to cell distribution) 
+
+dot(TS2) = (TS1-TS2)/tau in [mL]
+	desc: Transit compartment 2 (delay due to cell distribution)
+
+dot(TS3) = (TS2-TS3)/tau in [mL]
+	desc: Transit compartment 3 (delay due to cell distribution)
+	
+TSTotal = TS1 + TS2 + TS3 + TS in [mL]
+	desc: Total tumor volume

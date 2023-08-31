@@ -1,0 +1,46 @@
+[[model]]
+name: Tumor growth inhbition model: growth-independent, delayed response (Cell Distribution Model), proportional to concentration
+author: Michael Gertz
+
+# Initial values:
+PDCompartment.TS = PDCompartment.TS0
+PDCompartment.TS1 = 0
+PDCompartment.TS2 = 0
+PDCompartment.TS3 = 0
+
+
+[environment]
+t = 0 bind time
+
+
+[PDCompartment]
+
+TS0 = 0.1 in [mL]
+	desc: initial tumor size 
+	
+kKill = 0.00000001 in [1/h*L/pmol]
+	desc: kill rate constant
+	
+Mtt = 72 in [h]
+	desc: average life span 
+	
+tau = Mtt/3 in [h]
+
+C_Drug = 1 in [pmol/L]	
+
+Kill = kKill * C_Drug in [1/h]
+
+dot(TS) = -Kill*TS in [mL]
+	desc: Tumor volume
+	
+dot(TS1) = Kill*TS-TS1/tau in [mL]
+	desc: Transit compartment 1 (delay due to cell distribution > dying cells) 
+
+dot(TS2) = (TS1-TS2)/tau in [mL]
+	desc: Transit compartment 2 (delay due to cell distribution > dying cells)
+
+dot(TS3) = (TS2-TS3)/tau in [mL]
+	desc: Transit compartment 3 (delay due to cell distribution > dying cells)  
+	
+TSTotal = TS1 + TS2 + TS3 + TS  in [mL]
+	desc: Total tumor volume

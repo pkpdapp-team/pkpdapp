@@ -41,7 +41,7 @@ def monolix_import(
     # parse the model file
     model_parser = MonolixModelParser()
     model, (admin_id, dosed_compartment, tlag,
-            direct) = model_parser.parse(model_str)
+            direct, dosed_qname) = model_parser.parse(model_str)
 
     # parse the data file
     data_parser = DataParser()
@@ -103,16 +103,18 @@ def monolix_import(
     protocol = dataset.subjects.first().protocol
 
     # create the pk model
-    DosedPharmacokineticModel = apps.get_model(
-        'pkpdapp', 'DosedPharmacokineticModel')
-    pk_model = DosedPharmacokineticModel.objects.create(
+    CombinedModel = apps.get_model(
+        'pkpdapp', 'CombinedModel')
+    pk_model = CombinedModel.objects.create(
         name='Dosed {}'.format(project['<MODEL>']['[LONGITUDINAL]']['file']),
         project=app_project,
         pd_model=pd_model,
         pk_model=None,
-        protocol=protocol,
-        dose_compartment=dosed_compartment,
     )
+
+    drug = pk_model.variables.get(qname=dosed_qname)
+    drug.protocol = protocol
+    drug.save()
 
     # only display the fitted output of model
     fit_variable = project['<FIT>']['model']

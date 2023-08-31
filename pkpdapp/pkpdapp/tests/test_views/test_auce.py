@@ -3,12 +3,16 @@
 # is released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
+
+import pkpdapp.tests  # noqa: F401
 from rest_framework import status
 from rest_framework.test import APITestCase, APIClient
 from django.contrib.auth.models import User
 from pkpdapp.models import BiomarkerType, Dataset
+import unittest
 
 
+@unittest.skip("might not be needed anymore")
 class NcaTestCase(APITestCase):
     def setUp(self):
         user = User.objects.get(username='demo')

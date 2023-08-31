@@ -15,41 +15,73 @@ import MailIcon from '@mui/icons-material/Mail';
 import MenuIcon from '@mui/icons-material/Menu';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
+import MainContent from './MainContent';
+import { PageName, setPage } from './mainSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '../../app/store';
+import { LinearProgress } from '@mui/material';
+import { ThemeContext } from '@emotion/react';
+import { Logout } from '@mui/icons-material';
+import { logout } from '../login/loginSlice';
+import { useAppDispatch } from '../../app/hooks';
 
 const drawerWidth = 240;
 
 export default function Sidebar() {
+  const dispatch = useAppDispatch();
   const [mobileOpen, setMobileOpen] = React.useState(false);
+  const selectedPage = useSelector((state: RootState) => state.main.selectedPage);
+  const selectedProject = useSelector((state: RootState) => state.main.selectedProject);
+  const dirtyCount = useSelector((state: RootState) => state.main.dirtyCount);
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
   };
+
+  const pageKeys = Object.keys(PageName);
+  const pageValues = Object.values(PageName);
+
+  const pages = pageKeys.map((key, index) => {
+    return {
+      key,
+      value: pageValues[index],
+    };
+  });
+
+  const handlePageClick = (key: string) => () => {
+    dispatch(setPage(PageName[key as keyof typeof PageName]));
+  }; 
+  
+  const isPageDisabled = (key: string) => { 
+    const page = PageName[key as keyof typeof PageName];
+    if (page === PageName.DATA) {
+      return true;
+    }
+    if (selectedProject === null) {
+      return page !== PageName.PROJECTS;
+    } else {
+      return false;
+    }
+  }
+  
+  const isPageSelected = (key: string) => {
+    const page = PageName[key as keyof typeof PageName];
+    return page === selectedPage;
+  }
+    
 
   const drawer = (
     <div>
       <Toolbar />
       <Divider />
       <List>
-        {['Inbox', 'Starred', 'Send email', 'Drafts'].map((text, index) => (
-          <ListItem key={text} disablePadding>
-            <ListItemButton>
+        {pages.map(({ key, value }, index) => (
+          <ListItem key={key} disablePadding selected={isPageSelected(key)}>
+            <ListItemButton onClick={handlePageClick(key)} disabled={isPageDisabled(key)} disableRipple={true}>
               <ListItemIcon>
                 {index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
               </ListItemIcon>
-              <ListItemText primary={text} />
-            </ListItemButton>
-          </ListItem>
-        ))}
-      </List>
-      <Divider />
-      <List>
-        {['All mail', 'Trash', 'Spam'].map((text, index) => (
-          <ListItem key={text} disablePadding>
-            <ListItemButton>
-              <ListItemIcon>
-                {index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
-              </ListItemIcon>
-              <ListItemText primary={text} />
+              <ListItemText primary={value} />
             </ListItemButton>
           </ListItem>
         ))}
@@ -57,12 +89,10 @@ export default function Sidebar() {
     </div>
   );
 
-  const window = undefined;
-  const container = window !== undefined ? () => window().document.body : undefined;
-
   return (
     <Box sx={{ display: 'flex' }}>
       <CssBaseline />
+      
       <AppBar
         position="fixed"
         sx={{
@@ -70,6 +100,7 @@ export default function Sidebar() {
           ml: { sm: `${drawerWidth}px` },
         }}
       >
+        
         <Toolbar>
           <IconButton
             color="inherit"
@@ -80,10 +111,23 @@ export default function Sidebar() {
           >
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" noWrap component="div">
-            Responsive drawer
+          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
+            PkpdApp
           </Typography>
+          <IconButton
+            onClick={() => dispatch(logout())}
+            color="inherit"
+          >
+            <Logout />
+          </IconButton>
         </Toolbar>
+        {dirtyCount !== 0 ? (
+          <LinearProgress
+            sx={{ height: 5, zIndex: 10010000}}
+          />
+        ): (
+          <Box sx={{ height: 5}}></Box>
+        )}
       </AppBar>
       <Box
         component="nav"
@@ -92,7 +136,6 @@ export default function Sidebar() {
       >
         {/* The implementation can be swapped with js to avoid SEO duplication of links. */}
         <Drawer
-          container={container}
           variant="temporary"
           open={mobileOpen}
           onClose={handleDrawerToggle}

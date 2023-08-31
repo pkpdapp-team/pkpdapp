@@ -3,16 +3,16 @@
 # is released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-
-from django.db import models
-from django.db.models import Q
-import myokit
-import numpy as np
 from pkpdapp.models import (
-    Unit, DosedPharmacokineticModel,
+    Unit, CombinedModel,
     PharmacokineticModel, PharmacodynamicModel,
-    StoredModel
+    StoredModel, Protocol,
 )
+import numpy as np
+from django.db.models import Q
+from django.db import models
+import logging
+logger = logging.getLogger(__name__)
 
 
 class Variable(StoredModel):
@@ -42,6 +42,10 @@ class Variable(StoredModel):
     )
 
     name = models.CharField(max_length=100, help_text='name of the variable')
+    description = models.TextField(
+        blank=True, null=True,
+        help_text='description of the variable'
+    )
     binding = models.CharField(
         max_length=100,
         help_text='myokit binding of the variable (e.g. time)',
@@ -60,6 +64,15 @@ class Variable(StoredModel):
             'in the stored sbml)'
         )
     )
+
+    unit_symbol = models.CharField(
+        max_length=20, blank=True, null=True,
+        help_text=(
+            'if unit is None then this is the unit of this '
+            'variable as a string'
+        )
+    )
+
     constant = models.BooleanField(
         default=True,
         help_text=(
@@ -113,11 +126,19 @@ class Variable(StoredModel):
         help_text='pharmacokinetic model'
     )
     dosed_pk_model = models.ForeignKey(
-        DosedPharmacokineticModel,
+        CombinedModel,
         blank=True, null=True,
         on_delete=models.CASCADE,
         related_name='variables',
         help_text='dosed pharmacokinetic model'
+    )
+
+    protocol = models.ForeignKey(
+        Protocol,
+        on_delete=models.SET_NULL,
+        related_name='variables',
+        blank=True, null=True,
+        help_text='dosing protocol'
     )
 
     class Meta:
@@ -181,7 +202,8 @@ class Variable(StoredModel):
             pk_model=model,
         )
         found_variable = Variable._find_close_variable(
-            myokit_variable, variables
+            myokit_variable, variables,
+            compound=model.get_project().compound
         )
         if found_variable is not None:
             return variables[0]
@@ -196,6 +218,7 @@ class Variable(StoredModel):
                 name=myokit_variable.name(),
                 qname=qname,
                 default_value=value,
+                description=myokit_variable.meta.get('desc', ''),
                 binding=myokit_variable.binding(),
                 lower_bound=0.1 * value,
                 upper_bound=10.0 * value,
@@ -208,18 +231,31 @@ class Variable(StoredModel):
             )
 
     @staticmethod
-    def _find_close_variable(myokit_variable, variables):
+    def _find_close_variable(myokit_variable, variables, compound=None):
+        logger.debug('Looking for variable: {} [{}]'.format(
+            myokit_variable, myokit_variable.unit()
+        ))
         found = None
         for i, v in enumerate(variables):
+            # todo check if units are compatible...
+            if v.unit is None:
+                logger.debug('\tchecking variable: {}'.format(v.qname))
+            else:
+                logger.debug('\tchecking variable: {} [{}]'.format(
+                    v.qname, v.unit.symbol
+                ))
             if v.unit is None:
                 if myokit_variable.unit() is None:
                     found = i
-            elif myokit.Unit.close(
-                v.unit.get_myokit_unit(),
-                    myokit_variable.unit()
+            elif (
+                myokit_variable.unit() is not None and
+                v.unit.is_convertible_to(
+                    myokit_variable.unit(), compound=compound
+                )
             ):
                 found = i
         if found is not None:
+            logger.debug('Found variable: {}'.format(variables[found]))
             return variables[found]
         return None
 
@@ -232,8 +268,13 @@ class Variable(StoredModel):
             qname=myokit_variable.qname(),
             pd_model=model,
         )
+        project = model.get_project()
+        compound = None
+        if project is not None:
+            compound = project.compound
         found_variable = Variable._find_close_variable(
-            myokit_variable, variables
+            myokit_variable, variables,
+            compound=compound
         )
         if found_variable is not None:
             return variables[0]
@@ -247,6 +288,7 @@ class Variable(StoredModel):
             return Variable.objects.create(
                 name=myokit_variable.name(),
                 qname=qname,
+                description=myokit_variable.meta.get('desc', ''),
                 constant=myokit_variable.is_constant(),
                 binding=myokit_variable.binding(),
                 default_value=value,
@@ -268,8 +310,13 @@ class Variable(StoredModel):
             qname=myokit_variable.qname(),
             dosed_pk_model=model,
         )
+        compound = None
+        project = model.get_project()
+        if project is not None:
+            compound = project.compound
         found_variable = Variable._find_close_variable(
-            myokit_variable, variables
+            myokit_variable, variables,
+            compound=compound
         )
         if found_variable is not None:
             return variables[0]
@@ -283,6 +330,7 @@ class Variable(StoredModel):
             return Variable.objects.create(
                 name=myokit_variable.name(),
                 qname=qname,
+                description=myokit_variable.meta.get('desc', ''),
                 constant=myokit_variable.is_constant(),
                 default_value=value,
                 binding=myokit_variable.binding(),
@@ -299,7 +347,7 @@ class Variable(StoredModel):
     def get_variable(model, myokit_variable):
         if isinstance(model, PharmacokineticModel):
             return Variable.get_variable_pk(model, myokit_variable)
-        elif isinstance(model, DosedPharmacokineticModel):
+        elif isinstance(model, CombinedModel):
             return Variable.get_variable_dosed_pk(model, myokit_variable)
         elif isinstance(model, PharmacodynamicModel):
             return Variable.get_variable_pd(model, myokit_variable)
@@ -313,6 +361,7 @@ class Variable(StoredModel):
         stored_variable_kwargs = {
             'name': self.name,
             'qname': self.qname,
+            'description': self.description,
             'unit': self.unit,
             'is_public': self.is_public,
             'binding': self.binding,
@@ -324,11 +373,16 @@ class Variable(StoredModel):
             'display': self.display,
             'color': self.color,
             'state': self.state,
+            'unit_symbol': self.unit_symbol,
             'constant': self.constant,
             'read_only': True,
+            'protocol': (
+                self.protocol.create_stored_protocol()
+                if self.protocol is not None else None
+            ),
         }
         if isinstance(stored_model, PharmacodynamicModel):
             stored_variable_kwargs['pd_model'] = stored_model
-        elif isinstance(stored_model, DosedPharmacokineticModel):
+        elif isinstance(stored_model, CombinedModel):
             stored_variable_kwargs['dosed_pk_model'] = stored_model
         return Variable.objects.create(**stored_variable_kwargs)

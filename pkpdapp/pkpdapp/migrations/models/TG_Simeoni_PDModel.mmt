@@ -1,0 +1,32 @@
+[[model]]
+name: Tumor growth model - exponential/ linear w/o saturation (Simeoni)
+author: Michael Gertz
+
+# Initial values:
+PDCompartment.TS = PDCompartment.TS0
+
+
+[environment]
+t = 0 bind time
+
+
+[PDCompartment]
+
+TS0 = 0.1 in [mL]
+	desc: initial tumor size 
+	
+kgl = 0.01 in [mL/h]
+	desc: growth rate constant linear
+
+kge = 0.005 in [1/h]
+	desc: growth rate constant exponential
+	
+psi = 20 [dimensionless]
+	desc: set to a value of 20 for a rapid switch between exponential and linear phase
+
+Growth = if(TS > 1e12,
+    0,
+    kge*TS/((1+(kge/kgl*TS)^psi)^(1/psi)))
+
+dot(TS) = Growth in [mL]
+	desc: Tumor size

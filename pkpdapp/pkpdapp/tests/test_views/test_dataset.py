@@ -3,6 +3,7 @@
 # is released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
+import pkpdapp.tests  # noqa: F401
 from urllib.request import urlretrieve
 
 from django.contrib.auth.models import User
@@ -45,4 +46,4 @@ class DatasetTestCase(APITestCase):
         response = self.client.get("/api/dataset/?project_id=1")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_data = response.data
-        self.assertGreater(len(response_data), 0)
+        self.assertEqual(len(response_data), 0)

@@ -42,23 +42,24 @@ function isResponseOk(response) {
   }
 }
 
+
+
 export const login = createAsyncThunk(
   "login/login",
   async ({username, password}, { getState, dispatch }) => {
     const csrf = getState().login.csrf;
-    const response = await fetch("/api/login/", {
-      method: "POST",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-        "X-CSRFToken": csrf,
-      },
-      body: JSON.stringify({username: username, password: password}),
-
-    })
+    const response = fetch("/api/login/", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": csrf,
+        },
+        body: JSON.stringify({username: username, password: password}),
+      })
     .then(isResponseOk)
     .then((data) => {
-      dispatch(fetchCsrf());
+      //dispatch(fetchCsrf());
       return {isAuthenticated: true, user: data.user, error: null}
     })
     .catch((err) => {

@@ -1,0 +1,43 @@
+[[model]]
+name: Tumor growth inhbition model: growth-independent, proportional to concentration
+author: Michael Gertz
+
+# Initial values:
+PDCompartment.TS = PDCompartment.TS0
+PDCompartment.K1 = 0
+PDCompartment.K2 = 0
+PDCompartment.K3 = 0
+
+
+[environment]
+t = 0 bind time
+
+
+[PDCompartment]
+	
+TS0 = 0.1 in [mL]
+	desc: initial tumor size 
+	
+kKill = 0.00000001 in [1/h*L/pmol]
+	desc: kill rate constant
+	
+Mtt = 72 in [h]
+	desc: average life span
+	
+tau = Mtt/3 in [h]	
+
+C_Drug = 1 in [pmol/L]	
+
+Kill = kKill * C_Drug in [1/h]
+
+dot(TS) = -K3*TS in [mL]
+	desc: Tumor volume
+	
+dot(K1) = (Kill-K1)/tau in [1/h]
+	desc: Transit compartment 1 (delay due to signal transduction) 
+
+dot(K2) = (K1-K2)/tau in [1/h]
+	desc: Transit compartment 2 (delay due to signal transduction)
+
+dot(K3) = (K2-K3)/tau in [1/h]
+	desc: Transit compartment 3 (delay due to signal transduction)

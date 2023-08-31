@@ -12,17 +12,12 @@ from pkpdapp.api.serializers import DoseSerializer
 
 class ProtocolSerializer(serializers.ModelSerializer):
     doses = DoseSerializer(
-        many=True, read_only=True
-    )
-    dose_ids = serializers.PrimaryKeyRelatedField(
-        queryset=Dose.objects.all(),
-        source='doses',
-        many=True, write_only=True,
-    )
-    dosed_pk_models = serializers.PrimaryKeyRelatedField(
-        many=True, read_only=True
+        many=True
     )
     dataset = serializers.SerializerMethodField('get_dataset')
+    variables = serializers.PrimaryKeyRelatedField(
+        many=True, read_only=True
+    )
     subjects = serializers.PrimaryKeyRelatedField(
         many=True, read_only=True
     )
@@ -33,3 +28,18 @@ class ProtocolSerializer(serializers.ModelSerializer):
 
     def get_dataset(self, protocol):
         return protocol.get_dataset()
+
+    def create(self, validated_data):
+        doses = validated_data.pop('doses')
+        protocol = Protocol.objects.create(**validated_data)
+        for dose in doses:
+            Dose.objects.create(protocol=protocol, **dose)
+        return protocol
+
+    def update(self, instance, validated_data):
+        doses = validated_data.pop('doses')
+        Dose.objects.filter(protocol=instance).delete()
+        for dose in doses:
+            dose['protocol'] = instance
+            DoseSerializer.create(DoseSerializer(), dose)
+        return super().update(instance, validated_data)

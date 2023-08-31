@@ -1,0 +1,64 @@
+[[model]]
+name: 1-compartment PK Model + effect compartment
+author: Michael Gertz
+
+# Initial values:
+PKCompartment.Aa = 0
+PKCompartment.A1 = 0
+PKCompartment.AUC1 = 0
+PKCompartment.AUCe = 0
+PKCompartment.Ce = 0
+
+[environment]
+t = 0 in [h] bind time
+
+
+[PKCompartment]
+
+tlag = 0 in [h]
+	desc: Absorption lag time from extravasc compartment
+
+ka = 1 in [1/h]
+    desc: First order absorption rate constant  
+
+F = 1 in [dimensionless]
+    desc: Fraction absorbed/ bioavailability 
+	
+V1 = 1 in [L]
+    desc: Volume of the central compartment	
+	
+CL = 1 in [L/h]
+    desc: Linear clearance from central compartment 
+
+CLmax = 0 in [L/h]
+    desc: Maximum nonlinear Michaelis-Menten clearance; CLmax = Vmax/Km
+
+Km = 1 in [pmol/L]
+    desc: Michaelis-Menten constant 	
+	
+ke0 = 1 in [1/h]
+	desc: Equilibration rate constant effect compartment
+	
+Kpu = 1 in [dimensionless]
+	desc: Unbound effect compartment to total plasma partitioning coefficient
+	
+C1= A1/V1 in [pmol/L]
+    desc: Concentration of drug in the central compartment
+	
+CL_t = CL+CLmax*(1/(1+(C1/Km))) in [L/h]
+	desc: Total clearance as a function of time
+
+dot(Aa) = -ka*Aa in [pmol] 
+    desc: Amount of drug in 'depo' compartment 
+
+dot(A1) =  ka*Aa*F -CL*C1 -CLmax*(1/(1+(C1/Km)))*C1 in [pmol] 
+    desc: Amount of drug in central compartment 
+
+dot(Ce) = ke0*(C1*Kpu - Ce) in [pmol/L] 
+	desc: Concentration of drug in effect compartment 
+	
+dot(AUC1) = C1 in [pmol/L*h]
+	desc: AUC of drug in the central compartment
+	
+dot(AUCe) = Ce in [pmol/L*h]
+	desc: AUC of drug in the effect compartment

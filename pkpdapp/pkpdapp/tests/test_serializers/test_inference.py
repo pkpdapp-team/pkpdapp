@@ -3,60 +3,22 @@
 # is released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-
 from django.test import TestCase
 from rest_framework.exceptions import ValidationError
 from pkpdapp.models import (
-    Inference, PharmacodynamicModel, LogLikelihood,
-    Project, BiomarkerType,
-    InferenceMixin, Algorithm
+    InferenceMixin
 )
 from pkpdapp.api.serializers import (
     InferenceSerializer, InferenceChainSerializer,
 )
+from pkpdapp.tests import create_pd_inference
 
 
 class TestInferenceSerializer(TestCase):
     def setUp(self):
-        project = Project.objects.get(
-            name='demo',
-        )
-        biomarker_type = BiomarkerType.objects.get(
-            name='Tumour volume',
-            dataset__name='lxf_control_growth'
-        )
-        model = PharmacodynamicModel.objects.get(
-            name='tumour_growth_inhibition_model_koch',
-            read_only=False,
-        )
-        self.inference = Inference.objects.create(
-            name='bob',
-            project=project,
-            max_number_of_iterations=10,
-            algorithm=Algorithm.objects.get(name='Haario-Bardenet'),
-        )
-        log_likelihood = LogLikelihood.objects.create(
-            variable=model.variables.first(),
-            inference=self.inference,
-            form=LogLikelihood.Form.MODEL
-        )
-
-        # remove all outputs except
-        output_names = [
-            'myokit.tumour_volume',
-        ]
-        outputs = []
-        for output in log_likelihood.outputs.all():
-            if output.variable.qname in output_names:
-                output.parent.biomarker_type = biomarker_type
-                output.parent.observed = True
-                output.parent.save()
-                outputs.append(output.parent)
-            else:
-                for param in output.parent.parameters.all():
-                    if param != output:
-                        param.child.delete()
-                output.parent.delete()
+        self.inference, log_likelihood, biomarker_type, \
+            _, self.model, _ = create_pd_inference(
+                sampling=False)
 
         # set uniform prior on everything, except amounts
         for i, param in enumerate(

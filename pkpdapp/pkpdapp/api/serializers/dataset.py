@@ -6,6 +6,7 @@
 
 from pkpdapp.utils import DataParser
 from rest_framework import serializers
+from drf_spectacular.utils import extend_schema_field
 import codecs
 from pkpdapp.models import (
     Dataset, Protocol,
@@ -26,6 +27,7 @@ class DatasetSerializer(serializers.ModelSerializer):
         model = Dataset
         fields = '__all__'
 
+    @extend_schema_field(ProtocolSerializer(many=True))
     def get_protocols(self, dataset):
         protocols = [
             Protocol.objects.get(pk=p['protocol'])

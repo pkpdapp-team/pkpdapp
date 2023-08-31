@@ -759,6 +759,7 @@ class LogLikelihood(models.Model):
         """
         model = self.get_model()
         myokit_model = model.get_myokit_model()
+        print(myokit_model.code())
         myokit_simulator = model.get_myokit_simulator()
 
         fixed_parameters_dict = {
@@ -992,10 +993,9 @@ class LogLikelihood(models.Model):
 
     def create_model_family(self):
         for model_variable in self.get_model_variables():
-            if model_variable.constant:
-                name = model_variable.qname
-            else:
-                name = 'initial ' + model_variable.qname
+            if not model_variable.constant:
+                continue
+            name = model_variable.qname
             child = LogLikelihood.objects.create(
                 name=name,
                 inference=self.inference,

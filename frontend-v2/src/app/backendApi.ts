@@ -1,671 +1,12 @@
 import { emptySplitApi as api } from "./emptyApi";
 const injectedRtkApi = api.injectEndpoints({
   endpoints: (build) => ({
-    listDatasets: build.query<ListDatasetsApiResponse, ListDatasetsApiArg>({
-      query: () => ({ url: `/api/dataset/` }),
-    }),
-    createDataset: build.mutation<
-      CreateDatasetApiResponse,
-      CreateDatasetApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/dataset/`,
-        method: "POST",
-        body: queryArg.dataset,
-      }),
-    }),
-    retrieveDataset: build.query<
-      RetrieveDatasetApiResponse,
-      RetrieveDatasetApiArg
-    >({
-      query: (queryArg) => ({ url: `/api/dataset/${queryArg.id}/` }),
-    }),
-    updateDataset: build.mutation<
-      UpdateDatasetApiResponse,
-      UpdateDatasetApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/dataset/${queryArg.id}/`,
-        method: "PUT",
-        body: queryArg.dataset,
-      }),
-    }),
-    partialUpdateDataset: build.mutation<
-      PartialUpdateDatasetApiResponse,
-      PartialUpdateDatasetApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/dataset/${queryArg.id}/`,
-        method: "PATCH",
-        body: queryArg.dataset,
-      }),
-    }),
-    destroyDataset: build.mutation<
-      DestroyDatasetApiResponse,
-      DestroyDatasetApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/dataset/${queryArg.id}/`,
-        method: "DELETE",
-      }),
-    }),
-    listUsers: build.query<ListUsersApiResponse, ListUsersApiArg>({
-      query: () => ({ url: `/api/user/` }),
-    }),
-    createUser: build.mutation<CreateUserApiResponse, CreateUserApiArg>({
-      query: (queryArg) => ({
-        url: `/api/user/`,
-        method: "POST",
-        body: queryArg.user,
-      }),
-    }),
-    retrieveUser: build.query<RetrieveUserApiResponse, RetrieveUserApiArg>({
-      query: (queryArg) => ({ url: `/api/user/${queryArg.id}/` }),
-    }),
-    updateUser: build.mutation<UpdateUserApiResponse, UpdateUserApiArg>({
-      query: (queryArg) => ({
-        url: `/api/user/${queryArg.id}/`,
-        method: "PUT",
-        body: queryArg.user,
-      }),
-    }),
-    partialUpdateUser: build.mutation<
-      PartialUpdateUserApiResponse,
-      PartialUpdateUserApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/user/${queryArg.id}/`,
-        method: "PATCH",
-        body: queryArg.user,
-      }),
-    }),
-    destroyUser: build.mutation<DestroyUserApiResponse, DestroyUserApiArg>({
-      query: (queryArg) => ({
-        url: `/api/user/${queryArg.id}/`,
-        method: "DELETE",
-      }),
-    }),
-    listSubjects: build.query<ListSubjectsApiResponse, ListSubjectsApiArg>({
-      query: () => ({ url: `/api/subject/` }),
-    }),
-    createSubject: build.mutation<
-      CreateSubjectApiResponse,
-      CreateSubjectApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/subject/`,
-        method: "POST",
-        body: queryArg.subject,
-      }),
-    }),
-    retrieveSubject: build.query<
-      RetrieveSubjectApiResponse,
-      RetrieveSubjectApiArg
-    >({
-      query: (queryArg) => ({ url: `/api/subject/${queryArg.id}/` }),
-    }),
-    updateSubject: build.mutation<
-      UpdateSubjectApiResponse,
-      UpdateSubjectApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/subject/${queryArg.id}/`,
-        method: "PUT",
-        body: queryArg.subject,
-      }),
-    }),
-    partialUpdateSubject: build.mutation<
-      PartialUpdateSubjectApiResponse,
-      PartialUpdateSubjectApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/subject/${queryArg.id}/`,
-        method: "PATCH",
-        body: queryArg.subject,
-      }),
-    }),
-    destroySubject: build.mutation<
-      DestroySubjectApiResponse,
-      DestroySubjectApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/subject/${queryArg.id}/`,
-        method: "DELETE",
-      }),
-    }),
-    listProjects: build.query<ListProjectsApiResponse, ListProjectsApiArg>({
-      query: () => ({ url: `/api/project/` }),
-    }),
-    createProject: build.mutation<
-      CreateProjectApiResponse,
-      CreateProjectApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/project/`,
-        method: "POST",
-        body: queryArg.project,
-      }),
-    }),
-    retrieveProject: build.query<
-      RetrieveProjectApiResponse,
-      RetrieveProjectApiArg
-    >({
-      query: (queryArg) => ({ url: `/api/project/${queryArg.id}/` }),
-    }),
-    updateProject: build.mutation<
-      UpdateProjectApiResponse,
-      UpdateProjectApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/project/${queryArg.id}/`,
-        method: "PUT",
-        body: queryArg.project,
-      }),
-    }),
-    partialUpdateProject: build.mutation<
-      PartialUpdateProjectApiResponse,
-      PartialUpdateProjectApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/project/${queryArg.id}/`,
-        method: "PATCH",
-        body: queryArg.project,
-      }),
-    }),
-    destroyProject: build.mutation<
-      DestroyProjectApiResponse,
-      DestroyProjectApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/project/${queryArg.id}/`,
-        method: "DELETE",
-      }),
-    }),
-    listProjectAccess: build.query<
-      ListProjectAccessApiResponse,
-      ListProjectAccessApiArg
-    >({
-      query: () => ({ url: `/api/project_access/` }),
-    }),
-    createProjectAccess: build.mutation<
-      CreateProjectAccessApiResponse,
-      CreateProjectAccessApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/project_access/`,
-        method: "POST",
-        body: queryArg.projectAccess,
-      }),
-    }),
-    retrieveProjectAccess: build.query<
-      RetrieveProjectAccessApiResponse,
-      RetrieveProjectAccessApiArg
-    >({
-      query: (queryArg) => ({ url: `/api/project_access/${queryArg.id}/` }),
-    }),
-    updateProjectAccess: build.mutation<
-      UpdateProjectAccessApiResponse,
-      UpdateProjectAccessApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/project_access/${queryArg.id}/`,
-        method: "PUT",
-        body: queryArg.projectAccess,
-      }),
-    }),
-    partialUpdateProjectAccess: build.mutation<
-      PartialUpdateProjectAccessApiResponse,
-      PartialUpdateProjectAccessApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/project_access/${queryArg.id}/`,
-        method: "PATCH",
-        body: queryArg.projectAccess,
-      }),
-    }),
-    destroyProjectAccess: build.mutation<
-      DestroyProjectAccessApiResponse,
-      DestroyProjectAccessApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/project_access/${queryArg.id}/`,
-        method: "DELETE",
-      }),
-    }),
-    listDoses: build.query<ListDosesApiResponse, ListDosesApiArg>({
-      query: () => ({ url: `/api/dose/` }),
-    }),
-    createDose: build.mutation<CreateDoseApiResponse, CreateDoseApiArg>({
-      query: (queryArg) => ({
-        url: `/api/dose/`,
-        method: "POST",
-        body: queryArg.dose,
-      }),
-    }),
-    retrieveDose: build.query<RetrieveDoseApiResponse, RetrieveDoseApiArg>({
-      query: (queryArg) => ({ url: `/api/dose/${queryArg.id}/` }),
-    }),
-    updateDose: build.mutation<UpdateDoseApiResponse, UpdateDoseApiArg>({
-      query: (queryArg) => ({
-        url: `/api/dose/${queryArg.id}/`,
-        method: "PUT",
-        body: queryArg.dose,
-      }),
-    }),
-    partialUpdateDose: build.mutation<
-      PartialUpdateDoseApiResponse,
-      PartialUpdateDoseApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/dose/${queryArg.id}/`,
-        method: "PATCH",
-        body: queryArg.dose,
-      }),
-    }),
-    destroyDose: build.mutation<DestroyDoseApiResponse, DestroyDoseApiArg>({
-      query: (queryArg) => ({
-        url: `/api/dose/${queryArg.id}/`,
-        method: "DELETE",
-      }),
-    }),
-    listUnits: build.query<ListUnitsApiResponse, ListUnitsApiArg>({
-      query: () => ({ url: `/api/unit/` }),
-    }),
-    createUnit: build.mutation<CreateUnitApiResponse, CreateUnitApiArg>({
-      query: (queryArg) => ({
-        url: `/api/unit/`,
-        method: "POST",
-        body: queryArg.unit,
-      }),
-    }),
-    retrieveUnit: build.query<RetrieveUnitApiResponse, RetrieveUnitApiArg>({
-      query: (queryArg) => ({ url: `/api/unit/${queryArg.id}/` }),
-    }),
-    updateUnit: build.mutation<UpdateUnitApiResponse, UpdateUnitApiArg>({
-      query: (queryArg) => ({
-        url: `/api/unit/${queryArg.id}/`,
-        method: "PUT",
-        body: queryArg.unit,
-      }),
-    }),
-    partialUpdateUnit: build.mutation<
-      PartialUpdateUnitApiResponse,
-      PartialUpdateUnitApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/unit/${queryArg.id}/`,
-        method: "PATCH",
-        body: queryArg.unit,
-      }),
-    }),
-    destroyUnit: build.mutation<DestroyUnitApiResponse, DestroyUnitApiArg>({
-      query: (queryArg) => ({
-        url: `/api/unit/${queryArg.id}/`,
-        method: "DELETE",
-      }),
-    }),
-    listVariables: build.query<ListVariablesApiResponse, ListVariablesApiArg>({
-      query: () => ({ url: `/api/variable/` }),
-    }),
-    createVariable: build.mutation<
-      CreateVariableApiResponse,
-      CreateVariableApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/variable/`,
-        method: "POST",
-        body: queryArg.variable,
-      }),
-    }),
-    retrieveVariable: build.query<
-      RetrieveVariableApiResponse,
-      RetrieveVariableApiArg
-    >({
-      query: (queryArg) => ({ url: `/api/variable/${queryArg.id}/` }),
-    }),
-    updateVariable: build.mutation<
-      UpdateVariableApiResponse,
-      UpdateVariableApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/variable/${queryArg.id}/`,
-        method: "PUT",
-        body: queryArg.variable,
-      }),
-    }),
-    partialUpdateVariable: build.mutation<
-      PartialUpdateVariableApiResponse,
-      PartialUpdateVariableApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/variable/${queryArg.id}/`,
-        method: "PATCH",
-        body: queryArg.variable,
-      }),
-    }),
-    destroyVariable: build.mutation<
-      DestroyVariableApiResponse,
-      DestroyVariableApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/variable/${queryArg.id}/`,
-        method: "DELETE",
-      }),
-    }),
-    listProtocols: build.query<ListProtocolsApiResponse, ListProtocolsApiArg>({
-      query: () => ({ url: `/api/protocol/` }),
-    }),
-    createProtocol: build.mutation<
-      CreateProtocolApiResponse,
-      CreateProtocolApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/protocol/`,
-        method: "POST",
-        body: queryArg.protocol,
-      }),
-    }),
-    retrieveProtocol: build.query<
-      RetrieveProtocolApiResponse,
-      RetrieveProtocolApiArg
-    >({
-      query: (queryArg) => ({ url: `/api/protocol/${queryArg.id}/` }),
-    }),
-    updateProtocol: build.mutation<
-      UpdateProtocolApiResponse,
-      UpdateProtocolApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/protocol/${queryArg.id}/`,
-        method: "PUT",
-        body: queryArg.protocol,
-      }),
-    }),
-    partialUpdateProtocol: build.mutation<
-      PartialUpdateProtocolApiResponse,
-      PartialUpdateProtocolApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/protocol/${queryArg.id}/`,
-        method: "PATCH",
-        body: queryArg.protocol,
-      }),
-    }),
-    destroyProtocol: build.mutation<
-      DestroyProtocolApiResponse,
-      DestroyProtocolApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/protocol/${queryArg.id}/`,
-        method: "DELETE",
-      }),
-    }),
-    listBiomarkerTypes: build.query<
-      ListBiomarkerTypesApiResponse,
-      ListBiomarkerTypesApiArg
-    >({
-      query: () => ({ url: `/api/biomarker_type/` }),
-    }),
-    createBiomarkerType: build.mutation<
-      CreateBiomarkerTypeApiResponse,
-      CreateBiomarkerTypeApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/biomarker_type/`,
-        method: "POST",
-        body: queryArg.biomarkerType,
-      }),
-    }),
-    retrieveBiomarkerType: build.query<
-      RetrieveBiomarkerTypeApiResponse,
-      RetrieveBiomarkerTypeApiArg
-    >({
-      query: (queryArg) => ({ url: `/api/biomarker_type/${queryArg.id}/` }),
-    }),
-    updateBiomarkerType: build.mutation<
-      UpdateBiomarkerTypeApiResponse,
-      UpdateBiomarkerTypeApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/biomarker_type/${queryArg.id}/`,
-        method: "PUT",
-        body: queryArg.biomarkerType,
-      }),
-    }),
-    partialUpdateBiomarkerType: build.mutation<
-      PartialUpdateBiomarkerTypeApiResponse,
-      PartialUpdateBiomarkerTypeApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/biomarker_type/${queryArg.id}/`,
-        method: "PATCH",
-        body: queryArg.biomarkerType,
-      }),
-    }),
-    destroyBiomarkerType: build.mutation<
-      DestroyBiomarkerTypeApiResponse,
-      DestroyBiomarkerTypeApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/biomarker_type/${queryArg.id}/`,
-        method: "DELETE",
-      }),
-    }),
-    listPharmacokineticModels: build.query<
-      ListPharmacokineticModelsApiResponse,
-      ListPharmacokineticModelsApiArg
-    >({
-      query: () => ({ url: `/api/pharmacokinetic/` }),
-    }),
-    createPharmacokineticModel: build.mutation<
-      CreatePharmacokineticModelApiResponse,
-      CreatePharmacokineticModelApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/pharmacokinetic/`,
-        method: "POST",
-        body: queryArg.pharmacokinetic,
-      }),
-    }),
-    retrievePharmacokineticModel: build.query<
-      RetrievePharmacokineticModelApiResponse,
-      RetrievePharmacokineticModelApiArg
-    >({
-      query: (queryArg) => ({ url: `/api/pharmacokinetic/${queryArg.id}/` }),
-    }),
-    updatePharmacokineticModel: build.mutation<
-      UpdatePharmacokineticModelApiResponse,
-      UpdatePharmacokineticModelApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/pharmacokinetic/${queryArg.id}/`,
-        method: "PUT",
-        body: queryArg.pharmacokinetic,
-      }),
-    }),
-    partialUpdatePharmacokineticModel: build.mutation<
-      PartialUpdatePharmacokineticModelApiResponse,
-      PartialUpdatePharmacokineticModelApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/pharmacokinetic/${queryArg.id}/`,
-        method: "PATCH",
-        body: queryArg.pharmacokinetic,
-      }),
-    }),
-    destroyPharmacokineticModel: build.mutation<
-      DestroyPharmacokineticModelApiResponse,
-      DestroyPharmacokineticModelApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/pharmacokinetic/${queryArg.id}/`,
-        method: "DELETE",
-      }),
-    }),
-    listPharmacodynamicModels: build.query<
-      ListPharmacodynamicModelsApiResponse,
-      ListPharmacodynamicModelsApiArg
-    >({
-      query: () => ({ url: `/api/pharmacodynamic/` }),
-    }),
-    createPharmacodynamicModel: build.mutation<
-      CreatePharmacodynamicModelApiResponse,
-      CreatePharmacodynamicModelApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/pharmacodynamic/`,
-        method: "POST",
-        body: queryArg.pharmacodynamic,
-      }),
-    }),
-    retrievePharmacodynamicModel: build.query<
-      RetrievePharmacodynamicModelApiResponse,
-      RetrievePharmacodynamicModelApiArg
-    >({
-      query: (queryArg) => ({ url: `/api/pharmacodynamic/${queryArg.id}/` }),
-    }),
-    updatePharmacodynamicModel: build.mutation<
-      UpdatePharmacodynamicModelApiResponse,
-      UpdatePharmacodynamicModelApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/pharmacodynamic/${queryArg.id}/`,
-        method: "PUT",
-        body: queryArg.pharmacodynamic,
-      }),
-    }),
-    partialUpdatePharmacodynamicModel: build.mutation<
-      PartialUpdatePharmacodynamicModelApiResponse,
-      PartialUpdatePharmacodynamicModelApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/pharmacodynamic/${queryArg.id}/`,
-        method: "PATCH",
-        body: queryArg.pharmacodynamic,
-      }),
-    }),
-    destroyPharmacodynamicModel: build.mutation<
-      DestroyPharmacodynamicModelApiResponse,
-      DestroyPharmacodynamicModelApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/pharmacodynamic/${queryArg.id}/`,
-        method: "DELETE",
-      }),
-    }),
-    listDosedPharmacokineticModels: build.query<
-      ListDosedPharmacokineticModelsApiResponse,
-      ListDosedPharmacokineticModelsApiArg
-    >({
-      query: () => ({ url: `/api/dosed_pharmacokinetic/` }),
-    }),
-    createDosedPharmacokineticModel: build.mutation<
-      CreateDosedPharmacokineticModelApiResponse,
-      CreateDosedPharmacokineticModelApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/dosed_pharmacokinetic/`,
-        method: "POST",
-        body: queryArg.dosedPharmacokinetic,
-      }),
-    }),
-    retrieveDosedPharmacokineticModel: build.query<
-      RetrieveDosedPharmacokineticModelApiResponse,
-      RetrieveDosedPharmacokineticModelApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/dosed_pharmacokinetic/${queryArg.id}/`,
-      }),
-    }),
-    updateDosedPharmacokineticModel: build.mutation<
-      UpdateDosedPharmacokineticModelApiResponse,
-      UpdateDosedPharmacokineticModelApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/dosed_pharmacokinetic/${queryArg.id}/`,
-        method: "PUT",
-        body: queryArg.dosedPharmacokinetic,
-      }),
-    }),
-    partialUpdateDosedPharmacokineticModel: build.mutation<
-      PartialUpdateDosedPharmacokineticModelApiResponse,
-      PartialUpdateDosedPharmacokineticModelApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/dosed_pharmacokinetic/${queryArg.id}/`,
-        method: "PATCH",
-        body: queryArg.dosedPharmacokinetic,
-      }),
-    }),
-    destroyDosedPharmacokineticModel: build.mutation<
-      DestroyDosedPharmacokineticModelApiResponse,
-      DestroyDosedPharmacokineticModelApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/dosed_pharmacokinetic/${queryArg.id}/`,
-        method: "DELETE",
-      }),
-    }),
-    listInferences: build.query<
-      ListInferencesApiResponse,
-      ListInferencesApiArg
-    >({
-      query: () => ({ url: `/api/inference/` }),
-    }),
-    createInference: build.mutation<
-      CreateInferenceApiResponse,
-      CreateInferenceApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/inference/`,
-        method: "POST",
-        body: queryArg.inference,
-      }),
-    }),
-    retrieveInference: build.query<
-      RetrieveInferenceApiResponse,
-      RetrieveInferenceApiArg
-    >({
-      query: (queryArg) => ({ url: `/api/inference/${queryArg.id}/` }),
-    }),
-    updateInference: build.mutation<
-      UpdateInferenceApiResponse,
-      UpdateInferenceApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/inference/${queryArg.id}/`,
-        method: "PUT",
-        body: queryArg.inference,
-      }),
-    }),
-    partialUpdateInference: build.mutation<
-      PartialUpdateInferenceApiResponse,
-      PartialUpdateInferenceApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/inference/${queryArg.id}/`,
-        method: "PATCH",
-        body: queryArg.inference,
-      }),
-    }),
-    destroyInference: build.mutation<
-      DestroyInferenceApiResponse,
-      DestroyInferenceApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/inference/${queryArg.id}/`,
-        method: "DELETE",
-      }),
-    }),
-    listAlgorithms: build.query<
-      ListAlgorithmsApiResponse,
-      ListAlgorithmsApiArg
-    >({
+    algorithmList: build.query<AlgorithmListApiResponse, AlgorithmListApiArg>({
       query: () => ({ url: `/api/algorithm/` }),
     }),
-    createAlgorithm: build.mutation<
-      CreateAlgorithmApiResponse,
-      CreateAlgorithmApiArg
+    algorithmCreate: build.mutation<
+      AlgorithmCreateApiResponse,
+      AlgorithmCreateApiArg
     >({
       query: (queryArg) => ({
         url: `/api/algorithm/`,
@@ -673,15 +14,15 @@ const injectedRtkApi = api.injectEndpoints({
         body: queryArg.algorithm,
       }),
     }),
-    retrieveAlgorithm: build.query<
-      RetrieveAlgorithmApiResponse,
-      RetrieveAlgorithmApiArg
+    algorithmRetrieve: build.query<
+      AlgorithmRetrieveApiResponse,
+      AlgorithmRetrieveApiArg
     >({
       query: (queryArg) => ({ url: `/api/algorithm/${queryArg.id}/` }),
     }),
-    updateAlgorithm: build.mutation<
-      UpdateAlgorithmApiResponse,
-      UpdateAlgorithmApiArg
+    algorithmUpdate: build.mutation<
+      AlgorithmUpdateApiResponse,
+      AlgorithmUpdateApiArg
     >({
       query: (queryArg) => ({
         url: `/api/algorithm/${queryArg.id}/`,
@@ -689,34 +30,367 @@ const injectedRtkApi = api.injectEndpoints({
         body: queryArg.algorithm,
       }),
     }),
-    partialUpdateAlgorithm: build.mutation<
-      PartialUpdateAlgorithmApiResponse,
-      PartialUpdateAlgorithmApiArg
+    algorithmPartialUpdate: build.mutation<
+      AlgorithmPartialUpdateApiResponse,
+      AlgorithmPartialUpdateApiArg
     >({
       query: (queryArg) => ({
         url: `/api/algorithm/${queryArg.id}/`,
         method: "PATCH",
-        body: queryArg.algorithm,
+        body: queryArg.patchedAlgorithm,
       }),
     }),
-    destroyAlgorithm: build.mutation<
-      DestroyAlgorithmApiResponse,
-      DestroyAlgorithmApiArg
+    algorithmDestroy: build.mutation<
+      AlgorithmDestroyApiResponse,
+      AlgorithmDestroyApiArg
     >({
       query: (queryArg) => ({
         url: `/api/algorithm/${queryArg.id}/`,
         method: "DELETE",
       }),
     }),
-    listInferenceChains: build.query<
-      ListInferenceChainsApiResponse,
-      ListInferenceChainsApiArg
+    auceCreate: build.mutation<AuceCreateApiResponse, AuceCreateApiArg>({
+      query: () => ({ url: `/api/auce/`, method: "POST" }),
+    }),
+    biomarkerTypeList: build.query<
+      BiomarkerTypeListApiResponse,
+      BiomarkerTypeListApiArg
+    >({
+      query: () => ({ url: `/api/biomarker_type/` }),
+    }),
+    biomarkerTypeCreate: build.mutation<
+      BiomarkerTypeCreateApiResponse,
+      BiomarkerTypeCreateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/biomarker_type/`,
+        method: "POST",
+        body: queryArg.biomarkerType,
+      }),
+    }),
+    biomarkerTypeRetrieve: build.query<
+      BiomarkerTypeRetrieveApiResponse,
+      BiomarkerTypeRetrieveApiArg
+    >({
+      query: (queryArg) => ({ url: `/api/biomarker_type/${queryArg.id}/` }),
+    }),
+    biomarkerTypeUpdate: build.mutation<
+      BiomarkerTypeUpdateApiResponse,
+      BiomarkerTypeUpdateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/biomarker_type/${queryArg.id}/`,
+        method: "PUT",
+        body: queryArg.biomarkerType,
+      }),
+    }),
+    biomarkerTypePartialUpdate: build.mutation<
+      BiomarkerTypePartialUpdateApiResponse,
+      BiomarkerTypePartialUpdateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/biomarker_type/${queryArg.id}/`,
+        method: "PATCH",
+        body: queryArg.patchedBiomarkerType,
+      }),
+    }),
+    biomarkerTypeDestroy: build.mutation<
+      BiomarkerTypeDestroyApiResponse,
+      BiomarkerTypeDestroyApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/biomarker_type/${queryArg.id}/`,
+        method: "DELETE",
+      }),
+    }),
+    combinedModelList: build.query<
+      CombinedModelListApiResponse,
+      CombinedModelListApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/combined_model/`,
+        params: { project_id: queryArg.projectId },
+      }),
+    }),
+    combinedModelCreate: build.mutation<
+      CombinedModelCreateApiResponse,
+      CombinedModelCreateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/combined_model/`,
+        method: "POST",
+        body: queryArg.combinedModel,
+      }),
+    }),
+    combinedModelRetrieve: build.query<
+      CombinedModelRetrieveApiResponse,
+      CombinedModelRetrieveApiArg
+    >({
+      query: (queryArg) => ({ url: `/api/combined_model/${queryArg.id}/` }),
+    }),
+    combinedModelUpdate: build.mutation<
+      CombinedModelUpdateApiResponse,
+      CombinedModelUpdateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/combined_model/${queryArg.id}/`,
+        method: "PUT",
+        body: queryArg.combinedModel,
+      }),
+    }),
+    combinedModelPartialUpdate: build.mutation<
+      CombinedModelPartialUpdateApiResponse,
+      CombinedModelPartialUpdateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/combined_model/${queryArg.id}/`,
+        method: "PATCH",
+        body: queryArg.patchedCombinedModel,
+      }),
+    }),
+    combinedModelDestroy: build.mutation<
+      CombinedModelDestroyApiResponse,
+      CombinedModelDestroyApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/combined_model/${queryArg.id}/`,
+        method: "DELETE",
+      }),
+    }),
+    combinedModelSetVariablesFromInferenceUpdate: build.mutation<
+      CombinedModelSetVariablesFromInferenceUpdateApiResponse,
+      CombinedModelSetVariablesFromInferenceUpdateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/combined_model/${queryArg.id}/set_variables_from_inference/`,
+        method: "PUT",
+        body: queryArg.combinedModel,
+      }),
+    }),
+    combinedModelSimulateCreate: build.mutation<
+      CombinedModelSimulateCreateApiResponse,
+      CombinedModelSimulateCreateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/combined_model/${queryArg.id}/simulate`,
+        method: "POST",
+        body: queryArg.simulate,
+      }),
+    }),
+    compoundList: build.query<CompoundListApiResponse, CompoundListApiArg>({
+      query: () => ({ url: `/api/compound/` }),
+    }),
+    compoundCreate: build.mutation<
+      CompoundCreateApiResponse,
+      CompoundCreateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/compound/`,
+        method: "POST",
+        body: queryArg.compound,
+      }),
+    }),
+    compoundRetrieve: build.query<
+      CompoundRetrieveApiResponse,
+      CompoundRetrieveApiArg
+    >({
+      query: (queryArg) => ({ url: `/api/compound/${queryArg.id}/` }),
+    }),
+    compoundUpdate: build.mutation<
+      CompoundUpdateApiResponse,
+      CompoundUpdateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/compound/${queryArg.id}/`,
+        method: "PUT",
+        body: queryArg.compound,
+      }),
+    }),
+    compoundPartialUpdate: build.mutation<
+      CompoundPartialUpdateApiResponse,
+      CompoundPartialUpdateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/compound/${queryArg.id}/`,
+        method: "PATCH",
+        body: queryArg.patchedCompound,
+      }),
+    }),
+    compoundDestroy: build.mutation<
+      CompoundDestroyApiResponse,
+      CompoundDestroyApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/compound/${queryArg.id}/`,
+        method: "DELETE",
+      }),
+    }),
+    datasetList: build.query<DatasetListApiResponse, DatasetListApiArg>({
+      query: () => ({ url: `/api/dataset/` }),
+    }),
+    datasetCreate: build.mutation<
+      DatasetCreateApiResponse,
+      DatasetCreateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/dataset/`,
+        method: "POST",
+        body: queryArg.dataset,
+      }),
+    }),
+    datasetRetrieve: build.query<
+      DatasetRetrieveApiResponse,
+      DatasetRetrieveApiArg
+    >({
+      query: (queryArg) => ({ url: `/api/dataset/${queryArg.id}/` }),
+    }),
+    datasetUpdate: build.mutation<
+      DatasetUpdateApiResponse,
+      DatasetUpdateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/dataset/${queryArg.id}/`,
+        method: "PUT",
+        body: queryArg.dataset,
+      }),
+    }),
+    datasetPartialUpdate: build.mutation<
+      DatasetPartialUpdateApiResponse,
+      DatasetPartialUpdateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/dataset/${queryArg.id}/`,
+        method: "PATCH",
+        body: queryArg.patchedDataset,
+      }),
+    }),
+    datasetDestroy: build.mutation<
+      DatasetDestroyApiResponse,
+      DatasetDestroyApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/dataset/${queryArg.id}/`,
+        method: "DELETE",
+      }),
+    }),
+    datasetCsvUpdate: build.mutation<
+      DatasetCsvUpdateApiResponse,
+      DatasetCsvUpdateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/dataset/${queryArg.id}/csv/`,
+        method: "PUT",
+        body: queryArg.datasetCsv,
+      }),
+    }),
+    doseList: build.query<DoseListApiResponse, DoseListApiArg>({
+      query: () => ({ url: `/api/dose/` }),
+    }),
+    doseCreate: build.mutation<DoseCreateApiResponse, DoseCreateApiArg>({
+      query: (queryArg) => ({
+        url: `/api/dose/`,
+        method: "POST",
+        body: queryArg.dose,
+      }),
+    }),
+    doseRetrieve: build.query<DoseRetrieveApiResponse, DoseRetrieveApiArg>({
+      query: (queryArg) => ({ url: `/api/dose/${queryArg.id}/` }),
+    }),
+    doseUpdate: build.mutation<DoseUpdateApiResponse, DoseUpdateApiArg>({
+      query: (queryArg) => ({
+        url: `/api/dose/${queryArg.id}/`,
+        method: "PUT",
+        body: queryArg.dose,
+      }),
+    }),
+    dosePartialUpdate: build.mutation<
+      DosePartialUpdateApiResponse,
+      DosePartialUpdateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/dose/${queryArg.id}/`,
+        method: "PATCH",
+        body: queryArg.patchedDose,
+      }),
+    }),
+    doseDestroy: build.mutation<DoseDestroyApiResponse, DoseDestroyApiArg>({
+      query: (queryArg) => ({
+        url: `/api/dose/${queryArg.id}/`,
+        method: "DELETE",
+      }),
+    }),
+    inferenceList: build.query<InferenceListApiResponse, InferenceListApiArg>({
+      query: () => ({ url: `/api/inference/` }),
+    }),
+    inferenceCreate: build.mutation<
+      InferenceCreateApiResponse,
+      InferenceCreateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/inference/`,
+        method: "POST",
+        body: queryArg.inference,
+      }),
+    }),
+    inferenceRetrieve: build.query<
+      InferenceRetrieveApiResponse,
+      InferenceRetrieveApiArg
+    >({
+      query: (queryArg) => ({ url: `/api/inference/${queryArg.id}/` }),
+    }),
+    inferenceUpdate: build.mutation<
+      InferenceUpdateApiResponse,
+      InferenceUpdateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/inference/${queryArg.id}/`,
+        method: "PUT",
+        body: queryArg.inference,
+      }),
+    }),
+    inferencePartialUpdate: build.mutation<
+      InferencePartialUpdateApiResponse,
+      InferencePartialUpdateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/inference/${queryArg.id}/`,
+        method: "PATCH",
+        body: queryArg.patchedInference,
+      }),
+    }),
+    inferenceDestroy: build.mutation<
+      InferenceDestroyApiResponse,
+      InferenceDestroyApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/inference/${queryArg.id}/`,
+        method: "DELETE",
+      }),
+    }),
+    inferenceStopCreate: build.mutation<
+      InferenceStopCreateApiResponse,
+      InferenceStopCreateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/inference/${queryArg.id}/stop`,
+        method: "POST",
+      }),
+    }),
+    inferenceWizardCreate: build.mutation<
+      InferenceWizardCreateApiResponse,
+      InferenceWizardCreateApiArg
+    >({
+      query: () => ({ url: `/api/inference/wizard`, method: "POST" }),
+    }),
+    inferenceChainList: build.query<
+      InferenceChainListApiResponse,
+      InferenceChainListApiArg
     >({
       query: () => ({ url: `/api/inference_chain/` }),
     }),
-    createInferenceChain: build.mutation<
-      CreateInferenceChainApiResponse,
-      CreateInferenceChainApiArg
+    inferenceChainCreate: build.mutation<
+      InferenceChainCreateApiResponse,
+      InferenceChainCreateApiArg
     >({
       query: (queryArg) => ({
         url: `/api/inference_chain/`,
@@ -724,15 +398,15 @@ const injectedRtkApi = api.injectEndpoints({
         body: queryArg.inferenceChain,
       }),
     }),
-    retrieveInferenceChain: build.query<
-      RetrieveInferenceChainApiResponse,
-      RetrieveInferenceChainApiArg
+    inferenceChainRetrieve: build.query<
+      InferenceChainRetrieveApiResponse,
+      InferenceChainRetrieveApiArg
     >({
       query: (queryArg) => ({ url: `/api/inference_chain/${queryArg.id}/` }),
     }),
-    updateInferenceChain: build.mutation<
-      UpdateInferenceChainApiResponse,
-      UpdateInferenceChainApiArg
+    inferenceChainUpdate: build.mutation<
+      InferenceChainUpdateApiResponse,
+      InferenceChainUpdateApiArg
     >({
       query: (queryArg) => ({
         url: `/api/inference_chain/${queryArg.id}/`,
@@ -740,105 +414,82 @@ const injectedRtkApi = api.injectEndpoints({
         body: queryArg.inferenceChain,
       }),
     }),
-    partialUpdateInferenceChain: build.mutation<
-      PartialUpdateInferenceChainApiResponse,
-      PartialUpdateInferenceChainApiArg
+    inferenceChainPartialUpdate: build.mutation<
+      InferenceChainPartialUpdateApiResponse,
+      InferenceChainPartialUpdateApiArg
     >({
       query: (queryArg) => ({
         url: `/api/inference_chain/${queryArg.id}/`,
         method: "PATCH",
-        body: queryArg.inferenceChain,
+        body: queryArg.patchedInferenceChain,
       }),
     }),
-    destroyInferenceChain: build.mutation<
-      DestroyInferenceChainApiResponse,
-      DestroyInferenceChainApiArg
+    inferenceChainDestroy: build.mutation<
+      InferenceChainDestroyApiResponse,
+      InferenceChainDestroyApiArg
     >({
       query: (queryArg) => ({
         url: `/api/inference_chain/${queryArg.id}/`,
         method: "DELETE",
       }),
     }),
-    listSessions: build.query<ListSessionsApiResponse, ListSessionsApiArg>({
-      query: () => ({ url: `/api/session/` }),
+    ncaCreate: build.mutation<NcaCreateApiResponse, NcaCreateApiArg>({
+      query: () => ({ url: `/api/nca/`, method: "POST" }),
     }),
-    listWhoAmIs: build.query<ListWhoAmIsApiResponse, ListWhoAmIsApiArg>({
-      query: () => ({ url: `/api/whoami/` }),
+    pharmacodynamicList: build.query<
+      PharmacodynamicListApiResponse,
+      PharmacodynamicListApiArg
+    >({
+      query: () => ({ url: `/api/pharmacodynamic/` }),
     }),
-    createNca: build.mutation<CreateNcaApiResponse, CreateNcaApiArg>({
-      query: (queryArg) => ({
-        url: `/api/nca/`,
-        method: "POST",
-        body: queryArg.body,
-      }),
-    }),
-    createAuce: build.mutation<CreateAuceApiResponse, CreateAuceApiArg>({
-      query: (queryArg) => ({
-        url: `/api/auce/`,
-        method: "POST",
-        body: queryArg.body,
-      }),
-    }),
-    createSimulatePk: build.mutation<
-      CreateSimulatePkApiResponse,
-      CreateSimulatePkApiArg
+    pharmacodynamicCreate: build.mutation<
+      PharmacodynamicCreateApiResponse,
+      PharmacodynamicCreateApiArg
     >({
       query: (queryArg) => ({
-        url: `/api/dosed_pharmacokinetic/${queryArg.id}/simulate`,
+        url: `/api/pharmacodynamic/`,
         method: "POST",
-        body: queryArg.body,
+        body: queryArg.pharmacodynamic,
       }),
     }),
-    createInferenceWizard: build.mutation<
-      CreateInferenceWizardApiResponse,
-      CreateInferenceWizardApiArg
+    pharmacodynamicRetrieve: build.query<
+      PharmacodynamicRetrieveApiResponse,
+      PharmacodynamicRetrieveApiArg
+    >({
+      query: (queryArg) => ({ url: `/api/pharmacodynamic/${queryArg.id}/` }),
+    }),
+    pharmacodynamicUpdate: build.mutation<
+      PharmacodynamicUpdateApiResponse,
+      PharmacodynamicUpdateApiArg
     >({
       query: (queryArg) => ({
-        url: `/api/inference/wizard`,
-        method: "POST",
-        body: queryArg.body,
-      }),
-    }),
-    createStopInference: build.mutation<
-      CreateStopInferenceApiResponse,
-      CreateStopInferenceApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/inference/${queryArg.id}/stop`,
-        method: "POST",
-        body: queryArg.body,
-      }),
-    }),
-    createSimulatePd: build.mutation<
-      CreateSimulatePdApiResponse,
-      CreateSimulatePdApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/pharmacodynamic/${queryArg.id}/simulate`,
-        method: "POST",
-        body: queryArg.body,
-      }),
-    }),
-    csvDataset: build.mutation<CsvDatasetApiResponse, CsvDatasetApiArg>({
-      query: (queryArg) => ({
-        url: `/api/dataset/${queryArg.id}/csv/`,
+        url: `/api/pharmacodynamic/${queryArg.id}/`,
         method: "PUT",
-        body: queryArg.datasetCsv,
+        body: queryArg.pharmacodynamic,
       }),
     }),
-    monolixProject: build.mutation<
-      MonolixProjectApiResponse,
-      MonolixProjectApiArg
+    pharmacodynamicPartialUpdate: build.mutation<
+      PharmacodynamicPartialUpdateApiResponse,
+      PharmacodynamicPartialUpdateApiArg
     >({
       query: (queryArg) => ({
-        url: `/api/project/${queryArg.id}/monolix/`,
-        method: "PUT",
-        body: queryArg.monolix,
+        url: `/api/pharmacodynamic/${queryArg.id}/`,
+        method: "PATCH",
+        body: queryArg.patchedPharmacodynamic,
       }),
     }),
-    mmtPharmacodynamicModel: build.mutation<
-      MmtPharmacodynamicModelApiResponse,
-      MmtPharmacodynamicModelApiArg
+    pharmacodynamicDestroy: build.mutation<
+      PharmacodynamicDestroyApiResponse,
+      PharmacodynamicDestroyApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/pharmacodynamic/${queryArg.id}/`,
+        method: "DELETE",
+      }),
+    }),
+    pharmacodynamicMmtUpdate: build.mutation<
+      PharmacodynamicMmtUpdateApiResponse,
+      PharmacodynamicMmtUpdateApiArg
     >({
       query: (queryArg) => ({
         url: `/api/pharmacodynamic/${queryArg.id}/mmt/`,
@@ -846,9 +497,9 @@ const injectedRtkApi = api.injectEndpoints({
         body: queryArg.pharmacodynamic,
       }),
     }),
-    sbmlPharmacodynamicModel: build.mutation<
-      SbmlPharmacodynamicModelApiResponse,
-      SbmlPharmacodynamicModelApiArg
+    pharmacodynamicSbmlUpdate: build.mutation<
+      PharmacodynamicSbmlUpdateApiResponse,
+      PharmacodynamicSbmlUpdateApiArg
     >({
       query: (queryArg) => ({
         url: `/api/pharmacodynamic/${queryArg.id}/sbml/`,
@@ -856,9 +507,9 @@ const injectedRtkApi = api.injectEndpoints({
         body: queryArg.pharmacodynamicSbml,
       }),
     }),
-    setVariablesFromInferencePharmacodynamicModel: build.mutation<
-      SetVariablesFromInferencePharmacodynamicModelApiResponse,
-      SetVariablesFromInferencePharmacodynamicModelApiArg
+    pharmacodynamicSetVariablesFromInferenceUpdate: build.mutation<
+      PharmacodynamicSetVariablesFromInferenceUpdateApiResponse,
+      PharmacodynamicSetVariablesFromInferenceUpdateApiArg
     >({
       query: (queryArg) => ({
         url: `/api/pharmacodynamic/${queryArg.id}/set_variables_from_inference/`,
@@ -866,681 +517,1102 @@ const injectedRtkApi = api.injectEndpoints({
         body: queryArg.pharmacodynamic,
       }),
     }),
-    setVariablesFromInferenceDosedPharmacokineticModel: build.mutation<
-      SetVariablesFromInferenceDosedPharmacokineticModelApiResponse,
-      SetVariablesFromInferenceDosedPharmacokineticModelApiArg
+    pharmacodynamicSimulateCreate: build.mutation<
+      PharmacodynamicSimulateCreateApiResponse,
+      PharmacodynamicSimulateCreateApiArg
     >({
       query: (queryArg) => ({
-        url: `/api/dosed_pharmacokinetic/${queryArg.id}/set_variables_from_inference/`,
-        method: "PUT",
-        body: queryArg.dosedPharmacokinetic,
+        url: `/api/pharmacodynamic/${queryArg.id}/simulate`,
+        method: "POST",
+        body: queryArg.simulate,
       }),
+    }),
+    pharmacokineticList: build.query<
+      PharmacokineticListApiResponse,
+      PharmacokineticListApiArg
+    >({
+      query: () => ({ url: `/api/pharmacokinetic/` }),
+    }),
+    pharmacokineticCreate: build.mutation<
+      PharmacokineticCreateApiResponse,
+      PharmacokineticCreateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/pharmacokinetic/`,
+        method: "POST",
+        body: queryArg.pharmacokinetic,
+      }),
+    }),
+    pharmacokineticRetrieve: build.query<
+      PharmacokineticRetrieveApiResponse,
+      PharmacokineticRetrieveApiArg
+    >({
+      query: (queryArg) => ({ url: `/api/pharmacokinetic/${queryArg.id}/` }),
+    }),
+    pharmacokineticUpdate: build.mutation<
+      PharmacokineticUpdateApiResponse,
+      PharmacokineticUpdateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/pharmacokinetic/${queryArg.id}/`,
+        method: "PUT",
+        body: queryArg.pharmacokinetic,
+      }),
+    }),
+    pharmacokineticPartialUpdate: build.mutation<
+      PharmacokineticPartialUpdateApiResponse,
+      PharmacokineticPartialUpdateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/pharmacokinetic/${queryArg.id}/`,
+        method: "PATCH",
+        body: queryArg.patchedPharmacokinetic,
+      }),
+    }),
+    pharmacokineticDestroy: build.mutation<
+      PharmacokineticDestroyApiResponse,
+      PharmacokineticDestroyApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/pharmacokinetic/${queryArg.id}/`,
+        method: "DELETE",
+      }),
+    }),
+    projectList: build.query<ProjectListApiResponse, ProjectListApiArg>({
+      query: () => ({ url: `/api/project/` }),
+    }),
+    projectCreate: build.mutation<
+      ProjectCreateApiResponse,
+      ProjectCreateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/project/`,
+        method: "POST",
+        body: queryArg.project,
+      }),
+    }),
+    projectRetrieve: build.query<
+      ProjectRetrieveApiResponse,
+      ProjectRetrieveApiArg
+    >({
+      query: (queryArg) => ({ url: `/api/project/${queryArg.id}/` }),
+    }),
+    projectUpdate: build.mutation<
+      ProjectUpdateApiResponse,
+      ProjectUpdateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/project/${queryArg.id}/`,
+        method: "PUT",
+        body: queryArg.project,
+      }),
+    }),
+    projectPartialUpdate: build.mutation<
+      ProjectPartialUpdateApiResponse,
+      ProjectPartialUpdateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/project/${queryArg.id}/`,
+        method: "PATCH",
+        body: queryArg.patchedProject,
+      }),
+    }),
+    projectDestroy: build.mutation<
+      ProjectDestroyApiResponse,
+      ProjectDestroyApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/project/${queryArg.id}/`,
+        method: "DELETE",
+      }),
+    }),
+    projectMonolixUpdate: build.mutation<
+      ProjectMonolixUpdateApiResponse,
+      ProjectMonolixUpdateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/project/${queryArg.id}/monolix/`,
+        method: "PUT",
+        body: queryArg.monolix,
+      }),
+    }),
+    projectAccessList: build.query<
+      ProjectAccessListApiResponse,
+      ProjectAccessListApiArg
+    >({
+      query: () => ({ url: `/api/project_access/` }),
+    }),
+    projectAccessCreate: build.mutation<
+      ProjectAccessCreateApiResponse,
+      ProjectAccessCreateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/project_access/`,
+        method: "POST",
+        body: queryArg.projectAccess,
+      }),
+    }),
+    projectAccessRetrieve: build.query<
+      ProjectAccessRetrieveApiResponse,
+      ProjectAccessRetrieveApiArg
+    >({
+      query: (queryArg) => ({ url: `/api/project_access/${queryArg.id}/` }),
+    }),
+    projectAccessUpdate: build.mutation<
+      ProjectAccessUpdateApiResponse,
+      ProjectAccessUpdateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/project_access/${queryArg.id}/`,
+        method: "PUT",
+        body: queryArg.projectAccess,
+      }),
+    }),
+    projectAccessPartialUpdate: build.mutation<
+      ProjectAccessPartialUpdateApiResponse,
+      ProjectAccessPartialUpdateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/project_access/${queryArg.id}/`,
+        method: "PATCH",
+        body: queryArg.patchedProjectAccess,
+      }),
+    }),
+    projectAccessDestroy: build.mutation<
+      ProjectAccessDestroyApiResponse,
+      ProjectAccessDestroyApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/project_access/${queryArg.id}/`,
+        method: "DELETE",
+      }),
+    }),
+    protocolList: build.query<ProtocolListApiResponse, ProtocolListApiArg>({
+      query: (queryArg) => ({
+        url: `/api/protocol/`,
+        params: { project_id: queryArg.projectId },
+      }),
+    }),
+    protocolCreate: build.mutation<
+      ProtocolCreateApiResponse,
+      ProtocolCreateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/protocol/`,
+        method: "POST",
+        body: queryArg.protocol,
+      }),
+    }),
+    protocolRetrieve: build.query<
+      ProtocolRetrieveApiResponse,
+      ProtocolRetrieveApiArg
+    >({
+      query: (queryArg) => ({ url: `/api/protocol/${queryArg.id}/` }),
+    }),
+    protocolUpdate: build.mutation<
+      ProtocolUpdateApiResponse,
+      ProtocolUpdateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/protocol/${queryArg.id}/`,
+        method: "PUT",
+        body: queryArg.protocol,
+      }),
+    }),
+    protocolPartialUpdate: build.mutation<
+      ProtocolPartialUpdateApiResponse,
+      ProtocolPartialUpdateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/protocol/${queryArg.id}/`,
+        method: "PATCH",
+        body: queryArg.patchedProtocol,
+      }),
+    }),
+    protocolDestroy: build.mutation<
+      ProtocolDestroyApiResponse,
+      ProtocolDestroyApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/protocol/${queryArg.id}/`,
+        method: "DELETE",
+      }),
+    }),
+    sessionRetrieve: build.query<
+      SessionRetrieveApiResponse,
+      SessionRetrieveApiArg
+    >({
+      query: () => ({ url: `/api/session/` }),
+    }),
+    simulationList: build.query<
+      SimulationListApiResponse,
+      SimulationListApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/simulation/`,
+        params: { project_id: queryArg.projectId },
+      }),
+    }),
+    simulationCreate: build.mutation<
+      SimulationCreateApiResponse,
+      SimulationCreateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/simulation/`,
+        method: "POST",
+        body: queryArg.simulation,
+      }),
+    }),
+    simulationRetrieve: build.query<
+      SimulationRetrieveApiResponse,
+      SimulationRetrieveApiArg
+    >({
+      query: (queryArg) => ({ url: `/api/simulation/${queryArg.id}/` }),
+    }),
+    simulationUpdate: build.mutation<
+      SimulationUpdateApiResponse,
+      SimulationUpdateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/simulation/${queryArg.id}/`,
+        method: "PUT",
+        body: queryArg.simulation,
+      }),
+    }),
+    simulationPartialUpdate: build.mutation<
+      SimulationPartialUpdateApiResponse,
+      SimulationPartialUpdateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/simulation/${queryArg.id}/`,
+        method: "PATCH",
+        body: queryArg.patchedSimulation,
+      }),
+    }),
+    simulationDestroy: build.mutation<
+      SimulationDestroyApiResponse,
+      SimulationDestroyApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/simulation/${queryArg.id}/`,
+        method: "DELETE",
+      }),
+    }),
+    subjectList: build.query<SubjectListApiResponse, SubjectListApiArg>({
+      query: () => ({ url: `/api/subject/` }),
+    }),
+    subjectCreate: build.mutation<
+      SubjectCreateApiResponse,
+      SubjectCreateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/subject/`,
+        method: "POST",
+        body: queryArg.subject,
+      }),
+    }),
+    subjectRetrieve: build.query<
+      SubjectRetrieveApiResponse,
+      SubjectRetrieveApiArg
+    >({
+      query: (queryArg) => ({ url: `/api/subject/${queryArg.id}/` }),
+    }),
+    subjectUpdate: build.mutation<
+      SubjectUpdateApiResponse,
+      SubjectUpdateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/subject/${queryArg.id}/`,
+        method: "PUT",
+        body: queryArg.subject,
+      }),
+    }),
+    subjectPartialUpdate: build.mutation<
+      SubjectPartialUpdateApiResponse,
+      SubjectPartialUpdateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/subject/${queryArg.id}/`,
+        method: "PATCH",
+        body: queryArg.patchedSubject,
+      }),
+    }),
+    subjectDestroy: build.mutation<
+      SubjectDestroyApiResponse,
+      SubjectDestroyApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/subject/${queryArg.id}/`,
+        method: "DELETE",
+      }),
+    }),
+    unitList: build.query<UnitListApiResponse, UnitListApiArg>({
+      query: (queryArg) => ({
+        url: `/api/unit/`,
+        params: { compound_id: queryArg.compoundId },
+      }),
+    }),
+    unitCreate: build.mutation<UnitCreateApiResponse, UnitCreateApiArg>({
+      query: (queryArg) => ({
+        url: `/api/unit/`,
+        method: "POST",
+        body: queryArg.unit,
+      }),
+    }),
+    unitRetrieve: build.query<UnitRetrieveApiResponse, UnitRetrieveApiArg>({
+      query: (queryArg) => ({
+        url: `/api/unit/${queryArg.id}/`,
+        params: { compound_id: queryArg.compoundId },
+      }),
+    }),
+    unitUpdate: build.mutation<UnitUpdateApiResponse, UnitUpdateApiArg>({
+      query: (queryArg) => ({
+        url: `/api/unit/${queryArg.id}/`,
+        method: "PUT",
+        body: queryArg.unit,
+      }),
+    }),
+    unitPartialUpdate: build.mutation<
+      UnitPartialUpdateApiResponse,
+      UnitPartialUpdateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/unit/${queryArg.id}/`,
+        method: "PATCH",
+        body: queryArg.patchedUnit,
+      }),
+    }),
+    unitDestroy: build.mutation<UnitDestroyApiResponse, UnitDestroyApiArg>({
+      query: (queryArg) => ({
+        url: `/api/unit/${queryArg.id}/`,
+        method: "DELETE",
+      }),
+    }),
+    userList: build.query<UserListApiResponse, UserListApiArg>({
+      query: () => ({ url: `/api/user/` }),
+    }),
+    userCreate: build.mutation<UserCreateApiResponse, UserCreateApiArg>({
+      query: (queryArg) => ({
+        url: `/api/user/`,
+        method: "POST",
+        body: queryArg.user,
+      }),
+    }),
+    userRetrieve: build.query<UserRetrieveApiResponse, UserRetrieveApiArg>({
+      query: (queryArg) => ({ url: `/api/user/${queryArg.id}/` }),
+    }),
+    userUpdate: build.mutation<UserUpdateApiResponse, UserUpdateApiArg>({
+      query: (queryArg) => ({
+        url: `/api/user/${queryArg.id}/`,
+        method: "PUT",
+        body: queryArg.user,
+      }),
+    }),
+    userPartialUpdate: build.mutation<
+      UserPartialUpdateApiResponse,
+      UserPartialUpdateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/user/${queryArg.id}/`,
+        method: "PATCH",
+        body: queryArg.patchedUser,
+      }),
+    }),
+    userDestroy: build.mutation<UserDestroyApiResponse, UserDestroyApiArg>({
+      query: (queryArg) => ({
+        url: `/api/user/${queryArg.id}/`,
+        method: "DELETE",
+      }),
+    }),
+    variableList: build.query<VariableListApiResponse, VariableListApiArg>({
+      query: (queryArg) => ({
+        url: `/api/variable/`,
+        params: {
+          dosed_pk_model_id: queryArg.dosedPkModelId,
+          pd_model_id: queryArg.pdModelId,
+          project_id: queryArg.projectId,
+        },
+      }),
+    }),
+    variableCreate: build.mutation<
+      VariableCreateApiResponse,
+      VariableCreateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/variable/`,
+        method: "POST",
+        body: queryArg.variable,
+      }),
+    }),
+    variableRetrieve: build.query<
+      VariableRetrieveApiResponse,
+      VariableRetrieveApiArg
+    >({
+      query: (queryArg) => ({ url: `/api/variable/${queryArg.id}/` }),
+    }),
+    variableUpdate: build.mutation<
+      VariableUpdateApiResponse,
+      VariableUpdateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/variable/${queryArg.id}/`,
+        method: "PUT",
+        body: queryArg.variable,
+      }),
+    }),
+    variablePartialUpdate: build.mutation<
+      VariablePartialUpdateApiResponse,
+      VariablePartialUpdateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/variable/${queryArg.id}/`,
+        method: "PATCH",
+        body: queryArg.patchedVariable,
+      }),
+    }),
+    variableDestroy: build.mutation<
+      VariableDestroyApiResponse,
+      VariableDestroyApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/variable/${queryArg.id}/`,
+        method: "DELETE",
+      }),
+    }),
+    whoamiRetrieve: build.query<
+      WhoamiRetrieveApiResponse,
+      WhoamiRetrieveApiArg
+    >({
+      query: () => ({ url: `/api/whoami/` }),
     }),
   }),
   overrideExisting: false,
 });
 export { injectedRtkApi as backendApi };
-export type ListDatasetsApiResponse = /** status 200  */ Dataset[];
-export type ListDatasetsApiArg = void;
-export type CreateDatasetApiResponse = /** status 201  */ Dataset;
-export type CreateDatasetApiArg = {
-  dataset: Dataset;
+export type AlgorithmListApiResponse = /** status 200  */ Algorithm[];
+export type AlgorithmListApiArg = void;
+export type AlgorithmCreateApiResponse = /** status 201  */ Algorithm;
+export type AlgorithmCreateApiArg = {
+  algorithm: Algorithm;
 };
-export type RetrieveDatasetApiResponse = /** status 200  */ Dataset;
-export type RetrieveDatasetApiArg = {
-  /** A unique integer value identifying this dataset. */
-  id: string;
+export type AlgorithmRetrieveApiResponse = /** status 200  */ Algorithm;
+export type AlgorithmRetrieveApiArg = {
+  /** A unique integer value identifying this algorithm. */
+  id: number;
 };
-export type UpdateDatasetApiResponse = /** status 200  */ Dataset;
-export type UpdateDatasetApiArg = {
-  /** A unique integer value identifying this dataset. */
-  id: string;
-  dataset: Dataset;
+export type AlgorithmUpdateApiResponse = /** status 200  */ Algorithm;
+export type AlgorithmUpdateApiArg = {
+  /** A unique integer value identifying this algorithm. */
+  id: number;
+  algorithm: Algorithm;
 };
-export type PartialUpdateDatasetApiResponse = /** status 200  */ Dataset;
-export type PartialUpdateDatasetApiArg = {
-  /** A unique integer value identifying this dataset. */
-  id: string;
-  dataset: Dataset;
+export type AlgorithmPartialUpdateApiResponse = /** status 200  */ Algorithm;
+export type AlgorithmPartialUpdateApiArg = {
+  /** A unique integer value identifying this algorithm. */
+  id: number;
+  patchedAlgorithm: PatchedAlgorithm;
 };
-export type DestroyDatasetApiResponse = unknown;
-export type DestroyDatasetApiArg = {
-  /** A unique integer value identifying this dataset. */
-  id: string;
+export type AlgorithmDestroyApiResponse = unknown;
+export type AlgorithmDestroyApiArg = {
+  /** A unique integer value identifying this algorithm. */
+  id: number;
 };
-export type ListUsersApiResponse = /** status 200  */ User[];
-export type ListUsersApiArg = void;
-export type CreateUserApiResponse = /** status 201  */ User;
-export type CreateUserApiArg = {
-  user: User;
-};
-export type RetrieveUserApiResponse = /** status 200  */ User;
-export type RetrieveUserApiArg = {
-  /** A unique integer value identifying this user. */
-  id: string;
-};
-export type UpdateUserApiResponse = /** status 200  */ User;
-export type UpdateUserApiArg = {
-  /** A unique integer value identifying this user. */
-  id: string;
-  user: User;
-};
-export type PartialUpdateUserApiResponse = /** status 200  */ User;
-export type PartialUpdateUserApiArg = {
-  /** A unique integer value identifying this user. */
-  id: string;
-  user: User;
-};
-export type DestroyUserApiResponse = unknown;
-export type DestroyUserApiArg = {
-  /** A unique integer value identifying this user. */
-  id: string;
-};
-export type ListSubjectsApiResponse = /** status 200  */ Subject[];
-export type ListSubjectsApiArg = void;
-export type CreateSubjectApiResponse = /** status 201  */ Subject;
-export type CreateSubjectApiArg = {
-  subject: Subject;
-};
-export type RetrieveSubjectApiResponse = /** status 200  */ Subject;
-export type RetrieveSubjectApiArg = {
-  /** A unique integer value identifying this subject. */
-  id: string;
-};
-export type UpdateSubjectApiResponse = /** status 200  */ Subject;
-export type UpdateSubjectApiArg = {
-  /** A unique integer value identifying this subject. */
-  id: string;
-  subject: Subject;
-};
-export type PartialUpdateSubjectApiResponse = /** status 200  */ Subject;
-export type PartialUpdateSubjectApiArg = {
-  /** A unique integer value identifying this subject. */
-  id: string;
-  subject: Subject;
-};
-export type DestroySubjectApiResponse = unknown;
-export type DestroySubjectApiArg = {
-  /** A unique integer value identifying this subject. */
-  id: string;
-};
-export type ListProjectsApiResponse = /** status 200  */ Project[];
-export type ListProjectsApiArg = void;
-export type CreateProjectApiResponse = /** status 201  */ Project;
-export type CreateProjectApiArg = {
-  project: Project;
-};
-export type RetrieveProjectApiResponse = /** status 200  */ Project;
-export type RetrieveProjectApiArg = {
-  /** A unique integer value identifying this project. */
-  id: string;
-};
-export type UpdateProjectApiResponse = /** status 200  */ Project;
-export type UpdateProjectApiArg = {
-  /** A unique integer value identifying this project. */
-  id: string;
-  project: Project;
-};
-export type PartialUpdateProjectApiResponse = /** status 200  */ Project;
-export type PartialUpdateProjectApiArg = {
-  /** A unique integer value identifying this project. */
-  id: string;
-  project: Project;
-};
-export type DestroyProjectApiResponse = unknown;
-export type DestroyProjectApiArg = {
-  /** A unique integer value identifying this project. */
-  id: string;
-};
-export type ListProjectAccessApiResponse = /** status 200  */ ProjectAccess[];
-export type ListProjectAccessApiArg = void;
-export type CreateProjectAccessApiResponse = /** status 201  */ ProjectAccess;
-export type CreateProjectAccessApiArg = {
-  projectAccess: ProjectAccess;
-};
-export type RetrieveProjectAccessApiResponse = /** status 200  */ ProjectAccess;
-export type RetrieveProjectAccessApiArg = {
-  /** A unique integer value identifying this project access. */
-  id: string;
-};
-export type UpdateProjectAccessApiResponse = /** status 200  */ ProjectAccess;
-export type UpdateProjectAccessApiArg = {
-  /** A unique integer value identifying this project access. */
-  id: string;
-  projectAccess: ProjectAccess;
-};
-export type PartialUpdateProjectAccessApiResponse =
-  /** status 200  */ ProjectAccess;
-export type PartialUpdateProjectAccessApiArg = {
-  /** A unique integer value identifying this project access. */
-  id: string;
-  projectAccess: ProjectAccess;
-};
-export type DestroyProjectAccessApiResponse = unknown;
-export type DestroyProjectAccessApiArg = {
-  /** A unique integer value identifying this project access. */
-  id: string;
-};
-export type ListDosesApiResponse = /** status 200  */ Dose[];
-export type ListDosesApiArg = void;
-export type CreateDoseApiResponse = /** status 201  */ Dose;
-export type CreateDoseApiArg = {
-  dose: Dose;
-};
-export type RetrieveDoseApiResponse = /** status 200  */ Dose;
-export type RetrieveDoseApiArg = {
-  /** A unique integer value identifying this dose. */
-  id: string;
-};
-export type UpdateDoseApiResponse = /** status 200  */ Dose;
-export type UpdateDoseApiArg = {
-  /** A unique integer value identifying this dose. */
-  id: string;
-  dose: Dose;
-};
-export type PartialUpdateDoseApiResponse = /** status 200  */ Dose;
-export type PartialUpdateDoseApiArg = {
-  /** A unique integer value identifying this dose. */
-  id: string;
-  dose: Dose;
-};
-export type DestroyDoseApiResponse = unknown;
-export type DestroyDoseApiArg = {
-  /** A unique integer value identifying this dose. */
-  id: string;
-};
-export type ListUnitsApiResponse = /** status 200  */ Unit[];
-export type ListUnitsApiArg = void;
-export type CreateUnitApiResponse = /** status 201  */ Unit;
-export type CreateUnitApiArg = {
-  unit: Unit;
-};
-export type RetrieveUnitApiResponse = /** status 200  */ Unit;
-export type RetrieveUnitApiArg = {
-  /** A unique integer value identifying this unit. */
-  id: string;
-};
-export type UpdateUnitApiResponse = /** status 200  */ Unit;
-export type UpdateUnitApiArg = {
-  /** A unique integer value identifying this unit. */
-  id: string;
-  unit: Unit;
-};
-export type PartialUpdateUnitApiResponse = /** status 200  */ Unit;
-export type PartialUpdateUnitApiArg = {
-  /** A unique integer value identifying this unit. */
-  id: string;
-  unit: Unit;
-};
-export type DestroyUnitApiResponse = unknown;
-export type DestroyUnitApiArg = {
-  /** A unique integer value identifying this unit. */
-  id: string;
-};
-export type ListVariablesApiResponse = /** status 200  */ Variable[];
-export type ListVariablesApiArg = void;
-export type CreateVariableApiResponse = /** status 201  */ Variable;
-export type CreateVariableApiArg = {
-  variable: Variable;
-};
-export type RetrieveVariableApiResponse = /** status 200  */ Variable;
-export type RetrieveVariableApiArg = {
-  /** A unique integer value identifying this variable. */
-  id: string;
-};
-export type UpdateVariableApiResponse = /** status 200  */ Variable;
-export type UpdateVariableApiArg = {
-  /** A unique integer value identifying this variable. */
-  id: string;
-  variable: Variable;
-};
-export type PartialUpdateVariableApiResponse = /** status 200  */ Variable;
-export type PartialUpdateVariableApiArg = {
-  /** A unique integer value identifying this variable. */
-  id: string;
-  variable: Variable;
-};
-export type DestroyVariableApiResponse = unknown;
-export type DestroyVariableApiArg = {
-  /** A unique integer value identifying this variable. */
-  id: string;
-};
-export type ListProtocolsApiResponse = /** status 200  */ Protocol[];
-export type ListProtocolsApiArg = void;
-export type CreateProtocolApiResponse = /** status 201  */ Protocol;
-export type CreateProtocolApiArg = {
-  protocol: Protocol;
-};
-export type RetrieveProtocolApiResponse = /** status 200  */ Protocol;
-export type RetrieveProtocolApiArg = {
-  /** A unique integer value identifying this protocol. */
-  id: string;
-};
-export type UpdateProtocolApiResponse = /** status 200  */ Protocol;
-export type UpdateProtocolApiArg = {
-  /** A unique integer value identifying this protocol. */
-  id: string;
-  protocol: Protocol;
-};
-export type PartialUpdateProtocolApiResponse = /** status 200  */ Protocol;
-export type PartialUpdateProtocolApiArg = {
-  /** A unique integer value identifying this protocol. */
-  id: string;
-  protocol: Protocol;
-};
-export type DestroyProtocolApiResponse = unknown;
-export type DestroyProtocolApiArg = {
-  /** A unique integer value identifying this protocol. */
-  id: string;
-};
-export type ListBiomarkerTypesApiResponse = /** status 200  */ BiomarkerType[];
-export type ListBiomarkerTypesApiArg = void;
-export type CreateBiomarkerTypeApiResponse = /** status 201  */ BiomarkerType;
-export type CreateBiomarkerTypeApiArg = {
+export type AuceCreateApiResponse = unknown;
+export type AuceCreateApiArg = void;
+export type BiomarkerTypeListApiResponse = /** status 200  */ BiomarkerType[];
+export type BiomarkerTypeListApiArg = void;
+export type BiomarkerTypeCreateApiResponse = /** status 201  */ BiomarkerType;
+export type BiomarkerTypeCreateApiArg = {
   biomarkerType: BiomarkerType;
 };
-export type RetrieveBiomarkerTypeApiResponse = /** status 200  */ BiomarkerType;
-export type RetrieveBiomarkerTypeApiArg = {
+export type BiomarkerTypeRetrieveApiResponse = /** status 200  */ BiomarkerType;
+export type BiomarkerTypeRetrieveApiArg = {
   /** A unique integer value identifying this biomarker type. */
-  id: string;
+  id: number;
 };
-export type UpdateBiomarkerTypeApiResponse = /** status 200  */ BiomarkerType;
-export type UpdateBiomarkerTypeApiArg = {
+export type BiomarkerTypeUpdateApiResponse = /** status 200  */ BiomarkerType;
+export type BiomarkerTypeUpdateApiArg = {
   /** A unique integer value identifying this biomarker type. */
-  id: string;
+  id: number;
   biomarkerType: BiomarkerType;
 };
-export type PartialUpdateBiomarkerTypeApiResponse =
+export type BiomarkerTypePartialUpdateApiResponse =
   /** status 200  */ BiomarkerType;
-export type PartialUpdateBiomarkerTypeApiArg = {
+export type BiomarkerTypePartialUpdateApiArg = {
   /** A unique integer value identifying this biomarker type. */
-  id: string;
-  biomarkerType: BiomarkerType;
+  id: number;
+  patchedBiomarkerType: PatchedBiomarkerType;
 };
-export type DestroyBiomarkerTypeApiResponse = unknown;
-export type DestroyBiomarkerTypeApiArg = {
+export type BiomarkerTypeDestroyApiResponse = unknown;
+export type BiomarkerTypeDestroyApiArg = {
   /** A unique integer value identifying this biomarker type. */
-  id: string;
+  id: number;
 };
-export type ListPharmacokineticModelsApiResponse =
-  /** status 200  */ Pharmacokinetic[];
-export type ListPharmacokineticModelsApiArg = void;
-export type CreatePharmacokineticModelApiResponse =
-  /** status 201  */ Pharmacokinetic;
-export type CreatePharmacokineticModelApiArg = {
-  pharmacokinetic: Pharmacokinetic;
+export type CombinedModelListApiResponse = /** status 200  */ CombinedModel[];
+export type CombinedModelListApiArg = {
+  /** Filter results by project ID */
+  projectId?: number;
 };
-export type RetrievePharmacokineticModelApiResponse =
-  /** status 200  */ Pharmacokinetic;
-export type RetrievePharmacokineticModelApiArg = {
-  /** A unique integer value identifying this pharmacokinetic model. */
-  id: string;
+export type CombinedModelCreateApiResponse = /** status 201  */ CombinedModel;
+export type CombinedModelCreateApiArg = {
+  combinedModel: CombinedModel;
 };
-export type UpdatePharmacokineticModelApiResponse =
-  /** status 200  */ Pharmacokinetic;
-export type UpdatePharmacokineticModelApiArg = {
-  /** A unique integer value identifying this pharmacokinetic model. */
-  id: string;
-  pharmacokinetic: Pharmacokinetic;
+export type CombinedModelRetrieveApiResponse = /** status 200  */ CombinedModel;
+export type CombinedModelRetrieveApiArg = {
+  /** A unique integer value identifying this combined model. */
+  id: number;
 };
-export type PartialUpdatePharmacokineticModelApiResponse =
-  /** status 200  */ Pharmacokinetic;
-export type PartialUpdatePharmacokineticModelApiArg = {
-  /** A unique integer value identifying this pharmacokinetic model. */
-  id: string;
-  pharmacokinetic: Pharmacokinetic;
+export type CombinedModelUpdateApiResponse = /** status 200  */ CombinedModel;
+export type CombinedModelUpdateApiArg = {
+  /** A unique integer value identifying this combined model. */
+  id: number;
+  combinedModel: CombinedModel;
 };
-export type DestroyPharmacokineticModelApiResponse = unknown;
-export type DestroyPharmacokineticModelApiArg = {
-  /** A unique integer value identifying this pharmacokinetic model. */
-  id: string;
+export type CombinedModelPartialUpdateApiResponse =
+  /** status 200  */ CombinedModel;
+export type CombinedModelPartialUpdateApiArg = {
+  /** A unique integer value identifying this combined model. */
+  id: number;
+  patchedCombinedModel: PatchedCombinedModel;
 };
-export type ListPharmacodynamicModelsApiResponse =
-  /** status 200  */ Pharmacodynamic[];
-export type ListPharmacodynamicModelsApiArg = void;
-export type CreatePharmacodynamicModelApiResponse =
-  /** status 201  */ Pharmacodynamic;
-export type CreatePharmacodynamicModelApiArg = {
-  pharmacodynamic: Pharmacodynamic;
+export type CombinedModelDestroyApiResponse = unknown;
+export type CombinedModelDestroyApiArg = {
+  /** A unique integer value identifying this combined model. */
+  id: number;
 };
-export type RetrievePharmacodynamicModelApiResponse =
-  /** status 200  */ Pharmacodynamic;
-export type RetrievePharmacodynamicModelApiArg = {
-  /** A unique integer value identifying this pharmacodynamic model. */
-  id: string;
+export type CombinedModelSetVariablesFromInferenceUpdateApiResponse =
+  /** status 200  */ CombinedModel;
+export type CombinedModelSetVariablesFromInferenceUpdateApiArg = {
+  /** A unique integer value identifying this combined model. */
+  id: number;
+  combinedModel: CombinedModel;
 };
-export type UpdatePharmacodynamicModelApiResponse =
-  /** status 200  */ Pharmacodynamic;
-export type UpdatePharmacodynamicModelApiArg = {
-  /** A unique integer value identifying this pharmacodynamic model. */
-  id: string;
-  pharmacodynamic: Pharmacodynamic;
+export type CombinedModelSimulateCreateApiResponse =
+  /** status 200  */ SimulateResponse;
+export type CombinedModelSimulateCreateApiArg = {
+  id: number;
+  simulate: Simulate;
 };
-export type PartialUpdatePharmacodynamicModelApiResponse =
-  /** status 200  */ Pharmacodynamic;
-export type PartialUpdatePharmacodynamicModelApiArg = {
-  /** A unique integer value identifying this pharmacodynamic model. */
-  id: string;
-  pharmacodynamic: Pharmacodynamic;
+export type CompoundListApiResponse = /** status 200  */ Compound[];
+export type CompoundListApiArg = void;
+export type CompoundCreateApiResponse = /** status 201  */ Compound;
+export type CompoundCreateApiArg = {
+  compound: Compound;
 };
-export type DestroyPharmacodynamicModelApiResponse = unknown;
-export type DestroyPharmacodynamicModelApiArg = {
-  /** A unique integer value identifying this pharmacodynamic model. */
-  id: string;
+export type CompoundRetrieveApiResponse = /** status 200  */ Compound;
+export type CompoundRetrieveApiArg = {
+  /** A unique integer value identifying this compound. */
+  id: number;
 };
-export type ListDosedPharmacokineticModelsApiResponse =
-  /** status 200  */ DosedPharmacokinetic[];
-export type ListDosedPharmacokineticModelsApiArg = void;
-export type CreateDosedPharmacokineticModelApiResponse =
-  /** status 201  */ DosedPharmacokinetic;
-export type CreateDosedPharmacokineticModelApiArg = {
-  dosedPharmacokinetic: DosedPharmacokinetic;
+export type CompoundUpdateApiResponse = /** status 200  */ Compound;
+export type CompoundUpdateApiArg = {
+  /** A unique integer value identifying this compound. */
+  id: number;
+  compound: Compound;
 };
-export type RetrieveDosedPharmacokineticModelApiResponse =
-  /** status 200  */ DosedPharmacokinetic;
-export type RetrieveDosedPharmacokineticModelApiArg = {
-  /** A unique integer value identifying this dosed pharmacokinetic model. */
-  id: string;
+export type CompoundPartialUpdateApiResponse = /** status 200  */ Compound;
+export type CompoundPartialUpdateApiArg = {
+  /** A unique integer value identifying this compound. */
+  id: number;
+  patchedCompound: PatchedCompound;
 };
-export type UpdateDosedPharmacokineticModelApiResponse =
-  /** status 200  */ DosedPharmacokinetic;
-export type UpdateDosedPharmacokineticModelApiArg = {
-  /** A unique integer value identifying this dosed pharmacokinetic model. */
-  id: string;
-  dosedPharmacokinetic: DosedPharmacokinetic;
+export type CompoundDestroyApiResponse = unknown;
+export type CompoundDestroyApiArg = {
+  /** A unique integer value identifying this compound. */
+  id: number;
 };
-export type PartialUpdateDosedPharmacokineticModelApiResponse =
-  /** status 200  */ DosedPharmacokinetic;
-export type PartialUpdateDosedPharmacokineticModelApiArg = {
-  /** A unique integer value identifying this dosed pharmacokinetic model. */
-  id: string;
-  dosedPharmacokinetic: DosedPharmacokinetic;
+export type DatasetListApiResponse = /** status 200  */ Dataset[];
+export type DatasetListApiArg = void;
+export type DatasetCreateApiResponse = /** status 201  */ Dataset;
+export type DatasetCreateApiArg = {
+  dataset: Dataset;
 };
-export type DestroyDosedPharmacokineticModelApiResponse = unknown;
-export type DestroyDosedPharmacokineticModelApiArg = {
-  /** A unique integer value identifying this dosed pharmacokinetic model. */
-  id: string;
-};
-export type ListInferencesApiResponse = /** status 200  */ Inference[];
-export type ListInferencesApiArg = void;
-export type CreateInferenceApiResponse = /** status 201  */ Inference;
-export type CreateInferenceApiArg = {
-  inference: Inference;
-};
-export type RetrieveInferenceApiResponse = /** status 200  */ Inference;
-export type RetrieveInferenceApiArg = {
-  /** A unique integer value identifying this inference. */
-  id: string;
-};
-export type UpdateInferenceApiResponse = /** status 200  */ Inference;
-export type UpdateInferenceApiArg = {
-  /** A unique integer value identifying this inference. */
-  id: string;
-  inference: Inference;
-};
-export type PartialUpdateInferenceApiResponse = /** status 200  */ Inference;
-export type PartialUpdateInferenceApiArg = {
-  /** A unique integer value identifying this inference. */
-  id: string;
-  inference: Inference;
-};
-export type DestroyInferenceApiResponse = unknown;
-export type DestroyInferenceApiArg = {
-  /** A unique integer value identifying this inference. */
-  id: string;
-};
-export type ListAlgorithmsApiResponse = /** status 200  */ Algorithm[];
-export type ListAlgorithmsApiArg = void;
-export type CreateAlgorithmApiResponse = /** status 201  */ Algorithm;
-export type CreateAlgorithmApiArg = {
-  algorithm: Algorithm;
-};
-export type RetrieveAlgorithmApiResponse = /** status 200  */ Algorithm;
-export type RetrieveAlgorithmApiArg = {
-  /** A unique integer value identifying this algorithm. */
-  id: string;
-};
-export type UpdateAlgorithmApiResponse = /** status 200  */ Algorithm;
-export type UpdateAlgorithmApiArg = {
-  /** A unique integer value identifying this algorithm. */
-  id: string;
-  algorithm: Algorithm;
-};
-export type PartialUpdateAlgorithmApiResponse = /** status 200  */ Algorithm;
-export type PartialUpdateAlgorithmApiArg = {
-  /** A unique integer value identifying this algorithm. */
-  id: string;
-  algorithm: Algorithm;
-};
-export type DestroyAlgorithmApiResponse = unknown;
-export type DestroyAlgorithmApiArg = {
-  /** A unique integer value identifying this algorithm. */
-  id: string;
-};
-export type ListInferenceChainsApiResponse =
-  /** status 200  */ InferenceChain[];
-export type ListInferenceChainsApiArg = void;
-export type CreateInferenceChainApiResponse = /** status 201  */ InferenceChain;
-export type CreateInferenceChainApiArg = {
-  inferenceChain: InferenceChain;
-};
-export type RetrieveInferenceChainApiResponse =
-  /** status 200  */ InferenceChain;
-export type RetrieveInferenceChainApiArg = {
-  /** A unique integer value identifying this inference chain. */
-  id: string;
-};
-export type UpdateInferenceChainApiResponse = /** status 200  */ InferenceChain;
-export type UpdateInferenceChainApiArg = {
-  /** A unique integer value identifying this inference chain. */
-  id: string;
-  inferenceChain: InferenceChain;
-};
-export type PartialUpdateInferenceChainApiResponse =
-  /** status 200  */ InferenceChain;
-export type PartialUpdateInferenceChainApiArg = {
-  /** A unique integer value identifying this inference chain. */
-  id: string;
-  inferenceChain: InferenceChain;
-};
-export type DestroyInferenceChainApiResponse = unknown;
-export type DestroyInferenceChainApiArg = {
-  /** A unique integer value identifying this inference chain. */
-  id: string;
-};
-export type ListSessionsApiResponse = /** status 200  */ any[];
-export type ListSessionsApiArg = void;
-export type ListWhoAmIsApiResponse = /** status 200  */ any[];
-export type ListWhoAmIsApiArg = void;
-export type CreateNcaApiResponse = /** status 201  */ any;
-export type CreateNcaApiArg = {
-  body: any;
-};
-export type CreateAuceApiResponse = /** status 201  */ any;
-export type CreateAuceApiArg = {
-  body: any;
-};
-export type CreateSimulatePkApiResponse = /** status 201  */ any;
-export type CreateSimulatePkApiArg = {
-  id: string;
-  body: any;
-};
-export type CreateInferenceWizardApiResponse = /** status 201  */ any;
-export type CreateInferenceWizardApiArg = {
-  body: any;
-};
-export type CreateStopInferenceApiResponse = /** status 201  */ any;
-export type CreateStopInferenceApiArg = {
-  id: string;
-  body: any;
-};
-export type CreateSimulatePdApiResponse = /** status 201  */ any;
-export type CreateSimulatePdApiArg = {
-  id: string;
-  body: any;
-};
-export type CsvDatasetApiResponse = /** status 200  */ DatasetCsv;
-export type CsvDatasetApiArg = {
+export type DatasetRetrieveApiResponse = /** status 200  */ Dataset;
+export type DatasetRetrieveApiArg = {
   /** A unique integer value identifying this dataset. */
-  id: string;
+  id: number;
+};
+export type DatasetUpdateApiResponse = /** status 200  */ Dataset;
+export type DatasetUpdateApiArg = {
+  /** A unique integer value identifying this dataset. */
+  id: number;
+  dataset: Dataset;
+};
+export type DatasetPartialUpdateApiResponse = /** status 200  */ Dataset;
+export type DatasetPartialUpdateApiArg = {
+  /** A unique integer value identifying this dataset. */
+  id: number;
+  patchedDataset: PatchedDataset;
+};
+export type DatasetDestroyApiResponse = unknown;
+export type DatasetDestroyApiArg = {
+  /** A unique integer value identifying this dataset. */
+  id: number;
+};
+export type DatasetCsvUpdateApiResponse = /** status 200  */ DatasetCsv;
+export type DatasetCsvUpdateApiArg = {
+  /** A unique integer value identifying this dataset. */
+  id: number;
   datasetCsv: DatasetCsv;
 };
-export type MonolixProjectApiResponse = /** status 200  */ Monolix;
-export type MonolixProjectApiArg = {
-  /** A unique integer value identifying this project. */
-  id: string;
-  monolix: Monolix;
+export type DoseListApiResponse = /** status 200  */ Dose[];
+export type DoseListApiArg = void;
+export type DoseCreateApiResponse = /** status 201  */ Dose;
+export type DoseCreateApiArg = {
+  dose: Dose;
 };
-export type MmtPharmacodynamicModelApiResponse =
-  /** status 200  */ Pharmacodynamic;
-export type MmtPharmacodynamicModelApiArg = {
-  /** A unique integer value identifying this pharmacodynamic model. */
-  id: string;
+export type DoseRetrieveApiResponse = /** status 200  */ Dose;
+export type DoseRetrieveApiArg = {
+  /** A unique integer value identifying this dose. */
+  id: number;
+};
+export type DoseUpdateApiResponse = /** status 200  */ Dose;
+export type DoseUpdateApiArg = {
+  /** A unique integer value identifying this dose. */
+  id: number;
+  dose: Dose;
+};
+export type DosePartialUpdateApiResponse = /** status 200  */ Dose;
+export type DosePartialUpdateApiArg = {
+  /** A unique integer value identifying this dose. */
+  id: number;
+  patchedDose: PatchedDose;
+};
+export type DoseDestroyApiResponse = unknown;
+export type DoseDestroyApiArg = {
+  /** A unique integer value identifying this dose. */
+  id: number;
+};
+export type InferenceListApiResponse = /** status 200  */ Inference[];
+export type InferenceListApiArg = void;
+export type InferenceCreateApiResponse = /** status 201  */ Inference;
+export type InferenceCreateApiArg = {
+  inference: Inference;
+};
+export type InferenceRetrieveApiResponse = /** status 200  */ Inference;
+export type InferenceRetrieveApiArg = {
+  /** A unique integer value identifying this inference. */
+  id: number;
+};
+export type InferenceUpdateApiResponse = /** status 200  */ Inference;
+export type InferenceUpdateApiArg = {
+  /** A unique integer value identifying this inference. */
+  id: number;
+  inference: Inference;
+};
+export type InferencePartialUpdateApiResponse = /** status 200  */ Inference;
+export type InferencePartialUpdateApiArg = {
+  /** A unique integer value identifying this inference. */
+  id: number;
+  patchedInference: PatchedInference;
+};
+export type InferenceDestroyApiResponse = unknown;
+export type InferenceDestroyApiArg = {
+  /** A unique integer value identifying this inference. */
+  id: number;
+};
+export type InferenceStopCreateApiResponse = unknown;
+export type InferenceStopCreateApiArg = {
+  id: number;
+};
+export type InferenceWizardCreateApiResponse = unknown;
+export type InferenceWizardCreateApiArg = void;
+export type InferenceChainListApiResponse = /** status 200  */ InferenceChain[];
+export type InferenceChainListApiArg = void;
+export type InferenceChainCreateApiResponse = /** status 201  */ InferenceChain;
+export type InferenceChainCreateApiArg = {
+  inferenceChain: InferenceChain;
+};
+export type InferenceChainRetrieveApiResponse =
+  /** status 200  */ InferenceChain;
+export type InferenceChainRetrieveApiArg = {
+  /** A unique integer value identifying this inference chain. */
+  id: number;
+};
+export type InferenceChainUpdateApiResponse = /** status 200  */ InferenceChain;
+export type InferenceChainUpdateApiArg = {
+  /** A unique integer value identifying this inference chain. */
+  id: number;
+  inferenceChain: InferenceChain;
+};
+export type InferenceChainPartialUpdateApiResponse =
+  /** status 200  */ InferenceChain;
+export type InferenceChainPartialUpdateApiArg = {
+  /** A unique integer value identifying this inference chain. */
+  id: number;
+  patchedInferenceChain: PatchedInferenceChain;
+};
+export type InferenceChainDestroyApiResponse = unknown;
+export type InferenceChainDestroyApiArg = {
+  /** A unique integer value identifying this inference chain. */
+  id: number;
+};
+export type NcaCreateApiResponse = unknown;
+export type NcaCreateApiArg = void;
+export type PharmacodynamicListApiResponse =
+  /** status 200  */ Pharmacodynamic[];
+export type PharmacodynamicListApiArg = void;
+export type PharmacodynamicCreateApiResponse =
+  /** status 201  */ Pharmacodynamic;
+export type PharmacodynamicCreateApiArg = {
   pharmacodynamic: Pharmacodynamic;
 };
-export type SbmlPharmacodynamicModelApiResponse =
-  /** status 200  */ PharmacodynamicSbml;
-export type SbmlPharmacodynamicModelApiArg = {
+export type PharmacodynamicRetrieveApiResponse =
+  /** status 200  */ Pharmacodynamic;
+export type PharmacodynamicRetrieveApiArg = {
   /** A unique integer value identifying this pharmacodynamic model. */
-  id: string;
+  id: number;
+};
+export type PharmacodynamicUpdateApiResponse =
+  /** status 200  */ Pharmacodynamic;
+export type PharmacodynamicUpdateApiArg = {
+  /** A unique integer value identifying this pharmacodynamic model. */
+  id: number;
+  pharmacodynamic: Pharmacodynamic;
+};
+export type PharmacodynamicPartialUpdateApiResponse =
+  /** status 200  */ Pharmacodynamic;
+export type PharmacodynamicPartialUpdateApiArg = {
+  /** A unique integer value identifying this pharmacodynamic model. */
+  id: number;
+  patchedPharmacodynamic: PatchedPharmacodynamic;
+};
+export type PharmacodynamicDestroyApiResponse = unknown;
+export type PharmacodynamicDestroyApiArg = {
+  /** A unique integer value identifying this pharmacodynamic model. */
+  id: number;
+};
+export type PharmacodynamicMmtUpdateApiResponse =
+  /** status 200  */ Pharmacodynamic;
+export type PharmacodynamicMmtUpdateApiArg = {
+  /** A unique integer value identifying this pharmacodynamic model. */
+  id: number;
+  pharmacodynamic: Pharmacodynamic;
+};
+export type PharmacodynamicSbmlUpdateApiResponse =
+  /** status 200  */ PharmacodynamicSbml;
+export type PharmacodynamicSbmlUpdateApiArg = {
+  /** A unique integer value identifying this pharmacodynamic model. */
+  id: number;
   pharmacodynamicSbml: PharmacodynamicSbml;
 };
-export type SetVariablesFromInferencePharmacodynamicModelApiResponse =
+export type PharmacodynamicSetVariablesFromInferenceUpdateApiResponse =
   /** status 200  */ Pharmacodynamic;
-export type SetVariablesFromInferencePharmacodynamicModelApiArg = {
+export type PharmacodynamicSetVariablesFromInferenceUpdateApiArg = {
   /** A unique integer value identifying this pharmacodynamic model. */
-  id: string;
+  id: number;
   pharmacodynamic: Pharmacodynamic;
 };
-export type SetVariablesFromInferenceDosedPharmacokineticModelApiResponse =
-  /** status 200  */ DosedPharmacokinetic;
-export type SetVariablesFromInferenceDosedPharmacokineticModelApiArg = {
-  /** A unique integer value identifying this dosed pharmacokinetic model. */
-  id: string;
-  dosedPharmacokinetic: DosedPharmacokinetic;
+export type PharmacodynamicSimulateCreateApiResponse =
+  /** status 200  */ SimulateResponse;
+export type PharmacodynamicSimulateCreateApiArg = {
+  id: number;
+  simulate: Simulate;
 };
-export type Dataset = {
-  id?: number;
-  biomarker_types?: string[];
-  subjects?: string[];
-  protocols?: string;
+export type PharmacokineticListApiResponse =
+  /** status 200  */ Pharmacokinetic[];
+export type PharmacokineticListApiArg = void;
+export type PharmacokineticCreateApiResponse =
+  /** status 201  */ Pharmacokinetic;
+export type PharmacokineticCreateApiArg = {
+  pharmacokinetic: Pharmacokinetic;
+};
+export type PharmacokineticRetrieveApiResponse =
+  /** status 200  */ Pharmacokinetic;
+export type PharmacokineticRetrieveApiArg = {
+  /** A unique integer value identifying this pharmacokinetic model. */
+  id: number;
+};
+export type PharmacokineticUpdateApiResponse =
+  /** status 200  */ Pharmacokinetic;
+export type PharmacokineticUpdateApiArg = {
+  /** A unique integer value identifying this pharmacokinetic model. */
+  id: number;
+  pharmacokinetic: Pharmacokinetic;
+};
+export type PharmacokineticPartialUpdateApiResponse =
+  /** status 200  */ Pharmacokinetic;
+export type PharmacokineticPartialUpdateApiArg = {
+  /** A unique integer value identifying this pharmacokinetic model. */
+  id: number;
+  patchedPharmacokinetic: PatchedPharmacokinetic;
+};
+export type PharmacokineticDestroyApiResponse = unknown;
+export type PharmacokineticDestroyApiArg = {
+  /** A unique integer value identifying this pharmacokinetic model. */
+  id: number;
+};
+export type ProjectListApiResponse = /** status 200  */ Project[];
+export type ProjectListApiArg = void;
+export type ProjectCreateApiResponse = /** status 201  */ Project;
+export type ProjectCreateApiArg = {
+  project: Project;
+};
+export type ProjectRetrieveApiResponse = /** status 200  */ Project;
+export type ProjectRetrieveApiArg = {
+  /** A unique integer value identifying this project. */
+  id: number;
+};
+export type ProjectUpdateApiResponse = /** status 200  */ Project;
+export type ProjectUpdateApiArg = {
+  /** A unique integer value identifying this project. */
+  id: number;
+  project: Project;
+};
+export type ProjectPartialUpdateApiResponse = /** status 200  */ Project;
+export type ProjectPartialUpdateApiArg = {
+  /** A unique integer value identifying this project. */
+  id: number;
+  patchedProject: PatchedProject;
+};
+export type ProjectDestroyApiResponse = unknown;
+export type ProjectDestroyApiArg = {
+  /** A unique integer value identifying this project. */
+  id: number;
+};
+export type ProjectMonolixUpdateApiResponse = /** status 200  */ Monolix;
+export type ProjectMonolixUpdateApiArg = {
+  /** A unique integer value identifying this project. */
+  id: number;
+  monolix: Monolix;
+};
+export type ProjectAccessListApiResponse = /** status 200  */ ProjectAccess[];
+export type ProjectAccessListApiArg = void;
+export type ProjectAccessCreateApiResponse = /** status 201  */ ProjectAccess;
+export type ProjectAccessCreateApiArg = {
+  projectAccess: ProjectAccess;
+};
+export type ProjectAccessRetrieveApiResponse = /** status 200  */ ProjectAccess;
+export type ProjectAccessRetrieveApiArg = {
+  /** A unique integer value identifying this project access. */
+  id: number;
+};
+export type ProjectAccessUpdateApiResponse = /** status 200  */ ProjectAccess;
+export type ProjectAccessUpdateApiArg = {
+  /** A unique integer value identifying this project access. */
+  id: number;
+  projectAccess: ProjectAccess;
+};
+export type ProjectAccessPartialUpdateApiResponse =
+  /** status 200  */ ProjectAccess;
+export type ProjectAccessPartialUpdateApiArg = {
+  /** A unique integer value identifying this project access. */
+  id: number;
+  patchedProjectAccess: PatchedProjectAccess;
+};
+export type ProjectAccessDestroyApiResponse = unknown;
+export type ProjectAccessDestroyApiArg = {
+  /** A unique integer value identifying this project access. */
+  id: number;
+};
+export type ProtocolListApiResponse = /** status 200  */ Protocol[];
+export type ProtocolListApiArg = {
+  /** Filter results by project ID */
+  projectId?: number;
+};
+export type ProtocolCreateApiResponse = /** status 201  */ Protocol;
+export type ProtocolCreateApiArg = {
+  protocol: Protocol;
+};
+export type ProtocolRetrieveApiResponse = /** status 200  */ Protocol;
+export type ProtocolRetrieveApiArg = {
+  /** A unique integer value identifying this protocol. */
+  id: number;
+};
+export type ProtocolUpdateApiResponse = /** status 200  */ Protocol;
+export type ProtocolUpdateApiArg = {
+  /** A unique integer value identifying this protocol. */
+  id: number;
+  protocol: Protocol;
+};
+export type ProtocolPartialUpdateApiResponse = /** status 200  */ Protocol;
+export type ProtocolPartialUpdateApiArg = {
+  /** A unique integer value identifying this protocol. */
+  id: number;
+  patchedProtocol: PatchedProtocol;
+};
+export type ProtocolDestroyApiResponse = unknown;
+export type ProtocolDestroyApiArg = {
+  /** A unique integer value identifying this protocol. */
+  id: number;
+};
+export type SessionRetrieveApiResponse = unknown;
+export type SessionRetrieveApiArg = void;
+export type SimulationListApiResponse = /** status 200  */ Simulation[];
+export type SimulationListApiArg = {
+  /** Filter results by project ID */
+  projectId?: number;
+};
+export type SimulationCreateApiResponse = /** status 201  */ Simulation;
+export type SimulationCreateApiArg = {
+  simulation: Simulation;
+};
+export type SimulationRetrieveApiResponse = /** status 200  */ Simulation;
+export type SimulationRetrieveApiArg = {
+  /** A unique integer value identifying this simulation. */
+  id: number;
+};
+export type SimulationUpdateApiResponse = /** status 200  */ Simulation;
+export type SimulationUpdateApiArg = {
+  /** A unique integer value identifying this simulation. */
+  id: number;
+  simulation: Simulation;
+};
+export type SimulationPartialUpdateApiResponse = /** status 200  */ Simulation;
+export type SimulationPartialUpdateApiArg = {
+  /** A unique integer value identifying this simulation. */
+  id: number;
+  patchedSimulation: PatchedSimulation;
+};
+export type SimulationDestroyApiResponse = unknown;
+export type SimulationDestroyApiArg = {
+  /** A unique integer value identifying this simulation. */
+  id: number;
+};
+export type SubjectListApiResponse = /** status 200  */ Subject[];
+export type SubjectListApiArg = void;
+export type SubjectCreateApiResponse = /** status 201  */ Subject;
+export type SubjectCreateApiArg = {
+  subject: Subject;
+};
+export type SubjectRetrieveApiResponse = /** status 200  */ Subject;
+export type SubjectRetrieveApiArg = {
+  /** A unique integer value identifying this subject. */
+  id: number;
+};
+export type SubjectUpdateApiResponse = /** status 200  */ Subject;
+export type SubjectUpdateApiArg = {
+  /** A unique integer value identifying this subject. */
+  id: number;
+  subject: Subject;
+};
+export type SubjectPartialUpdateApiResponse = /** status 200  */ Subject;
+export type SubjectPartialUpdateApiArg = {
+  /** A unique integer value identifying this subject. */
+  id: number;
+  patchedSubject: PatchedSubject;
+};
+export type SubjectDestroyApiResponse = unknown;
+export type SubjectDestroyApiArg = {
+  /** A unique integer value identifying this subject. */
+  id: number;
+};
+export type UnitListApiResponse = /** status 200  */ Unit[];
+export type UnitListApiArg = {
+  /** Enable conversions based on compound information */
+  compoundId?: number;
+};
+export type UnitCreateApiResponse = /** status 201  */ Unit;
+export type UnitCreateApiArg = {
+  unit: Unit;
+};
+export type UnitRetrieveApiResponse = /** status 200  */ Unit;
+export type UnitRetrieveApiArg = {
+  /** Enable conversions based on compound information */
+  compoundId?: number;
+  /** A unique integer value identifying this unit. */
+  id: number;
+};
+export type UnitUpdateApiResponse = /** status 200  */ Unit;
+export type UnitUpdateApiArg = {
+  /** A unique integer value identifying this unit. */
+  id: number;
+  unit: Unit;
+};
+export type UnitPartialUpdateApiResponse = /** status 200  */ Unit;
+export type UnitPartialUpdateApiArg = {
+  /** A unique integer value identifying this unit. */
+  id: number;
+  patchedUnit: PatchedUnit;
+};
+export type UnitDestroyApiResponse = unknown;
+export type UnitDestroyApiArg = {
+  /** A unique integer value identifying this unit. */
+  id: number;
+};
+export type UserListApiResponse = /** status 200  */ User[];
+export type UserListApiArg = void;
+export type UserCreateApiResponse = /** status 201  */ User;
+export type UserCreateApiArg = {
+  user: User;
+};
+export type UserRetrieveApiResponse = /** status 200  */ User;
+export type UserRetrieveApiArg = {
+  /** A unique integer value identifying this user. */
+  id: number;
+};
+export type UserUpdateApiResponse = /** status 200  */ User;
+export type UserUpdateApiArg = {
+  /** A unique integer value identifying this user. */
+  id: number;
+  user: User;
+};
+export type UserPartialUpdateApiResponse = /** status 200  */ User;
+export type UserPartialUpdateApiArg = {
+  /** A unique integer value identifying this user. */
+  id: number;
+  patchedUser: PatchedUser;
+};
+export type UserDestroyApiResponse = unknown;
+export type UserDestroyApiArg = {
+  /** A unique integer value identifying this user. */
+  id: number;
+};
+export type VariableListApiResponse = /** status 200  */ Variable[];
+export type VariableListApiArg = {
+  /** Filter results by dosed_pk_model ID */
+  dosedPkModelId?: number;
+  /** Filter results by pd_model ID */
+  pdModelId?: number;
+  /** Filter results by project ID */
+  projectId?: number;
+};
+export type VariableCreateApiResponse = /** status 201  */ Variable;
+export type VariableCreateApiArg = {
+  variable: Variable;
+};
+export type VariableRetrieveApiResponse = /** status 200  */ Variable;
+export type VariableRetrieveApiArg = {
+  /** A unique integer value identifying this variable. */
+  id: number;
+};
+export type VariableUpdateApiResponse = /** status 200  */ Variable;
+export type VariableUpdateApiArg = {
+  /** A unique integer value identifying this variable. */
+  id: number;
+  variable: Variable;
+};
+export type VariablePartialUpdateApiResponse = /** status 200  */ Variable;
+export type VariablePartialUpdateApiArg = {
+  /** A unique integer value identifying this variable. */
+  id: number;
+  patchedVariable: PatchedVariable;
+};
+export type VariableDestroyApiResponse = unknown;
+export type VariableDestroyApiArg = {
+  /** A unique integer value identifying this variable. */
+  id: number;
+};
+export type WhoamiRetrieveApiResponse = unknown;
+export type WhoamiRetrieveApiArg = void;
+export type CategoryEnum = "SA" | "OP" | "OT";
+export type Algorithm = {
+  id: number;
   name: string;
-  datetime?: string | null;
-  description?: string;
-  project?: number | null;
+  category: CategoryEnum;
 };
-export type User = {
+export type PatchedAlgorithm = {
   id?: number;
-  username: string;
-  first_name?: string;
-  last_name?: string;
-  email?: string;
-  profile?: {
-    id?: number;
-    user: number;
-  };
-  project_set?: string[];
-};
-export type Subject = {
-  id?: number;
-  id_in_dataset: number;
-  shape?: number;
-  display?: boolean;
-  metadata?: string;
-  dataset: number;
-  protocol?: number | null;
-};
-export type Project = {
-  id?: number;
-  user_access: {
-    id?: number;
-    read_only?: boolean;
-    user: number;
-    project?: string;
-  }[];
-  name: string;
-  description?: string;
-  users?: string[];
-};
-export type ProjectAccess = {
-  id?: number;
-  read_only?: boolean;
-  user: number;
-  project?: string;
-};
-export type Dose = {
-  id?: number;
-  start_time: number;
-  amount: number;
-  duration?: number;
-  read_only?: boolean;
-  datetime?: string | null;
-  protocol: number;
-};
-export type Unit = {
-  id?: number;
-  compatible_units?: string;
-  symbol: string;
-  g?: number;
-  m?: number;
-  s?: number;
-  A?: number;
-  K?: number;
-  cd?: number;
-  mol?: number;
-  multiplier?: number;
-};
-export type Variable = {
-  id?: number;
-  read_only?: boolean;
-  datetime?: string | null;
-  is_public?: boolean;
-  lower_bound?: number;
-  upper_bound?: number;
-  default_value?: number;
-  is_log?: boolean;
-  name: string;
-  binding?: string | null;
-  qname: string;
-  constant?: boolean;
-  state?: boolean;
-  color?: number;
-  display?: boolean;
-  axis?: boolean;
-  unit?: number | null;
-  pd_model?: number | null;
-  pk_model?: number | null;
-  dosed_pk_model?: number | null;
-};
-export type Protocol = {
-  id?: number;
-  doses?: {
-    id?: number;
-    start_time: number;
-    amount: number;
-    duration?: number;
-    read_only?: boolean;
-    datetime?: string | null;
-    protocol: number;
-  }[];
-  dose_ids: string[];
-  dosed_pk_models?: string[];
-  dataset?: string;
-  subjects?: string[];
-  read_only?: boolean;
-  datetime?: string | null;
-  name: string;
-  dose_type?: "D" | "I";
-  project?: number | null;
-  compound?: number | null;
-  time_unit?: number | null;
-  amount_unit?: number | null;
+  name?: string;
+  category?: CategoryEnum;
 };
 export type BiomarkerType = {
-  id?: number;
-  data?: string;
-  is_continuous?: string;
-  is_categorical?: string;
+  id: number;
+  data: {
+    [key: string]: any[];
+  } | null;
+  is_continuous: boolean;
+  is_categorical: boolean;
   name: string;
   description?: string | null;
   display?: boolean;
@@ -1552,85 +1624,256 @@ export type BiomarkerType = {
   stored_time_unit: number;
   display_time_unit: number;
 };
-export type Pharmacokinetic = {
+export type PatchedBiomarkerType = {
   id?: number;
-  read_only?: boolean;
-  datetime?: string | null;
-  name: string;
-  description?: string;
-  mmt?: string;
-  time_max?: number;
+  data?: {
+    [key: string]: any[];
+  } | null;
+  is_continuous?: boolean;
+  is_categorical?: boolean;
+  name?: string;
+  description?: string | null;
+  display?: boolean;
+  color?: number;
+  axis?: boolean;
+  stored_unit?: number;
+  dataset?: number;
+  display_unit?: number;
+  stored_time_unit?: number;
+  display_time_unit?: number;
 };
-export type Pharmacodynamic = {
-  id?: number;
-  components?: string;
-  variables?: string[];
-  mmt?: string;
-  read_only?: boolean;
-  datetime?: string | null;
-  name: string;
-  description?: string;
-  time_max?: number;
-  project?: number | null;
+export type PkpdMapping = {
+  id: number;
+  datetime: string;
+  read_only: boolean;
+  pkpd_model: number;
+  pk_variable: number;
+  pd_variable: number;
 };
-export type DosedPharmacokinetic = {
-  id?: number;
-  mappings: {
-    id?: number;
-    datetime?: string;
-    read_only?: boolean;
-    pkpd_model: number;
-    pk_variable: number;
-    pd_variable: number;
-  }[];
-  components?: string;
-  variables?: string[];
-  mmt?: string;
+export type TypeEnum = "RO" | "FUP" | "BPR";
+export type DerivedVariable = {
+  id: number;
+  read_only?: boolean;
+  datetime?: string | null;
+  type: TypeEnum;
+  pkpd_model: number;
+  pk_variable: number;
+};
+export type CombinedModelSpeciesEnum = "H" | "R" | "N" | "M";
+export type CombinedModel = {
+  id: number;
+  mappings: PkpdMapping[];
+  derived_variables: DerivedVariable[];
+  components: string;
+  variables: number[];
+  mmt: string;
+  time_unit: number;
   read_only?: boolean;
   datetime?: string | null;
   name: string;
-  dose_compartment?: string | null;
+  species?: CombinedModelSpeciesEnum;
+  has_saturation?: boolean;
+  has_effect?: boolean;
+  has_lag?: boolean;
+  has_bioavailability?: boolean;
+  has_hill_coefficient?: boolean;
   time_max?: number;
   project?: number | null;
   pk_model?: number | null;
   pd_model?: number | null;
-  protocol?: number | null;
+  pd_model2?: number | null;
 };
-export type Inference = {
+export type PatchedCombinedModel = {
   id?: number;
-  log_likelihoods: {
-    id?: number;
-    parameters: {
-      id?: number;
-      name: string;
-      parent_index?: number | null;
-      child_index?: number;
-      length?: number | null;
-      parent?: string;
-      child: number;
-      variable?: number | null;
-    }[];
-    model?: string;
-    dataset?: string;
-    time_variable?: string;
-    is_a_prior?: string;
-    name: string;
-    description?: string | null;
-    value?: number | null;
-    time_independent_data?: boolean;
-    observed?: boolean;
-    form?: "N" | "U" | "LN" | "F" | "S" | "E" | "M";
-    inference?: string;
-    variable?: number | null;
-    biomarker_type?: number | null;
-    protocol_filter?: number | null;
-    children?: string[];
-  }[];
+  mappings?: PkpdMapping[];
+  derived_variables?: DerivedVariable[];
+  components?: string;
+  variables?: number[];
+  mmt?: string;
+  time_unit?: number;
+  read_only?: boolean;
+  datetime?: string | null;
+  name?: string;
+  species?: CombinedModelSpeciesEnum;
+  has_saturation?: boolean;
+  has_effect?: boolean;
+  has_lag?: boolean;
+  has_bioavailability?: boolean;
+  has_hill_coefficient?: boolean;
+  time_max?: number;
+  project?: number | null;
+  pk_model?: number | null;
+  pd_model?: number | null;
+  pd_model2?: number | null;
+};
+export type SimulateResponse = {
+  time: number[];
+  outputs: {
+    [key: string]: number[];
+  };
+};
+export type ErrorResponse = {
+  error: string;
+};
+export type Simulate = {
+  outputs: string[];
+  variables: {
+    [key: string]: number;
+  };
+  time_max?: number;
+};
+export type Efficacy = {
+  id: number;
+  name?: string;
+  c50: number;
+  hill_coefficient?: number;
+  c50_unit: number;
+  compound: number;
+};
+export type CompoundTypeEnum = "SM" | "LM";
+export type IntrinsicClearanceAssayEnum = "MS" | "HC";
+export type Compound = {
+  id: number;
+  efficacy_experiments: Efficacy[];
+  name: string;
+  description?: string;
+  molecular_mass?: number;
+  compound_type?: CompoundTypeEnum;
+  fraction_unbound_plasma?: number | null;
+  blood_to_plasma_ratio?: number | null;
+  intrinsic_clearance?: number | null;
+  intrinsic_clearance_assay?: IntrinsicClearanceAssayEnum;
+  fraction_unbound_including_cells?: number | null;
+  target_molecular_mass?: number;
+  target_concentration?: number | null;
+  dissociation_constant?: number | null;
+  is_soluble?: boolean;
+  molecular_mass_unit?: number;
+  intrinsic_clearance_unit?: number;
+  target_molecular_mass_unit?: number;
+  target_concentration_unit?: number;
+  dissociation_unit?: number;
+};
+export type PatchedCompound = {
+  id?: number;
+  efficacy_experiments?: Efficacy[];
+  name?: string;
+  description?: string;
+  molecular_mass?: number;
+  compound_type?: CompoundTypeEnum;
+  fraction_unbound_plasma?: number | null;
+  blood_to_plasma_ratio?: number | null;
+  intrinsic_clearance?: number | null;
+  intrinsic_clearance_assay?: IntrinsicClearanceAssayEnum;
+  fraction_unbound_including_cells?: number | null;
+  target_molecular_mass?: number;
+  target_concentration?: number | null;
+  dissociation_constant?: number | null;
+  is_soluble?: boolean;
+  molecular_mass_unit?: number;
+  intrinsic_clearance_unit?: number;
+  target_molecular_mass_unit?: number;
+  target_concentration_unit?: number;
+  dissociation_unit?: number;
+};
+export type Dose = {
+  id: number;
+  start_time: number;
+  amount: number;
+  duration?: number;
+  repeats?: number;
+  repeat_interval?: number;
+  read_only?: boolean;
+  datetime?: string | null;
+};
+export type DoseTypeEnum = "D" | "I";
+export type Protocol = {
+  id: number;
+  doses: Dose[];
+  dataset: string;
+  variables: number[];
+  subjects: number[];
+  read_only?: boolean;
+  datetime?: string | null;
+  name: string;
+  dose_type?: DoseTypeEnum;
+  project?: number | null;
+  compound?: number | null;
+  time_unit?: number | null;
+  amount_unit?: number | null;
+};
+export type Dataset = {
+  id: number;
+  biomarker_types: number[];
+  subjects: number[];
+  protocols: Protocol[];
+  name: string;
+  datetime?: string | null;
+  description?: string;
+  project?: number | null;
+};
+export type PatchedDataset = {
+  id?: number;
+  biomarker_types?: number[];
+  subjects?: number[];
+  protocols?: Protocol[];
+  name?: string;
+  datetime?: string | null;
+  description?: string;
+  project?: number | null;
+};
+export type DatasetCsv = {
+  csv: string;
+};
+export type PatchedDose = {
+  id?: number;
+  start_time?: number;
+  amount?: number;
+  duration?: number;
+  repeats?: number;
+  repeat_interval?: number;
+  read_only?: boolean;
+  datetime?: string | null;
+};
+export type LogLikelihoodParameter = {
+  id: number;
+  name: string;
+  parent_index?: number | null;
+  child_index?: number;
+  length?: number | null;
+  parent: number;
+  child: number;
+  variable?: number | null;
+};
+export type FormEnum = "N" | "U" | "LN" | "F" | "S" | "E" | "M";
+export type LogLikelihood = {
+  id: number;
+  parameters: LogLikelihoodParameter[];
+  model: string[] | null;
+  dataset: number | null;
+  time_variable: number | null;
+  is_a_prior: boolean;
+  name: string;
+  description?: string | null;
+  value?: number | null;
+  time_independent_data?: boolean;
+  observed?: boolean;
+  form?: FormEnum;
+  inference: number;
+  variable?: number | null;
+  biomarker_type?: number | null;
+  protocol_filter?: number | null;
+  children: number[];
+};
+export type InitializationStrategyEnum = "D" | "R" | "F";
+export type Inference = {
+  id: number;
+  log_likelihoods: LogLikelihood[];
   read_only?: boolean;
   datetime?: string | null;
   name: string;
   description?: string;
-  initialization_strategy?: "D" | "R" | "F";
+  initialization_strategy?: InitializationStrategyEnum;
   number_of_chains?: number;
   max_number_of_iterations?: number;
   burn_in?: number;
@@ -1638,145 +1881,443 @@ export type Inference = {
   time_elapsed?: number;
   number_of_function_evals?: number;
   task_id?: string | null;
-  metadata?: object;
+  metadata?: {
+    [key: string]: any;
+  };
   project: number;
   algorithm?: number;
   initialization_inference?: number | null;
 };
-export type Algorithm = {
+export type PatchedInference = {
   id?: number;
-  name: string;
-  category: "SA" | "OP" | "OT";
+  log_likelihoods?: LogLikelihood[];
+  read_only?: boolean;
+  datetime?: string | null;
+  name?: string;
+  description?: string;
+  initialization_strategy?: InitializationStrategyEnum;
+  number_of_chains?: number;
+  max_number_of_iterations?: number;
+  burn_in?: number;
+  number_of_iterations?: number;
+  time_elapsed?: number;
+  number_of_function_evals?: number;
+  task_id?: string | null;
+  metadata?: {
+    [key: string]: any;
+  };
+  project?: number;
+  algorithm?: number;
+  initialization_inference?: number | null;
 };
 export type InferenceChain = {
+  id: number;
+  data: string;
+  outputs: string;
+  inference: number;
+};
+export type PatchedInferenceChain = {
   id?: number;
   data?: string;
   outputs?: string;
-  inference: number;
+  inference?: number;
 };
-export type DatasetCsv = {
-  csv: Blob;
+export type Pharmacodynamic = {
+  id: number;
+  components: string;
+  variables: number[];
+  mmt?: string;
+  read_only?: boolean;
+  datetime?: string | null;
+  name: string;
+  description?: string;
+  time_max?: number;
+  project?: number | null;
 };
-export type Monolix = {
-  data_csv: Blob;
-  model_txt: Blob;
-  project_mlxtran: Blob;
-  data?: string;
-  pd_model?: string;
-  pk_model?: string;
+export type PatchedPharmacodynamic = {
+  id?: number;
+  components?: string;
+  variables?: number[];
+  mmt?: string;
+  read_only?: boolean;
+  datetime?: string | null;
+  name?: string;
+  description?: string;
+  time_max?: number;
+  project?: number | null;
 };
 export type PharmacodynamicSbml = {
   sbml: string;
 };
+export type Pharmacokinetic = {
+  id: number;
+  read_only?: boolean;
+  datetime?: string | null;
+  name: string;
+  description?: string;
+  mmt?: string;
+  time_max?: number;
+};
+export type PatchedPharmacokinetic = {
+  id?: number;
+  read_only?: boolean;
+  datetime?: string | null;
+  name?: string;
+  description?: string;
+  mmt?: string;
+  time_max?: number;
+};
+export type ProjectAccess = {
+  id: number;
+  read_only?: boolean;
+  user: number;
+  project: number;
+};
+export type ProjectSpeciesEnum = "M" | "R" | "H" | "K" | "O";
+export type Project = {
+  id: number;
+  user_access: ProjectAccess[];
+  protocols: number[];
+  name: string;
+  description?: string;
+  created: string;
+  species?: ProjectSpeciesEnum;
+  compound: number;
+  users: number[];
+};
+export type PatchedProject = {
+  id?: number;
+  user_access?: ProjectAccess[];
+  protocols?: number[];
+  name?: string;
+  description?: string;
+  created?: string;
+  species?: ProjectSpeciesEnum;
+  compound?: number;
+  users?: number[];
+};
+export type Monolix = {
+  data_csv: string;
+  model_txt: string;
+  project_mlxtran: string;
+  data: string;
+  pd_model: string;
+  pk_model: string;
+};
+export type PatchedProjectAccess = {
+  id?: number;
+  read_only?: boolean;
+  user?: number;
+  project?: number;
+};
+export type PatchedProtocol = {
+  id?: number;
+  doses?: Dose[];
+  dataset?: string;
+  variables?: number[];
+  subjects?: number[];
+  read_only?: boolean;
+  datetime?: string | null;
+  name?: string;
+  dose_type?: DoseTypeEnum;
+  project?: number | null;
+  compound?: number | null;
+  time_unit?: number | null;
+  amount_unit?: number | null;
+};
+export type SimulationSlider = {
+  id: number;
+  variable: number;
+};
+export type SimulationYAxis = {
+  id: number;
+  right?: boolean;
+  variable: number;
+};
+export type SimulationCxLine = {
+  id: number;
+  value: number;
+};
+export type Y2ScaleEnum = "lin" | "lg2" | "lg10" | "ln";
+export type SimulationPlot = {
+  id: number;
+  y_axes: SimulationYAxis[];
+  cx_lines: SimulationCxLine[];
+  index: number;
+  x_scale?: Y2ScaleEnum;
+  y_scale?: Y2ScaleEnum;
+  y2_scale?: Y2ScaleEnum;
+  x_unit: number;
+  y_unit?: number | null;
+  y_unit2?: number | null;
+};
+export type Simulation = {
+  id: number;
+  sliders: SimulationSlider[];
+  plots: SimulationPlot[];
+  name: string;
+  nrows?: number;
+  ncols?: number;
+  time_max?: number;
+  abs_tolerance?: number;
+  rel_tolerance?: number;
+  project: number;
+  time_max_unit: number;
+};
+export type PatchedSimulation = {
+  id?: number;
+  sliders?: SimulationSlider[];
+  plots?: SimulationPlot[];
+  name?: string;
+  nrows?: number;
+  ncols?: number;
+  time_max?: number;
+  abs_tolerance?: number;
+  rel_tolerance?: number;
+  project?: number;
+  time_max_unit?: number;
+};
+export type Subject = {
+  id: number;
+  id_in_dataset: number;
+  shape?: number;
+  display?: boolean;
+  metadata?: string;
+  dataset: number;
+  protocol?: number | null;
+};
+export type PatchedSubject = {
+  id?: number;
+  id_in_dataset?: number;
+  shape?: number;
+  display?: boolean;
+  metadata?: string;
+  dataset?: number;
+  protocol?: number | null;
+};
+export type Unit = {
+  id: number;
+  compatible_units: {
+    [key: string]: string;
+  }[];
+  symbol: string;
+  g?: number;
+  m?: number;
+  s?: number;
+  A?: number;
+  K?: number;
+  cd?: number;
+  mol?: number;
+  multiplier?: number;
+};
+export type PatchedUnit = {
+  id?: number;
+  compatible_units?: {
+    [key: string]: string;
+  }[];
+  symbol?: string;
+  g?: number;
+  m?: number;
+  s?: number;
+  A?: number;
+  K?: number;
+  cd?: number;
+  mol?: number;
+  multiplier?: number;
+};
+export type Profile = {
+  id: number;
+  user: number;
+};
+export type User = {
+  id: number;
+  username: string;
+  first_name?: string;
+  last_name?: string;
+  email?: string;
+  profile: Profile;
+  project_set: number[];
+};
+export type PatchedUser = {
+  id?: number;
+  username?: string;
+  first_name?: string;
+  last_name?: string;
+  email?: string;
+  profile?: Profile;
+  project_set?: number[];
+};
+export type Variable = {
+  id: number;
+  read_only?: boolean;
+  datetime?: string | null;
+  is_public?: boolean;
+  lower_bound?: number;
+  upper_bound?: number;
+  default_value?: number;
+  is_log?: boolean;
+  name: string;
+  description?: string | null;
+  binding?: string | null;
+  qname: string;
+  unit_symbol?: string | null;
+  constant?: boolean;
+  state?: boolean;
+  color?: number;
+  display?: boolean;
+  axis?: boolean;
+  unit?: number | null;
+  pd_model?: number | null;
+  pk_model?: number | null;
+  dosed_pk_model?: number | null;
+  protocol?: number | null;
+};
+export type PatchedVariable = {
+  id?: number;
+  read_only?: boolean;
+  datetime?: string | null;
+  is_public?: boolean;
+  lower_bound?: number;
+  upper_bound?: number;
+  default_value?: number;
+  is_log?: boolean;
+  name?: string;
+  description?: string | null;
+  binding?: string | null;
+  qname?: string;
+  unit_symbol?: string | null;
+  constant?: boolean;
+  state?: boolean;
+  color?: number;
+  display?: boolean;
+  axis?: boolean;
+  unit?: number | null;
+  pd_model?: number | null;
+  pk_model?: number | null;
+  dosed_pk_model?: number | null;
+  protocol?: number | null;
+};
 export const {
-  useListDatasetsQuery,
-  useCreateDatasetMutation,
-  useRetrieveDatasetQuery,
-  useUpdateDatasetMutation,
-  usePartialUpdateDatasetMutation,
-  useDestroyDatasetMutation,
-  useListUsersQuery,
-  useCreateUserMutation,
-  useRetrieveUserQuery,
-  useUpdateUserMutation,
-  usePartialUpdateUserMutation,
-  useDestroyUserMutation,
-  useListSubjectsQuery,
-  useCreateSubjectMutation,
-  useRetrieveSubjectQuery,
-  useUpdateSubjectMutation,
-  usePartialUpdateSubjectMutation,
-  useDestroySubjectMutation,
-  useListProjectsQuery,
-  useCreateProjectMutation,
-  useRetrieveProjectQuery,
-  useUpdateProjectMutation,
-  usePartialUpdateProjectMutation,
-  useDestroyProjectMutation,
-  useListProjectAccessQuery,
-  useCreateProjectAccessMutation,
-  useRetrieveProjectAccessQuery,
-  useUpdateProjectAccessMutation,
-  usePartialUpdateProjectAccessMutation,
-  useDestroyProjectAccessMutation,
-  useListDosesQuery,
-  useCreateDoseMutation,
-  useRetrieveDoseQuery,
-  useUpdateDoseMutation,
-  usePartialUpdateDoseMutation,
-  useDestroyDoseMutation,
-  useListUnitsQuery,
-  useCreateUnitMutation,
-  useRetrieveUnitQuery,
-  useUpdateUnitMutation,
-  usePartialUpdateUnitMutation,
-  useDestroyUnitMutation,
-  useListVariablesQuery,
-  useCreateVariableMutation,
-  useRetrieveVariableQuery,
-  useUpdateVariableMutation,
-  usePartialUpdateVariableMutation,
-  useDestroyVariableMutation,
-  useListProtocolsQuery,
-  useCreateProtocolMutation,
-  useRetrieveProtocolQuery,
-  useUpdateProtocolMutation,
-  usePartialUpdateProtocolMutation,
-  useDestroyProtocolMutation,
-  useListBiomarkerTypesQuery,
-  useCreateBiomarkerTypeMutation,
-  useRetrieveBiomarkerTypeQuery,
-  useUpdateBiomarkerTypeMutation,
-  usePartialUpdateBiomarkerTypeMutation,
-  useDestroyBiomarkerTypeMutation,
-  useListPharmacokineticModelsQuery,
-  useCreatePharmacokineticModelMutation,
-  useRetrievePharmacokineticModelQuery,
-  useUpdatePharmacokineticModelMutation,
-  usePartialUpdatePharmacokineticModelMutation,
-  useDestroyPharmacokineticModelMutation,
-  useListPharmacodynamicModelsQuery,
-  useCreatePharmacodynamicModelMutation,
-  useRetrievePharmacodynamicModelQuery,
-  useUpdatePharmacodynamicModelMutation,
-  usePartialUpdatePharmacodynamicModelMutation,
-  useDestroyPharmacodynamicModelMutation,
-  useListDosedPharmacokineticModelsQuery,
-  useCreateDosedPharmacokineticModelMutation,
-  useRetrieveDosedPharmacokineticModelQuery,
-  useUpdateDosedPharmacokineticModelMutation,
-  usePartialUpdateDosedPharmacokineticModelMutation,
-  useDestroyDosedPharmacokineticModelMutation,
-  useListInferencesQuery,
-  useCreateInferenceMutation,
-  useRetrieveInferenceQuery,
-  useUpdateInferenceMutation,
-  usePartialUpdateInferenceMutation,
-  useDestroyInferenceMutation,
-  useListAlgorithmsQuery,
-  useCreateAlgorithmMutation,
-  useRetrieveAlgorithmQuery,
-  useUpdateAlgorithmMutation,
-  usePartialUpdateAlgorithmMutation,
-  useDestroyAlgorithmMutation,
-  useListInferenceChainsQuery,
-  useCreateInferenceChainMutation,
-  useRetrieveInferenceChainQuery,
-  useUpdateInferenceChainMutation,
-  usePartialUpdateInferenceChainMutation,
-  useDestroyInferenceChainMutation,
-  useListSessionsQuery,
-  useListWhoAmIsQuery,
-  useCreateNcaMutation,
-  useCreateAuceMutation,
-  useCreateSimulatePkMutation,
-  useCreateInferenceWizardMutation,
-  useCreateStopInferenceMutation,
-  useCreateSimulatePdMutation,
-  useCsvDatasetMutation,
-  useMonolixProjectMutation,
-  useMmtPharmacodynamicModelMutation,
-  useSbmlPharmacodynamicModelMutation,
-  useSetVariablesFromInferencePharmacodynamicModelMutation,
-  useSetVariablesFromInferenceDosedPharmacokineticModelMutation,
+  useAlgorithmListQuery,
+  useAlgorithmCreateMutation,
+  useAlgorithmRetrieveQuery,
+  useAlgorithmUpdateMutation,
+  useAlgorithmPartialUpdateMutation,
+  useAlgorithmDestroyMutation,
+  useAuceCreateMutation,
+  useBiomarkerTypeListQuery,
+  useBiomarkerTypeCreateMutation,
+  useBiomarkerTypeRetrieveQuery,
+  useBiomarkerTypeUpdateMutation,
+  useBiomarkerTypePartialUpdateMutation,
+  useBiomarkerTypeDestroyMutation,
+  useCombinedModelListQuery,
+  useCombinedModelCreateMutation,
+  useCombinedModelRetrieveQuery,
+  useCombinedModelUpdateMutation,
+  useCombinedModelPartialUpdateMutation,
+  useCombinedModelDestroyMutation,
+  useCombinedModelSetVariablesFromInferenceUpdateMutation,
+  useCombinedModelSimulateCreateMutation,
+  useCompoundListQuery,
+  useCompoundCreateMutation,
+  useCompoundRetrieveQuery,
+  useCompoundUpdateMutation,
+  useCompoundPartialUpdateMutation,
+  useCompoundDestroyMutation,
+  useDatasetListQuery,
+  useDatasetCreateMutation,
+  useDatasetRetrieveQuery,
+  useDatasetUpdateMutation,
+  useDatasetPartialUpdateMutation,
+  useDatasetDestroyMutation,
+  useDatasetCsvUpdateMutation,
+  useDoseListQuery,
+  useDoseCreateMutation,
+  useDoseRetrieveQuery,
+  useDoseUpdateMutation,
+  useDosePartialUpdateMutation,
+  useDoseDestroyMutation,
+  useInferenceListQuery,
+  useInferenceCreateMutation,
+  useInferenceRetrieveQuery,
+  useInferenceUpdateMutation,
+  useInferencePartialUpdateMutation,
+  useInferenceDestroyMutation,
+  useInferenceStopCreateMutation,
+  useInferenceWizardCreateMutation,
+  useInferenceChainListQuery,
+  useInferenceChainCreateMutation,
+  useInferenceChainRetrieveQuery,
+  useInferenceChainUpdateMutation,
+  useInferenceChainPartialUpdateMutation,
+  useInferenceChainDestroyMutation,
+  useNcaCreateMutation,
+  usePharmacodynamicListQuery,
+  usePharmacodynamicCreateMutation,
+  usePharmacodynamicRetrieveQuery,
+  usePharmacodynamicUpdateMutation,
+  usePharmacodynamicPartialUpdateMutation,
+  usePharmacodynamicDestroyMutation,
+  usePharmacodynamicMmtUpdateMutation,
+  usePharmacodynamicSbmlUpdateMutation,
+  usePharmacodynamicSetVariablesFromInferenceUpdateMutation,
+  usePharmacodynamicSimulateCreateMutation,
+  usePharmacokineticListQuery,
+  usePharmacokineticCreateMutation,
+  usePharmacokineticRetrieveQuery,
+  usePharmacokineticUpdateMutation,
+  usePharmacokineticPartialUpdateMutation,
+  usePharmacokineticDestroyMutation,
+  useProjectListQuery,
+  useProjectCreateMutation,
+  useProjectRetrieveQuery,
+  useProjectUpdateMutation,
+  useProjectPartialUpdateMutation,
+  useProjectDestroyMutation,
+  useProjectMonolixUpdateMutation,
+  useProjectAccessListQuery,
+  useProjectAccessCreateMutation,
+  useProjectAccessRetrieveQuery,
+  useProjectAccessUpdateMutation,
+  useProjectAccessPartialUpdateMutation,
+  useProjectAccessDestroyMutation,
+  useProtocolListQuery,
+  useProtocolCreateMutation,
+  useProtocolRetrieveQuery,
+  useProtocolUpdateMutation,
+  useProtocolPartialUpdateMutation,
+  useProtocolDestroyMutation,
+  useSessionRetrieveQuery,
+  useSimulationListQuery,
+  useSimulationCreateMutation,
+  useSimulationRetrieveQuery,
+  useSimulationUpdateMutation,
+  useSimulationPartialUpdateMutation,
+  useSimulationDestroyMutation,
+  useSubjectListQuery,
+  useSubjectCreateMutation,
+  useSubjectRetrieveQuery,
+  useSubjectUpdateMutation,
+  useSubjectPartialUpdateMutation,
+  useSubjectDestroyMutation,
+  useUnitListQuery,
+  useUnitCreateMutation,
+  useUnitRetrieveQuery,
+  useUnitUpdateMutation,
+  useUnitPartialUpdateMutation,
+  useUnitDestroyMutation,
+  useUserListQuery,
+  useUserCreateMutation,
+  useUserRetrieveQuery,
+  useUserUpdateMutation,
+  useUserPartialUpdateMutation,
+  useUserDestroyMutation,
+  useVariableListQuery,
+  useVariableCreateMutation,
+  useVariableRetrieveQuery,
+  useVariableUpdateMutation,
+  useVariablePartialUpdateMutation,
+  useVariableDestroyMutation,
+  useWhoamiRetrieveQuery,
 } = injectedRtkApi;

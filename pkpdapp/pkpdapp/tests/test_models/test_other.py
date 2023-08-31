@@ -3,7 +3,7 @@
 # is released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-
+import pkpdapp.tests  # noqa: F401
 from django.test import TestCase
 from pkpdapp.models import (
     Dataset, Project,
@@ -19,6 +19,8 @@ class TestCompoundModel(TestCase):
         c = Compound.objects.create(
             name='my_cool_compound',
             description='placebo',
+            molecular_mass=100,
+            target_molecular_mass=100,
         )
         self.assertTrue(isinstance(c, Compound))
 
@@ -28,9 +30,16 @@ class TestProfileModel(TestCase):
         u = User.objects.create_user(
             'john', 'lennon@thebeatles.com', 'johnpassword'
         )
+        c = Compound.objects.create(
+            name='my_cool_compound',
+            description='placebo',
+            molecular_mass=100,
+            target_molecular_mass=100,
+        )
         p = Project.objects.create(
             name='my_cool_project',
             description='description for my cool project',
+            compound=c,
         )
         self.assertEqual(u.profile.user.username, 'john')
         u.profile.selected_project = p
@@ -39,9 +48,17 @@ class TestProfileModel(TestCase):
 
 class TestProjectModel(TestCase):
     def setUp(self):
+        c = Compound.objects.create(
+            name='my_cool_compound',
+            description='placebo',
+            molecular_mass=100,
+            target_molecular_mass=100,
+        )
+
         Project.objects.create(
             name='my_cool_project',
             description='description for my cool project',
+            compound=c,
         )
 
     def test_project_creation(self):

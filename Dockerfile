@@ -1,16 +1,16 @@
 # Using a 2-stage build. This is the builder for javascript frontend
 
-FROM node:lts as build
+FROM node:19 as build
 RUN mkdir -p /app/frontend
 WORKDIR /app/frontend
-COPY frontend/package.json /app/frontend
+COPY frontend-v2/package.json /app/frontend
 
-RUN npm install --legacy-peer-deps
+RUN npm install
 
-COPY frontend /app/frontend/
+COPY frontend-v2 /app/frontend/
 RUN npm run build
 
-FROM python:3.9
+FROM python:3.10
 
 # install libsundials-dev
 RUN apt-get update && apt-get upgrade -y
@@ -34,7 +34,7 @@ RUN rm -rf /var/lib/apt/lists/*
 # install dependencies
 COPY ./requirements.txt /
 RUN apt-get update && apt-get upgrade -y
-RUN apt-get install -y build-essential libsasl2-dev python-dev libldap2-dev libssl-dev
+RUN apt-get install -y build-essential libsasl2-dev python3-dev libldap2-dev libssl-dev
 
 RUN pip install  -r requirements.txt
 

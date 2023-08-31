@@ -6,9 +6,10 @@
 from rest_framework import serializers
 from pkpdapp.models import (
     PharmacokineticModel,
-    DosedPharmacokineticModel,
+    CombinedModel,
     PharmacodynamicModel, PkpdMapping,
     MyokitModelMixin,
+    DerivedVariable,
 )
 from pkpdapp.api.serializers import (
     ValidSbml, ValidMmt
@@ -16,34 +17,49 @@ from pkpdapp.api.serializers import (
 
 
 class PkpdMappingSerializer(serializers.ModelSerializer):
-    datetime = serializers.DateField(read_only=True)
-    read_only = serializers.BooleanField(read_only=True)
+    datetime = serializers.DateField(read_only=True, required=False)
+    read_only = serializers.BooleanField(read_only=True, required=False)
 
     class Meta:
         model = PkpdMapping
         fields = '__all__'
 
 
-class BaseDosedPharmacokineticSerializer(serializers.ModelSerializer):
+class DerivedVariableSerializer(serializers.ModelSerializer):
     class Meta:
-        model = DosedPharmacokineticModel
+        model = DerivedVariable
         fields = '__all__'
 
 
-class DosedPharmacokineticSerializer(serializers.ModelSerializer):
+class BaseDosedPharmacokineticSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CombinedModel
+        fields = '__all__'
+
+
+class CombinedModelSerializer(serializers.ModelSerializer):
     mappings = PkpdMappingSerializer(many=True)
+    derived_variables = DerivedVariableSerializer(many=True)
     components = serializers.SerializerMethodField('get_components')
     variables = serializers.PrimaryKeyRelatedField(
         many=True, read_only=True
     )
-    mmt = serializers.SerializerMethodField('get_mmt')
+    mmt = serializers.SerializerMethodField('get_mmt', read_only=True)
+    time_unit = serializers.SerializerMethodField('get_time_unit')
 
     class Meta:
-        model = DosedPharmacokineticModel
+        model = CombinedModel
         fields = '__all__'
 
-    def get_mmt(self, m):
+    def get_mmt(self, m) -> str:
         return m.get_mmt()
+
+    def get_time_unit(self, m) -> int:
+        unit = m.get_time_unit()
+        if unit is None:
+            return -1
+        else:
+            return unit.id
 
     def get_components(self, m):
         model = m.get_myokit_model()
@@ -54,11 +70,13 @@ class DosedPharmacokineticSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         mappings_data = validated_data.pop('mappings')
+        derived_variables_data = validated_data.pop('derived_variables')
         new_pkpd_model = BaseDosedPharmacokineticSerializer().create(
             validated_data
         )
         for field_datas, Serializer in [
                 (mappings_data, PkpdMappingSerializer),
+                (derived_variables_data, DerivedVariableSerializer)
         ]:
             for field_data in field_datas:
                 serializer = Serializer()
@@ -69,10 +87,15 @@ class DosedPharmacokineticSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         mappings_data = validated_data.pop('mappings')
+        derived_var_data = validated_data.pop('derived_variables')
         old_mappings = list((instance.mappings).all())
         for i in range(len(mappings_data), len(old_mappings)):
             old_mappings[i].delete()
             del old_mappings[i]
+        old_derived_vars = list((instance.derived_variables).all())
+        for i in range(len(derived_var_data), len(old_derived_vars)):
+            old_derived_vars[i].delete()
+            del old_derived_vars[i]
 
         new_pkpd_model = BaseDosedPharmacokineticSerializer().update(
             instance, validated_data
@@ -82,7 +105,9 @@ class DosedPharmacokineticSerializer(serializers.ModelSerializer):
         if not instance.read_only:
             for field_datas, old_models, Serializer in [
                     (mappings_data,
-                     old_mappings, PkpdMappingSerializer)
+                     old_mappings, PkpdMappingSerializer),
+                    (derived_var_data,
+                     old_derived_vars, DerivedVariableSerializer),
             ]:
                 for field_data in field_datas:
                     serializer = Serializer()
@@ -91,10 +116,10 @@ class DosedPharmacokineticSerializer(serializers.ModelSerializer):
                         new_model = serializer.update(
                             old_model, field_data
                         )
+                        new_model.save()
                     except IndexError:
                         field_data['pkpd_model'] = new_pkpd_model
                         new_model = serializer.create(field_data)
-                    new_model.save()
 
         return new_pkpd_model
 

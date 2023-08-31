@@ -27,6 +27,46 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # setup automatic pk column for models
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'level': 'DEBUG',
+            'formatter': 'simple'
+        },
+        'file': {
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': os.path.join(BASE_DIR, 'logfile.log'),
+            'maxBytes': 1024 * 1024 * 5,  # 5 MB
+            'backupCount': 5,
+            'level': 'DEBUG',
+            'formatter': 'verbose'
+        }
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'pkpdapp': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+    },
+    'formatters': {
+        'simple': {
+            'format': '%(levelname)s %(message)s'
+        },
+        'verbose': {
+            'format': '%(asctime)s %(levelname)s %(module)s %(process)d %(thread)d %(message)s'  # noqa: E501
+        }
+    }
+}
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
@@ -34,8 +74,13 @@ DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 SECRET_KEY = os.environ.get("SECRET_KEY", default='foo')
 
 DEBUG = int(os.environ.get("DEBUG", default=0))
+print('DEBUG', DEBUG)
 
 ALLOWED_HOSTS = [os.environ.get('HOST_NAME', 'localhost'), '127.0.0.1']
+
+if DEBUG:
+    ALLOWED_HOSTS.append('testserver')
+
 
 # Application definition - to use any of those you need to run `manage.py
 # migrate` first
@@ -57,6 +102,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'corsheaders',
+    'drf_spectacular',
 
     # internal apps
     'pkpdapp',
@@ -135,7 +181,15 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
-    ]
+    ],
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'PKPDApp API',
+    'DESCRIPTION': 'The API for the PKPDApp',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
 }
 
 
@@ -189,6 +243,10 @@ MIDDLEWARE = [
 
 CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:3000",
+    "http://127.0.0.1:3001",
+    "http://127.0.0.1:3002",
+    "http://127.0.0.1:3003",
+    "http://127.0.0.1:3004",
     "http://localhost:3000",
     "http://" + os.environ.get('HOST_NAME', 'bamad.herokuapp.com')
 ]
@@ -253,6 +311,7 @@ db_from_env = dj_database_url.config(
 )
 DATABASES['default'].update(db_from_env)
 
+print('database_url', DATABASE_URL)
 
 # Password validation
 # https://docs.djangoproject.com/en/3.0/ref/settings/#auth-password-validators

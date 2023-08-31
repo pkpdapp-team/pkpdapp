@@ -71,7 +71,7 @@ class DataParser:
 
     altername_unit_names = {
         "h": ["hour"],
-        "d": ["day"],
+        "day": ["d"],
     }
 
     def is_covariate_column(self, col_name):

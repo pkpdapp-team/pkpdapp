@@ -21,6 +21,8 @@ datafile_urls = [
     'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/usecase1/usecase1.csv',  # noqa: E501
 ]
 
+datafile_urls = []
+
 datafile_names = [
     'lxf_control_growth',
     'lxf_medium_erlotinib_dose',
@@ -55,8 +57,6 @@ protocol_units = [
         'time': myokit.Unit.parse_simple('h'),
         'amount': myokit.Unit.parse_simple('ng'),
     },
-
-
 ]
 
 datafile_descriptions = [
@@ -98,6 +98,7 @@ usecase0 dataset
 usecase1 dataset
 ''',  # noqa: W605
 ]
+
 
 biomarkers_for_datasets = [
     [
@@ -277,10 +278,10 @@ def load_datasets(apps, schema_editor):
                         symbol=b['unit']
                     ),
                     stored_time_unit=Unit.objects.get(
-                        symbol=b['time']
+                        symbol=b['time'] if b['time'] != 'd' else 'day'
                     ),
                     display_time_unit=Unit.objects.get(
-                        symbol=b['time']
+                        symbol=b['time'] if b['time'] != 'd' else 'day'
                     ),
                     dataset=dataset,
                     color=i,
@@ -363,7 +364,7 @@ def load_datasets(apps, schema_editor):
                 if TIME_UNIT_COLUMN is None:
                     time_unit = Unit.objects.get(symbol='h')
                 else:
-                    time_unit = Unit.objects.get(symbol=row[TIME_UNIT_COLUMN])
+                    time_unit = Unit.objects.get(symbol=row[TIME_UNIT_COLUMN] if row[TIME_UNIT_COLUMN] != 'd' else 'day')  # noqa: E501
 
                 subject_id = row[SUBJECT_ID_COLUMN]
                 try:
@@ -470,10 +471,19 @@ def load_datasets(apps, schema_editor):
                         compound = Compound.objects.create(
                             name=compound_str,
                             # TODO how to get molecular_mass?
-                            molecular_mass=1.0,
-                            molecular_mass_unit=Unit.objects.get(
-                                symbol='g/mol'
-                            )
+                            molecular_mass=100,
+                            compound_type='SM',
+                            molecular_mass_unit=Unit.objects.get(symbol='g/mol'),  # noqa: E501
+                            intrinsic_clearance_unit=Unit.objects.get(symbol='µL/min/mg'),  # noqa: E501
+                            intrinsic_clearance_assay='MS',
+                            fraction_unbound_plasma=1.0,
+                            fraction_unbound_including_cells=1.0,
+                            target_molecular_mass=100,
+                            target_molecular_mass_unit=Unit.objects.get(symbol='g/mol'),  # noqa: E501
+                            target_concentration=1e-9,
+                            target_concentration_unit=Unit.objects.get(symbol='nmol/L'),  # noqa: E501
+                            dissociation_unit=Unit.objects.get(symbol='nmol/L'),  # noqa: E501
+                            is_soluble=True,
                         )
                     if subject.id in protocols:
                         protocol = protocols[subject.id]
