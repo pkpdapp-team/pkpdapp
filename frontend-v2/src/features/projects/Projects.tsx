@@ -93,12 +93,13 @@ const ProjectTable: React.FC = () => {
   
   const handleAddRow = (type: 'SM' | 'LM') => {
     const user_access = [{ id: user?.id || 0, read_only: false, user: user?.id || 0 , project: 0}]
-    let new_name = 'new';
+    const new_name_base = 'untitled';
+    let new_name = new_name_base;
     let name_exists = projectNames.includes(new_name);
     let append = 0;
     while (name_exists) {
       append += 1;
-      new_name = `new${append}`;
+      new_name = `${new_name_base}${append}`;
       name_exists = projectNames.includes(new_name);
     }
     let project: Project = { id: 0, name: new_name, description: '', compound: 0, user_access, users: [user?.id || 0], protocols: [], created: '' }
