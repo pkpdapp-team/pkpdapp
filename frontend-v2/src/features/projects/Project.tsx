@@ -20,6 +20,7 @@ import useDirty from "../../hooks/useDirty";
 interface Props {
   project: Project;
   isSelected: boolean;
+  otherProjectNames: string[];
 }
 
 export interface FormData {
@@ -27,7 +28,7 @@ export interface FormData {
   compound: Compound;
 }
 
-const ProjectRow: React.FC<Props> = ({ project, isSelected }) => {
+const ProjectRow: React.FC<Props> = ({ project, isSelected, otherProjectNames }) => {
   const dispatch = useDispatch();
   const [
     updateProject, // This is the mutation trigger
@@ -134,6 +135,13 @@ const ProjectRow: React.FC<Props> = ({ project, isSelected }) => {
     { value: "O", label: "Other" },
   ]
 
+  const validateName = (value: string) => {
+    if (otherProjectNames.includes(value)) {
+      return 'Name must be unique';
+    }
+    return true;
+  };
+
   return (
     <React.Fragment>
     <TableRow data-cy={`project-${project.id}`}>
@@ -141,7 +149,7 @@ const ProjectRow: React.FC<Props> = ({ project, isSelected }) => {
       <Radio sx={{ marginTop: 4 }} checked={isSelected} onClick={handleSelectProject}/> 
       </TableCell>
       <TableCell>
-        <TextField name="project.name" control={control} textFieldProps={defaultProps} rules={{ required: true }} /> 
+        <TextField name="project.name" control={control} textFieldProps={defaultProps} rules={{ required: true, validate: validateName }} /> 
       </TableCell>
       <TableCell>
         <SelectField name="project.species" options={speciesOptions} control={control} selectProps={defaultProps} /> 

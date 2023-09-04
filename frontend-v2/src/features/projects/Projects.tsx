@@ -87,11 +87,21 @@ const ProjectTable: React.FC = () => {
       return (compound_a < compound_b) ? -1 : 1;
     })
   }
+
+  const projectNames = projects?.map((project) => project.name) || [];
   
   
   const handleAddRow = (type: 'SM' | 'LM') => {
     const user_access = [{ id: user?.id || 0, read_only: false, user: user?.id || 0 , project: 0}]
-    let project: Project = { id: 0, name: 'new', description: '', compound: 0, user_access, users: [user?.id || 0], protocols: [], created: '' }
+    let new_name = 'new';
+    let name_exists = projectNames.includes(new_name);
+    let append = 0;
+    while (name_exists) {
+      append += 1;
+      new_name = `new${append}`;
+      name_exists = projectNames.includes(new_name);
+    }
+    let project: Project = { id: 0, name: new_name, description: '', compound: 0, user_access, users: [user?.id || 0], protocols: [], created: '' }
     let compound: Compound | undefined = undefined;
     if (type === 'SM') {
       compound = {id: 0, name: 'new', description: '', compound_type: 'SM', efficacy_experiments: [], dissociation_constant: 500};
@@ -158,8 +168,8 @@ const ProjectTable: React.FC = () => {
               <TableCell colSpan={5}>No projects found</TableCell>
             </TableRow>
           )}
-          {projects?.map((project) => (
-            <ProjectRow key={project.id} project={project} isSelected={selectedProject === project.id} />
+          {projects?.map((project, i) => (
+            <ProjectRow key={project.id} project={project} otherProjectNames={projectNames.slice(0, i).concat(projectNames.slice(i + 1))} isSelected={selectedProject === project.id} />
           ))}
         </TableBody>
       
