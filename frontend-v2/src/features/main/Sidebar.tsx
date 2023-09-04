@@ -112,7 +112,7 @@ export default function Sidebar() {
             <MenuIcon />
           </IconButton>
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-            PkpdApp
+            PK/PD Simulator
           </Typography>
           <IconButton
             onClick={() => dispatch(logout())}
