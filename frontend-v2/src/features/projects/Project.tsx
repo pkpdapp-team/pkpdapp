@@ -16,6 +16,7 @@ import UserAccess from "./UserAccess";
 import { setProject } from "../main/mainSlice";
 import TextField from "../../components/TextField";
 import useDirty from "../../hooks/useDirty";
+import ConfirmationDialog from "../../components/ConfirmationDialog";
 
 interface Props {
   project: Project;
@@ -50,6 +51,8 @@ const ProjectRow: React.FC<Props> = ({ project, isSelected, otherProjectNames })
     { value: "SM", label: "Small Molecule" },
     { value: "LM", label: "Large Molecule" },
   ]
+
+  const [showConfirmDelete, setShowConfirmDelete] = useState<boolean>(false);
 
 
   const { data: compound, error, isLoading } = useCompoundRetrieveQuery({id: project.compound})
@@ -158,9 +161,10 @@ const ProjectRow: React.FC<Props> = ({ project, isSelected, otherProjectNames })
         <TextField name="compound.name" control={control} textFieldProps={defaultProps} rules={{ required: true }} /> 
       </TableCell>
       <TableCell>
-        <IconButton onClick={handleDelete}>
+        <IconButton onClick={() => setShowConfirmDelete(true)}>
           <Delete />
         </IconButton>
+        <ConfirmationDialog open={showConfirmDelete} title="Delete Project" message="Are you sure you want to delete this project?" onConfirm={handleDelete} onCancel={() => setShowConfirmDelete(false)} />
         <IconButton onClick={() => setUserAccessOpen(true)}>
           <PersonAdd />
         </IconButton>
