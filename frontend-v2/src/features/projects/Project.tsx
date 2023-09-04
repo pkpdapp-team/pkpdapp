@@ -164,7 +164,7 @@ const ProjectRow: React.FC<Props> = ({ project, isSelected, otherProjectNames })
         <IconButton onClick={() => setShowConfirmDelete(true)}>
           <Delete />
         </IconButton>
-        <ConfirmationDialog open={showConfirmDelete} title="Delete Project" message="Are you sure you want to delete this project?" onConfirm={handleDelete} onCancel={() => setShowConfirmDelete(false)} />
+        <ConfirmationDialog open={showConfirmDelete} title="Delete Project" message="Are you sure you want to permanently delete this project?" onConfirm={handleDelete} onCancel={() => setShowConfirmDelete(false)} />
         <IconButton onClick={() => setUserAccessOpen(true)}>
           <PersonAdd />
         </IconButton>

@@ -143,6 +143,9 @@ const ProjectTable: React.FC = () => {
 
   return (
     <TableContainer>
+      <DropdownButton useIcon={false} options={[{label: 'Small Molecule', value: 'SM'}, {label: 'Large Molecule', value: 'LM'}]} onOptionSelected={(value: 'SM' | 'LM') => handleAddRow(value)}>
+        Create new project
+      </DropdownButton>
       <Table size="small">
         <TableHead>
           <TableRow>
@@ -151,14 +154,7 @@ const ProjectTable: React.FC = () => {
             <TableCell>Species <IconButton color={sortBy === SortOptions.SPECIES? "success": undefined} onClick={() => handleSortBy(SortOptions.SPECIES)}><SortIcon /></IconButton></TableCell>
             <TableCell>Compound <IconButton color={sortBy === SortOptions.COMPOUND? "success": undefined} onClick={() => handleSortBy(SortOptions.COMPOUND)}><SortIcon /></IconButton></TableCell>
             <TableCell>Actions</TableCell>
-            <TableCell>
-              <Stack direction="row" spacing={2} alignItems={'center'}>
-                Modality
-                <DropdownButton options={[{label: 'Small Molecule', value: 'SM'}, {label: 'Large Molecule', value: 'LM'}]} onOptionSelected={(value: 'SM' | 'LM') => handleAddRow(value)}>
-                  <AddIcon />
-                </DropdownButton>
-              </Stack>
-            </TableCell>
+            <TableCell>Modality</TableCell>
             <TableCell align="right">
             </TableCell>
           </TableRow>
