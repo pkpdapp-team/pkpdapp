@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { CombinedModel, CombinedModelUpdateApiArg, Pharmacokinetic, Project, usePharmacodynamicListQuery, usePharmacokineticListQuery } from '../../app/backendApi';
 import { Control } from 'react-hook-form';
-import { FormControlLabel, Select, Stack, TextField as MuiTextField, Typography, Grid, Checkbox as MuiCheckbox } from '@mui/material';
+import { FormControlLabel, Select, Stack, TextField as MuiTextField, Typography, Grid, Checkbox as MuiCheckbox, Tooltip } from '@mui/material';
 import SelectField from '../../components/SelectField';
 import { Check } from '@mui/icons-material';
 import Checkbox from '../../components/Checkbox';
@@ -75,10 +75,18 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props ) => {
           </Typography>
           </Grid>
           <Grid item xs={4}>
+          <Tooltip title="Includes Michaellis-Menten parameters (CLmax and Km)">
           <Checkbox label="Saturation" name="has_saturation" control={control} checkboxFieldProps={{ disabled: isTMDDmodel || !model.pk_model }} />
+          </Tooltip>
+          <Tooltip title="Includes an effect compartment">
           <Checkbox label="Effect Compartment" name="has_effect" control={control} checkboxFieldProps={{ disabled: !model.pk_model }}  />
+          </Tooltip>
+          <Tooltip title="Includes a time delay following PO of SC administration">
           <Checkbox label="Lag Time" name="has_lag" control={control} checkboxFieldProps={{ disabled: !model.pk_model }}  />
+          </Tooltip>
+          <Tooltip title="Includes bioavailability (F), if not selected F=1">
           <Checkbox label="Bioavailability" name="has_bioavailability" control={control} checkboxFieldProps={{ disabled: !model.pk_model }}  />
+          </Tooltip>
           </Grid>
         </Grid>
         <Grid container item spacing={2}>

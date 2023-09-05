@@ -8,6 +8,7 @@ import {
   FormControlLabel,
   Tooltip,
   Typography,
+  Radio,
 } from "@mui/material";
 import { Project, PkpdMapping, CombinedModel, Variable, useVariableUpdateMutation, useProtocolCreateMutation, useProtocolDestroyMutation, Dose, useUnitListQuery, Unit, Compound } from "../../app/backendApi";
 import Checkbox from "../../components/Checkbox";
@@ -23,6 +24,8 @@ interface Props {
   units: Unit[];
   timeVariable: Variable | undefined;
 }
+
+const derivedVariableRegex = /calc_.*_(f|bl|RO)/;
 
 
 const VariableRow: React.FC<Props> = ({ project, compound, model, variable, control, effectVariable, units, timeVariable }) => {
@@ -117,6 +120,20 @@ const VariableRow: React.FC<Props> = ({ project, compound, model, variable, cont
   };
 
   const addDerived = (type: 'RO' | 'FUP' | 'BPR') => {
+    // can only be one 'FUP' and one 'BPR' and one 'RO' across all variables
+    const fup_index = derivedVariables.findIndex((ro) => ro.type === 'FUP');
+    const bpr_index = derivedVariables.findIndex((ro) => ro.type === 'BPR');
+    const ro_index = derivedVariables.findIndex((ro) => ro.type === 'RO');
+    if (type === 'FUP' && fup_index >= 0) {
+      removeDerived(fup_index);
+    }
+    if (type === 'BPR' && bpr_index >= 0) {
+      removeDerived(bpr_index);
+    }
+    if (type === 'RO' && ro_index >= 0) {
+      removeDerived(ro_index);
+    }
+
     derivedVariablesAppend({ id: 0, pk_variable: variable.id, pkpd_model: model.id, type });
   };
 
@@ -145,6 +162,8 @@ const VariableRow: React.FC<Props> = ({ project, compound, model, variable, cont
   const disableBPR = !compound.blood_to_plasma_ratio || compound.compound_type === 'LM';
   const noDosing = !isAmount;
 
+  const isDerivedVariable = variable.name.match(derivedVariableRegex) !== null; 
+
   if (noMapToPD && noDerivedVariables && noDosing) {
     return (null);
   }
@@ -166,27 +185,27 @@ const VariableRow: React.FC<Props> = ({ project, compound, model, variable, cont
       </TableCell>
       <TableCell>
         { !noDosing && (
-        <FormControlLabel control={<MuiCheckbox checked={hasProtocol} onClick={() => hasProtocol ? removeProtocol() : addProtocol()} data-cy={`checkbox-dosing-${variable.name}`} />} label="Dosing" />
+        <FormControlLabel control={<MuiCheckbox checked={hasProtocol} onClick={() => hasProtocol ? removeProtocol() : addProtocol()} data-cy={`checkbox-dosing-${variable.name}`} />} label="" />
         )}
       </TableCell>
       <TableCell>
         { !noMapToPD && (
-        <FormControlLabel control={<MuiCheckbox checked={linkToPD} onClick={() => linkToPD ? removePDMapping() : addPDMapping()} data-cy={`checkbox-map-to-pd-${variable.name}`}/>} label="Map to PD Effect" />
+        <FormControlLabel control={<Radio checked={linkToPD} onClick={() => linkToPD ? removePDMapping() : addPDMapping()} data-cy={`checkbox-map-to-pd-${variable.name}`}/>} label="" />
         )}
       </TableCell>
       <TableCell>
-        { !noDerivedVariables && (
-        <FormControlLabel disabled={disableRo} control={<MuiCheckbox checked={isLinkedTo('RO')} onClick={onClickDerived('RO')} />} label="Link to RO" />
+        { !noDerivedVariables && !isDerivedVariable && (
+        <FormControlLabel disabled={disableRo} control={<Radio checked={isLinkedTo('RO')} onClick={onClickDerived('RO')} />} label="" />
         )}
       </TableCell>
       <TableCell>
-        { !noDerivedVariables && (
-        <FormControlLabel disabled={disableFUP} control={<MuiCheckbox checked={isLinkedTo('FUP')} onClick={onClickDerived('FUP')} />} label="Calculate unbound concentration" />
+        { !noDerivedVariables && !isDerivedVariable && (
+        <FormControlLabel disabled={disableFUP} control={<Radio checked={isLinkedTo('FUP')} onClick={onClickDerived('FUP')} />} label="" />
         )}
       </TableCell>
       <TableCell>
-        { !noDerivedVariables && (
-        <FormControlLabel disabled={disableBPR} control={<MuiCheckbox checked={isLinkedTo('BPR')} onClick={onClickDerived('BPR')} />} label="Multiply (observations in plasma)" />
+        { !noDerivedVariables && !isDerivedVariable && (
+        <FormControlLabel disabled={disableBPR} control={<Radio checked={isLinkedTo('BPR')} onClick={onClickDerived('BPR')} />} label="" />
         )}
       </TableCell>
     </TableRow>

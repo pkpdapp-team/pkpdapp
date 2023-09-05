@@ -91,7 +91,7 @@ const Model: React.FC = () => {
   }
 
   return (
-    <DynamicTabs tabNames={["PK/PK Model", "Map Variables", "Parameters"]}>
+    <DynamicTabs tabNames={["PK/PD Model", "Map Variables", "Parameters"]}>
       <TabPanel>
         <PKPDModelTab model={model} project={project} control={control} updateModel={updateModel} />
       </TabPanel>
