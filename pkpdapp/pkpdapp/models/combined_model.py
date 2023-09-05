@@ -288,10 +288,15 @@ class CombinedModel(MyokitModelMixin, StoredModel):
             myokit_compartment = myokit_var.parent()
             var_name = derived_variable.pk_variable.name
             if derived_variable.type == DerivedVariable.Type.RECEPTOR_OCCUPANCY:  # noqa: E501
-                var = myokit_compartment.add_variable(f'calc_{var_name}_RO')
+                new_names = [f'calc_{var_name}_RO', 'KD_ud', 'CT1_0_ud']
+                has_name = any([myokit_compartment.has_variable(new_name) for new_name in new_names])  # noqa: E501
+                if has_name:
+                    continue
+                var = myokit_compartment.add_variable(new_names[0])
+                kd = myokit_compartment.add_variable(new_names[1])
+                target_conc = myokit_compartment.add_variable(new_names[2])
                 var.meta['desc'] = f'Receptor occupancy for {myokit_var.meta["desc"]}'  # noqa: E501
                 var.set_unit(myokit.Unit())
-                kd = myokit_compartment.add_variable('KD_ud')
                 kd_unit = myokit_var.unit()
                 compound = self.project.compound
                 kd_unit_conversion_factor = \
@@ -301,7 +306,6 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 kd.set_rhs(compound.dissociation_constant *
                            kd_unit_conversion_factor)
                 kd.set_unit(kd_unit)
-                target_conc = myokit_compartment.add_variable('CT1_0_ud')
                 target_conc_unit = myokit_var.unit()
                 target_conc_unit_conversion_factor = \
                     compound.target_concentration_unit.convert_to(
@@ -339,19 +343,27 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 ))
                 )
             elif derived_variable.type == DerivedVariable.Type.FRACTION_UNBOUND_PLASMA:  # noqa: E501
-                var = myokit_compartment.add_variable(f'calc_{var_name}_f')
+                new_names = [f'calc_{var_name}_f', 'FUP_ud']
+                has_name = any([myokit_compartment.has_variable(new_name) for new_name in new_names])  # noqa: E501
+                if has_name:
+                    continue
+                var = myokit_compartment.add_variable(new_names[0])
+                fup = myokit_compartment.add_variable(new_names[1])
                 var.meta['desc'] = f'Unbound {myokit_var.meta["desc"]}'
                 var.set_unit(myokit_var.unit())
-                fup = myokit_compartment.add_variable('FUP_ud')
                 fup.set_rhs(self.project.compound.fraction_unbound_plasma)
                 fup.set_unit(myokit.units.dimensionless)
                 var.set_rhs(myokit.Multiply(
                     myokit.Name(fup), myokit.Name(myokit_var)))
             elif derived_variable.type == DerivedVariable.Type.BLOOD_PLASMA_RATIO:  # noqa: E501
-                var = myokit_compartment.add_variable(f'calc_{var_name}_bl')
+                new_names = [f'calc_{var_name}_bl', 'BP_ud']
+                has_name = any([myokit_compartment.has_variable(new_name) for new_name in new_names])  # noqa: E501
+                if has_name:
+                    continue
+                var = myokit_compartment.add_variable(new_names[0])
+                bpr = myokit_compartment.add_variable(new_names[1])
                 var.meta['desc'] = f'Blood {myokit_var.meta["desc"]}'
                 var.set_unit(myokit_var.unit())
-                bpr = myokit_compartment.add_variable('BP_ud')
                 bpr.set_rhs(self.project.compound.blood_to_plasma_ratio)
                 bpr.set_unit(myokit.units.dimensionless)
                 var.set_rhs(myokit.Multiply(

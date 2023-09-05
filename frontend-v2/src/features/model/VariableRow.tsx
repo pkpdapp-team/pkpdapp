@@ -121,23 +121,19 @@ const VariableRow: React.FC<Props> = ({ project, compound, model, variable, cont
 
   const addDerived = (type: 'RO' | 'FUP' | 'BPR') => {
     // can only be one 'FUP' and one 'BPR' and one 'RO' across all variables
-    const fup_index = derivedVariables.findIndex((ro) => ro.type === 'FUP');
-    const bpr_index = derivedVariables.findIndex((ro) => ro.type === 'BPR');
-    const ro_index = derivedVariables.findIndex((ro) => ro.type === 'RO');
-    if (type === 'FUP' && fup_index >= 0) {
-      removeDerived(fup_index);
-    }
-    if (type === 'BPR' && bpr_index >= 0) {
-      removeDerived(bpr_index);
-    }
-    if (type === 'RO' && ro_index >= 0) {
-      removeDerived(ro_index);
-    }
+    const sameType = derivedVariables
+      .map((d, i) => ({...d, index: i }))
+      .filter((ro) => ro.type === type)
+      .map((ro) => ro.index);
 
+    if (sameType.length > 0) {
+      removeDerived(sameType);
+    }
+    
     derivedVariablesAppend({ id: 0, pk_variable: variable.id, pkpd_model: model.id, type });
   };
 
-  const removeDerived = (index: number) => {
+  const removeDerived = (index: number | number[]) => {
     derivedVariablesRemove(index);
   };
 
