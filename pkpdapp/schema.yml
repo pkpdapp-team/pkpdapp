@@ -3264,6 +3264,9 @@ components:
         is_soluble:
           type: boolean
           description: is the compound target soluble
+        use_efficacy:
+          type: integer
+          nullable: true
         molecular_mass_unit:
           type: integer
           description: unit for molecular mass (e.g. g/mol)
@@ -3953,6 +3956,9 @@ components:
         is_soluble:
           type: boolean
           description: is the compound target soluble
+        use_efficacy:
+          type: integer
+          nullable: true
         molecular_mass_unit:
           type: integer
           description: unit for molecular mass (e.g. g/mol)

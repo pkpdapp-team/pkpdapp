@@ -7,6 +7,7 @@
 # flake8: noqa
 
 
+
 from django.conf import settings
 import django.core.validators
 from django.db import migrations, models
@@ -556,6 +557,11 @@ class Migration(migrations.Migration):
             model_name='compound',
             name='target_molecular_mass_unit',
             field=models.ForeignKey(default=pkpdapp.models.compound.get_mol_mass_unit, help_text='unit for target molecular mass (e.g. g/mol)', on_delete=django.db.models.deletion.PROTECT, related_name='compounds_target_mol_mass', to='pkpdapp.unit'),
+        ),
+        migrations.AddField(
+            model_name='compound',
+            name='use_efficacy',
+            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='compound_using', to='pkpdapp.efficacyexperiment'),
         ),
         migrations.AddField(
             model_name='combinedmodel',

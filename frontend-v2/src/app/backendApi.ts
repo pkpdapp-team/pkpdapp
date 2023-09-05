@@ -1748,6 +1748,7 @@ export type Compound = {
   target_concentration?: number | null;
   dissociation_constant?: number | null;
   is_soluble?: boolean;
+  use_efficacy?: number | null;
   molecular_mass_unit?: number;
   intrinsic_clearance_unit?: number;
   target_molecular_mass_unit?: number;
@@ -1770,6 +1771,7 @@ export type PatchedCompound = {
   target_concentration?: number | null;
   dissociation_constant?: number | null;
   is_soluble?: boolean;
+  use_efficacy?: number | null;
   molecular_mass_unit?: number;
   intrinsic_clearance_unit?: number;
   target_molecular_mass_unit?: number;
