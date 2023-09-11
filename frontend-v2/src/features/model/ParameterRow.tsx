@@ -75,7 +75,13 @@ const ParameterRow: React.FC<Props> = ({ project, model, variable, units }) => {
         {type}
       </TableCell>
       <TableCell>
+        <FloatField name="lower_bound" control={control} label="Lower" />
+      </TableCell>
+      <TableCell>
         <FloatField name="default_value" control={control} label="Value" rules={{ required: true }} data_cy={`parameter-${variable.name}-value`} />
+      </TableCell>
+      <TableCell>
+        <FloatField name="upper_bound" control={control} label="Upper" />
       </TableCell>
       <TableCell>
         <UnitField label={'Unit'} name={'unit'} control={control} baseUnit={unit} />

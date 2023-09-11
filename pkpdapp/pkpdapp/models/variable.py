@@ -21,11 +21,11 @@ class Variable(StoredModel):
     """
     is_public = models.BooleanField(default=False)
     lower_bound = models.FloatField(
-        default=1e-6,
+        blank=True, null=True,
         help_text='lowest possible value for this variable'
     )
     upper_bound = models.FloatField(
-        default=2,
+        blank=True, null=True,
         help_text='largest possible value for this variable'
     )
     default_value = models.FloatField(
@@ -220,8 +220,8 @@ class Variable(StoredModel):
                 default_value=value,
                 description=myokit_variable.meta.get('desc', ''),
                 binding=myokit_variable.binding(),
-                lower_bound=0.1 * value,
-                upper_bound=10.0 * value,
+                lower_bound=None,
+                upper_bound=None,
                 constant=myokit_variable.is_constant(),
                 state=state,
                 unit=Unit.get_unit_from_variable(myokit_variable),
@@ -292,8 +292,8 @@ class Variable(StoredModel):
                 constant=myokit_variable.is_constant(),
                 binding=myokit_variable.binding(),
                 default_value=value,
-                lower_bound=0.1 * value,
-                upper_bound=10.0 * value,
+                lower_bound=None,
+                upper_bound=None,
                 state=state,
                 unit=Unit.get_unit_from_variable(myokit_variable),
                 pd_model=model,
@@ -321,6 +321,13 @@ class Variable(StoredModel):
         if found_variable is not None:
             return variables[0]
         else:
+            # lower and upper bounds for library models
+            lower = None
+            upper = None
+            if myokit_variable.qname() == 'PDCompartment.Imax':
+                upper = 1.0
+            elif myokit_variable.qname() == 'PKCompartment.F':
+                upper = 1.0
             state = myokit_variable.is_state()
             if state:
                 value = myokit_variable.state_value()
@@ -334,8 +341,8 @@ class Variable(StoredModel):
                 constant=myokit_variable.is_constant(),
                 default_value=value,
                 binding=myokit_variable.binding(),
-                lower_bound=0.1 * value,
-                upper_bound=10.0 * value,
+                lower_bound=lower,
+                upper_bound=upper,
                 state=state,
                 unit=Unit.get_unit_from_variable(myokit_variable),
                 dosed_pk_model=model,

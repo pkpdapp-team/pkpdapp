@@ -4,6 +4,7 @@ import { Control } from 'react-hook-form';
 import { TableContainer, Table, TableHead, TableRow, TableCell, TableBody, Stack, Button } from '@mui/material';
 import ParameterRow from './ParameterRow';
 import { param_default as paramDefaults } from './param_default';
+import HelpButton from '../../components/HelpButton';
 
 interface Props {
     model: CombinedModel;
@@ -73,11 +74,9 @@ const ParametersTab: React.FC<Props> = ({ model, project, control, variables }) 
               defaultValue = compound.target_concentration || undefined;
               defaultUnitId = compound.target_concentration_unit;
             }
-            console.log('defaulttttt', modelName, varName, species, defaultValue, defaultUnitId, compound)
             if (!defaultValue || !defaultUnitId) {
               continue;
             }
-            console.log('defaulttttt', modelName, varName, species, defaultVal, defaultUnitId)
             if (defaultUnitId) {
                 updateVariable({ id: variable.id, variable: { ...variable, default_value: defaultValue, unit: defaultUnitId }});
             }
@@ -86,15 +85,17 @@ const ParametersTab: React.FC<Props> = ({ model, project, control, variables }) 
 
     return (
       <Stack spacing={2}>
-      <Button variant="contained" color="primary" onClick={resetToSpeciesDefaults} disabled={noReset}>Reset to Species Defaults</Button>
+      <Button variant="contained" color="primary" onClick={resetToSpeciesDefaults} disabled={noReset} sx={{width: 270}}>Reset to Species Defaults</Button>
       <TableContainer>
       <Table>
         <TableHead>
           <TableRow>
             <TableCell>Name</TableCell>
             <TableCell>Type</TableCell>
+            <TableCell>Lower Bound</TableCell>
             <TableCell>Value</TableCell>
-            <TableCell>Unit</TableCell>
+            <TableCell>Upper Bound</TableCell>
+            <TableCell>Unit <HelpButton title='Unit Column'>Changing the units does not update the PKPD values. The user is responsible for the correctness of the values and units.</HelpButton> </TableCell>
           </TableRow>
         </TableHead>
         <TableBody>

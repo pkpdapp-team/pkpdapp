@@ -60,8 +60,8 @@ const SimulationSliderView: React.FC<SimulationSliderProps> = ({ index, slider, 
   };
 
   const baseValue = variable?.default_value || 1.0;
-  const minValue = baseValue / range;
-  const maxValue = baseValue * range;
+  const minValue = Math.max(variable?.lower_bound || -Infinity, baseValue / range);
+  const maxValue = Math.min(variable?.upper_bound || Infinity, baseValue * range);
   const stepValue = (maxValue - minValue) / 1000.0;
 
   const handleBlur = () => {

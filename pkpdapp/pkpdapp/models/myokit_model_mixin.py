@@ -192,6 +192,8 @@ class MyokitModelMixin:
             for v in model.variables(const=True, sort=True)
             if v.is_literal() and v.qname() not in removed_variables
         ]
+
+
         # parameters could originally be outputs
         for v in new_variables:
             if not v.constant:

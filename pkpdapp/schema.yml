@@ -4479,11 +4479,23 @@ components:
         lower_bound:
           type: number
           format: double
-          description: lowest possible value for this variable
+          description: lowest possible value for this variable (given default values)
+        hard_lower_bound:
+          type: number
+          format: double
+          nullable: true
+          description: lowest possible value for this variable (optionally set by
+            user)
         upper_bound:
           type: number
           format: double
-          description: largest possible value for this variable
+          description: largest possible value for this variable (given default values)
+        hard_upper_bound:
+          type: number
+          format: double
+          nullable: true
+          description: largest possible value for this variable (optionally set by
+            user)
         default_value:
           type: number
           format: double
@@ -5164,11 +5176,23 @@ components:
         lower_bound:
           type: number
           format: double
-          description: lowest possible value for this variable
+          description: lowest possible value for this variable (given default values)
+        hard_lower_bound:
+          type: number
+          format: double
+          nullable: true
+          description: lowest possible value for this variable (optionally set by
+            user)
         upper_bound:
           type: number
           format: double
-          description: largest possible value for this variable
+          description: largest possible value for this variable (given default values)
+        hard_upper_bound:
+          type: number
+          format: double
+          nullable: true
+          description: largest possible value for this variable (optionally set by
+            user)
         default_value:
           type: number
           format: double

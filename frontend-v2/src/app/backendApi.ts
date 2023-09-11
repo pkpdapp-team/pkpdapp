@@ -2155,7 +2155,9 @@ export type Variable = {
   datetime?: string | null;
   is_public?: boolean;
   lower_bound?: number;
+  hard_lower_bound?: number | null;
   upper_bound?: number;
+  hard_upper_bound?: number | null;
   default_value?: number;
   is_log?: boolean;
   name: string;
@@ -2180,7 +2182,9 @@ export type PatchedVariable = {
   datetime?: string | null;
   is_public?: boolean;
   lower_bound?: number;
+  hard_lower_bound?: number | null;
   upper_bound?: number;
+  hard_upper_bound?: number | null;
   default_value?: number;
   is_log?: boolean;
   name?: string;
