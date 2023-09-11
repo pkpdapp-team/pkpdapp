@@ -97,12 +97,19 @@ class CombinedModelSerializer(serializers.ModelSerializer):
             old_derived_vars[i].delete()
             del old_derived_vars[i]
 
+        models_changed = (
+            instance.pk_model != validated_data.get('pk_model') or
+            instance.pd_model != validated_data.get('pd_model') or
+            instance.pd_model2 != validated_data.get('pd_model2') 
+        )
+
         new_pkpd_model = BaseDosedPharmacokineticSerializer().update(
             instance, validated_data
         )
 
         # don't update mappings if read_only
-        if not instance.read_only:
+        # don't update mapping or derived variables if models have changed
+        if not (instance.read_only or models_changed):
             for field_datas, old_models, Serializer in [
                     (mappings_data,
                      old_mappings, PkpdMappingSerializer),

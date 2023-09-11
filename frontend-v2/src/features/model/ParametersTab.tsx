@@ -30,15 +30,23 @@ const ParametersTab: React.FC<Props> = ({ model, project, control, variables }) 
 
     let constVariables = variables.filter(variable => variable.constant);
     constVariables.sort((a, b) => {
-      const aisPK = a.qname.startsWith("PK");
-      const bisPK = b.qname.startsWith("PK");
-      if (aisPK && !bisPK) {
-        return -1;
+      let apriority = 0;
+      if (a.qname.endsWith("_ud")) {
+        apriority = 1;
+      } else if (b.qname.startsWith("PK")) {
+        apriority = 3;
+      } else if (b.qname.startsWith("PD")) {
+        apriority = 2;
       }
-      if (!aisPK && bisPK) {
-        return 1;
+      let bpriority = 0;
+      if (b.qname.endsWith("_ud")) {
+        bpriority = 1;
+      } else if (b.qname.startsWith("PK")) {
+        bpriority = 3;
+      } else if (b.qname.startsWith("PD")) {
+        bpriority = 2;
       }
-      return a.name > b.name ? 1 : -1;
+      return bpriority - apriority;
     })
 
     const noReset = !pkModel || !project.species || project.species === 'O';

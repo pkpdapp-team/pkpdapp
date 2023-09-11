@@ -6,6 +6,7 @@ import SelectField from '../../components/SelectField';
 import { Check } from '@mui/icons-material';
 import Checkbox from '../../components/Checkbox';
 import FloatField from '../../components/FloatField';
+import HelpButton from '../../components/HelpButton';
 
 interface Props {
     model: CombinedModel;
@@ -66,15 +67,21 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props ) => {
     return (
       <Grid container spacing={2}>
         <Grid container item spacing={2}>
-          <Grid item xs={3}>
+          <Grid item xs={5}>
+            <Stack direction="row" alignItems="center" spacing={1}>
             <SelectField label="PK Model" name="pk_model" control={control} options={pk_model_options} formControlProps={{ fullWidth: true }}/>
+            <>
+            { model.pk_model && 
+              <HelpButton title={pk_model_map[model.pk_model].name}>
+                <Typography>
+                  {pk_model_map[model.pk_model].description}
+                </Typography>
+              </HelpButton>
+            }
+            </>
+            </Stack>
           </Grid>
           <Grid item xs={5}>
-          <Typography>
-            {model.pk_model ? pk_model_map[model.pk_model].description : ''}
-          </Typography>
-          </Grid>
-          <Grid item xs={4}>
           <Tooltip title="Includes Michaellis-Menten parameters (CLmax and Km)">
           <Checkbox label="Saturation" name="has_saturation" control={control} checkboxFieldProps={{ disabled: isTMDDmodel || !model.pk_model }} />
           </Tooltip>
@@ -90,28 +97,40 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props ) => {
           </Grid>
         </Grid>
         <Grid container item spacing={2}>
-          <Grid item xs={3}>
+          <Grid item xs={5}>
+            <Stack direction="row" alignItems="center" spacing={1}>
             <SelectField label="PD Model" name="pd_model" control={control} options={pd_model_options}  formControlProps={{ fullWidth: true }}/>
+            <>
+            { model.pd_model && 
+              <HelpButton title={pd_model_map[model.pd_model].name}>
+                <Typography>
+                  {pd_model_map[model.pd_model].description}
+                </Typography>
+              </HelpButton>
+            }
+            </>
+            </Stack>
           </Grid>
           <Grid item xs={5}>
-            <Typography>
-              {model.pd_model ? pd_model_map[model.pd_model].description : ''}
-            </Typography>
-          </Grid>
-          <Grid item xs={4}>
             { model.pd_model && (
               <Checkbox label="Hill Coefficient" name="has_hill_coefficient" control={control} checkboxFieldProps={{ disabled: !model.pd_model }} />
             )}
           </Grid>
           { pdIsTumourGrowth && (
           <>
-            <Grid item xs={3}>
-              <SelectField label="Secondary PD Model" name="pd_model2" control={control} options={pd_model2_options} />
-            </Grid>
             <Grid item xs={5}>
-              <Typography>
-                {model.pd_model2 ? pd_model_map[model.pd_model2].description : ''}
-              </Typography>
+            <Stack direction="row" alignItems="center" spacing={1}>
+              <SelectField label="Secondary PD Model" name="pd_model2" control={control} options={pd_model2_options} formControlProps={{ fullWidth: true }}/>
+              <>
+              {model.pd_model2 && (
+                <HelpButton title={pd_model_map[model.pd_model2].name}>
+                <Typography>
+                  {pd_model_map[model.pd_model2].description}
+                </Typography>
+                </HelpButton>
+              )}
+              </>
+            </Stack>
             </Grid>
           </>
           )}

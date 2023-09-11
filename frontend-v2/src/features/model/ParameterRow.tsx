@@ -57,6 +57,8 @@ const ParameterRow: React.FC<Props> = ({ project, model, variable, units }) => {
 
 
   const isPD = variable.qname.startsWith("PD");
+  const isUD = variable.qname.endsWith("_ud");
+  const type = isUD ? "UD" : isPD ? "PD" : "PK";
 
   const unit = variable.unit === null ? undefined : units.find(u => u.id === variable.unit)
 
@@ -70,7 +72,7 @@ const ParameterRow: React.FC<Props> = ({ project, model, variable, units }) => {
         </Tooltip>
       </TableCell>
       <TableCell>
-        {isPD ? "PD" : "PK"}
+        {type}
       </TableCell>
       <TableCell>
         <FloatField name="default_value" control={control} label="Value" rules={{ required: true }} data_cy={`parameter-${variable.name}-value`} />

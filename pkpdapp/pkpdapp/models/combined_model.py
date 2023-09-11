@@ -288,14 +288,24 @@ class CombinedModel(MyokitModelMixin, StoredModel):
             myokit_compartment = myokit_var.parent()
             var_name = derived_variable.pk_variable.name
             if derived_variable.type == DerivedVariable.Type.RECEPTOR_OCCUPANCY:  # noqa: E501
-                new_names = [f'calc_{var_name}_RO', 'KD_ud', 'CT1_0_ud']
+                new_names = [f'calc_{var_name}_RO']
                 has_name = any([myokit_compartment.has_variable(new_name) for new_name in new_names])  # noqa: E501
                 if has_name:
                     continue
                 var = myokit_compartment.add_variable(new_names[0])
-                kd = myokit_compartment.add_variable(new_names[1])
-                target_conc = myokit_compartment.add_variable(new_names[2])
                 var.meta['desc'] = f'Receptor occupancy for {myokit_var.meta["desc"]}'  # noqa: E501
+                kd_name = 'KD_ud'
+                if myokit_compartment.has_variable(kd_name):
+                    kd = myokit_compartment.get(kd_name)
+                else:
+                    kd = myokit_compartment.add_variable(kd_name)
+                    kd.meta['desc'] = 'User-defined Dissociation Constant (Drug Target Tab) used to calculate Receptor occupancy'  # noqa: E501
+                target_conc_name = 'CT1_0_ud'
+                if myokit_compartment.has_variable(target_conc_name):
+                    target_conc = myokit_compartment.get(target_conc_name)
+                else:
+                    target_conc = myokit_compartment.add_variable(target_conc_name)
+                    target_conc.meta['desc'] = 'User-defined Target Concentration (Drug Target Tab) used to calculate Receptor occupancy'  # noqa: E501
                 var.set_unit(myokit.Unit())
                 kd_unit = myokit_var.unit()
                 compound = self.project.compound
@@ -348,8 +358,9 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 if has_name:
                     continue
                 var = myokit_compartment.add_variable(new_names[0])
+                var.meta['desc'] = f'Unbound Concentration for {myokit_var.meta["desc"]}'  # noqa: E501
                 fup = myokit_compartment.add_variable(new_names[1])
-                var.meta['desc'] = f'Unbound {myokit_var.meta["desc"]}'
+                fup.meta['desc'] = 'User-defined Fraction Unbound Plasma (Drug Target Tab)'  # noqa: E501
                 var.set_unit(myokit_var.unit())
                 fup.set_rhs(self.project.compound.fraction_unbound_plasma)
                 fup.set_unit(myokit.units.dimensionless)
@@ -362,7 +373,8 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                     continue
                 var = myokit_compartment.add_variable(new_names[0])
                 bpr = myokit_compartment.add_variable(new_names[1])
-                var.meta['desc'] = f'Blood {myokit_var.meta["desc"]}'
+                bpr.meta['desc'] = 'User-defined Blood to Plasma Ratio (Drug Target Tab)'  # noqa: E501
+                var.meta['desc'] = f'Blood Concentration for {myokit_var.meta["desc"]}'
                 var.set_unit(myokit_var.unit())
                 bpr.set_rhs(self.project.compound.blood_to_plasma_ratio)
                 bpr.set_unit(myokit.units.dimensionless)
@@ -374,12 +386,15 @@ class CombinedModel(MyokitModelMixin, StoredModel):
 
         # do mappings
         for mapping in self.mappings.all():
-            pd_var = pkpd_model.get(
-                mapping.pd_variable.qname.replace('myokit', 'PD')
-            )
-            pk_var = pkpd_model.get(
-                mapping.pk_variable.qname
-            )
+            try:
+                pd_var = pkpd_model.get(
+                    mapping.pd_variable.qname.replace('myokit', 'PD')
+                )
+                pk_var = pkpd_model.get(
+                    mapping.pk_variable.qname
+                )
+            except KeyError:
+                continue
 
             pk_to_pd_conversion_multiplier = Unit.convert_between_myokit_units(
                 pk_var.unit(), pd_var.unit(), compound=self.project.compound
@@ -425,6 +440,16 @@ class CombinedModel(MyokitModelMixin, StoredModel):
         # don't update a stored model
         if self.read_only:
             return
+
+        # if the pk or pd models have changed then remove the mappings and
+        # derived variables
+        if (
+            self.pk_model != self.__original_pk_model or
+            self.pd_model != self.__original_pd_model or
+            self.pd_model2 != self.__original_pd_model2
+        ):
+            self.mappings.all().delete()
+            self.derived_variables.all().delete()
 
         if (
             created or

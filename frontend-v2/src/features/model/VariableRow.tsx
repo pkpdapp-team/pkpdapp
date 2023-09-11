@@ -126,7 +126,7 @@ const VariableRow: React.FC<Props> = ({ project, compound, model, variable, cont
       .filter((ro) => ro.type === type)
       .map((ro) => ro.index);
 
-    if (sameType.length > 0) {
+    if (sameType.length > 0 && type !== 'RO') {
       removeDerived(sameType);
     }
     
@@ -191,7 +191,7 @@ const VariableRow: React.FC<Props> = ({ project, compound, model, variable, cont
       </TableCell>
       <TableCell>
         { !noDerivedVariables && !isDerivedVariable && (
-        <FormControlLabel disabled={disableRo} control={<Radio checked={isLinkedTo('RO')} onClick={onClickDerived('RO')} />} label="" />
+        <FormControlLabel disabled={disableRo} control={<MuiCheckbox checked={isLinkedTo('RO')} onClick={onClickDerived('RO')} />} label="" />
         )}
       </TableCell>
       <TableCell>
