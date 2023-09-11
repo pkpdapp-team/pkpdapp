@@ -14,6 +14,7 @@ const Model: React.FC = () => {
   const projectId = useSelector((state: RootState) => state.main.selectedProject);
   const { data: project, isLoading: isProjectLoading } = useProjectRetrieveQuery({id: projectId || 0}, { skip: !projectId })
   const { data: models, isLoading: isModelsLoading } = useCombinedModelListQuery({projectId: projectId || 0}, { skip: !projectId})
+  const { data: protocols, error: protocolsError, isLoading: isProtocolsLoading } = useProtocolListQuery({projectId: projectId || 0}, { skip: !projectId})
   const model = models?.[0] || null;
   const [ updateModel ]  = useCombinedModelUpdateMutation()
   const { data: variables, isLoading: isVariablesLoading } = useVariableListQuery({ dosedPkModelId: model?.id || 0 }, { skip: !model?.id })
@@ -90,8 +91,20 @@ const Model: React.FC = () => {
     return <div>Not found</div>;
   }
 
+  let tabErrors: {[key: string]: string} = {};
+  if (model.pk_model === null) {
+    tabErrors['PK/PD Model'] = 'Please select a PK model to simulate';
+  }
+  if (model.pd_model && model.mappings.length === 0) {
+    tabErrors['Map Variables'] = 'Please select a PK variable to link PK and PD models (Link to PD column)';
+  }
+  if (protocols && protocols.length === 0) {
+    tabErrors['Map Variables'] = 'Please select a dosing compartment';
+  }
+
+
   return (
-    <DynamicTabs tabNames={["PK/PD Model", "Map Variables", "Parameters"]}>
+    <DynamicTabs tabNames={["PK/PD Model", "Map Variables", "Parameters"]} tabErrors={tabErrors}>
       <TabPanel>
         <PKPDModelTab model={model} project={project} control={control} updateModel={updateModel} />
       </TabPanel>

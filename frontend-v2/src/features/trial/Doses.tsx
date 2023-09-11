@@ -81,7 +81,7 @@ const Doses: React.FC<Props> = ({ project, protocol, units }) => {
             {variable.name}
           </TableCell>
           <TableCell>
-            <FloatField label={"Dose"} name={`doses.${index}.amount`} control={control} rules={{ required: true }} />
+            <FloatField label={"Dose"} name={`doses.${index}.amount`} control={control} rules={{ required: true, min: { value: Number.EPSILON, message: "Must be greater than 0"} }} />
           </TableCell>
           <TableCell>
             { protocol.amount_unit && index === 0 && (
@@ -95,7 +95,7 @@ const Doses: React.FC<Props> = ({ project, protocol, units }) => {
             <FloatField label={index === 0 ? "Start Time" : "Time After Last Dose"} name={`doses.${index}.start_time`} control={control} rules={{ required: true }} />
           </TableCell>
           <TableCell>
-            <FloatField label={"Dosing Duration"} name={`doses.${index}.duration`} control={control} rules={{ required: true, min: { value: Number.EPSILON, message: "Must be greater than 0"} }} />
+            <FloatField label={"Dosing Duration"} name={`doses.${index}.duration`} control={control} rules={{ required: true,  min: { value: Number.EPSILON, message: "Must be greater than 0"} }} />
           </TableCell>
           <TableCell>
             <FloatField label={"Dosing Interval"} name={`doses.${index}.repeat_interval`} control={control} rules={{ required: true, min: { value: Number.EPSILON, message: "Must be greater than 0" } }} />
