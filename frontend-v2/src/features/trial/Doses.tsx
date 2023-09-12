@@ -81,7 +81,7 @@ const Doses: React.FC<Props> = ({ project, protocol, units }) => {
             {variable.name}
           </TableCell>
           <TableCell>
-            <FloatField label={"Dose"} name={`doses.${index}.amount`} control={control} rules={{ required: true, min: { value: Number.EPSILON, message: "Must be greater than 0"} }} />
+            <FloatField label={"Dose"} name={`doses.${index}.amount`} control={control} rules={{ required: true, min: { value: 0, message: "Must be greater or equal to 0"} }} />
           </TableCell>
           <TableCell>
             { protocol.amount_unit && index === 0 && (

@@ -2049,6 +2049,10 @@ export type SimulationPlot = {
   x_scale?: Y2ScaleEnum;
   y_scale?: Y2ScaleEnum;
   y2_scale?: Y2ScaleEnum;
+  min?: number | null;
+  max?: number | null;
+  min2?: number | null;
+  max2?: number | null;
   x_unit: number;
   y_unit?: number | null;
   y_unit2?: number | null;
@@ -2154,10 +2158,8 @@ export type Variable = {
   read_only?: boolean;
   datetime?: string | null;
   is_public?: boolean;
-  lower_bound?: number;
-  hard_lower_bound?: number | null;
-  upper_bound?: number;
-  hard_upper_bound?: number | null;
+  lower_bound?: number | null;
+  upper_bound?: number | null;
   default_value?: number;
   is_log?: boolean;
   name: string;
@@ -2181,10 +2183,8 @@ export type PatchedVariable = {
   read_only?: boolean;
   datetime?: string | null;
   is_public?: boolean;
-  lower_bound?: number;
-  hard_lower_bound?: number | null;
-  upper_bound?: number;
-  hard_upper_bound?: number | null;
+  lower_bound?: number | null;
+  upper_bound?: number | null;
   default_value?: number;
   is_log?: boolean;
   name?: string;

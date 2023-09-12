@@ -46,9 +46,6 @@ export default function Sidebar() {
   if ((model && model.pk_model === null) || (model && model.pd_model && model.mappings.length === 0) || (protocols && protocols.length === 0)) {
     errors[PageName.MODEL] = 'Model is incomplete, see the Model tab for details';
   }
-  if (protocols && protocols.some((protocol: Protocol) => protocol.doses[0].amount === 0)) {
-    errors[PageName.TRIAL_DESIGN] = 'Trial Design is incomplete, see the Trial Design tab for details';
-  }
 
   let errorComponents: { [key: string]: React.ReactNode } = {};
   for (const key in errors) {

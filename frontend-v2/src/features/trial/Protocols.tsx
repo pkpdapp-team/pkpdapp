@@ -47,7 +47,7 @@ const Protocols: React.FC = () => {
             <TableCell>Dosing Interval</TableCell>
             <TableCell>Time Unit</TableCell>
             <TableCell align="right">
-              Add Dose Line <HelpButton title="Add Dose Line">Adding an additional dosing line allows defining complex dosing regimens (e.g. chaing dosing frequency and/or dosing levels)</HelpButton>
+              Add Dose Line <HelpButton title="Add Dose Line">Adding an additional dosing line allows defining complex dosing regimens (e.g. changing dosing frequency and/or dosing levels)</HelpButton>
             </TableCell>
           </TableRow>
         </TableHead>

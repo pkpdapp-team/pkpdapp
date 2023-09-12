@@ -118,6 +118,26 @@ class SimulationPlot(models.Model):
         help_text='unit for rhs y axis'
     )
 
+    min = models.FloatField(
+        null=True, blank=True,
+        help_text='lower bound for the y axis'
+    )
+
+    max = models.FloatField(
+        null=True, blank=True,
+        help_text='upper bound for the y axis'
+    )
+
+    min2 = models.FloatField(
+        null=True, blank=True,
+        help_text='lower bound for the rhs y axis'
+    )
+
+    max2 = models.FloatField(
+        null=True, blank=True,
+        help_text='upper bound for the rhs y axis'
+    )
+
     def get_project(self):
         return self.simulation.project
 
@@ -139,6 +159,8 @@ class SimulationYAxis(models.Model):
         default=False,
         help_text='True if the variable is plotted on the right y axis'
     )
+
+    
 
 
 # model for a slider on the plot. the sliders alter the value of a variable

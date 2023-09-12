@@ -1,5 +1,5 @@
 import React, { SyntheticEvent, useEffect } from 'react';
-import { SimulationSlider, useVariableRetrieveQuery } from '../../app/backendApi';
+import { SimulationSlider, Unit, useVariableRetrieveQuery } from '../../app/backendApi';
 import { Grid, IconButton, Input, Slider, Stack, Tooltip, Typography } from '@mui/material';
 import { CloseFullscreen, Delete, OpenInFull, Replay, Save } from '@mui/icons-material';
 
@@ -9,10 +9,13 @@ interface SimulationSliderProps {
   onChange: (value: number) => void;
   onSave: (value: number) => void;
   remove: (index: number) => void;
+  units: Unit[];
 }
 
-const SimulationSliderView: React.FC<SimulationSliderProps> = ({ index, slider, onChange, remove, onSave }) => {
+const SimulationSliderView: React.FC<SimulationSliderProps> = ({ index, slider, onChange, remove, onSave, units }) => {
   const { data: variable, isLoading } = useVariableRetrieveQuery({id: slider.variable});
+
+  const unit = units.find((unit) => unit.id === variable?.unit);
 
   const [value, setValue] = React.useState<number>(
     variable?.default_value || 1.0,
@@ -89,7 +92,7 @@ const SimulationSliderView: React.FC<SimulationSliderProps> = ({ index, slider, 
       <Stack direction="row" spacing={0} alignItems="center">
         <Tooltip title={variable.description} placement='top'>
         <Typography id="discrete-slider" gutterBottom sx={{ flexGrow: 1 }}>
-          {variable.name}
+          {unit?.symbol ? `${variable.name} [${unit?.symbol}]` : variable.name}
         </Typography>
         </Tooltip>
         <Tooltip title={"Reset to saved default value"} placement='top'>

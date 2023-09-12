@@ -4479,23 +4479,13 @@ components:
         lower_bound:
           type: number
           format: double
-          description: lowest possible value for this variable (given default values)
-        hard_lower_bound:
-          type: number
-          format: double
           nullable: true
-          description: lowest possible value for this variable (optionally set by
-            user)
+          description: lowest possible value for this variable
         upper_bound:
           type: number
           format: double
-          description: largest possible value for this variable (given default values)
-        hard_upper_bound:
-          type: number
-          format: double
           nullable: true
-          description: largest possible value for this variable (optionally set by
-            user)
+          description: largest possible value for this variable
         default_value:
           type: number
           format: double
@@ -4984,6 +4974,26 @@ components:
             * `lg2` - Log2
             * `lg10` - Log10
             * `ln` - Ln
+        min:
+          type: number
+          format: double
+          nullable: true
+          description: lower bound for the y axis
+        max:
+          type: number
+          format: double
+          nullable: true
+          description: upper bound for the y axis
+        min2:
+          type: number
+          format: double
+          nullable: true
+          description: lower bound for the rhs y axis
+        max2:
+          type: number
+          format: double
+          nullable: true
+          description: upper bound for the rhs y axis
         x_unit:
           type: integer
           description: unit for x axis
@@ -5176,23 +5186,13 @@ components:
         lower_bound:
           type: number
           format: double
-          description: lowest possible value for this variable (given default values)
-        hard_lower_bound:
-          type: number
-          format: double
           nullable: true
-          description: lowest possible value for this variable (optionally set by
-            user)
+          description: lowest possible value for this variable
         upper_bound:
           type: number
           format: double
-          description: largest possible value for this variable (given default values)
-        hard_upper_bound:
-          type: number
-          format: double
           nullable: true
-          description: largest possible value for this variable (optionally set by
-            user)
+          description: largest possible value for this variable
         default_value:
           type: number
           format: double
