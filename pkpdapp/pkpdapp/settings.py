@@ -74,7 +74,6 @@ LOGGING = {
 SECRET_KEY = os.environ.get("SECRET_KEY", default='foo')
 
 DEBUG = int(os.environ.get("DEBUG", default=0))
-print('DEBUG', DEBUG)
 
 ALLOWED_HOSTS = [os.environ.get('HOST_NAME', 'localhost'), '127.0.0.1']
 
@@ -311,7 +310,6 @@ db_from_env = dj_database_url.config(
 )
 DATABASES['default'].update(db_from_env)
 
-print('database_url', DATABASE_URL)
 
 # Password validation
 # https://docs.djangoproject.com/en/3.0/ref/settings/#auth-password-validators
