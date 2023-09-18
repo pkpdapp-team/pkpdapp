@@ -290,7 +290,7 @@ const SimulationPlotView: React.FC<SimulationPlotProps> = ({ index, plot, data, 
             color: 'rgb(0, 0, 0)',
           },
           yanchor: 'top',
-          xanchor: 'middle',
+          xanchor: 'center',
           textposition: 'middle',
         },
         line: {
