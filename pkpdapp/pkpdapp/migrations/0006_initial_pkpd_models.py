@@ -117,6 +117,16 @@ $$
             'mmt_filename': 'pkpdapp/migrations/models/IE_InhibitionProduction_Emax.mmt'  # noqa: E501
         },
         {
+            'name': 'indirect_effects_precursor_inhibition_production',
+            'description': 'Indirect effects precursor model with inhibition and production',  # noqa: E501
+            'mmt_filename': 'pkpdapp/migrations/models/IE_Precursor_InhibitionElimination_Emax.mmt'  # noqa: E501
+        },
+        {
+            'name': 'indirect_effects_precursor_stimulation_production',
+            'description': 'Indirect effects precursor model with stimulatino and production',  # noqa: E501
+            'mmt_filename': 'pkpdapp/migrations/models/IE_Precursor_StimulationElimination_Emax.mmt'  # noqa: E501
+        },
+        {
             'name': 'direct_effects_emax',
             'description': 'Direct effects model with Emax',
             'mmt_filename': 'pkpdapp/migrations/models/DE_Emax.mmt'  # noqa: E501
@@ -298,6 +308,70 @@ Description of a clinical two compartment TMDD model here.
 Description of a clinical two compartment TMDD model here.
 """,  # noqa: W605
             'mmt_filename': 'pkpdapp/migrations/models/TMDD_QSS_2cmpt_PK_Model_Preclinical.mmt'  # noqa: E501
+        },
+        {
+            'name': 'one_compartment_tmdd_full_constant_target_clinical',
+            'description':
+            """
+            Description of a clinical one compartment TMDD model here.
+            """,  # noqa: W605
+            'mmt_filename': 'pkpdapp/migrations/models/TMDD_Full_ConstTarget_1cmpt_PK_Model_Clinical.mmt'  # noqa: E501
+        },
+        {
+            'name': 'two_compartment_tmdd_full_constant_target_clinical',
+            'description':
+            """
+            Description of a clinical two compartment TMDD model here.
+            """,  # noqa: W605
+            'mmt_filename': 'pkpdapp/migrations/models/TMDD_Full_ConstTarget_2cmpt_PK_Model_clinical.mmt'  # noqa: E501
+        },
+        {
+            'name': 'one_compartment_tmdd_full_constant_target_preclinical',
+            'description':
+            """
+            Description of a preclinical one compartment TMDD model here.
+            """,  # noqa: W605
+            'mmt_filename': 'pkpdapp/migrations/models/TMDD_Full_ConstTarget_1cmpt_PK_Model_Preclinical.mmt'  # noqa: E501
+        },
+        {
+            'name': 'two_compartment_tmdd_full_constant_target_preclinical',
+            'description':
+            """
+            Description of a preclinical two compartment TMDD model here.
+            """,  # noqa: W605
+            'mmt_filename': 'pkpdapp/migrations/models/TMDD_Full_ConstTarget_2cmpt_PK_Model_preclinical.mmt'  # noqa: E501
+        },
+        {
+            'name': 'one_compartment_tmdd_qss_constant_target_clinical',
+            'description':
+            """
+            Description of a clinical one compartment TMDD model here.
+            """,  # noqa: W605
+            'mmt_filename': 'pkpdapp/migrations/models/TMDD_QSS_ConstTarget_1cmpt_PK_Model_Clinical.mmt'  # noqa: E501
+        },
+        {
+            'name': 'two_compartment_tmdd_qss_constant_target_clinical',
+            'description':
+            """
+            Description of a clinical two compartment TMDD model here.
+            """,  # noqa: W605
+            'mmt_filename': 'pkpdapp/migrations/models/TMDD_QSS_ConstTarget_2cmpt_PK_Model_clinical.mmt'  # noqa: E501
+        },
+        {
+            'name': 'one_compartment_tmdd_qss_constant_target_preclinical',
+            'description':
+            """
+            Description of a preclinical one compartment TMDD model here.
+            """,  # noqa: W605
+            'mmt_filename': 'pkpdapp/migrations/models/TMDD_QSS_ConstTarget_1cmpt_PK_Model_Preclinical.mmt'  # noqa: E501
+        },
+        {
+            'name': 'two_compartment_tmdd_qss_constant_target_preclinical',
+            'description':
+            """
+            Description of a preclinical two compartment TMDD model here.
+            """,  # noqa: W605
+            'mmt_filename': 'pkpdapp/migrations/models/TMDD_QSS_ConstTarget_2cmpt_PK_Model_preclinical.mmt'  # noqa: E501
         },
     ]
 

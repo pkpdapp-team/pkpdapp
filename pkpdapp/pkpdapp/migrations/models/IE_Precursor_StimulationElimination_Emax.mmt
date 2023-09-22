@@ -1,0 +1,47 @@
+[[model]]
+name: Indirect effects model with precursor (for rebound/ tolerance) - stimulation of precursor elimination
+author: Michael Gertz
+
+# Initial values:
+PDCompartment.P = PDCompartment.E0*PDCompartment.kdeg/(PDCompartment.kdegP*PDCompartment.FE)
+PDCompartment.E = PDCompartment.E0
+
+
+[environment]
+t = 0 in [h] bind time
+
+
+[PDCompartment]
+
+kdegP = 0.1 in [1/h]
+	desc: degradation rate constant of precursor
+	
+FE = 1 in [dimensionless]
+	desc: fraction of precursor that is converted to effect
+
+kdeg = 2 in [1/h]	
+	desc: degradation rate constant of the effect
+
+E0 = 100 in [dimensionless]
+	desc: baseline effect
+	
+Emax = 5 in [dimensionless]
+	desc: maximal fold change from baseline (value range: 1 (no effect) to infinity)
+	
+C50 = 100000 in [pmol/L]
+	desc: concentration that produces half-maximal effects
+
+HC = 1 in [dimensionless]
+	desc: Hill coefficient
+	
+C_Drug = 1 in [pmol/L]
+	desc: drug concentration driving the PD effect
+
+P0 = E0*kdeg/(kdegP*FE) in [dimensionless]
+	desc: baseline of precursor
+
+STIM = (1+(Emax-1)*C_Drug^HC/(C_Drug^HC+C50^HC)) in [dimensionless]
+
+dot(P) = kdegP*P0 - kdegP*P*(FE*STIM + (1-FE)) in [dimensionless]
+dot(E) = kdegP*P*(FE*STIM) -kdeg*E in [dimensionless]
+	desc: PD effect
