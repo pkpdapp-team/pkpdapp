@@ -49,7 +49,14 @@ const ParametersTab: React.FC<Props> = ({ model, project, control, variables }) 
 
     let constVariables = variables.filter(variable => variable.constant);
     constVariables.sort((a, b) => {
-      return paramPriority(b) - paramPriority(a);
+      const overallOrder = paramPriority(a) - paramPriority(b);
+      if (overallOrder !== 0) {
+        // first sort by priority
+        return overallOrder;
+      } else {
+        // otherwise use alphabetical ordering
+        return a.name.localeCompare(b.name);
+      }
     })
 
     const noReset = !pkModel || !project.species || project.species === 'O';
