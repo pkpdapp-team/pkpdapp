@@ -174,17 +174,24 @@ class MyokitModelMixin:
         from pkpdapp.models import Variable
 
         removed_variables = []
-        if not getattr(self, 'has_saturation', True):
-            removed_variables += ['PKCompartment.Km', 'PKCompartment.CLmax']
-        if not getattr(self, 'has_effect', True):
-            removed_variables += ['PKCompartment.Ce', 'PKCompartment.AUCe',
-                                  'PKCompartment.ke0', 'PKCompartment.Kpu']
-        if not getattr(self, 'has_hill_coefficient', True):
-            removed_variables += ['PDCompartment.HC']
-        if not getattr(self, 'has_lag', True):
-            removed_variables += ['PKCompartment.tlag']
-        if not getattr(self, 'has_bioavailability', True):
-            removed_variables += ['PKCompartment.F']
+        if self.is_library_model:
+            removed_variables += [
+                'PDCompartment.C_Drug',
+                'PKCompartment.b_term',
+                'PKCompartment.c_term',
+            ]
+            if not getattr(self, 'has_saturation', True):
+                removed_variables += ['PKCompartment.Km', 'PKCompartment.CLmax']
+            if not getattr(self, 'has_effect', True):
+                removed_variables += ['PKCompartment.Ce', 'PKCompartment.AUCe',
+                                    'PKCompartment.ke0', 'PKCompartment.Kpu']
+            if not getattr(self, 'has_hill_coefficient', True):
+                removed_variables += ['PDCompartment.HC']
+            if not getattr(self, 'has_lag', True):
+                removed_variables += ['PKCompartment.tlag']
+            if not getattr(self, 'has_bioavailability', True):
+                removed_variables += ['PKCompartment.F']
+            
 
         model = self.get_myokit_model()
         new_variables = [
@@ -192,7 +199,6 @@ class MyokitModelMixin:
             for v in model.variables(const=True, sort=True)
             if v.is_literal() and v.qname() not in removed_variables
         ]
-
 
         # parameters could originally be outputs
         for v in new_variables:

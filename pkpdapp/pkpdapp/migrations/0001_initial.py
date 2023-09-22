@@ -189,6 +189,7 @@ class Migration(migrations.Migration):
                 ('description', models.TextField(blank=True, default='', help_text='short description of the model')),
                 ('mmt', models.TextField(default='[[model]]\n\n[myokit]\ntime = 0 bind time', help_text='the model represented using mmt (see https://myokit.readthedocs)')),
                 ('time_max', models.FloatField(default=30, help_text='suggested maximum time to simulate for this model (in the time units specified by the mmt model)')),
+                ('is_library_model', models.BooleanField(default=False, help_text='whether this model is a library model (i.e. it is not an uploaded user model)')),
             ],
             options={
                 'abstract': False,
@@ -205,6 +206,7 @@ class Migration(migrations.Migration):
                 ('description', models.TextField(blank=True, default='', help_text='short description of the model')),
                 ('mmt', models.TextField(default='[[model]]\n\n[myokit]\ntime = 0 bind time', help_text='the model represented using mmt (see https://myokit.readthedocs)')),
                 ('time_max', models.FloatField(default=30, help_text='suggested maximum time to simulate for this model (in the time units specified by the mmt model)')),
+                ('is_library_model', models.BooleanField(default=False, help_text='whether this model is a library model (i.e. it is not an uploaded user model)')),
             ],
             options={
                 'abstract': False,

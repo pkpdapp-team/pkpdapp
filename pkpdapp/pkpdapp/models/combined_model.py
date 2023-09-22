@@ -136,6 +136,13 @@ class CombinedModel(MyokitModelMixin, StoredModel):
     def get_project(self):
         return self.project
 
+    @property
+    def is_library_model(self):
+        is_library_model = False
+        if self.pk_model:
+            is_library_model = self.pk_model.is_library_model
+        return is_library_model
+
     def get_time_max(self):
         time_max = self.time_max
         if self.pd_model:

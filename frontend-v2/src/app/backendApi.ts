@@ -1934,6 +1934,7 @@ export type Pharmacodynamic = {
   name: string;
   description?: string;
   time_max?: number;
+  is_library_model?: boolean;
   project?: number | null;
 };
 export type PatchedPharmacodynamic = {
@@ -1946,6 +1947,7 @@ export type PatchedPharmacodynamic = {
   name?: string;
   description?: string;
   time_max?: number;
+  is_library_model?: boolean;
   project?: number | null;
 };
 export type PharmacodynamicSbml = {
@@ -1959,6 +1961,7 @@ export type Pharmacokinetic = {
   description?: string;
   mmt?: string;
   time_max?: number;
+  is_library_model?: boolean;
 };
 export type PatchedPharmacokinetic = {
   id?: number;
@@ -1968,6 +1971,7 @@ export type PatchedPharmacokinetic = {
   description?: string;
   mmt?: string;
   time_max?: number;
+  is_library_model?: boolean;
 };
 export type ProjectAccess = {
   id: number;

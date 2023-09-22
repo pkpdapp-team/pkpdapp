@@ -4162,6 +4162,10 @@ components:
           format: double
           description: suggested maximum time to simulate for this model (in the time
             units specified by the mmt model)
+        is_library_model:
+          type: boolean
+          description: whether this model is a library model (i.e. it is not an uploaded
+            user model)
         project:
           type: integer
           nullable: true
@@ -4195,6 +4199,10 @@ components:
           format: double
           description: suggested maximum time to simulate for this model (in the time
             units specified by the mmt model)
+        is_library_model:
+          type: boolean
+          description: whether this model is a library model (i.e. it is not an uploaded
+            user model)
     PatchedProject:
       type: object
       properties:
@@ -4592,6 +4600,10 @@ components:
           format: double
           description: suggested maximum time to simulate for this model (in the time
             units specified by the mmt model)
+        is_library_model:
+          type: boolean
+          description: whether this model is a library model (i.e. it is not an uploaded
+            user model)
         project:
           type: integer
           nullable: true
@@ -4638,6 +4650,10 @@ components:
           format: double
           description: suggested maximum time to simulate for this model (in the time
             units specified by the mmt model)
+        is_library_model:
+          type: boolean
+          description: whether this model is a library model (i.e. it is not an uploaded
+            user model)
       required:
       - id
       - name

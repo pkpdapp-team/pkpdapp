@@ -324,10 +324,11 @@ class Variable(StoredModel):
             # lower and upper bounds for library models
             lower = None
             upper = None
-            if myokit_variable.qname() == 'PDCompartment.Imax':
-                upper = 1.0
-            elif myokit_variable.qname() == 'PKCompartment.F':
-                upper = 1.0
+            if model.is_library_model:
+                if myokit_variable.qname() == 'PDCompartment.Imax':
+                    upper = 1.0
+                elif myokit_variable.qname() == 'PKCompartment.F':
+                    upper = 1.0
             state = myokit_variable.is_state()
             if state:
                 value = myokit_variable.state_value()

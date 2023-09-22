@@ -390,7 +390,8 @@ Description of a clinical two compartment TMDD model here.
                     name=m['name'],
                     description=m['description'],
                     mmt=MyokitModelMixin.sbml_string_to_mmt(sbml_string),
-                    project=demo_project
+                    project=demo_project,
+                    is_library_model=True,
                 )
 
                 myokit_model = SBMLParser().parse_string(
@@ -487,6 +488,7 @@ Description of a clinical two compartment TMDD model here.
                 name=m['name'],
                 description=myokit_model.meta['name'],
                 mmt=mmt_string,
+                is_library_model=True,
             )
         except urllib.error.URLError:
             print('WARNING: urlopen timed-out, no data loaded')
