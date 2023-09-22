@@ -113,7 +113,9 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props ) => {
           </Grid>
           <Grid item xs={5}>
             { model.pd_model && (
+              <Tooltip title="Includes the Hill coefficient to the PD response">
               <Checkbox label="Hill Coefficient" name="has_hill_coefficient" control={control} checkboxFieldProps={{ disabled: !model.pd_model }} />
+              </Tooltip>
             )}
           </Grid>
           { pdIsTumourGrowth && (
