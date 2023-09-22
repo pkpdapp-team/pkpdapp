@@ -161,18 +161,13 @@ const SimulationPlotView: React.FC<SimulationPlotProps> = ({ index, plot, data, 
   }
 
   
-  
-  
-  // remove any initial values that are smaller than 1e-9
-  
   // setup range for y-axis
   let rangey: number[] | undefined = undefined;
   let rangey2: number[] | undefined = undefined;
   
   if (minY !== undefined && maxY !== undefined) {
-    rangey = [minY, maxY];
     if (plot.y_scale === 'lg2' || plot.y_scale === 'lg10' || plot.y_scale === 'ln') {
-      rangey = [Math.log10(minY), Math.log10(maxY)];
+      rangey = [Math.log10(minY), Math.log10(2 * maxY)];
       if (plot.max) {
         rangey[1] = Math.log10(plot.max)
       }
@@ -186,7 +181,6 @@ const SimulationPlotView: React.FC<SimulationPlotProps> = ({ index, plot, data, 
     }
   }
   if (minY2 !== undefined && maxY2 !== undefined) {
-    rangey2 = [minY2, maxY2];
     if (plot.y2_scale === 'lg2' || plot.y2_scale === 'lg10' || plot.y2_scale === 'ln') {
       rangey2 = [Math.log10(minY2), Math.log10(maxY2)];
       if (plot.max2) {
