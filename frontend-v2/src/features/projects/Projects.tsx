@@ -105,9 +105,9 @@ const ProjectTable: React.FC = () => {
     let project: Project = { id: 0, name: new_name, description: '', compound: 0, user_access, users: [user?.id || 0], protocols: [], created: '' }
     let compound: Compound | undefined = undefined;
     if (type === 'SM') {
-      compound = {id: 0, name: 'new', description: '', compound_type: 'SM', efficacy_experiments: [], dissociation_constant: 500};
+      compound = {id: 0, name: 'untitled', description: '', compound_type: 'SM', efficacy_experiments: [], dissociation_constant: 500};
     } else if (type === 'LM') {
-      compound = {id: 0, name: 'new', description: '', compound_type: 'LM', efficacy_experiments: [], molecular_mass: 150000, fraction_unbound_plasma: 1.0, dissociation_constant: 1};
+      compound = {id: 0, name: 'untitled', description: '', compound_type: 'LM', efficacy_experiments: [], molecular_mass: 150000, fraction_unbound_plasma: 1.0, dissociation_constant: 1};
     }
     if (!compound) {
       return
