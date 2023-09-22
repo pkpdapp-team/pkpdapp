@@ -29,25 +29,27 @@ const ParametersTab: React.FC<Props> = ({ model, project, control, variables }) 
         return <div>Units not found</div>;
     }
 
+    const libraryParamOrder = ['Cl', 'Clmax', 'Km', 'Kss', 'KD', 'V1', 'V2', 'V3', 'Q1', 'Q2', 'CT1_0', 'kdeg', 'kint', 'koff', 'F', 'ka', 'tlag', 'Kp', 'ke0'];
+    const qnameLibraryOrder = libraryParamOrder.toReversed().map(param => 'PKCompartment.' + param);
+    const paramPriority = (param: Variable) => {
+      let priority = 0;
+      if (param.qname.endsWith("_ud")) {
+        priority = 1;
+      } else if (param.qname.startsWith("PK")) {
+        priority = 3;
+        let index = qnameLibraryOrder.indexOf(param.qname);
+        if (index > -1) {
+          priority = 4 + index;
+        }
+      } else if (param.qname.startsWith("PD")) {
+        priority = 2;
+      }
+      return priority;
+    }
+
     let constVariables = variables.filter(variable => variable.constant);
     constVariables.sort((a, b) => {
-      let apriority = 0;
-      if (a.qname.endsWith("_ud")) {
-        apriority = 1;
-      } else if (b.qname.startsWith("PK")) {
-        apriority = 3;
-      } else if (b.qname.startsWith("PD")) {
-        apriority = 2;
-      }
-      let bpriority = 0;
-      if (b.qname.endsWith("_ud")) {
-        bpriority = 1;
-      } else if (b.qname.startsWith("PK")) {
-        bpriority = 3;
-      } else if (b.qname.startsWith("PD")) {
-        bpriority = 2;
-      }
-      return bpriority - apriority;
+      return paramPriority(b) - paramPriority(a);
     })
 
     const noReset = !pkModel || !project.species || project.species === 'O';

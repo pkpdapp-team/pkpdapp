@@ -184,7 +184,8 @@ class MyokitModelMixin:
                 removed_variables += ['PKCompartment.Km', 'PKCompartment.CLmax']
             if not getattr(self, 'has_effect', True):
                 removed_variables += ['PKCompartment.Ce', 'PKCompartment.AUCe',
-                                    'PKCompartment.ke0', 'PKCompartment.Kpu']
+                                    'PKCompartment.ke0', 'PKCompartment.Kpu',
+                                    'PKCompartment.Kp',]
             if not getattr(self, 'has_hill_coefficient', True):
                 removed_variables += ['PDCompartment.HC']
             if not getattr(self, 'has_lag', True):
