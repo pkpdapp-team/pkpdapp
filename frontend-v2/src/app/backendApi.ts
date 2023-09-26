@@ -1650,7 +1650,7 @@ export type PkpdMapping = {
   pk_variable: number;
   pd_variable: number;
 };
-export type TypeEnum = "RO" | "FUP" | "BPR";
+export type TypeEnum = "RO" | "FUP" | "BPR" | "TLG";
 export type DerivedVariable = {
   id: number;
   read_only?: boolean;
@@ -1668,6 +1668,7 @@ export type CombinedModel = {
   variables: number[];
   mmt: string;
   time_unit: number;
+  is_library_model: boolean;
   read_only?: boolean;
   datetime?: string | null;
   name: string;
@@ -1691,6 +1692,7 @@ export type PatchedCombinedModel = {
   variables?: number[];
   mmt?: string;
   time_unit?: number;
+  is_library_model?: boolean;
   read_only?: boolean;
   datetime?: string | null;
   name?: string;
@@ -1748,6 +1750,7 @@ export type Compound = {
   target_concentration?: number | null;
   dissociation_constant?: number | null;
   is_soluble?: boolean;
+  use_efficacy?: number | null;
   molecular_mass_unit?: number;
   intrinsic_clearance_unit?: number;
   target_molecular_mass_unit?: number;
@@ -1770,6 +1773,7 @@ export type PatchedCompound = {
   target_concentration?: number | null;
   dissociation_constant?: number | null;
   is_soluble?: boolean;
+  use_efficacy?: number | null;
   molecular_mass_unit?: number;
   intrinsic_clearance_unit?: number;
   target_molecular_mass_unit?: number;
@@ -1932,6 +1936,7 @@ export type Pharmacodynamic = {
   name: string;
   description?: string;
   time_max?: number;
+  is_library_model?: boolean;
   project?: number | null;
 };
 export type PatchedPharmacodynamic = {
@@ -1944,6 +1949,7 @@ export type PatchedPharmacodynamic = {
   name?: string;
   description?: string;
   time_max?: number;
+  is_library_model?: boolean;
   project?: number | null;
 };
 export type PharmacodynamicSbml = {
@@ -1957,6 +1963,7 @@ export type Pharmacokinetic = {
   description?: string;
   mmt?: string;
   time_max?: number;
+  is_library_model?: boolean;
 };
 export type PatchedPharmacokinetic = {
   id?: number;
@@ -1966,6 +1973,7 @@ export type PatchedPharmacokinetic = {
   description?: string;
   mmt?: string;
   time_max?: number;
+  is_library_model?: boolean;
 };
 export type ProjectAccess = {
   id: number;
@@ -2047,6 +2055,10 @@ export type SimulationPlot = {
   x_scale?: Y2ScaleEnum;
   y_scale?: Y2ScaleEnum;
   y2_scale?: Y2ScaleEnum;
+  min?: number | null;
+  max?: number | null;
+  min2?: number | null;
+  max2?: number | null;
   x_unit: number;
   y_unit?: number | null;
   y_unit2?: number | null;
@@ -2152,8 +2164,8 @@ export type Variable = {
   read_only?: boolean;
   datetime?: string | null;
   is_public?: boolean;
-  lower_bound?: number;
-  upper_bound?: number;
+  lower_bound?: number | null;
+  upper_bound?: number | null;
   default_value?: number;
   is_log?: boolean;
   name: string;
@@ -2177,8 +2189,8 @@ export type PatchedVariable = {
   read_only?: boolean;
   datetime?: string | null;
   is_public?: boolean;
-  lower_bound?: number;
-  upper_bound?: number;
+  lower_bound?: number | null;
+  upper_bound?: number | null;
   default_value?: number;
   is_log?: boolean;
   name?: string;

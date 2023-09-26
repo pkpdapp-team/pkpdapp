@@ -13,6 +13,7 @@ import { useUnitListQuery, useProjectRetrieveQuery, useDoseCreateMutation, usePr
 import { RootState } from "../../app/store";
 import { useFieldArray, useForm } from "react-hook-form";
 import Doses from "./Doses";
+import HelpButton from "../../components/HelpButton";
 
 
 const Protocols: React.FC = () => {
@@ -37,16 +38,16 @@ const Protocols: React.FC = () => {
       <Table>
         <TableHead>
           <TableRow>
-            <TableCell>Site of Admin</TableCell>
+            <TableCell>Site of Admin<HelpButton title="Site of Admin">Defined in Model/Map Variables</HelpButton></TableCell>
             <TableCell>Dose</TableCell>
-            <TableCell>Dose Unit</TableCell>
+            <TableCell>Dose Unit<HelpButton title="Dose Unit">Default selection: mg/kg for preclinical, mg for clinical</HelpButton></TableCell>
             <TableCell>Number of Doses</TableCell>
-            <TableCell>Start Time</TableCell>
-            <TableCell>Dose Duration</TableCell>
+            <TableCell>Start Time<HelpButton title="Start Time">Start time of the first dose</HelpButton></TableCell>
+            <TableCell>Dose Duration<HelpButton title="Dose Duration">Duration of infusion. For PO/SC dosing use default 0.0533 h</HelpButton></TableCell>
             <TableCell>Dosing Interval</TableCell>
             <TableCell>Time Unit</TableCell>
             <TableCell align="right">
-              Add Dose
+              Add Dose Line <HelpButton title="Add Dose Line">Adding an additional dosing line allows defining complex dosing regimens (e.g. changing dosing frequency and/or dosing levels)</HelpButton>
             </TableCell>
           </TableRow>
         </TableHead>

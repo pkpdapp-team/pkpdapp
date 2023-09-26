@@ -8,6 +8,7 @@ import {
   FormControlLabel,
   Tooltip,
   Typography,
+  Radio,
 } from "@mui/material";
 import { Project, PkpdMapping, CombinedModel, Variable, useVariableUpdateMutation, useProtocolCreateMutation, useProtocolDestroyMutation, Dose, useUnitListQuery, Unit, Compound } from "../../app/backendApi";
 import Checkbox from "../../components/Checkbox";
@@ -23,6 +24,8 @@ interface Props {
   units: Unit[];
   timeVariable: Variable | undefined;
 }
+
+const derivedVariableRegex = /calc_.*_(f|bl|RO)/;
 
 
 const VariableRow: React.FC<Props> = ({ project, compound, model, variable, control, effectVariable, units, timeVariable }) => {
@@ -56,7 +59,18 @@ const VariableRow: React.FC<Props> = ({ project, compound, model, variable, cont
   useEffect(() => {
     const intervalId = setInterval(() => {
       if (isDirty) {
-        handleSubmit((data) => updateVariable({ id: data.id, variable: data }))();
+        handleSubmit((data) => {
+          // @ts-expect-error
+          if (data.lower_bound === '') {
+            data.lower_bound = null;
+          }
+          // @ts-expect-error
+          if (data.upper_bound === '') {
+            data.upper_bound = null;
+          }
+          console.log('updateVariable', data)
+          updateVariable({ id: data.id, variable: data });
+        })();
       }
     }, 1000);
     return () => clearInterval(intervalId);
@@ -84,7 +98,7 @@ const VariableRow: React.FC<Props> = ({ project, compound, model, variable, cont
     const isPerKg = variableUnit?.g !== 0;
     const amountUnitSymbol = isPerKg ? "mg/kg" : "mg";
     const amountUnit = units.find((unit) => unit.symbol === amountUnitSymbol);
-    const defaultDose: Dose = { id: 0, amount: 0, start_time: 0, repeat_interval: 1, repeats: 1, duration: 0.0833 };
+    const defaultDose: Dose = { id: 0, amount: 1, start_time: 0, repeat_interval: 1, repeats: 1, duration: 0.0833 };
     createProtocol({ protocol: { id: 0, dataset: '', doses: [ defaultDose ], amount_unit: amountUnit?.id || variable.unit, time_unit: defaultTimeUnit?.id || undefined, subjects: [], name: variable.name, project: project.id, variables: [variable.id] } })
     .then((value) => {
       if ('data' in value) {
@@ -116,24 +130,37 @@ const VariableRow: React.FC<Props> = ({ project, compound, model, variable, cont
     }
   };
 
-  const addDerived = (type: 'RO' | 'FUP' | 'BPR') => {
+  const addDerived = (type: 'RO' | 'FUP' | 'BPR' | "TLG") => {
+    console.log('addDerived', type)
+    // can only be one 'FUP' and one 'BPR' across all variables
+    const sameType = derivedVariables
+      .map((d, i) => ({...d, index: i }))
+      .filter((ro) => ro.type === type)
+      .map((ro) => ro.index);
+
+    const onlyOne = type === 'FUP' || type === 'BPR';
+    if (onlyOne && sameType.length > 0) {
+      removeDerived(sameType);
+    }
+    
     derivedVariablesAppend({ id: 0, pk_variable: variable.id, pkpd_model: model.id, type });
   };
 
-  const removeDerived = (index: number) => {
+  const removeDerived = (index: number | number[]) => {
     derivedVariablesRemove(index);
   };
 
-  const onClickDerived = (type: 'RO' | 'FUP' | 'BPR') => () => {
+  const onClickDerived = (type: 'RO' | 'FUP' | 'BPR' | "TLG") => () => {
+    console.log('onClickDerived', type)
     const index = derivedIndex(type);
     return index >= 0 ? removeDerived(index) : addDerived(type)
   };
 
-  const derivedIndex = (type: 'RO' | 'FUP' | 'BPR') => {
+  const derivedIndex = (type: 'RO' | 'FUP' | 'BPR' | "TLG") => {
     return derivedVariables.findIndex((ro) => ro.pk_variable === variable.id && ro.type === type);
   };
 
-  const isLinkedTo = (type: 'RO' | 'FUP' | 'BPR') => {
+  const isLinkedTo = (type: 'RO' | 'FUP' | 'BPR' | "TLG") => {
     return derivedIndex(type) >= 0;
   };
 
@@ -145,9 +172,13 @@ const VariableRow: React.FC<Props> = ({ project, compound, model, variable, cont
   const disableBPR = !compound.blood_to_plasma_ratio || compound.compound_type === 'LM';
   const noDosing = !isAmount;
 
+  const isDerivedVariable = variable.name.match(derivedVariableRegex) !== null; 
+
   if (noMapToPD && noDerivedVariables && noDosing) {
     return (null);
   }
+
+  const modelHaveTLag = model.has_lag;
 
   return (
     <TableRow>
@@ -166,27 +197,34 @@ const VariableRow: React.FC<Props> = ({ project, compound, model, variable, cont
       </TableCell>
       <TableCell>
         { !noDosing && (
-        <FormControlLabel control={<MuiCheckbox checked={hasProtocol} onClick={() => hasProtocol ? removeProtocol() : addProtocol()} data-cy={`checkbox-dosing-${variable.name}`} />} label="Dosing" />
+        <FormControlLabel control={<MuiCheckbox checked={hasProtocol} onClick={() => hasProtocol ? removeProtocol() : addProtocol()} data-cy={`checkbox-dosing-${variable.name}`} />} label="" />
         )}
       </TableCell>
+      { modelHaveTLag && (
+      <TableCell>
+        { !noDosing && (
+        <FormControlLabel control={<MuiCheckbox checked={isLinkedTo('TLG')} onClick={onClickDerived('TLG')} data-cy={`checkbox-tlag-${variable.name}`} />} label="" />
+        )}
+      </TableCell>
+      )}
       <TableCell>
         { !noMapToPD && (
-        <FormControlLabel control={<MuiCheckbox checked={linkToPD} onClick={() => linkToPD ? removePDMapping() : addPDMapping()} data-cy={`checkbox-map-to-pd-${variable.name}`}/>} label="Map to PD Effect" />
+        <FormControlLabel control={<Radio checked={linkToPD} onClick={() => linkToPD ? removePDMapping() : addPDMapping()} data-cy={`checkbox-map-to-pd-${variable.name}`}/>} label="" />
         )}
       </TableCell>
       <TableCell>
-        { !noDerivedVariables && (
-        <FormControlLabel disabled={disableRo} control={<MuiCheckbox checked={isLinkedTo('RO')} onClick={onClickDerived('RO')} />} label="Link to RO" />
+        { !noDerivedVariables && !isDerivedVariable && (
+        <FormControlLabel disabled={disableRo} control={<MuiCheckbox checked={isLinkedTo('RO')} onClick={onClickDerived('RO')} />} label="" />
         )}
       </TableCell>
       <TableCell>
-        { !noDerivedVariables && (
-        <FormControlLabel disabled={disableFUP} control={<MuiCheckbox checked={isLinkedTo('FUP')} onClick={onClickDerived('FUP')} />} label="Calculate unbound concentration" />
+        { !noDerivedVariables && !isDerivedVariable && (
+        <FormControlLabel disabled={disableFUP} control={<Radio checked={isLinkedTo('FUP')} onClick={onClickDerived('FUP')} />} label="" />
         )}
       </TableCell>
       <TableCell>
-        { !noDerivedVariables && (
-        <FormControlLabel disabled={disableBPR} control={<MuiCheckbox checked={isLinkedTo('BPR')} onClick={onClickDerived('BPR')} />} label="Multiply (observations in plasma)" />
+        { !noDerivedVariables && !isDerivedVariable && (
+        <FormControlLabel disabled={disableBPR} control={<Radio checked={isLinkedTo('BPR')} onClick={onClickDerived('BPR')} />} label="" />
         )}
       </TableCell>
     </TableRow>

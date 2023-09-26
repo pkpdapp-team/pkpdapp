@@ -1,8 +1,9 @@
 import * as React from 'react';
 import { CombinedModel, Project, Variable, useCompoundRetrieveQuery, useUnitListQuery, useUnitRetrieveQuery } from '../../app/backendApi';
 import { Control, useFieldArray } from 'react-hook-form';
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tooltip } from '@mui/material';
 import VariableRow from './VariableRow';
+import HelpButton from '../../components/HelpButton';
 
 interface Props {
     model: CombinedModel;
@@ -55,6 +56,32 @@ const MapVariablesTab: React.FC<Props> = ({ model, project, control, variables }
       
     })
 
+    const dosingCompartmentHelp = (
+      <>
+      <p>IV dosing: A1 for PK models and A1_f (full TMDD models) or A1_t (for QSS models)</p>
+      <p>PO/SC dosing: Aa</p>
+      <p>For custom-made models, please consult your tM&S expert</p>
+      </>
+    );
+
+    const sROHelp = (
+      <p>The receptor occupancy for SM and LM (calc_RO) is calculated from the total drug concentration (typcially C1 or Ce), the total target concentration and the KD value of drug-target binding</p>
+    );
+
+    const unboundHelp = (
+      <p>For SM, the unbound concentration in plasma is calculated by multiplying the central drug concentration (typically C1) by fup (see Drug Target tab)</p>
+    );
+
+    const bloodHelp = (
+      <p>For SM, the total concentration in blood is calculated by dividing the central drug concentration (typically C1) by BP (see Drug Target tab)</p>
+    );
+
+    const lagTimeHelp = (
+      <p>Adds a tlag parameter to the model, which is the time delay between the dosing into the chosen compartment and the first observation of drug in this compartment</p>
+    );
+
+    const haveTLag = model.has_lag;
+
     const effectVariable = variables.find((variable) => variable.qname === "PDCompartment.C_Drug" || variable.qname === "PDCompartment2.C_Drug");
     const timeVariable = variables.find((variable) => variable.binding === "time");
     return (
@@ -65,11 +92,24 @@ const MapVariablesTab: React.FC<Props> = ({ model, project, control, variables }
             <TableCell>Name</TableCell>
             <TableCell>Unit</TableCell>
             <TableCell>Type</TableCell>
-            <TableCell>Dosing Compartment</TableCell>
+            <Tooltip title="Select dosing compartment">
+            <TableCell>Dosing Compartment<HelpButton title={'Dosing Compartment'}>{dosingCompartmentHelp}</HelpButton></TableCell>
+            </Tooltip>
+            { haveTLag && (
+            <TableCell>Lag Time<HelpButton title={'Lag Time'}>{lagTimeHelp}</HelpButton></TableCell>
+            )}
+            <Tooltip title="Select drug concentration that drives PD effects">
             <TableCell>Link to PD</TableCell>
-            <TableCell>Link to Static Receptor Occupancy</TableCell>
-            <TableCell>Unbound Concentration</TableCell>
-            <TableCell>Blood Concentration</TableCell>
+            </Tooltip>
+            <Tooltip title="Select drug concentration that drives RO">
+            <TableCell>Link to Static Receptor Occupancy<HelpButton title={'Link to Static Receptor Occupancy'}>{sROHelp}</HelpButton></TableCell>
+            </Tooltip>
+            <Tooltip title="Unbound concentration is calculated">
+            <TableCell>Unbound Concentration<HelpButton title={'Unbound Concentration'}>{unboundHelp}</HelpButton></TableCell>
+            </Tooltip>
+            <Tooltip title="Blood concentration is calculated">
+            <TableCell>Blood Concentration<HelpButton title={'Blood concentration'}>{bloodHelp}</HelpButton></TableCell>
+            </Tooltip>
           </TableRow>
         </TableHead>
         <TableBody>

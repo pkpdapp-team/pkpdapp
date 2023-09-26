@@ -12,11 +12,15 @@ type Props = {
   children?: React.ReactNode;
   disabled?: boolean;
   data_cy?: string;
+  useIcon?: boolean;
 };
 
-const DropdownButton: React.FC<Props> = ({ data_cy, options, onOptionSelected, children, disabled }) => {
+const DropdownButton: React.FC<Props> = ({ data_cy, options, onOptionSelected, children, disabled, useIcon }) => {
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
 
+  if (useIcon === undefined) {
+    useIcon = true;
+  }
 
   const handleButtonClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
@@ -35,8 +39,16 @@ const DropdownButton: React.FC<Props> = ({ data_cy, options, onOptionSelected, c
   }
 
   return (
-    <div data-cy={data_cy}>
-      <IconButton onClick={handleButtonClick} disabled={isDisabled}>{children}</IconButton>
+    <div>
+      {useIcon ? (
+        <IconButton onClick={handleButtonClick} disabled={isDisabled} data-cy={data_cy}>
+          {children}
+        </IconButton>
+      ) : (
+        <Button variant='contained' onClick={handleButtonClick} disabled={isDisabled} data-cy={data_cy}>
+          {children}
+        </Button>
+      )}
       <Popover
         open={open}
         anchorEl={anchorEl}

@@ -7,13 +7,16 @@ import Drug from '../drug/Drug';
 import Model from '../model/Model';
 import Simulations from '../simulation/Simulations';
 import Protocols from '../trial/Protocols';
-import { Box } from '@mui/material';
+import ErrorIcon from '@mui/icons-material/Error';
+import { Box, Tooltip } from '@mui/material';
+import { useCombinedModelListQuery, useProtocolListQuery } from '../../app/backendApi';
 
 
 interface TabPanelProps {
   children?: React.ReactNode;
   index: PageName;
   value: PageName;
+  error?: React.ReactNode;
 }
 
 function TabPanel(props: TabPanelProps) {
@@ -36,8 +39,10 @@ function TabPanel(props: TabPanelProps) {
 
 const MainContent: React.FC = () => {
   const page = useSelector((state: RootState) => state.main.selectedPage);
-  return (
+  
 
+
+  return (
     <div>
       <TabPanel value={page} index={PageName.PROJECTS}>
         <ProjectTable />

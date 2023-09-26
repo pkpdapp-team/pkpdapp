@@ -148,7 +148,28 @@ const Simulations: React.FC = () => {
   useEffect(() => {
     const intervalId = setInterval(() => {
       if (isDirty) {
-        handleSubmit((data) => updateSimulation({ id: data.id, simulation: data }))();
+        handleSubmit((data) => {
+          // empty string keeps getting in, so convert to null
+          for (let i = 0; i < data.plots.length; i++) {
+            // @ts-ignore
+            if (data.plots[i].min === '') { 
+              data.plots[i].min = null;
+            }
+            // @ts-ignore
+            if (data.plots[i].max === '') {
+              data.plots[i].max = null;
+            }
+            // @ts-ignore
+            if (data.plots[i].min2 === '') {
+              data.plots[i].min2 = null;
+            }
+            // @ts-ignore
+            if (data.plots[i].max2 === '') {
+              data.plots[i].max2 = null;
+            }
+          }
+          updateSimulation({ id: data.id, simulation: data });
+        })();
       }
     }, 1000);
 
@@ -164,9 +185,29 @@ const Simulations: React.FC = () => {
     return <div>Not found</div>;
   }
   
-  const outputs = variables?.filter((variable) => !variable.constant) || [];
+  const filterOutputs = model?.is_library_model ? ['environment.t', 'PDCompartment.C_Drug'] : [];
+  const outputs = variables?.filter((variable) => !variable.constant && !filterOutputs.includes(variable.qname)) || [];
+  let outputsSorted = outputs.map((variable) => { 
+    if (variable.name.startsWith("C")) {
+      return { ...variable, priority: 3 };
+    } else if (variable.name.startsWith("E")) {
+      return { ...variable, priority: 2 };
+    } else if (variable.name.startsWith("TS")) {
+      return { ...variable, priority: 1 };
+    } else if (variable.name.startsWith("RO_model")) {
+      return { ...variable, priority: 0 };
+    } else if (variable.name.startsWith("calc_")) {
+      return { ...variable, priority: -1 };
+    } else if (variable.name.startsWith("AUC")) {
+      return { ...variable, priority: -2 };
+    } else {
+      return { ...variable, priority: -3 };
+    }
+  });
+
+  outputsSorted.sort((a, b) => b.priority - a.priority);
   const inputs = variables?.filter((variable) => variable.constant) || [];
-  const addPlotOptions = outputs.map((variable) => ({ value: variable.id, label: variable.name }));
+  const addPlotOptions = outputsSorted.map((variable) => ({ value: variable.id, label: variable.description ? `${variable.name} (${variable.description})` : variable.name }));
   const sliderVarIds = sliders.map(v => v.variable)
   const addSliderOptions = inputs.filter(v => !sliderVarIds.includes(v.id)).map((variable) => ({ value: variable.id, label: variable.name }));
 
@@ -254,8 +295,8 @@ const Simulations: React.FC = () => {
         </Stack>
         <Grid container spacing={2}>
           {sliders.map((slider, index) => (
-            <Grid item xs={12} md={6} lg={3} key={index}>
-              <SimulationSliderView index={index} slider={slider} onChange={handleChangeSlider(slider)} remove={removeSlider} onSave={handleSaveSlider(slider)} />
+            <Grid item xs={12} md={6} lg={4} key={index}>
+              <SimulationSliderView index={index} slider={slider} onChange={handleChangeSlider(slider)} remove={removeSlider} onSave={handleSaveSlider(slider)} units={units} />
             </Grid>
           ))}
         </Grid>

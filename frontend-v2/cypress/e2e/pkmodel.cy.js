@@ -7,8 +7,8 @@ describe('landing page', () => {
   it('can create combined pk and pd model and simulate from it', () => {
     // create a new project
     cy.intercept('POST', '/api/project/').as('createProject')
-    cy.contains('th', 'Modality').find('button').click()
-    cy.contains('[role=button]', 'Small Molecule').click()
+    cy.get('[data-cy="create-project"]').click()
+    cy.get('[data-cy="create-project-option-Small Molecule"]').click()
     cy.wait('@createProject').then((interception) => {
         const { id } = interception.response.body
 
@@ -83,7 +83,7 @@ describe('landing page', () => {
 
     // add a plot of Aa
     cy.get('[data-cy="add-plot"]').click()
-    cy.get('[data-cy="add-plot-option-Aa"]').click()
+    cy.get('[data-cy^="add-plot-option-Aa"]').click()
 
     // now there should be an svg with class "main-svg"
     cy.get('svg.main-svg').should('exist')

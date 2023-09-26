@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import Plot from 'react-plotly.js';
-import { Compound, SimulateResponse, Simulation, SimulationPlot, Unit, Variable } from '../../app/backendApi';
-import { Config, Data, Icons, Layout, Icon as PlotlyIcon } from 'plotly.js';
+import { Compound, SimulateResponse, Simulation, SimulationPlot, Unit, Variable, useProtocolListQuery } from '../../app/backendApi';
+import { AxisType, Config, Data, Icons, Layout, Icon as PlotlyIcon } from 'plotly.js';
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
 import { Control, UseFormSetValue } from 'react-hook-form';
 import SimulationPlotForm from './SimulationPlotForm';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../app/store';
+import { type } from 'os';
 
 interface SimulationPlotProps {
   index: number;
@@ -19,6 +22,8 @@ interface SimulationPlotProps {
 }
 
 const SimulationPlotView: React.FC<SimulationPlotProps> = ({ index, plot, data, variables, control, setValue, remove, units, compound }) => {
+  const projectId = useSelector((state: RootState) => state.main.selectedProject);
+  const { data: protocols, error: protocolsError, isLoading: isProtocolsLoading } = useProtocolListQuery({projectId: projectId || 0}, { skip: !projectId})
 
   const [open, setOpen] = useState(false);
 
@@ -50,6 +55,11 @@ const SimulationPlotView: React.FC<SimulationPlotProps> = ({ index, plot, data, 
   const minX = Math.min(...convertedTime);
   const maxX = Math.max(...convertedTime);
 
+  let minY: number | undefined = undefined;
+  let minY2: number | undefined = undefined;
+  let maxY: number | undefined = undefined;
+  let maxY2: number | undefined = undefined;
+
   let plotData: Data[] = plot.y_axes.map((y_axis) => {
     const variableValues = data.outputs[y_axis.variable];
     const variable = variables.find((v) => v.id === y_axis.variable);
@@ -60,7 +70,32 @@ const SimulationPlotView: React.FC<SimulationPlotProps> = ({ index, plot, data, 
     const ycompatibleUnit = variableUnit?.compatible_units.find((u) => parseInt(u.id) === yaxisUnit?.id);
     const yconversionFactor = ycompatibleUnit ? parseFloat(ycompatibleUnit.conversion_factor) : 1.0;
 
+
     if (variableValues) {
+      const y = variableValues.map((v) => v * yconversionFactor);
+      if (y_axis.right) {
+        if (minY2 === undefined) {
+          minY2 = Math.min(...y);
+        } else {
+          minY2 = Math.min(minY2, ...y);
+        }
+        if (maxY2 === undefined) {
+          maxY2 = Math.max(...y);
+        } else {
+          maxY2 = Math.max(maxY2, ...y);
+        }
+      } else {
+        if (minY === undefined) {
+          minY = Math.min(...y);
+        } else {
+          minY = Math.min(minY, ...y);
+        }
+        if (maxY === undefined) {
+          maxY = Math.max(...y);
+        } else {
+          maxY = Math.max(maxY, ...y);
+        }
+      }
       return {
         yaxis: y_axis.right ? 'y2' : undefined,
         x: convertedTime,
@@ -78,6 +113,9 @@ const SimulationPlotView: React.FC<SimulationPlotProps> = ({ index, plot, data, 
     }
   });
   let icLines: number[] = [];
+
+  
+
 
   const concentrationUnit = units.find((unit) => unit.symbol === "pmol/L");
   if (concentrationUnit === undefined) {
@@ -122,12 +160,112 @@ const SimulationPlotView: React.FC<SimulationPlotProps> = ({ index, plot, data, 
     xAxisTitle = `${xAxisTitle}  [${xUnit.symbol}]`
   }
 
+  
+  // setup range for y-axis
+  let rangey: number[] | undefined = undefined;
+  let rangey2: number[] | undefined = undefined;
+  
+  if (minY !== undefined && maxY !== undefined) {
+    if (plot.y_scale === 'lg2' || plot.y_scale === 'lg10' || plot.y_scale === 'ln') {
+      rangey = [Math.log10(minY), Math.log10(2 * maxY)];
+      if (plot.max) {
+        rangey[1] = Math.log10(plot.max)
+      }
+      if (plot.min) {
+        rangey[0] = Math.log10(plot.min)
+      } else if (plot.max) {
+        rangey[0] = Math.log10(Math.max(minY, plot.max * 1e-3));
+      } else {
+        rangey[0] = Math.log10(Math.max(minY, maxY * 1e-3));
+      }
+    }
+  }
+  if (minY2 !== undefined && maxY2 !== undefined) {
+    if (plot.y2_scale === 'lg2' || plot.y2_scale === 'lg10' || plot.y2_scale === 'ln') {
+      rangey2 = [Math.log10(minY2), Math.log10(maxY2)];
+      if (plot.max2) {
+        rangey2[1] = Math.log10(plot.max2)
+      }
+      if (plot.min2) {
+        rangey2[0] = Math.log10(plot.min2)
+      } else if (plot.max2) {
+        rangey2[0] = Math.log10(Math.max(minY2, plot.max2 * 1e-3));
+      } else {
+        rangey2[0] = Math.log10(Math.max(minY2, maxY2 * 1e-3));
+      }
+    }
+  };
+  
   const axisScaleOptions: {[key: string]: { type: 'linear' | 'log', dtick?: number | string}} = {
     'lin': { type: 'linear' },
     'lg2': { type: 'log', dtick: Math.log10(2) },
-    'lg10': { type: 'log', dtick: `D${1}` },
+    'lg10': { type: 'log' },
     'ln': { type: 'log', dtick: Math.log10(Math.E) },
   }
+  
+  // axis types
+  let typey: AxisType = 'linear';
+  let typey2: AxisType = 'linear';
+  if (plot.y_scale === 'lg2' || plot.y_scale === 'lg10' || plot.y_scale === 'ln') {
+    typey = 'log';
+  }
+  if (plot.y2_scale === 'lg2' || plot.y2_scale === 'lg10' || plot.y2_scale === 'ln') {
+    typey2 = 'log';
+  }
+  
+  // axis dticks
+  let dticky: number | string | undefined = undefined;
+  let dticky2: number | string | undefined = undefined;
+  function nearestPowerOf2(n: number) {
+    return 1 << 31 - Math.clz32(n);
+  }
+  function nearestPowerOfe(n: number) {
+    return Math.pow(Math.E ,Math.floor(Math.log(n)/Math.log(Math.E)))
+  }
+  if (plot.y_scale === 'lg2' && rangey) {
+    dticky = Math.log10((nearestPowerOf2(rangey[1] - rangey[0]) / 100.0));
+  } else if (plot.y_scale === 'lg10') {
+    dticky = `D${2}`;
+  } else if (plot.y_scale === 'ln' && rangey) {
+    dticky = Math.log10((nearestPowerOfe(rangey[1] - rangey[0]) / 10.0));
+  }
+  if (plot.y2_scale === 'lg2' && rangey2) {
+    dticky2 = Math.log10((nearestPowerOf2(rangey2[1] - rangey2[0]) / 10.0));
+  } else if (plot.y2_scale === 'lg10') {
+    dticky2 = `D${2}`;
+  } else if (plot.y2_scale === 'ln' && rangey2) {
+    dticky2 = Math.log10((nearestPowerOfe(rangey2[1] - rangey2[0]) / 10.0));
+  }
+    
+
+  //let dosingEvents: number[] = []
+  //function arange(start: number, stop: number, step: number) {
+  //    let arr: number[] = [];
+  //    do {
+  //      arr.push(arr[arr.length - 1] + step);
+  //    } while (arr[arr.length - 1] < stop);
+  //    return arr;
+  //};
+  //if (protocols) {
+  //  const tlag_var = variables.find((v) => v.binding === 'tlag');
+  //  for (const protocol of protocols) {
+  //    let lastDoseTime = tlag;
+  //    for (const dose of protocol.doses) {
+  //      const repeat_interval = dose.repeat_interval || 1.0;
+  //      const repeats = dose.repeats || 0;
+  //      if (repeat_interval <= 0) {
+  //        continue;
+  //      }
+  //      const startTimes = arange(
+  //        dose.start_time + lastDoseTime, 
+  //        dose.start_time + lastDoseTime + repeat_interval * repeats, 
+  //        repeat_interval
+  //      );
+  //      lastDoseTime = startTimes[startTimes.length - 1];
+  //      dosingEvents = dosingEvents.concat(startTimes.map(x => xconversionFactor * x)),
+  //    }
+  //  }
+  //}
 
 
   const plotLayout: Partial<Layout> = {
@@ -146,7 +284,7 @@ const SimulationPlotView: React.FC<SimulationPlotProps> = ({ index, plot, data, 
             color: 'rgb(0, 0, 0)',
           },
           yanchor: 'top',
-          xanchor: 'middle',
+          xanchor: 'center',
           textposition: 'middle',
         },
         line: {
@@ -166,19 +304,25 @@ const SimulationPlotView: React.FC<SimulationPlotProps> = ({ index, plot, data, 
     xaxis: {
       title: xAxisTitle,
       automargin: true,
+      exponentformat: 'power',  
       ...axisScaleOptions[plot.x_scale || 'lin'],
     },
     yaxis: {
       title: yAxisTitle,
       automargin: true,
+      range: rangey,
+      exponentformat: 'power',  
       ...axisScaleOptions[plot.y_scale || 'lin'],
     },
     yaxis2: {
       title: y2AxisTitle,
       anchor: 'free',
+      range: rangey2,
       overlaying: 'y',
+      automargin: true,
       side: 'right',
       position: 1.0,
+      exponentformat: 'power',  
       ...axisScaleOptions[plot.y2_scale || 'lin'],
     },
     margin: {
@@ -229,7 +373,7 @@ const SimulationPlotView: React.FC<SimulationPlotProps> = ({ index, plot, data, 
         style={{ width: '100%', height: '100%' }}
         config={config}
       />
-      <Dialog open={open} onClose={handleClose} fullWidth maxWidth='sm'>
+      <Dialog open={open} onClose={handleClose} fullWidth maxWidth='md'>
         <DialogTitle>Customise Plot</DialogTitle>
         <DialogContent>
           <SimulationPlotForm index={index} variables={variables} plot={plot} control={control} setValue={setValue} units={units} compound={compound} />

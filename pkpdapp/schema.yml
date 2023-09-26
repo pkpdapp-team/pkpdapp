@@ -3123,6 +3123,9 @@ components:
         time_unit:
           type: integer
           readOnly: true
+        is_library_model:
+          type: boolean
+          readOnly: true
         read_only:
           type: boolean
           description: true if object has been stored
@@ -3185,6 +3188,7 @@ components:
       - components
       - derived_variables
       - id
+      - is_library_model
       - mappings
       - mmt
       - name
@@ -3264,6 +3268,9 @@ components:
         is_soluble:
           type: boolean
           description: is the compound target soluble
+        use_efficacy:
+          type: integer
+          nullable: true
         molecular_mass_unit:
           type: integer
           description: unit for molecular mass (e.g. g/mol)
@@ -3367,6 +3374,7 @@ components:
             * `RO` - receptor occupancy
             * `FUP` - faction unbound plasma
             * `BPR` - blood plasma ratio
+            * `TLG` - dosing lag time
         pkpd_model:
           type: integer
           description: PKPD model that this derived variable is for
@@ -3833,6 +3841,9 @@ components:
         time_unit:
           type: integer
           readOnly: true
+        is_library_model:
+          type: boolean
+          readOnly: true
         read_only:
           type: boolean
           description: true if object has been stored
@@ -3953,6 +3964,9 @@ components:
         is_soluble:
           type: boolean
           description: is the compound target soluble
+        use_efficacy:
+          type: integer
+          nullable: true
         molecular_mass_unit:
           type: integer
           description: unit for molecular mass (e.g. g/mol)
@@ -4156,6 +4170,10 @@ components:
           format: double
           description: suggested maximum time to simulate for this model (in the time
             units specified by the mmt model)
+        is_library_model:
+          type: boolean
+          description: whether this model is a library model (i.e. it is not an uploaded
+            user model)
         project:
           type: integer
           nullable: true
@@ -4189,6 +4207,10 @@ components:
           format: double
           description: suggested maximum time to simulate for this model (in the time
             units specified by the mmt model)
+        is_library_model:
+          type: boolean
+          description: whether this model is a library model (i.e. it is not an uploaded
+            user model)
     PatchedProject:
       type: object
       properties:
@@ -4473,10 +4495,12 @@ components:
         lower_bound:
           type: number
           format: double
+          nullable: true
           description: lowest possible value for this variable
         upper_bound:
           type: number
           format: double
+          nullable: true
           description: largest possible value for this variable
         default_value:
           type: number
@@ -4584,6 +4608,10 @@ components:
           format: double
           description: suggested maximum time to simulate for this model (in the time
             units specified by the mmt model)
+        is_library_model:
+          type: boolean
+          description: whether this model is a library model (i.e. it is not an uploaded
+            user model)
         project:
           type: integer
           nullable: true
@@ -4630,6 +4658,10 @@ components:
           format: double
           description: suggested maximum time to simulate for this model (in the time
             units specified by the mmt model)
+        is_library_model:
+          type: boolean
+          description: whether this model is a library model (i.e. it is not an uploaded
+            user model)
       required:
       - id
       - name
@@ -4966,6 +4998,26 @@ components:
             * `lg2` - Log2
             * `lg10` - Log10
             * `ln` - Ln
+        min:
+          type: number
+          format: double
+          nullable: true
+          description: lower bound for the y axis
+        max:
+          type: number
+          format: double
+          nullable: true
+          description: upper bound for the y axis
+        min2:
+          type: number
+          format: double
+          nullable: true
+          description: lower bound for the rhs y axis
+        max2:
+          type: number
+          format: double
+          nullable: true
+          description: upper bound for the rhs y axis
         x_unit:
           type: integer
           description: unit for x axis
@@ -5044,11 +5096,13 @@ components:
       - RO
       - FUP
       - BPR
+      - TLG
       type: string
       description: |-
         * `RO` - receptor occupancy
         * `FUP` - faction unbound plasma
         * `BPR` - blood plasma ratio
+        * `TLG` - dosing lag time
     Unit:
       type: object
       properties:
@@ -5158,10 +5212,12 @@ components:
         lower_bound:
           type: number
           format: double
+          nullable: true
           description: lowest possible value for this variable
         upper_bound:
           type: number
           format: double
+          nullable: true
           description: largest possible value for this variable
         default_value:
           type: number

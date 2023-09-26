@@ -51,6 +51,14 @@ class MechanisticModel(models.Model, MyokitModelMixin):
         )
     )
 
+    is_library_model = models.BooleanField(
+        default=False,
+        help_text=(
+            'whether this model is a library model (i.e. it is not an '
+            'uploaded user model)'
+        )
+    )
+
     class Meta:
         abstract = True
 

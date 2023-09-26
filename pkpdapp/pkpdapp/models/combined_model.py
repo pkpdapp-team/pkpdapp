@@ -111,11 +111,11 @@ class CombinedModel(MyokitModelMixin, StoredModel):
     def from_db(cls, db, field_names, values):
         instance = super().from_db(db, field_names, values)
         # fix for infinite recursion when deleting project
-        if 'pk_model' in field_names:
+        if 'pk_model_id' in field_names:
             instance.__original_pk_model = instance.pk_model
-        if 'pd_model' in field_names:
+        if 'pd_model_id' in field_names:
             instance.__original_pd_model = instance.pd_model
-        if 'pd_model2' in field_names:
+        if 'pd_model2_id' in field_names:
             instance.__original_pd_model2 = instance.pd_model2
         if 'species' in field_names:
             instance.__original_species = instance.species
@@ -135,6 +135,13 @@ class CombinedModel(MyokitModelMixin, StoredModel):
 
     def get_project(self):
         return self.project
+
+    @property
+    def is_library_model(self):
+        is_library_model = False
+        if self.pk_model:
+            is_library_model = self.pk_model.is_library_model
+        return is_library_model
 
     def get_time_max(self):
         time_max = self.time_max
@@ -281,14 +288,32 @@ class CombinedModel(MyokitModelMixin, StoredModel):
 
         # do derived variables
         for derived_variable in self.derived_variables.all():
-            myokit_var = pkpd_model.get(derived_variable.pk_variable.qname)
+            try:
+                myokit_var = pkpd_model.get(derived_variable.pk_variable.qname)
+            except KeyError:
+                continue
             myokit_compartment = myokit_var.parent()
             var_name = derived_variable.pk_variable.name
             if derived_variable.type == DerivedVariable.Type.RECEPTOR_OCCUPANCY:  # noqa: E501
-                var = myokit_compartment.add_variable(f'{var_name}_RO')
+                new_names = [f'calc_{var_name}_RO']
+                has_name = any([myokit_compartment.has_variable(new_name) for new_name in new_names])  # noqa: E501
+                if has_name:
+                    continue
+                var = myokit_compartment.add_variable(new_names[0])
                 var.meta['desc'] = f'Receptor occupancy for {myokit_var.meta["desc"]}'  # noqa: E501
+                kd_name = 'KD_ud'
+                if myokit_compartment.has_variable(kd_name):
+                    kd = myokit_compartment.get(kd_name)
+                else:
+                    kd = myokit_compartment.add_variable(kd_name)
+                    kd.meta['desc'] = 'User-defined Dissociation Constant (Drug Target Tab) used to calculate Receptor occupancy'  # noqa: E501
+                target_conc_name = 'CT1_0_ud'
+                if myokit_compartment.has_variable(target_conc_name):
+                    target_conc = myokit_compartment.get(target_conc_name)
+                else:
+                    target_conc = myokit_compartment.add_variable(target_conc_name)
+                    target_conc.meta['desc'] = 'User-defined Target Concentration (Drug Target Tab) used to calculate Receptor occupancy'  # noqa: E501
                 var.set_unit(myokit.Unit())
-                kd = myokit_compartment.add_variable(f'{var_name}_RO_KD')
                 kd_unit = myokit_var.unit()
                 compound = self.project.compound
                 kd_unit_conversion_factor = \
@@ -298,8 +323,6 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 kd.set_rhs(compound.dissociation_constant *
                            kd_unit_conversion_factor)
                 kd.set_unit(kd_unit)
-                target_conc = myokit_compartment.add_variable(
-                    f'{var_name}_RO_TC')
                 target_conc_unit = myokit_var.unit()
                 target_conc_unit_conversion_factor = \
                     compound.target_concentration_unit.convert_to(
@@ -337,35 +360,57 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 ))
                 )
             elif derived_variable.type == DerivedVariable.Type.FRACTION_UNBOUND_PLASMA:  # noqa: E501
-                var = myokit_compartment.add_variable(f'{var_name}_UN')
-                var.meta['desc'] = f'Unbound {myokit_var.meta["desc"]}'
+                new_names = [f'calc_{var_name}_f', 'FUP_ud']
+                has_name = any([myokit_compartment.has_variable(new_name) for new_name in new_names])  # noqa: E501
+                if has_name:
+                    continue
+                var = myokit_compartment.add_variable(new_names[0])
+                var.meta['desc'] = f'Unbound Concentration for {myokit_var.meta["desc"]}'  # noqa: E501
+                fup = myokit_compartment.add_variable(new_names[1])
+                fup.meta['desc'] = 'User-defined Fraction Unbound Plasma (Drug Target Tab)'  # noqa: E501
                 var.set_unit(myokit_var.unit())
-                fup = myokit_compartment.add_variable(f'{var_name}_UN_FUP')
                 fup.set_rhs(self.project.compound.fraction_unbound_plasma)
                 fup.set_unit(myokit.units.dimensionless)
                 var.set_rhs(myokit.Multiply(
                     myokit.Name(fup), myokit.Name(myokit_var)))
             elif derived_variable.type == DerivedVariable.Type.BLOOD_PLASMA_RATIO:  # noqa: E501
-                var = myokit_compartment.add_variable(f'{var_name}_BL')
-                var.meta['desc'] = f'Blood {myokit_var.meta["desc"]}'
+                new_names = [f'calc_{var_name}_bl', 'BP_ud']
+                has_name = any([myokit_compartment.has_variable(new_name) for new_name in new_names])  # noqa: E501
+                if has_name:
+                    continue
+                var = myokit_compartment.add_variable(new_names[0])
+                bpr = myokit_compartment.add_variable(new_names[1])
+                bpr.meta['desc'] = 'User-defined Blood to Plasma Ratio (Drug Target Tab)'  # noqa: E501
+                var.meta['desc'] = f'Blood Concentration for {myokit_var.meta["desc"]}'
                 var.set_unit(myokit_var.unit())
-                bpr = myokit_compartment.add_variable(f'{var_name}_BL_BPR')
                 bpr.set_rhs(self.project.compound.blood_to_plasma_ratio)
                 bpr.set_unit(myokit.units.dimensionless)
                 var.set_rhs(myokit.Multiply(
                     myokit.Name(bpr), myokit.Name(myokit_var)))
+            elif derived_variable.type == DerivedVariable.Type.TLAG:  # noqa: E501
+                new_names = [f'{var_name}_tlag_ud']
+                has_name = any([myokit_compartment.has_variable(new_name) for new_name in new_names])  # noqa: E501
+                if has_name:
+                    continue
+                var = myokit_compartment.add_variable(new_names[0])
+                time_var = pkpd_model.binding('time')
+                var.set_unit(time_var.unit())
+                var.set_rhs(myokit.Number(0))
             else:
                 raise ValueError(
                     f'Unknown derived variable type {derived_variable.type}')
 
         # do mappings
         for mapping in self.mappings.all():
-            pd_var = pkpd_model.get(
-                mapping.pd_variable.qname.replace('myokit', 'PD')
-            )
-            pk_var = pkpd_model.get(
-                mapping.pk_variable.qname
-            )
+            try:
+                pd_var = pkpd_model.get(
+                    mapping.pd_variable.qname.replace('myokit', 'PD')
+                )
+                pk_var = pkpd_model.get(
+                    mapping.pk_variable.qname
+                )
+            except KeyError:
+                continue
 
             pk_to_pd_conversion_multiplier = Unit.convert_between_myokit_units(
                 pk_var.unit(), pd_var.unit(), compound=self.project.compound
@@ -411,6 +456,16 @@ class CombinedModel(MyokitModelMixin, StoredModel):
         # don't update a stored model
         if self.read_only:
             return
+
+        # if the pk or pd models have changed then remove the mappings and
+        # derived variables
+        if (
+            self.pk_model != self.__original_pk_model or
+            self.pd_model != self.__original_pd_model or
+            self.pd_model2 != self.__original_pd_model2
+        ):
+            self.mappings.all().delete()
+            self.derived_variables.all().delete()
 
         if (
             created or
@@ -515,6 +570,7 @@ class DerivedVariable(StoredModel):
         RECEPTOR_OCCUPANCY = 'RO', 'receptor occupancy'
         FRACTION_UNBOUND_PLASMA = 'FUP', 'faction unbound plasma'
         BLOOD_PLASMA_RATIO = 'BPR', 'blood plasma ratio'
+        TLAG = 'TLG', 'dosing lag time'
 
     type = models.CharField(
         max_length=3,

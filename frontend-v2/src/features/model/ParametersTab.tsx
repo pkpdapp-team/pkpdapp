@@ -4,6 +4,7 @@ import { Control } from 'react-hook-form';
 import { TableContainer, Table, TableHead, TableRow, TableCell, TableBody, Stack, Button } from '@mui/material';
 import ParameterRow from './ParameterRow';
 import { param_default as paramDefaults } from './param_default';
+import HelpButton from '../../components/HelpButton';
 
 interface Props {
     model: CombinedModel;
@@ -28,17 +29,34 @@ const ParametersTab: React.FC<Props> = ({ model, project, control, variables }) 
         return <div>Units not found</div>;
     }
 
+    const libraryParamOrder = ['CL', 'CLmax', 'Km', 'Kss', 'KD', 'V1', 'V2', 'V3', 'Q1', 'Q2', 'CT1_0', 'kdeg', 'kint', 'koff', 'F', 'ka', 'tlag', 'Kp', 'ke0'];
+    const qnameLibraryOrder = libraryParamOrder.map(param => 'PKCompartment.' + param);
+    const paramPriority = (param: Variable) => {
+      let priority = 0;
+      if (param.qname.endsWith("_ud")) {
+        priority = qnameLibraryOrder.length + 2;
+      } else if (param.qname.startsWith("PK")) {
+        priority = qnameLibraryOrder.length;
+        let index = qnameLibraryOrder.indexOf(param.qname);
+        if (index > -1) {
+          priority = index;
+        }
+      } else if (param.qname.startsWith("PD")) {
+        priority = qnameLibraryOrder.length + 1;
+      }
+      return priority;
+    }
+
     let constVariables = variables.filter(variable => variable.constant);
     constVariables.sort((a, b) => {
-      const aisPK = a.qname.startsWith("PK");
-      const bisPK = b.qname.startsWith("PK");
-      if (aisPK && !bisPK) {
-        return -1;
+      const overallOrder = paramPriority(a) - paramPriority(b);
+      if (overallOrder !== 0) {
+        // first sort by priority
+        return overallOrder;
+      } else {
+        // otherwise use alphabetical ordering
+        return a.name.localeCompare(b.name);
       }
-      if (!aisPK && bisPK) {
-        return 1;
-      }
-      return a.name > b.name ? 1 : -1;
     })
 
     const noReset = !pkModel || !project.species || project.species === 'O';
@@ -65,11 +83,9 @@ const ParametersTab: React.FC<Props> = ({ model, project, control, variables }) 
               defaultValue = compound.target_concentration || undefined;
               defaultUnitId = compound.target_concentration_unit;
             }
-            console.log('defaulttttt', modelName, varName, species, defaultValue, defaultUnitId, compound)
             if (!defaultValue || !defaultUnitId) {
               continue;
             }
-            console.log('defaulttttt', modelName, varName, species, defaultVal, defaultUnitId)
             if (defaultUnitId) {
                 updateVariable({ id: variable.id, variable: { ...variable, default_value: defaultValue, unit: defaultUnitId }});
             }
@@ -78,15 +94,17 @@ const ParametersTab: React.FC<Props> = ({ model, project, control, variables }) 
 
     return (
       <Stack spacing={2}>
-      <Button variant="contained" color="primary" onClick={resetToSpeciesDefaults} disabled={noReset}>Reset to Species Defaults</Button>
+      <Button variant="contained" color="primary" onClick={resetToSpeciesDefaults} disabled={noReset} sx={{width: 270}}>Reset to Species Defaults</Button>
       <TableContainer>
       <Table>
         <TableHead>
           <TableRow>
             <TableCell>Name</TableCell>
             <TableCell>Type</TableCell>
+            <TableCell>Lower Bound</TableCell>
             <TableCell>Value</TableCell>
-            <TableCell>Unit</TableCell>
+            <TableCell>Upper Bound</TableCell>
+            <TableCell>Unit <HelpButton title='Unit Column'>Changing the units does not update the PKPD values. The user is responsible for the correctness of the values and units.</HelpButton> </TableCell>
           </TableRow>
         </TableHead>
         <TableBody>

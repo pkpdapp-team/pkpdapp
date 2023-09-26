@@ -1,7 +1,9 @@
-import React, { PropsWithChildren, useState } from 'react';
+import React, { PropsWithChildren, ReactElement, useState } from 'react';
 import Box from '@mui/material/Box';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
+import ErrorIcon from '@mui/icons-material/Error';
+import { Tooltip } from '@mui/material';
 
 interface TabContextProps {
   currentTab: number;
@@ -15,6 +17,7 @@ export const TabContext = React.createContext<TabContextProps>({
 
 interface DynamicTabsProps {
   tabNames: string[];
+  tabErrors?: { [key: string]: string };
 }
 
 interface TabPanelProps {
@@ -27,12 +30,23 @@ export const TabPanel: React.FC<PropsWithChildren<TabPanelProps>> = ({ index, ch
   return <Box hidden={currentTab !== index}>{children}</Box>;
 };
 
-export const DynamicTabs: React.FC<PropsWithChildren<DynamicTabsProps>> = ({ tabNames, children }) => {
+export const DynamicTabs: React.FC<PropsWithChildren<DynamicTabsProps>> = ({ tabNames, tabErrors, children }) => {
   const [currentTab, setCurrentTab] = useState(0);
+
+  let errors: { [key: string]: ReactElement<any, string> } = {};
+  for (const key in tabErrors) {
+    errors[key] = (
+      <Tooltip title={tabErrors[key]}>
+      <ErrorIcon color='error'/>
+      </Tooltip>
+    )
+  }
+
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     setCurrentTab(newValue);
   };
+
 
   return (
     <TabContext.Provider value={{ currentTab, setCurrentTab }}>
@@ -40,7 +54,7 @@ export const DynamicTabs: React.FC<PropsWithChildren<DynamicTabsProps>> = ({ tab
         <Box sx={{ borderBottom: 1, borderColor: 'divider', marginBottom: 5 }}>
           <Tabs value={currentTab} onChange={handleChange} aria-label="basic tabs example">
             {tabNames.map((name, index) => (
-              <Tab key={index} label={name} />
+              <Tab key={index} label={name} icon={name in errors ? errors[name] : undefined} iconPosition='end' />
             ))}
           </Tabs>
         </Box>

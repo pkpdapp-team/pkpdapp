@@ -49,6 +49,11 @@ class Compound(models.Model):
         help_text='short description of the compound',
         blank=True, default=''
     )
+    use_efficacy = models.ForeignKey(
+        'EfficacyExperiment', on_delete=models.SET_NULL,
+        null=True,
+        related_name='compound_using',
+    )
     molecular_mass = models.FloatField(
         default=500.0,
         help_text=(

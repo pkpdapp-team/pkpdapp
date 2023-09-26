@@ -7,6 +7,7 @@
 # flake8: noqa
 
 
+
 from django.conf import settings
 import django.core.validators
 from django.db import migrations, models
@@ -188,6 +189,7 @@ class Migration(migrations.Migration):
                 ('description', models.TextField(blank=True, default='', help_text='short description of the model')),
                 ('mmt', models.TextField(default='[[model]]\n\n[myokit]\ntime = 0 bind time', help_text='the model represented using mmt (see https://myokit.readthedocs)')),
                 ('time_max', models.FloatField(default=30, help_text='suggested maximum time to simulate for this model (in the time units specified by the mmt model)')),
+                ('is_library_model', models.BooleanField(default=False, help_text='whether this model is a library model (i.e. it is not an uploaded user model)')),
             ],
             options={
                 'abstract': False,
@@ -204,6 +206,7 @@ class Migration(migrations.Migration):
                 ('description', models.TextField(blank=True, default='', help_text='short description of the model')),
                 ('mmt', models.TextField(default='[[model]]\n\n[myokit]\ntime = 0 bind time', help_text='the model represented using mmt (see https://myokit.readthedocs)')),
                 ('time_max', models.FloatField(default=30, help_text='suggested maximum time to simulate for this model (in the time units specified by the mmt model)')),
+                ('is_library_model', models.BooleanField(default=False, help_text='whether this model is a library model (i.e. it is not an uploaded user model)')),
             ],
             options={
                 'abstract': False,
@@ -255,6 +258,10 @@ class Migration(migrations.Migration):
                 ('x_scale', models.CharField(choices=[('lin', 'Linear'), ('lg2', 'Log2'), ('lg10', 'Log10'), ('ln', 'Ln')], default='lin', help_text='scale for x axis', max_length=4)),
                 ('y_scale', models.CharField(choices=[('lin', 'Linear'), ('lg2', 'Log2'), ('lg10', 'Log10'), ('ln', 'Ln')], default='lin', help_text='scale for y axis', max_length=4)),
                 ('y2_scale', models.CharField(choices=[('lin', 'Linear'), ('lg2', 'Log2'), ('lg10', 'Log10'), ('ln', 'Ln')], default='lin', help_text='scale for rhs y axis', max_length=4)),
+                ('min', models.FloatField(blank=True, help_text='lower bound for the y axis', null=True)),
+                ('max', models.FloatField(blank=True, help_text='upper bound for the y axis', null=True)),
+                ('min2', models.FloatField(blank=True, help_text='lower bound for the rhs y axis', null=True)),
+                ('max2', models.FloatField(blank=True, help_text='upper bound for the rhs y axis', null=True)),
                 ('simulation', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='plots', to='pkpdapp.simulation')),
             ],
         ),
@@ -292,8 +299,8 @@ class Migration(migrations.Migration):
                 ('read_only', models.BooleanField(default=False, help_text='true if object has been stored')),
                 ('datetime', models.DateTimeField(blank=True, help_text='datetime the object was stored.', null=True)),
                 ('is_public', models.BooleanField(default=False)),
-                ('lower_bound', models.FloatField(default=1e-06, help_text='lowest possible value for this variable')),
-                ('upper_bound', models.FloatField(default=2, help_text='largest possible value for this variable')),
+                ('lower_bound', models.FloatField(blank=True, help_text='lowest possible value for this variable', null=True)),
+                ('upper_bound', models.FloatField(blank=True, help_text='largest possible value for this variable', null=True)),
                 ('default_value', models.FloatField(default=1, help_text='default value for this variable')),
                 ('is_log', models.BooleanField(default=False, help_text='True if default_value is stored as the log of this value')),
                 ('name', models.CharField(help_text='name of the variable', max_length=100)),
@@ -556,6 +563,11 @@ class Migration(migrations.Migration):
             model_name='compound',
             name='target_molecular_mass_unit',
             field=models.ForeignKey(default=pkpdapp.models.compound.get_mol_mass_unit, help_text='unit for target molecular mass (e.g. g/mol)', on_delete=django.db.models.deletion.PROTECT, related_name='compounds_target_mol_mass', to='pkpdapp.unit'),
+        ),
+        migrations.AddField(
+            model_name='compound',
+            name='use_efficacy',
+            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='compound_using', to='pkpdapp.efficacyexperiment'),
         ),
         migrations.AddField(
             model_name='combinedmodel',

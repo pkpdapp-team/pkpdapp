@@ -24,6 +24,10 @@ import { ThemeContext } from '@emotion/react';
 import { Logout } from '@mui/icons-material';
 import { logout } from '../login/loginSlice';
 import { useAppDispatch } from '../../app/hooks';
+import ErrorIcon from '@mui/icons-material/Error';
+import { Tooltip } from '@mui/material';
+import { useCombinedModelListQuery, useProtocolListQuery } from '../../app/backendApi';
+import { Protocol } from "../../app/backendApi";
 
 const drawerWidth = 240;
 
@@ -33,6 +37,24 @@ export default function Sidebar() {
   const selectedPage = useSelector((state: RootState) => state.main.selectedPage);
   const selectedProject = useSelector((state: RootState) => state.main.selectedProject);
   const dirtyCount = useSelector((state: RootState) => state.main.dirtyCount);
+  const projectId = useSelector((state: RootState) => state.main.selectedProject);
+  const { data: models, isLoading: isModelsLoading } = useCombinedModelListQuery({projectId: projectId || 0}, { skip: !projectId})
+  const { data: protocols, error: protocolsError, isLoading: isProtocolsLoading } = useProtocolListQuery({projectId: projectId || 0}, { skip: !projectId})
+  const model = models?.[0] || null;
+
+  let errors: { [key: string]: string } = {};
+  if ((model && model.pk_model === null) || (model && model.pd_model && model.mappings.length === 0) || (protocols && protocols.length === 0)) {
+    errors[PageName.MODEL] = 'Model is incomplete, see the Model tab for details';
+  }
+
+  let errorComponents: { [key: string]: React.ReactNode } = {};
+  for (const key in errors) {
+    errorComponents[key] = (
+      <Tooltip title={errors[key]}>
+      <ErrorIcon color='error'/>
+      </Tooltip>
+    )
+  }
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -54,7 +76,13 @@ export default function Sidebar() {
   
   const isPageDisabled = (key: string) => { 
     const page = PageName[key as keyof typeof PageName];
+    if (page === PageName.TRIAL_DESIGN && PageName.MODEL in errors) {
+      return true;
+    }
     if (page === PageName.DATA) {
+      return true;
+    }
+    if (page === PageName.SIMULATIONS && (PageName.MODEL in errors || PageName.TRIAL_DESIGN in errors)) {
       return true;
     }
     if (selectedProject === null) {
@@ -79,7 +107,7 @@ export default function Sidebar() {
           <ListItem key={key} disablePadding selected={isPageSelected(key)}>
             <ListItemButton onClick={handlePageClick(key)} disabled={isPageDisabled(key)} disableRipple={true}>
               <ListItemIcon>
-                {index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
+                {value in errorComponents ? errorComponents[value] : index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
               </ListItemIcon>
               <ListItemText primary={value} />
             </ListItemButton>
@@ -112,7 +140,7 @@ export default function Sidebar() {
             <MenuIcon />
           </IconButton>
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-            PkpdApp
+            PK/PD Simulator
           </Typography>
           <IconButton
             onClick={() => dispatch(logout())}

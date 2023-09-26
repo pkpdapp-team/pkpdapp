@@ -8,6 +8,7 @@ import SelectField from '../../components/SelectField';
 import Checkbox from '../../components/Checkbox';
 import DropdownButton from '../../components/DropdownButton';
 import { Add, Delete } from '@mui/icons-material';
+import FloatField from '../../components/FloatField';
 
 interface SimulationPlotFormProps {
   index: number;
@@ -127,9 +128,9 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({ index, plot, va
 
   const axisScaleOptions = [
     { label: 'Linear', value: 'lin' },
-    { label: 'Log2', value: 'lg2' },
+    //{ label: 'Log2', value: 'lg2' },
     { label: 'Log10', value: 'lg10' },
-    { label: 'Ln', value: 'ln' },
+    //{ label: 'Ln', value: 'ln' },
   ];
 
   return (
@@ -154,6 +155,8 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({ index, plot, va
           selectProps={{disabled: lhs_y_axes.length === 0}}
       />
       <SelectField label="Y Axis Scale" name={`plots.${index}.y_scale`} options={axisScaleOptions} control={control} />
+      <FloatField label="Y Axis Min" name={`plots.${index}.min`} control={control} />
+      <FloatField label="Y Axis Max" name={`plots.${index}.max`} control={control} />
       <DropdownButton options={addYAxisOptions} onOptionSelected={handleAddYAxis}>
         <Add />
       </DropdownButton>
@@ -217,6 +220,8 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({ index, plot, va
           selectProps={{disabled: rhs_y_axes.length === 0}}
       />
         <SelectField label="Y2 Axis Scale" name={`plots.${index}.y2_scale`} options={axisScaleOptions} control={control} />
+        <FloatField label="Y2 Axis Min" name={`plots.${index}.min2`} control={control} />
+        <FloatField label="Y2 Axis Max" name={`plots.${index}.max2`} control={control} />
       <DropdownButton options={addY2AxisOptions} onOptionSelected={handleAddY2Axis} >
         <Add />
       </DropdownButton>
