@@ -39,13 +39,13 @@ const DropdownButton: React.FC<Props> = ({ data_cy, options, onOptionSelected, c
   }
 
   return (
-    <div data-cy={data_cy}>
+    <div>
       {useIcon ? (
-        <IconButton onClick={handleButtonClick} disabled={isDisabled}>
+        <IconButton onClick={handleButtonClick} disabled={isDisabled} data-cy={data_cy}>
           {children}
         </IconButton>
       ) : (
-        <Button variant='contained' onClick={handleButtonClick} disabled={isDisabled}>
+        <Button variant='contained' onClick={handleButtonClick} disabled={isDisabled} data-cy={data_cy}>
           {children}
         </Button>
       )}

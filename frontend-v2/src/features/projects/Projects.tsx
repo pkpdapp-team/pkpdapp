@@ -143,7 +143,7 @@ const ProjectTable: React.FC = () => {
 
   return (
     <TableContainer>
-      <DropdownButton useIcon={false} options={[{label: 'Small Molecule', value: 'SM'}, {label: 'Large Molecule', value: 'LM'}]} onOptionSelected={(value: 'SM' | 'LM') => handleAddRow(value)}>
+      <DropdownButton useIcon={false} data_cy="create-project" options={[{label: 'Small Molecule', value: 'SM'}, {label: 'Large Molecule', value: 'LM'}]} onOptionSelected={(value: 'SM' | 'LM') => handleAddRow(value)}>
         Create new project
       </DropdownButton>
       <Table size="small">
