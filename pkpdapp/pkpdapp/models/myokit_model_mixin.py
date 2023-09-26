@@ -157,7 +157,6 @@ class MyokitModelMixin:
         with lock:
             myokit_model = cache.get(key)
         if myokit_model is None:
-            print('creating myokit model')
             myokit_model = self.create_myokit_model()
             cache.set(
                 key, myokit_model, timeout=None
@@ -508,16 +507,11 @@ class MyokitModelMixin:
 
         # get tlag vars
         override_tlag = {}
-        print('DERIVED VARIABLES')
         if isinstance(self, pkpdapp.models.CombinedModel):
-            print('DERIVED VARIABLES2')
             for dv in self.derived_variables.all():
-                print('DERIVED VARIABLES3', dv)
                 if dv.type == 'TLG':
-                    print('DERIVED VARIABLES4', dv.pk_variable.qname)
                     derived_param = dv.pk_variable.qname + '_tlag_ud'
                     if derived_param in variables:
-                        print('DERIVED VARIABLES5', derived_param)
                         override_tlag[dv.pk_variable.qname] = variables[derived_param]
 
         sim = self.create_myokit_simulator(

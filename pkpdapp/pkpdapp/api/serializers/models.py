@@ -92,7 +92,6 @@ class CombinedModelSerializer(serializers.ModelSerializer):
         return new_pkpd_model
 
     def update(self, instance, validated_data):
-        print('update')
         mappings_data = validated_data.pop('mappings')
         derived_var_data = validated_data.pop('derived_variables')
         old_mappings = list((instance.mappings).all())
@@ -103,14 +102,9 @@ class CombinedModelSerializer(serializers.ModelSerializer):
             instance.pd_model != validated_data.get('pd_model') or
             instance.pd_model2 != validated_data.get('pd_model2') 
         )
-        print('models changed', models_changed)
-        print('instance.pk_model', instance.pk_model)
-        print('validated_data.get(pk_model)', validated_data.get('pk_model'))
-        print('pre-update model')
         new_pkpd_model = BaseDosedPharmacokineticSerializer().update(
             instance, validated_data
         )
-        print('post-update model')
 
         # don't update mappings if read_only
         # don't update mapping or derived variables if models have changed
@@ -138,7 +132,6 @@ class CombinedModelSerializer(serializers.ModelSerializer):
             old_model.delete()
         for old_model in old_derived_vars:
             old_model.delete()
-        print('post-adding mapping and derived model')
 
         return new_pkpd_model
 

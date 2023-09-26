@@ -109,7 +109,6 @@ class CombinedModel(MyokitModelMixin, StoredModel):
 
     @classmethod
     def from_db(cls, db, field_names, values):
-        print('from_db combined', field_names)
         instance = super().from_db(db, field_names, values)
         # fix for infinite recursion when deleting project
         if 'pk_model_id' in field_names:
@@ -185,7 +184,6 @@ class CombinedModel(MyokitModelMixin, StoredModel):
         return stored_model
 
     def create_myokit_model(self):
-        print('create_moykit_model combined')
         if self.pk_model is None:
             pk_model = myokit.Model()
         else:
@@ -289,9 +287,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
             )
 
         # do derived variables
-        print('about to do derived var')
         for derived_variable in self.derived_variables.all():
-            print('doing derived variable', derived_variable.type)
             try:
                 myokit_var = pkpd_model.get(derived_variable.pk_variable.qname)
             except KeyError:
@@ -392,7 +388,6 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 var.set_rhs(myokit.Multiply(
                     myokit.Name(bpr), myokit.Name(myokit_var)))
             elif derived_variable.type == DerivedVariable.Type.TLAG:  # noqa: E501
-                print('found tlag derived var', var_name)
                 new_names = [f'{var_name}_tlag_ud']
                 has_name = any([myokit_compartment.has_variable(new_name) for new_name in new_names])  # noqa: E501
                 if has_name:
@@ -469,7 +464,6 @@ class CombinedModel(MyokitModelMixin, StoredModel):
             self.pd_model != self.__original_pd_model or
             self.pd_model2 != self.__original_pd_model2
         ):
-            print('save: removing mappings and derived variables',
                 self.pk_model, self.__original_pk_model,
                 self.pd_model, self.__original_pd_model,
                 self.pd_model2, self.__original_pd_model2
