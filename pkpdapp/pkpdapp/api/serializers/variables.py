@@ -12,13 +12,14 @@ from pkpdapp.models import (
 class VariableSerializer(serializers.ModelSerializer):
     class Meta:
         model = Variable
-        fields = '__all__'
+        fields = "__all__"
+
     def to_internal_value(self, data):
         optional_fields = [
-            'lower_bound',
-            'upper_bound',
+            "lower_bound",
+            "upper_bound",
         ]
         for field in optional_fields:
-            if data.get(field, None) == '':
+            if data.get(field, None) == "":
                 data[field] = None
         return super(VariableSerializer, self).to_internal_value(data)

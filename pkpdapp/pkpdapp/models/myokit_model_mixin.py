@@ -12,6 +12,7 @@ import myokit
 import threading
 from django.core.cache import cache
 import logging
+
 logger = logging.getLogger(__name__)
 
 lock = threading.Lock()
@@ -19,14 +20,10 @@ lock = threading.Lock()
 
 class MyokitModelMixin:
     def _get_myokit_model_cache_key(self):
-        return 'myokit_model_{}_{}'.format(
-            self._meta.db_table, self.id
-        )
+        return "myokit_model_{}_{}".format(self._meta.db_table, self.id)
 
     def _get_myokit_simulator_cache_key(self):
-        return 'myokit_simulator_{}_{}'.format(
-            self._meta.db_table, self.id
-        )
+        return "myokit_simulator_{}_{}".format(self._meta.db_table, self.id)
 
     @staticmethod
     def sbml_string_to_mmt(sbml):
@@ -36,9 +33,7 @@ class MyokitModelMixin:
     @staticmethod
     def parse_sbml_string(sbml):
         with lock:
-            model = SBMLParser().parse_string(
-                str.encode(sbml)
-            ).myokit_model()
+            model = SBMLParser().parse_string(str.encode(sbml)).myokit_model()
         return model
 
     @staticmethod
@@ -58,10 +53,12 @@ class MyokitModelMixin:
             model = self.get_myokit_model()
 
         from pkpdapp.models import Variable
+
         if override_tlag is None:
             try:
                 tlag_value = self.variables.get(
-                    qname='PKCompartment.tlag').default_value
+                    qname="PKCompartment.tlag"
+                ).default_value
             except Variable.DoesNotExist:
                 tlag_value = 0.0
         else:
@@ -83,31 +80,26 @@ class MyokitModelMixin:
         for v in self.variables.filter(state=True):
             if v.protocol:
                 # get tlag value default to 0
-                derived_param = v.qname + '_tlag_ud'
+                derived_param = v.qname + "_tlag_ud"
                 try:
-                    tlag_value = self.variables.get(
-                        qname=derived_param).default_value
+                    tlag_value = self.variables.get(qname=derived_param).default_value
                 except Variable.DoesNotExist:
                     tlag_value = 0.0
 
                 # override tlag if set
                 if v.qname in override_tlag:
                     tlag_value = override_tlag[v.qname]
-                    
+
                 amount_var = model.get(v.qname)
-                time_var = model.binding('time')
+                time_var = model.binding("time")
 
-                amount_conversion_factor = \
-                    v.protocol.amount_unit.convert_to(
-                        amount_var.unit(),
-                        compound=compound
-                    )
+                amount_conversion_factor = v.protocol.amount_unit.convert_to(
+                    amount_var.unit(), compound=compound
+                )
 
-                time_conversion_factor = \
-                    v.protocol.time_unit.convert_to(
-                        time_var.unit(),
-                        compound=compound
-                    )
+                time_conversion_factor = v.protocol.time_unit.convert_to(
+                    time_var.unit(), compound=compound
+                )
 
                 dosing_events = []
                 last_dose_time = tlag_value
@@ -116,26 +108,23 @@ class MyokitModelMixin:
                         continue
                     start_times = np.arange(
                         d.start_time + last_dose_time,
-                        d.start_time + last_dose_time +
-                        d.repeat_interval * d.repeats,
-                        d.repeat_interval
+                        d.start_time + last_dose_time + d.repeat_interval * d.repeats,
+                        d.repeat_interval,
                     )
                     if len(start_times) == 0:
                         continue
                     last_dose_time = start_times[-1]
                     dosing_events += [
                         (
-                            (amount_conversion_factor /
-                             time_conversion_factor) *
-                            (d.amount / d.duration),
+                            (amount_conversion_factor / time_conversion_factor)
+                            * (d.amount / d.duration),
                             time_conversion_factor * start_time,
-                            time_conversion_factor * d.duration
+                            time_conversion_factor * d.duration,
                         )
                         for start_time in start_times
                     ]
 
-                protocols[_get_pacing_label(
-                    amount_var)] = get_protocol(dosing_events)
+                protocols[_get_pacing_label(amount_var)] = get_protocol(dosing_events)
 
         with lock:
             sim = myokit.Simulation(model, protocol=protocols)
@@ -147,9 +136,7 @@ class MyokitModelMixin:
             myokit_simulator = cache.get(key)
         if myokit_simulator is None:
             myokit_simulator = self.create_myokit_simulator()
-            cache.set(
-                key, myokit_simulator, timeout=None
-            )
+            cache.set(key, myokit_simulator, timeout=None)
         return myokit_simulator
 
     def get_myokit_model(self):
@@ -158,9 +145,7 @@ class MyokitModelMixin:
             myokit_model = cache.get(key)
         if myokit_model is None:
             myokit_model = self.create_myokit_model()
-            cache.set(
-                key, myokit_model, timeout=None
-            )
+            cache.set(key, myokit_model, timeout=None)
         return myokit_model
 
     def is_variables_out_of_date(self):
@@ -170,9 +155,7 @@ class MyokitModelMixin:
         # TODO: is this sufficient, we are also updating on save
         # so I think it should be ok....?
         all_const_variables = self.variables.filter(constant=True)
-        myokit_variable_count = sum(
-            1 for _ in model.variables(const=True, sort=True)
-        )
+        myokit_variable_count = sum(1 for _ in model.variables(const=True, sort=True))
         # check if variables need updating
         return len(all_const_variables) != myokit_variable_count
 
@@ -181,7 +164,7 @@ class MyokitModelMixin:
         cache.delete(self._get_myokit_simulator_cache_key())
 
     def update_model(self):
-        logger.info('UPDATE MODEL')
+        logger.info("UPDATE MODEL")
         # delete model and simulators from cache
         cache.delete(self._get_myokit_simulator_cache_key())
         cache.delete(self._get_myokit_model_cache_key())
@@ -192,22 +175,25 @@ class MyokitModelMixin:
         removed_variables = []
         if self.is_library_model:
             removed_variables += [
-                'PKCompartment.b_term',
-                'PKCompartment.c_term',
+                "PKCompartment.b_term",
+                "PKCompartment.c_term",
             ]
-            if not getattr(self, 'has_saturation', True):
-                removed_variables += ['PKCompartment.Km', 'PKCompartment.CLmax']
-            if not getattr(self, 'has_effect', True):
-                removed_variables += ['PKCompartment.Ce', 'PKCompartment.AUCe',
-                                    'PKCompartment.ke0', 'PKCompartment.Kpu',
-                                    'PKCompartment.Kp',]
-            if not getattr(self, 'has_hill_coefficient', True):
-                removed_variables += ['PDCompartment.HC']
+            if not getattr(self, "has_saturation", True):
+                removed_variables += ["PKCompartment.Km", "PKCompartment.CLmax"]
+            if not getattr(self, "has_effect", True):
+                removed_variables += [
+                    "PKCompartment.Ce",
+                    "PKCompartment.AUCe",
+                    "PKCompartment.ke0",
+                    "PKCompartment.Kpu",
+                    "PKCompartment.Kp",
+                ]
+            if not getattr(self, "has_hill_coefficient", True):
+                removed_variables += ["PDCompartment.HC"]
             # tlag now on per variable basis
-            removed_variables += ['PKCompartment.tlag']
-            if not getattr(self, 'has_bioavailability', True):
-                removed_variables += ['PKCompartment.F']
-            
+            removed_variables += ["PKCompartment.tlag"]
+            if not getattr(self, "has_bioavailability", True):
+                removed_variables += ["PKCompartment.F"]
 
         model = self.get_myokit_model()
         new_variables = [
@@ -231,19 +217,19 @@ class MyokitModelMixin:
             for v in model.variables(const=False, state=False, sort=True)
             if v.qname() not in removed_variables
         ]
-        logger.debug('ALL NEW OUTPUTS')
+        logger.debug("ALL NEW OUTPUTS")
         for v in new_outputs:
             if v.unit is not None:
                 logger.debug(
-                    f'{v.qname} [{v.unit.symbol}], '
-                    f'id = {v.id} constant = {v.constant}, '
-                    f'state = {v.state}'
+                    f"{v.qname} [{v.unit.symbol}], "
+                    f"id = {v.id} constant = {v.constant}, "
+                    f"state = {v.state}"
                 )
             else:
                 logger.debug(
-                    f'{v.qname}, id = {v.id} '
-                    f'constant = {v.constant}, '
-                    f'state = {v.state}'
+                    f"{v.qname}, id = {v.id} "
+                    f"constant = {v.constant}, "
+                    f"state = {v.state}"
                 )
 
         for v in new_outputs:
@@ -260,29 +246,27 @@ class MyokitModelMixin:
                 v.save()
 
         all_new_variables = new_variables + new_states + new_outputs
-        logger.debug('ALL NEW VARIABLES')
+        logger.debug("ALL NEW VARIABLES")
         for v in all_new_variables:
             if v.unit is not None:
                 logger.debug(
-                    f'{v.qname} [{v.unit.symbol}], id = {v.id} '
-                    f'constant = {v.constant}, state = {v.state}'
+                    f"{v.qname} [{v.unit.symbol}], id = {v.id} "
+                    f"constant = {v.constant}, state = {v.state}"
                 )
             else:
                 logger.debug(
-                    f'{v.qname}, id = {v.id} '
-                    f'constant = {v.constant}, state = {v.state}'
+                    f"{v.qname}, id = {v.id} "
+                    f"constant = {v.constant}, state = {v.state}"
                 )
 
         # delete all variables that are not in new
         for variable in self.variables.all():
             if variable not in all_new_variables:
-                logger.debug(
-                    f'DELETING VARIABLE {variable.qname} (id = {variable.id})'
-                )
+                logger.debug(f"DELETING VARIABLE {variable.qname} (id = {variable.id})")
                 variable.delete()
             else:
                 logger.debug(
-                    f'RETAINING VARIABLE {variable.qname} (id = {variable.id}, value = {variable.default_value})'  # noqa: E501
+                    f"RETAINING VARIABLE {variable.qname} (id = {variable.id}, value = {variable.default_value})"  # noqa: E501
                 )
 
         self.variables.set(all_new_variables)
@@ -290,75 +274,71 @@ class MyokitModelMixin:
     def set_variables_from_inference(self, inference):
         results_for_mle = inference.get_maximum_likelihood()
         for result in results_for_mle:
-            inference_var = (
-                result.log_likelihood.outputs.first().variable
-            )
+            inference_var = result.log_likelihood.outputs.first().variable
             # noise variables won't have a model variable
             if inference_var is not None:
-                model_var = self.variables.filter(
-                    qname=inference_var.qname
-                ).first()
+                model_var = self.variables.filter(qname=inference_var.qname).first()
             else:
                 model_var = None
             if model_var is not None:
                 model_var.default_value = result.value
-                if model_var.lower_bound and model_var.lower_bound > model_var.default_value:
+                if (
+                    model_var.lower_bound
+                    and model_var.lower_bound > model_var.default_value
+                ):
                     model_var.lower_bound = model_var.default_value
-                if model_var.upper_bound and model_var.upper_bound < model_var.default_value:
+                if (
+                    model_var.upper_bound
+                    and model_var.upper_bound < model_var.default_value
+                ):
                     model_var.upper_bound = model_var.default_value
                 model_var.save()
 
-    @ staticmethod
+    @staticmethod
     def _serialise_equation(equ):
         writer = MathMLExpressionWriter()
         writer.set_mode(presentation=True)
         return writer.eq(equ)
 
-    @ staticmethod
+    @staticmethod
     def _serialise_variable(var):
         return {
-            'name': var.name(),
-            'qname': var.qname(),
-            'unit': str(var.unit()),
-            'default_value': float(var.value()),
-            'lower_bound': 0.0,
-            'upper_bound': 2.0,
-            'scale': 'LN',
+            "name": var.name(),
+            "qname": var.qname(),
+            "unit": str(var.unit()),
+            "default_value": float(var.value()),
+            "lower_bound": 0.0,
+            "upper_bound": 2.0,
+            "scale": "LN",
         }
 
-    @ classmethod
+    @classmethod
     def _serialise_component(cls, c):
         states = [
-            cls._serialise_variable(s)
-            for s in c.variables(state=True, sort=True)
+            cls._serialise_variable(s) for s in c.variables(state=True, sort=True)
         ]
         variables = [
-            cls._serialise_variable(v)
-            for v in c.variables(const=True, sort=True)
+            cls._serialise_variable(v) for v in c.variables(const=True, sort=True)
         ]
         outputs = [
-            cls._serialise_variable(o)
-            for o in c.variables(const=False, sort=True)
+            cls._serialise_variable(o) for o in c.variables(const=False, sort=True)
         ]
         equations = [
-            cls._serialise_equation(e)
-            for e in c.equations(bound=False, const=False)
+            cls._serialise_equation(e) for e in c.equations(bound=False, const=False)
         ]
         return {
-            'name': c.name(),
-            'states': states,
-            'variables': variables,
-            'outputs': outputs,
-            'equations': equations,
+            "name": c.name(),
+            "states": states,
+            "variables": variables,
+            "outputs": outputs,
+            "equations": equations,
         }
 
     def states(self):
-        """ states are dependent variables of the model to be solved """
+        """states are dependent variables of the model to be solved"""
         model = self.get_myokit_model()
         states = model.variables(state=True, sort=True)
-        return [
-            self._serialise_variable(s) for s in states
-        ]
+        return [self._serialise_variable(s) for s in states]
 
     def components(self):
         """
@@ -366,10 +346,7 @@ class MyokitModelMixin:
         variables of the model to be solved
         """
         model = self.get_myokit_model()
-        return [
-            self._serialise_component(c)
-            for c in model.components(sort=True)
-        ]
+        return [self._serialise_component(c) for c in model.components(sort=True)]
 
     def outputs(self):
         """
@@ -378,9 +355,7 @@ class MyokitModelMixin:
         """
         model = self.get_myokit_model()
         outpts = model.variables(const=False, sort=True)
-        return [
-            self._serialise_variable(o) for o in outpts
-        ]
+        return [self._serialise_variable(o) for o in outpts]
 
     def myokit_variables(self):
         """
@@ -389,9 +364,7 @@ class MyokitModelMixin:
         """
         model = self.get_myokit_model()
         variables = model.variables(const=True, sort=True)
-        return [
-            self._serialise_variable(v) for v in variables
-        ]
+        return [self._serialise_variable(v) for v in variables]
 
     def _convert_unit(self, variable, myokit_variable_sbml, value):
         if variable.unit is None:
@@ -402,7 +375,8 @@ class MyokitModelMixin:
             if project is not None:
                 compound = project.compound
             conversion_factor = variable.unit.convert_to(
-                myokit_variable_sbml.unit(), compound=compound)
+                myokit_variable_sbml.unit(), compound=compound
+            )
 
         return conversion_factor * value
 
@@ -421,8 +395,7 @@ class MyokitModelMixin:
             conversion_factor = 1.0
         else:
             conversion_factor = myokit.Unit.conversion_factor(
-                variable.unit.get_myokit_unit(),
-                myokit_variable_sbml.unit()
+                variable.unit.get_myokit_unit(), myokit_variable_sbml.unit()
             ).value()
 
         return conversion_factor * value
@@ -437,22 +410,17 @@ class MyokitModelMixin:
                 conversion_factor = 1.0
             else:
                 conversion_factor = myokit.Unit.conversion_factor(
-                    myokit_variable_sbml.unit(),
-                    variable.unit.get_myokit_unit()
+                    myokit_variable_sbml.unit(), variable.unit.get_myokit_unit()
                 ).value()
 
-            result[variable.id] = (
-                conversion_factor * np.frombuffer(v)
-            ).tolist()
+            result[variable.id] = (conversion_factor * np.frombuffer(v)).tolist()
 
         return result
 
     def get_time_max(self):
         return self.time_max
 
-    def simulate(
-            self, outputs=None, variables=None, time_max=None
-    ):
+    def simulate(self, outputs=None, variables=None, time_max=None):
         """
         Arguments
         ---------
@@ -477,8 +445,7 @@ class MyokitModelMixin:
             outputs = []
 
         default_variables = {
-            v.qname: v.get_default_value()
-            for v in self.variables.filter(constant=True)
+            v.qname: v.get_default_value() for v in self.variables.filter(constant=True)
         }
         if variables is None:
             variables = default_variables
@@ -495,39 +462,32 @@ class MyokitModelMixin:
             qname: self._convert_unit_qname(qname, value, model)
             for qname, value in variables.items()
         }
-        time_max = self._convert_bound_unit(
-            'time', time_max, model
-        )
+        time_max = self._convert_bound_unit("time", time_max, model)
 
         # Set constants in model
         for var_name, var_value in variables.items():
             model.get(var_name).set_rhs(float(var_value))
 
-        # create simulator 
+        # create simulator
 
         # get tlag vars
         override_tlag = {}
         if isinstance(self, pkpdapp.models.CombinedModel):
             for dv in self.derived_variables.all():
-                if dv.type == 'TLG':
-                    derived_param = dv.pk_variable.qname + '_tlag_ud'
+                if dv.type == "TLG":
+                    derived_param = dv.pk_variable.qname + "_tlag_ud"
                     if derived_param in variables:
                         override_tlag[dv.pk_variable.qname] = variables[derived_param]
 
-        sim = self.create_myokit_simulator(
-            override_tlag=override_tlag, model=model)
+        sim = self.create_myokit_simulator(override_tlag=override_tlag, model=model)
         # TODO: take these from simulation model
         sim.set_tolerance(abs_tol=1e-06, rel_tol=1e-08)
 
         # Simulate, logging only state variables given by `outputs`
-        return self.serialize_datalog(
-            sim.run(time_max, log=outputs), model
-        )
+        return self.serialize_datalog(sim.run(time_max, log=outputs), model)
 
 
-def set_administration(model,
-                       drug_amount,
-                       direct=True):
+def set_administration(model, drug_amount, direct=True):
     r"""
     Sets the route of administration of the compound.
 
@@ -577,9 +537,10 @@ def set_administration(model,
         directly or indirectly to the compartment.
     """
     if not drug_amount.is_state():
-        raise ValueError('The variable <' + str(drug_amount) +
-                         '> is not a state '
-                         'variable, and can therefore not be dosed.')
+        raise ValueError(
+            "The variable <" + str(drug_amount) + "> is not a state "
+            "variable, and can therefore not be dosed."
+        )
 
     # If administration is indirect, add a dosing compartment and update
     # the drug amount variable to the one in the dosing compartment
@@ -601,9 +562,7 @@ def get_protocol(events):
     """
     myokit_protocol = myokit.Protocol()
     for e in events:
-        myokit_protocol.schedule(
-            e[0], e[1], e[2]
-        )
+        myokit_protocol.schedule(e[0], e[1], e[2])
 
     return myokit_protocol
 
@@ -621,7 +580,7 @@ def _add_dose_rate(drug_amount, time_unit):
     # pace, i.e. tell myokit that its value is set by the dosing regimen/
     # myokit.Protocol
     compartment = drug_amount.parent()
-    dose_rate = compartment.add_variable_allow_renaming(str('dose_rate'))
+    dose_rate = compartment.add_variable_allow_renaming(str("dose_rate"))
     dose_rate.set_binding(_get_pacing_label(drug_amount))
 
     # Set initial value to 0 and unit to unit of drug amount over unit of
@@ -646,7 +605,7 @@ def _get_time_unit(model):
     # Get the variable that is bound to time
     # (only one can exist in myokit.Model)
     for var in bound_variables:
-        if var._binding == 'time':
+        if var._binding == "time":
             return var.unit()
 
 
@@ -656,30 +615,36 @@ def _add_dose_compartment(model, drug_amount, time_unit):
     the connected compartment.
     """
     # Add a dose compartment to the model
-    dose_comp = model.add_component_allow_renaming('dose')
+    dose_comp = model.add_component_allow_renaming("dose")
 
     # Create a state variable for the drug amount in the dose compartment
-    dose_drug_amount = dose_comp.add_variable('drug_amount')
+    dose_drug_amount = dose_comp.add_variable("drug_amount")
     dose_drug_amount.set_rhs(0)
     dose_drug_amount.set_unit(drug_amount.unit())
     dose_drug_amount.promote()
 
     # Create an absorption rate variable
-    absorption_rate = dose_comp.add_variable('absorption_rate')
+    absorption_rate = dose_comp.add_variable("absorption_rate")
     absorption_rate.set_rhs(1)
     absorption_rate.set_unit(1 / time_unit)
 
     # Add outflow expression to dose compartment
     dose_drug_amount.set_rhs(
-        myokit.Multiply(myokit.PrefixMinus(myokit.Name(absorption_rate)),
-                        myokit.Name(dose_drug_amount)))
+        myokit.Multiply(
+            myokit.PrefixMinus(myokit.Name(absorption_rate)),
+            myokit.Name(dose_drug_amount),
+        )
+    )
 
     # Add inflow expression to connected compartment
     rhs = drug_amount.rhs()
     drug_amount.set_rhs(
         myokit.Plus(
             rhs,
-            myokit.Multiply(myokit.Name(absorption_rate),
-                            myokit.Name(dose_drug_amount))))
+            myokit.Multiply(
+                myokit.Name(absorption_rate), myokit.Name(dose_drug_amount)
+            ),
+        )
+    )
 
     return dose_drug_amount
