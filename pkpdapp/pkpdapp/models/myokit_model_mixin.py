@@ -302,9 +302,9 @@ class MyokitModelMixin:
                 model_var = None
             if model_var is not None:
                 model_var.default_value = result.value
-                if model_var.lower_bound > model_var.default_value:
+                if model_var.lower_bound and model_var.lower_bound > model_var.default_value:
                     model_var.lower_bound = model_var.default_value
-                if model_var.upper_bound < model_var.default_value:
+                if model_var.upper_bound and model_var.upper_bound < model_var.default_value:
                     model_var.upper_bound = model_var.default_value
                 model_var.save()
 

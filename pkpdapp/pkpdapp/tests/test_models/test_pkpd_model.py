@@ -99,10 +99,11 @@ class TestPkpdModel(TestCase):
             ),
             type=DerivedVariable.Type.FRACTION_UNBOUND_PLASMA,
         )
+        derived_var_qname = 'PKCompartment.calc_C1_f'
         PkpdMapping.objects.create(
             pkpd_model=pkpd_model,
             pk_variable=pkpd_model.variables.get(
-                qname='PKCompartment.C1_UN',
+                qname=derived_var_qname,
             ),
             pd_variable=pkpd_model.variables.get(
                 qname='PDCompartment.C_Drug',
@@ -110,15 +111,15 @@ class TestPkpdModel(TestCase):
         )
         vars = pkpd_model.variables.values_list('qname', flat=True)
         for var in [
-            'PKCompartment.C1_UN', 'PDCompartment.C_Drug', 'PDCompartment.E'
+            derived_var_qname, 'PDCompartment.C_Drug', 'PDCompartment.E'
         ]:
             self.assertIn(var, vars)
         self.assertFalse(
-            pkpd_model.get_myokit_model().get('PKCompartment.C1_UN').is_state()
+            pkpd_model.get_myokit_model().get(derived_var_qname).is_state()
         )
         self.assertFalse(
             pkpd_model.get_myokit_model().get(
-                'PKCompartment.C1_UN'
+                derived_var_qname 
             ).is_constant()
         )
         self.assertFalse(

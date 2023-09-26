@@ -1049,9 +1049,14 @@ class LogLikelihood(models.Model):
             ]
 
             if variable is not None:
+                mean = variable.get_default_value()
+                if variable.lower_bound is not None and variable.upper_bound is not None:
+                    sigma = 0.1 * (variable.upper_bound - variable.lower_bound)
+                else:
+                    sigma = 0.1 * mean
                 defaults = [
-                    variable.get_default_value(),
-                    0.1 * (variable.upper_bound - variable.lower_bound),
+                    mean,
+                    sigma,
                 ]
             else:
                 defaults = [0.0, 1.0]
@@ -1062,9 +1067,14 @@ class LogLikelihood(models.Model):
             ]
 
             if variable is not None:
+                mean = variable.get_default_value()
+                if variable.lower_bound is not None and variable.upper_bound is not None:
+                    sigma = 0.1 * (variable.upper_bound - variable.lower_bound)
+                else:
+                    sigma = 0.1 * mean
                 defaults = [
-                    variable.get_default_value(),
-                    0.1 * (variable.upper_bound - variable.lower_bound),
+                    mean,
+                    sigma,
                 ]
             else:
                 defaults = [0.0, 1.0]
@@ -1075,9 +1085,17 @@ class LogLikelihood(models.Model):
             ]
 
             if variable is not None:
+                if variable.lower_bound is not None:
+                    lower = variable.lower_bound
+                else:
+                    lower = 0.1 * variable.get_default_value() 
+                if variable.upper_bound is not None:
+                    upper = variable.upper_bound
+                else:
+                    upper = 10.0 * variable.get_default_value()
                 defaults = [
-                    variable.lower_bound,
-                    variable.upper_bound,
+                    lower,
+                    upper,
                 ]
             else:
                 defaults = [0.0, 1.0]

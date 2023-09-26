@@ -464,10 +464,6 @@ class CombinedModel(MyokitModelMixin, StoredModel):
             self.pd_model != self.__original_pd_model or
             self.pd_model2 != self.__original_pd_model2
         ):
-                self.pk_model, self.__original_pk_model,
-                self.pd_model, self.__original_pd_model,
-                self.pd_model2, self.__original_pd_model2
-                  )
             self.mappings.all().delete()
             self.derived_variables.all().delete()
 
