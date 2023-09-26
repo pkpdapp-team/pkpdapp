@@ -46,10 +46,16 @@ class CombinedModelSerializer(serializers.ModelSerializer):
     )
     mmt = serializers.SerializerMethodField('get_mmt', read_only=True)
     time_unit = serializers.SerializerMethodField('get_time_unit')
+    is_library_model = serializers.SerializerMethodField(
+        'get_is_library_model'
+    )
 
     class Meta:
         model = CombinedModel
         fields = '__all__'
+
+    def get_is_library_model(self, m) -> bool:
+        return m.is_library_model
 
     def get_mmt(self, m) -> str:
         return m.get_mmt()
@@ -86,26 +92,25 @@ class CombinedModelSerializer(serializers.ModelSerializer):
         return new_pkpd_model
 
     def update(self, instance, validated_data):
+        print('update')
         mappings_data = validated_data.pop('mappings')
         derived_var_data = validated_data.pop('derived_variables')
         old_mappings = list((instance.mappings).all())
-        for i in range(len(mappings_data), len(old_mappings)):
-            old_mappings[i].delete()
-            del old_mappings[i]
         old_derived_vars = list((instance.derived_variables).all())
-        for i in range(len(derived_var_data), len(old_derived_vars)):
-            old_derived_vars[i].delete()
-            del old_derived_vars[i]
 
         models_changed = (
             instance.pk_model != validated_data.get('pk_model') or
             instance.pd_model != validated_data.get('pd_model') or
             instance.pd_model2 != validated_data.get('pd_model2') 
         )
-
+        print('models changed', models_changed)
+        print('instance.pk_model', instance.pk_model)
+        print('validated_data.get(pk_model)', validated_data.get('pk_model'))
+        print('pre-update model')
         new_pkpd_model = BaseDosedPharmacokineticSerializer().update(
             instance, validated_data
         )
+        print('post-update model')
 
         # don't update mappings if read_only
         # don't update mapping or derived variables if models have changed
@@ -127,6 +132,13 @@ class CombinedModelSerializer(serializers.ModelSerializer):
                     except IndexError:
                         field_data['pkpd_model'] = new_pkpd_model
                         new_model = serializer.create(field_data)
+
+        # delete any remaining old mappings
+        for old_model in old_mappings:
+            old_model.delete()
+        for old_model in old_derived_vars:
+            old_model.delete()
+        print('post-adding mapping and derived model')
 
         return new_pkpd_model
 

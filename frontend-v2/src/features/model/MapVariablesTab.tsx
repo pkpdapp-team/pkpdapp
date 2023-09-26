@@ -76,6 +76,12 @@ const MapVariablesTab: React.FC<Props> = ({ model, project, control, variables }
       <p>For SM, the total concentration in blood is calculated by dividing the central drug concentration (typically C1) by BP (see Drug Target tab)</p>
     );
 
+    const lagTimeHelp = (
+      <p>Adds a tlag parameter to the model, which is the time delay between the dosing into the chosen compartment and the first observation of drug in this compartment</p>
+    );
+
+    const haveTLag = model.has_lag;
+
     const effectVariable = variables.find((variable) => variable.qname === "PDCompartment.C_Drug" || variable.qname === "PDCompartment2.C_Drug");
     const timeVariable = variables.find((variable) => variable.binding === "time");
     return (
@@ -89,6 +95,9 @@ const MapVariablesTab: React.FC<Props> = ({ model, project, control, variables }
             <Tooltip title="Select dosing compartment">
             <TableCell>Dosing Compartment<HelpButton title={'Dosing Compartment'}>{dosingCompartmentHelp}</HelpButton></TableCell>
             </Tooltip>
+            { haveTLag && (
+            <TableCell>Lag Time<HelpButton title={'Lag Time'}>{lagTimeHelp}</HelpButton></TableCell>
+            )}
             <Tooltip title="Select drug concentration that drives PD effects">
             <TableCell>Link to PD</TableCell>
             </Tooltip>

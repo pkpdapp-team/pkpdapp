@@ -185,7 +185,8 @@ const Simulations: React.FC = () => {
     return <div>Not found</div>;
   }
   
-  const outputs = variables?.filter((variable) => !variable.constant) || [];
+  const filterOutputs = model?.is_library_model ? ['environment.t', 'PDCompartment.C_Drug'] : [];
+  const outputs = variables?.filter((variable) => !variable.constant && !filterOutputs.includes(variable.qname)) || [];
   let outputsSorted = outputs.map((variable) => { 
     if (variable.name.startsWith("C")) {
       return { ...variable, priority: 3 };

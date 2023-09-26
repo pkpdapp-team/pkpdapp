@@ -4,6 +4,7 @@
 # copyright notice and full license details.
 #
 
+import pkpdapp
 import numpy as np
 from myokit.formats.mathml import MathMLExpressionWriter
 from myokit.formats.sbml import SBMLParser
@@ -50,6 +51,9 @@ class MyokitModelMixin:
         return self.parse_mmt_string(self.mmt)
 
     def create_myokit_simulator(self, override_tlag=None, model=None):
+        if override_tlag is None:
+            override_tlag = {}
+
         if model is None:
             model = self.get_myokit_model()
 
@@ -78,6 +82,18 @@ class MyokitModelMixin:
             compound = project.compound
         for v in self.variables.filter(state=True):
             if v.protocol:
+                # get tlag value default to 0
+                derived_param = v.qname + '_tlag_ud'
+                try:
+                    tlag_value = self.variables.get(
+                        qname=derived_param).default_value
+                except Variable.DoesNotExist:
+                    tlag_value = 0.0
+
+                # override tlag if set
+                if v.qname in override_tlag:
+                    tlag_value = override_tlag[v.qname]
+                    
                 amount_var = model.get(v.qname)
                 time_var = model.binding('time')
 
@@ -141,6 +157,7 @@ class MyokitModelMixin:
         with lock:
             myokit_model = cache.get(key)
         if myokit_model is None:
+            print('creating myokit model')
             myokit_model = self.create_myokit_model()
             cache.set(
                 key, myokit_model, timeout=None
@@ -176,7 +193,6 @@ class MyokitModelMixin:
         removed_variables = []
         if self.is_library_model:
             removed_variables += [
-                'PDCompartment.C_Drug',
                 'PKCompartment.b_term',
                 'PKCompartment.c_term',
             ]
@@ -188,8 +204,8 @@ class MyokitModelMixin:
                                     'PKCompartment.Kp',]
             if not getattr(self, 'has_hill_coefficient', True):
                 removed_variables += ['PDCompartment.HC']
-            if not getattr(self, 'has_lag', True):
-                removed_variables += ['PKCompartment.tlag']
+            # tlag now on per variable basis
+            removed_variables += ['PKCompartment.tlag']
             if not getattr(self, 'has_bioavailability', True):
                 removed_variables += ['PKCompartment.F']
             
@@ -488,10 +504,21 @@ class MyokitModelMixin:
         for var_name, var_value in variables.items():
             model.get(var_name).set_rhs(float(var_value))
 
-        # create simulator
-        override_tlag = None
-        if 'PKCompartment.tlag' in variables:
-            override_tlag = variables['PKCompartment.tlag']
+        # create simulator 
+
+        # get tlag vars
+        override_tlag = {}
+        print('DERIVED VARIABLES')
+        if isinstance(self, pkpdapp.models.CombinedModel):
+            print('DERIVED VARIABLES2')
+            for dv in self.derived_variables.all():
+                print('DERIVED VARIABLES3', dv)
+                if dv.type == 'TLG':
+                    print('DERIVED VARIABLES4', dv.pk_variable.qname)
+                    derived_param = dv.pk_variable.qname + '_tlag_ud'
+                    if derived_param in variables:
+                        print('DERIVED VARIABLES5', derived_param)
+                        override_tlag[dv.pk_variable.qname] = variables[derived_param]
 
         sim = self.create_myokit_simulator(
             override_tlag=override_tlag, model=model)

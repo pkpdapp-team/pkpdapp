@@ -13,10 +13,14 @@ type Props<T extends FieldValues> = {
 };
 
 function convert(value: any) {
-  if (typeof value === 'string' && value !== '') {
-    return parseFloat(value);
+  if (typeof value === 'string') {
+    if (value !== '') {
+      return parseFloat(value);
+    } else {
+      return null;
+    }
   } else {
-    return value;
+    return null;
   }
 }
 
@@ -30,14 +34,16 @@ function FloatField<T extends FieldValues>({ label, name, control, rules, textFi
       render={({ field: { onChange, onBlur, value }, fieldState: { error, isDirty, isTouched } }) => {
         const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
           const updatedValue = convert(e.target.value);
+          console.log('handleBlur', updatedValue, value)
           if (updatedValue !== value) {
-            e.target.value = updatedValue;
+            e.target.value = updatedValue as any;
             onChange(e);
           }
           onBlur();
         };
 
         const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+          console.log('handleChage', convert(e.target.value))
           setFieldValue(convert(e.target.value));
         };
         return (

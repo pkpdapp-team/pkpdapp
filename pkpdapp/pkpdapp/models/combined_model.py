@@ -109,13 +109,14 @@ class CombinedModel(MyokitModelMixin, StoredModel):
 
     @classmethod
     def from_db(cls, db, field_names, values):
+        print('from_db combined', field_names)
         instance = super().from_db(db, field_names, values)
         # fix for infinite recursion when deleting project
-        if 'pk_model' in field_names:
+        if 'pk_model_id' in field_names:
             instance.__original_pk_model = instance.pk_model
-        if 'pd_model' in field_names:
+        if 'pd_model_id' in field_names:
             instance.__original_pd_model = instance.pd_model
-        if 'pd_model2' in field_names:
+        if 'pd_model2_id' in field_names:
             instance.__original_pd_model2 = instance.pd_model2
         if 'species' in field_names:
             instance.__original_species = instance.species
@@ -184,6 +185,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
         return stored_model
 
     def create_myokit_model(self):
+        print('create_moykit_model combined')
         if self.pk_model is None:
             pk_model = myokit.Model()
         else:
@@ -287,7 +289,9 @@ class CombinedModel(MyokitModelMixin, StoredModel):
             )
 
         # do derived variables
+        print('about to do derived var')
         for derived_variable in self.derived_variables.all():
+            print('doing derived variable', derived_variable.type)
             try:
                 myokit_var = pkpd_model.get(derived_variable.pk_variable.qname)
             except KeyError:
@@ -387,6 +391,16 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 bpr.set_unit(myokit.units.dimensionless)
                 var.set_rhs(myokit.Multiply(
                     myokit.Name(bpr), myokit.Name(myokit_var)))
+            elif derived_variable.type == DerivedVariable.Type.TLAG:  # noqa: E501
+                print('found tlag derived var', var_name)
+                new_names = [f'{var_name}_tlag_ud']
+                has_name = any([myokit_compartment.has_variable(new_name) for new_name in new_names])  # noqa: E501
+                if has_name:
+                    continue
+                var = myokit_compartment.add_variable(new_names[0])
+                time_var = pkpd_model.binding('time')
+                var.set_unit(time_var.unit())
+                var.set_rhs(myokit.Number(0))
             else:
                 raise ValueError(
                     f'Unknown derived variable type {derived_variable.type}')
@@ -455,6 +469,11 @@ class CombinedModel(MyokitModelMixin, StoredModel):
             self.pd_model != self.__original_pd_model or
             self.pd_model2 != self.__original_pd_model2
         ):
+            print('save: removing mappings and derived variables',
+                self.pk_model, self.__original_pk_model,
+                self.pd_model, self.__original_pd_model,
+                self.pd_model2, self.__original_pd_model2
+                  )
             self.mappings.all().delete()
             self.derived_variables.all().delete()
 
@@ -561,6 +580,7 @@ class DerivedVariable(StoredModel):
         RECEPTOR_OCCUPANCY = 'RO', 'receptor occupancy'
         FRACTION_UNBOUND_PLASMA = 'FUP', 'faction unbound plasma'
         BLOOD_PLASMA_RATIO = 'BPR', 'blood plasma ratio'
+        TLAG = 'TLG', 'dosing lag time'
 
     type = models.CharField(
         max_length=3,

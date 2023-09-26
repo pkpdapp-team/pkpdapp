@@ -59,7 +59,18 @@ const VariableRow: React.FC<Props> = ({ project, compound, model, variable, cont
   useEffect(() => {
     const intervalId = setInterval(() => {
       if (isDirty) {
-        handleSubmit((data) => updateVariable({ id: data.id, variable: data }))();
+        handleSubmit((data) => {
+          // @ts-expect-error
+          if (data.lower_bound === '') {
+            data.lower_bound = null;
+          }
+          // @ts-expect-error
+          if (data.upper_bound === '') {
+            data.upper_bound = null;
+          }
+          console.log('updateVariable', data)
+          updateVariable({ id: data.id, variable: data });
+        })();
       }
     }, 1000);
     return () => clearInterval(intervalId);
@@ -119,14 +130,16 @@ const VariableRow: React.FC<Props> = ({ project, compound, model, variable, cont
     }
   };
 
-  const addDerived = (type: 'RO' | 'FUP' | 'BPR') => {
-    // can only be one 'FUP' and one 'BPR' and one 'RO' across all variables
+  const addDerived = (type: 'RO' | 'FUP' | 'BPR' | "TLG") => {
+    console.log('addDerived', type)
+    // can only be one 'FUP' and one 'BPR' across all variables
     const sameType = derivedVariables
       .map((d, i) => ({...d, index: i }))
       .filter((ro) => ro.type === type)
       .map((ro) => ro.index);
 
-    if (sameType.length > 0 && type !== 'RO') {
+    const onlyOne = type === 'FUP' || type === 'BPR';
+    if (onlyOne && sameType.length > 0) {
       removeDerived(sameType);
     }
     
@@ -137,16 +150,17 @@ const VariableRow: React.FC<Props> = ({ project, compound, model, variable, cont
     derivedVariablesRemove(index);
   };
 
-  const onClickDerived = (type: 'RO' | 'FUP' | 'BPR') => () => {
+  const onClickDerived = (type: 'RO' | 'FUP' | 'BPR' | "TLG") => () => {
+    console.log('onClickDerived', type)
     const index = derivedIndex(type);
     return index >= 0 ? removeDerived(index) : addDerived(type)
   };
 
-  const derivedIndex = (type: 'RO' | 'FUP' | 'BPR') => {
+  const derivedIndex = (type: 'RO' | 'FUP' | 'BPR' | "TLG") => {
     return derivedVariables.findIndex((ro) => ro.pk_variable === variable.id && ro.type === type);
   };
 
-  const isLinkedTo = (type: 'RO' | 'FUP' | 'BPR') => {
+  const isLinkedTo = (type: 'RO' | 'FUP' | 'BPR' | "TLG") => {
     return derivedIndex(type) >= 0;
   };
 
@@ -163,6 +177,8 @@ const VariableRow: React.FC<Props> = ({ project, compound, model, variable, cont
   if (noMapToPD && noDerivedVariables && noDosing) {
     return (null);
   }
+
+  const modelHaveTLag = model.has_lag;
 
   return (
     <TableRow>
@@ -184,6 +200,13 @@ const VariableRow: React.FC<Props> = ({ project, compound, model, variable, cont
         <FormControlLabel control={<MuiCheckbox checked={hasProtocol} onClick={() => hasProtocol ? removeProtocol() : addProtocol()} data-cy={`checkbox-dosing-${variable.name}`} />} label="" />
         )}
       </TableCell>
+      { modelHaveTLag && (
+      <TableCell>
+        { !noDosing && (
+        <FormControlLabel control={<MuiCheckbox checked={isLinkedTo('TLG')} onClick={onClickDerived('TLG')} data-cy={`checkbox-tlag-${variable.name}`} />} label="" />
+        )}
+      </TableCell>
+      )}
       <TableCell>
         { !noMapToPD && (
         <FormControlLabel control={<Radio checked={linkToPD} onClick={() => linkToPD ? removePDMapping() : addPDMapping()} data-cy={`checkbox-map-to-pd-${variable.name}`}/>} label="" />

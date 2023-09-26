@@ -29,20 +29,20 @@ const ParametersTab: React.FC<Props> = ({ model, project, control, variables }) 
         return <div>Units not found</div>;
     }
 
-    const libraryParamOrder = ['Cl', 'Clmax', 'Km', 'Kss', 'KD', 'V1', 'V2', 'V3', 'Q1', 'Q2', 'CT1_0', 'kdeg', 'kint', 'koff', 'F', 'ka', 'tlag', 'Kp', 'ke0'];
-    const qnameLibraryOrder = libraryParamOrder.toReversed().map(param => 'PKCompartment.' + param);
+    const libraryParamOrder = ['CL', 'CLmax', 'Km', 'Kss', 'KD', 'V1', 'V2', 'V3', 'Q1', 'Q2', 'CT1_0', 'kdeg', 'kint', 'koff', 'F', 'ka', 'tlag', 'Kp', 'ke0'];
+    const qnameLibraryOrder = libraryParamOrder.map(param => 'PKCompartment.' + param);
     const paramPriority = (param: Variable) => {
       let priority = 0;
       if (param.qname.endsWith("_ud")) {
-        priority = 1;
+        priority = qnameLibraryOrder.length + 2;
       } else if (param.qname.startsWith("PK")) {
-        priority = 3;
+        priority = qnameLibraryOrder.length;
         let index = qnameLibraryOrder.indexOf(param.qname);
         if (index > -1) {
-          priority = 4 + index;
+          priority = index;
         }
       } else if (param.qname.startsWith("PD")) {
-        priority = 2;
+        priority = qnameLibraryOrder.length + 1;
       }
       return priority;
     }

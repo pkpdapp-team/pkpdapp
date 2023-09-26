@@ -34,7 +34,8 @@ const Model: React.FC = () => {
     components: '',
     variables: [],
     mmt: '',
-    time_unit: 0
+    time_unit: 0,
+    is_library_model: false,
   };
   const { reset, handleSubmit, control, formState: { isDirty } } = useForm<CombinedModel>({
     defaultValues: model || defaultModel

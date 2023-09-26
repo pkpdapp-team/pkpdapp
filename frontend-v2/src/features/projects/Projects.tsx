@@ -120,7 +120,7 @@ const ProjectTable: React.FC = () => {
     })
     .then((project) => {
       if ('data' in project) {
-        addCombinedModel({ combinedModel: { id: 0, name: `model for project ${project.data.id}`, project: project.data.id, mappings: [], derived_variables: [], components: '', variables: [], mmt: '', time_unit: 0 }})
+        addCombinedModel({ combinedModel: { id: 0, name: `model for project ${project.data.id}`, project: project.data.id, mappings: [], derived_variables: [], components: '', variables: [], mmt: '', time_unit: 0, is_library_model: false }})
         .then((combinedModel) => {
           if ('data' in combinedModel) {
             const defaultXUnit = units?.find((u) => u.symbol === 'h')?.id || combinedModel.data.time_unit;

@@ -1650,7 +1650,7 @@ export type PkpdMapping = {
   pk_variable: number;
   pd_variable: number;
 };
-export type TypeEnum = "RO" | "FUP" | "BPR";
+export type TypeEnum = "RO" | "FUP" | "BPR" | "TLG";
 export type DerivedVariable = {
   id: number;
   read_only?: boolean;
@@ -1668,6 +1668,7 @@ export type CombinedModel = {
   variables: number[];
   mmt: string;
   time_unit: number;
+  is_library_model: boolean;
   read_only?: boolean;
   datetime?: string | null;
   name: string;
@@ -1691,6 +1692,7 @@ export type PatchedCombinedModel = {
   variables?: number[];
   mmt?: string;
   time_unit?: number;
+  is_library_model?: boolean;
   read_only?: boolean;
   datetime?: string | null;
   name?: string;

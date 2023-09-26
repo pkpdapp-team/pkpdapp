@@ -3123,6 +3123,9 @@ components:
         time_unit:
           type: integer
           readOnly: true
+        is_library_model:
+          type: boolean
+          readOnly: true
         read_only:
           type: boolean
           description: true if object has been stored
@@ -3185,6 +3188,7 @@ components:
       - components
       - derived_variables
       - id
+      - is_library_model
       - mappings
       - mmt
       - name
@@ -3370,6 +3374,7 @@ components:
             * `RO` - receptor occupancy
             * `FUP` - faction unbound plasma
             * `BPR` - blood plasma ratio
+            * `TLG` - dosing lag time
         pkpd_model:
           type: integer
           description: PKPD model that this derived variable is for
@@ -3835,6 +3840,9 @@ components:
           readOnly: true
         time_unit:
           type: integer
+          readOnly: true
+        is_library_model:
+          type: boolean
           readOnly: true
         read_only:
           type: boolean
@@ -5088,11 +5096,13 @@ components:
       - RO
       - FUP
       - BPR
+      - TLG
       type: string
       description: |-
         * `RO` - receptor occupancy
         * `FUP` - faction unbound plasma
         * `BPR` - blood plasma ratio
+        * `TLG` - dosing lag time
     Unit:
       type: object
       properties:
