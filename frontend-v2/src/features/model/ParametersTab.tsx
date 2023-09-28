@@ -65,7 +65,15 @@ const ParametersTab: React.FC<Props> = ({ model, project, control, variables }) 
         if (noReset || !project.species) {
             return;
         }
-        const modelName: string = pkModel.name.replace("_clinical", "").replace("_preclinical", "").replace("tmdd_full", "tmdd").replace("tmdd_QSS", "tmdd").replace("production", "").replace("elimination", "");
+        const modelName: string = pkModel.name
+          .replace("_clinical", "")
+          .replace("_preclinical", "")
+          .replace("tmdd_full_constant_target", "tmdd")
+          .replace("tmdd_QSS_constant_target", "tmdd")
+          .replace("tmdd_full", "tmdd")
+          .replace("tmdd_QSS", "tmdd")
+          .replace("production", "")
+          .replace("elimination", "");
         const species: string = project.species;
         const compoundType: string = compound.compound_type || "SM";
         for (const variable of constVariables) {
