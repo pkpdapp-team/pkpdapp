@@ -76,6 +76,9 @@ export default function Sidebar() {
   
   const isPageDisabled = (key: string) => { 
     const page = PageName[key as keyof typeof PageName];
+    if (page === PageName.HELP) {
+      return false;
+    }
     if (page === PageName.TRIAL_DESIGN && PageName.MODEL in errors) {
       return true;
     }

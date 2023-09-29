@@ -7,9 +7,8 @@ import Drug from '../drug/Drug';
 import Model from '../model/Model';
 import Simulations from '../simulation/Simulations';
 import Protocols from '../trial/Protocols';
-import ErrorIcon from '@mui/icons-material/Error';
-import { Box, Tooltip } from '@mui/material';
-import { useCombinedModelListQuery, useProtocolListQuery } from '../../app/backendApi';
+import { Box } from '@mui/material';
+import Help from '../help/Help';
 
 
 interface TabPanelProps {
@@ -59,6 +58,10 @@ const MainContent: React.FC = () => {
       <TabPanel value={page} index={PageName.SIMULATIONS}>
         <Simulations />
       </TabPanel>
+      <TabPanel value={page} index={PageName.HELP}>
+        <Help />
+      </TabPanel>
+
     </div>
   );
 };

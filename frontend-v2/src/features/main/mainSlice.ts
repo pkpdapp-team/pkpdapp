@@ -7,6 +7,7 @@ export enum PageName {
   DATA = 'Data',
   TRIAL_DESIGN = 'Trial Design',
   SIMULATIONS = 'Simulations',
+  HELP = 'Help',
 }
 
 interface MainState {
