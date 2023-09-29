@@ -1,4 +1,4 @@
-import { Box, Button, Grid, IconButton, LinearProgress, List, ListItem, ListItemSecondaryAction, Radio, Stack, Tooltip, Typography } from '@mui/material';
+import { Button, Grid, IconButton, List, ListItem, ListItemSecondaryAction, Radio, Stack, Tooltip, Typography } from '@mui/material';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../app/store';
 import { Compound, Efficacy, useCompoundRetrieveQuery, useCompoundUpdateMutation, useProjectRetrieveQuery, useUnitListQuery } from '../../app/backendApi';
@@ -8,11 +8,8 @@ import UnitField from '../../components/UnitField';
 import SelectField from '../../components/SelectField';
 import { useEffect, useState } from 'react';
 import DeleteIcon from '@mui/icons-material/Delete';
-import AddIcon from '@mui/icons-material/Add';
 import TextField from '../../components/TextField';
 import useDirty from '../../hooks/useDirty';
-import { CompressOutlined } from '@mui/icons-material';
-import { setConstantValue } from 'typescript';
 import ConfirmationDialog from '../../components/ConfirmationDialog';
 
 
@@ -27,22 +24,20 @@ const Drug: React.FC = () => {
 
 
   // create a form for the compound data using react-hook-form
-  const { reset, handleSubmit, control, setValue, watch } = useForm<Compound>({
-    defaultValues: compound || { name: '', description: '', compound_type: 'SM' }
+  const { reset, handleSubmit, control, setValue } = useForm<Compound>({
+    defaultValues: compound || { name: '', description: '', compound_type: 'SM', efficacy_experiments: [] }
   });
   const { isDirty } = useFormState({ control });
-  const watch_use_efficiacy = watch('use_efficacy');
 
   useDirty(isDirty);
   
   const { fields: efficacy_experiments, append, remove } = useFieldArray({
     control,
     name: "efficacy_experiments",
-    keyName: "key",
+    keyName: "theKey",
   });
 
   useEffect(() => {
-    console.log('resetting', compound)
     reset(compound);
   }, [compound, reset]);
 
@@ -69,13 +64,10 @@ const Drug: React.FC = () => {
     return () => clearInterval(intervalId);
   }, [submit, isDirty]);
 
-
-
   useEffect(() => () => { submit(); }, []);
   
-  
   const addNewEfficacyExperiment = () => {
-    append({id: null as unknown as number, name: '', c50: compound?.target_concentration || 0, c50_unit: compound?.target_concentration_unit || 0,  hill_coefficient: 1, compound: compound?.id || 0 });
+    append([{ id: null as unknown as number, name: '', c50: compound?.target_concentration || 0, c50_unit: compound?.target_concentration_unit || 0,  hill_coefficient: 1, compound: compound?.id || 0 }]);
   };
 
   const deleteEfficacyExperiment = (index: number) => {
@@ -176,7 +168,7 @@ const Drug: React.FC = () => {
         </Button>
         <List>
         {efficacy_experiments.map((efficacy_experiment, index) => (
-          <ListItem key={index}>
+          <ListItem key={efficacy_experiment.theKey}>
           <Stack direction="column" spacing={2} key={index}>
             <TextField label="Name" name={`efficacy_experiments.${index}.name`} control={control} />
             <Stack direction="row" spacing={2}>
@@ -194,7 +186,13 @@ const Drug: React.FC = () => {
               <DeleteIcon />
             </IconButton>
             </Tooltip>
-            <ConfirmationDialog open={showConfirmDelete} title="Delete Efficacy-Safety Data" message="Are you sure you want to permanently delete this efficacy-safety data?" onConfirm={() => deleteEfficacyExperiment(index)} onCancel={() => setShowConfirmDelete(false)} />
+            <ConfirmationDialog 
+              open={showConfirmDelete} 
+              title="Delete Efficacy-Safety Data" 
+              message="Are you sure you want to permanently delete this efficacy-safety data?" 
+              onConfirm={() => { deleteEfficacyExperiment(index); setShowConfirmDelete(false); }} 
+              onCancel={() => setShowConfirmDelete(false)} 
+            />
           </ListItemSecondaryAction>
           </ListItem>
         ))}
