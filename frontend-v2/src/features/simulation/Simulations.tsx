@@ -12,6 +12,7 @@ import FloatField from '../../components/FloatField';
 import useDirty from '../../hooks/useDirty';
 import { SerializedError } from '@reduxjs/toolkit';
 import UnitField from '../../components/UnitField';
+import paramPriority from '../model/paramPriority';
 
 type SliderValues = {[key: number]: number};
 
@@ -185,6 +186,14 @@ const Simulations: React.FC = () => {
     return <div>Not found</div>;
   }
   
+  
+  let orderedSliders = sliders.map((slider) => {
+    const variable = variables.find((v) => v.id === slider.variable);
+    return { ...slider, priority: variable ? paramPriority(variable) : 0 };
+  });
+  orderedSliders.sort((a, b) => a.priority - b.priority);
+
+  
   const filterOutputs = model?.is_library_model ? ['environment.t', 'PDCompartment.C_Drug'] : [];
   const outputs = variables?.filter((variable) => !variable.constant && !filterOutputs.includes(variable.qname)) || [];
   let outputsSorted = outputs.map((variable) => { 
@@ -206,7 +215,8 @@ const Simulations: React.FC = () => {
   });
 
   outputsSorted.sort((a, b) => b.priority - a.priority);
-  const inputs = variables?.filter((variable) => variable.constant) || [];
+  let inputs = variables?.filter((variable) => variable.constant) || [];
+  inputs.sort((a, b) => { return paramPriority(a) - paramPriority(b) });
   const addPlotOptions = outputsSorted.map((variable) => ({ value: variable.id, label: variable.description ? `${variable.name} (${variable.description})` : variable.name }));
   const sliderVarIds = sliders.map(v => v.variable)
   const addSliderOptions = inputs.filter(v => !sliderVarIds.includes(v.id)).map((variable) => ({ value: variable.id, label: variable.name }));
@@ -294,7 +304,7 @@ const Simulations: React.FC = () => {
           </DropdownButton>
         </Stack>
         <Grid container spacing={2}>
-          {sliders.map((slider, index) => (
+          {orderedSliders.map((slider, index) => (
             <Grid item xs={12} md={6} lg={4} key={index}>
               <SimulationSliderView index={index} slider={slider} onChange={handleChangeSlider(slider)} remove={removeSlider} onSave={handleSaveSlider(slider)} units={units} />
             </Grid>

@@ -5,6 +5,7 @@ import { TableContainer, Table, TableHead, TableRow, TableCell, TableBody, Stack
 import ParameterRow from './ParameterRow';
 import { param_default as paramDefaults } from './param_default';
 import HelpButton from '../../components/HelpButton';
+import paramPriority from './paramPriority';
 
 interface Props {
     model: CombinedModel;
@@ -27,24 +28,6 @@ const ParametersTab: React.FC<Props> = ({ model, project, control, variables }) 
 
     if (!units || !compound) {
         return <div>Units not found</div>;
-    }
-
-    const libraryParamOrder = ['CL', 'CLmax', 'Km', 'Kss', 'KD', 'V1', 'V2', 'V3', 'Q1', 'Q2', 'CT1_0', 'kdeg', 'kint', 'koff', 'F', 'ka', 'tlag', 'Kp', 'ke0'];
-    const qnameLibraryOrder = libraryParamOrder.map(param => 'PKCompartment.' + param);
-    const paramPriority = (param: Variable) => {
-      let priority = 0;
-      if (param.qname.endsWith("_ud")) {
-        priority = qnameLibraryOrder.length + 2;
-      } else if (param.qname.startsWith("PK")) {
-        priority = qnameLibraryOrder.length;
-        let index = qnameLibraryOrder.indexOf(param.qname);
-        if (index > -1) {
-          priority = index;
-        }
-      } else if (param.qname.startsWith("PD")) {
-        priority = qnameLibraryOrder.length + 1;
-      }
-      return priority;
     }
 
     let constVariables = variables.filter(variable => variable.constant);
