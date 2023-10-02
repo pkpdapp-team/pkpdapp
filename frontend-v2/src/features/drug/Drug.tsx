@@ -49,7 +49,7 @@ const Drug: React.FC = () => {
       updateCompound({ id: data.id, compound: data }).then((result) => {
         // if the compound has no efficacy experiments, but the result has, then set the first one as the use_efficacy
         if ('data' in result) {
-          if (compound.efficacy_experiments.length == 0 && result.data.efficacy_experiments.length > 0) {
+          if (compound.efficacy_experiments.length === 0 && result.data.efficacy_experiments.length > 0) {
             updateCompound({ id: data.id, compound: { ...data, use_efficacy: result.data.efficacy_experiments[0].id }});
           }
         }
@@ -124,7 +124,7 @@ const Drug: React.FC = () => {
         <Stack direction="column" spacing={2}>
           <Stack direction="row" spacing={2}>
             <FloatField label={'Molecular Mass'} name={'molecular_mass'} control={control} rules={{ required: true }} />
-            <UnitField label={'Unit'} name={'molecular_mass_unit'} control={control} baseUnit={units.find(u => u.id == compound.molecular_mass_unit)} compound={compound} />
+            <UnitField label={'Unit'} name={'molecular_mass_unit'} control={control} baseUnit={units.find(u => u.id === compound.molecular_mass_unit)} compound={compound} />
           </Stack>
 
           <FloatField label="Fraction Unbound Plasma (fup)" name="fraction_unbound_plasma" control={control} textFieldProps={{ disabled: isLM }} />
