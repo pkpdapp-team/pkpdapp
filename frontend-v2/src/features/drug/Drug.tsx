@@ -37,12 +37,15 @@ const Drug: React.FC = () => {
     keyName: "theKey",
   });
 
+
   useEffect(() => {
     reset(compound);
   }, [compound, reset]);
 
   const submit = handleSubmit((data) => {
     if (data && compound && (JSON.stringify(data) !== JSON.stringify(compound))) {
+      // strange bug in react-hook-form is creating efficancy_experiments with undefined compounds, remove these for now.
+      data.efficacy_experiments = data.efficacy_experiments.filter((efficacy_experiment) => efficacy_experiment.compound !== undefined);
       updateCompound({ id: data.id, compound: data }).then((result) => {
         // if the compound has no efficacy experiments, but the result has, then set the first one as the use_efficacy
         if ('data' in result) {
@@ -169,7 +172,7 @@ const Drug: React.FC = () => {
         <List>
         {efficacy_experiments.map((efficacy_experiment, index) => (
           <ListItem key={efficacy_experiment.theKey}>
-          <Stack direction="column" spacing={2} key={index}>
+          <Stack direction="column" spacing={2}>
             <TextField label="Name" name={`efficacy_experiments.${index}.name`} control={control} />
             <Stack direction="row" spacing={2}>
               <FloatField label="C50" name={`efficacy_experiments.${index}.c50`} control={control} />
