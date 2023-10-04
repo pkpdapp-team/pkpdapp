@@ -24,7 +24,7 @@ const Help: React.FC = () => {
   const simulation_questions = generic_questions.slice(0, 1)
 
   return (
-    <DynamicTabs tabNames={["Projects", "Drug", "Model", "Trail Design", "Simulation"]}>
+    <DynamicTabs tabNames={["Projects", "Drug", "Model", "Trial Design", "Simulation"]}>
       <TabPanel>
         <HelpTab questions={project_questions} />
       </TabPanel>
