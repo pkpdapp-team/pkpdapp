@@ -40,8 +40,11 @@ C_Drug = 1 in [pmol/L]
 P0 = E0*kdeg/(kdegP*FE) in [dimensionless]
 	desc: baseline of precursor
 
-STIM = (1+(Emax-1)*C_Drug^HC/(C_Drug^HC+C50^HC)) in [dimensionless]
+STIM = C_Drug^HC/(C_Drug^HC+C50^HC) in [dimensionless]
+	desc: Stimulation
 
-dot(P) = kdegP*P0 - kdegP*P*(FE*STIM + (1-FE)) in [dimensionless]
-dot(E) = kdegP*P*(FE*STIM) -kdeg*E in [dimensionless]
+dot(P) = kdegP*P0 - kdegP*P*(FE*(1+(Emax-1)*STIM) + (1-FE)) in [dimensionless]
+	desc: Precursor
+	
+dot(E) = kdegP*P*(FE*(1+(Emax-1)*STIM)) -kdeg*E in [dimensionless]
 	desc: PD effect

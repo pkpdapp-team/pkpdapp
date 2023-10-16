@@ -7,7 +7,7 @@ PDCompartment.E = PDCompartment.E0
 
 
 [environment]
-t = 0 bind time
+t = 0 in [h] bind time
 
 
 [PDCompartment]
@@ -15,11 +15,11 @@ t = 0 bind time
 kdeg = 0.05 in [1/h]
 	desc: degradation rate constant of the effect
 
-E0 = 100
+E0 = 100 in [dimensionless]
 	desc: baseline effect
 	
 Imax = 0.80 in [dimensionless]
-	desc: maximal fold change from baseline
+	desc: maximal fold change from baseline (value range: 0 (no effect) to 1 (complete inhibition))
 	
 C50 = 100000 in [pmol/L]
 	desc: concentration that produces half-maximal effects
@@ -29,7 +29,8 @@ HC = 1 in [dimensionless]
 	
 C_Drug = 1 in [pmol/L]	
 
-INH = (1-Imax*C_Drug^HC/(C_Drug^HC+C50^HC)) in [dimensionless]
+INH = C_Drug^HC/(C_Drug^HC+C50^HC) in [dimensionless]
+	desc: Inhibition
 
-dot(E) = kdeg*(E0*INH-E)
+dot(E) = kdeg*(E0*(1-Imax*INH)-E) in [dimensionless]
 	desc: PD effect

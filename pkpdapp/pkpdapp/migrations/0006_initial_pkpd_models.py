@@ -104,7 +104,7 @@ $$
         {
             'name': 'indirect_effects_inhibition_elimination',
             'description': 'Indirect effects model with inhibition and elimination',  # noqa: E501
-            'mmt_filename': 'pkpdapp/migrations/models/IE_InhibitionElimination_Emax.mmt'  # noqa: E501
+            'mmt_filename': 'pkpdapp/migrations/models/IE_InhibitionElimination_Imax.mmt'  # noqa: E501
         },
         {
             'name': 'indirect_effects_stimulation_production',
@@ -114,7 +114,7 @@ $$
         {
             'name': 'indirect_effects_inhibition_production',
             'description': 'Indirect effects model with inhibition and production',  # noqa: E501
-            'mmt_filename': 'pkpdapp/migrations/models/IE_InhibitionProduction_Emax.mmt'  # noqa: E501
+            'mmt_filename': 'pkpdapp/migrations/models/IE_InhibitionProduction_Imax.mmt'  # noqa: E501
         },
         {
             'name': 'indirect_effects_precursor_inhibition_production',
