@@ -133,7 +133,7 @@ class Unit(models.Model):
             return False
         return True
 
-    def convert_to(self, unit, compound=None):
+    def convert_to(self, unit, compound=None, is_target=False):
         if unit is None:
             return 1.0
         if isinstance(unit, myokit.Unit):
@@ -142,9 +142,14 @@ class Unit(models.Model):
             myokit_unit = unit.get_myokit_unit()
         helpers = []
         if compound is not None:
-            helpers = [
-                f'{compound.molecular_mass} [{compound.molecular_mass_unit.symbol}]'  # noqa: E501
-            ]
+            if is_target:
+                helpers = [
+                    f'{compound.target_molecular_mass} [{compound.target_molecular_mass_unit.symbol}]'  # noqa: E501
+                ]
+            else:
+                helpers = [
+                    f'{compound.molecular_mass} [{compound.molecular_mass_unit.symbol}]'  # noqa: E501
+                ]
         return myokit.Unit.conversion_factor(
             self.get_myokit_unit(),
             myokit_unit,
@@ -152,12 +157,17 @@ class Unit(models.Model):
         ).value()
 
     @staticmethod
-    def convert_between_myokit_units(from_unit, to_unit, compound=None):
+    def convert_between_myokit_units(from_unit, to_unit, compound=None, is_target=False):
         helpers = []
         if compound is not None:
-            helpers = [
-                f'{compound.molecular_mass} [{compound.molecular_mass_unit.symbol}]'  # noqa: E501
-            ]
+            if is_target:
+                helpers = [
+                    f'{compound.target_molecular_mass} [{compound.target_molecular_mass_unit.symbol}]'  # noqa: E501
+                ]
+            else:
+                helpers = [
+                    f'{compound.molecular_mass} [{compound.molecular_mass_unit.symbol}]'  # noqa: E501
+                ]
         return myokit.Unit.conversion_factor(
             from_unit,
             to_unit,

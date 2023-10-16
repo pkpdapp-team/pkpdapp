@@ -9,9 +9,8 @@ import {
   TableHead,
   TableRow,
 } from "@mui/material";
-import { useUnitListQuery, useProjectRetrieveQuery, useDoseCreateMutation, useProtocolListQuery } from "../../app/backendApi";
+import { useUnitListQuery, useProjectRetrieveQuery, useProtocolListQuery } from "../../app/backendApi";
 import { RootState } from "../../app/store";
-import { useFieldArray, useForm } from "react-hook-form";
 import Doses from "./Doses";
 import HelpButton from "../../components/HelpButton";
 

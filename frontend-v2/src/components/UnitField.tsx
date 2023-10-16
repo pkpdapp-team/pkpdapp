@@ -1,12 +1,12 @@
 import React from 'react';
 import { Control, FieldPath, FieldValues } from 'react-hook-form';
 import { SelectProps } from '@mui/material';
-import { Compound, Unit, useUnitRetrieveQuery } from '../app/backendApi';
+import { Compound, Unit, UnitRead, useUnitRetrieveQuery } from '../app/backendApi';
 import SelectField from './SelectField';
 
 type Props<T extends FieldValues> = {
   label: string;
-  baseUnit?: Unit;
+  baseUnit?: UnitRead;
   name: FieldPath<T>;
   control: Control<T>;
   rules?: Object;

@@ -34,6 +34,7 @@ class UnitSerializer(serializers.ModelSerializer):
             {
                 'id': u.id,
                 'symbol': u.symbol,
-                'conversion_factor': unit.convert_to(u, compound=compound),
+                'conversion_factor': unit.convert_to(u, compound=compound, is_target=False),
+                'target_conversion_factor': unit.convert_to(u, compound=compound, is_target=True),
             } for u in unit.get_compatible_units(compound=compound)
         ]

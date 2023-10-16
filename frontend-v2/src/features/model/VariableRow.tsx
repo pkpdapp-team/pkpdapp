@@ -10,19 +10,18 @@ import {
   Typography,
   Radio,
 } from "@mui/material";
-import { Project, PkpdMapping, CombinedModel, Variable, useVariableUpdateMutation, useProtocolCreateMutation, useProtocolDestroyMutation, Dose, useUnitListQuery, Unit, Compound } from "../../app/backendApi";
-import Checkbox from "../../components/Checkbox";
+import { CombinedModel, Variable, useVariableUpdateMutation, useProtocolCreateMutation, useProtocolDestroyMutation, Dose, CombinedModelRead, CompoundRead, ProjectRead, UnitRead, VariableRead, DoseRead } from "../../app/backendApi";
 import useDirty from "../../hooks/useDirty";
 
 interface Props {
-  project: Project;
-  compound: Compound;
-  model: CombinedModel;
-  variable: Variable;
+  project: ProjectRead;
+  compound: CompoundRead;
+  model: CombinedModelRead;
+  variable: VariableRead;
   control: Control<CombinedModel>;
-  effectVariable: Variable | undefined;
-  units: Unit[];
-  timeVariable: Variable | undefined;
+  effectVariable: VariableRead | undefined;
+  units: UnitRead[];
+  timeVariable: VariableRead | undefined;
 }
 
 const derivedVariableRegex = /calc_.*_(f|bl|RO)/;
@@ -69,7 +68,7 @@ const VariableRow: React.FC<Props> = ({ project, compound, model, variable, cont
             data.upper_bound = null;
           }
           console.log('updateVariable', data)
-          updateVariable({ id: data.id, variable: data });
+          updateVariable({ id: variable.id, variable: data });
         })();
       }
     }, 1000);
@@ -98,8 +97,8 @@ const VariableRow: React.FC<Props> = ({ project, compound, model, variable, cont
     const isPerKg = variableUnit?.g !== 0;
     const amountUnitSymbol = isPerKg ? "mg/kg" : "mg";
     const amountUnit = units.find((unit) => unit.symbol === amountUnitSymbol);
-    const defaultDose: Dose = { id: 0, amount: 1, start_time: 0, repeat_interval: 1, repeats: 1, duration: 0.0833 };
-    createProtocol({ protocol: { id: 0, dataset: '', doses: [ defaultDose ], amount_unit: amountUnit?.id || variable.unit, time_unit: defaultTimeUnit?.id || undefined, subjects: [], name: variable.name, project: project.id, variables: [variable.id] } })
+    const defaultDose: DoseRead = { id: 0, amount: 1, start_time: 0, repeat_interval: 1, repeats: 1, duration: 0.0833 };
+    createProtocol({ protocol: { doses: [ defaultDose ], amount_unit: amountUnit?.id || variable.unit, time_unit: defaultTimeUnit?.id || undefined, name: variable.name, project: project.id } })
     .then((value) => {
       if ('data' in value) {
         setValue("protocol", value.data.id ) 
@@ -119,7 +118,7 @@ const VariableRow: React.FC<Props> = ({ project, compound, model, variable, cont
       if (mappings.length > 0) {
         removeMapping(0);
       }
-      appendMapping({ id: 0, pk_variable: variable.id, pd_variable: effectVariable.id, pkpd_model: model.id, datetime: '', read_only: false });
+      appendMapping({ pk_variable: variable.id, pd_variable: effectVariable.id, pkpd_model: model.id });
     }
   };
 
@@ -143,7 +142,7 @@ const VariableRow: React.FC<Props> = ({ project, compound, model, variable, cont
       removeDerived(sameType);
     }
     
-    derivedVariablesAppend({ id: 0, pk_variable: variable.id, pkpd_model: model.id, type });
+    derivedVariablesAppend({ pk_variable: variable.id, pkpd_model: model.id, type });
   };
 
   const removeDerived = (index: number | number[]) => {

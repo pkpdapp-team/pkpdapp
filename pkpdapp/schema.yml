@@ -2551,6 +2551,12 @@ paths:
         schema:
           type: integer
         description: Enable conversions based on compound information
+      - in: query
+        name: is_target
+        schema:
+          type: boolean
+        description: (optional, default=false) true if unit is a target concentration
+          unit
       tags:
       - unit
       security:

@@ -4,19 +4,18 @@ import {
   TableRow,
   IconButton,
 } from "@mui/material";
-import { Project, Protocol, Unit, useProtocolUpdateMutation, useVariableRetrieveQuery } from "../../app/backendApi";
+import { ProjectRead, Protocol, ProtocolRead, UnitRead, useProtocolUpdateMutation, useVariableRetrieveQuery } from "../../app/backendApi";
 import { Add, Delete } from "@mui/icons-material";
 import { useFieldArray, useForm } from "react-hook-form";
-import TextField from "../../components/TextField";
 import UnitField from "../../components/UnitField";
 import FloatField from "../../components/FloatField";
 import IntegerField from "../../components/IntegerField";
 import useDirty from "../../hooks/useDirty";
 
 interface Props {
-    project: Project;
-    protocol: Protocol;
-    units: Unit[];
+    project: ProjectRead;
+    protocol: ProtocolRead;
+    units: UnitRead[];
 }
 
 const Doses: React.FC<Props> = ({ project, protocol, units }) => {
@@ -38,7 +37,7 @@ const Doses: React.FC<Props> = ({ project, protocol, units }) => {
 
   const handleSave = handleSubmit((data: Protocol) => {
     if (JSON.stringify(data) !== JSON.stringify(protocol)) {
-      updateProtocol({ id: data.id, protocol: data })
+      updateProtocol({ id: protocol.id, protocol: data })
     }
   });
 
@@ -66,7 +65,7 @@ const Doses: React.FC<Props> = ({ project, protocol, units }) => {
   }
 
   const handleAddRow = () => {
-    appendDose({ id: 0, amount: 0, repeats: 0, start_time: 0, repeat_interval: 1 });
+    appendDose({ amount: 0, repeats: 0, start_time: 0, repeat_interval: 1 });
   }
 
   const handleDeleteRow = (index: number) => {

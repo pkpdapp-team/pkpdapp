@@ -1,16 +1,14 @@
 import * as React from 'react';
-import { CombinedModel, CombinedModelUpdateApiArg, Pharmacokinetic, Project, usePharmacodynamicListQuery, usePharmacokineticListQuery } from '../../app/backendApi';
+import { CombinedModel, CombinedModelRead, CombinedModelUpdateApiArg, Pharmacokinetic, ProjectRead, usePharmacodynamicListQuery, usePharmacokineticListQuery } from '../../app/backendApi';
 import { Control } from 'react-hook-form';
-import { FormControlLabel, Select, Stack, TextField as MuiTextField, Typography, Grid, Checkbox as MuiCheckbox, Tooltip } from '@mui/material';
+import { FormControlLabel, Stack, Typography, Grid, Checkbox as MuiCheckbox, Tooltip } from '@mui/material';
 import SelectField from '../../components/SelectField';
-import { Check } from '@mui/icons-material';
 import Checkbox from '../../components/Checkbox';
-import FloatField from '../../components/FloatField';
 import HelpButton from '../../components/HelpButton';
 
 interface Props {
-    model: CombinedModel;
-    project: Project;
+    model: CombinedModelRead;
+    project: ProjectRead;
     control: Control<CombinedModel>;
     updateModel: (data: CombinedModelUpdateApiArg) => void;
 }

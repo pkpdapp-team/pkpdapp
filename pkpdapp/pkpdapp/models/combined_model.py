@@ -326,7 +326,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 target_conc_unit = myokit_var.unit()
                 target_conc_unit_conversion_factor = \
                     compound.target_concentration_unit.convert_to(
-                        target_conc_unit, compound=compound
+                        target_conc_unit, compound=compound, is_target=True
                     )
                 target_conc.set_rhs(
                     compound.target_concentration *

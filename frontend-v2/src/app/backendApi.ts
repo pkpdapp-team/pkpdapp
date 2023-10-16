@@ -849,7 +849,10 @@ const injectedRtkApi = api.injectEndpoints({
     unitList: build.query<UnitListApiResponse, UnitListApiArg>({
       query: (queryArg) => ({
         url: `/api/unit/`,
-        params: { compound_id: queryArg.compoundId },
+        params: {
+          compound_id: queryArg.compoundId,
+          is_target: queryArg.isTarget,
+        },
       }),
     }),
     unitCreate: build.mutation<UnitCreateApiResponse, UnitCreateApiArg>({
@@ -989,24 +992,25 @@ const injectedRtkApi = api.injectEndpoints({
   overrideExisting: false,
 });
 export { injectedRtkApi as backendApi };
-export type AlgorithmListApiResponse = /** status 200  */ Algorithm[];
+export type AlgorithmListApiResponse = /** status 200  */ AlgorithmRead[];
 export type AlgorithmListApiArg = void;
-export type AlgorithmCreateApiResponse = /** status 201  */ Algorithm;
+export type AlgorithmCreateApiResponse = /** status 201  */ AlgorithmRead;
 export type AlgorithmCreateApiArg = {
   algorithm: Algorithm;
 };
-export type AlgorithmRetrieveApiResponse = /** status 200  */ Algorithm;
+export type AlgorithmRetrieveApiResponse = /** status 200  */ AlgorithmRead;
 export type AlgorithmRetrieveApiArg = {
   /** A unique integer value identifying this algorithm. */
   id: number;
 };
-export type AlgorithmUpdateApiResponse = /** status 200  */ Algorithm;
+export type AlgorithmUpdateApiResponse = /** status 200  */ AlgorithmRead;
 export type AlgorithmUpdateApiArg = {
   /** A unique integer value identifying this algorithm. */
   id: number;
   algorithm: Algorithm;
 };
-export type AlgorithmPartialUpdateApiResponse = /** status 200  */ Algorithm;
+export type AlgorithmPartialUpdateApiResponse =
+  /** status 200  */ AlgorithmRead;
 export type AlgorithmPartialUpdateApiArg = {
   /** A unique integer value identifying this algorithm. */
   id: number;
@@ -1019,25 +1023,29 @@ export type AlgorithmDestroyApiArg = {
 };
 export type AuceCreateApiResponse = unknown;
 export type AuceCreateApiArg = void;
-export type BiomarkerTypeListApiResponse = /** status 200  */ BiomarkerType[];
+export type BiomarkerTypeListApiResponse =
+  /** status 200  */ BiomarkerTypeRead[];
 export type BiomarkerTypeListApiArg = void;
-export type BiomarkerTypeCreateApiResponse = /** status 201  */ BiomarkerType;
+export type BiomarkerTypeCreateApiResponse =
+  /** status 201  */ BiomarkerTypeRead;
 export type BiomarkerTypeCreateApiArg = {
   biomarkerType: BiomarkerType;
 };
-export type BiomarkerTypeRetrieveApiResponse = /** status 200  */ BiomarkerType;
+export type BiomarkerTypeRetrieveApiResponse =
+  /** status 200  */ BiomarkerTypeRead;
 export type BiomarkerTypeRetrieveApiArg = {
   /** A unique integer value identifying this biomarker type. */
   id: number;
 };
-export type BiomarkerTypeUpdateApiResponse = /** status 200  */ BiomarkerType;
+export type BiomarkerTypeUpdateApiResponse =
+  /** status 200  */ BiomarkerTypeRead;
 export type BiomarkerTypeUpdateApiArg = {
   /** A unique integer value identifying this biomarker type. */
   id: number;
   biomarkerType: BiomarkerType;
 };
 export type BiomarkerTypePartialUpdateApiResponse =
-  /** status 200  */ BiomarkerType;
+  /** status 200  */ BiomarkerTypeRead;
 export type BiomarkerTypePartialUpdateApiArg = {
   /** A unique integer value identifying this biomarker type. */
   id: number;
@@ -1048,28 +1056,32 @@ export type BiomarkerTypeDestroyApiArg = {
   /** A unique integer value identifying this biomarker type. */
   id: number;
 };
-export type CombinedModelListApiResponse = /** status 200  */ CombinedModel[];
+export type CombinedModelListApiResponse =
+  /** status 200  */ CombinedModelRead[];
 export type CombinedModelListApiArg = {
   /** Filter results by project ID */
   projectId?: number;
 };
-export type CombinedModelCreateApiResponse = /** status 201  */ CombinedModel;
+export type CombinedModelCreateApiResponse =
+  /** status 201  */ CombinedModelRead;
 export type CombinedModelCreateApiArg = {
   combinedModel: CombinedModel;
 };
-export type CombinedModelRetrieveApiResponse = /** status 200  */ CombinedModel;
+export type CombinedModelRetrieveApiResponse =
+  /** status 200  */ CombinedModelRead;
 export type CombinedModelRetrieveApiArg = {
   /** A unique integer value identifying this combined model. */
   id: number;
 };
-export type CombinedModelUpdateApiResponse = /** status 200  */ CombinedModel;
+export type CombinedModelUpdateApiResponse =
+  /** status 200  */ CombinedModelRead;
 export type CombinedModelUpdateApiArg = {
   /** A unique integer value identifying this combined model. */
   id: number;
   combinedModel: CombinedModel;
 };
 export type CombinedModelPartialUpdateApiResponse =
-  /** status 200  */ CombinedModel;
+  /** status 200  */ CombinedModelRead;
 export type CombinedModelPartialUpdateApiArg = {
   /** A unique integer value identifying this combined model. */
   id: number;
@@ -1081,7 +1093,7 @@ export type CombinedModelDestroyApiArg = {
   id: number;
 };
 export type CombinedModelSetVariablesFromInferenceUpdateApiResponse =
-  /** status 200  */ CombinedModel;
+  /** status 200  */ CombinedModelRead;
 export type CombinedModelSetVariablesFromInferenceUpdateApiArg = {
   /** A unique integer value identifying this combined model. */
   id: number;
@@ -1093,24 +1105,24 @@ export type CombinedModelSimulateCreateApiArg = {
   id: number;
   simulate: Simulate;
 };
-export type CompoundListApiResponse = /** status 200  */ Compound[];
+export type CompoundListApiResponse = /** status 200  */ CompoundRead[];
 export type CompoundListApiArg = void;
-export type CompoundCreateApiResponse = /** status 201  */ Compound;
+export type CompoundCreateApiResponse = /** status 201  */ CompoundRead;
 export type CompoundCreateApiArg = {
   compound: Compound;
 };
-export type CompoundRetrieveApiResponse = /** status 200  */ Compound;
+export type CompoundRetrieveApiResponse = /** status 200  */ CompoundRead;
 export type CompoundRetrieveApiArg = {
   /** A unique integer value identifying this compound. */
   id: number;
 };
-export type CompoundUpdateApiResponse = /** status 200  */ Compound;
+export type CompoundUpdateApiResponse = /** status 200  */ CompoundRead;
 export type CompoundUpdateApiArg = {
   /** A unique integer value identifying this compound. */
   id: number;
   compound: Compound;
 };
-export type CompoundPartialUpdateApiResponse = /** status 200  */ Compound;
+export type CompoundPartialUpdateApiResponse = /** status 200  */ CompoundRead;
 export type CompoundPartialUpdateApiArg = {
   /** A unique integer value identifying this compound. */
   id: number;
@@ -1121,24 +1133,24 @@ export type CompoundDestroyApiArg = {
   /** A unique integer value identifying this compound. */
   id: number;
 };
-export type DatasetListApiResponse = /** status 200  */ Dataset[];
+export type DatasetListApiResponse = /** status 200  */ DatasetRead[];
 export type DatasetListApiArg = void;
-export type DatasetCreateApiResponse = /** status 201  */ Dataset;
+export type DatasetCreateApiResponse = /** status 201  */ DatasetRead;
 export type DatasetCreateApiArg = {
   dataset: Dataset;
 };
-export type DatasetRetrieveApiResponse = /** status 200  */ Dataset;
+export type DatasetRetrieveApiResponse = /** status 200  */ DatasetRead;
 export type DatasetRetrieveApiArg = {
   /** A unique integer value identifying this dataset. */
   id: number;
 };
-export type DatasetUpdateApiResponse = /** status 200  */ Dataset;
+export type DatasetUpdateApiResponse = /** status 200  */ DatasetRead;
 export type DatasetUpdateApiArg = {
   /** A unique integer value identifying this dataset. */
   id: number;
   dataset: Dataset;
 };
-export type DatasetPartialUpdateApiResponse = /** status 200  */ Dataset;
+export type DatasetPartialUpdateApiResponse = /** status 200  */ DatasetRead;
 export type DatasetPartialUpdateApiArg = {
   /** A unique integer value identifying this dataset. */
   id: number;
@@ -1155,24 +1167,24 @@ export type DatasetCsvUpdateApiArg = {
   id: number;
   datasetCsv: DatasetCsv;
 };
-export type DoseListApiResponse = /** status 200  */ Dose[];
+export type DoseListApiResponse = /** status 200  */ DoseRead[];
 export type DoseListApiArg = void;
-export type DoseCreateApiResponse = /** status 201  */ Dose;
+export type DoseCreateApiResponse = /** status 201  */ DoseRead;
 export type DoseCreateApiArg = {
   dose: Dose;
 };
-export type DoseRetrieveApiResponse = /** status 200  */ Dose;
+export type DoseRetrieveApiResponse = /** status 200  */ DoseRead;
 export type DoseRetrieveApiArg = {
   /** A unique integer value identifying this dose. */
   id: number;
 };
-export type DoseUpdateApiResponse = /** status 200  */ Dose;
+export type DoseUpdateApiResponse = /** status 200  */ DoseRead;
 export type DoseUpdateApiArg = {
   /** A unique integer value identifying this dose. */
   id: number;
   dose: Dose;
 };
-export type DosePartialUpdateApiResponse = /** status 200  */ Dose;
+export type DosePartialUpdateApiResponse = /** status 200  */ DoseRead;
 export type DosePartialUpdateApiArg = {
   /** A unique integer value identifying this dose. */
   id: number;
@@ -1183,24 +1195,25 @@ export type DoseDestroyApiArg = {
   /** A unique integer value identifying this dose. */
   id: number;
 };
-export type InferenceListApiResponse = /** status 200  */ Inference[];
+export type InferenceListApiResponse = /** status 200  */ InferenceRead[];
 export type InferenceListApiArg = void;
-export type InferenceCreateApiResponse = /** status 201  */ Inference;
+export type InferenceCreateApiResponse = /** status 201  */ InferenceRead;
 export type InferenceCreateApiArg = {
   inference: Inference;
 };
-export type InferenceRetrieveApiResponse = /** status 200  */ Inference;
+export type InferenceRetrieveApiResponse = /** status 200  */ InferenceRead;
 export type InferenceRetrieveApiArg = {
   /** A unique integer value identifying this inference. */
   id: number;
 };
-export type InferenceUpdateApiResponse = /** status 200  */ Inference;
+export type InferenceUpdateApiResponse = /** status 200  */ InferenceRead;
 export type InferenceUpdateApiArg = {
   /** A unique integer value identifying this inference. */
   id: number;
   inference: Inference;
 };
-export type InferencePartialUpdateApiResponse = /** status 200  */ Inference;
+export type InferencePartialUpdateApiResponse =
+  /** status 200  */ InferenceRead;
 export type InferencePartialUpdateApiArg = {
   /** A unique integer value identifying this inference. */
   id: number;
@@ -1217,26 +1230,29 @@ export type InferenceStopCreateApiArg = {
 };
 export type InferenceWizardCreateApiResponse = unknown;
 export type InferenceWizardCreateApiArg = void;
-export type InferenceChainListApiResponse = /** status 200  */ InferenceChain[];
+export type InferenceChainListApiResponse =
+  /** status 200  */ InferenceChainRead[];
 export type InferenceChainListApiArg = void;
-export type InferenceChainCreateApiResponse = /** status 201  */ InferenceChain;
+export type InferenceChainCreateApiResponse =
+  /** status 201  */ InferenceChainRead;
 export type InferenceChainCreateApiArg = {
   inferenceChain: InferenceChain;
 };
 export type InferenceChainRetrieveApiResponse =
-  /** status 200  */ InferenceChain;
+  /** status 200  */ InferenceChainRead;
 export type InferenceChainRetrieveApiArg = {
   /** A unique integer value identifying this inference chain. */
   id: number;
 };
-export type InferenceChainUpdateApiResponse = /** status 200  */ InferenceChain;
+export type InferenceChainUpdateApiResponse =
+  /** status 200  */ InferenceChainRead;
 export type InferenceChainUpdateApiArg = {
   /** A unique integer value identifying this inference chain. */
   id: number;
   inferenceChain: InferenceChain;
 };
 export type InferenceChainPartialUpdateApiResponse =
-  /** status 200  */ InferenceChain;
+  /** status 200  */ InferenceChainRead;
 export type InferenceChainPartialUpdateApiArg = {
   /** A unique integer value identifying this inference chain. */
   id: number;
@@ -1250,28 +1266,28 @@ export type InferenceChainDestroyApiArg = {
 export type NcaCreateApiResponse = unknown;
 export type NcaCreateApiArg = void;
 export type PharmacodynamicListApiResponse =
-  /** status 200  */ Pharmacodynamic[];
+  /** status 200  */ PharmacodynamicRead[];
 export type PharmacodynamicListApiArg = void;
 export type PharmacodynamicCreateApiResponse =
-  /** status 201  */ Pharmacodynamic;
+  /** status 201  */ PharmacodynamicRead;
 export type PharmacodynamicCreateApiArg = {
   pharmacodynamic: Pharmacodynamic;
 };
 export type PharmacodynamicRetrieveApiResponse =
-  /** status 200  */ Pharmacodynamic;
+  /** status 200  */ PharmacodynamicRead;
 export type PharmacodynamicRetrieveApiArg = {
   /** A unique integer value identifying this pharmacodynamic model. */
   id: number;
 };
 export type PharmacodynamicUpdateApiResponse =
-  /** status 200  */ Pharmacodynamic;
+  /** status 200  */ PharmacodynamicRead;
 export type PharmacodynamicUpdateApiArg = {
   /** A unique integer value identifying this pharmacodynamic model. */
   id: number;
   pharmacodynamic: Pharmacodynamic;
 };
 export type PharmacodynamicPartialUpdateApiResponse =
-  /** status 200  */ Pharmacodynamic;
+  /** status 200  */ PharmacodynamicRead;
 export type PharmacodynamicPartialUpdateApiArg = {
   /** A unique integer value identifying this pharmacodynamic model. */
   id: number;
@@ -1283,7 +1299,7 @@ export type PharmacodynamicDestroyApiArg = {
   id: number;
 };
 export type PharmacodynamicMmtUpdateApiResponse =
-  /** status 200  */ Pharmacodynamic;
+  /** status 200  */ PharmacodynamicRead;
 export type PharmacodynamicMmtUpdateApiArg = {
   /** A unique integer value identifying this pharmacodynamic model. */
   id: number;
@@ -1294,10 +1310,10 @@ export type PharmacodynamicSbmlUpdateApiResponse =
 export type PharmacodynamicSbmlUpdateApiArg = {
   /** A unique integer value identifying this pharmacodynamic model. */
   id: number;
-  pharmacodynamicSbml: PharmacodynamicSbml;
+  pharmacodynamicSbml: PharmacodynamicSbmlWrite;
 };
 export type PharmacodynamicSetVariablesFromInferenceUpdateApiResponse =
-  /** status 200  */ Pharmacodynamic;
+  /** status 200  */ PharmacodynamicRead;
 export type PharmacodynamicSetVariablesFromInferenceUpdateApiArg = {
   /** A unique integer value identifying this pharmacodynamic model. */
   id: number;
@@ -1310,28 +1326,28 @@ export type PharmacodynamicSimulateCreateApiArg = {
   simulate: Simulate;
 };
 export type PharmacokineticListApiResponse =
-  /** status 200  */ Pharmacokinetic[];
+  /** status 200  */ PharmacokineticRead[];
 export type PharmacokineticListApiArg = void;
 export type PharmacokineticCreateApiResponse =
-  /** status 201  */ Pharmacokinetic;
+  /** status 201  */ PharmacokineticRead;
 export type PharmacokineticCreateApiArg = {
   pharmacokinetic: Pharmacokinetic;
 };
 export type PharmacokineticRetrieveApiResponse =
-  /** status 200  */ Pharmacokinetic;
+  /** status 200  */ PharmacokineticRead;
 export type PharmacokineticRetrieveApiArg = {
   /** A unique integer value identifying this pharmacokinetic model. */
   id: number;
 };
 export type PharmacokineticUpdateApiResponse =
-  /** status 200  */ Pharmacokinetic;
+  /** status 200  */ PharmacokineticRead;
 export type PharmacokineticUpdateApiArg = {
   /** A unique integer value identifying this pharmacokinetic model. */
   id: number;
   pharmacokinetic: Pharmacokinetic;
 };
 export type PharmacokineticPartialUpdateApiResponse =
-  /** status 200  */ Pharmacokinetic;
+  /** status 200  */ PharmacokineticRead;
 export type PharmacokineticPartialUpdateApiArg = {
   /** A unique integer value identifying this pharmacokinetic model. */
   id: number;
@@ -1342,24 +1358,24 @@ export type PharmacokineticDestroyApiArg = {
   /** A unique integer value identifying this pharmacokinetic model. */
   id: number;
 };
-export type ProjectListApiResponse = /** status 200  */ Project[];
+export type ProjectListApiResponse = /** status 200  */ ProjectRead[];
 export type ProjectListApiArg = void;
-export type ProjectCreateApiResponse = /** status 201  */ Project;
+export type ProjectCreateApiResponse = /** status 201  */ ProjectRead;
 export type ProjectCreateApiArg = {
   project: Project;
 };
-export type ProjectRetrieveApiResponse = /** status 200  */ Project;
+export type ProjectRetrieveApiResponse = /** status 200  */ ProjectRead;
 export type ProjectRetrieveApiArg = {
   /** A unique integer value identifying this project. */
   id: number;
 };
-export type ProjectUpdateApiResponse = /** status 200  */ Project;
+export type ProjectUpdateApiResponse = /** status 200  */ ProjectRead;
 export type ProjectUpdateApiArg = {
   /** A unique integer value identifying this project. */
   id: number;
   project: Project;
 };
-export type ProjectPartialUpdateApiResponse = /** status 200  */ Project;
+export type ProjectPartialUpdateApiResponse = /** status 200  */ ProjectRead;
 export type ProjectPartialUpdateApiArg = {
   /** A unique integer value identifying this project. */
   id: number;
@@ -1370,31 +1386,35 @@ export type ProjectDestroyApiArg = {
   /** A unique integer value identifying this project. */
   id: number;
 };
-export type ProjectMonolixUpdateApiResponse = /** status 200  */ Monolix;
+export type ProjectMonolixUpdateApiResponse = /** status 200  */ MonolixRead;
 export type ProjectMonolixUpdateApiArg = {
   /** A unique integer value identifying this project. */
   id: number;
-  monolix: Monolix;
+  monolix: MonolixWrite;
 };
-export type ProjectAccessListApiResponse = /** status 200  */ ProjectAccess[];
+export type ProjectAccessListApiResponse =
+  /** status 200  */ ProjectAccessRead[];
 export type ProjectAccessListApiArg = void;
-export type ProjectAccessCreateApiResponse = /** status 201  */ ProjectAccess;
+export type ProjectAccessCreateApiResponse =
+  /** status 201  */ ProjectAccessRead;
 export type ProjectAccessCreateApiArg = {
   projectAccess: ProjectAccess;
 };
-export type ProjectAccessRetrieveApiResponse = /** status 200  */ ProjectAccess;
+export type ProjectAccessRetrieveApiResponse =
+  /** status 200  */ ProjectAccessRead;
 export type ProjectAccessRetrieveApiArg = {
   /** A unique integer value identifying this project access. */
   id: number;
 };
-export type ProjectAccessUpdateApiResponse = /** status 200  */ ProjectAccess;
+export type ProjectAccessUpdateApiResponse =
+  /** status 200  */ ProjectAccessRead;
 export type ProjectAccessUpdateApiArg = {
   /** A unique integer value identifying this project access. */
   id: number;
   projectAccess: ProjectAccess;
 };
 export type ProjectAccessPartialUpdateApiResponse =
-  /** status 200  */ ProjectAccess;
+  /** status 200  */ ProjectAccessRead;
 export type ProjectAccessPartialUpdateApiArg = {
   /** A unique integer value identifying this project access. */
   id: number;
@@ -1405,27 +1425,27 @@ export type ProjectAccessDestroyApiArg = {
   /** A unique integer value identifying this project access. */
   id: number;
 };
-export type ProtocolListApiResponse = /** status 200  */ Protocol[];
+export type ProtocolListApiResponse = /** status 200  */ ProtocolRead[];
 export type ProtocolListApiArg = {
   /** Filter results by project ID */
   projectId?: number;
 };
-export type ProtocolCreateApiResponse = /** status 201  */ Protocol;
+export type ProtocolCreateApiResponse = /** status 201  */ ProtocolRead;
 export type ProtocolCreateApiArg = {
   protocol: Protocol;
 };
-export type ProtocolRetrieveApiResponse = /** status 200  */ Protocol;
+export type ProtocolRetrieveApiResponse = /** status 200  */ ProtocolRead;
 export type ProtocolRetrieveApiArg = {
   /** A unique integer value identifying this protocol. */
   id: number;
 };
-export type ProtocolUpdateApiResponse = /** status 200  */ Protocol;
+export type ProtocolUpdateApiResponse = /** status 200  */ ProtocolRead;
 export type ProtocolUpdateApiArg = {
   /** A unique integer value identifying this protocol. */
   id: number;
   protocol: Protocol;
 };
-export type ProtocolPartialUpdateApiResponse = /** status 200  */ Protocol;
+export type ProtocolPartialUpdateApiResponse = /** status 200  */ ProtocolRead;
 export type ProtocolPartialUpdateApiArg = {
   /** A unique integer value identifying this protocol. */
   id: number;
@@ -1438,27 +1458,28 @@ export type ProtocolDestroyApiArg = {
 };
 export type SessionRetrieveApiResponse = unknown;
 export type SessionRetrieveApiArg = void;
-export type SimulationListApiResponse = /** status 200  */ Simulation[];
+export type SimulationListApiResponse = /** status 200  */ SimulationRead[];
 export type SimulationListApiArg = {
   /** Filter results by project ID */
   projectId?: number;
 };
-export type SimulationCreateApiResponse = /** status 201  */ Simulation;
+export type SimulationCreateApiResponse = /** status 201  */ SimulationRead;
 export type SimulationCreateApiArg = {
   simulation: Simulation;
 };
-export type SimulationRetrieveApiResponse = /** status 200  */ Simulation;
+export type SimulationRetrieveApiResponse = /** status 200  */ SimulationRead;
 export type SimulationRetrieveApiArg = {
   /** A unique integer value identifying this simulation. */
   id: number;
 };
-export type SimulationUpdateApiResponse = /** status 200  */ Simulation;
+export type SimulationUpdateApiResponse = /** status 200  */ SimulationRead;
 export type SimulationUpdateApiArg = {
   /** A unique integer value identifying this simulation. */
   id: number;
   simulation: Simulation;
 };
-export type SimulationPartialUpdateApiResponse = /** status 200  */ Simulation;
+export type SimulationPartialUpdateApiResponse =
+  /** status 200  */ SimulationRead;
 export type SimulationPartialUpdateApiArg = {
   /** A unique integer value identifying this simulation. */
   id: number;
@@ -1469,24 +1490,24 @@ export type SimulationDestroyApiArg = {
   /** A unique integer value identifying this simulation. */
   id: number;
 };
-export type SubjectListApiResponse = /** status 200  */ Subject[];
+export type SubjectListApiResponse = /** status 200  */ SubjectRead[];
 export type SubjectListApiArg = void;
-export type SubjectCreateApiResponse = /** status 201  */ Subject;
+export type SubjectCreateApiResponse = /** status 201  */ SubjectRead;
 export type SubjectCreateApiArg = {
   subject: Subject;
 };
-export type SubjectRetrieveApiResponse = /** status 200  */ Subject;
+export type SubjectRetrieveApiResponse = /** status 200  */ SubjectRead;
 export type SubjectRetrieveApiArg = {
   /** A unique integer value identifying this subject. */
   id: number;
 };
-export type SubjectUpdateApiResponse = /** status 200  */ Subject;
+export type SubjectUpdateApiResponse = /** status 200  */ SubjectRead;
 export type SubjectUpdateApiArg = {
   /** A unique integer value identifying this subject. */
   id: number;
   subject: Subject;
 };
-export type SubjectPartialUpdateApiResponse = /** status 200  */ Subject;
+export type SubjectPartialUpdateApiResponse = /** status 200  */ SubjectRead;
 export type SubjectPartialUpdateApiArg = {
   /** A unique integer value identifying this subject. */
   id: number;
@@ -1497,29 +1518,31 @@ export type SubjectDestroyApiArg = {
   /** A unique integer value identifying this subject. */
   id: number;
 };
-export type UnitListApiResponse = /** status 200  */ Unit[];
+export type UnitListApiResponse = /** status 200  */ UnitRead[];
 export type UnitListApiArg = {
   /** Enable conversions based on compound information */
   compoundId?: number;
+  /** (optional, default=false) true if unit is a target concentration unit */
+  isTarget?: boolean;
 };
-export type UnitCreateApiResponse = /** status 201  */ Unit;
+export type UnitCreateApiResponse = /** status 201  */ UnitRead;
 export type UnitCreateApiArg = {
   unit: Unit;
 };
-export type UnitRetrieveApiResponse = /** status 200  */ Unit;
+export type UnitRetrieveApiResponse = /** status 200  */ UnitRead;
 export type UnitRetrieveApiArg = {
   /** Enable conversions based on compound information */
   compoundId?: number;
   /** A unique integer value identifying this unit. */
   id: number;
 };
-export type UnitUpdateApiResponse = /** status 200  */ Unit;
+export type UnitUpdateApiResponse = /** status 200  */ UnitRead;
 export type UnitUpdateApiArg = {
   /** A unique integer value identifying this unit. */
   id: number;
   unit: Unit;
 };
-export type UnitPartialUpdateApiResponse = /** status 200  */ Unit;
+export type UnitPartialUpdateApiResponse = /** status 200  */ UnitRead;
 export type UnitPartialUpdateApiArg = {
   /** A unique integer value identifying this unit. */
   id: number;
@@ -1530,24 +1553,24 @@ export type UnitDestroyApiArg = {
   /** A unique integer value identifying this unit. */
   id: number;
 };
-export type UserListApiResponse = /** status 200  */ User[];
+export type UserListApiResponse = /** status 200  */ UserRead[];
 export type UserListApiArg = void;
-export type UserCreateApiResponse = /** status 201  */ User;
+export type UserCreateApiResponse = /** status 201  */ UserRead;
 export type UserCreateApiArg = {
   user: User;
 };
-export type UserRetrieveApiResponse = /** status 200  */ User;
+export type UserRetrieveApiResponse = /** status 200  */ UserRead;
 export type UserRetrieveApiArg = {
   /** A unique integer value identifying this user. */
   id: number;
 };
-export type UserUpdateApiResponse = /** status 200  */ User;
+export type UserUpdateApiResponse = /** status 200  */ UserRead;
 export type UserUpdateApiArg = {
   /** A unique integer value identifying this user. */
   id: number;
   user: User;
 };
-export type UserPartialUpdateApiResponse = /** status 200  */ User;
+export type UserPartialUpdateApiResponse = /** status 200  */ UserRead;
 export type UserPartialUpdateApiArg = {
   /** A unique integer value identifying this user. */
   id: number;
@@ -1558,7 +1581,7 @@ export type UserDestroyApiArg = {
   /** A unique integer value identifying this user. */
   id: number;
 };
-export type VariableListApiResponse = /** status 200  */ Variable[];
+export type VariableListApiResponse = /** status 200  */ VariableRead[];
 export type VariableListApiArg = {
   /** Filter results by dosed_pk_model ID */
   dosedPkModelId?: number;
@@ -1567,22 +1590,22 @@ export type VariableListApiArg = {
   /** Filter results by project ID */
   projectId?: number;
 };
-export type VariableCreateApiResponse = /** status 201  */ Variable;
+export type VariableCreateApiResponse = /** status 201  */ VariableRead;
 export type VariableCreateApiArg = {
   variable: Variable;
 };
-export type VariableRetrieveApiResponse = /** status 200  */ Variable;
+export type VariableRetrieveApiResponse = /** status 200  */ VariableRead;
 export type VariableRetrieveApiArg = {
   /** A unique integer value identifying this variable. */
   id: number;
 };
-export type VariableUpdateApiResponse = /** status 200  */ Variable;
+export type VariableUpdateApiResponse = /** status 200  */ VariableRead;
 export type VariableUpdateApiArg = {
   /** A unique integer value identifying this variable. */
   id: number;
   variable: Variable;
 };
-export type VariablePartialUpdateApiResponse = /** status 200  */ Variable;
+export type VariablePartialUpdateApiResponse = /** status 200  */ VariableRead;
 export type VariablePartialUpdateApiArg = {
   /** A unique integer value identifying this variable. */
   id: number;
@@ -1597,16 +1620,36 @@ export type WhoamiRetrieveApiResponse = unknown;
 export type WhoamiRetrieveApiArg = void;
 export type CategoryEnum = "SA" | "OP" | "OT";
 export type Algorithm = {
+  name: string;
+  category: CategoryEnum;
+};
+export type AlgorithmRead = {
   id: number;
   name: string;
   category: CategoryEnum;
 };
 export type PatchedAlgorithm = {
+  name?: string;
+  category?: CategoryEnum;
+};
+export type PatchedAlgorithmRead = {
   id?: number;
   name?: string;
   category?: CategoryEnum;
 };
 export type BiomarkerType = {
+  name: string;
+  description?: string | null;
+  display?: boolean;
+  color?: number;
+  axis?: boolean;
+  stored_unit: number;
+  dataset: number;
+  display_unit: number;
+  stored_time_unit: number;
+  display_time_unit: number;
+};
+export type BiomarkerTypeRead = {
   id: number;
   data: {
     [key: string]: any[];
@@ -1625,6 +1668,18 @@ export type BiomarkerType = {
   display_time_unit: number;
 };
 export type PatchedBiomarkerType = {
+  name?: string;
+  description?: string | null;
+  display?: boolean;
+  color?: number;
+  axis?: boolean;
+  stored_unit?: number;
+  dataset?: number;
+  display_unit?: number;
+  stored_time_unit?: number;
+  display_time_unit?: number;
+};
+export type PatchedBiomarkerTypeRead = {
   id?: number;
   data?: {
     [key: string]: any[];
@@ -1643,6 +1698,11 @@ export type PatchedBiomarkerType = {
   display_time_unit?: number;
 };
 export type PkpdMapping = {
+  pkpd_model: number;
+  pk_variable: number;
+  pd_variable: number;
+};
+export type PkpdMappingRead = {
   id: number;
   datetime: string;
   read_only: boolean;
@@ -1652,6 +1712,13 @@ export type PkpdMapping = {
 };
 export type TypeEnum = "RO" | "FUP" | "BPR" | "TLG";
 export type DerivedVariable = {
+  read_only?: boolean;
+  datetime?: string | null;
+  type: TypeEnum;
+  pkpd_model: number;
+  pk_variable: number;
+};
+export type DerivedVariableRead = {
   id: number;
   read_only?: boolean;
   datetime?: string | null;
@@ -1661,9 +1728,27 @@ export type DerivedVariable = {
 };
 export type CombinedModelSpeciesEnum = "H" | "R" | "N" | "M";
 export type CombinedModel = {
-  id: number;
   mappings: PkpdMapping[];
   derived_variables: DerivedVariable[];
+  read_only?: boolean;
+  datetime?: string | null;
+  name: string;
+  species?: CombinedModelSpeciesEnum;
+  has_saturation?: boolean;
+  has_effect?: boolean;
+  has_lag?: boolean;
+  has_bioavailability?: boolean;
+  has_hill_coefficient?: boolean;
+  time_max?: number;
+  project?: number | null;
+  pk_model?: number | null;
+  pd_model?: number | null;
+  pd_model2?: number | null;
+};
+export type CombinedModelRead = {
+  id: number;
+  mappings: PkpdMappingRead[];
+  derived_variables: DerivedVariableRead[];
   components: string;
   variables: number[];
   mmt: string;
@@ -1685,9 +1770,27 @@ export type CombinedModel = {
   pd_model2?: number | null;
 };
 export type PatchedCombinedModel = {
-  id?: number;
   mappings?: PkpdMapping[];
   derived_variables?: DerivedVariable[];
+  read_only?: boolean;
+  datetime?: string | null;
+  name?: string;
+  species?: CombinedModelSpeciesEnum;
+  has_saturation?: boolean;
+  has_effect?: boolean;
+  has_lag?: boolean;
+  has_bioavailability?: boolean;
+  has_hill_coefficient?: boolean;
+  time_max?: number;
+  project?: number | null;
+  pk_model?: number | null;
+  pd_model?: number | null;
+  pd_model2?: number | null;
+};
+export type PatchedCombinedModelRead = {
+  id?: number;
+  mappings?: PkpdMappingRead[];
+  derived_variables?: DerivedVariableRead[];
   components?: string;
   variables?: number[];
   mmt?: string;
@@ -1725,6 +1828,13 @@ export type Simulate = {
   time_max?: number;
 };
 export type Efficacy = {
+  name?: string;
+  c50: number;
+  hill_coefficient?: number;
+  c50_unit: number;
+  compound: number;
+};
+export type EfficacyRead = {
   id: number;
   name?: string;
   c50: number;
@@ -1735,7 +1845,6 @@ export type Efficacy = {
 export type CompoundTypeEnum = "SM" | "LM";
 export type IntrinsicClearanceAssayEnum = "MS" | "HC";
 export type Compound = {
-  id: number;
   efficacy_experiments: Efficacy[];
   name: string;
   description?: string;
@@ -1757,8 +1866,30 @@ export type Compound = {
   target_concentration_unit?: number;
   dissociation_unit?: number;
 };
+export type CompoundRead = {
+  id: number;
+  efficacy_experiments: EfficacyRead[];
+  name: string;
+  description?: string;
+  molecular_mass?: number;
+  compound_type?: CompoundTypeEnum;
+  fraction_unbound_plasma?: number | null;
+  blood_to_plasma_ratio?: number | null;
+  intrinsic_clearance?: number | null;
+  intrinsic_clearance_assay?: IntrinsicClearanceAssayEnum;
+  fraction_unbound_including_cells?: number | null;
+  target_molecular_mass?: number;
+  target_concentration?: number | null;
+  dissociation_constant?: number | null;
+  is_soluble?: boolean;
+  use_efficacy?: number | null;
+  molecular_mass_unit?: number;
+  intrinsic_clearance_unit?: number;
+  target_molecular_mass_unit?: number;
+  target_concentration_unit?: number;
+  dissociation_unit?: number;
+};
 export type PatchedCompound = {
-  id?: number;
   efficacy_experiments?: Efficacy[];
   name?: string;
   description?: string;
@@ -1780,7 +1911,45 @@ export type PatchedCompound = {
   target_concentration_unit?: number;
   dissociation_unit?: number;
 };
+export type PatchedCompoundRead = {
+  id?: number;
+  efficacy_experiments?: EfficacyRead[];
+  name?: string;
+  description?: string;
+  molecular_mass?: number;
+  compound_type?: CompoundTypeEnum;
+  fraction_unbound_plasma?: number | null;
+  blood_to_plasma_ratio?: number | null;
+  intrinsic_clearance?: number | null;
+  intrinsic_clearance_assay?: IntrinsicClearanceAssayEnum;
+  fraction_unbound_including_cells?: number | null;
+  target_molecular_mass?: number;
+  target_concentration?: number | null;
+  dissociation_constant?: number | null;
+  is_soluble?: boolean;
+  use_efficacy?: number | null;
+  molecular_mass_unit?: number;
+  intrinsic_clearance_unit?: number;
+  target_molecular_mass_unit?: number;
+  target_concentration_unit?: number;
+  dissociation_unit?: number;
+};
+export type Dataset = {
+  name: string;
+  datetime?: string | null;
+  description?: string;
+  project?: number | null;
+};
 export type Dose = {
+  start_time: number;
+  amount: number;
+  duration?: number;
+  repeats?: number;
+  repeat_interval?: number;
+  read_only?: boolean;
+  datetime?: string | null;
+};
+export type DoseRead = {
   id: number;
   start_time: number;
   amount: number;
@@ -1792,8 +1961,19 @@ export type Dose = {
 };
 export type DoseTypeEnum = "D" | "I";
 export type Protocol = {
-  id: number;
   doses: Dose[];
+  read_only?: boolean;
+  datetime?: string | null;
+  name: string;
+  dose_type?: DoseTypeEnum;
+  project?: number | null;
+  compound?: number | null;
+  time_unit?: number | null;
+  amount_unit?: number | null;
+};
+export type ProtocolRead = {
+  id: number;
+  doses: DoseRead[];
   dataset: string;
   variables: number[];
   subjects: number[];
@@ -1806,21 +1986,27 @@ export type Protocol = {
   time_unit?: number | null;
   amount_unit?: number | null;
 };
-export type Dataset = {
+export type DatasetRead = {
   id: number;
   biomarker_types: number[];
   subjects: number[];
-  protocols: Protocol[];
+  protocols: ProtocolRead[];
   name: string;
   datetime?: string | null;
   description?: string;
   project?: number | null;
 };
 export type PatchedDataset = {
+  name?: string;
+  datetime?: string | null;
+  description?: string;
+  project?: number | null;
+};
+export type PatchedDatasetRead = {
   id?: number;
   biomarker_types?: number[];
   subjects?: number[];
-  protocols?: Protocol[];
+  protocols?: ProtocolRead[];
   name?: string;
   datetime?: string | null;
   description?: string;
@@ -1830,6 +2016,15 @@ export type DatasetCsv = {
   csv: string;
 };
 export type PatchedDose = {
+  start_time?: number;
+  amount?: number;
+  duration?: number;
+  repeats?: number;
+  repeat_interval?: number;
+  read_only?: boolean;
+  datetime?: string | null;
+};
+export type PatchedDoseRead = {
   id?: number;
   start_time?: number;
   amount?: number;
@@ -1840,6 +2035,14 @@ export type PatchedDose = {
   datetime?: string | null;
 };
 export type LogLikelihoodParameter = {
+  name: string;
+  parent_index?: number | null;
+  child_index?: number;
+  length?: number | null;
+  child: number;
+  variable?: number | null;
+};
+export type LogLikelihoodParameterRead = {
   id: number;
   name: string;
   parent_index?: number | null;
@@ -1851,8 +2054,20 @@ export type LogLikelihoodParameter = {
 };
 export type FormEnum = "N" | "U" | "LN" | "F" | "S" | "E" | "M";
 export type LogLikelihood = {
-  id: number;
   parameters: LogLikelihoodParameter[];
+  name: string;
+  description?: string | null;
+  value?: number | null;
+  time_independent_data?: boolean;
+  observed?: boolean;
+  form?: FormEnum;
+  variable?: number | null;
+  biomarker_type?: number | null;
+  protocol_filter?: number | null;
+};
+export type LogLikelihoodRead = {
+  id: number;
+  parameters: LogLikelihoodParameterRead[];
   model: string[] | null;
   dataset: number | null;
   time_variable: number | null;
@@ -1871,7 +2086,6 @@ export type LogLikelihood = {
 };
 export type InitializationStrategyEnum = "D" | "R" | "F";
 export type Inference = {
-  id: number;
   log_likelihoods: LogLikelihood[];
   read_only?: boolean;
   datetime?: string | null;
@@ -1892,8 +2106,29 @@ export type Inference = {
   algorithm?: number;
   initialization_inference?: number | null;
 };
+export type InferenceRead = {
+  id: number;
+  log_likelihoods: LogLikelihoodRead[];
+  read_only?: boolean;
+  datetime?: string | null;
+  name: string;
+  description?: string;
+  initialization_strategy?: InitializationStrategyEnum;
+  number_of_chains?: number;
+  max_number_of_iterations?: number;
+  burn_in?: number;
+  number_of_iterations?: number;
+  time_elapsed?: number;
+  number_of_function_evals?: number;
+  task_id?: string | null;
+  metadata?: {
+    [key: string]: any;
+  };
+  project: number;
+  algorithm?: number;
+  initialization_inference?: number | null;
+};
 export type PatchedInference = {
-  id?: number;
   log_likelihoods?: LogLikelihood[];
   read_only?: boolean;
   datetime?: string | null;
@@ -1914,19 +2149,57 @@ export type PatchedInference = {
   algorithm?: number;
   initialization_inference?: number | null;
 };
+export type PatchedInferenceRead = {
+  id?: number;
+  log_likelihoods?: LogLikelihoodRead[];
+  read_only?: boolean;
+  datetime?: string | null;
+  name?: string;
+  description?: string;
+  initialization_strategy?: InitializationStrategyEnum;
+  number_of_chains?: number;
+  max_number_of_iterations?: number;
+  burn_in?: number;
+  number_of_iterations?: number;
+  time_elapsed?: number;
+  number_of_function_evals?: number;
+  task_id?: string | null;
+  metadata?: {
+    [key: string]: any;
+  };
+  project?: number;
+  algorithm?: number;
+  initialization_inference?: number | null;
+};
 export type InferenceChain = {
+  inference: number;
+};
+export type InferenceChainRead = {
   id: number;
   data: string;
   outputs: string;
   inference: number;
 };
 export type PatchedInferenceChain = {
+  inference?: number;
+};
+export type PatchedInferenceChainRead = {
   id?: number;
   data?: string;
   outputs?: string;
   inference?: number;
 };
 export type Pharmacodynamic = {
+  mmt?: string;
+  read_only?: boolean;
+  datetime?: string | null;
+  name: string;
+  description?: string;
+  time_max?: number;
+  is_library_model?: boolean;
+  project?: number | null;
+};
+export type PharmacodynamicRead = {
   id: number;
   components: string;
   variables: number[];
@@ -1940,6 +2213,16 @@ export type Pharmacodynamic = {
   project?: number | null;
 };
 export type PatchedPharmacodynamic = {
+  mmt?: string;
+  read_only?: boolean;
+  datetime?: string | null;
+  name?: string;
+  description?: string;
+  time_max?: number;
+  is_library_model?: boolean;
+  project?: number | null;
+};
+export type PatchedPharmacodynamicRead = {
   id?: number;
   components?: string;
   variables?: number[];
@@ -1952,10 +2235,20 @@ export type PatchedPharmacodynamic = {
   is_library_model?: boolean;
   project?: number | null;
 };
-export type PharmacodynamicSbml = {
+export type PharmacodynamicSbml = {};
+export type PharmacodynamicSbmlWrite = {
   sbml: string;
 };
 export type Pharmacokinetic = {
+  read_only?: boolean;
+  datetime?: string | null;
+  name: string;
+  description?: string;
+  mmt?: string;
+  time_max?: number;
+  is_library_model?: boolean;
+};
+export type PharmacokineticRead = {
   id: number;
   read_only?: boolean;
   datetime?: string | null;
@@ -1966,6 +2259,15 @@ export type Pharmacokinetic = {
   is_library_model?: boolean;
 };
 export type PatchedPharmacokinetic = {
+  read_only?: boolean;
+  datetime?: string | null;
+  name?: string;
+  description?: string;
+  mmt?: string;
+  time_max?: number;
+  is_library_model?: boolean;
+};
+export type PatchedPharmacokineticRead = {
   id?: number;
   read_only?: boolean;
   datetime?: string | null;
@@ -1976,6 +2278,10 @@ export type PatchedPharmacokinetic = {
   is_library_model?: boolean;
 };
 export type ProjectAccess = {
+  read_only?: boolean;
+  user: number;
+};
+export type ProjectAccessRead = {
   id: number;
   read_only?: boolean;
   user: number;
@@ -1983,8 +2289,15 @@ export type ProjectAccess = {
 };
 export type ProjectSpeciesEnum = "M" | "R" | "H" | "K" | "O";
 export type Project = {
-  id: number;
   user_access: ProjectAccess[];
+  name: string;
+  description?: string;
+  species?: ProjectSpeciesEnum;
+  compound: number;
+};
+export type ProjectRead = {
+  id: number;
+  user_access: ProjectAccessRead[];
   protocols: number[];
   name: string;
   description?: string;
@@ -1994,8 +2307,15 @@ export type Project = {
   users: number[];
 };
 export type PatchedProject = {
-  id?: number;
   user_access?: ProjectAccess[];
+  name?: string;
+  description?: string;
+  species?: ProjectSpeciesEnum;
+  compound?: number;
+};
+export type PatchedProjectRead = {
+  id?: number;
+  user_access?: ProjectAccessRead[];
   protocols?: number[];
   name?: string;
   description?: string;
@@ -2004,23 +2324,41 @@ export type PatchedProject = {
   compound?: number;
   users?: number[];
 };
-export type Monolix = {
-  data_csv: string;
-  model_txt: string;
-  project_mlxtran: string;
+export type Monolix = {};
+export type MonolixRead = {
   data: string;
   pd_model: string;
   pk_model: string;
 };
+export type MonolixWrite = {
+  data_csv: string;
+  model_txt: string;
+  project_mlxtran: string;
+};
 export type PatchedProjectAccess = {
+  read_only?: boolean;
+  user?: number;
+};
+export type PatchedProjectAccessRead = {
   id?: number;
   read_only?: boolean;
   user?: number;
   project?: number;
 };
 export type PatchedProtocol = {
-  id?: number;
   doses?: Dose[];
+  read_only?: boolean;
+  datetime?: string | null;
+  name?: string;
+  dose_type?: DoseTypeEnum;
+  project?: number | null;
+  compound?: number | null;
+  time_unit?: number | null;
+  amount_unit?: number | null;
+};
+export type PatchedProtocolRead = {
+  id?: number;
+  doses?: DoseRead[];
   dataset?: string;
   variables?: number[];
   subjects?: number[];
@@ -2034,21 +2372,30 @@ export type PatchedProtocol = {
   amount_unit?: number | null;
 };
 export type SimulationSlider = {
+  variable: number;
+};
+export type SimulationSliderRead = {
   id: number;
   variable: number;
 };
 export type SimulationYAxis = {
+  right?: boolean;
+  variable: number;
+};
+export type SimulationYAxisRead = {
   id: number;
   right?: boolean;
   variable: number;
 };
 export type SimulationCxLine = {
+  value: number;
+};
+export type SimulationCxLineRead = {
   id: number;
   value: number;
 };
 export type Y2ScaleEnum = "lin" | "lg2" | "lg10" | "ln";
 export type SimulationPlot = {
-  id: number;
   y_axes: SimulationYAxis[];
   cx_lines: SimulationCxLine[];
   index: number;
@@ -2063,8 +2410,23 @@ export type SimulationPlot = {
   y_unit?: number | null;
   y_unit2?: number | null;
 };
-export type Simulation = {
+export type SimulationPlotRead = {
   id: number;
+  y_axes: SimulationYAxisRead[];
+  cx_lines: SimulationCxLineRead[];
+  index: number;
+  x_scale?: Y2ScaleEnum;
+  y_scale?: Y2ScaleEnum;
+  y2_scale?: Y2ScaleEnum;
+  min?: number | null;
+  max?: number | null;
+  min2?: number | null;
+  max2?: number | null;
+  x_unit: number;
+  y_unit?: number | null;
+  y_unit2?: number | null;
+};
+export type Simulation = {
   sliders: SimulationSlider[];
   plots: SimulationPlot[];
   name: string;
@@ -2076,8 +2438,20 @@ export type Simulation = {
   project: number;
   time_max_unit: number;
 };
+export type SimulationRead = {
+  id: number;
+  sliders: SimulationSliderRead[];
+  plots: SimulationPlotRead[];
+  name: string;
+  nrows?: number;
+  ncols?: number;
+  time_max?: number;
+  abs_tolerance?: number;
+  rel_tolerance?: number;
+  project: number;
+  time_max_unit: number;
+};
 export type PatchedSimulation = {
-  id?: number;
   sliders?: SimulationSlider[];
   plots?: SimulationPlot[];
   name?: string;
@@ -2089,7 +2463,28 @@ export type PatchedSimulation = {
   project?: number;
   time_max_unit?: number;
 };
+export type PatchedSimulationRead = {
+  id?: number;
+  sliders?: SimulationSliderRead[];
+  plots?: SimulationPlotRead[];
+  name?: string;
+  nrows?: number;
+  ncols?: number;
+  time_max?: number;
+  abs_tolerance?: number;
+  rel_tolerance?: number;
+  project?: number;
+  time_max_unit?: number;
+};
 export type Subject = {
+  id_in_dataset: number;
+  shape?: number;
+  display?: boolean;
+  metadata?: string;
+  dataset: number;
+  protocol?: number | null;
+};
+export type SubjectRead = {
   id: number;
   id_in_dataset: number;
   shape?: number;
@@ -2099,6 +2494,14 @@ export type Subject = {
   protocol?: number | null;
 };
 export type PatchedSubject = {
+  id_in_dataset?: number;
+  shape?: number;
+  display?: boolean;
+  metadata?: string;
+  dataset?: number;
+  protocol?: number | null;
+};
+export type PatchedSubjectRead = {
   id?: number;
   id_in_dataset?: number;
   shape?: number;
@@ -2108,6 +2511,17 @@ export type PatchedSubject = {
   protocol?: number | null;
 };
 export type Unit = {
+  symbol: string;
+  g?: number;
+  m?: number;
+  s?: number;
+  A?: number;
+  K?: number;
+  cd?: number;
+  mol?: number;
+  multiplier?: number;
+};
+export type UnitRead = {
   id: number;
   compatible_units: {
     [key: string]: string;
@@ -2123,6 +2537,17 @@ export type Unit = {
   multiplier?: number;
 };
 export type PatchedUnit = {
+  symbol?: string;
+  g?: number;
+  m?: number;
+  s?: number;
+  A?: number;
+  K?: number;
+  cd?: number;
+  mol?: number;
+  multiplier?: number;
+};
+export type PatchedUnitRead = {
   id?: number;
   compatible_units?: {
     [key: string]: string;
@@ -2137,29 +2562,68 @@ export type PatchedUnit = {
   mol?: number;
   multiplier?: number;
 };
+export type User = {
+  username: string;
+  first_name?: string;
+  last_name?: string;
+  email?: string;
+};
 export type Profile = {
+  user: number;
+};
+export type ProfileRead = {
   id: number;
   user: number;
 };
-export type User = {
+export type UserRead = {
   id: number;
   username: string;
   first_name?: string;
   last_name?: string;
   email?: string;
-  profile: Profile;
+  profile: ProfileRead;
   project_set: number[];
 };
 export type PatchedUser = {
+  username?: string;
+  first_name?: string;
+  last_name?: string;
+  email?: string;
+};
+export type PatchedUserRead = {
   id?: number;
   username?: string;
   first_name?: string;
   last_name?: string;
   email?: string;
-  profile?: Profile;
+  profile?: ProfileRead;
   project_set?: number[];
 };
 export type Variable = {
+  read_only?: boolean;
+  datetime?: string | null;
+  is_public?: boolean;
+  lower_bound?: number | null;
+  upper_bound?: number | null;
+  default_value?: number;
+  is_log?: boolean;
+  name: string;
+  description?: string | null;
+  binding?: string | null;
+  qname: string;
+  unit_symbol?: string | null;
+  constant?: boolean;
+  state?: boolean;
+  color?: number;
+  display?: boolean;
+  axis?: boolean;
+  unit?: number | null;
+  pd_model?: number | null;
+  pk_model?: number | null;
+  dosed_pk_model?: number | null;
+  protocol?: number | null;
+};
+export type VariableRead = {
   id: number;
   read_only?: boolean;
   datetime?: string | null;
@@ -2185,6 +2649,30 @@ export type Variable = {
   protocol?: number | null;
 };
 export type PatchedVariable = {
+  read_only?: boolean;
+  datetime?: string | null;
+  is_public?: boolean;
+  lower_bound?: number | null;
+  upper_bound?: number | null;
+  default_value?: number;
+  is_log?: boolean;
+  name?: string;
+  description?: string | null;
+  binding?: string | null;
+  qname?: string;
+  unit_symbol?: string | null;
+  constant?: boolean;
+  state?: boolean;
+  color?: number;
+  display?: boolean;
+  axis?: boolean;
+  unit?: number | null;
+  pd_model?: number | null;
+  pk_model?: number | null;
+  dosed_pk_model?: number | null;
+  protocol?: number | null;
+};
+export type PatchedVariableRead = {
   id?: number;
   read_only?: boolean;
   datetime?: string | null;

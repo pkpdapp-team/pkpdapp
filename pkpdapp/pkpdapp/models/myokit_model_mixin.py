@@ -63,7 +63,7 @@ class MyokitModelMixin:
                 tlag_value = 0.0
         else:
             tlag_value = override_tlag
-
+            
         # add a dose_rate variable to the model for each
         # dosed variable
         for v in self.variables.filter(state=True):
@@ -92,9 +92,13 @@ class MyokitModelMixin:
 
                 amount_var = model.get(v.qname)
                 time_var = model.binding("time")
+                
+                is_target = False
+                if self.is_library_model:
+                    is_target = 'CT' in v.qname
 
                 amount_conversion_factor = v.protocol.amount_unit.convert_to(
-                    amount_var.unit(), compound=compound
+                    amount_var.unit(), compound=compound, is_target=is_target
                 )
 
                 time_conversion_factor = v.protocol.time_unit.convert_to(
@@ -367,6 +371,9 @@ class MyokitModelMixin:
         return [self._serialise_variable(v) for v in variables]
 
     def _convert_unit(self, variable, myokit_variable_sbml, value):
+        is_target = False
+        if self.is_library_model:
+            is_target = 'CT' in variable.qname
         if variable.unit is None:
             conversion_factor = 1.0
         else:
@@ -375,7 +382,7 @@ class MyokitModelMixin:
             if project is not None:
                 compound = project.compound
             conversion_factor = variable.unit.convert_to(
-                myokit_variable_sbml.unit(), compound=compound
+                myokit_variable_sbml.unit(), compound=compound, is_target=is_target
             )
 
         return conversion_factor * value

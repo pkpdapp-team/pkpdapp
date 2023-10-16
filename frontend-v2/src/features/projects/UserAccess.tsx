@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, FormControl, InputLabel, Select, MenuItem, DialogContentText, useTheme } from '@mui/material';
-import { Project, ProjectAccess, useUserListQuery } from '../../app/backendApi';
+import { Project, ProjectAccess, ProjectRead, useUserListQuery } from '../../app/backendApi';
 import { Control } from 'react-hook-form';
 import { FormData } from './Project';
 import SelectField from '../../components/SelectField';
@@ -8,7 +8,7 @@ import SelectField from '../../components/SelectField';
 
 interface Props {
   open: boolean;
-  project: Project;
+  project: ProjectRead;
   userAccess: ProjectAccess[];
   append: (value: ProjectAccess) => void;
   remove: (index: number) => void;
@@ -40,7 +40,7 @@ const UserAccess: React.FC<Props> = ({ open, userAccess, append, remove, control
   ]
 
   const addUser = (id: number) => {
-    append({ id: 0, user: id, read_only: false, project: project.id })
+    append({ user: id, read_only: false })
   }
 
   return (
@@ -68,7 +68,7 @@ const UserAccess: React.FC<Props> = ({ open, userAccess, append, remove, control
             </TableHead>
             <TableBody>
               {userAccess.map((user, i) => (
-                <TableRow key={user.id}>
+                <TableRow key={user.user}>
                   <TableCell>{userMap.get(user.user)?.username}</TableCell>
                   <TableCell>
                     <SelectField label="Access" name={`project.user_access.${i}.read_only`} control={control} options={accessLevelOptions} />

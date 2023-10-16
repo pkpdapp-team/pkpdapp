@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { CombinedModel, Project, Variable, useCompoundRetrieveQuery, usePharmacokineticRetrieveQuery, useUnitListQuery, useVariableUpdateMutation } from '../../app/backendApi';
+import { CombinedModel, CombinedModelRead, ProjectRead, VariableRead, useCompoundRetrieveQuery, usePharmacokineticRetrieveQuery, useUnitListQuery, useVariableUpdateMutation } from '../../app/backendApi';
 import { Control } from 'react-hook-form';
 import { TableContainer, Table, TableHead, TableRow, TableCell, TableBody, Stack, Button } from '@mui/material';
 import ParameterRow from './ParameterRow';
@@ -8,10 +8,10 @@ import HelpButton from '../../components/HelpButton';
 import paramPriority from './paramPriority';
 
 interface Props {
-    model: CombinedModel;
-    project: Project;
+    model: CombinedModelRead;
+    project: ProjectRead;
     control: Control<CombinedModel>;
-    variables: Variable[];
+    variables: VariableRead[];
 }
 
 

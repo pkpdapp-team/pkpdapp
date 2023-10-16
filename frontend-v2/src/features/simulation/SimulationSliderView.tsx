@@ -1,5 +1,5 @@
 import React, { SyntheticEvent, useEffect } from 'react';
-import { SimulationSlider, Unit, useVariableRetrieveQuery } from '../../app/backendApi';
+import { SimulationSlider, UnitRead, useVariableRetrieveQuery } from '../../app/backendApi';
 import { Grid, IconButton, Input, Slider, Stack, Tooltip, Typography } from '@mui/material';
 import { CloseFullscreen, Delete, OpenInFull, Replay, Save } from '@mui/icons-material';
 
@@ -9,7 +9,7 @@ interface SimulationSliderProps {
   onChange: (value: number) => void;
   onSave: (value: number) => void;
   remove: (index: number) => void;
-  units: Unit[];
+  units: UnitRead[];
 }
 
 const SimulationSliderView: React.FC<SimulationSliderProps> = ({ index, slider, onChange, remove, onSave, units }) => {

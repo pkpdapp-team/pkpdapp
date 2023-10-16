@@ -6,17 +6,16 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import { Project, CombinedModel, Variable, useVariableUpdateMutation, Unit } from "../../app/backendApi";
-import TextField from "../../components/TextField";
+import { Variable, useVariableUpdateMutation, CombinedModelRead, ProjectRead, UnitRead, VariableRead } from "../../app/backendApi";
 import UnitField from "../../components/UnitField";
 import useDirty from "../../hooks/useDirty";
 import FloatField from "../../components/FloatField";
 
 interface Props {
-  project: Project;
-  model: CombinedModel;
-  variable: Variable;
-  units: Unit[];
+  project: ProjectRead;
+  model: CombinedModelRead;
+  variable: VariableRead;
+  units: UnitRead[];
 }
 
 
@@ -36,7 +35,7 @@ const ParameterRow: React.FC<Props> = ({ project, model, variable, units }) => {
 
   const submit = handleSubmit((data) => {
     if (JSON.stringify(data) !== JSON.stringify(variable)) {
-      updateVariable({ id: data.id, variable: data })
+      updateVariable({ id: variable.id, variable: data })
     }
   })
 

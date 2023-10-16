@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 
 import { RootState } from "../../app/store";
-import { User } from "../../app/backendApi";
+import { UserRead } from "../../app/backendApi";
 
 
 export const fetchCsrf = createAsyncThunk<string, undefined>(
@@ -104,7 +104,7 @@ export const logout = createAsyncThunk(
 );
 
 interface LoginState {
-  user: User | undefined;
+  user: UserRead | undefined;
   csrf: string | undefined;
   isAuthenticated: boolean;
   error: string | undefined;

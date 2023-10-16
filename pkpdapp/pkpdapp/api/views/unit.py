@@ -28,7 +28,7 @@ class UnitView(viewsets.ModelViewSet):
 
         if request is not None:
             compound_id = self.request.query_params.get('compound_id')
-
+            
         if compound_id is not None:
             try:
                 compound = Compound.objects.get(pk=compound_id)
@@ -37,7 +37,7 @@ class UnitView(viewsets.ModelViewSet):
 
         if compound is not None:
             context['compound'] = compound
-
+            
         return context
 
     @extend_schema(

@@ -1,6 +1,6 @@
 import { useSelector } from 'react-redux';
 import { RootState } from '../../app/store';
-import { CombinedModel, useCombinedModelListQuery, useCombinedModelUpdateMutation, useProjectRetrieveQuery, useProtocolDestroyMutation, useProtocolListQuery, useSimulationListQuery, useSimulationUpdateMutation, useVariableListQuery } from '../../app/backendApi';
+import { CombinedModel, CombinedModelRead, useCombinedModelListQuery, useCombinedModelUpdateMutation, useProjectRetrieveQuery, useProtocolDestroyMutation, useProtocolListQuery, useSimulationListQuery, useSimulationUpdateMutation, useVariableListQuery } from '../../app/backendApi';
 import { useForm } from 'react-hook-form';
 import { useEffect, useMemo } from 'react';
 import { DynamicTabs, TabPanel } from '../../components/DynamicTabs';
@@ -25,7 +25,7 @@ const Model: React.FC = () => {
   }, [simulations]);
 
 
-  const defaultModel: CombinedModel = {
+  const defaultModel: CombinedModelRead = {
     id: 0,
     name: '',
     project: projectId || 0,
@@ -50,6 +50,9 @@ const Model: React.FC = () => {
   }, [model, reset]);
 
   const submit = handleSubmit((data: CombinedModel) => {
+    if (!model) {
+      return;
+    }
     // if either of the pd_models have changed, need to remove the mappings
     if (data.pd_model !== model?.pd_model || data.pd_model2 !== model?.pd_model2) {
       data.mappings = [];
@@ -59,7 +62,7 @@ const Model: React.FC = () => {
       data.pd_model2 = null;
     }
 
-    return updateModel({ id: data.id, combinedModel: data }).then((response) => {
+    return updateModel({ id: model.id, combinedModel: data }).then((response) => {
       if ('data' in response) {
         // if the pk_model has changed, need to reset the simulation time_max_unit
         if ((data.pk_model !== model?.pk_model) && simulation) {
