@@ -53,10 +53,7 @@ const Model: React.FC = () => {
     if (!model) {
       return;
     }
-    // if either of the pd_models have changed, need to remove the mappings
-    if (data.pd_model !== model?.pd_model || data.pd_model2 !== model?.pd_model2) {
-      data.mappings = [];
-    }
+    
     // if only pd_model has changed, need to clear pd_model2
     if (data.pd_model !== model?.pd_model) {
       data.pd_model2 = null;

@@ -166,6 +166,7 @@ const VariableRow: React.FC<Props> = ({ project, compound, model, variable, cont
 
   const noMapToPD = isPD || effectVariable === undefined || !isConcentration
   const noDerivedVariables =  !isConcentration || isPD;
+  const isC1 = model.is_library_model && variable.qname.endsWith('.C1')
   const disableRo = !compound.dissociation_constant || !compound.target_concentration;
   const disableFUP = !compound.fraction_unbound_plasma || compound.compound_type === 'LM';
   const disableBPR = !compound.blood_to_plasma_ratio || compound.compound_type === 'LM';
@@ -217,12 +218,12 @@ const VariableRow: React.FC<Props> = ({ project, compound, model, variable, cont
         )}
       </TableCell>
       <TableCell>
-        { !noDerivedVariables && !isDerivedVariable && (
+        { isC1 && !noDerivedVariables && !isDerivedVariable && (
         <FormControlLabel disabled={disableFUP} control={<Radio checked={isLinkedTo('FUP')} onClick={onClickDerived('FUP')} />} label="" />
         )}
       </TableCell>
       <TableCell>
-        { !noDerivedVariables && !isDerivedVariable && (
+        { isC1 && !noDerivedVariables && !isDerivedVariable && (
         <FormControlLabel disabled={disableBPR} control={<Radio checked={isLinkedTo('BPR')} onClick={onClickDerived('BPR')} />} label="" />
         )}
       </TableCell>

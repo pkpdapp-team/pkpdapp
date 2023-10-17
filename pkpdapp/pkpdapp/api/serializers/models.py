@@ -11,6 +11,7 @@ from pkpdapp.models import (
     PkpdMapping,
     MyokitModelMixin,
     DerivedVariable,
+    Variable,
 )
 from pkpdapp.api.serializers import ValidSbml, ValidMmt
 
@@ -86,32 +87,52 @@ class CombinedModelSerializer(serializers.ModelSerializer):
         derived_var_data = validated_data.pop("derived_variables")
         old_mappings = list((instance.mappings).all())
         old_derived_vars = list((instance.derived_variables).all())
-
-        models_changed = (
+        
+        pk_model_changed = (
             instance.pk_model != validated_data.get("pk_model")
-            or instance.pd_model != validated_data.get("pd_model")
-            or instance.pd_model2 != validated_data.get("pd_model2")
         )
+        pd_model_changed = (
+            instance.pd_model != validated_data.get("pd_model")
+        )
+        
         new_pkpd_model = BaseDosedPharmacokineticSerializer().update(
             instance, validated_data
         )
+        
+        # if pd model has changed, update effect variable
+        if pd_model_changed:
+            for mapping in mappings_data:
+                try:
+                    mapping['pd_variable'] = new_pkpd_model.variables.get(
+                        qname=mapping['pd_variable'].qname
+                    )
+                except Variable.DoesNotExist:
+                    mapping['pd_variable'] = None
+
+            mappings_data = [ m for m in mappings_data if m['pd_variable'] is not None ]
 
         # don't update mappings if read_only
-        # don't update mapping or derived variables if models have changed
-        if not (instance.read_only or models_changed):
-            for field_datas, old_models, Serializer in [
-                (mappings_data, old_mappings, PkpdMappingSerializer),
-                (derived_var_data, old_derived_vars, DerivedVariableSerializer),
-            ]:
-                for field_data in field_datas:
-                    serializer = Serializer()
-                    try:
-                        old_model = old_models.pop(0)
-                        new_model = serializer.update(old_model, field_data)
-                        new_model.save()
-                    except IndexError:
-                        field_data["pkpd_model"] = new_pkpd_model
-                        new_model = serializer.create(field_data)
+        # don't update mapping or derived variables if pk model has changed
+        if not (instance.read_only or pk_model_changed):
+            for derived_var in derived_var_data:
+                serializer = DerivedVariableSerializer()
+                try:
+                    old_model = old_derived_vars.pop(0)
+                    new_model = serializer.update(old_model, derived_var)
+                    new_model.save()
+                except IndexError:
+                    derived_var["pkpd_model"] = new_pkpd_model
+                    new_model = serializer.create(derived_var)
+
+            for mapping in mappings_data:
+                serializer = PkpdMappingSerializer()
+                try:
+                    old_model = old_mappings.pop(0)
+                    new_model = serializer.update(old_model, mapping)
+                    new_model.save()
+                except IndexError:
+                    mapping["pkpd_model"] = new_pkpd_model
+                    new_model = serializer.create(mapping)
 
         # delete any remaining old mappings
         for old_model in old_mappings:
