@@ -86,7 +86,7 @@ const Drug: React.FC = () => {
     return <div>Not found</div>;
   }
 
-  const intrinsic_clearence_assay_options = [
+  const intrinsic_clearance_assay_options = [
     { value: "MS", label: "Microsomes" },
     { value: "HC", label: "Hepatocytes" },
   ];
@@ -131,8 +131,8 @@ const Drug: React.FC = () => {
           <FloatField label="Blood to Plasma Ratio (BP)" name="blood_to_plasma_ratio" control={control} textFieldProps={{ disabled: isLM }} />
 
           <Stack direction="row" spacing={2}>
-            <FloatField label="Intrinsic Clearence" name="intrinsic_clearance" control={control} textFieldProps={{ disabled: true }} />
-            <SelectField label="Intrinsic Clearence Assay" name="intrinsic_clearance_assay" control={control} options={intrinsic_clearence_assay_options} selectProps={{ disabled: true }} />
+            <FloatField label="Intrinsic Clearance" name="intrinsic_clearance" control={control} textFieldProps={{ disabled: true }} />
+            <SelectField label="Intrinsic Clearance Assay" name="intrinsic_clearance_assay" control={control} options={intrinsic_clearance_assay_options} selectProps={{ disabled: true }} />
           </Stack>
 
           <FloatField label="Fraction Unbound Incubation (fuinc)" name="fraction_unbound_including_cells" control={control} textFieldProps={{ disabled: true }} />
