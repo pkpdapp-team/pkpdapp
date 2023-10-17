@@ -127,7 +127,7 @@ const Simulations: React.FC = () => {
 
   // generate a simulation if slider values change
   useEffect(() => {
-    if (simulation?.id && sliderValues && variables && model && protocols) {
+    if (simulation?.id && sliderValues && variables && model && protocols && compound) {
       const timeMaxUnit = units?.find((u) => u.id === simulation.time_max_unit);
       const compatibleTimeUnit = timeMaxUnit?.compatible_units?.find((u) => parseInt(u.id) === model.time_unit); 
       const timeMaxConversionFactor = compatibleTimeUnit ? parseFloat(compatibleTimeUnit.conversion_factor) : 1.0;
@@ -141,7 +141,7 @@ const Simulations: React.FC = () => {
         }
       });
     }
-  }, [simulation, simulate, sliderValues, model, protocols, variables]);
+  }, [simulation, simulate, sliderValues, model, protocols, variables, compound]);
 
   
   // save simulation every second if dirty
