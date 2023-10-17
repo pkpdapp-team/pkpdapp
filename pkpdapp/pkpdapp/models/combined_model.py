@@ -393,6 +393,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 if has_name:
                     continue
                 var = myokit_compartment.add_variable(new_names[0])
+                var.meta['desc'] = 'User-defined absorption lag time from specified compartment'
                 time_var = pkpd_model.binding('time')
                 var.set_unit(time_var.unit())
                 var.set_rhs(myokit.Number(0))
