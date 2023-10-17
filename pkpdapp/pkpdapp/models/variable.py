@@ -329,6 +329,8 @@ class Variable(StoredModel):
                     upper = 1.0
                 elif myokit_variable.qname() == 'PKCompartment.F':
                     upper = 1.0
+                elif myokit_variable.qname() == 'PDCompartment.FE':
+                    upper = 1.0
             state = myokit_variable.is_state()
             if state:
                 value = myokit_variable.state_value()
