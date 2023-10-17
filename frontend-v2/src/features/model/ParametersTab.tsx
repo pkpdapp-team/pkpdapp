@@ -31,6 +31,9 @@ const ParametersTab: React.FC<Props> = ({ model, project, control, variables }) 
     }
 
     let constVariables = variables.filter(variable => variable.constant);
+    if (model.is_library_model) {
+      constVariables = constVariables.filter(variable => variable.name !== "C_Drug");
+    }
     constVariables.sort((a, b) => {
       const overallOrder = paramPriority(a) - paramPriority(b);
       if (overallOrder !== 0) {
