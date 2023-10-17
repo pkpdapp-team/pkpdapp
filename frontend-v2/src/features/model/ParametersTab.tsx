@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { CombinedModel, CombinedModelRead, ProjectRead, VariableRead, useCompoundRetrieveQuery, usePharmacokineticRetrieveQuery, useUnitListQuery, useVariableUpdateMutation } from '../../app/backendApi';
 import { Control } from 'react-hook-form';
-import { TableContainer, Table, TableHead, TableRow, TableCell, TableBody, Stack, Button } from '@mui/material';
+import { TableContainer, Table, TableHead, TableRow, TableCell, TableBody, Stack, Button, Tooltip } from '@mui/material';
 import ParameterRow from './ParameterRow';
 import { param_default as paramDefaults } from './param_default';
 import HelpButton from '../../components/HelpButton';
@@ -85,7 +85,13 @@ const ParametersTab: React.FC<Props> = ({ model, project, control, variables }) 
 
     return (
       <Stack spacing={2}>
-      <Button variant="contained" color="primary" onClick={resetToSpeciesDefaults} disabled={noReset} sx={{width: 270}}>Reset to Species Defaults</Button>
+      {noReset ? (
+      <Tooltip title='No default parameters as "Other" has been selected as species (in "Projects")'>
+        <Button variant="contained" color="primary" onClick={resetToSpeciesDefaults} disabled={noReset} sx={{width: 270}}>Reset to Species Defaults</Button>
+      </Tooltip>
+      ) : (
+        <Button variant="contained" color="primary" onClick={resetToSpeciesDefaults} disabled={noReset} sx={{width: 270}}>Reset to Species Defaults</Button>
+      )}
       <TableContainer>
       <Table>
         <TableHead>
