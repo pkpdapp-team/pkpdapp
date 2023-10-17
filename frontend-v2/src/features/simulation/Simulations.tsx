@@ -1,7 +1,7 @@
 import { Alert, Container, Grid, Snackbar, Stack, Typography } from '@mui/material';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../app/store';
-import { Simulate, SimulateResponse, Simulation, SimulationPlot, SimulationSlider, Unit, Variable, useCombinedModelListQuery, useCombinedModelSimulateCreateMutation, useCompoundRetrieveQuery, useProjectRetrieveQuery, useProtocolListQuery, useSimulationListQuery, useSimulationUpdateMutation, useUnitListQuery, useVariableListQuery, useVariableUpdateMutation } from '../../app/backendApi';
+import { Simulate, SimulateResponse, Simulation, SimulationPlotRead, SimulationRead, SimulationSlider, SimulationSliderRead, UnitRead, VariableRead, useCombinedModelListQuery, useCombinedModelSimulateCreateMutation, useCompoundRetrieveQuery, useProjectRetrieveQuery, useProtocolListQuery, useSimulationListQuery, useSimulationUpdateMutation, useUnitListQuery, useVariableListQuery, useVariableUpdateMutation } from '../../app/backendApi';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { useEffect, useMemo, useState } from 'react';
 import SimulationPlotView from './SimulationPlotView';
@@ -10,7 +10,6 @@ import DropdownButton from '../../components/DropdownButton';
 import { Add } from '@mui/icons-material';
 import FloatField from '../../components/FloatField';
 import useDirty from '../../hooks/useDirty';
-import { SerializedError } from '@reduxjs/toolkit';
 import UnitField from '../../components/UnitField';
 import paramPriority from '../model/paramPriority';
 
@@ -20,7 +19,7 @@ interface ErrorObject {
   error: string;
 };
 
-const getSimulateInput = (simulation: Simulation, sliderValues: SliderValues, variables?: Variable[], timeMax?: number ): Simulate => {
+const getSimulateInput = (simulation: Simulation, sliderValues: SliderValues, variables?: VariableRead[], timeMax?: number ): Simulate => {
     let outputs: string[] = [];
     let simulateVariables: {[key: string]: number} = {};
     for (const slider of simulation?.sliders || []) {
@@ -47,7 +46,7 @@ const getSimulateInput = (simulation: Simulation, sliderValues: SliderValues, va
     }
 }
 
-const getSliderInitialValues = (simulation?: Simulation, existingSliderValues?: SliderValues, variables?: Variable[]): SliderValues => {
+const getSliderInitialValues = (simulation?: SimulationRead, existingSliderValues?: SliderValues, variables?: VariableRead[]): SliderValues => {
   let initialValues: {[key: number]: number} = {};
   for (const slider of simulation?.sliders || []) {
     if (existingSliderValues && existingSliderValues[slider.variable]) {
@@ -90,7 +89,7 @@ const Simulations: React.FC = () => {
   const [ sliderValues, setSliderValues ] = useState<{[key: number]: number} | undefined>(undefined);
   const [ loadingSimulate, setLoadingSimulate] = useState<boolean>(false);
 
-  const defaultSimulation: Simulation = {
+  const defaultSimulation: SimulationRead = {
     id: 0,
     name: 'default',
     sliders: [],
@@ -128,7 +127,7 @@ const Simulations: React.FC = () => {
 
   // generate a simulation if slider values change
   useEffect(() => {
-    if (simulation?.id && sliderValues && variables && model && protocols) {
+    if (simulation?.id && sliderValues && variables && model && protocols && compound) {
       const timeMaxUnit = units?.find((u) => u.id === simulation.time_max_unit);
       const compatibleTimeUnit = timeMaxUnit?.compatible_units?.find((u) => parseInt(u.id) === model.time_unit); 
       const timeMaxConversionFactor = compatibleTimeUnit ? parseFloat(compatibleTimeUnit.conversion_factor) : 1.0;
@@ -142,13 +141,13 @@ const Simulations: React.FC = () => {
         }
       });
     }
-  }, [simulation, simulate, sliderValues, model, protocols, variables]);
+  }, [simulation, simulate, sliderValues, model, protocols, variables, compound]);
 
   
   // save simulation every second if dirty
   useEffect(() => {
     const intervalId = setInterval(() => {
-      if (isDirty) {
+      if (isDirty && simulation) {
         handleSubmit((data) => {
           // empty string keeps getting in, so convert to null
           for (let i = 0; i < data.plots.length; i++) {
@@ -169,7 +168,7 @@ const Simulations: React.FC = () => {
               data.plots[i].max2 = null;
             }
           }
-          updateSimulation({ id: data.id, simulation: data });
+          updateSimulation({ id: simulation.id, simulation: data });
         })();
       }
     }, 1000);
@@ -226,8 +225,8 @@ const Simulations: React.FC = () => {
     if (!variable) {
       return;
     }
-    const defaultXUnit = units?.find((unit: Unit) => unit.symbol === 'h')?.id || 0
-    const defaultPlot: SimulationPlot = {
+    const defaultXUnit = units?.find((unit: UnitRead) => unit.symbol === 'h')?.id || 0
+    const defaultPlot: SimulationPlotRead = {
       id: 0,
       y_axes: [
         {
@@ -245,7 +244,7 @@ const Simulations: React.FC = () => {
   }
 
   const handleAddSlider = (variableId: number) => {
-    const defaultSlider: SimulationSlider = {
+    const defaultSlider: SimulationSliderRead = {
       id: 0,
       variable: variableId,
     }
@@ -278,8 +277,8 @@ const Simulations: React.FC = () => {
       <Grid container spacing={1}>
         {plots.map((plot, index) => (
           <Grid item md={12} lg={6} key={index}>
-            {data ? 
-              <SimulationPlotView index={index} plot={plot} data={data} variables={variables || []} control={control} setValue={setValue} remove={removePlot} units={units} compound={compound}/>
+            {data && model ? 
+              <SimulationPlotView index={index} plot={plot} data={data} variables={variables || []} control={control} setValue={setValue} remove={removePlot} units={units} compound={compound} model={model}/>
               :
               <div>Loading...</div>
             }

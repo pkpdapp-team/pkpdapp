@@ -9,9 +9,8 @@ import {
   TableHead,
   TableRow,
 } from "@mui/material";
-import { useUnitListQuery, useProjectRetrieveQuery, useDoseCreateMutation, useProtocolListQuery } from "../../app/backendApi";
+import { useUnitListQuery, useProjectRetrieveQuery, useProtocolListQuery } from "../../app/backendApi";
 import { RootState } from "../../app/store";
-import { useFieldArray, useForm } from "react-hook-form";
 import Doses from "./Doses";
 import HelpButton from "../../components/HelpButton";
 
@@ -43,7 +42,7 @@ const Protocols: React.FC = () => {
             <TableCell>Dose Unit<HelpButton title="Dose Unit">Default selection: mg/kg for preclinical, mg for clinical</HelpButton></TableCell>
             <TableCell>Number of Doses</TableCell>
             <TableCell>Start Time<HelpButton title="Start Time">Start time of the first dose</HelpButton></TableCell>
-            <TableCell>Dose Duration<HelpButton title="Dose Duration">Duration of infusion. For PO/SC dosing use default 0.0533 h</HelpButton></TableCell>
+            <TableCell>Dose Duration<HelpButton title="Dose Duration">Duration of dosing. For IV bolus PO/SC dosing use the default value 0.0833 h</HelpButton></TableCell>
             <TableCell>Dosing Interval</TableCell>
             <TableCell>Time Unit</TableCell>
             <TableCell align="right">

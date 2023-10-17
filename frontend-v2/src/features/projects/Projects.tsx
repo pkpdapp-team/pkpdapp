@@ -12,7 +12,7 @@ import {
   Stack,
   IconButton,
 } from "@mui/material";
-import { Compound, Project, useCompoundCreateMutation, useProjectCreateMutation, useProjectListQuery, useCombinedModelCreateMutation, useSimulationCreateMutation, SimulationPlot, useUnitListQuery, useVariableListQuery, useCompoundListQuery } from "../../app/backendApi";
+import { Compound, Project, useCompoundCreateMutation, useProjectCreateMutation, useProjectListQuery, useCombinedModelCreateMutation, useSimulationCreateMutation, SimulationPlot, useUnitListQuery, useVariableListQuery, useCompoundListQuery, CompoundRead, ProjectRead } from "../../app/backendApi";
 import ProjectRow from "./Project";
 import { RootState } from "../../app/store";
 import AddIcon from '@mui/icons-material/Add';
@@ -58,27 +58,27 @@ const ProjectTable: React.FC = () => {
     return <div>Loading...</div>;
   }
 
-  const compoundNames = compounds?.reduce((acc: {[key: number]: string}, compound: Compound) => {
+  const compoundNames = compounds?.reduce((acc: {[key: number]: string}, compound: CompoundRead) => {
     acc[compound.id] = compound.name;
     return acc;
   }, {});
 
   if (sortBy === SortOptions.CREATED) {
-    projects?.sort((a: Project, b: Project) => {
+    projects?.sort((a: ProjectRead, b: ProjectRead) => {
       return (Date.parse(a.created) > Date.parse(b.created)) ? -1 : 1;
     })
   } else if (sortBy === SortOptions.NAME) {
-    projects?.sort((a: Project, b: Project) => {
+    projects?.sort((a: ProjectRead, b: ProjectRead) => {
       return (a.name.toLowerCase() < b.name.toLowerCase()) ? -1 : 1;
     })
   } else if (sortBy === SortOptions.SPECIES) {
-    projects?.sort((a: Project, b: Project) => {
+    projects?.sort((a: ProjectRead, b: ProjectRead) => {
       const species_a = a.species?.toLowerCase() || '';
       const species_b = b.species?.toLowerCase() || '';
       return (species_a < species_b) ? -1 : 1;
     })
   } else if (sortBy === SortOptions.COMPOUND) {
-    projects?.sort((a: Project, b: Project) => {
+    projects?.sort((a: ProjectRead, b: ProjectRead) => {
       if (!compoundNames) {
         return 0;
       }
@@ -102,12 +102,12 @@ const ProjectTable: React.FC = () => {
       new_name = `${new_name_base}${append}`;
       name_exists = projectNames.includes(new_name);
     }
-    let project: Project = { id: 0, name: new_name, description: '', compound: 0, user_access, users: [user?.id || 0], protocols: [], created: '' }
+    let project: Project = { name: new_name, description: '', compound: 0, user_access }
     let compound: Compound | undefined = undefined;
     if (type === 'SM') {
-      compound = {id: 0, name: 'untitled', description: '', compound_type: 'SM', efficacy_experiments: [], dissociation_constant: 500};
+      compound = {name: 'untitled', description: '', compound_type: 'SM', efficacy_experiments: [], dissociation_constant: 500};
     } else if (type === 'LM') {
-      compound = {id: 0, name: 'untitled', description: '', compound_type: 'LM', efficacy_experiments: [], molecular_mass: 150000, fraction_unbound_plasma: 1.0, dissociation_constant: 1};
+      compound = {name: 'untitled', description: '', compound_type: 'LM', efficacy_experiments: [], molecular_mass: 150000, fraction_unbound_plasma: 1.0, dissociation_constant: 1};
     }
     if (!compound) {
       return
@@ -115,18 +115,16 @@ const ProjectTable: React.FC = () => {
     addCompound({ compound }).unwrap()
     .then((compound) => {
       project.compound = compound.id || 0
-      project.user_access[0].project = project.id
       return addProject({ project })
     })
     .then((project) => {
       if ('data' in project) {
-        addCombinedModel({ combinedModel: { id: 0, name: `model for project ${project.data.id}`, project: project.data.id, mappings: [], derived_variables: [], components: '', variables: [], mmt: '', time_unit: 0, is_library_model: false }})
+        addCombinedModel({ combinedModel: { name: `model for project ${project.data.id}`, project: project.data.id, mappings: [], derived_variables: [] }})
         .then((combinedModel) => {
           if ('data' in combinedModel) {
             const defaultXUnit = units?.find((u) => u.symbol === 'h')?.id || combinedModel.data.time_unit;
             const defaultSimultationTime = compound?.compound_type === 'SM' ? 48 : 672;
             const defaultPlot: SimulationPlot = {
-              id: 0,
               y_axes: [],
               cx_lines: [],
               index: 0,
@@ -134,7 +132,7 @@ const ProjectTable: React.FC = () => {
               y_unit: null,
               y_unit2: null,
             }
-            addSimulation({ simulation: { id: 0, name: `default`, project: project.data.id, sliders: [], plots: [], time_max_unit: defaultXUnit, time_max: defaultSimultationTime }})
+            addSimulation({ simulation: { name: `default`, project: project.data.id, sliders: [], plots: [], time_max_unit: defaultXUnit, time_max: defaultSimultationTime }})
           }
         });
       }

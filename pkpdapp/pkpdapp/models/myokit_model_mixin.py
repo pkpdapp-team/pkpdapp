@@ -45,7 +45,7 @@ class MyokitModelMixin:
     def create_myokit_model(self):
         return self.parse_mmt_string(self.mmt)
 
-    def create_myokit_simulator(self, override_tlag=None, model=None):
+    def create_myokit_simulator(self, override_tlag=None, model=None, time_max=None):
         if override_tlag is None:
             override_tlag = {}
 
@@ -93,8 +93,12 @@ class MyokitModelMixin:
                 amount_var = model.get(v.qname)
                 time_var = model.binding("time")
 
+                is_target = False
+                if self.is_library_model:
+                    is_target = "CT" in v.qname
+
                 amount_conversion_factor = v.protocol.amount_unit.convert_to(
-                    amount_var.unit(), compound=compound
+                    amount_var.unit(), compound=compound, is_target=is_target
                 )
 
                 time_conversion_factor = v.protocol.time_unit.convert_to(
@@ -123,7 +127,14 @@ class MyokitModelMixin:
                         )
                         for start_time in start_times
                     ]
-
+                # if any dosing events are close to time_max,
+                # make them equal to time_max
+                if time_max is not None:
+                    for i, (level, start, duration) in enumerate(dosing_events):
+                        if abs(start - time_max) < 1e-6:
+                            dosing_events[i] = (level, time_max, duration)
+                        elif abs(start + duration - time_max) < 1e-6:
+                            dosing_events[i] = (level, start, time_max - start)
                 protocols[_get_pacing_label(amount_var)] = get_protocol(dosing_events)
 
         with lock:
@@ -367,6 +378,9 @@ class MyokitModelMixin:
         return [self._serialise_variable(v) for v in variables]
 
     def _convert_unit(self, variable, myokit_variable_sbml, value):
+        is_target = False
+        if self.is_library_model:
+            is_target = "CT" in variable.qname
         if variable.unit is None:
             conversion_factor = 1.0
         else:
@@ -375,7 +389,7 @@ class MyokitModelMixin:
             if project is not None:
                 compound = project.compound
             conversion_factor = variable.unit.convert_to(
-                myokit_variable_sbml.unit(), compound=compound
+                myokit_variable_sbml.unit(), compound=compound, is_target=is_target
             )
 
         return conversion_factor * value
@@ -479,7 +493,9 @@ class MyokitModelMixin:
                     if derived_param in variables:
                         override_tlag[dv.pk_variable.qname] = variables[derived_param]
 
-        sim = self.create_myokit_simulator(override_tlag=override_tlag, model=model)
+        sim = self.create_myokit_simulator(
+            override_tlag=override_tlag, model=model, time_max=time_max
+        )
         # TODO: take these from simulation model
         sim.set_tolerance(abs_tol=1e-06, rel_tol=1e-08)
 

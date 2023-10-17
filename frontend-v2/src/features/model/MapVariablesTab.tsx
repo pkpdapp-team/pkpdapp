@@ -1,15 +1,15 @@
 import * as React from 'react';
-import { CombinedModel, Project, Variable, useCompoundRetrieveQuery, useUnitListQuery, useUnitRetrieveQuery } from '../../app/backendApi';
+import { CombinedModel, CombinedModelRead, Project, ProjectRead, Variable, VariableRead, useCompoundRetrieveQuery, useUnitListQuery, useUnitRetrieveQuery } from '../../app/backendApi';
 import { Control, useFieldArray } from 'react-hook-form';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tooltip } from '@mui/material';
 import VariableRow from './VariableRow';
 import HelpButton from '../../components/HelpButton';
 
 interface Props {
-    model: CombinedModel;
-    project: Project;
+    model: CombinedModelRead;
+    project: ProjectRead;
     control: Control<CombinedModel>;
-    variables: Variable[];
+    variables: VariableRead[];
 }
 
 const MapVariablesTab: React.FC<Props> = ({ model, project, control, variables }: Props ) => {

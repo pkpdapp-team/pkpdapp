@@ -1,6 +1,6 @@
 import React from 'react';
-import { Control, UseFormSetValue, useFieldArray } from 'react-hook-form';
-import { Compound, Simulation, SimulationPlot, SimulationYAxis, Unit, Variable, useUnitListQuery } from '../../app/backendApi';
+import { Control, FieldArrayWithId, UseFormSetValue, useFieldArray } from 'react-hook-form';
+import { Compound, CompoundRead, Simulation, SimulationPlot, SimulationPlotRead, SimulationYAxis, SimulationYAxisRead, Unit, UnitRead, Variable, VariableRead, useUnitListQuery } from '../../app/backendApi';
 import { Divider, Grid, IconButton, List, ListItem, Stack, Typography } from '@mui/material';
 import TextField from '../../components/TextField';
 import UnitField from '../../components/UnitField';
@@ -12,12 +12,12 @@ import FloatField from '../../components/FloatField';
 
 interface SimulationPlotFormProps {
   index: number;
-  plot: SimulationPlot;
-  variables: Variable[];
+  plot:  FieldArrayWithId<Simulation, "plots", "id">;
+  variables: VariableRead[];
   control: Control<Simulation>,
   setValue: UseFormSetValue<Simulation>,
-  units: Unit[],
-  compound: Compound,
+  units: UnitRead[],
+  compound: CompoundRead,
 }
 
 const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({ index, plot, variables, control, setValue, units, compound }) => {
@@ -43,7 +43,7 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({ index, plot, va
   const concentrationVariables = variables.filter((variable) => variable.unit && concentrationUnitIds.includes(variable.unit));
   const yAxisIsConcentration = plot.y_unit ? concentrationUnitIds.includes(plot.y_unit) : false;
 
-  type SimulationYAxisWithIndex = SimulationYAxis & { index: number };
+  type SimulationYAxisWithIndex = FieldArrayWithId<Simulation, `plots.${number}.y_axes`, "id"> & { index: number };
   const lhs_y_axes: SimulationYAxisWithIndex[] = y_axes.map((y, i) => ({...y, index: i })).filter((y) => !y.right);
   const rhs_y_axes: SimulationYAxisWithIndex[] = y_axes.map((y, i) => ({...y, index: i })).filter((y) => y.right);
 
@@ -69,7 +69,6 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({ index, plot, va
       }
     }
     addYAxis({
-      id: 0,
       variable: variable.id,
       right,
     });
@@ -93,7 +92,6 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({ index, plot, va
   const handleAddCxLine = (value: number) => {
     addCxLines({
       value,
-      id: 0,
     });
   }
 

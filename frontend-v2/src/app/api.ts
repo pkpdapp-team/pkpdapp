@@ -42,7 +42,7 @@ export const api = backendApi.enhanceEndpoints({
       providesTags: (result, error, { id }) => [{ type: 'Compound', id }],
     },
     compoundUpdate: {
-      invalidatesTags: (result, error, { id }) => [{ type: 'Compound', id }],
+      invalidatesTags: (result, error, { id }) => [{ type: 'Compound', id }, { type: 'Unit', id: 'LIST' }],
     },
     compoundCreate: {
       invalidatesTags: [{ type: 'Compound', id: 'LIST' }],

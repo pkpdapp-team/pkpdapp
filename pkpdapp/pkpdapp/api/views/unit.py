@@ -27,7 +27,7 @@ class UnitView(viewsets.ModelViewSet):
         compound = None
 
         if request is not None:
-            compound_id = self.request.query_params.get('compound_id')
+            compound_id = self.request.query_params.get("compound_id")
 
         if compound_id is not None:
             try:
@@ -36,18 +36,18 @@ class UnitView(viewsets.ModelViewSet):
                 pass
 
         if compound is not None:
-            context['compound'] = compound
+            context["compound"] = compound
 
         return context
 
     @extend_schema(
         parameters=[
             OpenApiParameter(
-                name='compound_id',
-                description='Enable conversions based on compound information',
+                name="compound_id",
+                description="Enable conversions based on compound information",
                 required=False,
                 type=OpenApiTypes.INT,
-                location=OpenApiParameter.QUERY
+                location=OpenApiParameter.QUERY,
             ),
         ],
     )
@@ -57,11 +57,11 @@ class UnitView(viewsets.ModelViewSet):
     @extend_schema(
         parameters=[
             OpenApiParameter(
-                name='compound_id',
-                description='Enable conversions based on compound information',
+                name="compound_id",
+                description="Enable conversions based on compound information",
                 required=False,
                 type=OpenApiTypes.INT,
-                location=OpenApiParameter.QUERY
+                location=OpenApiParameter.QUERY,
             ),
         ],
     )

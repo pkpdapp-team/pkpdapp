@@ -6,16 +6,16 @@ author: Michael Gertz
 
 
 [environment]
-t = 0 bind time
+t = 0 in [h] bind time
 
 
 [PDCompartment]
 
-E0 = 100
+E0 = 100 in [dimensionless]
 	desc: baseline effect
 	
 Emax = 5 in [dimensionless]
-	desc: maximal fold change from baseline
+	desc: maximal fold change from baseline (value range: 1 (no effect) to inf)
 	
 C50 = 100000 in [pmol/L]
 	desc: concentration that produces half-maximal effects
@@ -25,6 +25,8 @@ HC = 1 in [dimensionless]
 	
 C_Drug = 1 in [pmol/L]	
 
-STIM = (1+(Emax-1)*C_Drug^HC/(C_Drug^HC+C50^HC)) in [dimensionless]
+STIM = C_Drug^HC/(C_Drug^HC+C50^HC) in [dimensionless]
 
-E = E0 * STIM
+E = if(E0 <= 0 , 
+	+Emax*STIM , 
+	E0 * (1+(Emax-1)*STIM)) in [dimensionless]

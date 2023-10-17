@@ -10,7 +10,7 @@ import {
   Box,
 } from "@mui/material";
 import { Delete, PersonAdd } from "@mui/icons-material";
-import { Compound, Project, ProjectAccess, useProjectDestroyMutation, useCompoundRetrieveQuery, useCompoundUpdateMutation, useProjectUpdateMutation } from "../../app/backendApi";
+import { Compound, Project, ProjectAccess, useProjectDestroyMutation, useCompoundRetrieveQuery, useCompoundUpdateMutation, useProjectUpdateMutation, CompoundRead, ProjectRead } from "../../app/backendApi";
 import SelectField from "../../components/SelectField";
 import UserAccess from "./UserAccess";
 import { setProject } from "../main/mainSlice";
@@ -19,7 +19,7 @@ import useDirty from "../../hooks/useDirty";
 import ConfirmationDialog from "../../components/ConfirmationDialog";
 
 interface Props {
-  project: Project;
+  project: ProjectRead;
   isSelected: boolean;
   otherProjectNames: string[];
 }
@@ -56,7 +56,7 @@ const ProjectRow: React.FC<Props> = ({ project, isSelected, otherProjectNames })
 
 
   const { data: compound, error, isLoading } = useCompoundRetrieveQuery({id: project.compound})
-  const defaultCompound: Compound = {
+  const defaultCompound: CompoundRead = {
     id: 1, 
     name: '', 
     description: '', 

@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import Plot from 'react-plotly.js';
-import { Compound, SimulateResponse, Simulation, SimulationPlot, Unit, Variable, useProtocolListQuery } from '../../app/backendApi';
+import { CombinedModelRead, Compound, CompoundRead, SimulateResponse, Simulation, SimulationPlot, SimulationPlotRead, Unit, UnitRead, Variable, VariableRead, useProtocolListQuery } from '../../app/backendApi';
 import { AxisType, Config, Data, Icons, Layout, Icon as PlotlyIcon } from 'plotly.js';
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
-import { Control, UseFormSetValue } from 'react-hook-form';
+import { Control, FieldArrayWithId, UseFormSetValue } from 'react-hook-form';
 import SimulationPlotForm from './SimulationPlotForm';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../app/store';
@@ -11,17 +11,18 @@ import { type } from 'os';
 
 interface SimulationPlotProps {
   index: number;
-  plot: SimulationPlot;
+  plot: FieldArrayWithId<Simulation, "plots", "id">;
   data: SimulateResponse;
-  variables: Variable[];
+  variables: VariableRead[];
   control: Control<Simulation>,
   setValue: UseFormSetValue<Simulation>,
   remove: (index: number) => void,
-  units: Unit[],
-  compound: Compound,
+  units: UnitRead[],
+  compound: CompoundRead,
+  model: CombinedModelRead,
 }
 
-const SimulationPlotView: React.FC<SimulationPlotProps> = ({ index, plot, data, variables, control, setValue, remove, units, compound }) => {
+const SimulationPlotView: React.FC<SimulationPlotProps> = ({ index, plot, data, variables, control, setValue, remove, units, compound, model }) => {
   const projectId = useSelector((state: RootState) => state.main.selectedProject);
   const { data: protocols, error: protocolsError, isLoading: isProtocolsLoading } = useProtocolListQuery({projectId: projectId || 0}, { skip: !projectId})
 
@@ -68,8 +69,9 @@ const SimulationPlotView: React.FC<SimulationPlotProps> = ({ index, plot, data, 
 
     const yaxisUnit = y_axis.right ? units.find((u) => u.id === plot.y_unit2) : units.find((u) => u.id === plot.y_unit);
     const ycompatibleUnit = variableUnit?.compatible_units.find((u) => parseInt(u.id) === yaxisUnit?.id);
-    const yconversionFactor = ycompatibleUnit ? parseFloat(ycompatibleUnit.conversion_factor) : 1.0;
-
+    
+    const is_target = model.is_library_model ? variableName?.includes('CT') : false;
+    const yconversionFactor = ycompatibleUnit ? parseFloat(is_target ? ycompatibleUnit.target_conversion_factor : ycompatibleUnit.conversion_factor) : 1.0;
 
     if (variableValues) {
       const y = variableValues.map((v) => v * yconversionFactor);

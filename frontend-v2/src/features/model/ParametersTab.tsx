@@ -1,17 +1,17 @@
 import * as React from 'react';
-import { CombinedModel, Project, Variable, useCompoundRetrieveQuery, usePharmacokineticRetrieveQuery, useUnitListQuery, useVariableUpdateMutation } from '../../app/backendApi';
+import { CombinedModel, CombinedModelRead, ProjectRead, VariableRead, useCompoundRetrieveQuery, usePharmacokineticRetrieveQuery, useUnitListQuery, useVariableUpdateMutation } from '../../app/backendApi';
 import { Control } from 'react-hook-form';
-import { TableContainer, Table, TableHead, TableRow, TableCell, TableBody, Stack, Button } from '@mui/material';
+import { TableContainer, Table, TableHead, TableRow, TableCell, TableBody, Stack, Button, Tooltip } from '@mui/material';
 import ParameterRow from './ParameterRow';
 import { param_default as paramDefaults } from './param_default';
 import HelpButton from '../../components/HelpButton';
 import paramPriority from './paramPriority';
 
 interface Props {
-    model: CombinedModel;
-    project: Project;
+    model: CombinedModelRead;
+    project: ProjectRead;
     control: Control<CombinedModel>;
-    variables: Variable[];
+    variables: VariableRead[];
 }
 
 
@@ -31,6 +31,9 @@ const ParametersTab: React.FC<Props> = ({ model, project, control, variables }) 
     }
 
     let constVariables = variables.filter(variable => variable.constant);
+    if (model.is_library_model) {
+      constVariables = constVariables.filter(variable => variable.name !== "C_Drug");
+    }
     constVariables.sort((a, b) => {
       const overallOrder = paramPriority(a) - paramPriority(b);
       if (overallOrder !== 0) {
@@ -85,7 +88,13 @@ const ParametersTab: React.FC<Props> = ({ model, project, control, variables }) 
 
     return (
       <Stack spacing={2}>
-      <Button variant="contained" color="primary" onClick={resetToSpeciesDefaults} disabled={noReset} sx={{width: 270}}>Reset to Species Defaults</Button>
+      {noReset ? (
+      <Tooltip title='No default parameters as "Other" has been selected as species (in "Projects")'>
+        <span><Button variant="contained" color="primary" onClick={resetToSpeciesDefaults} disabled={noReset} sx={{width: 270}}>Reset to Species Defaults</Button></span>
+      </Tooltip>
+      ) : (
+        <Button variant="contained" color="primary" onClick={resetToSpeciesDefaults} disabled={noReset} sx={{width: 270}}>Reset to Species Defaults</Button>
+      )}
       <TableContainer>
       <Table>
         <TableHead>
