@@ -63,7 +63,7 @@ class MyokitModelMixin:
                 tlag_value = 0.0
         else:
             tlag_value = override_tlag
-            
+
         # add a dose_rate variable to the model for each
         # dosed variable
         for v in self.variables.filter(state=True):
@@ -92,10 +92,10 @@ class MyokitModelMixin:
 
                 amount_var = model.get(v.qname)
                 time_var = model.binding("time")
-                
+
                 is_target = False
                 if self.is_library_model:
-                    is_target = 'CT' in v.qname
+                    is_target = "CT" in v.qname
 
                 amount_conversion_factor = v.protocol.amount_unit.convert_to(
                     amount_var.unit(), compound=compound, is_target=is_target
@@ -127,7 +127,8 @@ class MyokitModelMixin:
                         )
                         for start_time in start_times
                     ]
-                # if any dosing events are close to time_max, make them equal to time_max
+                # if any dosing events are close to time_max,
+                # make them equal to time_max
                 if time_max is not None:
                     for i, (level, start, duration) in enumerate(dosing_events):
                         if abs(start - time_max) < 1e-6:
@@ -379,7 +380,7 @@ class MyokitModelMixin:
     def _convert_unit(self, variable, myokit_variable_sbml, value):
         is_target = False
         if self.is_library_model:
-            is_target = 'CT' in variable.qname
+            is_target = "CT" in variable.qname
         if variable.unit is None:
             conversion_factor = 1.0
         else:
@@ -492,7 +493,9 @@ class MyokitModelMixin:
                     if derived_param in variables:
                         override_tlag[dv.pk_variable.qname] = variables[derived_param]
 
-        sim = self.create_myokit_simulator(override_tlag=override_tlag, model=model, time_max=time_max)
+        sim = self.create_myokit_simulator(
+            override_tlag=override_tlag, model=model, time_max=time_max
+        )
         # TODO: take these from simulation model
         sim.set_tolerance(abs_tol=1e-06, rel_tol=1e-08)
 

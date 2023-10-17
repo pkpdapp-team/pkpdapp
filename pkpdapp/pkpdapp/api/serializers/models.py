@@ -87,29 +87,25 @@ class CombinedModelSerializer(serializers.ModelSerializer):
         derived_var_data = validated_data.pop("derived_variables")
         old_mappings = list((instance.mappings).all())
         old_derived_vars = list((instance.derived_variables).all())
-        
-        pk_model_changed = (
-            instance.pk_model != validated_data.get("pk_model")
-        )
-        pd_model_changed = (
-            instance.pd_model != validated_data.get("pd_model")
-        )
-        
+
+        pk_model_changed = instance.pk_model != validated_data.get("pk_model")
+        pd_model_changed = instance.pd_model != validated_data.get("pd_model")
+
         new_pkpd_model = BaseDosedPharmacokineticSerializer().update(
             instance, validated_data
         )
-        
+
         # if pd model has changed, update effect variable
         if pd_model_changed:
             for mapping in mappings_data:
                 try:
-                    mapping['pd_variable'] = new_pkpd_model.variables.get(
-                        qname=mapping['pd_variable'].qname
+                    mapping["pd_variable"] = new_pkpd_model.variables.get(
+                        qname=mapping["pd_variable"].qname
                     )
                 except Variable.DoesNotExist:
-                    mapping['pd_variable'] = None
+                    mapping["pd_variable"] = None
 
-            mappings_data = [ m for m in mappings_data if m['pd_variable'] is not None ]
+            mappings_data = [m for m in mappings_data if m["pd_variable"] is not None]
 
         # don't update mappings if read_only
         # don't update mapping or derived variables if pk model has changed
