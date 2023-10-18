@@ -60,6 +60,7 @@ const ParameterRow: React.FC<Props> = ({ project, model, variable, units }) => {
   const type = isUD ? "UD" : isPD ? "PD" : "PK";
 
   const unit = variable.unit === null ? undefined : units.find(u => u.id === variable.unit)
+  const isPreclinicalPerKg = project?.species !== 'H' && unit?.symbol.endsWith('/kg');
 
   return (
     <TableRow>
@@ -83,7 +84,7 @@ const ParameterRow: React.FC<Props> = ({ project, model, variable, units }) => {
         <FloatField name="upper_bound" control={control} label="Upper" />
       </TableCell>
       <TableCell>
-        <UnitField label={'Unit'} name={'unit'} control={control} baseUnit={unit} />
+        <UnitField label={'Unit'} name={'unit'} control={control} baseUnit={unit} isPreclinicalPerKg={isPreclinicalPerKg}/>
       </TableCell>
     </TableRow>
   );

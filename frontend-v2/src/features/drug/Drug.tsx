@@ -126,16 +126,6 @@ const Drug: React.FC = () => {
             <FloatField label={'Molecular Mass'} name={'molecular_mass'} control={control} rules={{ required: true }} />
             <UnitField label={'Unit'} name={'molecular_mass_unit'} control={control} baseUnit={units.find(u => u.id === compound.molecular_mass_unit)} compound={compound} />
           </Stack>
-
-          <FloatField label="Fraction Unbound Plasma (fup)" name="fraction_unbound_plasma" control={control} textFieldProps={{ disabled: isLM }} />
-          <FloatField label="Blood to Plasma Ratio (BP)" name="blood_to_plasma_ratio" control={control} textFieldProps={{ disabled: isLM }} />
-
-          <Stack direction="row" spacing={2}>
-            <FloatField label="Intrinsic Clearance" name="intrinsic_clearance" control={control} textFieldProps={{ disabled: true }} />
-            <SelectField label="Intrinsic Clearance Assay" name="intrinsic_clearance_assay" control={control} options={intrinsic_clearance_assay_options} selectProps={{ disabled: true }} />
-          </Stack>
-
-          <FloatField label="Fraction Unbound Incubation (fuinc)" name="fraction_unbound_including_cells" control={control} textFieldProps={{ disabled: true }} />
         </Stack>
       </Grid>
       <Grid item xs={12} md={6}>
@@ -148,18 +138,6 @@ const Drug: React.FC = () => {
             <FloatField label={'Molecular Mass'} name={'target_molecular_mass'} control={control} rules={{ required: true }} />
             <UnitField label={'Unit'} name={'target_molecular_mass_unit'} control={control} baseUnit={units.find(u => u.id === compound.molecular_mass_unit)} compound={compound} />
           </Stack>
-
-          <Stack direction="row" spacing={2}>
-            <FloatField label="Target Concentration (CT1_0_ud)" name={'target_concentration'} control={control} />
-            <UnitField label={'Unit'} name={'target_concentration_unit'} control={control} baseUnit={units.find(u => u.id === compound.target_concentration_unit)} compound={compound} />
-          </Stack>
-
-          <Stack direction="row" spacing={2}>
-            <FloatField label="Dissociation Constant (KD_ud)" name={'dissociation_constant'} control={control} />
-            <UnitField label={'Unit'} name={'dissociation_unit'} control={control} baseUnit={units.find(u => u.id === compound.dissociation_unit)} compound={compound} />
-          </Stack>
-
-          <SelectField label="Domain" name={'is_soluble'} control={control} options={is_soluble_options} selectProps={{ disabled: true }} />
         </Stack>
       </Grid>
       <Grid item xs={12} md={6}>

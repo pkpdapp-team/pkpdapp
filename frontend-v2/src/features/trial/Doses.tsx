@@ -72,6 +72,8 @@ const Doses: React.FC<Props> = ({ project, protocol, units }) => {
     removeDose(index);
   }
 
+  const isPreclinical = project.species !== 'H';
+
   return (
     <>
       {doses.map((dose, index) => (
@@ -84,7 +86,7 @@ const Doses: React.FC<Props> = ({ project, protocol, units }) => {
           </TableCell>
           <TableCell>
             { protocol.amount_unit && index === 0 && (
-              <UnitField label={"Unit"} name={`amount_unit`} control={control} baseUnit={units.find(u => u.id === protocol.amount_unit)} />
+              <UnitField label={"Unit"} name={`amount_unit`} control={control} baseUnit={units.find(u => u.id === protocol.amount_unit)} isPreclinicalPerKg={isPreclinical} />
             )}
           </TableCell>
           <TableCell>
