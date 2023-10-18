@@ -70,7 +70,7 @@ const SimulationPlotView: React.FC<SimulationPlotProps> = ({ index, plot, data, 
     const yaxisUnit = y_axis.right ? units.find((u) => u.id === plot.y_unit2) : units.find((u) => u.id === plot.y_unit);
     const ycompatibleUnit = variableUnit?.compatible_units.find((u) => parseInt(u.id) === yaxisUnit?.id);
     
-    const is_target = model.is_library_model ? variableName?.includes('CT') : false;
+    const is_target = model.is_library_model ? variableName?.includes('CT1') || variableName?.includes('AT1') : false;
     const yconversionFactor = ycompatibleUnit ? parseFloat(is_target ? ycompatibleUnit.target_conversion_factor : ycompatibleUnit.conversion_factor) : 1.0;
 
     if (variableValues) {
