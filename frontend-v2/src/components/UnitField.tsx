@@ -12,17 +12,25 @@ type Props<T extends FieldValues> = {
   rules?: Object;
   selectProps?: SelectProps;
   compound?: Compound;
+  isPreclinicalPerKg?: boolean;
 };
 
-function UnitField<T extends FieldValues>({ label, name, baseUnit, control, rules, selectProps }: Props<T>): React.ReactElement {
+function UnitField<T extends FieldValues>({ label, name, baseUnit, control, rules, selectProps, isPreclinicalPerKg }: Props<T>): React.ReactElement {
+  if (!isPreclinicalPerKg) {
+    isPreclinicalPerKg = false;
+  }
 
   const isDimensionless = baseUnit?.symbol === '' || false;
   if (!baseUnit || isDimensionless) {
     selectProps = { ...selectProps, disabled: true };
   }
 
-  const options = baseUnit?.compatible_units ? 
-    baseUnit?.compatible_units.map((unit: { [key: string]: string }) => {
+  const compatibleUnits = isPreclinicalPerKg ? 
+    baseUnit?.compatible_units.filter(unit => unit.symbol.endsWith('/kg')) :
+    baseUnit?.compatible_units;
+
+  const options = compatibleUnits ? 
+    compatibleUnits.map((unit: { [key: string]: string }) => {
       return { value: unit.id, label: unit.symbol } 
     }) : [];
 

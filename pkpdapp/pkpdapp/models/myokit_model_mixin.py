@@ -95,7 +95,7 @@ class MyokitModelMixin:
 
                 is_target = False
                 if self.is_library_model:
-                    is_target = "CT" in v.qname
+                    is_target = "CT1" in v.qname or "AT1" in v.qname
 
                 amount_conversion_factor = v.protocol.amount_unit.convert_to(
                     amount_var.unit(), compound=compound, is_target=is_target
@@ -380,7 +380,7 @@ class MyokitModelMixin:
     def _convert_unit(self, variable, myokit_variable_sbml, value):
         is_target = False
         if self.is_library_model:
-            is_target = "CT" in variable.qname
+            is_target = "CT1" in variable.qname or "AT1" in variable.qname
         if variable.unit is None:
             conversion_factor = 1.0
         else:
