@@ -33,7 +33,7 @@ const Help: React.FC = () => {
             return {
               title: rowList[0],
               type: rowList[1],
-              link: rowList[2],
+              link: rowList[2].replace('view?usp=sharing', 'preview'),
               keywords: rowList[3].split(',').map((keyword) => keyword.trim())
             };
           })
