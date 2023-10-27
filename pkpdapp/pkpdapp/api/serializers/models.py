@@ -68,8 +68,8 @@ class CombinedModelSerializer(serializers.ModelSerializer):
         return [_serialize_component(m, c, model) for c in model.components(sort=True)]
 
     def create(self, validated_data):
-        mappings_data = validated_data.pop("mappings")
-        derived_variables_data = validated_data.pop("derived_variables")
+        mappings_data = validated_data.pop("mappings", [])
+        derived_variables_data = validated_data.pop("derived_variables", [])
         new_pkpd_model = BaseDosedPharmacokineticSerializer().create(validated_data)
         for field_datas, Serializer in [
             (mappings_data, PkpdMappingSerializer),
@@ -83,13 +83,17 @@ class CombinedModelSerializer(serializers.ModelSerializer):
         return new_pkpd_model
 
     def update(self, instance, validated_data):
-        mappings_data = validated_data.pop("mappings")
-        derived_var_data = validated_data.pop("derived_variables")
+        mappings_data = validated_data.pop("mappings", [])
+        derived_var_data = validated_data.pop("derived_variables", [])
         old_mappings = list((instance.mappings).all())
         old_derived_vars = list((instance.derived_variables).all())
 
-        pk_model_changed = instance.pk_model != validated_data.get("pk_model")
-        pd_model_changed = instance.pd_model != validated_data.get("pd_model")
+        pk_model_changed = False
+        if "pk_model" in validated_data:
+            pk_model_changed = instance.pk_model != validated_data.get("pk_model")
+        pd_model_changed = False
+        if "pd_model" in validated_data:
+            pd_model_changed = instance.pd_model != validated_data.get("pd_model")
 
         new_pkpd_model = BaseDosedPharmacokineticSerializer().update(
             instance, validated_data
@@ -130,11 +134,14 @@ class CombinedModelSerializer(serializers.ModelSerializer):
                     mapping["pkpd_model"] = new_pkpd_model
                     new_model = serializer.create(mapping)
 
-        # delete any remaining old mappings
+        # delete any remaining old mappings and derived variables
         for old_model in old_mappings:
             old_model.delete()
         for old_model in old_derived_vars:
             old_model.delete()
+
+        # update model since mappings might have changed
+        new_pkpd_model.update_model()
 
         return new_pkpd_model
 
