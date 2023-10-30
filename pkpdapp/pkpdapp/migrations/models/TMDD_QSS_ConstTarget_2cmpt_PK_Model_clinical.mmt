@@ -70,7 +70,7 @@ c_term = C1_t * KSS in [pmol/L * pmol/L]
 C1_t = A1_t/V1 in [pmol/L]
     desc: Total concentration of drug in the central compartment
 
-CT1_t = CT1_0 in [pmol/L]	
+CT1_t = CT1_b + CT1_f in [pmol/L]	
 	desc: Total concentration of target in the central compartment
 	
 C1_f = 0.5 * (b_term + (b_term^2+4*c_term)^0.5) in [pmol/L]
@@ -85,7 +85,7 @@ C2 = A2/V2 in [pmol/L]
 CT1_b = C1_b in [pmol/L]
 	desc: Bound concentration of target in the central compartment
 
-CT1_f = CT1_t-CT1_b in [pmol/L]
+CT1_f = CT1_0-CT1_b in [pmol/L]
 	desc: Free concentration of target in the central compartment
 	
 	
