@@ -37,7 +37,7 @@ const HelpTab: React.FC<Props> = ({ questions, videos }) => {
               <Stack direction="row" spacing={1} sx={{ marginBottom: 1 }}>
               { video.keywords.map((keyword, index) => {
                 return (
-                  <Chip size="small" label={keyword} />
+                  <Chip key={index} size="small" label={keyword} />
                 )
               })}
               </Stack>

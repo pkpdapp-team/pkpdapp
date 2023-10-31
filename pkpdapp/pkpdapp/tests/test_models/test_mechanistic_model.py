@@ -89,6 +89,17 @@ class TestDosedPharmokineticModel(TestCase):
         v = stored_model.variables.get(qname='PKCompartment.A1')
         self.assertEqual(v.protocol.name, 'my_cool_protocol')
         self.assertNotEqual(v.protocol.id, self.p.id)
+        
+    def test_reset_to_default(self):
+        v = self.model.variables.get(qname='PKCompartment.CL')
+        self.assertNotEqual(v.default_value, 8)
+        self.assertNotEqual(v.unit.symbol, 'mL/h')
+
+        self.model.reset_params_to_defaults('H', 'LM')
+
+        v = self.model.variables.get(qname='PKCompartment.CL')
+        self.assertEqual(v.default_value, 8)
+        self.assertEqual(v.unit.symbol, 'mL/h')
 
     def test_myokit_model(self):
         model = self.model.get_myokit_model()

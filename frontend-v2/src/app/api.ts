@@ -79,6 +79,9 @@ export const api = backendApi.enhanceEndpoints({
       ],
     },
     // CombinedModel
+    combinedModelSetParamsToDefaultsUpdate: {
+      invalidatesTags: (result, error, { id }) => [{ type: 'Variable', id: 'LIST' }],
+    },
     combinedModelList: {
       providesTags: (result) =>
         result

@@ -74,7 +74,30 @@ class CombinedModelView(viewsets.ModelViewSet):
         obj.set_variables_from_inference(inference)
         serializer = self.serializer_class(obj)
         return response.Response(serializer.data)
-
+    
+    @decorators.action(
+        detail=True,
+        methods=['PUT'],
+        serializer_class=CombinedModelSerializer,
+    )
+    def set_params_to_defaults(self, request, pk):
+        obj = self.get_object()
+        project = obj.get_project()
+        if project is None:
+            return response.Response(
+                {'project': 'project not found'},
+                status.HTTP_400_BAD_REQUEST
+            )
+        compound = project.compound
+        if compound is None:
+            return response.Response(
+                {'compound': 'compound not found'},
+                status.HTTP_400_BAD_REQUEST
+            )
+        print('setting params to defaults', project.species, compound.compound_type)
+        obj.reset_params_to_defaults(project.species, compound.compound_type)
+        serializer = self.serializer_class(obj)
+        return response.Response(serializer.data)
 
 class PharmacodynamicView(viewsets.ModelViewSet):
     queryset = PharmacodynamicModel.objects.all()

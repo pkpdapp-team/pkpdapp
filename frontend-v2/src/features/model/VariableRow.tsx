@@ -12,13 +12,14 @@ import {
 } from "@mui/material";
 import { CombinedModel, Variable, useVariableUpdateMutation, useProtocolCreateMutation, useProtocolDestroyMutation, Dose, CombinedModelRead, CompoundRead, ProjectRead, UnitRead, VariableRead, DoseRead } from "../../app/backendApi";
 import useDirty from "../../hooks/useDirty";
+import { FormData } from "./Model";
 
 interface Props {
   project: ProjectRead;
   compound: CompoundRead;
   model: CombinedModelRead;
   variable: VariableRead;
-  control: Control<CombinedModel>;
+  control: Control<FormData>;
   effectVariable: VariableRead | undefined;
   units: UnitRead[];
   timeVariable: VariableRead | undefined;
@@ -31,11 +32,11 @@ const VariableRow: React.FC<Props> = ({ project, compound, model, variable, cont
 
   const { fields: mappings, append: appendMapping, remove: removeMapping } = useFieldArray({
       control,
-      name: "mappings",
+      name: "model.mappings",
   });
   const { fields: derivedVariables, append: derivedVariablesAppend, remove: derivedVariablesRemove } = useFieldArray({
       control,
-      name: "derived_variables",
+      name: "model.derived_variables",
   });
 
   const { control: controlVariable, handleSubmit, reset, setValue, formState: { isDirty: isDirtyForm }, watch} = useForm<Variable>(

@@ -443,6 +443,39 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/combined_model/{id}/set_params_to_defaults/:
+    put:
+      operationId: combined_model_set_params_to_defaults_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this combined model.
+        required: true
+      tags:
+      - combined_model
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CombinedModel'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CombinedModel'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CombinedModel'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CombinedModel'
+          description: ''
   /api/combined_model/{id}/set_variables_from_inference/:
     put:
       operationId: combined_model_set_variables_from_inference_update
@@ -2551,12 +2584,6 @@ paths:
         schema:
           type: integer
         description: Enable conversions based on compound information
-      - in: query
-        name: is_target
-        schema:
-          type: boolean
-        description: (optional, default=false) true if unit is a target concentration
-          unit
       tags:
       - unit
       security:
