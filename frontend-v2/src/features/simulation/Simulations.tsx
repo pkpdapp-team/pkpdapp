@@ -343,7 +343,7 @@ const Simulations: React.FC = () => {
           <Button variant="contained" onClick={exportSimulation}>Export to CSV</Button>
         </Stack>
         <Stack direction={'row'} alignItems={'center'}>
-          <Typography variant="h6">Parameters</Typography>
+          <Typography variant="h6">Parameter Sliders</Typography>
           <DropdownButton options={addSliderOptions} onOptionSelected={handleAddSlider}  data_cy="add-parameter-slider">
             <Add />
           </DropdownButton>
