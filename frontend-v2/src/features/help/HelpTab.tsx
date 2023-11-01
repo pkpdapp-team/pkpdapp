@@ -1,4 +1,4 @@
-import { Accordion, AccordionDetails, AccordionSummary, Chip, Stack, Typography } from "@mui/material";
+import { Accordion, AccordionDetails, AccordionSummary, Box, Card, Chip, Grid, Stack, Typography } from "@mui/material";
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { Question, TutorialVideo } from "./Help";
 import ReactPlayer from 'react-player/youtube'
@@ -29,18 +29,18 @@ const HelpTab: React.FC<Props> = ({ questions, videos }) => {
           )
         })}
       </Stack>
-      <Stack spacing={2}>
+      <Box sx={{ display: 'flex', flexWrap: 'wrap' }}>
         {videos.map((video, index) => {
           return (
-            <div key={index}>
+            <Card sx={{ width: '500px', margin: 2, padding: 1 }}>
               <Typography variant='h6' >{video.title}</Typography>
-              <Stack direction="row" spacing={1} sx={{ marginBottom: 1 }}>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap' }}>
               { video.keywords.map((keyword, index) => {
                 return (
-                  <Chip key={index} size="small" label={keyword} />
+                  <Chip key={index} size="small" label={keyword} sx={{ margin: 0.2 }} />
                 )
               })}
-              </Stack>
+              </Box>
               <iframe
                 key={index}
                 allowFullScreen
@@ -48,10 +48,10 @@ const HelpTab: React.FC<Props> = ({ questions, videos }) => {
                 style={{ border: "none", width: "100%", aspectRatio: "16/9" }}
                 title={video.title}
               />
-            </div>
+            </Card>
           )
         })}
-      </Stack>
+      </Box>
     </div>
   );
 }
