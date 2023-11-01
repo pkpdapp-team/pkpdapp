@@ -17,8 +17,9 @@ interface Props {
 
 const MapVariablesTab: React.FC<Props> = ({ model, project, control, variables, units, compound }: Props ) => {
     
+    const isPreclinical = project.species !== 'H' && model.is_library_model;
     const concentrationUnit = units.find((unit) => unit.symbol === "pmol/L");
-    const amountUnit = units.find((unit) => unit.symbol === "pmol");
+    const amountUnit = isPreclinical ? units.find((unit) => unit.symbol === "pmol/kg") : units.find((unit) => unit.symbol === "pmol");
     if (concentrationUnit === undefined || amountUnit === undefined) {
       return (<>No concentration or amount unit found</>);
     }
@@ -38,8 +39,8 @@ const MapVariablesTab: React.FC<Props> = ({ model, project, control, variables, 
       const bIsConcentration = concentrationUnit?.compatible_units.find((unit) => parseInt(unit.id) === b.unit) !== undefined;
       const bIsAmount = amountUnit?.compatible_units.find((unit) => parseInt(unit.id) === b.unit) !== undefined;
 
-      const aValue = aIsConcentration ? 1 : (aIsAmount ? 2 : 0);
-      const bValue = bIsConcentration ? 1 : (bIsAmount ? 2 : 0);
+      const aValue = aIsConcentration ? 2 : (aIsAmount ? 1 : 0);
+      const bValue = bIsConcentration ? 2 : (bIsAmount ? 1 : 0);
 
       if (aValue !== bValue) {
         return bValue - aValue;
