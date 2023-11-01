@@ -22,9 +22,14 @@ const ParametersTab: React.FC<Props> = ({ model, project, control, variables, co
 
     const [ setParamsToDefault ] = useCombinedModelSetParamsToDefaultsUpdateMutation();
 
-    const constVariables = getConstVariables(variables, model);
+    // if Aa is not dosed, then we will filter out F and ka (for library models)
+    const aaIsNotDosed = variables.filter((variable) => variable.protocol && variable.name === 'Aa').length === 0;
+    const willFilterFandKa = model.is_library_model && aaIsNotDosed;
+    let constVariables = getConstVariables(variables, model);
+    if (willFilterFandKa) {
+      constVariables = constVariables.filter((variable) => !['F', 'ka'].includes(variable.name));
+    }
     const noReset = getNoReset(project);
-    
     
     const myResetToSpeciesDefaults = () =>  {
       setParamsToDefault({id: model.id, combinedModel: model });
