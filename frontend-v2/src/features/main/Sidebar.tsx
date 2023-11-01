@@ -26,7 +26,7 @@ import { logout } from '../login/loginSlice';
 import { useAppDispatch } from '../../app/hooks';
 import ErrorIcon from '@mui/icons-material/Error';
 import { Tooltip } from '@mui/material';
-import { useCombinedModelListQuery, useProtocolListQuery } from '../../app/backendApi';
+import { useCombinedModelListQuery, useProjectRetrieveQuery, useProtocolListQuery } from '../../app/backendApi';
 import { Protocol } from "../../app/backendApi";
 
 const drawerWidth = 240;
@@ -41,6 +41,7 @@ export default function Sidebar() {
   const { data: models, isLoading: isModelsLoading } = useCombinedModelListQuery({projectId: projectId || 0}, { skip: !projectId})
   const { data: protocols, error: protocolsError, isLoading: isProtocolsLoading } = useProtocolListQuery({projectId: projectId || 0}, { skip: !projectId})
   const model = models?.[0] || null;
+  const { data: project, isLoading: isProjectLoading } = useProjectRetrieveQuery({id: projectId || 0}, { skip: !projectId })
 
   let errors: { [key: string]: string } = {};
   if ((model && model.pk_model === null) || (model && model.pd_model && model.mappings.length === 0) || (protocols && protocols.length === 0)) {
@@ -143,7 +144,8 @@ export default function Sidebar() {
             <MenuIcon />
           </IconButton>
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-            PK/PD Simulator
+            
+            PK/PD Simulator {project && ` - ${project.name}`}
           </Typography>
           <IconButton
             onClick={() => dispatch(logout())}
