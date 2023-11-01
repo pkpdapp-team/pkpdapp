@@ -263,7 +263,7 @@ const Simulations: React.FC = () => {
   inputs.sort((a, b) => { return paramPriority(a) - paramPriority(b) });
   const addPlotOptions = outputsSorted.map((variable) => ({ value: variable.id, label: variable.description ? `${variable.name} (${variable.description})` : variable.name }));
   const sliderVarIds = sliders.map(v => v.variable)
-  const addSliderOptions = inputs.filter(v => !sliderVarIds.includes(v.id)).map((variable) => ({ value: variable.id, label: variable.name }));
+  const addSliderOptions = inputs.filter(v => !sliderVarIds.includes(v.id)).map((variable) => ({ value: variable.id, label: `${variable.name} (${variable.description})` }));
 
   const handleAddPlot = (variableId: number) => {
     const variable = variables?.find((v) => v.id === variableId);
