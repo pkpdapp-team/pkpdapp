@@ -1,4 +1,4 @@
-import { Alert, Container, Grid, Snackbar, Stack, Typography } from '@mui/material';
+import { Alert, Button, Container, Grid, Snackbar, Stack, Typography } from '@mui/material';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../app/store';
 import { Simulate, SimulateResponse, Simulation, SimulationPlotRead, SimulationRead, SimulationSlider, SimulationSliderRead, UnitRead, VariableRead, useCombinedModelListQuery, useCombinedModelSimulateCreateMutation, useCompoundRetrieveQuery, useProjectRetrieveQuery, useProtocolListQuery, useSimulationListQuery, useSimulationUpdateMutation, useUnitListQuery, useVariableListQuery, useVariableUpdateMutation } from '../../app/backendApi';
@@ -7,7 +7,7 @@ import { useEffect, useMemo, useState } from 'react';
 import SimulationPlotView from './SimulationPlotView';
 import SimulationSliderView from './SimulationSliderView';
 import DropdownButton from '../../components/DropdownButton';
-import { Add } from '@mui/icons-material';
+import { Add, NorthWestSharp } from '@mui/icons-material';
 import FloatField from '../../components/FloatField';
 import useDirty from '../../hooks/useDirty';
 import UnitField from '../../components/UnitField';
@@ -19,7 +19,7 @@ interface ErrorObject {
   error: string;
 };
 
-const getSimulateInput = (simulation: Simulation, sliderValues: SliderValues, variables?: VariableRead[], timeMax?: number ): Simulate => {
+const getSimulateInput = (simulation: Simulation, sliderValues: SliderValues, variables?: VariableRead[], timeMax?: number, allOutputs: boolean = false ): Simulate => {
     let outputs: string[] = [];
     let simulateVariables: {[key: string]: number} = {};
     for (const slider of simulation?.sliders || []) {
@@ -30,11 +30,19 @@ const getSimulateInput = (simulation: Simulation, sliderValues: SliderValues, va
         }
       }
     }
-    for (const plot of simulation?.plots || []) {
-      for (const y_axis of plot.y_axes) {
-        const variable = variables?.find((v) => v.id === y_axis.variable);
-        if (variable && !outputs.includes(variable.name)) {
-          outputs.push(variable.qname);
+    if (allOutputs) {
+      for (const v of variables || []) {
+        if (!v.constant) {
+          outputs.push(v.qname);
+        }
+      }
+    } else {
+      for (const plot of simulation?.plots || []) {
+        for (const y_axis of plot.y_axes) {
+          const variable = variables?.find((v) => v.id === y_axis.variable);
+          if (variable && !outputs.includes(variable.name)) {
+            outputs.push(variable.qname);
+          }
         }
       }
     }
@@ -124,14 +132,19 @@ const Simulations: React.FC = () => {
       reset(simulation);
     }
   }, [simulation, reset, variables]);
+  
+  const getTimeMax = (simulation: SimulationRead, variables: VariableRead[]): number => {
+    const timeMaxUnit = units?.find((u) => u.id === simulation.time_max_unit);
+    const compatibleTimeUnit = timeMaxUnit?.compatible_units?.find((u) => parseInt(u.id) === model?.time_unit); 
+    const timeMaxConversionFactor = compatibleTimeUnit ? parseFloat(compatibleTimeUnit.conversion_factor) : 1.0;
+    const timeMax = (simulation?.time_max || 0) * timeMaxConversionFactor;
+    return timeMax;
+  }
 
   // generate a simulation if slider values change
   useEffect(() => {
     if (simulation?.id && sliderValues && variables && model && protocols && compound) {
-      const timeMaxUnit = units?.find((u) => u.id === simulation.time_max_unit);
-      const compatibleTimeUnit = timeMaxUnit?.compatible_units?.find((u) => parseInt(u.id) === model.time_unit); 
-      const timeMaxConversionFactor = compatibleTimeUnit ? parseFloat(compatibleTimeUnit.conversion_factor) : 1.0;
-      const timeMax = (simulation?.time_max || 0) * timeMaxConversionFactor;
+      const timeMax = getTimeMax(simulation, variables);
       simulate({ id: model.id, simulate: getSimulateInput(simulation, sliderValues, variables, timeMax)})
       .then((response) => {
         setLoadingSimulate(false);
@@ -142,6 +155,38 @@ const Simulations: React.FC = () => {
       });
     }
   }, [simulation, simulate, sliderValues, model, protocols, variables, compound]);
+  
+  const exportSimulation = () => {
+    if (simulation && variables && model && protocols && compound && sliderValues && project) {
+      const timeMax = getTimeMax(simulation, variables);
+      simulate({ id: model.id, simulate: getSimulateInput(simulation, sliderValues, variables, timeMax, true)})
+      .then((response) => {
+        if ("data" in response) {
+          const data = response.data as SimulateResponse;
+          const nrows = data.outputs[Object.keys(data.outputs)[0]].length;
+          const cols = Object.keys(data.outputs)
+          const vars = cols.map((vid) => variables.find((v) => v.id === parseInt(vid)));
+          const varNames = vars.map((v) => v?.qname || '');
+          const ncols = cols.length;
+          let rows = new Array(nrows + 1);
+          rows[0] = varNames;
+          for (let i = 0; i < nrows; i++) {
+            rows[i + 1] = new Array(ncols);
+            for (let j = 0; j < ncols; j++) {
+              rows[i + 1][j] = data.outputs[cols[j]][i];
+            }
+          }
+          const csvContent = rows.map(e => e.join(",")).join("\n");
+          const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.download = `${project.name}.csv`;
+          link.href = url;
+          link.click();
+        }
+      });
+    }
+  }
 
   
   // save simulation every second if dirty
@@ -295,6 +340,7 @@ const Simulations: React.FC = () => {
         <Stack direction={'row'} alignItems={'center'} spacing={2} justifyContent="flex-start">
           <FloatField label="Simulation Duration" name="time_max" control={control} />
           <UnitField label="Unit" name="time_max_unit" baseUnit={units.find(u => u.id === simulation?.time_max_unit)} control={control} selectProps={{ style: { flexShrink: 0 }}} />
+          <Button variant="contained" onClick={exportSimulation}>Export to CSV</Button>
         </Stack>
         <Stack direction={'row'} alignItems={'center'}>
           <Typography variant="h6">Parameters</Typography>
