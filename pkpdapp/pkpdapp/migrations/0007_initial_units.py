@@ -184,14 +184,6 @@ def load_units(apps, schema_editor):
             'unit': 1 / L
         },
         {
-            'symbol': 'cm^3',
-            'unit': (1e-2 * m)**3,
-        },
-        {
-            'symbol': 'cm^3/d',
-            'unit': (1e-2 * m)**3 / (24 * h),
-        },
-        {
             'symbol': 'kg',
             'unit': 1e3 * g,
         },
