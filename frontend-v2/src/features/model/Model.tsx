@@ -104,13 +104,8 @@ const Model: React.FC = () => {
           const time_max_unit = response.data.time_unit;
           updateSimulation({ id: simulation.id, simulation: { ...simulation, time_max_unit } });
         }
-        // if the pk model has changed or any of the checkboxes have changed, need to reset the parameters
-        if (
-          (data.model.pk_model !== model?.pk_model) || 
-          (data.model.has_bioavailability !== model.has_bioavailability) || 
-          (data.model.has_effect !== model.has_effect) ||
-          (data.model.has_saturation !== model.has_saturation)
-        ) {
+        // if the pk model has changed, need to reset the parameters
+        if (data.model.pk_model !== model?.pk_model) {
           setParamsToDefault({ id: model.id, combinedModel: data.model });
         }
       }

@@ -536,7 +536,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
         self.__original_has_hill_coefficient = self.has_hill_coefficient
         self.__original_has_bioavailability = self.has_bioavailability
         
-    def reset_params_to_defaults(self, species, compoundType):
+    def reset_params_to_defaults(self, species, compoundType, variables=None):
         if self.is_library_model:
             model_name = self.pk_model.name\
                 .replace("_clinical", "")\
@@ -547,7 +547,9 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 .replace("tmdd_QSS", "tmdd")\
                 .replace("production", "")\
                 .replace("elimination", "")
-            for v in self.variables.all():
+            if variables is None:
+                variables = self.variables.all()
+            for v in variables:
                 varName = v.name;
                 defaultVal = defaults.get(model_name, {}).get(varName, {}).get(species, {}).get(compoundType, None)
                 if defaultVal is None:

@@ -99,6 +99,7 @@ class CombinedModelView(viewsets.ModelViewSet):
         serializer = self.serializer_class(obj)
         return response.Response(serializer.data)
 
+
 class PharmacodynamicView(viewsets.ModelViewSet):
     queryset = PharmacodynamicModel.objects.all()
     serializer_class = PharmacodynamicSerializer

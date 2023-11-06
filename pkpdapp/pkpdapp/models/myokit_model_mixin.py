@@ -269,6 +269,14 @@ class MyokitModelMixin:
                     f"{v.qname}, id = {v.id} "
                     f"constant = {v.constant}, state = {v.state}"
                 )
+        
+        # for library models: set new variables to defaults
+        if self.is_library_model and hasattr(self, "reset_params_to_defaults"):
+            project = self.get_project()
+            if project is not None:
+                species = project.species
+                compound_type = project.compound.compound_type
+                self.reset_params_to_defaults(species, compound_type, all_new_variables)
 
         # delete all variables that are not in new
         for variable in self.variables.all():
