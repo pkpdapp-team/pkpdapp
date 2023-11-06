@@ -77,6 +77,11 @@ const Model: React.FC = () => {
     if (!model || !project) {
       return;
     }
+
+    // if tlag checkbox is unchecked, then remove tlag derived variables
+    if (data.model.has_lag !== model.has_lag && !data.model.has_lag) {
+      data.model.derived_variables = data.model.derived_variables.filter((dv) => dv.type !== 'TLG');
+    }
     
     // if only pd_model has changed, need to clear pd_model2
     if (data.model.pd_model !== model?.pd_model) {
