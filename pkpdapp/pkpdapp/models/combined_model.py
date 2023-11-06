@@ -542,11 +542,12 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 .replace("_clinical", "")\
                 .replace("_preclinical", "")\
                 .replace("tmdd_full_constant_target", "tmdd")\
-                .replace("tmdd_QSS_constant_target", "tmdd")\
+                .replace("tmdd_qss_constant_target", "tmdd")\
                 .replace("tmdd_full", "tmdd")\
                 .replace("tmdd_QSS", "tmdd")\
                 .replace("production", "")\
                 .replace("elimination", "")
+            print('resetting params to defaults', model_name, species, compoundType, self.pk_model.name)
             if variables is None:
                 variables = self.variables.all()
             for v in variables:
