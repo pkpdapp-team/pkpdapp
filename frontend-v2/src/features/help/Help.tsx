@@ -53,11 +53,11 @@ const Help: React.FC = () => {
     }});
   
   const questions = [
-    generic_questions.slice(0, 2),
-    generic_questions.slice(0, 4),
-    generic_questions.slice(0, 3),
-    generic_questions.slice(0, 5),
-    generic_questions.slice(0, 1),
+    generic_questions.slice(0, 0),
+    generic_questions.slice(0, 0),
+    generic_questions.slice(0, 0),
+    generic_questions.slice(0, 0),
+    generic_questions.slice(0, 0),
   ]
   const tutorials = [
     tutorialVideos.filter((video) => video.type.includes('Tutorial')),
@@ -68,12 +68,6 @@ const Help: React.FC = () => {
     tutorialVideos.filter((video) => video.type === 'Simulation'),
   ]
     
-  const project_questions = generic_questions.slice(0, 2);
-  const drug_questions = generic_questions.slice(0, 4)
-  const model_questions = generic_questions.slice(0, 3);
-  const trial_questions = generic_questions.slice(0, 5);
-  const simulation_questions = generic_questions.slice(0, 1)
-
   return (
     <DynamicTabs tabNames={["Tutorials", "Projects", "Drug", "Model", "Trial Design", "Simulation"]}>
       { questions.map((question, index) => (
