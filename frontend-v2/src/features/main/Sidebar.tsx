@@ -28,6 +28,13 @@ import ErrorIcon from '@mui/icons-material/Error';
 import { Tooltip } from '@mui/material';
 import { useCombinedModelListQuery, useProjectRetrieveQuery, useProtocolListQuery } from '../../app/backendApi';
 import { Protocol } from "../../app/backendApi";
+import DnsIcon from '@mui/icons-material/Dns';
+import BiotechIcon from '@mui/icons-material/Biotech';
+import FunctionsIcon from '@mui/icons-material/Functions';
+import VaccinesIcon from '@mui/icons-material/Vaccines';
+import SsidChartIcon from '@mui/icons-material/SsidChart';
+import ContactSupportIcon from '@mui/icons-material/ContactSupport';
+import TableViewIcon from '@mui/icons-material/TableView';
 
 const drawerWidth = 240;
 
@@ -56,6 +63,16 @@ export default function Sidebar() {
       </Tooltip>
     )
   }
+  
+  let icons: { [key: string]: React.ReactNode } = {
+    [PageName.PROJECTS]: <DnsIcon />,
+    [PageName.DRUG]: <BiotechIcon />,
+    [PageName.MODEL]: <FunctionsIcon />,
+    [PageName.TRIAL_DESIGN]: <VaccinesIcon />,
+    [PageName.DATA]: <TableViewIcon />,
+    [PageName.SIMULATIONS]: <SsidChartIcon />,
+    [PageName.HELP]: <ContactSupportIcon />,
+  };
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -111,7 +128,7 @@ export default function Sidebar() {
           <ListItem key={key} disablePadding selected={isPageSelected(key)}>
             <ListItemButton onClick={handlePageClick(key)} disabled={isPageDisabled(key)} disableRipple={true}>
               <ListItemIcon>
-                {value in errorComponents ? errorComponents[value] : index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
+                {value in errorComponents ? errorComponents[value] : icons[value]}
               </ListItemIcon>
               <ListItemText primary={value} />
             </ListItemButton>
