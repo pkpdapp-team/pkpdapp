@@ -9,6 +9,7 @@ import Simulations from "../simulation/Simulations";
 import Protocols from "../trial/Protocols";
 import { Box } from "@mui/material";
 import Help from "../help/Help";
+import Data from '../data/Data';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -46,6 +47,9 @@ const MainContent: React.FC = () => {
       </TabPanel>
       <TabPanel value={page} index={PageName.MODEL}>
         <Model />
+      </TabPanel>
+      <TabPanel value={page} index={PageName.DATA}>
+        <Data />
       </TabPanel>
       <TabPanel value={page} index={PageName.TRIAL_DESIGN}>
         <Protocols />
