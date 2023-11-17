@@ -11,6 +11,9 @@ from io import StringIO
 
 class DataParser:
     alternate_col_names = {
+        "ADMINISTRATION_ID": [
+            "Administration ID", "CMT", "Cmt", "cmt", "ADM", "Adm", "adm"
+        ],
         "SUBJECT_ID": [
             "ID", "id", "Subject_id", "Subject", "SUBJID",
             "SUBJECT_ID"
