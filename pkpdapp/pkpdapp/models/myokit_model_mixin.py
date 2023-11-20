@@ -269,7 +269,7 @@ class MyokitModelMixin:
                     f"{v.qname}, id = {v.id} "
                     f"constant = {v.constant}, state = {v.state}"
                 )
-        
+
         # for library models: set new variables to defaults
         if self.is_library_model and hasattr(self, "reset_params_to_defaults"):
             project = self.get_project()

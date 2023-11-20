@@ -7,16 +7,25 @@ import openpyxl
 
 # Load the workbook
 workbook = openpyxl.load_workbook(
-    'pkpdapp/migrations/models/ParametersValue_Species.xlsx', data_only=True)
+    "pkpdapp/migrations/models/ParametersValue_Species.xlsx", data_only=True
+)
 
-sheet_names = ['1cmpt_PK_Model', '2cmpt_PK_Model',
-               '3cmpt_PK_Model', '1cmpt_TMDD_Model',
-               '2cmpt_TMDD_Model']
-model_names = ['one_compartment', 'two_compartment',
-               'three_compartment', 'one_compartment_tmdd',
-               'two_compartment_tmdd']
-species_list = ['M', 'R', 'K', 'H']
-compound_type = ['SM', 'LM']
+sheet_names = [
+    "1cmpt_PK_Model",
+    "2cmpt_PK_Model",
+    "3cmpt_PK_Model",
+    "1cmpt_TMDD_Model",
+    "2cmpt_TMDD_Model",
+]
+model_names = [
+    "one_compartment",
+    "two_compartment",
+    "three_compartment",
+    "one_compartment_tmdd",
+    "two_compartment_tmdd",
+]
+species_list = ["M", "R", "K", "H"]
+compound_type = ["SM", "LM"]
 clinical = [False, False, False, True]
 
 defaults = {}
@@ -38,6 +47,6 @@ for sheet_name, model_name in zip(sheet_names, model_names):
                 unit = row[rowi + 1].value
                 if_clinical = clinical[i]
                 defaults[model_name][parameter][species][ctype] = {
-                    'value': value,
-                    'unit': unit,
+                    "value": value,
+                    "unit": unit,
                 }
