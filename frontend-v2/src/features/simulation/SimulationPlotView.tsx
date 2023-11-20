@@ -282,6 +282,7 @@ const SimulationPlotView: React.FC<SimulationPlotProps> = ({ index, plot, data, 
 
 
   const plotLayout: Partial<Layout> = {
+    dragmode: 'pan',
     shapes: icLines.map((icLine, i) => {
       return {
         type: 'line',

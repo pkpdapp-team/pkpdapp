@@ -7,11 +7,10 @@ import {
   TableRow,
   IconButton,
   Radio,
-  Box,
+  Typography,
 } from "@mui/material";
 import { Delete, PersonAdd } from "@mui/icons-material";
 import { Compound, Project, ProjectAccess, useProjectDestroyMutation, useCompoundRetrieveQuery, useCompoundUpdateMutation, useProjectUpdateMutation, CompoundRead, ProjectRead } from "../../app/backendApi";
-import SelectField from "../../components/SelectField";
 import UserAccess from "./UserAccess";
 import { setProject } from "../main/mainSlice";
 import TextField from "../../components/TextField";
@@ -28,6 +27,14 @@ export interface FormData {
   project: Project;
   compound: Compound;
 }
+
+export const speciesOptions = [
+    { value: "M", label: "Mouse" },
+    { value: "R", label: "Rat" },
+    { value: "K", label: "Monkey" },
+    { value: "H", label: "Human" },
+    { value: "O", label: "Other" },
+  ]
 
 const ProjectRow: React.FC<Props> = ({ project, isSelected, otherProjectNames }) => {
   const dispatch = useDispatch();
@@ -130,13 +137,7 @@ const ProjectRow: React.FC<Props> = ({ project, isSelected, otherProjectNames })
     fullWidth: true,
   }
 
-  const speciesOptions = [
-    { value: "M", label: "Mouse" },
-    { value: "R", label: "Rat" },
-    { value: "K", label: "Monkey" },
-    { value: "H", label: "Human" },
-    { value: "O", label: "Other" },
-  ]
+  
 
   const validateName = (value: string) => {
     if (otherProjectNames.includes(value)) {
@@ -155,7 +156,7 @@ const ProjectRow: React.FC<Props> = ({ project, isSelected, otherProjectNames })
         <TextField name="project.name" control={control} textFieldProps={defaultProps} rules={{ required: true, validate: validateName }} /> 
       </TableCell>
       <TableCell>
-        <SelectField name="project.species" options={speciesOptions} control={control} selectProps={defaultProps} /> 
+        <Typography>{ speciesOptions.find(s => s.value === project.species)?.label }</Typography>
       </TableCell>
       <TableCell>
         <TextField name="compound.name" control={control} textFieldProps={defaultProps} rules={{ required: true }} /> 

@@ -16,6 +16,7 @@ import myokit
 from django.db import models
 from django.urls import reverse
 import logging
+from pkpdapp.utils.default_params import defaults
 
 logger = logging.getLogger(__name__)
 
@@ -534,6 +535,47 @@ class CombinedModel(MyokitModelMixin, StoredModel):
         self.__original_has_lag = self.has_lag
         self.__original_has_hill_coefficient = self.has_hill_coefficient
         self.__original_has_bioavailability = self.has_bioavailability
+
+    def reset_params_to_defaults(self, species, compoundType, variables=None):
+        if self.is_library_model:
+            model_name = (
+                self.pk_model.name.replace("_clinical", "")
+                .replace("_preclinical", "")
+                .replace("tmdd_full_constant_target", "tmdd")
+                .replace("tmdd_qss_constant_target", "tmdd")
+                .replace("tmdd_full", "tmdd")
+                .replace("tmdd_QSS", "tmdd")
+                .replace("production", "")
+                .replace("elimination", "")
+            )
+            print(
+                "resetting params to defaults",
+                model_name,
+                species,
+                compoundType,
+                self.pk_model.name,
+            )
+            if variables is None:
+                variables = self.variables.all()
+            for v in variables:
+                varName = v.name
+                defaultVal = (
+                    defaults.get(model_name, {})
+                    .get(varName, {})
+                    .get(species, {})
+                    .get(compoundType, None)
+                )
+                if defaultVal is None:
+                    continue
+                if defaultVal.get("unit", "") == "dimensionless":
+                    defaultVal["unit"] = ""
+                unit = Unit.objects.filter(symbol=defaultVal.get("unit", "")).first()
+                value = defaultVal.get("value", None)
+                if value is None or unit is None:
+                    continue
+                v.default_value = value
+                v.unit = unit
+                v.save()
 
 
 class PkpdMapping(StoredModel):

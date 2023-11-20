@@ -1,31 +1,25 @@
 import * as React from 'react';
-import { CombinedModel, CombinedModelRead, Project, ProjectRead, Variable, VariableRead, useCompoundRetrieveQuery, useUnitListQuery, useUnitRetrieveQuery } from '../../app/backendApi';
-import { Control, useFieldArray } from 'react-hook-form';
+import { CombinedModelRead, CompoundRead, ProjectRead, UnitRead, VariableRead } from '../../app/backendApi';
+import { Control } from 'react-hook-form';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tooltip } from '@mui/material';
 import VariableRow from './VariableRow';
 import HelpButton from '../../components/HelpButton';
+import { FormData } from './Model';
 
 interface Props {
     model: CombinedModelRead;
     project: ProjectRead;
-    control: Control<CombinedModel>;
+    control: Control<FormData>;
     variables: VariableRead[];
+    units: UnitRead[];
+    compound: CompoundRead;
 }
 
-const MapVariablesTab: React.FC<Props> = ({ model, project, control, variables }: Props ) => {
+const MapVariablesTab: React.FC<Props> = ({ model, project, control, variables, units, compound }: Props ) => {
     
-    const { data: units, isLoading: isLoadingUnits } = useUnitListQuery({ compoundId: project.compound}, { skip: !project.compound });
-    const { data: compound, isLoading: isLoadingCompound } = useCompoundRetrieveQuery({id: project.compound})
-
-    if (isLoadingUnits || isLoadingCompound) {
-      return null;
-    }
-    if (units === undefined || compound === undefined) {
-      return null;
-    }
-
+    const isPreclinical = project.species !== 'H' && model.is_library_model;
     const concentrationUnit = units.find((unit) => unit.symbol === "pmol/L");
-    const amountUnit = units.find((unit) => unit.symbol === "pmol");
+    const amountUnit = isPreclinical ? units.find((unit) => unit.symbol === "pmol/kg") : units.find((unit) => unit.symbol === "pmol");
     if (concentrationUnit === undefined || amountUnit === undefined) {
       return (<>No concentration or amount unit found</>);
     }
@@ -45,8 +39,8 @@ const MapVariablesTab: React.FC<Props> = ({ model, project, control, variables }
       const bIsConcentration = concentrationUnit?.compatible_units.find((unit) => parseInt(unit.id) === b.unit) !== undefined;
       const bIsAmount = amountUnit?.compatible_units.find((unit) => parseInt(unit.id) === b.unit) !== undefined;
 
-      const aValue = aIsConcentration ? 1 : (aIsAmount ? 2 : 0);
-      const bValue = bIsConcentration ? 1 : (bIsAmount ? 2 : 0);
+      const aValue = aIsConcentration ? 2 : (aIsAmount ? 1 : 0);
+      const bValue = bIsConcentration ? 2 : (bIsAmount ? 1 : 0);
 
       if (aValue !== bValue) {
         return bValue - aValue;

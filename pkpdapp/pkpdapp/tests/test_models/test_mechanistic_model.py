@@ -5,9 +5,12 @@
 #
 from django.test import TestCase
 from pkpdapp.models import (
-    PharmacodynamicModel, Protocol, PharmacokineticModel,
+    PharmacodynamicModel,
+    Protocol,
+    PharmacokineticModel,
     CombinedModel,
-    Dose, Unit,
+    Dose,
+    Unit,
 )
 import myokit
 from django.core.exceptions import ValidationError
@@ -22,37 +25,34 @@ class TestPharmodynamicModel(TestCase):
     def test_model_bad_mmt(self):
         with self.assertRaises(myokit.ParseError):
             PharmacodynamicModel.objects.create(
-                name='my_cool_model',
-                description='description for my cool model',
-                mmt='this is not sbml'
+                name="my_cool_model",
+                description="description for my cool model",
+                mmt="this is not sbml",
             )
 
     def test_model_clean(self):
         m = PharmacodynamicModel(
-            name='my_cool_model',
-            description='description for my cool model',
-            mmt='this is not xml'
+            name="my_cool_model",
+            description="description for my cool model",
+            mmt="this is not xml",
         )
         with self.assertRaises(ValidationError):
             m.clean()
 
     def test_model_creation(self):
         m = PharmacodynamicModel.objects.create(
-            name='my_cool_model',
-            description='description for my cool model',
+            name="my_cool_model",
+            description="description for my cool model",
         )
         self.assertTrue(isinstance(m, PharmacodynamicModel))
 
     def test_myokit_model(self):
         m = PharmacodynamicModel.objects.get(
-            name='tumour_growth_gompertz',
+            name="tumour_growth_gompertz",
         )
         model = m.get_myokit_model()
         model_variables = [v.name() for v in model.variables()]
-        test_model_variables = [
-            'TS0', 'TSmax', 'beta',
-            'Growth', 'TS', 't'
-        ]
+        test_model_variables = ["TS0", "TSmax", "beta", "Growth", "TS", "t"]
         self.assertCountEqual(model_variables, test_model_variables)
 
 
@@ -60,7 +60,7 @@ class TestDosedPharmokineticModel(TestCase):
     def setUp(self):
         cache.clear()
         self.pk = PharmacokineticModel.objects.get(
-            name='one_compartment_clinical',
+            name="one_compartment_clinical",
         )
 
         self.model = CombinedModel.objects.create(
@@ -68,13 +68,13 @@ class TestDosedPharmokineticModel(TestCase):
         )
 
         self.p = Protocol.objects.create(
-            amount_unit=Unit.objects.get(symbol='pmol'),
-            time_unit=Unit.objects.get(symbol='h'),
-            name='my_cool_protocol',
+            amount_unit=Unit.objects.get(symbol="pmol"),
+            time_unit=Unit.objects.get(symbol="h"),
+            name="my_cool_protocol",
             dose_type=Protocol.DoseType.INDIRECT,
         )
 
-        v = self.model.variables.get(qname='PKCompartment.A1')
+        v = self.model.variables.get(qname="PKCompartment.A1")
         v.protocol = self.p
         v.save()
 
@@ -83,12 +83,22 @@ class TestDosedPharmokineticModel(TestCase):
         self.assertTrue(isinstance(stored_model, CombinedModel))
         self.assertTrue(stored_model.read_only)
         self.assertEqual(
-            len(stored_model.variables.all()),
-            len(self.model.variables.all())
+            len(stored_model.variables.all()), len(self.model.variables.all())
         )
-        v = stored_model.variables.get(qname='PKCompartment.A1')
-        self.assertEqual(v.protocol.name, 'my_cool_protocol')
+        v = stored_model.variables.get(qname="PKCompartment.A1")
+        self.assertEqual(v.protocol.name, "my_cool_protocol")
         self.assertNotEqual(v.protocol.id, self.p.id)
+
+    def test_reset_to_default(self):
+        v = self.model.variables.get(qname="PKCompartment.CL")
+        self.assertNotEqual(v.default_value, 8)
+        self.assertNotEqual(v.unit.symbol, "mL/h")
+
+        self.model.reset_params_to_defaults("H", "LM")
+
+        v = self.model.variables.get(qname="PKCompartment.CL")
+        self.assertEqual(v.default_value, 8)
+        self.assertEqual(v.unit.symbol, "mL/h")
 
     def test_myokit_model(self):
         model = self.model.get_myokit_model()
@@ -116,11 +126,11 @@ class TestDosedPharmokineticModel(TestCase):
         sim = self.model.get_myokit_simulator()
 
         output = sim.run(self.model.time_max)
-        index = np.where(np.array(output['environment.t']) > 0.5)[0][0]
-        self.assertGreater(output['PKCompartment.C1'][index], 0.01)
+        index = np.where(np.array(output["environment.t"]) > 0.5)[0][0]
+        self.assertGreater(output["PKCompartment.C1"][index], 0.01)
 
         # non-dosed model should have a concentration at t ~ 0.5 of near zero
         pk_sim = self.pk.get_myokit_simulator()
         output = pk_sim.run(self.pk.time_max)
-        index = np.where(np.array(output['environment.t']) > 0.5)[0][0]
-        self.assertLess(output['PKCompartment.C1'][index], 1e-6)
+        index = np.where(np.array(output["environment.t"]) > 0.5)[0][0]
+        self.assertLess(output["PKCompartment.C1"][index], 1e-6)

@@ -5,11 +5,13 @@ import { FormControlLabel, Stack, Typography, Grid, Checkbox as MuiCheckbox, Too
 import SelectField from '../../components/SelectField';
 import Checkbox from '../../components/Checkbox';
 import HelpButton from '../../components/HelpButton';
+import { FormData } from './Model';
+import { speciesOptions } from '../projects/Project';
 
 interface Props {
     model: CombinedModelRead;
     project: ProjectRead;
-    control: Control<CombinedModel>;
+    control: Control<FormData>;
     updateModel: (data: CombinedModelUpdateApiArg) => void;
 }
 
@@ -64,10 +66,13 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props ) => {
 
     return (
       <Grid container spacing={2}>
+        <Grid item xs={5}>
+          <SelectField label="Species" name="project.species" control={control} options={speciesOptions} formControlProps={{ fullWidth: true }}/>
+        </Grid>
         <Grid container item spacing={2}>
           <Grid item xs={5}>
             <Stack direction="row" alignItems="center" spacing={1}>
-            <SelectField label="PK Model" name="pk_model" control={control} options={pk_model_options} formControlProps={{ fullWidth: true }}/>
+            <SelectField label="PK Model" name="model.pk_model" control={control} options={pk_model_options} formControlProps={{ fullWidth: true }}/>
             <>
             { model.pk_model && 
               <HelpButton title={pk_model_map[model.pk_model].name}>
@@ -83,22 +88,22 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props ) => {
           <Stack direction="row" alignItems="center" spacing={1}>
           <Tooltip title="Includes Michaellis-Menten parameters (CLmax and Km)">
           <div>
-          <Checkbox label="Saturation" name="has_saturation" control={control} checkboxFieldProps={{ disabled: isTMDDmodel || !model.pk_model }} />
+          <Checkbox label="Saturation" name="model.has_saturation" control={control} checkboxFieldProps={{ disabled: isTMDDmodel || !model.pk_model }} />
           </div>
           </Tooltip>
           <Tooltip title="Includes an effect compartment">
           <div>
-          <Checkbox label="Effect Compartment" name="has_effect" control={control} checkboxFieldProps={{ disabled: !model.pk_model }}  />
+          <Checkbox label="Effect Compartment" name="model.has_effect" control={control} checkboxFieldProps={{ disabled: !model.pk_model }}  />
           </div>
           </Tooltip>
           <Tooltip title="Includes a time delay following PO of SC administration">
           <div>
-          <Checkbox label="Lag Time" name="has_lag" control={control} checkboxFieldProps={{ disabled: !model.pk_model }}  />
+          <Checkbox label="Lag Time" name="model.has_lag" control={control} checkboxFieldProps={{ disabled: !model.pk_model }}  />
           </div>
           </Tooltip>
           <Tooltip title="Includes bioavailability (F), if not selected F=1">
           <div>
-          <Checkbox label="Bioavailability" name="has_bioavailability" control={control} checkboxFieldProps={{ disabled: !model.pk_model }}  />
+          <Checkbox label="Bioavailability" name="model.has_bioavailability" control={control} checkboxFieldProps={{ disabled: !model.pk_model }}  />
           </div>
           </Tooltip>
           </Stack>
@@ -107,7 +112,7 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props ) => {
         <Grid container item spacing={2}>
           <Grid item xs={5}>
             <Stack direction="row" alignItems="center" spacing={1}>
-            <SelectField label="PD Model" name="pd_model" control={control} options={pd_model_options}  formControlProps={{ fullWidth: true }}/>
+            <SelectField label="PD Model" name="model.pd_model" control={control} options={pd_model_options}  formControlProps={{ fullWidth: true }}/>
             <>
             { model.pd_model && 
               <HelpButton title={pd_model_map[model.pd_model].name}>
@@ -123,7 +128,7 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props ) => {
             { model.pd_model && (
               <Tooltip title="Includes the Hill coefficient to the PD response">
               <div>
-              <Checkbox label="Hill Coefficient" name="has_hill_coefficient" control={control} checkboxFieldProps={{ disabled: !model.pd_model }} />
+              <Checkbox label="Hill Coefficient" name="model.has_hill_coefficient" control={control} checkboxFieldProps={{ disabled: !model.pd_model }} />
               </div>
               </Tooltip>
             )}
@@ -132,7 +137,7 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props ) => {
           <>
             <Grid item xs={5}>
             <Stack direction="row" alignItems="center" spacing={1}>
-              <SelectField label="Secondary PD Model" name="pd_model2" control={control} options={pd_model2_options} formControlProps={{ fullWidth: true }}/>
+              <SelectField label="Secondary PD Model" name="model.pd_model2" control={control} options={pd_model2_options} formControlProps={{ fullWidth: true }}/>
               <>
               {model.pd_model2 && (
                 <HelpButton title={pd_model_map[model.pd_model2].name}>

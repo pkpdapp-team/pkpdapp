@@ -157,6 +157,16 @@ const injectedRtkApi = api.injectEndpoints({
         method: "DELETE",
       }),
     }),
+    combinedModelSetParamsToDefaultsUpdate: build.mutation<
+      CombinedModelSetParamsToDefaultsUpdateApiResponse,
+      CombinedModelSetParamsToDefaultsUpdateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/combined_model/${queryArg.id}/set_params_to_defaults/`,
+        method: "PUT",
+        body: queryArg.combinedModel,
+      }),
+    }),
     combinedModelSetVariablesFromInferenceUpdate: build.mutation<
       CombinedModelSetVariablesFromInferenceUpdateApiResponse,
       CombinedModelSetVariablesFromInferenceUpdateApiArg
@@ -849,10 +859,7 @@ const injectedRtkApi = api.injectEndpoints({
     unitList: build.query<UnitListApiResponse, UnitListApiArg>({
       query: (queryArg) => ({
         url: `/api/unit/`,
-        params: {
-          compound_id: queryArg.compoundId,
-          is_target: queryArg.isTarget,
-        },
+        params: { compound_id: queryArg.compoundId },
       }),
     }),
     unitCreate: build.mutation<UnitCreateApiResponse, UnitCreateApiArg>({
@@ -1091,6 +1098,13 @@ export type CombinedModelDestroyApiResponse = unknown;
 export type CombinedModelDestroyApiArg = {
   /** A unique integer value identifying this combined model. */
   id: number;
+};
+export type CombinedModelSetParamsToDefaultsUpdateApiResponse =
+  /** status 200  */ CombinedModelRead;
+export type CombinedModelSetParamsToDefaultsUpdateApiArg = {
+  /** A unique integer value identifying this combined model. */
+  id: number;
+  combinedModel: CombinedModel;
 };
 export type CombinedModelSetVariablesFromInferenceUpdateApiResponse =
   /** status 200  */ CombinedModelRead;
@@ -1522,8 +1536,6 @@ export type UnitListApiResponse = /** status 200  */ UnitRead[];
 export type UnitListApiArg = {
   /** Enable conversions based on compound information */
   compoundId?: number;
-  /** (optional, default=false) true if unit is a target concentration unit */
-  isTarget?: boolean;
 };
 export type UnitCreateApiResponse = /** status 201  */ UnitRead;
 export type UnitCreateApiArg = {
@@ -2717,6 +2729,7 @@ export const {
   useCombinedModelUpdateMutation,
   useCombinedModelPartialUpdateMutation,
   useCombinedModelDestroyMutation,
+  useCombinedModelSetParamsToDefaultsUpdateMutation,
   useCombinedModelSetVariablesFromInferenceUpdateMutation,
   useCombinedModelSimulateCreateMutation,
   useCompoundListQuery,

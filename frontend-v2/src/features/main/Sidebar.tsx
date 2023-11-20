@@ -26,8 +26,15 @@ import { logout } from '../login/loginSlice';
 import { useAppDispatch } from '../../app/hooks';
 import ErrorIcon from '@mui/icons-material/Error';
 import { Tooltip } from '@mui/material';
-import { useCombinedModelListQuery, useProtocolListQuery } from '../../app/backendApi';
+import { useCombinedModelListQuery, useProjectRetrieveQuery, useProtocolListQuery } from '../../app/backendApi';
 import { Protocol } from "../../app/backendApi";
+import DnsIcon from '@mui/icons-material/Dns';
+import BiotechIcon from '@mui/icons-material/Biotech';
+import FunctionsIcon from '@mui/icons-material/Functions';
+import VaccinesIcon from '@mui/icons-material/Vaccines';
+import SsidChartIcon from '@mui/icons-material/SsidChart';
+import ContactSupportIcon from '@mui/icons-material/ContactSupport';
+import TableViewIcon from '@mui/icons-material/TableView';
 
 const drawerWidth = 240;
 
@@ -41,6 +48,7 @@ export default function Sidebar() {
   const { data: models, isLoading: isModelsLoading } = useCombinedModelListQuery({projectId: projectId || 0}, { skip: !projectId})
   const { data: protocols, error: protocolsError, isLoading: isProtocolsLoading } = useProtocolListQuery({projectId: projectId || 0}, { skip: !projectId})
   const model = models?.[0] || null;
+  const { data: project, isLoading: isProjectLoading } = useProjectRetrieveQuery({id: projectId || 0}, { skip: !projectId })
 
   let errors: { [key: string]: string } = {};
   if ((model && model.pk_model === null) || (model && model.pd_model && model.mappings.length === 0) || (protocols && protocols.length === 0)) {
@@ -55,6 +63,16 @@ export default function Sidebar() {
       </Tooltip>
     )
   }
+  
+  let icons: { [key: string]: React.ReactNode } = {
+    [PageName.PROJECTS]: <DnsIcon />,
+    [PageName.DRUG]: <BiotechIcon />,
+    [PageName.MODEL]: <FunctionsIcon />,
+    [PageName.TRIAL_DESIGN]: <VaccinesIcon />,
+    [PageName.DATA]: <TableViewIcon />,
+    [PageName.SIMULATIONS]: <SsidChartIcon />,
+    [PageName.HELP]: <ContactSupportIcon />,
+  };
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -110,7 +128,7 @@ export default function Sidebar() {
           <ListItem key={key} disablePadding selected={isPageSelected(key)}>
             <ListItemButton onClick={handlePageClick(key)} disabled={isPageDisabled(key)} disableRipple={true}>
               <ListItemIcon>
-                {value in errorComponents ? errorComponents[value] : index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
+                {value in errorComponents ? errorComponents[value] : icons[value]}
               </ListItemIcon>
               <ListItemText primary={value} />
             </ListItemButton>
@@ -143,7 +161,8 @@ export default function Sidebar() {
             <MenuIcon />
           </IconButton>
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-            PK/PD Simulator
+            
+            PK/PD Simulator {project && ` - ${project.name}`}
           </Typography>
           <IconButton
             onClick={() => dispatch(logout())}
