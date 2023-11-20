@@ -7,98 +7,12 @@
 from django.test import TestCase
 import numpy as np
 from pkpdapp.models import (
-    Inference, PharmacodynamicModel,
-    PharmacokineticModel, DosedPharmacokineticModel,
-    Protocol, Unit,
     LogLikelihood,
-    Project, BiomarkerType,
-    InferenceMixin, Algorithm, InferenceChain, InferenceResult,
+    InferenceMixin, InferenceChain, InferenceResult,
     InferenceFunctionResult, LogLikelihoodParameter,
 )
+from pkpdapp.tests import create_pd_inference
 from django.core.cache import cache
-
-
-class TestInferenceMixinPkModel(TestCase):
-    def setUp(self):
-        # ensure we've got nothing in the cache
-        cache._cache.flush_all()
-
-        project = Project.objects.get(
-            name='demo',
-        )
-        biomarker_type = BiomarkerType.objects.get(
-            name='DemoDrug Concentration',
-            dataset__name='usecase0'
-        )
-        biomarker_type.display_unit = Unit.objects.get(
-            symbol='g/L'
-        )
-        biomarker_type.save()
-        pk = PharmacokineticModel.objects\
-            .get(name='three_compartment_pk_model')
-
-        protocol = Protocol.objects.get(
-            subjects__dataset=biomarker_type.dataset,
-            subjects__id_in_dataset=1,
-        )
-
-        model = DosedPharmacokineticModel.objects.create(
-            name='my wonderful model',
-            pk_model=pk,
-            dose_compartment='central',
-            protocol=protocol,
-        )
-
-        self.inference = Inference.objects.create(
-            name='bob',
-            project=project,
-            max_number_of_iterations=10,
-            algorithm=Algorithm.objects.get(name='Haario-Bardenet'),
-        )
-        log_likelihood = LogLikelihood.objects.create(
-            variable=model.variables.first(),
-            inference=self.inference,
-            form=LogLikelihood.Form.MODEL
-        )
-
-        # remove all outputs except
-        output_names = [
-            'central.drug_c_concentration',
-        ]
-        outputs = []
-        for output in log_likelihood.outputs.all():
-            if output.variable.qname in output_names:
-                output.parent.biomarker_type = biomarker_type
-                output.parent.observed = True
-                output.parent.save()
-                outputs.append(output.parent)
-            else:
-                for param in output.parent.parameters.all():
-                    if param != output:
-                        param.child.delete()
-                output.parent.delete()
-
-        # set uniform prior on everything, except amounts
-        for param in log_likelihood.parameters.all():
-            if '_amount' in param.name:
-                param.set_fixed(0)
-            else:
-                param.set_uniform_prior(0.0, 0.1)
-
-        # 'run' inference to create copies of models
-        self.inference.run_inference(test=True)
-
-        # create mixin object
-        self.inference_mixin = InferenceMixin(self.inference)
-
-    def test_objective_functions(self):
-        # Test log-posterior
-        log_posterior = self.inference_mixin._pints_log_posterior
-        log_posterior(
-            log_posterior.to_search(
-                [0.0065, 0.0063, 0.05, 0.0135, 0.0022, 0.0089, 0.004]
-            )
-        )
 
 
 class TestInferenceMixinSingleOutputSampling(TestCase):
@@ -106,45 +20,7 @@ class TestInferenceMixinSingleOutputSampling(TestCase):
         # ensure we've got nothing in the cache
         cache._cache.flush_all()
 
-        project = Project.objects.get(
-            name='demo',
-        )
-        biomarker_type = BiomarkerType.objects.get(
-            name='Tumour volume',
-            dataset__name='lxf_control_growth'
-        )
-        model = PharmacodynamicModel.objects.get(
-            name='tumour_growth_inhibition_model_koch',
-            read_only=False,
-        )
-        self.inference = Inference.objects.create(
-            name='bob',
-            project=project,
-            max_number_of_iterations=10,
-            algorithm=Algorithm.objects.get(name='Haario-Bardenet'),
-        )
-        log_likelihood = LogLikelihood.objects.create(
-            variable=model.variables.first(),
-            inference=self.inference,
-            form=LogLikelihood.Form.MODEL
-        )
-
-        # remove all outputs except
-        output_names = [
-            'myokit.tumour_volume',
-        ]
-        outputs = []
-        for output in log_likelihood.outputs.all():
-            if output.variable.qname in output_names:
-                output.parent.biomarker_type = biomarker_type
-                output.parent.observed = True
-                output.parent.save()
-                outputs.append(output.parent)
-            else:
-                for param in output.parent.parameters.all():
-                    if param != output:
-                        param.child.delete()
-                output.parent.delete()
+        self.inference, log_likelihood, _, _, _, _ = create_pd_inference(True)
 
         # set uniform prior on everything, except amounts
         for param in log_likelihood.parameters.all():
@@ -169,7 +45,7 @@ class TestInferenceMixinSingleOutputSampling(TestCase):
         self.inference_mixin.run_inference()
 
         chains = self.inference_mixin.inference.chains.all()
-        self.assertEqual(len(chains), 4)
+        self.assertEqual(len(chains), 3)
         for chain in chains:
             priors = self.inference_mixin._priors
             fun_res = chain.inference_function_results
@@ -195,6 +71,7 @@ class TestInferenceMixinSingleOutputSampling(TestCase):
             p_vals_all = list(map(list, zip(*p_vals_all)))
             fn = self.inference_mixin._pints_log_posterior
             for idx, params in enumerate(p_vals_all):
+                print(f'comparing {fn(fn.to_search(params))} to {f_vals[idx]}')
                 self.assertTrue(
                     abs(fn(fn.to_search(params)) - f_vals[idx]) < 0.01
                 )
@@ -207,52 +84,12 @@ class TestInferenceMixinSingleOutputSampling(TestCase):
         self.assertTrue(inference.number_of_function_evals > 0)
 
 
-class TestInferenceMixinSingleOutputOptimisation(TestCase):
+class TestInferenceMixinSingleOutput(TestCase):
     def setUp(self):
         # ensure we've got nothing in the cache
         cache._cache.flush_all()
 
-        self.project = Project.objects.get(
-            name='demo',
-        )
-        biomarker_type = BiomarkerType.objects.get(
-            name='Tumour volume',
-            dataset__name='lxf_control_growth'
-        )
-        model = PharmacodynamicModel.objects.get(
-            name='tumour_growth_inhibition_model_koch',
-            read_only=False,
-        )
-        self.inference = Inference.objects.create(
-            name='bob',
-            project=self.project,
-            max_number_of_iterations=10,
-            algorithm=Algorithm.objects.get(name='XNES'),
-            number_of_chains=3,
-        )
-        log_likelihood = LogLikelihood.objects.create(
-            variable=model.variables.first(),
-            inference=self.inference,
-            form=LogLikelihood.Form.MODEL
-        )
-
-        # remove all outputs except
-        output_names = [
-            'myokit.tumour_volume',
-        ]
-        outputs = []
-        for output in log_likelihood.outputs.all():
-            if output.variable.qname in output_names:
-                output.parent.biomarker_type = biomarker_type
-                output.parent.observed = True
-                output.parent.save()
-                outputs.append(output.parent)
-            else:
-                for param in output.parent.parameters.all():
-                    if param != output:
-                        param.child.delete()
-                output.parent.delete()
-        self.outputs = outputs
+        self.inference, log_likelihood, _, _, _, _ = create_pd_inference()
 
         # set uniform prior on everything, except amounts
         for param in log_likelihood.parameters.all():
@@ -365,106 +202,13 @@ class TestInferenceMixinSingleOutputOptimisation(TestCase):
                 self.assertTrue(np.array_equal(iterations, expected))
 
 
-class TestInferenceMixinFakeData(TestCase):
-    def setUp(self):
-        # ensure we've got nothing in the cache
-        cache._cache.flush_all()
-        project = Project.objects.get(
-            name='demo',
-        )
-        model = PharmacodynamicModel.objects.get(
-            name='tumour_growth_inhibition_model_koch',
-            read_only=False,
-        )
-        self.inference = Inference.objects.create(
-            name='bob',
-            project=project,
-            max_number_of_iterations=10,
-            algorithm=Algorithm.objects.get(name='Haario-Bardenet'),
-        )
-        log_likelihood = LogLikelihood.objects.create(
-            variable=model.variables.first(),
-            inference=self.inference,
-            form=LogLikelihood.Form.MODEL
-        )
-
-        # remove all outputs except
-        output_names = [
-            'myokit.tumour_volume',
-        ]
-        outputs = []
-        for output in log_likelihood.outputs.all():
-            if output.variable.qname in output_names:
-                output.parent.biomarker_type = None
-                output.parent.save()
-                outputs.append(output.parent)
-            else:
-                for param in output.parent.parameters.all():
-                    if param != output:
-                        param.child.delete()
-                output.parent.delete()
-
-        # set uniform prior on everything, except amounts
-        for param in log_likelihood.parameters.all():
-            param.set_uniform_prior(0.0, 2.0)
-
-        # 'run' inference to create copies of models
-        self.inference.run_inference(test=True)
-
-    def test_inference_fails(self):
-        with self.assertRaisesRegex(
-            RuntimeError,
-            "must have at least one observed random variable"
-        ):
-            InferenceMixin(self.inference)
-
-
 class TestInferenceMixinSingleOutputOptimisationPopulation(TestCase):
     def setUp(self):
         # ensure we've got nothing in the cache
         cache._cache.flush_all()
 
-        self.project = Project.objects.get(
-            name='demo',
-        )
-        biomarker_type = BiomarkerType.objects.get(
-            name='Tumour volume',
-            dataset__name='lxf_control_growth'
-        )
-        model = PharmacodynamicModel.objects.get(
-            name='tumour_growth_inhibition_model_koch',
-            read_only=False,
-        )
-        self.inference = Inference.objects.create(
-            name='bob',
-            project=self.project,
-            max_number_of_iterations=10,
-            algorithm=Algorithm.objects.get(name='XNES'),
-            number_of_chains=3,
-        )
-        log_likelihood = LogLikelihood.objects.create(
-            variable=model.variables.first(),
-            inference=self.inference,
-            form=LogLikelihood.Form.MODEL
-        )
-
-        # remove all outputs except
-        output_names = [
-            'myokit.tumour_volume',
-        ]
-        outputs = []
-        for output in log_likelihood.outputs.all():
-            if output.variable.qname in output_names:
-                output.parent.biomarker_type = biomarker_type
-                output.parent.observed = True
-                output.parent.save()
-                outputs.append(output.parent)
-            else:
-                for param in output.parent.parameters.all():
-                    if param != output:
-                        param.child.delete()
-                output.parent.delete()
-        self.outputs = outputs
+        self.inference, log_likelihood, biomarker_type, \
+            _, _, _ = create_pd_inference()
 
         # set uniform prior on everything, except
         # we'll do a population prior on the first one
@@ -516,47 +260,8 @@ class TestInferenceMixinSingleOutputOptimisationCovariate(TestCase):
         # ensure we've got nothing in the cache
         cache._cache.flush_all()
 
-        self.project = Project.objects.get(
-            name='demo',
-        )
-        biomarker_type = BiomarkerType.objects.get(
-            name='Tumour volume',
-            dataset__name='lxf_control_growth'
-        )
-        model = PharmacodynamicModel.objects.get(
-            name='tumour_growth_inhibition_model_koch',
-            read_only=False,
-        )
-        self.inference = Inference.objects.create(
-            name='bob',
-            project=self.project,
-            max_number_of_iterations=10,
-            algorithm=Algorithm.objects.get(name='XNES'),
-            number_of_chains=3,
-        )
-        log_likelihood = LogLikelihood.objects.create(
-            variable=model.variables.first(),
-            inference=self.inference,
-            form=LogLikelihood.Form.MODEL
-        )
-
-        # remove all outputs except
-        output_names = [
-            'myokit.tumour_volume',
-        ]
-        outputs = []
-        for output in log_likelihood.outputs.all():
-            if output.variable.qname in output_names:
-                output.parent.biomarker_type = biomarker_type
-                output.parent.observed = True
-                output.parent.save()
-                outputs.append(output.parent)
-            else:
-                for param in output.parent.parameters.all():
-                    if param != output:
-                        param.child.delete()
-                output.parent.delete()
-        self.outputs = outputs
+        self.inference, log_likelihood, biomarker_type, \
+            covariate_biomarker_type, _, _ = create_pd_inference()
 
         # set uniform prior on everything, except
         # we'll do a population prior on the first one
@@ -564,11 +269,7 @@ class TestInferenceMixinSingleOutputOptimisationCovariate(TestCase):
             if i == 0:
                 # first param is sampled from a normal distribution with a mean
                 # derived from subject body weight
-                body_weight_biomarker_type = BiomarkerType.objects.get(
-                    name='Body weight',
-                    dataset__name='lxf_control_growth'
-                )
-                param.child.biomarker_type = body_weight_biomarker_type
+                param.child.biomarker_type = covariate_biomarker_type
                 param.child.time_independent_data = True
                 param.child.form = LogLikelihood.Form.NORMAL
                 param.child.save()
@@ -582,14 +283,14 @@ class TestInferenceMixinSingleOutputOptimisationCovariate(TestCase):
                 mean.form = LogLikelihood.Form.EQUATION
                 mean.description = '1.0 if arg0 < 20 else 2.0'
 
-                mean.biomarker_type = body_weight_biomarker_type
+                mean.biomarker_type = covariate_biomarker_type
                 mean.time_independent_data = True
                 mean.save()
                 body_weight = LogLikelihood.objects.create(
                     name='Body weight',
                     inference=self.inference,
                     form=LogLikelihood.Form.FIXED,
-                    biomarker_type=body_weight_biomarker_type,
+                    biomarker_type=covariate_biomarker_type,
                     time_independent_data=True,
                 )
                 LogLikelihoodParameter.objects.create(

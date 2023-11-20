@@ -3,6 +3,8 @@
 # is released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
+
+import pkpdapp.tests  # noqa: F401
 from rest_framework import status
 from rest_framework.test import APITestCase, APIClient
 from django.contrib.auth.models import User
@@ -19,7 +21,7 @@ class PdModelTestCase(APITestCase):
         response = self.client.get("/api/pharmacodynamic/?project_id=1")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_data = response.data
-        self.assertGreater(len(response_data), 0)
+        self.assertEqual(len(response_data), 0)
 
     def test_pd_serializer(self):
         response = self.client.get("/api/pharmacodynamic/1/")
@@ -43,7 +45,7 @@ class PdModelTestCase(APITestCase):
         )
 
         response = self.client.put(
-            "/api/pharmacodynamic/1/",
+            "/api/combined_model/1/",
             data={
                 'name': 'test',
                 'project': project.id

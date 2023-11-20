@@ -3,7 +3,7 @@
 # is released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-
+import django
 import codecs
 import unittest
 import urllib.request
@@ -11,6 +11,7 @@ from pkpdapp.utils import (
     MonolixModelParser, MonolixProjectParser
 )
 
+django.setup()
 BASE_URL_DATASETS = 'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/'   # noqa: E501
 
 

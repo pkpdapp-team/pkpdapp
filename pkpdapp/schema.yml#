@@ -1,0 +1,4584 @@
+openapi: 3.0.3
+info:
+  title: PKPDApp API
+  version: 1.0.0
+  description: The API for the PKPDApp
+paths:
+  /api/algorithm/:
+    get:
+      operationId: algorithm_list
+      tags:
+      - algorithm
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Algorithm'
+          description: ''
+    post:
+      operationId: algorithm_create
+      tags:
+      - algorithm
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Algorithm'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Algorithm'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Algorithm'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Algorithm'
+          description: ''
+  /api/algorithm/{id}/:
+    get:
+      operationId: algorithm_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this algorithm.
+        required: true
+      tags:
+      - algorithm
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Algorithm'
+          description: ''
+    put:
+      operationId: algorithm_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this algorithm.
+        required: true
+      tags:
+      - algorithm
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Algorithm'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Algorithm'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Algorithm'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Algorithm'
+          description: ''
+    patch:
+      operationId: algorithm_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this algorithm.
+        required: true
+      tags:
+      - algorithm
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedAlgorithm'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedAlgorithm'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedAlgorithm'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Algorithm'
+          description: ''
+    delete:
+      operationId: algorithm_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this algorithm.
+        required: true
+      tags:
+      - algorithm
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/auce/:
+    post:
+      operationId: auce_create
+      tags:
+      - auce
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/biomarker_type/:
+    get:
+      operationId: biomarker_type_list
+      tags:
+      - biomarker_type
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BiomarkerType'
+          description: ''
+    post:
+      operationId: biomarker_type_create
+      tags:
+      - biomarker_type
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BiomarkerType'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BiomarkerType'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BiomarkerType'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BiomarkerType'
+          description: ''
+  /api/biomarker_type/{id}/:
+    get:
+      operationId: biomarker_type_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this biomarker type.
+        required: true
+      tags:
+      - biomarker_type
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BiomarkerType'
+          description: ''
+    put:
+      operationId: biomarker_type_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this biomarker type.
+        required: true
+      tags:
+      - biomarker_type
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BiomarkerType'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BiomarkerType'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BiomarkerType'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BiomarkerType'
+          description: ''
+    patch:
+      operationId: biomarker_type_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this biomarker type.
+        required: true
+      tags:
+      - biomarker_type
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedBiomarkerType'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedBiomarkerType'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedBiomarkerType'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BiomarkerType'
+          description: ''
+    delete:
+      operationId: biomarker_type_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this biomarker type.
+        required: true
+      tags:
+      - biomarker_type
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/compound/:
+    get:
+      operationId: compound_list
+      tags:
+      - compound
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Compound'
+          description: ''
+    post:
+      operationId: compound_create
+      tags:
+      - compound
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Compound'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Compound'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Compound'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Compound'
+          description: ''
+  /api/compound/{id}/:
+    get:
+      operationId: compound_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this compound.
+        required: true
+      tags:
+      - compound
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Compound'
+          description: ''
+    put:
+      operationId: compound_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this compound.
+        required: true
+      tags:
+      - compound
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Compound'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Compound'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Compound'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Compound'
+          description: ''
+    patch:
+      operationId: compound_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this compound.
+        required: true
+      tags:
+      - compound
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCompound'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedCompound'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedCompound'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Compound'
+          description: ''
+    delete:
+      operationId: compound_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this compound.
+        required: true
+      tags:
+      - compound
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/dataset/:
+    get:
+      operationId: dataset_list
+      tags:
+      - dataset
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Dataset'
+          description: ''
+    post:
+      operationId: dataset_create
+      tags:
+      - dataset
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Dataset'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Dataset'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Dataset'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Dataset'
+          description: ''
+  /api/dataset/{id}/:
+    get:
+      operationId: dataset_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this dataset.
+        required: true
+      tags:
+      - dataset
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Dataset'
+          description: ''
+    put:
+      operationId: dataset_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this dataset.
+        required: true
+      tags:
+      - dataset
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Dataset'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Dataset'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Dataset'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Dataset'
+          description: ''
+    patch:
+      operationId: dataset_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this dataset.
+        required: true
+      tags:
+      - dataset
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedDataset'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedDataset'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedDataset'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Dataset'
+          description: ''
+    delete:
+      operationId: dataset_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this dataset.
+        required: true
+      tags:
+      - dataset
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/dataset/{id}/csv/:
+    put:
+      operationId: dataset_csv_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this dataset.
+        required: true
+      tags:
+      - dataset
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DatasetCsv'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DatasetCsv'
+          description: ''
+  /api/dose/:
+    get:
+      operationId: dose_list
+      tags:
+      - dose
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Dose'
+          description: ''
+    post:
+      operationId: dose_create
+      tags:
+      - dose
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Dose'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Dose'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Dose'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Dose'
+          description: ''
+  /api/dose/{id}/:
+    get:
+      operationId: dose_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this dose.
+        required: true
+      tags:
+      - dose
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Dose'
+          description: ''
+    put:
+      operationId: dose_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this dose.
+        required: true
+      tags:
+      - dose
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Dose'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Dose'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Dose'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Dose'
+          description: ''
+    patch:
+      operationId: dose_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this dose.
+        required: true
+      tags:
+      - dose
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedDose'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedDose'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedDose'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Dose'
+          description: ''
+    delete:
+      operationId: dose_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this dose.
+        required: true
+      tags:
+      - dose
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/dosed_pharmacokinetic/:
+    get:
+      operationId: dosed_pharmacokinetic_list
+      tags:
+      - dosed_pharmacokinetic
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DosedPharmacokinetic'
+          description: ''
+    post:
+      operationId: dosed_pharmacokinetic_create
+      tags:
+      - dosed_pharmacokinetic
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DosedPharmacokinetic'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DosedPharmacokinetic'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DosedPharmacokinetic'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DosedPharmacokinetic'
+          description: ''
+  /api/dosed_pharmacokinetic/{id}/:
+    get:
+      operationId: dosed_pharmacokinetic_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this dosed pharmacokinetic
+          model.
+        required: true
+      tags:
+      - dosed_pharmacokinetic
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DosedPharmacokinetic'
+          description: ''
+    put:
+      operationId: dosed_pharmacokinetic_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this dosed pharmacokinetic
+          model.
+        required: true
+      tags:
+      - dosed_pharmacokinetic
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DosedPharmacokinetic'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DosedPharmacokinetic'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DosedPharmacokinetic'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DosedPharmacokinetic'
+          description: ''
+    patch:
+      operationId: dosed_pharmacokinetic_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this dosed pharmacokinetic
+          model.
+        required: true
+      tags:
+      - dosed_pharmacokinetic
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedDosedPharmacokinetic'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedDosedPharmacokinetic'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedDosedPharmacokinetic'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DosedPharmacokinetic'
+          description: ''
+    delete:
+      operationId: dosed_pharmacokinetic_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this dosed pharmacokinetic
+          model.
+        required: true
+      tags:
+      - dosed_pharmacokinetic
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/dosed_pharmacokinetic/{id}/set_variables_from_inference/:
+    put:
+      operationId: dosed_pharmacokinetic_set_variables_from_inference_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this dosed pharmacokinetic
+          model.
+        required: true
+      tags:
+      - dosed_pharmacokinetic
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DosedPharmacokinetic'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DosedPharmacokinetic'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DosedPharmacokinetic'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DosedPharmacokinetic'
+          description: ''
+  /api/dosed_pharmacokinetic/{id}/simulate:
+    post:
+      operationId: dosed_pharmacokinetic_simulate_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - dosed_pharmacokinetic
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/inference/:
+    get:
+      operationId: inference_list
+      tags:
+      - inference
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Inference'
+          description: ''
+    post:
+      operationId: inference_create
+      tags:
+      - inference
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Inference'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Inference'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Inference'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Inference'
+          description: ''
+  /api/inference/{id}/:
+    get:
+      operationId: inference_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this inference.
+        required: true
+      tags:
+      - inference
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Inference'
+          description: ''
+    put:
+      operationId: inference_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this inference.
+        required: true
+      tags:
+      - inference
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Inference'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Inference'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Inference'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Inference'
+          description: ''
+    patch:
+      operationId: inference_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this inference.
+        required: true
+      tags:
+      - inference
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedInference'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedInference'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedInference'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Inference'
+          description: ''
+    delete:
+      operationId: inference_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this inference.
+        required: true
+      tags:
+      - inference
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/inference/{id}/stop:
+    post:
+      operationId: inference_stop_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - inference
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/inference/wizard:
+    post:
+      operationId: inference_wizard_create
+      description: |-
+        expecting data in the form:
+        {
+
+            # Inference parameters
+            'id': 1
+            'name': "my inference run",
+            'project': 1,
+            'algorithm': 2,
+            'initialization_strategy': 'R',
+            'initialization_inference': 2,
+            'number_of_chains': 4,
+            'max_number_of_iterations': 3000,
+            'burn_in': 0,
+
+            # Model
+            'model': {
+                'form': 'PK',
+                'id': 5
+            }
+            'dataset': 3,
+
+            # Model parameters
+            'parameters': [
+                {
+                    'name': 'myokit.parameter1'
+                    'form': 'N',
+                    'pooled': False,
+                    'parameters': [
+                        '2 * biomarker[subject_weight]',
+                        'parameter[parameter1_variance]'
+                    ]
+                },
+                {
+                    'name': 'parameter1_variance'
+                    'form': 'N',
+                    'parameters': [0, 1]
+                },
+                {
+                    'name': 'myokit.parameter2'
+                    'form': 'U',
+                    'parameters': [-1, 1]
+                },
+                {
+                    'name': 'myokit.parameter3'
+                    'form': 'F',
+                    'parameters': [123.5]
+                },
+            ]
+
+            # output
+            'observations': [
+                {
+                    'model': 'myokit.plasma_concentration',
+                    'biomarker': 'concentration,
+                    'noise_form': 'N',
+                    'noise_param_form': 'N',
+                    'parameters': [0, 1]
+                },
+                {
+                    'model': 'myokit.bacteria_count',
+                    'biomarker': 'bacteria,
+                    'noise_form': 'LN',
+                    'noise_param_form': 'F'
+                    'parameters': [123.3]
+                },
+            ]
+        }
+
+        Uses model as the base model. If it is a PK or PKPD model, creates a model
+        for each protocol used in the dataset, replacing the protocol of the model
+        with each new one.
+
+        This set of models has a set of parameters. If pooled is True or not given,
+        then parameters of the same qname are assumed to be identical, if pooled is
+        False, then the value of this parameter is different across each subject.
+        All Variable fields from the original model are copied over to the new
+        models. Priors and fixed values for each parameter in this set are provided
+        in 'parameters'. Distribution parameters for each prior can be provided
+        using a python expression, or a number. If a python expression is used, the
+        keywords Parameter[<param_name>] are used to refer to other parameters in
+        the list. Additional parameters can be added to the list (parameters not in
+        the model) to contruct hierarchical inference. You can refer to biomarkers
+        in the expression using the keyword Biomarker[<biomarker_name>].
+
+        The 'observations' field maps model output variables with biomarkers in the
+        dataset
+      tags:
+      - inference
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/inference_chain/:
+    get:
+      operationId: inference_chain_list
+      tags:
+      - inference_chain
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/InferenceChain'
+          description: ''
+    post:
+      operationId: inference_chain_create
+      tags:
+      - inference_chain
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InferenceChain'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/InferenceChain'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/InferenceChain'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InferenceChain'
+          description: ''
+  /api/inference_chain/{id}/:
+    get:
+      operationId: inference_chain_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this inference chain.
+        required: true
+      tags:
+      - inference_chain
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InferenceChain'
+          description: ''
+    put:
+      operationId: inference_chain_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this inference chain.
+        required: true
+      tags:
+      - inference_chain
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InferenceChain'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/InferenceChain'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/InferenceChain'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InferenceChain'
+          description: ''
+    patch:
+      operationId: inference_chain_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this inference chain.
+        required: true
+      tags:
+      - inference_chain
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedInferenceChain'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedInferenceChain'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedInferenceChain'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InferenceChain'
+          description: ''
+    delete:
+      operationId: inference_chain_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this inference chain.
+        required: true
+      tags:
+      - inference_chain
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/nca/:
+    post:
+      operationId: nca_create
+      tags:
+      - nca
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/pharmacodynamic/:
+    get:
+      operationId: pharmacodynamic_list
+      tags:
+      - pharmacodynamic
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Pharmacodynamic'
+          description: ''
+    post:
+      operationId: pharmacodynamic_create
+      tags:
+      - pharmacodynamic
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Pharmacodynamic'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Pharmacodynamic'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Pharmacodynamic'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pharmacodynamic'
+          description: ''
+  /api/pharmacodynamic/{id}/:
+    get:
+      operationId: pharmacodynamic_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this pharmacodynamic model.
+        required: true
+      tags:
+      - pharmacodynamic
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pharmacodynamic'
+          description: ''
+    put:
+      operationId: pharmacodynamic_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this pharmacodynamic model.
+        required: true
+      tags:
+      - pharmacodynamic
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Pharmacodynamic'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Pharmacodynamic'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Pharmacodynamic'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pharmacodynamic'
+          description: ''
+    patch:
+      operationId: pharmacodynamic_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this pharmacodynamic model.
+        required: true
+      tags:
+      - pharmacodynamic
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedPharmacodynamic'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedPharmacodynamic'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedPharmacodynamic'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pharmacodynamic'
+          description: ''
+    delete:
+      operationId: pharmacodynamic_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this pharmacodynamic model.
+        required: true
+      tags:
+      - pharmacodynamic
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/pharmacodynamic/{id}/mmt/:
+    put:
+      operationId: pharmacodynamic_mmt_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this pharmacodynamic model.
+        required: true
+      tags:
+      - pharmacodynamic
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Pharmacodynamic'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pharmacodynamic'
+          description: ''
+  /api/pharmacodynamic/{id}/sbml/:
+    put:
+      operationId: pharmacodynamic_sbml_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this pharmacodynamic model.
+        required: true
+      tags:
+      - pharmacodynamic
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PharmacodynamicSbml'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PharmacodynamicSbml'
+          description: ''
+  /api/pharmacodynamic/{id}/set_variables_from_inference/:
+    put:
+      operationId: pharmacodynamic_set_variables_from_inference_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this pharmacodynamic model.
+        required: true
+      tags:
+      - pharmacodynamic
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Pharmacodynamic'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Pharmacodynamic'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Pharmacodynamic'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pharmacodynamic'
+          description: ''
+  /api/pharmacodynamic/{id}/simulate:
+    post:
+      operationId: pharmacodynamic_simulate_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - pharmacodynamic
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/pharmacokinetic/:
+    get:
+      operationId: pharmacokinetic_list
+      tags:
+      - pharmacokinetic
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Pharmacokinetic'
+          description: ''
+    post:
+      operationId: pharmacokinetic_create
+      tags:
+      - pharmacokinetic
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Pharmacokinetic'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Pharmacokinetic'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Pharmacokinetic'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pharmacokinetic'
+          description: ''
+  /api/pharmacokinetic/{id}/:
+    get:
+      operationId: pharmacokinetic_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this pharmacokinetic model.
+        required: true
+      tags:
+      - pharmacokinetic
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pharmacokinetic'
+          description: ''
+    put:
+      operationId: pharmacokinetic_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this pharmacokinetic model.
+        required: true
+      tags:
+      - pharmacokinetic
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Pharmacokinetic'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Pharmacokinetic'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Pharmacokinetic'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pharmacokinetic'
+          description: ''
+    patch:
+      operationId: pharmacokinetic_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this pharmacokinetic model.
+        required: true
+      tags:
+      - pharmacokinetic
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedPharmacokinetic'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedPharmacokinetic'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedPharmacokinetic'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pharmacokinetic'
+          description: ''
+    delete:
+      operationId: pharmacokinetic_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this pharmacokinetic model.
+        required: true
+      tags:
+      - pharmacokinetic
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/project/:
+    get:
+      operationId: project_list
+      description: Enable partial updates
+      tags:
+      - project
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Project'
+          description: ''
+    post:
+      operationId: project_create
+      description: Enable partial updates
+      tags:
+      - project
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Project'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Project'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Project'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+          description: ''
+  /api/project/{id}/:
+    get:
+      operationId: project_retrieve
+      description: Enable partial updates
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this project.
+        required: true
+      tags:
+      - project
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+          description: ''
+    put:
+      operationId: project_update
+      description: Enable partial updates
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this project.
+        required: true
+      tags:
+      - project
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Project'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Project'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Project'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+          description: ''
+    patch:
+      operationId: project_partial_update
+      description: Enable partial updates
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this project.
+        required: true
+      tags:
+      - project
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedProject'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedProject'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedProject'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+          description: ''
+    delete:
+      operationId: project_destroy
+      description: Enable partial updates
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this project.
+        required: true
+      tags:
+      - project
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/project/{id}/monolix/:
+    put:
+      operationId: project_monolix_update
+      description: Enable partial updates
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this project.
+        required: true
+      tags:
+      - project
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Monolix'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Monolix'
+          description: ''
+  /api/project_access/:
+    get:
+      operationId: project_access_list
+      tags:
+      - project_access
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProjectAccess'
+          description: ''
+    post:
+      operationId: project_access_create
+      tags:
+      - project_access
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectAccess'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ProjectAccess'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ProjectAccess'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectAccess'
+          description: ''
+  /api/project_access/{id}/:
+    get:
+      operationId: project_access_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this project access.
+        required: true
+      tags:
+      - project_access
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectAccess'
+          description: ''
+    put:
+      operationId: project_access_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this project access.
+        required: true
+      tags:
+      - project_access
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectAccess'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ProjectAccess'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ProjectAccess'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectAccess'
+          description: ''
+    patch:
+      operationId: project_access_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this project access.
+        required: true
+      tags:
+      - project_access
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedProjectAccess'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedProjectAccess'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedProjectAccess'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectAccess'
+          description: ''
+    delete:
+      operationId: project_access_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this project access.
+        required: true
+      tags:
+      - project_access
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/protocol/:
+    get:
+      operationId: protocol_list
+      tags:
+      - protocol
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Protocol'
+          description: ''
+    post:
+      operationId: protocol_create
+      tags:
+      - protocol
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Protocol'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Protocol'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Protocol'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Protocol'
+          description: ''
+  /api/protocol/{id}/:
+    get:
+      operationId: protocol_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this protocol.
+        required: true
+      tags:
+      - protocol
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Protocol'
+          description: ''
+    put:
+      operationId: protocol_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this protocol.
+        required: true
+      tags:
+      - protocol
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Protocol'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Protocol'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Protocol'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Protocol'
+          description: ''
+    patch:
+      operationId: protocol_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this protocol.
+        required: true
+      tags:
+      - protocol
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedProtocol'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedProtocol'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedProtocol'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Protocol'
+          description: ''
+    delete:
+      operationId: protocol_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this protocol.
+        required: true
+      tags:
+      - protocol
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/session/:
+    get:
+      operationId: session_retrieve
+      tags:
+      - session
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/subject/:
+    get:
+      operationId: subject_list
+      tags:
+      - subject
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Subject'
+          description: ''
+    post:
+      operationId: subject_create
+      tags:
+      - subject
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Subject'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Subject'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Subject'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Subject'
+          description: ''
+  /api/subject/{id}/:
+    get:
+      operationId: subject_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this subject.
+        required: true
+      tags:
+      - subject
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Subject'
+          description: ''
+    put:
+      operationId: subject_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this subject.
+        required: true
+      tags:
+      - subject
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Subject'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Subject'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Subject'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Subject'
+          description: ''
+    patch:
+      operationId: subject_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this subject.
+        required: true
+      tags:
+      - subject
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedSubject'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedSubject'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedSubject'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Subject'
+          description: ''
+    delete:
+      operationId: subject_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this subject.
+        required: true
+      tags:
+      - subject
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/unit/:
+    get:
+      operationId: unit_list
+      tags:
+      - unit
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Unit'
+          description: ''
+    post:
+      operationId: unit_create
+      tags:
+      - unit
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Unit'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Unit'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Unit'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unit'
+          description: ''
+  /api/unit/{id}/:
+    get:
+      operationId: unit_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this unit.
+        required: true
+      tags:
+      - unit
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unit'
+          description: ''
+    put:
+      operationId: unit_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this unit.
+        required: true
+      tags:
+      - unit
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Unit'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Unit'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Unit'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unit'
+          description: ''
+    patch:
+      operationId: unit_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this unit.
+        required: true
+      tags:
+      - unit
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUnit'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedUnit'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUnit'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unit'
+          description: ''
+    delete:
+      operationId: unit_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this unit.
+        required: true
+      tags:
+      - unit
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/user/:
+    get:
+      operationId: user_list
+      tags:
+      - user
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+          description: ''
+    post:
+      operationId: user_create
+      tags:
+      - user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/User'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/User'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+  /api/user/{id}/:
+    get:
+      operationId: user_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this user.
+        required: true
+      tags:
+      - user
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+    put:
+      operationId: user_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this user.
+        required: true
+      tags:
+      - user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/User'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/User'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+    patch:
+      operationId: user_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this user.
+        required: true
+      tags:
+      - user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUser'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedUser'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUser'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+    delete:
+      operationId: user_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this user.
+        required: true
+      tags:
+      - user
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/variable/:
+    get:
+      operationId: variable_list
+      tags:
+      - variable
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Variable'
+          description: ''
+    post:
+      operationId: variable_create
+      tags:
+      - variable
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Variable'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Variable'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Variable'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Variable'
+          description: ''
+  /api/variable/{id}/:
+    get:
+      operationId: variable_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this variable.
+        required: true
+      tags:
+      - variable
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Variable'
+          description: ''
+    put:
+      operationId: variable_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this variable.
+        required: true
+      tags:
+      - variable
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Variable'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Variable'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Variable'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Variable'
+          description: ''
+    patch:
+      operationId: variable_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this variable.
+        required: true
+      tags:
+      - variable
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedVariable'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedVariable'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedVariable'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Variable'
+          description: ''
+    delete:
+      operationId: variable_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this variable.
+        required: true
+      tags:
+      - variable
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/whoami/:
+    get:
+      operationId: whoami_retrieve
+      tags:
+      - whoami
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          description: No response body
+components:
+  schemas:
+    Algorithm:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          description: name of the algorithm
+          maxLength: 100
+        category:
+          $ref: '#/components/schemas/CategoryEnum'
+      required:
+      - category
+      - id
+      - name
+    BiomarkerType:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        data:
+          type: object
+          additionalProperties:
+            type: array
+            items: {}
+          nullable: true
+          readOnly: true
+        is_continuous:
+          type: boolean
+          readOnly: true
+        is_categorical:
+          type: boolean
+          readOnly: true
+        name:
+          type: string
+          description: name of the biomarker type
+          maxLength: 100
+        description:
+          type: string
+          nullable: true
+          description: short description of the biomarker type
+        display:
+          type: boolean
+          description: True if this biomarker type will be displayed in the frontend,
+            False otherwise
+        color:
+          type: integer
+          description: Color index associated with this biomarker type. For plotting
+            purposes in the frontend
+        axis:
+          type: boolean
+          description: True/False if biomarker type displayed on LHS/RHS axis
+        stored_unit:
+          type: integer
+          description: unit for the value stored in :model:`pkpdapp.Biomarker`
+        dataset:
+          type: integer
+          description: dataset containing this biomarker measurement
+        display_unit:
+          type: integer
+          description: unit to use when sending or displaying biomarker values
+        stored_time_unit:
+          type: integer
+          description: unit for the time values stored in :model:`pkpdapp.Biomarker`
+        display_time_unit:
+          type: integer
+          description: unit to use when sending or displaying time values
+      required:
+      - data
+      - dataset
+      - display_time_unit
+      - display_unit
+      - id
+      - is_categorical
+      - is_continuous
+      - name
+      - stored_time_unit
+      - stored_unit
+    CategoryEnum:
+      enum:
+      - SA
+      - OP
+      - OT
+      type: string
+      description: |-
+        * `SA` - Sampling
+        * `OP` - Optimisation
+        * `OT` - Optimisation
+    Compound:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        efficacy_experiments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Efficacy'
+        name:
+          type: string
+          description: name of the compound
+          maxLength: 100
+        description:
+          type: string
+          description: short description of the compound
+        molecular_mass:
+          type: number
+          format: double
+          description: molecular mass for compound for conversion from mol to grams
+        compound_type:
+          $ref: '#/components/schemas/CompoundTypeEnum'
+        fraction_unbound_plasma:
+          type: number
+          format: double
+          nullable: true
+          description: fraction unbound plasma (unitless)
+        blood_to_plasma_ratio:
+          type: number
+          format: double
+          nullable: true
+          description: blood to plasma ratio (unitless)
+        intrinsic_clearence:
+          type: number
+          format: double
+          nullable: true
+          description: intrinsic clearance
+        intrinsic_clearence_assay:
+          $ref: '#/components/schemas/IntrinsicClearenceAssayEnum'
+        fraction_unbound_including_cells:
+          type: number
+          format: double
+          nullable: true
+          description: fraction unbound in plasma and red blood cells (unitless)
+        target_concentration:
+          type: number
+          format: double
+          nullable: true
+          description: target concentration
+        dissociation_constant:
+          type: number
+          format: double
+          nullable: true
+          description: dissociation constant
+        calculate_receptor_occupancy:
+          type: boolean
+          description: calculate receptor occupancy
+        is_soluble:
+          type: boolean
+          description: is the compound target soluble
+        molecular_mass_unit:
+          type: integer
+          description: unit for molecular mass (e.g. g/mol)
+        intrinsic_clearence_unit:
+          type: integer
+          description: unit for intrinsic clearance
+        target_concentration_unit:
+          type: integer
+          description: unit for target concentration
+        dissociation_unit:
+          type: integer
+          description: unit for dissociation constant
+      required:
+      - efficacy_experiments
+      - id
+      - molecular_mass
+      - name
+    CompoundTypeEnum:
+      enum:
+      - SM
+      - LM
+      type: string
+      description: |-
+        * `SM` - Small Molecule
+        * `LM` - Large Molecule
+    Dataset:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        biomarker_types:
+          type: array
+          items:
+            type: integer
+          readOnly: true
+        subjects:
+          type: array
+          items:
+            type: integer
+          readOnly: true
+        protocols:
+          type: array
+          items:
+            $ref: '#/components/schemas/Protocol'
+          readOnly: true
+        name:
+          type: string
+          description: name of the dataset
+          maxLength: 100
+        datetime:
+          type: string
+          format: date-time
+          nullable: true
+          description: date/time the experiment was conducted. All time measurements
+            are relative to this date/time, which is in YYYY-MM-DD HH:MM:SS format.
+            For example, 2020-07-18 14:30:59
+        description:
+          type: string
+          description: short description of the dataset
+        project:
+          type: integer
+          nullable: true
+          description: Project that "owns" this model
+      required:
+      - biomarker_types
+      - id
+      - name
+      - protocols
+      - subjects
+    DatasetCsv:
+      type: object
+      properties:
+        csv:
+          type: string
+          format: uri
+      required:
+      - csv
+    Dose:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        start_time:
+          type: number
+          format: double
+          description: starting time point of dose, see protocol for units
+        amount:
+          type: number
+          format: double
+          description: amount of compound administered over the duration, see protocol
+            for units. Rate of administration is assumed constant
+        duration:
+          type: number
+          format: double
+          description: Duration of dose administration, see protocol for units. Duration
+            must be greater than 0.
+        read_only:
+          type: boolean
+          description: true if object has been stored
+        datetime:
+          type: string
+          format: date-time
+          nullable: true
+          description: datetime the object was stored.
+        protocol:
+          type: integer
+          description: protocol containing this dose
+      required:
+      - amount
+      - id
+      - protocol
+      - start_time
+    DoseTypeEnum:
+      enum:
+      - D
+      - I
+      type: string
+      description: |-
+        * `D` - IV
+        * `I` - Extravascular
+    DosedPharmacokinetic:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        mappings:
+          type: array
+          items:
+            $ref: '#/components/schemas/PkpdMapping'
+        components:
+          type: string
+          readOnly: true
+        variables:
+          type: array
+          items:
+            type: integer
+          readOnly: true
+        mmt:
+          type: string
+          readOnly: true
+        read_only:
+          type: boolean
+          description: true if object has been stored
+        datetime:
+          type: string
+          format: date-time
+          nullable: true
+          description: datetime the object was stored.
+        name:
+          type: string
+          description: name of the model
+          maxLength: 100
+        dose_compartment:
+          type: string
+          nullable: true
+          description: compartment name to be dosed
+          maxLength: 100
+        time_max:
+          type: number
+          format: double
+          description: suggested time to simulate after the last dose (in the time
+            units specified by the mmt model)
+        project:
+          type: integer
+          nullable: true
+          description: Project that "owns" this model
+        pk_model:
+          type: integer
+          nullable: true
+          description: model
+        pd_model:
+          type: integer
+          nullable: true
+          description: PD part of model
+        protocol:
+          type: integer
+          nullable: true
+          description: dosing protocol
+      required:
+      - components
+      - id
+      - mappings
+      - mmt
+      - name
+      - variables
+    Efficacy:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          description: name of the experiment
+          maxLength: 100
+        c50:
+          type: number
+          format: double
+          description: half maximal effective concentration
+        hill_coefficient:
+          type: number
+          format: double
+          description: Hill coefficient measure of binding
+        c50_unit:
+          type: integer
+          description: unit for c50
+        compound:
+          type: integer
+          description: compound for efficacy experiment
+      required:
+      - c50
+      - c50_unit
+      - compound
+      - id
+      - name
+    FormEnum:
+      enum:
+      - N
+      - U
+      - LN
+      - F
+      - S
+      - E
+      - M
+      type: string
+      description: |-
+        * `N` - Normal
+        * `U` - Uniform
+        * `LN` - Log-Normal
+        * `F` - Fixed
+        * `S` - Sum
+        * `E` - Equation
+        * `M` - Model
+    Inference:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        log_likelihoods:
+          type: array
+          items:
+            $ref: '#/components/schemas/LogLikelihood'
+        read_only:
+          type: boolean
+          description: true if object has been stored
+        datetime:
+          type: string
+          format: date-time
+          nullable: true
+          description: datetime the object was stored.
+        name:
+          type: string
+          description: name of the dataset
+          maxLength: 100
+        description:
+          type: string
+          description: short description of what this inference does
+        initialization_strategy:
+          $ref: '#/components/schemas/InitializationStrategyEnum'
+        number_of_chains:
+          type: integer
+          description: number of chains
+        max_number_of_iterations:
+          type: integer
+          description: maximum number of iterations
+        burn_in:
+          type: integer
+          description: final iteration of burn-in
+        number_of_iterations:
+          type: integer
+          description: number of iterations calculated
+        time_elapsed:
+          type: integer
+          description: Elapsed run time for inference in seconds
+        number_of_function_evals:
+          type: integer
+          description: number of function evaluations
+        task_id:
+          type: string
+          nullable: true
+          description: If executing, this is the celery task id
+          maxLength: 40
+        metadata:
+          type: object
+          additionalProperties: {}
+          description: metadata for inference
+        project:
+          type: integer
+          description: Project that "owns" this inference object
+        algorithm:
+          type: integer
+          description: algorithm used to perform the inference
+        initialization_inference:
+          type: integer
+          nullable: true
+      required:
+      - id
+      - log_likelihoods
+      - name
+      - project
+    InferenceChain:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        data:
+          type: string
+          readOnly: true
+        outputs:
+          type: string
+          readOnly: true
+        inference:
+          type: integer
+          description: inference for this chain
+      required:
+      - data
+      - id
+      - inference
+      - outputs
+    InitializationStrategyEnum:
+      enum:
+      - D
+      - R
+      - F
+      type: string
+      description: |-
+        * `D` - Default Value of model
+        * `R` - Random from prior
+        * `F` - From other inference
+    IntrinsicClearenceAssayEnum:
+      enum:
+      - MS
+      - HC
+      type: string
+      description: |-
+        * `MS` - Microsomes
+        * `HC` - Hepatocytes
+    LogLikelihood:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        parameters:
+          type: array
+          items:
+            $ref: '#/components/schemas/LogLikelihoodParameter'
+        model:
+          type: array
+          items:
+            type: string
+          minLength: 2
+          maxLength: 2
+          nullable: true
+          readOnly: true
+        dataset:
+          type: integer
+          nullable: true
+          readOnly: true
+        time_variable:
+          type: integer
+          nullable: true
+          readOnly: true
+        is_a_prior:
+          type: boolean
+          readOnly: true
+        name:
+          type: string
+          description: name of log_likelihood.
+          maxLength: 100
+        description:
+          type: string
+          nullable: true
+          description: 'description of log_likelihood. For equations will be the code
+            of that equation using Python syntax: arg1 * arg2^arg3'
+        value:
+          type: number
+          format: double
+          nullable: true
+          description: set if a fixed value is required
+        time_independent_data:
+          type: boolean
+          description: 'True if biomarker_type refers to time-independent data. If
+            there are multiple timepoints in biomarker_type then only the first is
+            taken '
+        observed:
+          type: boolean
+          description: 'True if this log_likelihood is observed '
+        form:
+          $ref: '#/components/schemas/FormEnum'
+        inference:
+          type: integer
+          readOnly: true
+          description: 'Log_likelihood belongs to this inference object. '
+        variable:
+          type: integer
+          nullable: true
+          description: 'If form=MODEL, a variable (any) in the deterministic model. '
+        biomarker_type:
+          type: integer
+          nullable: true
+          description: data associated with this log_likelihood. This is used for
+            measurement data (observed=True) or for covariates (observed=False). The
+            random variable associated with this log_likelihood has the same shape
+            as this data. For covariates the subject ids in the data correspond to
+            the values of the random variable at that location.
+        protocol_filter:
+          type: integer
+          nullable: true
+          description: filter subject data on this protocol(null implies all subjects)
+        children:
+          type: array
+          items:
+            type: integer
+          readOnly: true
+      required:
+      - children
+      - dataset
+      - id
+      - inference
+      - is_a_prior
+      - model
+      - name
+      - parameters
+      - time_variable
+    LogLikelihoodParameter:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          description: name of log_likelihood parameter.
+          maxLength: 100
+        parent_index:
+          type: integer
+          nullable: true
+          description: parameter index for distribution and equation parameters. blank
+            for models (variable is used instead)
+        child_index:
+          type: integer
+          description: 'output index for all log_likelihoods. '
+        length:
+          type: integer
+          nullable: true
+          description: length of array representing parameter. null for scalar
+        parent:
+          type: integer
+          readOnly: true
+        child:
+          type: integer
+        variable:
+          type: integer
+          nullable: true
+          description: input model variable for this parameter.
+      required:
+      - child
+      - id
+      - name
+      - parent
+    Monolix:
+      type: object
+      properties:
+        data_csv:
+          type: string
+          format: uri
+          writeOnly: true
+        model_txt:
+          type: string
+          format: uri
+          writeOnly: true
+        project_mlxtran:
+          type: string
+          format: uri
+          writeOnly: true
+        data:
+          type: string
+          readOnly: true
+        pd_model:
+          type: string
+          readOnly: true
+        pk_model:
+          type: string
+          readOnly: true
+      required:
+      - data
+      - data_csv
+      - model_txt
+      - pd_model
+      - pk_model
+      - project_mlxtran
+    PatchedAlgorithm:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          description: name of the algorithm
+          maxLength: 100
+        category:
+          $ref: '#/components/schemas/CategoryEnum'
+    PatchedBiomarkerType:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        data:
+          type: object
+          additionalProperties:
+            type: array
+            items: {}
+          nullable: true
+          readOnly: true
+        is_continuous:
+          type: boolean
+          readOnly: true
+        is_categorical:
+          type: boolean
+          readOnly: true
+        name:
+          type: string
+          description: name of the biomarker type
+          maxLength: 100
+        description:
+          type: string
+          nullable: true
+          description: short description of the biomarker type
+        display:
+          type: boolean
+          description: True if this biomarker type will be displayed in the frontend,
+            False otherwise
+        color:
+          type: integer
+          description: Color index associated with this biomarker type. For plotting
+            purposes in the frontend
+        axis:
+          type: boolean
+          description: True/False if biomarker type displayed on LHS/RHS axis
+        stored_unit:
+          type: integer
+          description: unit for the value stored in :model:`pkpdapp.Biomarker`
+        dataset:
+          type: integer
+          description: dataset containing this biomarker measurement
+        display_unit:
+          type: integer
+          description: unit to use when sending or displaying biomarker values
+        stored_time_unit:
+          type: integer
+          description: unit for the time values stored in :model:`pkpdapp.Biomarker`
+        display_time_unit:
+          type: integer
+          description: unit to use when sending or displaying time values
+    PatchedCompound:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        efficacy_experiments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Efficacy'
+        name:
+          type: string
+          description: name of the compound
+          maxLength: 100
+        description:
+          type: string
+          description: short description of the compound
+        molecular_mass:
+          type: number
+          format: double
+          description: molecular mass for compound for conversion from mol to grams
+        compound_type:
+          $ref: '#/components/schemas/CompoundTypeEnum'
+        fraction_unbound_plasma:
+          type: number
+          format: double
+          nullable: true
+          description: fraction unbound plasma (unitless)
+        blood_to_plasma_ratio:
+          type: number
+          format: double
+          nullable: true
+          description: blood to plasma ratio (unitless)
+        intrinsic_clearence:
+          type: number
+          format: double
+          nullable: true
+          description: intrinsic clearance
+        intrinsic_clearence_assay:
+          $ref: '#/components/schemas/IntrinsicClearenceAssayEnum'
+        fraction_unbound_including_cells:
+          type: number
+          format: double
+          nullable: true
+          description: fraction unbound in plasma and red blood cells (unitless)
+        target_concentration:
+          type: number
+          format: double
+          nullable: true
+          description: target concentration
+        dissociation_constant:
+          type: number
+          format: double
+          nullable: true
+          description: dissociation constant
+        calculate_receptor_occupancy:
+          type: boolean
+          description: calculate receptor occupancy
+        is_soluble:
+          type: boolean
+          description: is the compound target soluble
+        molecular_mass_unit:
+          type: integer
+          description: unit for molecular mass (e.g. g/mol)
+        intrinsic_clearence_unit:
+          type: integer
+          description: unit for intrinsic clearance
+        target_concentration_unit:
+          type: integer
+          description: unit for target concentration
+        dissociation_unit:
+          type: integer
+          description: unit for dissociation constant
+    PatchedDataset:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        biomarker_types:
+          type: array
+          items:
+            type: integer
+          readOnly: true
+        subjects:
+          type: array
+          items:
+            type: integer
+          readOnly: true
+        protocols:
+          type: array
+          items:
+            $ref: '#/components/schemas/Protocol'
+          readOnly: true
+        name:
+          type: string
+          description: name of the dataset
+          maxLength: 100
+        datetime:
+          type: string
+          format: date-time
+          nullable: true
+          description: date/time the experiment was conducted. All time measurements
+            are relative to this date/time, which is in YYYY-MM-DD HH:MM:SS format.
+            For example, 2020-07-18 14:30:59
+        description:
+          type: string
+          description: short description of the dataset
+        project:
+          type: integer
+          nullable: true
+          description: Project that "owns" this model
+    PatchedDose:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        start_time:
+          type: number
+          format: double
+          description: starting time point of dose, see protocol for units
+        amount:
+          type: number
+          format: double
+          description: amount of compound administered over the duration, see protocol
+            for units. Rate of administration is assumed constant
+        duration:
+          type: number
+          format: double
+          description: Duration of dose administration, see protocol for units. Duration
+            must be greater than 0.
+        read_only:
+          type: boolean
+          description: true if object has been stored
+        datetime:
+          type: string
+          format: date-time
+          nullable: true
+          description: datetime the object was stored.
+        protocol:
+          type: integer
+          description: protocol containing this dose
+    PatchedDosedPharmacokinetic:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        mappings:
+          type: array
+          items:
+            $ref: '#/components/schemas/PkpdMapping'
+        components:
+          type: string
+          readOnly: true
+        variables:
+          type: array
+          items:
+            type: integer
+          readOnly: true
+        mmt:
+          type: string
+          readOnly: true
+        read_only:
+          type: boolean
+          description: true if object has been stored
+        datetime:
+          type: string
+          format: date-time
+          nullable: true
+          description: datetime the object was stored.
+        name:
+          type: string
+          description: name of the model
+          maxLength: 100
+        dose_compartment:
+          type: string
+          nullable: true
+          description: compartment name to be dosed
+          maxLength: 100
+        time_max:
+          type: number
+          format: double
+          description: suggested time to simulate after the last dose (in the time
+            units specified by the mmt model)
+        project:
+          type: integer
+          nullable: true
+          description: Project that "owns" this model
+        pk_model:
+          type: integer
+          nullable: true
+          description: model
+        pd_model:
+          type: integer
+          nullable: true
+          description: PD part of model
+        protocol:
+          type: integer
+          nullable: true
+          description: dosing protocol
+    PatchedInference:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        log_likelihoods:
+          type: array
+          items:
+            $ref: '#/components/schemas/LogLikelihood'
+        read_only:
+          type: boolean
+          description: true if object has been stored
+        datetime:
+          type: string
+          format: date-time
+          nullable: true
+          description: datetime the object was stored.
+        name:
+          type: string
+          description: name of the dataset
+          maxLength: 100
+        description:
+          type: string
+          description: short description of what this inference does
+        initialization_strategy:
+          $ref: '#/components/schemas/InitializationStrategyEnum'
+        number_of_chains:
+          type: integer
+          description: number of chains
+        max_number_of_iterations:
+          type: integer
+          description: maximum number of iterations
+        burn_in:
+          type: integer
+          description: final iteration of burn-in
+        number_of_iterations:
+          type: integer
+          description: number of iterations calculated
+        time_elapsed:
+          type: integer
+          description: Elapsed run time for inference in seconds
+        number_of_function_evals:
+          type: integer
+          description: number of function evaluations
+        task_id:
+          type: string
+          nullable: true
+          description: If executing, this is the celery task id
+          maxLength: 40
+        metadata:
+          type: object
+          additionalProperties: {}
+          description: metadata for inference
+        project:
+          type: integer
+          description: Project that "owns" this inference object
+        algorithm:
+          type: integer
+          description: algorithm used to perform the inference
+        initialization_inference:
+          type: integer
+          nullable: true
+    PatchedInferenceChain:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        data:
+          type: string
+          readOnly: true
+        outputs:
+          type: string
+          readOnly: true
+        inference:
+          type: integer
+          description: inference for this chain
+    PatchedPharmacodynamic:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        components:
+          type: string
+          readOnly: true
+        variables:
+          type: array
+          items:
+            type: integer
+          readOnly: true
+        mmt:
+          type: string
+        read_only:
+          type: boolean
+          description: true if object has been stored
+        datetime:
+          type: string
+          format: date-time
+          nullable: true
+          description: datetime the object was stored.
+        name:
+          type: string
+          description: name of the model
+          maxLength: 100
+        description:
+          type: string
+          description: short description of the model
+        time_max:
+          type: number
+          format: double
+          description: suggested maximum time to simulate for this model (in the time
+            units specified by the mmt model)
+        project:
+          type: integer
+          nullable: true
+          description: Project that "owns" this model
+    PatchedPharmacokinetic:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        read_only:
+          type: boolean
+          description: true if object has been stored
+        datetime:
+          type: string
+          format: date-time
+          nullable: true
+          description: datetime the object was stored.
+        name:
+          type: string
+          description: name of the model
+          maxLength: 100
+        description:
+          type: string
+          description: short description of the model
+        mmt:
+          type: string
+          description: the model represented using mmt (see https://myokit.readthedocs)
+        time_max:
+          type: number
+          format: double
+          description: suggested maximum time to simulate for this model (in the time
+            units specified by the mmt model)
+    PatchedProject:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        user_access:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProjectAccess'
+        name:
+          type: string
+          description: name of the project
+          maxLength: 100
+        description:
+          type: string
+          description: short description of the project
+        compound:
+          type: integer
+        users:
+          type: array
+          items:
+            type: integer
+          readOnly: true
+          description: users with access to this project
+    PatchedProjectAccess:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        read_only:
+          type: boolean
+          description: True if user has read access only
+        user:
+          type: integer
+        project:
+          type: integer
+          readOnly: true
+    PatchedProtocol:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        doses:
+          type: array
+          items:
+            $ref: '#/components/schemas/Dose'
+          readOnly: true
+        dose_ids:
+          type: array
+          items:
+            type: integer
+            writeOnly: true
+          writeOnly: true
+        dosed_pk_models:
+          type: array
+          items:
+            type: integer
+          readOnly: true
+        dataset:
+          type: string
+          readOnly: true
+        subjects:
+          type: array
+          items:
+            type: integer
+          readOnly: true
+        read_only:
+          type: boolean
+          description: true if object has been stored
+        datetime:
+          type: string
+          format: date-time
+          nullable: true
+          description: datetime the object was stored.
+        name:
+          type: string
+          description: name of the protocol
+          maxLength: 100
+        dose_type:
+          $ref: '#/components/schemas/DoseTypeEnum'
+        project:
+          type: integer
+          nullable: true
+          description: Project that "owns" this protocol.
+        compound:
+          type: integer
+          nullable: true
+          description: drug compound
+        time_unit:
+          type: integer
+          nullable: true
+          description: unit for the start_time and duration values stored in each
+            dose
+        amount_unit:
+          type: integer
+          nullable: true
+          description: unit for the amount value stored in each dose
+    PatchedSubject:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        id_in_dataset:
+          type: integer
+          description: unique id in the dataset
+        shape:
+          type: integer
+          description: Shape index associated with this subject. For plotting purposes
+            in the frontend
+        display:
+          type: boolean
+          description: True if this subject will be displayed in the frontend, False
+            otherwise
+        metadata:
+          type: string
+          description: subject metadata
+        dataset:
+          type: integer
+          description: dataset containing this subject
+        protocol:
+          type: integer
+          nullable: true
+          description: dosing protocol for this subject.
+    PatchedUnit:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        compatible_units:
+          type: array
+          items:
+            type: object
+            additionalProperties:
+              type: string
+          readOnly: true
+        symbol:
+          type: string
+          description: symbol for unit display
+          maxLength: 50
+        g:
+          type: number
+          format: double
+          description: grams exponent
+        m:
+          type: number
+          format: double
+          description: meters exponent
+        s:
+          type: number
+          format: double
+          description: seconds exponent
+        A:
+          type: number
+          format: double
+          description: ampere exponent
+        K:
+          type: number
+          format: double
+          description: kelvin exponent
+        cd:
+          type: number
+          format: double
+          description: candela exponent
+        mol:
+          type: number
+          format: double
+          description: mole exponent
+        multiplier:
+          type: number
+          format: double
+          description: multiplier in powers of 10
+    PatchedUser:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        username:
+          type: string
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        email:
+          type: string
+          format: email
+          title: Email address
+          maxLength: 254
+        profile:
+          allOf:
+          - $ref: '#/components/schemas/Profile'
+          readOnly: true
+        project_set:
+          type: array
+          items:
+            type: integer
+          readOnly: true
+    PatchedVariable:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        read_only:
+          type: boolean
+          description: true if object has been stored
+        datetime:
+          type: string
+          format: date-time
+          nullable: true
+          description: datetime the object was stored.
+        is_public:
+          type: boolean
+        lower_bound:
+          type: number
+          format: double
+          description: lowest possible value for this variable
+        upper_bound:
+          type: number
+          format: double
+          description: largest possible value for this variable
+        default_value:
+          type: number
+          format: double
+          description: default value for this variable
+        is_log:
+          type: boolean
+          description: True if default_value is stored as the log of this value
+        name:
+          type: string
+          description: name of the variable
+          maxLength: 100
+        binding:
+          type: string
+          nullable: true
+          description: myokit binding of the variable (e.g. time)
+          maxLength: 100
+        qname:
+          type: string
+          description: fully qualitifed name of the variable
+          maxLength: 200
+        constant:
+          type: boolean
+          description: True for a constant variable of the model, i.e. a parameter.
+            False if non-constant, i.e. an output of the model (default is True)
+        state:
+          type: boolean
+          description: True if it is a state variable of the model and has an initial
+            condition parameter (default is False)
+        color:
+          type: integer
+          description: Color index associated with this variable. For display purposes
+            in the frontend
+        display:
+          type: boolean
+          description: True if this variable will be displayed in the frontend, False
+            otherwise
+        axis:
+          type: boolean
+          description: False/True if biomarker type displayed on LHS/RHS axis
+        unit:
+          type: integer
+          nullable: true
+          description: variable values are in this unit (note this might be different
+            from the unit in the stored sbml)
+        pd_model:
+          type: integer
+          nullable: true
+          description: pharmacodynamic model
+        pk_model:
+          type: integer
+          nullable: true
+          description: pharmacokinetic model
+        dosed_pk_model:
+          type: integer
+          nullable: true
+          description: dosed pharmacokinetic model
+    Pharmacodynamic:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        components:
+          type: string
+          readOnly: true
+        variables:
+          type: array
+          items:
+            type: integer
+          readOnly: true
+        mmt:
+          type: string
+        read_only:
+          type: boolean
+          description: true if object has been stored
+        datetime:
+          type: string
+          format: date-time
+          nullable: true
+          description: datetime the object was stored.
+        name:
+          type: string
+          description: name of the model
+          maxLength: 100
+        description:
+          type: string
+          description: short description of the model
+        time_max:
+          type: number
+          format: double
+          description: suggested maximum time to simulate for this model (in the time
+            units specified by the mmt model)
+        project:
+          type: integer
+          nullable: true
+          description: Project that "owns" this model
+      required:
+      - components
+      - id
+      - name
+      - variables
+    PharmacodynamicSbml:
+      type: object
+      properties:
+        sbml:
+          type: string
+          writeOnly: true
+      required:
+      - sbml
+    Pharmacokinetic:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        read_only:
+          type: boolean
+          description: true if object has been stored
+        datetime:
+          type: string
+          format: date-time
+          nullable: true
+          description: datetime the object was stored.
+        name:
+          type: string
+          description: name of the model
+          maxLength: 100
+        description:
+          type: string
+          description: short description of the model
+        mmt:
+          type: string
+          description: the model represented using mmt (see https://myokit.readthedocs)
+        time_max:
+          type: number
+          format: double
+          description: suggested maximum time to simulate for this model (in the time
+            units specified by the mmt model)
+      required:
+      - id
+      - name
+    PkpdMapping:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        datetime:
+          type: string
+          format: date
+          readOnly: true
+        read_only:
+          type: boolean
+          readOnly: true
+        pkpd_model:
+          type: integer
+          description: PKPD model that this mapping is for
+        pk_variable:
+          type: integer
+          description: variable in PK part of model
+        pd_variable:
+          type: integer
+          description: variable in PD part of model
+      required:
+      - datetime
+      - id
+      - pd_variable
+      - pk_variable
+      - pkpd_model
+      - read_only
+    Profile:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        user:
+          type: integer
+      required:
+      - id
+      - user
+    Project:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        user_access:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProjectAccess'
+        name:
+          type: string
+          description: name of the project
+          maxLength: 100
+        description:
+          type: string
+          description: short description of the project
+        compound:
+          type: integer
+        users:
+          type: array
+          items:
+            type: integer
+          readOnly: true
+          description: users with access to this project
+      required:
+      - compound
+      - id
+      - name
+      - user_access
+      - users
+    ProjectAccess:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        read_only:
+          type: boolean
+          description: True if user has read access only
+        user:
+          type: integer
+        project:
+          type: integer
+          readOnly: true
+      required:
+      - id
+      - project
+      - user
+    Protocol:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        doses:
+          type: array
+          items:
+            $ref: '#/components/schemas/Dose'
+          readOnly: true
+        dose_ids:
+          type: array
+          items:
+            type: integer
+            writeOnly: true
+          writeOnly: true
+        dosed_pk_models:
+          type: array
+          items:
+            type: integer
+          readOnly: true
+        dataset:
+          type: string
+          readOnly: true
+        subjects:
+          type: array
+          items:
+            type: integer
+          readOnly: true
+        read_only:
+          type: boolean
+          description: true if object has been stored
+        datetime:
+          type: string
+          format: date-time
+          nullable: true
+          description: datetime the object was stored.
+        name:
+          type: string
+          description: name of the protocol
+          maxLength: 100
+        dose_type:
+          $ref: '#/components/schemas/DoseTypeEnum'
+        project:
+          type: integer
+          nullable: true
+          description: Project that "owns" this protocol.
+        compound:
+          type: integer
+          nullable: true
+          description: drug compound
+        time_unit:
+          type: integer
+          nullable: true
+          description: unit for the start_time and duration values stored in each
+            dose
+        amount_unit:
+          type: integer
+          nullable: true
+          description: unit for the amount value stored in each dose
+      required:
+      - dataset
+      - dose_ids
+      - dosed_pk_models
+      - doses
+      - id
+      - name
+      - subjects
+    Subject:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        id_in_dataset:
+          type: integer
+          description: unique id in the dataset
+        shape:
+          type: integer
+          description: Shape index associated with this subject. For plotting purposes
+            in the frontend
+        display:
+          type: boolean
+          description: True if this subject will be displayed in the frontend, False
+            otherwise
+        metadata:
+          type: string
+          description: subject metadata
+        dataset:
+          type: integer
+          description: dataset containing this subject
+        protocol:
+          type: integer
+          nullable: true
+          description: dosing protocol for this subject.
+      required:
+      - dataset
+      - id
+      - id_in_dataset
+    Unit:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        compatible_units:
+          type: array
+          items:
+            type: object
+            additionalProperties:
+              type: string
+          readOnly: true
+        symbol:
+          type: string
+          description: symbol for unit display
+          maxLength: 50
+        g:
+          type: number
+          format: double
+          description: grams exponent
+        m:
+          type: number
+          format: double
+          description: meters exponent
+        s:
+          type: number
+          format: double
+          description: seconds exponent
+        A:
+          type: number
+          format: double
+          description: ampere exponent
+        K:
+          type: number
+          format: double
+          description: kelvin exponent
+        cd:
+          type: number
+          format: double
+          description: candela exponent
+        mol:
+          type: number
+          format: double
+          description: mole exponent
+        multiplier:
+          type: number
+          format: double
+          description: multiplier in powers of 10
+      required:
+      - compatible_units
+      - id
+      - symbol
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        username:
+          type: string
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        email:
+          type: string
+          format: email
+          title: Email address
+          maxLength: 254
+        profile:
+          allOf:
+          - $ref: '#/components/schemas/Profile'
+          readOnly: true
+        project_set:
+          type: array
+          items:
+            type: integer
+          readOnly: true
+      required:
+      - id
+      - profile
+      - project_set
+      - username
+    Variable:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        read_only:
+          type: boolean
+          description: true if object has been stored
+        datetime:
+          type: string
+          format: date-time
+          nullable: true
+          description: datetime the object was stored.
+        is_public:
+          type: boolean
+        lower_bound:
+          type: number
+          format: double
+          description: lowest possible value for this variable
+        upper_bound:
+          type: number
+          format: double
+          description: largest possible value for this variable
+        default_value:
+          type: number
+          format: double
+          description: default value for this variable
+        is_log:
+          type: boolean
+          description: True if default_value is stored as the log of this value
+        name:
+          type: string
+          description: name of the variable
+          maxLength: 100
+        binding:
+          type: string
+          nullable: true
+          description: myokit binding of the variable (e.g. time)
+          maxLength: 100
+        qname:
+          type: string
+          description: fully qualitifed name of the variable
+          maxLength: 200
+        constant:
+          type: boolean
+          description: True for a constant variable of the model, i.e. a parameter.
+            False if non-constant, i.e. an output of the model (default is True)
+        state:
+          type: boolean
+          description: True if it is a state variable of the model and has an initial
+            condition parameter (default is False)
+        color:
+          type: integer
+          description: Color index associated with this variable. For display purposes
+            in the frontend
+        display:
+          type: boolean
+          description: True if this variable will be displayed in the frontend, False
+            otherwise
+        axis:
+          type: boolean
+          description: False/True if biomarker type displayed on LHS/RHS axis
+        unit:
+          type: integer
+          nullable: true
+          description: variable values are in this unit (note this might be different
+            from the unit in the stored sbml)
+        pd_model:
+          type: integer
+          nullable: true
+          description: pharmacodynamic model
+        pk_model:
+          type: integer
+          nullable: true
+          description: pharmacokinetic model
+        dosed_pk_model:
+          type: integer
+          nullable: true
+          description: dosed pharmacokinetic model
+      required:
+      - id
+      - name
+      - qname
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid

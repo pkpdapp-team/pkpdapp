@@ -8,6 +8,7 @@
 from .stored import StoredModel
 from .units import Unit
 from .compound import Compound
+from .efficacy_experiment import EfficacyExperiment
 from .project import Project, ProjectAccess
 from .protocol import Protocol
 from .dose import Dose
@@ -22,9 +23,11 @@ from .pharmacodynamic_model import (
 )
 from .pharmacokinetic_model import (
     PharmacokineticModel,
-    DosedPharmacokineticModel,
+)
+from .combined_model import (
+    CombinedModel,
     PkpdMapping,
-    set_administration,
+    DerivedVariable
 )
 from .dataset import Dataset
 from .variable import Variable
@@ -39,6 +42,13 @@ from .inference_results import (
     InferenceResult,
     InferenceFunctionResult,
     InferenceOutputResult,
+)
+from .simulation import (
+    Simulation,
+    SimulationYAxis,
+    SimulationCxLine,
+    SimulationSlider,
+    SimulationPlot,
 )
 from .inference import (
     Inference,

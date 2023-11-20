@@ -1,7 +1,10 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { TextField, Button, Box, Typography, CircularProgress } from '@mui/material';
-import { css } from '@emotion/react';
+import { Button, Box, Typography, CircularProgress, Container, CssBaseline, Stack, Alert } from '@mui/material';
+import { ReactComponent as PkpdAppIcon } from "../../logo_pkpdapp_with_text.svg";
+import TextField from '../../components/TextField';
+import { useAppDispatch } from '../../app/hooks';
+import { fetchCsrf } from './loginSlice';
 
 interface LoginFormInputs {
   username: string;
@@ -14,63 +17,42 @@ interface LoginProps {
   errorMessage?: string;
 }
 
-const formStyles = css({
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  margin: 'auto',
-  maxWidth: '500px',
-});
-
-const textFieldStyles = css({
-  marginBottom: '16px',
-});
-
-const buttonStyles = css({
-  marginTop: '16px',
-});
-
-const errorStyles = css({
-  color: 'red',
-  textAlign: 'center',
-  marginTop: '16px',
-});
-
 const Login: React.FC<LoginProps> = ({ onLogin, isLoading, errorMessage }) => {
-  const { register, handleSubmit } = useForm<LoginFormInputs>();
+  const { handleSubmit, control } = useForm<LoginFormInputs>();
+  const dispatch = useAppDispatch();
 
   const onSubmit = (data: LoginFormInputs) => {
     onLogin(data.username, data.password);
   };
 
   return (
-    <Box mt={10}>
-      <form onSubmit={handleSubmit(onSubmit)} css={formStyles}>
-        <Typography variant="h5">Login</Typography>
-        <TextField
-          type="text"
-          label="Username"
-          {...register('username')}
-          css={textFieldStyles}
-        />
-        <TextField
-          type="password"
-          label="Password"
-          {...register('password')}
-          css={textFieldStyles}
-        />
-        <Button
-          type="submit"
-          variant="contained"
-          color="primary"
-          disabled={isLoading}
-          css={buttonStyles}
-        >
-          {isLoading ? <CircularProgress size={24} /> : 'Login'}
-        </Button>
-        {errorMessage && <Typography css={errorStyles}>{errorMessage}</Typography>}
-      </form>
+    <Container component="main" maxWidth="xs">
+    <CssBaseline />
+    <form onSubmit={handleSubmit(onSubmit)}>
+    <Stack spacing={2} sx={{ marginTop: 10 }}>
+    <Box
+      display="flex"
+      justifyContent="center"
+      alignItems="center"
+    >
+      <PkpdAppIcon style={{ width: 250 }}/>
     </Box>
+      <Typography variant="h5">Login</Typography>
+      <TextField label="Username" name="username" control={control} textFieldProps={{autoComplete: "username"}} mode='onChange' />
+      <TextField label="Password" name="password" control={control} textFieldProps={{autoComplete: "password", type: "password"}} mode='onChange' />
+      <Button
+        type="submit"
+        variant="contained"
+        color="primary"
+        disabled={isLoading}
+      >
+        {isLoading ? <CircularProgress size={24} /> : 'Login'}
+      </Button>
+      {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
+
+    </Stack>
+    </form>
+    </Container>
   );
 };
 

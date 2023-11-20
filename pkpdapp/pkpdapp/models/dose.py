@@ -44,6 +44,21 @@ class DoseBase(models.Model):
         validators=[validate_duration]
     )
 
+    repeats = models.IntegerField(
+        default=1,
+        help_text=(
+            'Number of times to repeat the dose. '
+        ),
+    )
+
+    repeat_interval = models.FloatField(
+        default=1.0,
+        help_text=(
+            'Interval between repeated doses. '
+            'See protocol for units. '
+        ),
+    )
+
     class Meta:
         constraints = [
             models.CheckConstraint(
@@ -58,8 +73,13 @@ class DoseBase(models.Model):
     def save(self, force_insert=False, force_update=False, *args, **kwargs):
         super().save(force_insert, force_update, *args, **kwargs)
 
-        for dosed_pk_model in self.protocol.dosed_pk_models.all():
-            dosed_pk_model.update_simulator()
+        models = set()
+        for v in self.protocol.variables.all().select_related(
+            'dosed_pk_model'
+        ):
+            models.add(v.dosed_pk_model)
+        for m in models:
+            m.update_simulator()
 
     def is_same_as(self, other_dose):
         if self.duration != other_dose.duration:

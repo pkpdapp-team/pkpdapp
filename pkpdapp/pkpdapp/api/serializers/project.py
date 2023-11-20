@@ -26,10 +26,14 @@ class ProjectSerializer(serializers.ModelSerializer):
     user_access = ProjectAccessSerializer(
         source='projectaccess_set', many=True
     )
+    protocols = serializers.PrimaryKeyRelatedField(
+        many=True, read_only=True
+    )
 
     class Meta:
         model = Project
         fields = '__all__'
+        read_only_fields = ("created", )
 
     def create(self, validated_data):
         # save method of log_likelihood will create its own parameters,
@@ -45,6 +49,7 @@ class ProjectSerializer(serializers.ModelSerializer):
         return project
 
     def update(self, instance, validated_data):
+        print('project update', validated_data)
         users = validated_data.pop('projectaccess_set')
         old_accesses = list(instance.projectaccess_set.all())
         project = BaseProjectSerializer().update(

@@ -1,0 +1,123 @@
+[[model]]
+name: 1-compartment QSS TMDD PK Model + effect compartment
+author: Michael Gertz
+
+# Initial values:
+PKCompartment.Aa = 0
+PKCompartment.A1_t = 0
+PKCompartment.AT1_t = PKCompartment.CT1_0*PKCompartment.V1
+PKCompartment.AUC1_f = 0
+PKCompartment.AUC1_b = 0
+PKCompartment.AUC1_t = 0
+PKCompartment.AUCT1_f = 0
+PKCompartment.AUCT1_b = 0
+PKCompartment.AUCT1_t = 0
+PKCompartment.AUCe = 0
+PKCompartment.Ce = 0
+
+[environment]
+t = 0 in [h] bind time
+
+
+[PKCompartment]
+
+tlag = 1 in [h]
+	desc: absorption lag time from extravasc compartment (implementation tbd)
+
+ka = 1 in [1/h]
+    desc: first order absorption rate constant  
+
+F = 1 in [dimensionless]
+    desc: fraction absorbed 
+	
+V1 = 1 in [L]
+    desc: Volume of the central compartment	
+	
+CL = 1 in [L/h]
+    desc: Linear clearance from central compartment 
+
+CT1_0 = 100 in [pmol/L]
+	desc: baseline concentration of the target in the central compartment
+
+KSS = 1000 in [pmol/L]
+	desc: Apparent dissociation constant [KSS = (kint+koff)/kon], if kint << koff KSS ~= KD and if kint >> koff KSS > KD
+	
+kdeg = 0.05 in [1/h]
+	desc: target degradation rate constant
+
+kint = 0.05 in [1/h]
+	desc: complex internalization rate constant
+	
+ke0 = 0.1 in [1/h]
+	desc: equilibration rate constant effect compartment
+	
+Kp = 1 in [dimensionless]
+	desc: effect compartment to plasma partitioning coefficient
+
+
+b_term = C1_t - KSS - CT1_t in [pmol/L]
+	desc: b term of quadratic equation
+	
+c_term = C1_t * KSS in [pmol/L*pmol/L]
+	desc: c term of quadratic equation
+
+C1_t = A1_t/V1 in [pmol/L]
+    desc: Total concentration of drug in the central compartment	
+
+CT1_t = AT1_t/V1 in [pmol/L]	
+	desc: Total concentration of target in the central compartment	
+	
+C1_f = 0.5 * (b_term + (b_term^2+4*c_term)^0.5) in [pmol/L]
+	desc: Free concentration of drug in the central compartment
+
+C1_b = C1_t-C1_f in [pmol/L]
+	desc: Bound concentration of drug in the central compartment
+
+CT1_b = C1_b in [pmol/L]
+	desc: Bound concentration of target in the central compartment
+
+CT1_f = CT1_t-CT1_b in [pmol/L]
+	desc: Free concentration of target in the central compartment
+	
+	
+RO_Model = CT1_b/CT1_t*100 in [dimensionless]
+	desc: Receptor (Target) occupancy
+	
+PerInh = (1-CT1_f/CT1_t)*100 in [dimensionless]
+	desc: Percent inhbition relative to total target	
+	
+PerInh_Baseline = (1-CT1_f/CT1_0)*100 in [dimensionless]	
+	desc: Percent inhibition relative to the initial steady-state level of target	
+
+dot(Aa) = -ka*Aa in [pmol]
+    desc: Amount of drug in 'depo' compartment 
+
+dot(A1_t) = ka*Aa*F -CL*C1_f -kint*CT1_b*V1 in [pmol]
+    desc: Amount of free drug in central compartment 
+	
+dot(AT1_t) = kdeg*V1*(CT1_0 - CT1_f) -kint*CT1_b*V1 in [pmol]
+	desc: Amount of free target in central compartment
+
+dot(Ce) = ke0*(C1_f*Kp - Ce) in [pmol/L]	
+	desc: Concentration of drug in effect compartment 
+	
+dot(AUC1_f)= C1_f in [pmol/L*h]
+	desc: Free AUC of drug in central the compartment
+	
+dot(AUC1_b)= C1_b in [pmol/L*h]
+	desc: Bound AUC of drug in the central compartment
+
+dot(AUC1_t)= C1_t in [pmol/L*h]
+	desc: Total AUC of drug in central the central compartment	
+	
+dot(AUCT1_f)= CT1_f in [pmol/L*h]
+	desc: Free AUC of the target in the central compartment
+	
+dot(AUCT1_b)= CT1_b in [pmol/L*h]
+	desc: Bound AUC of the target in the central compartment
+
+dot(AUCT1_t)= CT1_t in [pmol/L*h]
+	desc: Total AUC of the target in the central compartment	
+	
+dot(AUCe)= Ce in [pmol/L*h]
+	desc: Free AUC of drug in the effect compartment

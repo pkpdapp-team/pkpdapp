@@ -13,8 +13,10 @@ import pints
 import numpy as np
 import scipy.stats as sps
 from pkpdapp.models import (
-    Variable, BiomarkerType,
-    MyokitForwardModel, Protocol,
+    Variable,
+    BiomarkerType,
+    MyokitForwardModel,
+    Protocol,
 )
 
 
@@ -66,26 +68,30 @@ class ODEop(theano.tensor.Op):
             self._cached_ode_model = self._ode_model.simulate
 
         if sensitivities:
+
             def function(x):
-                state, = self._cached_ode_model(np.array(x, dtype=np.float64))
+                (state,) = self._cached_ode_model(np.array(x, dtype=np.float64))
                 return state
+
         else:
+
             def function(x):
                 state = self._cached_ode_model(np.array(x, dtype=np.float64))
                 return state
+
         self._function = function
 
         if sensitivities:
+
             def vjp(x, gs):
-                _, sens = self._cached_ode_model(
-                    np.array(x, dtype=np.float64)
-                )
-                return [
-                    s.T.dot(g) for s, g in zip(sens, gs)
-                ]
+                _, sens = self._cached_ode_model(np.array(x, dtype=np.float64))
+                return [s.T.dot(g) for s, g in zip(sens, gs)]
+
         else:
+
             def vjp(x, g):
-                raise NotImplementedError('sensitivities have been turned off')
+                raise NotImplementedError("sensitivities have been turned off")
+
         self._vjp = vjp
 
     def infer_shape(self, fgraph, node, input_shapes):
@@ -93,9 +99,7 @@ class ODEop(theano.tensor.Op):
 
     def make_node(self, x):
         x = theano.tensor.as_tensor_variable(x)
-        outputs = [
-            theano.tensor.vector() for _ in range(self._n_outputs)
-        ]
+        outputs = [theano.tensor.vector() for _ in range(self._n_outputs)]
         return theano.tensor.Apply(self, [x], outputs)
 
     def perform(self, node, inputs_storage, output_storage):
@@ -108,7 +112,7 @@ class ODEop(theano.tensor.Op):
         x = inputs[0]
 
         # pass the VSP when asked for gradient
-        grad_op = ODEGradop('grad of ' + self.name, self._vjp, self._n_outputs)
+        grad_op = ODEGradop("grad of " + self.name, self._vjp, self._n_outputs)
         grad_op_apply = grad_op(x, *output_grads)
 
         return [grad_op_apply]
@@ -120,45 +124,39 @@ class LogLikelihoodParameter(models.Model):
     This model stores data on which input parameter this relationship
     referres to
     """
+
     name = models.CharField(
-        max_length=100,
-        help_text='name of log_likelihood parameter.'
+        max_length=100, help_text="name of log_likelihood parameter."
     )
     parent = models.ForeignKey(
-        'LogLikelihood',
-        related_name='parameters',
-        on_delete=models.CASCADE
+        "LogLikelihood", related_name="parameters", on_delete=models.CASCADE
     )
     parent_index = models.IntegerField(
-        blank=True, null=True,
+        blank=True,
+        null=True,
         help_text=(
-            'parameter index for distribution and equation parameters. '
-            'blank for models (variable is used instead)'
-        )
+            "parameter index for distribution and equation parameters. "
+            "blank for models (variable is used instead)"
+        ),
     )
     child = models.ForeignKey(
-        'LogLikelihood',
-        related_name='outputs',
-        on_delete=models.CASCADE
+        "LogLikelihood", related_name="outputs", on_delete=models.CASCADE
     )
     child_index = models.IntegerField(
-        default=0,
-        help_text=(
-            'output index for all log_likelihoods. '
-        )
+        default=0, help_text=("output index for all log_likelihoods. ")
     )
     variable = models.ForeignKey(
         Variable,
-        related_name='log_likelihood_parameters',
-        blank=True, null=True,
+        related_name="log_likelihood_parameters",
+        blank=True,
+        null=True,
         on_delete=models.PROTECT,
-        help_text='input model variable for this parameter.'
+        help_text="input model variable for this parameter.",
     )
     length = models.IntegerField(
-        blank=True, null=True,
-        help_text=(
-            'length of array representing parameter. null for scalar'
-        )
+        blank=True,
+        null=True,
+        help_text=("length of array representing parameter. null for scalar"),
     )
 
     def set_fixed(self, value):
@@ -177,14 +175,10 @@ class LogLikelihoodParameter(models.Model):
             _, _, subjects = child.get_data()
             self.length = len(subjects)
             self.save()
-        lower_param = LogLikelihoodParameter.objects.get(
-            parent=child, parent_index=0
-        )
+        lower_param = LogLikelihoodParameter.objects.get(parent=child, parent_index=0)
         lower_param.child.value = lower
         lower_param.child.save()
-        upper_param = LogLikelihoodParameter.objects.get(
-            parent=child, parent_index=1
-        )
+        upper_param = LogLikelihoodParameter.objects.get(parent=child, parent_index=1)
         upper_param.child.value = upper
         upper_param.child.save()
 
@@ -195,99 +189,93 @@ class LogLikelihood(models.Model):
     """
 
     inference = models.ForeignKey(
-        'Inference',
-        related_name='log_likelihoods',
+        "Inference",
+        related_name="log_likelihoods",
         on_delete=models.CASCADE,
-        help_text=(
-            'Log_likelihood belongs to this inference object. '
-        )
+        help_text=("Log_likelihood belongs to this inference object. "),
     )
 
-    name = models.CharField(
-        max_length=100,
-        help_text='name of log_likelihood.'
-    )
+    name = models.CharField(max_length=100, help_text="name of log_likelihood.")
 
     description = models.TextField(
-        blank=True, null=True,
+        blank=True,
+        null=True,
         help_text=(
-            'description of log_likelihood. For equations will be the '
-            'code of that equation using Python syntax: arg1 * arg2^arg3'
-        )
+            "description of log_likelihood. For equations will be the "
+            "code of that equation using Python syntax: arg1 * arg2^arg3"
+        ),
     )
 
     value = models.FloatField(
-        help_text='set if a fixed value is required',
-        blank=True, null=True,
+        help_text="set if a fixed value is required",
+        blank=True,
+        null=True,
     )
 
     children = models.ManyToManyField(
-        'LogLikelihood',
-        related_name='parents',
+        "LogLikelihood",
+        related_name="parents",
         symmetrical=False,
         through=LogLikelihoodParameter,
-        through_fields=('parent', 'child'),
+        through_fields=("parent", "child"),
     )
 
     variable = models.ForeignKey(
         Variable,
-        related_name='log_likelihoods',
-        blank=True, null=True,
+        related_name="log_likelihoods",
+        blank=True,
+        null=True,
         on_delete=models.PROTECT,
-        help_text=(
-            'If form=MODEL, a variable (any) in the deterministic model. '
-        )
+        help_text=("If form=MODEL, a variable (any) in the deterministic model. "),
     )
 
     biomarker_type = models.ForeignKey(
         BiomarkerType,
         on_delete=models.PROTECT,
-        blank=True, null=True,
+        blank=True,
+        null=True,
         help_text=(
-            'data associated with this log_likelihood. '
-            'This is used for measurement data (observed=True) '
-            'or for covariates (observed=False). '
-            'The random variable associated with this log_likelihood '
-            'has the same shape as this data. '
-            'For covariates the subject ids in the data correspond '
-            'to the values of the random variable at that location.'
-        )
+            "data associated with this log_likelihood. "
+            "This is used for measurement data (observed=True) "
+            "or for covariates (observed=False). "
+            "The random variable associated with this log_likelihood "
+            "has the same shape as this data. "
+            "For covariates the subject ids in the data correspond "
+            "to the values of the random variable at that location."
+        ),
     )
 
     time_independent_data = models.BooleanField(
         default=True,
         help_text=(
-            'True if biomarker_type refers to time-independent data. '
-            'If there are multiple timepoints in biomarker_type then only '
-            'the first is taken '
-        )
+            "True if biomarker_type refers to time-independent data. "
+            "If there are multiple timepoints in biomarker_type then only "
+            "the first is taken "
+        ),
     )
 
     observed = models.BooleanField(
-        default=False,
-        help_text=(
-            'True if this log_likelihood is observed '
-        )
+        default=False, help_text=("True if this log_likelihood is observed ")
     )
 
     protocol_filter = models.ForeignKey(
         Protocol,
         on_delete=models.PROTECT,
-        blank=True, null=True,
+        blank=True,
+        null=True,
         help_text=(
-            'filter subject data on this protocol'
-            '(null implies all subjects)'
-        )
+            "filter subject data on this protocol" "(null implies all subjects)"
+        ),
     )
 
     class Form(models.TextChoices):
-        NORMAL = 'N', 'Normal'
-        UNIFORM = 'U', 'Uniform'
-        LOGNORMAL = 'LN', 'Log-Normal'
-        FIXED = 'F', 'Fixed'
-        SUM = 'S', 'Sum'
-        EQUATION = 'E', 'Equation'
-        MODEL = 'M', 'Model'
+        NORMAL = "N", "Normal"
+        UNIFORM = "U", "Uniform"
+        LOGNORMAL = "LN", "Log-Normal"
+        FIXED = "F", "Fixed"
+        SUM = "S", "Sum"
+        EQUATION = "E", "Equation"
+        MODEL = "M", "Model"
 
     form = models.CharField(
         max_length=2,
@@ -300,37 +288,29 @@ class LogLikelihood(models.Model):
             models.CheckConstraint(
                 check=(
                     ~(
-                        Q(form='F') &
-                        Q(value__isnull=True) &
-                        Q(biomarker_type__isnull=True)
+                        Q(form="F")
+                        & Q(value__isnull=True)
+                        & Q(biomarker_type__isnull=True)
                     )
                 ),
                 name=(
-                    '%(class)s: fixed log_likelihood must have a value '
-                    'or biomarker_type'
-                )
+                    "%(class)s: fixed log_likelihood must have a value "
+                    "or biomarker_type"
+                ),
             ),
             models.CheckConstraint(
-                check=(
-                    ~(Q(form='M') & Q(variable__isnull=True))
-                ),
-                name=(
-                    '%(class)s: model log_likelihood must have a variable'
-                )
+                check=(~(Q(form="M") & Q(variable__isnull=True))),
+                name=("%(class)s: model log_likelihood must have a variable"),
             ),
             models.CheckConstraint(
                 check=(
                     ~(
-                        (
-                            Q(form='F') | Q(form='S') | Q(form='M')
-                        ) &
-                        Q(biomarker_type__isnull=False) &
-                        Q(protocol_filter=False)
+                        (Q(form="F") | Q(form="S") | Q(form="M"))
+                        & Q(biomarker_type__isnull=False)
+                        & Q(protocol_filter=False)
                     )
                 ),
-                name=(
-                    '%(class)s: deterministic log_likelihoods cannot have data'
-                )
+                name=("%(class)s: deterministic log_likelihoods cannot have data"),
             ),
         ]
 
@@ -344,9 +324,9 @@ class LogLikelihood(models.Model):
     def from_db(cls, db, field_names, values):
         instance = super().from_db(db, field_names, values)
         # fix for infinite recursion when deleting inference
-        if 'form' in field_names:
+        if "form" in field_names:
             instance.__original_form = instance.form
-        if 'variable' in field_names:
+        if "variable" in field_names:
             instance.__original_variable = instance.variable
         return instance
 
@@ -365,19 +345,16 @@ class LogLikelihood(models.Model):
 
     def is_a_distribution(self):
         return (
-            self.form == self.Form.NORMAL or
-            self.form == self.Form.UNIFORM or
-            self.form == self.Form.LOGNORMAL
+            self.form == self.Form.NORMAL
+            or self.form == self.Form.UNIFORM
+            or self.form == self.Form.LOGNORMAL
         )
 
     def is_a_prior(self):
         """
         True for distributions
         """
-        return (
-            self.is_a_distribution() and
-            not self.observed
-        )
+        return self.is_a_distribution() and not self.observed
 
     def has_data(self):
         """
@@ -395,29 +372,21 @@ class LogLikelihood(models.Model):
                 return values
         elif self.form == self.Form.EQUATION:
             params = self.get_noise_log_likelihoods()
-            param_values = [
-                p.sample() for p in params
-            ]
+            param_values = [p.sample() for p in params]
 
-            args = [
-                'arg{}'.format(i)
-                for i, _ in enumerate(param_values)
-            ]
-            args = ','.join(args)
+            args = ["arg{}".format(i) for i, _ in enumerate(param_values)]
+            args = ",".join(args)
             code = (
-                'import numpy as np\n'
-                'def fun({}):\n'
-                '  return {}\n'
-                'result = np.vectorize(fun)({})\n'
+                "import numpy as np\n"
+                "def fun({}):\n"
+                "  return {}\n"
+                "result = np.vectorize(fun)({})\n"
             ).format(args, self.description, args)
 
-            lcls = {
-                'arg{}'.format(i): param
-                for i, param in enumerate(param_values)
-            }
+            lcls = {"arg{}".format(i): param for i, param in enumerate(param_values)}
 
             exec(code, None, lcls)
-            return lcls['result']
+            return lcls["result"]
 
         # otherwise must be a distribtion
 
@@ -455,30 +424,25 @@ class LogLikelihood(models.Model):
             noise_params = self.get_noise_params()
         if self.form == self.Form.NORMAL:
             output_values += np.random.normal(
-                loc=noise_params[0],
-                scale=noise_params[1],
-                size=output_values.shape
+                loc=noise_params[0], scale=noise_params[1], size=output_values.shape
             )
         elif self.form == self.Form.LOGNORMAL:
-            output_values += (
-                np.random.lognormal(
-                    mean=noise_params[0],
-                    sigma=noise_params[1],
-                    size=output_values.shape
-                )
+            output_values += np.random.lognormal(
+                mean=noise_params[0], sigma=noise_params[1], size=output_values.shape
             )
         return output_values
 
     def get_length_by_index(self):
-        outputs = list(self.outputs.order_by('child_index'))
+        outputs = list(self.outputs.order_by("child_index"))
         if len(outputs) == 0:
             n_distinct_outputs = 0
         else:
             n_distinct_outputs = outputs[-1].child_index + 1
         length_by_index = [()] * n_distinct_outputs
         for output in outputs:
-            length_by_index[output.child_index] = \
+            length_by_index[output.child_index] = (
                 1 if output.length is None else output.length
+            )
         return length_by_index
 
     def get_total_length(self):
@@ -491,10 +455,14 @@ class LogLikelihood(models.Model):
         get inference results, respecting order of subjects
         defined by this log_likelihood
         """
-        return self.inference_results.filter(
-            chain=chain,
-            iteration=iteration,
-        ).order_by('subject').values_list('value', flat=True)
+        return (
+            self.inference_results.filter(
+                chain=chain,
+                iteration=iteration,
+            )
+            .order_by("subject")
+            .values_list("value", flat=True)
+        )
 
     def noise_range(self, output_values, noise_params=None):
         """
@@ -507,19 +475,17 @@ class LogLikelihood(models.Model):
         if self.form == self.Form.NORMAL:
             for i in range(len(output_values)):
                 dist = sps.norm(
-                    loc=output_values[i] + noise_params[0],
-                    scale=noise_params[1]
+                    loc=output_values[i] + noise_params[0], scale=noise_params[1]
                 )
-                output_values_min[i] = dist.ppf(.1)
-                output_values_max[i] = dist.ppf(.9)
+                output_values_min[i] = dist.ppf(0.1)
+                output_values_max[i] = dist.ppf(0.9)
         elif self.form == self.Form.LOGNORMAL:
             for i in range(len(output_values)):
                 dist = sps.lognorm(
-                    loc=output_values[i] + noise_params[0],
-                    scale=noise_params[1]
+                    loc=output_values[i] + noise_params[0], scale=noise_params[1]
                 )
-                output_values_min[i] = dist.ppf(.1)
-                output_values_max[i] = dist.ppf(.9)
+                output_values_min[i] = dist.ppf(0.1)
+                output_values_max[i] = dist.ppf(0.9)
 
         return output_values_min, output_values_max
 
@@ -530,10 +496,7 @@ class LogLikelihood(models.Model):
         # sure to choose the right one
 
         if parent is not None:
-            param = LogLikelihoodParameter.objects.get(
-                parent=parent,
-                child=self
-            )
+            param = LogLikelihoodParameter.objects.get(parent=parent, child=self)
 
             # outputs for models are assumed to be unique and ordered
             # by parent id, outputs for the rest can be non-unique, so use
@@ -555,7 +518,7 @@ class LogLikelihood(models.Model):
 
         values, times, subjects = self.get_data()
 
-        outputs = list(self.outputs.order_by('child_index'))
+        outputs = list(self.outputs.order_by("child_index"))
         if len(outputs) == 0:
             n_distinct_outputs = 0
         else:
@@ -566,8 +529,9 @@ class LogLikelihood(models.Model):
         if self.is_a_distribution():
             length_by_index = [()] * n_distinct_outputs
             for output in outputs:
-                length_by_index[output.child_index] = \
+                length_by_index[output.child_index] = (
                     1 if output.length is None else output.length
+                )
             total_length = sum(length_by_index)
 
             # set shape and check total length of outputs is < this shape
@@ -575,15 +539,15 @@ class LogLikelihood(models.Model):
                 shape = ()
                 if total_length > 1:
                     raise RuntimeError(
-                        'log_likelihood {} is scalar but total length of '
-                        'outputs is {}'.format(self.name, total_length)
+                        "log_likelihood {} is scalar but total length of "
+                        "outputs is {}".format(self.name, total_length)
                     )
             else:
                 shape = (len(values),)
                 if total_length > shape[0]:
                     raise RuntimeError(
-                        'log_likelihood {} has data of length {} but total '
-                        'length of outputs is {}'.format(
+                        "log_likelihood {} has data of length {} but total "
+                        "length of outputs is {}".format(
                             self.name, shape[0], total_length
                         )
                     )
@@ -599,23 +563,17 @@ class LogLikelihood(models.Model):
             mean, sigma = self.get_noise_log_likelihoods()
             mean = mean._create_pymc3_model(pm_model, self, ops)
             sigma = sigma._create_pymc3_model(pm_model, self, ops)
-            op = pm.Normal(
-                name, mean, sigma, observed=observed, shape=shape
-            )
+            op = pm.Normal(name, mean, sigma, observed=observed, shape=shape)
         elif self.form == self.Form.LOGNORMAL:
             mean, sigma = self.get_noise_log_likelihoods()
             mean = mean._create_pymc3_model(pm_model, self, ops)
             sigma = sigma._create_pymc3_model(pm_model, self, ops)
-            op = pm.LogNormal(
-                name, mean, sigma, observed=observed, shape=shape
-            )
+            op = pm.LogNormal(name, mean, sigma, observed=observed, shape=shape)
         elif self.form == self.Form.UNIFORM:
             lower, upper = self.get_noise_log_likelihoods()
             lower = lower._create_pymc3_model(pm_model, self, ops)
             upper = upper._create_pymc3_model(pm_model, self, ops)
-            op = pm.Uniform(
-                name, lower, upper, observed=observed, shape=shape
-            )
+            op = pm.Uniform(name, lower, upper, observed=observed, shape=shape)
         elif self.form == self.Form.MODEL:
             # ASSUMPTIONS / LIMITATIONS: - parents of models must be observed
             # random variables (e.g. can't have equation to, say, measure 2 *
@@ -628,9 +586,7 @@ class LogLikelihood(models.Model):
             subjects = []
             all_subjects = set()
             for parent in parents:
-                output = LogLikelihoodParameter.objects.get(
-                    parent=parent, child=self
-                )
+                output = LogLikelihoodParameter.objects.get(parent=parent, child=self)
                 _, this_times, this_subjects = parent.get_data()
                 output_names.append(output.variable.qname)
                 times.append(this_times)
@@ -644,10 +600,7 @@ class LogLikelihood(models.Model):
             # scalar values then we can just run 1 sim, if any are vector
             # values then each value is a different parameter for each subject,
             # so we need to run a sim for every subject
-            all_params_scalar = all([
-                p.length is None
-                for p in self.parameters.all()
-            ])
+            all_params_scalar = all([p.length is None for p in self.parameters.all()])
 
             if all_params_scalar:
                 subjects = None
@@ -671,14 +624,16 @@ class LogLikelihood(models.Model):
                 # max_length and create a 2d tensor to pass to the model with
                 # shape (n_params, max_length)
                 if not all_params_scalar:
-                    max_length = max([
-                        param.length if param.length is not None else 1
-                        for param in fitted_parameters
-                    ])
+                    max_length = max(
+                        [
+                            param.length if param.length is not None else 1
+                            for param in fitted_parameters
+                        ]
+                    )
                     if max_length != n_subjects:
                         raise RuntimeError(
-                            'Error: n_subjects given by params is '
-                            'different to n_subjects given by output data.'
+                            "Error: n_subjects given by params is "
+                            "different to n_subjects given by output data."
                         )
                     for index in range(len(all_params)):
                         param = fitted_parameters[index]
@@ -707,14 +662,9 @@ class LogLikelihood(models.Model):
             params = self.get_noise_log_likelihoods()
             pymc3_params = []
             for param in params:
-                param = param._create_pymc3_model(
-                    pm_model, self, ops
-                )
+                param = param._create_pymc3_model(pm_model, self, ops)
                 pymc3_params.append(param)
-            lcls = {
-                'arg{}'.format(i): param
-                for i, param in enumerate(pymc3_params)
-            }
+            lcls = {"arg{}".format(i): param for i, param in enumerate(pymc3_params)}
             op = eval(self.description, None, lcls)
         elif self.form == self.Form.FIXED:
             if self.biomarker_type is None:
@@ -722,7 +672,7 @@ class LogLikelihood(models.Model):
             else:
                 op = theano.shared(np.array(values))
         else:
-            raise RuntimeError('unrecognised form', self.form)
+            raise RuntimeError("unrecognised form", self.form)
 
         # split the op into its distinct outputs
         if self.form == self.Form.MODEL:
@@ -733,9 +683,7 @@ class LogLikelihood(models.Model):
             indexed_list = []
             current_index = 0
             for length in length_by_index:
-                indexed_list.append(
-                    op[current_index:current_index + length]
-                )
+                indexed_list.append(op[current_index : current_index + length])
             ops[name] = indexed_list
 
         # if no parent then we don't need to return anything
@@ -751,23 +699,19 @@ class LogLikelihood(models.Model):
                 ll._create_pymc3_model(pm_model, None, ops)
         return pm_model
 
-    def create_forward_model(
-            self, output_names, output_times, output_subjects=None
-    ):
+    def create_forward_model(self, output_names, output_times, output_subjects=None):
         """
         create pints forwards model for this log_likelihood.
         """
         model = self.get_model()
         myokit_model = model.get_myokit_model()
+        print(myokit_model.code())
         myokit_simulator = model.get_myokit_simulator()
 
         fixed_parameters_dict = {
             param.variable.qname: param.child.value
             for param in self.parameters.all()
-            if (
-                not param.child.is_random() and
-                param.variable is not None
-            )
+            if (not param.child.is_random() and param.variable is not None)
         }
 
         conversion_factors = []
@@ -776,29 +720,29 @@ class LogLikelihood(models.Model):
             myokit_variable_sbml = myokit_model.get(name)
 
             conversion_factor = myokit.Unit.conversion_factor(
-                myokit_variable_sbml.unit(),
-                variable.unit.get_myokit_unit()
+                myokit_variable_sbml.unit(), variable.unit.get_myokit_unit()
             ).value()
 
             conversion_factors.append(conversion_factor)
 
         pints_model = MyokitForwardModel(
-            myokit_simulator, myokit_model,
-            output_names, conversion_factors, output_times,
-            output_subjects, fixed_parameters_dict
+            myokit_simulator,
+            myokit_model,
+            output_names,
+            conversion_factors,
+            output_times,
+            output_subjects,
+            fixed_parameters_dict,
         )
 
         fitted_parameters = [
-            self.get_param(name)
-            for name in pints_model.variable_parameter_names()
+            self.get_param(name) for name in pints_model.variable_parameter_names()
         ]
 
         return pints_model, fitted_parameters
 
     def get_param(self, qname):
-        param = LogLikelihoodParameter.objects.get(
-            parent=self, variable__qname=qname
-        )
+        param = LogLikelihoodParameter.objects.get(parent=self, variable__qname=qname)
         return param
 
     def filter_data_by_protocol(self, df):
@@ -811,9 +755,9 @@ class LogLikelihood(models.Model):
             return df
         else:
             filtered_subjects = self.protocol_filter.subjects.values_list(
-                'id', flat=True
+                "id", flat=True
             )
-            return df.loc[df['subjects'].isin(filtered_subjects)]
+            return df.loc[df["subjects"].isin(filtered_subjects)]
 
     def get_data(self, fake=False):
         """
@@ -822,18 +766,16 @@ class LogLikelihood(models.Model):
         """
         if self.biomarker_type:
             df = self.filter_data_by_protocol(
-                self.biomarker_type.data(
-                    first_time_only=self.time_independent_data
-                )
+                self.biomarker_type.data(first_time_only=self.time_independent_data)
             )
 
             if df is None or len(df) == 0:
                 return None, None, None
 
             return (
-                df['values'].tolist(),
-                df['times'].tolist(),
-                df['subjects'].tolist()
+                df["values"].tolist(),
+                df["times"].tolist(),
+                df["subjects"].tolist(),
             )
         else:
             return None, None, None
@@ -844,11 +786,9 @@ class LogLikelihood(models.Model):
         """
         noise_parameters = self.parameters.filter(
             parent_index__isnull=False,
-        ).order_by('parent_index')
+        ).order_by("parent_index")
 
-        return [
-            p.name for p in noise_parameters
-        ]
+        return [p.name for p in noise_parameters]
 
     def get_noise_log_likelihoods(self):
         """
@@ -856,11 +796,9 @@ class LogLikelihood(models.Model):
         """
         noise_parameters = self.parameters.filter(
             parent_index__isnull=False,
-        ).order_by('parent_index')
+        ).order_by("parent_index")
 
-        return [
-            p.child for p in noise_parameters
-        ]
+        return [p.child for p in noise_parameters]
 
     def get_noise_params(self):
         """
@@ -868,9 +806,7 @@ class LogLikelihood(models.Model):
         if any noise params have a prior on them then
         this is sampled
         """
-        return [
-            child.sample() for child in self.get_noise_log_likelihoods()
-        ]
+        return [child.sample() for child in self.get_noise_log_likelihoods()]
 
     def create_pints_transform(self):
         if False:
@@ -901,20 +837,21 @@ class LogLikelihood(models.Model):
             noise_param = self.parameters.get(index=1)
             if noise_param.child.form == noise_param.child.Form.FIXED:
                 value = noise_param.value
-                return pints.GaussianKnownSigmaLogLikelihood(
-                    problem, value
-                ), fitted_children
+                return (
+                    pints.GaussianKnownSigmaLogLikelihood(problem, value),
+                    fitted_children,
+                )
             else:
-                return pints.GaussianLogLikelihood(
-                    problem
-                ), fitted_children + [noise_param.child]
+                return pints.GaussianLogLikelihood(problem), fitted_children + [
+                    noise_param.child
+                ]
         elif self.form == LogLikelihood.Form.LOGNORMAL:
             noise_param = self.parameters.get(index=1)
-            return pints.LogNormalLogLikelihood(
-                problem
-            ), fitted_children + [noise_param.child]
+            return pints.LogNormalLogLikelihood(problem), fitted_children + [
+                noise_param.child
+            ]
 
-        raise RuntimeError('unknown log_likelihood form')
+        raise RuntimeError("unknown log_likelihood form")
 
     def get_model(self, variable=None):
         """
@@ -937,9 +874,9 @@ class LogLikelihood(models.Model):
         if model is None:
             return []
         else:
-            return model.variables.filter(
-                Q(constant=True) | Q(state=True)
-            ).exclude(name="time")
+            return model.variables.filter(Q(constant=True) | Q(state=True)).exclude(
+                name="time"
+            )
 
     def get_model_outputs(self):
         """
@@ -950,17 +887,15 @@ class LogLikelihood(models.Model):
         if model is None:
             return []
         else:
-            return model.variables.filter(
-                Q(constant=False)
-            ).exclude(name="time")
+            return model.variables.filter(Q(constant=False)).exclude(name="time")
 
     def save(self, force_insert=False, force_update=False, *args, **kwargs):
         created = not self.pk
 
         set_defaults = (
-            created or
-            self.get_model() != self.get_model(self.__original_variable) or
-            self.form != self.__original_form
+            created
+            or self.get_model() != self.get_model(self.__original_variable)
+            or self.form != self.__original_form
         )
 
         if set_defaults:
@@ -992,10 +927,9 @@ class LogLikelihood(models.Model):
 
     def create_model_family(self):
         for model_variable in self.get_model_variables():
-            if model_variable.constant:
-                name = model_variable.qname
-            else:
-                name = 'initial ' + model_variable.qname
+            if not model_variable.constant:
+                continue
+            name = model_variable.qname
             child = LogLikelihood.objects.create(
                 name=name,
                 inference=self.inference,
@@ -1004,7 +938,8 @@ class LogLikelihood(models.Model):
                 form=self.Form.FIXED,
             )
             LogLikelihoodParameter.objects.create(
-                parent=self, child=child,
+                parent=self,
+                child=child,
                 variable=model_variable,
                 name=model_variable.qname,
             )
@@ -1049,9 +984,17 @@ class LogLikelihood(models.Model):
             ]
 
             if variable is not None:
+                mean = variable.get_default_value()
+                if (
+                    variable.lower_bound is not None
+                    and variable.upper_bound is not None
+                ):
+                    sigma = 0.1 * (variable.upper_bound - variable.lower_bound)
+                else:
+                    sigma = 0.1 * mean
                 defaults = [
-                    variable.get_default_value(),
-                    0.1 * (variable.upper_bound - variable.lower_bound),
+                    mean,
+                    sigma,
                 ]
             else:
                 defaults = [0.0, 1.0]
@@ -1062,9 +1005,17 @@ class LogLikelihood(models.Model):
             ]
 
             if variable is not None:
+                mean = variable.get_default_value()
+                if (
+                    variable.lower_bound is not None
+                    and variable.upper_bound is not None
+                ):
+                    sigma = 0.1 * (variable.upper_bound - variable.lower_bound)
+                else:
+                    sigma = 0.1 * mean
                 defaults = [
-                    variable.get_default_value(),
-                    0.1 * (variable.upper_bound - variable.lower_bound),
+                    mean,
+                    sigma,
                 ]
             else:
                 defaults = [0.0, 1.0]
@@ -1075,18 +1026,24 @@ class LogLikelihood(models.Model):
             ]
 
             if variable is not None:
+                if variable.lower_bound is not None:
+                    lower = variable.lower_bound
+                else:
+                    lower = 0.1 * variable.get_default_value()
+                if variable.upper_bound is not None:
+                    upper = variable.upper_bound
+                else:
+                    upper = 10.0 * variable.get_default_value()
                 defaults = [
-                    variable.lower_bound,
-                    variable.upper_bound,
+                    lower,
+                    upper,
                 ]
             else:
                 defaults = [0.0, 1.0]
         else:
             names = []
             defaults = []
-        for param_index, (name, default) in enumerate(
-                zip(names, defaults)
-        ):
+        for param_index, (name, default) in enumerate(zip(names, defaults)):
             child = LogLikelihood.objects.create(
                 name=name,
                 inference=self.inference,
@@ -1094,7 +1051,8 @@ class LogLikelihood(models.Model):
                 form=self.Form.FIXED,
             )
             LogLikelihoodParameter.objects.create(
-                parent=self, child=child,
+                parent=self,
+                child=child,
                 parent_index=param_index,
                 name=name,
             )
@@ -1103,26 +1061,24 @@ class LogLikelihood(models.Model):
         """
         create stored log_likelihood, ignoring children for now
         """
-        print('create_stored_log_likelihood', self.name)
+        print("create_stored_log_likelihood", self.name)
         new_variable = None
         if self.variable is not None:
             old_model = self.variable.get_model()
             new_model = new_models[old_model.id]
             variable_qname = self.variable.qname
 
-            new_variable = new_model.variables.get(
-                qname=variable_qname
-            )
+            new_variable = new_model.variables.get(qname=variable_qname)
 
         stored_log_likelihood_kwargs = {
-            'inference': inference,
-            'name': self.name,
-            'value': self.value,
-            'variable': new_variable,
-            'biomarker_type': self.biomarker_type,
-            'observed': self.observed,
-            'protocol_filter': self.protocol_filter,
-            'form': self.form,
+            "inference": inference,
+            "name": self.name,
+            "value": self.value,
+            "variable": new_variable,
+            "biomarker_type": self.biomarker_type,
+            "observed": self.observed,
+            "protocol_filter": self.protocol_filter,
+            "form": self.form,
         }
 
         # this will create default children

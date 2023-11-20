@@ -3,7 +3,7 @@
 # is released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-
+import pkpdapp.tests  # noqa: F401
 import codecs
 from django.test import TestCase
 import urllib.request

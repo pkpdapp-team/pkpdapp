@@ -19,15 +19,19 @@ from .permissions import (
     NotADatasetProtocol,
     CheckAccessToProject,
 )
+from .simulation import (
+    SimulationViewSet,
+)
 from .auce import AuceView
 from .biomarker_type import BiomarkerTypeView
 from .dataset import DatasetView
 from .dose import DoseView
+from .compound import CompoundView
 
 from .models import (
     PharmacokineticView,
     PharmacodynamicView,
-    DosedPharmacokineticView,
+    CombinedModelView,
 )
 from .nca import NcaView
 from .project import ProjectView, ProjectAccessView
@@ -37,7 +41,7 @@ from .inference import (
     StopInferenceView, InferenceWizardView,
 )
 from .simulate import (
-    SimulatePkView,
+    SimulateCombinedView,
     SimulatePdView,
 )
 from .subject import SubjectView

@@ -4,6 +4,7 @@
 # copyright notice and full license details.
 #
 
+import pkpdapp.tests  # noqa: F401
 from django.test import TestCase
 from pkpdapp.models import (
     Protocol,
@@ -20,6 +21,8 @@ class TestProtocolModel(TestCase):
         c = Compound.objects.create(
             name='my_cool_compound',
             description='placebo',
+            molecular_mass=100,
+            target_molecular_mass=100,
         )
 
         # test optional dataset

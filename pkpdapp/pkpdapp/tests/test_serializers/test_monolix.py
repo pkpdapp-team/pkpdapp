@@ -3,12 +3,12 @@
 # is released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-
+import pkpdapp.tests  # noqa: F401
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 import urllib.request
 from pkpdapp.models import (
-    Project,
+    Project, Compound,
 )
 from pkpdapp.api.serializers import (
     MonolixSerializer,
@@ -19,8 +19,15 @@ BASE_URL_DATASETS = 'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-data
 
 class TestMonolixSerializer(TestCase):
     def test_import(self):
+        compound = Compound.objects.create(
+            name='test',
+            description='test',
+            molecular_mass=100,
+            target_molecular_mass=100,
+        )
         project = Project.objects.create(
             name='test',
+            compound=compound,
         )
         model_f = urllib.request.urlopen(
             BASE_URL_DATASETS + 'usecase_monolix/PK_Model.txt', timeout=5

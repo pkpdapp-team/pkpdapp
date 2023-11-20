@@ -11,7 +11,7 @@ from django.db.models import Q
 from pkpdapp.models import (
     Dataset, Project,
     PharmacodynamicModel,
-    DosedPharmacokineticModel,
+    CombinedModel,
     Protocol,
     Unit,
     BiomarkerType,
@@ -19,6 +19,7 @@ from pkpdapp.models import (
     Subject,
     Inference, InferenceChain,
     LogLikelihood,
+    Simulation,
 )
 
 
@@ -28,7 +29,6 @@ class UserAccessFilter(filters.BaseFilterBackend):
     """
 
     def filter_queryset(self, request, queryset, view):
-
         if request.user.is_superuser:
             return queryset
 
@@ -50,7 +50,7 @@ class DosedPkModelFilter(filters.BaseFilterBackend):
             request.query_params.get('dosed_pk_model_id')
         if dosed_pk_model_id is not None:
             try:
-                dosed_pk_model = DosedPharmacokineticModel.objects.get(
+                dosed_pk_model = CombinedModel.objects.get(
                     id=dosed_pk_model_id
                 )
                 if queryset.model == Variable:
@@ -63,7 +63,7 @@ class DosedPkModelFilter(filters.BaseFilterBackend):
                     queryset = Unit.objects.filter(id__in=unit_ids)
                 else:
                     raise RuntimeError('queryset model {} not recognised')
-            except DosedPharmacokineticModel.DoesNotExist:
+            except CombinedModel.DoesNotExist:
                 queryset = queryset.model.objects.none()
 
         return queryset
@@ -143,9 +143,11 @@ class ProjectFilter(filters.BaseFilterBackend):
                 )
                 if queryset.model == Dataset:
                     queryset = project.datasets
+                elif queryset.model == Simulation:
+                    queryset = project.simulations
                 elif queryset.model == PharmacodynamicModel:
                     queryset = project.pd_models
-                elif queryset.model == DosedPharmacokineticModel:
+                elif queryset.model == CombinedModel:
                     queryset = project.pk_models
                 elif queryset.model == Protocol:
                     queryset = project.protocols

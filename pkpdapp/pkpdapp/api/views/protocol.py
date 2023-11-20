@@ -5,6 +5,8 @@
 #
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
+from drf_spectacular.utils import extend_schema, OpenApiParameter
+from drf_spectacular.types import OpenApiTypes
 from pkpdapp.api.serializers import ProtocolSerializer
 from pkpdapp.api.views import (
     ProjectFilter,
@@ -21,3 +23,17 @@ class ProtocolView(viewsets.ModelViewSet):
     permission_classes = [
         IsAuthenticated & NotADatasetProtocol & CheckAccessToProject
     ]
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='project_id',
+                description='Filter results by project ID',
+                required=False,
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY
+            ),
+        ],
+    )
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)

@@ -1,0 +1,32 @@
+[[model]]
+name: Stimulatory direct effects model (symmetrical Emax model)
+author: Michael Gertz
+
+# Initial values:
+
+
+[environment]
+t = 0 in [h] bind time
+
+
+[PDCompartment]
+
+E0 = 100 in [dimensionless]
+	desc: baseline effect
+	
+Emax = 5 in [dimensionless]
+	desc: maximal fold change from baseline (value range: 1 (no effect) to inf)
+	
+C50 = 100000 in [pmol/L]
+	desc: concentration that produces half-maximal effects
+
+HC = 1 in [dimensionless]
+	desc: Hill coefficient
+	
+C_Drug = 1 in [pmol/L]	
+
+STIM = C_Drug^HC/(C_Drug^HC+C50^HC) in [dimensionless]
+
+E = if(E0 <= 0 , 
+	+Emax*STIM , 
+	E0 * (1+(Emax-1)*STIM)) in [dimensionless]

@@ -4,6 +4,7 @@
 # copyright notice and full license details.
 #
 
+import pkpdapp.tests  # noqa: F401
 from django.test import TestCase
 from numpy.testing import assert_almost_equal
 from pkpdapp.models import (
@@ -17,24 +18,20 @@ import numpy as np
 class TestMyokitForwardModelSingleOutput(TestCase):
     def setUp(self):
         m = PharmacodynamicModel.objects.get(
-            name='tumour_growth_inhibition_model_koch',
+            name='tumour_growth_gompertz',
         )
         self.model = m.get_myokit_model()
         self.simulator = m.get_myokit_simulator()
 
         self.parameter_dict = {
-            'myokit.tumour_volume': 1,
-            'myokit.lambda_0': 1,
-            'myokit.lambda_1': 1,
-            'myokit.kappa': 1,
-            'myokit.drug_concentration': 1,
+            'PDCompartment.beta': 1,
+            'PDCompartment.TS0': 1,
+            'PDCompartment.TSmax': 1,
         }
 
         all_keys = list(self.parameter_dict.keys())
         self.fixed_dict = {
-            'myokit.tumour_volume': 1,
-            'myokit.lambda_0': 1,
-            'myokit.drug_concentration': 1,
+            'PDCompartment.TS0': 1,
         }
 
         variable_keys = (
@@ -49,7 +46,7 @@ class TestMyokitForwardModelSingleOutput(TestCase):
         forward_model = MyokitForwardModel(
             myokit_model=self.model,
             myokit_simulator=self.simulator,
-            outputs=["myokit.tumour_volume"],
+            outputs=["PDCompartment.TS"],
             times=[times],
             fixed_parameter_dict=self.fixed_dict,
             conversion_factors=[1.0],
@@ -63,7 +60,7 @@ class TestMyokitForwardModelSingleOutput(TestCase):
         forward_model = MyokitForwardModel(
             myokit_model=self.model,
             myokit_simulator=self.simulator,
-            outputs=["myokit.tumour_volume"],
+            outputs=["PDCompartment.TS"],
             times=[times],
             conversion_factors=[1.0],
         )
@@ -72,14 +69,12 @@ class TestMyokitForwardModelSingleOutput(TestCase):
 
         # try model with different variable parameters and check output differs
         new_fixed_dict = {
-            'myokit.tumour_volume': 2,
-            'myokit.lambda_0': 3,
-            'myokit.drug_concentration': 7.5,
+            'PDCompartment.TS0': 2,
         }
         forward_model = MyokitForwardModel(
             myokit_model=self.model,
             myokit_simulator=self.simulator,
-            outputs=["myokit.tumour_volume"],
+            outputs=["PDCompartment.TS"],
             times=[times],
             fixed_parameter_dict=new_fixed_dict,
             conversion_factors=[1.0],
@@ -92,7 +87,7 @@ class TestMyokitForwardModelSingleOutput(TestCase):
         forward_model = MyokitForwardModel(
             myokit_model=self.model,
             myokit_simulator=self.simulator,
-            outputs=["myokit.tumour_volume"],
+            outputs=["PDCompartment.TS"],
             times=[times],
             fixed_parameter_dict=new_fixed_dict,
             conversion_factors=[1.0],
@@ -108,11 +103,7 @@ class TestMyokitForwardModelSingleOutput(TestCase):
         all_keys = list(self.parameter_dict.keys())
 
         fixed_dict = {
-            'myokit.tumour_volume': self.fixed_dict['myokit.tumour_volume'],
-            'myokit.lambda_0':
-                [self.fixed_dict['myokit.lambda_0']] * n_subjects,
-            'myokit.drug_concentration':
-                self.fixed_dict['myokit.drug_concentration'],
+            'PDCompartment.TS0': [1] * n_subjects,
         }
 
         variable_keys = (
@@ -127,7 +118,7 @@ class TestMyokitForwardModelSingleOutput(TestCase):
         forward_model = MyokitForwardModel(
             myokit_model=self.model,
             myokit_simulator=self.simulator,
-            outputs=["myokit.tumour_volume"],
+            outputs=["PDCompartment.TS"],
             times=[times],
             subjects=[subjects],
             fixed_parameter_dict=fixed_dict,
@@ -139,58 +130,11 @@ class TestMyokitForwardModelSingleOutput(TestCase):
         self.assertEqual(len(z_subjects[0]), len(times))
         np.testing.assert_almost_equal(z_subjects[0], z[0])
 
-    def test_values(self):
-        times = np.linspace(0, 100)
-
-        forward_model = MyokitForwardModel(
-            myokit_model=self.model,
-            myokit_simulator=self.simulator,
-            outputs=["myokit.tumour_volume"],
-            times=[times],
-            conversion_factors=[1.0],
-        )
-        z = forward_model.simulate([1, 1, 1, 1, 1])
-        self.assertAlmostEqual(z[0][-1], 0.4999996148976773, delta=0.1)
-
-        tumour_volume = 2
-        z = forward_model.simulate([tumour_volume, 1, 1, 1, 1])
-        self.assertAlmostEqual(z[0][0], tumour_volume, delta=0.1)
-
-        z = forward_model.simulate([tumour_volume, 2, 1, 1, 1])
-        self.assertAlmostEqual(z[0][-1], 0.002582, delta=0.1)
-
-        z = forward_model.simulate([tumour_volume, 2, 0.1, 1, 1])
-        self.assertAlmostEqual(z[0][-1], 4.4999, delta=0.1)
-
-        # add some fixed parameters
-        forward_model = MyokitForwardModel(
-            myokit_model=self.model,
-            myokit_simulator=self.simulator,
-            outputs=["myokit.tumour_volume"],
-            times=[times],
-            fixed_parameter_dict={'myokit.tumour_volume': 2},
-            conversion_factors=[1.0],
-        )
-        z = forward_model.simulate([2, 0.1, 1, 1])
-        self.assertAlmostEqual(z[0][-1], 4.49999, delta=0.1)
-
-        forward_model = MyokitForwardModel(
-            myokit_model=self.model,
-            myokit_simulator=self.simulator,
-            outputs=["myokit.tumour_volume"],
-            times=[times],
-            fixed_parameter_dict={'myokit.tumour_volume': 4,
-                                  'myokit.kappa': 0.1},
-            conversion_factors=[1.0],
-        )
-        z = forward_model.simulate([2, 1, 3])
-        self.assertAlmostEqual(z[0][-1], 13.4999, delta=0.1)
-
 
 class TestMyokitPintsForwardModelMultipleOutput(TestCase):
     def setUp(self):
         m = PharmacokineticModel.objects.get(
-            name='three_compartment_pk_model',
+            name='three_compartment_preclinical',
         )
         self.model = m.get_myokit_model()
         self.simulator = m.get_myokit_simulator()
@@ -198,28 +142,31 @@ class TestMyokitPintsForwardModelMultipleOutput(TestCase):
     def test_runs(self):
         # all parameters are:
         # full_dict = {
-        #     'central.drug_c_amount': 1,
-        #     'peripheral_1.drug_p1_amount': 1,
-        #     'peripheral_2.drug_p2_amount': 1,
-        #     'central.size': 1,
-        #     'myokit.clearance': 1,
-        #     'myokit.drug_c_scale_factor': 1,
-        #     'myokit.k_peripheral1': 1,
-        #     'myokit.k_peripheral2': 1,
-        #     'peripheral_1.size': 1,
-        #     'peripheral_2.size': 1
+        #    'PKCompartment.tlag': 1,
+        #    'PKCompartment.ka': 1,
+        #    'PKCompartment.F': 1,
+        #    'PKCompartment.V1': 1,
+        #    'PKCompartment.V2': 1,
+        #    'PKCompartment.V3': 1,
+        #    'PKCompartment.CL': 1,
+        #    'PKCompartment.Q1': 1,
+        #    'PKCompartment.Q2': 1,
+        #    'PKCompartment.CLmax': 1,
+        #    'PKCompartment.Km': 1,
+        #    'PKCompartment.ke0': 1,
+        #    'PKCompartment.Kpu': 1,
         # }
         fixed_dict = {
-            'peripheral_1.drug_p1_amount': 1,
-            'peripheral_2.drug_p2_amount': 1,
-            'myokit.drug_c_scale_factor': 1,
+            'PKCompartment.tlag': 1,
+            'PKCompartment.CLmax': 1,
+            'PKCompartment.ke0': 1,
         }
-        variable_parameters = [1, 1, 1, 1, 1, 1, 1]
+        variable_parameters = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 
         desired_outputs = [
-            'central.drug_c_amount',
-            'peripheral_1.drug_p1_amount',
-            'peripheral_2.drug_p2_amount'
+            'PKCompartment.A1',
+            'PKCompartment.A2',
+            'PKCompartment.A3',
         ]
 
         conversion_factors = [
@@ -251,9 +198,9 @@ class TestMyokitPintsForwardModelMultipleOutput(TestCase):
 
         # do another ordering
         desired_outputs = [
-            'peripheral_2.drug_p2_amount',
-            'central.drug_c_amount',
-            'peripheral_1.drug_p1_amount',
+            'PKCompartment.A3',
+            'PKCompartment.A1',
+            'PKCompartment.A2',
         ]
 
         conversion_factors = [

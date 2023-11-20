@@ -9,6 +9,7 @@
 
 
 from django.conf import settings
+import django.core.validators
 from django.db import migrations, models
 import django.db.models.deletion
 import jsonfield.fields
@@ -64,12 +65,42 @@ class Migration(migrations.Migration):
             ],
         ),
         migrations.CreateModel(
+            name='CombinedModel',
+            fields=[
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('read_only', models.BooleanField(default=False, help_text='true if object has been stored')),
+                ('datetime', models.DateTimeField(blank=True, help_text='datetime the object was stored.', null=True)),
+                ('name', models.CharField(help_text='name of the model', max_length=100)),
+                ('species', models.CharField(choices=[('H', 'human'), ('R', 'rat'), ('N', 'non-human primate'), ('M', 'mouse')], default='H', help_text='species', max_length=1)),
+                ('has_saturation', models.BooleanField(default=False, help_text='whether the pk model has saturation')),
+                ('has_effect', models.BooleanField(default=False, help_text='whether the pk model has effect compartment')),
+                ('has_lag', models.BooleanField(default=False, help_text='whether the pk model has lag')),
+                ('has_bioavailability', models.BooleanField(default=False, help_text='whether the pk model has bioavailability')),
+                ('has_hill_coefficient', models.BooleanField(default=False, help_text='whether the pd model has hill coefficient')),
+                ('time_max', models.FloatField(default=30, help_text='suggested time to simulate after the last dose (in the time units specified by the mmt model)')),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=(pkpdapp.models.myokit_model_mixin.MyokitModelMixin, models.Model),
+        ),
+        migrations.CreateModel(
             name='Compound',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(help_text='name of the compound', max_length=100)),
-                ('description', models.TextField(help_text='short description of the compound')),
-                ('molecular_mass', models.FloatField(blank=True, help_text='molecular mass for compound for conversion from mol to grams', null=True)),
+                ('description', models.TextField(blank=True, default='', help_text='short description of the compound')),
+                ('molecular_mass', models.FloatField(default=500.0, help_text='molecular mass for compound for conversion from mol to grams')),
+                ('compound_type', models.CharField(choices=[('SM', 'Small Molecule'), ('LM', 'Large Molecule')], default='SM', max_length=2)),
+                ('fraction_unbound_plasma', models.FloatField(blank=True, default=0.02, help_text='fraction unbound plasma (unitless)', null=True)),
+                ('blood_to_plasma_ratio', models.FloatField(blank=True, default=1.0, help_text='blood to plasma ratio (unitless)', null=True)),
+                ('intrinsic_clearance', models.FloatField(blank=True, help_text='intrinsic clearance', null=True)),
+                ('intrinsic_clearance_assay', models.CharField(choices=[('MS', 'Microsomes'), ('HC', 'Hepatocytes')], default='MS', max_length=2)),
+                ('fraction_unbound_including_cells', models.FloatField(blank=True, default=1.0, help_text='fraction unbound in plasma and red blood cells (unitless)', null=True)),
+                ('target_molecular_mass', models.FloatField(default=25000.0, help_text='molecular mass for target for conversion from mol to grams')),
+                ('target_concentration', models.FloatField(blank=True, default=1.0, help_text='target concentration', null=True)),
+                ('dissociation_constant', models.FloatField(blank=True, help_text='dissociation constant', null=True)),
+                ('is_soluble', models.BooleanField(default=True, help_text='is the compound target soluble')),
             ],
         ),
         migrations.CreateModel(
@@ -82,28 +113,27 @@ class Migration(migrations.Migration):
             ],
         ),
         migrations.CreateModel(
+            name='DerivedVariable',
+            fields=[
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('read_only', models.BooleanField(default=False, help_text='true if object has been stored')),
+                ('datetime', models.DateTimeField(blank=True, help_text='datetime the object was stored.', null=True)),
+                ('type', models.CharField(choices=[('RO', 'receptor occupancy'), ('FUP', 'faction unbound plasma'), ('BPR', 'blood plasma ratio')], help_text='type of derived variable', max_length=3)),
+            ],
+            options={
+                'abstract': False,
+            },
+        ),
+        migrations.CreateModel(
             name='DoseBase',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('start_time', models.FloatField(help_text='starting time point of dose, see protocol for units')),
                 ('amount', models.FloatField(help_text='amount of compound administered over the duration, see protocol for units. Rate of administration is assumed constant')),
                 ('duration', models.FloatField(default=1.0, help_text='Duration of dose administration, see protocol for units. Duration must be greater than 0.', validators=[pkpdapp.models.dose.validate_duration])),
+                ('repeats', models.IntegerField(default=1, help_text='Number of times to repeat the dose. ')),
+                ('repeat_interval', models.FloatField(default=1.0, help_text='Interval between repeated doses. See protocol for units. ')),
             ],
-        ),
-        migrations.CreateModel(
-            name='DosedPharmacokineticModel',
-            fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('read_only', models.BooleanField(default=False, help_text='true if object has been stored')),
-                ('datetime', models.DateTimeField(blank=True, help_text='datetime the object was stored.', null=True)),
-                ('name', models.CharField(help_text='name of the model', max_length=100)),
-                ('dose_compartment', models.CharField(blank=True, default='central', help_text='compartment name to be dosed', max_length=100, null=True)),
-                ('time_max', models.FloatField(default=30, help_text='suggested time to simulate after the last dose (in the time units specified by the mmt model)')),
-            ],
-            options={
-                'abstract': False,
-            },
-            bases=(pkpdapp.models.myokit_model_mixin.MyokitModelMixin, models.Model),
         ),
         migrations.CreateModel(
             name='Inference',
@@ -159,6 +189,7 @@ class Migration(migrations.Migration):
                 ('description', models.TextField(blank=True, default='', help_text='short description of the model')),
                 ('mmt', models.TextField(default='[[model]]\n\n[myokit]\ntime = 0 bind time', help_text='the model represented using mmt (see https://myokit.readthedocs)')),
                 ('time_max', models.FloatField(default=30, help_text='suggested maximum time to simulate for this model (in the time units specified by the mmt model)')),
+                ('is_library_model', models.BooleanField(default=False, help_text='whether this model is a library model (i.e. it is not an uploaded user model)')),
             ],
             options={
                 'abstract': False,
@@ -175,6 +206,7 @@ class Migration(migrations.Migration):
                 ('description', models.TextField(blank=True, default='', help_text='short description of the model')),
                 ('mmt', models.TextField(default='[[model]]\n\n[myokit]\ntime = 0 bind time', help_text='the model represented using mmt (see https://myokit.readthedocs)')),
                 ('time_max', models.FloatField(default=30, help_text='suggested maximum time to simulate for this model (in the time units specified by the mmt model)')),
+                ('is_library_model', models.BooleanField(default=False, help_text='whether this model is a library model (i.e. it is not an uploaded user model)')),
             ],
             options={
                 'abstract': False,
@@ -187,6 +219,9 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(help_text='name of the project', max_length=100)),
                 ('description', models.TextField(blank=True, default='', help_text='short description of the project')),
+                ('created', models.DateTimeField(auto_now_add=True)),
+                ('species', models.CharField(choices=[('M', 'Mouse'), ('R', 'Rat'), ('H', 'Human'), ('K', 'Monkey'), ('O', 'Other')], default='O', help_text='subject species', max_length=1)),
+                ('compound', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.compound')),
             ],
         ),
         migrations.CreateModel(
@@ -201,6 +236,34 @@ class Migration(migrations.Migration):
             options={
                 'abstract': False,
             },
+        ),
+        migrations.CreateModel(
+            name='Simulation',
+            fields=[
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('name', models.CharField(help_text='name of the simulation', max_length=100)),
+                ('nrows', models.IntegerField(default=1, help_text='number of subplot rows')),
+                ('ncols', models.IntegerField(default=1, help_text='number of subplot columns')),
+                ('time_max', models.FloatField(default=30, help_text='maximum time for the simulation', validators=[django.core.validators.MinValueValidator(0)])),
+                ('abs_tolerance', models.FloatField(default=1e-06, help_text='absolute tolerance for the simulation', validators=[django.core.validators.MinValueValidator(0)])),
+                ('rel_tolerance', models.FloatField(default=1e-06, help_text='relative tolerance for the simulation', validators=[django.core.validators.MinValueValidator(0)])),
+                ('project', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='simulations', to='pkpdapp.project')),
+            ],
+        ),
+        migrations.CreateModel(
+            name='SimulationPlot',
+            fields=[
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('index', models.IntegerField(help_text='index of the plot in the simulation')),
+                ('x_scale', models.CharField(choices=[('lin', 'Linear'), ('lg2', 'Log2'), ('lg10', 'Log10'), ('ln', 'Ln')], default='lin', help_text='scale for x axis', max_length=4)),
+                ('y_scale', models.CharField(choices=[('lin', 'Linear'), ('lg2', 'Log2'), ('lg10', 'Log10'), ('ln', 'Ln')], default='lin', help_text='scale for y axis', max_length=4)),
+                ('y2_scale', models.CharField(choices=[('lin', 'Linear'), ('lg2', 'Log2'), ('lg10', 'Log10'), ('ln', 'Ln')], default='lin', help_text='scale for rhs y axis', max_length=4)),
+                ('min', models.FloatField(blank=True, help_text='lower bound for the y axis', null=True)),
+                ('max', models.FloatField(blank=True, help_text='upper bound for the y axis', null=True)),
+                ('min2', models.FloatField(blank=True, help_text='lower bound for the rhs y axis', null=True)),
+                ('max2', models.FloatField(blank=True, help_text='upper bound for the rhs y axis', null=True)),
+                ('simulation', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='plots', to='pkpdapp.simulation')),
+            ],
         ),
         migrations.CreateModel(
             name='Unit',
@@ -236,21 +299,24 @@ class Migration(migrations.Migration):
                 ('read_only', models.BooleanField(default=False, help_text='true if object has been stored')),
                 ('datetime', models.DateTimeField(blank=True, help_text='datetime the object was stored.', null=True)),
                 ('is_public', models.BooleanField(default=False)),
-                ('lower_bound', models.FloatField(default=1e-06, help_text='lowest possible value for this variable')),
-                ('upper_bound', models.FloatField(default=2, help_text='largest possible value for this variable')),
+                ('lower_bound', models.FloatField(blank=True, help_text='lowest possible value for this variable', null=True)),
+                ('upper_bound', models.FloatField(blank=True, help_text='largest possible value for this variable', null=True)),
                 ('default_value', models.FloatField(default=1, help_text='default value for this variable')),
                 ('is_log', models.BooleanField(default=False, help_text='True if default_value is stored as the log of this value')),
                 ('name', models.CharField(help_text='name of the variable', max_length=100)),
+                ('description', models.TextField(blank=True, help_text='description of the variable', null=True)),
                 ('binding', models.CharField(blank=True, help_text='myokit binding of the variable (e.g. time)', max_length=100, null=True)),
                 ('qname', models.CharField(help_text='fully qualitifed name of the variable', max_length=200)),
+                ('unit_symbol', models.CharField(blank=True, help_text='if unit is None then this is the unit of this variable as a string', max_length=20, null=True)),
                 ('constant', models.BooleanField(default=True, help_text='True for a constant variable of the model, i.e. a parameter. False if non-constant, i.e. an output of the model (default is True)')),
-                ('state', models.BooleanField(default=False, help_text='True for a state variable of the model (default is False)')),
+                ('state', models.BooleanField(default=False, help_text='True if it is a state variable of the model and has an initial condition parameter (default is False)')),
                 ('color', models.IntegerField(default=0, help_text='Color index associated with this variable. For display purposes in the frontend')),
                 ('display', models.BooleanField(default=True, help_text='True if this variable will be displayed in the frontend, False otherwise')),
                 ('axis', models.BooleanField(default=False, help_text='False/True if biomarker type displayed on LHS/RHS axis')),
-                ('dosed_pk_model', models.ForeignKey(blank=True, help_text='dosed pharmacokinetic model', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='variables', to='pkpdapp.dosedpharmacokineticmodel')),
+                ('dosed_pk_model', models.ForeignKey(blank=True, help_text='dosed pharmacokinetic model', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='variables', to='pkpdapp.combinedmodel')),
                 ('pd_model', models.ForeignKey(blank=True, help_text='pharmacodynamic model', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='variables', to='pkpdapp.pharmacodynamicmodel')),
                 ('pk_model', models.ForeignKey(blank=True, help_text='pharmacokinetic model', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='variables', to='pkpdapp.pharmacokineticmodel')),
+                ('protocol', models.ForeignKey(blank=True, help_text='dosing protocol', null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='variables', to='pkpdapp.protocol')),
                 ('unit', models.ForeignKey(blank=True, help_text='variable values are in this unit (note this might be different from the unit in the stored sbml)', null=True, on_delete=django.db.models.deletion.PROTECT, to='pkpdapp.unit')),
             ],
         ),
@@ -265,6 +331,51 @@ class Migration(migrations.Migration):
                 ('dataset', models.ForeignKey(help_text='dataset containing this subject', on_delete=django.db.models.deletion.CASCADE, related_name='subjects', to='pkpdapp.dataset')),
                 ('protocol', models.ForeignKey(blank=True, help_text='dosing protocol for this subject.', null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='subjects', to='pkpdapp.protocol')),
             ],
+        ),
+        migrations.CreateModel(
+            name='SimulationYAxis',
+            fields=[
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('right', models.BooleanField(default=False, help_text='True if the variable is plotted on the right y axis')),
+                ('plot', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='y_axes', to='pkpdapp.simulationplot')),
+                ('variable', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='y_axes', to='pkpdapp.variable')),
+            ],
+        ),
+        migrations.CreateModel(
+            name='SimulationSlider',
+            fields=[
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('simulation', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='sliders', to='pkpdapp.simulation')),
+                ('variable', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='sliders', to='pkpdapp.variable')),
+            ],
+        ),
+        migrations.AddField(
+            model_name='simulationplot',
+            name='x_unit',
+            field=models.ForeignKey(help_text='unit for x axis', on_delete=django.db.models.deletion.PROTECT, related_name='simulation_plots', to='pkpdapp.unit'),
+        ),
+        migrations.AddField(
+            model_name='simulationplot',
+            name='y_unit',
+            field=models.ForeignKey(blank=True, help_text='unit for y axis', null=True, on_delete=django.db.models.deletion.PROTECT, related_name='simulation_plots_y', to='pkpdapp.unit'),
+        ),
+        migrations.AddField(
+            model_name='simulationplot',
+            name='y_unit2',
+            field=models.ForeignKey(blank=True, help_text='unit for rhs y axis', null=True, on_delete=django.db.models.deletion.PROTECT, related_name='simulation_plots_y2', to='pkpdapp.unit'),
+        ),
+        migrations.CreateModel(
+            name='SimulationCxLine',
+            fields=[
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('value', models.FloatField(help_text='value of the line')),
+                ('plot', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='cx_lines', to='pkpdapp.simulationplot')),
+            ],
+        ),
+        migrations.AddField(
+            model_name='simulation',
+            name='time_max_unit',
+            field=models.ForeignKey(help_text='unit for maximum time', on_delete=django.db.models.deletion.PROTECT, related_name='simulation_time_max', to='pkpdapp.unit'),
         ),
         migrations.AddField(
             model_name='protocol',
@@ -315,7 +426,7 @@ class Migration(migrations.Migration):
                 ('datetime', models.DateTimeField(blank=True, help_text='datetime the object was stored.', null=True)),
                 ('pd_variable', models.ForeignKey(help_text='variable in PD part of model', on_delete=django.db.models.deletion.CASCADE, related_name='pd_mappings', to='pkpdapp.variable')),
                 ('pk_variable', models.ForeignKey(help_text='variable in PK part of model', on_delete=django.db.models.deletion.CASCADE, related_name='pk_mappings', to='pkpdapp.variable')),
-                ('pkpd_model', models.ForeignKey(help_text='PKPD model that this mapping is for', on_delete=django.db.models.deletion.CASCADE, related_name='mappings', to='pkpdapp.dosedpharmacokineticmodel')),
+                ('pkpd_model', models.ForeignKey(help_text='PKPD model that this mapping is for', on_delete=django.db.models.deletion.CASCADE, related_name='mappings', to='pkpdapp.combinedmodel')),
             ],
             options={
                 'abstract': False,
@@ -342,7 +453,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='loglikelihood',
             name='children',
-            field=models.ManyToManyField(blank=True, null=True, related_name='parents', through='pkpdapp.LogLikelihoodParameter', to='pkpdapp.LogLikelihood'),
+            field=models.ManyToManyField(related_name='parents', through='pkpdapp.LogLikelihoodParameter', to='pkpdapp.LogLikelihood'),
         ),
         migrations.AddField(
             model_name='loglikelihood',
@@ -398,29 +509,30 @@ class Migration(migrations.Migration):
             name='project',
             field=models.ForeignKey(help_text='Project that "owns" this inference object', on_delete=django.db.models.deletion.CASCADE, to='pkpdapp.project'),
         ),
-        migrations.AddField(
-            model_name='dosedpharmacokineticmodel',
-            name='pd_model',
-            field=models.ForeignKey(blank=True, help_text='PD part of model', null=True, on_delete=django.db.models.deletion.PROTECT, related_name='pkpd_models', to='pkpdapp.pharmacodynamicmodel'),
-        ),
-        migrations.AddField(
-            model_name='dosedpharmacokineticmodel',
-            name='pk_model',
-            field=models.ForeignKey(blank=True, default=1, help_text='model', null=True, on_delete=django.db.models.deletion.PROTECT, to='pkpdapp.pharmacokineticmodel'),
-        ),
-        migrations.AddField(
-            model_name='dosedpharmacokineticmodel',
-            name='project',
-            field=models.ForeignKey(blank=True, help_text='Project that "owns" this model', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='pk_models', to='pkpdapp.project'),
-        ),
-        migrations.AddField(
-            model_name='dosedpharmacokineticmodel',
-            name='protocol',
-            field=models.ForeignKey(blank=True, help_text='dosing protocol', null=True, on_delete=django.db.models.deletion.PROTECT, related_name='dosed_pk_models', to='pkpdapp.protocol'),
+        migrations.CreateModel(
+            name='EfficacyExperiment',
+            fields=[
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('name', models.CharField(blank=True, default='', help_text='name of the experiment', max_length=100)),
+                ('c50', models.FloatField(help_text='half maximal effective concentration')),
+                ('hill_coefficient', models.FloatField(default=1.0, help_text='Hill coefficient measure of binding')),
+                ('c50_unit', models.ForeignKey(help_text='unit for c50', on_delete=django.db.models.deletion.PROTECT, related_name='efficacy_experiments', to='pkpdapp.unit')),
+                ('compound', models.ForeignKey(help_text='compound for efficacy experiment', on_delete=django.db.models.deletion.CASCADE, related_name='efficacy_experiments', to='pkpdapp.compound')),
+            ],
         ),
         migrations.AddConstraint(
             model_name='dosebase',
             constraint=models.CheckConstraint(check=models.Q(('duration__gt', 0)), name='Duration must be greater than 0'),
+        ),
+        migrations.AddField(
+            model_name='derivedvariable',
+            name='pk_variable',
+            field=models.ForeignKey(help_text='base variable in PK part of model', on_delete=django.db.models.deletion.CASCADE, related_name='derived_variables', to='pkpdapp.variable'),
+        ),
+        migrations.AddField(
+            model_name='derivedvariable',
+            name='pkpd_model',
+            field=models.ForeignKey(help_text='PKPD model that this derived variable is for', on_delete=django.db.models.deletion.CASCADE, related_name='derived_variables', to='pkpdapp.combinedmodel'),
         ),
         migrations.AddField(
             model_name='dataset',
@@ -429,8 +541,53 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='compound',
+            name='dissociation_unit',
+            field=models.ForeignKey(default=pkpdapp.models.compound.get_dissociation_constant_unit, help_text='unit for dissociation constant', on_delete=django.db.models.deletion.PROTECT, related_name='compounds_kd', to='pkpdapp.unit'),
+        ),
+        migrations.AddField(
+            model_name='compound',
+            name='intrinsic_clearance_unit',
+            field=models.ForeignKey(default=pkpdapp.models.compound.get_intrinsic_clearence_unit, help_text='unit for intrinsic clearance', on_delete=django.db.models.deletion.PROTECT, related_name='compounds_clint', to='pkpdapp.unit'),
+        ),
+        migrations.AddField(
+            model_name='compound',
             name='molecular_mass_unit',
-            field=models.ForeignKey(default=pkpdapp.models.compound.get_mol_mass_unit, help_text='unit for molecular mass (e.g. g/mol)', on_delete=django.db.models.deletion.PROTECT, related_name='compounds', to='pkpdapp.unit'),
+            field=models.ForeignKey(default=pkpdapp.models.compound.get_mol_mass_unit, help_text='unit for molecular mass (e.g. g/mol)', on_delete=django.db.models.deletion.PROTECT, related_name='compound_mol_mass', to='pkpdapp.unit'),
+        ),
+        migrations.AddField(
+            model_name='compound',
+            name='target_concentration_unit',
+            field=models.ForeignKey(default=pkpdapp.models.compound.get_target_concentration_unit, help_text='unit for target concentration', on_delete=django.db.models.deletion.PROTECT, related_name='compounds_target_conc', to='pkpdapp.unit'),
+        ),
+        migrations.AddField(
+            model_name='compound',
+            name='target_molecular_mass_unit',
+            field=models.ForeignKey(default=pkpdapp.models.compound.get_mol_mass_unit, help_text='unit for target molecular mass (e.g. g/mol)', on_delete=django.db.models.deletion.PROTECT, related_name='compounds_target_mol_mass', to='pkpdapp.unit'),
+        ),
+        migrations.AddField(
+            model_name='compound',
+            name='use_efficacy',
+            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='compound_using', to='pkpdapp.efficacyexperiment'),
+        ),
+        migrations.AddField(
+            model_name='combinedmodel',
+            name='pd_model',
+            field=models.ForeignKey(blank=True, help_text='PD part of model', null=True, on_delete=django.db.models.deletion.PROTECT, related_name='pkpd_models', to='pkpdapp.pharmacodynamicmodel'),
+        ),
+        migrations.AddField(
+            model_name='combinedmodel',
+            name='pd_model2',
+            field=models.ForeignKey(blank=True, help_text='second PD part of model', null=True, on_delete=django.db.models.deletion.PROTECT, related_name='pkpd_models2', to='pkpdapp.pharmacodynamicmodel'),
+        ),
+        migrations.AddField(
+            model_name='combinedmodel',
+            name='pk_model',
+            field=models.ForeignKey(blank=True, help_text='model', null=True, on_delete=django.db.models.deletion.PROTECT, to='pkpdapp.pharmacokineticmodel'),
+        ),
+        migrations.AddField(
+            model_name='combinedmodel',
+            name='project',
+            field=models.ForeignKey(blank=True, help_text='Project that "owns" this model', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='pk_models', to='pkpdapp.project'),
         ),
         migrations.AddField(
             model_name='categoricalbiomarker',

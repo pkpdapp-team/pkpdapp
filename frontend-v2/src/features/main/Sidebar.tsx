@@ -15,41 +15,122 @@ import MailIcon from '@mui/icons-material/Mail';
 import MenuIcon from '@mui/icons-material/Menu';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
+import MainContent from './MainContent';
+import { PageName, setPage } from './mainSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '../../app/store';
+import { LinearProgress } from '@mui/material';
+import { ThemeContext } from '@emotion/react';
+import { Logout } from '@mui/icons-material';
+import { logout } from '../login/loginSlice';
+import { useAppDispatch } from '../../app/hooks';
+import ErrorIcon from '@mui/icons-material/Error';
+import { Tooltip } from '@mui/material';
+import { useCombinedModelListQuery, useProjectRetrieveQuery, useProtocolListQuery } from '../../app/backendApi';
+import { Protocol } from "../../app/backendApi";
+import DnsIcon from '@mui/icons-material/Dns';
+import BiotechIcon from '@mui/icons-material/Biotech';
+import FunctionsIcon from '@mui/icons-material/Functions';
+import VaccinesIcon from '@mui/icons-material/Vaccines';
+import SsidChartIcon from '@mui/icons-material/SsidChart';
+import ContactSupportIcon from '@mui/icons-material/ContactSupport';
+import TableViewIcon from '@mui/icons-material/TableView';
 
 const drawerWidth = 240;
 
 export default function Sidebar() {
+  const dispatch = useAppDispatch();
   const [mobileOpen, setMobileOpen] = React.useState(false);
+  const selectedPage = useSelector((state: RootState) => state.main.selectedPage);
+  const selectedProject = useSelector((state: RootState) => state.main.selectedProject);
+  const dirtyCount = useSelector((state: RootState) => state.main.dirtyCount);
+  const projectId = useSelector((state: RootState) => state.main.selectedProject);
+  const { data: models, isLoading: isModelsLoading } = useCombinedModelListQuery({projectId: projectId || 0}, { skip: !projectId})
+  const { data: protocols, error: protocolsError, isLoading: isProtocolsLoading } = useProtocolListQuery({projectId: projectId || 0}, { skip: !projectId})
+  const model = models?.[0] || null;
+  const { data: project, isLoading: isProjectLoading } = useProjectRetrieveQuery({id: projectId || 0}, { skip: !projectId })
+
+  let errors: { [key: string]: string } = {};
+  if ((model && model.pk_model === null) || (model && model.pd_model && model.mappings.length === 0) || (protocols && protocols.length === 0)) {
+    errors[PageName.MODEL] = 'Model is incomplete, see the Model tab for details';
+  }
+
+  let errorComponents: { [key: string]: React.ReactNode } = {};
+  for (const key in errors) {
+    errorComponents[key] = (
+      <Tooltip title={errors[key]}>
+      <ErrorIcon color='error'/>
+      </Tooltip>
+    )
+  }
+  
+  let icons: { [key: string]: React.ReactNode } = {
+    [PageName.PROJECTS]: <DnsIcon />,
+    [PageName.DRUG]: <BiotechIcon />,
+    [PageName.MODEL]: <FunctionsIcon />,
+    [PageName.TRIAL_DESIGN]: <VaccinesIcon />,
+    [PageName.DATA]: <TableViewIcon />,
+    [PageName.SIMULATIONS]: <SsidChartIcon />,
+    [PageName.HELP]: <ContactSupportIcon />,
+  };
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
   };
+
+  const pageKeys = Object.keys(PageName);
+  const pageValues = Object.values(PageName);
+
+  const pages = pageKeys.map((key, index) => {
+    return {
+      key,
+      value: pageValues[index],
+    };
+  });
+
+  const handlePageClick = (key: string) => () => {
+    dispatch(setPage(PageName[key as keyof typeof PageName]));
+  }; 
+  
+  const isPageDisabled = (key: string) => { 
+    const page = PageName[key as keyof typeof PageName];
+    if (page === PageName.HELP) {
+      return false;
+    }
+    if (page === PageName.TRIAL_DESIGN && PageName.MODEL in errors) {
+      return true;
+    }
+    if (page === PageName.DATA) {
+      return true;
+    }
+    if (page === PageName.SIMULATIONS && (PageName.MODEL in errors || PageName.TRIAL_DESIGN in errors)) {
+      return true;
+    }
+    if (selectedProject === null) {
+      return page !== PageName.PROJECTS;
+    } else {
+      return false;
+    }
+  }
+  
+  const isPageSelected = (key: string) => {
+    const page = PageName[key as keyof typeof PageName];
+    return page === selectedPage;
+  }
+    
 
   const drawer = (
     <div>
       <Toolbar />
       <Divider />
       <List>
-        {['Inbox', 'Starred', 'Send email', 'Drafts'].map((text, index) => (
-          <ListItem key={text} disablePadding>
-            <ListItemButton>
+        {pages.map(({ key, value }, index) => (
+          <ListItem key={key} disablePadding selected={isPageSelected(key)}>
+            <ListItemButton onClick={handlePageClick(key)} disabled={isPageDisabled(key)} disableRipple={true}>
               <ListItemIcon>
-                {index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
+                {value in errorComponents ? errorComponents[value] : icons[value]}
               </ListItemIcon>
-              <ListItemText primary={text} />
-            </ListItemButton>
-          </ListItem>
-        ))}
-      </List>
-      <Divider />
-      <List>
-        {['All mail', 'Trash', 'Spam'].map((text, index) => (
-          <ListItem key={text} disablePadding>
-            <ListItemButton>
-              <ListItemIcon>
-                {index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
-              </ListItemIcon>
-              <ListItemText primary={text} />
+              <ListItemText primary={value} />
             </ListItemButton>
           </ListItem>
         ))}
@@ -57,12 +138,10 @@ export default function Sidebar() {
     </div>
   );
 
-  const window = undefined;
-  const container = window !== undefined ? () => window().document.body : undefined;
-
   return (
     <Box sx={{ display: 'flex' }}>
       <CssBaseline />
+      
       <AppBar
         position="fixed"
         sx={{
@@ -70,6 +149,7 @@ export default function Sidebar() {
           ml: { sm: `${drawerWidth}px` },
         }}
       >
+        
         <Toolbar>
           <IconButton
             color="inherit"
@@ -80,10 +160,24 @@ export default function Sidebar() {
           >
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" noWrap component="div">
-            Responsive drawer
+          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
+            
+            PK/PD Simulator {project && ` - ${project.name}`}
           </Typography>
+          <IconButton
+            onClick={() => dispatch(logout())}
+            color="inherit"
+          >
+            <Logout />
+          </IconButton>
         </Toolbar>
+        {dirtyCount !== 0 ? (
+          <LinearProgress
+            sx={{ height: 5, zIndex: 10010000}}
+          />
+        ): (
+          <Box sx={{ height: 5}}></Box>
+        )}
       </AppBar>
       <Box
         component="nav"
@@ -92,7 +186,6 @@ export default function Sidebar() {
       >
         {/* The implementation can be swapped with js to avoid SEO duplication of links. */}
         <Drawer
-          container={container}
           variant="temporary"
           open={mobileOpen}
           onClose={handleDrawerToggle}

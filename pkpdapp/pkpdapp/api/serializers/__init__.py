@@ -15,9 +15,11 @@ from .monolix import MonolixSerializer
 from .auce import AuceSerializer
 from .biomarker_type import BiomarkerTypeSerializer
 from .dose import DoseSerializer
+from .efficacy_experiment import EfficacySerializer
+from .compound import CompoundSerializer
 from .models import (
     PharmacokineticSerializer,
-    DosedPharmacokineticSerializer,
+    CombinedModelSerializer,
     PharmacodynamicSerializer,
     PharmacodynamicSbmlSerializer,
 )
@@ -38,5 +40,11 @@ from .dataset import DatasetSerializer, DatasetCsvSerializer
 from .subject import SubjectSerializer
 from .unit import UnitSerializer
 from .user import UserSerializer
+from .simulation import (
+    SimulationSerializer,
+    SimulationYAxisSerializer,
+    SimulationCxLineSerializer,
+    SimulationSliderSerializer,
+)
 
 

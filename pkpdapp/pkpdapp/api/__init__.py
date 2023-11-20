@@ -6,10 +6,10 @@
 # flake8: noqa F401
 
 from .views import (
-    DatasetView, UserView, ProjectView,
-    PharmacokineticView, DosedPharmacokineticView,
+    DatasetView, UserView, ProjectView, CompoundView,
+    PharmacokineticView, CombinedModelView,
     PharmacodynamicView, DoseView,
-    ProtocolView, SimulatePkView, SimulatePdView,
+    ProtocolView, SimulateCombinedView, SimulatePdView,
     UnitView, BiomarkerTypeView, VariableView, SubjectView,
     ProjectAccessView, NcaView, AuceView,
     InferenceView, InferenceChainView,
@@ -17,4 +17,5 @@ from .views import (
     StopInferenceView,
     LogLikelihoodView, InferenceWizardView, 
     login_view, logout_view, get_csrf, SessionView, WhoAmIView,
+    SimulationViewSet,
 )
