@@ -1,0 +1,68 @@
+{
+  "name": "frontend",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@emotion/react": "^11.10.6",
+    "@emotion/styled": "^11.10.6",
+    "@mui/icons-material": "^5.11.11",
+    "@mui/lab": "^5.0.0-alpha.122",
+    "@mui/material": "^5.11.12",
+    "@mui/styles": "^5.11.12",
+    "@mui/system": "^5.4.1",
+    "@mui/x-date-pickers": "^6.0.0",
+    "@reduxjs/toolkit": "^1.6.0",
+    "@testing-library/jest-dom": "^5.11.4",
+    "@testing-library/react": "^11.1.0",
+    "@testing-library/user-event": "^12.1.10",
+    "chart.js": "^3.7.1",
+    "chartjs-plugin-annotation": "^1.4.0",
+    "chartjs-plugin-crosshair": "^1.2.0",
+    "classnames": "^2.3.1",
+    "color-scheme": "^1.0.1",
+    "compute-iqr": "^1.1.0",
+    "date-fns": "^2.29.3",
+    "dayjs": "^1.11.7",
+    "elkjs": "^0.7.1",
+    "http-proxy-middleware": "^2.0.0",
+    "normalizr": "^3.6.1",
+    "react": "^17.0.0",
+    "react-chartjs-2": "^3.0.4",
+    "react-dom": "^17.0.2",
+    "react-flow-renderer": "^10.1.0",
+    "react-hook-form": "^7.6.6",
+    "react-mathjax-preview": "^2.2.3",
+    "react-redux": "^7.2.4",
+    "react-router-dom": "^5.2.0",
+    "react-scripts": "^5.0.0",
+    "web-vitals": "^1.0.1",
+    "web-worker": "^1.2.0"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "prettier": "2.5.1"
+  }
+}

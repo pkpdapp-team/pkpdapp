@@ -1,0 +1,14 @@
+[flake8]
+max-line-length = 88
+extend-ignore = E203, W503
+
+exclude=
+    .git,
+    venv
+
+ignore=
+    # Accept ambiguously named variables
+    E741
+
+    # Accept line breaks after binary operators
+    W504

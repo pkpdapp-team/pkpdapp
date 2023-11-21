@@ -1,0 +1,26 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+
+# Virtual environments
+venv
+env*
+
+# Setuptools files
+*.egg-info
+
+# vscode
+.vscode
+
+# database file (not sure yet what its good for)
+db.sqlite3
+
+# DS
+.DS_Store
+
+# static files
+pkpdapp/static
+
+# nodemodules
+frontend/node_modules
+
+logfile.log*

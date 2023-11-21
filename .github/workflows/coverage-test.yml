@@ -1,0 +1,45 @@
+name: Coverage
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - '**'
+
+jobs:
+
+  build-and-test:
+    name: coverage
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v1
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v1
+        with:
+          python-version: '3.10'
+          architecture: x64
+          
+      - name: install sundials
+        run: |
+          sudo apt-get update
+          sudo apt-get install libsundials-dev libsasl2-dev python3-dev libldap2-dev libssl-dev
+
+      - name: install pkpdapp
+        run: |
+          python --version
+          python -m pip install --upgrade pip setuptools wheel
+          python -m pip install -r requirements.txt
+          python -m pip install coverage codecov
+      - name: run coverage
+        run: |
+          cd pkpdapp && coverage run manage.py test
+      - name: codecov
+        if: success()
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        run: |
+          cd pkpdapp && codecov

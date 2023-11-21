@@ -1,0 +1,32 @@
+[[model]]
+name: Inhibitory direct effects model (symmetrical Imax model)
+author: Michael Gertz
+
+# Initial values:
+
+
+[environment]
+t = 0 in [h] bind time
+
+
+[PDCompartment]
+
+E0 = 100 in [dimensionless]
+	desc: baseline effect
+	
+Imax = 0.80 in [dimensionless]
+	desc: maximal fold change from baseline  (value range: 0 (no effect) to 1 (complete inhibition))
+	
+C50 = 100000 in [pmol/L]
+	desc: concentration that produces half-maximal effects
+
+HC = 1 in [dimensionless]
+	desc: Hill coefficient
+	
+C_Drug = 1 in [pmol/L]	
+
+INH = C_Drug^HC/(C_Drug^HC+C50^HC) in [dimensionless]
+
+E = if(E0 <= 0 , 
+	-Imax*INH , 
+	E0 * (1-Imax*INH)) in [dimensionless]

@@ -1,0 +1,29 @@
+[[model]]
+name: Tumor growth model - exponential/ linear w/ saturation (Gompertz-logistic)
+author: Michael Gertz
+
+# Initial values:
+PDCompartment.TS = PDCompartment.TS0
+
+
+[environment]
+t = 0 bind time
+
+
+[PDCompartment]
+
+TS0 = 0.1 in [mL]
+	desc: initial tumor size 
+	
+TSmax = 10 in [mL]
+	desc: maximal tumor size 	
+	
+beta = 0.002 in [1/h]
+	desc: growth rate constant
+
+Growth = if(TS > 1e12,
+    0,
+    TS*beta*log(TSmax/TS))
+
+dot(TS) = Growth in [mL]
+	desc: Tumor size
