@@ -149,11 +149,9 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({
   };
 
   const handleRemoveYAxis = (yAxis: SimulationYAxisWithIndex) => {
-    console.log("remove", yAxis);
     removeYAxis(yAxis.index);
   };
 
-  console.log("y_axes", y_axes);
 
   const handleAddCxLine = (value: number) => {
     addCxLines({

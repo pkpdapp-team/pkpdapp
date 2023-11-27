@@ -64,7 +64,6 @@ const Doses: React.FC<Props> = ({ project, protocol, units }) => {
   useEffect(() => {
     const intervalId = setInterval(() => {
       if (isDirty) {
-        console.log("saving protocol");
         handleSave();
       }
     }, 1000);

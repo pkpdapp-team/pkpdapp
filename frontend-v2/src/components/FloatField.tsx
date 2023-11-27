@@ -44,7 +44,6 @@ function FloatField<T extends FieldValues>({
       }) => {
         const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
           const updatedValue = convert(e.target.value);
-          console.log("handleBlur", updatedValue, value);
           if (updatedValue !== value) {
             e.target.value = updatedValue as any;
             onChange(e);
@@ -53,7 +52,6 @@ function FloatField<T extends FieldValues>({
         };
 
         const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-          console.log("handleChage", convert(e.target.value));
           setFieldValue(convert(e.target.value));
         };
         return (

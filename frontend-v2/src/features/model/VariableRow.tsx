@@ -103,7 +103,6 @@ const VariableRow: React.FC<Props> = ({
           if (data.upper_bound === "") {
             data.upper_bound = null;
           }
-          console.log("updateVariable", data);
           updateVariable({ id: variable.id, variable: data });
         })();
       }
@@ -207,7 +206,6 @@ const VariableRow: React.FC<Props> = ({
   };
 
   const addDerived = (type: "RO" | "FUP" | "BPR" | "TLG") => {
-    console.log("addDerived", type);
     // can only be one 'FUP' and one 'BPR' across all variables
     const sameType = derivedVariables
       .map((d, i) => ({ ...d, index: i }))
@@ -231,7 +229,6 @@ const VariableRow: React.FC<Props> = ({
   };
 
   const onClickDerived = (type: "RO" | "FUP" | "BPR" | "TLG") => () => {
-    console.log("onClickDerived", type);
     const index = derivedIndex(type);
     return index >= 0 ? removeDerived(index) : addDerived(type);
   };

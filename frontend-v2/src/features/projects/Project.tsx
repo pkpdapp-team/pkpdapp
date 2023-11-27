@@ -115,7 +115,6 @@ const ProjectRow: React.FC<Props> = ({
 
   const handleSave = handleSubmit((data: FormData) => {
     if (compound && project) {
-      console.log("save", data, compound);
       if (JSON.stringify(compound) !== JSON.stringify(data.compound)) {
         updateCompound({ id: compound.id, compound: data.compound });
       }

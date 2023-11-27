@@ -41,7 +41,6 @@ export const fetchSession = createAsyncThunk<
     .catch((err) => {
       return rejectWithValue({ error: err.error });
     });
-  console.log("fetchSession", response);
   return response;
 });
 
@@ -122,7 +121,6 @@ const slice = createSlice({
     setCredentials: (state, action) => {
       const user = action.payload.user;
       const csrf = action.payload.csrf;
-      console.log("setCredentials", user);
       state.user = user;
       state.csrf = csrf;
     },
@@ -139,13 +137,11 @@ const slice = createSlice({
       state.user = action.payload.user;
     });
     builder.addCase(login.fulfilled, (state, action) => {
-      console.log("login.fulfilled", action.payload);
       state.isAuthenticated = action.payload.isAuthenticated;
       state.user = action.payload.user;
       state.error = undefined;
     });
     builder.addCase(login.rejected, (state, action) => {
-      console.log("login.rejected", action.payload);
       state.error = action.payload?.error;
     });
     builder.addCase(logout.fulfilled, (state, action) => {

@@ -74,7 +74,6 @@ export function resetToSpeciesDefaults(
   if (getNoReset(project) || !project.species) {
     return;
   }
-  console.log("resetting to species defaults");
   const modelName: string = pkModel.name
     .replace("_clinical", "")
     .replace("_preclinical", "")
@@ -86,12 +85,10 @@ export function resetToSpeciesDefaults(
     .replace("elimination", "");
   const species: string = project.species;
   const compoundType: string = compound.compound_type || "SM";
-  console.log(modelName, species, compoundType);
   for (const variable of constVariables) {
     const varName = variable.name;
     let defaultVal =
       paramDefaults[modelName]?.[varName]?.[species]?.[compoundType];
-    console.log(variable.name, defaultVal);
     if (defaultVal?.unit === "dimensionless") {
       defaultVal.unit = "";
     }
@@ -109,7 +106,6 @@ export function resetToSpeciesDefaults(
     if (!defaultValue || !defaultUnitId) {
       continue;
     }
-    console.log(defaultValue, defaultUnitId);
     if (defaultUnitId) {
       updateVariable({
         id: variable.id,
