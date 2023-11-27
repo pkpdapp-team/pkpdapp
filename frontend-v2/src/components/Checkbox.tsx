@@ -1,6 +1,6 @@
-import React from 'react';
-import { Control, Controller, FieldPath, FieldValues } from 'react-hook-form';
-import * as material from '@mui/material';
+import React from "react";
+import { Control, Controller, FieldPath, FieldValues } from "react-hook-form";
+import * as material from "@mui/material";
 
 type Props<T extends FieldValues> = {
   label: string;
@@ -10,20 +10,29 @@ type Props<T extends FieldValues> = {
   checkboxFieldProps?: material.CheckboxProps;
 };
 
-function Checkbox<T extends FieldValues>({ label, name, control, rules, checkboxFieldProps }: Props<T>): React.ReactElement {
+function Checkbox<T extends FieldValues>({
+  label,
+  name,
+  control,
+  rules,
+  checkboxFieldProps,
+}: Props<T>): React.ReactElement {
   return (
     <Controller
       name={name}
       control={control}
       rules={rules}
-      render={({ field: { onChange, onBlur, value }, fieldState: { error } }) => {
+      render={({
+        field: { onChange, onBlur, value },
+        fieldState: { error },
+      }) => {
         return (
           <material.FormControlLabel
             control={
               <material.Checkbox
                 name={name}
                 id={name}
-                checked={value === undefined ?  false : value}
+                checked={value === undefined ? false : value}
                 onChange={onChange}
                 onBlur={onBlur}
                 data-cy={`checkbox-${name}`}
@@ -32,10 +41,10 @@ function Checkbox<T extends FieldValues>({ label, name, control, rules, checkbox
             }
             label={label}
           />
-        )
+        );
       }}
     />
   );
-};
+}
 
 export default Checkbox;

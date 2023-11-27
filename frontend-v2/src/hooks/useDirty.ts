@@ -1,17 +1,19 @@
 import { useDispatch } from "react-redux";
-import { decrementDirtyCount, incrementDirtyCount } from "../features/main/mainSlice";
+import {
+  decrementDirtyCount,
+  incrementDirtyCount,
+} from "../features/main/mainSlice";
 import { useEffect, useState } from "react";
 
 function useDirty(isDirty: boolean) {
   const dispatch = useDispatch();
   useEffect(() => {
     if (isDirty) {
-      dispatch(incrementDirtyCount())
+      dispatch(incrementDirtyCount());
       return () => {
-        dispatch(decrementDirtyCount())
+        dispatch(decrementDirtyCount());
       };
     }
-    
   }, [isDirty]);
 }
 

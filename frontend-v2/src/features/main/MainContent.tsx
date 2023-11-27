@@ -1,15 +1,14 @@
-import React from 'react';
-import { useSelector } from 'react-redux';
-import { RootState } from '../../app/store';
-import { PageName } from './mainSlice';
-import ProjectTable from '../projects/Projects';
-import Drug from '../drug/Drug';
-import Model from '../model/Model';
-import Simulations from '../simulation/Simulations';
-import Protocols from '../trial/Protocols';
-import { Box } from '@mui/material';
-import Help from '../help/Help';
-
+import React from "react";
+import { useSelector } from "react-redux";
+import { RootState } from "../../app/store";
+import { PageName } from "./mainSlice";
+import ProjectTable from "../projects/Projects";
+import Drug from "../drug/Drug";
+import Model from "../model/Model";
+import Simulations from "../simulation/Simulations";
+import Protocols from "../trial/Protocols";
+import { Box } from "@mui/material";
+import Help from "../help/Help";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -29,17 +28,13 @@ function TabPanel(props: TabPanelProps) {
       aria-labelledby={`simple-tab-${index}`}
       {...other}
     >
-      <Box sx={{ p: 3, zIndex: (value === index ? 1000 : 1) }}>
-        {children}
-      </Box>
+      <Box sx={{ p: 3, zIndex: value === index ? 1000 : 1 }}>{children}</Box>
     </div>
   );
 }
 
 const MainContent: React.FC = () => {
   const page = useSelector((state: RootState) => state.main.selectedPage);
-  
-
 
   return (
     <div>
@@ -48,12 +43,12 @@ const MainContent: React.FC = () => {
       </TabPanel>
       <TabPanel value={page} index={PageName.DRUG}>
         <Drug />
-      </TabPanel >
+      </TabPanel>
       <TabPanel value={page} index={PageName.MODEL}>
         <Model />
       </TabPanel>
       <TabPanel value={page} index={PageName.TRIAL_DESIGN}>
-        <Protocols/>
+        <Protocols />
       </TabPanel>
       <TabPanel value={page} index={PageName.SIMULATIONS}>
         <Simulations />
@@ -61,7 +56,6 @@ const MainContent: React.FC = () => {
       <TabPanel value={page} index={PageName.HELP}>
         <Help />
       </TabPanel>
-
     </div>
   );
 };

@@ -1,8 +1,17 @@
-import { Accordion, AccordionDetails, AccordionSummary, Box, Card, Chip, Grid, Stack, Typography } from "@mui/material";
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
+  Box,
+  Card,
+  Chip,
+  Grid,
+  Stack,
+  Typography,
+} from "@mui/material";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { Question, TutorialVideo } from "./Help";
-import ReactPlayer from 'react-player/youtube'
-
+import ReactPlayer from "react-player/youtube";
 
 interface Props {
   questions: Question[];
@@ -17,29 +26,32 @@ const HelpTab: React.FC<Props> = ({ questions, videos }) => {
         {questions.map((question, index) => {
           return (
             <Accordion key={index}>
-              <AccordionSummary
-                expandIcon={<ExpandMoreIcon />}
-              >
+              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                 <Typography>{question.question}</Typography>
               </AccordionSummary>
               <AccordionDetails>
                 <Typography>{question.answer}</Typography>
               </AccordionDetails>
             </Accordion>
-          )
+          );
         })}
       </Stack>
-      <Box sx={{ display: 'flex', flexWrap: 'wrap' }}>
+      <Box sx={{ display: "flex", flexWrap: "wrap" }}>
         {videos.map((video, index) => {
           return (
-            <Card sx={{ width: '500px', margin: 2, padding: 1 }}>
-              <Typography variant='h6' >{video.title}</Typography>
-              <Box sx={{ display: 'flex', flexWrap: 'wrap' }}>
-              { video.keywords.map((keyword, index) => {
-                return (
-                  <Chip key={index} size="small" label={keyword} sx={{ margin: 0.2 }} />
-                )
-              })}
+            <Card sx={{ width: "500px", margin: 2, padding: 1 }}>
+              <Typography variant="h6">{video.title}</Typography>
+              <Box sx={{ display: "flex", flexWrap: "wrap" }}>
+                {video.keywords.map((keyword, index) => {
+                  return (
+                    <Chip
+                      key={index}
+                      size="small"
+                      label={keyword}
+                      sx={{ margin: 0.2 }}
+                    />
+                  );
+                })}
               </Box>
               <iframe
                 key={index}
@@ -49,11 +61,11 @@ const HelpTab: React.FC<Props> = ({ questions, videos }) => {
                 title={video.title}
               />
             </Card>
-          )
+          );
         })}
       </Box>
     </div>
   );
-}
+};
 
-export default HelpTab; 
+export default HelpTab;

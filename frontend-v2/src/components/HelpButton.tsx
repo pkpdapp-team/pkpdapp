@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { HelpOutline } from '@mui/icons-material';
-import HelpDialog from './HelpDialog';
-import { IconButton } from '@mui/material';
+import React, { useState } from "react";
+import { HelpOutline } from "@mui/icons-material";
+import HelpDialog from "./HelpDialog";
+import { IconButton } from "@mui/material";
 
 interface HelpButtonProps {
   title: string;

@@ -1,5 +1,5 @@
-import * as React from 'react';
-import { Typography } from '@mui/material';
+import * as React from "react";
+import { Typography } from "@mui/material";
 
 interface Props {
   title: string;
@@ -10,4 +10,3 @@ export const Title = ({ title }: Props) => (
     {title}
   </Typography>
 );
-

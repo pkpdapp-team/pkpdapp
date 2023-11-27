@@ -1,69 +1,93 @@
-import * as React from 'react';
-import AppBar from '@mui/material/AppBar';
-import Box from '@mui/material/Box';
-import CssBaseline from '@mui/material/CssBaseline';
-import Divider from '@mui/material/Divider';
-import Drawer from '@mui/material/Drawer';
-import IconButton from '@mui/material/IconButton';
-import InboxIcon from '@mui/icons-material/MoveToInbox';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemButton from '@mui/material/ListItemButton';
-import ListItemIcon from '@mui/material/ListItemIcon';
-import ListItemText from '@mui/material/ListItemText';
-import MailIcon from '@mui/icons-material/Mail';
-import MenuIcon from '@mui/icons-material/Menu';
-import Toolbar from '@mui/material/Toolbar';
-import Typography from '@mui/material/Typography';
-import MainContent from './MainContent';
-import { PageName, setPage } from './mainSlice';
-import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from '../../app/store';
-import { LinearProgress } from '@mui/material';
-import { ThemeContext } from '@emotion/react';
-import { Logout } from '@mui/icons-material';
-import { logout } from '../login/loginSlice';
-import { useAppDispatch } from '../../app/hooks';
-import ErrorIcon from '@mui/icons-material/Error';
-import { Tooltip } from '@mui/material';
-import { useCombinedModelListQuery, useProjectRetrieveQuery, useProtocolListQuery } from '../../app/backendApi';
+import * as React from "react";
+import AppBar from "@mui/material/AppBar";
+import Box from "@mui/material/Box";
+import CssBaseline from "@mui/material/CssBaseline";
+import Divider from "@mui/material/Divider";
+import Drawer from "@mui/material/Drawer";
+import IconButton from "@mui/material/IconButton";
+import InboxIcon from "@mui/icons-material/MoveToInbox";
+import List from "@mui/material/List";
+import ListItem from "@mui/material/ListItem";
+import ListItemButton from "@mui/material/ListItemButton";
+import ListItemIcon from "@mui/material/ListItemIcon";
+import ListItemText from "@mui/material/ListItemText";
+import MailIcon from "@mui/icons-material/Mail";
+import MenuIcon from "@mui/icons-material/Menu";
+import Toolbar from "@mui/material/Toolbar";
+import Typography from "@mui/material/Typography";
+import MainContent from "./MainContent";
+import { PageName, setPage } from "./mainSlice";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "../../app/store";
+import { LinearProgress } from "@mui/material";
+import { ThemeContext } from "@emotion/react";
+import { Logout } from "@mui/icons-material";
+import { logout } from "../login/loginSlice";
+import { useAppDispatch } from "../../app/hooks";
+import ErrorIcon from "@mui/icons-material/Error";
+import { Tooltip } from "@mui/material";
+import {
+  useCombinedModelListQuery,
+  useProjectRetrieveQuery,
+  useProtocolListQuery,
+} from "../../app/backendApi";
 import { Protocol } from "../../app/backendApi";
-import DnsIcon from '@mui/icons-material/Dns';
-import BiotechIcon from '@mui/icons-material/Biotech';
-import FunctionsIcon from '@mui/icons-material/Functions';
-import VaccinesIcon from '@mui/icons-material/Vaccines';
-import SsidChartIcon from '@mui/icons-material/SsidChart';
-import ContactSupportIcon from '@mui/icons-material/ContactSupport';
-import TableViewIcon from '@mui/icons-material/TableView';
+import DnsIcon from "@mui/icons-material/Dns";
+import BiotechIcon from "@mui/icons-material/Biotech";
+import FunctionsIcon from "@mui/icons-material/Functions";
+import VaccinesIcon from "@mui/icons-material/Vaccines";
+import SsidChartIcon from "@mui/icons-material/SsidChart";
+import ContactSupportIcon from "@mui/icons-material/ContactSupport";
+import TableViewIcon from "@mui/icons-material/TableView";
 
 const drawerWidth = 240;
 
 export default function Sidebar() {
   const dispatch = useAppDispatch();
   const [mobileOpen, setMobileOpen] = React.useState(false);
-  const selectedPage = useSelector((state: RootState) => state.main.selectedPage);
-  const selectedProject = useSelector((state: RootState) => state.main.selectedProject);
+  const selectedPage = useSelector(
+    (state: RootState) => state.main.selectedPage,
+  );
+  const selectedProject = useSelector(
+    (state: RootState) => state.main.selectedProject,
+  );
   const dirtyCount = useSelector((state: RootState) => state.main.dirtyCount);
-  const projectId = useSelector((state: RootState) => state.main.selectedProject);
-  const { data: models, isLoading: isModelsLoading } = useCombinedModelListQuery({projectId: projectId || 0}, { skip: !projectId})
-  const { data: protocols, error: protocolsError, isLoading: isProtocolsLoading } = useProtocolListQuery({projectId: projectId || 0}, { skip: !projectId})
+  const projectId = useSelector(
+    (state: RootState) => state.main.selectedProject,
+  );
+  const { data: models, isLoading: isModelsLoading } =
+    useCombinedModelListQuery(
+      { projectId: projectId || 0 },
+      { skip: !projectId },
+    );
+  const {
+    data: protocols,
+    error: protocolsError,
+    isLoading: isProtocolsLoading,
+  } = useProtocolListQuery({ projectId: projectId || 0 }, { skip: !projectId });
   const model = models?.[0] || null;
-  const { data: project, isLoading: isProjectLoading } = useProjectRetrieveQuery({id: projectId || 0}, { skip: !projectId })
+  const { data: project, isLoading: isProjectLoading } =
+    useProjectRetrieveQuery({ id: projectId || 0 }, { skip: !projectId });
 
   let errors: { [key: string]: string } = {};
-  if ((model && model.pk_model === null) || (model && model.pd_model && model.mappings.length === 0) || (protocols && protocols.length === 0)) {
-    errors[PageName.MODEL] = 'Model is incomplete, see the Model tab for details';
+  if (
+    (model && model.pk_model === null) ||
+    (model && model.pd_model && model.mappings.length === 0) ||
+    (protocols && protocols.length === 0)
+  ) {
+    errors[PageName.MODEL] =
+      "Model is incomplete, see the Model tab for details";
   }
 
   let errorComponents: { [key: string]: React.ReactNode } = {};
   for (const key in errors) {
     errorComponents[key] = (
       <Tooltip title={errors[key]}>
-      <ErrorIcon color='error'/>
+        <ErrorIcon color="error" />
       </Tooltip>
-    )
+    );
   }
-  
+
   let icons: { [key: string]: React.ReactNode } = {
     [PageName.PROJECTS]: <DnsIcon />,
     [PageName.DRUG]: <BiotechIcon />,
@@ -90,9 +114,9 @@ export default function Sidebar() {
 
   const handlePageClick = (key: string) => () => {
     dispatch(setPage(PageName[key as keyof typeof PageName]));
-  }; 
-  
-  const isPageDisabled = (key: string) => { 
+  };
+
+  const isPageDisabled = (key: string) => {
     const page = PageName[key as keyof typeof PageName];
     if (page === PageName.HELP) {
       return false;
@@ -103,7 +127,10 @@ export default function Sidebar() {
     if (page === PageName.DATA) {
       return true;
     }
-    if (page === PageName.SIMULATIONS && (PageName.MODEL in errors || PageName.TRIAL_DESIGN in errors)) {
+    if (
+      page === PageName.SIMULATIONS &&
+      (PageName.MODEL in errors || PageName.TRIAL_DESIGN in errors)
+    ) {
       return true;
     }
     if (selectedProject === null) {
@@ -111,13 +138,12 @@ export default function Sidebar() {
     } else {
       return false;
     }
-  }
-  
+  };
+
   const isPageSelected = (key: string) => {
     const page = PageName[key as keyof typeof PageName];
     return page === selectedPage;
-  }
-    
+  };
 
   const drawer = (
     <div>
@@ -126,9 +152,15 @@ export default function Sidebar() {
       <List>
         {pages.map(({ key, value }, index) => (
           <ListItem key={key} disablePadding selected={isPageSelected(key)}>
-            <ListItemButton onClick={handlePageClick(key)} disabled={isPageDisabled(key)} disableRipple={true}>
+            <ListItemButton
+              onClick={handlePageClick(key)}
+              disabled={isPageDisabled(key)}
+              disableRipple={true}
+            >
               <ListItemIcon>
-                {value in errorComponents ? errorComponents[value] : icons[value]}
+                {value in errorComponents
+                  ? errorComponents[value]
+                  : icons[value]}
               </ListItemIcon>
               <ListItemText primary={value} />
             </ListItemButton>
@@ -139,9 +171,9 @@ export default function Sidebar() {
   );
 
   return (
-    <Box sx={{ display: 'flex' }}>
+    <Box sx={{ display: "flex" }}>
       <CssBaseline />
-      
+
       <AppBar
         position="fixed"
         sx={{
@@ -149,34 +181,27 @@ export default function Sidebar() {
           ml: { sm: `${drawerWidth}px` },
         }}
       >
-        
         <Toolbar>
           <IconButton
             color="inherit"
             aria-label="open drawer"
             edge="start"
             onClick={handleDrawerToggle}
-            sx={{ mr: 2, display: { sm: 'none' } }}
+            sx={{ mr: 2, display: { sm: "none" } }}
           >
             <MenuIcon />
           </IconButton>
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-            
             PK/PD Simulator {project && ` - ${project.name}`}
           </Typography>
-          <IconButton
-            onClick={() => dispatch(logout())}
-            color="inherit"
-          >
+          <IconButton onClick={() => dispatch(logout())} color="inherit">
             <Logout />
           </IconButton>
         </Toolbar>
         {dirtyCount !== 0 ? (
-          <LinearProgress
-            sx={{ height: 5, zIndex: 10010000}}
-          />
-        ): (
-          <Box sx={{ height: 5}}></Box>
+          <LinearProgress sx={{ height: 5, zIndex: 10010000 }} />
+        ) : (
+          <Box sx={{ height: 5 }}></Box>
         )}
       </AppBar>
       <Box
@@ -193,8 +218,11 @@ export default function Sidebar() {
             keepMounted: true, // Better open performance on mobile.
           }}
           sx={{
-            display: { xs: 'block', sm: 'none' },
-            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+            display: { xs: "block", sm: "none" },
+            "& .MuiDrawer-paper": {
+              boxSizing: "border-box",
+              width: drawerWidth,
+            },
           }}
         >
           {drawer}
@@ -202,8 +230,11 @@ export default function Sidebar() {
         <Drawer
           variant="permanent"
           sx={{
-            display: { xs: 'none', sm: 'block' },
-            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+            display: { xs: "none", sm: "block" },
+            "& .MuiDrawer-paper": {
+              boxSizing: "border-box",
+              width: drawerWidth,
+            },
           }}
           open
         >
@@ -212,7 +243,11 @@ export default function Sidebar() {
       </Box>
       <Box
         component="main"
-        sx={{ flexGrow: 1, p: 3, width: { sm: `calc(100% - ${drawerWidth}px)` } }}
+        sx={{
+          flexGrow: 1,
+          p: 3,
+          width: { sm: `calc(100% - ${drawerWidth}px)` },
+        }}
       >
         <Toolbar />
         <MainContent />
