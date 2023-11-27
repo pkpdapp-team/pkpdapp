@@ -14,6 +14,7 @@ function useDirty(isDirty: boolean) {
         dispatch(decrementDirtyCount());
       };
     }
+    return undefined;
   }, [isDirty]);
 }
 

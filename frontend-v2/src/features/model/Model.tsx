@@ -8,17 +8,13 @@ import {
   useCombinedModelSetParamsToDefaultsUpdateMutation,
   useCombinedModelUpdateMutation,
   useCompoundRetrieveQuery,
-  usePharmacokineticListQuery,
-  usePharmacokineticRetrieveQuery,
   useProjectRetrieveQuery,
   useProjectUpdateMutation,
-  useProtocolDestroyMutation,
   useProtocolListQuery,
   useSimulationListQuery,
   useSimulationUpdateMutation,
   useUnitListQuery,
   useVariableListQuery,
-  useVariableUpdateMutation,
 } from "../../app/backendApi";
 import { useForm } from "react-hook-form";
 import { useEffect, useMemo } from "react";
@@ -27,10 +23,6 @@ import MapVariablesTab from "./MapVariablesTab";
 import PKPDModelTab from "./PKPDModelTab";
 import ParametersTab from "./ParametersTab";
 import useDirty from "../../hooks/useDirty";
-import {
-  getConstVariables,
-  resetToSpeciesDefaults,
-} from "./resetToSpeciesDefaults";
 
 export type FormData = {
   project: ProjectRead;
@@ -55,7 +47,6 @@ const Model: React.FC = () => {
     );
   const {
     data: protocols,
-    error: protocolsError,
     isLoading: isProtocolsLoading,
   } = useProtocolListQuery({ projectId: projectId || 0 }, { skip: !projectId });
   const model = models?.[0] || null;
@@ -75,7 +66,7 @@ const Model: React.FC = () => {
   const simulation = useMemo(() => {
     return simulations?.[0] || undefined;
   }, [simulations]);
-  const [updateProject, { isLoading: isUpdatingProject }] =
+  const [updateProject] =
     useProjectUpdateMutation();
   const [setParamsToDefault] =
     useCombinedModelSetParamsToDefaultsUpdateMutation();

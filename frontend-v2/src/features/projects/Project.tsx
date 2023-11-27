@@ -53,18 +53,15 @@ const ProjectRow: React.FC<Props> = ({
 }) => {
   const dispatch = useDispatch();
   const [
-    updateProject, // This is the mutation trigger
-    { isLoading: isUpdatingProject }, // This is the destructured mutation result
+    updateProject, // This is the destructured mutation result
   ] = useProjectUpdateMutation();
 
   const [
-    updateCompound, // This is the mutation trigger
-    { isLoading: isUpdatingCompound }, // This is the destructured mutation result
+    updateCompound, // This is the destructured mutation result
   ] = useCompoundUpdateMutation();
 
   const [
-    destroyProject, // This is the mutation trigger
-    { isLoading: isDestroying }, // This is the destructured mutation result
+    destroyProject, // This is the destructured mutation result
   ] = useProjectDestroyMutation();
 
   const modalityOptions = [
@@ -76,7 +73,6 @@ const ProjectRow: React.FC<Props> = ({
 
   const {
     data: compound,
-    error,
     isLoading,
   } = useCompoundRetrieveQuery({ id: project.compound });
   const defaultCompound: CompoundRead = {

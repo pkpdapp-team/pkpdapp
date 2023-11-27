@@ -42,6 +42,8 @@ enum SortOptions {
   COMPOUND = "compound",
 }
 
+const SM_SIM_TIME = 48;
+const LM_SIM_TIME = 672;
 const ProjectTable: React.FC = () => {
   const [sortBy, setSortBy] = React.useState<SortOptions>(SortOptions.CREATED);
 
@@ -123,7 +125,7 @@ const ProjectTable: React.FC = () => {
       new_name = `${new_name_base}${append}`;
       name_exists = projectNames.includes(new_name);
     }
-    let project: Project = {
+    const project: Project = {
       name: new_name,
       description: "",
       compound: 0,
@@ -173,7 +175,7 @@ const ProjectTable: React.FC = () => {
                 units?.find((u) => u.symbol === "h")?.id ||
                 combinedModel.data.time_unit;
               const defaultSimultationTime =
-                compound?.compound_type === "SM" ? 48 : 672;
+                compound?.compound_type === "SM" ? SM_SIM_TIME : LM_SIM_TIME;
               const defaultPlot: SimulationPlot = {
                 y_axes: [],
                 cx_lines: [],

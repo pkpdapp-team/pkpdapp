@@ -19,6 +19,11 @@ export type TutorialVideo = {
 
 const tutorialVideosUrl: string = "/backend/tutorial_videos.csv";
 
+const TITLE_COLUMN = 0;
+const TYPE_COLUMN = 1;
+const LINK_COLUMN = 2;
+const KEYWORDS_COLUMN = 3;
+
 const Help: React.FC = () => {
   const [tutorialVideos, setTutorialVideos] = React.useState<TutorialVideo[]>(
     [],
@@ -34,10 +39,10 @@ const Help: React.FC = () => {
           results.data.map((row) => {
             const rowList = row as string[];
             return {
-              title: rowList[0],
-              type: rowList[1],
-              link: rowList[2].replace("view?usp=sharing", "preview"),
-              keywords: rowList[3].split(",").map((keyword) => keyword.trim()),
+              title: rowList[TITLE_COLUMN],
+              type: rowList[TYPE_COLUMN],
+              link: rowList[LINK_COLUMN].replace("view?usp=sharing", "preview"),
+              keywords: rowList[KEYWORDS_COLUMN].split(",").map((keyword) => keyword.trim()),
             };
           }),
         );

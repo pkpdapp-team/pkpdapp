@@ -192,7 +192,7 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({
     label: v.toString(),
     value: v,
   }));
-  let receptorOccupancyVariableOptions: {
+  const receptorOccupancyVariableOptions: {
     label: string;
     value: string | number;
   }[] = concentrationVariables.map((v) => ({ label: v.name, value: v.id }));

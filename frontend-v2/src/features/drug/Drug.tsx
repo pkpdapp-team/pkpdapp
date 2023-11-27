@@ -154,8 +154,6 @@ const Drug: React.FC = () => {
     { value: true, label: "Soluble" },
   ];
 
-  const isLM = compound.compound_type === "LM";
-
   const isEfficacySelected = (efficacy_experiment: EfficacyRead) => {
     if (compound.use_efficacy === undefined) {
       return false;

@@ -87,7 +87,7 @@ export function resetToSpeciesDefaults(
   const compoundType: string = compound.compound_type || "SM";
   for (const variable of constVariables) {
     const varName = variable.name;
-    let defaultVal =
+    const defaultVal =
       paramDefaults[modelName]?.[varName]?.[species]?.[compoundType];
     if (defaultVal?.unit === "dimensionless") {
       defaultVal.unit = "";

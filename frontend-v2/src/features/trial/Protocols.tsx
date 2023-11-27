@@ -24,7 +24,6 @@ const Protocols: React.FC = () => {
   );
   const {
     data: project,
-    error: projectError,
     isLoading: isProjectLoading,
   } = useProjectRetrieveQuery(
     { id: selectedProject || 0 },
@@ -32,7 +31,6 @@ const Protocols: React.FC = () => {
   );
   const {
     data: protocols,
-    error: protocolsError,
     isLoading: isProtocolsLoading,
   } = useProtocolListQuery(
     { projectId: selectedProject || 0 },

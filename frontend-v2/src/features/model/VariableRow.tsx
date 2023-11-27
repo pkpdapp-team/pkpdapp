@@ -11,7 +11,6 @@ import {
   Radio,
 } from "@mui/material";
 import {
-  CombinedModel,
   Variable,
   useVariableUpdateMutation,
   useProtocolCreateMutation,
@@ -139,7 +138,7 @@ const VariableRow: React.FC<Props> = ({
       (unit) => parseInt(unit.id) === variable.unit,
     ) !== undefined;
   const isAmount =
-    variableUnit?.symbol != "" &&
+    variableUnit?.symbol !== "" &&
     amountUnit?.compatible_units.find(
       (unit) => parseInt(unit.id) === variable.unit,
     ) !== undefined;

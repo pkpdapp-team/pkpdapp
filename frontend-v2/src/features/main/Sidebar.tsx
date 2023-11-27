@@ -5,33 +5,28 @@ import CssBaseline from "@mui/material/CssBaseline";
 import Divider from "@mui/material/Divider";
 import Drawer from "@mui/material/Drawer";
 import IconButton from "@mui/material/IconButton";
-import InboxIcon from "@mui/icons-material/MoveToInbox";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
-import MailIcon from "@mui/icons-material/Mail";
 import MenuIcon from "@mui/icons-material/Menu";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import MainContent from "./MainContent";
 import { PageName, setPage } from "./mainSlice";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
-import { LinearProgress } from "@mui/material";
-import { ThemeContext } from "@emotion/react";
+import { LinearProgress, Tooltip } from "@mui/material";
 import { Logout } from "@mui/icons-material";
 import { logout } from "../login/loginSlice";
 import { useAppDispatch } from "../../app/hooks";
 import ErrorIcon from "@mui/icons-material/Error";
-import { Tooltip } from "@mui/material";
 import {
   useCombinedModelListQuery,
   useProjectRetrieveQuery,
   useProtocolListQuery,
 } from "../../app/backendApi";
-import { Protocol } from "../../app/backendApi";
 import DnsIcon from "@mui/icons-material/Dns";
 import BiotechIcon from "@mui/icons-material/Biotech";
 import FunctionsIcon from "@mui/icons-material/Functions";
@@ -55,18 +50,16 @@ export default function Sidebar() {
   const projectId = useSelector(
     (state: RootState) => state.main.selectedProject,
   );
-  const { data: models, isLoading: isModelsLoading } =
+  const { data: models } =
     useCombinedModelListQuery(
       { projectId: projectId || 0 },
       { skip: !projectId },
     );
   const {
     data: protocols,
-    error: protocolsError,
-    isLoading: isProtocolsLoading,
   } = useProtocolListQuery({ projectId: projectId || 0 }, { skip: !projectId });
   const model = models?.[0] || null;
-  const { data: project, isLoading: isProjectLoading } =
+  const { data: project } =
     useProjectRetrieveQuery({ id: projectId || 0 }, { skip: !projectId });
 
   let errors: { [key: string]: string } = {};
@@ -150,7 +143,7 @@ export default function Sidebar() {
       <Toolbar />
       <Divider />
       <List>
-        {pages.map(({ key, value }, index) => (
+        {pages.map(({ key, value }) => (
           <ListItem key={key} disablePadding selected={isPageSelected(key)}>
             <ListItemButton
               onClick={handlePageClick(key)}

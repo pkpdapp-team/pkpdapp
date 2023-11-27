@@ -126,13 +126,11 @@ const Simulations: React.FC = () => {
     );
   const {
     data: protocols,
-    error: protocolsError,
-    isLoading: isProtocolsLoading,
   } = useProtocolListQuery({ projectId: projectId || 0 }, { skip: !projectId });
   const model = useMemo(() => {
     return models?.[0] || undefined;
   }, [models]);
-  const { data: variables, isLoading: isVariablesLoading } =
+  const { data: variables } =
     useVariableListQuery(
       { dosedPkModelId: model?.id || 0 },
       { skip: !model?.id },
@@ -217,17 +215,16 @@ const Simulations: React.FC = () => {
   }, [simulation, reset, variables]);
 
   const getTimeMax = (
-    simulation: SimulationRead,
-    variables: VariableRead[],
+    sim: SimulationRead,
   ): number => {
-    const timeMaxUnit = units?.find((u) => u.id === simulation.time_max_unit);
+    const timeMaxUnit = units?.find((u) => u.id === sim.time_max_unit);
     const compatibleTimeUnit = timeMaxUnit?.compatible_units?.find(
       (u) => parseInt(u.id) === model?.time_unit,
     );
     const timeMaxConversionFactor = compatibleTimeUnit
       ? parseFloat(compatibleTimeUnit.conversion_factor)
       : 1.0;
-    const timeMax = (simulation?.time_max || 0) * timeMaxConversionFactor;
+    const timeMax = (sim?.time_max || 0) * timeMaxConversionFactor;
     return timeMax;
   };
 
@@ -241,7 +238,7 @@ const Simulations: React.FC = () => {
       protocols &&
       compound
     ) {
-      const timeMax = getTimeMax(simulation, variables);
+      const timeMax = getTimeMax(simulation);
       simulate({
         id: model.id,
         simulate: getSimulateInput(
@@ -278,7 +275,7 @@ const Simulations: React.FC = () => {
       sliderValues &&
       project
     ) {
-      const timeMax = getTimeMax(simulation, variables);
+      const timeMax = getTimeMax(simulation);
       simulate({
         id: model.id,
         simulate: getSimulateInput(

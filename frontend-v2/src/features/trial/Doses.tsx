@@ -24,7 +24,6 @@ interface Props {
 const Doses: React.FC<Props> = ({ project, protocol, units }) => {
   const {
     data: variable,
-    error: variableError,
     isLoading: isVariableLoading,
   } = useVariableRetrieveQuery(
     { id: protocol.variables[0] || 0 },

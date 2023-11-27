@@ -1,8 +1,5 @@
-import { useState } from "react";
 import {
-  Button,
   Dialog,
-  DialogActions,
   DialogContent,
   DialogTitle,
   Table,
@@ -11,16 +8,11 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  TextField,
   FormControl,
-  InputLabel,
   Select,
   MenuItem,
-  DialogContentText,
-  useTheme,
 } from "@mui/material";
 import {
-  Project,
   ProjectAccess,
   ProjectRead,
   useUserListQuery,
@@ -43,14 +35,11 @@ const UserAccess: React.FC<Props> = ({
   open,
   userAccess,
   append,
-  remove,
   control,
   onClose,
-  project,
 }) => {
-  const theme = useTheme();
 
-  const { data: users, error, isLoading } = useUserListQuery();
+  const { data: users } = useUserListQuery();
 
   // create map from user id to user object
   const userMap = new Map();

@@ -6,12 +6,12 @@ import { UserRead } from "../../app/backendApi";
 export const fetchCsrf = createAsyncThunk<string, undefined>(
   "login/fetchCsrf",
   async (_, { dispatch }) => {
-    const response = await fetch("/api/csrf/", {
+    const csrfResponse = await fetch("/api/csrf/", {
       method: "GET",
       credentials: "include",
     }).then((response) => response.json());
-    localStorage.setItem("csrf", response["X-CSRFToken"]);
-    return response["X-CSRFToken"];
+    localStorage.setItem("csrf", csrfResponse["X-CSRFToken"]);
+    return csrfResponse["X-CSRFToken"];
   },
 );
 
@@ -29,7 +29,7 @@ export const fetchSession = createAsyncThunk<
   undefined,
   { rejectValue: LoginErrorResponse }
 >("login/fetchSession", async (_, { dispatch, rejectWithValue }) => {
-  const response = await fetch("/api/session/", {
+  const sessionResponse = await fetch("/api/session/", {
     method: "GET",
     credentials: "include",
   })
@@ -41,7 +41,7 @@ export const fetchSession = createAsyncThunk<
     .catch((err) => {
       return rejectWithValue({ error: err.error });
     });
-  return response;
+  return sessionResponse;
 });
 
 function isResponseOk(response: Response) {
@@ -157,7 +157,7 @@ export default slice.reducer;
 export const selectCurrentUser = (state: RootState) => state.login.user;
 export const selectCsrf = (state: RootState) => state.login.csrf;
 export const selectAuthHeaders = (state: RootState) => {
-  let headers = { "X-CSRFToken": "" };
+  const headers = { "X-CSRFToken": "" };
   const csrf = state.login.csrf;
   if (csrf) {
     headers["X-CSRFToken"] = csrf;

@@ -1,9 +1,10 @@
 import * as React from "react";
 import {
-  CombinedModel,
   CombinedModelRead,
   CombinedModelUpdateApiArg,
   Pharmacokinetic,
+  PharmacokineticRead,
+  PharmacodynamicRead,
   ProjectRead,
   usePharmacodynamicListQuery,
   usePharmacokineticListQuery,
@@ -34,12 +35,10 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props) => {
   // get list of pd models
   const {
     data: pdModels,
-    error: pdModelError,
     isLoading: pdModelLoading,
   } = usePharmacodynamicListQuery();
   const {
     data: pkModels,
-    error: pkModelError,
     isLoading: pkModelLoading,
   } = usePharmacokineticListQuery();
   const [showCode, setShowCode] = React.useState(false);
@@ -53,45 +52,45 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props) => {
 
   const clinical = project.species === "H";
   const pkModelsFiltered = pkModels.filter(
-    (model: Pharmacokinetic) =>
-      !model.name.includes(!clinical ? "_clinical" : "_preclinical"),
+    (m: Pharmacokinetic) =>
+      !m.name.includes(!clinical ? "_clinical" : "_preclinical"),
   );
   const pdModelsFiltered = pdModels.filter(
-    (model) =>
-      model.name !== "tumour_growth_inhibition_model_koch" &&
-      model.name !== "tumour_growth_inhibition_model_koch_reparametrised",
+    (m) =>
+      m.name !== "tumour_growth_inhibition_model_koch" &&
+      m.name !== "tumour_growth_inhibition_model_koch_reparametrised",
   );
 
   let pd_model_options: { value: number | string; label: string }[] =
-    pdModelsFiltered.map((model) => {
-      return { value: model.id, label: model.name };
+    pdModelsFiltered.map((m) => {
+      return { value: m.id, label: m.name };
     });
   pd_model_options.push({ value: "", label: "None" });
-  let pk_model_options = pkModelsFiltered.map((model) => {
-    return { value: model.id, label: model.name };
+  const pk_model_options = pkModelsFiltered.map((m) => {
+    return { value: m.id, label: m.name };
   });
   const pk_model_map = pkModels.reduce(
-    (map, model) => {
-      map[model.id] = model;
+    (map, m) => {
+      map[m.id] = m;
       return map;
     },
-    {} as { [key: number]: any },
+    {} as { [key: number]: PharmacokineticRead},
   );
   const pd_model_map = pdModels.reduce(
-    (map, model) => {
-      map[model.id] = model;
+    (map, m) => {
+      map[m.id] = m;
       return map;
     },
-    {} as { [key: number]: any },
+    {} as { [key: number]: PharmacodynamicRead},
   );
 
   const pdIsTumourGrowth =
     model.pd_model &&
     pd_model_map[model.pd_model].name.includes("tumour_growth") &&
     !pd_model_map[model.pd_model].name.includes("inhibition");
-  let pd_model2_options: { value: number | string; label: string }[] =
+  const pd_model2_options: { value: number | string; label: string }[] =
     pdModelsFiltered
-      .filter((model) => model.name.includes("tumour_growth_inhibition"))
+      .filter((m) => m.name.includes("tumour_growth_inhibition"))
       .map((model) => {
         return { value: model.id, label: model.name };
       });

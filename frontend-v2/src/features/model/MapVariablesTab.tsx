@@ -46,7 +46,7 @@ const MapVariablesTab: React.FC<Props> = ({
     return <>No concentration or amount unit found</>;
   }
 
-  let timeVaryingVariables = variables.filter((variable) => !variable.constant);
+  const timeVaryingVariables = variables.filter((variable) => !variable.constant);
   timeVaryingVariables.sort((a, b) => {
     const aisPK = a.qname.startsWith("PK");
     const bisPK = b.qname.startsWith("PK");

@@ -36,7 +36,8 @@ function SelectField<T extends FieldValues>({
 }: Props<T>): React.ReactElement {
   const labelId = `${name}-label`;
   const displayEmpty = selectProps?.displayEmpty || true;
-  const labelWidth = (label ? label.length : 0) * 9;
+  const pixelPerChar = 9;
+  const labelWidth = (label ? label.length : 0) * pixelPerChar;
   return (
     <Controller
       name={name}

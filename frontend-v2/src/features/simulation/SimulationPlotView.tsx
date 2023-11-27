@@ -2,15 +2,10 @@ import React, { useState } from "react";
 import Plot from "react-plotly.js";
 import {
   CombinedModelRead,
-  Compound,
   CompoundRead,
   SimulateResponse,
   Simulation,
-  SimulationPlot,
-  SimulationPlotRead,
-  Unit,
   UnitRead,
-  Variable,
   VariableRead,
   useProtocolListQuery,
 } from "../../app/backendApi";
@@ -18,7 +13,6 @@ import {
   AxisType,
   Config,
   Data,
-  Icons,
   Layout,
   Icon as PlotlyIcon,
 } from "plotly.js";
@@ -33,7 +27,6 @@ import { Control, FieldArrayWithId, UseFormSetValue } from "react-hook-form";
 import SimulationPlotForm from "./SimulationPlotForm";
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
-import { type } from "os";
 
 interface SimulationPlotProps {
   index: number;
@@ -63,11 +56,7 @@ const SimulationPlotView: React.FC<SimulationPlotProps> = ({
   const projectId = useSelector(
     (state: RootState) => state.main.selectedProject,
   );
-  const {
-    data: protocols,
-    error: protocolsError,
-    isLoading: isProtocolsLoading,
-  } = useProtocolListQuery({ projectId: projectId || 0 }, { skip: !projectId });
+  useProtocolListQuery({ projectId: projectId || 0 }, { skip: !projectId });
 
   const [open, setOpen] = useState(false);
 
@@ -294,24 +283,6 @@ const SimulationPlotView: React.FC<SimulationPlotProps> = ({
     ln: { type: "log", dtick: Math.log10(Math.E) },
   };
 
-  // axis types
-  let typey: AxisType = "linear";
-  let typey2: AxisType = "linear";
-  if (
-    plot.y_scale === "lg2" ||
-    plot.y_scale === "lg10" ||
-    plot.y_scale === "ln"
-  ) {
-    typey = "log";
-  }
-  if (
-    plot.y2_scale === "lg2" ||
-    plot.y2_scale === "lg10" ||
-    plot.y2_scale === "ln"
-  ) {
-    typey2 = "log";
-  }
-
   // axis dticks
   let dticky: number | string | undefined = undefined;
   let dticky2: number | string | undefined = undefined;
@@ -335,35 +306,6 @@ const SimulationPlotView: React.FC<SimulationPlotProps> = ({
   } else if (plot.y2_scale === "ln" && rangey2) {
     dticky2 = Math.log10(nearestPowerOfe(rangey2[1] - rangey2[0]) / 10.0);
   }
-
-  //let dosingEvents: number[] = []
-  //function arange(start: number, stop: number, step: number) {
-  //    let arr: number[] = [];
-  //    do {
-  //      arr.push(arr[arr.length - 1] + step);
-  //    } while (arr[arr.length - 1] < stop);
-  //    return arr;
-  //};
-  //if (protocols) {
-  //  const tlag_var = variables.find((v) => v.binding === 'tlag');
-  //  for (const protocol of protocols) {
-  //    let lastDoseTime = tlag;
-  //    for (const dose of protocol.doses) {
-  //      const repeat_interval = dose.repeat_interval || 1.0;
-  //      const repeats = dose.repeats || 0;
-  //      if (repeat_interval <= 0) {
-  //        continue;
-  //      }
-  //      const startTimes = arange(
-  //        dose.start_time + lastDoseTime,
-  //        dose.start_time + lastDoseTime + repeat_interval * repeats,
-  //        repeat_interval
-  //      );
-  //      lastDoseTime = startTimes[startTimes.length - 1];
-  //      dosingEvents = dosingEvents.concat(startTimes.map(x => xconversionFactor * x)),
-  //    }
-  //  }
-  //}
 
   const plotLayout: Partial<Layout> = {
     dragmode: "pan",
