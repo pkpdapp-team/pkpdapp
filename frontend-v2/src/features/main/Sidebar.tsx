@@ -23,6 +23,8 @@ import { logout } from "../login/loginSlice";
 import { useAppDispatch } from "../../app/hooks";
 import ErrorIcon from "@mui/icons-material/Error";
 import {
+  CombinedModelRead,
+  Protocol,
   useCombinedModelListQuery,
   useProjectRetrieveQuery,
   useProtocolListQuery,
@@ -50,24 +52,29 @@ export default function Sidebar() {
   const projectId = useSelector(
     (state: RootState) => state.main.selectedProject,
   );
+  const projectIdOrZero = projectId || 0;
   const { data: models } =
     useCombinedModelListQuery(
-      { projectId: projectId || 0 },
+      { projectId: projectIdOrZero },
       { skip: !projectId },
     );
   const {
     data: protocols,
-  } = useProtocolListQuery({ projectId: projectId || 0 }, { skip: !projectId });
+  } = useProtocolListQuery({ projectId: projectIdOrZero }, { skip: !projectId });
   const model = models?.[0] || null;
   const { data: project } =
-    useProjectRetrieveQuery({ id: projectId || 0 }, { skip: !projectId });
+    useProjectRetrieveQuery({ id: projectIdOrZero }, { skip: !projectId });
+
+  const modelIsIncomplete = (model: CombinedModelRead | null, protocols: ProtocolListApiResponse | undefined) => {
+    return (
+      (model && model.pk_model === null) ||
+      (model && model.pd_model && model.mappings.length === 0) ||
+      (protocols && protocols.length === 0)
+    );
+  };
 
   let errors: { [key: string]: string } = {};
-  if (
-    (model && model.pk_model === null) ||
-    (model && model.pd_model && model.mappings.length === 0) ||
-    (protocols && protocols.length === 0)
-  ) {
+  if (modelIsIncomplete(model, protocols)) {
     errors[PageName.MODEL] =
       "Model is incomplete, see the Model tab for details";
   }
