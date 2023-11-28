@@ -66,11 +66,11 @@ export default function Sidebar() {
   const { data: project } =
     useProjectRetrieveQuery({ id: projectIdOrZero }, { skip: !projectId });
 
-  const modelIsIncomplete = (model: CombinedModelRead | null, protocols: ProtocolListApiResponse | undefined) => {
+  const modelIsIncomplete = (mdl: CombinedModelRead | null, prtcls: ProtocolListApiResponse | undefined) => {
     return (
-      (model && model.pk_model === null) ||
-      (model && model.pd_model && model.mappings.length === 0) ||
-      (protocols && protocols.length === 0)
+      (mdl && mdl.pk_model === null) ||
+      (mdl && mdl.pd_model && mdl.mappings.length === 0) ||
+      (prtcls && prtcls.length === 0)
     );
   };
 

@@ -176,14 +176,6 @@ const ProjectTable: React.FC = () => {
                 combinedModel.data.time_unit;
               const defaultSimultationTime =
                 compound?.compound_type === "SM" ? SM_SIM_TIME : LM_SIM_TIME;
-              const defaultPlot: SimulationPlot = {
-                y_axes: [],
-                cx_lines: [],
-                index: 0,
-                x_unit: defaultXUnit,
-                y_unit: null,
-                y_unit2: null,
-              };
               addSimulation({
                 simulation: {
                   name: `default`,
