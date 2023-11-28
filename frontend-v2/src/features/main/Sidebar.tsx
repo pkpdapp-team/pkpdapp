@@ -25,6 +25,7 @@ import ErrorIcon from "@mui/icons-material/Error";
 import {
   CombinedModelRead,
   Protocol,
+  ProtocolListApiResponse,
   useCombinedModelListQuery,
   useProjectRetrieveQuery,
   useProtocolListQuery,
