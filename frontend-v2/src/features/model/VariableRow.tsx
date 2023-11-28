@@ -37,6 +37,8 @@ interface Props {
   timeVariable: VariableRead | undefined;
 }
 
+type DerivedVariableType = "RO" | "FUP" | "BPR" | "TLG";
+
 const derivedVariableRegex = /calc_.*_(f|bl|RO)/;
 
 const VariableRow: React.FC<Props> = ({
@@ -204,7 +206,7 @@ const VariableRow: React.FC<Props> = ({
     }
   };
 
-  const addDerived = (type: "RO" | "FUP" | "BPR" | "TLG") => {
+  const addDerived = (type: DerivedVariableType) => {
     // can only be one 'FUP' and one 'BPR' across all variables
     const sameType = derivedVariables
       .map((d, i) => ({ ...d, index: i }))
@@ -227,18 +229,18 @@ const VariableRow: React.FC<Props> = ({
     derivedVariablesRemove(index);
   };
 
-  const onClickDerived = (type: "RO" | "FUP" | "BPR" | "TLG") => () => {
+  const onClickDerived = (type: DerivedVariableType) => () => {
     const index = derivedIndex(type);
     return index >= 0 ? removeDerived(index) : addDerived(type);
   };
 
-  const derivedIndex = (type: "RO" | "FUP" | "BPR" | "TLG") => {
+  const derivedIndex = (type: DerivedVariableType) => {
     return derivedVariables.findIndex(
       (ro) => ro.pk_variable === variable.id && ro.type === type,
     );
   };
 
-  const isLinkedTo = (type: "RO" | "FUP" | "BPR" | "TLG") => {
+  const isLinkedTo = (type: DerivedVariableType) => {
     return derivedIndex(type) >= 0;
   };
 

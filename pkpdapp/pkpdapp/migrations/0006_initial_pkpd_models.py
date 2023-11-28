@@ -381,7 +381,6 @@ Description of a clinical two compartment TMDD model here.
     Unit = apps.get_model("pkpdapp", "Unit")
     Variable = apps.get_model("pkpdapp", "Variable")
     Project = apps.get_model("pkpdapp", "Project")
-    demo_project = Project.objects.get(name='demo')
     for m in models_pd:
         try:
             with urllib.request.urlopen(m['sbml_url'], timeout=5) as f:
@@ -390,7 +389,6 @@ Description of a clinical two compartment TMDD model here.
                     name=m['name'],
                     description=m['description'],
                     mmt=MyokitModelMixin.sbml_string_to_mmt(sbml_string),
-                    project=demo_project,
                     is_library_model=True,
                 )
 
@@ -493,61 +491,9 @@ Description of a clinical two compartment TMDD model here.
         except urllib.error.URLError:
             print('WARNING: urlopen timed-out, no data loaded')
 
-    model = CombinedModel.objects.create(
-        name='demo',
-        project=demo_project,
-    )
-
-    # three_comp_model = PharmacokineticModel.objects.get(
-    #    name='three_compartment_pk_model'
-    # )
-    # usecase0_model = DosedPharmacokineticModel.objects.create(
-    #    name='usecase0',
-    #    project=demo_project,
-    #    pk_model=three_comp_model,
-    #    dose_compartment='central',
-    #    protocol=(
-    #        Dataset.objects.get(name='usecase0')
-    #        .subjects.first().protocol
-    #    )
-    # )
-    # for variable in usecase0_model.variables.all():
-    #    if variable.qname == 'myokit.drug_c_scale':
-    #        continue
-    #    if variable.state and variable.qname != 'myokit.drug_c_concentration':
-    #        variable.display = False
-    #    variable.lower_bound = 0
-    #    variable.upper_bound = 0.1
-    #    variable.default_value = 0.05
-    #    variable.save()
-
-    # usecase1_model = DosedPharmacokineticModel.objects.create(
-    #    name='usecase1',
-    #    project=demo_project,
-    #    pk_model=three_comp_model,
-    #    dose_compartment='central',
-    #    protocol=(
-    #        Dataset.objects.get(name='usecase1')
-    #        .subjects.first().protocol
-    #    )
-    # )
-    # for variable in usecase1_model.variables.all():
-    #    if variable.qname == 'myokit.drug_c_scale':
-    #        continue
-    #    if variable.state and variable.qname != 'myokit.drug_c_concentration':
-    #        variable.display = False
-
-    #    variable.lower_bound = 0
-    #    variable.upper_bound = 0.1
-    #    variable.default_value = 0.05
-    #    variable.save()
-
-
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('pkpdapp', '0003_initial_users_and_projects'),
-        ('pkpdapp', '0005_initial_datasets'),
         ('pkpdapp', '0007_initial_units'),
     ]
 

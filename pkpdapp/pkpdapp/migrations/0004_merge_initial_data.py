@@ -10,9 +10,7 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('pkpdapp', '0003_initial_users_and_projects'),
         ('pkpdapp', '0006_initial_pkpd_models'),
-        ('pkpdapp', '0005_initial_datasets'),
         ('pkpdapp', '0008_initial_algorithms'),
     ]
 

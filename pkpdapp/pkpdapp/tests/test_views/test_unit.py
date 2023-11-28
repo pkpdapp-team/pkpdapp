@@ -22,9 +22,9 @@ class UnitTestCase(APITestCase):
                 pd_model=self.pd_model,
             )
 
-        user = User.objects.get(username='demo')
+        self.user = User.objects.create_user(username='testuser', password='12345')
         self.client = APIClient()
-        self.client.force_authenticate(user=user)
+        self.client.force_authenticate(user=self.user)
 
     def test_dosed_pk_project_filter(self):
         response = self.client.get(

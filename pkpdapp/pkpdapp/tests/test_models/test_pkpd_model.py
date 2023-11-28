@@ -16,18 +16,18 @@ from pkpdapp.models import (
     PkpdMapping,
     Project,
     DerivedVariable,
+    Compound,
 )
 
 
 class TestPkpdModel(TestCase):
     def setUp(self):
-        self.project = Project.objects.get(
-            name="demo",
-        )
-
-        user = User.objects.get(username="demo")
+        self.user = User.objects.create_user(username='testuser', password='12345')
+        compound = Compound.objects.create(name='demo')
+        self.project = Project.objects.create(name='demo', compound=compound)
+        self.project.users.add(self.user)
         self.client = APIClient()
-        self.client.force_authenticate(user=user)
+        self.client.force_authenticate(user=self.user)
 
     def test_combined_model_creation(self):
         pk_model = PharmacokineticModel.objects.get(name="one_compartment_clinical")

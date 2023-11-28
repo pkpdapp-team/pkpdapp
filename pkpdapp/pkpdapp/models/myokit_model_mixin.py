@@ -413,15 +413,6 @@ class MyokitModelMixin:
         variable = self.variables.get(qname=myokit_variable_sbml.qname())
         return self._convert_unit(variable, myokit_variable_sbml, value)
 
-        if variable.unit is None:
-            conversion_factor = 1.0
-        else:
-            conversion_factor = myokit.Unit.conversion_factor(
-                variable.unit.get_myokit_unit(), myokit_variable_sbml.unit()
-            ).value()
-
-        return conversion_factor * value
-
     def serialize_datalog(self, datalog, myokit_model):
         result = {}
         for k, v in datalog.items():

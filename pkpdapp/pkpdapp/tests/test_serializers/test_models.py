@@ -10,6 +10,7 @@ import urllib.request
 from pkpdapp.models import (
     PharmacodynamicModel,
     Project,
+    Compound,
 )
 from pkpdapp.api.serializers import (
     PharmacodynamicSbmlSerializer, PharmacodynamicSerializer
@@ -20,8 +21,10 @@ BASE_URL_DATASETS = 'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-data
 
 class TestPdModelSerializer(TestCase):
     def setUp(self):
-        self.project = Project.objects.get(
+        compound = Compound.objects.create(name='demo')
+        self.project = Project.objects.create(
             name='demo',
+            compound=compound
         )
 
     def test_sbml_serialize(self):

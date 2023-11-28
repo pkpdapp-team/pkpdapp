@@ -24,9 +24,9 @@ def faux_test_file(url, ending='.csv'):
 
 class DatasetTestCase(APITestCase):
     def setUp(self):
-        user = User.objects.get(username='demo')
+        self.user = User.objects.create_user(username='testuser', password='12345')
         self.client = APIClient()
-        self.client.force_authenticate(user=user)
+        self.client.force_authenticate(user=self.user)
 
     def test_dataset_creation(self):
         data = {"name": "hello", "datatime": "", "description": "bye"}
