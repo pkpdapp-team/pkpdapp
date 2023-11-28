@@ -318,27 +318,27 @@ const Simulations: React.FC = () => {
     }
   };
 
-  const onSubmit = (data: Simulation) => {
+  const onSubmit = (dta: Simulation) => {
     // empty string keeps getting in, so convert to null
-    for (let i = 0; i < data.plots.length; i++) {
+    for (let i = 0; i < dta.plots.length; i++) {
       // @ts-ignore
-      if (data.plots[i].min === "") {
-        data.plots[i].min = null;
+      if (dta.plots[i].min === "") {
+        dta.plots[i].min = null;
       }
       // @ts-ignore
-      if (data.plots[i].max === "") {
-        data.plots[i].max = null;
+      if (dta.plots[i].max === "") {
+        dta.plots[i].max = null;
       }
       // @ts-ignore
-      if (data.plots[i].min2 === "") {
-        data.plots[i].min2 = null;
+      if (dta.plots[i].min2 === "") {
+        dta.plots[i].min2 = null;
       }
       // @ts-ignore
-      if (data.plots[i].max2 === "") {
-        data.plots[i].max2 = null;
+      if (dta.plots[i].max2 === "") {
+        dta.plots[i].max2 = null;
       }
     }
-    updateSimulation({ id: simulation?.id || 0, simulation: data });
+    updateSimulation({ id: simulation?.id || 0, simulation: dta });
   };
 
   // save simulation every second if dirty
