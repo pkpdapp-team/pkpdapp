@@ -10,7 +10,6 @@ import {
   useProtocolListQuery,
 } from "../../app/backendApi";
 import {
-  AxisType,
   Config,
   Data,
   Layout,
@@ -27,6 +26,124 @@ import { Control, FieldArrayWithId, UseFormSetValue } from "react-hook-form";
 import SimulationPlotForm from "./SimulationPlotForm";
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
+
+function dticks(rangey: number[] | undefined, rangey2: number[] | undefined, plot: FieldArrayWithId<Simulation, "plots", "id">): { dticky: number | string | undefined; dticky2: number | string | undefined } {
+  // axis dticks
+  let dticky: number | string | undefined = undefined;
+  let dticky2: number | string | undefined = undefined;
+  function nearestPowerOf2(n: number) {
+    return 1 << (31 - Math.clz32(n));
+  }
+  function nearestPowerOfe(n: number) {
+    return Math.pow(Math.E, Math.floor(Math.log(n) / Math.log(Math.E)));
+  }
+  if (plot.y_scale === "lg2" && rangey) {
+    dticky = Math.log10(nearestPowerOf2(rangey[1] - rangey[0]) / 100.0);
+  } else if (plot.y_scale === "lg10") {
+    dticky = `D${2}`;
+  } else if (plot.y_scale === "ln" && rangey) {
+    dticky = Math.log10(nearestPowerOfe(rangey[1] - rangey[0]) / 10.0);
+  }
+  if (plot.y2_scale === "lg2" && rangey2) {
+    dticky2 = Math.log10(nearestPowerOf2(rangey2[1] - rangey2[0]) / 10.0);
+  } else if (plot.y2_scale === "lg10") {
+    dticky2 = `D${2}`;
+  } else if (plot.y2_scale === "ln" && rangey2) {
+    dticky2 = Math.log10(nearestPowerOfe(rangey2[1] - rangey2[0]) / 10.0);
+  }
+  return { dticky, dticky2 };
+}
+
+function ranges(minY: number | undefined, maxY: number | undefined, minY2: number | undefined, maxY2: number | undefined , plot: FieldArrayWithId<Simulation, "plots", "id">): { rangey: number[] | undefined; rangey2: number[] | undefined } {
+  // setup range for y-axis
+  let rangey: number[] | undefined = undefined;
+  let rangey2: number[] | undefined = undefined;
+
+  if (minY !== undefined && maxY !== undefined) {
+    if (
+      plot.y_scale === "lg2" ||
+      plot.y_scale === "lg10" ||
+      plot.y_scale === "ln"
+    ) {
+      rangey = [Math.log10(minY), Math.log10(2 * maxY)];
+      if (plot.max) {
+        rangey[1] = Math.log10(plot.max);
+      }
+      if (plot.min) {
+        rangey[0] = Math.log10(plot.min);
+      } else if (plot.max) {
+        rangey[0] = Math.log10(Math.max(minY, plot.max * 1e-3));
+      } else {
+        rangey[0] = Math.log10(Math.max(minY, maxY * 1e-3));
+      }
+    } else {
+      // linear scale
+      if (plot.max || plot.min) {
+        const deltaY = (plot.max || maxY) - (plot.min || minY);
+        rangey = [minY - 0.1 * deltaY, maxY + 0.1 * deltaY];
+        if (plot.max) {
+          rangey[1] = plot.max;
+        }
+        if (plot.min) {
+          rangey[0] = plot.min;
+        }
+      }
+    }
+  }
+  if (minY2 !== undefined && maxY2 !== undefined) {
+    if (
+      plot.y2_scale === "lg2" ||
+      plot.y2_scale === "lg10" ||
+      plot.y2_scale === "ln"
+    ) {
+      rangey2 = [Math.log10(minY2), Math.log10(maxY2)];
+      if (plot.max2) {
+        rangey2[1] = Math.log10(plot.max2);
+      }
+      if (plot.min2) {
+        rangey2[0] = Math.log10(plot.min2);
+      } else if (plot.max2) {
+        rangey2[0] = Math.log10(Math.max(minY2, plot.max2 * 1e-3));
+      } else {
+        rangey2[0] = Math.log10(Math.max(minY2, maxY2 * 1e-3));
+      }
+    }
+  }
+  return { rangey, rangey2 };
+}
+
+function genIcLines(units: UnitRead[], plot: FieldArrayWithId<Simulation, "plots", "id">, compound: CompoundRead, concentrationUnit: UnitRead) {
+  let icLines: number[] = [];
+
+  const concentrationUnitIds = concentrationUnit.compatible_units.map((unit) =>
+    parseInt(unit.id),
+  );
+  const yAxisIsConcentration = plot.y_unit
+    ? concentrationUnitIds.includes(plot.y_unit)
+    : false;
+
+  if (yAxisIsConcentration && compound.efficacy_experiments.length > 0) {
+    const exp = compound.efficacy_experiments[0];
+    if (exp.hill_coefficient && exp.c50) {
+      const yAxisUnit = units.find((unit) => unit.id === plot.y_unit);
+      const c50Unit = units.find((unit) => unit.id === exp.c50_unit);
+      const compatibleUnit = c50Unit?.compatible_units.find(
+        (u) => parseInt(u.id) === yAxisUnit?.id,
+      );
+      const factor = compatibleUnit
+        ? parseFloat(compatibleUnit.conversion_factor)
+        : 1.0;
+      icLines = plot.cx_lines.map((cx_line) => {
+        const hc = exp.hill_coefficient || 1.0;
+        const ec50 = exp.c50 || 0.0;
+        const cx = cx_line.value / (100.0 - cx_line.value);
+        const iCx = cx ** (1.0 / hc) * ec50;
+        return iCx * factor;
+      });
+    }
+  }
+  return icLines;
+}
 
 interface SimulationPlotProps {
   index: number;
@@ -161,39 +278,13 @@ const SimulationPlotView: React.FC<SimulationPlotProps> = ({
       };
     }
   });
-  let icLines: number[] = [];
 
   const concentrationUnit = units.find((unit) => unit.symbol === "pmol/L");
   if (concentrationUnit === undefined) {
     return <>No concentration or amount unit found</>;
   }
-  const concentrationUnitIds = concentrationUnit.compatible_units.map((unit) =>
-    parseInt(unit.id),
-  );
-  const yAxisIsConcentration = plot.y_unit
-    ? concentrationUnitIds.includes(plot.y_unit)
-    : false;
 
-  if (yAxisIsConcentration && compound.efficacy_experiments.length > 0) {
-    const exp = compound.efficacy_experiments[0];
-    if (exp.hill_coefficient && exp.c50) {
-      const yAxisUnit = units.find((unit) => unit.id === plot.y_unit);
-      const c50Unit = units.find((unit) => unit.id === exp.c50_unit);
-      const compatibleUnit = c50Unit?.compatible_units.find(
-        (u) => parseInt(u.id) === yAxisUnit?.id,
-      );
-      const factor = compatibleUnit
-        ? parseFloat(compatibleUnit.conversion_factor)
-        : 1.0;
-      icLines = plot.cx_lines.map((cx_line) => {
-        const hc = exp.hill_coefficient || 1.0;
-        const ec50 = exp.c50 || 0.0;
-        const cx = cx_line.value / (100.0 - cx_line.value);
-        const iCx = cx ** (1.0 / hc) * ec50;
-        return iCx * factor;
-      });
-    }
-  }
+  const icLines: number[] = genIcLines(units, plot, compound, concentrationUnit);
 
   let yAxisTitle = plotData
     //@ts-expect-error
@@ -220,59 +311,7 @@ const SimulationPlotView: React.FC<SimulationPlotProps> = ({
   }
 
   // setup range for y-axis
-  let rangey: number[] | undefined = undefined;
-  let rangey2: number[] | undefined = undefined;
-
-  if (minY !== undefined && maxY !== undefined) {
-    if (
-      plot.y_scale === "lg2" ||
-      plot.y_scale === "lg10" ||
-      plot.y_scale === "ln"
-    ) {
-      rangey = [Math.log10(minY), Math.log10(2 * maxY)];
-      if (plot.max) {
-        rangey[1] = Math.log10(plot.max);
-      }
-      if (plot.min) {
-        rangey[0] = Math.log10(plot.min);
-      } else if (plot.max) {
-        rangey[0] = Math.log10(Math.max(minY, plot.max * 1e-3));
-      } else {
-        rangey[0] = Math.log10(Math.max(minY, maxY * 1e-3));
-      }
-    } else {
-      // linear scale
-      if (plot.max || plot.min) {
-        const deltaY = (plot.max || maxY) - (plot.min || minY);
-        rangey = [minY - 0.1 * deltaY, maxY + 0.1 * deltaY];
-        if (plot.max) {
-          rangey[1] = plot.max;
-        }
-        if (plot.min) {
-          rangey[0] = plot.min;
-        }
-      }
-    }
-  }
-  if (minY2 !== undefined && maxY2 !== undefined) {
-    if (
-      plot.y2_scale === "lg2" ||
-      plot.y2_scale === "lg10" ||
-      plot.y2_scale === "ln"
-    ) {
-      rangey2 = [Math.log10(minY2), Math.log10(maxY2)];
-      if (plot.max2) {
-        rangey2[1] = Math.log10(plot.max2);
-      }
-      if (plot.min2) {
-        rangey2[0] = Math.log10(plot.min2);
-      } else if (plot.max2) {
-        rangey2[0] = Math.log10(Math.max(minY2, plot.max2 * 1e-3));
-      } else {
-        rangey2[0] = Math.log10(Math.max(minY2, maxY2 * 1e-3));
-      }
-    }
-  }
+  const { rangey, rangey2 } = ranges(minY, maxY, minY2, maxY2, plot);
 
   const axisScaleOptions: {
     [key: string]: { type: "linear" | "log"; dtick?: number | string };
@@ -284,28 +323,7 @@ const SimulationPlotView: React.FC<SimulationPlotProps> = ({
   };
 
   // axis dticks
-  let dticky: number | string | undefined = undefined;
-  let dticky2: number | string | undefined = undefined;
-  function nearestPowerOf2(n: number) {
-    return 1 << (31 - Math.clz32(n));
-  }
-  function nearestPowerOfe(n: number) {
-    return Math.pow(Math.E, Math.floor(Math.log(n) / Math.log(Math.E)));
-  }
-  if (plot.y_scale === "lg2" && rangey) {
-    dticky = Math.log10(nearestPowerOf2(rangey[1] - rangey[0]) / 100.0);
-  } else if (plot.y_scale === "lg10") {
-    dticky = `D${2}`;
-  } else if (plot.y_scale === "ln" && rangey) {
-    dticky = Math.log10(nearestPowerOfe(rangey[1] - rangey[0]) / 10.0);
-  }
-  if (plot.y2_scale === "lg2" && rangey2) {
-    dticky2 = Math.log10(nearestPowerOf2(rangey2[1] - rangey2[0]) / 10.0);
-  } else if (plot.y2_scale === "lg10") {
-    dticky2 = `D${2}`;
-  } else if (plot.y2_scale === "ln" && rangey2) {
-    dticky2 = Math.log10(nearestPowerOfe(rangey2[1] - rangey2[0]) / 10.0);
-  }
+  // const { dticky, dticky2 } = dticks(rangey, rangey2, plot);
 
   const plotLayout: Partial<Layout> = {
     dragmode: "pan",
