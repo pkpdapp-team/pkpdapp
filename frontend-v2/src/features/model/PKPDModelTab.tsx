@@ -92,8 +92,8 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props) => {
   const pd_model2_options: { value: number | string; label: string }[] =
     pdModelsFiltered
       .filter((m) => m.name.includes("tumour_growth_inhibition"))
-      .map((model) => {
-        return { value: model.id, label: model.name };
+      .map((m) => {
+        return { value: m.id, label: m.name };
       });
   pd_model2_options.push({ value: "", label: "None" });
   const isTMDDmodel = model.pk_model
