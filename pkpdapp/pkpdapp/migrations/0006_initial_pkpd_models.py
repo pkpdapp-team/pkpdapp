@@ -377,10 +377,8 @@ Description of a clinical two compartment TMDD model here.
 
     PharmacodynamicModel = apps.get_model("pkpdapp", "PharmacodynamicModel")
     PharmacokineticModel = apps.get_model("pkpdapp", "PharmacokineticModel")
-    CombinedModel = apps.get_model("pkpdapp", "CombinedModel")
     Unit = apps.get_model("pkpdapp", "Unit")
     Variable = apps.get_model("pkpdapp", "Variable")
-    Project = apps.get_model("pkpdapp", "Project")
     for m in models_pd:
         try:
             with urllib.request.urlopen(m['sbml_url'], timeout=5) as f:
@@ -490,6 +488,7 @@ Description of a clinical two compartment TMDD model here.
             )
         except urllib.error.URLError:
             print('WARNING: urlopen timed-out, no data loaded')
+
 
 class Migration(migrations.Migration):
 
