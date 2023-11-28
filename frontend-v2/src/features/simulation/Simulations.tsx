@@ -318,33 +318,36 @@ const Simulations: React.FC = () => {
     }
   };
 
+  const onSubmit = (data: Simulation) => {
+    // empty string keeps getting in, so convert to null
+    for (let i = 0; i < data.plots.length; i++) {
+      // @ts-ignore
+      if (data.plots[i].min === "") {
+        data.plots[i].min = null;
+      }
+      // @ts-ignore
+      if (data.plots[i].max === "") {
+        data.plots[i].max = null;
+      }
+      // @ts-ignore
+      if (data.plots[i].min2 === "") {
+        data.plots[i].min2 = null;
+      }
+      // @ts-ignore
+      if (data.plots[i].max2 === "") {
+        data.plots[i].max2 = null;
+      }
+    }
+    updateSimulation({ id: simulation?.id || 0, simulation: data });
+  };
+
   // save simulation every second if dirty
   useEffect(() => {
     const intervalId = setInterval(() => {
-      if (isDirty && simulation) {
-        handleSubmit((data) => {
-          // empty string keeps getting in, so convert to null
-          for (let i = 0; i < data.plots.length; i++) {
-            // @ts-ignore
-            if (data.plots[i].min === "") {
-              data.plots[i].min = null;
-            }
-            // @ts-ignore
-            if (data.plots[i].max === "") {
-              data.plots[i].max = null;
-            }
-            // @ts-ignore
-            if (data.plots[i].min2 === "") {
-              data.plots[i].min2 = null;
-            }
-            // @ts-ignore
-            if (data.plots[i].max2 === "") {
-              data.plots[i].max2 = null;
-            }
-          }
-          updateSimulation({ id: simulation.id, simulation: data });
-        })();
+      if (!isDirty || !simulation) {
+        return;
       }
+      handleSubmit(onSubmit)();
     }, 1000);
 
     return () => clearInterval(intervalId);
