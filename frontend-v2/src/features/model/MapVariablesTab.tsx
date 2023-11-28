@@ -50,11 +50,9 @@ const MapVariablesTab: React.FC<Props> = ({
   timeVaryingVariables.sort((a, b) => {
     const aisPK = a.qname.startsWith("PK");
     const bisPK = b.qname.startsWith("PK");
-    if (aisPK && !bisPK) {
-      return -1;
-    }
-    if (!aisPK && bisPK) {
-      return 1;
+    const hasPk = aisPK || bisPK;
+    if (hasPk) {
+      return aisPK ? -1 : 1;
     }
     const aIsConcentration =
       concentrationUnit?.compatible_units.find(

@@ -43,7 +43,8 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props) => {
   } = usePharmacokineticListQuery();
   const [showCode, setShowCode] = React.useState(false);
 
-  if (pdModelLoading || pkModelLoading) {
+  const loading = [pdModelLoading, pkModelLoading];
+  if (loading.some((l) => l)) {
     return <div>Loading...</div>;
   }
   if (!pdModels || !pkModels) {
@@ -61,7 +62,7 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props) => {
       m.name !== "tumour_growth_inhibition_model_koch_reparametrised",
   );
 
-  let pd_model_options: { value: number | string; label: string }[] =
+  const pd_model_options: { value: number | string; label: string }[] =
     pdModelsFiltered.map((m) => {
       return { value: m.id, label: m.name };
     });

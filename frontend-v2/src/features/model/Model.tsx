@@ -33,8 +33,9 @@ const Model: React.FC = () => {
   const projectId = useSelector(
     (state: RootState) => state.main.selectedProject,
   );
+  const projectIdOrZero = projectId || 0;
   const { data: project, isLoading: isProjectLoading } =
-    useProjectRetrieveQuery({ id: projectId || 0 }, { skip: !projectId });
+    useProjectRetrieveQuery({ id: projectIdOrZero }, { skip: !projectId });
   const { data: compound, isLoading: isLoadingCompound } =
     useCompoundRetrieveQuery(
       { id: project?.compound || 0 },
@@ -42,13 +43,13 @@ const Model: React.FC = () => {
     );
   const { data: models, isLoading: isModelsLoading } =
     useCombinedModelListQuery(
-      { projectId: projectId || 0 },
+      { projectId: projectIdOrZero },
       { skip: !projectId },
     );
   const {
     data: protocols,
     isLoading: isProtocolsLoading,
-  } = useProtocolListQuery({ projectId: projectId || 0 }, { skip: !projectId });
+  } = useProtocolListQuery({ projectId: projectIdOrZero }, { skip: !projectId });
   const model = models?.[0] || null;
   const [updateModel] = useCombinedModelUpdateMutation();
   const { data: variables, isLoading: isVariablesLoading } =
@@ -57,7 +58,7 @@ const Model: React.FC = () => {
       { skip: !model?.id },
     );
   const { data: simulations, isLoading: isSimulationsLoading } =
-    useSimulationListQuery({ projectId: projectId || 0 }, { skip: !projectId });
+    useSimulationListQuery({ projectId: projectIdOrZero }, { skip: !projectId });
   const { data: units, isLoading: isLoadingUnits } = useUnitListQuery(
     { compoundId: project?.compound },
     { skip: !project || !project.compound },
@@ -74,7 +75,7 @@ const Model: React.FC = () => {
   const defaultModel: CombinedModelRead = {
     id: 0,
     name: "",
-    project: projectId || 0,
+    project: projectIdOrZero,
     mappings: [],
     derived_variables: [],
     components: "",
@@ -174,15 +175,8 @@ const Model: React.FC = () => {
     return () => clearInterval(intervalId);
   }, [submit, isDirty]);
 
-  if (
-    isProjectLoading ||
-    isModelsLoading ||
-    isVariablesLoading ||
-    isProtocolsLoading ||
-    isSimulationsLoading ||
-    isLoadingCompound ||
-    isLoadingUnits
-  ) {
+  const loading = [isProjectLoading, isModelsLoading, isVariablesLoading, isProtocolsLoading, isSimulationsLoading, isLoadingCompound, isLoadingUnits];
+  if (loading.some((x) => x)) {
     return <div>Loading...</div>;
   }
 
@@ -191,20 +185,21 @@ const Model: React.FC = () => {
   }
 
   let tabErrors: { [key: string]: string } = {};
+  const tabKeys = ["PK/PD Model", "Map Variables", "Parameters"];
   if (model.pk_model === null) {
-    tabErrors["PK/PD Model"] = "Please select a PK model to simulate";
+    tabErrors[tabKeys[0]] = "Please select a PK model to simulate";
   }
   if (model.pd_model && model.mappings.length === 0) {
-    tabErrors["Map Variables"] =
+    tabErrors[tabKeys[1]] =
       "Please select a PK variable to link PK and PD models (Link to PD column)";
   }
   if (protocols && protocols.length === 0) {
-    tabErrors["Map Variables"] = "Please select a dosing compartment";
+    tabErrors[tabKeys[1]] = "Please select a dosing compartment";
   }
 
   return (
     <DynamicTabs
-      tabNames={["PK/PD Model", "Map Variables", "Parameters"]}
+      tabNames={tabKeys}
       tabErrors={tabErrors}
     >
       <TabPanel>
