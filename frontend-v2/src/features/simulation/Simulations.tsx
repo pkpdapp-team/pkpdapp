@@ -117,16 +117,17 @@ const Simulations: React.FC = () => {
   const projectId = useSelector(
     (state: RootState) => state.main.selectedProject,
   );
+  const projectIdOrZero = projectId || 0;
   const { data: project, isLoading: isProjectLoading } =
-    useProjectRetrieveQuery({ id: projectId || 0 }, { skip: !projectId });
+    useProjectRetrieveQuery({ id: projectIdOrZero }, { skip: !projectId });
   const { data: models, isLoading: isModelsLoading } =
     useCombinedModelListQuery(
-      { projectId: projectId || 0 },
+      { projectId: projectIdOrZero },
       { skip: !projectId },
     );
   const {
     data: protocols,
-  } = useProtocolListQuery({ projectId: projectId || 0 }, { skip: !projectId });
+  } = useProtocolListQuery({ projectId: projectIdOrZero }, { skip: !projectId });
   const model = useMemo(() => {
     return models?.[0] || undefined;
   }, [models]);
@@ -136,7 +137,7 @@ const Simulations: React.FC = () => {
       { skip: !model?.id },
     );
   const { data: simulations, isLoading: isSimulationsLoading } =
-    useSimulationListQuery({ projectId: projectId || 0 }, { skip: !projectId });
+    useSimulationListQuery({ projectId: projectIdOrZero }, { skip: !projectId });
   const simulation = useMemo(() => {
     return simulations?.[0] || undefined;
   }, [simulations]);
@@ -172,7 +173,7 @@ const Simulations: React.FC = () => {
     plots: [],
     nrows: 0,
     ncols: 0,
-    project: projectId || 0,
+    project: projectIdOrZero,
     time_max_unit: model?.time_unit || 0,
   };
 
@@ -349,13 +350,10 @@ const Simulations: React.FC = () => {
     return () => clearInterval(intervalId);
   }, [handleSubmit, isDirty, updateSimulation]);
 
-  if (
-    isProjectLoading ||
-    isSimulationsLoading ||
-    isModelsLoading ||
-    isLoadingCompound ||
-    isUnitsLoading
-  ) {
+  const loading = [isProjectLoading, isSimulationsLoading, isModelsLoading, isLoadingCompound, isUnitsLoading].some(
+    (v) => v,
+  );
+  if (loading) {
     return <div>Loading...</div>;
   }
 
