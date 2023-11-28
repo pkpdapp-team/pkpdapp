@@ -22,18 +22,19 @@ const Protocols: React.FC = () => {
   const selectedProject = useSelector(
     (state: RootState) => state.main.selectedProject,
   );
+  const selectedProjectOrZero = selectedProject || 0;
   const {
     data: project,
     isLoading: isProjectLoading,
   } = useProjectRetrieveQuery(
-    { id: selectedProject || 0 },
+    { id: selectedProjectOrZero },
     { skip: !selectedProject },
   );
   const {
     data: protocols,
     isLoading: isProtocolsLoading,
   } = useProtocolListQuery(
-    { projectId: selectedProject || 0 },
+    { projectId: selectedProjectOrZero },
     { skip: !selectedProject },
   );
   const { data: units, isLoading: unitsLoading } = useUnitListQuery(
@@ -41,7 +42,10 @@ const Protocols: React.FC = () => {
     { skip: !project?.compound },
   );
 
-  if (isProjectLoading || isProtocolsLoading || unitsLoading) {
+  const loading = [isProjectLoading, isProtocolsLoading, unitsLoading].some(
+    (x) => x,
+  );
+  if (loading) {
     return <div>Loading...</div>;
   }
 
