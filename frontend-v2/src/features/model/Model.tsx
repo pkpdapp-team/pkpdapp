@@ -184,7 +184,7 @@ const Model: React.FC = () => {
     return <div>Not found</div>;
   }
 
-  let tabErrors: { [key: string]: string } = {};
+  const tabErrors: { [key: string]: string } = {};
   const tabKeys = ["PK/PD Model", "Map Variables", "Parameters"];
   if (model.pk_model === null) {
     tabErrors[tabKeys[0]] = "Please select a PK model to simulate";

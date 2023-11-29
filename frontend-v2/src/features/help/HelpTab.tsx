@@ -39,13 +39,13 @@ const HelpTab: React.FC<Props> = ({ questions, videos }) => {
       <Box sx={{ display: "flex", flexWrap: "wrap" }}>
         {videos.map((video, index) => {
           return (
-            <Card sx={{ width: "500px", margin: 2, padding: 1 }}>
+            <Card sx={{ width: "500px", margin: 2, padding: 1 }} key={index} >
               <Typography variant="h6">{video.title}</Typography>
               <Box sx={{ display: "flex", flexWrap: "wrap" }}>
-                {video.keywords.map((keyword, index) => {
+                {video.keywords.map((keyword, vindex) => {
                   return (
                     <Chip
-                      key={index}
+                      key={vindex}
                       size="small"
                       label={keyword}
                       sx={{ margin: 0.2 }}

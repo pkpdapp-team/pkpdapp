@@ -213,7 +213,7 @@ const SimulationPlotView: React.FC<SimulationPlotProps> = ({
   let maxY: number | undefined = undefined;
   let maxY2: number | undefined = undefined;
 
-  let plotData: Data[] = plot.y_axes.map((y_axis) => {
+  const plotData: Data[] = plot.y_axes.map((y_axis) => {
     const variableValues = data.outputs[y_axis.variable];
     const variable = variables.find((v) => v.id === y_axis.variable);
     const variableName = variable?.name;

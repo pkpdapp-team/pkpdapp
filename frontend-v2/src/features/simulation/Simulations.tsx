@@ -54,8 +54,8 @@ const getSimulateInput = (
   timeMax?: number,
   allOutputs: boolean = false,
 ): Simulate => {
-  let outputs: string[] = [];
-  let simulateVariables: { [key: string]: number } = {};
+  const outputs: string[] = [];
+  const simulateVariables: { [key: string]: number } = {};
   for (const slider of simulation?.sliders || []) {
     if (sliderValues[slider.variable]) {
       const variable = variables?.find((v) => v.id === slider.variable);
@@ -97,7 +97,7 @@ const getSliderInitialValues = (
   existingSliderValues?: SliderValues,
   variables?: VariableRead[],
 ): SliderValues => {
-  let initialValues: { [key: number]: number } = {};
+  const initialValues: { [key: number]: number } = {};
   for (const slider of simulation?.sliders || []) {
     if (existingSliderValues && existingSliderValues[slider.variable]) {
       initialValues[slider.variable] = existingSliderValues[slider.variable];
@@ -251,8 +251,8 @@ const Simulations: React.FC = () => {
       }).then((response) => {
         setLoadingSimulate(false);
         if ("data" in response) {
-          const data = response.data as SimulateResponse;
-          setData(data);
+          const responseData = response.data as SimulateResponse;
+          setData(responseData);
         }
       });
     }
@@ -288,20 +288,20 @@ const Simulations: React.FC = () => {
         ),
       }).then((response) => {
         if ("data" in response) {
-          const data = response.data as SimulateResponse;
-          const nrows = data.outputs[Object.keys(data.outputs)[0]].length;
-          const cols = Object.keys(data.outputs);
+          const responseData = response.data as SimulateResponse;
+          const nrows = responseData.outputs[Object.keys(responseData.outputs)[0]].length;
+          const cols = Object.keys(responseData.outputs);
           const vars = cols.map((vid) =>
             variables.find((v) => v.id === parseInt(vid)),
           );
           const varNames = vars.map((v) => v?.qname || "");
           const ncols = cols.length;
-          let rows = new Array(nrows + 1);
+          const rows = new Array(nrows + 1);
           rows[0] = varNames;
           for (let i = 0; i < nrows; i++) {
             rows[i + 1] = new Array(ncols);
             for (let j = 0; j < ncols; j++) {
-              rows[i + 1][j] = data.outputs[cols[j]][i];
+              rows[i + 1][j] = responseData.outputs[cols[j]][i];
             }
           }
           const csvContent = rows.map((e) => e.join(",")).join("\n");
@@ -364,7 +364,7 @@ const Simulations: React.FC = () => {
     return <div>Not found</div>;
   }
 
-  let orderedSliders = sliders.map((slider) => {
+  const orderedSliders = sliders.map((slider) => {
     const variable = variables.find((v) => v.id === slider.variable);
     return { ...slider, priority: variable ? paramPriority(variable) : 0 };
   });
@@ -378,7 +378,7 @@ const Simulations: React.FC = () => {
       (variable) =>
         !variable.constant && !filterOutputs.includes(variable.qname),
     ) || [];
-  let outputsSorted = outputs.map((variable) => {
+  const outputsSorted = outputs.map((variable) => {
     if (variable.name.startsWith("C")) {
       return { ...variable, priority: 3 };
     } else if (variable.name.startsWith("E")) {
@@ -397,7 +397,7 @@ const Simulations: React.FC = () => {
   });
 
   outputsSorted.sort((a, b) => b.priority - a.priority);
-  let inputs = variables?.filter((variable) => variable.constant) || [];
+  const inputs = variables?.filter((variable) => variable.constant) || [];
   inputs.sort((a, b) => {
     return paramPriority(a) - paramPriority(b);
   });

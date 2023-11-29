@@ -147,8 +147,8 @@ const VariableRow: React.FC<Props> = ({
 
   const addProtocol = () => {
     const isPerKg = variableUnit?.g !== 0;
-    const amountUnitSymbol = isPerKg ? "mg/kg" : "mg";
-    const amountUnit = units.find((unit) => unit.symbol === amountUnitSymbol);
+    const doseAmountUnitSymbol = isPerKg ? "mg/kg" : "mg";
+    const doseAmountUnit = units.find((unit) => unit.symbol === doseAmountUnitSymbol);
     const defaultDose: DoseRead = {
       id: 0,
       amount: 1,
@@ -160,7 +160,7 @@ const VariableRow: React.FC<Props> = ({
     createProtocol({
       protocol: {
         doses: [defaultDose],
-        amount_unit: amountUnit?.id || variable.unit,
+        amount_unit: doseAmountUnit?.id || variable.unit,
         time_unit: defaultTimeUnit?.id || undefined,
         name: variable.name,
         project: project.id,

@@ -13,6 +13,7 @@ from pkpdapp.models import (
 from pkpdapp.api.serializers import AuceSerializer
 from pkpdapp.utils import Auce
 
+required_text = "This field is required"
 
 class AuceView(views.APIView):
     def post(self, request, format=None):
@@ -21,7 +22,7 @@ class AuceView(views.APIView):
 
         biomarker_type_id = request.data.get('biomarker_type_id', None)
         if biomarker_type_id is None:
-            errors['biomarker_type_id'] = "This field is required"
+            errors['biomarker_type_id'] = required_text
         else:
             try:
                 biomarker_type = \
@@ -34,7 +35,7 @@ class AuceView(views.APIView):
 
         group_type_id = request.data.get('group_type_id', None)
         if group_type_id is None:
-            errors['group_type_id'] = "This field is required"
+            errors['group_type_id'] = required_text
         else:
             try:
                 group_type = \
@@ -47,7 +48,7 @@ class AuceView(views.APIView):
 
         concentration_type_id = request.data.get('concentration_type_id', None)
         if concentration_type_id is None:
-            errors['concentration_type_id'] = "This field is required"
+            errors['concentration_type_id'] = required_text
         else:
             try:
                 concentration_type = \

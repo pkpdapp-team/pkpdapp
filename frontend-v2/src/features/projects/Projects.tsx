@@ -64,7 +64,7 @@ const ProjectTable: React.FC = () => {
   const { data: compounds, isLoading: compoundsLoading } =
     useCompoundListQuery();
 
-  let projects = projectsUnordered ? [...projectsUnordered] : undefined;
+  const projects = projectsUnordered ? [...projectsUnordered] : undefined;
 
   const { data: units, isLoading: unitsLoading } = useUnitListQuery({});
 
@@ -156,16 +156,16 @@ const ProjectTable: React.FC = () => {
     }
     addCompound({ compound })
       .unwrap()
-      .then((compound) => {
-        project.compound = compound.id || 0;
+      .then((newCompound) => {
+        project.compound = newCompound.id || 0;
         return addProject({ project });
       })
-      .then((project) => {
-        if ("data" in project) {
+      .then((newProject) => {
+        if ("data" in newProject) {
           addCombinedModel({
             combinedModel: {
-              name: `model for project ${project.data.id}`,
-              project: project.data.id,
+              name: `model for project ${newProject.data.id}`,
+              project: newProject.data.id,
               mappings: [],
               derived_variables: [],
             },
@@ -179,7 +179,7 @@ const ProjectTable: React.FC = () => {
               addSimulation({
                 simulation: {
                   name: `default`,
-                  project: project.data.id,
+                  project: newProject.data.id,
                   sliders: [],
                   plots: [],
                   time_max_unit: defaultXUnit,

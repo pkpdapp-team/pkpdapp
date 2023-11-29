@@ -48,7 +48,7 @@ const UserAccess: React.FC<Props> = ({
   });
 
   // create list of user options for select
-  let userOptions = users?.map((user) => {
+  const userOptions = users?.map((user) => {
     return { value: user.id, label: user.username };
   });
   userOptions?.push({ value: 0, label: "Add User" });

@@ -40,7 +40,7 @@ export const DynamicTabs: React.FC<PropsWithChildren<DynamicTabsProps>> = ({
 }) => {
   const [currentTab, setCurrentTab] = useState(0);
 
-  let errors: { [key: string]: ReactElement<any, string> } = {};
+  const errors: { [key: string]: ReactElement<any, string> } = {};
   for (const key in tabErrors) {
     errors[key] = (
       <Tooltip title={tabErrors[key]}>

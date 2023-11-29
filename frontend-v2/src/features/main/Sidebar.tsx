@@ -74,13 +74,13 @@ export default function Sidebar() {
     );
   };
 
-  let errors: { [key: string]: string } = {};
+  const errors: { [key: string]: string } = {};
   if (modelIsIncomplete(model, protocols)) {
     errors[PageName.MODEL] =
       "Model is incomplete, see the Model tab for details";
   }
 
-  let errorComponents: { [key: string]: React.ReactNode } = {};
+  const errorComponents: { [key: string]: React.ReactNode } = {};
   for (const key in errors) {
     errorComponents[key] = (
       <Tooltip title={errors[key]}>
@@ -89,7 +89,7 @@ export default function Sidebar() {
     );
   }
 
-  let icons: { [key: string]: React.ReactNode } = {
+  const icons: { [key: string]: React.ReactNode } = {
     [PageName.PROJECTS]: <DnsIcon />,
     [PageName.DRUG]: <BiotechIcon />,
     [PageName.MODEL]: <FunctionsIcon />,

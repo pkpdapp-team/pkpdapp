@@ -42,7 +42,7 @@ const SimulationSliderView: React.FC<SimulationSliderProps> = ({
     id: slider.variable,
   });
 
-  const unit = units.find((unit) => unit.id === variable?.unit);
+  const unit = units.find((u) => u.id === variable?.unit);
 
   const [value, setValue] = React.useState<number>(
     variable?.default_value || 1.0,

@@ -31,7 +31,7 @@ const sliderPriority = (param: Variable) => {
     priority = qnameLibraryOrder.length + 2;
   } else if (param.qname.startsWith("PK")) {
     priority = qnameLibraryOrder.length;
-    let index = qnameLibraryOrder.indexOf(param.qname);
+    const index = qnameLibraryOrder.indexOf(param.qname);
     if (index > -1) {
       priority = index;
     }
