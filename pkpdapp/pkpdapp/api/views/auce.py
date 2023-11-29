@@ -12,6 +12,7 @@ from pkpdapp.api.serializers import AuceSerializer
 from pkpdapp.utils import Auce
 
 required_text = "This field is required"
+biomarker_not_found_text = "BiomarkerType id {} not found"
 
 
 class AuceView(views.APIView):
@@ -25,7 +26,7 @@ class AuceView(views.APIView):
             try:
                 biomarker_type = BiomarkerType.objects.get(id=biomarker_type_id)
             except BiomarkerType.DoesNotExist:
-                errors["biomarker_type_id"] = "BiomarkerType id {} not found".format(
+                errors["biomarker_type_id"] = biomarker_not_found_text.format(
                     biomarker_type_id
                 )
 
@@ -36,7 +37,7 @@ class AuceView(views.APIView):
             try:
                 group_type = BiomarkerType.objects.get(id=group_type_id)
             except BiomarkerType.DoesNotExist:
-                errors["group_type_id"] = "BiomarkerType id {} not found".format(
+                errors["group_type_id"] = biomarker_not_found_text.format(
                     biomarker_type_id
                 )
 
@@ -47,7 +48,7 @@ class AuceView(views.APIView):
             try:
                 concentration_type = BiomarkerType.objects.get(id=concentration_type_id)
             except BiomarkerType.DoesNotExist:
-                errors["group_type_id"] = "BiomarkerType id {} not found".format(
+                errors["group_type_id"] = biomarker_not_found_text.format(
                     concentration_type_id
                 )
 

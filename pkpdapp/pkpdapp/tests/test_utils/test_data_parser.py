@@ -13,7 +13,7 @@ from pkpdapp.utils import DataParser
 
 django.setup()
 BASE_URL_DATASETS = 'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-datafiles/main/'   # noqa: E501
-
+te_data_filename = 'usecase_monolix/TE_Data.txt'
 
 class TestDataParser(TestCase):
     def test_parse(self):

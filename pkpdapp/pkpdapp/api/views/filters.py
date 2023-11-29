@@ -22,6 +22,7 @@ from pkpdapp.models import (
     Simulation,
 )
 
+queryset_model_not_recognised_text = "queryset model {} not recognised"
 
 class UserAccessFilter(filters.BaseFilterBackend):
     """
@@ -36,7 +37,7 @@ class UserAccessFilter(filters.BaseFilterBackend):
         if queryset.model == Project:
             queryset = queryset.filter(users=user)
         else:
-            raise RuntimeError('queryset model {} not recognised')
+            raise RuntimeError(queryset_model_not_recognised_text)
         return queryset
 
 
@@ -62,7 +63,7 @@ class DosedPkModelFilter(filters.BaseFilterBackend):
                     )
                     queryset = Unit.objects.filter(id__in=unit_ids)
                 else:
-                    raise RuntimeError('queryset model {} not recognised')
+                    raise RuntimeError(queryset_model_not_recognised_text)
             except CombinedModel.DoesNotExist:
                 queryset = queryset.model.objects.none()
 
@@ -91,7 +92,7 @@ class PdModelFilter(filters.BaseFilterBackend):
                     )
                     queryset = Unit.objects.filter(id__in=unit_ids)
                 else:
-                    raise RuntimeError('queryset model {} not recognised')
+                    raise RuntimeError(queryset_model_not_recognised_text)
             except PharmacodynamicModel.DoesNotExist:
                 queryset = queryset.model.objects.none()
 
@@ -122,7 +123,7 @@ class InferenceFilter(filters.BaseFilterBackend):
                 elif queryset.model == LogLikelihood:
                     queryset = inference.log_likelihoods.all()
                 else:
-                    raise RuntimeError('queryset model {} not recognised')
+                    raise RuntimeError(queryset_model_not_recognised_text)
             except Inference.DoesNotExist:
                 queryset = queryset.model.objects.none()
 
@@ -171,7 +172,7 @@ class ProjectFilter(filters.BaseFilterBackend):
                         Q(dosed_pk_model__project=project)
                     )
                 else:
-                    raise RuntimeError('queryset model {} not recognised')
+                    raise RuntimeError(queryset_model_not_recognised_text)
             except Project.DoesNotExist:
                 queryset = queryset.model.objects.none()
 
