@@ -5,7 +5,7 @@ RUN mkdir -p /app/frontend
 WORKDIR /app/frontend
 COPY frontend-v2/package.json /app/frontend
 
-RUN npm install
+RUN npm install --ignore-scripts
 
 COPY frontend-v2 /app/frontend/
 RUN npm run build
