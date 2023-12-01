@@ -1,10 +1,25 @@
-import { useState } from 'react';
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, FormControl, InputLabel, Select, MenuItem, DialogContentText, useTheme } from '@mui/material';
-import { Project, ProjectAccess, ProjectRead, useUserListQuery } from '../../app/backendApi';
-import { Control } from 'react-hook-form';
-import { FormData } from './Project';
-import SelectField from '../../components/SelectField';
-
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  FormControl,
+  Select,
+  MenuItem,
+} from "@mui/material";
+import {
+  ProjectAccess,
+  ProjectRead,
+  useUserListQuery,
+} from "../../app/backendApi";
+import { Control } from "react-hook-form";
+import { FormData } from "./Project";
+import SelectField from "../../components/SelectField";
 
 interface Props {
   open: boolean;
@@ -16,32 +31,37 @@ interface Props {
   onClose: () => void;
 }
 
-const UserAccess: React.FC<Props> = ({ open, userAccess, append, remove, control, onClose, project }) => {
-  const theme = useTheme();
+const UserAccess: React.FC<Props> = ({
+  open,
+  userAccess,
+  append,
+  control,
+  onClose,
+}) => {
 
-  const { data: users, error, isLoading } = useUserListQuery()
+  const { data: users } = useUserListQuery();
 
   // create map from user id to user object
-  const userMap = new Map()
+  const userMap = new Map();
   users?.forEach((user) => {
-    userMap.set(user.id, user)
-  })
+    userMap.set(user.id, user);
+  });
 
   // create list of user options for select
-  let userOptions = users?.map((user) => {
-    return { value: user.id, label: user.username }
-  })
-  userOptions?.push({ value: 0, label: "Add User" })
+  const userOptions = users?.map((user) => {
+    return { value: user.id, label: user.username };
+  });
+  userOptions?.push({ value: 0, label: "Add User" });
 
   // user access level options
   const accessLevelOptions = [
     { value: false, label: "Editor" },
     { value: true, label: "Viewer" },
-  ]
+  ];
 
   const addUser = (id: number) => {
-    append({ user: id, read_only: false })
-  }
+    append({ user: id, read_only: false });
+  };
 
   return (
     <Dialog open={open} onClose={onClose}>
@@ -55,7 +75,10 @@ const UserAccess: React.FC<Props> = ({ open, userAccess, append, remove, control
                 <TableCell>Access Level</TableCell>
                 <TableCell>
                   <FormControl fullWidth>
-                    <Select value={0} onChange={(e) => addUser(e.target.value as number)}>
+                    <Select
+                      value={0}
+                      onChange={(e) => addUser(e.target.value as number)}
+                    >
                       {userOptions?.map((option) => (
                         <MenuItem key={option.value} value={option.value}>
                           {option.label}
@@ -71,7 +94,12 @@ const UserAccess: React.FC<Props> = ({ open, userAccess, append, remove, control
                 <TableRow key={user.user}>
                   <TableCell>{userMap.get(user.user)?.username}</TableCell>
                   <TableCell>
-                    <SelectField label="Access" name={`project.user_access.${i}.read_only`} control={control} options={accessLevelOptions} />
+                    <SelectField
+                      label="Access"
+                      name={`project.user_access.${i}.read_only`}
+                      control={control}
+                      options={accessLevelOptions}
+                    />
                   </TableCell>
                 </TableRow>
               ))}

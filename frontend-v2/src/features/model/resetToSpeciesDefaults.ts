@@ -1,14 +1,35 @@
 import { MutationTrigger } from "@reduxjs/toolkit/dist/query/react/buildHooks";
-import { CombinedModelRead, CompoundRead, PharmacokineticRead, Project, ProjectRead, UnitRead, VariableRead, VariableUpdateApiArg, useVariableUpdateMutation } from "../../app/backendApi";
+import {
+  CombinedModelRead,
+  CompoundRead,
+  PharmacokineticRead,
+  Project,
+  ProjectRead,
+  UnitRead,
+  VariableRead,
+  VariableUpdateApiArg,
+  useVariableUpdateMutation,
+} from "../../app/backendApi";
 import paramPriority from "./paramPriority";
-import { param_default as paramDefaults } from './param_default';
-import { MutationDefinition, BaseQueryFn, FetchArgs, FetchBaseQueryError, FetchBaseQueryMeta } from "@reduxjs/toolkit/dist/query";
+import { param_default as paramDefaults } from "./param_default";
+import {
+  MutationDefinition,
+  BaseQueryFn,
+  FetchArgs,
+  FetchBaseQueryError,
+  FetchBaseQueryMeta,
+} from "@reduxjs/toolkit/dist/query";
 
 // filter out parameters from all variables, and sort them by priority
-export const getConstVariables = (variables: VariableRead[], model: CombinedModelRead) => {
-  let constVariables = variables.filter(variable => variable.constant);
+export const getConstVariables = (
+  variables: VariableRead[],
+  model: CombinedModelRead,
+) => {
+  let constVariables = variables.filter((variable) => variable.constant);
   if (model.is_library_model) {
-    constVariables = constVariables.filter(variable => variable.name !== "C_Drug");
+    constVariables = constVariables.filter(
+      (variable) => variable.name !== "C_Drug",
+    );
   }
   constVariables.sort((a, b) => {
     const overallOrder = paramPriority(a) - paramPriority(b);
@@ -19,19 +40,40 @@ export const getConstVariables = (variables: VariableRead[], model: CombinedMode
       // otherwise use alphabetical ordering
       return a.name.localeCompare(b.name);
     }
-  })
+  });
   return constVariables;
-}
+};
 
-export const getNoReset = (project: ProjectRead) => !project.species || project.species === 'O';
+export const getNoReset = (project: ProjectRead) =>
+  !project.species || project.species === "O";
 
-type VariableMutation = MutationTrigger<MutationDefinition<VariableUpdateApiArg, BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError, {}, FetchBaseQueryMeta>, never, VariableRead, "api">>
+type VariableMutation = MutationTrigger<
+  MutationDefinition<
+    VariableUpdateApiArg,
+    BaseQueryFn<
+      string | FetchArgs,
+      unknown,
+      FetchBaseQueryError,
+      {},
+      FetchBaseQueryMeta
+    >,
+    never,
+    VariableRead,
+    "api"
+  >
+>;
 
-export function resetToSpeciesDefaults(pkModel: PharmacokineticRead, project: ProjectRead, compound: CompoundRead, constVariables: VariableRead[], units: UnitRead[], updateVariable: VariableMutation) {
+export function resetToSpeciesDefaults(
+  pkModel: PharmacokineticRead,
+  project: ProjectRead,
+  compound: CompoundRead,
+  constVariables: VariableRead[],
+  units: UnitRead[],
+  updateVariable: VariableMutation,
+) {
   if (getNoReset(project) || !project.species) {
-      return;
+    return;
   }
-  console.log('resetting to species defaults')
   const modelName: string = pkModel.name
     .replace("_clinical", "")
     .replace("_preclinical", "")
@@ -43,15 +85,16 @@ export function resetToSpeciesDefaults(pkModel: PharmacokineticRead, project: Pr
     .replace("elimination", "");
   const species: string = project.species;
   const compoundType: string = compound.compound_type || "SM";
-  console.log(modelName, species, compoundType)
   for (const variable of constVariables) {
     const varName = variable.name;
-    let defaultVal = paramDefaults[modelName]?.[varName]?.[species]?.[compoundType];
-    console.log(variable.name, defaultVal)
+    const defaultVal =
+      paramDefaults[modelName]?.[varName]?.[species]?.[compoundType];
     if (defaultVal?.unit === "dimensionless") {
-      defaultVal.unit = '';
+      defaultVal.unit = "";
     }
-    let defaultUnitId: number | undefined = defaultVal ? units.find(unit => unit.symbol === defaultVal.unit)?.id : undefined;
+    let defaultUnitId: number | undefined = defaultVal
+      ? units.find((unit) => unit.symbol === defaultVal.unit)?.id
+      : undefined;
     let defaultValue: number | undefined = defaultVal?.value;
     if (varName.endsWith("_RO_KD")) {
       defaultValue = compound.dissociation_constant || undefined;
@@ -63,9 +106,15 @@ export function resetToSpeciesDefaults(pkModel: PharmacokineticRead, project: Pr
     if (!defaultValue || !defaultUnitId) {
       continue;
     }
-    console.log(defaultValue, defaultUnitId)
     if (defaultUnitId) {
-      updateVariable({ id: variable.id, variable: { ...variable, default_value: defaultValue, unit: defaultUnitId }});
+      updateVariable({
+        id: variable.id,
+        variable: {
+          ...variable,
+          default_value: defaultValue,
+          unit: defaultUnitId,
+        },
+      });
     }
   }
 }

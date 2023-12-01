@@ -1,7 +1,7 @@
-import React from 'react';
-import { Control, Controller, FieldPath, FieldValues } from 'react-hook-form';
-import * as material from '@mui/material';
-import { useFieldState } from '../app/hooks';
+import React from "react";
+import { Control, Controller, FieldPath, FieldValues } from "react-hook-form";
+import * as material from "@mui/material";
+import { useFieldState } from "../app/hooks";
 
 type Props<T extends FieldValues> = {
   label?: string;
@@ -12,21 +12,30 @@ type Props<T extends FieldValues> = {
 };
 
 function convert(value: any) {
-  if (typeof value === 'string' && value !== '') {
+  if (typeof value === "string" && value !== "") {
     return parseInt(value);
   } else {
     return value;
   }
 }
 
-function IntegerField<T extends FieldValues>({ label, name, control, rules, textFieldProps }: Props<T>): React.ReactElement {
+function IntegerField<T extends FieldValues>({
+  label,
+  name,
+  control,
+  rules,
+  textFieldProps,
+}: Props<T>): React.ReactElement {
   const [fieldValue, setFieldValue] = useFieldState({ name, control });
   return (
     <Controller
       name={name}
       control={control}
       rules={rules}
-      render={({ field: { onChange, onBlur, value }, fieldState: { error, isDirty, isTouched } }) => {
+      render={({
+        field: { onChange, onBlur, value },
+        fieldState: { error, isDirty, isTouched },
+      }) => {
         const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
           const updatedValue = convert(e.target.value);
           if (updatedValue !== value) {
@@ -41,21 +50,28 @@ function IntegerField<T extends FieldValues>({ label, name, control, rules, text
         };
         return (
           <material.TextField
-            label={ !error ? label : error?.message || (error?.type === 'required' ? 'Required' : '')}
+            label={
+              !error
+                ? label
+                : error?.message ||
+                  (error?.type === "required" ? "Required" : "")
+            }
             name={name}
             id={name}
             variant="outlined"
-            value={fieldValue === undefined || fieldValue === null ? '' : fieldValue}
+            value={
+              fieldValue === undefined || fieldValue === null ? "" : fieldValue
+            }
             onChange={handleChange}
             onBlur={handleBlur}
             error={!!error}
             {...textFieldProps}
-            type='number'
+            type="number"
           />
         );
       }}
     />
   );
-};
+}
 
 export default IntegerField;

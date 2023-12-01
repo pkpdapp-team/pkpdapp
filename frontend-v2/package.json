@@ -56,9 +56,11 @@
   },
   "devDependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
+    "@rtk-query/codegen-openapi": "^1.2.0",
     "@types/papaparse": "^5.3.10",
     "@types/react-plotly.js": "^2.6.0",
     "cypress": "^12.16.0",
+    "prettier": "3.1.0",
     "start-server-and-test": "^2.0.0"
   }
 }

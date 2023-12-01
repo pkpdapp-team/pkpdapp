@@ -1,13 +1,13 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 export enum PageName {
-  PROJECTS = 'Projects',
-  DRUG = 'Drug and Target',
-  MODEL = 'Model',
-  DATA = 'Data',
-  TRIAL_DESIGN = 'Trial Design',
-  SIMULATIONS = 'Simulations',
-  HELP = 'Help & Feedback',
+  PROJECTS = "Projects",
+  DRUG = "Drug and Target",
+  MODEL = "Model",
+  DATA = "Data",
+  TRIAL_DESIGN = "Trial Design",
+  SIMULATIONS = "Simulations",
+  HELP = "Help & Feedback",
 }
 
 interface MainState {
@@ -23,7 +23,7 @@ const initialState: MainState = {
 };
 
 const mainSlice = createSlice({
-  name: 'main',
+  name: "main",
   initialState,
   reducers: {
     setPage: (state, action: PayloadAction<PageName>) => {
@@ -37,9 +37,10 @@ const mainSlice = createSlice({
     },
     decrementDirtyCount: (state) => {
       state.dirtyCount -= 1;
-    }
+    },
   },
 });
 
-export const { setPage, setProject, incrementDirtyCount, decrementDirtyCount} = mainSlice.actions;
+export const { setPage, setProject, incrementDirtyCount, decrementDirtyCount } =
+  mainSlice.actions;
 export default mainSlice.reducer;

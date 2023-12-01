@@ -12,13 +12,13 @@ from pkpdapp.models import (
     Algorithm,
     Dataset,
     Subject,
+    Compound,
 )
 
 
 def create_pd_inference(sampling=False):
-    project = Project.objects.get(
-        name='demo',
-    )
+    compound = Compound.objects.create(name="demo")
+    project = Project.objects.create(name="demo", compound=compound)
     pd = PharmacodynamicModel.objects.get(
         name='tumour_growth_gompertz',
         read_only=False,

@@ -1,5 +1,11 @@
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button } from '@mui/material';
-import React from 'react';
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+} from "@mui/material";
+import React from "react";
 
 interface ConfirmationDialogProps {
   open: boolean;
@@ -9,7 +15,13 @@ interface ConfirmationDialogProps {
   onCancel: () => void;
 }
 
-const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({ open, title, message, onConfirm, onCancel }) => {
+const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
+  open,
+  title,
+  message,
+  onConfirm,
+  onCancel,
+}) => {
   return (
     <Dialog open={open} onClose={onCancel}>
       <DialogTitle>{title}</DialogTitle>

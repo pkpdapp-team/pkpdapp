@@ -8,18 +8,19 @@ import django
 from django.contrib.auth.models import User
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
-from pkpdapp.models import Project
+from pkpdapp.models import Project, Compound
 django.setup()
 
 
 class BiomarkerTypeTestCase(APITestCase):
     def setUp(self):
-        user = User.objects.get(username='demo')
+        self.user = User.objects.create_user(username='testuser', password='12345')
         self.client = APIClient()
-        self.client.force_authenticate(user=user)
+        self.client.force_authenticate(user=self.user)
 
     def test_bt_project_filter(self):
-        project = Project.objects.get(name="demo")
+        compound = Compound.objects.create(name='demo')
+        project = Project.objects.create(name='demo', compound=compound)
         response = self.client.get(
             "/api/biomarker_type/?project_id={}".format(project.pk)
         )

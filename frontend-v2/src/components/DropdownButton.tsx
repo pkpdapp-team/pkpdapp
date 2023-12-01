@@ -1,5 +1,12 @@
-import { Button, IconButton, ListItem, ListItemButton, ListItemText, Popover } from '@mui/material';
-import React, { useState } from 'react';
+import {
+  Button,
+  IconButton,
+  ListItem,
+  ListItemButton,
+  ListItemText,
+  Popover,
+} from "@mui/material";
+import React, { useState } from "react";
 
 type Option = {
   label: string;
@@ -15,7 +22,14 @@ type Props = {
   useIcon?: boolean;
 };
 
-const DropdownButton: React.FC<Props> = ({ data_cy, options, onOptionSelected, children, disabled, useIcon }) => {
+const DropdownButton: React.FC<Props> = ({
+  data_cy,
+  options,
+  onOptionSelected,
+  children,
+  disabled,
+  useIcon,
+}) => {
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
 
   if (useIcon === undefined) {
@@ -41,11 +55,20 @@ const DropdownButton: React.FC<Props> = ({ data_cy, options, onOptionSelected, c
   return (
     <div>
       {useIcon ? (
-        <IconButton onClick={handleButtonClick} disabled={isDisabled} data-cy={data_cy}>
+        <IconButton
+          onClick={handleButtonClick}
+          disabled={isDisabled}
+          data-cy={data_cy}
+        >
           {children}
         </IconButton>
       ) : (
-        <Button variant='contained' onClick={handleButtonClick} disabled={isDisabled} data-cy={data_cy}>
+        <Button
+          variant="contained"
+          onClick={handleButtonClick}
+          disabled={isDisabled}
+          data-cy={data_cy}
+        >
           {children}
         </Button>
       )}
@@ -54,11 +77,15 @@ const DropdownButton: React.FC<Props> = ({ data_cy, options, onOptionSelected, c
         anchorEl={anchorEl}
         onClose={() => setAnchorEl(null)}
         data-cy={`dropdown-button-popover`}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
-        transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+        anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+        transformOrigin={{ vertical: "top", horizontal: "left" }}
       >
         {options.map((option, index) => (
-          <ListItemButton key={index} onClick={() => handleOptionSelected(option)} data-cy={`${data_cy}-option-${option.label}`}>
+          <ListItemButton
+            key={index}
+            onClick={() => handleOptionSelected(option)}
+            data-cy={`${data_cy}-option-${option.label}`}
+          >
             <ListItemText primary={option.label} />
           </ListItemButton>
         ))}

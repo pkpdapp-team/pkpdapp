@@ -1,5 +1,11 @@
-import React from 'react';
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button } from '@mui/material';
+import React from "react";
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+} from "@mui/material";
 
 interface HelpDialogProps {
   open: boolean;
@@ -8,7 +14,12 @@ interface HelpDialogProps {
   children: React.ReactNode;
 }
 
-const HelpDialog: React.FC<HelpDialogProps> = ({ open, title, onClose, children }) => {
+const HelpDialog: React.FC<HelpDialogProps> = ({
+  open,
+  title,
+  onClose,
+  children,
+}) => {
   return (
     <Dialog open={open} onClose={onClose}>
       <DialogTitle>{title}</DialogTitle>

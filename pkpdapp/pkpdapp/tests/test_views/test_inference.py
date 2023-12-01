@@ -13,19 +13,22 @@ from pkpdapp.models import (
     Inference,
     InferenceMixin,
     Project,
+    Compound,
 )
 from pkpdapp.tests import create_pd_inference
 
 
 class TestInferenceWizardView(APITestCase):
     def setUp(self):
-        self.project = Project.objects.get(
+        self.user = User.objects.create_user(username='testuser', password='12345')
+        compound = Compound.objects.create(name='test')
+        self.project = Project.objects.create(
             name='demo',
+            compound=compound,
         )
-
-        user = User.objects.get(username='demo')
+        self.project.users.add(self.user)
         self.client = APIClient()
-        self.client.force_authenticate(user=user)
+        self.client.force_authenticate(user=self.user)
 
     def test_population_and_covariates_inference(self):
         inference, log_likelihood, \

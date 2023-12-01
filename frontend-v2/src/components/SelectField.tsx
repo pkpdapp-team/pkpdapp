@@ -1,6 +1,14 @@
-import React from 'react';
-import { Control, Controller, FieldPath, FieldValues } from 'react-hook-form';
-import { Select, SelectProps, MenuItem, InputLabel, FormControl, OutlinedInput, FormControlProps } from '@mui/material';
+import React from "react";
+import { Control, Controller, FieldPath, FieldValues } from "react-hook-form";
+import {
+  Select,
+  SelectProps,
+  MenuItem,
+  InputLabel,
+  FormControl,
+  OutlinedInput,
+  FormControlProps,
+} from "@mui/material";
 
 type Option = {
   value: any;
@@ -17,23 +25,37 @@ type Props<T extends FieldValues> = {
   formControlProps?: FormControlProps;
 };
 
-function SelectField<T extends FieldValues>({ label, name, options, control, rules, selectProps, formControlProps }: Props<T>): React.ReactElement {
+function SelectField<T extends FieldValues>({
+  label,
+  name,
+  options,
+  control,
+  rules,
+  selectProps,
+  formControlProps,
+}: Props<T>): React.ReactElement {
   const labelId = `${name}-label`;
   const displayEmpty = selectProps?.displayEmpty || true;
-  const labelWidth = (label ? label.length : 0) * 9
+  const pixelPerChar = 9;
+  const labelWidth = (label ? label.length : 0) * pixelPerChar;
   return (
     <Controller
       name={name}
       control={control}
       rules={rules}
-      render={({ field: { onChange, onBlur, value }, fieldState: { error } }) => (
-        <FormControl {...formControlProps} style={{minWidth: labelWidth}}>
-          <InputLabel id={labelId} shrink={displayEmpty}>{label}</InputLabel>
+      render={({
+        field: { onChange, onBlur, value },
+        fieldState: { error },
+      }) => (
+        <FormControl {...formControlProps} style={{ minWidth: labelWidth }}>
+          <InputLabel id={labelId} shrink={displayEmpty}>
+            {label}
+          </InputLabel>
           <Select
             labelId={labelId}
             name={name}
             id={name}
-            value={value === undefined || value === null ? '' : value}
+            value={value === undefined || value === null ? "" : value}
             // @ts-ignore
             onChange={onChange}
             onBlur={onBlur}
@@ -43,7 +65,11 @@ function SelectField<T extends FieldValues>({ label, name, options, control, rul
             {...selectProps}
           >
             {options.map((option) => (
-              <MenuItem key={option.value} value={option.value} data-cy={`select-option-${name}-${option.label}`}>
+              <MenuItem
+                key={option.value}
+                value={option.value}
+                data-cy={`select-option-${name}-${option.label}`}
+              >
                 {option.label}
               </MenuItem>
             ))}
@@ -52,6 +78,6 @@ function SelectField<T extends FieldValues>({ label, name, options, control, rul
       )}
     />
   );
-};
+}
 
 export default SelectField;

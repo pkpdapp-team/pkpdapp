@@ -36,20 +36,20 @@
 //   }
 // }
 
-Cypress.Commands.add('login', (username, password) => {
-  cy.visit('/')
+Cypress.Commands.add("login", (username, password) => {
+  cy.visit("/");
 
-  cy.get('input[name=username]').type(username)
+  cy.get("input[name=username]").type(username);
 
   // {enter} causes the form to submit
-  cy.get('input[name=password]').type(`${password}{enter}`, { log: false })
+  cy.get("input[name=password]").type(`${password}{enter}`, { log: false });
 
   // we should be redirected to /
-  cy.url().should('not.contain', 'login')
+  cy.url().should("not.contain", "login");
 
   // our auth cookies should be present
-  cy.getCookie('csrftoken').should('exist')
-  cy.getCookie('sessionid').should('exist')
-})
+  cy.getCookie("csrftoken").should("exist");
+  cy.getCookie("sessionid").should("exist");
+});
 
-export {}
+export {};

@@ -1,8 +1,8 @@
-import { configureStore, ThunkAction, Action } from '@reduxjs/toolkit';
-import { setupListeners } from '@reduxjs/toolkit/query'
-import loginReducer from '../features/login/loginSlice';
-import mainReducer from '../features/main/mainSlice';
-import { api } from '../app/api'
+import { configureStore, ThunkAction, Action } from "@reduxjs/toolkit";
+import { setupListeners } from "@reduxjs/toolkit/query";
+import loginReducer from "../features/login/loginSlice";
+import mainReducer from "../features/main/mainSlice";
+import { api } from "../app/api";
 
 export const store = configureStore({
   reducer: {
@@ -18,7 +18,7 @@ export const store = configureStore({
 
 // optional, but required for refetchOnFocus/refetchOnReconnect behaviors
 // see `setupListeners` docs - takes an optional callback as the 2nd arg for customization
-setupListeners(store.dispatch)
+setupListeners(store.dispatch);
 
 export type AppDispatch = typeof store.dispatch;
 export type RootState = ReturnType<typeof store.getState>;

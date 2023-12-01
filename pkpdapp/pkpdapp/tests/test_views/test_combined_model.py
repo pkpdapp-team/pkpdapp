@@ -13,41 +13,52 @@ from pkpdapp.models import (
     PharmacokineticModel,
     CombinedModel,
     PharmacodynamicModel,
+    Compound,
+    ProjectAccess,
 )
 import numpy as np
 
 
 class CombinedModelTestCase(APITestCase):
     def setUp(self):
-        user = User.objects.get(username="demo")
+        self.user = User.objects.create_user(username='testuser', password='12345')
+        self.compound = Compound.objects.create(name='test')
+        self.project = Project.objects.create(name='demo', compound=self.compound)
+        self.project.users.add(self.user)
         self.client = APIClient()
-        self.client.force_authenticate(user=user)
+        self.client.force_authenticate(user=self.user)
 
     def test_pk_project_filter(self):
-        response = self.client.get("/api/combined_model/?project_id=1")
+        CombinedModel.objects.create(
+            name="test",
+            project=self.project,
+        )
+        response = self.client.get(f"/api/combined_model/?project_id={self.project.pk}")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_data = response.data
         self.assertEqual(len(response_data), 1)
 
     def test_cannot_create_in_read_only_project(self):
-        user = User.objects.get(username="demo2")
+        user = User.objects.create(username='testuser2', password='12345')
+        self.project.users.add(user)
+        access = ProjectAccess.objects.get(user=user, project=self.project)
+        access.read_only = True
+        access.save()
         self.client = APIClient()
         self.client.force_authenticate(user=user)
 
-        project = Project.objects.get(name="demo")
         response = self.client.post(
-            "/api/combined_model/", data={"name": "test", "project": project.id}
+            "/api/combined_model/", data={"name": "test", "project": self.project.id}
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def create_combined_model(self, name, pd=None):
-        project = Project.objects.get(name="demo")
         pk = PharmacokineticModel.objects.get(
             name="one_compartment_clinical",
         )
         data = {
             "name": name,
-            "project": project.id,
+            "project": self.project.id,
             "pk_model": pk.id,
             "mappings": [],
             "derived_variables": [],
@@ -63,7 +74,7 @@ class CombinedModelTestCase(APITestCase):
             "/api/protocol/",
             data={
                 "name": "test protocol",
-                "project": project.id,
+                "project": self.project.id,
                 "doses": [
                     {
                         "start_time": 0,
