@@ -103,7 +103,6 @@ class CombinedModel(MyokitModelMixin, StoredModel):
     __original_pk_model = None
     __original_pd_model = None
     __original_pd_model2 = None
-    __original_species = None
     __original_has_saturation = None
     __original_has_effect = None
     __original_has_lag = None
@@ -123,8 +122,6 @@ class CombinedModel(MyokitModelMixin, StoredModel):
             instance.__original_pd_model = instance.pd_model
         if "pd_model2_id" in field_names:
             instance.__original_pd_model2 = instance.pd_model2
-        if "species" in field_names:
-            instance.__original_species = instance.species
         if "has_saturation" in field_names:
             instance.__original_has_saturation = instance.has_saturation
         if "has_effect" in field_names:
@@ -529,7 +526,6 @@ class CombinedModel(MyokitModelMixin, StoredModel):
         self.__original_pd_model = self.pd_model
         self.__original_pd_model2 = self.pd_model2
         self.__original_pk_model = self.pk_model
-        self.__original_species = self.species
         self.__original_has_saturation = self.has_saturation
         self.__original_has_effect = self.has_effect
         self.__original_has_lag = self.has_lag
