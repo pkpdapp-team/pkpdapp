@@ -61,6 +61,8 @@ RUN chown -R www-data:www-data /var/lib/nginx /run /tmp
 # server setup files
 COPY nginx.default.template .
 COPY start-server.sh .
+# copy any ssl certificates
+COPY /etc/ssl/pkpdapp.com.* /etc/ssl/
 RUN chown -R www-data:www-data nginx.default.template start-server.sh
 
 # run as www-data
