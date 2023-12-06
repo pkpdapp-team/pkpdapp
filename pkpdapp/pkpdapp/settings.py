@@ -241,15 +241,10 @@ MIDDLEWARE = [
 ]
 
 CORS_ALLOWED_ORIGINS = [
-    "http://127.0.0.1:3000",
-    "http://127.0.0.1:3001",
-    "http://127.0.0.1:3002",
-    "http://127.0.0.1:3003",
-    "http://127.0.0.1:3004",
-    "http://localhost:3000",
+    f"https://{os.environ.get('HOST_NAME', 'localhost')}:3000",
 ]
 
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_ALL_ORIGINS = False
 
 CORS_EXPOSE_HEADERS = ['Content-Type', 'X-CSRFToken']
 CORS_ALLOW_CREDENTIALS = True
@@ -275,18 +270,19 @@ TEMPLATES = [
 
 X_FRAME_OPTIONS = 'SAMEORIGIN'
 
+
 # WSGI_APPLICATION = 'bamad.wsgi.application'
 
 # authentication cookie settings
 CSRF_COOKIE_SAMESITE = 'Lax'
 SESSION_COOKIE_SAMESITE = 'Lax'
-CSRF_COOKIE_HTTPONLY = False
+CSRF_COOKIE_HTTPONLY = True
 SESSION_COOKIE_HTTPONLY = True
 
 # PROD ONLY
-# CSRF_COOKIE_SECURE = True
-# SESSION_COOKIE_SECURE = True
-
+if not DEBUG: 
+    CSRF_COOKIE_SECURE = True
+    SESSION_COOKIE_SECURE = True
 
 WSGI_APPLICATION = 'pkpdapp.wsgi.application'
 

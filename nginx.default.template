@@ -7,8 +7,10 @@ upstream app_server {
 }
 
 server {
-    listen $PORT;
-    server_name pkpdapp.herokuapp.com;
+    listen $PORT ssl;
+    server_name         pkpdapp.com;
+    ssl_certificate     /etc/ssl/pkpdapp.com.crt;
+    ssl_certificate_key /etc/ssl/pkpdapp.com.key;
 
     # javascript frontend
     location / {
