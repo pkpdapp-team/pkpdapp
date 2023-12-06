@@ -31,6 +31,8 @@ services:
       context: .
     ports:
       - "80:${PORT}"
+    volumes:
+      - .certs:/etc/ssl/pkpdapp
     restart: unless-stopped
     env_file:
      - ./.env.prod

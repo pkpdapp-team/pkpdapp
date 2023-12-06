@@ -9,8 +9,8 @@ upstream app_server {
 server {
     listen $PORT ssl;
     server_name         pkpdapp.com;
-    ssl_certificate     /etc/ssl/pkpdapp.com.crt;
-    ssl_certificate_key /etc/ssl/pkpdapp.com.key;
+    ssl_certificate     /etc/ssl/pkpdapp/pkpdapp.com.crt;
+    ssl_certificate_key /etc/ssl/pkpdapp/pkpdapp.com.key;
 
     # javascript frontend
     location / {
