@@ -1506,6 +1506,11 @@
   resolved "https://registry.yarnpkg.com/@exodus/schemasafe/-/schemasafe-1.3.0.tgz#731656abe21e8e769a7f70a4d833e6312fe59b7f"
   integrity sha512-5Aap/GaRupgNx/feGBwLLTVv8OQFfv3pq2lPRzPg9R+IOBnDgghTGW7l7EuVXOvg5cc/xSAlRW8rBrjIC3Nvqw==
 
+"@fontsource/comfortaa@^5.0.18":
+  version "5.0.18"
+  resolved "https://registry.yarnpkg.com/@fontsource/comfortaa/-/comfortaa-5.0.18.tgz#3424c932dd8ac27f02ae568197c98686aa7d6767"
+  integrity sha512-0Goub97HAU4AsAZvR8x7C4uSmBqqkBBEf6m1wFzThZIy+dA6wyqUW8n7uKfElMPcc8ZemI5XMXslW5SdnNJa2Q==
+
 "@hapi/hoek@^9.0.0":
   version "9.3.0"
   resolved "https://registry.yarnpkg.com/@hapi/hoek/-/hoek-9.3.0.tgz#8368869dcb735be2e7f5cb7647de78e167a251fb"

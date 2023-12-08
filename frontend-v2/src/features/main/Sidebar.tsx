@@ -37,6 +37,8 @@ import VaccinesIcon from "@mui/icons-material/Vaccines";
 import SsidChartIcon from "@mui/icons-material/SsidChart";
 import ContactSupportIcon from "@mui/icons-material/ContactSupport";
 import TableViewIcon from "@mui/icons-material/TableView";
+import "@fontsource/comfortaa"; // Defaults to weight 400
+
 
 const drawerWidth = 240;
 
@@ -192,8 +194,8 @@ export default function Sidebar() {
           >
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-            PK/PD Simulator {project && ` - ${project.name}`}
+          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1, fontFamily: "comfortaa" }}>
+            pkpd explorer{project && ` - ${project.name}`}
           </Typography>
           <IconButton onClick={() => dispatch(logout())} color="inherit">
             <Logout />
