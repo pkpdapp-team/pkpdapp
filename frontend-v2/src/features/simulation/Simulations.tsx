@@ -74,7 +74,7 @@ const getSimulateInput = (
     for (const plot of simulation?.plots || []) {
       for (const y_axis of plot.y_axes) {
         const variable = variables?.find((v) => v.id === y_axis.variable);
-        if (variable && !outputs.includes(variable.name)) {
+        if (variable && !outputs.includes(variable.qname)) {
           outputs.push(variable.qname);
         }
       }
@@ -85,6 +85,15 @@ const getSimulateInput = (
     (v) => v.name === "time" || v.name === "t",
   );
   outputs.push(timeVariable?.qname || "time");
+
+  // for some reason we need to ask for concentration or myokit produces a kink in the output
+  const alwaysAsk = ["PKCompartment.C1"];
+  for (const v of alwaysAsk) {
+    const variable = variables?.find((vv) => vv.qname === v);
+    if (variable && !outputs.includes(variable.qname)) {
+      outputs.push(variable.qname);
+    }
+  }
   return {
     variables: simulateVariables,
     outputs,
