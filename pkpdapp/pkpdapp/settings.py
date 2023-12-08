@@ -118,6 +118,17 @@ if use_ldap:
         'ldap://ldap.forumsys.com:389'
     )
 
+    user_group = os.environ.get('AUTH_LDAP_USER_GROUP', None)
+    admin_group = os.environ.get('AUTH_LDAP_ADMIN_GROUP', None)
+
+    if user_group is not None:
+        AUTH_LDAP_REQUIRE_GROUP = user_group
+        
+    if admin_group is not None:
+        AUTH_LDAP_USER_FLAGS_BY_GROUP = {
+            "is_superuser": admin_group 
+        }
+
     use_direct_bind = bool(int(os.environ.get('AUTH_LDAP_DIRECT_BIND', '0')))
     if use_direct_bind:
         AUTH_LDAP_USER_DN_TEMPLATE = os.environ.get(
