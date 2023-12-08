@@ -57,6 +57,15 @@ const Protocols: React.FC = () => {
     (protocol) => protocol.variables.length > 0,
   );
 
+  // sort protocols alphabetically by name
+  filteredProtocols?.sort((a, b) => {
+    if (a.name < b.name) {
+      return -1;
+    } else {
+      return 1;
+    }
+  });
+
   return (
     <TableContainer>
       <Table>
