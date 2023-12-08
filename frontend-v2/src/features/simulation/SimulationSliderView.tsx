@@ -135,7 +135,7 @@ const SimulationSliderView: React.FC<SimulationSliderProps> = ({
             <Replay />
           </IconButton>
         </Tooltip>
-        <Tooltip title={"Save value as default"} placement="top">
+        <Tooltip title={"Save value to parameters"} placement="top">
           <IconButton aria-label="save" onClick={handleSave}>
             <Save />
           </IconButton>
