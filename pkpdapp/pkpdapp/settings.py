@@ -20,6 +20,7 @@ import os
 import dj_database_url
 import ldap
 from django_auth_ldap.config import LDAPSearch
+from django_auth_ldap.config import LDAPSearch, GroupOfNamesType
 
 # Set BASE_DIR to two directories up
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -120,6 +121,13 @@ if use_ldap:
 
     user_group = os.environ.get('AUTH_LDAP_USER_GROUP', None)
     admin_group = os.environ.get('AUTH_LDAP_ADMIN_GROUP', None)
+
+
+    if user_group is not None and admin_group is not None:
+        AUTH_LDAP_GROUP_SEARCH = LDAPSearch(
+            "ou=groups,dc=example,dc=com", ldap.SCOPE_SUBTREE, "(objectClass=groupOfNames)"
+        )
+        AUTH_LDAP_GROUP_TYPE = GroupOfNamesType()
 
     if user_group is not None:
         AUTH_LDAP_REQUIRE_GROUP = user_group
