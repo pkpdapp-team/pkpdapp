@@ -19,66 +19,64 @@ https://docs.djangoproject.com/en/3.0/ref/settings/.
 import os
 import dj_database_url
 import ldap
-from django_auth_ldap.config import LDAPSearch
+from django_auth_ldap.config import LDAPSearch, GroupOfNamesType
 
 # Set BASE_DIR to two directories up
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # setup automatic pk column for models
-DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-            'level': 'DEBUG',
-            'formatter': 'simple'
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "level": "DEBUG",
+            "formatter": "simple",
         },
-        'file': {
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': os.path.join(BASE_DIR, 'logfile.log'),
-            'maxBytes': 1024 * 1024 * 5,  # 5 MB
-            'backupCount': 5,
-            'level': 'DEBUG',
-            'formatter': 'verbose'
-        }
-    },
-    'loggers': {
-        'django': {
-            'handlers': ['console', 'file'],
-            'level': 'INFO',
-            'propagate': False,
-        },
-        'pkpdapp': {
-            'handlers': ['console', 'file'],
-            'level': 'DEBUG',
-            'propagate': False,
+        "file": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": os.path.join(BASE_DIR, "logfile.log"),
+            "maxBytes": 1024 * 1024 * 5,  # 5 MB
+            "backupCount": 5,
+            "level": "DEBUG",
+            "formatter": "verbose",
         },
     },
-    'formatters': {
-        'simple': {
-            'format': '%(levelname)s %(message)s'
+    "loggers": {
+        "django": {
+            "handlers": ["console", "file"],
+            "level": "INFO",
+            "propagate": False,
         },
-        'verbose': {
-            'format': '%(asctime)s %(levelname)s %(module)s %(process)d %(thread)d %(message)s'  # noqa: E501
-        }
-    }
+        "pkpdapp": {
+            "handlers": ["console", "file"],
+            "level": "INFO",
+            "propagate": False,
+        },
+    },
+    "formatters": {
+        "simple": {"format": "%(levelname)s %(message)s"},
+        "verbose": {
+            "format": "%(asctime)s %(levelname)s %(module)s %(process)d %(thread)d %(message)s"  # noqa: E501
+        },
+    },
 }
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
-SECRET_KEY = os.environ.get("SECRET_KEY", default='foo')
+SECRET_KEY = os.environ.get("SECRET_KEY", default="foo")
 
 DEBUG = int(os.environ.get("DEBUG", default=0))
 
-ALLOWED_HOSTS = [os.environ.get('HOST_NAME', 'localhost'), '127.0.0.1']
+ALLOWED_HOSTS = [os.environ.get("HOST_NAME", "localhost"), "127.0.0.1"]
 
 if DEBUG:
-    ALLOWED_HOSTS.append('testserver')
+    ALLOWED_HOSTS.append("testserver")
 
 
 # Application definition - to use any of those you need to run `manage.py
@@ -86,228 +84,230 @@ if DEBUG:
 
 INSTALLED_APPS = [
     # standard Django apps
-    'django.contrib.admin',
-    'django.contrib.admindocs',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-
+    "django.contrib.admin",
+    "django.contrib.admindocs",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
     # external apps
-    'dpd_static_support',
-    'django_extensions',
-    'djoser',
-    'rest_framework',
-    'rest_framework.authtoken',
-    'corsheaders',
-    'drf_spectacular',
-
+    "dpd_static_support",
+    "django_extensions",
+    "djoser",
+    "rest_framework",
+    "rest_framework.authtoken",
+    "corsheaders",
+    "drf_spectacular",
     # internal apps
-    'pkpdapp',
+    "pkpdapp",
 ]
 
-use_ldap = bool(int(os.environ.get('AUTH_LDAP_USE', '0')))
+use_ldap = bool(int(os.environ.get("AUTH_LDAP_USE", "0")))
 if use_ldap:
     AUTHENTICATION_BACKENDS = [
         "django_auth_ldap.backend.LDAPBackend",
         "django.contrib.auth.backends.ModelBackend",
     ]
     AUTH_LDAP_SERVER_URI = os.environ.get(
-        'AUTH_LDAP_SERVER_URI',
-        'ldap://ldap.forumsys.com:389'
+        "AUTH_LDAP_SERVER_URI", "ldap://ldap.forumsys.com:389"
     )
 
-    use_direct_bind = bool(int(os.environ.get('AUTH_LDAP_DIRECT_BIND', '0')))
+    user_group = os.environ.get("AUTH_LDAP_USER_GROUP", None)
+    admin_group = os.environ.get("AUTH_LDAP_ADMIN_GROUP", None)
+    group_search = os.environ.get("AUTH_LDAP_GROUP_SEARCH", None)
+
+    if group_search is not None:
+        AUTH_LDAP_GROUP_SEARCH = LDAPSearch(
+            group_search, ldap.SCOPE_SUBTREE, "(objectClass=groupOfNames)"
+        )
+        AUTH_LDAP_GROUP_TYPE = GroupOfNamesType()
+
+    if user_group is not None and group_search is not None:
+        AUTH_LDAP_REQUIRE_GROUP = user_group
+
+    if admin_group is not None and group_search is not None:
+        AUTH_LDAP_USER_FLAGS_BY_GROUP = {
+            "is_staff": admin_group,
+            "is_superuser": admin_group,
+        }
+
+    use_direct_bind = bool(int(os.environ.get("AUTH_LDAP_DIRECT_BIND", "0")))
     if use_direct_bind:
         AUTH_LDAP_USER_DN_TEMPLATE = os.environ.get(
-            'AUTH_LDAP_BIND_DN_TEMPLATE',
-            'uid=%(user)s,dc=example,dc=com'
+            "AUTH_LDAP_BIND_DN_TEMPLATE", "uid=%(user)s,dc=example,dc=com"
         )
     else:
         AUTH_LDAP_BIND_DN = os.environ.get(
-            'AUTH_LDAP_BIND_DN',
-            'cn=read-only-admin,dc=example,dc=com'
+            "AUTH_LDAP_BIND_DN", "cn=read-only-admin,dc=example,dc=com"
         )
-        AUTH_LDAP_BIND_PASSWORD = os.environ.get(
-            'AUTH_LDAP_BIND_PASSWORD',
-            'password'
-        )
+        AUTH_LDAP_BIND_PASSWORD = os.environ.get("AUTH_LDAP_BIND_PASSWORD", "password")
         AUTH_LDAP_USER_SEARCH = LDAPSearch(
             os.environ.get(
-                'AUTH_LDAP_SEARCH_BASE',
-                'ou=mathematicians,dc=example,dc=com'
+                "AUTH_LDAP_SEARCH_BASE", "ou=mathematicians,dc=example,dc=com"
             ),
             ldap.SCOPE_SUBTREE,
-            os.environ.get(
-                'AUTH_LDAP_SEARCH_FILTER',
-                "(uid=%(user)s)"
-            ),
+            os.environ.get("AUTH_LDAP_SEARCH_FILTER", "(uid=%(user)s)"),
         )
 
 DJOSER = {
-    'PASSWORD_RESET_CONFIRM_URL': 'reset-password/{uid}/{token}',
-    'ACTIVATION_URL': 'activate/{uid}/{token}',
-    'SEND_ACTIVATION_EMAIL': True,
-    'SEND_CONFIRMATION_EMAIL': True,
-    'PASSWORD_CHANGED_EMAIL_CONFIRMATION': True,
-    'SERIALIZERS': {},
-    'PERMISSIONS': {
-        'activation': ['rest_framework.permissions.AllowAny'],
-        'password_reset': ['rest_framework.permissions.AllowAny'],
-        'password_reset_confirm': ['rest_framework.permissions.AllowAny'],
-        'set_password': ['djoser.permissions.CurrentUserOrAdmin'],
-        'username_reset': ['rest_framework.permissions.AllowAny'],
-        'username_reset_confirm': ['rest_framework.permissions.AllowAny'],
-        'set_username': ['djoser.permissions.CurrentUserOrAdmin'],
-        'user_create': ['rest_framework.permissions.AllowAny'],
-        'user_delete': ['djoser.permissions.CurrentUserOrAdmin'],
-        'user': ['djoser.permissions.CurrentUserOrAdmin'],
-        'user_list': ['djoser.permissions.CurrentUserOrAdmin'],
-        'token_create': ['rest_framework.permissions.AllowAny'],
-        'token_destroy': ['rest_framework.permissions.IsAuthenticated'],
+    "PASSWORD_RESET_CONFIRM_URL": "reset-password/{uid}/{token}",
+    "ACTIVATION_URL": "activate/{uid}/{token}",
+    "SEND_ACTIVATION_EMAIL": True,
+    "SEND_CONFIRMATION_EMAIL": True,
+    "PASSWORD_CHANGED_EMAIL_CONFIRMATION": True,
+    "SERIALIZERS": {},
+    "PERMISSIONS": {
+        "activation": ["rest_framework.permissions.AllowAny"],
+        "password_reset": ["rest_framework.permissions.AllowAny"],
+        "password_reset_confirm": ["rest_framework.permissions.AllowAny"],
+        "set_password": ["djoser.permissions.CurrentUserOrAdmin"],
+        "username_reset": ["rest_framework.permissions.AllowAny"],
+        "username_reset_confirm": ["rest_framework.permissions.AllowAny"],
+        "set_username": ["djoser.permissions.CurrentUserOrAdmin"],
+        "user_create": ["rest_framework.permissions.AllowAny"],
+        "user_delete": ["djoser.permissions.CurrentUserOrAdmin"],
+        "user": ["djoser.permissions.CurrentUserOrAdmin"],
+        "user_list": ["djoser.permissions.CurrentUserOrAdmin"],
+        "token_create": ["rest_framework.permissions.AllowAny"],
+        "token_destroy": ["rest_framework.permissions.IsAuthenticated"],
     },
 }
 
 
 # django rest framework library
 REST_FRAMEWORK = {
-    'DEFAULT_RENDERER_CLASSES': [
-        'rest_framework.renderers.JSONRenderer',
+    "DEFAULT_RENDERER_CLASSES": [
+        "rest_framework.renderers.JSONRenderer",
     ],
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.SessionAuthentication',
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.SessionAuthentication",
     ],
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
     ],
-    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
 SPECTACULAR_SETTINGS = {
-    'TITLE': 'PKPDApp API',
-    'DESCRIPTION': 'The API for the PKPDApp',
-    'VERSION': '1.0.0',
-    'SERVE_INCLUDE_SCHEMA': False,
+    "TITLE": "PKPDApp API",
+    "DESCRIPTION": "The API for the PKPDApp",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
 }
 
 
-CRISPY_TEMPLATE_PACK = 'bootstrap4'
+CRISPY_TEMPLATE_PACK = "bootstrap4"
 
 MARKDOWNIFY_MARKDOWN_EXTENSIONS = [
-    'mdx_math',
+    "mdx_math",
 ]
 
 MARKDOWNIFY_WHITELIST_TAGS = [
-    'a',
-    'abbr',
-    'acronym',
-    'b',
-    'blockquote',
-    'em',
-    'i',
-    'li',
-    'ol',
-    'p',
-    'strong',
-    'ul',
-    'h',
-    'script',
+    "a",
+    "abbr",
+    "acronym",
+    "b",
+    "blockquote",
+    "em",
+    "i",
+    "li",
+    "ol",
+    "p",
+    "strong",
+    "ul",
+    "h",
+    "script",
 ]
 
 MARKDOWNIFY_WHITELIST_ATTRS = [
-    'href',
-    'src',
-    'alt',
-    'type',
+    "href",
+    "src",
+    "alt",
+    "type",
 ]
 
 MARKDOWNIFY_WHITELIST_STYLES = [
-    'color',
-    'font-weight',
+    "color",
+    "font-weight",
 ]
 
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
-    'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
-
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
 CORS_ALLOWED_ORIGINS = [
-    "http://127.0.0.1:3000",
-    "http://127.0.0.1:3001",
-    "http://127.0.0.1:3002",
-    "http://127.0.0.1:3003",
-    "http://127.0.0.1:3004",
-    "http://localhost:3000",
+    f"https://{os.environ.get('HOST_NAME', 'localhost')}:3000",
 ]
 
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_ALL_ORIGINS = False
 
-CORS_EXPOSE_HEADERS = ['Content-Type', 'X-CSRFToken']
+CORS_EXPOSE_HEADERS = ["Content-Type", "X-CSRFToken"]
 CORS_ALLOW_CREDENTIALS = True
 
-ROOT_URLCONF = 'pkpdapp.urls'
+ROOT_URLCONF = "pkpdapp.urls"
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'pkpdapp', 'templates')],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [os.path.join(BASE_DIR, "pkpdapp", "templates")],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.debug",
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
             ],
         },
     },
 ]
 
 
-X_FRAME_OPTIONS = 'SAMEORIGIN'
+X_FRAME_OPTIONS = "SAMEORIGIN"
+
 
 # WSGI_APPLICATION = 'bamad.wsgi.application'
 
 # authentication cookie settings
-CSRF_COOKIE_SAMESITE = 'Lax'
-SESSION_COOKIE_SAMESITE = 'Lax'
-CSRF_COOKIE_HTTPONLY = False
+CSRF_COOKIE_SAMESITE = "Lax"
+SESSION_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_HTTPONLY = True
 SESSION_COOKIE_HTTPONLY = True
 
 # PROD ONLY
-# CSRF_COOKIE_SECURE = True
-# SESSION_COOKIE_SECURE = True
+if not DEBUG:
+    CSRF_COOKIE_SECURE = True
+    SESSION_COOKIE_SECURE = True
 
-
-WSGI_APPLICATION = 'pkpdapp.wsgi.application'
+WSGI_APPLICATION = "pkpdapp.wsgi.application"
 
 
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-        'OPTIONS': {
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
+        "OPTIONS": {
             # 'timeout': 20,
-        }
+        },
     }
 }
 
-DATABASE_URL = os.environ.get('DATABASE_URL')
+DATABASE_URL = os.environ.get("DATABASE_URL")
 db_from_env = dj_database_url.config(
     default=DATABASE_URL, conn_max_age=500, ssl_require=False
 )
-DATABASES['default'].update(db_from_env)
+DATABASES["default"].update(db_from_env)
 
 
 # Password validation
@@ -315,21 +315,17 @@ DATABASES['default'].update(db_from_env)
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME':
-        'django.contrib.auth.password_validation.'
-        'UserAttributeSimilarityValidator',
+        "NAME": "django.contrib.auth.password_validation."
+        "UserAttributeSimilarityValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.'
-        'MinimumLengthValidator',
+        "NAME": "django.contrib.auth.password_validation." "MinimumLengthValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.'
-        'CommonPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation." "CommonPasswordValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.'
-        'NumericPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation." "NumericPasswordValidator",
     },
 ]
 
@@ -337,9 +333,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/3.0/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = "UTC"
 
 USE_I18N = True
 
@@ -348,71 +344,66 @@ USE_L10N = True
 USE_TZ = True
 
 # Media files (such as data sets and model files)
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = "/media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
-STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+STATIC_URL = "/static/"
+STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
-STATICFILES_DIRS = [
-]
+STATICFILES_DIRS = []
 
 # Staticfiles finders for locating dash app assets and related files
 STATICFILES_FINDERS = [
     # Django default finders
-    'django.contrib.staticfiles.finders.FileSystemFinder',
-    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+    "django.contrib.staticfiles.finders.FileSystemFinder",
+    "django.contrib.staticfiles.finders.AppDirectoriesFinder",
 ]
 
 # Forever cachable files and compression support
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 
 # Redirect to home URL after login (Default redirects to /accounts/profile/)
-LOGIN_REDIRECT_URL = '/'
+LOGIN_REDIRECT_URL = "/"
 
 
 EMAIL_HOST = os.environ.get("EMAIL_HOST", default=None)
 if EMAIL_HOST is None:
-    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 else:
-    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 
-EMAIL_PORT = os.environ.get("EMAIL_PORT", default='foo')
-EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", default='foo')
-EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", default='foo')
-DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL",
-                                    default='webmaster@localhost')
+EMAIL_PORT = os.environ.get("EMAIL_PORT", default="foo")
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", default="foo")
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", default="foo")
+DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", default="webmaster@localhost")
 
 CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
-        'LOCATION': '127.0.0.1:11211',
+    "default": {
+        "BACKEND": "django.core.cache.backends.memcached.MemcachedCache",
+        "LOCATION": "127.0.0.1:11211",
     }
 }
 
-DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL",
-                                    default='webmaster@localhost')
+DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", default="webmaster@localhost")
 
 CLOUDAMQP_URL = os.environ.get("CLOUDAMQP_URL", default=None)
 if CLOUDAMQP_URL is None:
     CELERY_BROKER_URL = [
-        'amqp://',
-        'amqp://{}:{}@rabbitmq:5672'.format(
-            os.environ.get("RABBITMQ_DEFAULT_USER",
-                           default='guest'),
-            os.environ.get("RABBITMQ_DEFAULT_PASS",
-                           default='guest')
-        )
+        "amqp://",
+        "amqp://{}:{}@rabbitmq:5672".format(
+            os.environ.get("RABBITMQ_DEFAULT_USER", default="guest"),
+            os.environ.get("RABBITMQ_DEFAULT_PASS", default="guest"),
+        ),
     ]
 else:
     CELERY_BROKER_URL = CLOUDAMQP_URL
 
 CELERY_BROKER_TRANSPORT_OPTIONS = {
-    'max_retries': 3,
-    'interval_start': 0,
-    'interval_step': 0.2,
-    'interval_max': 0.5,
+    "max_retries": 3,
+    "interval_start": 0,
+    "interval_step": 0.2,
+    "interval_max": 0.5,
 }
