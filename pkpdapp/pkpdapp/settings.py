@@ -134,7 +134,8 @@ if use_ldap:
         
     if admin_group is not None and group_search is not None:
         AUTH_LDAP_USER_FLAGS_BY_GROUP = {
-            "is_superuser": admin_group 
+            "is_staff": admin_group,
+            "is_superuser": admin_group,
         }
 
     use_direct_bind = bool(int(os.environ.get('AUTH_LDAP_DIRECT_BIND', '0')))
