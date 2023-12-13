@@ -14,9 +14,18 @@ PKPDApp is an open source web-based application to explore, analyse and model th
 
 Use these instructions for deploying the application in a production environment. Instructions for developers can be found below.
 
+### Get the code
+
+First clone the repository:
+
+```bash
+$ git clone https://github.com/pkpdapp-team/pkpdapp.git
+$ cd pkpdapp
+```
+
 ### `.env.prod` file
 
-The configuration of the production application is stored in the `.env.prod` file. Edit this file and variables to correspond to your particular setup. The variables are described below:
+The configuration of the production application is stored in the `.env.prod` file in the root directory. Edit this file and variables to correspond to your particular setup. The variables are described below:
 
 - `DEBUG`: set to 0 for production
 - `HOST_NAME`: the host name of the application
