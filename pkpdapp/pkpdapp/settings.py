@@ -125,7 +125,7 @@ if use_ldap:
 
     if group_search is not None:
         AUTH_LDAP_GROUP_SEARCH = LDAPSearch(
-            "ou=groups,dc=example,dc=com", ldap.SCOPE_SUBTREE, "(objectClass=groupOfNames)"
+            group_search, ldap.SCOPE_SUBTREE, "(objectClass=groupOfNames)"
         )
         AUTH_LDAP_GROUP_TYPE = GroupOfNamesType()
 
