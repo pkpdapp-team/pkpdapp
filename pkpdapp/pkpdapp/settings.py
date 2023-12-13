@@ -121,18 +121,18 @@ if use_ldap:
 
     user_group = os.environ.get('AUTH_LDAP_USER_GROUP', None)
     admin_group = os.environ.get('AUTH_LDAP_ADMIN_GROUP', None)
+    group_search = os.environ.get('AUTH_LDAP_GROUP_SEARCH', None)
 
-
-    if user_group is not None and admin_group is not None:
+    if group_search is not None:
         AUTH_LDAP_GROUP_SEARCH = LDAPSearch(
             "ou=groups,dc=example,dc=com", ldap.SCOPE_SUBTREE, "(objectClass=groupOfNames)"
         )
         AUTH_LDAP_GROUP_TYPE = GroupOfNamesType()
 
-    if user_group is not None:
+    if user_group is not None and group_search is not None:
         AUTH_LDAP_REQUIRE_GROUP = user_group
         
-    if admin_group is not None:
+    if admin_group is not None and group_search is not None:
         AUTH_LDAP_USER_FLAGS_BY_GROUP = {
             "is_superuser": admin_group 
         }
