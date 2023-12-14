@@ -2,8 +2,6 @@ import React, { useEffect } from "react";
 import { DynamicTabs, TabPanel } from "../../components/DynamicTabs";
 import HelpTab from "./HelpTab";
 import { parse } from "papaparse";
-import { set } from "react-hook-form";
-import { Container } from "@mui/material";
 
 export type Question = {
   question: string;

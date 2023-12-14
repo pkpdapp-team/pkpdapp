@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { useForm } from "react-hook-form";
 import {
   Button,
@@ -9,13 +9,10 @@ import {
   CssBaseline,
   Stack,
   Alert,
-  FormControlLabel,
-  Checkbox,
 } from "@mui/material";
 import { ReactComponent as PkpdAppIcon } from "../../logo_pkpdapp_with_text.svg";
 import TextField from "../../components/TextField";
 import { useAppDispatch } from "../../app/hooks";
-import { fetchCsrf } from "./loginSlice";
 
 interface LoginFormInputs {
   username: string;
@@ -30,7 +27,6 @@ interface LoginProps {
 
 const Login: React.FC<LoginProps> = ({ onLogin, isLoading, errorMessage }) => {
   const { handleSubmit, control } = useForm<LoginFormInputs>();
-  const dispatch = useAppDispatch();
 
   const onSubmit = (data: LoginFormInputs) => {
     onLogin(data.username, data.password);

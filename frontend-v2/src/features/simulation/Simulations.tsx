@@ -35,7 +35,7 @@ import { useEffect, useMemo, useState } from "react";
 import SimulationPlotView from "./SimulationPlotView";
 import SimulationSliderView from "./SimulationSliderView";
 import DropdownButton from "../../components/DropdownButton";
-import { Add, NorthWestSharp } from "@mui/icons-material";
+import { Add } from "@mui/icons-material";
 import FloatField from "../../components/FloatField";
 import useDirty from "../../hooks/useDirty";
 import UnitField from "../../components/UnitField";

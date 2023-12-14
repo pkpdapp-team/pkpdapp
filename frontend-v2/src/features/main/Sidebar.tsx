@@ -24,7 +24,6 @@ import { useAppDispatch } from "../../app/hooks";
 import ErrorIcon from "@mui/icons-material/Error";
 import {
   CombinedModelRead,
-  Protocol,
   ProtocolListApiResponse,
   useCombinedModelListQuery,
   useProjectRetrieveQuery,

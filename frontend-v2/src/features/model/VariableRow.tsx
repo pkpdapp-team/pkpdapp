@@ -15,7 +15,6 @@ import {
   useVariableUpdateMutation,
   useProtocolCreateMutation,
   useProtocolDestroyMutation,
-  Dose,
   CombinedModelRead,
   CompoundRead,
   ProjectRead,

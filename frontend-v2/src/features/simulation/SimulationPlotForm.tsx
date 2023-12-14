@@ -6,18 +6,10 @@ import {
   useFieldArray,
 } from "react-hook-form";
 import {
-  Compound,
   CompoundRead,
   Simulation,
-  SimulationPlot,
-  SimulationPlotRead,
-  SimulationYAxis,
-  SimulationYAxisRead,
-  Unit,
   UnitRead,
-  Variable,
   VariableRead,
-  useUnitListQuery,
 } from "../../app/backendApi";
 import {
   Divider,
@@ -31,7 +23,6 @@ import {
 import TextField from "../../components/TextField";
 import UnitField from "../../components/UnitField";
 import SelectField from "../../components/SelectField";
-import Checkbox from "../../components/Checkbox";
 import DropdownButton from "../../components/DropdownButton";
 import { Add, Delete } from "@mui/icons-material";
 import FloatField from "../../components/FloatField";
