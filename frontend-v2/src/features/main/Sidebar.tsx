@@ -262,6 +262,7 @@ export default function Sidebar() {
               color: "#1976d2",
               fontWeight: "bold",
               paddingLeft: "1rem",
+              fontFamily: "comfortaa",
             }}
           >
             PKPD Explorer {project && ` - ${project.name}`}
