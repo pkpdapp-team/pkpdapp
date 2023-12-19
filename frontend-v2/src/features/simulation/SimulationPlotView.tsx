@@ -9,7 +9,7 @@ import {
   VariableRead,
   useProtocolListQuery,
 } from "../../app/backendApi";
-import { Config, Data, xLayout, Icon as PlotlyIcon } from "plotly.js";
+import { Config, Data, Layout, Icon as PlotlyIcon } from "plotly.js";
 import {
   Button,
   Dialog,
@@ -343,7 +343,7 @@ const SimulationPlotView: React.FC<SimulationPlotProps> = ({
   // axis dticks
   // const { dticky, dticky2 } = dticks(rangey, rangey2, plot);
 
-  const plotLayout: Partial<xLayout> = {
+  const plotLayout: Partial<Layout> = {
     dragmode: "pan",
     shapes: icLines.map((icLine, i) => {
       return {
