@@ -8,8 +8,6 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Button,
-  Stack,
   IconButton,
   SvgIcon,
 } from "@mui/material";
@@ -21,19 +19,14 @@ import {
   useProjectListQuery,
   useCombinedModelCreateMutation,
   useSimulationCreateMutation,
-  SimulationPlot,
   useUnitListQuery,
-  useVariableListQuery,
   useCompoundListQuery,
   CompoundRead,
   ProjectRead,
 } from "../../app/backendApi";
 import ProjectRow from "./Project";
 import { RootState } from "../../app/store";
-import AddIcon from "@mui/icons-material/Add";
-import { PublicOutlined } from "@mui/icons-material";
 import DropdownButton from "../../components/DropdownButton";
-import { api } from "../../app/api";
 import SortIcon from "@mui/icons-material/Sort";
 import { useCustomToast } from "../../hooks/useCustomToast";
 import { notificationTypes } from "../../components/Notification/notificationTypes";

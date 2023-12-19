@@ -26,7 +26,6 @@ import { SvgIcon } from "@mui/material";
 import { ReactComponent as RocheLogo } from "../../shared/assets/svg/logo_roche.svg";
 import {
   CombinedModelRead,
-  Protocol,
   ProtocolListApiResponse,
   useCombinedModelListQuery,
   useProjectRetrieveQuery,
@@ -39,6 +38,8 @@ import VaccinesIcon from "@mui/icons-material/Vaccines";
 import SsidChartIcon from "@mui/icons-material/SsidChart";
 import ContactSupportIcon from "@mui/icons-material/ContactSupport";
 import TableViewIcon from "@mui/icons-material/TableView";
+import "@fontsource/comfortaa"; // Defaults to weight 400
+
 
 const drawerWidth = 240;
 

@@ -3,9 +3,7 @@ import { Control, FieldPath, FieldValues } from "react-hook-form";
 import { SelectProps } from "@mui/material";
 import {
   Compound,
-  Unit,
   UnitRead,
-  useUnitRetrieveQuery,
 } from "../app/backendApi";
 import SelectField from "./SelectField";
 

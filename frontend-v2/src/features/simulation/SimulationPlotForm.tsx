@@ -6,18 +6,10 @@ import {
   useFieldArray,
 } from "react-hook-form";
 import {
-  Compound,
   CompoundRead,
   Simulation,
-  SimulationPlot,
-  SimulationPlotRead,
-  SimulationYAxis,
-  SimulationYAxisRead,
-  Unit,
   UnitRead,
-  Variable,
   VariableRead,
-  useUnitListQuery,
 } from "../../app/backendApi";
 import {
   Divider,

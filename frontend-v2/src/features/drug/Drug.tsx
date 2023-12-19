@@ -15,7 +15,6 @@ import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
 import {
   Compound,
-  Efficacy,
   EfficacyRead,
   useCompoundRetrieveQuery,
   useCompoundUpdateMutation,
@@ -25,7 +24,6 @@ import {
 import { useFieldArray, useForm, useFormState } from "react-hook-form";
 import FloatField from "../../components/FloatField";
 import UnitField from "../../components/UnitField";
-import SelectField from "../../components/SelectField";
 import { useEffect, useState } from "react";
 import DeleteIcon from "@mui/icons-material/Delete";
 import TextField from "../../components/TextField";
@@ -144,16 +142,6 @@ const Drug: React.FC = () => {
   if (!compound || !project || !units) {
     return <div>Not found</div>;
   }
-
-  const intrinsic_clearance_assay_options = [
-    { value: "MS", label: "Microsomes" },
-    { value: "HC", label: "Hepatocytes" },
-  ];
-
-  const is_soluble_options = [
-    { value: false, label: "Membrane-bound" },
-    { value: true, label: "Soluble" },
-  ];
 
   const isEfficacySelected = (efficacy_experiment: EfficacyRead) => {
     if (compound.use_efficacy === undefined) {

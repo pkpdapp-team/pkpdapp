@@ -1,16 +1,11 @@
 import * as React from "react";
 import {
-  CombinedModel,
   CombinedModelRead,
   CompoundRead,
   ProjectRead,
   UnitRead,
   VariableRead,
   useCombinedModelSetParamsToDefaultsUpdateMutation,
-  useCompoundRetrieveQuery,
-  usePharmacokineticRetrieveQuery,
-  useUnitListQuery,
-  useVariableUpdateMutation,
 } from "../../app/backendApi";
 import { Control } from "react-hook-form";
 import {
@@ -26,11 +21,9 @@ import {
 } from "@mui/material";
 import ParameterRow from "./ParameterRow";
 import HelpButton from "../../components/HelpButton";
-import paramPriority from "./paramPriority";
 import {
   getConstVariables,
   getNoReset,
-  resetToSpeciesDefaults,
 } from "./resetToSpeciesDefaults";
 import { FormData } from "./Model";
 import { defaultHeaderSx } from "../../shared/tableHeadersSx";

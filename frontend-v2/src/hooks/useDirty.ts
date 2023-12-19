@@ -3,7 +3,7 @@ import {
   decrementDirtyCount,
   incrementDirtyCount,
 } from "../features/main/mainSlice";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 function useDirty(isDirty: boolean) {
   const dispatch = useDispatch();

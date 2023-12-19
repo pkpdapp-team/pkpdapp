@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { useForm } from "react-hook-form";
 import {
   Button,
@@ -13,7 +13,6 @@ import {
 import { ReactComponent as PkpdAppIcon } from "../../logo_pkpdapp_with_text.svg";
 import TextField from "../../components/TextField";
 import { useAppDispatch } from "../../app/hooks";
-import { fetchCsrf } from "./loginSlice";
 
 interface LoginFormInputs {
   username: string;
@@ -28,14 +27,13 @@ interface LoginProps {
 
 const Login: React.FC<LoginProps> = ({ onLogin, isLoading, errorMessage }) => {
   const { handleSubmit, control } = useForm<LoginFormInputs>();
-  const dispatch = useAppDispatch();
 
   const onSubmit = (data: LoginFormInputs) => {
     onLogin(data.username, data.password);
   };
 
   return (
-    <Container component="main" maxWidth="xs">
+    <Container component="main" maxWidth="sm">
       <CssBaseline />
       <form onSubmit={handleSubmit(onSubmit)}>
         <Stack spacing={2} sx={{ marginTop: 10 }}>
@@ -68,6 +66,17 @@ const Login: React.FC<LoginProps> = ({ onLogin, isLoading, errorMessage }) => {
           {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
         </Stack>
       </form>
+      <Typography variant="caption" sx={{ marginTop: 2 }}>
+        I acknowledge that I am bound by confidentiality obligations imposed
+        through my employment or contractual agreement with Roche in connection
+        with my access to confidential information, including PKPD Explorer and
+        its contents. By entering PKPD Explorer, I confirm that I understand
+        that my activities within PKPD Explorer may be monitored consistent with
+        local law, and all contents and passwords are confidential information,
+        and that unauthorized disclosure or use of such confidential information
+        may result in disciplinary action including termination of my employment
+        or services and/or legal action based on local law." 
+      </Typography>
     </Container>
   );
 };

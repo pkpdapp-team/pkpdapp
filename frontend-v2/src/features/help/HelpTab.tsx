@@ -5,13 +5,11 @@ import {
   Box,
   Card,
   Chip,
-  Grid,
   Stack,
   Typography,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { Question, TutorialVideo } from "./Help";
-import ReactPlayer from "react-player/youtube";
 
 interface Props {
   questions: Question[];
