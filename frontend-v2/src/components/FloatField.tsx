@@ -2,14 +2,16 @@ import React from "react";
 import { Control, Controller, FieldPath, FieldValues } from "react-hook-form";
 import * as material from "@mui/material";
 import { useFieldState } from "../app/hooks";
+import { getLabel } from "../shared/getRequiredLabel";
 
 type Props<T extends FieldValues> = {
   label?: string;
   name: FieldPath<T>;
   control: Control<T>;
-  rules?: Object;
+  rules?: Record<string, unknown>;
   textFieldProps?: material.TextFieldProps;
   data_cy?: string;
+  sx?: Record<string, string>
 };
 
 function convert(value: any) {
@@ -31,8 +33,10 @@ function FloatField<T extends FieldValues>({
   rules,
   textFieldProps,
   data_cy,
+  sx
 }: Props<T>): React.ReactElement {
   const [fieldValue, setFieldValue] = useFieldState({ name, control });
+
   return (
     <Controller
       name={name}
@@ -58,12 +62,13 @@ function FloatField<T extends FieldValues>({
           <material.TextField
             label={
               !error
-                ? label
+                ? getLabel(label || '', Boolean(rules?.required))
                 : error?.message ||
                   (error?.type === "required" ? "Required" : "")
             }
             name={name}
             id={name}
+            sx={sx}
             variant="outlined"
             value={
               fieldValue === undefined || fieldValue === null ? "" : fieldValue

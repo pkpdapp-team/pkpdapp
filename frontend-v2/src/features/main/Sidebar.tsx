@@ -22,6 +22,9 @@ import { Logout } from "@mui/icons-material";
 import { logout } from "../login/loginSlice";
 import { useAppDispatch } from "../../app/hooks";
 import ErrorIcon from "@mui/icons-material/Error";
+import { SvgIcon } from "@mui/material";
+import { ReactComponent as RocheLogo } from "../../shared/assets/svg/logo_roche.svg";
+import { ReactComponent as PKPDLogo } from "../../shared/assets/svg/logo_pkpdapp.svg";
 import {
   CombinedModelRead,
   ProtocolListApiResponse,
@@ -55,19 +58,27 @@ export default function Sidebar() {
     (state: RootState) => state.main.selectedProject,
   );
   const projectIdOrZero = projectId || 0;
-  const { data: models } =
-    useCombinedModelListQuery(
-      { projectId: projectIdOrZero },
-      { skip: !projectId },
-    );
-  const {
-    data: protocols,
-  } = useProtocolListQuery({ projectId: projectIdOrZero }, { skip: !projectId });
-  const model = models?.[0] || null;
-  const { data: project } =
-    useProjectRetrieveQuery({ id: projectIdOrZero }, { skip: !projectId });
 
-  const modelIsIncomplete = (mdl: CombinedModelRead | null, prtcls: ProtocolListApiResponse | undefined) => {
+  const { data: models } = useCombinedModelListQuery(
+    { projectId: projectIdOrZero },
+    { skip: !projectId },
+  );
+  const { data: protocols } = useProtocolListQuery(
+    { projectId: projectIdOrZero },
+    { skip: !projectId },
+  );
+  const model = models?.[0] || null;
+  const { data: project } = useProjectRetrieveQuery(
+    { id: projectIdOrZero },
+    { skip: !projectId },
+  );
+  const { REACT_APP_ROCHE } = process.env;
+  const isRocheLogo = typeof REACT_APP_ROCHE === 'string' ? REACT_APP_ROCHE === 'true' : REACT_APP_ROCHE;
+
+  const modelIsIncomplete = (
+    mdl: CombinedModelRead | null,
+    prtcls: ProtocolListApiResponse | undefined,
+  ) => {
     return (
       (mdl && mdl.pk_model === null) ||
       (mdl && mdl.pd_model && mdl.mappings.length === 0) ||
@@ -147,58 +158,146 @@ export default function Sidebar() {
     return page === selectedPage;
   };
 
+  const projectsPage = pages[0];
+  const helpPage = pages[pages?.length - 1];
+  const steps = pages.filter(
+    (step) => step !== projectsPage && step !== helpPage,
+  );
+
   const drawer = (
-    <div>
-      <Toolbar />
-      <Divider />
-      <List>
-        {pages.map(({ key, value }) => (
-          <ListItem key={key} disablePadding selected={isPageSelected(key)}>
-            <ListItemButton
-              onClick={handlePageClick(key)}
-              disabled={isPageDisabled(key)}
-              disableRipple={true}
-            >
-              <ListItemIcon>
-                {value in errorComponents
-                  ? errorComponents[value]
-                  : icons[value]}
-              </ListItemIcon>
-              <ListItemText primary={value} />
-            </ListItemButton>
-          </ListItem>
-        ))}
-      </List>
+    <div style={{ marginTop: "7rem" }}>
+      <ListItem
+        key={projectsPage?.key}
+        disablePadding
+        selected={isPageSelected(projectsPage?.key)}
+      >
+        <ListItemButton
+          onClick={handlePageClick(projectsPage?.key)}
+          disabled={isPageDisabled(projectsPage?.key)}
+          disableRipple={true}
+        >
+          <ListItemIcon>
+            {projectsPage?.value in errorComponents
+              ? errorComponents[projectsPage?.value]
+              : icons[projectsPage?.value]}
+          </ListItemIcon>
+          <ListItemText primary={projectsPage?.value} />
+        </ListItemButton>
+      </ListItem>
+      {projectIdOrZero !== 0 && (
+        <>
+          <Typography
+            variant="subtitle1"
+            noWrap
+            component="div"
+            sx={{
+              flexGrow: 1,
+              color: "gray",
+              paddingLeft: "1rem",
+              paddingTop: "1rem",
+            }}
+          >
+            STEPS
+          </Typography>
+          <List>
+            {steps.map(({ key, value }) => (
+              <ListItem key={key} disablePadding selected={isPageSelected(key)}>
+                <ListItemButton
+                  onClick={handlePageClick(key)}
+                  disabled={isPageDisabled(key)}
+                  disableRipple={true}
+                >
+                  <ListItemIcon>
+                    {value in errorComponents
+                      ? errorComponents[value]
+                      : icons[value]}
+                  </ListItemIcon>
+                  <ListItemText primary={value} />
+                </ListItemButton>
+              </ListItem>
+            ))}
+          </List>
+        </>
+      )}
     </div>
   );
 
   return (
     <Box sx={{ display: "flex" }}>
       <CssBaseline />
-
       <AppBar
         position="fixed"
         sx={{
-          width: { sm: `calc(100% - ${drawerWidth}px)` },
+          width: { sm: `100%` },
           ml: { sm: `${drawerWidth}px` },
+          zIndex: 10010000,
+          backgroundColor: "white",
         }}
       >
         <Toolbar>
           <IconButton
-            color="inherit"
+            color="primary"
             aria-label="open drawer"
             edge="start"
             onClick={handleDrawerToggle}
-            sx={{ mr: 2, display: { sm: "none" } }}
+            sx={{ mr: 2, display: { sm: "none" }, color: "grey" }}
           >
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1, fontFamily: "comfortaa" }}>
-            pkpd explorer{project && ` - ${project.name}`}
+          <SvgIcon
+            color="primary"
+            sx={{ width: "4rem", height: "4rem" }}
+            viewBox="0 0 62 32"
+          >
+            {isRocheLogo ? <RocheLogo /> : <PKPDLogo />}
+          </SvgIcon>
+          <Divider
+            orientation="vertical"
+            color="#000"
+            style={{ height: "1rem", marginLeft: "1rem", opacity: "0.2" }}
+          />
+          <Typography
+            variant="h6"
+            noWrap
+            component="div"
+            sx={{
+              flexGrow: 1,
+              color: "#1976d2",
+              fontWeight: "bold",
+              paddingLeft: "1rem",
+            }}
+          >
+            PKPD Explorer {project && ` - ${project.name}`}
           </Typography>
-          <IconButton onClick={() => dispatch(logout())} color="inherit">
-            <Logout />
-          </IconButton>
+          <div style={{ display: "flex" }}>
+            <Typography
+              variant="subtitle1"
+              noWrap
+              component="div"
+              onClick={handlePageClick(helpPage?.key)}
+              sx={{
+                flexGrow: 1,
+                color: "gray",
+                cursor: "pointer",
+              }}
+            >
+              Help
+            </Typography>
+            <Typography
+              variant="subtitle1"
+              noWrap
+              component="div"
+              onClick={() => dispatch(logout())}
+              sx={{
+                flexGrow: 1,
+                color: "gray",
+                paddingLeft: "1rem",
+                cursor: "pointer",
+              }}
+            >
+              Exit
+            </Typography>
+          </div>
         </Toolbar>
         {dirtyCount !== 0 ? (
           <LinearProgress sx={{ height: 5, zIndex: 10010000 }} />

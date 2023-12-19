@@ -9,6 +9,7 @@ import {
   TableHead,
   TableRow,
   IconButton,
+  SvgIcon,
 } from "@mui/material";
 import {
   Compound,
@@ -27,6 +28,10 @@ import ProjectRow from "./Project";
 import { RootState } from "../../app/store";
 import DropdownButton from "../../components/DropdownButton";
 import SortIcon from "@mui/icons-material/Sort";
+import { useCustomToast } from "../../hooks/useCustomToast";
+import { notificationTypes } from "../../components/Notification/notificationTypes";
+import { ReactComponent as FolderLogo } from "../../shared/assets/svg/folder.svg";
+import { defaultHeaderSx } from "../../shared/tableHeadersSx";
 
 enum SortOptions {
   CREATED = "created",
@@ -39,8 +44,14 @@ const SM_SIM_TIME = 48;
 const LM_SIM_TIME = 672;
 const ProjectTable: React.FC = () => {
   const [sortBy, setSortBy] = React.useState<SortOptions>(SortOptions.CREATED);
+  const toast = useCustomToast();
 
   const handleSortBy = (option: SortOptions) => {
+    toast({
+      type: notificationTypes.SUCCESS,
+      text: "You must complete all mandatory fields",
+      autoClose: 35000,
+    });
     setSortBy((prev) => {
       if (prev === option) {
         return SortOptions.CREATED;
@@ -186,7 +197,7 @@ const ProjectTable: React.FC = () => {
   };
 
   return (
-    <TableContainer>
+    <TableContainer sx={{ width: "90%" }}>
       <DropdownButton
         useIcon={false}
         data_cy="create-project"
@@ -198,60 +209,113 @@ const ProjectTable: React.FC = () => {
       >
         Create new project
       </DropdownButton>
-      <Table size="small">
-        <TableHead>
-          <TableRow>
-            <TableCell padding="checkbox">Select</TableCell>
-            <TableCell>
-              Name{" "}
-              <IconButton
-                color={sortBy === SortOptions.NAME ? "success" : undefined}
-                onClick={() => handleSortBy(SortOptions.NAME)}
-              >
-                <SortIcon />
-              </IconButton>
-            </TableCell>
-            <TableCell>
-              Species{" "}
-              <IconButton
-                color={sortBy === SortOptions.SPECIES ? "success" : undefined}
-                onClick={() => handleSortBy(SortOptions.SPECIES)}
-              >
-                <SortIcon />
-              </IconButton>
-            </TableCell>
-            <TableCell>
-              Compound{" "}
-              <IconButton
-                color={sortBy === SortOptions.COMPOUND ? "success" : undefined}
-                onClick={() => handleSortBy(SortOptions.COMPOUND)}
-              >
-                <SortIcon />
-              </IconButton>
-            </TableCell>
-            <TableCell>Actions</TableCell>
-            <TableCell>Modality</TableCell>
-            <TableCell align="right"></TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {projects?.length === 0 && (
+      {projects?.length === 0 ? (
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            width: "100%",
+            height: "80vh",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <SvgIcon
+            color="primary"
+            sx={{ width: "10rem", height: "10rem" }}
+            viewBox="0 0 164 124"
+          >
+            <FolderLogo />
+          </SvgIcon>
+          <div style={{ fontWeight: "bold", marginTop: "2rem" }}>
+            No projects started
+          </div>
+          <div>Create a new one</div>
+        </div>
+      ) : (
+        <Table size="small">
+          <TableHead>
             <TableRow>
-              <TableCell colSpan={5}>No projects found</TableCell>
+              <TableCell padding="checkbox">
+                <div style={{ ...defaultHeaderSx, display: "flex" }}>
+                  Select
+                  <div
+                    style={{
+                      ...defaultHeaderSx,
+                      color: "red",
+                      paddingLeft: "5px",
+                    }}
+                  >
+                    *
+                  </div>
+                </div>
+              </TableCell>
+              <TableCell>
+                <div style={{ ...defaultHeaderSx }}>
+                  Name{" "}
+                  <IconButton
+                    color={sortBy === SortOptions.NAME ? "success" : undefined}
+                    onClick={() => handleSortBy(SortOptions.NAME)}
+                  >
+                    <SortIcon />
+                  </IconButton>
+                </div>
+              </TableCell>
+              <TableCell>
+                <div style={{ ...defaultHeaderSx }}>
+                  Species{" "}
+                  <IconButton
+                    color={
+                      sortBy === SortOptions.SPECIES ? "success" : undefined
+                    }
+                    onClick={() => handleSortBy(SortOptions.SPECIES)}
+                  >
+                    <SortIcon />
+                  </IconButton>
+                </div>
+              </TableCell>
+              <TableCell>
+                <div style={{ ...defaultHeaderSx }}>
+                  Compound{" "}
+                  <IconButton
+                    color={
+                      sortBy === SortOptions.COMPOUND ? "success" : undefined
+                    }
+                    onClick={() => handleSortBy(SortOptions.COMPOUND)}
+                  >
+                    <SortIcon />
+                  </IconButton>
+                </div>
+              </TableCell>
+              <TableCell>
+                <div style={{ ...defaultHeaderSx }}>Modality</div>
+              </TableCell>
+              <TableCell>
+                <div style={{ ...defaultHeaderSx }}>Actions</div>
+              </TableCell>
+              <TableCell align="right"></TableCell>
             </TableRow>
-          )}
-          {projects?.map((project, i) => (
-            <ProjectRow
-              key={project.id}
-              project={project}
-              otherProjectNames={projectNames
-                .slice(0, i)
-                .concat(projectNames.slice(i + 1))}
-              isSelected={selectedProject === project.id}
-            />
-          ))}
-        </TableBody>
-      </Table>
+          </TableHead>
+          <TableBody>
+            {projects?.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={5}>No projects found</TableCell>
+              </TableRow>
+            )}
+            {projects?.map((project, i) => (
+              <ProjectRow
+                key={project.id}
+                isAnyProjectSelected={Boolean(selectedProject)}
+                project={project}
+                otherProjectNames={projectNames
+                  .slice(0, i)
+                  .concat(projectNames.slice(i + 1))}
+                isSelected={selectedProject === project.id}
+              />
+            ))}
+          </TableBody>
+        </Table>
+      )}
     </TableContainer>
   );
 };

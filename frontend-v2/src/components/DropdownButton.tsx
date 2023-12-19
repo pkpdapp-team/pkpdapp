@@ -6,6 +6,7 @@ import {
   Popover,
 } from "@mui/material";
 import React, { useState } from "react";
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 
 type Option = {
   label: string;
@@ -67,6 +68,7 @@ const DropdownButton: React.FC<Props> = ({
           onClick={handleButtonClick}
           disabled={isDisabled}
           data-cy={data_cy}
+          endIcon={<ArrowDropDownIcon />}
         >
           {children}
         </Button>

@@ -34,6 +34,10 @@ interface Props {
   effectVariable: VariableRead | undefined;
   units: UnitRead[];
   timeVariable: VariableRead | undefined;
+  updateDosings: (key: number, value: boolean) => void;
+  isAnyDosingSelected: boolean;
+  updateLinksToPd: (key: number, value: boolean) => void;
+  isAnyLinkToPdSelected: boolean;
 }
 
 type DerivedVariableType = "RO" | "FUP" | "BPR" | "TLG";
@@ -49,6 +53,10 @@ const VariableRow: React.FC<Props> = ({
   effectVariable,
   units,
   timeVariable,
+  updateDosings,
+  isAnyDosingSelected,
+  updateLinksToPd,
+  isAnyLinkToPdSelected,
 }) => {
   const {
     fields: mappings,
@@ -110,6 +118,21 @@ const VariableRow: React.FC<Props> = ({
     return () => clearInterval(intervalId);
   }, [handleSubmit, isDirty, updateVariable]);
 
+  const isPD = variable.qname.startsWith("PD");
+  const hasProtocol: boolean = watchProtocolId != null;
+  const linkToPD = isPD
+    ? false
+    : mappings.find((mapping) => mapping.pk_variable === variable.id) !==
+      undefined;
+
+  useEffect(() => {
+    updateDosings(variable.id, hasProtocol);
+  }, [hasProtocol]);
+
+  useEffect(() => {
+    updateLinksToPd(variable.id, linkToPD);
+  }, [linkToPD]);
+
   if (
     variable.constant ||
     variable.name === "t" ||
@@ -128,12 +151,6 @@ const VariableRow: React.FC<Props> = ({
     return <>No concentration or amount unit found</>;
   }
 
-  const isPD = variable.qname.startsWith("PD");
-  const hasProtocol: boolean = watchProtocolId != null;
-  const linkToPD = isPD
-    ? false
-    : mappings.find((mapping) => mapping.pk_variable === variable.id) !==
-      undefined;
   const isConcentration =
     concentrationUnit?.compatible_units.find(
       (unit) => parseInt(unit.id) === variable.unit,
@@ -147,7 +164,9 @@ const VariableRow: React.FC<Props> = ({
   const addProtocol = () => {
     const isPerKg = variableUnit?.g !== 0;
     const doseAmountUnitSymbol = isPerKg ? "mg/kg" : "mg";
-    const doseAmountUnit = units.find((unit) => unit.symbol === doseAmountUnitSymbol);
+    const doseAmountUnit = units.find(
+      (unit) => unit.symbol === doseAmountUnitSymbol,
+    );
     const defaultDose: DoseRead = {
       id: 0,
       amount: 1,
@@ -276,6 +295,11 @@ const VariableRow: React.FC<Props> = ({
           <FormControlLabel
             control={
               <MuiCheckbox
+                sx={{
+                  "& .MuiSvgIcon-root": {
+                    color: isAnyDosingSelected ? "inherit" : "red",
+                  },
+                }}
                 checked={hasProtocol}
                 onClick={() => (hasProtocol ? removeProtocol() : addProtocol())}
                 data-cy={`checkbox-dosing-${variable.name}`}
@@ -301,20 +325,29 @@ const VariableRow: React.FC<Props> = ({
           )}
         </TableCell>
       )}
-      <TableCell>
-        {!noMapToPD && (
-          <FormControlLabel
-            control={
-              <Radio
-                checked={linkToPD}
-                onClick={() => (linkToPD ? removePDMapping() : addPDMapping())}
-                data-cy={`checkbox-map-to-pd-${variable.name}`}
-              />
-            }
-            label=""
-          />
-        )}
-      </TableCell>
+      {model.pd_model && (
+        <TableCell>
+          {!noMapToPD && (
+            <FormControlLabel
+              control={
+                <Radio
+                  sx={{
+                    "& .MuiSvgIcon-root": {
+                      color: isAnyLinkToPdSelected ? "inherit" : "red",
+                    },
+                  }}
+                  checked={linkToPD}
+                  onClick={() =>
+                    linkToPD ? removePDMapping() : addPDMapping()
+                  }
+                  data-cy={`checkbox-map-to-pd-${variable.name}`}
+                />
+              }
+              label=""
+            />
+          )}
+        </TableCell>
+      )}
       <TableCell>
         {!noDerivedVariables && !isDerivedVariable && (
           <FormControlLabel

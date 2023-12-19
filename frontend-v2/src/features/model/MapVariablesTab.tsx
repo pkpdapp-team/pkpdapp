@@ -19,6 +19,7 @@ import {
 import VariableRow from "./VariableRow";
 import HelpButton from "../../components/HelpButton";
 import { FormData } from "./Model";
+import { defaultHeaderSx } from "../../shared/tableHeadersSx";
 
 interface Props {
   model: CombinedModelRead;
@@ -37,6 +38,22 @@ const MapVariablesTab: React.FC<Props> = ({
   units,
   compound,
 }: Props) => {
+  const [dosings, setDosing] = React.useState<
+    { key: number; hasDosingSelected: boolean, projectId: number }[]
+  >([]);
+  const [linkToPds, setLinkToPd] = React.useState<
+    { key: number; hasPdSelected: boolean, projectId: number }[]
+  >([]);
+
+  const iconRef = React.useRef<HTMLDivElement | null>(null);
+  const isAnyDosingSelected = dosings
+    .filter(({ projectId }) => projectId === project?.id)
+    .map(({ hasDosingSelected }) => hasDosingSelected)
+    .some(Boolean);
+  const isAnyLinkToPdSelected = linkToPds
+    .filter(({ projectId }) => projectId === project?.id)
+    .map(({ hasPdSelected }) => hasPdSelected)
+    .some(Boolean);
   const isPreclinical = project.species !== "H" && model.is_library_model;
   const concentrationUnit = units.find((unit) => unit.symbol === "pmol/L");
   const amountUnit = isPreclinical
@@ -46,7 +63,9 @@ const MapVariablesTab: React.FC<Props> = ({
     return <>No concentration or amount unit found</>;
   }
 
-  const timeVaryingVariables = variables.filter((variable) => !variable.constant);
+  const timeVaryingVariables = variables.filter(
+    (variable) => !variable.constant,
+  );
   timeVaryingVariables.sort((a, b) => {
     const aisPK = a.qname.startsWith("PK");
     const bisPK = b.qname.startsWith("PK");
@@ -132,53 +151,110 @@ const MapVariablesTab: React.FC<Props> = ({
   const timeVariable = variables.find(
     (variable) => variable.binding === "time",
   );
+
+  const updateDosings = (key: number, value: boolean) => {
+    setDosing((prevDosings) => [
+      ...prevDosings.filter(({ key: dosingKey }) => key !== dosingKey),
+      { key, hasDosingSelected: value, projectId: project?.id },
+    ]);
+  };
+
+  const updateLinksToPd = (key: number, value: boolean) => {
+    setLinkToPd((prevLinks) => [
+      ...prevLinks.filter(({ key: linkKey }) => key !== linkKey),
+      { key, hasPdSelected: value, projectId: project?.id },
+    ]);
+  };
+
   return (
-    <TableContainer>
+    <TableContainer sx={{ width: "90%" }}>
       <Table>
         <TableHead>
           <TableRow>
-            <TableCell>Name</TableCell>
-            <TableCell>Unit</TableCell>
-            <TableCell>Type</TableCell>
-            <Tooltip title="Select dosing compartment">
+            <TableCell>
+              <div style={{ ...defaultHeaderSx }}>Name</div>
+            </TableCell>
+            <TableCell>
+              <div style={{ ...defaultHeaderSx }}>Unit</div>
+            </TableCell>
+            <TableCell>
+              <div style={{ ...defaultHeaderSx }}>Type</div>
+            </TableCell>
+            <Tooltip placement="top-start" title="Select dosing compartment">
               <TableCell>
-                Dosing Compartment
-                <HelpButton title={"Dosing Compartment"}>
-                  {dosingCompartmentHelp}
-                </HelpButton>
+                <div ref={iconRef} style={{ ...defaultHeaderSx }}>
+                  <p>
+                    Dosing Compartment <span style={{ color: "red" }}>*</span>
+                  </p>
+                  <HelpButton title={"Dosing Compartment"}>
+                    {dosingCompartmentHelp}
+                  </HelpButton>
+                </div>
               </TableCell>
             </Tooltip>
             {haveTLag && (
               <TableCell>
-                Lag Time
-                <HelpButton title={"Lag Time"}>{lagTimeHelp}</HelpButton>
+                <div style={{ ...defaultHeaderSx }}>
+                  {" "}
+                  Lag Time
+                  <HelpButton title={"Lag Time"}>{lagTimeHelp}</HelpButton>
+                </div>
               </TableCell>
             )}
-            <Tooltip title="Select drug concentration that drives PD effects">
-              <TableCell>Link to PD</TableCell>
-            </Tooltip>
-            <Tooltip title="Select drug concentration that drives RO">
+            {model?.pd_model && (
+              <Tooltip
+                placement="top-start"
+                title="Select drug concentration that drives PD effects"
+              >
+                <TableCell>
+                  <div style={{ ...defaultHeaderSx }}>
+                    <p>
+                      Link to PD <span style={{ color: "red" }}>*</span>
+                    </p>
+                  </div>
+                </TableCell>
+              </Tooltip>
+            )}
+            <Tooltip
+              placement="top-start"
+              title="Select drug concentration that drives RO"
+            >
               <TableCell>
-                Link to Static Receptor Occupancy
-                <HelpButton title={"Link to Static Receptor Occupancy"}>
-                  {sROHelp}
-                </HelpButton>
+                <div style={{ ...defaultHeaderSx }}>
+                  {" "}
+                  Link to Static Receptor Occupancy
+                  <HelpButton title={"Link to Static Receptor Occupancy"}>
+                    {sROHelp}
+                  </HelpButton>
+                </div>
               </TableCell>
             </Tooltip>
-            <Tooltip title="Unbound concentration is calculated">
+            <Tooltip
+              placement="top-start"
+              title="Unbound concentration is calculated"
+            >
               <TableCell>
-                Unbound Concentration
-                <HelpButton title={"Unbound Concentration"}>
-                  {unboundHelp}
-                </HelpButton>
+                <div style={{ ...defaultHeaderSx }}>
+                  {" "}
+                  Unbound Concentration
+                  <HelpButton title={"Unbound Concentration"}>
+                    {unboundHelp}
+                  </HelpButton>
+                </div>
               </TableCell>
             </Tooltip>
-            <Tooltip title="Blood concentration is calculated">
+            <Tooltip
+              placement="top-start"
+              title="Blood concentration is calculated"
+            >
               <TableCell>
-                Blood Concentration
-                <HelpButton title={"Blood concentration"}>
-                  {bloodHelp}
-                </HelpButton>
+                <div style={{ ...defaultHeaderSx }}>
+                  {" "}
+                  Blood Concentration
+                  <HelpButton title={"Blood concentration"}>
+                    {bloodHelp}
+                  </HelpButton>
+                </div>
               </TableCell>
             </Tooltip>
           </TableRow>
@@ -200,6 +276,10 @@ const MapVariablesTab: React.FC<Props> = ({
               effectVariable={effectVariable}
               units={units}
               timeVariable={timeVariable}
+              updateDosings={updateDosings}
+              isAnyDosingSelected={isAnyDosingSelected}
+              updateLinksToPd={updateLinksToPd}
+              isAnyLinkToPdSelected={isAnyLinkToPdSelected}
             />
           ))}
         </TableBody>

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { HelpOutline } from "@mui/icons-material";
-import HelpDialog from "./HelpDialog";
-import { IconButton } from "@mui/material";
+import { IconButton, Tooltip } from "@mui/material";
+import { tooltipWrapper } from "../shared/tooltipWrapper";
 
 interface HelpButtonProps {
   title: string;
@@ -21,12 +21,25 @@ const HelpButton: React.FC<HelpButtonProps> = ({ title, children }) => {
 
   return (
     <>
-      <IconButton onClick={handleOpen}>
-        <HelpOutline />
-      </IconButton>
-      <HelpDialog open={open} title={title} onClose={handleClose}>
-        {children}
-      </HelpDialog>
+      <Tooltip
+        placement="bottom-end"
+        title={tooltipWrapper(children, handleClose)}
+        disableHoverListener={true}
+        open={open}
+        componentsProps={{
+          tooltip: {
+            sx: {
+              bgcolor: "common.white",
+              color: "common.black",
+              boxShadow: "2px 2px 5px rgba(0, 0, 0, .3)"
+            },
+          },
+        }}
+      >
+        <IconButton onClick={handleOpen}>
+            <HelpOutline />
+        </IconButton>
+      </Tooltip>
     </>
   );
 };

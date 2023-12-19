@@ -1,5 +1,6 @@
 import {
   Button,
+  FormLabel,
   Grid,
   IconButton,
   List,
@@ -160,128 +161,146 @@ const Drug: React.FC = () => {
   };
 
   return (
-    <Grid container spacing={2}>
-      <Grid item xs={12} md={6}>
-        <Typography variant="h6" component="h2" gutterBottom>
-          Drug Properties
-        </Typography>
-        <Stack direction="column" spacing={2}>
-          <Stack direction="row" spacing={2}>
-            <FloatField
-              label={"Molecular Mass"}
-              name={"molecular_mass"}
-              control={control}
-              rules={{ required: true }}
-            />
-            <UnitField
-              label={"Unit"}
-              name={"molecular_mass_unit"}
-              control={control}
-              baseUnit={units.find(
-                (u) => u.id === compound.molecular_mass_unit,
-              )}
-              compound={compound}
-            />
-          </Stack>
-        </Stack>
-      </Grid>
-      <Grid item xs={12} md={6}>
-        <Typography variant="h6" component="h2" gutterBottom>
-          Target Properties
-        </Typography>
-
-        <Stack direction="column" spacing={2}>
-          <Stack direction="row" spacing={2}>
-            <FloatField
-              label={"Molecular Mass"}
-              name={"target_molecular_mass"}
-              control={control}
-              rules={{ required: true }}
-            />
-            <UnitField
-              label={"Unit"}
-              name={"target_molecular_mass_unit"}
-              control={control}
-              baseUnit={units.find(
-                (u) => u.id === compound.molecular_mass_unit,
-              )}
-              compound={compound}
-            />
-          </Stack>
-        </Stack>
-      </Grid>
-      <Grid item xs={12} md={6}>
-        <Typography variant="h6" component="h2" gutterBottom>
-          Efficacy-Safety Data
-        </Typography>
-        <Button variant="contained" onClick={addNewEfficacyExperiment}>
-          Add new Efficacy-Safety Information
-        </Button>
-        <List>
-          {efficacy_experiments.map((efficacy_experiment, index) => (
-            <ListItem key={efficacy_experiment.theKey}>
-              <Stack direction="column" spacing={2}>
-                <TextField
-                  label="Name"
-                  name={`efficacy_experiments.${index}.name`}
-                  control={control}
-                />
-                <Stack direction="row" spacing={2}>
-                  <FloatField
-                    label="C50"
-                    name={`efficacy_experiments.${index}.c50`}
-                    control={control}
-                  />
-                  <UnitField
-                    label={"Unit"}
-                    name={`efficacy_experiments.${index}.c50_unit`}
-                    control={control}
-                    baseUnit={units.find(
-                      (u) => u.id === efficacy_experiment.c50_unit,
-                    )}
-                    compound={compound}
-                  />
-                </Stack>
+    <div style={{ display: "flex", flexDirection: "column" }}>
+      <div style={{ display: "flex" }}>
+        <Grid container xl={12}>
+          <Grid item xl={4} xs={10} sx={{ paddingRight: "2rem" }}>
+            <Typography variant="h6" component="h2" gutterBottom>
+              Drug Properties
+            </Typography>
+            <Stack direction="row" spacing={1}>
+              <FloatField
+                label={"Molecular Mass"}
+                name={"molecular_mass"}
+                control={control}
+                sx={{ flex: "1" }}
+                rules={{ required: true }}
+              />
+              <UnitField
+                label={"Unit"}
+                name={"molecular_mass_unit"}
+                control={control}
+                baseUnit={units.find(
+                  (u) => u.id === compound.molecular_mass_unit,
+                )}
+                compound={compound}
+              />
+            </Stack>
+          </Grid>
+          <Grid item xl={4} xs={10} sx={{ paddingRight: "2rem" }}>
+            <Typography variant="h6" component="h2" gutterBottom>
+              Target Properties
+            </Typography>
+            <Stack direction="column" spacing={2}>
+              <Stack direction="row" spacing={2}>
                 <FloatField
-                  label="Hill-coefficient"
-                  name={`efficacy_experiments.${index}.hill_coefficient`}
+                  label={"Molecular Mass"}
+                  name={"target_molecular_mass"}
                   control={control}
+                  sx={{ flex: "1" }}
+                  rules={{ required: true }}
+                />
+                <UnitField
+                  label={"Unit"}
+                  name={"target_molecular_mass_unit"}
+                  control={control}
+                  baseUnit={units.find(
+                    (u) => u.id === compound.molecular_mass_unit,
+                  )}
+                  compound={compound}
                 />
               </Stack>
-              <ListItemSecondaryAction>
-                <Tooltip title="Use this efficacy-safety data">
-                  <Radio
-                    checked={isEfficacySelected(
-                      efficacy_experiment as unknown as EfficacyRead,
-                    )}
-                    onClick={() =>
-                      handleSelectEfficacy(
-                        efficacy_experiment as unknown as EfficacyRead,
-                      )
-                    }
+            </Stack>
+          </Grid>
+        </Grid>
+      </div>
+      <Grid container xl={12} sx={{ paddingTop: "3rem" }}>
+        <Grid item xl={4} xs={10}>
+          <Typography variant="h6" component="h2" gutterBottom>
+            Efficacy-Safety Data
+          </Typography>
+          <Button variant="outlined" onClick={addNewEfficacyExperiment}>
+            Add new
+          </Button>
+          <List>
+            {efficacy_experiments.map((efficacy_experiment, index) => (
+              <ListItem
+                style={{ paddingLeft: 0 }}
+                key={efficacy_experiment.theKey}
+              >
+                <Stack direction="column" spacing={2} sx={{ flex: "1" }}>
+                  <div
+                    style={{ display: "flex", justifyContent: "space-between" }}
+                  >
+                    <Tooltip
+                      placement={"top-end"}
+                      title="Use this efficacy-safety data"
+                    >
+                      <div style={{ display: "flex", alignItems: "center" }}>
+                        <Radio
+                          checked={isEfficacySelected(
+                            efficacy_experiment as unknown as EfficacyRead,
+                          )}
+                          onClick={() =>
+                            handleSelectEfficacy(
+                              efficacy_experiment as unknown as EfficacyRead,
+                            )
+                          }
+                        />
+                        <Typography color="primary">Select</Typography>
+                      </div>
+                    </Tooltip>
+                    <Tooltip title="Delete this efficacy-safety data">
+                      <IconButton onClick={() => setShowConfirmDelete(true)}>
+                        <DeleteIcon />
+                      </IconButton>
+                    </Tooltip>
+                    <ConfirmationDialog
+                      open={showConfirmDelete}
+                      title="Delete Efficacy-Safety Data"
+                      message="Are you sure you want to permanently delete this efficacy-safety data?"
+                      onConfirm={() => {
+                        deleteEfficacyExperiment(index);
+                        setShowConfirmDelete(false);
+                      }}
+                      onCancel={() => setShowConfirmDelete(false)}
+                    />
+                  </div>
+                  <TextField
+                    sx={{ flex: "1" }}
+                    label="Name"
+                    name={`efficacy_experiments.${index}.name`}
+                    control={control}
                   />
-                </Tooltip>
-                <Tooltip title="Delete this efficacy-safety data">
-                  <IconButton onClick={() => setShowConfirmDelete(true)}>
-                    <DeleteIcon />
-                  </IconButton>
-                </Tooltip>
-                <ConfirmationDialog
-                  open={showConfirmDelete}
-                  title="Delete Efficacy-Safety Data"
-                  message="Are you sure you want to permanently delete this efficacy-safety data?"
-                  onConfirm={() => {
-                    deleteEfficacyExperiment(index);
-                    setShowConfirmDelete(false);
-                  }}
-                  onCancel={() => setShowConfirmDelete(false)}
-                />
-              </ListItemSecondaryAction>
-            </ListItem>
-          ))}
-        </List>
+                  <Stack direction="row" spacing={2}>
+                    <FloatField
+                      sx={{ flex: "1" }}
+                      label="C50"
+                      name={`efficacy_experiments.${index}.c50`}
+                      control={control}
+                    />
+                    <UnitField
+                      label={"Unit"}
+                      name={`efficacy_experiments.${index}.c50_unit`}
+                      control={control}
+                      baseUnit={units.find(
+                        (u) => u.id === efficacy_experiment.c50_unit,
+                      )}
+                      compound={compound}
+                    />
+                  </Stack>
+                  <FloatField
+                    label="Hill-coefficient"
+                    name={`efficacy_experiments.${index}.hill_coefficient`}
+                    control={control}
+                  />
+                </Stack>
+              </ListItem>
+            ))}
+          </List>
+        </Grid>
       </Grid>
-    </Grid>
+    </div>
   );
 };
 

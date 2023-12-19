@@ -29,7 +29,7 @@ const mainSlice = createSlice({
     setPage: (state, action: PayloadAction<PageName>) => {
       state.selectedPage = action.payload;
     },
-    setProject: (state, action: PayloadAction<number>) => {
+    setProject: (state, action: PayloadAction<number | null>) => {
       state.selectedProject = action.payload;
     },
     incrementDirtyCount: (state) => {

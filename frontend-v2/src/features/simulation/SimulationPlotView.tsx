@@ -9,12 +9,7 @@ import {
   VariableRead,
   useProtocolListQuery,
 } from "../../app/backendApi";
-import {
-  Config,
-  Data,
-  Layout,
-  Icon as PlotlyIcon,
-} from "plotly.js";
+import { Config, Data, Layout, Icon as PlotlyIcon } from "plotly.js";
 import {
   Button,
   Dialog,
@@ -27,7 +22,14 @@ import SimulationPlotForm from "./SimulationPlotForm";
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
 
-function dticks(rangey: number[] | undefined, rangey2: number[] | undefined, plot: FieldArrayWithId<Simulation, "plots", "id">): { dticky: number | string | undefined; dticky2: number | string | undefined } {
+function dticks(
+  rangey: number[] | undefined,
+  rangey2: number[] | undefined,
+  plot: FieldArrayWithId<Simulation, "plots", "id">,
+): {
+  dticky: number | string | undefined;
+  dticky2: number | string | undefined;
+} {
   // axis dticks
   let dticky: number | string | undefined = undefined;
   let dticky2: number | string | undefined = undefined;
@@ -54,7 +56,13 @@ function dticks(rangey: number[] | undefined, rangey2: number[] | undefined, plo
   return { dticky, dticky2 };
 }
 
-function ranges(minY: number | undefined, maxY: number | undefined, minY2: number | undefined, maxY2: number | undefined , plot: FieldArrayWithId<Simulation, "plots", "id">): { rangey: number[] | undefined; rangey2: number[] | undefined } {
+function ranges(
+  minY: number | undefined,
+  maxY: number | undefined,
+  minY2: number | undefined,
+  maxY2: number | undefined,
+  plot: FieldArrayWithId<Simulation, "plots", "id">,
+): { rangey: number[] | undefined; rangey2: number[] | undefined } {
   // setup range for y-axis
   let rangey: number[] | undefined = undefined;
   let rangey2: number[] | undefined = undefined;
@@ -112,7 +120,12 @@ function ranges(minY: number | undefined, maxY: number | undefined, minY2: numbe
   return { rangey, rangey2 };
 }
 
-function genIcLines(units: UnitRead[], plot: FieldArrayWithId<Simulation, "plots", "id">, compound: CompoundRead, concentrationUnit: UnitRead) {
+function genIcLines(
+  units: UnitRead[],
+  plot: FieldArrayWithId<Simulation, "plots", "id">,
+  compound: CompoundRead,
+  concentrationUnit: UnitRead,
+) {
   let icLines: number[] = [];
 
   const concentrationUnitIds = concentrationUnit.compatible_units.map((unit) =>
@@ -284,7 +297,12 @@ const SimulationPlotView: React.FC<SimulationPlotProps> = ({
     return <>No concentration or amount unit found</>;
   }
 
-  const icLines: number[] = genIcLines(units, plot, compound, concentrationUnit);
+  const icLines: number[] = genIcLines(
+    units,
+    plot,
+    compound,
+    concentrationUnit,
+  );
 
   let yAxisTitle = plotData
     //@ts-expect-error
@@ -421,6 +439,7 @@ const SimulationPlotView: React.FC<SimulationPlotProps> = ({
     displaylogo: false,
     scrollZoom: true,
   };
+
   return (
     <>
       <Plot
@@ -428,9 +447,16 @@ const SimulationPlotView: React.FC<SimulationPlotProps> = ({
         layout={plotLayout}
         style={{ width: "100%", height: "100%" }}
         config={config}
+        useResizeHandler={true}
       />
-      <Dialog open={open} onClose={handleClose} fullWidth maxWidth="md">
-        <DialogTitle>Customise Plot</DialogTitle>
+      <Dialog
+        open={open}
+        onClose={handleClose}
+        fullWidth
+        maxWidth="lg"
+        sx={{ maxHeight: "90%", top: "5rem" }}
+      >
+        <DialogTitle sx={{ fontWeight: "bold" }}>Customise Plot</DialogTitle>
         <DialogContent>
           <SimulationPlotForm
             index={index}
