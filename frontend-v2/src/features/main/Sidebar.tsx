@@ -24,6 +24,7 @@ import { useAppDispatch } from "../../app/hooks";
 import ErrorIcon from "@mui/icons-material/Error";
 import { SvgIcon } from "@mui/material";
 import { ReactComponent as RocheLogo } from "../../shared/assets/svg/logo_roche.svg";
+import { ReactComponent as PKPDLogo } from "../../shared/assets/svg/logo_pkpdapp.svg";
 import {
   CombinedModelRead,
   ProtocolListApiResponse,
@@ -71,6 +72,8 @@ export default function Sidebar() {
     { id: projectIdOrZero },
     { skip: !projectId },
   );
+  const { REACT_APP_ROCHE } = process.env;
+  const isRocheLogo = typeof REACT_APP_ROCHE === 'string' ? REACT_APP_ROCHE === 'true' : REACT_APP_ROCHE;
 
   const modelIsIncomplete = (
     mdl: CombinedModelRead | null,
@@ -246,7 +249,7 @@ export default function Sidebar() {
             sx={{ width: "4rem", height: "4rem" }}
             viewBox="0 0 62 32"
           >
-            <RocheLogo />
+            {isRocheLogo ? <RocheLogo /> : <PKPDLogo />}
           </SvgIcon>
           <Divider
             orientation="vertical"
@@ -262,7 +265,6 @@ export default function Sidebar() {
               color: "#1976d2",
               fontWeight: "bold",
               paddingLeft: "1rem",
-              fontFamily: "comfortaa",
             }}
           >
             PKPD Explorer {project && ` - ${project.name}`}

@@ -108,7 +108,7 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props) => {
             name="project.species"
             control={control}
             options={speciesOptions}
-            formControlProps={{ sx: { width: 'calc(100% - 3rem)'} }}
+            formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
           />
           <>
             {model.pk_model && (
@@ -122,14 +122,14 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props) => {
         </Stack>
       </Grid>
       <Grid container item spacing={2}>
-      <Grid item xl={5} md={8} xs={10}>
-          <Stack direction="row" alignItems="center" spacing={1} >
+        <Grid item xl={5} md={8} xs={10}>
+          <Stack direction="row" alignItems="center" spacing={1}>
             <SelectField
               label="PK Model"
               name="model.pk_model"
               control={control}
               options={pk_model_options}
-              formControlProps={{ sx: { width: 'calc(100% - 3rem)'} }}
+              formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
             />
             <>
               {model.pk_model && (
@@ -199,14 +199,14 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props) => {
         </Grid>
       </Grid>
       <Grid container item spacing={2}>
-      <Grid item xl={5} md={8} xs={10}>
+        <Grid item xl={5} md={8} xs={10}>
           <Stack direction="row" alignItems="center" spacing={1}>
             <SelectField
               label="PD Model"
               name="model.pd_model"
               control={control}
               options={pd_model_options}
-              formControlProps={{ sx: { width: 'calc(100% - 3rem)'} }}
+              formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
             />
             <>
               {model.pd_model && (
@@ -251,14 +251,14 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props) => {
         <Box width="100%" />
         {pdIsTumourGrowth && (
           <>
-      <Grid item xl={5} md={8} xs={10}>
+            <Grid item xl={5} md={8} xs={10}>
               <Stack direction="row" alignItems="center" spacing={1}>
                 <SelectField
                   label="Secondary PD Model"
                   name="model.pd_model2"
                   control={control}
                   options={pd_model2_options}
-                  formControlProps={{ sx: { width: 'calc(100% - 3rem)'} }}
+                  formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
                 />
                 <>
                   {model.pd_model2 && (
