@@ -14,7 +14,7 @@ type Props<T extends FieldValues> = {
   baseUnit?: UnitRead;
   name: FieldPath<T>;
   control: Control<T>;
-  rules?: Object;
+  rules?: Record<string, unknown>;
   selectProps?: SelectProps;
   compound?: Compound;
   isPreclinicalPerKg?: boolean;

@@ -1,21 +1,22 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import {
   Control,
   Controller,
   FieldPath,
-  FieldValues,
-  useFormState,
+  FieldValues
 } from "react-hook-form";
 import * as material from "@mui/material";
 import { useFieldState } from "../app/hooks";
+import { getLabel } from "../shared/getRequiredLabel";
 
 type Props<T extends FieldValues> = {
   label?: string;
   name: FieldPath<T>;
   control: Control<T>;
-  rules?: Object;
+  rules?: Record<string, unknown>;
   mode?: "onChange" | "onBlur";
   textFieldProps?: material.TextFieldProps;
+  sx?: material.SxProps
 };
 
 function TextField<T extends FieldValues>({
@@ -25,6 +26,7 @@ function TextField<T extends FieldValues>({
   rules,
   mode,
   textFieldProps,
+  sx
 }: Props<T>): React.ReactElement {
   const [fieldValue, setFieldValue] = useFieldState({ name, control });
 
@@ -58,7 +60,7 @@ function TextField<T extends FieldValues>({
           <material.TextField
             label={
               !error
-                ? label
+                ? getLabel(label || '', Boolean(rules?.required))
                 : error?.message ||
                   (error?.type === "required" ? "Required" : "")
             }
@@ -71,6 +73,7 @@ function TextField<T extends FieldValues>({
             onChange={handleChange}
             onBlur={handleBlur}
             error={!!error}
+            sx={sx}
             {...textFieldProps}
           />
         );

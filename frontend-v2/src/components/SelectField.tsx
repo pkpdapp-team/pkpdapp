@@ -9,6 +9,7 @@ import {
   OutlinedInput,
   FormControlProps,
 } from "@mui/material";
+import { getLabel } from "../shared/getRequiredLabel";
 
 type Option = {
   value: any;
@@ -20,7 +21,7 @@ type Props<T extends FieldValues> = {
   name: FieldPath<T>;
   options: Option[];
   control: Control<T>;
-  rules?: Object;
+  rules?: Record<string, unknown>;
   selectProps?: SelectProps;
   formControlProps?: FormControlProps;
 };
@@ -38,6 +39,7 @@ function SelectField<T extends FieldValues>({
   const displayEmpty = selectProps?.displayEmpty || true;
   const pixelPerChar = 9;
   const labelWidth = (label ? label.length : 0) * pixelPerChar;
+
   return (
     <Controller
       name={name}
@@ -49,7 +51,7 @@ function SelectField<T extends FieldValues>({
       }) => (
         <FormControl {...formControlProps} style={{ minWidth: labelWidth }}>
           <InputLabel id={labelId} shrink={displayEmpty}>
-            {label}
+            {getLabel(label || '', Boolean(rules?.required))}
           </InputLabel>
           <Select
             labelId={labelId}

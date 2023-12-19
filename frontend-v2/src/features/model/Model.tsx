@@ -46,10 +46,8 @@ const Model: React.FC = () => {
       { projectId: projectIdOrZero },
       { skip: !projectId },
     );
-  const {
-    data: protocols,
-    isLoading: isProtocolsLoading,
-  } = useProtocolListQuery({ projectId: projectIdOrZero }, { skip: !projectId });
+  const { data: protocols, isLoading: isProtocolsLoading } =
+    useProtocolListQuery({ projectId: projectIdOrZero }, { skip: !projectId });
   const model = models?.[0] || null;
   const [updateModel] = useCombinedModelUpdateMutation();
   const { data: variables, isLoading: isVariablesLoading } =
@@ -58,7 +56,10 @@ const Model: React.FC = () => {
       { skip: !model?.id },
     );
   const { data: simulations, isLoading: isSimulationsLoading } =
-    useSimulationListQuery({ projectId: projectIdOrZero }, { skip: !projectId });
+    useSimulationListQuery(
+      { projectId: projectIdOrZero },
+      { skip: !projectId },
+    );
   const { data: units, isLoading: isLoadingUnits } = useUnitListQuery(
     { compoundId: project?.compound },
     { skip: !project || !project.compound },
@@ -67,8 +68,7 @@ const Model: React.FC = () => {
   const simulation = useMemo(() => {
     return simulations?.[0] || undefined;
   }, [simulations]);
-  const [updateProject] =
-    useProjectUpdateMutation();
+  const [updateProject] = useProjectUpdateMutation();
   const [setParamsToDefault] =
     useCombinedModelSetParamsToDefaultsUpdateMutation();
 
@@ -175,7 +175,15 @@ const Model: React.FC = () => {
     return () => clearInterval(intervalId);
   }, [submit, isDirty]);
 
-  const loading = [isProjectLoading, isModelsLoading, isVariablesLoading, isProtocolsLoading, isSimulationsLoading, isLoadingCompound, isLoadingUnits];
+  const loading = [
+    isProjectLoading,
+    isModelsLoading,
+    isVariablesLoading,
+    isProtocolsLoading,
+    isSimulationsLoading,
+    isLoadingCompound,
+    isLoadingUnits,
+  ];
   if (loading.some((x) => x)) {
     return <div>Loading...</div>;
   }
@@ -197,10 +205,13 @@ const Model: React.FC = () => {
     tabErrors[tabKeys[1]] = "Please select a dosing compartment";
   }
 
+  const isOtherSpeciesSelected = project.species === "O";
+
   return (
     <DynamicTabs
       tabNames={tabKeys}
       tabErrors={tabErrors}
+      isOtherSpeciesSelected={isOtherSpeciesSelected}
     >
       <TabPanel>
         <PKPDModelTab

@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { TableCell, TableRow, IconButton } from "@mui/material";
+import { TableCell, TableRow, IconButton, Button } from "@mui/material";
 import {
   ProjectRead,
   Protocol,
@@ -8,7 +8,7 @@ import {
   useProtocolUpdateMutation,
   useVariableRetrieveQuery,
 } from "../../app/backendApi";
-import { Add, Delete } from "@mui/icons-material";
+import { Delete } from "@mui/icons-material";
 import { useFieldArray, useForm } from "react-hook-form";
 import UnitField from "../../components/UnitField";
 import FloatField from "../../components/FloatField";
@@ -22,13 +22,11 @@ interface Props {
 }
 
 const Doses: React.FC<Props> = ({ project, protocol, units }) => {
-  const {
-    data: variable,
-    isLoading: isVariableLoading,
-  } = useVariableRetrieveQuery(
-    { id: protocol.variables[0] || 0 },
-    { skip: !protocol.variables.length },
-  );
+  const { data: variable, isLoading: isVariableLoading } =
+    useVariableRetrieveQuery(
+      { id: protocol.variables[0] || 0 },
+      { skip: !protocol.variables.length },
+    );
   const {
     control,
     handleSubmit,
@@ -179,12 +177,8 @@ const Doses: React.FC<Props> = ({ project, protocol, units }) => {
               />
             )}
           </TableCell>
-          <TableCell align="right">
-            {index === 0 ? (
-              <IconButton onClick={handleAddRow}>
-                <Add />
-              </IconButton>
-            ) : (
+          <TableCell align="center">
+            {index !== 0 && (
               <IconButton onClick={() => handleDeleteRow(index)}>
                 <Delete />
               </IconButton>
@@ -192,6 +186,13 @@ const Doses: React.FC<Props> = ({ project, protocol, units }) => {
           </TableCell>
         </TableRow>
       ))}
+      <Button
+        onClick={handleAddRow}
+        variant="outlined"
+        sx={{ fontSize: ".5rem" }}
+      >
+        Add New Row
+      </Button>
     </>
   );
 };

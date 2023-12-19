@@ -1,0 +1,50 @@
+.notification {
+  align-items: center;
+  background-color: white;
+  border-left: 8px solid #ccc;
+  border-radius: 3px;
+  box-shadow: 0 0 8px 0 #00000029;
+  display: flex;
+  min-height: 6.6rem;
+  width: 20rem
+}
+
+.notification__content {
+    display: flex;
+    width: 100%;
+}
+
+.notification__text {
+    display: flex;
+    flex-direction: column;
+    max-width: 25rem;
+}
+
+.notification__message {
+    font-size: .9rem;
+    font-weight: 100;
+}
+
+.notification__text {
+  flex: 1 1 0;
+  font-weight: 600;
+  margin-left: 1.5rem;
+}
+
+.notification__remove {
+  margin: 0 1.5rem;
+  display: flex;
+  align-items: center;
+}
+
+.notification--success {
+  border-left-color: #3fe18f;
+}
+
+.notification--information {
+  border-left-color: #0057f7;
+}
+
+.notification--error {
+  border-left-color: #f93852;
+}

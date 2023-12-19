@@ -35,6 +35,7 @@ import { useEffect, useMemo, useState } from "react";
 import SimulationPlotView from "./SimulationPlotView";
 import SimulationSliderView from "./SimulationSliderView";
 import DropdownButton from "../../components/DropdownButton";
+import SettingsIcon from "@mui/icons-material/Settings";
 import { Add, NorthWestSharp } from "@mui/icons-material";
 import FloatField from "../../components/FloatField";
 import useDirty from "../../hooks/useDirty";
@@ -125,19 +126,22 @@ const Simulations: React.FC = () => {
       { projectId: projectIdOrZero },
       { skip: !projectId },
     );
-  const {
-    data: protocols,
-  } = useProtocolListQuery({ projectId: projectIdOrZero }, { skip: !projectId });
+  const { data: protocols } = useProtocolListQuery(
+    { projectId: projectIdOrZero },
+    { skip: !projectId },
+  );
   const model = useMemo(() => {
     return models?.[0] || undefined;
   }, [models]);
-  const { data: variables } =
-    useVariableListQuery(
-      { dosedPkModelId: model?.id || 0 },
-      { skip: !model?.id },
-    );
+  const { data: variables } = useVariableListQuery(
+    { dosedPkModelId: model?.id || 0 },
+    { skip: !model?.id },
+  );
   const { data: simulations, isLoading: isSimulationsLoading } =
-    useSimulationListQuery({ projectId: projectIdOrZero }, { skip: !projectId });
+    useSimulationListQuery(
+      { projectId: projectIdOrZero },
+      { skip: !projectId },
+    );
   const simulation = useMemo(() => {
     return simulations?.[0] || undefined;
   }, [simulations]);
@@ -206,6 +210,14 @@ const Simulations: React.FC = () => {
     name: "plots",
   });
 
+  const layoutOptions = [
+    { value: "vertical", label: "Vertical" },
+    { value: "horizontal", label: "Horizontal" },
+  ];
+  const defaultLayout = layoutOptions[0]?.value;
+
+  const [layout, setLayout] = useState<string>(defaultLayout);
+
   // reset form and sliders if simulation changes
   useEffect(() => {
     if (simulation && variables) {
@@ -215,9 +227,7 @@ const Simulations: React.FC = () => {
     }
   }, [simulation, reset, variables]);
 
-  const getTimeMax = (
-    sim: SimulationRead,
-  ): number => {
+  const getTimeMax = (sim: SimulationRead): number => {
     const timeMaxUnit = units?.find((u) => u.id === sim.time_max_unit);
     const compatibleTimeUnit = timeMaxUnit?.compatible_units?.find(
       (u) => parseInt(u.id) === model?.time_unit,
@@ -289,7 +299,8 @@ const Simulations: React.FC = () => {
       }).then((response) => {
         if ("data" in response) {
           const responseData = response.data as SimulateResponse;
-          const nrows = responseData.outputs[Object.keys(responseData.outputs)[0]].length;
+          const nrows =
+            responseData.outputs[Object.keys(responseData.outputs)[0]].length;
           const cols = Object.keys(responseData.outputs);
           const vars = cols.map((vid) =>
             variables.find((v) => v.id === parseInt(vid)),
@@ -353,9 +364,13 @@ const Simulations: React.FC = () => {
     return () => clearInterval(intervalId);
   }, [handleSubmit, isDirty, updateSimulation]);
 
-  const loading = [isProjectLoading, isSimulationsLoading, isModelsLoading, isLoadingCompound, isUnitsLoading].some(
-    (v) => v,
-  );
+  const loading = [
+    isProjectLoading,
+    isSimulationsLoading,
+    isModelsLoading,
+    isLoadingCompound,
+    isUnitsLoading,
+  ].some((v) => v);
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -464,22 +479,21 @@ const Simulations: React.FC = () => {
   };
 
   return (
-    <Container maxWidth={false}>
-      <Stack spacing={1}>
+    <Grid container xl={12}>
+      <Grid item xs={layout === "vertical" ? 7 : 12}>
         <Stack direction={"row"} alignItems={"center"}>
-          <Typography variant="h6">Plots</Typography>
-
           <DropdownButton
+            useIcon={false}
+            data_cy="add-plot"
             options={addPlotOptions}
             onOptionSelected={handleAddPlot}
-            data_cy="add-plot"
           >
-            <Add />
+            Add new plot
           </DropdownButton>
         </Stack>
         <Grid container spacing={1}>
           {plots.map((plot, index) => (
-            <Grid item md={12} lg={6} key={index}>
+            <Grid item xs={12} xl={layout === "vertical" ? 12 : 6} key={index}>
               {data && model ? (
                 <SimulationPlotView
                   index={index}
@@ -511,6 +525,7 @@ const Simulations: React.FC = () => {
               alignItems={"center"}
               spacing={2}
               justifyContent="flex-start"
+              paddingTop="1rem"
             >
               <FloatField
                 label="Simulation Duration"
@@ -528,34 +543,76 @@ const Simulations: React.FC = () => {
                 Export to CSV
               </Button>
             </Stack>
-            <Stack direction={"row"} alignItems={"center"}>
-              <Typography variant="h6">Parameter Sliders</Typography>
-              <DropdownButton
-                options={addSliderOptions}
-                onOptionSelected={handleAddSlider}
-                data_cy="add-parameter-slider"
-              >
-                <Add />
-              </DropdownButton>
-            </Stack>
-            <Grid container spacing={2}>
-              {orderedSliders.map((slider, index) => (
-                <Grid item xs={12} md={6} lg={4} key={index}>
-                  <SimulationSliderView
-                    index={index}
-                    slider={slider}
-                    onChange={handleChangeSlider(slider)}
-                    remove={removeSlider}
-                    onSave={handleSaveSlider(slider)}
-                    units={units}
-                  />
-                </Grid>
-              ))}
-            </Grid>
           </>
         )}
-      </Stack>
-    </Container>
+      </Grid>
+      <Grid
+        item
+        xs={layout === "vertical" ? 4 : 12}
+        sx={
+          layout === "vertical"
+            ? { position: "fixed", right: 0, paddingLeft: "1rem" }
+            : {}
+        }
+      >
+        <Stack direction="column">
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              paddingBottom: "1rem",
+            }}
+          >
+            <Typography
+              sx={{
+                fontWeight: "bold",
+                fontSize: "1.2rem",
+              }}
+            >
+              Parameters
+            </Typography>
+            <DropdownButton
+              useIcon={true}
+              options={layoutOptions}
+              onOptionSelected={(option) => {
+                setLayout(option);
+                window.dispatchEvent(new Event("resize"));
+              }}
+              data_cy="add-parameter-slider"
+            >
+              <SettingsIcon />
+            </DropdownButton>
+          </div>
+          <DropdownButton
+            useIcon={false}
+            options={addSliderOptions}
+            onOptionSelected={handleAddSlider}
+            data_cy="add-parameter-slider"
+          >
+            Add new
+          </DropdownButton>
+        </Stack>
+        <Grid xs={12} sx={{ paddingRight: "1rem" }} container spacing={2}>
+          {orderedSliders.map((slider, index) => (
+            <Grid
+              item
+              xs={layout === "horizontal" ? 6 : 12}
+              xl={layout === "horizontal" ? 4 : 12}
+              key={index}
+            >
+              <SimulationSliderView
+                index={index}
+                slider={slider}
+                onChange={handleChangeSlider(slider)}
+                remove={removeSlider}
+                onSave={handleSaveSlider(slider)}
+                units={units}
+              />
+            </Grid>
+          ))}
+        </Grid>
+      </Grid>
+    </Grid>
   );
 };
 

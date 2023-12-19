@@ -31,6 +31,7 @@ interface Props {
   project: ProjectRead;
   isSelected: boolean;
   otherProjectNames: string[];
+  isAnyProjectSelected: Boolean;
 }
 
 export interface FormData {
@@ -49,6 +50,7 @@ export const speciesOptions = [
 const ProjectRow: React.FC<Props> = ({
   project,
   isSelected,
+  isAnyProjectSelected,
   otherProjectNames,
 }) => {
   const dispatch = useDispatch();
@@ -147,6 +149,7 @@ const ProjectRow: React.FC<Props> = ({
 
   const handleDelete = () => {
     destroyProject({ id: project.id });
+    dispatch(setProject(null));
   };
 
   const userAccessClose = () => {
@@ -158,8 +161,12 @@ const ProjectRow: React.FC<Props> = ({
   };
 
   const defaultProps = {
-    fullWidth: true,
+    fullWidth: true
   };
+
+  const defaultSx = {
+    backgroundColor: 'white'
+  }
 
   const validateName = (value: string) => {
     if (otherProjectNames.includes(value)) {
@@ -170,14 +177,14 @@ const ProjectRow: React.FC<Props> = ({
 
   return (
     <React.Fragment>
-      <TableRow data-cy={`project-${project.id}`}>
+      <TableRow data-cy={`project-${project.id}`} style={{ backgroundColor: isSelected ? '#E3E9F8' : '#FFF' }}>
         <TableCell
           rowSpan={isSelected ? 2 : 1}
           sx={{ verticalAlign: "top" }}
           padding="checkbox"
         >
           <Radio
-            sx={{ marginTop: 4 }}
+            sx={{ marginTop: 4, color: isAnyProjectSelected ? 'inherit' : 'red' }}
             checked={isSelected}
             onClick={handleSelectProject}
           />
@@ -188,6 +195,7 @@ const ProjectRow: React.FC<Props> = ({
             control={control}
             textFieldProps={defaultProps}
             rules={{ required: true, validate: validateName }}
+            sx={defaultSx}
           />
         </TableCell>
         <TableCell>
@@ -201,7 +209,14 @@ const ProjectRow: React.FC<Props> = ({
             control={control}
             textFieldProps={defaultProps}
             rules={{ required: true }}
+            sx={defaultSx}
           />
+        </TableCell>
+        <TableCell>
+          {
+            modalityOptions.find((m) => m.value === compound.compound_type)
+              ?.label
+          }
         </TableCell>
         <TableCell>
           <IconButton onClick={() => setShowConfirmDelete(true)}>
@@ -227,23 +242,19 @@ const ProjectRow: React.FC<Props> = ({
             project={project}
           />
         </TableCell>
-        <TableCell>
-          {
-            modalityOptions.find((m) => m.value === compound.compound_type)
-              ?.label
-          }
-        </TableCell>
       </TableRow>
       {isSelected && (
-        <TableRow>
-          <TableCell colSpan={5}>
+        <TableRow style={{ backgroundColor: '#E3E9F8' }}>
+          <TableCell colSpan={4}>
             <TextField
               label="Description"
               name="project.description"
               control={control}
               textFieldProps={{ ...defaultProps, multiline: true }}
+              sx={defaultSx}
             />
           </TableCell>
+          <TableCell colSpan={1} />
         </TableRow>
       )}
     </React.Fragment>

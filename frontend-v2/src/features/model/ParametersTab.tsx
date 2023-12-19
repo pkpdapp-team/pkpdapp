@@ -33,6 +33,7 @@ import {
   resetToSpeciesDefaults,
 } from "./resetToSpeciesDefaults";
 import { FormData } from "./Model";
+import { defaultHeaderSx } from "../../shared/tableHeadersSx";
 
 interface Props {
   model: CombinedModelRead;
@@ -98,21 +99,34 @@ const ParametersTab: React.FC<Props> = ({
           Reset to Species Defaults
         </Button>
       )}
-      <TableContainer>
+      <TableContainer sx={{ width: "90%" }}>
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>Name</TableCell>
-              <TableCell>Type</TableCell>
-              <TableCell>Lower Bound</TableCell>
-              <TableCell>Value</TableCell>
-              <TableCell>Upper Bound</TableCell>
               <TableCell>
-                Unit{" "}
-                <HelpButton title="Unit Column">
-                  Changing the units does not update the PKPD values. The user
-                  is responsible for the correctness of the values and units.
-                </HelpButton>{" "}
+                <div style={{ ...defaultHeaderSx }}>Name</div>
+              </TableCell>
+              <TableCell>
+                <div style={{ ...defaultHeaderSx }}>Type</div>
+              </TableCell>
+              <TableCell>
+                <div style={{ ...defaultHeaderSx }}>Lower Bound</div>
+              </TableCell>
+              <TableCell>
+                <div style={{ ...defaultHeaderSx }}>Value</div>
+              </TableCell>
+              <TableCell>
+                <div style={{ ...defaultHeaderSx }}>Upper Bound</div>
+              </TableCell>
+              <TableCell>
+                <div style={{ ...defaultHeaderSx }}>
+                  {" "}
+                  Unit{" "}
+                  <HelpButton title="Unit Column">
+                    Changing the units does not update the PKPD values. The user
+                    is responsible for the correctness of the values and units.
+                  </HelpButton>{" "}
+                </div>
               </TableCell>
             </TableRow>
           </TableHead>

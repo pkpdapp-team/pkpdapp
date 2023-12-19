@@ -11,6 +11,8 @@ import Login from "./features/login/login";
 import Sidebar from "./features/main/Sidebar";
 import { useAppDispatch } from "./app/hooks";
 import { RootState } from "./app/store";
+import { ToastContainer } from "react-toastify";
+import 'react-toastify/dist/ReactToastify.css';
 
 function App() {
   const dispatch = useAppDispatch();
@@ -28,7 +30,10 @@ function App() {
   return (
     <>
       {isAuth ? (
+        <>
         <Sidebar />
+        <ToastContainer />
+        </>
       ) : (
         <Login onLogin={onLogin} isLoading={false} errorMessage={error} />
       )}

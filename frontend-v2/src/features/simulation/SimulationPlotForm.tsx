@@ -31,9 +31,8 @@ import {
 import TextField from "../../components/TextField";
 import UnitField from "../../components/UnitField";
 import SelectField from "../../components/SelectField";
-import Checkbox from "../../components/Checkbox";
 import DropdownButton from "../../components/DropdownButton";
-import { Add, Delete } from "@mui/icons-material";
+import { Delete } from "@mui/icons-material";
 import FloatField from "../../components/FloatField";
 
 interface SimulationPlotFormProps {
@@ -152,7 +151,6 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({
     removeYAxis(yAxis.index);
   };
 
-
   const handleAddCxLine = (value: number) => {
     addCxLines({
       value,
@@ -207,7 +205,10 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({
   ];
 
   return (
-    <Stack sx={{ marginTop: 2 }}>
+    <Stack>
+      <Typography sx={{ fontWeight: "bold", paddingBottom: '1rem' }}>
+        X Axis
+      </Typography>
       <Stack direction={"row"} spacing={2} alignItems={"center"}>
         <UnitField
           label="X Axis Unit"
@@ -223,8 +224,23 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({
         />
       </Stack>
       <Divider sx={{ margin: 2 }} />
-      <Stack direction={"row"} spacing={2} alignItems={"center"}>
-        <Typography variant="h6">Y Axis</Typography>
+      <Typography sx={{ fontWeight: "bold", paddingBottom: '1rem' }}>
+        Y Axis
+      </Typography>
+      <DropdownButton
+        useIcon={false}
+        data_cy="add-y-axis"
+        options={addYAxisOptions}
+        onOptionSelected={handleAddYAxis}
+      >
+        Add Y axis
+      </DropdownButton>
+      <Stack
+        direction={"row"}
+        spacing={2}
+        alignItems={"center"}
+        sx={{ paddingTop: "1.5rem" }}
+      >
         <UnitField
           label="Y Axis Unit"
           name={`plots.${index}.y_unit`}
@@ -248,12 +264,6 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({
           name={`plots.${index}.max`}
           control={control}
         />
-        <DropdownButton
-          options={addYAxisOptions}
-          onOptionSelected={handleAddYAxis}
-        >
-          <Add />
-        </DropdownButton>
       </Stack>
       <List>
         {lhs_y_axes.map((yAxis) => (
@@ -278,16 +288,21 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({
           </ListItem>
         ))}
       </List>
+      <Divider sx={{ margin: 2 }} />
       <Stack direction={"row"} spacing={2} alignItems={"center"}>
-        <Typography variant="h6">Cx Reference Lines</Typography>
-        <DropdownButton
-          options={addCxLineOptions}
-          onOptionSelected={handleAddCxLine}
-          disabled={!yAxisIsConcentration || !haveEfficacyExp}
-        >
-          <Add />
-        </DropdownButton>
+        <Typography sx={{ fontWeight: "bold", paddingBottom: "1rem" }}>
+          Cx Reference Lines
+        </Typography>
       </Stack>
+      <DropdownButton
+        useIcon={false}
+        data_cy="add-cx-lines"
+        options={addCxLineOptions}
+        onOptionSelected={handleAddCxLine}
+        disabled={!yAxisIsConcentration || !haveEfficacyExp}
+      >
+        Add Lines
+      </DropdownButton>
       <List>
         {cx_lines.map((cxLine, cxLineIndex) => (
           <ListItem key={cxLine.id}>
@@ -314,8 +329,18 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({
         ))}
       </List>
       <Divider sx={{ margin: 2 }} />
-      <Stack direction={"row"} spacing={2} alignItems={"center"}>
-        <Typography variant="h6">Y2 Axis</Typography>
+      <Typography sx={{ fontWeight: "bold", paddingBottom: "1rem" }}>
+        Y2 Axis
+      </Typography>
+      <DropdownButton
+        useIcon={false}
+        data_cy="add-variable"
+        options={addY2AxisOptions}
+        onOptionSelected={handleAddY2Axis}
+      >
+        Add Variable
+      </DropdownButton>
+      <Stack direction={"row"} spacing={2} alignItems={"center"} sx={{ paddingTop: '1rem'}}>
         <UnitField
           label="Unit"
           name={`plots.${index}.y_unit2`}
@@ -339,12 +364,6 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({
           name={`plots.${index}.max2`}
           control={control}
         />
-        <DropdownButton
-          options={addY2AxisOptions}
-          onOptionSelected={handleAddY2Axis}
-        >
-          <Add />
-        </DropdownButton>
       </Stack>
       <List>
         {rhs_y_axes.map((yAxis, yAxisIndex) => (
