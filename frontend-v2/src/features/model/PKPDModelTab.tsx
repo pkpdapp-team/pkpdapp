@@ -100,15 +100,15 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props) => {
     : false;
 
   return (
-    <Grid container spacing={2}>
-      <Grid item xs={5}>
+    <Grid xs={12} container spacing={2}>
+      <Grid item xl={5} md={8} xs={10}>
         <Stack direction="row" alignItems="center" spacing={1}>
           <SelectField
             label="Species"
             name="project.species"
             control={control}
             options={speciesOptions}
-            formControlProps={{ fullWidth: true }}
+            formControlProps={{ sx: { width: 'calc(100% - 3rem)'} }}
           />
           <>
             {model.pk_model && (
@@ -122,14 +122,14 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props) => {
         </Stack>
       </Grid>
       <Grid container item spacing={2}>
-        <Grid item xs={5}>
-          <Stack direction="row" alignItems="center" spacing={1}>
+      <Grid item xl={5} md={8} xs={10}>
+          <Stack direction="row" alignItems="center" spacing={1} >
             <SelectField
               label="PK Model"
               name="model.pk_model"
               control={control}
               options={pk_model_options}
-              formControlProps={{ fullWidth: true }}
+              formControlProps={{ sx: { width: 'calc(100% - 3rem)'} }}
             />
             <>
               {model.pk_model && (
@@ -199,14 +199,14 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props) => {
         </Grid>
       </Grid>
       <Grid container item spacing={2}>
-        <Grid item xs={5}>
+      <Grid item xl={5} md={8} xs={10}>
           <Stack direction="row" alignItems="center" spacing={1}>
             <SelectField
               label="PD Model"
               name="model.pd_model"
               control={control}
               options={pd_model_options}
-              formControlProps={{ fullWidth: true }}
+              formControlProps={{ sx: { width: 'calc(100% - 3rem)'} }}
             />
             <>
               {model.pd_model && (
@@ -221,7 +221,7 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props) => {
         </Grid>
         <Box width="100%" height="0" />
         <Grid container item spacing={2} sx={{ paddingTop: "0" }}>
-          <Grid item xs={5} sx={{ paddingTop: "0 !important" }}>
+          <Grid item xs={12} md={8} xl={5} sx={{ paddingTop: "0 !important" }}>
             <Stack
               sx={{
                 display: "flex",
@@ -251,14 +251,14 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props) => {
         <Box width="100%" />
         {pdIsTumourGrowth && (
           <>
-            <Grid item xs={5}>
+      <Grid item xl={5} md={8} xs={10}>
               <Stack direction="row" alignItems="center" spacing={1}>
                 <SelectField
                   label="Secondary PD Model"
                   name="model.pd_model2"
                   control={control}
                   options={pd_model2_options}
-                  formControlProps={{ fullWidth: true }}
+                  formControlProps={{ sx: { width: 'calc(100% - 3rem)'} }}
                 />
                 <>
                   {model.pd_model2 && (
