@@ -31,7 +31,7 @@ import {
   useVariableUpdateMutation,
 } from "../../app/backendApi";
 import { useFieldArray, useForm } from "react-hook-form";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import SimulationPlotView from "./SimulationPlotView";
 import SimulationSliderView from "./SimulationSliderView";
 import DropdownButton from "../../components/DropdownButton";
@@ -215,8 +215,15 @@ const Simulations: React.FC = () => {
     { value: "horizontal", label: "Horizontal" },
   ];
   const defaultLayout = layoutOptions[0]?.value;
-
   const [layout, setLayout] = useState<string>(defaultLayout);
+  const parametersRef = useRef<HTMLDivElement | null>(null);
+  const [parametersHeight, setParametersHeight] = useState<number>(0);
+
+  useEffect(() => {
+    const height = parametersRef?.current?.clientHeight || 0;
+    setParametersHeight(height);
+  }, [parametersRef?.current?.clientHeight])
+
 
   // reset form and sliders if simulation changes
   useEffect(() => {
@@ -479,7 +486,7 @@ const Simulations: React.FC = () => {
   };
 
   return (
-    <Grid container xl={12}>
+    <Grid container xl={12} sx={{ marginBottom: layout === 'horizontal' ? `${parametersHeight}px` : 0}}>
       <Grid item xs={layout === "vertical" ? 7 : 12}>
         <Stack direction={"row"} alignItems={"center"}>
           <DropdownButton
@@ -525,7 +532,7 @@ const Simulations: React.FC = () => {
               alignItems={"center"}
               spacing={2}
               justifyContent="flex-start"
-              paddingTop="1rem"
+              paddingTop='1rem'
             >
               <FloatField
                 label="Simulation Duration"
@@ -547,12 +554,13 @@ const Simulations: React.FC = () => {
         )}
       </Grid>
       <Grid
+        ref={parametersRef}
         item
-        xs={layout === "vertical" ? 4 : 12}
+        xl={layout === "vertical" ? 4 : 12}
         sx={
           layout === "vertical"
-            ? { position: "fixed", right: 0, paddingLeft: "1rem" }
-            : {}
+            ? { position: "fixed", right: 0, paddingLeft: "1rem", width: '100%' }
+            : { position: "fixed", bottom: 0, height: 'auto', backgroundColor: 'white', width: '-webkit-fill-available' }
         }
       >
         <Stack direction="column">
@@ -592,11 +600,12 @@ const Simulations: React.FC = () => {
             Add new
           </DropdownButton>
         </Stack>
-        <Grid xs={12} sx={{ paddingRight: "1rem" }} container spacing={2}>
+        <Grid sx={{ paddingRight: "1rem" }} container spacing={2}>
           {orderedSliders.map((slider, index) => (
             <Grid
               item
-              xs={layout === "horizontal" ? 6 : 12}
+              xs={layout === "horizontal" ? 12 : 12}
+              md={layout === "horizontal" ? 6 : 12}
               xl={layout === "horizontal" ? 4 : 12}
               key={index}
             >
