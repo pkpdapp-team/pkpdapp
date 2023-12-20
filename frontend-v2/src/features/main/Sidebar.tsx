@@ -278,9 +278,10 @@ export default function Sidebar() {
               color: "#1976d2",
               fontWeight: "bold",
               paddingLeft: "1rem",
+              fontFamily: "Comfortaa",
             }}
           >
-            PKPD Explorer {project && ` - ${project.name}`}
+            pkpd explorer {project && ` - ${project.name}`}
           </Typography>
           <div style={{ display: "flex" }}>
             <Typography
