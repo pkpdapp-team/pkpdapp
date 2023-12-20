@@ -6,6 +6,6 @@ export const tooltipWrapper = (children: React.ReactNode, onClose: () => void) =
         <div style={{ display: 'block' }}>
             {children}
         </div>
-        <CloseIcon onClick={onClose}/>
+        <CloseIcon sx={{ cursor: 'pointer' }} onClick={onClose}/>
     </div>
 )

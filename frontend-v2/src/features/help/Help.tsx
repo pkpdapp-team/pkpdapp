@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { DynamicTabs, TabPanel } from "../../components/DynamicTabs";
 import HelpTab from "./HelpTab";
 import { parse } from "papaparse";
+import { SubPageName } from "../main/mainSlice";
 
 export type Question = {
   question: string;
@@ -40,7 +41,9 @@ const Help: React.FC = () => {
               title: rowList[TITLE_COLUMN],
               type: rowList[TYPE_COLUMN],
               link: rowList[LINK_COLUMN].replace("view?usp=sharing", "preview"),
-              keywords: rowList[KEYWORDS_COLUMN].split(",").map((keyword) => keyword.trim()),
+              keywords: rowList[KEYWORDS_COLUMN].split(",").map((keyword) =>
+                keyword.trim(),
+              ),
             };
           }),
         );
@@ -79,12 +82,12 @@ const Help: React.FC = () => {
   return (
     <DynamicTabs
       tabNames={[
-        "Tutorials",
-        "Projects",
-        "Drug",
-        "Model",
-        "Trial Design",
-        "Simulation",
+        SubPageName.TUTORIALS,
+        SubPageName.PROJECTS,
+        SubPageName.DRUG,
+        SubPageName.MODEL,
+        SubPageName.TRAILDESIGN,
+        SubPageName.SIMULATION,
       ]}
     >
       {questions.map((question, index) => (
