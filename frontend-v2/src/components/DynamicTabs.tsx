@@ -1,11 +1,13 @@
-import React, { PropsWithChildren, ReactElement, useState } from "react";
+import React, { PropsWithChildren, ReactElement, useState, useEffect } from "react";
 import Box from "@mui/material/Box";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 import ErrorIcon from "@mui/icons-material/Error";
+import { useDispatch } from "react-redux";
 import { Tooltip } from "@mui/material";
 import { useCustomToast } from "../hooks/useCustomToast";
 import { notificationTypes } from "./Notification/notificationTypes";
+import { SubPageName, setSubPage } from "../features/main/mainSlice";
 
 interface TabContextProps {
   currentTab: number;
@@ -18,7 +20,7 @@ export const TabContext = React.createContext<TabContextProps>({
 });
 
 interface DynamicTabsProps {
-  tabNames: string[];
+  tabNames: SubPageName[];
   tabErrors?: { [key: string]: string };
   isOtherSpeciesSelected?: boolean;
 }
@@ -44,6 +46,7 @@ export const DynamicTabs: React.FC<PropsWithChildren<DynamicTabsProps>> = ({
 }) => {
   const [currentTab, setCurrentTab] = useState(0);
   const toast = useCustomToast();
+  const dispatch = useDispatch();
 
   const errors: { [key: string]: ReactElement<any, string> } = {};
   for (const key in tabErrors) {
@@ -71,8 +74,10 @@ export const DynamicTabs: React.FC<PropsWithChildren<DynamicTabsProps>> = ({
         autoClose: 3500
       })
       setCurrentTab(newValue);
+      dispatch(setSubPage(tabNames[newValue]))
     } else {
       setCurrentTab(newValue);
+      dispatch(setSubPage(tabNames[newValue]))
     }
   };
 

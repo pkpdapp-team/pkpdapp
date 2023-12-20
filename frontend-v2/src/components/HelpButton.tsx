@@ -1,7 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { HelpOutline } from "@mui/icons-material";
 import { IconButton, Tooltip } from "@mui/material";
 import { tooltipWrapper } from "../shared/tooltipWrapper";
+import { useSelector } from "react-redux";
+import { RootState } from "../app/store";
 
 interface HelpButtonProps {
   title: string;
@@ -10,6 +12,18 @@ interface HelpButtonProps {
 
 const HelpButton: React.FC<HelpButtonProps> = ({ title, children }) => {
   const [open, setOpen] = useState(false);
+  const selectedPage = useSelector(
+    (state: RootState) => state.main.selectedPage,
+  );
+  const selectedSubPage = useSelector(
+    (state: RootState) => state.main.selectedSubPage,
+  );
+
+  useEffect(() => {
+    if (open) {
+      setOpen(false);
+    }
+  }, [selectedPage, selectedSubPage]);
 
   const handleOpen = () => {
     setOpen(true);
@@ -26,6 +40,7 @@ const HelpButton: React.FC<HelpButtonProps> = ({ title, children }) => {
         title={tooltipWrapper(children, handleClose)}
         disableHoverListener={true}
         open={open}
+        TransitionProps={{ timeout: { enter: 200, exit: 0} }}
         componentsProps={{
           tooltip: {
             sx: {

@@ -23,6 +23,7 @@ import MapVariablesTab from "./MapVariablesTab";
 import PKPDModelTab from "./PKPDModelTab";
 import ParametersTab from "./ParametersTab";
 import useDirty from "../../hooks/useDirty";
+import { SubPageName } from "../main/mainSlice";
 
 export type FormData = {
   project: ProjectRead;
@@ -193,7 +194,7 @@ const Model: React.FC = () => {
   }
 
   const tabErrors: { [key: string]: string } = {};
-  const tabKeys = ["PK/PD Model", "Map Variables", "Parameters"];
+  const tabKeys = [SubPageName.PKPDMODEL, SubPageName.MAPVARIABLES, SubPageName.PARAMETERS];
   if (model.pk_model === null) {
     tabErrors[tabKeys[0]] = "Please select a PK model to simulate";
   }

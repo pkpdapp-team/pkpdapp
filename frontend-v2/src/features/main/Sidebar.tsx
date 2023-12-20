@@ -14,7 +14,7 @@ import MenuIcon from "@mui/icons-material/Menu";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import MainContent from "./MainContent";
-import { PageName, setPage } from "./mainSlice";
+import { PageName, SubPageName, setPage, setSubPage } from "./mainSlice";
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
 import { LinearProgress, Tooltip } from "@mui/material";
@@ -126,7 +126,20 @@ export default function Sidebar() {
   });
 
   const handlePageClick = (key: string) => () => {
-    dispatch(setPage(PageName[key as keyof typeof PageName]));
+    const chosenPage = PageName[key as keyof typeof PageName];
+    dispatch(setPage(chosenPage));
+
+    switch (chosenPage) {
+      case (PageName.MODEL):
+        dispatch(setSubPage(SubPageName.PKPDMODEL));
+        break;
+      case (PageName.HELP):
+        dispatch(setSubPage(SubPageName.TUTORIALS));
+        break
+      default:
+        dispatch(setSubPage(null));
+        break;
+    }
   };
 
   const isPageDisabled = (key: string) => {
