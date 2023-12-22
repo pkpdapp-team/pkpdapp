@@ -38,6 +38,8 @@ interface Props {
   isAnyDosingSelected: boolean;
   updateLinksToPd: (key: number, value: boolean) => void;
   isAnyLinkToPdSelected: boolean;
+  updateLagTimes: (key: number, value: boolean) => void;
+  isAnyLagTimeSelected: boolean;
 }
 
 type DerivedVariableType = "RO" | "FUP" | "BPR" | "TLG";
@@ -57,6 +59,8 @@ const VariableRow: React.FC<Props> = ({
   isAnyDosingSelected,
   updateLinksToPd,
   isAnyLinkToPdSelected,
+  updateLagTimes,
+  isAnyLagTimeSelected
 }) => {
   const {
     fields: mappings,
@@ -132,6 +136,10 @@ const VariableRow: React.FC<Props> = ({
   useEffect(() => {
     updateLinksToPd(variable.id, linkToPD);
   }, [linkToPD]);
+
+  useEffect(() => {
+    updateLagTimes(variable.id, isLinkedTo("TLG"));
+  }, [isLinkedTo("TLG")]);
 
   if (
     variable.constant ||
@@ -315,6 +323,11 @@ const VariableRow: React.FC<Props> = ({
             <FormControlLabel
               control={
                 <MuiCheckbox
+                sx={{
+                  "& .MuiSvgIcon-root": {
+                    color: isAnyLagTimeSelected ? "inherit" : "red",
+                  },
+                }}
                   checked={isLinkedTo("TLG")}
                   onClick={onClickDerived("TLG")}
                   data-cy={`checkbox-tlag-${variable.name}`}

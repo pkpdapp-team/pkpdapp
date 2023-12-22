@@ -16,6 +16,7 @@ type Props<T extends FieldValues> = {
   rules?: Record<string, unknown>;
   mode?: "onChange" | "onBlur";
   textFieldProps?: material.TextFieldProps;
+  autoShrink?: boolean;
   sx?: material.SxProps
 };
 
@@ -26,6 +27,7 @@ function TextField<T extends FieldValues>({
   rules,
   mode,
   textFieldProps,
+  autoShrink,
   sx
 }: Props<T>): React.ReactElement {
   const [fieldValue, setFieldValue] = useFieldState({ name, control });
@@ -66,6 +68,7 @@ function TextField<T extends FieldValues>({
             }
             name={name}
             id={name}
+            InputLabelProps={autoShrink !== undefined ? { shrink: autoShrink } : {}}
             variant="outlined"
             value={
               fieldValue === undefined || fieldValue === null ? "" : fieldValue

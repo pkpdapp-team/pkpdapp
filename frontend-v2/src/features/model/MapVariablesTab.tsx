@@ -3,6 +3,7 @@ import {
   CombinedModelRead,
   CompoundRead,
   ProjectRead,
+  ProjectSpeciesEnum,
   UnitRead,
   VariableRead,
 } from "../../app/backendApi";
@@ -39,10 +40,13 @@ const MapVariablesTab: React.FC<Props> = ({
   compound,
 }: Props) => {
   const [dosings, setDosing] = React.useState<
-    { key: number; hasDosingSelected: boolean, projectId: number }[]
+    { key: number; hasDosingSelected: boolean; projectId: number, species: ProjectSpeciesEnum | undefined  }[]
   >([]);
   const [linkToPds, setLinkToPd] = React.useState<
-    { key: number; hasPdSelected: boolean, projectId: number }[]
+    { key: number; hasPdSelected: boolean; projectId: number, species: ProjectSpeciesEnum | undefined }[]
+  >([]);
+  const [lagTimes, setLagTimes] = React.useState<
+    { key: number; hasLagTimeSelected: boolean; projectId: number, species: ProjectSpeciesEnum | undefined }[]
   >([]);
 
   const iconRef = React.useRef<HTMLDivElement | null>(null);
@@ -53,6 +57,10 @@ const MapVariablesTab: React.FC<Props> = ({
   const isAnyLinkToPdSelected = linkToPds
     .filter(({ projectId }) => projectId === project?.id)
     .map(({ hasPdSelected }) => hasPdSelected)
+    .some(Boolean);
+  const isAnyLagTimeSelected = lagTimes
+    .filter(({ projectId }) => projectId === project?.id)
+    .map(({ hasLagTimeSelected }) => hasLagTimeSelected)
     .some(Boolean);
   const isPreclinical = project.species !== "H" && model.is_library_model;
   const concentrationUnit = units.find((unit) => unit.symbol === "pmol/L");
@@ -154,17 +162,37 @@ const MapVariablesTab: React.FC<Props> = ({
 
   const updateDosings = (key: number, value: boolean) => {
     setDosing((prevDosings) => [
-      ...prevDosings.filter(({ key: dosingKey }) => key !== dosingKey),
-      { key, hasDosingSelected: value, projectId: project?.id },
+      ...prevDosings.filter(({ key: dosingKey, species, projectId }) => key !== dosingKey && species === project.species && projectId === project.id),
+      { key, hasDosingSelected: value, projectId: project?.id, species: project?.species },
     ]);
   };
 
   const updateLinksToPd = (key: number, value: boolean) => {
     setLinkToPd((prevLinks) => [
-      ...prevLinks.filter(({ key: linkKey }) => key !== linkKey),
-      { key, hasPdSelected: value, projectId: project?.id },
+      ...prevLinks.filter(({ key: linkKey, species, projectId }) => key !== linkKey && species === project.species && projectId === project.id),
+      { key, hasPdSelected: value, projectId: project?.id, species: project?.species },
     ]);
   };
+
+  const updateLagTimes = (key: number, value: boolean) => {
+    setLagTimes((prevLags) => [
+      ...prevLags.filter(({ key: lagKey, species, projectId }) => key !== lagKey && species === project.species && projectId === project.id),
+      { key, hasLagTimeSelected: value, projectId: project?.id, species: project?.species },
+    ]);
+  };
+
+  const sortVariables = (variable1: VariableRead, variable2: VariableRead) => {
+    if (variable1.name.startsWith('C') && variable2.name.startsWith('A')) {
+      return -1;
+    }
+
+    if (variable1.name.startsWith('A') && variable2.name.startsWith('C')) {
+      return 1;
+    }
+
+    return variable1.name < variable2.name ? -1 : 1;
+  }
+
 
   return (
     <TableContainer sx={{ width: "90%" }}>
@@ -196,7 +224,7 @@ const MapVariablesTab: React.FC<Props> = ({
               <TableCell>
                 <div style={{ ...defaultHeaderSx }}>
                   {" "}
-                  Lag Time
+                  Lag Time <span style={{ color: "red" }}>*</span>
                   <HelpButton title={"Lag Time"}>{lagTimeHelp}</HelpButton>
                 </div>
               </TableCell>
@@ -265,7 +293,7 @@ const MapVariablesTab: React.FC<Props> = ({
               <TableCell colSpan={5}>No variables found</TableCell>
             </TableRow>
           )}
-          {timeVaryingVariables.map((variable) => (
+          {timeVaryingVariables.sort(sortVariables).map((variable) => (
             <VariableRow
               key={variable.id}
               variable={variable}
@@ -280,6 +308,8 @@ const MapVariablesTab: React.FC<Props> = ({
               isAnyDosingSelected={isAnyDosingSelected}
               updateLinksToPd={updateLinksToPd}
               isAnyLinkToPdSelected={isAnyLinkToPdSelected}
+              updateLagTimes={updateLagTimes}
+              isAnyLagTimeSelected={isAnyLagTimeSelected}
             />
           ))}
         </TableBody>
