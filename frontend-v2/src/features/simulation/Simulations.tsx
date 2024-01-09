@@ -233,6 +233,8 @@ const Simulations: React.FC = () => {
     setParametersHeight(height);
   }, [parametersRef?.current?.clientHeight])
 
+  const updateWindowDimensions = () => window.innerWidth < 1000 && setLayout('horizontal');
+  window.addEventListener("resize", updateWindowDimensions);
 
   // reset form and sliders if simulation changes
   useEffect(() => {
@@ -495,8 +497,8 @@ const Simulations: React.FC = () => {
   };
 
   return (
-    <Grid container xl={12} sx={{ marginBottom: layout === 'horizontal' ? `${parametersHeight}px` : 0}}>
-      <Grid item xs={layout === "vertical" ? 7 : 12}>
+    <Grid container sx={{ marginBottom: layout === 'vertical' ? 0 : `${parametersHeight}px` }}>
+      <Grid item xl={layout === "vertical" ? 8 : 12} md={layout === "vertical" ? 7 : 12} xs={layout === "vertical" ? 6 : 12}>
         <Stack direction={"row"} alignItems={"center"}>
           <DropdownButton
             useIcon={false}
@@ -507,33 +509,6 @@ const Simulations: React.FC = () => {
             Add new plot
           </DropdownButton>
         </Stack>
-        <Grid container spacing={1}>
-          {plots.map((plot, index) => (
-            <Grid item xs={12} xl={layout === "vertical" ? 12 : 6} key={index}>
-              {data && model ? (
-                <SimulationPlotView
-                  index={index}
-                  plot={plot}
-                  data={data}
-                  variables={variables || []}
-                  control={control}
-                  setValue={setValue}
-                  remove={removePlot}
-                  units={units}
-                  compound={compound}
-                  model={model}
-                />
-              ) : (
-                <div>Loading...</div>
-              )}
-            </Grid>
-          ))}
-        </Grid>
-        <Snackbar open={Boolean(simulateError)} autoHideDuration={6000}>
-          <Alert severity="error">
-            Error simulating model: {simulateError?.error || "unknown error"}
-          </Alert>
-        </Snackbar>
         {plots.length > 0 && (
           <>
             <Stack
@@ -561,15 +536,44 @@ const Simulations: React.FC = () => {
             </Stack>
           </>
         )}
+        <Grid container spacing={1}>
+          {plots.map((plot, index) => (
+            <Grid item xl={layout === "vertical" ? 12 : 6} md={layout === "vertical" ? 12 : 6} xs={layout === "vertical" ? 12 : 12} key={index}>
+              {data && model ? (
+                <SimulationPlotView
+                  index={index}
+                  plot={plot}
+                  data={data}
+                  variables={variables || []}
+                  control={control}
+                  setValue={setValue}
+                  remove={removePlot}
+                  units={units}
+                  compound={compound}
+                  model={model}
+                />
+              ) : (
+                <div>Loading...</div>
+              )}
+            </Grid>
+          ))}
+        </Grid>
+        <Snackbar open={Boolean(simulateError)} autoHideDuration={6000}>
+          <Alert severity="error">
+            Error simulating model: {simulateError?.error || "unknown error"}
+          </Alert>
+        </Snackbar>
       </Grid>
       <Grid
         ref={parametersRef}
         item
-        xl={layout === "vertical" ? 4 : 12}
+        xl={layout === "vertical" ? 3 : 12}
+        md={layout === "vertical" ? 4 : 12}
+        xs={layout === "vertical" ? 5 : 12}
         sx={
           layout === "vertical"
             ? { position: "fixed", right: 0, paddingLeft: "1rem", width: '100%' }
-            : { position: "fixed", bottom: 0, height: 'auto', backgroundColor: 'white', width: '-webkit-fill-available' }
+            : { position: "fixed", bottom: 0, paddingBottom: '3rem', height: 'auto', backgroundColor: 'white', width: '-webkit-fill-available' }
         }
       >
         <Stack direction="column">

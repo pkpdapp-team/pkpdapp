@@ -47,6 +47,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, isLoading, errorMessage }) => {
             control={control}
             textFieldProps={{ autoComplete: "username" }}
             mode="onChange"
+            autoShrink={true}
           />
           <TextField
             label="Password"
@@ -54,6 +55,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, isLoading, errorMessage }) => {
             control={control}
             textFieldProps={{ autoComplete: "password", type: "password" }}
             mode="onChange"
+            autoShrink={true}
           />
           <Button
             type="submit"

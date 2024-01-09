@@ -38,6 +38,8 @@ interface Props {
   isAnyDosingSelected: boolean;
   updateLinksToPd: (key: number, value: boolean) => void;
   isAnyLinkToPdSelected: boolean;
+  updateLagTimes: (key: number, value: boolean) => void;
+  isAnyLagTimeSelected: boolean;
 }
 
 type DerivedVariableType = "RO" | "FUP" | "BPR" | "TLG";
@@ -57,6 +59,8 @@ const VariableRow: React.FC<Props> = ({
   isAnyDosingSelected,
   updateLinksToPd,
   isAnyLinkToPdSelected,
+  updateLagTimes,
+  isAnyLagTimeSelected,
 }) => {
   const {
     fields: mappings,
@@ -125,6 +129,21 @@ const VariableRow: React.FC<Props> = ({
     : mappings.find((mapping) => mapping.pk_variable === variable.id) !==
       undefined;
 
+  const onClickDerived = (type: DerivedVariableType) => () => {
+    const index = derivedIndex(type);
+    return index >= 0 ? removeDerived(index) : addDerived(type);
+  };
+
+  const derivedIndex = (type: DerivedVariableType) => {
+    return derivedVariables.findIndex(
+      (ro) => ro.pk_variable === variable.id && ro.type === type,
+    );
+  };
+
+  const isLinkedTo = (type: DerivedVariableType) => {
+    return derivedIndex(type) >= 0;
+  };
+
   useEffect(() => {
     updateDosings(variable.id, hasProtocol);
   }, [hasProtocol]);
@@ -132,6 +151,10 @@ const VariableRow: React.FC<Props> = ({
   useEffect(() => {
     updateLinksToPd(variable.id, linkToPD);
   }, [linkToPD]);
+
+  useEffect(() => {
+    updateLagTimes(variable.id, isLinkedTo("TLG"));
+  }, [isLinkedTo("TLG")]);
 
   if (
     variable.constant ||
@@ -247,21 +270,6 @@ const VariableRow: React.FC<Props> = ({
     derivedVariablesRemove(index);
   };
 
-  const onClickDerived = (type: DerivedVariableType) => () => {
-    const index = derivedIndex(type);
-    return index >= 0 ? removeDerived(index) : addDerived(type);
-  };
-
-  const derivedIndex = (type: DerivedVariableType) => {
-    return derivedVariables.findIndex(
-      (ro) => ro.pk_variable === variable.id && ro.type === type,
-    );
-  };
-
-  const isLinkedTo = (type: DerivedVariableType) => {
-    return derivedIndex(type) >= 0;
-  };
-
   const noMapToPD = isPD || effectVariable === undefined || !isConcentration;
   const noDerivedVariables = !isConcentration || isPD;
   const isC1 = model.is_library_model && variable.qname.endsWith(".C1");
@@ -315,6 +323,11 @@ const VariableRow: React.FC<Props> = ({
             <FormControlLabel
               control={
                 <MuiCheckbox
+                  sx={{
+                    "& .MuiSvgIcon-root": {
+                      color: isAnyLagTimeSelected ? "inherit" : "red",
+                    },
+                  }}
                   checked={isLinkedTo("TLG")}
                   onClick={onClickDerived("TLG")}
                   data-cy={`checkbox-tlag-${variable.name}`}

@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { TableCell, TableRow, IconButton, Button } from "@mui/material";
+import { TableCell, TableRow, IconButton, Button, Stack } from "@mui/material";
 import {
   ProjectRead,
   Protocol,
@@ -14,6 +14,7 @@ import UnitField from "../../components/UnitField";
 import FloatField from "../../components/FloatField";
 import IntegerField from "../../components/IntegerField";
 import useDirty from "../../hooks/useDirty";
+import HelpButton from "../../components/HelpButton";
 
 interface Props {
   project: ProjectRead;
@@ -186,13 +187,19 @@ const Doses: React.FC<Props> = ({ project, protocol, units }) => {
           </TableCell>
         </TableRow>
       ))}
-      <Button
-        onClick={handleAddRow}
-        variant="outlined"
-        sx={{ fontSize: ".5rem" }}
-      >
-        Add New Row
-      </Button>
+      <Stack direction='row' width='max-content'>
+        <Button
+          onClick={handleAddRow}
+          variant="outlined"
+          sx={{ fontSize: ".5rem" }}
+        >
+          Add New Row
+        </Button>
+        <HelpButton title="Add Dose Line">
+          Adding an additional dosing line allows defining complex dosing
+          regimens (e.g. changing dosing frequency and/or dosing levels)
+        </HelpButton>
+      </Stack>
     </>
   );
 };

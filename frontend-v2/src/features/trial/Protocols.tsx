@@ -124,12 +124,7 @@ const Protocols: React.FC = () => {
             <TableCell align="right">
               <div style={{ ...defaultHeaderSx }}>
                 {" "}
-                Add Dose Line{" "}
-                <HelpButton title="Add Dose Line">
-                  Adding an additional dosing line allows defining complex
-                  dosing regimens (e.g. changing dosing frequency and/or dosing
-                  levels)
-                </HelpButton>
+                Remove{" "}
               </div>
             </TableCell>
           </TableRow>
