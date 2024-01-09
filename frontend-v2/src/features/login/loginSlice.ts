@@ -44,11 +44,27 @@ export const fetchSession = createAsyncThunk<
   return sessionResponse;
 });
 
+class ServerError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = "ServerError";
+  }
+}
 function isResponseOk(response: Response) {
   if (response.status >= 200 && response.status <= 299) {
     return response.json();
   } else {
-    throw Error(response.statusText);
+    return response.json()
+      .then((data) => {
+        throw new ServerError(data.detail);
+      })
+      .catch((err) => {
+        if (err instanceof ServerError) {
+          throw err;
+        } else {
+          throw Error(response.statusText);
+        }
+      });
   }
 }
 
@@ -80,7 +96,7 @@ export const login = createAsyncThunk<
         return { isAuthenticated: true, user: data.user };
       })
       .catch((err) => {
-        return rejectWithValue({ error: err.message });
+        return rejectWithValue({ error: err.message});
       });
     return response;
   },

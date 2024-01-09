@@ -39,7 +39,7 @@ def login_view(request):
 
     user = authenticate(username=username, password=password)
     if user is None:
-        return JsonResponse({'detail': 'Invalid credentials.'}, status=400)
+        return JsonResponse({'detail': 'Invalid credentials. Either you have supplied an incorrect username/password combination, or you do not have sufficient access'}, status=400)
 
     login(request, user)
 
