@@ -38,9 +38,20 @@ const Login: React.FC<LoginProps> = ({ onLogin, isLoading, errorMessage }) => {
       <form onSubmit={handleSubmit(onSubmit)}>
         <Stack spacing={2} sx={{ marginTop: 10 }}>
           <Box display="flex" justifyContent="center" alignItems="center">
-            <PkpdAppIcon style={{ width: 250 }} />
+          <Typography
+            variant="h3"
+            component="div"
+            sx={{
+              color: "#1976d2",
+              fontWeight: "bold",
+              paddingLeft: "1rem",
+              fontFamily: "Comfortaa",
+            }}
+          >
+            pkpd explorer
+          </Typography>
           </Box>
-          <Typography variant="h5">Login</Typography>
+          <Typography variant="h6">Login</Typography>
           <TextField
             label="Username"
             name="username"
