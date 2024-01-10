@@ -25,14 +25,16 @@ $ cd pkpdapp
 
 ### `.env.prod` file
 
-The configuration of the production application is stored in the `.env.prod` file in the root directory. Edit this file and variables to correspond to your particular setup. The variables are described below:
+The configuration of the production application is stored in the `.env.prod` file in the root directory. Edit this file and variables to correspond to your particular setup, in particular make sure `HOST_NAME`, `DATABASE_URL` is set correctly and that `SECRET_KEY` is altered from the default. The variables are described below:
 
 - `DEBUG`: set to 0 for production
 - `HOST_NAME`: the host name of the application
 - `SECRET_KEY`: a large random string used for cryptographic signing
-- `POSTGRES_PASSWORD`: password for postgres database specified in `docker-compose.yml` (not needed if using your own database)
-- `DATABASE_URL`: URL of a postgres database (e.g. postgres://username:password@postgres:5432/postgres). Do not alter this if you are using the
-  postgres service in the `docker-compose.yml` file.
+- `DATABASE_URL`: URL of a postgres database (e.g. postgres://username:password@postgres:5432/postgres). Note that any special characters in the password must be url-encoded. E.g. `postgres://user:p#ssword!@localhost/foobar` should be written as `postgres://user:p%23ssword!@localhost/foobar`.
+
+and should instead be passed as:
+
+
 
 - `RABBITMQ_DEFAULT_USER`: username for rabbitmq server (optional)
 - `RABBITMQ_DEFAULT_PASS`: password for rabbitmq server (optional)
@@ -66,13 +68,19 @@ in the root folder (this folder needs to be created) and named `pkpdapp.crt` and
 
 ### PostgreSQL database
 
-The application uses a PostgreSQL database. You can either supply your own
-database and set the `DATABASE_URL` variable in the `.env.prod` file, or the
-`docker-compose.yml` file contains a postgres service that can be used, along
-with the `DATABASE_URL` variable already set in the `.env.prod` file.
+The application uses a PostgreSQL database. You should supply your own
+database and set the `DATABASE_URL` variable in the `.env.prod` file appropriately.
 
-If you are using your own database, you can delete the postgres service from the
-`docker-compose.yml` file.
+### Help pages & Tutorials
+
+To add tutorial videos to the application, you will need to create a csv file with the following columns (the first line of the csv file should be the column names):
+
+- `Title`: title of the video
+- `Type`: tab in which the video will be displayed (either `Tutorial X` where `X` is a number, `Project`, `Drug`, `Model`, `Trial Design`  or `Simulation`)
+- `Link`: link to the video
+- `Keywords`: keywords associated with the video (optional)
+
+This file should be placed in the `pkpdapp/static/` directory and named `tutorial_videos.csv`.
 
 ### Containers
 
