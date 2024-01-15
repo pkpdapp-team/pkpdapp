@@ -13,7 +13,6 @@ services:
   app:
     image: pkpdapp
     depends_on:
-      - postgres
       - rabbitmq
     build:
       dockerfile: Dockerfile
