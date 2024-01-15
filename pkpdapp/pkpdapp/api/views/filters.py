@@ -31,9 +31,6 @@ class UserAccessFilter(filters.BaseFilterBackend):
     """
 
     def filter_queryset(self, request, queryset, view):
-        if request.user.is_superuser:
-            return queryset
-
         user = request.user
         if queryset.model == Project:
             queryset = queryset.filter(users=user)
