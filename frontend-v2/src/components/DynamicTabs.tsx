@@ -21,6 +21,7 @@ export const TabContext = React.createContext<TabContextProps>({
 
 interface DynamicTabsProps {
   tabNames: SubPageName[];
+  disabledTabs?: SubPageName[];
   tabErrors?: { [key: string]: string };
   isOtherSpeciesSelected?: boolean;
 }
@@ -40,6 +41,7 @@ export const TabPanel: React.FC<PropsWithChildren<TabPanelProps>> = ({
 
 export const DynamicTabs: React.FC<PropsWithChildren<DynamicTabsProps>> = ({
   tabNames,
+  disabledTabs,
   tabErrors,
   isOtherSpeciesSelected,
   children,
@@ -96,6 +98,7 @@ export const DynamicTabs: React.FC<PropsWithChildren<DynamicTabsProps>> = ({
                 label={name}
                 icon={name in errors ? errors[name] : undefined}
                 iconPosition="end"
+                disabled={disabledTabs?.includes(name)}
               />
             ))}
           </Tabs>

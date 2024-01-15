@@ -78,17 +78,20 @@ const Help: React.FC = () => {
     tutorialVideos.filter((video) => video.type === "Trial Design"),
     tutorialVideos.filter((video) => video.type === "Simulation"),
   ];
+  const tabNames = [
+    SubPageName.TUTORIALS,
+    SubPageName.PROJECTS,
+    SubPageName.DRUG,
+    SubPageName.MODEL,
+    SubPageName.TRAILDESIGN,
+    SubPageName.SIMULATION,
+  ];
+  const disabledTabs = tabNames.filter((name, index) => tutorials[index].length === 0);
 
   return (
     <DynamicTabs
-      tabNames={[
-        SubPageName.TUTORIALS,
-        SubPageName.PROJECTS,
-        SubPageName.DRUG,
-        SubPageName.MODEL,
-        SubPageName.TRAILDESIGN,
-        SubPageName.SIMULATION,
-      ]}
+      tabNames={tabNames}
+      disabledTabs={disabledTabs}
     >
       {questions.map((question, index) => (
         <TabPanel key={index}>
