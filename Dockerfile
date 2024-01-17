@@ -8,6 +8,7 @@ COPY frontend-v2/package.json /app/frontend
 RUN npm install --ignore-scripts
 
 COPY frontend-v2 /app/frontend/
+COPY .env.prod /app/
 RUN npm run build
 
 FROM python:3.10
