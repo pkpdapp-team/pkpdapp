@@ -21,6 +21,7 @@ import { Control, FieldArrayWithId, UseFormSetValue } from "react-hook-form";
 import SimulationPlotForm from "./SimulationPlotForm";
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
+import exp from "constants";
 
 function dticks(
   rangey: number[] | undefined,
@@ -135,8 +136,8 @@ function genIcLines(
     ? concentrationUnitIds.includes(plot.y_unit)
     : false;
 
-  if (yAxisIsConcentration && compound.efficacy_experiments.length > 0) {
-    const exp = compound.efficacy_experiments[0];
+  const exp = compound.efficacy_experiments.find(exp => exp.id === compound.use_efficacy);
+  if (yAxisIsConcentration && exp) {
     if (exp.hill_coefficient && exp.c50) {
       const yAxisUnit = units.find((unit) => unit.id === plot.y_unit);
       const c50Unit = units.find((unit) => unit.id === exp.c50_unit);
