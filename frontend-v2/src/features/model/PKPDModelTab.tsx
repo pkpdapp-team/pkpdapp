@@ -110,15 +110,6 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props) => {
             options={speciesOptions}
             formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
           />
-          <>
-            {model.pk_model && (
-              <HelpButton title={pk_model_map[model.pk_model].name}>
-                <Typography>
-                  {pk_model_map[model.pk_model].description}
-                </Typography>
-              </HelpButton>
-            )}
-          </>
         </Stack>
       </Grid>
       <Grid container item spacing={2}>
@@ -131,15 +122,6 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props) => {
               options={pk_model_options}
               formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
             />
-            <>
-              {model.pk_model && (
-                <HelpButton title={pk_model_map[model.pk_model].name}>
-                  <Typography>
-                    {pk_model_map[model.pk_model].description}
-                  </Typography>
-                </HelpButton>
-              )}
-            </>
           </Stack>
           {model.pk_model && (
             <Stack
@@ -208,15 +190,6 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props) => {
               options={pd_model_options}
               formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
             />
-            <>
-              {model.pd_model && (
-                <HelpButton title={pd_model_map[model.pd_model].name}>
-                  <Typography>
-                    {pd_model_map[model.pd_model].description}
-                  </Typography>
-                </HelpButton>
-              )}
-            </>
           </Stack>
         </Grid>
         <Box width="100%" height="0" />
@@ -260,15 +233,6 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props) => {
                   options={pd_model2_options}
                   formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
                 />
-                <>
-                  {model.pd_model2 && (
-                    <HelpButton title={pd_model_map[model.pd_model2].name}>
-                      <Typography>
-                        {pd_model_map[model.pd_model2].description}
-                      </Typography>
-                    </HelpButton>
-                  )}
-                </>
               </Stack>
             </Grid>
           </>
