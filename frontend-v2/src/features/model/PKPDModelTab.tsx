@@ -99,6 +99,13 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props) => {
     ? pk_model_map[model.pk_model].name.includes("tmdd")
     : false;
 
+  const pd_model = model.pd_model ? pd_model_map[model.pd_model] : null;
+  const pd_model2 = model.pd_model2 ? pd_model_map[model.pd_model2] : null;
+  const pdModelHasHillCoefficient = 
+    pd_model?.name.includes("indirect") 
+    || pd_model?.name.includes("direct")
+    || pd_model2?.name.includes("emax_kill");
+
   return (
     <Grid xs={12} container spacing={2}>
       <Grid item xl={5} md={8} xs={10}>
@@ -192,35 +199,7 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props) => {
             />
           </Stack>
         </Grid>
-        <Box width="100%" height="0" />
-        <Grid container item spacing={2} sx={{ paddingTop: "0" }}>
-          <Grid item xs={12} md={8} xl={5} sx={{ paddingTop: "0 !important" }}>
-            <Stack
-              sx={{
-                display: "flex",
-                paddingTop: "0",
-                "& .MuiFormControlLabel-label": { fontSize: ".9rem" },
-              }}
-              direction="row"
-              alignItems="center"
-              flexWrap="wrap"
-              justifyContent="space-between"
-            >
-              {model.pd_model && (
-                <Tooltip title="Includes the Hill coefficient to the PD response">
-                  <div>
-                    <Checkbox
-                      label="Hill Coefficient"
-                      name="model.has_hill_coefficient"
-                      control={control}
-                      checkboxFieldProps={{ disabled: !model.pd_model }}
-                    />
-                  </div>
-                </Tooltip>
-              )}
-            </Stack>
-          </Grid>
-        </Grid>
+        
         <Box width="100%" />
         {pdIsTumourGrowth && (
           <>
@@ -237,6 +216,35 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props) => {
             </Grid>
           </>
         )}
+        <Box width="100%" height="0" />
+        <Grid container item spacing={2} sx={{ paddingTop: "0" }}>
+          <Grid item xs={12} md={8} xl={5} sx={{ paddingTop: "0 !important" }}>
+            <Stack
+              sx={{
+                display: "flex",
+                paddingTop: "0",
+                "& .MuiFormControlLabel-label": { fontSize: ".9rem" },
+              }}
+              direction="row"
+              alignItems="center"
+              flexWrap="wrap"
+              justifyContent="space-between"
+            >
+              {pdModelHasHillCoefficient && (
+                <Tooltip title="Includes the Hill coefficient to the PD response">
+                  <div>
+                    <Checkbox
+                      label="Hill Coefficient"
+                      name="model.has_hill_coefficient"
+                      control={control}
+                      checkboxFieldProps={{ disabled: !model.pd_model }}
+                    />
+                  </div>
+                </Tooltip>
+              )}
+            </Stack>
+          </Grid>
+        </Grid>
         <Box width="100%" height="0" />
         <Grid item xs={5} sx={{ paddingTop: "1rem" }}>
           <Stack
