@@ -16,6 +16,7 @@ import { RootState } from "../../app/store";
 import {
   Compound,
   EfficacyRead,
+  UnitRead,
   useCompoundRetrieveQuery,
   useCompoundUpdateMutation,
   useProjectRetrieveQuery,
@@ -29,6 +30,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import TextField from "../../components/TextField";
 import useDirty from "../../hooks/useDirty";
 import ConfirmationDialog from "../../components/ConfirmationDialog";
+import SelectField from "../../components/SelectField";
 
 const Drug: React.FC = () => {
   const projectId = useSelector(
@@ -160,6 +162,16 @@ const Drug: React.FC = () => {
     }
   };
 
+  const molMassUnit = units.find((u) => u.id === compound.molecular_mass_unit);
+  const molMassUnits= molMassUnit?.compatible_units.filter((unit) => unit.symbol.endsWith("mol"));
+  const molMassUnitOpt= molMassUnits
+    ? molMassUnits.map((unit: { [key: string]: string }) => {
+        return { value: unit.id, label: unit.symbol };
+      })
+    : [];
+
+
+
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
       <div style={{ display: "flex" }}>
@@ -176,14 +188,11 @@ const Drug: React.FC = () => {
                 sx={{ flex: "1" }}
                 rules={{ required: true }}
               />
-              <UnitField
+              <SelectField
                 label={"Unit"}
                 name={"molecular_mass_unit"}
+                options={molMassUnitOpt}
                 control={control}
-                baseUnit={units.find(
-                  (u) => u.id === compound.molecular_mass_unit,
-                )}
-                compound={compound}
               />
             </Stack>
           </Grid>
@@ -200,14 +209,11 @@ const Drug: React.FC = () => {
                   sx={{ flex: "1" }}
                   rules={{ required: true }}
                 />
-                <UnitField
+                <SelectField
                   label={"Unit"}
                   name={"target_molecular_mass_unit"}
+                  options={molMassUnitOpt}
                   control={control}
-                  baseUnit={units.find(
-                    (u) => u.id === compound.molecular_mass_unit,
-                  )}
-                  compound={compound}
                 />
               </Stack>
             </Stack>
