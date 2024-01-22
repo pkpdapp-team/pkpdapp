@@ -333,6 +333,13 @@ class Variable(StoredModel):
                     upper = 1.0
                 elif myokit_variable.qname() == 'PDCompartment.Emax':
                     lower = 1.0
+                elif myokit_variable.qname() == 'PKCompartment.CL':
+                    lower = 0.0
+                elif myokit_variable.qname() == 'PKCompartment.CLmax':
+                    lower = 0.0
+                elif myokit_variable.qname().startswith('PKCompartment') and "_tlag_" in myokit_variable.name():
+                    lower = 0.0
+
             state = myokit_variable.is_state()
             if state:
                 value = myokit_variable.state_value()
