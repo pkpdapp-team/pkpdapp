@@ -130,7 +130,7 @@ const MapVariablesTab: React.FC<Props> = ({
   const unboundHelp = (
     <p>
       For SM, the unbound concentration in plasma is calculated by multiplying
-      the central drug concentration (typically C1) by fup (see Drug Target tab)
+      the central drug concentration (typically C1) by fup (see Parameter tab)
     </p>
   );
 
