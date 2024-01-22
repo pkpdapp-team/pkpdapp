@@ -202,9 +202,13 @@ const Model: React.FC = () => {
     tabErrors[tabKeys[1]] =
       "Please select a PK variable to link PK and PD models (Link to PD column)";
   }
+  if (model.has_lag && !model.derived_variables.find((dv) => dv.type === "TLG")) {
+    tabErrors[tabKeys[1]] = "Please select a lag time variable";
+  }
   if (protocols && protocols.length === 0) {
     tabErrors[tabKeys[1]] = "Please select a dosing compartment";
   }
+  
 
   const isOtherSpeciesSelected = project.species === "O";
 
