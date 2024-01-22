@@ -363,7 +363,7 @@ const VariableRow: React.FC<Props> = ({
         </TableCell>
       )}
       <TableCell>
-        {!noDerivedVariables && !isDerivedVariable && (
+        {!noDerivedVariables && (
           <FormControlLabel
             disabled={disableRo}
             control={
