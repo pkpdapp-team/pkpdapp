@@ -8,6 +8,7 @@ import {
   useCombinedModelSetParamsToDefaultsUpdateMutation,
   useCombinedModelUpdateMutation,
   useCompoundRetrieveQuery,
+  usePharmacodynamicRetrieveQuery,
   useProjectRetrieveQuery,
   useProjectUpdateMutation,
   useProtocolListQuery,
@@ -50,6 +51,12 @@ const Model: React.FC = () => {
   const { data: protocols, isLoading: isProtocolsLoading } =
     useProtocolListQuery({ projectId: projectIdOrZero }, { skip: !projectId });
   const model = models?.[0] || null;
+  const { data: pd_model, isLoading: isPdModelLoading } =
+    usePharmacodynamicRetrieveQuery(
+      { id: model?.pd_model || 0 },
+      { skip: !model?.pd_model },
+    );
+
   const [updateModel] = useCombinedModelUpdateMutation();
   const { data: variables, isLoading: isVariablesLoading } =
     useVariableListQuery(
@@ -198,9 +205,14 @@ const Model: React.FC = () => {
   if (model.pk_model === null) {
     tabErrors[tabKeys[0]] = "Please select a PK model to simulate";
   }
-  if (model.pd_model && model.mappings.length === 0) {
-    tabErrors[tabKeys[1]] =
-      "Please select a PK variable to link PK and PD models (Link to PD column)";
+  const isTumourModel = pd_model?.is_library_model && pd_model?.name.startsWith("tumour_growth");
+  const noKillModel = !model.pd_model2;
+  if (model.pd_model &&  model.mappings.length === 0) {
+    // put exception for tumour growth models with no kill
+    if (!(isTumourModel && noKillModel)) {
+      tabErrors[tabKeys[1]] =
+        "Please select a PK variable to link PK and PD models (Link to PD column)";
+    }
   }
   if (model.has_lag && !model.derived_variables.find((dv) => dv.type === "TLG")) {
     tabErrors[tabKeys[1]] = "Please select a lag time variable";
@@ -217,6 +229,7 @@ const Model: React.FC = () => {
       tabNames={tabKeys}
       tabErrors={tabErrors}
       isOtherSpeciesSelected={isOtherSpeciesSelected}
+      tumourModelWithNoKillModel={isTumourModel && noKillModel}
     >
       <TabPanel>
         <PKPDModelTab

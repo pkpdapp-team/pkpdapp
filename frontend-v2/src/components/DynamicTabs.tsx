@@ -24,6 +24,7 @@ interface DynamicTabsProps {
   disabledTabs?: SubPageName[];
   tabErrors?: { [key: string]: string };
   isOtherSpeciesSelected?: boolean;
+  tumourModelWithNoKillModel?: boolean;
 }
 
 interface TabPanelProps {
@@ -44,6 +45,7 @@ export const DynamicTabs: React.FC<PropsWithChildren<DynamicTabsProps>> = ({
   disabledTabs,
   tabErrors,
   isOtherSpeciesSelected,
+  tumourModelWithNoKillModel,
   children,
 }) => {
   const [currentTab, setCurrentTab] = useState(0);
@@ -77,6 +79,15 @@ export const DynamicTabs: React.FC<PropsWithChildren<DynamicTabsProps>> = ({
       })
       setCurrentTab(newValue);
       dispatch(setSubPage(tabNames[newValue]))
+    } else if (tabNames[newValue] === 'Map Variables' && tumourModelWithNoKillModel) {
+      toast({
+        type: notificationTypes.INFORMATION,
+        text: "You have selected a tumour growth model without a kill model. Please ensure this is correct",
+        autoClose: 3500
+      })
+      setCurrentTab(newValue);
+      dispatch(setSubPage(tabNames[newValue]))
+
     } else {
       setCurrentTab(newValue);
       dispatch(setSubPage(tabNames[newValue]))

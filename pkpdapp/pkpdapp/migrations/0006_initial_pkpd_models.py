@@ -469,6 +469,7 @@ Description of a clinical two compartment TMDD model here.
                 name=m['name'],
                 description=myokit_model.meta['name'],
                 mmt=mmt_string,
+                is_library_model=True,
             )
         except urllib.error.URLError:
             print('WARNING: urlopen timed-out, no data loaded')
