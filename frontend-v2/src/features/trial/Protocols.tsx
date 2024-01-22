@@ -101,7 +101,7 @@ const Protocols: React.FC = () => {
                 {" "}
                 Start Time
                 <HelpButton title="Start Time">
-                  Start time of the first dose
+                  Time of the first dose
                 </HelpButton>
               </div>
             </TableCell>
