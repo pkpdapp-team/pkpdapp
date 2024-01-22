@@ -23,7 +23,6 @@ import KeyboardDoubleArrowRightIcon from "@mui/icons-material/KeyboardDoubleArro
 import KeyboardDoubleArrowDownIcon from "@mui/icons-material/KeyboardDoubleArrowDown";
 import SelectField from "../../components/SelectField";
 import Checkbox from "../../components/Checkbox";
-import HelpButton from "../../components/HelpButton";
 import { FormData } from "./Model";
 import { speciesOptions } from "../projects/Project";
 

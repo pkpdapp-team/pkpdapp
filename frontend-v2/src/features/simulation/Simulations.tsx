@@ -41,6 +41,7 @@ import FloatField from "../../components/FloatField";
 import useDirty from "../../hooks/useDirty";
 import UnitField from "../../components/UnitField";
 import paramPriority from "../model/paramPriority";
+import HelpButton from "../../components/HelpButton";
 
 type SliderValues = { [key: number]: number };
 
@@ -543,9 +544,16 @@ const Simulations: React.FC = () => {
                 control={control}
                 selectProps={{ style: { flexShrink: 0 } }}
               />
-              <Button variant="contained" onClick={exportSimulation}>
-                Export to CSV
-              </Button>
+              <div>
+                <Button variant="contained" onClick={exportSimulation}>
+                  Export to CSV
+                </Button>
+                <HelpButton title={"Export to CSV"}>
+                  A variables are reported in pmol, C or T variables are reported
+                  in pmol/L and AUC variables are reported in pmol/L*h. These
+                  units cannot be changed in the current version.
+                </HelpButton>
+              </div>
             </Stack>
           </>
         )}
