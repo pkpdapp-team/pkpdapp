@@ -190,11 +190,12 @@ const VariableRow: React.FC<Props> = ({
     const doseAmountUnit = units.find(
       (unit) => unit.symbol === doseAmountUnitSymbol,
     );
+    const isSmallMolecule = compound.compound_type === "SM";
     const defaultDose: DoseRead = {
       id: 0,
       amount: 1,
       start_time: 0,
-      repeat_interval: 1,
+      repeat_interval: isSmallMolecule ? 24 : 168,
       repeats: 1,
       duration: 0.0833,
     };
