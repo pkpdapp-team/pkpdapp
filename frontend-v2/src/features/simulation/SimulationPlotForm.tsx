@@ -283,7 +283,7 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({
       <Divider sx={{ margin: 2 }} />
       <Stack direction={"row"} spacing={2} alignItems={"center"}>
         <Typography sx={{ fontWeight: "bold", paddingBottom: "1rem" }}>
-          Cx Reference Lines
+          Reference lines (if Efficacy-Safety Data have been defined in Drug and Target)
         </Typography>
       </Stack>
       <DropdownButton
