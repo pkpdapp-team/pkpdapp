@@ -73,7 +73,9 @@ const Protocols: React.FC = () => {
                 {" "}
                 Site of Admin
                 <HelpButton title="Site of Admin">
-                  Defined in Model/Map Variables
+                  Defines the site of drug administration. A1/A1_t/A1_f = IV, Aa
+                  = SC or PO. The site of drug administration can be selected
+                  under Model/ Map Variables
                 </HelpButton>
               </div>
             </TableCell>
