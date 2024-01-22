@@ -141,7 +141,7 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props) => {
               flexWrap="wrap"
               justifyContent="space-between"
             >
-              <Tooltip title="Includes Michaellis-Menten parameters (CLmax and Km)">
+              <Tooltip title="Includes Michaelis-Menten parameters (CLmax and Km)">
                 <div>
                   <Checkbox
                     label="Saturation"
@@ -163,7 +163,7 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props) => {
                   />
                 </div>
               </Tooltip>
-              <Tooltip title="Includes a time delay following PO of SC administration">
+              <Tooltip title="Includes a time delay following PO or SC administration">
                 <div>
                   <Checkbox
                     label="Lag Time"
