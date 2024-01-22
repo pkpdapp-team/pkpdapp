@@ -149,6 +149,15 @@ const MapVariablesTab: React.FC<Props> = ({
     </p>
   );
 
+  const unitsHelp = (
+    <p>
+      Displayed units represent the default units of pkpd explorer. If you
+      export your simulations to csv file (in Simulations), those are the units
+      of the reported variables. If you want to change the units of a variable,
+      you can do so in Simulations / Customize Plot
+    </p>
+  );
+
   const haveTLag = model.has_lag;
 
   const effectVariable = variables.find(
@@ -203,7 +212,10 @@ const MapVariablesTab: React.FC<Props> = ({
               <div style={{ ...defaultHeaderSx }}>Name</div>
             </TableCell>
             <TableCell>
-              <div style={{ ...defaultHeaderSx }}>Unit</div>
+              <div style={{ ...defaultHeaderSx }}>
+                Unit
+                  <HelpButton title={"Unit"}>{unitsHelp}</HelpButton>
+              </div>
             </TableCell>
             <TableCell>
               <div style={{ ...defaultHeaderSx }}>Type</div>
