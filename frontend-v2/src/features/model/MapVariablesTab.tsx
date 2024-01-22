@@ -137,7 +137,7 @@ const MapVariablesTab: React.FC<Props> = ({
   const bloodHelp = (
     <p>
       For SM, the total concentration in blood is calculated by dividing the
-      central drug concentration (typically C1) by BP (see Drug Target tab)
+      central drug concentration (typically C1) by BP (see Parameter tab)
     </p>
   );
 
