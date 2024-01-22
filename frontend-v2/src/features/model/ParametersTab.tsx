@@ -116,8 +116,9 @@ const ParametersTab: React.FC<Props> = ({
                   {" "}
                   Unit{" "}
                   <HelpButton title="Unit Column">
-                    Changing the units does not update the PKPD values. The user
-                    is responsible for the correctness of the values and units.
+                    Changing the units does not automatically update the PKPD
+                    parameter values. The user is responsible for the
+                    correctness of the PKPD parameter values and units.
                   </HelpButton>{" "}
                 </div>
               </TableCell>
