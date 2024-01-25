@@ -163,24 +163,37 @@ class CombinedModel(MyokitModelMixin, StoredModel):
         myokit_model = self.get_myokit_model()
         return myokit_model.code()
 
-    def create_stored_model(self):
+    def copy(self, project):
         stored_model_kwargs = {
             "name": self.name,
-            "project": self.project,
+            "project": project,
             "pk_model": self.pk_model,
             "pd_model": self.pd_model,
             "time_max": self.time_max,
-            "read_only": True,
+            "read_only": self.read_only,
         }
         stored_model = CombinedModel.objects.create(**stored_model_kwargs)
 
+        # get the new varaibles of the model
         new_variables = {}
-        for variable in self.variables.all():
-            new_variable = variable.create_stored_variable(stored_model)
-            new_variables[new_variable.qname] = new_variable
+        for variable in stored_model.variables.all():
+            new_variables[variable.qname] = variable
+
+        for dv in self.derived_variables.all():
+            dv.copy(stored_model, new_variables)
+
+        # variables might have changed so get the new ones
+        new_variables = {}
+        for variable in stored_model.variables.all():
+            new_variables[variable.qname] = variable
 
         for mapping in self.mappings.all():
-            mapping.create_stored_mapping(stored_model, new_variables)
+            mapping.copy(stored_model, new_variables)
+
+        # update the variable values of the new model
+        for variable in stored_model.variables.all():
+            old_var = self.variables.get(qname=variable.qname)
+            old_var.copy(variable, project)
 
         return stored_model
 
@@ -626,14 +639,14 @@ class PkpdMapping(StoredModel):
         super().delete()
         pkpd_model.update_model()
 
-    def create_stored_mapping(self, new_pkpd_model, new_variables):
+    def copy(self, new_pkpd_model, new_variables):
         new_pk_variable = new_variables[self.pk_variable.qname]
         new_pd_variable = new_variables[self.pd_variable.qname]
         stored_kwargs = {
             "pkpd_model": new_pkpd_model,
             "pk_variable": new_pk_variable,
             "pd_variable": new_pd_variable,
-            "read_only": True,
+            "read_only": self.read_only,
         }
         stored_mapping = PkpdMapping.objects.create(**stored_kwargs)
         return stored_mapping
@@ -688,12 +701,13 @@ class DerivedVariable(StoredModel):
         super().delete()
         pkpd_model.update_model()
 
-    def create_stored_mapping(self, new_pkpd_model, new_variables):
+    def copy(self, new_pkpd_model, new_variables):
         new_pk_variable = new_variables[self.pk_variable.qname]
         stored_kwargs = {
             "pkpd_model": new_pkpd_model,
             "pk_variable": new_pk_variable,
-            "read_only": True,
+            "read_only": self.read_only,
+            "type": self.type,
         }
         stored_mapping = DerivedVariable.objects.create(**stored_kwargs)
         return stored_mapping

@@ -133,19 +133,16 @@ class Protocol(StoredModel):
 
         self.__original_dose_type = self.dose_type
 
-    def create_stored_protocol(self):
-        if self.read_only:
-            return self
+    def copy(self, new_project):
         stored_protocol_kwargs = {
             'name': self.name,
-            'project': self.project,
+            'project': new_project,
             'compound': self.compound,
             'dose_type': self.dose_type,
             'time_unit': self.time_unit,
             'amount_unit': self.amount_unit,
-            'read_only': True,
         }
         stored_protocol = Protocol.objects.create(**stored_protocol_kwargs)
         for dose in self.doses.all():
-            dose.create_stored_dose(stored_protocol)
+            dose.copy(stored_protocol)
         return stored_protocol

@@ -1,13 +1,16 @@
 // src/components/ProjectTable.tsx
 import React, { useEffect, useState } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import {
   TableCell,
   TableRow,
   IconButton,
   Radio,
   Typography,
+  Tooltip,
 } from "@mui/material";
 import { Delete, PersonAdd } from "@mui/icons-material";
 import {
@@ -26,6 +29,7 @@ import { setProject } from "../main/mainSlice";
 import TextField from "../../components/TextField";
 import useDirty from "../../hooks/useDirty";
 import ConfirmationDialog from "../../components/ConfirmationDialog";
+import { selectCurrentUser } from "../login/loginSlice";
 
 interface Props {
   project: ProjectRead;
@@ -107,6 +111,10 @@ const ProjectRow: React.FC<Props> = ({
     name: "project.user_access",
   });
 
+  const currentUser = useSelector(selectCurrentUser);
+  const myUserId = currentUser?.id || 0;
+  const isSharedWithMe = project.user_access.some(ua => ua.user === myUserId && ua.read_only === true);
+
   useEffect(() => {
     reset({ project, compound });
   }, [project, compound, reset]);
@@ -175,6 +183,7 @@ const ProjectRow: React.FC<Props> = ({
     return true;
   };
 
+
   return (
     <React.Fragment>
       <TableRow data-cy={`project-${project.id}`} style={{ backgroundColor: isSelected ? '#E3E9F8' : '#FFF' }}>
@@ -219,16 +228,31 @@ const ProjectRow: React.FC<Props> = ({
           }
         </TableCell>
         <TableCell>
-          <IconButton onClick={() => setShowConfirmDelete(true)}>
-            <Delete />
+          { isSharedWithMe ? (
+            <>
+              <IconButton onClick={() => setShowConfirmDelete(true)}>
+                <Delete />
+              </IconButton>
+              <ConfirmationDialog
+                open={showConfirmDelete}
+                title="Delete Project"
+                message="Are you sure you want to permanently delete this project?"
+                onConfirm={handleDelete}
+                onCancel={() => setShowConfirmDelete(false)}
+              />
+            </>
+          ) : (
+            <Tooltip title="This project is shared with me as view-only">
+            <IconButton disabled>
+              <VisibilityIcon />
+            </IconButton>
+            </Tooltip>
+          )}
+
+          <IconButton onClick={copyProject}>
+            <ContentCopyIcon />
           </IconButton>
-          <ConfirmationDialog
-            open={showConfirmDelete}
-            title="Delete Project"
-            message="Are you sure you want to permanently delete this project?"
-            onConfirm={handleDelete}
-            onCancel={() => setShowConfirmDelete(false)}
-          />
+
           <IconButton onClick={() => setUserAccessOpen(true)}>
             <PersonAdd />
           </IconButton>
