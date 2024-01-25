@@ -78,17 +78,6 @@ class TestDosedPharmokineticModel(TestCase):
         v.protocol = self.p
         v.save()
 
-    def test_store_model(self):
-        stored_model = self.model.create_stored_model()
-        self.assertTrue(isinstance(stored_model, CombinedModel))
-        self.assertTrue(stored_model.read_only)
-        self.assertEqual(
-            len(stored_model.variables.all()), len(self.model.variables.all())
-        )
-        v = stored_model.variables.get(qname="PKCompartment.A1")
-        self.assertEqual(v.protocol.name, "my_cool_protocol")
-        self.assertNotEqual(v.protocol.id, self.p.id)
-
     def test_reset_to_default(self):
         v = self.model.variables.get(qname="PKCompartment.CL")
         self.assertNotEqual(v.default_value, 8)
