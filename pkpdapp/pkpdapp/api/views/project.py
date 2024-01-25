@@ -3,31 +3,23 @@
 # is released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-from rest_framework import (
-    viewsets, response, parsers, status, decorators
-)
+from rest_framework import viewsets, response, parsers, status, decorators
 from rest_framework.permissions import IsAuthenticated
 
 from pkpdapp.api.serializers import (
     ProjectSerializer,
     ProjectAccessSerializer,
-    MonolixSerializer
+    MonolixSerializer,
 )
-from pkpdapp.api.views import (
-    UserAccessFilter,
-    CheckAccessToProject
-)
-from pkpdapp.models import (
-    Project,
-    ProjectAccess
-)
+from pkpdapp.api.views import UserAccessFilter, CheckAccessToProject
+from pkpdapp.models import Project, ProjectAccess
 
 
 class EnablePartialUpdateMixin:
     """Enable partial updates"""
 
     def update(self, request, *args, **kwargs):
-        kwargs['partial'] = True
+        kwargs["partial"] = True
         return super().update(request, *args, **kwargs)
 
 
@@ -38,24 +30,33 @@ class ProjectView(EnablePartialUpdateMixin, viewsets.ModelViewSet):
 
     @decorators.action(
         detail=True,
-        methods=['PUT'],
+        methods=["PUT"],
         serializer_class=MonolixSerializer,
         parser_classes=[parsers.MultiPartParser],
     )
     def monolix(self, request, pk):
         obj = self.get_object()
-        serializer = self.serializer_class(obj, data=request.data,
-                                           partial=True)
+        serializer = self.serializer_class(obj, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return response.Response(serializer.data)
-        return response.Response(serializer.errors,
-                                 status.HTTP_400_BAD_REQUEST)
+        return response.Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
+
+    @decorators.action(
+        detail=True,
+        methods=["PUT"],
+        serializer_class=ProjectSerializer,
+    )
+    def copy(self, request, pk):
+        obj = self.get_object()
+        new_obj = obj.copy(user=request.user)
+        serializer = self.serializer_class(new_obj, data=request.data)
+        if serializer.is_valid():
+            return response.Response(serializer.data)
+        return response.Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
 
 
 class ProjectAccessView(viewsets.ModelViewSet):
     queryset = ProjectAccess.objects.all()
     serializer_class = ProjectAccessSerializer
-    permission_classes = [
-        IsAuthenticated & CheckAccessToProject
-    ]
+    permission_classes = [IsAuthenticated & CheckAccessToProject]

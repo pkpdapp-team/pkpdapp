@@ -98,7 +98,7 @@ class Dose(DoseBase, StoredModel):
         help_text='protocol containing this dose'
     )
 
-    def create_stored_dose(self, stored_protocol):
+    def copy(self, stored_protocol):
         stored_dose_kwargs = {
             'protocol': stored_protocol,
             'start_time': self.start_time,

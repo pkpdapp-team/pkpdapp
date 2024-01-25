@@ -15,6 +15,9 @@ import FloatField from "../../components/FloatField";
 import IntegerField from "../../components/IntegerField";
 import useDirty from "../../hooks/useDirty";
 import HelpButton from "../../components/HelpButton";
+import { useSelector } from "react-redux";
+import { RootState } from "../../app/store";
+import { selectIsProjectShared } from "../login/loginSlice";
 
 interface Props {
   project: ProjectRead;
@@ -38,6 +41,7 @@ const Doses: React.FC<Props> = ({ project, protocol, units }) => {
   });
   useDirty(isDirty);
   const [updateProtocol] = useProtocolUpdateMutation();
+  const isSharedWithMe = useSelector((state: RootState) => selectIsProjectShared(state, project));
 
   const {
     fields: doses,
@@ -93,6 +97,9 @@ const Doses: React.FC<Props> = ({ project, protocol, units }) => {
   };
 
   const isPreclinical = project.species !== "H";
+  const defaultProps = {
+    disabled: isSharedWithMe,
+  }
 
   return (
     <>
@@ -108,6 +115,7 @@ const Doses: React.FC<Props> = ({ project, protocol, units }) => {
                 required: true,
                 min: { value: 0, message: "Must be greater or equal to 0" },
               }}
+              textFieldProps={defaultProps}
             />
           </TableCell>
           <TableCell>
@@ -118,6 +126,7 @@ const Doses: React.FC<Props> = ({ project, protocol, units }) => {
                 control={control}
                 baseUnit={units.find((u) => u.id === protocol.amount_unit)}
                 isPreclinicalPerKg={isPreclinical}
+                selectProps={defaultProps}
               />
             )}
           </TableCell>
@@ -130,6 +139,7 @@ const Doses: React.FC<Props> = ({ project, protocol, units }) => {
                 required: true,
                 min: { value: 1, message: "One or more required" },
               }}
+              textFieldProps={defaultProps}
             />
           </TableCell>
           <TableCell>
@@ -138,6 +148,7 @@ const Doses: React.FC<Props> = ({ project, protocol, units }) => {
               name={`doses.${index}.start_time`}
               control={control}
               rules={{ required: true }}
+              textFieldProps={defaultProps}
             />
           </TableCell>
           <TableCell>
@@ -152,6 +163,7 @@ const Doses: React.FC<Props> = ({ project, protocol, units }) => {
                   message: "Must be greater than 0",
                 },
               }}
+              textFieldProps={defaultProps}
             />
           </TableCell>
           <TableCell>
@@ -166,6 +178,7 @@ const Doses: React.FC<Props> = ({ project, protocol, units }) => {
                   message: "Must be greater than 0",
                 },
               }}
+              textFieldProps={defaultProps}
             />
           </TableCell>
           <TableCell>
@@ -175,12 +188,13 @@ const Doses: React.FC<Props> = ({ project, protocol, units }) => {
                 name={`time_unit`}
                 control={control}
                 baseUnit={units.find((u) => u.id === protocol.time_unit)}
+                selectProps={defaultProps}
               />
             )}
           </TableCell>
           <TableCell align="center">
             {index !== 0 && (
-              <IconButton onClick={() => handleDeleteRow(index)}>
+              <IconButton onClick={() => handleDeleteRow(index)} disabled={isSharedWithMe}>
                 <Delete />
               </IconButton>
             )}
@@ -192,6 +206,7 @@ const Doses: React.FC<Props> = ({ project, protocol, units }) => {
           onClick={handleAddRow}
           variant="outlined"
           sx={{ fontSize: ".5rem" }}
+          disabled={isSharedWithMe}
         >
           Add New Row
         </Button>

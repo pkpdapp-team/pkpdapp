@@ -40,3 +40,13 @@ class EfficacyExperiment(models.Model):
         related_name='efficacy_experiments',
         help_text='compound for efficacy experiment'
     )
+
+    def copy(self, compound):
+        kwargs = {
+            'name': self.name,
+            'c50': self.c50,
+            'c50_unit': self.c50_unit,
+            'hill_coefficient': self.hill_coefficient,
+            'compound': compound,
+        }
+        return EfficacyExperiment.objects.create(**kwargs)

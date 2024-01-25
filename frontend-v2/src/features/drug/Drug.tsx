@@ -16,6 +16,7 @@ import { RootState } from "../../app/store";
 import {
   Compound,
   EfficacyRead,
+  UnitRead,
   useCompoundRetrieveQuery,
   useCompoundUpdateMutation,
   useProjectRetrieveQuery,
@@ -29,6 +30,8 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import TextField from "../../components/TextField";
 import useDirty from "../../hooks/useDirty";
 import ConfirmationDialog from "../../components/ConfirmationDialog";
+import SelectField from "../../components/SelectField";
+import { selectIsProjectShared } from "../login/loginSlice";
 
 const Drug: React.FC = () => {
   const projectId = useSelector(
@@ -46,6 +49,9 @@ const Drug: React.FC = () => {
     { compoundId: project?.compound },
     { skip: !project?.compound },
   );
+
+
+  const isSharedWithMe = useSelector((state: RootState) => selectIsProjectShared(state, project));
 
   const [showConfirmDelete, setShowConfirmDelete] = useState<boolean>(false);
 
@@ -75,6 +81,8 @@ const Drug: React.FC = () => {
   useEffect(() => {
     reset(compound);
   }, [compound, reset]);
+
+
 
   const submit = handleSubmit((data) => {
     if (data && compound && JSON.stringify(data) !== JSON.stringify(compound)) {
@@ -160,6 +168,17 @@ const Drug: React.FC = () => {
     }
   };
 
+  const molMassUnit = units.find((u) => u.id === compound.molecular_mass_unit);
+  const molMassUnits= molMassUnit?.compatible_units.filter((unit) => unit.symbol.endsWith("mol"));
+  const molMassUnitOpt= molMassUnits
+    ? molMassUnits.map((unit: { [key: string]: string }) => {
+        return { value: unit.id, label: unit.symbol };
+      })
+    : [];
+
+
+  const defaultProps = { disabled: isSharedWithMe };
+
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
       <div style={{ display: "flex" }}>
@@ -175,15 +194,14 @@ const Drug: React.FC = () => {
                 control={control}
                 sx={{ flex: "1" }}
                 rules={{ required: true }}
+                textFieldProps={defaultProps}
               />
-              <UnitField
+              <SelectField
                 label={"Unit"}
                 name={"molecular_mass_unit"}
+                options={molMassUnitOpt}
                 control={control}
-                baseUnit={units.find(
-                  (u) => u.id === compound.molecular_mass_unit,
-                )}
-                compound={compound}
+                selectProps={defaultProps}
               />
             </Stack>
           </Grid>
@@ -199,15 +217,14 @@ const Drug: React.FC = () => {
                   control={control}
                   sx={{ flex: "1" }}
                   rules={{ required: true }}
+                  textFieldProps={defaultProps}
                 />
-                <UnitField
+                <SelectField
                   label={"Unit"}
                   name={"target_molecular_mass_unit"}
+                  options={molMassUnitOpt}
                   control={control}
-                  baseUnit={units.find(
-                    (u) => u.id === compound.molecular_mass_unit,
-                  )}
-                  compound={compound}
+                  selectProps={defaultProps}
                 />
               </Stack>
             </Stack>
@@ -219,7 +236,7 @@ const Drug: React.FC = () => {
           <Typography variant="h6" component="h2" gutterBottom>
             Efficacy-Safety Data
           </Typography>
-          <Button variant="outlined" onClick={addNewEfficacyExperiment}>
+          <Button variant="outlined" onClick={addNewEfficacyExperiment} disabled={isSharedWithMe}>
             Add new
           </Button>
           <List>
@@ -246,12 +263,13 @@ const Drug: React.FC = () => {
                               efficacy_experiment as unknown as EfficacyRead,
                             )
                           }
+                          disabled={isSharedWithMe}
                         />
                         <Typography color="primary">Select</Typography>
                       </div>
                     </Tooltip>
                     <Tooltip title="Delete this efficacy-safety data">
-                      <IconButton onClick={() => setShowConfirmDelete(true)}>
+                      <IconButton onClick={() => setShowConfirmDelete(true)} disabled={isSharedWithMe}>
                         <DeleteIcon />
                       </IconButton>
                     </Tooltip>
@@ -271,6 +289,7 @@ const Drug: React.FC = () => {
                     label="Name"
                     name={`efficacy_experiments.${index}.name`}
                     control={control}
+                    textFieldProps={defaultProps}
                   />
                   <Stack direction="row" spacing={2}>
                     <FloatField
@@ -278,6 +297,7 @@ const Drug: React.FC = () => {
                       label="C50"
                       name={`efficacy_experiments.${index}.c50`}
                       control={control}
+                      textFieldProps={defaultProps}
                     />
                     <UnitField
                       label={"Unit"}
@@ -287,12 +307,14 @@ const Drug: React.FC = () => {
                         (u) => u.id === efficacy_experiment.c50_unit,
                       )}
                       compound={compound}
+                      selectProps={defaultProps}
                     />
                   </Stack>
                   <FloatField
                     label="Hill-coefficient"
                     name={`efficacy_experiments.${index}.hill_coefficient`}
                     control={control}
+                    textFieldProps={defaultProps}
                   />
                 </Stack>
               </ListItem>

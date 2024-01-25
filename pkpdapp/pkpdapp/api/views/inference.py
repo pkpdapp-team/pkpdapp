@@ -616,7 +616,7 @@ class InferenceWizardView(views.APIView):
         ]
         rename_models = len(protocols) > 1
         if len(protocols) == 0 or data['model']['form'] == 'PD':
-            models = [model.create_stored_model()]
+            models = [model.copy(project)]
             protocols = [None]
         else:
             models = [

@@ -23,9 +23,11 @@ import KeyboardDoubleArrowRightIcon from "@mui/icons-material/KeyboardDoubleArro
 import KeyboardDoubleArrowDownIcon from "@mui/icons-material/KeyboardDoubleArrowDown";
 import SelectField from "../../components/SelectField";
 import Checkbox from "../../components/Checkbox";
-import HelpButton from "../../components/HelpButton";
 import { FormData } from "./Model";
 import { speciesOptions } from "../projects/Project";
+import { useSelector } from "react-redux";
+import { RootState } from "../../app/store";
+import { selectIsProjectShared } from "../login/loginSlice";
 
 interface Props {
   model: CombinedModelRead;
@@ -41,6 +43,7 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props) => {
   const { data: pkModels, isLoading: pkModelLoading } =
     usePharmacokineticListQuery();
   const [showCode, setShowCode] = React.useState(false);
+  const isSharedWithMe = useSelector((state: RootState) => selectIsProjectShared(state, project));
 
   const loading = [pdModelLoading, pkModelLoading];
   if (loading.some((l) => l)) {
@@ -49,6 +52,7 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props) => {
   if (!pdModels || !pkModels) {
     return <div>Error loading models.</div>;
   }
+
 
   const clinical = project.species === "H";
   const pkModelsFiltered = pkModels.filter(
@@ -99,6 +103,17 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props) => {
     ? pk_model_map[model.pk_model].name.includes("tmdd")
     : false;
 
+  const pd_model = model.pd_model ? pd_model_map[model.pd_model] : null;
+  const pd_model2 = model.pd_model2 ? pd_model_map[model.pd_model2] : null;
+  const pdModelHasHillCoefficient = 
+    pd_model?.name.includes("indirect") 
+    || pd_model?.name.includes("direct")
+    || pd_model2?.name.includes("emax_kill");
+
+  const defaultProps = {
+    disabled: isSharedWithMe,
+  }
+
   return (
     <Grid xs={12} container spacing={2}>
       <Grid item xl={5} md={8} xs={10}>
@@ -109,16 +124,8 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props) => {
             control={control}
             options={speciesOptions}
             formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
+            selectProps={defaultProps}
           />
-          <>
-            {model.pk_model && (
-              <HelpButton title={pk_model_map[model.pk_model].name}>
-                <Typography>
-                  {pk_model_map[model.pk_model].description}
-                </Typography>
-              </HelpButton>
-            )}
-          </>
         </Stack>
       </Grid>
       <Grid container item spacing={2}>
@@ -130,16 +137,8 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props) => {
               control={control}
               options={pk_model_options}
               formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
+              selectProps={defaultProps}
             />
-            <>
-              {model.pk_model && (
-                <HelpButton title={pk_model_map[model.pk_model].name}>
-                  <Typography>
-                    {pk_model_map[model.pk_model].description}
-                  </Typography>
-                </HelpButton>
-              )}
-            </>
           </Stack>
           {model.pk_model && (
             <Stack
@@ -152,14 +151,14 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props) => {
               flexWrap="wrap"
               justifyContent="space-between"
             >
-              <Tooltip title="Includes Michaellis-Menten parameters (CLmax and Km)">
+              <Tooltip title="Includes Michaelis-Menten parameters (CLmax and Km)">
                 <div>
                   <Checkbox
                     label="Saturation"
                     name="model.has_saturation"
                     control={control}
                     checkboxFieldProps={{
-                      disabled: isTMDDmodel || !model.pk_model,
+                      disabled: isTMDDmodel || !model.pk_model || isSharedWithMe,
                     }}
                   />
                 </div>
@@ -170,17 +169,17 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props) => {
                     label="Effect Compartment"
                     name="model.has_effect"
                     control={control}
-                    checkboxFieldProps={{ disabled: !model.pk_model }}
+                    checkboxFieldProps={{ disabled: !model.pk_model || isSharedWithMe }}
                   />
                 </div>
               </Tooltip>
-              <Tooltip title="Includes a time delay following PO of SC administration">
+              <Tooltip title="Includes a time delay following PO or SC administration">
                 <div>
                   <Checkbox
                     label="Lag Time"
                     name="model.has_lag"
                     control={control}
-                    checkboxFieldProps={{ disabled: !model.pk_model }}
+                    checkboxFieldProps={{ disabled: !model.pk_model || isSharedWithMe }}
                   />
                 </div>
               </Tooltip>
@@ -190,7 +189,7 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props) => {
                     label="Bioavailability"
                     name="model.has_bioavailability"
                     control={control}
-                    checkboxFieldProps={{ disabled: !model.pk_model }}
+                    checkboxFieldProps={{ disabled: !model.pk_model || isSharedWithMe }}
                   />
                 </div>
               </Tooltip>
@@ -207,18 +206,28 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props) => {
               control={control}
               options={pd_model_options}
               formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
+              selectProps={defaultProps}
             />
-            <>
-              {model.pd_model && (
-                <HelpButton title={pd_model_map[model.pd_model].name}>
-                  <Typography>
-                    {pd_model_map[model.pd_model].description}
-                  </Typography>
-                </HelpButton>
-              )}
-            </>
           </Stack>
         </Grid>
+        
+        <Box width="100%" />
+        {pdIsTumourGrowth && (
+          <>
+            <Grid item xl={5} md={8} xs={10}>
+              <Stack direction="row" alignItems="center" spacing={1}>
+                <SelectField
+                  label="Secondary PD Model"
+                  name="model.pd_model2"
+                  control={control}
+                  options={pd_model2_options}
+                  formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
+                  selectProps={defaultProps}
+                />
+              </Stack>
+            </Grid>
+          </>
+        )}
         <Box width="100%" height="0" />
         <Grid container item spacing={2} sx={{ paddingTop: "0" }}>
           <Grid item xs={12} md={8} xl={5} sx={{ paddingTop: "0 !important" }}>
@@ -233,14 +242,14 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props) => {
               flexWrap="wrap"
               justifyContent="space-between"
             >
-              {model.pd_model && (
+              {pdModelHasHillCoefficient && (
                 <Tooltip title="Includes the Hill coefficient to the PD response">
                   <div>
                     <Checkbox
                       label="Hill Coefficient"
                       name="model.has_hill_coefficient"
                       control={control}
-                      checkboxFieldProps={{ disabled: !model.pd_model }}
+                      checkboxFieldProps={{ disabled: !model.pd_model || isSharedWithMe }}
                     />
                   </div>
                 </Tooltip>
@@ -248,31 +257,6 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props) => {
             </Stack>
           </Grid>
         </Grid>
-        <Box width="100%" />
-        {pdIsTumourGrowth && (
-          <>
-            <Grid item xl={5} md={8} xs={10}>
-              <Stack direction="row" alignItems="center" spacing={1}>
-                <SelectField
-                  label="Secondary PD Model"
-                  name="model.pd_model2"
-                  control={control}
-                  options={pd_model2_options}
-                  formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
-                />
-                <>
-                  {model.pd_model2 && (
-                    <HelpButton title={pd_model_map[model.pd_model2].name}>
-                      <Typography>
-                        {pd_model_map[model.pd_model2].description}
-                      </Typography>
-                    </HelpButton>
-                  )}
-                </>
-              </Stack>
-            </Grid>
-          </>
-        )}
         <Box width="100%" height="0" />
         <Grid item xs={5} sx={{ paddingTop: "1rem" }}>
           <Stack

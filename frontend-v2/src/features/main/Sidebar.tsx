@@ -29,6 +29,7 @@ import {
   CombinedModelRead,
   ProtocolListApiResponse,
   useCombinedModelListQuery,
+  usePharmacodynamicRetrieveQuery,
   useProjectRetrieveQuery,
   useProtocolListQuery,
 } from "../../app/backendApi";
@@ -68,6 +69,11 @@ export default function Sidebar() {
     { skip: !projectId },
   );
   const model = models?.[0] || null;
+  const { data: pd_model, isLoading: isPdModelLoading } =
+    usePharmacodynamicRetrieveQuery(
+      { id: model?.pd_model || 0 },
+      { skip: !model?.pd_model },
+    );
   const { data: project } = useProjectRetrieveQuery(
     { id: projectIdOrZero },
     { skip: !projectId },
@@ -79,9 +85,12 @@ export default function Sidebar() {
     mdl: CombinedModelRead | null,
     prtcls: ProtocolListApiResponse | undefined,
   ) => {
+
+    const isTumourModel = pd_model?.is_library_model && pd_model?.name.startsWith("tumour_growth");
+    const noKillModel = !mdl?.pd_model2;
     return (
       (mdl && mdl.pk_model === null) ||
-      (mdl && mdl.pd_model && mdl.mappings.length === 0) ||
+      (mdl && mdl.pd_model && mdl.mappings.length === 0 && !(isTumourModel && noKillModel)) ||
       (prtcls && prtcls.length === 0)
     );
   };

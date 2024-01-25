@@ -21,6 +21,9 @@ import VariableRow from "./VariableRow";
 import HelpButton from "../../components/HelpButton";
 import { FormData } from "./Model";
 import { defaultHeaderSx } from "../../shared/tableHeadersSx";
+import { useSelector } from "react-redux";
+import { RootState } from "../../app/store";
+import { selectIsProjectShared } from "../login/loginSlice";
 
 interface Props {
   model: CombinedModelRead;
@@ -130,14 +133,14 @@ const MapVariablesTab: React.FC<Props> = ({
   const unboundHelp = (
     <p>
       For SM, the unbound concentration in plasma is calculated by multiplying
-      the central drug concentration (typically C1) by fup (see Drug Target tab)
+      the central drug concentration (typically C1) by fup (see Parameter tab)
     </p>
   );
 
   const bloodHelp = (
     <p>
       For SM, the total concentration in blood is calculated by dividing the
-      central drug concentration (typically C1) by BP (see Drug Target tab)
+      central drug concentration (typically C1) by BP (see Parameter tab)
     </p>
   );
 
@@ -146,6 +149,15 @@ const MapVariablesTab: React.FC<Props> = ({
       Adds a tlag parameter to the model, which is the time delay between the
       dosing into the chosen compartment and the first observation of drug in
       this compartment
+    </p>
+  );
+
+  const unitsHelp = (
+    <p>
+      Displayed units represent the default units of pkpd explorer. If you
+      export your simulations to csv file (in Simulations), those are the units
+      of the reported variables. If you want to change the units of a variable,
+      you can do so in Simulations / Customize Plot
     </p>
   );
 
@@ -193,7 +205,6 @@ const MapVariablesTab: React.FC<Props> = ({
     return variable1.name < variable2.name ? -1 : 1;
   }
 
-
   return (
     <TableContainer sx={{ width: "90%" }}>
       <Table>
@@ -203,7 +214,10 @@ const MapVariablesTab: React.FC<Props> = ({
               <div style={{ ...defaultHeaderSx }}>Name</div>
             </TableCell>
             <TableCell>
-              <div style={{ ...defaultHeaderSx }}>Unit</div>
+              <div style={{ ...defaultHeaderSx }}>
+                Unit
+                  <HelpButton title={"Unit"}>{unitsHelp}</HelpButton>
+              </div>
             </TableCell>
             <TableCell>
               <div style={{ ...defaultHeaderSx }}>Type</div>

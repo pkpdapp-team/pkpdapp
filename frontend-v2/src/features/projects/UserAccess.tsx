@@ -11,6 +11,7 @@ import {
   FormControl,
   Select,
   MenuItem,
+  IconButton,
 } from "@mui/material";
 import {
   ProjectAccess,
@@ -19,7 +20,9 @@ import {
 } from "../../app/backendApi";
 import { Control } from "react-hook-form";
 import { FormData } from "./Project";
-import SelectField from "../../components/SelectField";
+import { Delete, PersonAdd } from "@mui/icons-material";
+import { useSelector } from "react-redux";
+import { selectCurrentUser } from "../login/loginSlice";
 
 interface Props {
   open: boolean;
@@ -35,6 +38,7 @@ const UserAccess: React.FC<Props> = ({
   open,
   userAccess,
   append,
+  remove,
   control,
   onClose,
 }) => {
@@ -47,21 +51,24 @@ const UserAccess: React.FC<Props> = ({
     userMap.set(user.id, user);
   });
 
+  
+
+  const addUser = (id: number) => {
+    append({ user: id, read_only: true });
+  };
+
+  const deleteAccess = (access: ProjectAccess, index: number) => () => {
+    remove(index);
+  }
+
+  const currentUser = useSelector(selectCurrentUser);
+  const myUserId = currentUser?.id || 0;
+
   // create list of user options for select
-  const userOptions = users?.map((user) => {
+  const userOptions = users?.filter(user => user.id !== myUserId).map((user) => {
     return { value: user.id, label: user.username };
   });
   userOptions?.push({ value: 0, label: "Add User" });
-
-  // user access level options
-  const accessLevelOptions = [
-    { value: false, label: "Editor" },
-    { value: true, label: "Viewer" },
-  ];
-
-  const addUser = (id: number) => {
-    append({ user: id, read_only: false });
-  };
 
   return (
     <Dialog open={open} onClose={onClose}>
@@ -72,7 +79,7 @@ const UserAccess: React.FC<Props> = ({
             <TableHead>
               <TableRow>
                 <TableCell>Username</TableCell>
-                <TableCell>Access Level</TableCell>
+                <TableCell>Remove Access</TableCell>
                 <TableCell>
                   <FormControl fullWidth>
                     <Select
@@ -90,19 +97,22 @@ const UserAccess: React.FC<Props> = ({
               </TableRow>
             </TableHead>
             <TableBody>
-              {userAccess.map((user, i) => (
-                <TableRow key={user.user}>
-                  <TableCell>{userMap.get(user.user)?.username}</TableCell>
-                  <TableCell>
-                    <SelectField
-                      label="Access"
-                      name={`project.user_access.${i}.read_only`}
-                      control={control}
-                      options={accessLevelOptions}
-                    />
-                  </TableCell>
-                </TableRow>
-              ))}
+              {userAccess.map((user, i) => {
+                const isMe = user.user === myUserId;
+                const userName = userMap.get(user.user)?.username;
+                return (
+                  <TableRow key={user.user}>
+                    <TableCell>{userName}</TableCell>
+                    <TableCell>
+                    {!isMe && (
+                      <IconButton onClick={deleteAccess(user, i)}>
+                        <Delete />
+                      </IconButton>
+                    )}
+                    </TableCell>
+                  </TableRow>
+                )
+              })}
             </TableBody>
           </Table>
         </TableContainer>

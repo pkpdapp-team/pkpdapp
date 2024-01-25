@@ -22,12 +22,82 @@ from pkpdapp.models import (
 
 class TestPkpdModel(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(username='testuser', password='12345')
-        compound = Compound.objects.create(name='demo')
-        self.project = Project.objects.create(name='demo', compound=compound)
+        self.user = User.objects.create_user(username="testuser", password="12345")
+        compound = Compound.objects.create(name="demo")
+        self.project = Project.objects.create(name="demo", compound=compound)
         self.project.users.add(self.user)
         self.client = APIClient()
         self.client.force_authenticate(user=self.user)
+
+    def test_copy(self):
+        pk_model = PharmacokineticModel.objects.get(name="one_compartment_clinical")
+        pd_model = PharmacodynamicModel.objects.get(
+            name="indirect_effects_stimulation_production"
+        )  # noqa E501
+        pkpd_model = CombinedModel.objects.create(
+            name="my wonderful model",
+            pk_model=pk_model,
+            pd_model=pd_model,
+            project=self.project,
+            has_saturation=True,
+
+        )
+        cl = pkpd_model.variables.get(qname="PKCompartment.CL")
+        c1 = pkpd_model.variables.get(qname="PKCompartment.C1")
+        a1 = pkpd_model.variables.get(qname="PKCompartment.A1")
+        drug = pkpd_model.variables.get(qname="PDCompartment.C_Drug")
+        mapping = PkpdMapping.objects.create(
+            pkpd_model=pkpd_model,
+            pk_variable=c1,
+            pd_variable=drug,
+        )
+        derived = DerivedVariable.objects.create(
+            pkpd_model=pkpd_model,
+            pk_variable=a1,
+            type=DerivedVariable.Type.TLAG,
+        )
+        new_compound = Compound.objects.create(name="new compound")
+        new_project = Project.objects.create(name="new project", compound=new_compound)
+        cl.default_value = 1.123
+        cl.lower_bound = 0.111
+        cl.upper_bound = 3.331
+        cl.save()
+        pkpd_model_copy = pkpd_model.copy(new_project)
+        # check its all the same
+        self.assertEqual(pkpd_model_copy.name, pkpd_model.name)
+        self.assertEqual(pkpd_model_copy.pk_model, pkpd_model.pk_model)
+        self.assertEqual(pkpd_model_copy.pd_model, pkpd_model.pd_model)
+        self.assertEqual(pkpd_model_copy.project, new_project)
+        self.assertEqual(
+            pkpd_model_copy.variables.count(), pkpd_model.variables.count()
+        )
+        self.assertEqual(pkpd_model_copy.mappings.count(), pkpd_model.mappings.count())
+        self.assertEqual(
+            pkpd_model_copy.derived_variables.count(),
+            pkpd_model.derived_variables.count(),
+        )  # noqa E501
+        # check the variables are the same content but different objects
+        for var in pkpd_model.variables.all():
+            copy = pkpd_model_copy.variables.get(qname=var.qname)
+            self.assertEqual(copy.default_value, var.default_value)
+            self.assertEqual(copy.lower_bound, var.lower_bound)
+            self.assertEqual(copy.upper_bound, var.upper_bound)
+            self.assertNotEqual(copy.id, var.id)
+        # check the mappings are the same content but different objects
+        for mapping in pkpd_model.mappings.all():
+            copy = pkpd_model_copy.mappings.get(
+                pk_variable__qname=mapping.pk_variable.qname
+            )
+            self.assertEqual(
+                copy.pd_variable.qname, mapping.pd_variable.qname
+            )  # noqa E501
+            self.assertNotEqual(copy.id, mapping.id)  # noqa E501
+        # check the derived variables are the same content but different objects
+        for derived in pkpd_model.derived_variables.all():
+            copy = pkpd_model_copy.derived_variables.get(
+                pk_variable__qname=derived.pk_variable.qname
+            )  # noqa E501
+            self.assertNotEqual(copy.id, derived.id)
 
     def test_combined_model_creation(self):
         pk_model = PharmacokineticModel.objects.get(name="one_compartment_clinical")

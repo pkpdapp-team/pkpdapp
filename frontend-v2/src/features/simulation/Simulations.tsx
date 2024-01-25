@@ -41,6 +41,8 @@ import FloatField from "../../components/FloatField";
 import useDirty from "../../hooks/useDirty";
 import UnitField from "../../components/UnitField";
 import paramPriority from "../model/paramPriority";
+import HelpButton from "../../components/HelpButton";
+import { selectIsProjectShared } from "../login/loginSlice";
 
 type SliderValues = { [key: number]: number };
 
@@ -178,6 +180,8 @@ const Simulations: React.FC = () => {
     { [key: number]: number } | undefined
   >(undefined);
   const [loadingSimulate, setLoadingSimulate] = useState<boolean>(false);
+
+  const isSharedWithMe = useSelector((state: RootState) => selectIsProjectShared(state, project));
 
   const defaultSimulation: SimulationRead = {
     id: 0,
@@ -323,7 +327,20 @@ const Simulations: React.FC = () => {
           const vars = cols.map((vid) =>
             variables.find((v) => v.id === parseInt(vid)),
           );
-          const varNames = vars.map((v) => v?.qname || "");
+          const varUnits = vars.map((v) => 
+            units?.find((u) => u.id === v?.unit)
+          );
+          const varNames = vars.map((v, i) => `${v?.qname} (${varUnits[i]?.symbol || ''})`);
+          const timeCol = varNames.findIndex(n => n.startsWith("environment.t")); 
+          // move time to first column
+          if (timeCol !== -1) {
+            const timeName = varNames[timeCol];
+            varNames[timeCol] = varNames[0];
+            varNames[0] = timeName.replace("environment.t", "time");
+            const timeId = cols[timeCol];
+            cols[timeCol] = cols[0];
+            cols[0] = timeId;
+          }
           const ncols = cols.length;
           const rows = new Array(nrows + 1);
           rows[0] = varNames;
@@ -505,6 +522,7 @@ const Simulations: React.FC = () => {
             data_cy="add-plot"
             options={addPlotOptions}
             onOptionSelected={handleAddPlot}
+            disabled={isSharedWithMe}
           >
             Add new plot
           </DropdownButton>
@@ -522,17 +540,25 @@ const Simulations: React.FC = () => {
                 label="Simulation Duration"
                 name="time_max"
                 control={control}
+                textFieldProps={{ disabled: isSharedWithMe }}
               />
               <UnitField
                 label="Unit"
                 name="time_max_unit"
                 baseUnit={units.find((u) => u.id === simulation?.time_max_unit)}
                 control={control}
-                selectProps={{ style: { flexShrink: 0 } }}
+                selectProps={{ style: { flexShrink: 0 }, disabled: isSharedWithMe }}
               />
-              <Button variant="contained" onClick={exportSimulation}>
-                Export to CSV
-              </Button>
+              <div>
+                <Button variant="contained" onClick={exportSimulation}>
+                  Export to CSV
+                </Button>
+                <HelpButton title={"Export to CSV"}>
+                  A variables are reported in pmol, C or T variables are reported
+                  in pmol/L and AUC variables are reported in pmol/L*h. These
+                  units cannot be changed in the current version.
+                </HelpButton>
+              </div>
             </Stack>
           </>
         )}
@@ -609,6 +635,7 @@ const Simulations: React.FC = () => {
             options={addSliderOptions}
             onOptionSelected={handleAddSlider}
             data_cy="add-parameter-slider"
+            disabled={isSharedWithMe}
           >
             Add new
           </DropdownButton>

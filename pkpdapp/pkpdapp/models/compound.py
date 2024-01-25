@@ -170,3 +170,28 @@ class Compound(models.Model):
 
     def __str__(self):
         return str(self.name)
+
+    def copy(self):
+        kwargs = {
+            'name': self.name,
+            'description': self.description,
+            'molecular_mass': self.molecular_mass,
+            'molecular_mass_unit': self.molecular_mass_unit,
+            'fraction_unbound_plasma': self.fraction_unbound_plasma,
+            'blood_to_plasma_ratio': self.blood_to_plasma_ratio,
+            'intrinsic_clearance': self.intrinsic_clearance,
+            'intrinsic_clearance_unit': self.intrinsic_clearance_unit,
+            'intrinsic_clearance_assay': self.intrinsic_clearance_assay,
+            'fraction_unbound_including_cells': self.fraction_unbound_including_cells,
+            'target_molecular_mass': self.target_molecular_mass,
+            'target_molecular_mass_unit': self.target_molecular_mass_unit,
+            'target_concentration': self.target_concentration,
+            'target_concentration_unit': self.target_concentration_unit,
+            'dissociation_constant': self.dissociation_constant,
+            'dissociation_unit': self.dissociation_unit,
+            'is_soluble': self.is_soluble,
+        }
+        new_compound = Compound.objects.create(**kwargs)
+        for efficacy_experiment in self.efficacy_experiments.all():
+            efficacy_experiment.copy(new_compound)
+        return new_compound

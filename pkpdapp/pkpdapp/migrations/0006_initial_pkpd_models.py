@@ -463,13 +463,24 @@ Description of a clinical two compartment TMDD model here.
             # check myokit can parse the model
             mmt_string = open(m['mmt_filename'], 'r').read()
             myokit_model = myokit.parse(mmt_string)[0]
-            print('loading', m['mmt_filename'], myokit_model.meta['name'])
             myokit_model.validate()
-            model = PharmacodynamicModel.objects.create(
-                name=m['name'],
-                description=myokit_model.meta['name'],
-                mmt=mmt_string,
-            )
+            # update the model if it already exists
+            try:
+                model = PharmacodynamicModel.objects.get(name=m['name'])
+                print('updating', m['mmt_filename'], myokit_model.meta['name'])
+                model.mmt = mmt_string
+                model.description = myokit_model.meta['name']
+                model.is_library_model = True
+                model.save()
+            except PharmacodynamicModel.DoesNotExist:
+                # add the model
+                print('creating', m['mmt_filename'], myokit_model.meta['name'])
+                model = PharmacodynamicModel.objects.create(
+                    name=m['name'],
+                    description=myokit_model.meta['name'],
+                    mmt=mmt_string,
+                    is_library_model=True,
+                )
         except urllib.error.URLError:
             print('WARNING: urlopen timed-out, no data loaded')
 
@@ -478,14 +489,23 @@ Description of a clinical two compartment TMDD model here.
             # check myokit can parse the model
             mmt_string = open(m['mmt_filename'], 'r').read()
             myokit_model = myokit.parse(mmt_string)[0]
-            print('loading', m['mmt_filename'], myokit_model.meta['name'])
             myokit_model.validate()
-            model = PharmacokineticModel.objects.create(
-                name=m['name'],
-                description=myokit_model.meta['name'],
-                mmt=mmt_string,
-                is_library_model=True,
-            )
+            # update the model if it already exists
+            try:
+                model = PharmacokineticModel.objects.get(name=m['name'])
+                print('updating', m['mmt_filename'], myokit_model.meta['name'])
+                model.mmt = mmt_string
+                model.description = myokit_model.meta['name']
+                model.is_library_model = True
+                model.save()
+            except PharmacokineticModel.DoesNotExist:
+                print('creating', m['mmt_filename'], myokit_model.meta['name'])
+                model = PharmacokineticModel.objects.create(
+                    name=m['name'],
+                    description=myokit_model.meta['name'],
+                    mmt=mmt_string,
+                    is_library_model=True,
+                )
         except urllib.error.URLError:
             print('WARNING: urlopen timed-out, no data loaded')
 

@@ -27,6 +27,9 @@ import {
 } from "./resetToSpeciesDefaults";
 import { FormData } from "./Model";
 import { defaultHeaderSx } from "../../shared/tableHeadersSx";
+import { useSelector } from "react-redux";
+import { RootState } from "../../app/store";
+import { selectIsProjectShared } from "../login/loginSlice";
 
 interface Props {
   model: CombinedModelRead;
@@ -47,6 +50,8 @@ const ParametersTab: React.FC<Props> = ({
 }) => {
   const [setParamsToDefault] =
     useCombinedModelSetParamsToDefaultsUpdateMutation();
+
+  const isSharedWithMe = useSelector((state: RootState) => selectIsProjectShared(state, project));
 
   // if Aa is not dosed, then we will filter out F and ka (for library models)
   const aaIsNotDosed =
@@ -74,7 +79,7 @@ const ParametersTab: React.FC<Props> = ({
               variant="contained"
               color="primary"
               onClick={myResetToSpeciesDefaults}
-              disabled={noReset}
+              disabled={noReset || isSharedWithMe}
               sx={{ width: 270 }}
             >
               Reset to Species Defaults
@@ -86,7 +91,7 @@ const ParametersTab: React.FC<Props> = ({
           variant="contained"
           color="primary"
           onClick={myResetToSpeciesDefaults}
-          disabled={noReset}
+          disabled={noReset || isSharedWithMe}
           sx={{ width: 270 }}
         >
           Reset to Species Defaults
@@ -116,8 +121,9 @@ const ParametersTab: React.FC<Props> = ({
                   {" "}
                   Unit{" "}
                   <HelpButton title="Unit Column">
-                    Changing the units does not update the PKPD values. The user
-                    is responsible for the correctness of the values and units.
+                    Changing the units does not automatically update the PKPD
+                    parameter values. The user is responsible for the
+                    correctness of the PKPD parameter values and units.
                   </HelpButton>{" "}
                 </div>
               </TableCell>

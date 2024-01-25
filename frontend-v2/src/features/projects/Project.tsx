@@ -1,13 +1,17 @@
 // src/components/ProjectTable.tsx
 import React, { useEffect, useState } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import {
   TableCell,
   TableRow,
   IconButton,
   Radio,
   Typography,
+  Tooltip,
+  Stack,
 } from "@mui/material";
 import { Delete, PersonAdd } from "@mui/icons-material";
 import {
@@ -20,12 +24,15 @@ import {
   useProjectUpdateMutation,
   CompoundRead,
   ProjectRead,
+  useProjectCopyUpdateMutation,
 } from "../../app/backendApi";
 import UserAccess from "./UserAccess";
 import { setProject } from "../main/mainSlice";
 import TextField from "../../components/TextField";
 import useDirty from "../../hooks/useDirty";
 import ConfirmationDialog from "../../components/ConfirmationDialog";
+import { selectCurrentUser, selectIsProjectShared } from "../login/loginSlice";
+import { RootState } from "../../app/store";
 
 interface Props {
   project: ProjectRead;
@@ -65,6 +72,8 @@ const ProjectRow: React.FC<Props> = ({
   const [
     destroyProject, // This is the destructured mutation result
   ] = useProjectDestroyMutation();
+
+  const [ projectCopyUpdate ] = useProjectCopyUpdateMutation();
 
   const modalityOptions = [
     { value: "SM", label: "Small Molecule" },
@@ -107,6 +116,8 @@ const ProjectRow: React.FC<Props> = ({
     name: "project.user_access",
   });
 
+  const isSharedWithMe = useSelector((state: RootState) => selectIsProjectShared(state, project));
+
   useEffect(() => {
     reset({ project, compound });
   }, [project, compound, reset]);
@@ -121,6 +132,7 @@ const ProjectRow: React.FC<Props> = ({
       }
     }
   });
+
 
   useEffect(() => {
     const intervalId = setInterval(() => {
@@ -161,7 +173,8 @@ const ProjectRow: React.FC<Props> = ({
   };
 
   const defaultProps = {
-    fullWidth: true
+    fullWidth: true,
+    disabled: isSharedWithMe,
   };
 
   const defaultSx = {
@@ -174,6 +187,11 @@ const ProjectRow: React.FC<Props> = ({
     }
     return true;
   };
+
+  const copyProject = () => {
+    projectCopyUpdate({ id: project.id, project: project });
+  }
+
 
   return (
     <React.Fragment>
@@ -219,19 +237,43 @@ const ProjectRow: React.FC<Props> = ({
           }
         </TableCell>
         <TableCell>
-          <IconButton onClick={() => setShowConfirmDelete(true)}>
-            <Delete />
+          <Stack direction="row" spacing={0.0}>
+          { !isSharedWithMe ? (
+            <>
+              <Tooltip title="Delete Project">
+              <IconButton onClick={() => setShowConfirmDelete(true)}>
+                <Delete />
+              </IconButton>
+              </Tooltip>
+              <ConfirmationDialog
+                open={showConfirmDelete}
+                title="Delete Project"
+                message="Are you sure you want to permanently delete this project?"
+                onConfirm={handleDelete}
+                onCancel={() => setShowConfirmDelete(false)}
+              />
+            </>
+          ) : (
+            <Tooltip title="This project is shared with me as view-only">
+            <div>
+            <IconButton disabled>
+              <VisibilityIcon />
+            </IconButton>
+            </div>
+            </Tooltip>
+          )}
+
+          <Tooltip title="Copy Project">
+          <IconButton onClick={copyProject}>
+            <ContentCopyIcon />
           </IconButton>
-          <ConfirmationDialog
-            open={showConfirmDelete}
-            title="Delete Project"
-            message="Are you sure you want to permanently delete this project?"
-            onConfirm={handleDelete}
-            onCancel={() => setShowConfirmDelete(false)}
-          />
-          <IconButton onClick={() => setUserAccessOpen(true)}>
+          </Tooltip>
+
+          <Tooltip title="Share Project">
+          <IconButton onClick={() => setUserAccessOpen(true)} disabled={isSharedWithMe}>
             <PersonAdd />
           </IconButton>
+          </Tooltip>
           <UserAccess
             open={userAccessOpen}
             control={control}
@@ -241,6 +283,7 @@ const ProjectRow: React.FC<Props> = ({
             remove={remove}
             project={project}
           />
+          </Stack>
         </TableCell>
       </TableRow>
       {isSelected && (

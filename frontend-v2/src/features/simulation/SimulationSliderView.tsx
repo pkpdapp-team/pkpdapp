@@ -2,6 +2,7 @@ import React, { SyntheticEvent, useEffect } from "react";
 import {
   SimulationSlider,
   UnitRead,
+  useProjectRetrieveQuery,
   useVariableRetrieveQuery,
 } from "../../app/backendApi";
 import {
@@ -20,6 +21,9 @@ import {
   Replay,
   Save,
 } from "@mui/icons-material";
+import { useSelector } from "react-redux";
+import { RootState } from "../../app/store";
+import { selectIsProjectShared } from "../login/loginSlice";
 
 interface SimulationSliderProps {
   index: number;
@@ -38,6 +42,16 @@ const SimulationSliderView: React.FC<SimulationSliderProps> = ({
   onSave,
   units,
 }) => {
+
+  const projectId = useSelector(
+    (state: RootState) => state.main.selectedProject,
+  );
+  const { data: project } = useProjectRetrieveQuery(
+    { id: projectId || 0 },
+    { skip: !projectId },
+  );
+  const isSharedWithMe = useSelector((state: RootState) => selectIsProjectShared(state, project));
+
   const { data: variable, isLoading } = useVariableRetrieveQuery({
     id: slider.variable,
   });
@@ -136,7 +150,7 @@ const SimulationSliderView: React.FC<SimulationSliderProps> = ({
           </IconButton>
         </Tooltip>
         <Tooltip title={"Save value to parameters"} placement="top">
-          <IconButton aria-label="save" onClick={handleSave}>
+          <IconButton aria-label="save" onClick={handleSave} disabled={isSharedWithMe}>
             <Save />
           </IconButton>
         </Tooltip>
@@ -151,7 +165,7 @@ const SimulationSliderView: React.FC<SimulationSliderProps> = ({
           </IconButton>
         </Tooltip>
         <Tooltip title={"Remove slider"} placement="top">
-          <IconButton aria-label="delete" onClick={handleDelete}>
+          <IconButton aria-label="delete" onClick={handleDelete} disabled={isSharedWithMe}>
             <Delete />
           </IconButton>
         </Tooltip>
@@ -171,7 +185,7 @@ const SimulationSliderView: React.FC<SimulationSliderProps> = ({
         </Grid>
         <Grid item xs={4}>
           <Input
-            value={value}
+            value={value.toPrecision(3)}
             size="small"
             onChange={handleInputChange}
             onBlur={handleBlur}

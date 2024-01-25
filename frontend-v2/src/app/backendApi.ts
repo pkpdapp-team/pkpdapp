@@ -636,6 +636,16 @@ const injectedRtkApi = api.injectEndpoints({
         method: "DELETE",
       }),
     }),
+    projectCopyUpdate: build.mutation<
+      ProjectCopyUpdateApiResponse,
+      ProjectCopyUpdateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/project/${queryArg.id}/copy/`,
+        method: "PUT",
+        body: queryArg.project,
+      }),
+    }),
     projectMonolixUpdate: build.mutation<
       ProjectMonolixUpdateApiResponse,
       ProjectMonolixUpdateApiArg
@@ -1399,6 +1409,12 @@ export type ProjectDestroyApiResponse = unknown;
 export type ProjectDestroyApiArg = {
   /** A unique integer value identifying this project. */
   id: number;
+};
+export type ProjectCopyUpdateApiResponse = /** status 200  */ ProjectRead;
+export type ProjectCopyUpdateApiArg = {
+  /** A unique integer value identifying this project. */
+  id: number;
+  project: Project;
 };
 export type ProjectMonolixUpdateApiResponse = /** status 200  */ MonolixRead;
 export type ProjectMonolixUpdateApiArg = {
@@ -2788,6 +2804,7 @@ export const {
   useProjectUpdateMutation,
   useProjectPartialUpdateMutation,
   useProjectDestroyMutation,
+  useProjectCopyUpdateMutation,
   useProjectMonolixUpdateMutation,
   useProjectAccessListQuery,
   useProjectAccessCreateMutation,

@@ -25,6 +25,9 @@ export const api = backendApi.enhanceEndpoints({
     projectRetrieve: {
       providesTags: (result, error, { id }) => [{ type: "Project", id }],
     },
+    projectCopyUpdate: {
+      invalidatesTags: (result, error, { id }) => [{ type: "Project", id: "LIST" }],
+    },
     projectUpdate: {
       invalidatesTags: (result, error, { id }) => [{ type: "Project", id }],
     },
