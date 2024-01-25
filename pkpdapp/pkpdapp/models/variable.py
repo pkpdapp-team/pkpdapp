@@ -37,7 +37,7 @@ class Variable(StoredModel):
 
     is_log = models.BooleanField(
         default=False,
-        help_text=("True if default_value is stored as " "the log of this value"),
+        help_text=("True if default_value is stored as the log of this value"),
     )
 
     name = models.CharField(max_length=100, help_text="name of the variable")
@@ -72,7 +72,7 @@ class Variable(StoredModel):
         blank=True,
         null=True,
         help_text=(
-            "if unit is None then this is the unit of this " "variable as a string"
+            "if unit is None then this is the unit of this variable as a string"
         ),
     )
 
@@ -151,7 +151,7 @@ class Variable(StoredModel):
             models.CheckConstraint(
                 check=((Q(is_log=True) & Q(lower_bound__gt=0)) | Q(is_log=False)),
                 name=(
-                    "%(class)s: log scale must have a lower " "bound greater than zero"
+                    "%(class)s: log scale must have a lower bound greater than zero"
                 ),
             ),
             models.CheckConstraint(

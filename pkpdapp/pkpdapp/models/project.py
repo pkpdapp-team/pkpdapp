@@ -67,8 +67,6 @@ class Project(models.Model):
             compound=new_compound,
             created=new_created,
         )
-        # for dataset in self.dataset_set.all():
-        #     dataset.copy(new_project)
         variable_map = {}
         for model in self.pk_models.all():
             new_model = model.copy(new_project)
@@ -79,15 +77,15 @@ class Project(models.Model):
         for simulation in self.simulations.all():
             simulation.copy(new_project, variable_map)
         if user is None:
-            for userAccess in self.projectaccess_set.all():
-                userAccess.copy(new_project)
+            for user_access in self.projectaccess_set.all():
+                user_access.copy(new_project)
         else:
-            projectAccess = ProjectAccess.objects.create(
+            project_access = ProjectAccess.objects.create(
                 user=user,
                 project=new_project,
                 read_only=False,
             )
-            self.projectaccess_set.set([projectAccess])
+            self.projectaccess_set.set([project_access])
         return new_project
 
 
