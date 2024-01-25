@@ -76,7 +76,6 @@ class Project(models.Model):
                 new_variable = new_model.variables.get(name=variable.name)
                 variable_map[variable] = new_variable
 
-
         for simulation in self.simulations.all():
             simulation.copy(new_project, variable_map)
         if user is None:

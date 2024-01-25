@@ -117,7 +117,9 @@ class TestProject(TestCase):
         self.assertEqual(new_sim.sliders.count(), 1)
         new_slider = new_sim.sliders.first()
         self.assertNotEqual(new_slider.pk, slider.pk)
-        self.assertEqual(new_slider.variable, new_model.variables.get(qname="PKCompartment.CL"))  # noqa E501
+        self.assertEqual(
+            new_slider.variable, new_model.variables.get(qname="PKCompartment.CL")
+        )  # noqa E501
 
         # check that the efficacy experiment is there and has the right name
         self.assertEqual(new_project.compound.efficacy_experiments.count(), 1)
@@ -126,8 +128,3 @@ class TestProject(TestCase):
         self.assertEqual(new_effic.name, "my efficacy experiment")
         self.assertEqual(new_effic.c50, 2.0)
         self.assertEqual(new_effic.c50_unit, h)
-
-
-
-        
- 
