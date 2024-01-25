@@ -69,8 +69,16 @@ class Project(models.Model):
         )
         # for dataset in self.dataset_set.all():
         #     dataset.copy(new_project)
+        variable_map = {}
         for model in self.pk_models.all():
-            model.copy(new_project)
+            new_model = model.copy(new_project)
+            for variable in model.variables.all():
+                new_variable = new_model.variables.get(name=variable.name)
+                variable_map[variable] = new_variable
+
+
+        for simulation in self.simulations.all():
+            simulation.copy(new_project, variable_map)
         if projectAccess is None:
             for userAccess in self.projectaccess_set.all():
                 userAccess.copy(new_project)

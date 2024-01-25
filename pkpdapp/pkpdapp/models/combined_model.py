@@ -171,6 +171,13 @@ class CombinedModel(MyokitModelMixin, StoredModel):
             "pd_model": self.pd_model,
             "time_max": self.time_max,
             "read_only": self.read_only,
+            "has_saturation": self.has_saturation,
+            "has_effect": self.has_effect,
+            "has_lag": self.has_lag,
+            "has_bioavailability": self.has_bioavailability,
+            "has_hill_coefficient": self.has_hill_coefficient,
+            "species": self.species,
+            "pd_model2": self.pd_model2,
         }
         stored_model = CombinedModel.objects.create(**stored_model_kwargs)
 

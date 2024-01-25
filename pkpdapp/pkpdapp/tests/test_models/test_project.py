@@ -14,6 +14,12 @@ from pkpdapp.models import (
     Project,
     Compound,
     Protocol,
+    Simulation,
+    SimulationPlot,
+    SimulationSlider,
+    SimulationYAxis,
+    Unit,
+    EfficacyExperiment,
 )
 
 
@@ -41,7 +47,35 @@ class TestProject(TestCase):
         a1.save()
 
         a1 = pkpd_model.variables.get(qname="PKCompartment.A1")
-        print('a1.protocol', a1.protocol)
+        cl = pkpd_model.variables.get(qname="PKCompartment.CL")
+        h = Unit.objects.get(symbol="h")
+
+        sim = Simulation.objects.create(
+            project=self.project,
+            time_max=30,
+            time_max_unit=h,
+        )
+        plot = SimulationPlot.objects.create(
+            simulation=sim,
+            index=0,
+            x_unit=h,
+        )
+        yaxis = SimulationYAxis.objects.create(
+            plot=plot,
+            variable=a1,
+        )
+        slider = SimulationSlider.objects.create(
+            simulation=sim,
+            variable=cl,
+        )
+
+        effic = EfficacyExperiment.objects.create(
+            name="my efficacy experiment",
+            c50=2.0,
+            c50_unit=h,
+            compound=self.project.compound,
+        )
+
         new_project = self.project.copy()
 
         # check that the new project has the right name
@@ -64,6 +98,36 @@ class TestProject(TestCase):
         self.assertNotEqual(new_dose.pk, dose.pk)
         self.assertEqual(new_dose.amount, 1.0)
         self.assertEqual(new_dose.start_time, 0.0)
+
+        # check that the simulation is there and has the right name
+        self.assertEqual(new_project.simulations.count(), 1)
+        new_sim = new_project.simulations.first()
+        self.assertEqual(new_sim.time_max, 30)
+        self.assertEqual(new_sim.time_max_unit, h)
+        self.assertNotEqual(new_sim.pk, sim.pk)
+        self.assertEqual(new_sim.plots.count(), 1)
+        new_plot = new_sim.plots.first()
+        self.assertNotEqual(new_plot.pk, plot.pk)
+        self.assertEqual(new_plot.y_axes.count(), 1)
+        new_yaxis = new_plot.y_axes.first()
+        self.assertNotEqual(new_yaxis.pk, yaxis.pk)
+        self.assertEqual(new_yaxis.variable, new_a1)
+
+        # check that the slider is there and has the right name
+        self.assertEqual(new_sim.sliders.count(), 1)
+        new_slider = new_sim.sliders.first()
+        self.assertNotEqual(new_slider.pk, slider.pk)
+        self.assertEqual(new_slider.variable, new_model.variables.get(qname="PKCompartment.CL"))  # noqa E501
+
+        # check that the efficacy experiment is there and has the right name
+        self.assertEqual(new_project.compound.efficacy_experiments.count(), 1)
+        new_effic = new_project.compound.efficacy_experiments.first()
+        self.assertNotEqual(new_effic.pk, effic.pk)
+        self.assertEqual(new_effic.name, "my efficacy experiment")
+        self.assertEqual(new_effic.c50, 2.0)
+        self.assertEqual(new_effic.c50_unit, h)
+
+
 
         
  

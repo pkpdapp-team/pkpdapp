@@ -23,6 +23,7 @@ import {
   useProjectUpdateMutation,
   CompoundRead,
   ProjectRead,
+  useProjectCopyUpdateMutation,
 } from "../../app/backendApi";
 import UserAccess from "./UserAccess";
 import { setProject } from "../main/mainSlice";
@@ -69,6 +70,8 @@ const ProjectRow: React.FC<Props> = ({
   const [
     destroyProject, // This is the destructured mutation result
   ] = useProjectDestroyMutation();
+
+  const [ projectCopyUpdate ] = useProjectCopyUpdateMutation();
 
   const modalityOptions = [
     { value: "SM", label: "Small Molecule" },
@@ -130,6 +133,7 @@ const ProjectRow: React.FC<Props> = ({
     }
   });
 
+
   useEffect(() => {
     const intervalId = setInterval(() => {
       if (isDirty) {
@@ -182,6 +186,10 @@ const ProjectRow: React.FC<Props> = ({
     }
     return true;
   };
+
+  const copyProject = () => {
+    projectCopyUpdate({ id: project.id, project: project });
+  }
 
 
   return (

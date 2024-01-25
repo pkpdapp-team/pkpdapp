@@ -56,6 +56,24 @@ class Simulation(models.Model):
     def get_project(self):
         return self.project
 
+    def copy(self, project, variable_map):
+        kwargs = {
+            "name": self.name,
+            "project": project,
+            "nrows": self.nrows,
+            "ncols": self.ncols,
+            "time_max": self.time_max,
+            "time_max_unit": self.time_max_unit,
+            "abs_tolerance": self.abs_tolerance,
+            "rel_tolerance": self.rel_tolerance,
+        }
+        new_simulation = Simulation.objects.create(**kwargs)
+        for plot in self.plots.all():
+            plot.copy(new_simulation, variable_map)
+        for slider in self.sliders.all():
+            slider.copy(new_simulation, variable_map)
+        return new_simulation
+
 
 # model for a simulation plot
 
@@ -137,6 +155,28 @@ class SimulationPlot(models.Model):
     def get_project(self):
         return self.simulation.project
 
+    def copy(self, new_simulation, variable_map):
+        kwargs = {
+            "simulation": new_simulation,
+            "index": self.index,
+            "x_scale": self.x_scale,
+            "y_scale": self.y_scale,
+            "y2_scale": self.y2_scale,
+            "x_unit": self.x_unit,
+            "y_unit": self.y_unit,
+            "y_unit2": self.y_unit2,
+            "min": self.min,
+            "max": self.max,
+            "min2": self.min2,
+            "max2": self.max2,
+        }
+        new_plot = SimulationPlot.objects.create(**kwargs)
+        for y_axis in self.y_axes.all():
+            y_axis.copy(new_plot, variable_map)
+        for cx_line in self.cx_lines.all():
+            cx_line.copy(new_plot)
+        return new_plot
+
 
 # model for mapping a variable to a y axis
 class SimulationYAxis(models.Model):
@@ -153,6 +193,14 @@ class SimulationYAxis(models.Model):
         default=False, help_text="True if the variable is plotted on the right y axis"
     )
 
+    def copy(self, new_plot, variable_map):
+        kwargs = {
+            "plot": new_plot,
+            "variable": variable_map[self.variable],
+            "right": self.right,
+        }
+        return SimulationYAxis.objects.create(**kwargs)
+
 
 # model for a slider on the plot. the sliders alter the value of a variable
 # in the model
@@ -165,6 +213,13 @@ class SimulationSlider(models.Model):
         "Variable", on_delete=models.CASCADE, related_name="sliders"
     )
 
+    def copy(self, new_simulation, variable_map):
+        kwargs = {
+            "simulation": new_simulation,
+            "variable": variable_map[self.variable],
+        }
+        return SimulationSlider.objects.create(**kwargs)
+
 
 class SimulationCxLine(models.Model):
     plot = models.ForeignKey(
@@ -172,3 +227,10 @@ class SimulationCxLine(models.Model):
     )
 
     value = models.FloatField(help_text="value of the line")
+
+    def copy(self, new_plot):
+        kwargs = {
+            "plot": new_plot,
+            "value": self.value,
+        }
+        return SimulationCxLine.objects.create(**kwargs)

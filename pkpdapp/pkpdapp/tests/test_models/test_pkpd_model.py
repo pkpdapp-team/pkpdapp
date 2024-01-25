@@ -39,6 +39,8 @@ class TestPkpdModel(TestCase):
             pk_model=pk_model,
             pd_model=pd_model,
             project=self.project,
+            has_saturation=True,
+
         )
         cl = pkpd_model.variables.get(qname="PKCompartment.CL")
         c1 = pkpd_model.variables.get(qname="PKCompartment.C1")

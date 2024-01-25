@@ -52,6 +52,21 @@ class ProjectView(EnablePartialUpdateMixin, viewsets.ModelViewSet):
         return response.Response(serializer.errors,
                                  status.HTTP_400_BAD_REQUEST)
 
+    @decorators.action(
+        detail=True,
+        methods=['PUT'],
+        serializer_class=ProjectSerializer,
+    )
+    def copy(self, request, pk):
+        obj = self.get_object()
+        new_obj = obj.copy()
+        serializer = self.serializer_class(new_obj, data=request.data)
+        if serializer.is_valid():
+            return response.Response(serializer.data)
+        return response.Response(serializer.errors,
+                                 status.HTTP_400_BAD_REQUEST)
+
+
 
 class ProjectAccessView(viewsets.ModelViewSet):
     queryset = ProjectAccess.objects.all()

@@ -191,4 +191,7 @@ class Compound(models.Model):
             'dissociation_unit': self.dissociation_unit,
             'is_soluble': self.is_soluble,
         }
-        return Compound.objects.create(**kwargs)
+        new_compound = Compound.objects.create(**kwargs)
+        for efficacy_experiment in self.efficacy_experiments.all():
+            efficacy_experiment.copy(new_compound)
+        return new_compound
