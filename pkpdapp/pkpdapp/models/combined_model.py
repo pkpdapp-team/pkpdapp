@@ -193,7 +193,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
         # update the variable values of the new model
         for variable in stored_model.variables.all():
             old_var = self.variables.get(qname=variable.qname)
-            old_var.copy(variable, project)
+            variable.copy(old_var, project)
 
         return stored_model
 
