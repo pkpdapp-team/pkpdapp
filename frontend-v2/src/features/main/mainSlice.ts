@@ -1,4 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { RootState } from "../../app/store";
+import { selectCurrentUser } from "../login/loginSlice";
 
 export enum PageName {
   PROJECTS = "Projects",
@@ -57,6 +59,8 @@ const mainSlice = createSlice({
     },
   },
 });
+
+
 
 export const { setPage, setSubPage, setProject, incrementDirtyCount, decrementDirtyCount } =
   mainSlice.actions;

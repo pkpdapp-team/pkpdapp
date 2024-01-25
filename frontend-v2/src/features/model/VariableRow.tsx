@@ -24,6 +24,9 @@ import {
 } from "../../app/backendApi";
 import useDirty from "../../hooks/useDirty";
 import { FormData } from "./Model";
+import { useSelector } from "react-redux";
+import { RootState } from "../../app/store";
+import { selectIsProjectShared } from "../login/loginSlice";
 
 interface Props {
   project: ProjectRead;
@@ -90,6 +93,8 @@ const VariableRow: React.FC<Props> = ({
   const [updateVariable] = useVariableUpdateMutation();
   const [createProtocol] = useProtocolCreateMutation();
   const [destroyProtocol] = useProtocolDestroyMutation();
+
+  const isSharedWithMe = useSelector((state: RootState) => selectIsProjectShared(state, project));
 
   const defaultTimeUnit = timeVariable
     ? units?.find((u) => u.id === timeVariable.unit)
@@ -312,6 +317,7 @@ const VariableRow: React.FC<Props> = ({
                 checked={hasProtocol}
                 onClick={() => (hasProtocol ? removeProtocol() : addProtocol())}
                 data-cy={`checkbox-dosing-${variable.name}`}
+                disabled={isSharedWithMe}
               />
             }
             label=""
@@ -332,6 +338,7 @@ const VariableRow: React.FC<Props> = ({
                   checked={isLinkedTo("TLG")}
                   onClick={onClickDerived("TLG")}
                   data-cy={`checkbox-tlag-${variable.name}`}
+                  disabled={isSharedWithMe}
                 />
               }
               label=""
@@ -351,6 +358,7 @@ const VariableRow: React.FC<Props> = ({
                     },
                   }}
                   checked={linkToPD}
+                  disabled={isSharedWithMe}
                   onClick={() =>
                     linkToPD ? removePDMapping() : addPDMapping()
                   }
@@ -365,7 +373,7 @@ const VariableRow: React.FC<Props> = ({
       <TableCell>
         {!noDerivedVariables && (
           <FormControlLabel
-            disabled={disableRo}
+            disabled={disableRo || isSharedWithMe}
             control={
               <MuiCheckbox
                 checked={isLinkedTo("RO")}
@@ -379,7 +387,7 @@ const VariableRow: React.FC<Props> = ({
       <TableCell>
         {isC1 && !noDerivedVariables && !isDerivedVariable && (
           <FormControlLabel
-            disabled={disableFUP}
+            disabled={disableFUP || isSharedWithMe}
             control={
               <Radio
                 checked={isLinkedTo("FUP")}
@@ -393,7 +401,7 @@ const VariableRow: React.FC<Props> = ({
       <TableCell>
         {isC1 && !noDerivedVariables && !isDerivedVariable && (
           <FormControlLabel
-            disabled={disableBPR}
+            disabled={disableBPR || isSharedWithMe}
             control={
               <Radio
                 checked={isLinkedTo("BPR")}

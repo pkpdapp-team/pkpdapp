@@ -42,6 +42,7 @@ import useDirty from "../../hooks/useDirty";
 import UnitField from "../../components/UnitField";
 import paramPriority from "../model/paramPriority";
 import HelpButton from "../../components/HelpButton";
+import { selectIsProjectShared } from "../login/loginSlice";
 
 type SliderValues = { [key: number]: number };
 
@@ -179,6 +180,8 @@ const Simulations: React.FC = () => {
     { [key: number]: number } | undefined
   >(undefined);
   const [loadingSimulate, setLoadingSimulate] = useState<boolean>(false);
+
+  const isSharedWithMe = useSelector((state: RootState) => selectIsProjectShared(state, project));
 
   const defaultSimulation: SimulationRead = {
     id: 0,
@@ -519,6 +522,7 @@ const Simulations: React.FC = () => {
             data_cy="add-plot"
             options={addPlotOptions}
             onOptionSelected={handleAddPlot}
+            disabled={isSharedWithMe}
           >
             Add new plot
           </DropdownButton>
@@ -536,13 +540,14 @@ const Simulations: React.FC = () => {
                 label="Simulation Duration"
                 name="time_max"
                 control={control}
+                textFieldProps={{ disabled: isSharedWithMe }}
               />
               <UnitField
                 label="Unit"
                 name="time_max_unit"
                 baseUnit={units.find((u) => u.id === simulation?.time_max_unit)}
                 control={control}
-                selectProps={{ style: { flexShrink: 0 } }}
+                selectProps={{ style: { flexShrink: 0 }, disabled: isSharedWithMe }}
               />
               <div>
                 <Button variant="contained" onClick={exportSimulation}>
@@ -630,6 +635,7 @@ const Simulations: React.FC = () => {
             options={addSliderOptions}
             onOptionSelected={handleAddSlider}
             data_cy="add-parameter-slider"
+            disabled={isSharedWithMe}
           >
             Add new
           </DropdownButton>

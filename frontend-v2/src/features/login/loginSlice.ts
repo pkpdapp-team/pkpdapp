@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 
 import { RootState } from "../../app/store";
-import { UserRead } from "../../app/backendApi";
+import { UserRead, ProjectRead, ProjectAccessRead } from "../../app/backendApi";
 
 export const fetchCsrf = createAsyncThunk<string, undefined>(
   "login/fetchCsrf",
@@ -169,6 +169,14 @@ const slice = createSlice({
 export const { setCredentials } = slice.actions;
 
 export default slice.reducer;
+
+export const selectIsProjectShared = (state: RootState, project: ProjectRead | undefined) => {
+  const currentUser = selectCurrentUser(state);
+  const myUserId = currentUser?.id || 0;
+  const isSharedWithMe = project?.user_access.some((ua: ProjectAccessRead) => ua.user === myUserId && ua.read_only === true) || false;
+  return isSharedWithMe;
+
+}
 
 export const selectCurrentUser = (state: RootState) => state.login.user;
 export const selectCsrf = (state: RootState) => state.login.csrf;

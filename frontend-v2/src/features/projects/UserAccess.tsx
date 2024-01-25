@@ -51,11 +51,7 @@ const UserAccess: React.FC<Props> = ({
     userMap.set(user.id, user);
   });
 
-  // create list of user options for select
-  const userOptions = users?.map((user) => {
-    return { value: user.id, label: user.username };
-  });
-  userOptions?.push({ value: 0, label: "Add User" });
+  
 
   const addUser = (id: number) => {
     append({ user: id, read_only: true });
@@ -67,6 +63,12 @@ const UserAccess: React.FC<Props> = ({
 
   const currentUser = useSelector(selectCurrentUser);
   const myUserId = currentUser?.id || 0;
+
+  // create list of user options for select
+  const userOptions = users?.filter(user => user.id !== myUserId).map((user) => {
+    return { value: user.id, label: user.username };
+  });
+  userOptions?.push({ value: 0, label: "Add User" });
 
   return (
     <Dialog open={open} onClose={onClose}>
@@ -102,11 +104,11 @@ const UserAccess: React.FC<Props> = ({
                   <TableRow key={user.user}>
                     <TableCell>{userName}</TableCell>
                     <TableCell>
-                    (!isMe && (
+                    {!isMe && (
                       <IconButton onClick={deleteAccess(user, i)}>
                         <Delete />
                       </IconButton>
-                    ))
+                    )}
                     </TableCell>
                   </TableRow>
                 )

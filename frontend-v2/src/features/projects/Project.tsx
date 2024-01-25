@@ -11,6 +11,7 @@ import {
   Radio,
   Typography,
   Tooltip,
+  Stack,
 } from "@mui/material";
 import { Delete, PersonAdd } from "@mui/icons-material";
 import {
@@ -30,7 +31,8 @@ import { setProject } from "../main/mainSlice";
 import TextField from "../../components/TextField";
 import useDirty from "../../hooks/useDirty";
 import ConfirmationDialog from "../../components/ConfirmationDialog";
-import { selectCurrentUser } from "../login/loginSlice";
+import { selectCurrentUser, selectIsProjectShared } from "../login/loginSlice";
+import { RootState } from "../../app/store";
 
 interface Props {
   project: ProjectRead;
@@ -114,9 +116,7 @@ const ProjectRow: React.FC<Props> = ({
     name: "project.user_access",
   });
 
-  const currentUser = useSelector(selectCurrentUser);
-  const myUserId = currentUser?.id || 0;
-  const isSharedWithMe = project.user_access.some(ua => ua.user === myUserId && ua.read_only === true);
+  const isSharedWithMe = useSelector((state: RootState) => selectIsProjectShared(state, project));
 
   useEffect(() => {
     reset({ project, compound });
@@ -173,7 +173,8 @@ const ProjectRow: React.FC<Props> = ({
   };
 
   const defaultProps = {
-    fullWidth: true
+    fullWidth: true,
+    disabled: isSharedWithMe,
   };
 
   const defaultSx = {
@@ -236,11 +237,14 @@ const ProjectRow: React.FC<Props> = ({
           }
         </TableCell>
         <TableCell>
-          { isSharedWithMe ? (
+          <Stack direction="row" spacing={0.0}>
+          { !isSharedWithMe ? (
             <>
+              <Tooltip title="Delete Project">
               <IconButton onClick={() => setShowConfirmDelete(true)}>
                 <Delete />
               </IconButton>
+              </Tooltip>
               <ConfirmationDialog
                 open={showConfirmDelete}
                 title="Delete Project"
@@ -251,19 +255,25 @@ const ProjectRow: React.FC<Props> = ({
             </>
           ) : (
             <Tooltip title="This project is shared with me as view-only">
+            <div>
             <IconButton disabled>
               <VisibilityIcon />
             </IconButton>
+            </div>
             </Tooltip>
           )}
 
+          <Tooltip title="Copy Project">
           <IconButton onClick={copyProject}>
             <ContentCopyIcon />
           </IconButton>
+          </Tooltip>
 
-          <IconButton onClick={() => setUserAccessOpen(true)}>
+          <Tooltip title="Share Project">
+          <IconButton onClick={() => setUserAccessOpen(true)} disabled={isSharedWithMe}>
             <PersonAdd />
           </IconButton>
+          </Tooltip>
           <UserAccess
             open={userAccessOpen}
             control={control}
@@ -273,6 +283,7 @@ const ProjectRow: React.FC<Props> = ({
             remove={remove}
             project={project}
           />
+          </Stack>
         </TableCell>
       </TableRow>
       {isSelected && (

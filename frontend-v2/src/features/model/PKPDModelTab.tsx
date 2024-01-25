@@ -25,6 +25,9 @@ import SelectField from "../../components/SelectField";
 import Checkbox from "../../components/Checkbox";
 import { FormData } from "./Model";
 import { speciesOptions } from "../projects/Project";
+import { useSelector } from "react-redux";
+import { RootState } from "../../app/store";
+import { selectIsProjectShared } from "../login/loginSlice";
 
 interface Props {
   model: CombinedModelRead;
@@ -40,6 +43,7 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props) => {
   const { data: pkModels, isLoading: pkModelLoading } =
     usePharmacokineticListQuery();
   const [showCode, setShowCode] = React.useState(false);
+  const isSharedWithMe = useSelector((state: RootState) => selectIsProjectShared(state, project));
 
   const loading = [pdModelLoading, pkModelLoading];
   if (loading.some((l) => l)) {
@@ -48,6 +52,7 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props) => {
   if (!pdModels || !pkModels) {
     return <div>Error loading models.</div>;
   }
+
 
   const clinical = project.species === "H";
   const pkModelsFiltered = pkModels.filter(
@@ -105,6 +110,10 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props) => {
     || pd_model?.name.includes("direct")
     || pd_model2?.name.includes("emax_kill");
 
+  const defaultProps = {
+    disabled: isSharedWithMe,
+  }
+
   return (
     <Grid xs={12} container spacing={2}>
       <Grid item xl={5} md={8} xs={10}>
@@ -115,6 +124,7 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props) => {
             control={control}
             options={speciesOptions}
             formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
+            selectProps={defaultProps}
           />
         </Stack>
       </Grid>
@@ -127,6 +137,7 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props) => {
               control={control}
               options={pk_model_options}
               formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
+              selectProps={defaultProps}
             />
           </Stack>
           {model.pk_model && (
@@ -147,7 +158,7 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props) => {
                     name="model.has_saturation"
                     control={control}
                     checkboxFieldProps={{
-                      disabled: isTMDDmodel || !model.pk_model,
+                      disabled: isTMDDmodel || !model.pk_model || isSharedWithMe,
                     }}
                   />
                 </div>
@@ -158,7 +169,7 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props) => {
                     label="Effect Compartment"
                     name="model.has_effect"
                     control={control}
-                    checkboxFieldProps={{ disabled: !model.pk_model }}
+                    checkboxFieldProps={{ disabled: !model.pk_model || isSharedWithMe }}
                   />
                 </div>
               </Tooltip>
@@ -168,7 +179,7 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props) => {
                     label="Lag Time"
                     name="model.has_lag"
                     control={control}
-                    checkboxFieldProps={{ disabled: !model.pk_model }}
+                    checkboxFieldProps={{ disabled: !model.pk_model || isSharedWithMe }}
                   />
                 </div>
               </Tooltip>
@@ -178,7 +189,7 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props) => {
                     label="Bioavailability"
                     name="model.has_bioavailability"
                     control={control}
-                    checkboxFieldProps={{ disabled: !model.pk_model }}
+                    checkboxFieldProps={{ disabled: !model.pk_model || isSharedWithMe }}
                   />
                 </div>
               </Tooltip>
@@ -195,6 +206,7 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props) => {
               control={control}
               options={pd_model_options}
               formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
+              selectProps={defaultProps}
             />
           </Stack>
         </Grid>
@@ -210,6 +222,7 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props) => {
                   control={control}
                   options={pd_model2_options}
                   formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
+                  selectProps={defaultProps}
                 />
               </Stack>
             </Grid>
@@ -236,7 +249,7 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props) => {
                       label="Hill Coefficient"
                       name="model.has_hill_coefficient"
                       control={control}
-                      checkboxFieldProps={{ disabled: !model.pd_model }}
+                      checkboxFieldProps={{ disabled: !model.pd_model || isSharedWithMe }}
                     />
                   </div>
                 </Tooltip>

@@ -10,6 +10,7 @@ import {
   Simulation,
   UnitRead,
   VariableRead,
+  useProjectRetrieveQuery,
 } from "../../app/backendApi";
 import {
   Divider,
@@ -26,6 +27,9 @@ import SelectField from "../../components/SelectField";
 import DropdownButton from "../../components/DropdownButton";
 import { Delete } from "@mui/icons-material";
 import FloatField from "../../components/FloatField";
+import { useSelector } from "react-redux";
+import { RootState } from "../../app/store";
+import { selectIsProjectShared } from "../login/loginSlice";
 
 interface SimulationPlotFormProps {
   index: number;
@@ -46,6 +50,15 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({
   units,
   compound,
 }) => {
+  const projectId = useSelector(
+    (state: RootState) => state.main.selectedProject,
+  );
+  const { data: project } = useProjectRetrieveQuery(
+    { id: projectId || 0 },
+    { skip: !projectId },
+  );
+  const isSharedWithMe = useSelector((state: RootState) => selectIsProjectShared(state, project));
+
   const baseXUnitId = units
     ? units.find((u) => u.symbol === "h")?.id
     : undefined;
@@ -196,6 +209,10 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({
     //{ label: 'Ln', value: 'ln' },
   ];
 
+  const defaultProps = {
+    disabled: isSharedWithMe,
+  }
+
   return (
     <Stack>
       <Typography sx={{ fontWeight: "bold", paddingBottom: '1rem' }}>
@@ -207,12 +224,14 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({
           name={`plots.${index}.x_unit`}
           control={control}
           baseUnit={units.find((u) => u.id === baseXUnitId)}
+          selectProps={defaultProps}
         />
         <SelectField
           label="X Axis Scale"
           name={`plots.${index}.x_scale`}
           options={axisScaleOptions}
           control={control}
+          selectProps={defaultProps}
         />
       </Stack>
       <Divider sx={{ margin: 2 }} />
@@ -224,6 +243,7 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({
         data_cy="add-y-axis"
         options={addYAxisOptions}
         onOptionSelected={handleAddYAxis}
+        disabled={isSharedWithMe}
       >
         Add Y axis
       </DropdownButton>
@@ -238,23 +258,26 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({
           name={`plots.${index}.y_unit`}
           control={control}
           baseUnit={units.find((u) => u.id === baseYUnitId)}
-          selectProps={{ disabled: lhs_y_axes.length === 0 }}
+          selectProps={{ disabled: lhs_y_axes.length === 0 || isSharedWithMe }}
         />
         <SelectField
           label="Y Axis Scale"
           name={`plots.${index}.y_scale`}
           options={axisScaleOptions}
           control={control}
+          selectProps={defaultProps}
         />
         <FloatField
           label="Y Axis Min"
           name={`plots.${index}.min`}
           control={control}
+          textFieldProps={defaultProps}
         />
         <FloatField
           label="Y Axis Max"
           name={`plots.${index}.max`}
           control={control}
+          textFieldProps={defaultProps}
         />
       </Stack>
       <List>
@@ -269,10 +292,11 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({
                     .filter((v) => !v.constant)
                     .map((v) => ({ value: v.id, label: v.name }))}
                   control={control}
+                  selectProps={defaultProps}
                 />
               </Grid>
               <Grid item xs={2}>
-                <IconButton onClick={() => handleRemoveYAxis(yAxis)}>
+                <IconButton onClick={() => handleRemoveYAxis(yAxis)} disabled={isSharedWithMe}>
                   <Delete />
                 </IconButton>
               </Grid>
@@ -291,7 +315,7 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({
         data_cy="add-cx-lines"
         options={addCxLineOptions}
         onOptionSelected={handleAddCxLine}
-        disabled={!yAxisIsConcentration || !haveEfficacyExp}
+        disabled={!yAxisIsConcentration || !haveEfficacyExp || isSharedWithMe}
       >
         Add Lines
       </DropdownButton>
@@ -307,12 +331,12 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({
                   textFieldProps={{
                     type: "number",
                     inputProps: { step: 0.1 },
-                    disabled: !yAxisIsConcentration,
+                    disabled: !yAxisIsConcentration || isSharedWithMe,
                   }}
                 />
               </Grid>
               <Grid item xs={2}>
-                <IconButton onClick={() => handleRemoveCxLine(cxLineIndex)}>
+                <IconButton onClick={() => handleRemoveCxLine(cxLineIndex)} disabled={isSharedWithMe}>
                   <Delete />
                 </IconButton>
               </Grid>
@@ -329,6 +353,7 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({
         data_cy="add-variable"
         options={addY2AxisOptions}
         onOptionSelected={handleAddY2Axis}
+        disabled={isSharedWithMe}
       >
         Add Variable
       </DropdownButton>
@@ -338,23 +363,26 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({
           name={`plots.${index}.y_unit2`}
           control={control}
           baseUnit={units.find((u) => u.id === baseY2UnitId)}
-          selectProps={{ disabled: rhs_y_axes.length === 0 }}
+          selectProps={{ disabled: rhs_y_axes.length === 0 || isSharedWithMe }}
         />
         <SelectField
           label="Y2 Axis Scale"
           name={`plots.${index}.y2_scale`}
           options={axisScaleOptions}
           control={control}
+          selectProps={defaultProps}
         />
         <FloatField
           label="Y2 Axis Min"
           name={`plots.${index}.min2`}
           control={control}
+          textFieldProps={defaultProps}
         />
         <FloatField
           label="Y2 Axis Max"
           name={`plots.${index}.max2`}
           control={control}
+          textFieldProps={defaultProps}
         />
       </Stack>
       <List>
@@ -369,10 +397,11 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({
                     .filter((v) => !v.constant)
                     .map((v) => ({ value: v.id, label: v.name }))}
                   control={control}
+                  selectProps={defaultProps}
                 />
               </Grid>
               <Grid item xs={2}>
-                <IconButton onClick={() => handleRemoveYAxis(yAxis)}>
+                <IconButton onClick={() => handleRemoveYAxis(yAxis)} disabled={isSharedWithMe}>
                   <Delete />
                 </IconButton>
               </Grid>

@@ -52,7 +52,7 @@ class Project(models.Model):
     def __str__(self):
         return str(self.name)
 
-    def copy(self, projectAccess=None):
+    def copy(self, user=None):
         """
         Copy the project, including all datasets, models and users.
         """
@@ -79,14 +79,16 @@ class Project(models.Model):
 
         for simulation in self.simulations.all():
             simulation.copy(new_project, variable_map)
-        if projectAccess is None:
+        if user is None:
             for userAccess in self.projectaccess_set.all():
                 userAccess.copy(new_project)
         else:
-            for a in projectAccess:
-                a.project = new_project
-                a.save()
-            self.projectaccess_set.set(projectAccess)
+            projectAccess = ProjectAccess.objects.create(
+                user=user,
+                project=new_project,
+                read_only=False,
+            )
+            self.projectaccess_set.set([projectAccess])
         return new_project
 
 

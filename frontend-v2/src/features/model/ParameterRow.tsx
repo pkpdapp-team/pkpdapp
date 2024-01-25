@@ -12,6 +12,9 @@ import {
 import UnitField from "../../components/UnitField";
 import useDirty from "../../hooks/useDirty";
 import FloatField from "../../components/FloatField";
+import { selectIsProjectShared } from "../login/loginSlice";
+import { useSelector } from "react-redux";
+import { RootState } from "../../app/store";
 
 interface Props {
   project: ProjectRead;
@@ -35,6 +38,8 @@ const ParameterRow: React.FC<Props> = ({ project, model, variable, units }) => {
 
   const isDirty = isDirtyForm;
   useDirty(isDirty);
+
+  const isSharedWithMe = useSelector((state: RootState) => selectIsProjectShared(state, project));
 
   const submit = handleSubmit((data) => {
     if (JSON.stringify(data) !== JSON.stringify(variable)) {
@@ -73,6 +78,10 @@ const ParameterRow: React.FC<Props> = ({ project, model, variable, units }) => {
   const isPreclinicalPerKg =
     project?.species !== "H" && unit?.symbol.endsWith("/kg");
 
+  const defaultProps = {
+    disabled: isSharedWithMe,
+  };
+
   return (
     <TableRow>
       <TableCell>
@@ -82,7 +91,12 @@ const ParameterRow: React.FC<Props> = ({ project, model, variable, units }) => {
       </TableCell>
       <TableCell>{type}</TableCell>
       <TableCell>
-        <FloatField name="lower_bound" control={control} label="Lower" />
+        <FloatField 
+          name="lower_bound" 
+          control={control} 
+          label="Lower" 
+          textFieldProps={defaultProps}
+        />
       </TableCell>
       <TableCell>
         <FloatField
@@ -91,10 +105,16 @@ const ParameterRow: React.FC<Props> = ({ project, model, variable, units }) => {
           label="Value"
           rules={{ required: true }}
           data_cy={`parameter-${variable.name}-value`}
+          textFieldProps={defaultProps}
         />
       </TableCell>
       <TableCell>
-        <FloatField name="upper_bound" control={control} label="Upper" />
+        <FloatField 
+          name="upper_bound" 
+          control={control} 
+          label="Upper" 
+          textFieldProps={defaultProps}
+        />
       </TableCell>
       <TableCell>
         <UnitField
@@ -103,6 +123,7 @@ const ParameterRow: React.FC<Props> = ({ project, model, variable, units }) => {
           control={control}
           baseUnit={unit}
           isPreclinicalPerKg={isPreclinicalPerKg}
+          selectProps={defaultProps}
         />
       </TableCell>
     </TableRow>

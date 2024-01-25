@@ -21,6 +21,9 @@ import VariableRow from "./VariableRow";
 import HelpButton from "../../components/HelpButton";
 import { FormData } from "./Model";
 import { defaultHeaderSx } from "../../shared/tableHeadersSx";
+import { useSelector } from "react-redux";
+import { RootState } from "../../app/store";
+import { selectIsProjectShared } from "../login/loginSlice";
 
 interface Props {
   model: CombinedModelRead;
@@ -201,7 +204,6 @@ const MapVariablesTab: React.FC<Props> = ({
 
     return variable1.name < variable2.name ? -1 : 1;
   }
-
 
   return (
     <TableContainer sx={{ width: "90%" }}>
