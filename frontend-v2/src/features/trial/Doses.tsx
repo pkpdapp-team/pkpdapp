@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { TableCell, TableRow, IconButton, Button, Stack } from "@mui/material";
+import { TableCell, TableRow, IconButton, Button, Stack, Typography } from "@mui/material";
 import {
   ProjectRead,
   Protocol,
@@ -183,13 +183,9 @@ const Doses: React.FC<Props> = ({ project, protocol, units }) => {
           </TableCell>
           <TableCell>
             {protocol.time_unit && index === 0 && (
-              <UnitField
-                label={"Time Unit"}
-                name={`time_unit`}
-                control={control}
-                baseUnit={units.find((u) => u.id === protocol.time_unit)}
-                selectProps={defaultProps}
-              />
+              <Typography>
+                {units.find((u) => u.id === protocol.time_unit)?.symbol}
+              </Typography>
             )}
           </TableCell>
           <TableCell align="center">
