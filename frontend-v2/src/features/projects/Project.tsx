@@ -25,6 +25,8 @@ import {
   CompoundRead,
   ProjectRead,
   useProjectCopyUpdateMutation,
+  useProjectAccessUpdateMutation,
+  useProjectAccessDestroyMutation,
 } from "../../app/backendApi";
 import UserAccess from "./UserAccess";
 import { setProject } from "../main/mainSlice";
@@ -117,6 +119,8 @@ const ProjectRow: React.FC<Props> = ({
   });
 
   const isSharedWithMe = useSelector((state: RootState) => selectIsProjectShared(state, project));
+  const currentUser = useSelector((state: RootState) => selectCurrentUser(state));
+  const [ projectAccessDestroy ] = useProjectAccessDestroyMutation();
 
   useEffect(() => {
     reset({ project, compound });
@@ -159,10 +163,20 @@ const ProjectRow: React.FC<Props> = ({
     return <div>Error: cannot find compound...</div>;
   }
 
-  const handleDelete = () => {
+  const handleDeleteProject = () => {
     destroyProject({ id: project.id });
     dispatch(setProject(null));
   };
+
+  const handleRemoveUserAccess = () => {
+    const projectAccess = project.user_access.find((access) => access.user === currentUser?.id);
+    if (projectAccess) {
+      projectAccessDestroy({ id: projectAccess.id });
+    }
+  }
+
+  const handleDelete = isSharedWithMe ? handleRemoveUserAccess : handleDeleteProject;
+
 
   const userAccessClose = () => {
     setUserAccessOpen(false);
@@ -192,6 +206,12 @@ const ProjectRow: React.FC<Props> = ({
     projectCopyUpdate({ id: project.id, project: project });
   }
 
+  const deleteMessage = isSharedWithMe ? 
+    "This will remove this shared project from your list, the original project will be unaffected, do you wish to proceed?" 
+    : "Are you sure you want to permanently delete this project? If it is shared with any other users, it will be removed from their list as well"
+  const deleteTooltip = isSharedWithMe ?
+    "Remove shared project from your list"
+    : "Delete Project";
 
   return (
     <React.Fragment>
@@ -238,51 +258,49 @@ const ProjectRow: React.FC<Props> = ({
         </TableCell>
         <TableCell>
           <Stack direction="row" spacing={0.0}>
-          { !isSharedWithMe ? (
-            <>
-              <Tooltip title="Delete Project">
+            <Tooltip title={deleteTooltip}>
               <IconButton onClick={() => setShowConfirmDelete(true)}>
                 <Delete />
               </IconButton>
-              </Tooltip>
-              <ConfirmationDialog
-                open={showConfirmDelete}
-                title="Delete Project"
-                message="Are you sure you want to permanently delete this project?"
-                onConfirm={handleDelete}
-                onCancel={() => setShowConfirmDelete(false)}
-              />
-            </>
-          ) : (
-            <Tooltip title="This project is shared with me as view-only">
-            <div>
-            <IconButton disabled>
-              <VisibilityIcon />
+            </Tooltip>
+            <ConfirmationDialog
+              open={showConfirmDelete}
+              title={deleteTooltip}
+              message={deleteMessage}
+              onConfirm={handleDelete}
+              onCancel={() => setShowConfirmDelete(false)}
+            />
+            <Tooltip title="Copy Project">
+            <IconButton onClick={copyProject}>
+              <ContentCopyIcon />
             </IconButton>
+            </Tooltip>
+
+            <Tooltip title="Share Project">
+            <div>
+              <IconButton onClick={() => setUserAccessOpen(true)} disabled={isSharedWithMe}>
+                <PersonAdd />
+              </IconButton>
             </div>
             </Tooltip>
-          )}
-
-          <Tooltip title="Copy Project">
-          <IconButton onClick={copyProject}>
-            <ContentCopyIcon />
-          </IconButton>
-          </Tooltip>
-
-          <Tooltip title="Share Project">
-          <IconButton onClick={() => setUserAccessOpen(true)} disabled={isSharedWithMe}>
-            <PersonAdd />
-          </IconButton>
-          </Tooltip>
-          <UserAccess
-            open={userAccessOpen}
-            control={control}
-            onClose={userAccessClose}
-            userAccess={userAccess as ProjectAccess[]}
-            append={append}
-            remove={remove}
-            project={project}
-          />
+            <UserAccess
+              open={userAccessOpen}
+              control={control}
+              onClose={userAccessClose}
+              userAccess={userAccess as ProjectAccess[]}
+              append={append}
+              remove={remove}
+              project={project}
+            />
+            { isSharedWithMe && (
+            <Tooltip title="This project is shared with me as view-only">
+              <div>
+              <IconButton disabled>
+                <VisibilityIcon />
+              </IconButton>
+              </div>
+            </Tooltip>
+            )}
           </Stack>
         </TableCell>
       </TableRow>
