@@ -137,7 +137,7 @@ const SimulationSliderView: React.FC<SimulationSliderProps> = ({
   return (
     <div data-cy={`parameter-slider-${variable.name}`}>
       <Stack direction="row" spacing={0} alignItems="center">
-        <Tooltip title={variable.description} placement="top">
+        <Tooltip title={variable.description} placement="bottom">
           <Typography id="discrete-slider" gutterBottom sx={{ flexGrow: 1 }}>
             {unit?.symbol
               ? `${variable.name} [${unit?.symbol}]`
