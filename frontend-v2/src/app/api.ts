@@ -40,6 +40,12 @@ export const api = backendApi.enhanceEndpoints({
         { type: "Project", id: "LIST" },
       ],
     },
+    // projectAccess
+    projectAccessDestroy: {
+      invalidatesTags: (result, error, { id }) => [
+        { type: "Project", id: "LIST" },
+      ],
+    },
     // Compounds
     compoundList: {
       providesTags: (result) =>
