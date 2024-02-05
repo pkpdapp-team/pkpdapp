@@ -1,5 +1,5 @@
 [[model]]
-name: Tumor growth model - exponential/ linear w/ saturation (Gompertz-logistic)
+name: Tumor growth model - exponential w/o saturation
 author: Michael Gertz, Soledad Castano
 
 # All parameter values are placeholders and can be adjusted in the app under Model/Parameters
@@ -17,16 +17,16 @@ t = 0 in [h] bind time
 TS0 = 0.1 in [mL]
 	desc: Initial tumor volume/ size 
 	
-TSmax = 10 in [mL]
-	desc: Maximal tumor volume/ size 	
+kge = 0.005 in [1/h] 
+	desc: Exponential growth rate constant
 	
-beta = 0.002 in [1/h]
-	desc: Growth rate constant
+gamma = 1 in [dimensionless]
+	desc: 0 < gamma <= 1; gamma = 1 leads to exponential growth, gamma = 2/3, tumor radius expands linearly with time
 
 Growth = if(TS > 1e12,
     0,
-    TS*beta*log(TSmax/TS)) in [mL/h]
+    kge*TS^gamma) in [mL/h]
 	desc: Tumor growth rate	
 
-dot(TS) = Growth in [mL]
+dot(TS) = Growth in [mL/h]
 	desc: Tumor volume/ size

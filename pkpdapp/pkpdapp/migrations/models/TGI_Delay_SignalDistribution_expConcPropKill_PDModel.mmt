@@ -1,6 +1,8 @@
 [[model]]
-name: Tumor growth inhibition model: growth-independent, delayed response (Signal Distribution Model), proportional to exp(concentration)
-author: Michael Gertz
+name: Tumor growth inhbition model: growth-independent, delayed response (Signal Distribution Model), proportional to exp(concentration)
+author: Michael Gertz, Soledad Castano
+
+# All parameter values are placeholders and can be adjusted in the app under Model/Parameters
 
 # Initial values:
 PDCompartment.TS = PDCompartment.TS0
@@ -10,37 +12,40 @@ PDCompartment.K3 = 0
 
 
 [environment]
-t = 0 bind time
+t = 0 in [h] bind time
 
 
 [PDCompartment]
 	
 TS0 = 0.1 in [mL]
-	desc: initial tumor size 
+	desc: Initial tumor volume/ size
 	
 kmax = 0.015 in [1/h]
-	desc: maximal kill rate constant
+	desc: Maximal kill rate constant
 	
 C50 = 1000000 in [pmol/L]
-	desc: concentration of half-maximal effect
+	desc: Concentration of half-maximal effect
 
 Mtt = 72 in [h]
-	desc: average duration of transduction
+	desc: Average duration of transduction
 	
 tau = Mtt/3 in [h]
+  desc: Delay in treatment effect
 
-C_Drug = 1 in [pmol/L]	
+C_Drug = 1 in [pmol/L]
+	desc: Drug concentration causing tumor killing
 
 Kill = kmax * (1 - exp(-log(2)/C50 * C_Drug)) in [1/h]
+	desc: Tumor kill rate constant
 
 dot(TS) = -K3*TS in [mL]
-	desc: Tumor size 
+	desc: Tumor size/ size 
 	
 dot(K1) = (Kill-K1)/tau in [1/h]
-	desc: Transit compartment 1 (delay due to signal distribution) 
+	desc: Transit compartment 1 (delay of killing due to signal distribution) 
 
 dot(K2) = (K1-K2)/tau in [1/h]
-	desc: Transit compartment 2 (delay due to signal distribution)
+	desc: Transit compartment 2 (delay of killing due to signal distribution)
 
 dot(K3) = (K2-K3)/tau in [1/h]
-	desc: Transit compartment 3 (delay due to signal distribution)
+	desc: Transit compartment 3 (delay of killing due to signal distribution)

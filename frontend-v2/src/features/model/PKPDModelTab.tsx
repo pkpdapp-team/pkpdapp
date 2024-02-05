@@ -36,6 +36,42 @@ interface Props {
   updateModel: (data: CombinedModelUpdateApiArg) => void;
 }
 
+const pk_model_order = [
+  "one_compartment",
+  "two_compartment",
+  "three_compartment",
+  "one_compartment_tmdd_full",
+  "one_compartment_tmdd_QSS",
+  "one_compartment_tmdd_full_constant_target",
+  "one_compartment_tmdd_qss_constant_target",
+  "two_compartment_tmdd_full",
+  "two_compartment_tmdd_QSS",
+  "two_compartment_tmdd_full_constant_target",
+  "two_compartment_tmdd_qss_constant_target",
+]
+
+const pd_model_order = [
+  "direct_effects_emax",
+  "direct_effects_imax",
+  "indirect_effects_stimulation_elimination",
+  "indirect_effects_inhibition_elimination",
+  "indirect_effects_stimulation_production",
+  "indirect_effects_inhibition_production",
+  "indirect_effects_precursor_stimulation_production",
+  "indirect_effects_precursor_inhibition_production",
+  "tumour_growth_linear",
+  "tumour_growth_exponential",
+  "tumour_growth_gompertz",
+  "tumour_growth_simeoni",
+  "tumour_growth_simeoni_logistic",
+  "tumour_growth_inhibition_delay_cell_distribution_conc_prop_kill",
+  "tumour_growth_inhibition_delay_cell_distribution_emax_kill",
+  "tumour_growth_inhibition_delay_cell_distribution_exp_conc_kill",
+  "tumour_growth_inhibition_delay_signal_distribution_conc_prop_kill",
+  "tumour_growth_inhibition_delay_signal_distribution_emax_kill",
+  "tumour_growth_inhibition_delay_signal_distribution_exp_conc_kill",
+]
+
 const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props) => {
   // get list of pd models
   const { data: pdModels, isLoading: pdModelLoading } =
@@ -69,9 +105,23 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props) => {
     pdModelsFiltered.map((m) => {
       return { value: m.id, label: m.name };
     });
+  pd_model_options.sort((a, b) => {
+    const aName = a.label;
+    const bName = b.label;
+    const aIndex = pd_model_order.indexOf(aName);
+    const bIndex = pd_model_order.indexOf(bName);
+    return aIndex - bIndex;
+  });
   pd_model_options.push({ value: "", label: "None" });
   const pk_model_options = pkModelsFiltered.map((m) => {
     return { value: m.id, label: m.name };
+  });
+  pk_model_options.sort((a, b) => {
+    const aName = a.label.replace("_preclinical", "").replace("_clinical", "");
+    const bName = b.label.replace("_preclinical", "").replace("_clinical", "");
+    const aIndex = pk_model_order.indexOf(aName);
+    const bIndex = pk_model_order.indexOf(bName);
+    return aIndex - bIndex;
   });
   const pk_model_map = pkModels.reduce(
     (map, m) => {
@@ -158,7 +208,7 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props) => {
                     name="model.has_saturation"
                     control={control}
                     checkboxFieldProps={{
-                      disabled: isTMDDmodel || !model.pk_model || isSharedWithMe,
+                      disabled: !model.pk_model || isSharedWithMe,
                     }}
                   />
                 </div>
