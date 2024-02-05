@@ -137,9 +137,19 @@ $$
             'mmt_filename': 'pkpdapp/migrations/models/DE_Imax.mmt'  # noqa: E501
         },
         {
+            'name': 'tumour_growth_exponential',
+            'description': '',
+            'mmt_filename': 'pkpdapp/migrations/models/TG_Exponential_PDModel.mmt'  # noqa: E501
+        },
+        {
             'name': 'tumour_growth_gompertz',
             'description': '',
             'mmt_filename': 'pkpdapp/migrations/models/TG_Gompertz_PDModel.mmt'  # noqa: E501
+        },
+        {
+            'name': 'tumour_growth_linear',
+            'description': '',
+            'mmt_filename': 'pkpdapp/migrations/models/TG_Linear_PDModel.mmt'  # noqa: E501
         },
         {
             'name': 'tumour_growth_simeoni_logistic',
@@ -462,12 +472,12 @@ Description of a clinical two compartment TMDD model here.
         try:
             # check myokit can parse the model
             mmt_string = open(m['mmt_filename'], 'r').read()
+            print('updating', m['mmt_filename'])
             myokit_model = myokit.parse(mmt_string)[0]
             myokit_model.validate()
             # update the model if it already exists
             try:
                 model = PharmacodynamicModel.objects.get(name=m['name'])
-                print('updating', m['mmt_filename'], myokit_model.meta['name'])
                 model.mmt = mmt_string
                 model.description = myokit_model.meta['name']
                 model.is_library_model = True

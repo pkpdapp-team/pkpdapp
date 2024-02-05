@@ -208,15 +208,19 @@ class Variable(StoredModel):
             qname=myokit_variable.qname(),
             pk_model=model,
         )
+        compound = None
+        project = model.get_project()
+        if project is not None:
+            compound = project.compound
         found_variable = Variable._find_close_variable(
-            myokit_variable, variables, compound=model.get_project().compound
+            myokit_variable, variables, compound=compound
         )
         if found_variable is not None:
             return variables[0]
         else:
             state = myokit_variable.is_state()
             if state:
-                value = myokit_variable.state_value()
+                value = myokit_variable.initial_value(as_float=True)
             else:
                 value = myokit_variable.value()
             qname = myokit_variable.qname()
@@ -285,7 +289,7 @@ class Variable(StoredModel):
         else:
             state = myokit_variable.is_state()
             if state:
-                value = myokit_variable.state_value()
+                value = myokit_variable.initial_value(as_float=True)
             else:
                 value = myokit_variable.value()
             qname = myokit_variable.qname()
@@ -348,7 +352,7 @@ class Variable(StoredModel):
 
             state = myokit_variable.is_state()
             if state:
-                value = myokit_variable.state_value()
+                value = myokit_variable.initial_value(as_float=True)
             else:
                 value = myokit_variable.value()
             qname = myokit_variable.qname()

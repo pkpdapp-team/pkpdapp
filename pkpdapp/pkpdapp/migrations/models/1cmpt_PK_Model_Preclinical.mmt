@@ -1,6 +1,8 @@
 [[model]]
-name: 1-compartment PK Model + effect compartment
-author: Michael Gertz
+name: 1-compartment PK Model
+author: Michael Gertz, Soledad Castano
+
+# All parameter values are placeholders and can be adjusted in the app under Model/Parameters
 
 # Initial values:
 PKCompartment.Aa = 0
@@ -19,22 +21,22 @@ tlag = 0 in [h]
 	desc: Absorption lag time from extravasc compartment
 
 ka = 1 in [1/h]
-    desc: First order absorption rate constant  
+  desc: First order absorption rate constant  
 
 F = 1 in [dimensionless]
-    desc: Fraction absorbed/ bioavailability 
+  desc: Fraction absorbed / bioavailability 
 	
 V1 = 1 in [L/kg]
-    desc: Volume of the central compartment	
+  desc: Volume of the central compartment	
 	
 CL = 1 in [L/h/kg]
-    desc: Linear clearance from central compartment 
+  desc: Linear clearance from central compartment 
 
 CLmax = 0 in [L/h/kg]
-    desc: Maximum nonlinear Michaelis-Menten clearance; CLmax = Vmax/Km
+  desc: Maximum nonlinear clearance from central compartment (CLmax = Vmax/Km)
 
 Km = 1 in [pmol/L]
-    desc: Michaelis-Menten constant 	
+  desc: Michaelis-Menten constant 	
 	
 ke0 = 1 in [1/h]
 	desc: Equilibration rate constant effect compartment
@@ -42,20 +44,20 @@ ke0 = 1 in [1/h]
 Kpu = 1 in [dimensionless]
 	desc: Unbound effect compartment to total plasma partitioning coefficient
 	
-C1= A1/V1 in [pmol/L]
-    desc: Concentration of drug in the central compartment
+C1 = A1/V1 in [pmol/L]
+  desc: Concentration of drug in the central compartment
 	
-CL_t = CL+CLmax*(1/(1+(C1/Km))) in [L/h/kg]
+CL_t = CL + CLmax*(1/(1+(C1/Km))) in [L/h/kg]
 	desc: Total clearance as a function of time 
 
-dot(Aa) = -ka*Aa in [pmol/kg]
-    desc: Amount of drug in 'depo' compartment
+dot(Aa) = - ka*Aa in [pmol/kg]
+  desc: Amount of drug in the 'depo' compartment
 
-dot(A1) =  ka*Aa*F -CL*C1 -CLmax*(1/(1+(C1/Km)))*C1 in [pmol/kg]
-    desc: Amount of drug in central compartment 
+dot(A1) = ka*Aa*F - CL*C1 - CLmax*(1/(1+(C1/Km)))*C1 in [pmol/kg]
+  desc: Amount of drug in the central compartment 
 
 dot(Ce) = ke0*(C1*Kpu - Ce) in [pmol/L]	
-	desc: Concentration of drug in effect compartment
+	desc: Concentration of drug in the effect compartment
 	
 dot(AUC1) = C1 in [pmol/L*h]
 	desc: AUC of drug in the central compartment

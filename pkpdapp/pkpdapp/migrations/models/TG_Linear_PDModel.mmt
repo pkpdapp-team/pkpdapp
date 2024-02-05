@@ -1,6 +1,6 @@
 [[model]]
-name: Tumor growth model - exponential/ linear w/ saturation (Gompertz-logistic)
-author: Michael Gertz, Soledad Castano
+name: Tumor growth model - linear w/o saturation
+author: Michael Gertz, Soledad Castano        
 
 # All parameter values are placeholders and can be adjusted in the app under Model/Parameters
 
@@ -10,22 +10,19 @@ PDCompartment.TS = PDCompartment.TS0
 
 [environment]
 t = 0 in [h] bind time
-
-
+    
+	
 [PDCompartment]
 
 TS0 = 0.1 in [mL]
 	desc: Initial tumor volume/ size 
 	
-TSmax = 10 in [mL]
-	desc: Maximal tumor volume/ size 	
-	
-beta = 0.002 in [1/h]
-	desc: Growth rate constant
+kgl = 0.01 in [mL/h]
+	desc: Linear growth rate
 
 Growth = if(TS > 1e12,
     0,
-    TS*beta*log(TSmax/TS)) in [mL/h]
+    kgl) in [mL/h]
 	desc: Tumor growth rate	
 
 dot(TS) = Growth in [mL]
