@@ -88,10 +88,15 @@ To link to an external help page url, set the `REACT_APP_HELP_URL` variable in t
 
 The application is deployed using docker containers and docker-compose, so you will need to install these.
 
-You can build a docker image and run the image inside the container with commands below (run these commands in the root directory of the repository):
+To build the containers, run the following command in the root directory of the repository. This runs a script that builds the containers (using `docker compose build`).
 
 ```bash
-$ docker-compose build
+$ ./build.sh
+```
+
+You can run the container with:
+
+```bash
 $ docker-compose up
 ```
 
