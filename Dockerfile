@@ -9,6 +9,11 @@ RUN npm install --ignore-scripts
 
 COPY frontend-v2 /app/frontend/
 COPY .env.prod /app/
+
+# use git on the host to set REACT_APP_VERSION to the current git commit
+ARG GIT_COMMIT_ID
+ENV REACT_APP_VERSION=$GIT_COMMIT_ID
+
 RUN npm run build
 
 FROM python:3.10
