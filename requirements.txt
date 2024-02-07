@@ -1,5 +1,5 @@
 gunicorn
-Django==3.2.23
+Django==3.2.24
 setuptools<=65.5.1
 django-cors-headers>=3.7.0
 dpd-static-support>=0.0.5
