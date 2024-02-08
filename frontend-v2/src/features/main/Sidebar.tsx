@@ -252,7 +252,7 @@ export default function Sidebar() {
         sx={{
           width: { sm: `100%` },
           ml: { sm: `${drawerWidth}px` },
-          zIndex: 10010000,
+          zIndex: 9998,
           backgroundColor: "white",
         }}
       >
