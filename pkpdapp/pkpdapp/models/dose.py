@@ -104,6 +104,8 @@ class Dose(DoseBase, StoredModel):
             'start_time': self.start_time,
             'amount': self.amount,
             'duration': self.duration,
+            'repeats': self.repeats,
+            'repeat_interval': self.repeat_interval,
             'read_only': True,
         }
         return Dose.objects.create(**stored_dose_kwargs)
