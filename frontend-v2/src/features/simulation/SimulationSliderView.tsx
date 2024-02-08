@@ -30,7 +30,7 @@ interface SimulationSliderProps {
   slider: SimulationSlider;
   onChange: (value: number) => void;
   onSave: (value: number) => void;
-  remove: (index: number) => void;
+  onRemove: () => void;
   units: UnitRead[];
 }
 
@@ -38,7 +38,7 @@ const SimulationSliderView: React.FC<SimulationSliderProps> = ({
   index,
   slider,
   onChange,
-  remove,
+  onRemove,
   onSave,
   units,
 }) => {
@@ -88,7 +88,7 @@ const SimulationSliderView: React.FC<SimulationSliderProps> = ({
   };
 
   const handleDelete = () => {
-    remove(index);
+    onRemove();
   };
 
   const handleWider = () => {
