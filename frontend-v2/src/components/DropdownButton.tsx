@@ -80,6 +80,7 @@ const DropdownButton: React.FC<Props> = ({
         data-cy={`dropdown-button-popover`}
         anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
         transformOrigin={{ vertical: "top", horizontal: "left" }}
+        style={{ zIndex: 9999 }}
       >
         {options.map((option, index) => (
           <ListItemButton

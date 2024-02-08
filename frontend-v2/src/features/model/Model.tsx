@@ -205,7 +205,8 @@ const Model: React.FC = () => {
   if (model.pk_model === null) {
     tabErrors[tabKeys[0]] = "Please select a PK model to simulate";
   }
-  const isTumourModel = pd_model?.is_library_model && pd_model?.name.startsWith("tumour_growth");
+  const hasPdModel = model.pd_model !== null;
+  const isTumourModel =  hasPdModel && pd_model?.is_library_model && pd_model?.name.startsWith("tumour_growth");
   const noKillModel = !model.pd_model2;
   if (model.pd_model &&  model.mappings.length === 0) {
     // put exception for tumour growth models with no kill

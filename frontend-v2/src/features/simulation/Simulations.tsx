@@ -414,9 +414,9 @@ const Simulations: React.FC = () => {
     return <div>Not found</div>;
   }
 
-  const orderedSliders = sliders.map((slider) => {
+  const orderedSliders = sliders.map((slider, i) => {
     const variable = variables.find((v) => v.id === slider.variable);
-    return { ...slider, priority: variable ? paramPriority(variable) : 0 };
+    return { ...slider, priority: variable ? paramPriority(variable) : 0, fieldArrayIndex: i };
   });
   orderedSliders.sort((a, b) => a.priority - b.priority);
 
@@ -501,6 +501,10 @@ const Simulations: React.FC = () => {
     setSliderValues({ ...sliderValues, [slider.variable]: value });
     setLoadingSimulate(true);
   };
+  
+  const handleRemoveSlider = (index: number) => () => {
+    removeSlider(index);
+  }
 
   const handleSaveSlider = (slider: SimulationSlider) => (value: number) => {
     const variable = variables?.find((v) => v.id === slider.variable);
@@ -653,7 +657,7 @@ const Simulations: React.FC = () => {
                 index={index}
                 slider={slider}
                 onChange={handleChangeSlider(slider)}
-                remove={removeSlider}
+                onRemove={handleRemoveSlider(slider.fieldArrayIndex)}
                 onSave={handleSaveSlider(slider)}
                 units={units}
               />

@@ -40,7 +40,9 @@ class TestProject(TestCase):
             project=self.project,
         )
         protocol = Protocol.objects.create(name="my protocol")
-        dose = protocol.doses.create(amount=1.0, start_time=0.0)
+        dose = protocol.doses.create(
+            amount=1.0, start_time=0.0, repeats=2, repeat_interval=1.1
+        )
         protocol.doses.set([dose])
         a1 = pkpd_model.variables.get(qname="PKCompartment.A1")
         a1.protocol = protocol
@@ -98,6 +100,8 @@ class TestProject(TestCase):
         self.assertNotEqual(new_dose.pk, dose.pk)
         self.assertEqual(new_dose.amount, 1.0)
         self.assertEqual(new_dose.start_time, 0.0)
+        self.assertEqual(new_dose.repeats, 2)
+        self.assertEqual(new_dose.repeat_interval, 1.1)
 
         # check that the simulation is there and has the right name
         self.assertEqual(new_project.simulations.count(), 1)
