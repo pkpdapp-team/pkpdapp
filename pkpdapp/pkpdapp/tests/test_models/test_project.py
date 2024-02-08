@@ -40,7 +40,9 @@ class TestProject(TestCase):
             project=self.project,
         )
         protocol = Protocol.objects.create(name="my protocol")
-        dose = protocol.doses.create(amount=1.0, start_time=0.0, repeats=2, repeat_interval=1.1)
+        dose = protocol.doses.create(
+            amount=1.0, start_time=0.0, repeats=2, repeat_interval=1.1
+        )
         protocol.doses.set([dose])
         a1 = pkpd_model.variables.get(qname="PKCompartment.A1")
         a1.protocol = protocol
