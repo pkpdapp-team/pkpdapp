@@ -46,10 +46,6 @@ import { selectIsProjectShared } from "../login/loginSlice";
 
 type SliderValues = { [key: number]: number };
 
-
-const { REACT_APP_DEBUG } = process.env;
-const showDebugPane = typeof REACT_APP_DEBUG === 'string' ? REACT_APP_DEBUG === 'true' : REACT_APP_DEBUG;
-
 interface ErrorObject {
   error: string;
 }
@@ -127,6 +123,21 @@ const getSliderInitialValues = (
     }
   }
   return initialValues;
+};
+
+const getVariablesSimulated = (
+  variables?: VariableRead[],
+  sliderValues?: SliderValues,
+) => {
+  const constantVariables = variables?.filter((v) => v.constant) || [];
+  const merged = constantVariables.map((v: VariableRead) => {
+    const result = { qname: v.qname, value: v.default_value };
+    if (sliderValues && sliderValues[v.id]) {
+      result.value = sliderValues[v.id];
+    }
+    return result;
+  });
+  return merged;
 };
 
 const Simulations: React.FC = () => {
@@ -279,6 +290,7 @@ const Simulations: React.FC = () => {
       compound
     ) {
       const timeMax = getTimeMax(simulation);
+      console.log("Simulating with params", getVariablesSimulated(variables, sliderValues));
       simulate({
         id: model.id,
         simulate: getSimulateInput(
@@ -316,6 +328,7 @@ const Simulations: React.FC = () => {
       project
     ) {
       const timeMax = getTimeMax(simulation);
+      console.log("Export to CSV: simulating with params", getVariablesSimulated(variables, sliderValues));
       simulate({
         id: model.id,
         simulate: getSimulateInput(
