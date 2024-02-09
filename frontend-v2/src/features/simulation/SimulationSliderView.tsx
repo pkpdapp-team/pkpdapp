@@ -186,7 +186,7 @@ const SimulationSliderView: React.FC<SimulationSliderProps> = ({
         </Grid>
         <Grid item xs={4}>
           <Input
-            value={value.toPrecision(3)}
+            value={value}
             size="small"
             onChange={handleInputChange}
             onBlur={handleBlur}
