@@ -125,6 +125,21 @@ const getSliderInitialValues = (
   return initialValues;
 };
 
+const getVariablesSimulated = (
+  variables?: VariableRead[],
+  sliderValues?: SliderValues,
+) => {
+  const constantVariables = variables?.filter((v) => v.constant) || [];
+  const merged = constantVariables.map((v: VariableRead) => {
+    const result = { qname: v.qname, value: v.default_value };
+    if (sliderValues && sliderValues[v.id]) {
+      result.value = sliderValues[v.id];
+    }
+    return result;
+  });
+  return merged;
+};
+
 const Simulations: React.FC = () => {
   const projectId = useSelector(
     (state: RootState) => state.main.selectedProject,
@@ -243,7 +258,10 @@ const Simulations: React.FC = () => {
   // reset form and sliders if simulation changes
   useEffect(() => {
     if (simulation && variables) {
-      setSliderValues((s) => getSliderInitialValues(simulation, s, variables));
+      setSliderValues((s) => {
+        const initialValues = getSliderInitialValues(simulation, s, variables);
+        return initialValues;
+      });
       //setLoadingSimulate(true);
       reset(simulation);
     }
@@ -272,6 +290,7 @@ const Simulations: React.FC = () => {
       compound
     ) {
       const timeMax = getTimeMax(simulation);
+      console.log("Simulating with params", getVariablesSimulated(variables, sliderValues));
       simulate({
         id: model.id,
         simulate: getSimulateInput(
@@ -309,6 +328,8 @@ const Simulations: React.FC = () => {
       project
     ) {
       const timeMax = getTimeMax(simulation);
+      const allParams = getVariablesSimulated(variables, sliderValues);
+      console.log("Export to CSV: simulating with params", allParams);
       simulate({
         id: model.id,
         simulate: getSimulateInput(
@@ -342,13 +363,22 @@ const Simulations: React.FC = () => {
             cols[0] = timeId;
           }
           const ncols = cols.length;
-          const rows = new Array(nrows + 1);
-          rows[0] = varNames;
+          const nparams = allParams.length;
+          const rows = new Array(nrows + 1 + nparams);
+          let rowi = 0;
+          for (let i = 0; i < nparams; i++) {
+            rows[rowi] = [allParams[i].qname, allParams[i].value];
+            rowi++;
+          }
+          rowi++;
+          rows[rowi] = varNames;
+          rowi++;
           for (let i = 0; i < nrows; i++) {
-            rows[i + 1] = new Array(ncols);
+            rows[rowi] = new Array(ncols);
             for (let j = 0; j < ncols; j++) {
-              rows[i + 1][j] = responseData.outputs[cols[j]][i];
+              rows[rowi][j] = responseData.outputs[cols[j]][i];
             }
+            rowi++;
           }
           const csvContent = rows.map((e) => e.join(",")).join("\n");
           const blob = new Blob([csvContent], {
