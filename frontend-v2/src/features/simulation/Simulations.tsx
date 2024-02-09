@@ -46,6 +46,10 @@ import { selectIsProjectShared } from "../login/loginSlice";
 
 type SliderValues = { [key: number]: number };
 
+
+const { REACT_APP_DEBUG } = process.env;
+const showDebugPane = typeof REACT_APP_DEBUG === 'string' ? REACT_APP_DEBUG === 'true' : REACT_APP_DEBUG;
+
 interface ErrorObject {
   error: string;
 }
