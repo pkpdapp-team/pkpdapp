@@ -66,6 +66,7 @@ const SimulationSliderView: React.FC<SimulationSliderProps> = ({
 
   useEffect(() => {
     setValue(variable?.default_value || 1.0);
+    onChange(variable?.default_value || 1.0);
   }, [variable]);
 
   const handleSliderChange = (
