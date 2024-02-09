@@ -1858,7 +1858,7 @@ export const param_default: {[key: string]: {[key: string]: {[key: string]: {[ke
             },
             
         },
-        kdeg: {
+        kdegT: {
             M: {
                 SM: {
                     value: 0.07124809851593399,
@@ -2592,7 +2592,7 @@ export const param_default: {[key: string]: {[key: string]: {[key: string]: {[ke
             },
             
         },
-        kdeg: {
+        kdegT: {
             M: {
                 SM: {
                     value: 0.07124809851593399,
