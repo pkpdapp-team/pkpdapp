@@ -328,7 +328,8 @@ const Simulations: React.FC = () => {
       project
     ) {
       const timeMax = getTimeMax(simulation);
-      console.log("Export to CSV: simulating with params", getVariablesSimulated(variables, sliderValues));
+      const allParams = getVariablesSimulated(variables, sliderValues);
+      console.log("Export to CSV: simulating with params", allParams);
       simulate({
         id: model.id,
         simulate: getSimulateInput(
@@ -362,13 +363,22 @@ const Simulations: React.FC = () => {
             cols[0] = timeId;
           }
           const ncols = cols.length;
-          const rows = new Array(nrows + 1);
-          rows[0] = varNames;
+          const nparams = allParams.length;
+          const rows = new Array(nrows + 1 + nparams);
+          let rowi = 0;
+          for (let i = 0; i < nparams; i++) {
+            rows[rowi] = [allParams[i].qname, allParams[i].value];
+            rowi++;
+          }
+          rowi++;
+          rows[rowi] = varNames;
+          rowi++;
           for (let i = 0; i < nrows; i++) {
-            rows[i + 1] = new Array(ncols);
+            rows[rowi] = new Array(ncols);
             for (let j = 0; j < ncols; j++) {
-              rows[i + 1][j] = responseData.outputs[cols[j]][i];
+              rows[rowi][j] = responseData.outputs[cols[j]][i];
             }
+            rowi++;
           }
           const csvContent = rows.map((e) => e.join(",")).join("\n");
           const blob = new Blob([csvContent], {
