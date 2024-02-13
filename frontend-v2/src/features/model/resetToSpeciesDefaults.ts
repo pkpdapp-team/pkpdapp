@@ -28,6 +28,15 @@ export const getConstVariables = (
     constVariables = constVariables.filter(
       (variable) => variable.name !== "C_Drug",
     );
+    // if Aa is not dosed, then we will filter out F and ka (for library models)
+    const aaIsNotDosed =
+      variables.filter((variable) => variable.protocol && variable.name === "Aa")
+        .length === 0;
+    if (aaIsNotDosed) {
+      constVariables = constVariables.filter(
+        (variable) => !["F", "ka"].includes(variable.name),
+      );
+    }
   }
   constVariables.sort((a, b) => {
     const overallOrder = paramPriority(a) - paramPriority(b);
