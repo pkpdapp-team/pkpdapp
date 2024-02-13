@@ -116,7 +116,7 @@ const getSliderInitialValues = (
       initialValues[slider.variable] = existingSliderValues[slider.variable];
     } else {
       const variable = variables?.find((v) => v.id === slider.variable);
-      if (variable && variable.default_value) {
+      if (variable?.default_value) {
         initialValues[slider.variable] = variable.default_value;
       }
     }
