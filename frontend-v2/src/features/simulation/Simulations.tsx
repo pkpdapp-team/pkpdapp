@@ -43,6 +43,7 @@ import UnitField from "../../components/UnitField";
 import paramPriority from "../model/paramPriority";
 import HelpButton from "../../components/HelpButton";
 import { selectIsProjectShared } from "../login/loginSlice";
+import { getConstVariables } from "../model/resetToSpeciesDefaults";
 
 type SliderValues = { [key: number]: number };
 
@@ -109,16 +110,14 @@ const getSliderInitialValues = (
   existingSliderValues?: SliderValues,
   variables?: VariableRead[],
 ): SliderValues => {
-  const initialValues: { [key: number]: number } = {};
+  const initialValues: SliderValues = {};
   for (const slider of simulation?.sliders || []) {
     if (existingSliderValues && existingSliderValues[slider.variable]) {
       initialValues[slider.variable] = existingSliderValues[slider.variable];
     } else {
       const variable = variables?.find((v) => v.id === slider.variable);
-      if (variable) {
-        initialValues[slider.variable] = variable.default_value || 1.0;
-      } else {
-        initialValues[slider.variable] = 1.0;
+      if (variable?.default_value) {
+        initialValues[slider.variable] = variable.default_value;
       }
     }
   }
@@ -192,7 +191,7 @@ const Simulations: React.FC = () => {
   const [updateVariable] = useVariableUpdateMutation();
 
   const [sliderValues, setSliderValues] = useState<
-    { [key: number]: number } | undefined
+    SliderValues | undefined
   >(undefined);
   const [loadingSimulate, setLoadingSimulate] = useState<boolean>(false);
 
@@ -477,10 +476,8 @@ const Simulations: React.FC = () => {
   });
 
   outputsSorted.sort((a, b) => b.priority - a.priority);
-  const inputs = variables?.filter((variable) => variable.constant) || [];
-  inputs.sort((a, b) => {
-    return paramPriority(a) - paramPriority(b);
-  });
+
+  let constVariables = model ? getConstVariables(variables, model) : [];
   const addPlotOptions = outputsSorted.map((variable) => ({
     value: variable.id,
     label: variable.description
@@ -488,7 +485,7 @@ const Simulations: React.FC = () => {
       : variable.name,
   }));
   const sliderVarIds = sliders.map((v) => v.variable);
-  const addSliderOptions = inputs
+  const addSliderOptions = constVariables
     .filter((v) => !sliderVarIds.includes(v.id))
     .map((variable) => ({
       value: variable.id,
