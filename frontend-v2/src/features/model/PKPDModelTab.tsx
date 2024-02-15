@@ -103,7 +103,7 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props) => {
 
   const pd_model_options: { value: number | string; label: string }[] =
     pdModelsFiltered
-    .filter((m) => !m.name.includes("inhibition"))
+    .filter((m) => !m.name.includes("tumour_growth_inhibition"))
     .map((m) => {
       return { value: m.id, label: m.name };
     });
