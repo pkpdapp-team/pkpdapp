@@ -339,7 +339,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                     kd = myokit_compartment.add_variable(kd_name)
                     kd.meta[
                         "desc"
-                    ] = "User-defined Dissociation Constant (Drug Target Tab) used to calculate Receptor occupancy"  # noqa: E501
+                    ] = "User-defined Dissociation Constant used to calculate Receptor occupancy"  # noqa: E501
                 target_conc_name = "CT1_0_ud"
                 if myokit_compartment.has_variable(target_conc_name):
                     target_conc = myokit_compartment.get(target_conc_name)
@@ -347,7 +347,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                     target_conc = myokit_compartment.add_variable(target_conc_name)
                     target_conc.meta[
                         "desc"
-                    ] = "User-defined Target Concentration (Drug Target Tab) used to calculate Receptor occupancy"  # noqa: E501
+                    ] = "User-defined Target Concentration used to calculate Receptor occupancy"  # noqa: E501
                 var.set_unit(myokit.Unit())
                 kd_unit = myokit_var.unit()
                 compound = self.project.compound
