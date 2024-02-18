@@ -210,7 +210,7 @@ class MyokitModelMixin:
         new_variables = [
             Variable.get_variable(self, v)
             for v in model.variables(const=True, sort=True)
-            if v.is_constant() and v.qname() not in removed_variables
+            if v.is_literal() and v.qname() not in removed_variables
         ]
 
         # parameters could originally be outputs
