@@ -21,7 +21,10 @@ export enum SubPageName {
   DRUG = 'Drug',
   MODEL = 'Model',
   TRAILDESIGN = 'Trial Design',
-  SIMULATION = 'Simulation'
+  SIMULATION = 'Simulation',
+  LOAD_DATA = 'Load Data',
+  STRATIFICATION = 'Stratification',
+  VISUALISATION = 'Visualisation'
 }
 
 interface MainState {
