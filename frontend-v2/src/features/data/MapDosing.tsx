@@ -5,18 +5,19 @@ import { StepperState } from "./LoadDataStepper";
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
 import {
+  VariableRead,
   useCombinedModelListQuery,
   useProjectRetrieveQuery,
   useUnitListQuery,
   useVariableListQuery
 } from "../../app/backendApi";
 
-interface IMapObservations {
+interface IMapDosing {
   state: StepperState;
   firstTime: boolean;
 }
-
-const MapObservations: FC<IMapObservations> = ({state, firstTime}: IMapObservations) => {
+    
+const MapDosing: FC<IMapDosing> = ({state, firstTime}: IMapDosing) => {
   console.log({ state })
   const projectId = useSelector(
     (state: RootState) => state.main.selectedProject,
@@ -29,80 +30,66 @@ const MapObservations: FC<IMapObservations> = ({state, firstTime}: IMapObservati
       { projectId: projectIdOrZero },
       { skip: !projectId },
     );
+  const { data: units, isLoading: isLoadingUnits } = useUnitListQuery(
+    { compoundId: project?.compound },
+    { skip: !project || !project.compound },
+  );
   const [ model ] = models;
   const { data: variables } = useVariableListQuery(
     { dosedPkModelId: model?.id || 0 },
     { skip: !model?.id },
   );
-  const { data: units, isLoading: isLoadingUnits } = useUnitListQuery(
-    { compoundId: project?.compound },
-    { skip: !project || !project.compound },
+
+  const amountField = state.fields.find(
+    (field, i) => state.normalisedFields[i] === 'Amount'
   );
-
-  const observationField = state.fields.find(
-    (field, i) => state.normalisedFields[i] === 'Observation'
-  ) || '';
-  const observationValues = observationField ?
-    state.data.map(row => row[observationField]) :
+  const amountValues = amountField ?
+    state.data.map(row => row[amountField]) :
     [];
-  const observationUnitField = state.fields.find(
-    (field, i) => state.normalisedFields[i] === 'Observation Unit'
+  const amountUnitField = state.fields.find(
+    (field, i) => state.normalisedFields[i] === 'Amount Unit'
   );
-  const observationUnits = observationUnitField ?
-    state.data.map(row => row[observationUnitField]) :
+  const amountUnits = amountUnitField ?
+    state.data.map(row => row[amountUnitField]) :
     [];
-  const filterOutputs = model?.is_library_model
-    ? ["environment.t", "PDCompartment.C_Drug"]
-    : [];
-  const modelOutputs =
-    variables?.filter(
-      (variable) =>
-        !variable.constant && !filterOutputs.includes(variable.qname),
-    ) || [];
-
-  const selectedVariable = variables?.find(variable => variable.qname === state.observationVariables?.[observationField]);
-  const compatibleUnits = units?.find((unit) => unit.id === selectedVariable?.unit)?.compatible_units;
-
-  const handleObservationChange = (field: string) => (event: SelectChangeEvent) => {
-    const { value } = event.target;
-    state.setObservationVariables({
-      ...state.observationVariables,
-      [field]: value
-    });
-    const selectedVariable = variables?.find(variable => variable.qname === value);
-    const defaultUnit = units?.find(unit => unit.id === selectedVariable?.unit);
-    state.setObservationUnits({
-      ...state.observationUnits,
-      [field]: defaultUnit?.symbol || ''
-    });
+  const selectedVariable = variables?.find(variable => variable.qname === state.amountVariable);
+  const variableUnits = units?.find(unit => unit.id === selectedVariable?.unit)?.compatible_units;
+  const isAmount = (variable: VariableRead) => {
+    const amountUnits = units?.find(
+      (unit) => unit.symbol === "pmol/kg",
+    )?.compatible_units;
+    const variableUnit = units?.find((unit) => unit.id === variable.unit);
+    return variableUnit?.symbol !== "" &&
+      amountUnits?.find(
+        (unit) => parseInt(unit.id) === variable.unit,
+      ) !== undefined;
   }
-  const handleUnitChange = (field: string) => (event: SelectChangeEvent) => {
+  const modelAmounts = variables?.filter(isAmount) || [];
+
+  const handleAmountMappingChange = (event: SelectChangeEvent) => {
     const { value } = event.target;
-    state.setObservationUnits({
-      ...state.observationUnits,
-      [field]: value
-    });
+    state.setAmountVariable(value);
   }
+  const handleAmountUnitChange = (event: SelectChangeEvent) => {
+    const { value } = event.target;
+    state.setAmountUnit(value);
+  }
+  console.log(units?.map(unit => unit.symbol))
   return (
     <>
-      <p>Map observations to variables in the model.</p>
+      <p>Map dose amounts to dosing compartments in the model.</p>
       <Box component="div" sx={{ maxHeight: "40vh", overflow: 'auto', overflowX: 'auto' }}>
         <Table>
           <TableHead>
             <TableRow>
               <TableCell>
                 <Typography>
-                  Name
+                  Amount
                 </Typography>
               </TableCell>
               <TableCell>
                 <Typography>
-                  Observation
-                </Typography>
-              </TableCell>
-              <TableCell>
-                <Typography>
-                  Observation Unit
+                  Unit
                 </Typography>
               </TableCell>
               <TableCell>
@@ -115,10 +102,10 @@ const MapObservations: FC<IMapObservations> = ({state, firstTime}: IMapObservati
                     labelId={`select-var-label`}
                     id={`select-var`}
                     label='Variable'
-                    value={state.observationVariables?.[observationField]}
-                    onChange={handleObservationChange(observationField)}
+                    value={state.amountVariable || modelAmounts?.[0]?.qname}
+                    onChange={handleAmountMappingChange}
                   >
-                    {modelOutputs?.map((variable) => (
+                    {modelAmounts?.map((variable) => (
                       <MenuItem key={variable.name} value={variable.qname}>{variable.name}</MenuItem>
                     ))}
                   </Select>
@@ -129,10 +116,10 @@ const MapObservations: FC<IMapObservations> = ({state, firstTime}: IMapObservati
                     labelId={`select-unit-label`}
                     id={`select-unit`}
                     label='Units'
-                    value={state.observationUnits?.[observationField]}
-                    onChange={handleUnitChange(observationField)}
+                    value={state.amountUnit}
+                    onChange={handleAmountUnitChange}
                   >
-                    {compatibleUnits?.map((unit) => (
+                    {variableUnits?.map((unit) => (
                       <MenuItem key={unit.symbol} value={unit.symbol}>{unit.symbol}</MenuItem>
                     ))}
                   </Select>
@@ -141,15 +128,14 @@ const MapObservations: FC<IMapObservations> = ({state, firstTime}: IMapObservati
             </TableRow>
           </TableHead>
           <TableBody>
-            {observationValues.map((observation, index) => (
+            {amountValues.map((amount, index) => (
               <TableRow key={index}>
-                <TableCell>{observationField}</TableCell>
-                <TableCell>{observation}</TableCell>
-                <TableCell>{observationUnits[index]}</TableCell>
+                <TableCell>{amount}</TableCell>
+                <TableCell>{amountUnits[index]}</TableCell>
                 <TableCell>
-                  {state.observationVariables?.[observationField]}
-                  [{state.observationUnits?.[observationField]}]
-                  </TableCell>
+                  {state.amountVariable}
+                  [{state.amountUnit}]
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -159,6 +145,6 @@ const MapObservations: FC<IMapObservations> = ({state, firstTime}: IMapObservati
   )
 }
 
-export default MapObservations;
+export default MapDosing;
 
  

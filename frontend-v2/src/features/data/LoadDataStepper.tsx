@@ -8,9 +8,10 @@ import Typography from '@mui/material/Typography';
 import LoadData from './LoadData';
 import { useState } from 'react';
 import MapObservations from './MapObservations';
+import MapDosing from './MapDosing';
 
-const stepLabels = ['Upload Data', 'Map Observations'];
-const stepComponents = [LoadData, MapObservations];
+const stepLabels = ['Upload Data', 'Map Dosing', 'Map Observations'];
+const stepComponents = [LoadData, MapDosing, MapObservations];
 
 type Row = {[key: string]: string};
 type Data = Row[];
@@ -29,6 +30,10 @@ export type StepperState = {
   setAmountUnit: (amountUnit: string) => void;
   observationUnits?: {[key: string]: string};
   setObservationUnits: (observationUnits: {[key: string]: string}) => void;
+  amountVariable?: string;
+  setAmountVariable: (amountVariable: string) => void;
+  observationVariables: {[key: string]: string};
+  setObservationVariables: (observationVariables: {[key: string]: string}) => void;
 }
 
 const LoadDataStepper: React.FC = () => {
@@ -38,6 +43,8 @@ const LoadDataStepper: React.FC = () => {
   const [timeUnit, setTimeUnit] = useState<string | undefined>(undefined);
   const [amountUnit, setAmountUnit] = useState<string | undefined>(undefined);
   const [observationUnits, setObservationUnits] = useState<{[key: string]: string}>({});
+  const [amountVariable, setAmountVariable] = useState<string | undefined>(undefined);
+  const [observationVariables, setObservationVariables] = useState<{[key: string]: string}>({});
 
   const state = {
     fields,
@@ -52,10 +59,15 @@ const LoadDataStepper: React.FC = () => {
     setAmountUnit,
     observationUnits,
     setObservationUnits,
+    amountVariable,
+    setAmountVariable,
+    observationVariables,
+    setObservationVariables
   };
 
   const [stepState, setStepState] = useState({ activeStep: 0, maxStep: 0 });
   const StepComponent = stepComponents[stepState.activeStep];
+  const isFinished = stepState.activeStep === stepLabels.length;
 
   const handleNext = () => {
     setStepState((prevActiveStep) => ({ 
@@ -77,10 +89,15 @@ const LoadDataStepper: React.FC = () => {
           </Step>
         ))}
       </Stepper>
-      <Typography>{stepState.activeStep === stepLabels.length ? 'The process is completed' : <StepComponent state={state} firstTime={stepState.activeStep === stepState.maxStep}/>}</Typography>
+      <Typography>
+        {isFinished ? 
+          'The process is completed' :
+          <StepComponent state={state} firstTime={stepState.activeStep === stepState.maxStep}/>
+        }
+      </Typography>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', marginTop: 1 }}>
         <Button disabled={stepState.activeStep === 0} onClick={handleBack}>Back</Button>
-        <Button variant="contained" color="primary" onClick={handleNext}>
+        <Button disabled={isFinished} variant="contained" color="primary" onClick={handleNext}>
           {stepState.activeStep === stepLabels.length - 1 ? 'Finish' : 'Next'}
         </Button>
       </Box>

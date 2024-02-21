@@ -1,6 +1,6 @@
 import { Alert, Box, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
 import Papa, { ParseError, ParseMeta } from 'papaparse'
-import React, {useCallback, useState} from 'react'
+import { FC, useCallback, useState} from 'react'
 import {useDropzone} from 'react-dropzone'
 import MapHeaders from './MapHeaders';
 import { manditoryHeaders, normaliseHeader, normalisedHeaders } from './normaliseDataHeaders';
@@ -48,7 +48,7 @@ const validateNormalisedFields = (fields: Field[]) => {
   return errors;
 }
 
-const LoadData: React.FC<ILoadDataProps> = ({state, firstTime}) => {
+const LoadData: FC<ILoadDataProps> = ({state, firstTime}) => {
   const [errors, setErrors] = useState<string[]>(firstTime ? [] : validateNormalisedFields(state.normalisedFields));
   const [showData, setShowData] = useState<boolean>(state.data.length > 0 && state.fields.length > 0);
 
