@@ -69,6 +69,7 @@ const Help: React.FC = () => {
     generic_questions.slice(0, 0),
     generic_questions.slice(0, 0),
     generic_questions.slice(0, 0),
+    generic_questions.slice(0, 0),
   ];
   const tutorials = [
     tutorialVideos.filter((video) => video.type.includes("Tutorial")),
