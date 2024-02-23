@@ -71,6 +71,11 @@ class BiomarkerType(models.Model):
             'True/False if biomarker type displayed on LHS/RHS axis'
         )
     )
+    mapped_qname = models.CharField(
+        default='',
+        max_length=50,
+        help_text='qname of the mapped model variable'
+    )
 
     def get_project(self):
         return self.dataset.get_project()

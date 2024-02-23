@@ -1671,6 +1671,7 @@ export type BiomarkerType = {
   display?: boolean;
   color?: number;
   axis?: boolean;
+  mapped_qname?: string;
   stored_unit: number;
   dataset: number;
   display_unit: number;
@@ -1689,6 +1690,7 @@ export type BiomarkerTypeRead = {
   display?: boolean;
   color?: number;
   axis?: boolean;
+  mapped_qname?: string;
   stored_unit: number;
   dataset: number;
   display_unit: number;
@@ -1701,6 +1703,7 @@ export type PatchedBiomarkerType = {
   display?: boolean;
   color?: number;
   axis?: boolean;
+  mapped_qname?: string;
   stored_unit?: number;
   dataset?: number;
   display_unit?: number;
@@ -1719,6 +1722,7 @@ export type PatchedBiomarkerTypeRead = {
   display?: boolean;
   color?: number;
   axis?: boolean;
+  mapped_qname?: string;
   stored_unit?: number;
   dataset?: number;
   display_unit?: number;
@@ -2127,9 +2131,7 @@ export type Inference = {
   time_elapsed?: number;
   number_of_function_evals?: number;
   task_id?: string | null;
-  metadata?: {
-    [key: string]: any;
-  };
+  metadata?: any;
   project: number;
   algorithm?: number;
   initialization_inference?: number | null;
@@ -2149,9 +2151,7 @@ export type InferenceRead = {
   time_elapsed?: number;
   number_of_function_evals?: number;
   task_id?: string | null;
-  metadata?: {
-    [key: string]: any;
-  };
+  metadata?: any;
   project: number;
   algorithm?: number;
   initialization_inference?: number | null;
@@ -2170,9 +2170,7 @@ export type PatchedInference = {
   time_elapsed?: number;
   number_of_function_evals?: number;
   task_id?: string | null;
-  metadata?: {
-    [key: string]: any;
-  };
+  metadata?: any;
   project?: number;
   algorithm?: number;
   initialization_inference?: number | null;
@@ -2192,9 +2190,7 @@ export type PatchedInferenceRead = {
   time_elapsed?: number;
   number_of_function_evals?: number;
   task_id?: string | null;
-  metadata?: {
-    [key: string]: any;
-  };
+  metadata?: any;
   project?: number;
   algorithm?: number;
   initialization_inference?: number | null;
