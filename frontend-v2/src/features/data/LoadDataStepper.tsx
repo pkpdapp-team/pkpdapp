@@ -28,12 +28,6 @@ export type StepperState = {
   setData: (data: Data) => void;
   amountUnit?: string;
   setAmountUnit: (amountUnit: string) => void;
-  observationUnits?: {[key: string]: string};
-  setObservationUnits: (observationUnits: {[key: string]: string}) => void;
-  amountVariable?: string;
-  setAmountVariable: (amountVariable: string) => void;
-  observationVariables: {[key: string]: string};
-  setObservationVariables: (observationVariables: {[key: string]: string}) => void;
 }
 
 const LoadDataStepper: React.FC = () => {
@@ -42,9 +36,6 @@ const LoadDataStepper: React.FC = () => {
   const [normalisedFields, setNormalisedFields] = useState<string[]>([]);
   const [timeUnit, setTimeUnit] = useState<string | undefined>(undefined);
   const [amountUnit, setAmountUnit] = useState<string | undefined>(undefined);
-  const [observationUnits, setObservationUnits] = useState<{[key: string]: string}>({});
-  const [amountVariable, setAmountVariable] = useState<string | undefined>(undefined);
-  const [observationVariables, setObservationVariables] = useState<{[key: string]: string}>({});
 
   const state = {
     fields,
@@ -56,13 +47,7 @@ const LoadDataStepper: React.FC = () => {
     timeUnit,
     setTimeUnit,
     amountUnit,
-    setAmountUnit,
-    observationUnits,
-    setObservationUnits,
-    amountVariable,
-    setAmountVariable,
-    observationVariables,
-    setObservationVariables
+    setAmountUnit
   };
 
   const [stepState, setStepState] = useState({ activeStep: 0, maxStep: 0 });

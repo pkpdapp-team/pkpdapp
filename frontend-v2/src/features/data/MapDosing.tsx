@@ -49,11 +49,16 @@ const MapDosing: FC<IMapDosing> = ({state, firstTime}: IMapDosing) => {
   const amountUnitField = state.fields.find(
     (field, i) => state.normalisedFields[i] === 'Amount Unit'
   );
-  const amountUnits = amountUnitField ?
-    state.data.map(row => row[amountUnitField]) :
+  const amountUnits = state.data.map(row => row[amountUnitField || 'Amount Unit']);
+  const administrationIdField = state.fields.find(
+    (field, i) => state.normalisedFields[i] === 'Administration ID'
+  );
+  const administrationIds = administrationIdField ?
+    state.data.map(row => row[administrationIdField]) :
     [];
-  const selectedVariable = variables?.find(variable => variable.qname === state.amountVariable);
-  const variableUnits = units?.find(unit => unit.id === selectedVariable?.unit)?.compatible_units;
+  const uniqueAdministrationIds = [...new Set(administrationIds)];
+  const amountVariables = state.data.map(row => row['Dosing Variable']);
+
   const isAmount = (variable: VariableRead) => {
     const amountUnits = units?.find(
       (unit) => unit.symbol === "pmol/kg",
@@ -66,19 +71,99 @@ const MapDosing: FC<IMapDosing> = ({state, firstTime}: IMapDosing) => {
   }
   const modelAmounts = variables?.filter(isAmount) || [];
 
-  const handleAmountMappingChange = (event: SelectChangeEvent) => {
+  const handleAmountMappingChange = (id: string) => (event: SelectChangeEvent) => {
+    const nextData = [...state.data];
     const { value } = event.target;
-    state.setAmountVariable(value);
+    nextData.filter(row => administrationIdField ? row[administrationIdField] === id : true)
+      .forEach(row => {
+        row['Dosing Variable'] = value;
+      })
+    state.setData(nextData);
   }
-  const handleAmountUnitChange = (event: SelectChangeEvent) => {
+  const handleAmountUnitChange = (id: string) => (event: SelectChangeEvent) => {
+    const nextData = [...state.data];
     const { value } = event.target;
-    state.setAmountUnit(value);
+    nextData.filter(row => administrationIdField ? row[administrationIdField] === id : true)
+      .forEach(row => {
+        row['Amount Unit'] = value;
+      })
+    state.setData(nextData);
   }
-  console.log(units?.map(unit => unit.symbol))
   return (
     <>
       <p>Map dose amounts to dosing compartments in the model.</p>
       <Box component="div" sx={{ maxHeight: "40vh", overflow: 'auto', overflowX: 'auto' }}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>
+                <Typography>
+                  {administrationIdField}
+                </Typography>
+              </TableCell>
+              <TableCell>
+                <Typography>
+                  Unit
+                </Typography>
+              </TableCell>
+              <TableCell>
+                <Typography>
+                  Dosing Compartment
+                </Typography>
+              </TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {uniqueAdministrationIds.map((adminId, index) => {
+              const currentRow = state.data.find(row => administrationIdField ? row[administrationIdField] === adminId : true);
+              const selectedVariable = variables?.find(variable => variable.qname === currentRow?.['Dosing Variable']);
+              const compatibleUnits = units?.find(unit => unit.id === selectedVariable?.unit)?.compatible_units;
+              const adminUnit = amountUnitField && currentRow && currentRow[amountUnitField];
+              return (
+                <TableRow>
+                  <TableCell>
+                    {adminId}
+                  </TableCell>
+                  <TableCell>
+                    {adminUnit ?
+                      adminUnit :
+                      <FormControl>
+                        <InputLabel id={`select-unit-${adminId}-label`}>Units</InputLabel>
+                        <Select
+                          labelId={`select-unit-${adminId}-label`}
+                          id={`select-unit-${adminId}`}
+                          label='Units'
+                          value={currentRow?.['Amount Unit']}
+                          onChange={handleAmountUnitChange(adminId)}
+                        >
+                          {compatibleUnits?.map((unit) => (
+                            <MenuItem key={unit.symbol} value={unit.symbol}>{unit.symbol}</MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    }
+                  </TableCell>
+                  <TableCell>
+                    <FormControl>
+                      <InputLabel id={`select-var-${adminId}-label`}>Variable</InputLabel>
+                      <Select
+                        labelId={`select-var-${adminId}-label`}
+                        id={`select-var-${adminId}`}
+                        label='Variable'
+                        value={selectedVariable?.qname}
+                        onChange={handleAmountMappingChange(adminId)}
+                      >
+                        {modelAmounts?.map((variable) => (
+                          <MenuItem key={variable.name} value={variable.qname}>{variable.name}</MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </TableCell>
+                </TableRow>
+              )
+            })}
+          </TableBody>
+        </Table>
         <Table>
           <TableHead>
             <TableRow>
@@ -96,34 +181,6 @@ const MapDosing: FC<IMapDosing> = ({state, firstTime}: IMapDosing) => {
                 <Typography>
                   Mapping
                 </Typography>
-                <FormControl>
-                  <InputLabel id={`select-var-label`}>Variable</InputLabel>
-                  <Select
-                    labelId={`select-var-label`}
-                    id={`select-var`}
-                    label='Variable'
-                    value={state.amountVariable || modelAmounts?.[0]?.qname}
-                    onChange={handleAmountMappingChange}
-                  >
-                    {modelAmounts?.map((variable) => (
-                      <MenuItem key={variable.name} value={variable.qname}>{variable.name}</MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-                <FormControl>
-                  <InputLabel id={`select-unit-label`}>Units</InputLabel>
-                  <Select
-                    labelId={`select-unit-label`}
-                    id={`select-unit`}
-                    label='Units'
-                    value={state.amountUnit}
-                    onChange={handleAmountUnitChange}
-                  >
-                    {variableUnits?.map((unit) => (
-                      <MenuItem key={unit.symbol} value={unit.symbol}>{unit.symbol}</MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
               </TableCell>
             </TableRow>
           </TableHead>
@@ -132,10 +189,7 @@ const MapDosing: FC<IMapDosing> = ({state, firstTime}: IMapDosing) => {
               <TableRow key={index}>
                 <TableCell>{amount}</TableCell>
                 <TableCell>{amountUnits[index]}</TableCell>
-                <TableCell>
-                  {state.amountVariable}
-                  [{state.amountUnit}]
-                </TableCell>
+                <TableCell>{amountVariables[index]}</TableCell>
               </TableRow>
             ))}
           </TableBody>

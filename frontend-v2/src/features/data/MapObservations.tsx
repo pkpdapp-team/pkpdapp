@@ -42,15 +42,22 @@ const MapObservations: FC<IMapObservations> = ({state, firstTime}: IMapObservati
   const observationField = state.fields.find(
     (field, i) => state.normalisedFields[i] === 'Observation'
   ) || '';
+  const observationIdField = state.fields.find(
+    (field, i) => state.normalisedFields[i] === 'Observation ID'
+  );
+  const observationIds = observationIdField ?
+    state.data.map(row => row[observationIdField]) :
+    [observationField];
+  const uniqueObservationIds = [...new Set(observationIds)];
   const observationValues = observationField ?
     state.data.map(row => row[observationField]) :
     [];
   const observationUnitField = state.fields.find(
     (field, i) => state.normalisedFields[i] === 'Observation Unit'
   );
-  const observationUnits = observationUnitField ?
-    state.data.map(row => row[observationUnitField]) :
-    [];
+  const observationUnits = state.data.map(row => row[observationUnitField || 'Observation Unit']);
+  const observationVariables = state.data.map(row => row['Observation Variable']);
+
   const filterOutputs = model?.is_library_model
     ? ["environment.t", "PDCompartment.C_Drug"]
     : [];
@@ -60,33 +67,104 @@ const MapObservations: FC<IMapObservations> = ({state, firstTime}: IMapObservati
         !variable.constant && !filterOutputs.includes(variable.qname),
     ) || [];
 
-  const selectedVariable = variables?.find(variable => variable.qname === state.observationVariables?.[observationField]);
-  const compatibleUnits = units?.find((unit) => unit.id === selectedVariable?.unit)?.compatible_units;
-
-  const handleObservationChange = (field: string) => (event: SelectChangeEvent) => {
+  const handleObservationChange = (id: string) => (event: SelectChangeEvent) => {
+    const nextData = [...state.data];
     const { value } = event.target;
-    state.setObservationVariables({
-      ...state.observationVariables,
-      [field]: value
-    });
     const selectedVariable = variables?.find(variable => variable.qname === value);
     const defaultUnit = units?.find(unit => unit.id === selectedVariable?.unit);
-    state.setObservationUnits({
-      ...state.observationUnits,
-      [field]: defaultUnit?.symbol || ''
-    });
+    nextData.filter(row => observationIdField ? row[observationIdField] === id : true)
+      .forEach(row => {
+        row['Observation Variable'] = value;
+        if (!observationUnitField && defaultUnit) {
+          row['Observation Unit'] = defaultUnit?.symbol
+        }
+      });
+    state.setData(nextData);
   }
-  const handleUnitChange = (field: string) => (event: SelectChangeEvent) => {
+  const handleUnitChange = (id: string) => (event: SelectChangeEvent) => {
+    const nextData = [...state.data];
     const { value } = event.target;
-    state.setObservationUnits({
-      ...state.observationUnits,
-      [field]: value
-    });
+    nextData.filter(row => observationIdField ? row[observationIdField] === id : true)
+      .forEach(row => {
+        row[observationUnitField || 'Observation Unit'] = value;
+      });
+    state.setData(nextData);
   }
   return (
     <>
       <p>Map observations to variables in the model.</p>
       <Box component="div" sx={{ maxHeight: "40vh", overflow: 'auto', overflowX: 'auto' }}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>
+                <Typography>
+                  {observationIdField}
+                </Typography>
+              </TableCell>
+              <TableCell>
+                <Typography>
+                  Unit
+                </Typography>
+              </TableCell>
+              <TableCell>
+                <Typography>
+                  Observation
+                </Typography>
+              </TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {uniqueObservationIds.map((obsId, index) => {
+              const currentRow = state.data.find(row => observationIdField ? row[observationIdField] === obsId : true);
+              const selectedVariable = variables?.find(variable => variable.qname === currentRow?.['Observation Variable']);
+              const compatibleUnits = units?.find(unit => unit.id === selectedVariable?.unit)?.compatible_units;
+              const obsUnit = observationUnitField && currentRow && currentRow[observationUnitField];
+              return (
+                <TableRow>
+                  <TableCell>
+                    {obsId}
+                  </TableCell>
+                  <TableCell>
+                    {obsUnit ?
+                      obsUnit :
+                      <FormControl>
+                        <InputLabel id={`select-unit-${obsId}-label`}>Units</InputLabel>
+                        <Select
+                          labelId={`select-unit-${obsId}-label`}
+                          id={`select-unit-${obsId}`}
+                          label='Units'
+                          value={currentRow?.['Observation Unit']}
+                          onChange={handleUnitChange(obsId)}
+                        >
+                          {compatibleUnits?.map((unit) => (
+                            <MenuItem key={unit.symbol} value={unit.symbol}>{unit.symbol}</MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    }
+                  </TableCell>
+                  <TableCell>
+                    <FormControl>
+                      <InputLabel id={`select-var-${obsId}-label`}>Variable</InputLabel>
+                      <Select
+                        labelId={`select-var-${obsId}-label`}
+                        id={`select-var-${obsId}`}
+                        label='Variable'
+                        value={selectedVariable?.qname}
+                        onChange={handleObservationChange(obsId)}
+                      >
+                        {modelOutputs?.map((variable) => (
+                          <MenuItem key={variable.name} value={variable.qname}>{variable.name}</MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </TableCell>
+                </TableRow>
+              )
+            })}
+          </TableBody>
+        </Table>
         <Table>
           <TableHead>
             <TableRow>
@@ -109,49 +187,23 @@ const MapObservations: FC<IMapObservations> = ({state, firstTime}: IMapObservati
                 <Typography>
                   Mapping
                 </Typography>
-                <FormControl>
-                  <InputLabel id={`select-var-label`}>Variable</InputLabel>
-                  <Select
-                    labelId={`select-var-label`}
-                    id={`select-var`}
-                    label='Variable'
-                    value={state.observationVariables?.[observationField]}
-                    onChange={handleObservationChange(observationField)}
-                  >
-                    {modelOutputs?.map((variable) => (
-                      <MenuItem key={variable.name} value={variable.qname}>{variable.name}</MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-                <FormControl>
-                  <InputLabel id={`select-unit-label`}>Units</InputLabel>
-                  <Select
-                    labelId={`select-unit-label`}
-                    id={`select-unit`}
-                    label='Units'
-                    value={state.observationUnits?.[observationField]}
-                    onChange={handleUnitChange(observationField)}
-                  >
-                    {compatibleUnits?.map((unit) => (
-                      <MenuItem key={unit.symbol} value={unit.symbol}>{unit.symbol}</MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
               </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {observationValues.map((observation, index) => (
-              <TableRow key={index}>
-                <TableCell>{observationField}</TableCell>
-                <TableCell>{observation}</TableCell>
-                <TableCell>{observationUnits[index]}</TableCell>
-                <TableCell>
-                  {state.observationVariables?.[observationField]}
-                  [{state.observationUnits?.[observationField]}]
-                  </TableCell>
-              </TableRow>
-            ))}
+            {observationValues.map((observation, index) => {
+              const obsId = observationIds[index];
+              const obsUnit = observationUnits[index];
+              const obsVariable = observationVariables[index];
+              return (
+                <TableRow key={index}>
+                  <TableCell>{obsId}</TableCell>
+                  <TableCell>{observation}</TableCell>
+                  <TableCell>{obsUnit}</TableCell>
+                  <TableCell>{obsVariable}</TableCell>
+                </TableRow>
+              )
+            })}
           </TableBody>
         </Table>
       </Box>
