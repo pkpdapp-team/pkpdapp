@@ -9,9 +9,10 @@ import LoadData from './LoadData';
 import { useState } from 'react';
 import MapObservations from './MapObservations';
 import MapDosing from './MapDosing';
+import PreviewData from './PreviewData';
 
-const stepLabels = ['Upload Data', 'Map Dosing', 'Map Observations'];
-const stepComponents = [LoadData, MapDosing, MapObservations];
+const stepLabels = ['Upload Data', 'Map Dosing', 'Map Observations', 'Preview Dataset'];
+const stepComponents = [LoadData, MapDosing, MapObservations, PreviewData];
 
 type Row = {[key: string]: string};
 type Data = Row[];
