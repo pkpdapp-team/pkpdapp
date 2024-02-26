@@ -17,7 +17,6 @@ interface IMapObservations {
 }
 
 const MapObservations: FC<IMapObservations> = ({state, firstTime}: IMapObservations) => {
-  console.log({ state })
   const projectId = useSelector(
     (state: RootState) => state.main.selectedProject,
   );

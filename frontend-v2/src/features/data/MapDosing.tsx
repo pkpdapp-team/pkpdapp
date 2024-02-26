@@ -18,7 +18,6 @@ interface IMapDosing {
 }
     
 const MapDosing: FC<IMapDosing> = ({state, firstTime}: IMapDosing) => {
-  console.log({ state })
   const projectId = useSelector(
     (state: RootState) => state.main.selectedProject,
   );
