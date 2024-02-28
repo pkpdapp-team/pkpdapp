@@ -1,4 +1,4 @@
-import * as React from "react";
+import { FC, useRef, useState } from "react";
 import {
   CombinedModelRead,
   CompoundRead,
@@ -21,9 +21,6 @@ import VariableRow from "./VariableRow";
 import HelpButton from "../../components/HelpButton";
 import { FormData } from "./Model";
 import { defaultHeaderSx } from "../../shared/tableHeadersSx";
-import { useSelector } from "react-redux";
-import { RootState } from "../../app/store";
-import { selectIsProjectShared } from "../login/loginSlice";
 
 interface Props {
   model: CombinedModelRead;
@@ -34,7 +31,7 @@ interface Props {
   compound: CompoundRead;
 }
 
-const MapVariablesTab: React.FC<Props> = ({
+const MapVariablesTab: FC<Props> = ({
   model,
   project,
   control,
@@ -42,17 +39,17 @@ const MapVariablesTab: React.FC<Props> = ({
   units,
   compound,
 }: Props) => {
-  const [dosings, setDosing] = React.useState<
+  const [dosings, setDosing] = useState<
     { key: number; hasDosingSelected: boolean; projectId: number, species: ProjectSpeciesEnum | undefined  }[]
   >([]);
-  const [linkToPds, setLinkToPd] = React.useState<
+  const [linkToPds, setLinkToPd] = useState<
     { key: number; hasPdSelected: boolean; projectId: number, species: ProjectSpeciesEnum | undefined }[]
   >([]);
-  const [lagTimes, setLagTimes] = React.useState<
+  const [lagTimes, setLagTimes] = useState<
     { key: number; hasLagTimeSelected: boolean; projectId: number, species: ProjectSpeciesEnum | undefined }[]
   >([]);
 
-  const iconRef = React.useRef<HTMLDivElement | null>(null);
+  const iconRef = useRef<HTMLDivElement | null>(null);
   const isAnyDosingSelected = dosings
     .filter(({ projectId }) => projectId === project?.id)
     .map(({ hasDosingSelected }) => hasDosingSelected)

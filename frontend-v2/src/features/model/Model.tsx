@@ -18,7 +18,7 @@ import {
   useVariableListQuery,
 } from "../../app/backendApi";
 import { useForm } from "react-hook-form";
-import { useEffect, useMemo } from "react";
+import { FC, useEffect, useMemo } from "react";
 import { DynamicTabs, TabPanel } from "../../components/DynamicTabs";
 import MapVariablesTab from "./MapVariablesTab";
 import PKPDModelTab from "./PKPDModelTab";
@@ -31,7 +31,7 @@ export type FormData = {
   model: CombinedModel;
 };
 
-const Model: React.FC = () => {
+const Model: FC = () => {
   const projectId = useSelector(
     (state: RootState) => state.main.selectedProject,
   );
@@ -51,7 +51,7 @@ const Model: React.FC = () => {
   const { data: protocols, isLoading: isProtocolsLoading } =
     useProtocolListQuery({ projectId: projectIdOrZero }, { skip: !projectId });
   const model = models?.[0] || null;
-  const { data: pd_model, isLoading: isPdModelLoading } =
+  const { data: pd_model } =
     usePharmacodynamicRetrieveQuery(
       { id: model?.pd_model || 0 },
       { skip: !model?.pd_model },

@@ -1,4 +1,9 @@
-import React, { useState, useEffect } from "react";
+import {
+  FC,
+  ReactNode,
+  useState,
+  useEffect
+} from "react";
 import { HelpOutline } from "@mui/icons-material";
 import { IconButton, Tooltip } from "@mui/material";
 import { tooltipWrapper } from "../shared/tooltipWrapper";
@@ -7,10 +12,10 @@ import { RootState } from "../app/store";
 
 interface HelpButtonProps {
   title: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
-const HelpButton: React.FC<HelpButtonProps> = ({ title, children }) => {
+const HelpButton: FC<HelpButtonProps> = ({ title, children }) => {
   const [open, setOpen] = useState(false);
   const selectedPage = useSelector(
     (state: RootState) => state.main.selectedPage,
