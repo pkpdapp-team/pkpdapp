@@ -1,5 +1,5 @@
 // src/components/ProjectTable.tsx
-import React, { useEffect } from "react";
+import { FC, useEffect } from "react";
 import { Control, useFieldArray, useForm } from "react-hook-form";
 import {
   TableCell,
@@ -49,7 +49,7 @@ type DerivedVariableType = "RO" | "FUP" | "BPR" | "TLG";
 
 const derivedVariableRegex = /calc_.*_(f|bl|RO)/;
 
-const VariableRow: React.FC<Props> = ({
+const VariableRow: FC<Props> = ({
   project,
   compound,
   model,
@@ -83,7 +83,6 @@ const VariableRow: React.FC<Props> = ({
   });
 
   const {
-    control: controlVariable,
     handleSubmit,
     reset,
     setValue,

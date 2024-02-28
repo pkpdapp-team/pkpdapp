@@ -1,11 +1,9 @@
 import {
   Button,
-  FormLabel,
   Grid,
   IconButton,
   List,
   ListItem,
-  ListItemSecondaryAction,
   Radio,
   Stack,
   Tooltip,
@@ -16,7 +14,6 @@ import { RootState } from "../../app/store";
 import {
   Compound,
   EfficacyRead,
-  UnitRead,
   useCompoundRetrieveQuery,
   useCompoundUpdateMutation,
   useProjectRetrieveQuery,
@@ -25,7 +22,7 @@ import {
 import { useFieldArray, useForm, useFormState } from "react-hook-form";
 import FloatField from "../../components/FloatField";
 import UnitField from "../../components/UnitField";
-import { useEffect, useState } from "react";
+import { FC, useEffect, useState } from "react";
 import DeleteIcon from "@mui/icons-material/Delete";
 import TextField from "../../components/TextField";
 import useDirty from "../../hooks/useDirty";
@@ -33,7 +30,7 @@ import ConfirmationDialog from "../../components/ConfirmationDialog";
 import SelectField from "../../components/SelectField";
 import { selectIsProjectShared } from "../login/loginSlice";
 
-const Drug: React.FC = () => {
+const Drug: FC = () => {
   const projectId = useSelector(
     (state: RootState) => state.main.selectedProject,
   );

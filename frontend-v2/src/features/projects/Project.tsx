@@ -1,5 +1,5 @@
 // src/components/ProjectTable.tsx
-import React, { useEffect, useState } from "react";
+import { FC, useEffect, useState } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import VisibilityIcon from '@mui/icons-material/Visibility';
@@ -25,7 +25,6 @@ import {
   CompoundRead,
   ProjectRead,
   useProjectCopyUpdateMutation,
-  useProjectAccessUpdateMutation,
   useProjectAccessDestroyMutation,
 } from "../../app/backendApi";
 import UserAccess from "./UserAccess";
@@ -56,7 +55,7 @@ export const speciesOptions = [
   { value: "O", label: "Other" },
 ];
 
-const ProjectRow: React.FC<Props> = ({
+const ProjectRow: FC<Props> = ({
   project,
   isSelected,
   isAnyProjectSelected,
@@ -214,7 +213,7 @@ const ProjectRow: React.FC<Props> = ({
     : "Delete Project";
 
   return (
-    <React.Fragment>
+    <>
       <TableRow data-cy={`project-${project.id}`} style={{ backgroundColor: isSelected ? '#E3E9F8' : '#FFF' }}>
         <TableCell
           rowSpan={isSelected ? 2 : 1}
@@ -318,7 +317,7 @@ const ProjectRow: React.FC<Props> = ({
           <TableCell colSpan={1} />
         </TableRow>
       )}
-    </React.Fragment>
+    </>
   );
 };
 

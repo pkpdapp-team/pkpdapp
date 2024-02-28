@@ -1,6 +1,4 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { RootState } from "../../app/store";
-import { selectCurrentUser } from "../login/loginSlice";
 
 export enum PageName {
   PROJECTS = "Projects",

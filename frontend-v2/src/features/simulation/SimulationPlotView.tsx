@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { FC, useState } from "react";
 import Plot from "react-plotly.js";
 import {
   CombinedModelRead,
@@ -21,41 +21,6 @@ import { Control, FieldArrayWithId, UseFormSetValue } from "react-hook-form";
 import SimulationPlotForm from "./SimulationPlotForm";
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
-import exp from "constants";
-
-function dticks(
-  rangey: number[] | undefined,
-  rangey2: number[] | undefined,
-  plot: FieldArrayWithId<Simulation, "plots", "id">,
-): {
-  dticky: number | string | undefined;
-  dticky2: number | string | undefined;
-} {
-  // axis dticks
-  let dticky: number | string | undefined = undefined;
-  let dticky2: number | string | undefined = undefined;
-  function nearestPowerOf2(n: number) {
-    return 1 << (31 - Math.clz32(n));
-  }
-  function nearestPowerOfe(n: number) {
-    return Math.pow(Math.E, Math.floor(Math.log(n) / Math.log(Math.E)));
-  }
-  if (plot.y_scale === "lg2" && rangey) {
-    dticky = Math.log10(nearestPowerOf2(rangey[1] - rangey[0]) / 100.0);
-  } else if (plot.y_scale === "lg10") {
-    dticky = `D${2}`;
-  } else if (plot.y_scale === "ln" && rangey) {
-    dticky = Math.log10(nearestPowerOfe(rangey[1] - rangey[0]) / 10.0);
-  }
-  if (plot.y2_scale === "lg2" && rangey2) {
-    dticky2 = Math.log10(nearestPowerOf2(rangey2[1] - rangey2[0]) / 10.0);
-  } else if (plot.y2_scale === "lg10") {
-    dticky2 = `D${2}`;
-  } else if (plot.y2_scale === "ln" && rangey2) {
-    dticky2 = Math.log10(nearestPowerOfe(rangey2[1] - rangey2[0]) / 10.0);
-  }
-  return { dticky, dticky2 };
-}
 
 function ranges(
   minY: number | undefined,
@@ -172,7 +137,7 @@ interface SimulationPlotProps {
   model: CombinedModelRead;
 }
 
-const SimulationPlotView: React.FC<SimulationPlotProps> = ({
+const SimulationPlotView: FC<SimulationPlotProps> = ({
   index,
   plot,
   data,

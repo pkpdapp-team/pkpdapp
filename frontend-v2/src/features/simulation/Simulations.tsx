@@ -1,7 +1,6 @@
 import {
   Alert,
   Button,
-  Container,
   Grid,
   Snackbar,
   Stack,
@@ -31,11 +30,10 @@ import {
   useVariableUpdateMutation,
 } from "../../app/backendApi";
 import { useFieldArray, useForm } from "react-hook-form";
-import { useEffect, useMemo, useState, useRef } from "react";
+import { FC, useEffect, useMemo, useState, useRef } from "react";
 import SimulationPlotView from "./SimulationPlotView";
 import SimulationSliderView from "./SimulationSliderView";
 import DropdownButton from "../../components/DropdownButton";
-import { Add } from "@mui/icons-material";
 import SettingsIcon from "@mui/icons-material/Settings";
 import FloatField from "../../components/FloatField";
 import useDirty from "../../hooks/useDirty";
@@ -139,7 +137,7 @@ const getVariablesSimulated = (
   return merged;
 };
 
-const Simulations: React.FC = () => {
+const Simulations: FC = () => {
   const projectId = useSelector(
     (state: RootState) => state.main.selectedProject,
   );

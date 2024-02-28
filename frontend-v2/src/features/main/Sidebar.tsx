@@ -1,4 +1,4 @@
-import * as React from "react";
+import { ReactNode, useState } from "react";
 import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
 import CssBaseline from "@mui/material/CssBaseline";
@@ -18,7 +18,6 @@ import { PageName, SubPageName, setPage, setSubPage } from "./mainSlice";
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
 import { LinearProgress, Tooltip } from "@mui/material";
-import { Logout } from "@mui/icons-material";
 import { logout } from "../login/loginSlice";
 import { useAppDispatch } from "../../app/hooks";
 import ErrorIcon from "@mui/icons-material/Error";
@@ -47,7 +46,7 @@ const drawerWidth = 240;
 
 export default function Sidebar() {
   const dispatch = useAppDispatch();
-  const [mobileOpen, setMobileOpen] = React.useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const selectedPage = useSelector(
     (state: RootState) => state.main.selectedPage,
   );
@@ -69,7 +68,7 @@ export default function Sidebar() {
     { skip: !projectId },
   );
   const model = models?.[0] || null;
-  const { data: pd_model, isLoading: isPdModelLoading } =
+  const { data: pd_model } =
     usePharmacodynamicRetrieveQuery(
       { id: model?.pd_model || 0 },
       { skip: !model?.pd_model },
@@ -101,7 +100,7 @@ export default function Sidebar() {
       "Model is incomplete, see the Model tab for details";
   }
 
-  const errorComponents: { [key: string]: React.ReactNode } = {};
+  const errorComponents: { [key: string]: ReactNode } = {};
   for (const key in errors) {
     errorComponents[key] = (
       <Tooltip title={errors[key]}>
@@ -110,7 +109,7 @@ export default function Sidebar() {
     );
   }
 
-  const icons: { [key: string]: React.ReactNode } = {
+  const icons: { [key: string]: ReactNode } = {
     [PageName.PROJECTS]: <DnsIcon />,
     [PageName.DRUG]: <BiotechIcon />,
     [PageName.MODEL]: <FunctionsIcon />,

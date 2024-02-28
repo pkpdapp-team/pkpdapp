@@ -1,4 +1,4 @@
-import React from "react";
+import { FC } from "react";
 import { useForm } from "react-hook-form";
 import {
   Button,
@@ -10,9 +10,7 @@ import {
   Stack,
   Alert,
 } from "@mui/material";
-import { ReactComponent as PkpdAppIcon } from "../../logo_pkpdapp_with_text.svg";
 import TextField from "../../components/TextField";
-import { useAppDispatch } from "../../app/hooks";
 
 interface LoginFormInputs {
   username: string;
@@ -27,7 +25,7 @@ interface LoginProps {
 
 const { REACT_APP_HELP_URL } = process.env;
 
-const Login: React.FC<LoginProps> = ({ onLogin, isLoading, errorMessage }) => {
+const Login: FC<LoginProps> = ({ onLogin, isLoading, errorMessage }) => {
   const { handleSubmit, control } = useForm<LoginFormInputs>();
 
   const onSubmit = (data: LoginFormInputs) => {
