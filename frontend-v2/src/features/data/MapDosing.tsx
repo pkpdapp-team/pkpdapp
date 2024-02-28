@@ -1,6 +1,18 @@
 import { FC } from 'react';
-import { Box, Select, FormControl, MenuItem, InputLabel, Stack, Table, TableHead, TableRow, TableCell, TableBody, Typography, SelectChangeEvent } from "@mui/material";
-import { Field, Data } from "./LoadData";
+import {
+  Box,
+  Select,
+  FormControl,
+  MenuItem,
+  InputLabel,
+  Table,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableBody,
+  Typography,
+  SelectChangeEvent
+} from "@mui/material";
 import { StepperState } from "./LoadDataStepper";
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
@@ -16,24 +28,24 @@ interface IMapDosing {
   state: StepperState;
   firstTime: boolean;
 }
-    
-const MapDosing: FC<IMapDosing> = ({state, firstTime}: IMapDosing) => {
+
+const MapDosing: FC<IMapDosing> = ({ state, firstTime }: IMapDosing) => {
   const projectId = useSelector(
     (state: RootState) => state.main.selectedProject,
   );
   const projectIdOrZero = projectId || 0;
-  const { data: project, isLoading: isProjectLoading } =
+  const { data: project } =
     useProjectRetrieveQuery({ id: projectId || 0 }, { skip: !projectId });
-  const { data: models = [], isLoading: isModelsLoading } =
+  const { data: models = [] } =
     useCombinedModelListQuery(
       { projectId: projectIdOrZero },
       { skip: !projectId },
     );
-  const { data: units, isLoading: isLoadingUnits } = useUnitListQuery(
+  const { data: units } = useUnitListQuery(
     { compoundId: project?.compound },
     { skip: !project || !project.compound },
   );
-  const [ model ] = models;
+  const [model] = models;
   const { data: variables } = useVariableListQuery(
     { dosedPkModelId: model?.id || 0 },
     { skip: !model?.id },
@@ -200,4 +212,3 @@ const MapDosing: FC<IMapDosing> = ({state, firstTime}: IMapDosing) => {
 
 export default MapDosing;
 
- 

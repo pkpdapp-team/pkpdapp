@@ -86,7 +86,7 @@ const LoadDataStepper: FC = () => {
     if (!isDatasetLoading) {
       addDataset();
     }
-  }, [datasets, isDatasetLoading]);
+  }, [datasets, createDataset, isDatasetLoading]);
 
   useEffect(function onFinished() {
     if (isFinished && dataset?.id) {
@@ -102,7 +102,7 @@ const LoadDataStepper: FC = () => {
         console.error(e);
       }
     }
-  }, [isFinished])
+  }, [isFinished, updateDataset, dataset?.id, data])
 
   const handleNext = () => {
     setStepState((prevActiveStep) => ({ 

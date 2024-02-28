@@ -1,6 +1,5 @@
 import { FC } from 'react';
-import { Box, Select, FormControl, MenuItem, InputLabel, Stack, Table, TableHead, TableRow, TableCell, TableBody, Typography, SelectChangeEvent } from "@mui/material";
-import { Field, Data } from "./LoadData";
+import { Box, Select, FormControl, MenuItem, InputLabel, Table, TableHead, TableRow, TableCell, TableBody, Typography, SelectChangeEvent } from "@mui/material";
 import { StepperState } from "./LoadDataStepper";
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
@@ -16,14 +15,14 @@ interface IMapObservations {
   firstTime: boolean;
 }
 
-const MapObservations: FC<IMapObservations> = ({state, firstTime}: IMapObservations) => {
+const MapObservations: FC<IMapObservations> = ({state}: IMapObservations) => {
   const projectId = useSelector(
     (state: RootState) => state.main.selectedProject,
   );
   const projectIdOrZero = projectId || 0;
-  const { data: project, isLoading: isProjectLoading } =
+  const { data: project } =
     useProjectRetrieveQuery({ id: projectId || 0 }, { skip: !projectId });
-  const { data: models = [], isLoading: isModelsLoading } =
+  const { data: models = [] } =
     useCombinedModelListQuery(
       { projectId: projectIdOrZero },
       { skip: !projectId },
@@ -33,7 +32,7 @@ const MapObservations: FC<IMapObservations> = ({state, firstTime}: IMapObservati
     { dosedPkModelId: model?.id || 0 },
     { skip: !model?.id },
   );
-  const { data: units, isLoading: isLoadingUnits } = useUnitListQuery(
+  const { data: units } = useUnitListQuery(
     { compoundId: project?.compound },
     { skip: !project || !project.compound },
   );
@@ -114,7 +113,7 @@ const MapObservations: FC<IMapObservations> = ({state, firstTime}: IMapObservati
             </TableRow>
           </TableHead>
           <TableBody>
-            {uniqueObservationIds.map((obsId, index) => {
+            {uniqueObservationIds.map((obsId) => {
               const currentRow = state.data.find(row => observationIdField ? row[observationIdField] === obsId : true);
               const selectedVariable = variables?.find(variable => variable.qname === currentRow?.['Observation Variable']);
               const compatibleUnits = units?.find(unit => unit.id === selectedVariable?.unit)?.compatible_units;
