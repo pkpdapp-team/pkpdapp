@@ -845,6 +845,12 @@ paths:
       - dataset
       requestBody:
         content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DatasetCsv'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DatasetCsv'
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/DatasetCsv'
@@ -3419,7 +3425,6 @@ components:
       properties:
         csv:
           type: string
-          format: uri
       required:
       - csv
     DerivedVariable:

@@ -4,7 +4,7 @@
 # copyright notice and full license details.
 #
 from rest_framework import (
-    viewsets, decorators, parsers, response, status
+    viewsets, decorators, response, status
 )
 from pkpdapp.api.views import (
     ProjectFilter,
@@ -23,8 +23,7 @@ class DatasetView(viewsets.ModelViewSet):
     @decorators.action(
         detail=True,
         serializer_class=DatasetCsvSerializer,
-        methods=['PUT'],
-        parser_classes=[parsers.MultiPartParser],
+        methods=['PUT']
     )
     def csv(self, request, pk):
         obj = self.get_object()
