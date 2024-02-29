@@ -30,7 +30,7 @@ import {
   useVariableUpdateMutation,
 } from "../../app/backendApi";
 import { useFieldArray, useForm } from "react-hook-form";
-import { FC, useEffect, useMemo, useState, useRef } from "react";
+import { FC, useCallback, useEffect, useMemo, useState, useRef } from "react";
 import SimulationPlotView from "./SimulationPlotView";
 import SimulationSliderView from "./SimulationSliderView";
 import DropdownButton from "../../components/DropdownButton";
@@ -191,6 +191,10 @@ const Simulations: FC = () => {
   const [sliderValues, setSliderValues] = useState<
     SliderValues | undefined
   >(undefined);
+  const handleChangeSlider = useCallback((variable: number, value: number) => {
+    setSliderValues(prevSliderValues => ({ ...prevSliderValues, [variable]: value }));
+    setLoadingSimulate(true);
+  }, []);
   const [loadingSimulate, setLoadingSimulate] = useState<boolean>(false);
 
   const isSharedWithMe = useSelector((state: RootState) => selectIsProjectShared(state, project));
@@ -521,11 +525,6 @@ const Simulations: FC = () => {
     };
     addSimulationSlider(defaultSlider);
   };
-
-  const handleChangeSlider = (slider: SimulationSlider) => (value: number) => {
-    setSliderValues({ ...sliderValues, [slider.variable]: value });
-    setLoadingSimulate(true);
-  };
   
   const handleRemoveSlider = (index: number) => () => {
     removeSlider(index);
@@ -681,7 +680,7 @@ const Simulations: FC = () => {
               <SimulationSliderView
                 index={index}
                 slider={slider}
-                onChange={handleChangeSlider(slider)}
+                onChange={handleChangeSlider}
                 onRemove={handleRemoveSlider(slider.fieldArrayIndex)}
                 onSave={handleSaveSlider(slider)}
                 units={units}

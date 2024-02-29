@@ -34,14 +34,13 @@ import { selectIsProjectShared } from "../login/loginSlice";
 interface SimulationSliderProps {
   index: number;
   slider: SimulationSlider;
-  onChange: (value: number) => void;
+  onChange: (variable: number, value: number) => void;
   onSave: (value: number) => void;
   onRemove: () => void;
   units: UnitRead[];
 }
 
 const SimulationSliderView: FC<SimulationSliderProps> = ({
-  index,
   slider,
   onChange,
   onRemove,
@@ -72,8 +71,8 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
 
   useEffect(() => {
     setValue(defaultValue);
-    onChange(defaultValue);
-  }, [defaultValue]);
+    onChange(slider.variable, defaultValue);
+  }, [defaultValue, onChange, slider.variable]);
 
   const handleSliderChange = (
     event: Event | SyntheticEvent<Element, Event>,
@@ -86,7 +85,7 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
 
   const handleReset = () => {
     setValue(defaultValue);
-    onChange(defaultValue);
+    onChange(slider.variable, defaultValue);
   };
 
   const handleSave = () => {
@@ -130,7 +129,7 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
       setValue(maxValue);
       truncatedValue = maxValue;
     }
-    onChange(truncatedValue);
+    onChange(slider.variable, truncatedValue);
   };
 
   if (isLoading) {
