@@ -1,4 +1,4 @@
-import { FC, useRef, useState } from "react";
+import { FC, useCallback, useRef, useState } from "react";
 import {
   CombinedModelRead,
   CompoundRead,
@@ -49,6 +49,27 @@ const MapVariablesTab: FC<Props> = ({
     { key: number; hasLagTimeSelected: boolean; projectId: number, species: ProjectSpeciesEnum | undefined }[]
   >([]);
 
+  const updateDosings = useCallback((key: number, value: boolean) => {
+    setDosing((prevDosings) => [
+      ...prevDosings.filter(({ key: dosingKey, species, projectId }) => key !== dosingKey && species === project.species && projectId === project.id),
+      { key, hasDosingSelected: value, projectId: project?.id, species: project?.species },
+    ]);
+  }, [project?.id, project?.species]);
+
+  const updateLinksToPd = useCallback((key: number, value: boolean) => {
+    setLinkToPd((prevLinks) => [
+      ...prevLinks.filter(({ key: linkKey, species, projectId }) => key !== linkKey && species === project.species && projectId === project.id),
+      { key, hasPdSelected: value, projectId: project?.id, species: project?.species },
+    ]);
+  }, [project?.id, project?.species]);
+
+  const updateLagTimes = useCallback((key: number, value: boolean) => {
+    setLagTimes((prevLags) => [
+      ...prevLags.filter(({ key: lagKey, species, projectId }) => key !== lagKey && species === project.species && projectId === project.id),
+      { key, hasLagTimeSelected: value, projectId: project?.id, species: project?.species },
+    ]);
+  }, [project?.id, project?.species]);
+  
   const iconRef = useRef<HTMLDivElement | null>(null);
   const isAnyDosingSelected = dosings
     .filter(({ projectId }) => projectId === project?.id)
@@ -168,27 +189,6 @@ const MapVariablesTab: FC<Props> = ({
   const timeVariable = variables.find(
     (variable) => variable.binding === "time",
   );
-
-  const updateDosings = (key: number, value: boolean) => {
-    setDosing((prevDosings) => [
-      ...prevDosings.filter(({ key: dosingKey, species, projectId }) => key !== dosingKey && species === project.species && projectId === project.id),
-      { key, hasDosingSelected: value, projectId: project?.id, species: project?.species },
-    ]);
-  };
-
-  const updateLinksToPd = (key: number, value: boolean) => {
-    setLinkToPd((prevLinks) => [
-      ...prevLinks.filter(({ key: linkKey, species, projectId }) => key !== linkKey && species === project.species && projectId === project.id),
-      { key, hasPdSelected: value, projectId: project?.id, species: project?.species },
-    ]);
-  };
-
-  const updateLagTimes = (key: number, value: boolean) => {
-    setLagTimes((prevLags) => [
-      ...prevLags.filter(({ key: lagKey, species, projectId }) => key !== lagKey && species === project.species && projectId === project.id),
-      { key, hasLagTimeSelected: value, projectId: project?.id, species: project?.species },
-    ]);
-  };
 
   const sortVariables = (variable1: VariableRead, variable2: VariableRead) => {
     if (variable1.name.startsWith('C') && variable2.name.startsWith('A')) {

@@ -150,16 +150,16 @@ const VariableRow: FC<Props> = ({
 
   useEffect(() => {
     updateDosings(variable.id, hasProtocol);
-  }, [variable.id, hasProtocol]);
+  }, [variable.id, hasProtocol, updateDosings]);
 
   useEffect(() => {
     updateLinksToPd(variable.id, linkToPD);
-  }, [variable.id, linkToPD]);
+  }, [variable.id, linkToPD, updateLinksToPd]);
 
   const isLinkedToTLG = derivedIndex("TLG") >= 0;
   useEffect(() => {
     updateLagTimes(variable.id, isLinkedToTLG);
-  }, [variable.id, isLinkedToTLG]);
+  }, [variable.id, isLinkedToTLG, updateLagTimes]);
 
   if (
     variable.constant ||
