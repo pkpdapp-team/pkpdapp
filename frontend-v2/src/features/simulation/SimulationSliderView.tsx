@@ -1,4 +1,10 @@
-import React, { SyntheticEvent, useEffect } from "react";
+import {
+  ChangeEvent,
+  FC, 
+  SyntheticEvent,
+  useEffect,
+  useState,
+} from "react";
 import {
   SimulationSlider,
   UnitRead,
@@ -34,7 +40,7 @@ interface SimulationSliderProps {
   units: UnitRead[];
 }
 
-const SimulationSliderView: React.FC<SimulationSliderProps> = ({
+const SimulationSliderView: FC<SimulationSliderProps> = ({
   index,
   slider,
   onChange,
@@ -58,16 +64,16 @@ const SimulationSliderView: React.FC<SimulationSliderProps> = ({
 
   const unit = units.find((u) => u.id === variable?.unit);
 
-  const [value, setValue] = React.useState<number>(
-    variable?.default_value || 1.0,
-  );
+  const [range, setRange] = useState<number>(10.0);
 
-  const [range, setRange] = React.useState<number>(10.0);
+  // update the slider value if the variable default value changes
+  const defaultValue = variable?.default_value || 1.0;
+  const [value, setValue] = useState<number>(defaultValue);
 
   useEffect(() => {
-    setValue(variable?.default_value || 1.0);
-    onChange(variable?.default_value || 1.0);
-  }, [variable]);
+    setValue(defaultValue);
+    onChange(defaultValue);
+  }, [defaultValue]);
 
   const handleSliderChange = (
     event: Event | SyntheticEvent<Element, Event>,
@@ -79,8 +85,8 @@ const SimulationSliderView: React.FC<SimulationSliderProps> = ({
   };
 
   const handleReset = () => {
-    setValue(variable?.default_value || 1.0);
-    onChange(variable?.default_value || 1.0);
+    setValue(defaultValue);
+    onChange(defaultValue);
   };
 
   const handleSave = () => {
@@ -100,7 +106,7 @@ const SimulationSliderView: React.FC<SimulationSliderProps> = ({
     setRange(Math.max(range - 10.0, 10.0));
   };
 
-  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
     setValue(Number(event.target.value));
   };
 

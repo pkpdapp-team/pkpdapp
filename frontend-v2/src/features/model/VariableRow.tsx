@@ -124,7 +124,7 @@ const VariableRow: FC<Props> = ({
       }
     }, 1000);
     return () => clearInterval(intervalId);
-  }, [handleSubmit, isDirty, updateVariable]);
+  }, [handleSubmit, isDirty, updateVariable, variable.id]);
 
   const isPD = variable.qname.startsWith("PD");
   const hasProtocol: boolean = watchProtocolId != null;
@@ -150,15 +150,16 @@ const VariableRow: FC<Props> = ({
 
   useEffect(() => {
     updateDosings(variable.id, hasProtocol);
-  }, [hasProtocol]);
+  }, [variable.id, hasProtocol]);
 
   useEffect(() => {
     updateLinksToPd(variable.id, linkToPD);
-  }, [linkToPD]);
+  }, [variable.id, linkToPD]);
 
+  const isLinkedToTLG = derivedIndex("TLG") >= 0;
   useEffect(() => {
-    updateLagTimes(variable.id, isLinkedTo("TLG"));
-  }, [isLinkedTo("TLG")]);
+    updateLagTimes(variable.id, isLinkedToTLG);
+  }, [variable.id, isLinkedToTLG]);
 
   if (
     variable.constant ||

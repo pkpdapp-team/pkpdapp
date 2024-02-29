@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import { FC, useEffect } from "react";
 import { TableCell, TableRow, IconButton, Button, Stack, Typography } from "@mui/material";
 import {
   ProjectRead,
@@ -25,7 +25,7 @@ interface Props {
   units: UnitRead[];
 }
 
-const Doses: React.FC<Props> = ({ project, protocol, units }) => {
+const Doses: FC<Props> = ({ project, protocol, units }) => {
   const { data: variable, isLoading: isVariableLoading } =
     useVariableRetrieveQuery(
       { id: protocol.variables[0] || 0 },
