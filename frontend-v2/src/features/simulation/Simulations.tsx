@@ -30,7 +30,7 @@ import {
   useVariableUpdateMutation,
 } from "../../app/backendApi";
 import { useFieldArray, useForm } from "react-hook-form";
-import { FC, useEffect, useMemo, useState, useRef } from "react";
+import { FC, useCallback, useEffect, useMemo, useState, useRef } from "react";
 import SimulationPlotView from "./SimulationPlotView";
 import SimulationSliderView from "./SimulationSliderView";
 import DropdownButton from "../../components/DropdownButton";
@@ -191,6 +191,10 @@ const Simulations: FC = () => {
   const [sliderValues, setSliderValues] = useState<
     SliderValues | undefined
   >(undefined);
+  const handleChangeSlider = useCallback((variable: number, value: number) => {
+    setSliderValues(prevSliderValues => ({ ...prevSliderValues, [variable]: value }));
+    setLoadingSimulate(true);
+  }, []);
   const [loadingSimulate, setLoadingSimulate] = useState<boolean>(false);
 
   const isSharedWithMe = useSelector((state: RootState) => selectIsProjectShared(state, project));
@@ -275,6 +279,7 @@ const Simulations: FC = () => {
     const timeMax = (sim?.time_max || 0) * timeMaxConversionFactor;
     return timeMax;
   };
+  const timeMax = simulation?.id && getTimeMax(simulation);
 
   // generate a simulation if slider values change
   useEffect(() => {
@@ -286,7 +291,6 @@ const Simulations: FC = () => {
       protocols &&
       compound
     ) {
-      const timeMax = getTimeMax(simulation);
       console.log("Simulating with params", getVariablesSimulated(variables, sliderValues));
       simulate({
         id: model.id,
@@ -312,6 +316,7 @@ const Simulations: FC = () => {
     protocols,
     variables,
     compound,
+    timeMax,
   ]);
 
   const exportSimulation = () => {
@@ -324,7 +329,6 @@ const Simulations: FC = () => {
       sliderValues &&
       project
     ) {
-      const timeMax = getTimeMax(simulation);
       const allParams = getVariablesSimulated(variables, sliderValues);
       console.log("Export to CSV: simulating with params", allParams);
       simulate({
@@ -391,31 +395,31 @@ const Simulations: FC = () => {
     }
   };
 
-  const onSubmit = (dta: Simulation) => {
-    // empty string keeps getting in, so convert to null
-    for (let i = 0; i < dta.plots.length; i++) {
-      // @ts-ignore
-      if (dta.plots[i].min === "") {
-        dta.plots[i].min = null;
-      }
-      // @ts-ignore
-      if (dta.plots[i].max === "") {
-        dta.plots[i].max = null;
-      }
-      // @ts-ignore
-      if (dta.plots[i].min2 === "") {
-        dta.plots[i].min2 = null;
-      }
-      // @ts-ignore
-      if (dta.plots[i].max2 === "") {
-        dta.plots[i].max2 = null;
-      }
-    }
-    updateSimulation({ id: simulation?.id || 0, simulation: dta });
-  };
-
   // save simulation every second if dirty
   useEffect(() => {
+    const onSubmit = (dta: Simulation) => {
+      // empty string keeps getting in, so convert to null
+      for (let i = 0; i < dta.plots.length; i++) {
+        // @ts-ignore
+        if (dta.plots[i].min === "") {
+          dta.plots[i].min = null;
+        }
+        // @ts-ignore
+        if (dta.plots[i].max === "") {
+          dta.plots[i].max = null;
+        }
+        // @ts-ignore
+        if (dta.plots[i].min2 === "") {
+          dta.plots[i].min2 = null;
+        }
+        // @ts-ignore
+        if (dta.plots[i].max2 === "") {
+          dta.plots[i].max2 = null;
+        }
+      }
+      updateSimulation({ id: simulation?.id || 0, simulation: dta });
+    };
+
     const intervalId = setInterval(() => {
       if (!isDirty || !simulation) {
         return;
@@ -424,7 +428,7 @@ const Simulations: FC = () => {
     }, 1000);
 
     return () => clearInterval(intervalId);
-  }, [handleSubmit, isDirty, updateSimulation]);
+  }, [handleSubmit, isDirty, simulation, updateSimulation]);
 
   const loading = [
     isProjectLoading,
@@ -520,11 +524,6 @@ const Simulations: FC = () => {
       variable: variableId,
     };
     addSimulationSlider(defaultSlider);
-  };
-
-  const handleChangeSlider = (slider: SimulationSlider) => (value: number) => {
-    setSliderValues({ ...sliderValues, [slider.variable]: value });
-    setLoadingSimulate(true);
   };
   
   const handleRemoveSlider = (index: number) => () => {
@@ -681,7 +680,7 @@ const Simulations: FC = () => {
               <SimulationSliderView
                 index={index}
                 slider={slider}
-                onChange={handleChangeSlider(slider)}
+                onChange={handleChangeSlider}
                 onRemove={handleRemoveSlider(slider.fieldArrayIndex)}
                 onSave={handleSaveSlider(slider)}
                 units={units}
