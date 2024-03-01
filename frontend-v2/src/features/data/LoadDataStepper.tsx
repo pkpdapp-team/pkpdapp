@@ -1,4 +1,5 @@
 import { FC, useEffect } from 'react';
+import { useSelector } from "react-redux";
 import Papa from 'papaparse'
 import Box from '@mui/material/Box';
 import Stepper from '@mui/material/Stepper';
@@ -11,11 +12,12 @@ import { useState } from 'react';
 import MapObservations from './MapObservations';
 import MapDosing from './MapDosing';
 import PreviewData from './PreviewData';
+import { RootState } from "../../app/store";
 import {
   DatasetRead,
   useDatasetListQuery,
   useDatasetCreateMutation,
-  useDatasetCsvUpdateMutation
+  useDatasetCsvUpdateMutation,
 } from '../../app/backendApi';
 
 const stepLabels = ['Upload Data', 'Map Dosing', 'Map Observations', 'Preview Dataset'];
@@ -45,6 +47,14 @@ const LoadDataStepper: FC = () => {
   const [normalisedFields, setNormalisedFields] = useState<string[]>([]);
   const [timeUnit, setTimeUnit] = useState<string | undefined>(undefined);
   const [amountUnit, setAmountUnit] = useState<string | undefined>(undefined);
+  const selectedProject = useSelector(
+    (state: RootState) => state.main.selectedProject,
+  );
+  const selectedProjectOrZero = selectedProject || 0;
+  const { data: datasets = [], isLoading: isDatasetLoading } = useDatasetListQuery(
+    { projectId: selectedProjectOrZero },
+    { skip: !selectedProject },
+  );
   const [
     createDataset
   ] = useDatasetCreateMutation();
@@ -69,13 +79,17 @@ const LoadDataStepper: FC = () => {
   const [stepState, setStepState] = useState({ activeStep: 0, maxStep: 0 });
   const StepComponent = stepComponents[stepState.activeStep];
   const isFinished = stepState.activeStep === stepLabels.length;
-  const { data: datasets = [], isLoading: isDatasetLoading } = useDatasetListQuery();
 
   useEffect(function onDataLoad() {
     async function addDataset() {
       let [dataset] = datasets;
       if (!dataset) {
-        const response = await createDataset({ dataset: { name: 'New Dataset' } });
+        const response = await createDataset({ 
+          dataset: { 
+            name: 'New Dataset',
+            project: selectedProjectOrZero,
+          }
+        });
         if ('data' in response && response.data) {
           dataset = response.data;
         }

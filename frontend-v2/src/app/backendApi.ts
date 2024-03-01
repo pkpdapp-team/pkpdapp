@@ -236,7 +236,10 @@ const injectedRtkApi = api.injectEndpoints({
       }),
     }),
     datasetList: build.query<DatasetListApiResponse, DatasetListApiArg>({
-      query: () => ({ url: `/api/dataset/` }),
+      query: (queryArg) => ({
+        url: `/api/dataset/`,
+        params: { project_id: queryArg.projectId },
+      }),
     }),
     datasetCreate: build.mutation<
       DatasetCreateApiResponse,
@@ -1158,7 +1161,10 @@ export type CompoundDestroyApiArg = {
   id: number;
 };
 export type DatasetListApiResponse = /** status 200  */ DatasetRead[];
-export type DatasetListApiArg = void;
+export type DatasetListApiArg = {
+  /** Filter results by project ID */
+  projectId?: number;
+};
 export type DatasetCreateApiResponse = /** status 201  */ DatasetRead;
 export type DatasetCreateApiArg = {
   dataset: Dataset;
