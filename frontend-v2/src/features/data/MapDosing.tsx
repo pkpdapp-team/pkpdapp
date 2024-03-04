@@ -54,22 +54,19 @@ const MapDosing: FC<IMapDosing> = ({ state, firstTime }: IMapDosing) => {
   const amountField = state.fields.find(
     (field, i) => state.normalisedFields[i] === 'Amount'
   );
-  const amountValues = amountField ?
-    state.data.map(row => row[amountField]) :
-    [];
+  const dosingRows = amountField ? state.data.filter(row => row[amountField] && row[amountField] !== '.') : [];
   const amountUnitField = state.fields.find(
-    (field, i) => state.normalisedFields[i] === 'Amount Unit'
+    (field, i) => ['Amount Unit', 'Unit'].includes(state.normalisedFields[i])
   );
-  const amountUnits = state.data.map(row => row[amountUnitField || 'Amount Unit']);
   const administrationIdField = state.fields.find(
     (field, i) => state.normalisedFields[i] === 'Administration ID'
   );
   const administrationIds = administrationIdField ?
-    state.data.map(row => row[administrationIdField]) :
+    dosingRows.map(row => row[administrationIdField]) :
     [];
   const uniqueAdministrationIds = [...new Set(administrationIds)];
-  const amountVariables = state.data.map(row => row['Dosing Variable']);
-
+  const routeField = state.fields.find(field => field.toLowerCase() === 'route');
+  
   const isAmount = (variable: VariableRead) => {
     const amountUnits = units?.find(
       (unit) => unit.symbol === "pmol/kg",
@@ -114,6 +111,16 @@ const MapDosing: FC<IMapDosing> = ({ state, firstTime }: IMapDosing) => {
               </TableCell>
               <TableCell>
                 <Typography>
+                  Amount
+                </Typography>
+              </TableCell>
+              <TableCell>
+                <Typography>
+                  Route
+                </Typography>
+              </TableCell>
+              <TableCell>
+                <Typography>
                   Unit
                 </Typography>
               </TableCell>
@@ -126,14 +133,26 @@ const MapDosing: FC<IMapDosing> = ({ state, firstTime }: IMapDosing) => {
           </TableHead>
           <TableBody>
             {uniqueAdministrationIds.map((adminId, index) => {
-              const currentRow = state.data.find(row => administrationIdField ? row[administrationIdField] === adminId : true);
+              const currentRow = dosingRows.find(row => administrationIdField ? row[administrationIdField] === adminId : true);
               const selectedVariable = variables?.find(variable => variable.qname === currentRow?.['Dosing Variable']);
               const compatibleUnits = units?.find(unit => unit.id === selectedVariable?.unit)?.compatible_units;
               const adminUnit = amountUnitField && currentRow && currentRow[amountUnitField];
+              const amount = amountField && currentRow?.[amountField];
+              const route = routeField && currentRow?.[routeField];
               return (
                 <TableRow>
                   <TableCell>
                     {adminId}
+                  </TableCell>
+                  <TableCell>
+                    <Typography>
+                      {amount}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography>
+                      {route}
+                    </Typography>
                   </TableCell>
                   <TableCell>
                     {adminUnit ?
@@ -173,36 +192,6 @@ const MapDosing: FC<IMapDosing> = ({ state, firstTime }: IMapDosing) => {
                 </TableRow>
               )
             })}
-          </TableBody>
-        </Table>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>
-                <Typography>
-                  Amount
-                </Typography>
-              </TableCell>
-              <TableCell>
-                <Typography>
-                  Unit
-                </Typography>
-              </TableCell>
-              <TableCell>
-                <Typography>
-                  Mapping
-                </Typography>
-              </TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {amountValues.map((amount, index) => (
-              <TableRow key={index}>
-                <TableCell>{amount}</TableCell>
-                <TableCell>{amountUnits[index]}</TableCell>
-                <TableCell>{amountVariables[index]}</TableCell>
-              </TableRow>
-            ))}
           </TableBody>
         </Table>
       </Box>

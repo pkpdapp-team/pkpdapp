@@ -43,18 +43,19 @@ const MapObservations: FC<IMapObservations> = ({state}: IMapObservations) => {
   const observationIdField = state.fields.find(
     (field, i) => state.normalisedFields[i] === 'Observation ID'
   );
+  const observationRows = observationField ? state.data.filter(row => row[observationField] !== '.') : [];
   const observationIds = observationIdField ?
-    state.data.map(row => row[observationIdField]) :
+    observationRows.map(row => row[observationIdField]) :
     [observationField];
   const uniqueObservationIds = [...new Set(observationIds)];
   const observationValues = observationField ?
-    state.data.map(row => row[observationField]) :
+    observationRows.map(row => row[observationField]) :
     [];
   const observationUnitField = state.fields.find(
-    (field, i) => state.normalisedFields[i] === 'Observation Unit'
+    (field, i) => ['Observation Unit', 'Unit'].includes(state.normalisedFields[i])
   );
-  const observationUnits = state.data.map(row => row[observationUnitField || 'Observation Unit']);
-  const observationVariables = state.data.map(row => row['Observation Variable']);
+  const observationUnits = observationRows.map(row => row[observationUnitField || 'Observation Unit']);
+  const observationVariables = observationRows.map(row => row['Observation Variable']);
 
   const filterOutputs = model?.is_library_model
     ? ["environment.t", "PDCompartment.C_Drug"]
@@ -114,10 +115,21 @@ const MapObservations: FC<IMapObservations> = ({state}: IMapObservations) => {
           </TableHead>
           <TableBody>
             {uniqueObservationIds.map((obsId) => {
-              const currentRow = state.data.find(row => observationIdField ? row[observationIdField] === obsId : true);
+              const currentRow = observationRows.find(row => observationIdField ? row[observationIdField] === obsId : true);
               const selectedVariable = variables?.find(variable => variable.qname === currentRow?.['Observation Variable']);
               const compatibleUnits = units?.find(unit => unit.id === selectedVariable?.unit)?.compatible_units;
               const obsUnit = observationUnitField && currentRow && currentRow[observationUnitField];
+              let obsUnitSymbol = obsUnit;
+              ['%', 'fraction', 'ratio'].forEach(token => {
+                if (obsUnitSymbol?.toLowerCase().includes(token)) {
+                  obsUnitSymbol = '';
+                }
+              });
+              const compatibleVariables = modelOutputs.filter(variable => {
+                const variableUnit = units?.find(unit => unit.id === variable.unit);
+                const compatibleSymbols = variableUnit?.compatible_units.map(u => u.symbol);
+                return compatibleSymbols?.includes(obsUnitSymbol || '');
+              });
               return (
                 <TableRow>
                   <TableCell>
@@ -152,7 +164,7 @@ const MapObservations: FC<IMapObservations> = ({state}: IMapObservations) => {
                         value={selectedVariable?.qname}
                         onChange={handleObservationChange(obsId)}
                       >
-                        {modelOutputs?.map((variable) => (
+                        {compatibleVariables?.map((variable) => (
                           <MenuItem key={variable.name} value={variable.qname}>{variable.name}</MenuItem>
                         ))}
                       </Select>
