@@ -97,12 +97,13 @@ class Dataset(models.Model):
 
         # create subject protocol
         for i, row in data[
-            ['SUBJECT_ID', 'ROUTE', "AMOUNT_UNIT"]
+            ['SUBJECT_ID', 'ROUTE', "AMOUNT_UNIT", "AMOUNT_VARIABLE"]
         ].drop_duplicates().iterrows():
             subject_id = row['SUBJECT_ID']
             route = row['ROUTE']
             amount_unit = Unit.objects.get(symbol=row['AMOUNT_UNIT'])
             subject = subjects[subject_id]
+            mapped_qname = row['AMOUNT_VARIABLE']
             if route == 'IV':
                 route = Protocol.DoseType.DIRECT
             else:
@@ -115,7 +116,8 @@ class Dataset(models.Model):
                     ),
                     time_unit=time_unit,
                     amount_unit=amount_unit,
-                    dose_type=route
+                    dose_type=route,
+                    mapped_qname=mapped_qname
                 )
                 subject.save()
 

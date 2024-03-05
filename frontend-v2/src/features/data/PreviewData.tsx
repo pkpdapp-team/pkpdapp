@@ -11,7 +11,8 @@ const PreviewData: FC<IPreviewData> = ({ state, firstTime }: IPreviewData) => {
   const { data } = state;
   const fields = [
     ...state.fields,
-    'Dosing Variable',
+    'cohort',
+    'Amount Variable',
     'Observation Variable'
   ];
   if (!state.normalisedFields.find(field => field === 'Amount Unit')) {
