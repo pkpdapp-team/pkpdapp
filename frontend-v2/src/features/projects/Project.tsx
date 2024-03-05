@@ -1,5 +1,5 @@
 // src/components/ProjectTable.tsx
-import { FC, useEffect, useState } from "react";
+import { FC, useEffect, useMemo, useState } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import VisibilityIcon from '@mui/icons-material/Visibility';
@@ -31,6 +31,7 @@ import UserAccess from "./UserAccess";
 import { setProject } from "../main/mainSlice";
 import TextField from "../../components/TextField";
 import useDirty from "../../hooks/useDirty";
+import useInterval from '../../hooks/useInterval';
 import ConfirmationDialog from "../../components/ConfirmationDialog";
 import { selectCurrentUser, selectIsProjectShared } from "../login/loginSlice";
 import { RootState } from "../../app/store";
@@ -125,7 +126,7 @@ const ProjectRow: FC<Props> = ({
     reset({ project, compound });
   }, [project, compound, reset]);
 
-  const handleSave = handleSubmit((data: FormData) => {
+  const handleSave = useMemo(() => handleSubmit((data: FormData) => {
     if (compound && project) {
       if (JSON.stringify(compound) !== JSON.stringify(data.compound)) {
         updateCompound({ id: compound.id, compound: data.compound });
@@ -134,25 +135,13 @@ const ProjectRow: FC<Props> = ({
         updateProject({ id: project.id, project: data.project });
       }
     }
+  }), [handleSubmit, compound, project, updateCompound, updateProject]);
+
+  useInterval({
+    callback: handleSave,
+    delay: 1000,
+    isDirty
   });
-
-
-  useEffect(() => {
-    const intervalId = setInterval(() => {
-      if (isDirty) {
-        handleSave();
-      }
-    }, 1000);
-
-    return () => clearInterval(intervalId);
-  }, [handleSave, isDirty]);
-
-  useEffect(
-    () => () => {
-      handleSave();
-    },
-    [],
-  );
 
   if (isLoading) {
     return <div>Loading...</div>;

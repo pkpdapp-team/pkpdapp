@@ -1,4 +1,4 @@
-import { FC, useEffect } from "react";
+import { FC, useEffect, useMemo } from "react";
 import { TableCell, TableRow, IconButton, Button, Stack, Typography } from "@mui/material";
 import {
   ProjectRead,
@@ -14,6 +14,7 @@ import UnitField from "../../components/UnitField";
 import FloatField from "../../components/FloatField";
 import IntegerField from "../../components/IntegerField";
 import useDirty from "../../hooks/useDirty";
+import useInterval from '../../hooks/useInterval';
 import HelpButton from "../../components/HelpButton";
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
@@ -56,29 +57,18 @@ const Doses: FC<Props> = ({ project, protocol, units }) => {
     reset(protocol);
   }, [protocol, reset]);
 
-  const handleSave = handleSubmit((data: Protocol) => {
+  const handleSave = useMemo(() => handleSubmit((data: Protocol) => {
     if (JSON.stringify(data) !== JSON.stringify(protocol)) {
       updateProtocol({ id: protocol.id, protocol: data });
     }
-  });
+  }), [handleSubmit, protocol, updateProtocol]);
 
   // save protocol every second if dirty
-  useEffect(() => {
-    const intervalId = setInterval(() => {
-      if (isDirty) {
-        handleSave();
-      }
-    }, 1000);
-
-    return () => clearInterval(intervalId);
-  }, [handleSave, isDirty]);
-
-  useEffect(
-    () => () => {
-      handleSave();
-    },
-    [],
-  );
+  useInterval({
+    callback: handleSave,
+    delay: 1000,
+    isDirty
+  });
 
   if (isVariableLoading) {
     return <div>Loading...</div>;
