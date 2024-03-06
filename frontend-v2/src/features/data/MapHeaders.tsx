@@ -1,5 +1,6 @@
-import { TableContainer, Table, TableHead, TableRow, TableCell, TableBody, Select, FormControl, MenuItem, InputLabel, Typography } from "@mui/material";
-import LoadData, { Data, Field } from "./LoadData";
+import { FC } from "react";
+import { Table, TableHead, TableRow, TableCell, TableBody, Select, FormControl, MenuItem, InputLabel, Typography } from "@mui/material";
+import { Data, Field } from "./LoadData";
 import { normalisedHeaders } from "./normaliseDataHeaders";
 
 interface IMapHeaders {
@@ -9,7 +10,7 @@ interface IMapHeaders {
   setNormalisedFields: (fields: Field[]) => void;
 }
 
-const MapHeaders: React.FC<IMapHeaders> = ({data, fields, normalisedFields, setNormalisedFields}: IMapHeaders) => {
+const MapHeaders: FC<IMapHeaders> = ({data, fields, normalisedFields, setNormalisedFields}: IMapHeaders) => {
 
   const normalisedHeadersOptions = normalisedHeaders.map((header) => ({value: header, label: header}));
   

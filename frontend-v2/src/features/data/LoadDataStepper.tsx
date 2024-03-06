@@ -1,4 +1,6 @@
-import * as React from 'react';
+import { FC, useEffect } from 'react';
+import { useSelector } from "react-redux";
+import Papa from 'papaparse'
 import Box from '@mui/material/Box';
 import Stepper from '@mui/material/Stepper';
 import Step from '@mui/material/Step';
@@ -8,9 +10,18 @@ import Typography from '@mui/material/Typography';
 import LoadData from './LoadData';
 import { useState } from 'react';
 import MapObservations from './MapObservations';
+import MapDosing from './MapDosing';
+import PreviewData from './PreviewData';
+import { RootState } from "../../app/store";
+import {
+  DatasetRead,
+  useDatasetListQuery,
+  useDatasetCreateMutation,
+  useDatasetCsvUpdateMutation,
+} from '../../app/backendApi';
 
-const stepLabels = ['Upload Data', 'Map Observations'];
-const stepComponents = [LoadData, MapObservations];
+const stepLabels = ['Upload Data', 'Map Dosing', 'Map Observations', 'Preview Dataset'];
+const stepComponents = [LoadData, MapDosing, MapObservations, PreviewData];
 
 type Row = {[key: string]: string};
 type Data = Row[];
@@ -27,17 +38,30 @@ export type StepperState = {
   setData: (data: Data) => void;
   amountUnit?: string;
   setAmountUnit: (amountUnit: string) => void;
-  observationUnits?: {[key: string]: string};
-  setObservationUnits: (observationUnits: {[key: string]: string}) => void;
 }
 
-const LoadDataStepper: React.FC = () => {
+const LoadDataStepper: FC = () => {
+  const [dataset, setDataset] = useState<null | DatasetRead>(null);
   const [data, setData] = useState<Data>([]);
   const [fields, setFields] = useState<string[]>([]);
   const [normalisedFields, setNormalisedFields] = useState<string[]>([]);
   const [timeUnit, setTimeUnit] = useState<string | undefined>(undefined);
   const [amountUnit, setAmountUnit] = useState<string | undefined>(undefined);
-  const [observationUnits, setObservationUnits] = useState<{[key: string]: string}>({});
+  const selectedProject = useSelector(
+    (state: RootState) => state.main.selectedProject,
+  );
+  const selectedProjectOrZero = selectedProject || 0;
+  const { data: datasets = [], isLoading: isDatasetLoading } = useDatasetListQuery(
+    { projectId: selectedProjectOrZero },
+    { skip: !selectedProject },
+  );
+  const [
+    createDataset
+  ] = useDatasetCreateMutation();
+  const [
+    updateDataset
+  ] = useDatasetCsvUpdateMutation();
+
 
   const state = {
     fields,
@@ -49,13 +73,50 @@ const LoadDataStepper: React.FC = () => {
     timeUnit,
     setTimeUnit,
     amountUnit,
-    setAmountUnit,
-    observationUnits,
-    setObservationUnits,
+    setAmountUnit
   };
 
   const [stepState, setStepState] = useState({ activeStep: 0, maxStep: 0 });
   const StepComponent = stepComponents[stepState.activeStep];
+  const isFinished = stepState.activeStep === stepLabels.length;
+
+  useEffect(function onDataLoad() {
+    async function addDataset() {
+      let [dataset] = datasets;
+      if (!dataset) {
+        const response = await createDataset({ 
+          dataset: { 
+            name: 'New Dataset',
+            project: selectedProjectOrZero,
+          }
+        });
+        if ('data' in response && response.data) {
+          dataset = response.data;
+        }
+      }
+      console.log({dataset});
+      setDataset(dataset);
+    }
+    if (!isDatasetLoading) {
+      addDataset();
+    }
+  }, [datasets, createDataset, isDatasetLoading]);
+
+  useEffect(function onFinished() {
+    if (isFinished && dataset?.id) {
+      try {
+        const csv = Papa.unparse(data);
+        updateDataset({
+          id: dataset.id,
+          datasetCsv: {
+            csv
+          }
+        })
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  }, [isFinished, updateDataset, dataset?.id, data])
 
   const handleNext = () => {
     setStepState((prevActiveStep) => ({ 
@@ -77,10 +138,15 @@ const LoadDataStepper: React.FC = () => {
           </Step>
         ))}
       </Stepper>
-      <Typography>{stepState.activeStep === stepLabels.length ? 'The process is completed' : <StepComponent state={state} firstTime={stepState.activeStep === stepState.maxStep}/>}</Typography>
+      <Typography>
+        {isFinished ? 
+          'The process is completed' :
+          <StepComponent state={state} firstTime={stepState.activeStep === stepState.maxStep}/>
+        }
+      </Typography>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', marginTop: 1 }}>
         <Button disabled={stepState.activeStep === 0} onClick={handleBack}>Back</Button>
-        <Button variant="contained" color="primary" onClick={handleNext}>
+        <Button disabled={isFinished} variant="contained" color="primary" onClick={handleNext}>
           {stepState.activeStep === stepLabels.length - 1 ? 'Finish' : 'Next'}
         </Button>
       </Box>

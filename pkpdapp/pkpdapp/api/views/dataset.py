@@ -4,8 +4,10 @@
 # copyright notice and full license details.
 #
 from rest_framework import (
-    viewsets, decorators, parsers, response, status
+    viewsets, decorators, response, status
 )
+from drf_spectacular.utils import extend_schema, OpenApiParameter
+from drf_spectacular.types import OpenApiTypes
 from pkpdapp.api.views import (
     ProjectFilter,
 )
@@ -20,11 +22,24 @@ class DatasetView(viewsets.ModelViewSet):
     serializer_class = DatasetSerializer
     filter_backends = [ProjectFilter]
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='project_id',
+                description='Filter results by project ID',
+                required=False,
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY
+            ),
+        ],
+    )
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
     @decorators.action(
         detail=True,
         serializer_class=DatasetCsvSerializer,
-        methods=['PUT'],
-        parser_classes=[parsers.MultiPartParser],
+        methods=['PUT']
     )
     def csv(self, request, pk):
         obj = self.get_object()
