@@ -693,6 +693,12 @@ paths:
   /api/dataset/:
     get:
       operationId: dataset_list
+      parameters:
+      - in: query
+        name: project_id
+        schema:
+          type: integer
+        description: Filter results by project ID
       tags:
       - dataset
       security:
@@ -845,6 +851,12 @@ paths:
       - dataset
       requestBody:
         content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DatasetCsv'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DatasetCsv'
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/DatasetCsv'
@@ -3126,6 +3138,10 @@ components:
         axis:
           type: boolean
           description: True/False if biomarker type displayed on LHS/RHS axis
+        mapped_qname:
+          type: string
+          description: qname of the mapped model variable
+          maxLength: 50
         stored_unit:
           type: integer
           description: unit for the value stored in :model:`pkpdapp.Biomarker`
@@ -3415,7 +3431,6 @@ components:
       properties:
         csv:
           type: string
-          format: uri
       required:
       - csv
     DerivedVariable:
@@ -3605,8 +3620,6 @@ components:
           description: If executing, this is the celery task id
           maxLength: 40
         metadata:
-          type: object
-          additionalProperties: {}
           description: metadata for inference
         project:
           type: integer
@@ -3865,6 +3878,10 @@ components:
         axis:
           type: boolean
           description: True/False if biomarker type displayed on LHS/RHS axis
+        mapped_qname:
+          type: string
+          description: qname of the mapped model variable
+          maxLength: 50
         stored_unit:
           type: integer
           description: unit for the value stored in :model:`pkpdapp.Biomarker`
@@ -4174,8 +4191,6 @@ components:
           description: If executing, this is the celery task id
           maxLength: 40
         metadata:
-          type: object
-          additionalProperties: {}
           description: metadata for inference
         project:
           type: integer

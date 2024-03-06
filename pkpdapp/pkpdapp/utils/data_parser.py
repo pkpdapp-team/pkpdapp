@@ -43,6 +43,9 @@ class DataParser:
             "OBSERVATION_UNIT",
             "OBSERVATIONUNIT"
         ],
+        "OBSERVATION_VARIABLE": [
+            "Observbation Variable", "OBSERVATION_VARIABLE"
+        ],
         "COMPOUND": [
             "Compound", "COMPOUND"
         ],
@@ -67,6 +70,7 @@ class DataParser:
         "AMOUNT_UNIT",
         "OBSERVATION_UNIT",
         "OBSERVATION_NAME",
+        "OBSERVATION_VARIABLE",
         "COMPOUND",
         "ROUTE",
         "INFUSION_TIME",
@@ -156,6 +160,10 @@ class DataParser:
         # put in default observation name if not present
         if "OBSERVATION_NAME" not in found_cols:
             data["OBSERVATION_NAME"] = "observation"
+
+        # put in blank observation variable if not present
+        if "OBSERVATION_VARIABLE" not in found_cols:
+            data["OBSERVATION_VARIABLE"] = ""
 
         # put in default compound name if not present
         if "COMPOUND" not in found_cols:

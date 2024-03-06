@@ -7,7 +7,6 @@
 from pkpdapp.utils import DataParser
 from rest_framework import serializers
 from drf_spectacular.utils import extend_schema_field
-import codecs
 from pkpdapp.models import (
     Dataset, Protocol,
 )
@@ -38,19 +37,18 @@ class DatasetSerializer(serializers.ModelSerializer):
 
 
 class DatasetCsvSerializer(serializers.ModelSerializer):
-    csv = serializers.FileField()
+    csv = serializers.CharField()
 
     class Meta:
         model = Dataset
         fields = ['csv']
 
     def validate_csv(self, csv):
-        utf8_file = codecs.EncodedFile(csv.open(), "utf-8")
         parser = DataParser()
 
         # error in columns
         try:
-            data = parser.parse_from_stream(utf8_file)
+            data = parser.parse_from_str(csv)
         except RuntimeError as err:
             raise serializers.ValidationError(str(err))
         except UnicodeDecodeError as err:
