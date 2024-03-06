@@ -22,13 +22,15 @@ import {
 import { useFieldArray, useForm, useFormState } from "react-hook-form";
 import FloatField from "../../components/FloatField";
 import UnitField from "../../components/UnitField";
-import { FC, useEffect, useState } from "react";
+import { FC, useEffect, useMemo, useState } from "react";
 import DeleteIcon from "@mui/icons-material/Delete";
 import TextField from "../../components/TextField";
 import useDirty from "../../hooks/useDirty";
+import useInterval from "../../hooks/useInterval";
 import ConfirmationDialog from "../../components/ConfirmationDialog";
 import SelectField from "../../components/SelectField";
 import { selectIsProjectShared } from "../login/loginSlice";
+
 
 const Drug: FC = () => {
   const projectId = useSelector(
@@ -79,9 +81,7 @@ const Drug: FC = () => {
     reset(compound);
   }, [compound, reset]);
 
-
-
-  const submit = handleSubmit((data) => {
+  const submit = useMemo(() => handleSubmit((data) => {
     if (data && compound && JSON.stringify(data) !== JSON.stringify(compound)) {
       // strange bug in react-hook-form is creating efficancy_experiments with undefined compounds, remove these for now.
       data.efficacy_experiments = data.efficacy_experiments.filter(
@@ -105,24 +105,13 @@ const Drug: FC = () => {
         }
       });
     }
+  }), [compound, handleSubmit, updateCompound]);
+
+  useInterval({
+    callback: submit, 
+    delay: 1000,
+    isDirty
   });
-
-  useEffect(() => {
-    const intervalId = setInterval(() => {
-      if (isDirty) {
-        submit();
-      }
-    }, 1000);
-
-    return () => clearInterval(intervalId);
-  }, [submit, isDirty]);
-
-  useEffect(
-    () => () => {
-      submit();
-    },
-    [],
-  );
 
   const addNewEfficacyExperiment = () => {
     append([

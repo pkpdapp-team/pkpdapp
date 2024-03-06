@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import { FC, useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { TableCell, TableRow, Tooltip, Typography } from "@mui/material";
 import {
@@ -11,6 +11,7 @@ import {
 } from "../../app/backendApi";
 import UnitField from "../../components/UnitField";
 import useDirty from "../../hooks/useDirty";
+import useInterval from '../../hooks/useInterval';
 import FloatField from "../../components/FloatField";
 import { selectIsProjectShared } from "../login/loginSlice";
 import { useSelector } from "react-redux";
@@ -23,7 +24,7 @@ interface Props {
   units: UnitRead[];
 }
 
-const ParameterRow: React.FC<Props> = ({ project, model, variable, units }) => {
+const ParameterRow: FC<Props> = ({ project, model, variable, units }) => {
   const {
     control,
     handleSubmit,
@@ -41,27 +42,17 @@ const ParameterRow: React.FC<Props> = ({ project, model, variable, units }) => {
 
   const isSharedWithMe = useSelector((state: RootState) => selectIsProjectShared(state, project));
 
-  const submit = handleSubmit((data) => {
+  const submit = useMemo(() => handleSubmit((data) => {
     if (JSON.stringify(data) !== JSON.stringify(variable)) {
       updateVariable({ id: variable.id, variable: data });
     }
+  }), [handleSubmit, updateVariable, variable]);
+
+  useInterval({
+    callback: submit,
+    delay: 1000,
+    isDirty
   });
-
-  useEffect(() => {
-    const intervalId = setInterval(() => {
-      if (isDirty) {
-        submit();
-      }
-    }, 1000);
-    return () => clearInterval(intervalId);
-  }, [submit, isDirty]);
-
-  useEffect(
-    () => () => {
-      submit();
-    },
-    [],
-  );
 
   if (variable.constant !== true) {
     return null;
