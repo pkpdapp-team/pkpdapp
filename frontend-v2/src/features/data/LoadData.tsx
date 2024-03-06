@@ -1,9 +1,9 @@
-import { Alert, Box, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
-import Papa, { ParseError, ParseMeta } from 'papaparse'
-import React, {useCallback, useState} from 'react'
+import { Alert, Box, Stack } from '@mui/material';
+import Papa from 'papaparse'
+import { FC, useCallback, useState} from 'react'
 import {useDropzone} from 'react-dropzone'
 import MapHeaders from './MapHeaders';
-import { manditoryHeaders, normaliseHeader, normalisedHeaders } from './normaliseDataHeaders';
+import { manditoryHeaders, normaliseHeader } from './normaliseDataHeaders';
 import { StepperState } from './LoadDataStepper';
 
 export type Row = {[key: string]: string};
@@ -48,7 +48,7 @@ const validateNormalisedFields = (fields: Field[]) => {
   return errors;
 }
 
-const LoadData: React.FC<ILoadDataProps> = ({state, firstTime}) => {
+const LoadData: FC<ILoadDataProps> = ({state, firstTime}) => {
   const [errors, setErrors] = useState<string[]>(firstTime ? [] : validateNormalisedFields(state.normalisedFields));
   const [showData, setShowData] = useState<boolean>(state.data.length > 0 && state.fields.length > 0);
 
@@ -62,7 +62,6 @@ const LoadData: React.FC<ILoadDataProps> = ({state, firstTime}) => {
         // Parse the CSV data
         const rawCsv = reader.result as string;
         const csvData = Papa.parse(rawCsv.trim(), { header: true });
-        const data = csvData.data as Data;
         const fields = csvData.meta.fields || [];
         const normalisedFields = fields.map(normaliseHeader);
         const errors = csvData.errors.map((e) => e.message).concat(validateNormalisedFields(normalisedFields));
@@ -77,7 +76,7 @@ const LoadData: React.FC<ILoadDataProps> = ({state, firstTime}) => {
       reader.readAsText(file)
     })
     
-  }, [])
+  }, [state])
   const {getRootProps, getInputProps} = useDropzone({onDrop})
 
   const setNormalisedFields = (fields: Field[]) => {

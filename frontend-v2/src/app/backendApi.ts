@@ -236,7 +236,10 @@ const injectedRtkApi = api.injectEndpoints({
       }),
     }),
     datasetList: build.query<DatasetListApiResponse, DatasetListApiArg>({
-      query: () => ({ url: `/api/dataset/` }),
+      query: (queryArg) => ({
+        url: `/api/dataset/`,
+        params: { project_id: queryArg.projectId },
+      }),
     }),
     datasetCreate: build.mutation<
       DatasetCreateApiResponse,
@@ -1158,7 +1161,10 @@ export type CompoundDestroyApiArg = {
   id: number;
 };
 export type DatasetListApiResponse = /** status 200  */ DatasetRead[];
-export type DatasetListApiArg = void;
+export type DatasetListApiArg = {
+  /** Filter results by project ID */
+  projectId?: number;
+};
 export type DatasetCreateApiResponse = /** status 201  */ DatasetRead;
 export type DatasetCreateApiArg = {
   dataset: Dataset;
@@ -1671,6 +1677,7 @@ export type BiomarkerType = {
   display?: boolean;
   color?: number;
   axis?: boolean;
+  mapped_qname?: string;
   stored_unit: number;
   dataset: number;
   display_unit: number;
@@ -1689,6 +1696,7 @@ export type BiomarkerTypeRead = {
   display?: boolean;
   color?: number;
   axis?: boolean;
+  mapped_qname?: string;
   stored_unit: number;
   dataset: number;
   display_unit: number;
@@ -1701,6 +1709,7 @@ export type PatchedBiomarkerType = {
   display?: boolean;
   color?: number;
   axis?: boolean;
+  mapped_qname?: string;
   stored_unit?: number;
   dataset?: number;
   display_unit?: number;
@@ -1719,6 +1728,7 @@ export type PatchedBiomarkerTypeRead = {
   display?: boolean;
   color?: number;
   axis?: boolean;
+  mapped_qname?: string;
   stored_unit?: number;
   dataset?: number;
   display_unit?: number;
@@ -2127,9 +2137,7 @@ export type Inference = {
   time_elapsed?: number;
   number_of_function_evals?: number;
   task_id?: string | null;
-  metadata?: {
-    [key: string]: any;
-  };
+  metadata?: any;
   project: number;
   algorithm?: number;
   initialization_inference?: number | null;
@@ -2149,9 +2157,7 @@ export type InferenceRead = {
   time_elapsed?: number;
   number_of_function_evals?: number;
   task_id?: string | null;
-  metadata?: {
-    [key: string]: any;
-  };
+  metadata?: any;
   project: number;
   algorithm?: number;
   initialization_inference?: number | null;
@@ -2170,9 +2176,7 @@ export type PatchedInference = {
   time_elapsed?: number;
   number_of_function_evals?: number;
   task_id?: string | null;
-  metadata?: {
-    [key: string]: any;
-  };
+  metadata?: any;
   project?: number;
   algorithm?: number;
   initialization_inference?: number | null;
@@ -2192,9 +2196,7 @@ export type PatchedInferenceRead = {
   time_elapsed?: number;
   number_of_function_evals?: number;
   task_id?: string | null;
-  metadata?: {
-    [key: string]: any;
-  };
+  metadata?: any;
   project?: number;
   algorithm?: number;
   initialization_inference?: number | null;
