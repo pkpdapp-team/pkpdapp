@@ -1,5 +1,5 @@
 // src/components/ProjectTable.tsx
-import React, { useEffect } from "react";
+import { FC, useEffect } from "react";
 import { Control, useFieldArray, useForm } from "react-hook-form";
 import {
   TableCell,
@@ -49,7 +49,7 @@ type DerivedVariableType = "RO" | "FUP" | "BPR" | "TLG";
 
 const derivedVariableRegex = /calc_.*_(f|bl|RO)/;
 
-const VariableRow: React.FC<Props> = ({
+const VariableRow: FC<Props> = ({
   project,
   compound,
   model,
@@ -83,7 +83,6 @@ const VariableRow: React.FC<Props> = ({
   });
 
   const {
-    control: controlVariable,
     handleSubmit,
     reset,
     setValue,
@@ -125,7 +124,7 @@ const VariableRow: React.FC<Props> = ({
       }
     }, 1000);
     return () => clearInterval(intervalId);
-  }, [handleSubmit, isDirty, updateVariable]);
+  }, [handleSubmit, isDirty, updateVariable, variable.id]);
 
   const isPD = variable.qname.startsWith("PD");
   const hasProtocol: boolean = watchProtocolId != null;
@@ -151,15 +150,16 @@ const VariableRow: React.FC<Props> = ({
 
   useEffect(() => {
     updateDosings(variable.id, hasProtocol);
-  }, [hasProtocol]);
+  }, [variable.id, hasProtocol, updateDosings]);
 
   useEffect(() => {
     updateLinksToPd(variable.id, linkToPD);
-  }, [linkToPD]);
+  }, [variable.id, linkToPD, updateLinksToPd]);
 
+  const isLinkedToTLG = derivedIndex("TLG") >= 0;
   useEffect(() => {
-    updateLagTimes(variable.id, isLinkedTo("TLG"));
-  }, [isLinkedTo("TLG")]);
+    updateLagTimes(variable.id, isLinkedToTLG);
+  }, [variable.id, isLinkedToTLG, updateLagTimes]);
 
   if (
     variable.constant ||

@@ -1,3 +1,4 @@
+import { FC } from "react";
 import {
   Dialog,
   DialogContent,
@@ -20,7 +21,7 @@ import {
 } from "../../app/backendApi";
 import { Control } from "react-hook-form";
 import { FormData } from "./Project";
-import { Delete, PersonAdd } from "@mui/icons-material";
+import { Delete } from "@mui/icons-material";
 import { useSelector } from "react-redux";
 import { selectCurrentUser } from "../login/loginSlice";
 
@@ -34,7 +35,7 @@ interface Props {
   onClose: () => void;
 }
 
-const UserAccess: React.FC<Props> = ({
+const UserAccess: FC<Props> = ({
   open,
   userAccess,
   append,

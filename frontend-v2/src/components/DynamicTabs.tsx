@@ -1,4 +1,16 @@
-import React, { PropsWithChildren, ReactElement, useState, useEffect } from "react";
+import {
+  Children,
+  Dispatch,
+  FC,
+  PropsWithChildren,
+  ReactElement,
+  SetStateAction,
+  SyntheticEvent,
+  cloneElement,
+  createContext,
+  useContext,
+  useState
+} from "react";
 import Box from "@mui/material/Box";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
@@ -11,10 +23,10 @@ import { SubPageName, setSubPage } from "../features/main/mainSlice";
 
 interface TabContextProps {
   currentTab: number;
-  setCurrentTab: React.Dispatch<React.SetStateAction<number>>;
+  setCurrentTab: Dispatch<SetStateAction<number>>;
 }
 
-export const TabContext = React.createContext<TabContextProps>({
+export const TabContext = createContext<TabContextProps>({
   currentTab: 0,
   setCurrentTab: () => {},
 });
@@ -31,16 +43,16 @@ interface TabPanelProps {
   index?: number;
 }
 
-export const TabPanel: React.FC<PropsWithChildren<TabPanelProps>> = ({
+export const TabPanel: FC<PropsWithChildren<TabPanelProps>> = ({
   index,
   children,
 }) => {
-  const { currentTab } = React.useContext(TabContext);
+  const { currentTab } = useContext(TabContext);
 
   return <Box hidden={currentTab !== index}>{children}</Box>;
 };
 
-export const DynamicTabs: React.FC<PropsWithChildren<DynamicTabsProps>> = ({
+export const DynamicTabs: FC<PropsWithChildren<DynamicTabsProps>> = ({
   tabNames,
   disabledTabs,
   tabErrors,
@@ -61,7 +73,7 @@ export const DynamicTabs: React.FC<PropsWithChildren<DynamicTabsProps>> = ({
     );
   }
 
-  const handleChange = (event: React.SyntheticEvent, newValue: number) => {
+  const handleChange = (event: SyntheticEvent, newValue: number) => {
     const previousTabs = tabNames.filter((__, index) => index < newValue);
     const previousErrors = previousTabs.map(tabName => tabErrors && tabErrors[tabName]).filter(val => val !== undefined);
     
@@ -115,8 +127,8 @@ export const DynamicTabs: React.FC<PropsWithChildren<DynamicTabsProps>> = ({
           </Tabs>
         </Box>
         <Box sx={{ margin: 2 }}>
-          {React.Children.map(children, (child, index) => {
-            return React.cloneElement(child as React.ReactElement<any>, {
+          {Children.map(children, (child, index) => {
+            return cloneElement(child as React.ReactElement<any>, {
               index,
             });
           })}

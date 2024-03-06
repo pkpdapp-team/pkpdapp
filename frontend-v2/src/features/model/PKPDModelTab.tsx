@@ -1,9 +1,8 @@
-import * as React from "react";
+import { FC, useState } from "react";
 import {
   CombinedModelRead,
   CombinedModelUpdateApiArg,
   Pharmacokinetic,
-  PharmacokineticRead,
   PharmacodynamicRead,
   ProjectRead,
   usePharmacodynamicListQuery,
@@ -11,11 +10,9 @@ import {
 } from "../../app/backendApi";
 import { Control } from "react-hook-form";
 import {
-  FormControlLabel,
   Stack,
   Typography,
   Grid,
-  Checkbox as MuiCheckbox,
   Tooltip,
   Box,
 } from "@mui/material";
@@ -72,13 +69,13 @@ const pd_model_order = [
   "tumour_growth_inhibition_delay_signal_distribution_exp_conc_kill",
 ]
 
-const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props) => {
+const PKPDModelTab: FC<Props> = ({ model, project, control }: Props) => {
   // get list of pd models
   const { data: pdModels, isLoading: pdModelLoading } =
     usePharmacodynamicListQuery();
   const { data: pkModels, isLoading: pkModelLoading } =
     usePharmacokineticListQuery();
-  const [showCode, setShowCode] = React.useState(false);
+  const [showCode, setShowCode] = useState(false);
   const isSharedWithMe = useSelector((state: RootState) => selectIsProjectShared(state, project));
 
   const loading = [pdModelLoading, pkModelLoading];
@@ -125,13 +122,6 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props) => {
     const bIndex = pk_model_order.indexOf(bName);
     return aIndex - bIndex;
   });
-  const pk_model_map = pkModels.reduce(
-    (map, m) => {
-      map[m.id] = m;
-      return map;
-    },
-    {} as { [key: number]: PharmacokineticRead },
-  );
   const pd_model_map = pdModels.reduce(
     (map, m) => {
       map[m.id] = m;
@@ -151,9 +141,6 @@ const PKPDModelTab: React.FC<Props> = ({ model, project, control }: Props) => {
         return { value: m.id, label: m.name };
       });
   pd_model2_options.push({ value: "", label: "None" });
-  const isTMDDmodel = model.pk_model
-    ? pk_model_map[model.pk_model].name.includes("tmdd")
-    : false;
 
   const pd_model = model.pd_model ? pd_model_map[model.pd_model] : null;
   const pd_model2 = model.pd_model2 ? pd_model_map[model.pd_model2] : null;

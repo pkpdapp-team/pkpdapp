@@ -15,7 +15,7 @@ function useDirty(isDirty: boolean) {
       };
     }
     return undefined;
-  }, [isDirty]);
+  }, [isDirty, dispatch]);
 }
 
 export default useDirty;
