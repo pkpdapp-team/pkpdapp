@@ -25,9 +25,7 @@ const HelpButton: FC<HelpButtonProps> = ({ title, children }) => {
   );
 
   useEffect(() => {
-    if (open) {
-      setOpen(false);
-    }
+    setOpen(false);
   }, [selectedPage, selectedSubPage]);
 
   const handleOpen = () => {
