@@ -49,7 +49,6 @@ const Protocols: FC = () => {
   );
   
   const { dataset } = useDataset(selectedProject);
-  console.log('trials', dataset)
 
   const loading = [isProjectLoading, isProtocolsLoading, unitsLoading].some(
     (x) => x,
