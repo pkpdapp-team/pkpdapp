@@ -19,6 +19,10 @@ export default function useDataset(selectedProject: number | null) {
     createDataset
   ] = useDatasetCreateMutation();
 
+  if (dataset !== appDataset) {
+    setDataset(appDataset);
+  }
+
   useEffect(function onDataLoad() {
     async function addDataset() {
       let [newDataset] = datasets;
@@ -34,7 +38,7 @@ export default function useDataset(selectedProject: number | null) {
         }
       }
       appDataset = newDataset;
-      setDataset(newDataset);
+      setDataset(appDataset);
     }
     if (selectedProjectOrZero && !isDatasetLoading) {
       addDataset();
@@ -43,11 +47,11 @@ export default function useDataset(selectedProject: number | null) {
 
   const updateDataset = useCallback((newDataset: DatasetRead) => {
     appDataset = newDataset;
-    setDataset(newDataset);
+    setDataset(appDataset);
   }, []);
 
   return {
-    dataset: appDataset,
+    dataset,
     updateDataset
   };
 }
