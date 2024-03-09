@@ -30,6 +30,9 @@ class DataParser:
         "AMOUNT_UNIT": [
             "Amt_unit", "Amt_units", "AMTUNIT", "UNIT", "AMOUNT_UNIT"
         ],
+        "AMOUNT_VARIABLE": [
+            "Amount Variable", "AMOUNT_VARIABLE"
+        ],
         "OBSERVATION": [
             "DV", "Observation", "Y", "YVAL", "OBSERVATION",
             "OBSERVATION_VALUE", "OBSERVATIONVALUE"
@@ -68,6 +71,7 @@ class DataParser:
     optional_cols = [
         "TIME_UNIT",
         "AMOUNT_UNIT",
+        "AMOUNT_VARIABLE",
         "OBSERVATION_UNIT",
         "OBSERVATION_NAME",
         "OBSERVATION_VARIABLE",
@@ -76,7 +80,7 @@ class DataParser:
         "INFUSION_TIME",
     ]
 
-    altername_unit_names = {
+    alternate_unit_names = {
         "h": ["hour"],
         "day": ["d"],
     }
@@ -144,7 +148,7 @@ class DataParser:
 
         # map alternate unit names to standard names
         inv_altername_unit_names = {}
-        for k, v in self.altername_unit_names.items():
+        for k, v in self.alternate_unit_names.items():
             for v2 in v:
                 inv_altername_unit_names[v2] = k
 
@@ -164,6 +168,10 @@ class DataParser:
         # put in blank observation variable if not present
         if "OBSERVATION_VARIABLE" not in found_cols:
             data["OBSERVATION_VARIABLE"] = ""
+
+        # put in blank amount variable if not present
+        if "AMOUNT_VARIABLE" not in found_cols:
+            data["AMOUNT_VARIABLE"] = ""
 
         # put in default compound name if not present
         if "COMPOUND" not in found_cols:

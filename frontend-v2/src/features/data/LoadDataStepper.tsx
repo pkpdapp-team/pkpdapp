@@ -13,15 +13,16 @@ import MapObservations from './MapObservations';
 import MapDosing from './MapDosing';
 import PreviewData from './PreviewData';
 import { RootState } from "../../app/store";
-import {
-  DatasetRead,
-  useDatasetListQuery,
-  useDatasetCreateMutation,
-  useDatasetCsvUpdateMutation,
-} from '../../app/backendApi';
+import { DatasetRead, useDatasetCsvUpdateMutation } from '../../app/backendApi';
+import Stratification from './Stratification';
+import useDataset from '../../hooks/useDataset';
 
-const stepLabels = ['Upload Data', 'Map Dosing', 'Map Observations', 'Preview Dataset'];
-const stepComponents = [LoadData, MapDosing, MapObservations, PreviewData];
+interface IStepper {
+  onFinish: () => void
+}
+
+const stepLabels = ['Upload Data', 'Map Dosing', 'Map Observations', 'Stratification', 'Preview Dataset'];
+const stepComponents = [LoadData, MapDosing, MapObservations, Stratification, PreviewData];
 
 type Row = {[key: string]: string};
 type Data = Row[];
@@ -40,8 +41,7 @@ export type StepperState = {
   setAmountUnit: (amountUnit: string) => void;
 }
 
-const LoadDataStepper: FC = () => {
-  const [dataset, setDataset] = useState<null | DatasetRead>(null);
+const LoadDataStepper: FC<IStepper> = ({ onFinish }) => {
   const [data, setData] = useState<Data>([]);
   const [fields, setFields] = useState<string[]>([]);
   const [normalisedFields, setNormalisedFields] = useState<string[]>([]);
@@ -50,18 +50,10 @@ const LoadDataStepper: FC = () => {
   const selectedProject = useSelector(
     (state: RootState) => state.main.selectedProject,
   );
-  const selectedProjectOrZero = selectedProject || 0;
-  const { data: datasets = [], isLoading: isDatasetLoading } = useDatasetListQuery(
-    { projectId: selectedProjectOrZero },
-    { skip: !selectedProject },
-  );
   const [
-    createDataset
-  ] = useDatasetCreateMutation();
-  const [
-    updateDataset
+    updateDatasetCsv
   ] = useDatasetCsvUpdateMutation();
-
+  const { dataset, updateDataset } = useDataset(selectedProject);
 
   const state = {
     fields,
@@ -80,43 +72,26 @@ const LoadDataStepper: FC = () => {
   const StepComponent = stepComponents[stepState.activeStep];
   const isFinished = stepState.activeStep === stepLabels.length;
 
-  useEffect(function onDataLoad() {
-    async function addDataset() {
-      let [dataset] = datasets;
-      if (!dataset) {
-        const response = await createDataset({ 
-          dataset: { 
-            name: 'New Dataset',
-            project: selectedProjectOrZero,
-          }
-        });
-        if ('data' in response && response.data) {
-          dataset = response.data;
-        }
-      }
-      console.log({dataset});
-      setDataset(dataset);
-    }
-    if (!isDatasetLoading) {
-      addDataset();
-    }
-  }, [datasets, createDataset, isDatasetLoading]);
-
   useEffect(function onFinished() {
     if (isFinished && dataset?.id) {
       try {
         const csv = Papa.unparse(data);
-        updateDataset({
+        updateDatasetCsv({
           id: dataset.id,
           datasetCsv: {
             csv
           }
         })
+        .unwrap()
+        .then(data => {
+          updateDataset(data as unknown as DatasetRead);
+          onFinish();
+        });
       } catch (e) {
         console.error(e);
       }
     }
-  }, [isFinished, updateDataset, dataset?.id, data])
+  }, [isFinished, onFinish, updateDatasetCsv, updateDataset, dataset?.id, data])
 
   const handleNext = () => {
     setStepState((prevActiveStep) => ({ 

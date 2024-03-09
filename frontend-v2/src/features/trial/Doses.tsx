@@ -74,10 +74,6 @@ const Doses: FC<Props> = ({ project, protocol, units }) => {
     return <div>Loading...</div>;
   }
 
-  if (!variable) {
-    return <div>Variable not found</div>;
-  }
-
   const handleAddRow = () => {
     appendDose({ amount: 0, repeats: 0, start_time: 0, repeat_interval: 1 });
   };
@@ -95,7 +91,7 @@ const Doses: FC<Props> = ({ project, protocol, units }) => {
     <>
       {doses.map((dose, index) => (
         <TableRow key={dose.id}>
-          <TableCell>{variable.name}</TableCell>
+          <TableCell>{variable?.name || ''}</TableCell>
           <TableCell>
             <FloatField
               label={"Dose"}
