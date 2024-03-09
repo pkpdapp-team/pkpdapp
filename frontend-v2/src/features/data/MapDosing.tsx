@@ -84,7 +84,7 @@ const MapDosing: FC<IMapDosing> = ({ state, firstTime }: IMapDosing) => {
     const { value } = event.target;
     nextData.filter(row => administrationIdField ? row[administrationIdField] === id : true)
       .forEach(row => {
-        row['Dosing Variable'] = value;
+        row['Amount Variable'] = value;
       })
     state.setData(nextData);
   }
@@ -134,7 +134,7 @@ const MapDosing: FC<IMapDosing> = ({ state, firstTime }: IMapDosing) => {
           <TableBody>
             {uniqueAdministrationIds.map((adminId, index) => {
               const currentRow = dosingRows.find(row => administrationIdField ? row[administrationIdField] === adminId : true);
-              const selectedVariable = variables?.find(variable => variable.qname === currentRow?.['Dosing Variable']);
+              const selectedVariable = variables?.find(variable => variable.qname === currentRow?.['Amount Variable']);
               const compatibleUnits = units?.find(unit => unit.id === selectedVariable?.unit)?.compatible_units;
               const adminUnit = amountUnitField && currentRow && currentRow[amountUnitField];
               const amount = amountField && currentRow?.[amountField];

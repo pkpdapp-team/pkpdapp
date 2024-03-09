@@ -2004,6 +2004,7 @@ export type Protocol = {
   datetime?: string | null;
   name: string;
   dose_type?: DoseTypeEnum;
+  mapped_qname?: string;
   project?: number | null;
   compound?: number | null;
   time_unit?: number | null;
@@ -2019,6 +2020,7 @@ export type ProtocolRead = {
   datetime?: string | null;
   name: string;
   dose_type?: DoseTypeEnum;
+  mapped_qname?: string;
   project?: number | null;
   compound?: number | null;
   time_unit?: number | null;
@@ -2381,6 +2383,7 @@ export type PatchedProtocol = {
   datetime?: string | null;
   name?: string;
   dose_type?: DoseTypeEnum;
+  mapped_qname?: string;
   project?: number | null;
   compound?: number | null;
   time_unit?: number | null;
@@ -2396,6 +2399,7 @@ export type PatchedProtocolRead = {
   datetime?: string | null;
   name?: string;
   dose_type?: DoseTypeEnum;
+  mapped_qname?: string;
   project?: number | null;
   compound?: number | null;
   time_unit?: number | null;
