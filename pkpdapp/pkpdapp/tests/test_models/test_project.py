@@ -26,7 +26,7 @@ from pkpdapp.models import (
 class TestProject(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(username="testuser", password="12345")
-        compound = Compound.objects.create(name="demo")
+        compound = Compound.objects.create(name="demo", compound_type="LM")
         self.project = Project.objects.create(name="demo", compound=compound)
         self.project.users.add(self.user)
         self.client = APIClient()
@@ -82,6 +82,12 @@ class TestProject(TestCase):
 
         # check that the new project has the right name
         self.assertEqual(new_project.name, "Copy of demo")
+        
+        # check that the compound is there and has the right name
+        new_compound = new_project.compound
+        self.assertEqual(new_compound.name, "demo")
+        self.assertNotEqual(new_compound.pk, self.project.compound.pk)
+        self.assertEqual(new_compound.compound_type, "LM")
 
         # check that the model is there and has the right name
         self.assertEqual(new_project.pk_models.count(), 1)
