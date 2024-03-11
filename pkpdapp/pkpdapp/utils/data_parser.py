@@ -19,22 +19,22 @@ class DataParser:
             "SUBJECT_ID"
         ],
         "TIME": [
-            "Time", "TIME", "TIMEPOINT", "t", "T", "time"
+            "Time", "TIME", "TIMEPOINT", "t", "T", "time",
         ],
         "TIME_UNIT": [
-            "Time_unit", "Time_units", "TIMEUNIT", "TIME_UNIT"
+            "Time_unit", "Time_units", "TIMEUNIT", "TIME_UNIT", "Units_Time"
         ],
         "AMOUNT": [
             "Amt", "Amount", "AMT", "AMOUNT"
         ],
         "AMOUNT_UNIT": [
-            "Amt_unit", "Amt_units", "AMTUNIT", "UNIT", "AMOUNT_UNIT"
+            "Amt_unit", "Amt_units", "AMTUNIT", "UNIT", "AMOUNT_UNIT", "Units_AMT"
         ],
         "AMOUNT_VARIABLE": [
             "Amount Variable", "AMOUNT_VARIABLE"
         ],
         "OBSERVATION": [
-            "DV", "Observation", "Y", "YVAL", "OBSERVATION",
+            "DV", "Observation", "Y", "YVAL", "OBSERVATION", "Conc",
             "OBSERVATION_VALUE", "OBSERVATIONVALUE"
         ],
         "OBSERVATION_NAME": [
@@ -42,7 +42,7 @@ class DataParser:
             "OBSERVATION_NAME", "OBSERVATIONID", "OBSERVATIONNAME"
         ],
         "OBSERVATION_UNIT": [
-            "DV_units", "Observation_unit", "YUNIT", "UNIT",
+            "DV_units", "Observation_unit", "YUNIT", "UNIT", "Units_Conc",
             "OBSERVATION_UNIT",
             "OBSERVATIONUNIT"
         ],

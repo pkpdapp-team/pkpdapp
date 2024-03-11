@@ -156,6 +156,10 @@ class Dataset(models.Model):
             subject = subjects[subject_id]
 
             if observation != ".":  # measurement observation
+                try:
+                    observation = float(observation)
+                except ValueError:
+                    observation = 0.0
                 Biomarker.objects.create(
                     time=time,
                     subject=subject,
