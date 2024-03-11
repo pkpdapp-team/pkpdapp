@@ -190,6 +190,7 @@ class Compound(models.Model):
             'dissociation_constant': self.dissociation_constant,
             'dissociation_unit': self.dissociation_unit,
             'is_soluble': self.is_soluble,
+            'compound_type': self.compound_type,
         }
         new_compound = Compound.objects.create(**kwargs)
         for efficacy_experiment in self.efficacy_experiments.all():
