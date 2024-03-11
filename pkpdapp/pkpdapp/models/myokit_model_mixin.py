@@ -5,6 +5,7 @@
 #
 
 import pkpdapp
+from pkpdapp.models import Protocol
 import numpy as np
 from myokit.formats.mathml import MathMLExpressionWriter
 from myokit.formats.sbml import SBMLParser
@@ -440,6 +441,27 @@ class MyokitModelMixin:
     def get_time_max(self):
         return self.time_max
 
+    def simulate_model(
+            self, outputs=None, variables=None, time_max=None, dosing_protocols=None
+    ):
+        model = self.get_myokit_model()
+        # Convert units
+        variables = self._initialise_variables(model, variables)
+        time_max = self._convert_bound_unit("time", time_max, model)
+        # get tlag vars
+        override_tlag = self._get_override_tlag(variables)
+        # create simulator
+        sim = self.create_myokit_simulator(
+            override_tlag=override_tlag,
+            model=model,
+            time_max=time_max,
+            dosing_protocols=dosing_protocols
+        )
+        # TODO: take these from simulation model
+        sim.set_tolerance(abs_tol=1e-06, rel_tol=1e-08)
+        # Simulate, logging only state variables given by `outputs`
+        return self.serialize_datalog(sim.run(time_max, log=outputs), model)
+
     def simulate(self, outputs=None, variables=None, time_max=None):
         """
         Arguments
@@ -475,21 +497,32 @@ class MyokitModelMixin:
                 **variables,
             }
 
-        model = self.get_myokit_model()
-        # Convert units
-        variables = self._initialise_variables(model, variables)
-        time_max = self._convert_bound_unit("time", time_max, model)
-        # get tlag vars
-        override_tlag = self._get_override_tlag(variables)
-        # create simulator
-        sim = self.create_myokit_simulator(
-            override_tlag=override_tlag, model=model, time_max=time_max
+        project_sim = self.simulate_model(
+            variables=variables, time_max=time_max, outputs=outputs
         )
-        # TODO: take these from simulation model
-        sim.set_tolerance(abs_tol=1e-06, rel_tol=1e-08)
 
-        # Simulate, logging only state variables given by `outputs`
-        return self.serialize_datalog(sim.run(time_max, log=outputs), model)
+        project = self.get_project()
+        sims = [project_sim]
+        if project is not None:
+            for subjects in get_project_cohorts(project):
+                # find unique protocols for this subject cohort
+                dosing_protocols = {}
+                subject_protocols = [
+                    Protocol.objects.get(pk=p['protocol'])
+                    for p in subjects.values('protocol').distinct()
+                    if p['protocol'] is not None
+                ]
+                for protocol in subject_protocols:
+                    dosing_protocols[protocol.mapped_qname] = protocol
+                sim = self.simulate_model(
+                    outputs=outputs,
+                    variables=variables,
+                    time_max=time_max,
+                    dosing_protocols=dosing_protocols
+                )
+                sims.append(sim)
+
+        return sims
 
 
 def set_administration(model, drug_amount, direct=True):
@@ -689,3 +722,21 @@ def _get_dosing_events(
             elif abs(start + duration - time_max) < 1e-6:
                 dosing_events[i] = (level, start, time_max - start)
     return dosing_events
+
+
+def get_project_cohorts(project):
+    dataset = project.datasets.first()
+    cohorts = []
+    if dataset is not None:
+        # TODO: create backend subject cohorts based on the
+        # frontend upload stepper
+        dataset_protocols = [
+            Protocol.objects.get(pk=p['protocol'])
+            for p in dataset.subjects.values('protocol').distinct()
+            if p['protocol'] is not None
+        ]
+        cohorts = [
+            dataset.subjects.filter(protocol=protocol)
+            for protocol in dataset_protocols
+        ]
+    return cohorts

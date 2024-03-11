@@ -44,14 +44,15 @@ class TestSimulateView(APITestCase):
         response = self.client.post(url, data, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        outputs = response.data.get('outputs')
-        self.assertCountEqual(
-            list(outputs.keys()),
-            [
-                Variable.objects.get(qname=qname, dosed_pk_model=m).id
-                for qname in data['outputs']
-            ]
-        )
+        for sim in response.data:
+            outputs = sim.get('outputs')
+            self.assertCountEqual(
+                list(outputs.keys()),
+                [
+                    Variable.objects.get(qname=qname, dosed_pk_model=m).id
+                    for qname in data['outputs']
+                ]
+            )
 
         url = reverse('simulate-combined-model', args=(123,))
         response = self.client.post(url, data, format='json')
