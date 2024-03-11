@@ -82,7 +82,7 @@ class TestProject(TestCase):
 
         # check that the new project has the right name
         self.assertEqual(new_project.name, "Copy of demo")
-        
+
         # check that the compound is there and has the right name
         new_compound = new_project.compound
         self.assertEqual(new_compound.name, "demo")
