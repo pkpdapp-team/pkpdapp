@@ -180,7 +180,7 @@ const Simulations: FC = () => {
       ? (simulateErrorBase.data as ErrorObject)
       : { error: "Unknown error" }
     : undefined;
-  const [data, setData] = useState<SimulateResponse | null>(null);
+  const [data, setData] = useState<SimulateResponse[] | null>(null);
   const { data: compound, isLoading: isLoadingCompound } =
     useCompoundRetrieveQuery(
       { id: project?.compound || 0 },
@@ -303,7 +303,8 @@ const Simulations: FC = () => {
       }).then((response) => {
         setLoadingSimulate(false);
         if ("data" in response) {
-          const responseData = response.data as SimulateResponse;
+          const responseData = response.data as SimulateResponse[];
+          console.log({ responseData })
           setData(responseData);
         }
       });
@@ -342,10 +343,10 @@ const Simulations: FC = () => {
         ),
       }).then((response) => {
         if ("data" in response) {
-          const responseData = response.data as SimulateResponse;
+          const [ projectData ] = response.data;
           const nrows =
-            responseData.outputs[Object.keys(responseData.outputs)[0]].length;
-          const cols = Object.keys(responseData.outputs);
+            projectData.outputs[Object.keys(projectData.outputs)[0]].length;
+          const cols = Object.keys(projectData.outputs);
           const vars = cols.map((vid) =>
             variables.find((v) => v.id === parseInt(vid)),
           );
@@ -377,7 +378,7 @@ const Simulations: FC = () => {
           for (let i = 0; i < nrows; i++) {
             rows[rowi] = new Array(ncols);
             for (let j = 0; j < ncols; j++) {
-              rows[rowi][j] = responseData.outputs[cols[j]][i];
+              rows[rowi][j] = projectData.outputs[cols[j]][i];
             }
             rowi++;
           }
@@ -592,24 +593,26 @@ const Simulations: FC = () => {
         )}
         <Grid container spacing={1}>
           {plots.map((plot, index) => (
-            <Grid item xl={layout === "vertical" ? 12 : 6} md={layout === "vertical" ? 12 : 6} xs={layout === "vertical" ? 12 : 12} key={index}>
-              {data && model ? (
-                <SimulationPlotView
-                  index={index}
-                  plot={plot}
-                  data={data}
-                  variables={variables || []}
-                  control={control}
-                  setValue={setValue}
-                  remove={removePlot}
-                  units={units}
-                  compound={compound}
-                  model={model}
-                />
-              ) : (
-                <div>Loading...</div>
-              )}
-            </Grid>
+            data?.map(d => (
+              <Grid item xl={layout === "vertical" ? 12 : 6} md={layout === "vertical" ? 12 : 6} xs={layout === "vertical" ? 12 : 12} key={index}>
+                {d && model ? (
+                  <SimulationPlotView
+                    index={index}
+                    plot={plot}
+                    data={d}
+                    variables={variables || []}
+                    control={control}
+                    setValue={setValue}
+                    remove={removePlot}
+                    units={units}
+                    compound={compound}
+                    model={model}
+                  />
+                ) : (
+                  <div>Loading...</div>
+                )}
+              </Grid>
+            ))
           ))}
         </Grid>
         <Snackbar open={Boolean(simulateError)} autoHideDuration={6000}>
