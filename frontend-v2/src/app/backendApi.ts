@@ -2026,11 +2026,21 @@ export type ProtocolRead = {
   time_unit?: number | null;
   amount_unit?: number | null;
 };
+export type SubjectGroup = {
+  name: string;
+};
+export type SubjectGroupRead = {
+  id: number;
+  subjects: number[];
+  protocols: ProtocolRead[];
+  name: string;
+};
 export type DatasetRead = {
   id: number;
   biomarker_types: number[];
   subjects: number[];
   protocols: ProtocolRead[];
+  groups: SubjectGroupRead[];
   name: string;
   datetime?: string | null;
   description?: string;
@@ -2047,6 +2057,7 @@ export type PatchedDatasetRead = {
   biomarker_types?: number[];
   subjects?: number[];
   protocols?: ProtocolRead[];
+  groups?: SubjectGroupRead[];
   name?: string;
   datetime?: string | null;
   description?: string;
@@ -2517,6 +2528,7 @@ export type Subject = {
   metadata?: string;
   dataset: number;
   protocol?: number | null;
+  group?: number | null;
 };
 export type SubjectRead = {
   id: number;
@@ -2526,6 +2538,7 @@ export type SubjectRead = {
   metadata?: string;
   dataset: number;
   protocol?: number | null;
+  group?: number | null;
 };
 export type PatchedSubject = {
   id_in_dataset?: number;
@@ -2534,6 +2547,7 @@ export type PatchedSubject = {
   metadata?: string;
   dataset?: number;
   protocol?: number | null;
+  group?: number | null;
 };
 export type PatchedSubjectRead = {
   id?: number;
@@ -2543,6 +2557,7 @@ export type PatchedSubjectRead = {
   metadata?: string;
   dataset?: number;
   protocol?: number | null;
+  group?: number | null;
 };
 export type Unit = {
   symbol: string;

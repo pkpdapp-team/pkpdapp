@@ -11,7 +11,7 @@ const PreviewData: FC<IPreviewData> = ({ state, firstTime }: IPreviewData) => {
   const { data } = state;
   const fields = [
     ...state.fields,
-    'cohort',
+    'Group',
     'Amount Variable',
     'Observation Variable'
   ];
