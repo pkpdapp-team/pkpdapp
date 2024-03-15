@@ -5,7 +5,7 @@
 #
 
 import pkpdapp
-from pkpdapp.models import Protocol
+from pkpdapp.models import SubjectGroup, Protocol
 import numpy as np
 from myokit.formats.mathml import MathMLExpressionWriter
 from myokit.formats.sbml import SBMLParser
@@ -504,12 +504,12 @@ class MyokitModelMixin:
         project = self.get_project()
         sims = [project_sim]
         if project is not None:
-            for subjects in get_project_cohorts(project):
+            for group in get_subject_groups(project):
                 # find unique protocols for this subject cohort
                 dosing_protocols = {}
                 subject_protocols = [
                     Protocol.objects.get(pk=p['protocol'])
-                    for p in subjects.values('protocol').distinct()
+                    for p in group.subjects.values('protocol').distinct()
                     if p['protocol'] is not None
                 ]
                 for protocol in subject_protocols:
@@ -724,19 +724,13 @@ def _get_dosing_events(
     return dosing_events
 
 
-def get_project_cohorts(project):
+def get_subject_groups(project):
     dataset = project.datasets.first()
-    cohorts = []
+    dataset_groups = []
     if dataset is not None:
-        # TODO: create backend subject cohorts based on the
-        # frontend upload stepper
-        dataset_protocols = [
-            Protocol.objects.get(pk=p['protocol'])
-            for p in dataset.subjects.values('protocol').distinct()
-            if p['protocol'] is not None
+        dataset_groups = [
+            SubjectGroup.objects.get(pk=g['group'])
+            for g in dataset.subjects.values('group').distinct()
+            if g['group'] is not None
         ]
-        cohorts = [
-            dataset.subjects.filter(protocol=protocol)
-            for protocol in dataset_protocols
-        ]
-    return cohorts
+    return dataset_groups
