@@ -304,7 +304,6 @@ const Simulations: FC = () => {
         setLoadingSimulate(false);
         if ("data" in response) {
           const responseData = response.data as SimulateResponse[];
-          console.log({ responseData })
           setData(responseData);
         }
       });
@@ -593,26 +592,24 @@ const Simulations: FC = () => {
         )}
         <Grid container spacing={1}>
           {plots.map((plot, index) => (
-            data?.map(d => (
-              <Grid item xl={layout === "vertical" ? 12 : 6} md={layout === "vertical" ? 12 : 6} xs={layout === "vertical" ? 12 : 12} key={index}>
-                {d && model ? (
-                  <SimulationPlotView
-                    index={index}
-                    plot={plot}
-                    data={d}
-                    variables={variables || []}
-                    control={control}
-                    setValue={setValue}
-                    remove={removePlot}
-                    units={units}
-                    compound={compound}
-                    model={model}
-                  />
-                ) : (
-                  <div>Loading...</div>
-                )}
-              </Grid>
-            ))
+            <Grid item xl={layout === "vertical" ? 12 : 6} md={layout === "vertical" ? 12 : 6} xs={layout === "vertical" ? 12 : 12} key={index}>
+              {data && model ? (
+                <SimulationPlotView
+                  index={index}
+                  plot={plot}
+                  data={data}
+                  variables={variables || []}
+                  control={control}
+                  setValue={setValue}
+                  remove={removePlot}
+                  units={units}
+                  compound={compound}
+                  model={model}
+                />
+              ) : (
+                <div>Loading...</div>
+              )}
+            </Grid>
           ))}
         </Grid>
         <Snackbar open={Boolean(simulateError)} autoHideDuration={6000}>

@@ -127,7 +127,7 @@ function genIcLines(
 interface SimulationPlotProps {
   index: number;
   plot: FieldArrayWithId<Simulation, "plots", "id">;
-  data: SimulateResponse;
+  data: SimulateResponse[];
   variables: VariableRead[];
   control: Control<Simulation>;
   setValue: UseFormSetValue<Simulation>;
@@ -183,7 +183,7 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
     ? parseFloat(xcompatibleUnit.conversion_factor)
     : 1.0;
 
-  const convertedTime = data.time.map((t) => t * xconversionFactor);
+  const convertedTime = data[0].time.map((t) => t * xconversionFactor);
   const minX = Math.min(...convertedTime);
   const maxX = Math.max(...convertedTime);
 
@@ -192,71 +192,73 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
   let maxY: number | undefined = undefined;
   let maxY2: number | undefined = undefined;
 
-  const plotData: Data[] = plot.y_axes.map((y_axis) => {
-    const variableValues = data.outputs[y_axis.variable];
-    const variable = variables.find((v) => v.id === y_axis.variable);
-    const variableName = variable?.name;
-    const variableUnit = units.find((u) => u.id === variable?.unit);
+  const plotData = plot.y_axes.map((y_axis) => {
+    return data.map((d, index) => {
+      const variableValues = d.outputs[y_axis.variable];
+      const variable = variables.find((v) => v.id === y_axis.variable);
+      const variableName = variable?.name;
+      const variableUnit = units.find((u) => u.id === variable?.unit);
 
-    const yaxisUnit = y_axis.right
-      ? units.find((u) => u.id === plot.y_unit2)
-      : units.find((u) => u.id === plot.y_unit);
-    const ycompatibleUnit = variableUnit?.compatible_units.find(
-      (u) => parseInt(u.id) === yaxisUnit?.id,
-    );
+      const yaxisUnit = y_axis.right
+        ? units.find((u) => u.id === plot.y_unit2)
+        : units.find((u) => u.id === plot.y_unit);
+      const ycompatibleUnit = variableUnit?.compatible_units.find(
+        (u) => parseInt(u.id) === yaxisUnit?.id,
+      );
 
-    const is_target = model.is_library_model
-      ? variableName?.includes("CT1") || variableName?.includes("AT1")
-      : false;
-    const yconversionFactor = ycompatibleUnit
-      ? parseFloat(
-          is_target
-            ? ycompatibleUnit.target_conversion_factor
-            : ycompatibleUnit.conversion_factor,
-        )
-      : 1.0;
+      const is_target = model.is_library_model
+        ? variableName?.includes("CT1") || variableName?.includes("AT1")
+        : false;
+      const yconversionFactor = ycompatibleUnit
+        ? parseFloat(
+            is_target
+              ? ycompatibleUnit.target_conversion_factor
+              : ycompatibleUnit.conversion_factor,
+          )
+        : 1.0;
 
-    if (variableValues) {
-      const y = variableValues.map((v) => v * yconversionFactor);
-      if (y_axis.right) {
-        if (minY2 === undefined) {
-          minY2 = Math.min(...y);
+      if (variableValues) {
+        const y = variableValues.map((v) => v * yconversionFactor);
+        if (y_axis.right) {
+          if (minY2 === undefined) {
+            minY2 = Math.min(...y);
+          } else {
+            minY2 = Math.min(minY2, ...y);
+          }
+          if (maxY2 === undefined) {
+            maxY2 = Math.max(...y);
+          } else {
+            maxY2 = Math.max(maxY2, ...y);
+          }
         } else {
-          minY2 = Math.min(minY2, ...y);
+          if (minY === undefined) {
+            minY = Math.min(...y);
+          } else {
+            minY = Math.min(minY, ...y);
+          }
+          if (maxY === undefined) {
+            maxY = Math.max(...y);
+          } else {
+            maxY = Math.max(maxY, ...y);
+          }
         }
-        if (maxY2 === undefined) {
-          maxY2 = Math.max(...y);
-        } else {
-          maxY2 = Math.max(maxY2, ...y);
-        }
+        return {
+          yaxis: y_axis.right ? "y2" : undefined,
+          x: convertedTime,
+          y: variableValues.map((v) => v * yconversionFactor),
+          name: `${variableName} ${index}` || "unknown",
+        };
       } else {
-        if (minY === undefined) {
-          minY = Math.min(...y);
-        } else {
-          minY = Math.min(minY, ...y);
-        }
-        if (maxY === undefined) {
-          maxY = Math.max(...y);
-        } else {
-          maxY = Math.max(maxY, ...y);
-        }
+        return {
+          yaxis: y_axis.right ? "y2" : undefined,
+          x: [],
+          y: [],
+          type: "scatter",
+          name: `${y_axis.variable} ${index}`,
+        };
       }
-      return {
-        yaxis: y_axis.right ? "y2" : undefined,
-        x: convertedTime,
-        y: variableValues.map((v) => v * yconversionFactor),
-        name: variableName || "unknown",
-      };
-    } else {
-      return {
-        yaxis: y_axis.right ? "y2" : undefined,
-        x: [],
-        y: [],
-        type: "scatter",
-        name: `${y_axis.variable}`,
-      };
-    }
-  });
+    });
+  }).flat() as Data[];
 
   const concentrationUnit = units.find((unit) => unit.symbol === "pmol/L");
   if (concentrationUnit === undefined) {
