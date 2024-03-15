@@ -1127,7 +1127,7 @@ export type CombinedModelSetVariablesFromInferenceUpdateApiArg = {
   combinedModel: CombinedModel;
 };
 export type CombinedModelSimulateCreateApiResponse =
-  /** status 200  */ SimulateResponse;
+  /** status 200  */ SimulateResponse[];
 export type CombinedModelSimulateCreateApiArg = {
   id: number;
   simulate: Simulate;
@@ -1350,7 +1350,7 @@ export type PharmacodynamicSetVariablesFromInferenceUpdateApiArg = {
   pharmacodynamic: Pharmacodynamic;
 };
 export type PharmacodynamicSimulateCreateApiResponse =
-  /** status 200  */ SimulateResponse;
+  /** status 200  */ SimulateResponse[];
 export type PharmacodynamicSimulateCreateApiArg = {
   id: number;
   simulate: Simulate;

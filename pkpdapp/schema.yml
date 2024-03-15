@@ -539,7 +539,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SimulateResponse'
+                type: array
+                items:
+                  $ref: '#/components/schemas/SimulateResponse'
           description: ''
         '400':
           content:
@@ -1674,7 +1676,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SimulateResponse'
+                type: array
+                items:
+                  $ref: '#/components/schemas/SimulateResponse'
           description: ''
         '400':
           content:

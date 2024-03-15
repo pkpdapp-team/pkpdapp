@@ -135,11 +135,12 @@ class CombinedModelTestCase(APITestCase):
             format="json",
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        keys = [key for key in response.data["outputs"].keys()]
+        data = response.data[0]
+        keys = [key for key in data["outputs"].keys()]
         return (
-            response.data["outputs"][keys[0]],
-            response.data["outputs"][keys[1]],
-            response.data["outputs"][keys[2]],
+            data["outputs"][keys[0]],
+            data["outputs"][keys[1]],
+            data["outputs"][keys[2]],
         )
 
     def test_swap_mapped_pd_model(self):

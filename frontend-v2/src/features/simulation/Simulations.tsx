@@ -180,7 +180,7 @@ const Simulations: FC = () => {
       ? (simulateErrorBase.data as ErrorObject)
       : { error: "Unknown error" }
     : undefined;
-  const [data, setData] = useState<SimulateResponse | null>(null);
+  const [data, setData] = useState<SimulateResponse[] | null>(null);
   const { data: compound, isLoading: isLoadingCompound } =
     useCompoundRetrieveQuery(
       { id: project?.compound || 0 },
@@ -303,7 +303,7 @@ const Simulations: FC = () => {
       }).then((response) => {
         setLoadingSimulate(false);
         if ("data" in response) {
-          const responseData = response.data as SimulateResponse;
+          const responseData = response.data as SimulateResponse[];
           setData(responseData);
         }
       });
@@ -342,10 +342,10 @@ const Simulations: FC = () => {
         ),
       }).then((response) => {
         if ("data" in response) {
-          const responseData = response.data as SimulateResponse;
+          const [ projectData ] = response.data;
           const nrows =
-            responseData.outputs[Object.keys(responseData.outputs)[0]].length;
-          const cols = Object.keys(responseData.outputs);
+            projectData.outputs[Object.keys(projectData.outputs)[0]].length;
+          const cols = Object.keys(projectData.outputs);
           const vars = cols.map((vid) =>
             variables.find((v) => v.id === parseInt(vid)),
           );
@@ -377,7 +377,7 @@ const Simulations: FC = () => {
           for (let i = 0; i < nrows; i++) {
             rows[rowi] = new Array(ncols);
             for (let j = 0; j < ncols; j++) {
-              rows[rowi][j] = responseData.outputs[cols[j]][i];
+              rows[rowi][j] = projectData.outputs[cols[j]][i];
             }
             rowi++;
           }

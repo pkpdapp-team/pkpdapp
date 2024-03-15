@@ -30,7 +30,7 @@ def create_pd_inference(sampling=False):
     # generate some fake data
     output = model.variables.get(qname='PDCompartment.TS')
     time = model.variables.get(qname='environment.t')
-    data = model.simulate(outputs=[output.qname, time.qname])
+    data = model.simulate(outputs=[output.qname, time.qname])[0]
     print(data)
     TS = data[output.id]
     times = data[time.id]
