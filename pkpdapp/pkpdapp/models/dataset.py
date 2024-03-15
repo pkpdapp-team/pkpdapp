@@ -9,7 +9,7 @@ from django.db import models
 from pkpdapp.models import Project
 from pkpdapp.models import (
     Dose, Biomarker, BiomarkerType, Subject, Protocol, Unit,
-    CategoricalBiomarker,
+    CategoricalBiomarker, SubjectGroup
 )
 from pkpdapp.utils import DataParser
 
@@ -86,7 +86,7 @@ class Dataset(models.Model):
 
         # create subjects
         subjects = {}
-        for i, row in data[['SUBJECT_ID']].drop_duplicates().iterrows():
+        for i, row in data[['SUBJECT_ID', 'GROUP_ID']].drop_duplicates().iterrows():
             subject_id = row['SUBJECT_ID']
 
             subjects[subject_id] = Subject.objects.create(
@@ -95,6 +95,20 @@ class Dataset(models.Model):
                 shape=i,
             )
 
+        # create subject groups
+        for i, row in data[['GROUP_ID']].drop_duplicates().iterrows():
+            group_id = row['GROUP_ID']
+            group_name = f'Group {group_id}'
+            group = SubjectGroup.objects.create(
+                name=group_name
+            )
+            for i, row in data[
+                data['GROUP_ID'] == group_id
+            ][['SUBJECT_ID']].drop_duplicates().iterrows():
+                subject_id = row['SUBJECT_ID']
+                subject = subjects[subject_id]
+                subject.group = group
+                subject.save()
         # create subject protocol
         for i, row in data[
             ['SUBJECT_ID', 'ROUTE', "AMOUNT_UNIT", "AMOUNT_VARIABLE"]

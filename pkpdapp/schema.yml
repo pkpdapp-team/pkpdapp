@@ -3402,6 +3402,11 @@ components:
           items:
             $ref: '#/components/schemas/Protocol'
           readOnly: true
+        groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/SubjectGroup'
+          readOnly: true
         name:
           type: string
           description: name of the dataset
@@ -3422,6 +3427,7 @@ components:
           description: Project that "owns" this model
       required:
       - biomarker_types
+      - groups
       - id
       - name
       - protocols
@@ -4087,6 +4093,11 @@ components:
           items:
             $ref: '#/components/schemas/Protocol'
           readOnly: true
+        groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/SubjectGroup'
+          readOnly: true
         name:
           type: string
           description: name of the dataset
@@ -4481,6 +4492,10 @@ components:
           type: integer
           nullable: true
           description: dosing protocol for this subject.
+        group:
+          type: integer
+          nullable: true
+          description: subject group containing this subject.
     PatchedUnit:
       type: object
       properties:
@@ -5177,10 +5192,39 @@ components:
           type: integer
           nullable: true
           description: dosing protocol for this subject.
+        group:
+          type: integer
+          nullable: true
+          description: subject group containing this subject.
       required:
       - dataset
       - id
       - id_in_dataset
+    SubjectGroup:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        subjects:
+          type: array
+          items:
+            type: integer
+          readOnly: true
+        protocols:
+          type: array
+          items:
+            $ref: '#/components/schemas/Protocol'
+          readOnly: true
+        name:
+          type: string
+          description: name of the group
+          maxLength: 100
+      required:
+      - id
+      - name
+      - protocols
+      - subjects
     TypeEnum:
       enum:
       - RO

@@ -59,6 +59,9 @@ class DataParser:
             "TINF", "Tinf", "tinf", "Infusion_time", "INFUSIONTIME",
             "INFUSION_TIME"
         ],
+        "GROUP_ID": [
+            "Group ID", "Group", "GROUP", "cohort", "Cohort", "COHORT"
+        ]
     }
 
     required_cols = [
@@ -78,6 +81,7 @@ class DataParser:
         "COMPOUND",
         "ROUTE",
         "INFUSION_TIME",
+        "GROUP_ID"
     ]
 
     alternate_unit_names = {
@@ -180,6 +184,10 @@ class DataParser:
         # put in default route name if not present
         if "ROUTE" not in found_cols:
             data["ROUTE"] = "IV"
+
+        # put in default subject group if not present
+        if "GROUP_ID" not in found_cols:
+            data["GROUP_ID"] = 1
 
         # put in default units if not present, convert any percentage units
         # to dimensionless

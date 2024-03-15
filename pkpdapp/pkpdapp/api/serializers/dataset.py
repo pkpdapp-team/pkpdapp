@@ -8,9 +8,9 @@ from pkpdapp.utils import DataParser
 from rest_framework import serializers
 from drf_spectacular.utils import extend_schema_field
 from pkpdapp.models import (
-    Dataset, Protocol,
+    Dataset, Protocol, SubjectGroup
 )
-from pkpdapp.api.serializers import ProtocolSerializer
+from pkpdapp.api.serializers import ProtocolSerializer, SubjectGroupSerializer
 
 
 class DatasetSerializer(serializers.ModelSerializer):
@@ -21,10 +21,20 @@ class DatasetSerializer(serializers.ModelSerializer):
         many=True, read_only=True
     )
     protocols = serializers.SerializerMethodField('get_protocols')
+    groups = serializers.SerializerMethodField('get_subject_groups')
 
     class Meta:
         model = Dataset
         fields = '__all__'
+
+    @extend_schema_field(SubjectGroupSerializer(many=True))
+    def get_subject_groups(self, dataset):
+        subject_groups = [
+            SubjectGroup.objects.get(pk=g['group'])
+            for g in dataset.subjects.values('group').distinct()
+            if g['group'] is not None
+        ]
+        return SubjectGroupSerializer(subject_groups, many=True).data
 
     @extend_schema_field(ProtocolSerializer(many=True))
     def get_protocols(self, dataset):

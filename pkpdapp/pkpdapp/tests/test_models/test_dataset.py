@@ -12,6 +12,7 @@ from pkpdapp.models import (
     Biomarker,
     Unit,
     Subject,
+    SubjectGroup,
 )
 from django.utils import timezone
 
@@ -35,9 +36,13 @@ class TestBiomarkerTypeModel(TestCase):
             stored_time_unit=self.time_unit,
             display_time_unit=self.time_unit,
         )
+        self.subject_group = SubjectGroup.objects.create(
+            name='my_cool_group',
+        )
         self.subject = Subject.objects.create(
             id_in_dataset=1,
             dataset=self.dataset,
+            group=self.subject_group,
         )
         self.values = [0, 1, 2]
         self.times = [0, 2, 4]
