@@ -13,6 +13,7 @@ from .project import Project, ProjectAccess
 from .protocol import Protocol
 from .dose import Dose
 from .subject import Subject
+from .subject_group import SubjectGroup
 from .biomarker_type import BiomarkerType
 from .biomarker import Biomarker
 from .categorical_biomarker import CategoricalBiomarker

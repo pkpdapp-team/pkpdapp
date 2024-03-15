@@ -76,12 +76,12 @@ const Protocols: FC = () => {
 
   function a11yProps(index: number) {
     return {
-      id: `protocol-tab-${index}`,
-      'aria-controls': `protocol-tabpanel`,
+      id: `group-tab-${index}`,
+      'aria-controls': `group-tabpanel`,
     };
   }
 
-  const selectedProtocols = tab === 0 ? filteredProtocols : [dataset?.protocols[tab-1]];
+  const selectedProtocols = tab === 0 ? filteredProtocols : dataset?.groups[tab-1].protocols;
   const DosesComponent = tab === 0 ? Doses : DatasetDoses;
   return (
     <>
@@ -90,15 +90,15 @@ const Protocols: FC = () => {
           label={'Project'}
           {...a11yProps(0)}
         />
-        {dataset?.protocols.map((protocol, index) => (
+        {dataset?.groups.map((group, index) => (
           <Tab
-            key={protocol.id}
-            label={`Group ${index + 1}`}
+            key={group.id}
+            label={group.name}
             {...a11yProps(index+1)}
           />
         ))}
     </Tabs>
-    <Box role="tabpanel" id={`protocol-tabpanel`}>
+    <Box role="tabpanel" id={`group-tabpanel`}>
       <TableContainer sx={{ width: '90%' }}>
         <Table>
           <TableHead>

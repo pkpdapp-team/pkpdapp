@@ -24,8 +24,13 @@ interface IStratification {
 }
 
 const Stratification: FC<IStratification> = ({ state, firstTime }: IStratification) => {
+  const idField = state.fields.find((field, index) => state.normalisedFields[index] === 'ID');
   const subjectDoses = getSubjectDoses(state);
   const protocols = getProtocols(subjectDoses);
+  const groups = protocols.map((protocol, index) => ({
+    name: `Group ${index + 1}`,
+    subjects: protocol.subjects
+  }));
   const catCovariates = state.fields.filter((field, index) =>
     state.normalisedFields[index] === 'Cat Covariate' && field.toLowerCase() !== 'route'
   );
@@ -35,10 +40,23 @@ const Stratification: FC<IStratification> = ({ state, firstTime }: IStratificati
   });
 
   const [firstRow] = state.data;
-  const primaryCohort = catCovariates.find((field => firstRow[field] === firstRow.cohort));
+  const primaryCohort = catCovariates.find((field => field === 'Group'));
   const [primary, setPrimary] = useState(primaryCohort || '');
   const [secondary, setSecondary] = useState<string[]>([]);
   const [tab, setTab] = useState(0);
+
+  if (!firstRow['Group ID']) {
+    const newData = [ ...state.data ];
+    protocols.forEach((protocol, index) => {
+      protocol.subjects.forEach(subject => {
+        const subjectRows = newData.filter(row => idField ? row[idField] === subject : false);
+        subjectRows.forEach(row => {
+          row['Group ID'] = `${index + 1}`;
+        });
+      });
+    });
+    state.setData(newData);
+  }
 
   const handleTabChange = (event: ChangeEvent<{}>, newValue: number) => {
     setTab(newValue);
@@ -46,11 +64,7 @@ const Stratification: FC<IStratification> = ({ state, firstTime }: IStratificati
 
   const handlePrimaryChange = (event: ChangeEvent<HTMLInputElement>) => {
     setPrimary(event.target.value);
-    const nextData = [...state.data];
-    nextData.forEach(row => {
-      row.cohort = row[event.target.value];
-    });
-    state.setData(nextData);
+    // TODO: split each subject group into separate cohorts.
   };
 
   const handleSecondaryChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -62,6 +76,7 @@ const Stratification: FC<IStratification> = ({ state, firstTime }: IStratificati
       const newState = new Set([...secondary, event.target.value]);
       setSecondary([...newState]);
     }
+    // TODO: split each subject group into separate cohorts.
   };
 
   function a11yProps(index: number) {
@@ -126,16 +141,16 @@ const Stratification: FC<IStratification> = ({ state, firstTime }: IStratificati
         </Table>
       }
       <Tabs value={tab} onChange={handleTabChange}>
-        {protocols.map((protocol, index) => (
+        {groups.map((group, index) => (
           <Tab
-            key={protocol.label}
-            label={`Group ${index + 1}`}
+            key={group.name}
+            label={group.name}
             {...a11yProps(index)}
           />
         ))}
       </Tabs>
       <Box role='tabpanel' id='protocol-tabpanel'>
-        <ProtocolDataGrid protocol={protocols[tab]}  state={state} />
+        <ProtocolDataGrid group={groups[tab]}  state={state} />
       </Box>
     </>
   );
