@@ -45,13 +45,13 @@ const Stratification: FC<IStratification> = ({ state, firstTime }: IStratificati
   const [secondary, setSecondary] = useState<string[]>([]);
   const [tab, setTab] = useState(0);
 
-  if (!firstRow['Group']) {
-    const newData = { ...state.data };
+  if (!firstRow['Group ID']) {
+    const newData = [ ...state.data ];
     protocols.forEach((protocol, index) => {
       protocol.subjects.forEach(subject => {
         const subjectRows = newData.filter(row => idField ? row[idField] === subject : false);
-        subjectRows.forEach((row, index) => {
-          row['Group'] = `${index + 1}`;
+        subjectRows.forEach(row => {
+          row['Group ID'] = `${index + 1}`;
         });
       });
     });
