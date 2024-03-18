@@ -38,10 +38,6 @@ class SimulateResponseSerializer(serializers.Serializer):
         }
 
 
-class SimulateResponseListSerializer(serializers.ListSerializer):
-    child = SimulateResponseSerializer()
-
-
 class ErrorResponseSerializer(serializers.Serializer):
     error = serializers.CharField()
 
@@ -49,7 +45,7 @@ class ErrorResponseSerializer(serializers.Serializer):
 @extend_schema(
     request=SimulateSerializer,
     responses={
-        200: SimulateResponseListSerializer,
+        200: SimulateResponseSerializer(many=True),
         400: ErrorResponseSerializer,
         404: None,
     },
