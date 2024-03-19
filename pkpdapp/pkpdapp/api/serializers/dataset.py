@@ -10,7 +10,9 @@ from drf_spectacular.utils import extend_schema_field
 from pkpdapp.models import (
     Dataset, Protocol, SubjectGroup
 )
-from pkpdapp.api.serializers import ProtocolSerializer, SubjectGroupSerializer
+from pkpdapp.api.serializers import (
+    BiomarkerTypeSerializer, ProtocolSerializer, SubjectGroupSerializer
+)
 
 
 class DatasetSerializer(serializers.ModelSerializer):
@@ -22,10 +24,15 @@ class DatasetSerializer(serializers.ModelSerializer):
     )
     protocols = serializers.SerializerMethodField('get_protocols')
     groups = serializers.SerializerMethodField('get_subject_groups')
+    biomarkers = serializers.SerializerMethodField('get_biomarkers')
 
     class Meta:
         model = Dataset
         fields = '__all__'
+
+    @extend_schema_field(BiomarkerTypeSerializer(many=True))
+    def get_biomarkers(self, dataset):
+        return BiomarkerTypeSerializer(dataset.biomarker_types.all(), many=True).data
 
     @extend_schema_field(SubjectGroupSerializer(many=True))
     def get_subject_groups(self, dataset):
