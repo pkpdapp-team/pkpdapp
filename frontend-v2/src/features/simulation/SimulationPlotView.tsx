@@ -21,6 +21,7 @@ import { Control, FieldArrayWithId, UseFormSetValue } from "react-hook-form";
 import SimulationPlotForm from "./SimulationPlotForm";
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
+import useDataset from "../../hooks/useDataset";
 
 function ranges(
   minY: number | undefined,
@@ -153,6 +154,8 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
     (state: RootState) => state.main.selectedProject,
   );
   useProtocolListQuery({ projectId: projectId || 0 }, { skip: !projectId });
+
+  const { dataset, subjectBiomarkers } = useDataset(projectId);
 
   const [open, setOpen] = useState(false);
 
@@ -408,10 +411,57 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
     scrollZoom: true,
   };
 
+  const biomarkerVariables = subjectBiomarkers?.map(d => {
+    const observation = d?.[0];
+    const variable = variables.find(v => v.qname === observation?.qname);
+    return variable?.id;
+  }) || [];
+  let combinedPlotData = [...plotData];
+  plot.y_axes.forEach(y_axis => {
+    const xAxisUnit = units.find((u) => u.id === plot.x_unit);
+    const yAxisUnit = y_axis.right
+      ? units.find((u) => u.id === plot.y_unit2)
+      : units.find((u) => u.id === plot.y_unit);
+      
+    const biomarkerIndex = biomarkerVariables.indexOf(y_axis.variable);
+    const biomarkerData = subjectBiomarkers?.[biomarkerIndex];
+    const { label, qname, unit, timeUnit } = biomarkerData?.[0] || {};
+    const yCompatibleUnit = unit?.compatible_units.find(
+      (u) => parseInt(u.id) === yAxisUnit?.id,
+    );
+    const timeCompatibleUnit = timeUnit?.compatible_units.find(
+      (u) => parseInt(u.id) === xAxisUnit?.id,
+    );
+    const timeConversionFactor = timeCompatibleUnit
+      ? parseFloat(timeCompatibleUnit.conversion_factor)
+      : 1.0;
+    const is_target = model.is_library_model
+      ? qname?.includes("CT1") || qname?.includes("AT1")
+      : false;
+    const yConversionFactor = yCompatibleUnit
+      ? parseFloat(
+          is_target
+            ? yCompatibleUnit.target_conversion_factor
+            : yCompatibleUnit.conversion_factor,
+        )
+      : 1.0;
+    const scatterplotData = dataset?.groups?.map(group => {
+      const groupBiomarkers = biomarkerData?.filter(d => group.subjects.includes(d.subjectId));
+      return {
+        name: `${group.name} ${label}`,
+        x: groupBiomarkers?.map(d => d?.time * timeConversionFactor),
+        y: groupBiomarkers?.map(d => d?.value * yConversionFactor),
+        type: 'scatter',
+        mode: 'markers'
+      }
+    });
+    combinedPlotData = combinedPlotData.concat(scatterplotData as Data[]);
+  });
+  
   return (
     <>
       <Plot
-        data={plotData}
+        data={combinedPlotData as Data[]}
         layout={plotLayout}
         style={{ width: "100%", height: "100%" }}
         config={config}

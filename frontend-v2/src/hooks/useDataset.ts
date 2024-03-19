@@ -2,7 +2,9 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   DatasetRead,
   useDatasetListQuery,
-  useDatasetCreateMutation
+  useDatasetCreateMutation,
+  useProjectRetrieveQuery,
+  useUnitListQuery
 } from '../app/backendApi';
 
 // assume only one dataset per project for the time being.
@@ -11,6 +13,13 @@ let appDataset: DatasetRead | null = null;
 export default function useDataset(selectedProject: number | null) {
   const [dataset, setDataset] = useState<null | DatasetRead>(appDataset);
   const selectedProjectOrZero = selectedProject || 0;
+  const { data: project, isLoading: isProjectLoading } =
+    useProjectRetrieveQuery({ id: selectedProjectOrZero }, { skip: !selectedProject }
+  );
+  const { data: units, isLoading: isUnitsLoading } = useUnitListQuery(
+    { compoundId: project?.compound || 0 },
+    { skip: !project?.compound },
+  );
   const { data: datasets = [], isLoading: isDatasetLoading } = useDatasetListQuery(
     { projectId: selectedProjectOrZero },
     { skip: !selectedProject },
@@ -50,8 +59,29 @@ export default function useDataset(selectedProject: number | null) {
     setDataset(appDataset);
   }, []);
 
+  const subjectBiomarkers = dataset?.biomarkers
+    .filter(b => b.is_continuous)
+    .map(b => {
+      const timeUnit = units?.find(u => u.id === b.display_time_unit);
+      const unit = units?.find(u => u.id === b.display_unit);
+      const qname = b.mapped_qname;
+      const label = b.name;
+      return b.data?.subjects
+        .map((subjectId, index) => ({
+          subjectId,
+          time: b.data?.times[index],
+          timeUnit,
+          value: b.data?.values[index],
+          unit,
+          qname,
+          label
+        }))
+        .sort((a, b) => a.subjectId - b.subjectId)
+        .map((row, index) => ({ id: index + 1, ...row })) || [];
+    });
   return {
     dataset,
+    subjectBiomarkers,
     updateDataset
   };
 }

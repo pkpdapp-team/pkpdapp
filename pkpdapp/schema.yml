@@ -3411,6 +3411,11 @@ components:
           items:
             $ref: '#/components/schemas/SubjectGroup'
           readOnly: true
+        biomarkers:
+          type: array
+          items:
+            $ref: '#/components/schemas/BiomarkerType'
+          readOnly: true
         name:
           type: string
           description: name of the dataset
@@ -3431,6 +3436,7 @@ components:
           description: Project that "owns" this model
       required:
       - biomarker_types
+      - biomarkers
       - groups
       - id
       - name
@@ -4101,6 +4107,11 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/SubjectGroup'
+          readOnly: true
+        biomarkers:
+          type: array
+          items:
+            $ref: '#/components/schemas/BiomarkerType'
           readOnly: true
         name:
           type: string

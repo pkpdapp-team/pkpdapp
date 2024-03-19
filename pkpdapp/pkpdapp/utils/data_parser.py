@@ -47,7 +47,7 @@ class DataParser:
             "OBSERVATIONUNIT"
         ],
         "OBSERVATION_VARIABLE": [
-            "Observbation Variable", "OBSERVATION_VARIABLE"
+            "Observation Variable", "OBSERVATION_VARIABLE"
         ],
         "COMPOUND": [
             "Compound", "COMPOUND"
