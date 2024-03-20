@@ -74,7 +74,8 @@ const MapObservations: FC<IMapObservations> = ({state}: IMapObservations) => {
     nextData.filter(row => observationIdField ? row[observationIdField] === id : true)
       .forEach(row => {
         row['Observation Variable'] = value;
-        if (!observationUnitField && defaultUnit) {
+        const selectedUnitSymbol = row[observationUnitField || 'Observation Unit'];
+        if (!selectedUnitSymbol && defaultUnit) {
           row['Observation Unit'] = defaultUnit?.symbol
         }
       });
@@ -117,18 +118,19 @@ const MapObservations: FC<IMapObservations> = ({state}: IMapObservations) => {
             {uniqueObservationIds.map((obsId) => {
               const currentRow = observationRows.find(row => observationIdField ? row[observationIdField] === obsId : true);
               const selectedVariable = variables?.find(variable => variable.qname === currentRow?.['Observation Variable']);
-              const compatibleUnits = units?.find(unit => unit.id === selectedVariable?.unit)?.compatible_units;
-              const obsUnit = observationUnitField && currentRow && currentRow[observationUnitField];
-              let obsUnitSymbol = obsUnit;
+              let selectedUnitSymbol = currentRow?.[observationUnitField || 'Observation Unit'];
+              const compatibleUnits = selectedVariable
+                ? units?.find(unit => unit.id === selectedVariable?.unit)?.compatible_units
+                : units;
               ['%', 'fraction', 'ratio'].forEach(token => {
-                if (obsUnitSymbol?.toLowerCase().includes(token)) {
-                  obsUnitSymbol = '';
+                if (selectedUnitSymbol?.toLowerCase().includes(token)) {
+                  selectedUnitSymbol = '';
                 }
               });
               const compatibleVariables = modelOutputs.filter(variable => {
                 const variableUnit = units?.find(unit => unit.id === variable.unit);
                 const compatibleSymbols = variableUnit?.compatible_units.map(u => u.symbol);
-                return compatibleSymbols?.includes(obsUnitSymbol || '');
+                return compatibleSymbols?.includes(selectedUnitSymbol || '');
               });
               return (
                 <TableRow>
@@ -136,15 +138,15 @@ const MapObservations: FC<IMapObservations> = ({state}: IMapObservations) => {
                     {obsId}
                   </TableCell>
                   <TableCell>
-                    {obsUnit ?
-                      obsUnit :
+                    {observationUnitField && selectedUnitSymbol ?
+                      selectedUnitSymbol :
                       <FormControl>
                         <InputLabel id={`select-unit-${obsId}-label`}>Units</InputLabel>
                         <Select
                           labelId={`select-unit-${obsId}-label`}
                           id={`select-unit-${obsId}`}
                           label='Units'
-                          value={currentRow?.['Observation Unit']}
+                          value={selectedUnitSymbol || ''}
                           onChange={handleUnitChange(obsId)}
                         >
                           {compatibleUnits?.map((unit) => (
