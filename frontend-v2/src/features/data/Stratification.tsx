@@ -40,15 +40,14 @@ const Stratification: FC<IStratification> = ({ state, firstTime }: IStratificati
   });
 
   const [firstRow] = state.data;
-  const primaryCohort = catCovariates.find((field => field === 'Group'));
-  const [primary, setPrimary] = useState(primaryCohort || '');
+  const [primaryCohort, setPrimaryCohort] = useState('Group');
   const [secondary, setSecondary] = useState<string[]>([]);
   const [tab, setTab] = useState(0);
 
   if (!firstRow['Group ID']) {
     const newData = [ ...state.data ];
     newData.forEach(row => {
-      row['Group ID'] = row['Group'] || '1';
+      row['Group ID'] = row[primaryCohort] || '1';
     });
     state.setData(newData);
   }
@@ -58,8 +57,12 @@ const Stratification: FC<IStratification> = ({ state, firstTime }: IStratificati
   }
 
   const handlePrimaryChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setPrimary(event.target.value);
-    // TODO: split each subject group into separate cohorts.
+    setPrimaryCohort(event.target.value);
+    const newData = [ ...state.data ];
+    newData.forEach(row => {
+      row['Group ID'] = row[event.target.value];
+    });
+    state.setData(newData);
   };
 
   const handleSecondaryChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -71,7 +74,7 @@ const Stratification: FC<IStratification> = ({ state, firstTime }: IStratificati
       const newState = new Set([...secondary, event.target.value]);
       setSecondary([...newState]);
     }
-    // TODO: split each subject group into separate cohorts.
+    // TODO: update the Group ID column when groups Change.
   };
 
   function a11yProps(index: number) {
@@ -105,7 +108,7 @@ const Stratification: FC<IStratification> = ({ state, firstTime }: IStratificati
             {catCovariates.map((field, index) => {
               const primaryLabel = `heading-primary field-${field}`;
               const secondaryLabel = `heading-secondary field-${field}`;
-              const isPrimary = primary === field;
+              const isPrimary = primaryCohort === field;
               return (
                 <TableRow key={field}>
                   <TableCell id={`field-${field}`}>{field}</TableCell>
