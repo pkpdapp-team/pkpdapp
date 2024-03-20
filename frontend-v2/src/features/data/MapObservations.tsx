@@ -54,7 +54,7 @@ const MapObservations: FC<IMapObservations> = ({state}: IMapObservations) => {
   const observationUnitField = state.fields.find(
     (field, i) => ['Observation Unit', 'Unit'].includes(state.normalisedFields[i])
   );
-  const observationUnits = observationRows.map(row => row[observationUnitField || 'Observation Unit']);
+  const observationUnits = observationRows.map(row => row[observationUnitField || 'Observation_unit']);
   const observationVariables = observationRows.map(row => row['Observation Variable']);
 
   const filterOutputs = model?.is_library_model
@@ -74,9 +74,9 @@ const MapObservations: FC<IMapObservations> = ({state}: IMapObservations) => {
     nextData.filter(row => observationIdField ? row[observationIdField] === id : true)
       .forEach(row => {
         row['Observation Variable'] = value;
-        const selectedUnitSymbol = row[observationUnitField || 'Observation Unit'];
+        const selectedUnitSymbol = row[observationUnitField || 'Observation_unit'];
         if (!selectedUnitSymbol && defaultUnit) {
-          row['Observation Unit'] = defaultUnit?.symbol
+          row['Observation_unit'] = defaultUnit?.symbol
         }
       });
     state.setData(nextData);
@@ -86,7 +86,7 @@ const MapObservations: FC<IMapObservations> = ({state}: IMapObservations) => {
     const { value } = event.target;
     nextData.filter(row => observationIdField ? row[observationIdField] === id : true)
       .forEach(row => {
-        row[observationUnitField || 'Observation Unit'] = value;
+        row[observationUnitField || 'Observation_unit'] = value;
       });
     state.setData(nextData);
   }
@@ -118,7 +118,7 @@ const MapObservations: FC<IMapObservations> = ({state}: IMapObservations) => {
             {uniqueObservationIds.map((obsId) => {
               const currentRow = observationRows.find(row => observationIdField ? row[observationIdField] === obsId : true);
               const selectedVariable = variables?.find(variable => variable.qname === currentRow?.['Observation Variable']);
-              let selectedUnitSymbol = currentRow?.[observationUnitField || 'Observation Unit'];
+              let selectedUnitSymbol = currentRow?.[observationUnitField || 'Observation_unit'];
               const compatibleUnits = selectedVariable
                 ? units?.find(unit => unit.id === selectedVariable?.unit)?.compatible_units
                 : units;

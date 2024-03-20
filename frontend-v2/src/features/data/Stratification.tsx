@@ -47,13 +47,8 @@ const Stratification: FC<IStratification> = ({ state, firstTime }: IStratificati
 
   if (!firstRow['Group ID']) {
     const newData = [ ...state.data ];
-    protocols.forEach((protocol, index) => {
-      protocol.subjects.forEach(subject => {
-        const subjectRows = newData.filter(row => idField ? row[idField] === subject : false);
-        subjectRows.forEach(row => {
-          row['Group ID'] = `${index + 1}`;
-        });
-      });
+    newData.forEach(row => {
+      row['Group ID'] = row['Group'] || '1';
     });
     state.setData(newData);
   }
