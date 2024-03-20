@@ -131,7 +131,7 @@ const MapObservations: FC<IMapObservations> = ({state}: IMapObservations) => {
               const compatibleVariables = modelOutputs.filter(variable => {
                 const variableUnit = units?.find(unit => unit.id === variable.unit);
                 const compatibleSymbols = variableUnit?.compatible_units.map(u => u.symbol);
-                return compatibleSymbols?.includes(selectedUnitSymbol || '');
+                return selectedUnitSymbol ? compatibleSymbols?.includes(selectedUnitSymbol) : true;
               });
               return (
                 <TableRow>
