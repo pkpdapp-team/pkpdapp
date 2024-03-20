@@ -119,6 +119,7 @@ const MapObservations: FC<IMapObservations> = ({state}: IMapObservations) => {
               const currentRow = observationRows.find(row => observationIdField ? row[observationIdField] === obsId : true);
               const selectedVariable = variables?.find(variable => variable.qname === currentRow?.['Observation Variable']);
               let selectedUnitSymbol = currentRow?.[observationUnitField || 'Observation_unit'];
+              selectedUnitSymbol = units?.find(unit => unit.symbol === selectedUnitSymbol)?.symbol;
               const compatibleUnits = selectedVariable
                 ? units?.find(unit => unit.id === selectedVariable?.unit)?.compatible_units
                 : units;
