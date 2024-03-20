@@ -1,3 +1,4 @@
+import { FormControl, InputLabel, SelectChangeEvent } from "@mui/material";
 import { MenuItem, Select, Typography } from "@mui/material";
 import { Field, Data } from "./LoadData";
 import { StepperState } from "./LoadDataStepper";
@@ -26,34 +27,35 @@ const SetUnits: React.FC<IMapObservations> = ({state, firstTime}: IMapObservatio
   const secondUnit = units.find((unit) => unit.symbol === "s");
   const timeUnits = secondUnit?.compatible_units.map((unit) => unit.symbol);
   const timeUnitOptions = timeUnits?.map((unit) => ({ value: unit, label: unit })) || [];
-  const isPreclinical = project.species !== 'H';
-  const amountUnit = isPreclinical ? units.find((unit) => unit.symbol === "pmol/kg") : units.find((unit) => unit.symbol === "pmol");
-  const amountUnits = amountUnit?.compatible_units.map((unit) => unit.symbol);
-  const amountUnitOptions = amountUnits?.map((unit) => ({ value: unit, label: unit })) || [];
 
-  const noTimeUnit = state.normalisedFields.filter((field) => field === "Time Unit").length === 0;
-  const noAmountUnit = state.normalisedFields.filter((field) => field === "Amount Unit").length === 0;
+  const noTimeUnit = !state.normalisedFields.find((field) => field === "Time Unit");
+
+  function setTimeUnit(event: SelectChangeEvent) {
+    state.setTimeUnit(event.target?.value);
+    const newData = state.data.map(row => ({
+      ...row,
+      'Time_unit': event.target?.value
+    }));
+    state.setData(newData);
+  }
   return (
     <div>
       {noTimeUnit && (
-        <div>
-          <Typography variant="h5">Set Time Unit</Typography>
-          <Select value={state.timeUnit} onChange={(event) => state.setTimeUnit(event.target.value)}>
-            {timeUnitOptions.map((option) => (
-              <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>
-            ))}
-          </Select>
-        </div>
-      )}
-      { noAmountUnit && (
-        <div>
-          <Typography variant="h5">Set Amount Unit</Typography>
-          <Select value={state.amountUnit} onChange={(event) => state.setAmountUnit(event.target.value)}>
-            {amountUnitOptions.map((option) => (
-              <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>
-            ))}
-          </Select>
-          </div>
+        <>
+          <Typography>Please select a unit for all time values.</Typography>
+          <FormControl>
+            <InputLabel id='select-time-unit-label'>Set Time Unit</InputLabel>
+            <Select
+              labelId='select-time-unit-label'
+              value={state.timeUnit}
+              onChange={setTimeUnit}
+            >
+              {timeUnitOptions.map((option) => (
+                <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </>
       )}
     </div>
 

@@ -5,6 +5,7 @@ import {useDropzone} from 'react-dropzone'
 import MapHeaders from './MapHeaders';
 import { manditoryHeaders, normaliseHeader } from './normaliseDataHeaders';
 import { StepperState } from './LoadDataStepper';
+import SetUnits from './SetUnits';
 
 export type Row = {[key: string]: string};
 export type Data = Row[];
@@ -97,6 +98,9 @@ const LoadData: FC<ILoadDataProps> = ({state, firstTime}) => {
         {errors.map((error, index) => (
           <Alert severity="error" key={index}>{error}</Alert>
         ))}
+      </Box>
+      <Box sx={{ width: '100%', maxHeight: "20vh", overflow: 'auto', whiteSpace: 'nowrap'}}>
+        {showData && <SetUnits state={state} firstTime={firstTime} />} 
       </Box>
       <Box component="div" sx={{ maxHeight: "40vh", overflow: 'auto', overflowX: 'auto' }}>
         {showData && <MapHeaders data={state.data} fields={state.fields} setNormalisedFields={setNormalisedFields} normalisedFields={state.normalisedFields}/>}

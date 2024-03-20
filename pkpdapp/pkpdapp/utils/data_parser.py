@@ -196,8 +196,9 @@ class DataParser:
                 data[unit_col] = ""
             else:
                 def convert_percent_to_dim(x):
-                    xl = x.lower()
+                    xl = str(x).lower()
                     if (
+                        "nan" in xl or
                         "percent" in xl or
                         "fraction" in xl or
                         "ratio" in xl or

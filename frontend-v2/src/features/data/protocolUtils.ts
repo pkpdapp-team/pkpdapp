@@ -69,13 +69,13 @@ export function getProtocols(subjectDoses: SubjectDoses[] = []): IProtocol[] {
   return uniqueDoses(subjectDoses).map(doses => {
     const subjects: string[] = [];
     subjectDoses.forEach(subjectDosing => {
-      const subjectId = subjectDosing[0].subject;
+      const subjectId = subjectDosing[0]?.subject;
       if (subjectUsesProtocol(subjectDosing, doses)) {
           subjects.push(subjectId);
       }
     });
     return {
-      label: doses[0].label,
+      label: doses[0]?.label,
       doses,
       subjects
     };

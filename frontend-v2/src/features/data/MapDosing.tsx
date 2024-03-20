@@ -36,6 +36,7 @@ const MapDosing: FC<IMapDosing> = ({ state, firstTime }: IMapDosing) => {
   const projectIdOrZero = projectId || 0;
   const { data: project } =
     useProjectRetrieveQuery({ id: projectId || 0 }, { skip: !projectId });
+  const isPreclinical = project?.species !== 'H';
   const { data: models = [] } =
     useCombinedModelListQuery(
       { projectId: projectIdOrZero },
@@ -45,6 +46,9 @@ const MapDosing: FC<IMapDosing> = ({ state, firstTime }: IMapDosing) => {
     { compoundId: project?.compound },
     { skip: !project || !project.compound },
   );
+  const amountUnit = isPreclinical
+    ? units?.find((unit) => unit.symbol === "pmol/kg")
+    : units?.find((unit) => unit.symbol === "pmol");
   const [model] = models;
   const { data: variables } = useVariableListQuery(
     { dosedPkModelId: model?.id || 0 },
@@ -69,7 +73,7 @@ const MapDosing: FC<IMapDosing> = ({ state, firstTime }: IMapDosing) => {
   
   const isAmount = (variable: VariableRead) => {
     const amountUnits = units?.find(
-      (unit) => unit.symbol === "pmol/kg",
+      (unit) => unit.symbol === amountUnit?.symbol,
     )?.compatible_units;
     const variableUnit = units?.find((unit) => unit.id === variable.unit);
     return variableUnit?.symbol !== "" &&
@@ -93,7 +97,7 @@ const MapDosing: FC<IMapDosing> = ({ state, firstTime }: IMapDosing) => {
     const { value } = event.target;
     nextData.filter(row => administrationIdField ? row[administrationIdField] === id : true)
       .forEach(row => {
-        row['Amount Unit'] = value;
+        row[amountUnitField || 'Amt_unit'] = value;
       })
     state.setData(nextData);
   }
@@ -163,7 +167,7 @@ const MapDosing: FC<IMapDosing> = ({ state, firstTime }: IMapDosing) => {
                           labelId={`select-unit-${adminId}-label`}
                           id={`select-unit-${adminId}`}
                           label='Units'
-                          value={currentRow?.['Amount Unit']}
+                          value={currentRow?.[amountUnitField || 'Amt_unit']}
                           onChange={handleAmountUnitChange(adminId)}
                         >
                           {compatibleUnits?.map((unit) => (
