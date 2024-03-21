@@ -13,7 +13,6 @@ import {
   Typography
 } from "@mui/material";
 import { StepperState } from "./LoadDataStepper";
-import { getProtocols, getSubjectDoses } from "./protocolUtils";
 import ProtocolDataGrid from './ProtocolDataGrid';
 
 
@@ -24,14 +23,9 @@ interface IStratification {
 }
 
 const Stratification: FC<IStratification> = ({ state, firstTime }: IStratification) => {
-  const subjectDoses = getSubjectDoses(state);
-  const protocols = getProtocols(subjectDoses);
-  const groups = protocols.map((protocol, index) => ({
-    name: `Group ${index + 1}`,
-    subjects: protocol.subjects
-  }));
+  const idField = state.fields.find((field, index) => state.normalisedFields[index] === 'ID');
   const catCovariates = state.fields.filter((field, index) =>
-    state.normalisedFields[index] === 'Cat Covariate' && field.toLowerCase() !== 'route'
+    state.normalisedFields[index] === 'Cat Covariate'
   );
   const uniqueCovariateValues = catCovariates.map(field => {
     const values = state.data.map(row => row[field]);
@@ -42,6 +36,14 @@ const Stratification: FC<IStratification> = ({ state, firstTime }: IStratificati
   const [primaryCohort, setPrimaryCohort] = useState('Group');
   const [secondary, setSecondary] = useState<string[]>([]);
   const [tab, setTab] = useState(0);
+
+  const primaryCohortIndex = catCovariates.indexOf(primaryCohort);
+  const groups = uniqueCovariateValues[primaryCohortIndex].map((value, index) => {
+    return {
+      name: `Group ${index + 1}`,
+      subjects: state.data.filter(row => row[primaryCohort] === value).map(row => idField ? row[idField] : ''),
+    };
+  });
 
   if (!firstRow['Group ID']) {
     const newData = [ ...state.data ];
