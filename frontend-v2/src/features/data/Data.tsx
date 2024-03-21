@@ -2,7 +2,7 @@ import { FC, useState } from "react";
 import { useSelector } from "react-redux";
 import { useProjectRetrieveQuery, useUnitListQuery } from "../../app/backendApi";
 import { RootState } from "../../app/store";
-import { Button, Typography } from "@mui/material";
+import { Box, Button, Typography } from "@mui/material";
 import { DataGrid } from '@mui/x-data-grid';
 import LoadDataStepper from "./LoadDataStepper";
 import useDataset from "../../hooks/useDataset";
@@ -67,25 +67,38 @@ const Data:FC = () => {
   return isLoading ?
     <LoadDataStepper onFinish={onUploadComplete} onCancel={onCancel}  /> :
     <>
-      <Button variant="outlined" onClick={handleNewUpload}>
-        Upload new dataset
-      </Button>
-      <Typography variant="h6" component="h2" gutterBottom>
-        Protocols
-      </Typography>
-      <DataGrid
-        rows={dosingRows}
-        columns={dosingColumns}
-        autoHeight
-      />
-      <Typography variant="h6" component="h2" gutterBottom>
-        Observations
-      </Typography>
-      <DataGrid
-        rows={observations}
-        columns={columns}
-        autoHeight
-      />
+      <Box sx={{ display: 'flex', justifyContent: 'end' }}>
+        <Button
+          variant="outlined"
+          onClick={handleNewUpload}
+        >
+          Upload new dataset
+        </Button>
+      </Box>
+      {dosingRows.length !== 0 && 
+        <>
+          <Typography variant="h6" component="h2" gutterBottom>
+            Protocols
+          </Typography>
+          <DataGrid
+            rows={dosingRows}
+            columns={dosingColumns}
+            autoHeight
+          />
+        </>  
+      }
+      {observations.length !== 0 &&
+        <>
+          <Typography variant="h6" component="h2" gutterBottom>
+            Observations
+          </Typography>
+          <DataGrid
+            rows={observations}
+            columns={columns}
+            autoHeight
+          />
+        </>
+      }
     </>;
 }
 
