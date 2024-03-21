@@ -104,12 +104,12 @@ const MapObservations: FC<IMapObservations> = ({state}: IMapObservations) => {
               </TableCell>
               <TableCell>
                 <Typography>
-                  Unit
+                  Observation
                 </Typography>
               </TableCell>
               <TableCell>
                 <Typography>
-                  Observation
+                  Unit
                 </Typography>
               </TableCell>
             </TableRow>
@@ -139,6 +139,22 @@ const MapObservations: FC<IMapObservations> = ({state}: IMapObservations) => {
                     {obsId}
                   </TableCell>
                   <TableCell>
+                    <FormControl>
+                      <InputLabel id={`select-var-${obsId}-label`}>Variable</InputLabel>
+                      <Select
+                        labelId={`select-var-${obsId}-label`}
+                        id={`select-var-${obsId}`}
+                        label='Variable'
+                        value={selectedVariable?.qname}
+                        onChange={handleObservationChange(obsId)}
+                      >
+                        {compatibleVariables?.map((variable) => (
+                          <MenuItem key={variable.name} value={variable.qname}>{variable.name}</MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </TableCell>
+                  <TableCell>
                     {observationUnitField && selectedUnitSymbol ?
                       selectedUnitSymbol :
                       <FormControl>
@@ -156,22 +172,6 @@ const MapObservations: FC<IMapObservations> = ({state}: IMapObservations) => {
                         </Select>
                       </FormControl>
                     }
-                  </TableCell>
-                  <TableCell>
-                    <FormControl>
-                      <InputLabel id={`select-var-${obsId}-label`}>Variable</InputLabel>
-                      <Select
-                        labelId={`select-var-${obsId}-label`}
-                        id={`select-var-${obsId}`}
-                        label='Variable'
-                        value={selectedVariable?.qname}
-                        onChange={handleObservationChange(obsId)}
-                      >
-                        {compatibleVariables?.map((variable) => (
-                          <MenuItem key={variable.name} value={variable.qname}>{variable.name}</MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
                   </TableCell>
                 </TableRow>
               )

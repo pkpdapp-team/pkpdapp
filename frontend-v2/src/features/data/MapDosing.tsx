@@ -125,12 +125,12 @@ const MapDosing: FC<IMapDosing> = ({ state, firstTime }: IMapDosing) => {
               </TableCell>
               <TableCell>
                 <Typography>
-                  Unit
+                  Dosing Compartment
                 </Typography>
               </TableCell>
               <TableCell>
                 <Typography>
-                  Dosing Compartment
+                  Unit
                 </Typography>
               </TableCell>
             </TableRow>
@@ -159,6 +159,22 @@ const MapDosing: FC<IMapDosing> = ({ state, firstTime }: IMapDosing) => {
                     </Typography>
                   </TableCell>
                   <TableCell>
+                    <FormControl>
+                      <InputLabel id={`select-var-${adminId}-label`}>Variable</InputLabel>
+                      <Select
+                        labelId={`select-var-${adminId}-label`}
+                        id={`select-var-${adminId}`}
+                        label='Variable'
+                        value={selectedVariable?.qname}
+                        onChange={handleAmountMappingChange(adminId)}
+                      >
+                        {modelAmounts?.map((variable) => (
+                          <MenuItem key={variable.name} value={variable.qname}>{variable.name}</MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </TableCell>
+                  <TableCell>
                     {adminUnit ?
                       adminUnit :
                       <FormControl>
@@ -176,22 +192,6 @@ const MapDosing: FC<IMapDosing> = ({ state, firstTime }: IMapDosing) => {
                         </Select>
                       </FormControl>
                     }
-                  </TableCell>
-                  <TableCell>
-                    <FormControl>
-                      <InputLabel id={`select-var-${adminId}-label`}>Variable</InputLabel>
-                      <Select
-                        labelId={`select-var-${adminId}-label`}
-                        id={`select-var-${adminId}`}
-                        label='Variable'
-                        value={selectedVariable?.qname}
-                        onChange={handleAmountMappingChange(adminId)}
-                      >
-                        {modelAmounts?.map((variable) => (
-                          <MenuItem key={variable.name} value={variable.qname}>{variable.name}</MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
                   </TableCell>
                 </TableRow>
               )
