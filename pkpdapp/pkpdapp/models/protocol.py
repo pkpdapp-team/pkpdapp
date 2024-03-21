@@ -77,6 +77,7 @@ class Protocol(StoredModel):
 
     mapped_qname = models.CharField(
         default='',
+        blank=True, null=True,
         max_length=50,
         help_text='qname of the mapped dosing compartment for each dose'
     )
