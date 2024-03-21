@@ -61,6 +61,12 @@ class DataParser:
         ],
         "GROUP_ID": [
             "Group ID", "Group", "GROUP", "cohort", "Cohort", "COHORT"
+        ],
+        "ADDITIONAL_DOSES": [
+            "ADDL", "Addl", "addl", "ADDITIONAL_DOSES"
+        ],
+        "INTERDOSE_INTERVAL": [
+            "II", "INFUSION_INTERVAL"
         ]
     }
 
@@ -81,7 +87,9 @@ class DataParser:
         "COMPOUND",
         "ROUTE",
         "INFUSION_TIME",
-        "GROUP_ID"
+        "GROUP_ID",
+        "ADDITIONAL_DOSES",
+        "INTERDOSE_INTERVAL"
     ]
 
     alternate_unit_names = {
@@ -188,6 +196,12 @@ class DataParser:
         # put in default subject group if not present
         if "GROUP_ID" not in found_cols:
             data["GROUP_ID"] = 1
+
+        # put in default additional dosing columns if not present
+        if "ADDITIONAL_DOSES" not in found_cols:
+            data["ADDITIONAL_DOSES"] = ""
+        if "INTERDOSE_INTERVAL" not in found_cols:
+            data["INTERDOSE_INTERVAL"] = ""
 
         # put in default units if not present, convert any percentage units
         # to dimensionless

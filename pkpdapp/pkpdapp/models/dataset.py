@@ -164,6 +164,12 @@ class Dataset(models.Model):
             observation_name = row["OBSERVATION_NAME"]
             route = row['ROUTE']
             infusion_time = row['INFUSION_TIME']
+            try:
+                repeats = int(row['ADDITIONAL_DOSES']) + 1
+                repeat_interval = float(row['INTERDOSE_INTERVAL'])
+            except ValueError:
+                repeats = 1
+                repeat_interval = 1.0
 
             amount_unit = Unit.objects.get(symbol=amount_unit)
 
@@ -201,6 +207,8 @@ class Dataset(models.Model):
                     amount=amount,
                     duration=infusion_time,
                     protocol=protocol,
+                    repeats=repeats,
+                    repeat_interval=repeat_interval,
                 )
 
             # insert covariate columns as categorical for now
