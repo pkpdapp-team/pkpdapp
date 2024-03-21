@@ -4417,6 +4417,7 @@ components:
           $ref: '#/components/schemas/DoseTypeEnum'
         mapped_qname:
           type: string
+          nullable: true
           description: qname of the mapped dosing compartment for each dose
           maxLength: 50
         project:
@@ -4945,6 +4946,7 @@ components:
           $ref: '#/components/schemas/DoseTypeEnum'
         mapped_qname:
           type: string
+          nullable: true
           description: qname of the mapped dosing compartment for each dose
           maxLength: 50
         project:
