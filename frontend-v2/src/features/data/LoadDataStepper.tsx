@@ -18,6 +18,7 @@ import Stratification from './Stratification';
 import useDataset from '../../hooks/useDataset';
 
 interface IStepper {
+  onCancel: () => void,
   onFinish: () => void
 }
 
@@ -41,7 +42,7 @@ export type StepperState = {
   setAmountUnit: (amountUnit: string) => void;
 }
 
-const LoadDataStepper: FC<IStepper> = ({ onFinish }) => {
+const LoadDataStepper: FC<IStepper> = ({ onCancel, onFinish }) => {
   const [data, setData] = useState<Data>([]);
   const [fields, setFields] = useState<string[]>([]);
   const [normalisedFields, setNormalisedFields] = useState<string[]>([]);
@@ -120,7 +121,10 @@ const LoadDataStepper: FC<IStepper> = ({ onFinish }) => {
         }
       </Typography>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', marginTop: 1 }}>
-        <Button disabled={stepState.activeStep === 0} onClick={handleBack}>Back</Button>
+        {stepState.activeStep === 0 ?
+          <Button onClick={onCancel}>Cancel</Button> :
+          <Button onClick={handleBack}>Back</Button>
+        }
         <Button disabled={isFinished} variant="contained" color="primary" onClick={handleNext}>
           {stepState.activeStep === stepLabels.length - 1 ? 'Finish' : 'Next'}
         </Button>

@@ -21,12 +21,19 @@ const Data:FC = () => {
   );
   const { dataset, subjectBiomarkers } = useDataset(projectIdOrZero);
   const [isLoading, setIsLoading] = useState(false);
+
   function handleNewUpload() {
     setIsLoading(true);
   }
+
   function onUploadComplete() {
     setIsLoading(false);
   }
+
+  function onCancel() {
+    setIsLoading(false);
+  }
+
   const protocols = dataset?.protocols || [];
   const dosingRows = protocols.flatMap(protocol => {
     const amountUnit = units?.find(unit => unit.id === protocol.amount_unit)?.symbol || '';
@@ -58,7 +65,7 @@ const Data:FC = () => {
   const columns = firstRow ? Object.keys(firstRow).map((field) => ({ field, headerName: field })) : [];
 
   return isLoading ?
-    <LoadDataStepper onFinish={onUploadComplete}  /> :
+    <LoadDataStepper onFinish={onUploadComplete} onCancel={onCancel}  /> :
     <>
       <Button variant="outlined" onClick={handleNewUpload}>
         Upload new dataset
