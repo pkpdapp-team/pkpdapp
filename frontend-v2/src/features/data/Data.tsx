@@ -12,10 +12,10 @@ const Data:FC = () => {
     (state: RootState) => state.main.selectedProject,
   );
   const projectIdOrZero = projectId || 0;
-  const { data: project, isLoading: isProjectLoading } =
+  const { data: project } =
     useProjectRetrieveQuery({ id: projectIdOrZero }, { skip: !projectId }
   );
-  const { data: units, isLoading: isUnitsLoading } = useUnitListQuery(
+  const { data: units } = useUnitListQuery(
     { compoundId: project?.compound || 0 },
     { skip: !project?.compound },
   );

@@ -24,7 +24,6 @@ interface IStratification {
 }
 
 const Stratification: FC<IStratification> = ({ state, firstTime }: IStratification) => {
-  const idField = state.fields.find((field, index) => state.normalisedFields[index] === 'ID');
   const subjectDoses = getSubjectDoses(state);
   const protocols = getProtocols(subjectDoses);
   const groups = protocols.map((protocol, index) => ({

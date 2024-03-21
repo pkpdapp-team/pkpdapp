@@ -1,6 +1,5 @@
 import { FormControl, InputLabel, SelectChangeEvent } from "@mui/material";
 import { MenuItem, Select, Typography } from "@mui/material";
-import { Field, Data } from "./LoadData";
 import { StepperState } from "./LoadDataStepper";
 import { useProjectRetrieveQuery, useUnitListQuery } from "../../app/backendApi";
 import { useSelector } from "react-redux";

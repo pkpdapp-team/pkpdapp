@@ -1,6 +1,5 @@
 import { FC } from 'react';
 import { DataGrid } from '@mui/x-data-grid';
-import { IProtocol } from './protocolUtils';
 import { StepperState } from './LoadDataStepper';
 
 type SubjectGroup = {

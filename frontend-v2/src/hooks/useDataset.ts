@@ -13,10 +13,10 @@ let appDataset: DatasetRead | null = null;
 export default function useDataset(selectedProject: number | null) {
   const [dataset, setDataset] = useState<null | DatasetRead>(appDataset);
   const selectedProjectOrZero = selectedProject || 0;
-  const { data: project, isLoading: isProjectLoading } =
+  const { data: project } =
     useProjectRetrieveQuery({ id: selectedProjectOrZero }, { skip: !selectedProject }
   );
-  const { data: units, isLoading: isUnitsLoading } = useUnitListQuery(
+  const { data: units } = useUnitListQuery(
     { compoundId: project?.compound || 0 },
     { skip: !project?.compound },
   );
