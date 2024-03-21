@@ -159,7 +159,7 @@ const MapDosing: FC<IMapDosing> = ({ state, firstTime }: IMapDosing) => {
                     </Typography>
                   </TableCell>
                   <TableCell>
-                    <FormControl>
+                    <FormControl fullWidth>
                       <InputLabel id={`select-var-${adminId}-label`}>Variable</InputLabel>
                       <Select
                         labelId={`select-var-${adminId}-label`}
@@ -177,7 +177,7 @@ const MapDosing: FC<IMapDosing> = ({ state, firstTime }: IMapDosing) => {
                   <TableCell>
                     {adminUnit ?
                       adminUnit :
-                      <FormControl>
+                      <FormControl fullWidth>
                         <InputLabel id={`select-unit-${adminId}-label`}>Units</InputLabel>
                         <Select
                           labelId={`select-unit-${adminId}-label`}

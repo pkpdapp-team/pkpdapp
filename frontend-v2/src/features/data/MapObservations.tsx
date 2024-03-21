@@ -139,7 +139,7 @@ const MapObservations: FC<IMapObservations> = ({state}: IMapObservations) => {
                     {obsId}
                   </TableCell>
                   <TableCell>
-                    <FormControl>
+                    <FormControl fullWidth>
                       <InputLabel id={`select-var-${obsId}-label`}>Variable</InputLabel>
                       <Select
                         labelId={`select-var-${obsId}-label`}
@@ -157,7 +157,7 @@ const MapObservations: FC<IMapObservations> = ({state}: IMapObservations) => {
                   <TableCell>
                     {observationUnitField && selectedUnitSymbol ?
                       selectedUnitSymbol :
-                      <FormControl>
+                      <FormControl fullWidth>
                         <InputLabel id={`select-unit-${obsId}-label`}>Units</InputLabel>
                         <Select
                           labelId={`select-unit-${obsId}-label`}

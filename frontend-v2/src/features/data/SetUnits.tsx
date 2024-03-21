@@ -1,5 +1,12 @@
-import { FormControl, InputLabel, SelectChangeEvent } from "@mui/material";
-import { MenuItem, Select, Typography } from "@mui/material";
+import {
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
+  SelectChangeEvent,
+  Stack,
+  Typography
+} from "@mui/material";
 import { StepperState } from "./LoadDataStepper";
 import { useProjectRetrieveQuery, useUnitListQuery } from "../../app/backendApi";
 import { useSelector } from "react-redux";
@@ -41,19 +48,21 @@ const SetUnits: React.FC<IMapObservations> = ({state, firstTime}: IMapObservatio
     <div>
       {noTimeUnit && (
         <>
-          <Typography>Please select a unit for all time values.</Typography>
-          <FormControl>
-            <InputLabel id='select-time-unit-label'>Set Time Unit</InputLabel>
-            <Select
-              labelId='select-time-unit-label'
-              value={state.timeUnit}
-              onChange={setTimeUnit}
-            >
-              {timeUnitOptions.map((option) => (
-                <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+          <Stack direction='row'>
+            <Typography>Please select a unit for all time values.</Typography>
+            <FormControl fullWidth>
+              <InputLabel id='select-time-unit-label'>Set Time Unit</InputLabel>
+              <Select
+                labelId='select-time-unit-label'
+                value={state.timeUnit}
+                onChange={setTimeUnit}
+              >
+                {timeUnitOptions.map((option) => (
+                  <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Stack>
         </>
       )}
     </div>
