@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import { FC, useState } from 'react';
 import { Box, Select, FormControl, MenuItem, InputLabel, Table, TableHead, TableRow, TableCell, TableBody, Typography, SelectChangeEvent } from "@mui/material";
 import { StepperState } from "./LoadDataStepper";
 import { useSelector } from "react-redux";
@@ -16,6 +16,7 @@ interface IMapObservations {
 }
 
 const MapObservations: FC<IMapObservations> = ({state}: IMapObservations) => {
+  const [unitsAreFixed, setUnitsAreFixed] = useState(true);
   const projectId = useSelector(
     (state: RootState) => state.main.selectedProject,
   );
@@ -135,6 +136,10 @@ const MapObservations: FC<IMapObservations> = ({state}: IMapObservations) => {
                   ? compatibleSymbols?.includes(selectedUnitSymbol)
                   : true;
               });
+              const unitsShouldBeFixed = observationUnitField && selectedUnitSymbol;
+              if (unitsAreFixed && !unitsShouldBeFixed) {
+                setUnitsAreFixed(false);
+              }
               return (
                 <TableRow>
                   <TableCell>
@@ -157,7 +162,7 @@ const MapObservations: FC<IMapObservations> = ({state}: IMapObservations) => {
                     </FormControl>
                   </TableCell>
                   <TableCell>
-                    {observationUnitField && selectedUnitSymbol ?
+                    {unitsAreFixed ?
                       selectedUnitSymbol :
                       <FormControl fullWidth>
                         <InputLabel id={`select-unit-${obsId}-label`}>Units</InputLabel>
