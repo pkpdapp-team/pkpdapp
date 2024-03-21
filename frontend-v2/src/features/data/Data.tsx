@@ -51,7 +51,11 @@ const Data:FC = () => {
       qname
     }))
   });
-  const dosingColumns = dosingRows[0] ? Object.keys(dosingRows[0]).map((field) => ({ field, headerName: field })) : [];
+  const dosingColumns = dosingRows[0] ? Object.keys(dosingRows[0]).map((field) => ({
+    field,
+    headerName: field,
+    minWidth: field === 'qname' ? 200 : 50
+  })) : [];
   const observations = subjectBiomarkers?.flatMap(biomarkerRows => biomarkerRows.map((row) => {
     const group = dataset?.groups?.find(group => group.subjects.includes(row.subjectId));
     return  ({
@@ -62,7 +66,11 @@ const Data:FC = () => {
     })
   })) || [];
   const [firstRow] = observations;
-  const columns = firstRow ? Object.keys(firstRow).map((field) => ({ field, headerName: field })) : [];
+  const columns = firstRow ? Object.keys(firstRow).map((field) => ({
+    field,
+    headerName: field,
+    minWidth: field === 'qname' ? 200 : 50
+  })) : [];
 
   return isLoading ?
     <LoadDataStepper onFinish={onUploadComplete} onCancel={onCancel}  /> :
