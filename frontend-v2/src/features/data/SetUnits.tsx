@@ -48,13 +48,13 @@ const SetUnits: React.FC<IMapObservations> = ({state, firstTime}: IMapObservatio
     <div>
       {noTimeUnit && (
         <>
-          <Stack direction='row'>
+          <Stack direction='row' spacing='1rem'>
             <Typography>Please select a unit for all time values.</Typography>
-            <FormControl fullWidth>
+            <FormControl sx={{ minWidth: '10rem' }}>
               <InputLabel id='select-time-unit-label'>Set Time Unit</InputLabel>
               <Select
                 labelId='select-time-unit-label'
-                value={state.timeUnit}
+                value={state.timeUnit || ''}
                 onChange={setTimeUnit}
               >
                 {timeUnitOptions.map((option) => (
