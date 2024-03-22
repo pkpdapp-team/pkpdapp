@@ -1,6 +1,9 @@
 import {
   Alert,
   Button,
+  Checkbox,
+  FormControlLabel,
+  FormGroup,
   Grid,
   Snackbar,
   Stack,
@@ -42,6 +45,7 @@ import paramPriority from "../model/paramPriority";
 import HelpButton from "../../components/HelpButton";
 import { selectIsProjectShared } from "../login/loginSlice";
 import { getConstVariables } from "../model/resetToSpeciesDefaults";
+import useDataset from "../../hooks/useDataset";
 
 type SliderValues = { [key: number]: number };
 
@@ -141,6 +145,9 @@ const Simulations: FC = () => {
   const projectId = useSelector(
     (state: RootState) => state.main.selectedProject,
   );
+  const { dataset } = useDataset(projectId);
+  const [visibleGroups, setVisibleGroups] =
+    useState<string[]>(dataset?.groups.map(group => group.name) || []);
   const projectIdOrZero = projectId || 0;
   const { data: project, isLoading: isProjectLoading } =
     useProjectRetrieveQuery({ id: projectIdOrZero }, { skip: !projectId });
@@ -317,6 +324,7 @@ const Simulations: FC = () => {
     variables,
     compound,
     timeMax,
+    dataset,
   ]);
 
   const exportSimulation = () => {
@@ -541,6 +549,16 @@ const Simulations: FC = () => {
     });
   };
 
+  const handleVisibleGroups = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!event.target.checked) {
+      const newState = visibleGroups.filter(name => name !== event.target.value);
+      setVisibleGroups(newState);
+      return;
+    } else {
+      const newState = new Set([...visibleGroups, event.target.value]);
+      setVisibleGroups([...newState]);
+    }
+  }
   return (
     <Grid container sx={{ marginBottom: layout === 'vertical' ? 0 : `${parametersHeight}px` }}>
       <Grid item xl={layout === "vertical" ? 8 : 12} md={layout === "vertical" ? 7 : 12} xs={layout === "vertical" ? 6 : 12}>
@@ -605,6 +623,7 @@ const Simulations: FC = () => {
                   units={units}
                   compound={compound}
                   model={model}
+                  visibleGroups={visibleGroups}
                 />
               ) : (
                 <div>Loading...</div>
@@ -631,6 +650,33 @@ const Simulations: FC = () => {
         }
       >
         <Stack direction="column">
+          {dataset?.groups.length && (
+            <>
+              <Typography
+                sx={{
+                  fontWeight: "bold",
+                  fontSize: "1.2rem",
+                }}
+              >
+                Groups
+              </Typography>
+              <FormGroup>
+              {dataset?.groups.map((group) => (
+                <FormControlLabel
+                  key={group.name}
+                  control={
+                    <Checkbox
+                      checked={visibleGroups.includes(group.name)}
+                      value={group.name}
+                      onChange={handleVisibleGroups}
+                    />
+                  }
+                  label={group.name}
+                />
+              ))}
+              </FormGroup>
+            </>
+          )}
           <div
             style={{
               display: "flex",

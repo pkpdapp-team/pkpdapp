@@ -136,6 +136,7 @@ interface SimulationPlotProps {
   units: UnitRead[];
   compound: CompoundRead;
   model: CombinedModelRead;
+  visibleGroups: string[];
 }
 
 const SimulationPlotView: FC<SimulationPlotProps> = ({
@@ -149,6 +150,7 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
   units,
   compound,
   model,
+  visibleGroups
 }) => {
   const projectId = useSelector(
     (state: RootState) => state.main.selectedProject,
@@ -195,8 +197,12 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
   let maxY: number | undefined = undefined;
   let maxY2: number | undefined = undefined;
 
+  const visibleData = data.filter((d, index) => {
+    const group = dataset?.groups[index - 1];
+    return index === 0 || visibleGroups.includes(group?.name || "");
+  });
   const plotData = plot.y_axes.map((y_axis) => {
-    return data.map((d, index) => {
+    return visibleData.map((d, index) => {
       const variableValues = d.outputs[y_axis.variable];
       const variable = variables.find((v) => v.id === y_axis.variable);
       const variableName = variable?.name;
@@ -445,16 +451,18 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
             : yCompatibleUnit.conversion_factor,
         )
       : 1.0;
-    const scatterplotData = dataset?.groups?.map(group => {
-      const groupBiomarkers = biomarkerData?.filter(d => group.subjects.includes(d.subjectId));
-      return {
-        name: `${group.name} ${label}`,
-        x: groupBiomarkers?.map(d => d?.time * timeConversionFactor),
-        y: groupBiomarkers?.map(d => d?.value * yConversionFactor),
-        type: 'scatter',
-        mode: 'markers'
-      }
-    });
+    const scatterplotData = dataset?.groups
+      .filter(group => visibleGroups.includes(group.name))
+      .map(group => {
+        const groupBiomarkers = biomarkerData?.filter(d => group.subjects.includes(d.subjectId));
+        return {
+          name: `${group.name} ${label}`,
+          x: groupBiomarkers?.map(d => d?.time * timeConversionFactor),
+          y: groupBiomarkers?.map(d => d?.value * yConversionFactor),
+          type: 'scatter',
+          mode: 'markers'
+        }
+      });
     combinedPlotData = combinedPlotData.concat(scatterplotData as Data[]);
   });
   
