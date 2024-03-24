@@ -539,7 +539,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SimulateResponse'
+                type: array
+                items:
+                  $ref: '#/components/schemas/SimulateResponse'
           description: ''
         '400':
           content:
@@ -693,6 +695,12 @@ paths:
   /api/dataset/:
     get:
       operationId: dataset_list
+      parameters:
+      - in: query
+        name: project_id
+        schema:
+          type: integer
+        description: Filter results by project ID
       tags:
       - dataset
       security:
@@ -845,6 +853,12 @@ paths:
       - dataset
       requestBody:
         content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DatasetCsv'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DatasetCsv'
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/DatasetCsv'
@@ -1662,7 +1676,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SimulateResponse'
+                type: array
+                items:
+                  $ref: '#/components/schemas/SimulateResponse'
           description: ''
         '400':
           content:
@@ -3126,6 +3142,10 @@ components:
         axis:
           type: boolean
           description: True/False if biomarker type displayed on LHS/RHS axis
+        mapped_qname:
+          type: string
+          description: qname of the mapped model variable
+          maxLength: 50
         stored_unit:
           type: integer
           description: unit for the value stored in :model:`pkpdapp.Biomarker`
@@ -3386,6 +3406,16 @@ components:
           items:
             $ref: '#/components/schemas/Protocol'
           readOnly: true
+        groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/SubjectGroup'
+          readOnly: true
+        biomarkers:
+          type: array
+          items:
+            $ref: '#/components/schemas/BiomarkerType'
+          readOnly: true
         name:
           type: string
           description: name of the dataset
@@ -3406,6 +3436,8 @@ components:
           description: Project that "owns" this model
       required:
       - biomarker_types
+      - biomarkers
+      - groups
       - id
       - name
       - protocols
@@ -3415,7 +3447,6 @@ components:
       properties:
         csv:
           type: string
-          format: uri
       required:
       - csv
     DerivedVariable:
@@ -3605,8 +3636,6 @@ components:
           description: If executing, this is the celery task id
           maxLength: 40
         metadata:
-          type: object
-          additionalProperties: {}
           description: metadata for inference
         project:
           type: integer
@@ -3865,6 +3894,10 @@ components:
         axis:
           type: boolean
           description: True/False if biomarker type displayed on LHS/RHS axis
+        mapped_qname:
+          type: string
+          description: qname of the mapped model variable
+          maxLength: 50
         stored_unit:
           type: integer
           description: unit for the value stored in :model:`pkpdapp.Biomarker`
@@ -4070,6 +4103,16 @@ components:
           items:
             $ref: '#/components/schemas/Protocol'
           readOnly: true
+        groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/SubjectGroup'
+          readOnly: true
+        biomarkers:
+          type: array
+          items:
+            $ref: '#/components/schemas/BiomarkerType'
+          readOnly: true
         name:
           type: string
           description: name of the dataset
@@ -4174,8 +4217,6 @@ components:
           description: If executing, this is the celery task id
           maxLength: 40
         metadata:
-          type: object
-          additionalProperties: {}
           description: metadata for inference
         project:
           type: integer
@@ -4374,6 +4415,11 @@ components:
           maxLength: 100
         dose_type:
           $ref: '#/components/schemas/DoseTypeEnum'
+        mapped_qname:
+          type: string
+          nullable: true
+          description: qname of the mapped dosing compartment for each dose
+          maxLength: 50
         project:
           type: integer
           nullable: true
@@ -4462,6 +4508,10 @@ components:
           type: integer
           nullable: true
           description: dosing protocol for this subject.
+        group:
+          type: integer
+          nullable: true
+          description: subject group containing this subject.
     PatchedUnit:
       type: object
       properties:
@@ -4894,6 +4944,11 @@ components:
           maxLength: 100
         dose_type:
           $ref: '#/components/schemas/DoseTypeEnum'
+        mapped_qname:
+          type: string
+          nullable: true
+          description: qname of the mapped dosing compartment for each dose
+          maxLength: 50
         project:
           type: integer
           nullable: true
@@ -5154,10 +5209,39 @@ components:
           type: integer
           nullable: true
           description: dosing protocol for this subject.
+        group:
+          type: integer
+          nullable: true
+          description: subject group containing this subject.
       required:
       - dataset
       - id
       - id_in_dataset
+    SubjectGroup:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        subjects:
+          type: array
+          items:
+            type: integer
+          readOnly: true
+        protocols:
+          type: array
+          items:
+            $ref: '#/components/schemas/Protocol'
+          readOnly: true
+        name:
+          type: string
+          description: name of the group
+          maxLength: 100
+      required:
+      - id
+      - name
+      - protocols
+      - subjects
     TypeEnum:
       enum:
       - RO

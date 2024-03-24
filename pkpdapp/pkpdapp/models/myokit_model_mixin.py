@@ -5,6 +5,7 @@
 #
 
 import pkpdapp
+from pkpdapp.models import SubjectGroup, Protocol
 import numpy as np
 from myokit.formats.mathml import MathMLExpressionWriter
 from myokit.formats.sbml import SBMLParser
@@ -19,6 +20,79 @@ lock = threading.Lock()
 
 
 class MyokitModelMixin:
+    def _initialise_variables(self, model, variables):
+        # Convert units
+        variables = {
+            qname: self._convert_unit_qname(qname, value, model)
+            for qname, value in variables.items()
+        }
+
+        # Set constants in model
+        for var_name, var_value in variables.items():
+            model.get(var_name).set_rhs(float(var_value))
+
+        return variables
+
+    def _get_myokit_protocols(
+        self, model, dosing_protocols, override_tlag, time_max
+    ):
+        protocols = {}
+        is_target = False
+        time_var = model.binding("time")
+        project = self.get_project()
+        if project is None:
+            compound = None
+        else:
+            compound = project.compound
+
+        for qname, protocol in dosing_protocols.items():
+            amount_var = model.get(qname)
+            set_administration(model, amount_var)
+            tlag_value = self._get_tlag_value(qname)
+            # override tlag if set
+            if qname in override_tlag:
+                tlag_value = override_tlag[qname]
+
+            if self.is_library_model:
+                is_target = "CT1" in qname or "AT1" in qname
+
+            amount_conversion_factor = protocol.amount_unit.convert_to(
+                amount_var.unit(), compound=compound, is_target=is_target
+            )
+
+            time_conversion_factor = protocol.time_unit.convert_to(
+                time_var.unit(), compound=compound
+            )
+
+            dosing_events = _get_dosing_events(
+                protocol.doses,
+                amount_conversion_factor,
+                time_conversion_factor,
+                tlag_value,
+                time_max
+            )
+            protocols[_get_pacing_label(amount_var)] = get_protocol(dosing_events)
+        return protocols
+
+    def _get_override_tlag(self, variables):
+        override_tlag = {}
+        if isinstance(self, pkpdapp.models.CombinedModel):
+            for dv in self.derived_variables.all():
+                if dv.type == "TLG":
+                    derived_param = dv.pk_variable.qname + "_tlag_ud"
+                    if derived_param in variables:
+                        override_tlag[dv.pk_variable.qname] = variables[derived_param]
+        return override_tlag
+
+    def _get_tlag_value(self, qname):
+        from pkpdapp.models import Variable
+        # get tlag value default to 0
+        derived_param = qname + "_tlag_ud"
+        try:
+            return self.variables.get(qname=derived_param).default_value
+        except Variable.DoesNotExist:
+            return 0.0
+
     def _get_myokit_model_cache_key(self):
         return "myokit_model_{}_{}".format(self._meta.db_table, self.id)
 
@@ -45,97 +119,31 @@ class MyokitModelMixin:
     def create_myokit_model(self):
         return self.parse_mmt_string(self.mmt)
 
-    def create_myokit_simulator(self, override_tlag=None, model=None, time_max=None):
+    def create_myokit_simulator(
+            self, override_tlag=None, model=None, time_max=None, dosing_protocols=None
+    ):
         if override_tlag is None:
             override_tlag = {}
 
         if model is None:
             model = self.get_myokit_model()
 
-        from pkpdapp.models import Variable
+        if dosing_protocols is None:
+            # add a dose_rate variable to the model for each
+            # dosed variable
+            dosing_variables = [
+                v for v in self.variables.filter(state=True) if v.protocol
+            ]
+            dosing_protocols = {}
+            for v in dosing_variables:
+                dosing_protocols[v.qname] = v.protocol
 
-        if override_tlag is None:
-            try:
-                tlag_value = self.variables.get(
-                    qname="PKCompartment.tlag"
-                ).default_value
-            except Variable.DoesNotExist:
-                tlag_value = 0.0
-        else:
-            tlag_value = override_tlag
-
-        # add a dose_rate variable to the model for each
-        # dosed variable
-        for v in self.variables.filter(state=True):
-            if v.protocol:
-                myokit_v = model.get(v.qname)
-                set_administration(model, myokit_v)
-
-        protocols = {}
-        project = self.get_project()
-        if project is None:
-            compound = None
-        else:
-            compound = project.compound
-        for v in self.variables.filter(state=True):
-            if v.protocol:
-                # get tlag value default to 0
-                derived_param = v.qname + "_tlag_ud"
-                try:
-                    tlag_value = self.variables.get(qname=derived_param).default_value
-                except Variable.DoesNotExist:
-                    tlag_value = 0.0
-
-                # override tlag if set
-                if v.qname in override_tlag:
-                    tlag_value = override_tlag[v.qname]
-
-                amount_var = model.get(v.qname)
-                time_var = model.binding("time")
-
-                is_target = False
-                if self.is_library_model:
-                    is_target = "CT1" in v.qname or "AT1" in v.qname
-
-                amount_conversion_factor = v.protocol.amount_unit.convert_to(
-                    amount_var.unit(), compound=compound, is_target=is_target
-                )
-
-                time_conversion_factor = v.protocol.time_unit.convert_to(
-                    time_var.unit(), compound=compound
-                )
-
-                dosing_events = []
-                last_dose_time = tlag_value
-                for d in v.protocol.doses.all():
-                    if d.repeat_interval <= 0:
-                        continue
-                    start_times = np.arange(
-                        d.start_time + last_dose_time,
-                        d.start_time + last_dose_time + d.repeat_interval * d.repeats,
-                        d.repeat_interval,
-                    )
-                    if len(start_times) == 0:
-                        continue
-                    last_dose_time = start_times[-1]
-                    dosing_events += [
-                        (
-                            (amount_conversion_factor / time_conversion_factor)
-                            * (d.amount / d.duration),
-                            time_conversion_factor * start_time,
-                            time_conversion_factor * d.duration,
-                        )
-                        for start_time in start_times
-                    ]
-                # if any dosing events are close to time_max,
-                # make them equal to time_max
-                if time_max is not None:
-                    for i, (level, start, duration) in enumerate(dosing_events):
-                        if abs(start - time_max) < 1e-6:
-                            dosing_events[i] = (level, time_max, duration)
-                        elif abs(start + duration - time_max) < 1e-6:
-                            dosing_events[i] = (level, start, time_max - start)
-                protocols[_get_pacing_label(amount_var)] = get_protocol(dosing_events)
+        protocols = self._get_myokit_protocols(
+            model=model,
+            dosing_protocols=dosing_protocols,
+            override_tlag=override_tlag,
+            time_max=time_max
+        )
 
         with lock:
             sim = myokit.Simulation(model, protocol=protocols)
@@ -433,6 +441,27 @@ class MyokitModelMixin:
     def get_time_max(self):
         return self.time_max
 
+    def simulate_model(
+            self, outputs=None, variables=None, time_max=None, dosing_protocols=None
+    ):
+        model = self.get_myokit_model()
+        # Convert units
+        variables = self._initialise_variables(model, variables)
+        time_max = self._convert_bound_unit("time", time_max, model)
+        # get tlag vars
+        override_tlag = self._get_override_tlag(variables)
+        # create simulator
+        sim = self.create_myokit_simulator(
+            override_tlag=override_tlag,
+            model=model,
+            time_max=time_max,
+            dosing_protocols=dosing_protocols
+        )
+        # TODO: take these from simulation model
+        sim.set_tolerance(abs_tol=1e-06, rel_tol=1e-08)
+        # Simulate, logging only state variables given by `outputs`
+        return self.serialize_datalog(sim.run(time_max, log=outputs), model)
+
     def simulate(self, outputs=None, variables=None, time_max=None):
         """
         Arguments
@@ -468,38 +497,32 @@ class MyokitModelMixin:
                 **variables,
             }
 
-        model = self.get_myokit_model()
-
-        # Convert units
-        variables = {
-            qname: self._convert_unit_qname(qname, value, model)
-            for qname, value in variables.items()
-        }
-        time_max = self._convert_bound_unit("time", time_max, model)
-
-        # Set constants in model
-        for var_name, var_value in variables.items():
-            model.get(var_name).set_rhs(float(var_value))
-
-        # create simulator
-
-        # get tlag vars
-        override_tlag = {}
-        if isinstance(self, pkpdapp.models.CombinedModel):
-            for dv in self.derived_variables.all():
-                if dv.type == "TLG":
-                    derived_param = dv.pk_variable.qname + "_tlag_ud"
-                    if derived_param in variables:
-                        override_tlag[dv.pk_variable.qname] = variables[derived_param]
-
-        sim = self.create_myokit_simulator(
-            override_tlag=override_tlag, model=model, time_max=time_max
+        project_sim = self.simulate_model(
+            variables=variables, time_max=time_max, outputs=outputs
         )
-        # TODO: take these from simulation model
-        sim.set_tolerance(abs_tol=1e-06, rel_tol=1e-08)
 
-        # Simulate, logging only state variables given by `outputs`
-        return self.serialize_datalog(sim.run(time_max, log=outputs), model)
+        project = self.get_project()
+        sims = [project_sim]
+        if project is not None:
+            for group in get_subject_groups(project):
+                # find unique protocols for this subject cohort
+                dosing_protocols = {}
+                subject_protocols = [
+                    Protocol.objects.get(pk=p['protocol'])
+                    for p in group.subjects.values('protocol').distinct()
+                    if p['protocol'] is not None
+                ]
+                for protocol in subject_protocols:
+                    dosing_protocols[protocol.mapped_qname] = protocol
+                sim = self.simulate_model(
+                    outputs=outputs,
+                    variables=variables,
+                    time_max=time_max,
+                    dosing_protocols=dosing_protocols
+                )
+                sims.append(sim)
+
+        return sims
 
 
 def set_administration(model, drug_amount, direct=True):
@@ -663,3 +686,51 @@ def _add_dose_compartment(model, drug_amount, time_unit):
     )
 
     return dose_drug_amount
+
+
+def _get_dosing_events(
+        doses,
+        amount_conversion_factor=1.0,
+        time_conversion_factor=1.0,
+        last_dose_time=0.0,
+        time_max=None
+):
+    dosing_events = []
+    for d in doses.all():
+        if d.repeat_interval <= 0:
+            continue
+        start_times = np.arange(
+            d.start_time + last_dose_time,
+            d.start_time + last_dose_time + d.repeat_interval * d.repeats,
+            d.repeat_interval,
+        )
+        if len(start_times) == 0:
+            continue
+        last_dose_time = start_times[-1]
+        dose_level = d.amount / d.duration
+        dosing_events += [(
+            (amount_conversion_factor / time_conversion_factor) * dose_level,
+            time_conversion_factor * start_time,
+            time_conversion_factor * d.duration,
+        ) for start_time in start_times]
+    # if any dosing events are close to time_max,
+    # make them equal to time_max
+    if time_max is not None:
+        for i, (level, start, duration) in enumerate(dosing_events):
+            if abs(start - time_max) < 1e-6:
+                dosing_events[i] = (level, time_max, duration)
+            elif abs(start + duration - time_max) < 1e-6:
+                dosing_events[i] = (level, start, time_max - start)
+    return dosing_events
+
+
+def get_subject_groups(project):
+    dataset = project.datasets.first()
+    dataset_groups = []
+    if dataset is not None:
+        dataset_groups = [
+            SubjectGroup.objects.get(pk=g['group'])
+            for g in dataset.subjects.values('group').distinct()
+            if g['group'] is not None
+        ]
+    return dataset_groups

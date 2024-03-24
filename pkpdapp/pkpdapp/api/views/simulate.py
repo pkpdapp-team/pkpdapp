@@ -45,7 +45,7 @@ class ErrorResponseSerializer(serializers.Serializer):
 @extend_schema(
     request=SimulateSerializer,
     responses={
-        200: SimulateResponseSerializer,
+        200: SimulateResponseSerializer(many=True),
         400: ErrorResponseSerializer,
         404: None,
     },
@@ -67,7 +67,7 @@ class SimulateBaseView(views.APIView):
             return Response(
                 serialized_result.data, status=status.HTTP_400_BAD_REQUEST
             )
-        serialized_result = SimulateResponseSerializer(result)
+        serialized_result = SimulateResponseSerializer(result, many=True)
         return Response(serialized_result.data)
 
 

@@ -9,7 +9,7 @@ from django.db import models
 from pkpdapp.models import Project
 from pkpdapp.models import (
     Dose, Biomarker, BiomarkerType, Subject, Protocol, Unit,
-    CategoricalBiomarker,
+    CategoricalBiomarker, SubjectGroup
 )
 from pkpdapp.utils import DataParser
 
@@ -60,12 +60,18 @@ class Dataset(models.Model):
         # create biomarker types
         # assume AMOUNT_UNIT and TIME_UNIT are constant for each bt
         bts_unique = data_without_dose[
-            ['OBSERVATION_NAME', 'OBSERVATION_UNIT', 'TIME_UNIT']
+            [
+                'OBSERVATION_NAME',
+                'OBSERVATION_UNIT',
+                'OBSERVATION_VARIABLE',
+                'TIME_UNIT'
+            ]
         ].drop_duplicates()
         biomarker_types = {}
         for i, row in bts_unique.iterrows():
             unit = Unit.objects.get(symbol=row['OBSERVATION_UNIT'])
             observation_name = row['OBSERVATION_NAME']
+            observation_variable = row['OBSERVATION_VARIABLE']
             biomarker_types[observation_name] = BiomarkerType.objects.create(
                 name=observation_name,
                 description="",
@@ -75,11 +81,12 @@ class Dataset(models.Model):
                 display_time_unit=time_unit,
                 dataset=self,
                 color=i,
+                mapped_qname=observation_variable
             )
 
         # create subjects
         subjects = {}
-        for i, row in data[['SUBJECT_ID']].drop_duplicates().iterrows():
+        for i, row in data[['SUBJECT_ID', 'GROUP_ID']].drop_duplicates().iterrows():
             subject_id = row['SUBJECT_ID']
 
             subjects[subject_id] = Subject.objects.create(
@@ -88,14 +95,29 @@ class Dataset(models.Model):
                 shape=i,
             )
 
+        # create subject groups
+        for i, row in data[['GROUP_ID']].drop_duplicates().iterrows():
+            group_id = row['GROUP_ID']
+            group_name = f'Group {group_id}'
+            group = SubjectGroup.objects.create(
+                name=group_name
+            )
+            for i, row in data[
+                data['GROUP_ID'] == group_id
+            ][['SUBJECT_ID']].drop_duplicates().iterrows():
+                subject_id = row['SUBJECT_ID']
+                subject = subjects[subject_id]
+                subject.group = group
+                subject.save()
         # create subject protocol
         for i, row in data[
-            ['SUBJECT_ID', 'ROUTE', "AMOUNT_UNIT"]
+            ['SUBJECT_ID', 'ROUTE', "AMOUNT_UNIT", "AMOUNT_VARIABLE"]
         ].drop_duplicates().iterrows():
             subject_id = row['SUBJECT_ID']
             route = row['ROUTE']
             amount_unit = Unit.objects.get(symbol=row['AMOUNT_UNIT'])
             subject = subjects[subject_id]
+            mapped_qname = row['AMOUNT_VARIABLE']
             if route == 'IV':
                 route = Protocol.DoseType.DIRECT
             else:
@@ -108,7 +130,8 @@ class Dataset(models.Model):
                     ),
                     time_unit=time_unit,
                     amount_unit=amount_unit,
-                    dose_type=route
+                    dose_type=route,
+                    mapped_qname=mapped_qname
                 )
                 subject.save()
 
@@ -141,12 +164,22 @@ class Dataset(models.Model):
             observation_name = row["OBSERVATION_NAME"]
             route = row['ROUTE']
             infusion_time = row['INFUSION_TIME']
+            try:
+                repeats = int(row['ADDITIONAL_DOSES']) + 1
+                repeat_interval = float(row['INTERDOSE_INTERVAL'])
+            except ValueError:
+                repeats = 1
+                repeat_interval = 1.0
 
             amount_unit = Unit.objects.get(symbol=amount_unit)
 
             subject = subjects[subject_id]
 
             if observation != ".":  # measurement observation
+                try:
+                    observation = float(observation)
+                except ValueError:
+                    observation = 0.0
                 Biomarker.objects.create(
                     time=time,
                     subject=subject,
@@ -174,6 +207,8 @@ class Dataset(models.Model):
                     amount=amount,
                     duration=infusion_time,
                     protocol=protocol,
+                    repeats=repeats,
+                    repeat_interval=repeat_interval,
                 )
 
             # insert covariate columns as categorical for now

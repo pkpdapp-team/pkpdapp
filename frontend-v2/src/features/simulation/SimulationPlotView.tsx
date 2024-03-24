@@ -21,6 +21,7 @@ import { Control, FieldArrayWithId, UseFormSetValue } from "react-hook-form";
 import SimulationPlotForm from "./SimulationPlotForm";
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
+import useDataset from "../../hooks/useDataset";
 
 function ranges(
   minY: number | undefined,
@@ -127,7 +128,7 @@ function genIcLines(
 interface SimulationPlotProps {
   index: number;
   plot: FieldArrayWithId<Simulation, "plots", "id">;
-  data: SimulateResponse;
+  data: SimulateResponse[];
   variables: VariableRead[];
   control: Control<Simulation>;
   setValue: UseFormSetValue<Simulation>;
@@ -135,6 +136,7 @@ interface SimulationPlotProps {
   units: UnitRead[];
   compound: CompoundRead;
   model: CombinedModelRead;
+  visibleGroups: string[];
 }
 
 const SimulationPlotView: FC<SimulationPlotProps> = ({
@@ -148,11 +150,14 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
   units,
   compound,
   model,
+  visibleGroups
 }) => {
   const projectId = useSelector(
     (state: RootState) => state.main.selectedProject,
   );
   useProtocolListQuery({ projectId: projectId || 0 }, { skip: !projectId });
+
+  const { dataset, subjectBiomarkers } = useDataset(projectId);
 
   const [open, setOpen] = useState(false);
 
@@ -183,7 +188,7 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
     ? parseFloat(xcompatibleUnit.conversion_factor)
     : 1.0;
 
-  const convertedTime = data.time.map((t) => t * xconversionFactor);
+  const convertedTime = data[0].time.map((t) => t * xconversionFactor);
   const minX = Math.min(...convertedTime);
   const maxX = Math.max(...convertedTime);
 
@@ -192,71 +197,77 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
   let maxY: number | undefined = undefined;
   let maxY2: number | undefined = undefined;
 
-  const plotData: Data[] = plot.y_axes.map((y_axis) => {
-    const variableValues = data.outputs[y_axis.variable];
-    const variable = variables.find((v) => v.id === y_axis.variable);
-    const variableName = variable?.name;
-    const variableUnit = units.find((u) => u.id === variable?.unit);
-
-    const yaxisUnit = y_axis.right
-      ? units.find((u) => u.id === plot.y_unit2)
-      : units.find((u) => u.id === plot.y_unit);
-    const ycompatibleUnit = variableUnit?.compatible_units.find(
-      (u) => parseInt(u.id) === yaxisUnit?.id,
-    );
-
-    const is_target = model.is_library_model
-      ? variableName?.includes("CT1") || variableName?.includes("AT1")
-      : false;
-    const yconversionFactor = ycompatibleUnit
-      ? parseFloat(
-          is_target
-            ? ycompatibleUnit.target_conversion_factor
-            : ycompatibleUnit.conversion_factor,
-        )
-      : 1.0;
-
-    if (variableValues) {
-      const y = variableValues.map((v) => v * yconversionFactor);
-      if (y_axis.right) {
-        if (minY2 === undefined) {
-          minY2 = Math.min(...y);
-        } else {
-          minY2 = Math.min(minY2, ...y);
-        }
-        if (maxY2 === undefined) {
-          maxY2 = Math.max(...y);
-        } else {
-          maxY2 = Math.max(maxY2, ...y);
-        }
-      } else {
-        if (minY === undefined) {
-          minY = Math.min(...y);
-        } else {
-          minY = Math.min(minY, ...y);
-        }
-        if (maxY === undefined) {
-          maxY = Math.max(...y);
-        } else {
-          maxY = Math.max(maxY, ...y);
-        }
-      }
-      return {
-        yaxis: y_axis.right ? "y2" : undefined,
-        x: convertedTime,
-        y: variableValues.map((v) => v * yconversionFactor),
-        name: variableName || "unknown",
-      };
-    } else {
-      return {
-        yaxis: y_axis.right ? "y2" : undefined,
-        x: [],
-        y: [],
-        type: "scatter",
-        name: `${y_axis.variable}`,
-      };
-    }
+  const visibleData = data.filter((d, index) => {
+    const group = dataset?.groups[index - 1];
+    return index === 0 || visibleGroups.includes(group?.name || "");
   });
+  const plotData = plot.y_axes.map((y_axis) => {
+    return visibleData.map((d, index) => {
+      const variableValues = d.outputs[y_axis.variable];
+      const variable = variables.find((v) => v.id === y_axis.variable);
+      const variableName = variable?.name;
+      const variableUnit = units.find((u) => u.id === variable?.unit);
+
+      const yaxisUnit = y_axis.right
+        ? units.find((u) => u.id === plot.y_unit2)
+        : units.find((u) => u.id === plot.y_unit);
+      const ycompatibleUnit = variableUnit?.compatible_units.find(
+        (u) => parseInt(u.id) === yaxisUnit?.id,
+      );
+
+      const is_target = model.is_library_model
+        ? variableName?.includes("CT1") || variableName?.includes("AT1")
+        : false;
+      const yconversionFactor = ycompatibleUnit
+        ? parseFloat(
+            is_target
+              ? ycompatibleUnit.target_conversion_factor
+              : ycompatibleUnit.conversion_factor,
+          )
+        : 1.0;
+
+      if (variableValues) {
+        const y = variableValues.map((v) => v * yconversionFactor);
+        if (y_axis.right) {
+          if (minY2 === undefined) {
+            minY2 = Math.min(...y);
+          } else {
+            minY2 = Math.min(minY2, ...y);
+          }
+          if (maxY2 === undefined) {
+            maxY2 = Math.max(...y);
+          } else {
+            maxY2 = Math.max(maxY2, ...y);
+          }
+        } else {
+          if (minY === undefined) {
+            minY = Math.min(...y);
+          } else {
+            minY = Math.min(minY, ...y);
+          }
+          if (maxY === undefined) {
+            maxY = Math.max(...y);
+          } else {
+            maxY = Math.max(maxY, ...y);
+          }
+        }
+        return {
+          yaxis: y_axis.right ? "y2" : undefined,
+          x: convertedTime,
+          y: variableValues.map((v) => v * yconversionFactor),
+          name: `${variableName} ${index}` || "unknown",
+        };
+      } else {
+        return {
+          yaxis: y_axis.right ? "y2" : undefined,
+          x: [],
+          y: [],
+          type: "scatter",
+          name: `${y_axis.variable} ${index}`,
+        };
+      }
+    });
+  }).flat() as Data[];
 
   const concentrationUnit = units.find((unit) => unit.symbol === "pmol/L");
   if (concentrationUnit === undefined) {
@@ -406,10 +417,59 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
     scrollZoom: true,
   };
 
+  const biomarkerVariables = subjectBiomarkers?.map(d => {
+    const observation = d?.[0];
+    const variable = variables.find(v => v.qname === observation?.qname);
+    return variable?.id;
+  }) || [];
+  let combinedPlotData = [...plotData];
+  plot.y_axes.forEach(y_axis => {
+    const xAxisUnit = units.find((u) => u.id === plot.x_unit);
+    const yAxisUnit = y_axis.right
+      ? units.find((u) => u.id === plot.y_unit2)
+      : units.find((u) => u.id === plot.y_unit);
+      
+    const biomarkerIndex = biomarkerVariables.indexOf(y_axis.variable);
+    const biomarkerData = subjectBiomarkers?.[biomarkerIndex];
+    const { label, qname, unit, timeUnit } = biomarkerData?.[0] || {};
+    const yCompatibleUnit = unit?.compatible_units.find(
+      (u) => parseInt(u.id) === yAxisUnit?.id,
+    );
+    const timeCompatibleUnit = timeUnit?.compatible_units.find(
+      (u) => parseInt(u.id) === xAxisUnit?.id,
+    );
+    const timeConversionFactor = timeCompatibleUnit
+      ? parseFloat(timeCompatibleUnit.conversion_factor)
+      : 1.0;
+    const is_target = model.is_library_model
+      ? qname?.includes("CT1") || qname?.includes("AT1")
+      : false;
+    const yConversionFactor = yCompatibleUnit
+      ? parseFloat(
+          is_target
+            ? yCompatibleUnit.target_conversion_factor
+            : yCompatibleUnit.conversion_factor,
+        )
+      : 1.0;
+    const scatterplotData = dataset?.groups
+      .filter(group => visibleGroups.includes(group.name))
+      .map(group => {
+        const groupBiomarkers = biomarkerData?.filter(d => group.subjects.includes(d.subjectId));
+        return {
+          name: `${group.name} ${label}`,
+          x: groupBiomarkers?.map(d => d?.time * timeConversionFactor),
+          y: groupBiomarkers?.map(d => d?.value * yConversionFactor),
+          type: 'scatter',
+          mode: 'markers'
+        }
+      });
+    combinedPlotData = combinedPlotData.concat(scatterplotData as Data[]);
+  });
+  
   return (
     <>
       <Plot
-        data={plotData}
+        data={combinedPlotData as Data[]}
         layout={plotLayout}
         style={{ width: "100%", height: "100%" }}
         config={config}

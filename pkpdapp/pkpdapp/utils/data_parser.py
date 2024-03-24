@@ -11,24 +11,30 @@ from io import StringIO
 
 class DataParser:
     alternate_col_names = {
+        "ADMINISTRATION_ID": [
+            "Administration ID", "CMT", "Cmt", "cmt", "ADM", "Adm", "adm"
+        ],
         "SUBJECT_ID": [
             "ID", "id", "Subject_id", "Subject", "SUBJID",
             "SUBJECT_ID"
         ],
         "TIME": [
-            "Time", "TIME", "TIMEPOINT", "t", "T", "time"
+            "Time", "TIME", "TIMEPOINT", "t", "T", "time",
         ],
         "TIME_UNIT": [
-            "Time_unit", "Time_units", "TIMEUNIT", "TIME_UNIT"
+            "Time_unit", "Time_units", "TIMEUNIT", "TIME_UNIT", "Units_Time"
         ],
         "AMOUNT": [
             "Amt", "Amount", "AMT", "AMOUNT"
         ],
         "AMOUNT_UNIT": [
-            "Amt_unit", "Amt_units", "AMTUNIT", "UNIT", "AMOUNT_UNIT"
+            "Amt_unit", "Amt_units", "AMTUNIT", "UNIT", "AMOUNT_UNIT", "Units_AMT"
+        ],
+        "AMOUNT_VARIABLE": [
+            "Amount Variable", "AMOUNT_VARIABLE"
         ],
         "OBSERVATION": [
-            "DV", "Observation", "Y", "YVAL", "OBSERVATION",
+            "DV", "Observation", "Y", "YVAL", "OBSERVATION", "Conc",
             "OBSERVATION_VALUE", "OBSERVATIONVALUE"
         ],
         "OBSERVATION_NAME": [
@@ -36,9 +42,12 @@ class DataParser:
             "OBSERVATION_NAME", "OBSERVATIONID", "OBSERVATIONNAME"
         ],
         "OBSERVATION_UNIT": [
-            "DV_units", "Observation_unit", "YUNIT", "UNIT",
+            "DV_units", "Observation_unit", "YUNIT", "UNIT", "Units_Conc",
             "OBSERVATION_UNIT",
             "OBSERVATIONUNIT"
+        ],
+        "OBSERVATION_VARIABLE": [
+            "Observation Variable", "OBSERVATION_VARIABLE"
         ],
         "COMPOUND": [
             "Compound", "COMPOUND"
@@ -50,6 +59,15 @@ class DataParser:
             "TINF", "Tinf", "tinf", "Infusion_time", "INFUSIONTIME",
             "INFUSION_TIME"
         ],
+        "GROUP_ID": [
+            "Group ID", "Group", "GROUP", "cohort", "Cohort", "COHORT"
+        ],
+        "ADDITIONAL_DOSES": [
+            "ADDL", "Addl", "addl", "ADDITIONAL_DOSES"
+        ],
+        "INTERDOSE_INTERVAL": [
+            "II", "INFUSION_INTERVAL"
+        ]
     }
 
     required_cols = [
@@ -62,14 +80,19 @@ class DataParser:
     optional_cols = [
         "TIME_UNIT",
         "AMOUNT_UNIT",
+        "AMOUNT_VARIABLE",
         "OBSERVATION_UNIT",
         "OBSERVATION_NAME",
+        "OBSERVATION_VARIABLE",
         "COMPOUND",
         "ROUTE",
         "INFUSION_TIME",
+        "GROUP_ID",
+        "ADDITIONAL_DOSES",
+        "INTERDOSE_INTERVAL"
     ]
 
-    altername_unit_names = {
+    alternate_unit_names = {
         "h": ["hour"],
         "day": ["d"],
     }
@@ -137,7 +160,7 @@ class DataParser:
 
         # map alternate unit names to standard names
         inv_altername_unit_names = {}
-        for k, v in self.altername_unit_names.items():
+        for k, v in self.alternate_unit_names.items():
             for v2 in v:
                 inv_altername_unit_names[v2] = k
 
@@ -154,6 +177,14 @@ class DataParser:
         if "OBSERVATION_NAME" not in found_cols:
             data["OBSERVATION_NAME"] = "observation"
 
+        # put in blank observation variable if not present
+        if "OBSERVATION_VARIABLE" not in found_cols:
+            data["OBSERVATION_VARIABLE"] = ""
+
+        # put in blank amount variable if not present
+        if "AMOUNT_VARIABLE" not in found_cols:
+            data["AMOUNT_VARIABLE"] = ""
+
         # put in default compound name if not present
         if "COMPOUND" not in found_cols:
             data["COMPOUND"] = "unknown compound"
@@ -162,6 +193,16 @@ class DataParser:
         if "ROUTE" not in found_cols:
             data["ROUTE"] = "IV"
 
+        # put in default subject group if not present
+        if "GROUP_ID" not in found_cols:
+            data["GROUP_ID"] = 1
+
+        # put in default additional dosing columns if not present
+        if "ADDITIONAL_DOSES" not in found_cols:
+            data["ADDITIONAL_DOSES"] = ""
+        if "INTERDOSE_INTERVAL" not in found_cols:
+            data["INTERDOSE_INTERVAL"] = ""
+
         # put in default units if not present, convert any percentage units
         # to dimensionless
         for unit_col in ["TIME_UNIT", "AMOUNT_UNIT", "OBSERVATION_UNIT"]:
@@ -169,8 +210,9 @@ class DataParser:
                 data[unit_col] = ""
             else:
                 def convert_percent_to_dim(x):
-                    xl = x.lower()
+                    xl = str(x).lower()
                     if (
+                        "nan" in xl or
                         "percent" in xl or
                         "fraction" in xl or
                         "ratio" in xl or

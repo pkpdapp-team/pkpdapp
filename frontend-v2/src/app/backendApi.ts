@@ -236,7 +236,10 @@ const injectedRtkApi = api.injectEndpoints({
       }),
     }),
     datasetList: build.query<DatasetListApiResponse, DatasetListApiArg>({
-      query: () => ({ url: `/api/dataset/` }),
+      query: (queryArg) => ({
+        url: `/api/dataset/`,
+        params: { project_id: queryArg.projectId },
+      }),
     }),
     datasetCreate: build.mutation<
       DatasetCreateApiResponse,
@@ -1124,7 +1127,7 @@ export type CombinedModelSetVariablesFromInferenceUpdateApiArg = {
   combinedModel: CombinedModel;
 };
 export type CombinedModelSimulateCreateApiResponse =
-  /** status 200  */ SimulateResponse;
+  /** status 200  */ SimulateResponse[];
 export type CombinedModelSimulateCreateApiArg = {
   id: number;
   simulate: Simulate;
@@ -1158,7 +1161,10 @@ export type CompoundDestroyApiArg = {
   id: number;
 };
 export type DatasetListApiResponse = /** status 200  */ DatasetRead[];
-export type DatasetListApiArg = void;
+export type DatasetListApiArg = {
+  /** Filter results by project ID */
+  projectId?: number;
+};
 export type DatasetCreateApiResponse = /** status 201  */ DatasetRead;
 export type DatasetCreateApiArg = {
   dataset: Dataset;
@@ -1344,7 +1350,7 @@ export type PharmacodynamicSetVariablesFromInferenceUpdateApiArg = {
   pharmacodynamic: Pharmacodynamic;
 };
 export type PharmacodynamicSimulateCreateApiResponse =
-  /** status 200  */ SimulateResponse;
+  /** status 200  */ SimulateResponse[];
 export type PharmacodynamicSimulateCreateApiArg = {
   id: number;
   simulate: Simulate;
@@ -1671,6 +1677,7 @@ export type BiomarkerType = {
   display?: boolean;
   color?: number;
   axis?: boolean;
+  mapped_qname?: string;
   stored_unit: number;
   dataset: number;
   display_unit: number;
@@ -1689,6 +1696,7 @@ export type BiomarkerTypeRead = {
   display?: boolean;
   color?: number;
   axis?: boolean;
+  mapped_qname?: string;
   stored_unit: number;
   dataset: number;
   display_unit: number;
@@ -1701,6 +1709,7 @@ export type PatchedBiomarkerType = {
   display?: boolean;
   color?: number;
   axis?: boolean;
+  mapped_qname?: string;
   stored_unit?: number;
   dataset?: number;
   display_unit?: number;
@@ -1719,6 +1728,7 @@ export type PatchedBiomarkerTypeRead = {
   display?: boolean;
   color?: number;
   axis?: boolean;
+  mapped_qname?: string;
   stored_unit?: number;
   dataset?: number;
   display_unit?: number;
@@ -1994,6 +2004,7 @@ export type Protocol = {
   datetime?: string | null;
   name: string;
   dose_type?: DoseTypeEnum;
+  mapped_qname?: string | null;
   project?: number | null;
   compound?: number | null;
   time_unit?: number | null;
@@ -2009,16 +2020,28 @@ export type ProtocolRead = {
   datetime?: string | null;
   name: string;
   dose_type?: DoseTypeEnum;
+  mapped_qname?: string | null;
   project?: number | null;
   compound?: number | null;
   time_unit?: number | null;
   amount_unit?: number | null;
+};
+export type SubjectGroup = {
+  name: string;
+};
+export type SubjectGroupRead = {
+  id: number;
+  subjects: number[];
+  protocols: ProtocolRead[];
+  name: string;
 };
 export type DatasetRead = {
   id: number;
   biomarker_types: number[];
   subjects: number[];
   protocols: ProtocolRead[];
+  groups: SubjectGroupRead[];
+  biomarkers: BiomarkerTypeRead[];
   name: string;
   datetime?: string | null;
   description?: string;
@@ -2035,6 +2058,8 @@ export type PatchedDatasetRead = {
   biomarker_types?: number[];
   subjects?: number[];
   protocols?: ProtocolRead[];
+  groups?: SubjectGroupRead[];
+  biomarkers?: BiomarkerTypeRead[];
   name?: string;
   datetime?: string | null;
   description?: string;
@@ -2127,9 +2152,7 @@ export type Inference = {
   time_elapsed?: number;
   number_of_function_evals?: number;
   task_id?: string | null;
-  metadata?: {
-    [key: string]: any;
-  };
+  metadata?: any;
   project: number;
   algorithm?: number;
   initialization_inference?: number | null;
@@ -2149,9 +2172,7 @@ export type InferenceRead = {
   time_elapsed?: number;
   number_of_function_evals?: number;
   task_id?: string | null;
-  metadata?: {
-    [key: string]: any;
-  };
+  metadata?: any;
   project: number;
   algorithm?: number;
   initialization_inference?: number | null;
@@ -2170,9 +2191,7 @@ export type PatchedInference = {
   time_elapsed?: number;
   number_of_function_evals?: number;
   task_id?: string | null;
-  metadata?: {
-    [key: string]: any;
-  };
+  metadata?: any;
   project?: number;
   algorithm?: number;
   initialization_inference?: number | null;
@@ -2192,9 +2211,7 @@ export type PatchedInferenceRead = {
   time_elapsed?: number;
   number_of_function_evals?: number;
   task_id?: string | null;
-  metadata?: {
-    [key: string]: any;
-  };
+  metadata?: any;
   project?: number;
   algorithm?: number;
   initialization_inference?: number | null;
@@ -2379,6 +2396,7 @@ export type PatchedProtocol = {
   datetime?: string | null;
   name?: string;
   dose_type?: DoseTypeEnum;
+  mapped_qname?: string | null;
   project?: number | null;
   compound?: number | null;
   time_unit?: number | null;
@@ -2394,6 +2412,7 @@ export type PatchedProtocolRead = {
   datetime?: string | null;
   name?: string;
   dose_type?: DoseTypeEnum;
+  mapped_qname?: string | null;
   project?: number | null;
   compound?: number | null;
   time_unit?: number | null;
@@ -2511,6 +2530,7 @@ export type Subject = {
   metadata?: string;
   dataset: number;
   protocol?: number | null;
+  group?: number | null;
 };
 export type SubjectRead = {
   id: number;
@@ -2520,6 +2540,7 @@ export type SubjectRead = {
   metadata?: string;
   dataset: number;
   protocol?: number | null;
+  group?: number | null;
 };
 export type PatchedSubject = {
   id_in_dataset?: number;
@@ -2528,6 +2549,7 @@ export type PatchedSubject = {
   metadata?: string;
   dataset?: number;
   protocol?: number | null;
+  group?: number | null;
 };
 export type PatchedSubjectRead = {
   id?: number;
@@ -2537,6 +2559,7 @@ export type PatchedSubjectRead = {
   metadata?: string;
   dataset?: number;
   protocol?: number | null;
+  group?: number | null;
 };
 export type Unit = {
   symbol: string;

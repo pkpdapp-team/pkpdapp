@@ -75,6 +75,13 @@ class Protocol(StoredModel):
         help_text='unit for the amount value stored in each dose'
     )
 
+    mapped_qname = models.CharField(
+        default='',
+        blank=True, null=True,
+        max_length=50,
+        help_text='qname of the mapped dosing compartment for each dose'
+    )
+
     __original_dose_type = None
 
     def __init__(self, *args, **kwargs):

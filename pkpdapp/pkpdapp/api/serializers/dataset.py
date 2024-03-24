@@ -7,11 +7,12 @@
 from pkpdapp.utils import DataParser
 from rest_framework import serializers
 from drf_spectacular.utils import extend_schema_field
-import codecs
 from pkpdapp.models import (
-    Dataset, Protocol,
+    Dataset, Protocol, SubjectGroup
 )
-from pkpdapp.api.serializers import ProtocolSerializer
+from pkpdapp.api.serializers import (
+    BiomarkerTypeSerializer, ProtocolSerializer, SubjectGroupSerializer
+)
 
 
 class DatasetSerializer(serializers.ModelSerializer):
@@ -22,10 +23,25 @@ class DatasetSerializer(serializers.ModelSerializer):
         many=True, read_only=True
     )
     protocols = serializers.SerializerMethodField('get_protocols')
+    groups = serializers.SerializerMethodField('get_subject_groups')
+    biomarkers = serializers.SerializerMethodField('get_biomarkers')
 
     class Meta:
         model = Dataset
         fields = '__all__'
+
+    @extend_schema_field(BiomarkerTypeSerializer(many=True))
+    def get_biomarkers(self, dataset):
+        return BiomarkerTypeSerializer(dataset.biomarker_types.all(), many=True).data
+
+    @extend_schema_field(SubjectGroupSerializer(many=True))
+    def get_subject_groups(self, dataset):
+        subject_groups = [
+            SubjectGroup.objects.get(pk=g['group'])
+            for g in dataset.subjects.values('group').distinct()
+            if g['group'] is not None
+        ]
+        return SubjectGroupSerializer(subject_groups, many=True).data
 
     @extend_schema_field(ProtocolSerializer(many=True))
     def get_protocols(self, dataset):
@@ -38,19 +54,18 @@ class DatasetSerializer(serializers.ModelSerializer):
 
 
 class DatasetCsvSerializer(serializers.ModelSerializer):
-    csv = serializers.FileField()
+    csv = serializers.CharField()
 
     class Meta:
         model = Dataset
         fields = ['csv']
 
     def validate_csv(self, csv):
-        utf8_file = codecs.EncodedFile(csv.open(), "utf-8")
         parser = DataParser()
 
         # error in columns
         try:
-            data = parser.parse_from_stream(utf8_file)
+            data = parser.parse_from_str(csv)
         except RuntimeError as err:
             raise serializers.ValidationError(str(err))
         except UnicodeDecodeError as err:
