@@ -32,6 +32,7 @@ const Doses: FC<Props> = ({ project, protocol, units }) => {
       { id: protocol.variables[0] || 0 },
       { skip: !protocol.variables.length },
     );
+  const mappedVariable = protocol.mapped_qname || variable?.name || '';
   const {
     control,
     handleSubmit,
@@ -75,7 +76,7 @@ const Doses: FC<Props> = ({ project, protocol, units }) => {
   }
 
   const handleAddRow = () => {
-    appendDose({ amount: 0, repeats: 0, start_time: 0, repeat_interval: 1 });
+    appendDose({ amount: 0, duration: 0.0833, repeats: 1, start_time: 0, repeat_interval: 1 });
   };
 
   const handleDeleteRow = (index: number) => {
@@ -91,7 +92,7 @@ const Doses: FC<Props> = ({ project, protocol, units }) => {
     <>
       {doses.map((dose, index) => (
         <TableRow key={dose.id}>
-          <TableCell>{variable?.name || ''}</TableCell>
+          <TableCell>{mappedVariable}</TableCell>
           <TableCell>
             <FloatField
               label={"Dose"}

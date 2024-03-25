@@ -40,6 +40,7 @@ import SsidChartIcon from "@mui/icons-material/SsidChart";
 import ContactSupportIcon from "@mui/icons-material/ContactSupport";
 import TableViewIcon from "@mui/icons-material/TableView";
 import "@fontsource/comfortaa"; // Defaults to weight 400
+import useDataset from "../../hooks/useDataset";
 
 
 const drawerWidth = 240;
@@ -53,6 +54,7 @@ export default function Sidebar() {
   const selectedProject = useSelector(
     (state: RootState) => state.main.selectedProject,
   );
+  const { groupProtocols } = useDataset(selectedProject);
   const dirtyCount = useSelector((state: RootState) => state.main.dirtyCount);
   const projectId = useSelector(
     (state: RootState) => state.main.selectedProject,
@@ -94,10 +96,17 @@ export default function Sidebar() {
     );
   };
 
+  const doses = groupProtocols?.map(protocols => protocols.flatMap(p => p?.doses));
+  const groupsAreIncomplete = doses?.some(dosing => dosing.length === 0);
+
   const errors: { [key: string]: string } = {};
   if (modelIsIncomplete(model, protocols)) {
     errors[PageName.MODEL] =
       "Model is incomplete, see the Model tab for details";
+  }
+  if (groupsAreIncomplete) {
+    errors[PageName.TRIAL_DESIGN] =
+      "Trial design is incomplete, see the Trial Design tab for details";
   }
 
   const errorComponents: { [key: string]: ReactNode } = {};
