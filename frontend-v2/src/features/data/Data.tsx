@@ -64,7 +64,8 @@ const Data:FC = () => {
       timeUnit: row.timeUnit?.symbol,
       group: group?.name
     })
-  })) || [];
+  }))
+  .map((row, index) => ({ ...row, id: index + 1 })) || [];
   const [firstRow] = observations;
   const columns = firstRow ? Object.keys(firstRow).map((field) => ({
     field,
