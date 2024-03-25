@@ -1,5 +1,6 @@
 import { FC } from 'react';
 import DosingProtocols from './DosingProtocols';
+import CreateDosingProtocols from './CreateDosingProtocols';
 import { StepperState } from "./LoadDataStepper";
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
@@ -41,21 +42,34 @@ const MapDosing: FC<IMapDosing> = ({ state, firstTime }: IMapDosing) => {
     { skip: !model?.id },
   );
 
+  const amountField = state.fields.find(
+    (field, i) => state.normalisedFields[i] === 'Amount'
+  );
   const amountUnitField = state.fields.find(
     (field, i) => ['Amount Unit', 'Unit'].includes(state.normalisedFields[i])
   );
   const administrationIdField = state.fields.find(
     (field, i) => state.normalisedFields[i] === 'Administration ID'
   );
+  const hasDosingRows = amountField && administrationIdField;
   
-  return <DosingProtocols
-    administrationIdField={administrationIdField || ''}
-    amountUnitField={amountUnitField || ''}
-    amountUnit={amountUnit}
-    state={state}
-    units={units || []}
-    variables={variables || []}
-  />;
+  return hasDosingRows ? 
+    <DosingProtocols
+      administrationIdField={administrationIdField || ''}
+      amountUnitField={amountUnitField || ''}
+      amountUnit={amountUnit}
+      state={state}
+      units={units || []}
+      variables={variables || []}
+    /> :
+    <CreateDosingProtocols
+      administrationIdField={'Group'}
+      amountUnitField={amountUnitField || ''}
+      amountUnit={amountUnit}
+      state={state}
+      units={units || []}
+      variables={variables || []}
+    />;
 }
 
 export default MapDosing;

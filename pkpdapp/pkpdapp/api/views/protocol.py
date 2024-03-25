@@ -10,7 +10,6 @@ from drf_spectacular.types import OpenApiTypes
 from pkpdapp.api.serializers import ProtocolSerializer
 from pkpdapp.api.views import (
     ProjectFilter,
-    NotADatasetProtocol,
     CheckAccessToProject
 )
 from pkpdapp.models import Protocol
@@ -21,7 +20,7 @@ class ProtocolView(viewsets.ModelViewSet):
     serializer_class = ProtocolSerializer
     filter_backends = [ProjectFilter]
     permission_classes = [
-        IsAuthenticated & NotADatasetProtocol & CheckAccessToProject
+        IsAuthenticated & CheckAccessToProject
     ]
 
     @extend_schema(

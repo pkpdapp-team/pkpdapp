@@ -5,6 +5,7 @@ import {
   Protocol,
   ProtocolRead,
   UnitRead,
+  useCompoundRetrieveQuery,
   useProtocolUpdateMutation,
   useVariableRetrieveQuery,
 } from "../../app/backendApi";
@@ -27,11 +28,17 @@ interface Props {
 }
 
 const Doses: FC<Props> = ({ project, protocol, units }) => {
+  const { data: compound } =
+    useCompoundRetrieveQuery(
+      { id: project?.compound || 0 },
+      { skip: !project || !project.compound },
+    );
   const { data: variable, isLoading: isVariableLoading } =
     useVariableRetrieveQuery(
       { id: protocol.variables[0] || 0 },
       { skip: !protocol.variables.length },
     );
+  const mappedVariable = protocol.mapped_qname || variable?.qname || '';
   const {
     control,
     handleSubmit,
@@ -75,7 +82,14 @@ const Doses: FC<Props> = ({ project, protocol, units }) => {
   }
 
   const handleAddRow = () => {
-    appendDose({ amount: 0, repeats: 0, start_time: 0, repeat_interval: 1 });
+    const isSmallMolecule = compound?.compound_type === "SM";
+    appendDose({
+      amount: 0,
+      duration: 0.0833,
+      repeats: 1,
+      start_time: 0,
+      repeat_interval: isSmallMolecule ? 24 : 168,
+    });
   };
 
   const handleDeleteRow = (index: number) => {
@@ -91,7 +105,7 @@ const Doses: FC<Props> = ({ project, protocol, units }) => {
     <>
       {doses.map((dose, index) => (
         <TableRow key={dose.id}>
-          <TableCell>{variable?.name || ''}</TableCell>
+          <TableCell>{mappedVariable}</TableCell>
           <TableCell>
             <FloatField
               label={"Dose"}
