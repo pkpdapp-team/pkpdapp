@@ -81,7 +81,7 @@ const Protocols: FC = () => {
     };
   }
 
-  const selectedProtocols = tab === 0 ? filteredProtocols : dataset?.groups[tab-1].protocols;
+  const selectedProtocols = tab === 0 ? filteredProtocols : dataset?.groups[tab-1]?.protocols;
   const DosesComponent = tab === 0 ? Doses : DatasetDoses;
   return (
     <>
