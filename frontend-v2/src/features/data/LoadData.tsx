@@ -1,4 +1,4 @@
-import { Alert, Box, Stack } from '@mui/material';
+import { Alert, Box, Stack, Typography } from '@mui/material';
 import Papa from 'papaparse'
 import { FC, useCallback, useState} from 'react'
 import {useDropzone} from 'react-dropzone'
@@ -94,13 +94,17 @@ const LoadData: FC<ILoadDataProps> = ({state, firstTime}) => {
           <p>Drag 'n' drop some files here, or click to select files</p>
         </div>
       </div>
-      <Box sx={{ width: '100%', maxHeight: "20vh", overflow: 'auto', whiteSpace: 'nowrap'}}>
+      <Box sx={{ width: '100%', maxHeight: "24vh", overflow: 'auto', whiteSpace: 'nowrap'}}>
         {errors.map((error, index) => (
-          <Alert severity="error" key={index}>{error}</Alert>
+          <Alert severity="error" key={index}>
+            <Typography>{error}</Typography>
+          </Alert>
         ))}
-      </Box>
-      <Box sx={{ width: '100%', maxHeight: "20vh", overflow: 'auto', whiteSpace: 'nowrap'}}>
-        {showData && <SetUnits state={state} firstTime={firstTime} />} 
+        {showData && 
+          <Alert severity="error">
+            <SetUnits state={state} firstTime={firstTime} />
+          </Alert>
+        } 
       </Box>
       <Box component="div" sx={{ maxHeight: "40vh", overflow: 'auto', overflowX: 'auto' }}>
         {showData && <MapHeaders data={state.data} fields={state.fields} setNormalisedFields={setNormalisedFields} normalisedFields={state.normalisedFields}/>}
