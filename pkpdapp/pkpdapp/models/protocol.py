@@ -123,6 +123,8 @@ class Protocol(StoredModel):
             return False
         if self.amount_unit != protocol.amount_unit:
             return False
+        if self.mapped_qname != protocol.mapped_qname:
+            return False
 
         my_doses = self.doses.order_by('start_time')
         other_doses = protocol.doses.order_by('start_time')
