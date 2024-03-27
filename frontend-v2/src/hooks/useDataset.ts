@@ -4,6 +4,7 @@ import {
   useDatasetListQuery,
   useDatasetCreateMutation,
   useProjectRetrieveQuery,
+  useProtocolListQuery,
   useUnitListQuery
 } from '../app/backendApi';
 
@@ -24,6 +25,12 @@ export default function useDataset(selectedProject: number | null) {
     { projectId: selectedProjectOrZero },
     { skip: !selectedProject },
   );
+  const { data: protocols } =
+    useProtocolListQuery(
+      {},
+      { skip: !selectedProject },
+    );
+  const datasetProtocols = protocols?.filter(p => parseInt(p.dataset) === dataset?.id);
   const [
     createDataset
   ] = useDatasetCreateMutation();
@@ -79,8 +86,13 @@ export default function useDataset(selectedProject: number | null) {
         .sort((a, b) => a.subjectId - b.subjectId)
         .map((row, index) => ({ id: index + 1, ...row })) || [];
     });
+  const groupProtocols = dataset?.groups.map(group => 
+    group.protocols.map(p => datasetProtocols?.find(dp => dp.id === p.id))
+  );
   return {
     dataset,
+    groupProtocols,
+    protocols: datasetProtocols || [],
     subjectBiomarkers,
     updateDataset
   };
