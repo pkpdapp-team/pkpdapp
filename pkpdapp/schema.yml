@@ -4437,6 +4437,10 @@ components:
           type: integer
           nullable: true
           description: unit for the amount value stored in each dose
+        group:
+          type: integer
+          nullable: true
+          description: Group that uses this protocol
     PatchedSimulation:
       type: object
       properties:
@@ -4966,6 +4970,10 @@ components:
           type: integer
           nullable: true
           description: unit for the amount value stored in each dose
+        group:
+          type: integer
+          nullable: true
+          description: Group that "owns" this protocol
       required:
       - dataset
       - doses

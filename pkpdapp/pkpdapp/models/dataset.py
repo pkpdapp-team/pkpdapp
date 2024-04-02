@@ -131,7 +131,8 @@ class Dataset(models.Model):
                     time_unit=time_unit,
                     amount_unit=amount_unit,
                     dose_type=route,
-                    mapped_qname=mapped_qname
+                    mapped_qname=mapped_qname,
+                    group=subject.group
                 )
                 subject.save()
 

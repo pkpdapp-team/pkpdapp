@@ -10,10 +10,10 @@ from .units import Unit
 from .compound import Compound
 from .efficacy_experiment import EfficacyExperiment
 from .project import Project, ProjectAccess
+from .subject_group import SubjectGroup
 from .protocol import Protocol
 from .dose import Dose
 from .subject import Subject
-from .subject_group import SubjectGroup
 from .biomarker_type import BiomarkerType
 from .biomarker import Biomarker
 from .categorical_biomarker import CategoricalBiomarker

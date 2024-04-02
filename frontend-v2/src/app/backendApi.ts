@@ -2009,6 +2009,7 @@ export type Protocol = {
   compound?: number | null;
   time_unit?: number | null;
   amount_unit?: number | null;
+  group?: number | null;
 };
 export type ProtocolRead = {
   id: number;
@@ -2025,6 +2026,7 @@ export type ProtocolRead = {
   compound?: number | null;
   time_unit?: number | null;
   amount_unit?: number | null;
+  group?: number | null;
 };
 export type SubjectGroup = {
   name: string;
@@ -2401,6 +2403,7 @@ export type PatchedProtocol = {
   compound?: number | null;
   time_unit?: number | null;
   amount_unit?: number | null;
+  group?: number | null;
 };
 export type PatchedProtocolRead = {
   id?: number;
@@ -2417,6 +2420,7 @@ export type PatchedProtocolRead = {
   compound?: number | null;
   time_unit?: number | null;
   amount_unit?: number | null;
+  group?: number | null;
 };
 export type SimulationSlider = {
   variable: number;
