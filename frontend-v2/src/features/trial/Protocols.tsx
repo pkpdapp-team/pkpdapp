@@ -33,7 +33,7 @@ const Protocols: FC = () => {
     (state: RootState) => state.main.selectedProject,
   );
   const selectedProjectOrZero = selectedProject || 0;
-  const { dataset, groupProtocols, protocols: datasetProtocols } = useDataset(selectedProject);
+  const { dataset, protocols: datasetProtocols } = useDataset(selectedProject);
   const { data: project, isLoading: isProjectLoading } =
     useProjectRetrieveQuery(
       { id: selectedProjectOrZero },
@@ -81,11 +81,9 @@ const Protocols: FC = () => {
   }
 
   const subjectGroup = tab === 0 ? null : dataset?.groups[tab-1];
-  const subjectGroupProtocolIds = subjectGroup?.protocols.map(p => p.id);
-  const subjectGroupProtocols = datasetProtocols?.filter(p => subjectGroupProtocolIds?.includes(p.id));
   const selectedProtocols = tab === 0
     ? filteredProtocols
-    : subjectGroupProtocols
+    : datasetProtocols?.filter(p => p.group === subjectGroup?.id);
   return (
     <>
       <Tabs value={tab} onChange={handleTabChange}>
@@ -94,7 +92,8 @@ const Protocols: FC = () => {
           {...a11yProps(0)}
         />
         {dataset?.groups.map((group, index) => {
-          const selectedDoses = groupProtocols?.[index]?.flatMap(p => p?.doses) || [];
+          const groupProtocols = datasetProtocols?.filter(p => p.group === group.id);
+          const selectedDoses = groupProtocols?.flatMap(p => p?.doses) || [];
           return (
             <Tab
               key={group.id}

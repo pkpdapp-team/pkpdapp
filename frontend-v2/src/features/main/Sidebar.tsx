@@ -54,7 +54,7 @@ export default function Sidebar() {
   const selectedProject = useSelector(
     (state: RootState) => state.main.selectedProject,
   );
-  const { groupProtocols } = useDataset(selectedProject);
+  const { protocols: datasetProtocols } = useDataset(selectedProject);
   const dirtyCount = useSelector((state: RootState) => state.main.dirtyCount);
   const projectId = useSelector(
     (state: RootState) => state.main.selectedProject,
@@ -96,7 +96,7 @@ export default function Sidebar() {
     );
   };
 
-  const doses = groupProtocols?.map(protocols => protocols.flatMap(p => p?.doses));
+  const doses = datasetProtocols?.map(p => p?.doses);
   const groupsAreIncomplete = doses?.some(dosing => dosing.length === 0);
 
   const errors: { [key: string]: string } = {};
