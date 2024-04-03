@@ -101,9 +101,7 @@ const LoadData: FC<ILoadDataProps> = ({state, firstTime}) => {
           </Alert>
         ))}
         {showData && 
-          <Alert severity="error">
-            <SetUnits state={state} firstTime={firstTime} />
-          </Alert>
+          <SetUnits state={state} firstTime={firstTime} />
         } 
       </Box>
       <Box component="div" sx={{ maxHeight: "40vh", overflow: 'auto', overflowX: 'auto' }}>

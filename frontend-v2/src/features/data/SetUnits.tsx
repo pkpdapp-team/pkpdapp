@@ -1,4 +1,5 @@
 import {
+  Alert,
   FormControl,
   InputLabel,
   MenuItem,
@@ -47,7 +48,7 @@ const SetUnits: React.FC<IMapObservations> = ({state, firstTime}: IMapObservatio
   return (
     <div>
       {noTimeUnit && (
-        <>
+        <Alert severity="error">
           <Stack direction='row' spacing='1rem'>
             <Typography>Please select a unit for all time values.</Typography>
             <FormControl sx={{ minWidth: '10rem' }}>
@@ -63,7 +64,7 @@ const SetUnits: React.FC<IMapObservations> = ({state, firstTime}: IMapObservatio
               </Select>
             </FormControl>
           </Stack>
-        </>
+        </Alert>
       )}
     </div>
 
