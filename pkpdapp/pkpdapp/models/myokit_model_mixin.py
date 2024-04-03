@@ -5,7 +5,7 @@
 #
 
 import pkpdapp
-from pkpdapp.models import SubjectGroup, Protocol
+from pkpdapp.models import SubjectGroup
 import numpy as np
 from myokit.formats.mathml import MathMLExpressionWriter
 from myokit.formats.sbml import SBMLParser
@@ -505,14 +505,8 @@ class MyokitModelMixin:
         sims = [project_sim]
         if project is not None:
             for group in get_subject_groups(project):
-                # find unique protocols for this subject cohort
                 dosing_protocols = {}
-                subject_protocols = [
-                    Protocol.objects.get(pk=p['protocol'])
-                    for p in group.subjects.values('protocol').distinct()
-                    if p['protocol'] is not None
-                ]
-                for protocol in subject_protocols:
+                for protocol in group.protocols.all():
                     dosing_protocols[protocol.mapped_qname] = protocol
                 sim = self.simulate_model(
                     outputs=outputs,

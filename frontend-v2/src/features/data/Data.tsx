@@ -19,7 +19,7 @@ const Data:FC = () => {
     { compoundId: project?.compound || 0 },
     { skip: !project?.compound },
   );
-  const { dataset, subjectBiomarkers } = useDataset(projectIdOrZero);
+  const { dataset, protocols, subjectBiomarkers } = useDataset(projectIdOrZero);
   const [isLoading, setIsLoading] = useState(false);
 
   function handleNewUpload() {
@@ -34,7 +34,6 @@ const Data:FC = () => {
     setIsLoading(false);
   }
 
-  const protocols = dataset?.protocols || [];
   const dosingRows = protocols.flatMap(protocol => {
     const amountUnit = units?.find(unit => unit.id === protocol.amount_unit)?.symbol || '';
     const timeUnit = units?.find(unit => unit.id === protocol.time_unit)?.symbol || '';

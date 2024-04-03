@@ -12,8 +12,7 @@ import {
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
 import {
-  Simulate,
-  SimulateResponse,
+  ProtocolRead,
   Simulation,
   SimulationPlotRead,
   SimulationRead,
@@ -36,6 +35,7 @@ import { useFieldArray, useForm } from "react-hook-form";
 import { FC, useCallback, useEffect, useMemo, useState, useRef } from "react";
 import SimulationPlotView from "./SimulationPlotView";
 import SimulationSliderView from "./SimulationSliderView";
+import useSimulation, { getSimulateInput, getVariablesSimulated } from "./useSimulation";
 import DropdownButton from "../../components/DropdownButton";
 import SettingsIcon from "@mui/icons-material/Settings";
 import FloatField from "../../components/FloatField";
@@ -53,59 +53,7 @@ interface ErrorObject {
   error: string;
 }
 
-const getSimulateInput = (
-  simulation: Simulation,
-  sliderValues: SliderValues,
-  variables?: VariableRead[],
-  timeMax?: number,
-  allOutputs: boolean = false,
-): Simulate => {
-  const outputs: string[] = [];
-  const simulateVariables: { [key: string]: number } = {};
-  for (const slider of simulation?.sliders || []) {
-    if (sliderValues[slider.variable]) {
-      const variable = variables?.find((v) => v.id === slider.variable);
-      if (variable) {
-        simulateVariables[variable.qname] = sliderValues[slider.variable];
-      }
-    }
-  }
-  if (allOutputs) {
-    for (const v of variables || []) {
-      if (!v.constant) {
-        outputs.push(v.qname);
-      }
-    }
-  } else {
-    for (const plot of simulation?.plots || []) {
-      for (const y_axis of plot.y_axes) {
-        const variable = variables?.find((v) => v.id === y_axis.variable);
-        if (variable && !outputs.includes(variable.qname)) {
-          outputs.push(variable.qname);
-        }
-      }
-    }
-  }
-  // add time as an output
-  const timeVariable = variables?.find(
-    (v) => v.name === "time" || v.name === "t",
-  );
-  outputs.push(timeVariable?.qname || "time");
-
-  // for some reason we need to ask for concentration or myokit produces a kink in the output
-  const alwaysAsk = ["PKCompartment.C1"];
-  for (const v of alwaysAsk) {
-    const variable = variables?.find((vv) => vv.qname === v);
-    if (variable && !outputs.includes(variable.qname)) {
-      outputs.push(variable.qname);
-    }
-  }
-  return {
-    variables: simulateVariables,
-    outputs,
-    time_max: timeMax || undefined,
-  };
-};
+const DEFAULT_PROTOCOLS: ProtocolRead[] = [];
 
 const getSliderInitialValues = (
   simulation?: SimulationRead,
@@ -126,26 +74,11 @@ const getSliderInitialValues = (
   return initialValues;
 };
 
-const getVariablesSimulated = (
-  variables?: VariableRead[],
-  sliderValues?: SliderValues,
-) => {
-  const constantVariables = variables?.filter((v) => v.constant) || [];
-  const merged = constantVariables.map((v: VariableRead) => {
-    const result = { qname: v.qname, value: v.default_value };
-    if (sliderValues && sliderValues[v.id]) {
-      result.value = sliderValues[v.id];
-    }
-    return result;
-  });
-  return merged;
-};
-
 const Simulations: FC = () => {
   const projectId = useSelector(
     (state: RootState) => state.main.selectedProject,
   );
-  const { dataset } = useDataset(projectId);
+  const { dataset, protocols: datasetProtocols } = useDataset(projectId);
   const [visibleGroups, setVisibleGroups] =
     useState<string[]>(dataset?.groups.map(group => group.name) || []);
   const projectIdOrZero = projectId || 0;
@@ -156,7 +89,7 @@ const Simulations: FC = () => {
       { projectId: projectIdOrZero },
       { skip: !projectId },
     );
-  const { data: protocols } = useProtocolListQuery(
+  const { data: projectProtocols } = useProtocolListQuery(
     { projectId: projectIdOrZero },
     { skip: !projectId },
   );
@@ -187,7 +120,6 @@ const Simulations: FC = () => {
       ? (simulateErrorBase.data as ErrorObject)
       : { error: "Unknown error" }
     : undefined;
-  const [data, setData] = useState<SimulateResponse[] | null>(null);
   const { data: compound, isLoading: isLoadingCompound } =
     useCompoundRetrieveQuery(
       { id: project?.compound || 0 },
@@ -200,9 +132,7 @@ const Simulations: FC = () => {
   >(undefined);
   const handleChangeSlider = useCallback((variable: number, value: number) => {
     setSliderValues(prevSliderValues => ({ ...prevSliderValues, [variable]: value }));
-    setLoadingSimulate(true);
   }, []);
-  const [loadingSimulate, setLoadingSimulate] = useState<boolean>(false);
 
   const isSharedWithMe = useSelector((state: RootState) => selectIsProjectShared(state, project));
 
@@ -216,6 +146,36 @@ const Simulations: FC = () => {
     project: projectIdOrZero,
     time_max_unit: model?.time_unit || 0,
   };
+
+  // generate a simulation if slider values change
+  const getTimeMax = (sim: SimulationRead): number => {
+    const timeMaxUnit = units?.find((u) => u.id === sim.time_max_unit);
+    const compatibleTimeUnit = timeMaxUnit?.compatible_units?.find(
+      (u) => parseInt(u.id) === model?.time_unit,
+    );
+    const timeMaxConversionFactor = compatibleTimeUnit
+      ? parseFloat(compatibleTimeUnit.conversion_factor)
+      : 1.0;
+    const timeMax = (sim?.time_max || 0) * timeMaxConversionFactor;
+    return timeMax;
+  };
+  const timeMax = simulation?.id && getTimeMax(simulation);
+  const protocols = useMemo(() => {
+    if (projectProtocols && datasetProtocols) {
+      return [...projectProtocols, ...datasetProtocols];
+    }
+    return DEFAULT_PROTOCOLS;
+  }, [projectProtocols, datasetProtocols])
+  const { loadingSimulate, data } = useSimulation(
+    simulation,
+    sliderValues,
+    model,
+    protocols,
+    variables,
+    compound,
+    timeMax,
+    dataset,
+  );
 
   const {
     reset,
@@ -274,58 +234,6 @@ const Simulations: FC = () => {
       reset(simulation);
     }
   }, [simulation, reset, variables]);
-
-  const getTimeMax = (sim: SimulationRead): number => {
-    const timeMaxUnit = units?.find((u) => u.id === sim.time_max_unit);
-    const compatibleTimeUnit = timeMaxUnit?.compatible_units?.find(
-      (u) => parseInt(u.id) === model?.time_unit,
-    );
-    const timeMaxConversionFactor = compatibleTimeUnit
-      ? parseFloat(compatibleTimeUnit.conversion_factor)
-      : 1.0;
-    const timeMax = (sim?.time_max || 0) * timeMaxConversionFactor;
-    return timeMax;
-  };
-  const timeMax = simulation?.id && getTimeMax(simulation);
-
-  // generate a simulation if slider values change
-  useEffect(() => {
-    if (
-      simulation?.id &&
-      sliderValues &&
-      variables &&
-      model &&
-      protocols &&
-      compound
-    ) {
-      console.log("Simulating with params", getVariablesSimulated(variables, sliderValues));
-      simulate({
-        id: model.id,
-        simulate: getSimulateInput(
-          simulation,
-          sliderValues,
-          variables,
-          timeMax,
-        ),
-      }).then((response) => {
-        setLoadingSimulate(false);
-        if ("data" in response) {
-          const responseData = response.data as SimulateResponse[];
-          setData(responseData);
-        }
-      });
-    }
-  }, [
-    simulation,
-    simulate,
-    sliderValues,
-    model,
-    protocols,
-    variables,
-    compound,
-    timeMax,
-    dataset,
-  ]);
 
   const exportSimulation = () => {
     if (
@@ -611,7 +519,7 @@ const Simulations: FC = () => {
         <Grid container spacing={1}>
           {plots.map((plot, index) => (
             <Grid item xl={layout === "vertical" ? 12 : 6} md={layout === "vertical" ? 12 : 6} xs={layout === "vertical" ? 12 : 12} key={index}>
-              {data && model ? (
+              {data?.length && model ? (
                 <SimulationPlotView
                   index={index}
                   plot={plot}

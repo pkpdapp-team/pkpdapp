@@ -12,6 +12,7 @@ import {
   Tabs,
   Tab
 } from "@mui/material";
+import ErrorIcon from "@mui/icons-material/Error";
 import {
   useUnitListQuery,
   useProjectRetrieveQuery,
@@ -19,7 +20,6 @@ import {
 } from "../../app/backendApi";
 import { RootState } from "../../app/store";
 import Doses from "./Doses";
-import DatasetDoses from "./DatasetDoses";
 import HelpButton from "../../components/HelpButton";
 import { defaultHeaderSx } from "../../shared/tableHeadersSx";
 import useDataset from "../../hooks/useDataset";
@@ -33,12 +33,13 @@ const Protocols: FC = () => {
     (state: RootState) => state.main.selectedProject,
   );
   const selectedProjectOrZero = selectedProject || 0;
+  const { dataset, protocols: datasetProtocols } = useDataset(selectedProject);
   const { data: project, isLoading: isProjectLoading } =
     useProjectRetrieveQuery(
       { id: selectedProjectOrZero },
       { skip: !selectedProject },
     );
-  const { data: protocols, isLoading: isProtocolsLoading } =
+  const { data: projectProtocols, isLoading: isProtocolsLoading } =
     useProtocolListQuery(
       { projectId: selectedProjectOrZero },
       { skip: !selectedProject },
@@ -47,8 +48,6 @@ const Protocols: FC = () => {
     { compoundId: project?.compound || 0 },
     { skip: !project?.compound },
   );
-  
-  const { dataset } = useDataset(selectedProject);
 
   const loading = [isProjectLoading, isProtocolsLoading, unitsLoading].some(
     (x) => x,
@@ -57,11 +56,11 @@ const Protocols: FC = () => {
     return <div>Loading...</div>;
   }
 
-  if (!project || !protocols || !units) {
+  if (!project || !projectProtocols || !units) {
     return <div>Project not found</div>;
   }
 
-  const filteredProtocols = protocols?.filter(
+  const filteredProtocols = projectProtocols?.filter(
     (protocol) => protocol.variables.length > 0,
   );
 
@@ -81,8 +80,10 @@ const Protocols: FC = () => {
     };
   }
 
-  const selectedProtocols = tab === 0 ? filteredProtocols : dataset?.groups[tab-1]?.protocols;
-  const DosesComponent = tab === 0 ? Doses : DatasetDoses;
+  const subjectGroup = tab === 0 ? null : dataset?.groups[tab-1];
+  const selectedProtocols = tab === 0
+    ? filteredProtocols
+    : datasetProtocols?.filter(p => p.group === subjectGroup?.id);
   return (
     <>
       <Tabs value={tab} onChange={handleTabChange}>
@@ -90,13 +91,19 @@ const Protocols: FC = () => {
           label={'Project'}
           {...a11yProps(0)}
         />
-        {dataset?.groups.map((group, index) => (
-          <Tab
-            key={group.id}
-            label={group.name}
-            {...a11yProps(index+1)}
-          />
-        ))}
+        {dataset?.groups.map((group, index) => {
+          const groupProtocols = datasetProtocols?.filter(p => p.group === group.id);
+          const selectedDoses = groupProtocols?.flatMap(p => p?.doses) || [];
+          return (
+            <Tab
+              key={group.id}
+              label={group.name}
+              {...a11yProps(index+1)}
+              icon={selectedDoses.length === 0 ? <ErrorIcon color="error" /> : undefined}
+              iconPosition="end"
+            />
+          )
+        })}
     </Tabs>
     <Box role="tabpanel" id={`group-tabpanel`}>
       <TableContainer sx={{ width: '90%' }}>
@@ -169,14 +176,14 @@ const Protocols: FC = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {protocols?.length === 0 && (
+            {projectProtocols?.length === 0 && (
               <TableRow>
                 <TableCell colSpan={5}>No protocols found</TableCell>
               </TableRow>
             )}
             {selectedProtocols?.map((protocol) => {
               return protocol ? (
-                <DosesComponent
+                <Doses
                   key={protocol.id}
                   project={project}
                   protocol={protocol}
