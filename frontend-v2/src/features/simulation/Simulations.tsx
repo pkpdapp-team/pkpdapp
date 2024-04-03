@@ -12,7 +12,7 @@ import {
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
 import {
-  Simulate,
+  ProtocolRead,
   Simulation,
   SimulationPlotRead,
   SimulationRead,
@@ -53,6 +53,8 @@ interface ErrorObject {
   error: string;
 }
 
+const DEFAULT_PROTOCOLS: ProtocolRead[] = [];
+
 const getSliderInitialValues = (
   simulation?: SimulationRead,
   existingSliderValues?: SliderValues,
@@ -76,7 +78,7 @@ const Simulations: FC = () => {
   const projectId = useSelector(
     (state: RootState) => state.main.selectedProject,
   );
-  const { dataset } = useDataset(projectId);
+  const { dataset, protocols: datasetProtocols } = useDataset(projectId);
   const [visibleGroups, setVisibleGroups] =
     useState<string[]>(dataset?.groups.map(group => group.name) || []);
   const projectIdOrZero = projectId || 0;
@@ -87,7 +89,7 @@ const Simulations: FC = () => {
       { projectId: projectIdOrZero },
       { skip: !projectId },
     );
-  const { data: protocols } = useProtocolListQuery(
+  const { data: projectProtocols } = useProtocolListQuery(
     { projectId: projectIdOrZero },
     { skip: !projectId },
   );
@@ -158,6 +160,12 @@ const Simulations: FC = () => {
     return timeMax;
   };
   const timeMax = simulation?.id && getTimeMax(simulation);
+  const protocols = useMemo(() => {
+    if (projectProtocols && datasetProtocols) {
+      return [...projectProtocols, ...datasetProtocols];
+    }
+    return DEFAULT_PROTOCOLS;
+  }, [projectProtocols, datasetProtocols])
   const { loadingSimulate, data } = useSimulation(
     simulation,
     sliderValues,
