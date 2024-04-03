@@ -13,6 +13,9 @@ import {
 } from "../../app/backendApi";
 
 type SliderValues = { [key: number]: number };
+interface ErrorObject {
+  error: string;
+}
 
 export const getSimulateInput = (
   simulation: SimulationRead,
@@ -97,6 +100,11 @@ export default function useSimulation(
   const [data, setData] = useState<SimulateResponse[]>([]);
   const [simulate, { error: simulateErrorBase }] =
     useCombinedModelSimulateCreateMutation();
+  const simulateError: ErrorObject | undefined = simulateErrorBase
+    ? "data" in simulateErrorBase
+      ? (simulateErrorBase.data as ErrorObject)
+      : { error: "Unknown error" }
+    : undefined;
 
   useEffect(() => {
     if (
@@ -140,5 +148,6 @@ export default function useSimulation(
   return {
     loadingSimulate,
     data,
+    error: simulateError
   };
 }

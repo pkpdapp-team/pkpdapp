@@ -2184,6 +2184,11 @@ paths:
       operationId: protocol_list
       parameters:
       - in: query
+        name: dataset_id
+        schema:
+          type: integer
+        description: Filter results by dataset ID
+      - in: query
         name: project_id
         schema:
           type: integer
@@ -4388,9 +4393,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Dose'
-        dataset:
-          type: string
-          readOnly: true
         variables:
           type: array
           items:
@@ -4420,6 +4422,10 @@ components:
           nullable: true
           description: qname of the mapped dosing compartment for each dose
           maxLength: 50
+        dataset:
+          type: integer
+          nullable: true
+          description: Dataset that uses this protocol.
         project:
           type: integer
           nullable: true
@@ -4921,9 +4927,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Dose'
-        dataset:
-          type: string
-          readOnly: true
         variables:
           type: array
           items:
@@ -4953,6 +4956,10 @@ components:
           nullable: true
           description: qname of the mapped dosing compartment for each dose
           maxLength: 50
+        dataset:
+          type: integer
+          nullable: true
+          description: Dataset that uses this protocol.
         project:
           type: integer
           nullable: true
@@ -4973,9 +4980,8 @@ components:
         group:
           type: integer
           nullable: true
-          description: Group that "owns" this protocol
+          description: Group that uses this protocol
       required:
-      - dataset
       - doses
       - id
       - name

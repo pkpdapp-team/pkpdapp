@@ -713,7 +713,10 @@ const injectedRtkApi = api.injectEndpoints({
     protocolList: build.query<ProtocolListApiResponse, ProtocolListApiArg>({
       query: (queryArg) => ({
         url: `/api/protocol/`,
-        params: { project_id: queryArg.projectId },
+        params: {
+          dataset_id: queryArg.datasetId,
+          project_id: queryArg.projectId,
+        },
       }),
     }),
     protocolCreate: build.mutation<
@@ -1463,6 +1466,8 @@ export type ProjectAccessDestroyApiArg = {
 };
 export type ProtocolListApiResponse = /** status 200  */ ProtocolRead[];
 export type ProtocolListApiArg = {
+  /** Filter results by dataset ID */
+  datasetId?: number;
   /** Filter results by project ID */
   projectId?: number;
 };
@@ -2005,6 +2010,7 @@ export type Protocol = {
   name: string;
   dose_type?: DoseTypeEnum;
   mapped_qname?: string | null;
+  dataset?: number | null;
   project?: number | null;
   compound?: number | null;
   time_unit?: number | null;
@@ -2014,7 +2020,6 @@ export type Protocol = {
 export type ProtocolRead = {
   id: number;
   doses: DoseRead[];
-  dataset: string;
   variables: number[];
   subjects: number[];
   read_only?: boolean;
@@ -2022,6 +2027,7 @@ export type ProtocolRead = {
   name: string;
   dose_type?: DoseTypeEnum;
   mapped_qname?: string | null;
+  dataset?: number | null;
   project?: number | null;
   compound?: number | null;
   time_unit?: number | null;
@@ -2399,6 +2405,7 @@ export type PatchedProtocol = {
   name?: string;
   dose_type?: DoseTypeEnum;
   mapped_qname?: string | null;
+  dataset?: number | null;
   project?: number | null;
   compound?: number | null;
   time_unit?: number | null;
@@ -2408,7 +2415,6 @@ export type PatchedProtocol = {
 export type PatchedProtocolRead = {
   id?: number;
   doses?: DoseRead[];
-  dataset?: string;
   variables?: number[];
   subjects?: number[];
   read_only?: boolean;
@@ -2416,6 +2422,7 @@ export type PatchedProtocolRead = {
   name?: string;
   dose_type?: DoseTypeEnum;
   mapped_qname?: string | null;
+  dataset?: number | null;
   project?: number | null;
   compound?: number | null;
   time_unit?: number | null;

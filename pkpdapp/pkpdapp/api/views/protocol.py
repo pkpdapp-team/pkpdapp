@@ -9,6 +9,7 @@ from drf_spectacular.utils import extend_schema, OpenApiParameter
 from drf_spectacular.types import OpenApiTypes
 from pkpdapp.api.serializers import ProtocolSerializer
 from pkpdapp.api.views import (
+    DatasetFilter,
     ProjectFilter,
     CheckAccessToProject
 )
@@ -18,7 +19,7 @@ from pkpdapp.models import Protocol
 class ProtocolView(viewsets.ModelViewSet):
     queryset = Protocol.objects.all()
     serializer_class = ProtocolSerializer
-    filter_backends = [ProjectFilter]
+    filter_backends = [DatasetFilter, ProjectFilter]
     permission_classes = [
         IsAuthenticated & CheckAccessToProject
     ]
@@ -28,6 +29,13 @@ class ProtocolView(viewsets.ModelViewSet):
             OpenApiParameter(
                 name='project_id',
                 description='Filter results by project ID',
+                required=False,
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY
+            ),
+            OpenApiParameter(
+                name='dataset_id',
+                description='Filter results by dataset ID',
                 required=False,
                 type=OpenApiTypes.INT,
                 location=OpenApiParameter.QUERY

@@ -36,6 +36,12 @@ class Protocol(StoredModel):
     name = models.CharField(
         max_length=100, help_text='name of the protocol'
     )
+    dataset = models.ForeignKey(
+        'Dataset', on_delete=models.CASCADE,
+        related_name='protocols',
+        blank=True, null=True,
+        help_text='Dataset that uses this protocol.'
+    )
     project = models.ForeignKey(
         Project, on_delete=models.CASCADE,
         related_name='protocols',
@@ -111,12 +117,6 @@ class Protocol(StoredModel):
 
     def __str__(self):
         return str(self.name)
-
-    def get_dataset(self):
-        all_datasets = self.subjects.values('dataset').distinct()
-        if all_datasets:
-            return all_datasets[0]['dataset']
-        return None
 
     def is_same_as(self, protocol):
         if self.project != protocol.project:

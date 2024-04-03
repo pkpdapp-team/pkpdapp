@@ -1,15 +1,12 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   DatasetRead,
-  ProtocolRead,
   useDatasetListQuery,
   useDatasetCreateMutation,
   useProjectRetrieveQuery,
   useProtocolListQuery,
   useUnitListQuery
 } from '../app/backendApi';
-
-const DEFAULT_PROTOCOLS: ProtocolRead[] = [];
 
 // assume only one dataset per project for the time being.
 let appDataset: DatasetRead | null = null;
@@ -28,19 +25,9 @@ export default function useDataset(selectedProject: number | null) {
     { projectId: selectedProjectOrZero },
     { skip: !selectedProject },
   );
-  const { data: protocols } =
-    useProtocolListQuery(
-      {},
-      { skip: !selectedProject },
-    );
-  const datasetProtocols = useMemo(
-    () => {
-      if ( dataset && protocols?.length) {
-        return protocols.filter(p => parseInt(p.dataset) === dataset?.id);
-      }
-      return DEFAULT_PROTOCOLS;
-    },
-    [protocols, dataset]
+  const { data: datasetProtocols } = useProtocolListQuery(
+    { datasetId: dataset?.id},
+    { skip: !dataset?.id },
   );
   const [
     createDataset

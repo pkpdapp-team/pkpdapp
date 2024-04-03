@@ -12,7 +12,8 @@ from .filters import (
     DosedPkModelFilter,
     PdModelFilter,
     ProjectFilter,
-    InferenceFilter
+    InferenceFilter,
+    DatasetFilter
 )
 from .permissions import (
     NotADatasetDose,

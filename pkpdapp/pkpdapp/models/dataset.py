@@ -52,6 +52,7 @@ class Dataset(models.Model):
         # remove existing dataset
         BiomarkerType.objects.filter(dataset=self).delete()
         Subject.objects.filter(dataset=self).delete()
+        Protocol.objects.filter(dataset=self).delete()
 
         data_without_dose = data.query('OBSERVATION != "."')
 
@@ -132,7 +133,8 @@ class Dataset(models.Model):
                     amount_unit=amount_unit,
                     dose_type=route,
                     mapped_qname=mapped_qname,
-                    group=subject.group
+                    group=subject.group,
+                    dataset=self
                 )
                 subject.save()
 
