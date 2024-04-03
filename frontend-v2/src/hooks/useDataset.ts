@@ -25,7 +25,7 @@ export default function useDataset(selectedProject: number | null) {
     { projectId: selectedProjectOrZero },
     { skip: !selectedProject },
   );
-  const { data: datasetProtocols } = useProtocolListQuery(
+  const { data: datasetProtocols, refetch: refetchProtocols } = useProtocolListQuery(
     { datasetId: dataset?.id},
     { skip: !dataset?.id },
   );
@@ -36,6 +36,12 @@ export default function useDataset(selectedProject: number | null) {
   if (dataset !== appDataset) {
     setDataset(appDataset);
   }
+
+  useEffect(() => {
+    if (appDataset?.id) {
+      refetchProtocols();
+    }
+  }, [appDataset, refetchProtocols]);
 
   useEffect(function onDataLoad() {
     async function addDataset() {
