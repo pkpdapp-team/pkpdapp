@@ -43,7 +43,7 @@ class Subject(models.Model):
         help_text='subject metadata',
     )
     group = models.ForeignKey(
-        'SubjectGroup', on_delete=models.SET_NULL,
+        'SubjectGroup', on_delete=models.CASCADE,
         related_name='subjects',
         blank=True, null=True,
         help_text='subject group containing this subject.'

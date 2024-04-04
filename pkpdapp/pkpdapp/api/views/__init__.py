@@ -46,6 +46,7 @@ from .simulate import (
     SimulatePdView,
 )
 from .subject import SubjectView
+from .subject_group import SubjectGroupView
 from .unit import UnitView
 from .user import UserView
 from .variable import VariableView

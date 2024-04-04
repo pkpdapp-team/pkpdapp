@@ -22,12 +22,13 @@ import { RootState } from "../../app/store";
 import { selectIsProjectShared } from "../login/loginSlice";
 
 interface Props {
+  onChange: () => void;
   project: ProjectRead;
   protocol: ProtocolRead;
   units: UnitRead[];
 }
 
-const Doses: FC<Props> = ({ project, protocol, units }) => {
+const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
   const { data: compound } =
     useCompoundRetrieveQuery(
       { id: project?.compound || 0 },
@@ -64,11 +65,12 @@ const Doses: FC<Props> = ({ project, protocol, units }) => {
     reset(protocol);
   }, [protocol, reset]);
 
-  const handleSave = useMemo(() => handleSubmit((data: Protocol) => {
+  const handleSave = useMemo(() => handleSubmit(async (data: Protocol) => {
     if (JSON.stringify(data) !== JSON.stringify(protocol)) {
-      updateProtocol({ id: protocol.id, protocol: data });
+      await updateProtocol({ id: protocol.id, protocol: data });
+      onChange();
     }
-  }), [handleSubmit, protocol, updateProtocol]);
+  }), [handleSubmit, onChange, protocol, updateProtocol]);
 
   // save protocol every second if dirty
   useInterval({

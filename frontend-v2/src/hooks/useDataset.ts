@@ -4,7 +4,7 @@ import {
   useDatasetListQuery,
   useDatasetCreateMutation,
   useProjectRetrieveQuery,
-  useProtocolListQuery,
+  useSubjectGroupListQuery,
   useUnitListQuery
 } from '../app/backendApi';
 
@@ -25,10 +25,11 @@ export default function useDataset(selectedProject: number | null) {
     { projectId: selectedProjectOrZero },
     { skip: !selectedProject },
   );
-  const { data: datasetProtocols, refetch: refetchProtocols } = useProtocolListQuery(
-    { datasetId: dataset?.id},
-    { skip: !dataset?.id },
+  const { data: subjectGroups, refetch: refetchSubjectGroups } = useSubjectGroupListQuery(
+    { datasetId: dataset?.id || 0 },
+    { skip: !dataset }
   );
+
   const [
     createDataset
   ] = useDatasetCreateMutation();
@@ -38,10 +39,10 @@ export default function useDataset(selectedProject: number | null) {
   }
 
   useEffect(() => {
-    if (appDataset?.id) {
-      refetchProtocols();
+    if (dataset?.id) {
+      refetchSubjectGroups();
     }
-  }, [appDataset, refetchProtocols]);
+  }, [dataset, refetchSubjectGroups]);
 
   useEffect(function onDataLoad() {
     async function addDataset() {
@@ -93,7 +94,7 @@ export default function useDataset(selectedProject: number | null) {
 
   return {
     dataset,
-    protocols: datasetProtocols || [],
+    groups: subjectGroups || [],
     subjectBiomarkers,
     updateDataset
   };

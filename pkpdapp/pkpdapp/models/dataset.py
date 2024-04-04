@@ -53,6 +53,7 @@ class Dataset(models.Model):
         BiomarkerType.objects.filter(dataset=self).delete()
         Subject.objects.filter(dataset=self).delete()
         Protocol.objects.filter(dataset=self).delete()
+        SubjectGroup.objects.filter(dataset=self).delete()
 
         data_without_dose = data.query('OBSERVATION != "."')
 
@@ -101,7 +102,8 @@ class Dataset(models.Model):
             group_id = row['GROUP_ID']
             group_name = f'Group {group_id}'
             group = SubjectGroup.objects.create(
-                name=group_name
+                name=group_name,
+                dataset=self
             )
             for i, row in data[
                 data['GROUP_ID'] == group_id
