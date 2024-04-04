@@ -13,20 +13,18 @@ import {
 import {
   Variable,
   useVariableUpdateMutation,
-  useProtocolCreateMutation,
-  useProtocolDestroyMutation,
   CombinedModelRead,
   CompoundRead,
   ProjectRead,
   UnitRead,
   VariableRead,
-  DoseRead,
 } from "../../app/backendApi";
 import useDirty from "../../hooks/useDirty";
 import { FormData } from "./Model";
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
 import { selectIsProjectShared } from "../login/loginSlice";
+import useEditProtocol from "./useEditProtocol";
 
 interface Props {
   project: ProjectRead;
@@ -89,23 +87,40 @@ const VariableRow: FC<Props> = ({
     formState: { isDirty: isDirtyForm },
     watch,
   } = useForm<Variable>({ defaultValues: variable || { id: 0, name: "" } });
+  const watchProtocolId = watch("protocol");
+  const isDirty = watchProtocolId !== variable?.protocol || isDirtyForm;
+  useDirty(isDirty);
   const [updateVariable] = useVariableUpdateMutation();
-  const [createProtocol] = useProtocolCreateMutation();
-  const [destroyProtocol] = useProtocolDestroyMutation();
+  const { addProtocol, removeProtocol, hasProtocol } = useEditProtocol({
+    compound,
+    project,
+    units,
+    timeVariable,
+    variable,
+    watchProtocolId,
+  });
+  async function onAddProtocol() {
+    const value = await addProtocol();
+    if ("data" in value) {
+      setValue("protocol", value.data.id);
+      updateVariable({
+        id: variable.id,
+        variable: { ...variable, protocol: value.data.id },
+      });
+    }
+  }
+  async function onRemoveProtocol() {
+    const value = await removeProtocol();
+    if (value && "data" in value) {
+      setValue("protocol", null);
+    }
+  }
 
   const isSharedWithMe = useSelector((state: RootState) => selectIsProjectShared(state, project));
-
-  const defaultTimeUnit = timeVariable
-    ? units?.find((u) => u.id === timeVariable.unit)
-    : units?.find((unit) => unit.symbol === "h");
 
   useEffect(() => {
     reset(variable);
   }, [variable, reset]);
-
-  const watchProtocolId = watch("protocol");
-  const isDirty = watchProtocolId !== variable?.protocol || isDirtyForm;
-  useDirty(isDirty);
 
   useEffect(() => {
     const intervalId = setInterval(() => {
@@ -127,7 +142,6 @@ const VariableRow: FC<Props> = ({
   }, [handleSubmit, isDirty, updateVariable, variable.id]);
 
   const isPD = variable.qname.startsWith("PD");
-  const hasProtocol: boolean = watchProtocolId != null;
   const linkToPD = isPD
     ? false
     : mappings.find((mapping) => mapping.pk_variable === variable.id) !==
@@ -188,48 +202,6 @@ const VariableRow: FC<Props> = ({
     amountUnit?.compatible_units.find(
       (unit) => parseInt(unit.id) === variable.unit,
     ) !== undefined;
-
-  const addProtocol = () => {
-    const isPerKg = variableUnit?.g !== 0;
-    const doseAmountUnitSymbol = isPerKg ? "mg/kg" : "mg";
-    const doseAmountUnit = units.find(
-      (unit) => unit.symbol === doseAmountUnitSymbol,
-    );
-    const isSmallMolecule = compound.compound_type === "SM";
-    const defaultDose: DoseRead = {
-      id: 0,
-      amount: 1,
-      start_time: 0,
-      repeat_interval: isSmallMolecule ? 24 : 168,
-      repeats: 1,
-      duration: 0.0833,
-    };
-    createProtocol({
-      protocol: {
-        doses: [defaultDose],
-        amount_unit: doseAmountUnit?.id || variable.unit,
-        time_unit: defaultTimeUnit?.id || undefined,
-        name: variable.name,
-        project: project.id,
-      },
-    }).then((value) => {
-      if ("data" in value) {
-        setValue("protocol", value.data.id);
-        updateVariable({
-          id: variable.id,
-          variable: { ...variable, protocol: value.data.id },
-        });
-      }
-    });
-  };
-
-  const removeProtocol = () => {
-    if (hasProtocol && watchProtocolId) {
-      destroyProtocol({ id: watchProtocolId }).then(
-        (value) => "data" in value && setValue("protocol", null),
-      );
-    }
-  };
 
   const addPDMapping = () => {
     if (effectVariable) {
@@ -315,7 +287,7 @@ const VariableRow: FC<Props> = ({
                   },
                 }}
                 checked={hasProtocol}
-                onClick={() => (hasProtocol ? removeProtocol() : addProtocol())}
+                onClick={hasProtocol ? onRemoveProtocol : onAddProtocol}
                 data-cy={`checkbox-dosing-${variable.name}`}
                 disabled={isSharedWithMe}
               />
