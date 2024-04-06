@@ -38,7 +38,8 @@ const Stratification: FC<IStratification> = ({ state, firstTime }: IStratificati
   const [tab, setTab] = useState(0);
 
   const primaryCohortIndex = catCovariates.indexOf(primaryCohort);
-  const groups = uniqueCovariateValues[primaryCohortIndex].map((value, index) => {
+  const groupColumnValues = uniqueCovariateValues[primaryCohortIndex] || [];
+  const groups = groupColumnValues.map((value, index) => {
     return {
       name: `Group ${index + 1}`,
       subjects: state.data.filter(row => row[primaryCohort] === value).map(row => idField ? row[idField] : ''),
@@ -149,7 +150,10 @@ const Stratification: FC<IStratification> = ({ state, firstTime }: IStratificati
         ))}
       </Tabs>
       <Box role='tabpanel' id='protocol-tabpanel'>
-        <ProtocolDataGrid group={groups[tab]}  state={state} />
+        {groups[tab]
+          ? <ProtocolDataGrid group={groups[tab]}  state={state} />
+          : <Typography>This dataset has no subject group column.</Typography>
+        }
       </Box>
     </>
   );
