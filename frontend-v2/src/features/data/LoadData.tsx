@@ -52,6 +52,13 @@ const validateNormalisedFields = (fields: Field[]) => {
 const LoadData: FC<ILoadDataProps> = ({state, firstTime}) => {
   const [errors, setErrors] = useState<string[]>(firstTime ? [] : validateNormalisedFields(state.normalisedFields));
   const [showData, setShowData] = useState<boolean>(state.data.length > 0 && state.fields.length > 0);
+  // Add ID field if it doesn't exist. Assume just one subject for now.
+  if (!state.normalisedFields.includes('ID')) {
+    state.setNormalisedFields([...state.normalisedFields, 'ID']);
+    state.setFields([...state.fields, 'ID']);
+    const newData = state.data.map(row => ({...row, ID: '1'}));
+    state.setData(newData);
+  }
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     acceptedFiles.forEach((file) => {
