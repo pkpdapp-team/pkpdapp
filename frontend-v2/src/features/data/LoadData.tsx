@@ -52,11 +52,23 @@ const validateNormalisedFields = (fields: Field[]) => {
 const LoadData: FC<ILoadDataProps> = ({state, firstTime}) => {
   const [errors, setErrors] = useState<string[]>(firstTime ? [] : validateNormalisedFields(state.normalisedFields));
   const [showData, setShowData] = useState<boolean>(state.data.length > 0 && state.fields.length > 0);
-  // Add ID field if it doesn't exist. Assume just one subject for now.
+  // Add ID field if it doesn't exist. Assume ascending time values for each subject.
   if (!state.normalisedFields.includes('ID')) {
     state.setNormalisedFields([...state.normalisedFields, 'ID']);
     state.setFields([...state.fields, 'ID']);
-    const newData = state.data.map(row => ({...row, ID: '1'}));
+    let subjectCount = 1
+    const timeFieldIndex = state.normalisedFields.indexOf('Time');
+    const timeField = state.fields[timeFieldIndex];
+    const newData = state.data.map((row, index) => {
+      if (index > 0) {
+        const time = parseFloat(row[timeField]);
+        const prevTime = parseFloat(state.data[index - 1][timeField]);
+        if (time < prevTime) {
+          subjectCount++;
+        }
+      }
+      return {...row, ID: `${subjectCount}`};
+    });
     state.setData(newData);
   }
 
