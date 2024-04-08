@@ -48,7 +48,7 @@ export default function useDataset(selectedProject: number | null) {
       refetchSubjectGroups();
       refetchBiomarkerTypes();
     }
-  }, [dataset, refetchSubjectGroups]);
+  }, [dataset, refetchBiomarkerTypes, refetchSubjectGroups]);
 
   useEffect(function onDataLoad() {
     async function addDataset() {
