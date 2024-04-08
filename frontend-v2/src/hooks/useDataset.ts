@@ -5,7 +5,8 @@ import {
   useDatasetCreateMutation,
   useProjectRetrieveQuery,
   useSubjectGroupListQuery,
-  useUnitListQuery
+  useUnitListQuery,
+  useBiomarkerTypeListQuery
 } from '../app/backendApi';
 
 // assume only one dataset per project for the time being.
@@ -29,6 +30,10 @@ export default function useDataset(selectedProject: number | null) {
     { datasetId: dataset?.id || 0 },
     { skip: !dataset }
   );
+  const { data: biomarkerTypes, refetch: refetchBiomarkerTypes } = useBiomarkerTypeListQuery(
+    { datasetId: dataset?.id || 0 },
+    { skip: !dataset }
+  );
 
   const [
     createDataset
@@ -41,6 +46,7 @@ export default function useDataset(selectedProject: number | null) {
   useEffect(() => {
     if (dataset?.id) {
       refetchSubjectGroups();
+      refetchBiomarkerTypes();
     }
   }, [dataset, refetchSubjectGroups]);
 
@@ -71,8 +77,7 @@ export default function useDataset(selectedProject: number | null) {
     setDataset(appDataset);
   }, []);
 
-  const subjectBiomarkers = dataset?.biomarker_types
-    .filter(b => b.is_continuous)
+  const subjectBiomarkers = biomarkerTypes?.filter(b => b.is_continuous)
     .map(b => {
       const timeUnit = units?.find(u => u.id === b.display_time_unit);
       const unit = units?.find(u => u.id === b.display_unit);
@@ -95,7 +100,7 @@ export default function useDataset(selectedProject: number | null) {
   return {
     dataset,
     groups: subjectGroups || [],
-    subjectBiomarkers,
+    subjectBiomarkers: subjectBiomarkers || [],
     updateDataset
   };
 }

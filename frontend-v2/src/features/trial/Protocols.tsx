@@ -128,7 +128,7 @@ const Protocols: FC = () => {
   const selectedProtocols = tab === 0
     ? filteredProtocols
     : subjectGroup?.protocols;
-  console.log({ subjectGroups, subjectGroup, selectedProtocols, tab })
+
   return (
     <>
       <Tabs value={tab} onChange={handleTabChange}>

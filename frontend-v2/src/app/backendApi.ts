@@ -56,7 +56,10 @@ const injectedRtkApi = api.injectEndpoints({
       BiomarkerTypeListApiResponse,
       BiomarkerTypeListApiArg
     >({
-      query: () => ({ url: `/api/biomarker_type/` }),
+      query: (queryArg) => ({
+        url: `/api/biomarker_type/`,
+        params: { dataset_id: queryArg.datasetId },
+      }),
     }),
     biomarkerTypeCreate: build.mutation<
       BiomarkerTypeCreateApiResponse,
@@ -1105,7 +1108,10 @@ export type AuceCreateApiResponse = unknown;
 export type AuceCreateApiArg = void;
 export type BiomarkerTypeListApiResponse =
   /** status 200  */ BiomarkerTypeRead[];
-export type BiomarkerTypeListApiArg = void;
+export type BiomarkerTypeListApiArg = {
+  /** Filter results by dataset ID */
+  datasetId?: number;
+};
 export type BiomarkerTypeCreateApiResponse =
   /** status 201  */ BiomarkerTypeRead;
 export type BiomarkerTypeCreateApiArg = {

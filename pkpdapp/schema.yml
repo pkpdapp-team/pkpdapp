@@ -158,6 +158,12 @@ paths:
   /api/biomarker_type/:
     get:
       operationId: biomarker_type_list
+      parameters:
+      - in: query
+        name: dataset_id
+        schema:
+          type: integer
+        description: Filter results by dataset ID
       tags:
       - biomarker_type
       security:
