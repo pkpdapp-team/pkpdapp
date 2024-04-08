@@ -2140,11 +2140,10 @@ export type SubjectGroupRead = {
 };
 export type DatasetRead = {
   id: number;
-  biomarker_types: number[];
+  biomarker_types: BiomarkerTypeRead[];
   subjects: number[];
   groups: SubjectGroupRead[];
   protocols: ProtocolRead[];
-  biomarkers: BiomarkerTypeRead[];
   name: string;
   datetime?: string | null;
   description?: string;
@@ -2158,11 +2157,10 @@ export type PatchedDataset = {
 };
 export type PatchedDatasetRead = {
   id?: number;
-  biomarker_types?: number[];
+  biomarker_types?: BiomarkerTypeRead[];
   subjects?: number[];
   groups?: SubjectGroupRead[];
   protocols?: ProtocolRead[];
-  biomarkers?: BiomarkerTypeRead[];
   name?: string;
   datetime?: string | null;
   description?: string;

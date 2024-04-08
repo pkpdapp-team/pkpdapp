@@ -71,7 +71,7 @@ export default function useDataset(selectedProject: number | null) {
     setDataset(appDataset);
   }, []);
 
-  const subjectBiomarkers = dataset?.biomarkers
+  const subjectBiomarkers = dataset?.biomarker_types
     .filter(b => b.is_continuous)
     .map(b => {
       const timeUnit = units?.find(u => u.id === b.display_time_unit);

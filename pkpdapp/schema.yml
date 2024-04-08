@@ -3551,7 +3551,7 @@ components:
         biomarker_types:
           type: array
           items:
-            type: integer
+            $ref: '#/components/schemas/BiomarkerType'
           readOnly: true
         subjects:
           type: array
@@ -3567,11 +3567,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Protocol'
-          readOnly: true
-        biomarkers:
-          type: array
-          items:
-            $ref: '#/components/schemas/BiomarkerType'
           readOnly: true
         name:
           type: string
@@ -3593,7 +3588,6 @@ components:
           description: Project that "owns" this model
       required:
       - biomarker_types
-      - biomarkers
       - groups
       - id
       - name
@@ -4248,7 +4242,7 @@ components:
         biomarker_types:
           type: array
           items:
-            type: integer
+            $ref: '#/components/schemas/BiomarkerType'
           readOnly: true
         subjects:
           type: array
@@ -4264,11 +4258,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Protocol'
-          readOnly: true
-        biomarkers:
-          type: array
-          items:
-            $ref: '#/components/schemas/BiomarkerType'
           readOnly: true
         name:
           type: string

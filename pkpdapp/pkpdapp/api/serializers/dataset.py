@@ -6,7 +6,6 @@
 
 from pkpdapp.utils import DataParser
 from rest_framework import serializers
-from drf_spectacular.utils import extend_schema_field
 from pkpdapp.models import (
     Dataset
 )
@@ -16,7 +15,7 @@ from pkpdapp.api.serializers import (
 
 
 class DatasetSerializer(serializers.ModelSerializer):
-    biomarker_types = serializers.PrimaryKeyRelatedField(
+    biomarker_types = BiomarkerTypeSerializer(
         many=True, read_only=True
     )
     subjects = serializers.PrimaryKeyRelatedField(
@@ -28,15 +27,10 @@ class DatasetSerializer(serializers.ModelSerializer):
     protocols = ProtocolSerializer(
         many=True, read_only=True
     )
-    biomarkers = serializers.SerializerMethodField('get_biomarkers')
 
     class Meta:
         model = Dataset
         fields = '__all__'
-
-    @extend_schema_field(BiomarkerTypeSerializer(many=True))
-    def get_biomarkers(self, dataset):
-        return BiomarkerTypeSerializer(dataset.biomarker_types.all(), many=True).data
 
 
 class DatasetCsvSerializer(serializers.ModelSerializer):
