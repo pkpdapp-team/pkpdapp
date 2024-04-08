@@ -7,16 +7,18 @@ from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from drf_spectacular.types import OpenApiTypes
+from pkpdapp.api.serializers import SubjectGroupSerializer
+from pkpdapp.api.views import (
+    DatasetFilter,
+    ProjectFilter,
+    CheckAccessToProject
+)
+from pkpdapp.models import SubjectGroup
 
-from pkpdapp.api.serializers import BiomarkerTypeSerializer
-from pkpdapp.api.views import DatasetFilter, ProjectFilter
-from pkpdapp.api.views import CheckAccessToProject
-from pkpdapp.models import BiomarkerType
 
-
-class BiomarkerTypeView(viewsets.ModelViewSet):
-    queryset = BiomarkerType.objects.all()
-    serializer_class = BiomarkerTypeSerializer
+class SubjectGroupView(viewsets.ModelViewSet):
+    queryset = SubjectGroup.objects.all()
+    serializer_class = SubjectGroupSerializer
     filter_backends = [DatasetFilter, ProjectFilter]
     permission_classes = [
         IsAuthenticated & CheckAccessToProject
@@ -24,6 +26,13 @@ class BiomarkerTypeView(viewsets.ModelViewSet):
 
     @extend_schema(
         parameters=[
+            OpenApiParameter(
+                name='project_id',
+                description='Filter results by project ID',
+                required=False,
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY
+            ),
             OpenApiParameter(
                 name='dataset_id',
                 description='Filter results by dataset ID',

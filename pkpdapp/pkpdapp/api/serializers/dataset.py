@@ -6,9 +6,8 @@
 
 from pkpdapp.utils import DataParser
 from rest_framework import serializers
-from drf_spectacular.utils import extend_schema_field
 from pkpdapp.models import (
-    Dataset, Protocol, SubjectGroup
+    Dataset
 )
 from pkpdapp.api.serializers import (
     BiomarkerTypeSerializer, ProtocolSerializer, SubjectGroupSerializer
@@ -16,41 +15,22 @@ from pkpdapp.api.serializers import (
 
 
 class DatasetSerializer(serializers.ModelSerializer):
-    biomarker_types = serializers.PrimaryKeyRelatedField(
+    biomarker_types = BiomarkerTypeSerializer(
         many=True, read_only=True
     )
     subjects = serializers.PrimaryKeyRelatedField(
         many=True, read_only=True
     )
-    protocols = serializers.SerializerMethodField('get_protocols')
-    groups = serializers.SerializerMethodField('get_subject_groups')
-    biomarkers = serializers.SerializerMethodField('get_biomarkers')
+    groups = SubjectGroupSerializer(
+        many=True, read_only=True
+    )
+    protocols = ProtocolSerializer(
+        many=True, read_only=True
+    )
 
     class Meta:
         model = Dataset
         fields = '__all__'
-
-    @extend_schema_field(BiomarkerTypeSerializer(many=True))
-    def get_biomarkers(self, dataset):
-        return BiomarkerTypeSerializer(dataset.biomarker_types.all(), many=True).data
-
-    @extend_schema_field(SubjectGroupSerializer(many=True))
-    def get_subject_groups(self, dataset):
-        subject_groups = [
-            SubjectGroup.objects.get(pk=g['group'])
-            for g in dataset.subjects.values('group').distinct()
-            if g['group'] is not None
-        ]
-        return SubjectGroupSerializer(subject_groups, many=True).data
-
-    @extend_schema_field(ProtocolSerializer(many=True))
-    def get_protocols(self, dataset):
-        protocols = [
-            Protocol.objects.get(pk=p['protocol'])
-            for p in dataset.subjects.values('protocol').distinct()
-            if p['protocol'] is not None
-        ]
-        return ProtocolSerializer(protocols, many=True).data
 
 
 class DatasetCsvSerializer(serializers.ModelSerializer):

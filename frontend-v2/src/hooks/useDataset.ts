@@ -4,8 +4,9 @@ import {
   useDatasetListQuery,
   useDatasetCreateMutation,
   useProjectRetrieveQuery,
-  useProtocolListQuery,
-  useUnitListQuery
+  useSubjectGroupListQuery,
+  useUnitListQuery,
+  useBiomarkerTypeListQuery
 } from '../app/backendApi';
 
 // assume only one dataset per project for the time being.
@@ -25,10 +26,15 @@ export default function useDataset(selectedProject: number | null) {
     { projectId: selectedProjectOrZero },
     { skip: !selectedProject },
   );
-  const { data: datasetProtocols, refetch: refetchProtocols } = useProtocolListQuery(
-    { datasetId: dataset?.id},
-    { skip: !dataset?.id },
+  const { data: subjectGroups, refetch: refetchSubjectGroups } = useSubjectGroupListQuery(
+    { datasetId: dataset?.id || 0 },
+    { skip: !dataset }
   );
+  const { data: biomarkerTypes, refetch: refetchBiomarkerTypes } = useBiomarkerTypeListQuery(
+    { datasetId: dataset?.id || 0 },
+    { skip: !dataset }
+  );
+
   const [
     createDataset
   ] = useDatasetCreateMutation();
@@ -38,10 +44,11 @@ export default function useDataset(selectedProject: number | null) {
   }
 
   useEffect(() => {
-    if (appDataset?.id) {
-      refetchProtocols();
+    if (dataset?.id) {
+      refetchSubjectGroups();
+      refetchBiomarkerTypes();
     }
-  }, [appDataset, refetchProtocols]);
+  }, [dataset, refetchSubjectGroups]);
 
   useEffect(function onDataLoad() {
     async function addDataset() {
@@ -70,8 +77,7 @@ export default function useDataset(selectedProject: number | null) {
     setDataset(appDataset);
   }, []);
 
-  const subjectBiomarkers = dataset?.biomarkers
-    .filter(b => b.is_continuous)
+  const subjectBiomarkers = biomarkerTypes?.filter(b => b.is_continuous)
     .map(b => {
       const timeUnit = units?.find(u => u.id === b.display_time_unit);
       const unit = units?.find(u => u.id === b.display_unit);
@@ -93,8 +99,8 @@ export default function useDataset(selectedProject: number | null) {
 
   return {
     dataset,
-    protocols: datasetProtocols || [],
-    subjectBiomarkers,
+    groups: subjectGroups || [],
+    subjectBiomarkers: subjectBiomarkers || [],
     updateDataset
   };
 }

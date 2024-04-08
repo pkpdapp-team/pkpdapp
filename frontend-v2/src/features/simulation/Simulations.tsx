@@ -78,9 +78,9 @@ const Simulations: FC = () => {
   const projectId = useSelector(
     (state: RootState) => state.main.selectedProject,
   );
-  const { dataset, protocols: datasetProtocols } = useDataset(projectId);
+  const { dataset, groups } = useDataset(projectId);
   const [visibleGroups, setVisibleGroups] =
-    useState<string[]>(dataset?.groups.map(group => group.name) || []);
+    useState<string[]>(groups.map(group => group.name) || []);
   const projectIdOrZero = projectId || 0;
   const { data: project, isLoading: isProjectLoading } =
     useProjectRetrieveQuery({ id: projectIdOrZero }, { skip: !projectId });
@@ -161,11 +161,12 @@ const Simulations: FC = () => {
   };
   const timeMax = simulation?.id && getTimeMax(simulation);
   const protocols = useMemo(() => {
+    const datasetProtocols = groups?.flatMap(group => group.protocols) || [];
     if (projectProtocols && datasetProtocols) {
       return [...projectProtocols, ...datasetProtocols];
     }
     return DEFAULT_PROTOCOLS;
-  }, [projectProtocols, datasetProtocols])
+  }, [projectProtocols, groups])
   const { loadingSimulate, data } = useSimulation(
     simulation,
     sliderValues,
@@ -558,7 +559,7 @@ const Simulations: FC = () => {
         }
       >
         <Stack direction="column">
-          {dataset?.groups.length && (
+          {!!groups.length && (
             <>
               <Typography
                 sx={{
@@ -569,7 +570,7 @@ const Simulations: FC = () => {
                 Groups
               </Typography>
               <FormGroup>
-              {dataset?.groups.map((group) => (
+              {groups.map((group) => (
                 <FormControlLabel
                   key={group.name}
                   control={

@@ -157,7 +157,7 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
   );
   useProtocolListQuery({ projectId: projectId || 0 }, { skip: !projectId });
 
-  const { dataset, subjectBiomarkers } = useDataset(projectId);
+  const { groups, subjectBiomarkers } = useDataset(projectId);
 
   const [open, setOpen] = useState(false);
 
@@ -198,7 +198,7 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
   let maxY2: number | undefined = undefined;
 
   const visibleData = data.filter((d, index) => {
-    const group = dataset?.groups[index - 1];
+    const group = groups[index - 1];
     return index === 0 || visibleGroups.includes(group?.name || "");
   });
   const plotData = plot.y_axes.map((y_axis) => {
@@ -451,7 +451,7 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
             : yCompatibleUnit.conversion_factor,
         )
       : 1.0;
-    const scatterplotData = dataset?.groups
+    const scatterplotData = groups
       .filter(group => visibleGroups.includes(group.name))
       .map(group => {
         const groupBiomarkers = biomarkerData?.filter(d => group.subjects.includes(d.subjectId));

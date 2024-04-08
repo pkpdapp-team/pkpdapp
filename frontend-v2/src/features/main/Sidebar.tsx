@@ -30,7 +30,7 @@ import {
   useCombinedModelListQuery,
   usePharmacodynamicRetrieveQuery,
   useProjectRetrieveQuery,
-  useProtocolListQuery,
+  useProtocolListQuery
 } from "../../app/backendApi";
 import DnsIcon from "@mui/icons-material/Dns";
 import BiotechIcon from "@mui/icons-material/Biotech";
@@ -54,7 +54,7 @@ export default function Sidebar() {
   const selectedProject = useSelector(
     (state: RootState) => state.main.selectedProject,
   );
-  const { protocols: datasetProtocols } = useDataset(selectedProject);
+  const { groups: subjectGroups } = useDataset(selectedProject);
   const dirtyCount = useSelector((state: RootState) => state.main.dirtyCount);
   const projectId = useSelector(
     (state: RootState) => state.main.selectedProject,
@@ -96,7 +96,7 @@ export default function Sidebar() {
     );
   };
 
-  const doses = datasetProtocols?.map(p => p?.doses);
+  const doses = subjectGroups?.flatMap(group => group.protocols.map(p => p.doses));
   const groupsAreIncomplete = doses?.some(dosing => dosing.length === 0);
 
   const errors: { [key: string]: string } = {};

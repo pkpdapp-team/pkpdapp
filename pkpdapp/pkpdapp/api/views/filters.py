@@ -16,6 +16,7 @@ from pkpdapp.models import (
     BiomarkerType,
     Variable,
     Subject,
+    SubjectGroup,
     Inference,
     InferenceChain,
     LogLikelihood,
@@ -125,6 +126,8 @@ class DatasetFilter(filters.BaseFilterBackend):
                 dataset = Dataset.objects.get(id=dataset_id)
                 if queryset.model == BiomarkerType:
                     queryset = dataset.biomarker_types.all()
+                elif queryset.model == SubjectGroup:
+                    queryset = dataset.groups.all()
                 elif queryset.model == Subject:
                     queryset = dataset.subjects.all()
                 elif queryset.model == Protocol:

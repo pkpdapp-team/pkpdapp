@@ -158,6 +158,12 @@ paths:
   /api/biomarker_type/:
     get:
       operationId: biomarker_type_list
+      parameters:
+      - in: query
+        name: dataset_id
+        schema:
+          type: integer
+        description: Filter results by dataset ID
       tags:
       - biomarker_type
       security:
@@ -2630,6 +2636,158 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/subject_group/:
+    get:
+      operationId: subject_group_list
+      parameters:
+      - in: query
+        name: dataset_id
+        schema:
+          type: integer
+        description: Filter results by dataset ID
+      - in: query
+        name: project_id
+        schema:
+          type: integer
+        description: Filter results by project ID
+      tags:
+      - subject_group
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SubjectGroup'
+          description: ''
+    post:
+      operationId: subject_group_create
+      tags:
+      - subject_group
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubjectGroup'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SubjectGroup'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SubjectGroup'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubjectGroup'
+          description: ''
+  /api/subject_group/{id}/:
+    get:
+      operationId: subject_group_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this subject group.
+        required: true
+      tags:
+      - subject_group
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubjectGroup'
+          description: ''
+    put:
+      operationId: subject_group_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this subject group.
+        required: true
+      tags:
+      - subject_group
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubjectGroup'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SubjectGroup'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SubjectGroup'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubjectGroup'
+          description: ''
+    patch:
+      operationId: subject_group_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this subject group.
+        required: true
+      tags:
+      - subject_group
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedSubjectGroup'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedSubjectGroup'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedSubjectGroup'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubjectGroup'
+          description: ''
+    delete:
+      operationId: subject_group_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this subject group.
+        required: true
+      tags:
+      - subject_group
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
   /api/unit/:
     get:
       operationId: unit_list
@@ -3399,27 +3557,22 @@ components:
         biomarker_types:
           type: array
           items:
-            type: integer
+            $ref: '#/components/schemas/BiomarkerType'
           readOnly: true
         subjects:
           type: array
           items:
             type: integer
           readOnly: true
-        protocols:
-          type: array
-          items:
-            $ref: '#/components/schemas/Protocol'
-          readOnly: true
         groups:
           type: array
           items:
             $ref: '#/components/schemas/SubjectGroup'
           readOnly: true
-        biomarkers:
+        protocols:
           type: array
           items:
-            $ref: '#/components/schemas/BiomarkerType'
+            $ref: '#/components/schemas/Protocol'
           readOnly: true
         name:
           type: string
@@ -3441,7 +3594,6 @@ components:
           description: Project that "owns" this model
       required:
       - biomarker_types
-      - biomarkers
       - groups
       - id
       - name
@@ -4096,27 +4248,22 @@ components:
         biomarker_types:
           type: array
           items:
-            type: integer
+            $ref: '#/components/schemas/BiomarkerType'
           readOnly: true
         subjects:
           type: array
           items:
             type: integer
           readOnly: true
-        protocols:
-          type: array
-          items:
-            $ref: '#/components/schemas/Protocol'
-          readOnly: true
         groups:
           type: array
           items:
             $ref: '#/components/schemas/SubjectGroup'
           readOnly: true
-        biomarkers:
+        protocols:
           type: array
           items:
-            $ref: '#/components/schemas/BiomarkerType'
+            $ref: '#/components/schemas/Protocol'
           readOnly: true
         name:
           type: string
@@ -4522,6 +4669,29 @@ components:
           type: integer
           nullable: true
           description: subject group containing this subject.
+    PatchedSubjectGroup:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        subjects:
+          type: array
+          items:
+            type: integer
+          readOnly: true
+        protocols:
+          type: array
+          items:
+            $ref: '#/components/schemas/Protocol'
+        name:
+          type: string
+          description: name of the group
+          maxLength: 100
+        dataset:
+          type: integer
+          nullable: true
+          description: Dataset that this group belongs to.
     PatchedUnit:
       type: object
       properties:
@@ -5246,11 +5416,14 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Protocol'
-          readOnly: true
         name:
           type: string
           description: name of the group
           maxLength: 100
+        dataset:
+          type: integer
+          nullable: true
+          description: Dataset that this group belongs to.
       required:
       - id
       - name

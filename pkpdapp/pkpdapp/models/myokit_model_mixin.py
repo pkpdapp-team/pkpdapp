@@ -5,7 +5,6 @@
 #
 
 import pkpdapp
-from pkpdapp.models import SubjectGroup
 import numpy as np
 from myokit.formats.mathml import MathMLExpressionWriter
 from myokit.formats.sbml import SBMLParser
@@ -720,11 +719,6 @@ def _get_dosing_events(
 
 def get_subject_groups(project):
     dataset = project.datasets.first()
-    dataset_groups = []
-    if dataset is not None:
-        dataset_groups = [
-            SubjectGroup.objects.get(pk=g['group'])
-            for g in dataset.subjects.values('group').distinct()
-            if g['group'] is not None
-        ]
-    return dataset_groups
+    if dataset is None:
+        return []
+    return dataset.groups.all()

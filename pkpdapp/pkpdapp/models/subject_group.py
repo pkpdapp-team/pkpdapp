@@ -15,6 +15,12 @@ class SubjectGroup(models.Model):
     name = models.CharField(
         max_length=100, help_text='name of the group'
     )
+    dataset = models.ForeignKey(
+        'Dataset', on_delete=models.CASCADE,
+        related_name='groups',
+        blank=True, null=True,
+        help_text='Dataset that this group belongs to.'
+    )
 
     def __str__(self):
         return self.name

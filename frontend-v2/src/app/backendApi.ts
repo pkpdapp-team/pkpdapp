@@ -56,7 +56,10 @@ const injectedRtkApi = api.injectEndpoints({
       BiomarkerTypeListApiResponse,
       BiomarkerTypeListApiArg
     >({
-      query: () => ({ url: `/api/biomarker_type/` }),
+      query: (queryArg) => ({
+        url: `/api/biomarker_type/`,
+        params: { dataset_id: queryArg.datasetId },
+      }),
     }),
     biomarkerTypeCreate: build.mutation<
       BiomarkerTypeCreateApiResponse,
@@ -872,6 +875,63 @@ const injectedRtkApi = api.injectEndpoints({
         method: "DELETE",
       }),
     }),
+    subjectGroupList: build.query<
+      SubjectGroupListApiResponse,
+      SubjectGroupListApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/subject_group/`,
+        params: {
+          dataset_id: queryArg.datasetId,
+          project_id: queryArg.projectId,
+        },
+      }),
+    }),
+    subjectGroupCreate: build.mutation<
+      SubjectGroupCreateApiResponse,
+      SubjectGroupCreateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/subject_group/`,
+        method: "POST",
+        body: queryArg.subjectGroup,
+      }),
+    }),
+    subjectGroupRetrieve: build.query<
+      SubjectGroupRetrieveApiResponse,
+      SubjectGroupRetrieveApiArg
+    >({
+      query: (queryArg) => ({ url: `/api/subject_group/${queryArg.id}/` }),
+    }),
+    subjectGroupUpdate: build.mutation<
+      SubjectGroupUpdateApiResponse,
+      SubjectGroupUpdateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/subject_group/${queryArg.id}/`,
+        method: "PUT",
+        body: queryArg.subjectGroup,
+      }),
+    }),
+    subjectGroupPartialUpdate: build.mutation<
+      SubjectGroupPartialUpdateApiResponse,
+      SubjectGroupPartialUpdateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/subject_group/${queryArg.id}/`,
+        method: "PATCH",
+        body: queryArg.patchedSubjectGroup,
+      }),
+    }),
+    subjectGroupDestroy: build.mutation<
+      SubjectGroupDestroyApiResponse,
+      SubjectGroupDestroyApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/subject_group/${queryArg.id}/`,
+        method: "DELETE",
+      }),
+    }),
     unitList: build.query<UnitListApiResponse, UnitListApiArg>({
       query: (queryArg) => ({
         url: `/api/unit/`,
@@ -1048,7 +1108,10 @@ export type AuceCreateApiResponse = unknown;
 export type AuceCreateApiArg = void;
 export type BiomarkerTypeListApiResponse =
   /** status 200  */ BiomarkerTypeRead[];
-export type BiomarkerTypeListApiArg = void;
+export type BiomarkerTypeListApiArg = {
+  /** Filter results by dataset ID */
+  datasetId?: number;
+};
 export type BiomarkerTypeCreateApiResponse =
   /** status 201  */ BiomarkerTypeRead;
 export type BiomarkerTypeCreateApiArg = {
@@ -1559,6 +1622,41 @@ export type SubjectDestroyApiArg = {
   /** A unique integer value identifying this subject. */
   id: number;
 };
+export type SubjectGroupListApiResponse = /** status 200  */ SubjectGroupRead[];
+export type SubjectGroupListApiArg = {
+  /** Filter results by dataset ID */
+  datasetId?: number;
+  /** Filter results by project ID */
+  projectId?: number;
+};
+export type SubjectGroupCreateApiResponse = /** status 201  */ SubjectGroupRead;
+export type SubjectGroupCreateApiArg = {
+  subjectGroup: SubjectGroup;
+};
+export type SubjectGroupRetrieveApiResponse =
+  /** status 200  */ SubjectGroupRead;
+export type SubjectGroupRetrieveApiArg = {
+  /** A unique integer value identifying this subject group. */
+  id: number;
+};
+export type SubjectGroupUpdateApiResponse = /** status 200  */ SubjectGroupRead;
+export type SubjectGroupUpdateApiArg = {
+  /** A unique integer value identifying this subject group. */
+  id: number;
+  subjectGroup: SubjectGroup;
+};
+export type SubjectGroupPartialUpdateApiResponse =
+  /** status 200  */ SubjectGroupRead;
+export type SubjectGroupPartialUpdateApiArg = {
+  /** A unique integer value identifying this subject group. */
+  id: number;
+  patchedSubjectGroup: PatchedSubjectGroup;
+};
+export type SubjectGroupDestroyApiResponse = unknown;
+export type SubjectGroupDestroyApiArg = {
+  /** A unique integer value identifying this subject group. */
+  id: number;
+};
 export type UnitListApiResponse = /** status 200  */ UnitRead[];
 export type UnitListApiArg = {
   /** Enable conversions based on compound information */
@@ -2035,21 +2133,23 @@ export type ProtocolRead = {
   group?: number | null;
 };
 export type SubjectGroup = {
+  protocols: Protocol[];
   name: string;
+  dataset?: number | null;
 };
 export type SubjectGroupRead = {
   id: number;
   subjects: number[];
   protocols: ProtocolRead[];
   name: string;
+  dataset?: number | null;
 };
 export type DatasetRead = {
   id: number;
-  biomarker_types: number[];
+  biomarker_types: BiomarkerTypeRead[];
   subjects: number[];
-  protocols: ProtocolRead[];
   groups: SubjectGroupRead[];
-  biomarkers: BiomarkerTypeRead[];
+  protocols: ProtocolRead[];
   name: string;
   datetime?: string | null;
   description?: string;
@@ -2063,11 +2163,10 @@ export type PatchedDataset = {
 };
 export type PatchedDatasetRead = {
   id?: number;
-  biomarker_types?: number[];
+  biomarker_types?: BiomarkerTypeRead[];
   subjects?: number[];
-  protocols?: ProtocolRead[];
   groups?: SubjectGroupRead[];
-  biomarkers?: BiomarkerTypeRead[];
+  protocols?: ProtocolRead[];
   name?: string;
   datetime?: string | null;
   description?: string;
@@ -2572,6 +2671,18 @@ export type PatchedSubjectRead = {
   protocol?: number | null;
   group?: number | null;
 };
+export type PatchedSubjectGroup = {
+  protocols?: Protocol[];
+  name?: string;
+  dataset?: number | null;
+};
+export type PatchedSubjectGroupRead = {
+  id?: number;
+  subjects?: number[];
+  protocols?: ProtocolRead[];
+  name?: string;
+  dataset?: number | null;
+};
 export type Unit = {
   symbol: string;
   g?: number;
@@ -2865,6 +2976,12 @@ export const {
   useSubjectUpdateMutation,
   useSubjectPartialUpdateMutation,
   useSubjectDestroyMutation,
+  useSubjectGroupListQuery,
+  useSubjectGroupCreateMutation,
+  useSubjectGroupRetrieveQuery,
+  useSubjectGroupUpdateMutation,
+  useSubjectGroupPartialUpdateMutation,
+  useSubjectGroupDestroyMutation,
   useUnitListQuery,
   useUnitCreateMutation,
   useUnitRetrieveQuery,

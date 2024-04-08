@@ -3,6 +3,7 @@ import { ChangeEvent, FC, useState } from "react";
 import { useSelector } from "react-redux";
 import {
   Box,
+  Button,
   Table,
   TableBody,
   TableCell,
@@ -12,8 +13,11 @@ import {
   Tabs,
   Tab
 } from "@mui/material";
-import ErrorIcon from "@mui/icons-material/Error";
+import { Add, Error } from "@mui/icons-material";
 import {
+  useSubjectGroupCreateMutation,
+  useSubjectGroupDestroyMutation,
+  useSubjectGroupListQuery,
   useUnitListQuery,
   useProjectRetrieveQuery,
   useProtocolListQuery,
@@ -26,14 +30,15 @@ import useDataset from "../../hooks/useDataset";
 
 const Protocols: FC = () => {
   const [tab, setTab] = useState(0);
-  const handleTabChange = (event: ChangeEvent<{}>, newValue: number) => {
-    setTab(newValue);
-  };
   const selectedProject = useSelector(
     (state: RootState) => state.main.selectedProject,
   );
   const selectedProjectOrZero = selectedProject || 0;
-  const { dataset, protocols: datasetProtocols } = useDataset(selectedProject);
+  const { dataset } = useDataset(selectedProject);
+  const { data: subjectGroups, refetch: refetchSubjectGroups } = useSubjectGroupListQuery(
+    { datasetId: dataset?.id || 0 },
+    { skip: !dataset }
+  );
   const { data: project, isLoading: isProjectLoading } =
     useProjectRetrieveQuery(
       { id: selectedProjectOrZero },
@@ -48,6 +53,8 @@ const Protocols: FC = () => {
     { compoundId: project?.compound || 0 },
     { skip: !project?.compound },
   );
+  const [createSubjectGroup] = useSubjectGroupCreateMutation();
+  const [destroySubjectGroup] = useSubjectGroupDestroyMutation();
 
   const loading = [isProjectLoading, isProtocolsLoading, unitsLoading].some(
     (x) => x,
@@ -73,6 +80,43 @@ const Protocols: FC = () => {
     }
   });
 
+  const handleTabChange = async (event: ChangeEvent<{}>, newValue: number) => {
+    setTab(newValue);
+    if (dataset && subjectGroups && newValue === subjectGroups.length + 1) {
+      await createSubjectGroup({
+        subjectGroup: {
+          name: `Group ${newValue}`,
+          dataset: dataset?.id,
+          protocols: filteredProtocols.map(p => {
+            const { id, project, ...newProtocol } = p;
+            return {
+              ...newProtocol,
+              dataset: dataset?.id,
+              project: null
+            };
+          })
+        }
+      });
+      refetchSubjectGroups();
+    }
+  };
+
+  const removeGroup = (groupID: number) => async () => {
+    const subjectGroup = subjectGroups?.find(g => g.id === groupID);
+    const subjectCount = subjectGroup?.subjects.length || 0;
+    if (subjectCount === 0 || window?.confirm(
+      `Are you sure you want to delete group ${subjectGroup?.name} and all its subjects?`
+    )) {
+      setTab(tab - 1);
+      await destroySubjectGroup({ id: groupID });
+      refetchSubjectGroups();
+    }
+  }
+
+  const onProtocolChange = () => {
+    refetchSubjectGroups();
+  }
+
   function a11yProps(index: number) {
     return {
       id: `group-tab-${index}`,
@@ -80,10 +124,11 @@ const Protocols: FC = () => {
     };
   }
 
-  const subjectGroup = tab === 0 ? null : dataset?.groups[tab-1];
+  const subjectGroup = tab === 0 ? null : subjectGroups?.[tab-1];
   const selectedProtocols = tab === 0
     ? filteredProtocols
-    : datasetProtocols?.filter(p => p.group === subjectGroup?.id);
+    : subjectGroup?.protocols;
+
   return (
     <>
       <Tabs value={tab} onChange={handleTabChange}>
@@ -91,19 +136,24 @@ const Protocols: FC = () => {
           label={'Project'}
           {...a11yProps(0)}
         />
-        {dataset?.groups.map((group, index) => {
-          const groupProtocols = datasetProtocols?.filter(p => p.group === group.id);
-          const selectedDoses = groupProtocols?.flatMap(p => p?.doses) || [];
+        {subjectGroups?.map((group, index) => {
+          const selectedDoses = group.protocols?.flatMap(p => p?.doses) || [];
           return (
             <Tab
               key={group.id}
               label={group.name}
               {...a11yProps(index+1)}
-              icon={selectedDoses.length === 0 ? <ErrorIcon color="error" /> : undefined}
+              icon={selectedDoses.length === 0 ? <Error color="error" /> : undefined}
               iconPosition="end"
             />
           )
         })}
+        <Tab
+          label={'New Group'}
+          {...a11yProps((dataset?.groups?.length || 0) + 1)}
+          icon={<Add />}
+          iconPosition="start"
+        />
     </Tabs>
     <Box role="tabpanel" id={`group-tabpanel`}>
       <TableContainer sx={{ width: '90%' }}>
@@ -185,6 +235,7 @@ const Protocols: FC = () => {
               return protocol ? (
                 <Doses
                   key={protocol.id}
+                  onChange={onProtocolChange}
                   project={project}
                   protocol={protocol}
                   units={units}
@@ -194,6 +245,16 @@ const Protocols: FC = () => {
           </TableBody>
         </Table>
       </TableContainer>
+      {subjectGroup?.id &&
+        <Box sx={{ display: 'flex', justifyContent: 'end' }}>
+          <Button
+            variant="outlined"
+            onClick={removeGroup(subjectGroup.id)}
+          >
+            Remove Group
+          </Button>
+        </Box>
+      }
     </Box>
   </>
   );
