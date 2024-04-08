@@ -559,7 +559,7 @@ const Simulations: FC = () => {
         }
       >
         <Stack direction="column">
-          {dataset?.groups.length && (
+          {!!groups.length && (
             <>
               <Typography
                 sx={{
@@ -570,7 +570,7 @@ const Simulations: FC = () => {
                 Groups
               </Typography>
               <FormGroup>
-              {dataset?.groups.map((group) => (
+              {groups.map((group) => (
                 <FormControlLabel
                   key={group.name}
                   control={
