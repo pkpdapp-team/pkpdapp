@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import {
   CompoundRead,
   CombinedModelRead,
-  DatasetRead,
   ProtocolListApiResponse,
   Simulate,
   SimulationRead,
@@ -93,8 +92,7 @@ export default function useSimulation(
   protocols: ProtocolListApiResponse | undefined,
   variables: VariableListApiResponse | undefined,
   compound: CompoundRead | undefined,
-  timeMax: number | undefined,
-  dataset: DatasetRead | null,
+  timeMax: number | undefined
 ) {
   const [loadingSimulate, setLoadingSimulate] = useState<boolean>(false);
   const [data, setData] = useState<SimulateResponse[]>([]);
@@ -134,15 +132,14 @@ export default function useSimulation(
       });
     }
   }, [
-    simulation,
-    simulate,
-    sliderValues,
+    compound,
     model,
     protocols,
-    variables,
-    compound,
+    simulate,
+    simulation,
+    sliderValues,
     timeMax,
-    dataset,
+    variables,
   ]);
 
   return {

@@ -32,6 +32,7 @@ import { useCustomToast } from "../../hooks/useCustomToast";
 import { notificationTypes } from "../../components/Notification/notificationTypes";
 import { ReactComponent as FolderLogo } from "../../shared/assets/svg/folder.svg";
 import { defaultHeaderSx } from "../../shared/tableHeadersSx";
+import useDataset from "../../hooks/useDataset";
 
 enum SortOptions {
   CREATED = "created",
@@ -76,6 +77,7 @@ const ProjectTable: React.FC = () => {
   const [addCombinedModel] = useCombinedModelCreateMutation();
   const [addCompound] = useCompoundCreateMutation();
   const [addSimulation] = useSimulationCreateMutation();
+  const { addDataset } = useDataset(selectedProject);
 
   if (isLoading || unitsLoading || compoundsLoading) {
     return <div>Loading...</div>;
@@ -166,6 +168,7 @@ const ProjectTable: React.FC = () => {
       })
       .then((newProject) => {
         if ("data" in newProject) {
+          addDataset(newProject.data.id);
           addCombinedModel({
             combinedModel: {
               name: `model for project ${newProject.data.id}`,

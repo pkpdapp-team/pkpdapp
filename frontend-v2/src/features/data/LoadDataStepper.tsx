@@ -1,4 +1,4 @@
-import { FC, useEffect } from 'react';
+import { FC } from 'react';
 import { useSelector } from "react-redux";
 import Papa from 'papaparse'
 import Box from '@mui/material/Box';
@@ -73,8 +73,20 @@ const LoadDataStepper: FC<IStepper> = ({ onCancel, onFinish }) => {
   const StepComponent = stepComponents[stepState.activeStep];
   const isFinished = stepState.activeStep === stepLabels.length;
 
-  useEffect(function onFinished() {
-    if (isFinished && dataset?.id) {
+  const handleNext = () => {
+    setStepState((prevActiveStep) => ({ 
+      activeStep: prevActiveStep.activeStep + 1, 
+      maxStep: Math.max(prevActiveStep.maxStep, prevActiveStep.activeStep + 1)
+    }));
+  };
+
+  const handleBack = () => {
+    setStepState((prevActiveStep) => ({ ...prevActiveStep, activeStep: prevActiveStep.activeStep - 1 }));
+  };
+
+  const handleFinish = () => {
+    handleNext();
+    if (dataset?.id) {
       try {
         const csv = Papa.unparse(data);
         updateDatasetCsv({
@@ -92,18 +104,7 @@ const LoadDataStepper: FC<IStepper> = ({ onCancel, onFinish }) => {
         console.error(e);
       }
     }
-  }, [isFinished, onFinish, updateDatasetCsv, updateDataset, dataset?.id, data])
-
-  const handleNext = () => {
-    setStepState((prevActiveStep) => ({ 
-      activeStep: prevActiveStep.activeStep + 1, 
-      maxStep: Math.max(prevActiveStep.maxStep, prevActiveStep.activeStep + 1)
-    }));
-  };
-
-  const handleBack = () => {
-    setStepState((prevActiveStep) => ({ ...prevActiveStep, activeStep: prevActiveStep.activeStep - 1 }));
-  };
+  }
 
   return (
     <Box sx={{ width: '100%' }}>
@@ -125,7 +126,12 @@ const LoadDataStepper: FC<IStepper> = ({ onCancel, onFinish }) => {
           <Button onClick={onCancel}>Cancel</Button> :
           <Button onClick={handleBack}>Back</Button>
         }
-        <Button disabled={isFinished} variant="contained" color="primary" onClick={handleNext}>
+        <Button
+          disabled={isFinished}
+          variant="contained"
+          color="primary"
+          onClick={stepState.activeStep === stepLabels.length - 1 ? handleFinish : handleNext}
+        >
           {stepState.activeStep === stepLabels.length - 1 ? 'Finish' : 'Next'}
         </Button>
       </Box>

@@ -78,7 +78,7 @@ const Simulations: FC = () => {
   const projectId = useSelector(
     (state: RootState) => state.main.selectedProject,
   );
-  const { dataset, groups } = useDataset(projectId);
+  const { groups } = useDataset(projectId);
   const [visibleGroups, setVisibleGroups] =
     useState<string[]>(groups.map(group => group.name) || []);
   const projectIdOrZero = projectId || 0;
@@ -174,8 +174,7 @@ const Simulations: FC = () => {
     protocols,
     variables,
     compound,
-    timeMax,
-    dataset,
+    timeMax
   );
 
   const {
