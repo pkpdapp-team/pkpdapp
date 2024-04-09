@@ -40,9 +40,11 @@ const Stratification: FC<IStratification> = ({ state, firstTime }: IStratificati
   const primaryCohortIndex = catCovariates.indexOf(primaryCohort);
   const groupColumnValues = uniqueCovariateValues[primaryCohortIndex] || [];
   const groups = groupColumnValues.map((value, index) => {
+    const subjects = state.data.filter(row => row[primaryCohort] === value).map(row => idField ? row[idField] : '');
     return {
+      id: value,
       name: `Group ${index + 1}`,
-      subjects: state.data.filter(row => row[primaryCohort] === value).map(row => idField ? row[idField] : ''),
+      subjects: [...new Set(subjects)],
     };
   });
 

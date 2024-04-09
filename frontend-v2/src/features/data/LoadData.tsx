@@ -71,6 +71,15 @@ const LoadData: FC<ILoadDataProps> = ({state, firstTime}) => {
     });
     state.setData(newData);
   }
+  if (!state.fields.includes('Group')) {
+    state.setNormalisedFields([...state.normalisedFields, 'Cat Covariate']);
+    state.setFields([...state.fields, 'Group']);
+    const newData = [ ...state.data ];
+    newData.forEach(row => {
+      row['Group'] = '1';
+    });
+    state.setData(newData);
+  }
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     acceptedFiles.forEach((file) => {
