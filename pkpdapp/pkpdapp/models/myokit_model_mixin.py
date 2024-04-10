@@ -459,7 +459,8 @@ class MyokitModelMixin:
         # TODO: take these from simulation model
         sim.set_tolerance(abs_tol=1e-06, rel_tol=1e-08)
         # Simulate, logging only state variables given by `outputs`
-        return self.serialize_datalog(sim.run(time_max, log=outputs), model)
+        datalog = sim.run(time_max, log=outputs)
+        return self.serialize_datalog(datalog, model)
 
     def simulate(self, outputs=None, variables=None, time_max=None):
         """
@@ -496,26 +497,32 @@ class MyokitModelMixin:
                 **variables,
             }
 
-        project_sim = self.simulate_model(
-            variables=variables, time_max=time_max, outputs=outputs
-        )
+        # add a dose_rate variable to the model for each
+        # dosed variable
+        dosing_variables = [
+            v for v in self.variables.filter(state=True) if v.protocol
+        ]
+        project_dosing_protocols = {
+            v.qname: v.protocol for v in dosing_variables
+        }
+        model_dosing_protocols = [project_dosing_protocols]
 
         project = self.get_project()
-        sims = [project_sim]
-        if project is not None:
-            for group in get_subject_groups(project):
-                dosing_protocols = {}
-                for protocol in group.protocols.all():
-                    dosing_protocols[protocol.mapped_qname] = protocol
-                sim = self.simulate_model(
-                    outputs=outputs,
-                    variables=variables,
-                    time_max=time_max,
-                    dosing_protocols=dosing_protocols
-                )
-                sims.append(sim)
+        for group in get_subject_groups(project):
+            protocols = group.protocols.all()
+            dosing_protocols = {
+                protocol.mapped_qname: protocol for protocol in protocols
+            }
+            model_dosing_protocols.append(dosing_protocols)
 
-        return sims
+        return [
+            self.simulate_model(
+                variables=variables,
+                time_max=time_max,
+                outputs=outputs,
+                dosing_protocols=dosing_protocols
+            ) for dosing_protocols in model_dosing_protocols
+        ]
 
 
 def set_administration(model, drug_amount, direct=True):
@@ -718,6 +725,8 @@ def _get_dosing_events(
 
 
 def get_subject_groups(project):
+    if project is None:
+        return []
     dataset = project.datasets.first()
     if dataset is None:
         return []
