@@ -25,3 +25,4 @@ django-auth-ldap>=4.1.0
 pyyaml>=6.0.0
 drf-spectacular>=0.26.2
 openpyxl>=3.1.2
+django-user-visit>=2.0.0

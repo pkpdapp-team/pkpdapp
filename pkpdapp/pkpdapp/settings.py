@@ -99,6 +99,7 @@ INSTALLED_APPS = [
     "rest_framework.authtoken",
     "corsheaders",
     "drf_spectacular",
+    "user_visit",
     # internal apps
     "pkpdapp",
 ]
@@ -242,6 +243,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "user_visit.middleware.UserVisitMiddleware",
 ]
 
 CORS_ALLOWED_ORIGINS = [
