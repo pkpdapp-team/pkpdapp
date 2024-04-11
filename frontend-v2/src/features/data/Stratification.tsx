@@ -70,15 +70,21 @@ const Stratification: FC<IStratification> = ({ state, firstTime }: IStratificati
   };
 
   const handleSecondaryChange = (event: ChangeEvent<HTMLInputElement>) => {
+    let newState = [];
     if (!event.target.checked) {
-      const newState = secondary.filter(value => value !== event.target.value);
-      setSecondary(newState);
+      newState = secondary.filter(value => value !== event.target.value);
       return;
     } else {
-      const newState = new Set([...secondary, event.target.value]);
-      setSecondary([...newState]);
+      newState = [ ...new Set([...secondary, event.target.value])];
     }
-    // TODO: update the Group ID column when groups Change.
+  
+    setSecondary(newState);
+    const newData = [ ...state.data ];
+    newData.forEach(row => {
+      row['Group ID'] = [
+        row[primaryCohort], ...newState.map(field => row[field])
+      ].join('-');
+    });
   };
 
   function a11yProps(index: number) {
