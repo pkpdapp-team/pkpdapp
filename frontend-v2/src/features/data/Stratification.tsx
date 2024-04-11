@@ -70,7 +70,7 @@ const Stratification: FC<IStratification> = ({ state, firstTime }: IStratificati
   };
 
   const handleSecondaryChange = (event: ChangeEvent<HTMLInputElement>) => {
-    let newState = [];
+    let newState: string[] = [];
     if (!event.target.checked) {
       newState = secondary.filter(value => value !== event.target.value);
       return;

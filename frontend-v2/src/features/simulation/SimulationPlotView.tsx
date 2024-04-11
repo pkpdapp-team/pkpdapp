@@ -431,7 +431,7 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
       
     const biomarkerIndex = biomarkerVariables.indexOf(y_axis.variable);
     const biomarkerData = subjectBiomarkers?.[biomarkerIndex];
-    const { label, qname, unit, timeUnit } = biomarkerData?.[0] || {};
+    const { qname, unit, timeUnit } = biomarkerData?.[0] || {};
     const yCompatibleUnit = unit?.compatible_units.find(
       (u) => parseInt(u.id) === yAxisUnit?.id,
     );

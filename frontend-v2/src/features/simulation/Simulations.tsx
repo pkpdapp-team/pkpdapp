@@ -21,7 +21,6 @@ import {
   UnitRead,
   VariableRead,
   useCombinedModelListQuery,
-  useCombinedModelSimulateCreateMutation,
   useCompoundRetrieveQuery,
   useProjectRetrieveQuery,
   useProtocolListQuery,
@@ -35,7 +34,7 @@ import { useFieldArray, useForm } from "react-hook-form";
 import { FC, useCallback, useEffect, useMemo, useState, useRef } from "react";
 import SimulationPlotView from "./SimulationPlotView";
 import SimulationSliderView from "./SimulationSliderView";
-import useSimulation, { getSimulateInput, getVariablesSimulated } from "./useSimulation";
+import useSimulation from "./useSimulation";
 import DropdownButton from "../../components/DropdownButton";
 import SettingsIcon from "@mui/icons-material/Settings";
 import FloatField from "../../components/FloatField";
