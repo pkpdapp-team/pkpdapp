@@ -92,7 +92,8 @@ const Protocols: FC = () => {
             return {
               ...newProtocol,
               dataset: dataset?.id,
-              project: null
+              project: null,
+              name: `${newProtocol.name} - Group ${newValue}`,
             };
           })
         }
