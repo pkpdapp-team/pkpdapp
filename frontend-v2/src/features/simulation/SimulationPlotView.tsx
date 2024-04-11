@@ -253,7 +253,7 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
         }
         return {
           yaxis: y_axis.right ? "y2" : undefined,
-          x: convertedTime,
+          x: d.time.map((t) => t * xconversionFactor),
           y: variableValues.map((v) => v * yconversionFactor),
           name: `${variableName} ${index}` || "unknown",
         };
