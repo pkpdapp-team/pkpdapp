@@ -80,7 +80,7 @@ const Simulations: FC = () => {
   );
   const { groups } = useDataset(projectId);
   const [visibleGroups, setVisibleGroups] =
-    useState<string[]>(groups.map(group => group.name) || []);
+    useState<string[]>(['Project', ...groups.map(group => group.name)]);
   const projectIdOrZero = projectId || 0;
   const { data: project, isLoading: isProjectLoading } =
     useProjectRetrieveQuery({ id: projectIdOrZero }, { skip: !projectId });
@@ -501,19 +501,29 @@ const Simulations: FC = () => {
                 Groups
               </Typography>
               <FormGroup>
-              {groups.map((group) => (
                 <FormControlLabel
-                  key={group.name}
                   control={
                     <Checkbox
-                      checked={visibleGroups.includes(group.name)}
-                      value={group.name}
+                      checked={visibleGroups.includes('Project')}
+                      value='Project'
                       onChange={handleVisibleGroups}
                     />
                   }
-                  label={group.name}
+                  label='Project'
                 />
-              ))}
+                {groups.map((group) => (
+                  <FormControlLabel
+                    key={group.name}
+                    control={
+                      <Checkbox
+                        checked={visibleGroups.includes(group.name)}
+                        value={group.name}
+                        onChange={handleVisibleGroups}
+                      />
+                    }
+                    label={group.name}
+                  />
+                ))}
               </FormGroup>
             </>
           )}

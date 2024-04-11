@@ -200,7 +200,9 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
   const plotData = plot.y_axes.map((y_axis) => {
     return data.map((d, index) => {
       const group = groups[index - 1];
-      const visible = index === 0 || visibleGroups.includes(group?.name || "");
+      const visible = index === 0 
+        ? visibleGroups.includes('Project')
+        : visibleGroups.includes(group?.name || "");
       const variableValues = d.outputs[y_axis.variable];
       const variable = variables.find((v) => v.id === y_axis.variable);
       const variableName = variable?.name;
