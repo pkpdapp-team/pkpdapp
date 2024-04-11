@@ -197,12 +197,10 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
   let maxY: number | undefined = undefined;
   let maxY2: number | undefined = undefined;
 
-  const visibleData = data.filter((d, index) => {
-    const group = groups[index - 1];
-    return index === 0 || visibleGroups.includes(group?.name || "");
-  });
   const plotData = plot.y_axes.map((y_axis) => {
-    return visibleData.map((d, index) => {
+    return data.map((d, index) => {
+      const group = groups[index - 1];
+      const visible = index === 0 || visibleGroups.includes(group?.name || "");
       const variableValues = d.outputs[y_axis.variable];
       const variable = variables.find((v) => v.id === y_axis.variable);
       const variableName = variable?.name;
@@ -255,7 +253,8 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
           yaxis: y_axis.right ? "y2" : undefined,
           x: d.time.map((t) => t * xconversionFactor),
           y: variableValues.map((v) => v * yconversionFactor),
-          name: `${variableName} ${index}` || "unknown",
+          name: `${variableName} ${group?.name || 'project'}` || "unknown",
+          visible: visible ? true : "legendonly",
         };
       } else {
         return {
@@ -263,7 +262,8 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
           x: [],
           y: [],
           type: "scatter",
-          name: `${y_axis.variable} ${index}`,
+          name: `${y_axis.variable} ${group?.name || 'project'}`,
+          visible: visible ? true : "legendonly"
         };
       }
     });
@@ -452,15 +452,16 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
         )
       : 1.0;
     const scatterplotData = groups
-      .filter(group => visibleGroups.includes(group.name))
       .map(group => {
+        const visible = visibleGroups.includes(group.name);
         const groupBiomarkers = biomarkerData?.filter(d => group.subjects.includes(d.subjectId));
         return {
-          name: `${group.name} ${label}`,
+          name: group.name,
           x: groupBiomarkers?.map(d => d?.time * timeConversionFactor),
           y: groupBiomarkers?.map(d => d?.value * yConversionFactor),
           type: 'scatter',
-          mode: 'markers'
+          mode: 'markers',
+          visible: visible ? true : 'legendonly'
         }
       });
     combinedPlotData = combinedPlotData.concat(scatterplotData as Data[]);
