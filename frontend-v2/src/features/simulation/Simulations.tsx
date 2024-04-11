@@ -46,6 +46,7 @@ import HelpButton from "../../components/HelpButton";
 import { selectIsProjectShared } from "../login/loginSlice";
 import { getConstVariables } from "../model/resetToSpeciesDefaults";
 import useDataset from "../../hooks/useDataset";
+import useExportSimulation from "./useExportSimulation";
 
 type SliderValues = { [key: number]: number };
 
@@ -113,13 +114,6 @@ const Simulations: FC = () => {
     { compoundId: project?.compound || 0 },
     { skip: !project?.compound },
   );
-  const [simulate, { error: simulateErrorBase }] =
-    useCombinedModelSimulateCreateMutation();
-  const simulateError: ErrorObject | undefined = simulateErrorBase
-    ? "data" in simulateErrorBase
-      ? (simulateErrorBase.data as ErrorObject)
-      : { error: "Unknown error" }
-    : undefined;
   const { data: compound, isLoading: isLoadingCompound } =
     useCompoundRetrieveQuery(
       { id: project?.compound || 0 },
@@ -235,81 +229,20 @@ const Simulations: FC = () => {
     }
   }, [simulation, reset, variables]);
 
-  const exportSimulation = () => {
-    if (
-      simulation &&
-      variables &&
-      model &&
-      protocols &&
-      compound &&
-      sliderValues &&
-      project
-    ) {
-      const allParams = getVariablesSimulated(variables, sliderValues);
-      console.log("Export to CSV: simulating with params", allParams);
-      simulate({
-        id: model.id,
-        simulate: getSimulateInput(
-          simulation,
-          sliderValues,
-          variables,
-          timeMax,
-          true,
-        ),
-      }).then((response) => {
-        if ("data" in response) {
-          const [ projectData ] = response.data;
-          const nrows =
-            projectData.outputs[Object.keys(projectData.outputs)[0]].length;
-          const cols = Object.keys(projectData.outputs);
-          const vars = cols.map((vid) =>
-            variables.find((v) => v.id === parseInt(vid)),
-          );
-          const varUnits = vars.map((v) => 
-            units?.find((u) => u.id === v?.unit)
-          );
-          const varNames = vars.map((v, i) => `${v?.qname} (${varUnits[i]?.symbol || ''})`);
-          const timeCol = varNames.findIndex(n => n.startsWith("environment.t")); 
-          // move time to first column
-          if (timeCol !== -1) {
-            const timeName = varNames[timeCol];
-            varNames[timeCol] = varNames[0];
-            varNames[0] = timeName.replace("environment.t", "time");
-            const timeId = cols[timeCol];
-            cols[timeCol] = cols[0];
-            cols[0] = timeId;
-          }
-          const ncols = cols.length;
-          const nparams = allParams.length;
-          const rows = new Array(nrows + 1 + nparams);
-          let rowi = 0;
-          for (let i = 0; i < nparams; i++) {
-            rows[rowi] = [allParams[i].qname, allParams[i].value];
-            rowi++;
-          }
-          rowi++;
-          rows[rowi] = varNames;
-          rowi++;
-          for (let i = 0; i < nrows; i++) {
-            rows[rowi] = new Array(ncols);
-            for (let j = 0; j < ncols; j++) {
-              rows[rowi][j] = projectData.outputs[cols[j]][i];
-            }
-            rowi++;
-          }
-          const csvContent = rows.map((e) => e.join(",")).join("\n");
-          const blob = new Blob([csvContent], {
-            type: "text/csv;charset=utf-8;",
-          });
-          const url = URL.createObjectURL(blob);
-          const link = document.createElement("a");
-          link.download = `${project.name}.csv`;
-          link.href = url;
-          link.click();
-        }
-      });
-    }
-  };
+  const [exportSimulation, { error: simulateErrorBase }] = useExportSimulation({
+    simulation,
+    model,
+    protocols,
+    compound,
+    sliderValues,
+    timeMax,
+    project
+  });
+  const simulateError: ErrorObject | undefined = simulateErrorBase
+    ? "data" in simulateErrorBase
+      ? (simulateErrorBase.data as ErrorObject)
+      : { error: "Unknown error" }
+    : undefined;
 
   // save simulation every second if dirty
   useEffect(() => {
