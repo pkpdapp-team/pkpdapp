@@ -235,7 +235,8 @@ const Simulations: FC = () => {
     compound,
     sliderValues,
     timeMax,
-    project
+    project,
+    groups
   });
   const simulateError: ErrorObject | undefined = simulateErrorBase
     ? "data" in simulateErrorBase

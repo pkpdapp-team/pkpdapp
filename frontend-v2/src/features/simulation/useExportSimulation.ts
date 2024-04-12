@@ -7,9 +7,7 @@ import {
   useCombinedModelSimulateCreateMutation,
   useUnitListQuery,
   useVariableListQuery,
-  ProjectRead,
-  VariableListApiResponse,
-  UnitListApiResponse
+  ProjectRead
 } from "../../app/backendApi";
 
 type SliderValues = { [key: number]: number };
@@ -22,43 +20,32 @@ interface iExportSimulation {
   compound: CompoundRead | undefined;
   timeMax: number | undefined;
   project: ProjectRead | undefined;
+  groups: { id: number; name: string }[];
 }
 
 const parseResponse = (
   data: any,
-  variables: VariableListApiResponse,
-  units: UnitListApiResponse
+  timeCol: number,
+  label: string,
 ) => {
+  const cols = Object.keys(data.outputs);
   const nrows =
     data.outputs[Object.keys(data.outputs)[0]].length;
-  const cols = Object.keys(data.outputs);
-  const vars = cols.map((vid) =>
-    variables.find((v) => v.id === parseInt(vid)),
-  );
-  const varUnits = vars.map((v) =>
-    units.find((u) => u.id === v?.unit)
-  );
-  const varNames = vars.map((v, i) => `${v?.qname} (${varUnits[i]?.symbol || ''})`);
-  const timeCol = varNames.findIndex(n => n.startsWith("environment.t"));
+  const ncols = cols.length;
   // move time to first column
   if (timeCol !== -1) {
-    const timeName = varNames[timeCol];
-    varNames[timeCol] = varNames[0];
-    varNames[0] = timeName.replace("environment.t", "time");
     const timeId = cols[timeCol];
     cols[timeCol] = cols[0];
     cols[0] = timeId;
   }
-  const ncols = cols.length;
-  const rows = new Array(nrows + 1);
+  const rows = new Array(nrows);
   let rowi = 0;
-  rows[rowi] = varNames;
-  rowi++;
   for (let i = 0; i < nrows; i++) {
     rows[rowi] = new Array(ncols);
     for (let j = 0; j < ncols; j++) {
       rows[rowi][j] = data.outputs[cols[j]][i];
     }
+    rows[rowi].push(label);
     rowi++;
   }
   return rows;
@@ -72,6 +59,7 @@ export default function useExportSimulation({
   compound,
   timeMax,
   project,
+  groups
 }: iExportSimulation): [() => void, { error: any }] {
   const { data: variables } = useVariableListQuery(
     { dosedPkModelId: model?.id || 0 },
@@ -92,7 +80,8 @@ export default function useExportSimulation({
       protocols &&
       compound &&
       sliderValues &&
-      project
+      project &&
+      groups
     ) {
 
       const allParams = getVariablesSimulated(variables, sliderValues);
@@ -109,9 +98,28 @@ export default function useExportSimulation({
       }).then((response) => {
         let rows = allParams.map((p) => [p.qname, p.value]);
         if ("data" in response) {
+          const cols = Object.keys(response.data[0].outputs);
+          const vars = cols.map((vid) =>
+            variables.find((v) => v.id === parseInt(vid)),
+          );
+          const varUnits = vars.map((v) =>
+            units.find((u) => u.id === v?.unit)
+          );
+          const varNames = vars.map((v, i) => `${v?.qname} (${varUnits[i]?.symbol || ''})`);
+          const timeCol = varNames.findIndex(n => n.startsWith("environment.t"));
+          // move time to first column
+          if (timeCol !== -1) {
+            const timeName = varNames[timeCol];
+            varNames[timeCol] = varNames[0];
+            varNames[0] = timeName.replace("environment.t", "time");
+          }
           rows = [
             ...rows,
-            ...response.data.flatMap(data => parseResponse(data, variables, units))
+            [...varNames, 'Group'],
+            ...response.data.flatMap((data, index) => {
+              const label = index === 0 ? 'Project' : groups[index - 1].name;
+              return parseResponse(data, timeCol, label)
+            })
           ];
         }
         const csvContent = rows.map((e) => e.join(",")).join("\n");
