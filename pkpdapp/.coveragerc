@@ -2,6 +2,7 @@
 source = .
 omit =
     */apps.py
+    */management/*
     */tests/*
     manage.py
     pkpdapp/asgi.py
