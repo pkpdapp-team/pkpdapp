@@ -29,8 +29,11 @@ class TestSimulations(TestCase):
             outputs = [
                 variable.qname for variable in model.variables.filter(constant=False)
             ]
-            sim = model.simulate(
+            sims = model.simulate(
                 outputs=outputs,
                 time_max=672
             )
+            # model.simulate returns a list.
+            # We only need the first one for now.
+            sim = sims[0]
             self.assertMatchSnapshot(sim)
