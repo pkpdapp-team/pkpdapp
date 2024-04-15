@@ -410,3 +410,5 @@ CELERY_BROKER_TRANSPORT_OPTIONS = {
     "interval_step": 0.2,
     "interval_max": 0.5,
 }
+
+TEST_RUNNER = 'snapshottest.django.TestRunner'
