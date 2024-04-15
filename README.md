@@ -219,6 +219,23 @@ a file (say) called `test_models.py` use
 `python manage.py test pkpdapp.tests.test_models`
 - code coverage tests: can't be done locally
 
+## Snapshot testing the myokit models
+
+The Django app has a custom management command that runs snapshot tests for all
+the models in the database. The following script will generate snapshots from the
+main branch, verify them on the development branch, then clean up the generated
+snapshots. Run these commands from the `pkpdapp` directory.
+
+```sh
+git checkout master
+python manage.py test_snapshots
+git checkout development
+python manage.py test_snapshots
+git clean -df
+```
+
+You can find the custom command in `pkpdapp/pkpdapp/management/commands/test_snapshots.py`.
+
 ## Generating OpenAPI spec
 
 The front-end communicates with the back-end using a REST API. The API can be
