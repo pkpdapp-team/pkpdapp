@@ -141,7 +141,7 @@ const MapObservations: FC<IMapObservations> = ({state}: IMapObservations) => {
                 setUnitsAreFixed(false);
               }
               return (
-                <TableRow>
+                <TableRow key={obsId}>
                   <TableCell>
                     {obsId}
                   </TableCell>

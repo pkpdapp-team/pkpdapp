@@ -119,7 +119,7 @@ const DosingProtocols: FC<IDosingProtocols> = ({
               const amount = amountField && currentRow?.[amountField];
               const route = routeField && currentRow?.[routeField];
               return (
-                <TableRow>
+                <TableRow key={adminId}>
                   <TableCell>
                     {adminId}
                   </TableCell>

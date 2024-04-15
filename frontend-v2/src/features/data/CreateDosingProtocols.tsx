@@ -117,7 +117,7 @@ const CreateDosingProtocols: FC<IDosingProtocols> = ({
               const compatibleUnits = units?.find(unit => unit.id === selectedVariable?.unit)?.compatible_units;
               const adminUnit = amountUnitField && currentRow && currentRow[amountUnitField];
               return (
-                <TableRow>
+                <TableRow key={adminId}>
                   <TableCell>
                     {adminId}
                   </TableCell>
