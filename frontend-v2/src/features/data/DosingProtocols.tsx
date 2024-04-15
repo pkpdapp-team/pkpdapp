@@ -1,5 +1,6 @@
 import { FC } from 'react';
 import {
+  Alert,
   Box,
   Select,
   FormControl,
@@ -78,7 +79,9 @@ const DosingProtocols: FC<IDosingProtocols> = ({
   }
   return (
     <>
-      <p>Map dose amounts to dosing compartments in the model.</p>
+      <Alert severity="info">
+        Set a dosing compartment and unit for each of your subject groups here.
+      </Alert>
       <Box component="div" sx={{ maxHeight: "40vh", overflow: 'auto', overflowX: 'auto' }}>
         <Table>
           <TableHead>

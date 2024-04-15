@@ -1,5 +1,6 @@
 import { FC } from 'react';
 import {
+  Alert,
   Box,
   Select,
   FormControl,
@@ -30,7 +31,6 @@ interface IDosingProtocols {
 
 const CreateDosingProtocols: FC<IDosingProtocols> = ({
   administrationIdField,
-  amountUnitField = 'Amount Unit',
   amountUnit,
   state,
   units,
@@ -74,21 +74,12 @@ const CreateDosingProtocols: FC<IDosingProtocols> = ({
       })
     state.setData(nextData);
   }
-  const handleAmountUnitChange = (id: string) => (event: SelectChangeEvent) => {
-    const nextData = [...state.data];
-    const { value } = event.target;
-    nextData.filter(row => administrationIdField ? row[administrationIdField] === id : true)
-      .forEach(row => {
-        row[amountUnitField || 'Amt_unit'] = value;
-      })
-    state.setData(nextData);
-  }
   return (
     <>
-      <p>
+      <Alert severity="info">
         Map dosing compartments to your subject groups here.
-        You can set dose amounts and intervals under Trial Design, once you have uploaded your data.
-      </p>
+        You can set dose amounts, units and intervals under Trial Design, once you have uploaded your data.
+      </Alert>
       <Box component="div" sx={{ maxHeight: "40vh", overflow: 'auto', overflowX: 'auto' }}>
         <Table>
           <TableHead>
@@ -103,19 +94,12 @@ const CreateDosingProtocols: FC<IDosingProtocols> = ({
                   Dosing Compartment
                 </Typography>
               </TableCell>
-              <TableCell>
-                <Typography>
-                  Unit
-                </Typography>
-              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {uniqueAdministrationIds.map((adminId, index) => {
               const currentRow = state.data.find(row => administrationIdField ? row[administrationIdField] === adminId : true);
               const selectedVariable = variables?.find(variable => variable.qname === currentRow?.['Amount Variable']);
-              const compatibleUnits = units?.find(unit => unit.id === selectedVariable?.unit)?.compatible_units;
-              const adminUnit = amountUnitField && currentRow && currentRow[amountUnitField];
               return (
                 <TableRow>
                   <TableCell>
@@ -136,25 +120,6 @@ const CreateDosingProtocols: FC<IDosingProtocols> = ({
                         ))}
                       </Select>
                     </FormControl>
-                  </TableCell>
-                  <TableCell>
-                    {adminUnit ?
-                      adminUnit :
-                      <FormControl fullWidth>
-                        <InputLabel id={`select-unit-${adminId}-label`}>Units</InputLabel>
-                        <Select
-                          labelId={`select-unit-${adminId}-label`}
-                          id={`select-unit-${adminId}`}
-                          label='Units'
-                          value={currentRow?.[amountUnitField || 'Amt_unit']}
-                          onChange={handleAmountUnitChange(adminId)}
-                        >
-                          {compatibleUnits?.map((unit) => (
-                            <MenuItem key={unit.symbol} value={unit.symbol}>{unit.symbol}</MenuItem>
-                          ))}
-                        </Select>
-                      </FormControl>
-                    }
                   </TableCell>
                 </TableRow>
               )

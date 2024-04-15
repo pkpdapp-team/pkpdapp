@@ -16,6 +16,7 @@ import { RootState } from "../../app/store";
 import { DatasetRead, useDatasetCsvUpdateMutation } from '../../app/backendApi';
 import Stratification from './Stratification';
 import useDataset from '../../hooks/useDataset';
+import { Alert } from '@mui/material';
 
 interface IStepper {
   onCancel: () => void,
@@ -33,17 +34,23 @@ export type StepperState = {
   fields: Field[];
   normalisedFields: Field[];
   data: Data;
+  errors: string[];
+  warnings: string[];
   timeUnit?: string;
   setTimeUnit: (timeUnit: string) => void;
   setFields: (fields: Field[]) => void;
   setNormalisedFields: (fields: Field[]) => void;
   setData: (data: Data) => void;
+  setErrors: (errors: string[]) => void;
+  setWarnings: (warnings: string[]) => void;
   amountUnit?: string;
   setAmountUnit: (amountUnit: string) => void;
 }
 
 const LoadDataStepper: FC<IStepper> = ({ onCancel, onFinish }) => {
   const [data, setData] = useState<Data>([]);
+  const [errors, setErrors] = useState<string[]>([]);
+  const [warnings, setWarnings] = useState<string[]>([]);
   const [fields, setFields] = useState<string[]>([]);
   const [normalisedFields, setNormalisedFields] = useState<string[]>([]);
   const [timeUnit, setTimeUnit] = useState<string | undefined>(undefined);
@@ -60,6 +67,10 @@ const LoadDataStepper: FC<IStepper> = ({ onCancel, onFinish }) => {
     fields,
     normalisedFields,
     data,
+    errors,
+    warnings,
+    setErrors,
+    setWarnings,
     setFields,
     setNormalisedFields,
     setData,
@@ -84,24 +95,28 @@ const LoadDataStepper: FC<IStepper> = ({ onCancel, onFinish }) => {
     setStepState((prevActiveStep) => ({ ...prevActiveStep, activeStep: prevActiveStep.activeStep - 1 }));
   };
 
-  const handleFinish = () => {
+  const handleFinish = async () => {
     handleNext();
     if (dataset?.id) {
       try {
         const csv = Papa.unparse(data);
-        updateDatasetCsv({
+        const response = await updateDatasetCsv({
           id: dataset.id,
           datasetCsv: {
             csv
           }
-        })
-        .unwrap()
-        .then(data => {
-          updateDataset(data as unknown as DatasetRead);
-          onFinish();
         });
+        if (!('error' in response)) {
+          updateDataset(response.data as unknown as DatasetRead);
+          onFinish();
+        } else {
+          const { data } = response.error as { data: { csv: string[] } };
+          setErrors(data.csv);
+        }
       } catch (e) {
         console.error(e);
+        const { message } = e as Error;
+        setErrors([message])
       }
     }
   }
@@ -115,19 +130,19 @@ const LoadDataStepper: FC<IStepper> = ({ onCancel, onFinish }) => {
           </Step>
         ))}
       </Stepper>
-      <Typography>
-        {isFinished ? 
-          'The process is completed' :
-          <StepComponent state={state} firstTime={stepState.activeStep === stepState.maxStep}/>
-        }
-      </Typography>
+      {errors.map(error => <Alert severity="error">{error}</Alert>)}
+      {warnings.map(warning => <Alert severity="warning">{warning}</Alert>)}
+      {isFinished ? 
+        <Typography>'The process is completed'</Typography> :
+        <StepComponent state={state} firstTime={stepState.activeStep === stepState.maxStep}/>
+      }
       <Box sx={{ display: 'flex', justifyContent: 'space-between', marginTop: 1 }}>
         {stepState.activeStep === 0 ?
           <Button onClick={onCancel}>Cancel</Button> :
           <Button onClick={handleBack}>Back</Button>
         }
         <Button
-          disabled={isFinished}
+          disabled={isFinished || errors.length > 0}
           variant="contained"
           color="primary"
           onClick={stepState.activeStep === stepLabels.length - 1 ? handleFinish : handleNext}

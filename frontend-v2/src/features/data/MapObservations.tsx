@@ -1,5 +1,19 @@
 import { FC, useState } from 'react';
-import { Box, Select, FormControl, MenuItem, InputLabel, Table, TableHead, TableRow, TableCell, TableBody, Typography, SelectChangeEvent } from "@mui/material";
+import {
+  Alert,
+  Box,
+  Select,
+  FormControl,
+  MenuItem,
+  InputLabel,
+  Table,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableBody,
+  Typography,
+  SelectChangeEvent
+} from "@mui/material";
 import { StepperState } from "./LoadDataStepper";
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
@@ -93,7 +107,9 @@ const MapObservations: FC<IMapObservations> = ({state}: IMapObservations) => {
   }
   return (
     <>
-      <p>Map observations to variables in the model.</p>
+      <Alert severity='info'>
+        Map observations to variables in the model.
+      </Alert>
       <Box component="div" sx={{ maxHeight: "40vh", overflow: 'auto', overflowX: 'auto' }}>
         <Table>
           <TableHead>
