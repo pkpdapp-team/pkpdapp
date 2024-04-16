@@ -12,6 +12,7 @@ import { StepperState } from "./LoadDataStepper";
 import { useProjectRetrieveQuery, useUnitListQuery } from "../../app/backendApi";
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
+import { validateNormalisedFields } from "./normaliseDataHeaders";
 
 interface IMapObservations {
   state: StepperState;
@@ -44,11 +45,14 @@ const SetUnits: React.FC<IMapObservations> = ({state, firstTime}: IMapObservatio
       'Time_unit': event.target?.value
     }));
     state.setData(newData);
+    const { errors, warnings } = validateNormalisedFields([...state.normalisedFields, 'Time Unit']);
+    state.setErrors(errors);
+    state.setWarnings(warnings);
   }
   return (
     <div>
       {noTimeUnit && (
-        <Alert severity="error">
+        <Alert severity='info'>
           <Stack direction='row' spacing='1rem'>
             <Typography>Please select a unit for all time values.</Typography>
             <FormControl sx={{ minWidth: '10rem' }}>

@@ -24,11 +24,30 @@ const normalisation = {
     'Unit': ['unit', 'units'],
 }
 
-export const manditoryHeaders = ['ID', 'Time', 'Observation', 'Administration ID', 'Amount']
+export const manditoryHeaders = ['Time', 'Observation', 'Time Unit']
 
 export const normalisedHeaders = Object.keys(normalisation)
 
-
+export const validateNormalisedFields = (fields: string[]) => {
+    const errors: string[] = [];
+    // check for mandatory fields
+    for (const field of manditoryHeaders) {
+        if (!fields.includes(field)) {
+        errors.push(`${field} has not been defined`);
+        }
+    }
+    const warnings: string[] = [];
+    if (!fields.includes('ID')) {
+        warnings.push('ID has not been defined. IDs will be generated automatically.');
+    }
+    if (!fields.includes('Amount')) {
+        warnings.push('Amount has not been defined. Dosing amounts can be set in Trial Design.');
+    }
+    if (!fields.includes('Amount Unit')) {
+        warnings.push('Amount Unit has not been defined. Dosing units can be set in Trial Design.');
+    }
+    return { errors, warnings };
+}
 export const normaliseHeader = (header: string) => {
     for (const [key, value] of Object.entries(normalisation)) {
         if (value.includes(header.toLowerCase())) {

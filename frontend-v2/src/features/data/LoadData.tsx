@@ -3,7 +3,7 @@ import Papa from 'papaparse'
 import { FC, useCallback, useState} from 'react'
 import {useDropzone} from 'react-dropzone'
 import MapHeaders from './MapHeaders';
-import { manditoryHeaders, normaliseHeader } from './normaliseDataHeaders';
+import { normaliseHeader, validateNormalisedFields } from './normaliseDataHeaders';
 import { StepperState } from './LoadDataStepper';
 import SetUnits from './SetUnits';
 
@@ -38,19 +38,7 @@ interface ILoadDataProps {
   firstTime: boolean;
 }
 
-const validateNormalisedFields = (fields: Field[]) => {
-  const errors: string[] = [];
-  // check for mandatory fields
-  for (const field of manditoryHeaders) {
-    if (!fields.includes(field)) {
-      errors.push(`${field} has not been defined`);
-    }
-  }
-  return errors;
-}
-
 const LoadData: FC<ILoadDataProps> = ({state, firstTime}) => {
-  const [errors, setErrors] = useState<string[]>(firstTime ? [] : validateNormalisedFields(state.normalisedFields));
   const [showData, setShowData] = useState<boolean>(state.data.length > 0 && state.fields.length > 0);
   // Add ID field if it doesn't exist. Assume ascending time values for each subject.
   if (!state.normalisedFields.includes('ID')) {
@@ -85,19 +73,22 @@ const LoadData: FC<ILoadDataProps> = ({state, firstTime}) => {
     acceptedFiles.forEach((file) => {
       const reader = new FileReader()
 
-      reader.onabort = () => setErrors(['file reading was aborted'])
-      reader.onerror = () => setErrors(['file reading has failed'])
+      reader.onabort = () => state.setErrors(['file reading was aborted'])
+      reader.onerror = () => state.setErrors(['file reading has failed'])
       reader.onload = () => {
         // Parse the CSV data
         const rawCsv = reader.result as string;
         const csvData = Papa.parse(rawCsv.trim(), { header: true });
         const fields = csvData.meta.fields || [];
         const normalisedFields = fields.map(normaliseHeader);
-        const errors = csvData.errors.map((e) => e.message).concat(validateNormalisedFields(normalisedFields));
+        const fieldValidation = validateNormalisedFields(normalisedFields);
+        const errors = csvData.errors
+          .map((e) => e.message).concat(fieldValidation.errors);
         state.setData(csvData.data as Data);
         state.setFields(fields);
         state.setNormalisedFields(normalisedFields)
-        setErrors(errors);
+        state.setErrors(errors);
+        state.setWarnings(fieldValidation.warnings)
         if (csvData.data.length > 0 && csvData.meta.fields) {
           setShowData(true);
         }
@@ -110,28 +101,25 @@ const LoadData: FC<ILoadDataProps> = ({state, firstTime}) => {
 
   const setNormalisedFields = (fields: Field[]) => {
     state.setNormalisedFields(fields);
-    setErrors(validateNormalisedFields(fields));
+    const { errors, warnings } = validateNormalisedFields(fields);
+    state.setErrors(errors);
+    state.setWarnings(warnings);
   }
   
 
   return (
     <Stack spacing={2}>
+      <Box sx={{ width: '100%', maxHeight: "24vh", overflow: 'auto', whiteSpace: 'nowrap'}}>
+        {showData && 
+          <SetUnits state={state} firstTime={firstTime} />
+        }
+      </Box>
       <div style={style.dropAreaContainer}>
         <div {...getRootProps({style: style.dropArea})}>
           <input {...getInputProps()} />
           <p>Drag 'n' drop some files here, or click to select files</p>
         </div>
       </div>
-      <Box sx={{ width: '100%', maxHeight: "24vh", overflow: 'auto', whiteSpace: 'nowrap'}}>
-        {errors.map((error, index) => (
-          <Alert severity="error" key={index}>
-            <Typography>{error}</Typography>
-          </Alert>
-        ))}
-        {showData && 
-          <SetUnits state={state} firstTime={firstTime} />
-        } 
-      </Box>
       <Box component="div" sx={{ maxHeight: "40vh", overflow: 'auto', overflowX: 'auto' }}>
         {showData && <MapHeaders data={state.data} fields={state.fields} setNormalisedFields={setNormalisedFields} normalisedFields={state.normalisedFields}/>}
       </Box>
