@@ -79,6 +79,26 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
     isDirty
   });
 
+  const isPreclinical = project.species !== "H";
+  const defaultProps = {
+    disabled: isSharedWithMe,
+  }
+  const defaultSymbol = isPreclinical ? "mg/kg" : "mg";
+  const defaultUnit = units.find((u) => u.symbol === defaultSymbol);
+  const baseUnit = units.find((u) => u.id === protocol.amount_unit);
+
+  useEffect(() => {
+    // set default amount unit to mg/kg or mg, if not set already.
+    async function setDefaultAmountUnit() {
+      const newProtocol = { ...protocol, amount_unit: defaultUnit?.id };
+      await updateProtocol({ id: protocol.id, protocol: newProtocol });
+      onChange();
+    }
+    if (defaultUnit?.id && baseUnit?.symbol === '') {
+      setDefaultAmountUnit();
+    }
+  }, [defaultUnit?.id, baseUnit?.symbol, protocol, updateProtocol, onChange])
+
   if (isVariableLoading) {
     return <div>Loading...</div>;
   }
@@ -97,11 +117,6 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
   const handleDeleteRow = (index: number) => {
     removeDose(index);
   };
-
-  const isPreclinical = project.species !== "H";
-  const defaultProps = {
-    disabled: isSharedWithMe,
-  }
 
   return (
     <>
@@ -126,7 +141,7 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
                 label={"Unit"}
                 name={`amount_unit`}
                 control={control}
-                baseUnit={units.find((u) => u.id === protocol.amount_unit)}
+                baseUnit={baseUnit}
                 isPreclinicalPerKg={isPreclinical}
                 selectProps={defaultProps}
               />
