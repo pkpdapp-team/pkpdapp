@@ -396,20 +396,21 @@ class LogLikelihood(models.Model):
         if length == 1:
             length = None
         noise_params = self.get_noise_params()
+        generator = np.random.default_rng()
         if self.form == self.Form.NORMAL:
-            value = np.random.normal(
+            value = generator.normal(
                 loc=noise_params[0],
                 scale=noise_params[1],
                 size=length,
             )
         elif self.form == self.Form.LOGNORMAL:
-            value = np.random.lognormal(
+            value = generator.lognormal(
                 mean=noise_params[0],
                 scale=noise_params[1],
                 size=length,
             )
         elif self.form == self.Form.UNIFORM:
-            value = np.random.uniform(
+            value = generator.uniform(
                 low=noise_params[0],
                 high=noise_params[1],
                 size=length,
@@ -420,14 +421,15 @@ class LogLikelihood(models.Model):
         """
         add noise to the simulated data according to the log_likelihood
         """
+        generator = np.random.default_rng()
         if noise_params is None:
             noise_params = self.get_noise_params()
         if self.form == self.Form.NORMAL:
-            output_values += np.random.normal(
+            output_values += generator.normal(
                 loc=noise_params[0], scale=noise_params[1], size=output_values.shape
             )
         elif self.form == self.Form.LOGNORMAL:
-            output_values += np.random.lognormal(
+            output_values += generator.lognormal(
                 mean=noise_params[0], sigma=noise_params[1], size=output_values.shape
             )
         return output_values
