@@ -2,12 +2,13 @@ import { FC, useState } from "react";
 import { useSelector } from "react-redux";
 import { useProjectRetrieveQuery, useUnitListQuery } from "../../app/backendApi";
 import { RootState } from "../../app/store";
-import { Box, Button, Typography } from "@mui/material";
+import { Box, Button, Tab, Tabs, Typography } from "@mui/material";
 import { DataGrid } from '@mui/x-data-grid';
 import LoadDataStepper from "./LoadDataStepper";
 import useDataset from "../../hooks/useDataset";
 
 const Data:FC = () => {
+  const [tab, setTab] = useState(0);
   const projectId = useSelector(
     (state: RootState) => state.main.selectedProject,
   );
@@ -34,7 +35,19 @@ const Data:FC = () => {
     setIsLoading(false);
   }
 
-  const protocols = groups?.flatMap(group => group.protocols) || [];
+  function handleTabChange(event: React.SyntheticEvent, newValue: number) {
+    setTab(newValue);
+  }
+
+  function a11yProps(index: number) {
+    return {
+      id: `group-tab-${index}`,
+      'aria-controls': 'group-tabpanel'
+    };
+  }
+
+  const group = groups[tab];
+  const protocols = group?.protocols || [];
   const dosingRows = protocols.flatMap(protocol => {
     const amountUnit = units?.find(unit => unit.id === protocol.amount_unit)?.symbol || '';
     const timeUnit = units?.find(unit => unit.id === protocol.time_unit)?.symbol || '';
@@ -65,6 +78,7 @@ const Data:FC = () => {
       group: group?.name
     })
   }))
+  .filter(row => row.group === group?.name)
   .map((row, index) => ({ ...row, id: index + 1 })) || [];
   const [firstRow] = observations;
   const columns = firstRow ? Object.keys(firstRow).map((field) => ({
@@ -84,30 +98,41 @@ const Data:FC = () => {
           Upload new dataset
         </Button>
       </Box>
-      {dosingRows.length !== 0 && 
-        <>
-          <Typography variant="h6" component="h2" gutterBottom>
-            Protocols
-          </Typography>
-          <DataGrid
-            rows={dosingRows}
-            columns={dosingColumns}
-            autoHeight
+      <Tabs value={tab} onChange={handleTabChange}>ß
+        {groups?.map((group, index) => (
+          <Tab
+            key={group.id}
+            label={group.name}
+            {...a11yProps(index)}
           />
-        </>  
-      }
-      {observations.length !== 0 &&
-        <>
-          <Typography variant="h6" component="h2" gutterBottom>
-            Observations
-          </Typography>
-          <DataGrid
-            rows={observations}
-            columns={columns}
-            autoHeight
-          />
-        </>
-      }
+        ))}
+      </Tabs>
+      <Box role="tabpanel" id={`group-tabpanel`}>
+        {dosingRows.length !== 0 && 
+          <Box padding={1}>
+            <Typography variant="h6" component="h2" gutterBottom>
+              Protocols
+            </Typography>
+            <DataGrid
+              rows={dosingRows}
+              columns={dosingColumns}
+              autoHeight
+            />
+          </Box>  
+        }
+        {observations.length !== 0 &&
+          <Box padding={1}>
+            <Typography variant="h6" component="h2" gutterBottom>
+              Observations
+            </Typography>
+            <DataGrid
+              rows={observations}
+              columns={columns}
+              autoHeight
+            />
+          </Box>
+        }
+      </Box>
     </>;
 }
 
