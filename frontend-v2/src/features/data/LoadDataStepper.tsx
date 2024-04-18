@@ -130,8 +130,8 @@ const LoadDataStepper: FC<IStepper> = ({ onCancel, onFinish }) => {
           </Step>
         ))}
       </Stepper>
-      {errors.map(error => <Alert severity="error">{error}</Alert>)}
-      {warnings.map(warning => <Alert severity="warning">{warning}</Alert>)}
+      {errors.map(error => <Alert key={error} severity="error">{error}</Alert>)}
+      {warnings.map(warning => <Alert key={warning} severity="warning">{warning}</Alert>)}
       {isFinished ? 
         <Typography>'The process is completed'</Typography> :
         <StepComponent state={state} firstTime={stepState.activeStep === stepState.maxStep}/>
