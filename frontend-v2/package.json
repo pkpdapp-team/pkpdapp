@@ -8,7 +8,7 @@
     "@fontsource/comfortaa": "^5.0.19",
     "@mui/icons-material": "^5.15.15",
     "@mui/material": "^5.15.15",
-    "@mui/x-data-grid": "^6.19.11",
+    "@mui/x-data-grid": "^7.3.0",
     "@reduxjs/toolkit": "^2.2.3",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
