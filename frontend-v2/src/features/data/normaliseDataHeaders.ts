@@ -1,5 +1,5 @@
-
 const normalisation = {
+    'Ignore': ['ignore'],
     'Additional Doses': ['additional doses', 'additional dose', 'addl'],
     'Administration ID': ['administration id', 'cmt', 'adm'],
     'Amount': ['amount', 'amt' ],
@@ -9,7 +9,6 @@ const normalisation = {
     'Cont Covariate': ['cont covariate', 'weight', 'wt', 'bw', 'age', 'dose'],
     'Event ID': ['event id', 'evid'],
     'ID': ['id', 'subject', 'animal number'],
-    'Ignore': ['ignore'],
     'Ignored Observation': ['ignored observation', 'mdv'],
     'Infusion Duration': ['infusion duration', 'dur'],
     'Infusion Rate': ['infusion rate', 'rate'],
