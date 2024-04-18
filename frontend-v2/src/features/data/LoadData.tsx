@@ -1,4 +1,4 @@
-import { Box, Stack } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
 import Papa from 'papaparse'
 import { FC, useCallback, useState} from 'react'
 import {useDropzone} from 'react-dropzone'
@@ -114,12 +114,12 @@ const LoadData: FC<ILoadDataProps> = ({state, firstTime}) => {
           <SetUnits state={state} firstTime={firstTime} />
         }
       </Box>
-      <div style={style.dropAreaContainer}>
-        <div {...getRootProps({style: style.dropArea})}>
+      <Box style={style.dropAreaContainer}>
+        <Box {...getRootProps({style: style.dropArea})}>
           <input {...getInputProps()} />
-          <p>Drag 'n' drop some files here, or click to select files</p>
-        </div>
-      </div>
+          <Typography>Drag 'n' drop some files here, or click to select files</Typography>
+        </Box>
+      </Box>
       <Box component="div" sx={{ maxHeight: "40vh", overflow: 'auto', overflowX: 'auto' }}>
         {showData && <MapHeaders data={state.data} fields={state.fields} setNormalisedFields={setNormalisedFields} normalisedFields={state.normalisedFields}/>}
       </Box>
