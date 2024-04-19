@@ -1,6 +1,8 @@
 import { useCallback, useEffect } from 'react';
 import {
   DatasetRead,
+  BiomarkerTypeListApiResponse,
+  SubjectGroupListApiResponse,
   useDatasetListQuery,
   useDatasetCreateMutation,
   useProjectRetrieveQuery,
@@ -9,6 +11,9 @@ import {
   useUnitListQuery,
   useBiomarkerTypeListQuery
 } from '../app/backendApi';
+
+const DEFAULT_GROUPS: SubjectGroupListApiResponse = [];
+const DEFAULT_BIOMARKERS: BiomarkerTypeListApiResponse = [];
 
 export default function useDataset(selectedProject: number | null) {
   const selectedProjectOrZero = selectedProject || 0;
@@ -19,11 +24,11 @@ export default function useDataset(selectedProject: number | null) {
     { compoundId: project?.compound || 0 },
     { skip: !project?.compound },
   );
-  const { data: datasets = [], refetch } = useDatasetListQuery(
+  const { data: datasets, refetch } = useDatasetListQuery(
     { projectId: selectedProjectOrZero },
     { skip: !selectedProject },
   );
-  const [dataset] = datasets;
+  const dataset = datasets?.[0];
   const { data: subjects } = useSubjectListQuery(
     { datasetId: dataset?.id || 0 },
     { skip: !dataset }
@@ -66,31 +71,33 @@ export default function useDataset(selectedProject: number | null) {
     refetch();
   }, [refetch]);
 
-  const subjectBiomarkers = biomarkerTypes?.filter(b => b.is_continuous)
-    .map(b => {
-      const timeUnit = units?.find(u => u.id === b.display_time_unit);
-      const unit = units?.find(u => u.id === b.display_unit);
-      const qname = b.mapped_qname;
-      const label = b.name;
-      return b.data?.subjects
-        .map((subjectId, index) => ({
-          subjectId,
-          subjectDatasetId: subjects?.find(s => s.id === subjectId)?.id_in_dataset,
-          time: b.data?.times[index],
-          timeUnit,
-          value: b.data?.values[index],
-          unit,
-          qname,
-          label
-        }))
-        .sort((a, b) => a.subjectId - b.subjectId)
-        .map((row, index) => ({ id: index + 1, ...row })) || [];
-    });
+  const subjectBiomarkers = !biomarkerTypes ?
+    DEFAULT_BIOMARKERS :
+    biomarkerTypes.filter(b => b.is_continuous)
+      .map(b => {
+        const timeUnit = units?.find(u => u.id === b.display_time_unit);
+        const unit = units?.find(u => u.id === b.display_unit);
+        const qname = b.mapped_qname;
+        const label = b.name;
+        return b.data?.subjects
+          .map((subjectId, index) => ({
+            subjectId,
+            subjectDatasetId: subjects?.find(s => s.id === subjectId)?.id_in_dataset,
+            time: b.data?.times[index],
+            timeUnit,
+            value: b.data?.values[index],
+            unit,
+            qname,
+            label
+          }))
+          .sort((a, b) => a.subjectId - b.subjectId)
+          .map((row, index) => ({ id: index + 1, ...row })) || [];
+      });
 
   return {
     dataset,
-    groups: subjectGroups || [],
-    subjectBiomarkers: subjectBiomarkers || [],
+    groups: subjectGroups || DEFAULT_GROUPS,
+    subjectBiomarkers: subjectBiomarkers,
     addDataset,
     updateDataset
   };
