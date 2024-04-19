@@ -53,7 +53,7 @@ const Data:FC = () => {
     const timeUnit = units?.find(unit => unit.id === protocol.time_unit)?.symbol || '';
     const qname = protocol.mapped_qname;
     return protocol.doses.map(dose => ({
-      id: protocol.id,
+      id: dose.id,
       Amount: dose.amount,
       'Amount Unit': amountUnit,
       Time: dose.start_time,
