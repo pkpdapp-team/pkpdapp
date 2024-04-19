@@ -71,9 +71,7 @@ export default function useDataset(selectedProject: number | null) {
     refetch();
   }, [refetch]);
 
-  const subjectBiomarkers = !biomarkerTypes ?
-    DEFAULT_BIOMARKERS :
-    biomarkerTypes.filter(b => b.is_continuous)
+  const subjectBiomarkers = (biomarkerTypes || DEFAULT_BIOMARKERS).filter(b => b.is_continuous)
       .map(b => {
         const timeUnit = units?.find(u => u.id === b.display_time_unit);
         const unit = units?.find(u => u.id === b.display_unit);
