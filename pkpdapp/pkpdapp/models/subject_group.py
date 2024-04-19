@@ -15,6 +15,11 @@ class SubjectGroup(models.Model):
     name = models.CharField(
         max_length=100, help_text='name of the group'
     )
+    id_in_dataset = models.CharField(
+        null=True, blank=True,
+        max_length=20,
+        help_text='unique identifier in the dataset'
+    )
     dataset = models.ForeignKey(
         'Dataset', on_delete=models.CASCADE,
         related_name='groups',

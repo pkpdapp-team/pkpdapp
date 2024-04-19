@@ -103,6 +103,7 @@ class Dataset(models.Model):
             group_name = f'Group {group_id}'
             group = SubjectGroup.objects.create(
                 name=group_name,
+                id_in_dataset=group_id,
                 dataset=self
             )
             for i, row in data[

@@ -5,6 +5,7 @@ import {
   useDatasetCreateMutation,
   useProjectRetrieveQuery,
   useSubjectGroupListQuery,
+  useSubjectListQuery,
   useUnitListQuery,
   useBiomarkerTypeListQuery
 } from '../app/backendApi';
@@ -23,6 +24,10 @@ export default function useDataset(selectedProject: number | null) {
     { skip: !selectedProject },
   );
   const [dataset] = datasets;
+  const { data: subjects } = useSubjectListQuery(
+    { datasetId: dataset?.id || 0 },
+    { skip: !dataset }
+  );
   const { data: subjectGroups, refetch: refetchSubjectGroups } = useSubjectGroupListQuery(
     { datasetId: dataset?.id || 0 },
     { skip: !dataset }
@@ -70,6 +75,7 @@ export default function useDataset(selectedProject: number | null) {
       return b.data?.subjects
         .map((subjectId, index) => ({
           subjectId,
+          subjectDatasetId: subjects?.find(s => s.id === subjectId)?.id_in_dataset,
           time: b.data?.times[index],
           timeUnit,
           value: b.data?.values[index],
