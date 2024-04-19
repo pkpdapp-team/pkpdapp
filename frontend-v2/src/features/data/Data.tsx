@@ -59,7 +59,7 @@ const Data:FC = () => {
       Time: dose.start_time,
       'Time Unit': timeUnit,
       Duration: dose.duration,
-      'Additional Doses': dose.repeats,
+      'Additional Doses': (dose?.repeats || 1) - 1,
       'Interdose Interval': dose.repeat_interval,
       'Amount Variable': qname
     }))
