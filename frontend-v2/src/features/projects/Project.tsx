@@ -225,7 +225,7 @@ const ProjectRow: FC<Props> = ({
           />
         </TableCell>
         <TableCell>
-          <Typography>
+          <Typography component='span'>
             {speciesOptions.find((s) => s.value === project.species)?.label}
           </Typography>
         </TableCell>
@@ -245,7 +245,7 @@ const ProjectRow: FC<Props> = ({
           }
         </TableCell>
         <TableCell>
-          <Stack direction="row" spacing={0.0}>
+          <Stack component='span' direction="row" spacing={0.0}>
             <Tooltip title={deleteTooltip}>
               <IconButton onClick={() => setShowConfirmDelete(true)}>
                 <Delete />
@@ -265,11 +265,9 @@ const ProjectRow: FC<Props> = ({
             </Tooltip>
 
             <Tooltip title="Share Project">
-            <div>
               <IconButton onClick={() => setUserAccessOpen(true)} disabled={isSharedWithMe}>
                 <PersonAdd />
               </IconButton>
-            </div>
             </Tooltip>
             <UserAccess
               open={userAccessOpen}

@@ -154,7 +154,7 @@ const PKPDModelTab: FC<Props> = ({ model, project, control }: Props) => {
   }
 
   return (
-    <Grid xs={12} container spacing={2}>
+    <Grid container spacing={2}>
       <Grid item xl={5} md={8} xs={10}>
         <Stack direction="row" alignItems="center" spacing={1}>
           <SelectField
