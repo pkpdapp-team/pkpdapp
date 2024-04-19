@@ -2498,6 +2498,17 @@ paths:
   /api/subject/:
     get:
       operationId: subject_list
+      parameters:
+      - in: query
+        name: dataset_id
+        schema:
+          type: integer
+        description: Filter results by dataset ID
+      - in: query
+        name: project_id
+        schema:
+          type: integer
+        description: Filter results by project ID
       tags:
       - subject
       security:
@@ -4688,6 +4699,11 @@ components:
           type: string
           description: name of the group
           maxLength: 100
+        id_in_dataset:
+          type: string
+          nullable: true
+          description: unique identifier in the dataset
+          maxLength: 20
         dataset:
           type: integer
           nullable: true
@@ -5420,6 +5436,11 @@ components:
           type: string
           description: name of the group
           maxLength: 100
+        id_in_dataset:
+          type: string
+          nullable: true
+          description: unique identifier in the dataset
+          maxLength: 20
         dataset:
           type: integer
           nullable: true

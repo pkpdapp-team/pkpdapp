@@ -6,6 +6,7 @@ import { Box, Button, Tab, Tabs, Typography } from "@mui/material";
 import { DataGrid } from '@mui/x-data-grid';
 import LoadDataStepper from "./LoadDataStepper";
 import useDataset from "../../hooks/useDataset";
+import { Route } from "@mui/icons-material";
 
 const Data:FC = () => {
   const [tab, setTab] = useState(0);
@@ -52,6 +53,7 @@ const Data:FC = () => {
     const amountUnit = units?.find(unit => unit.id === protocol.amount_unit)?.symbol || '';
     const timeUnit = units?.find(unit => unit.id === protocol.time_unit)?.symbol || '';
     const qname = protocol.mapped_qname;
+    const doseType = protocol.dose_type;
     return protocol.doses.map(dose => ({
       id: dose.id,
       Amount: dose.amount,
@@ -59,6 +61,7 @@ const Data:FC = () => {
       Time: dose.start_time,
       'Time Unit': timeUnit,
       Duration: dose.duration,
+      Route: doseType,
       'Additional Doses': (dose?.repeats || 1) - 1,
       'Interdose Interval': dose.repeat_interval,
       'Amount Variable': qname
@@ -67,29 +70,33 @@ const Data:FC = () => {
   const dosingColumns = dosingRows[0] ? Object.keys(dosingRows[0]).map((field) => ({
     field,
     headerName: field,
-    minWidth: field.length > 10 ? 150 : 50
+    minWidth: field === 'Amount Variable' ? 150 :
+        field.length > 10 ? 130 : 30
   })) : [];
+  const groupId = group?.id_in_dataset || group?.name;
   const observations = subjectBiomarkers?.flatMap(biomarkerRows => biomarkerRows.map((row) => {
     const group = dataset?.groups?.find(group => group.subjects.includes(row.subjectId));
+    const groupId = group?.id_in_dataset || group?.name;
     return  ({
       id: row.id,
-      'Subject ID': row.subjectId,
+      'Subject ID': row.subjectDatasetId,
       'Time': row.time,
       'Time Unit': row.timeUnit?.symbol,
       'Observation': row.value,
       'Observation Unit': row.unit?.symbol,
       'Observation ID': row.label,
       'Observation Variable': row.qname,
-      Group: group?.name
+      Group: groupId,
     })
   }))
-  .filter(row => row.Group === group?.name)
+  .filter(row => row.Group === groupId)
   .map((row, index) => ({ ...row, id: index + 1 })) || [];
   const [firstRow] = observations;
   const columns = firstRow ? Object.keys(firstRow).map((field) => ({
     field,
     headerName: field,
-    minWidth: field.length > 10 ? 150 : 50
+    minWidth: field === 'Observation Variable' ? 150 :
+      field.length > 10 ? 120 : 30
   })) : [];
 
   return isLoading ?

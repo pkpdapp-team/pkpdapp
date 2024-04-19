@@ -828,7 +828,13 @@ const injectedRtkApi = api.injectEndpoints({
       }),
     }),
     subjectList: build.query<SubjectListApiResponse, SubjectListApiArg>({
-      query: () => ({ url: `/api/subject/` }),
+      query: (queryArg) => ({
+        url: `/api/subject/`,
+        params: {
+          dataset_id: queryArg.datasetId,
+          project_id: queryArg.projectId,
+        },
+      }),
     }),
     subjectCreate: build.mutation<
       SubjectCreateApiResponse,
@@ -1595,7 +1601,12 @@ export type SimulationDestroyApiArg = {
   id: number;
 };
 export type SubjectListApiResponse = /** status 200  */ SubjectRead[];
-export type SubjectListApiArg = void;
+export type SubjectListApiArg = {
+  /** Filter results by dataset ID */
+  datasetId?: number;
+  /** Filter results by project ID */
+  projectId?: number;
+};
 export type SubjectCreateApiResponse = /** status 201  */ SubjectRead;
 export type SubjectCreateApiArg = {
   subject: Subject;
@@ -2135,6 +2146,7 @@ export type ProtocolRead = {
 export type SubjectGroup = {
   protocols: Protocol[];
   name: string;
+  id_in_dataset?: string | null;
   dataset?: number | null;
 };
 export type SubjectGroupRead = {
@@ -2142,6 +2154,7 @@ export type SubjectGroupRead = {
   subjects: number[];
   protocols: ProtocolRead[];
   name: string;
+  id_in_dataset?: string | null;
   dataset?: number | null;
 };
 export type DatasetRead = {
@@ -2674,6 +2687,7 @@ export type PatchedSubjectRead = {
 export type PatchedSubjectGroup = {
   protocols?: Protocol[];
   name?: string;
+  id_in_dataset?: string | null;
   dataset?: number | null;
 };
 export type PatchedSubjectGroupRead = {
@@ -2681,6 +2695,7 @@ export type PatchedSubjectGroupRead = {
   subjects?: number[];
   protocols?: ProtocolRead[];
   name?: string;
+  id_in_dataset?: string | null;
   dataset?: number | null;
 };
 export type Unit = {
