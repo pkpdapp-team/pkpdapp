@@ -54,37 +54,42 @@ const Data:FC = () => {
     const qname = protocol.mapped_qname;
     return protocol.doses.map(dose => ({
       id: protocol.id,
-      amount: dose.amount,
-      amountUnit,
-      startTime: dose.start_time,
-      timeUnit,
-      duration: dose.duration,
-      repeats: dose.repeats,
-      repeatInterval: dose.repeat_interval,
-      qname
+      Amount: dose.amount,
+      'Amount Unit': amountUnit,
+      Time: dose.start_time,
+      'Time Unit': timeUnit,
+      Duration: dose.duration,
+      'Additional Doses': dose.repeats,
+      'Interdose Interval': dose.repeat_interval,
+      'Amount Variable': qname
     }))
   });
   const dosingColumns = dosingRows[0] ? Object.keys(dosingRows[0]).map((field) => ({
     field,
     headerName: field,
-    minWidth: field === 'qname' ? 200 : 50
+    minWidth: field.length > 10 ? 150 : 50
   })) : [];
   const observations = subjectBiomarkers?.flatMap(biomarkerRows => biomarkerRows.map((row) => {
     const group = dataset?.groups?.find(group => group.subjects.includes(row.subjectId));
     return  ({
-      ...row,
-      unit: row.unit?.symbol,
-      timeUnit: row.timeUnit?.symbol,
-      group: group?.name
+      id: row.id,
+      'Subject ID': row.subjectId,
+      'Time': row.time,
+      'Time Unit': row.timeUnit?.symbol,
+      'Observation': row.value,
+      'Observation Unit': row.unit?.symbol,
+      'Observation ID': row.label,
+      'Observation Variable': row.qname,
+      Group: group?.name
     })
   }))
-  .filter(row => row.group === group?.name)
+  .filter(row => row.Group === group?.name)
   .map((row, index) => ({ ...row, id: index + 1 })) || [];
   const [firstRow] = observations;
   const columns = firstRow ? Object.keys(firstRow).map((field) => ({
     field,
     headerName: field,
-    minWidth: field === 'qname' ? 200 : 50
+    minWidth: field.length > 10 ? 150 : 50
   })) : [];
 
   return isLoading ?
