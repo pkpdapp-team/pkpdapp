@@ -283,6 +283,7 @@ const Simulations: FC = () => {
 
   // generate a simulation if slider values change
   useEffect(() => {
+    let ignore = false;
     if (
       simulation?.id &&
       sliderValues &&
@@ -301,13 +302,18 @@ const Simulations: FC = () => {
           timeMax,
         ),
       }).then((response) => {
-        setLoadingSimulate(false);
-        if ("data" in response) {
-          const responseData = response.data as SimulateResponse;
-          setData(responseData);
+        if (!ignore) {
+          setLoadingSimulate(false);
+          if ("data" in response) {
+            const responseData = response.data as SimulateResponse;
+            setData(responseData);
+          }
         }
       });
     }
+    return () => {
+      ignore = true;
+    };
   }, [
     simulation,
     simulate,
