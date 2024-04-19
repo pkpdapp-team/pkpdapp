@@ -1,11 +1,12 @@
 # Using a 2-stage build. This is the builder for javascript frontend
 
-FROM node:19 as build
+FROM node:20 as build
 RUN mkdir -p /app/frontend
 WORKDIR /app/frontend
 COPY frontend-v2/package.json /app/frontend
+COPY frontend-v2/yarn.lock /app/frontend/
 
-RUN npm install --ignore-scripts
+RUN yarn install --ignore-scripts --frozen-lockfile
 
 COPY frontend-v2 /app/frontend/
 COPY .env.prod /app/
