@@ -105,6 +105,7 @@ export default function useSimulation(
     : undefined;
 
   useEffect(() => {
+    let ignore = false;
     if (
       simulation?.id &&
       sliderValues &&
@@ -124,13 +125,18 @@ export default function useSimulation(
           timeMax,
         ),
       }).then((response) => {
-        setLoadingSimulate(false);
-        if ("data" in response) {
-          const responseData = response.data as SimulateResponse[];
-          setData(responseData);
+        if (!ignore) {
+          setLoadingSimulate(false);
+          if ("data" in response) {
+            const responseData = response.data as SimulateResponse[];
+            setData(responseData);
+          }
         }
       });
     }
+    return () => {
+      ignore = true;
+    };
   }, [
     compound,
     model,
