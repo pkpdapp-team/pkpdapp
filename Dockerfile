@@ -1,12 +1,16 @@
 # Using a 2-stage build. This is the builder for javascript frontend
 
 FROM node:20 as build
+
+ENV YARN_VERSION 4.1.1
+RUN yarn policies set-version $YARN_VERSION
+
 RUN mkdir -p /app/frontend
 WORKDIR /app/frontend
 COPY frontend-v2/package.json /app/frontend
 COPY frontend-v2/yarn.lock /app/frontend/
 
-RUN yarn install --ignore-scripts --frozen-lockfile
+RUN yarn install --immutable
 
 COPY frontend-v2 /app/frontend/
 COPY .env.prod /app/
