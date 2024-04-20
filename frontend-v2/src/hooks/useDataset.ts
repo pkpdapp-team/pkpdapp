@@ -12,6 +12,7 @@ import {
   useBiomarkerTypeListQuery
 } from '../app/backendApi';
 
+const DEFAULT_DATASETS: DatasetRead[] = [];
 const DEFAULT_GROUPS: SubjectGroupListApiResponse = [];
 const DEFAULT_BIOMARKERS: BiomarkerTypeListApiResponse = [];
 
@@ -24,23 +25,26 @@ export default function useDataset(selectedProject: number | null) {
     { compoundId: project?.compound || 0 },
     { skip: !project?.compound },
   );
-  const { data: datasets, refetch } = useDatasetListQuery(
+  const { data: datasetData, refetch } = useDatasetListQuery(
     { projectId: selectedProjectOrZero },
     { skip: !selectedProject },
   );
-  const dataset = datasets?.[0];
+  const datasets = datasetData || DEFAULT_DATASETS;
+  const [dataset] = datasets;
   const { data: subjects } = useSubjectListQuery(
     { datasetId: dataset?.id || 0 },
     { skip: !dataset }
   );
-  const { data: subjectGroups, refetch: refetchSubjectGroups } = useSubjectGroupListQuery(
+  const { data: subjectGroupData, refetch: refetchSubjectGroups } = useSubjectGroupListQuery(
     { datasetId: dataset?.id || 0 },
     { skip: !dataset }
   );
-  const { data: biomarkerTypes, refetch: refetchBiomarkerTypes } = useBiomarkerTypeListQuery(
+  const subjectGroups = subjectGroupData || DEFAULT_GROUPS;
+  const { data: biomarkerTypeData, refetch: refetchBiomarkerTypes } = useBiomarkerTypeListQuery(
     { datasetId: dataset?.id || 0 },
     { skip: !dataset }
   );
+  const biomarkerTypes = biomarkerTypeData || DEFAULT_BIOMARKERS;
 
   const [
     createDataset
@@ -71,7 +75,7 @@ export default function useDataset(selectedProject: number | null) {
     refetch();
   }, [refetch]);
 
-  const subjectBiomarkers = (biomarkerTypes || DEFAULT_BIOMARKERS).filter(b => b.is_continuous)
+  const subjectBiomarkers = biomarkerTypes.filter(b => b.is_continuous)
       .map(b => {
         const timeUnit = units?.find(u => u.id === b.display_time_unit);
         const unit = units?.find(u => u.id === b.display_unit);
@@ -94,7 +98,7 @@ export default function useDataset(selectedProject: number | null) {
 
   return {
     dataset,
-    groups: subjectGroups || DEFAULT_GROUPS,
+    groups: subjectGroups,
     subjectBiomarkers: subjectBiomarkers,
     addDataset,
     updateDataset
