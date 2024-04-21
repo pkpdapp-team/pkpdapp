@@ -12,7 +12,7 @@ import {
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
 import {
-  ProtocolRead,
+  Simulate,
   Simulation,
   SimulationPlotRead,
   SimulationRead,
@@ -23,7 +23,6 @@ import {
   useCombinedModelListQuery,
   useCompoundRetrieveQuery,
   useProjectRetrieveQuery,
-  useProtocolListQuery,
   useSimulationListQuery,
   useSimulationUpdateMutation,
   useUnitListQuery,
@@ -46,6 +45,7 @@ import { selectIsProjectShared } from "../login/loginSlice";
 import { getConstVariables } from "../model/resetToSpeciesDefaults";
 import useDataset from "../../hooks/useDataset";
 import useExportSimulation from "./useExportSimulation";
+import { getSimulateInput, getVariablesSimulated } from "./useSimulation";
 
 type SliderValues = { [key: number]: number };
 
@@ -53,7 +53,6 @@ interface ErrorObject {
   error: string;
 }
 
-const DEFAULT_PROTOCOLS: ProtocolRead[] = [];
 
 const getSliderInitialValues = (
   simulation?: SimulationRead,
@@ -89,10 +88,6 @@ const Simulations: FC = () => {
       { projectId: projectIdOrZero },
       { skip: !projectId },
     );
-  const { data: projectProtocols } = useProtocolListQuery(
-    { projectId: projectIdOrZero },
-    { skip: !projectId },
-  );
   const model = useMemo(() => {
     return models?.[0] || undefined;
   }, [models]);
@@ -153,21 +148,25 @@ const Simulations: FC = () => {
     return timeMax;
   };
   const timeMax = simulation?.id && getTimeMax(simulation);
-  const protocols = useMemo(() => {
-    const datasetProtocols = groups?.flatMap(group => group.protocols) || [];
-    if (projectProtocols && datasetProtocols) {
-      return [...projectProtocols, ...datasetProtocols];
-    }
-    return DEFAULT_PROTOCOLS;
-  }, [projectProtocols, groups])
+
+  const simInputs = useMemo(() => simulation && sliderValues ?
+    getSimulateInput(
+      simulation,
+      sliderValues,
+      variables,
+      timeMax,
+    ) :
+    {} as Simulate,
+  [simulation, sliderValues, variables, timeMax]);
+  const simulatedVariables = useMemo(() => variables && sliderValues ?
+    getVariablesSimulated(variables, sliderValues) : 
+    [],
+  [variables, sliderValues]);
   const { loadingSimulate, data } = useSimulation(
-    simulation,
-    sliderValues,
-    model,
-    protocols,
-    variables,
-    compound,
-    timeMax
+    project,
+    simInputs,
+    simulatedVariables,
+    model
   );
 
   const {
@@ -229,14 +228,10 @@ const Simulations: FC = () => {
   }, [simulation, reset, variables]);
 
   const [exportSimulation, { error: simulateErrorBase }] = useExportSimulation({
-    simulation,
+    simInputs,
+    simulatedVariables,
     model,
-    protocols,
-    compound,
-    sliderValues,
-    timeMax,
-    project,
-    groups
+    project
   });
   const simulateError: ErrorObject | undefined = simulateErrorBase
     ? "data" in simulateErrorBase

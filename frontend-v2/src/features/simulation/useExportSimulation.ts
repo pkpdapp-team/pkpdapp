@@ -1,27 +1,25 @@
-import { getSimulateInput, getVariablesSimulated } from "./useSimulation";
+import { useMemo } from "react";
+import useDataset from "../../hooks/useDataset";
 import {
-  CompoundRead,
   CombinedModelRead,
   ProtocolListApiResponse,
-  SimulationRead,
+  Simulate,
   useCombinedModelSimulateCreateMutation,
+  useCompoundRetrieveQuery,
+  useProtocolListQuery,
   useUnitListQuery,
   useVariableListQuery,
   ProjectRead
 } from "../../app/backendApi";
 
-type SliderValues = { [key: number]: number };
-
 interface iExportSimulation {
-  simulation: SimulationRead | undefined;
-  sliderValues: SliderValues | undefined;
+  simInputs: Simulate;
+  simulatedVariables: { qname: string; value: number | undefined }[];
   model: CombinedModelRead | undefined;
-  protocols: ProtocolListApiResponse | undefined;
-  compound: CompoundRead | undefined;
-  timeMax: number | undefined;
   project: ProjectRead | undefined;
-  groups: { id: number; name: string }[];
 }
+
+const DEFAULT_PROTOCOLS: ProtocolListApiResponse = [];
 
 const parseResponse = (
   data: any,
@@ -52,15 +50,28 @@ const parseResponse = (
 }
 
 export default function useExportSimulation({
-  simulation,
-  sliderValues,
+  simInputs,
+  simulatedVariables,
   model,
-  protocols,
-  compound,
-  timeMax,
-  project,
-  groups
+  project
 }: iExportSimulation): [() => void, { error: any }] {
+  const { data: compound } =
+    useCompoundRetrieveQuery(
+      { id: project?.compound || 0 },
+      { skip: !project?.compound },
+    );
+  const { data: projectProtocols } = useProtocolListQuery(
+    { projectId: project?.id || 0 },
+    { skip: !project?.id },
+  );
+  const { groups } = useDataset(project?.id || 0);
+  const protocols = useMemo(() => {
+    const datasetProtocols = groups?.flatMap(group => group.protocols) || [];
+    if (projectProtocols && datasetProtocols) {
+      return [...projectProtocols, ...datasetProtocols];
+    }
+    return DEFAULT_PROTOCOLS;
+  }, [projectProtocols, groups])
   const { data: variables } = useVariableListQuery(
     { dosedPkModelId: model?.id || 0 },
     { skip: !model?.id },
@@ -73,30 +84,24 @@ export default function useExportSimulation({
         useCombinedModelSimulateCreateMutation();
   const exportSimulation = () => {
     if (
-      simulation &&
+      simInputs.variables &&
+      simInputs.outputs &&
+      simInputs.time_max &&
       variables &&
       units &&
       model &&
       protocols &&
       compound &&
-      sliderValues &&
       project &&
       groups
     ) {
 
-      const allParams = getVariablesSimulated(variables, sliderValues);
-      console.log("Export to CSV: simulating with params", allParams);
+      console.log("Export to CSV: simulating with params", simulatedVariables);
       simulate({
         id: model.id,
-        simulate: getSimulateInput(
-          simulation,
-          sliderValues,
-          variables,
-          timeMax,
-          true,
-        ),
+        simulate: simInputs,
       }).then((response) => {
-        let rows = allParams.map((p) => [p.qname, p.value]);
+        let rows = simulatedVariables.map((p) => [p.qname, p.value]);
         if ("data" in response) {
           const cols = Object.keys(response.data[0].outputs);
           const vars = cols.map((vid) =>
@@ -117,7 +122,9 @@ export default function useExportSimulation({
             ...rows,
             [...varNames, 'Group'],
             ...response.data.flatMap((data, index) => {
-              const label = index === 0 ? 'Project' : groups[index - 1].name;
+              const label = index === 0 ?
+                'Project' :
+                groups[index - 1].id_in_dataset || groups[index - 1].name;
               return parseResponse(data, timeCol, label)
             })
           ];

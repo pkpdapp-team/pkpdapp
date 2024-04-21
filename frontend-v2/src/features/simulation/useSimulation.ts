@@ -1,20 +1,24 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
-  CompoundRead,
   CombinedModelRead,
-  ProtocolListApiResponse,
+  ProtocolRead,
   Simulate,
   SimulationRead,
   SimulateResponse,
   VariableRead,
-  VariableListApiResponse,
   useCombinedModelSimulateCreateMutation,
+  useCompoundRetrieveQuery,
+  useProtocolListQuery,
+  ProjectRead
 } from "../../app/backendApi";
+import useDataset from "../../hooks/useDataset";
 
 type SliderValues = { [key: number]: number };
 interface ErrorObject {
   error: string;
 }
+
+const DEFAULT_PROTOCOLS: ProtocolRead[] = [];
 
 export const getSimulateInput = (
   simulation: SimulationRead,
@@ -86,14 +90,28 @@ export const getVariablesSimulated = (
 };
 
 export default function useSimulation(
-  simulation: SimulationRead | undefined,
-  sliderValues: SliderValues | undefined,
-  model: CombinedModelRead | undefined,
-  protocols: ProtocolListApiResponse | undefined,
-  variables: VariableListApiResponse | undefined,
-  compound: CompoundRead | undefined,
-  timeMax: number | undefined
+  project: ProjectRead | undefined,
+  simInputs: Simulate,
+  simulatedVariables: { qname: string; value: number | undefined }[],
+  model: CombinedModelRead | undefined
 ) {
+  const { data: compound } =
+    useCompoundRetrieveQuery(
+      { id: project?.compound || 0 },
+      { skip: !project?.compound },
+    );
+  const { data: projectProtocols } = useProtocolListQuery(
+    { projectId: project?.id || 0 },
+    { skip: !project?.id },
+  );
+  const { groups } = useDataset(project?.id || 0);
+  const protocols = useMemo(() => {
+    const datasetProtocols = groups?.flatMap(group => group.protocols) || [];
+    if (projectProtocols && datasetProtocols) {
+      return [...projectProtocols, ...datasetProtocols];
+    }
+    return DEFAULT_PROTOCOLS;
+  }, [projectProtocols, groups])
   const [loadingSimulate, setLoadingSimulate] = useState<boolean>(false);
   const [data, setData] = useState<SimulateResponse[]>([]);
   const [simulate, { error: simulateErrorBase }] =
@@ -107,23 +125,17 @@ export default function useSimulation(
   useEffect(() => {
     let ignore = false;
     if (
-      simulation?.id &&
-      sliderValues &&
-      variables &&
+      simInputs.outputs?.length > 2 &&
+      simInputs.time_max &&
       model &&
       protocols &&
       compound
     ) {
       setLoadingSimulate(true);
-      console.log("Simulating with params", getVariablesSimulated(variables, sliderValues));
+      console.log("Simulating with params", simulatedVariables);
       simulate({
         id: model.id,
-        simulate: getSimulateInput(
-          simulation,
-          sliderValues,
-          variables,
-          timeMax,
-        ),
+        simulate: simInputs,
       }).then((response) => {
         if (!ignore) {
           setLoadingSimulate(false);
@@ -142,10 +154,8 @@ export default function useSimulation(
     model,
     protocols,
     simulate,
-    simulation,
-    sliderValues,
-    timeMax,
-    variables,
+    simInputs,
+    simulatedVariables
   ]);
 
   return {
