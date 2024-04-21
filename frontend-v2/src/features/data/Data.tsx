@@ -6,7 +6,6 @@ import { Box, Button, Tab, Tabs, Typography } from "@mui/material";
 import { DataGrid } from '@mui/x-data-grid';
 import LoadDataStepper from "./LoadDataStepper";
 import useDataset from "../../hooks/useDataset";
-import { Route } from "@mui/icons-material";
 
 const Data:FC = () => {
   const [tab, setTab] = useState(0);
