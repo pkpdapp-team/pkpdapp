@@ -28,10 +28,10 @@ export default function useProtocols() {
     );
   const { data: projectProtocols } = useProtocolListQuery(
     { projectId: projectIdOrZero },
-    { skip: !project?.id },
+    { skip: !projectId },
   );
   const { groups } = useDataset(projectIdOrZero);
-  
+
   const protocols = useMemo(() => {
     const datasetProtocols = groups?.flatMap(group => group.protocols) || [];
     if (projectProtocols && datasetProtocols) {
