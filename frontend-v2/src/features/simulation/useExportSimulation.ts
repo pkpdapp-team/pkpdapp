@@ -1,12 +1,9 @@
-import { useMemo } from "react";
+import useProtocols from "./useProtocols";
 import useDataset from "../../hooks/useDataset";
 import {
   CombinedModelRead,
-  ProtocolListApiResponse,
   Simulate,
   useCombinedModelSimulateCreateMutation,
-  useCompoundRetrieveQuery,
-  useProtocolListQuery,
   useUnitListQuery,
   useVariableListQuery,
   ProjectRead
@@ -18,8 +15,6 @@ interface iExportSimulation {
   model: CombinedModelRead | undefined;
   project: ProjectRead | undefined;
 }
-
-const DEFAULT_PROTOCOLS: ProtocolListApiResponse = [];
 
 const parseResponse = (
   data: any,
@@ -55,23 +50,8 @@ export default function useExportSimulation({
   model,
   project
 }: iExportSimulation): [() => void, { error: any }] {
-  const { data: compound } =
-    useCompoundRetrieveQuery(
-      { id: project?.compound || 0 },
-      { skip: !project?.compound },
-    );
-  const { data: projectProtocols } = useProtocolListQuery(
-    { projectId: project?.id || 0 },
-    { skip: !project?.id },
-  );
   const { groups } = useDataset(project?.id || 0);
-  const protocols = useMemo(() => {
-    const datasetProtocols = groups?.flatMap(group => group.protocols) || [];
-    if (projectProtocols && datasetProtocols) {
-      return [...projectProtocols, ...datasetProtocols];
-    }
-    return DEFAULT_PROTOCOLS;
-  }, [projectProtocols, groups])
+  const { compound, protocols } = useProtocols();
   const { data: variables } = useVariableListQuery(
     { dosedPkModelId: model?.id || 0 },
     { skip: !model?.id },

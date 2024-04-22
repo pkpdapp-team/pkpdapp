@@ -1,24 +1,18 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
+import useProtocols from "./useProtocols";
 import {
   CombinedModelRead,
-  ProtocolRead,
   Simulate,
   SimulationRead,
   SimulateResponse,
   VariableRead,
-  useCombinedModelSimulateCreateMutation,
-  useCompoundRetrieveQuery,
-  useProtocolListQuery,
-  ProjectRead
+  useCombinedModelSimulateCreateMutation
 } from "../../app/backendApi";
-import useDataset from "../../hooks/useDataset";
 
 type SliderValues = { [key: number]: number };
 interface ErrorObject {
   error: string;
 }
-
-const DEFAULT_PROTOCOLS: ProtocolRead[] = [];
 
 export const getSimulateInput = (
   simulation: SimulationRead,
@@ -90,28 +84,11 @@ export const getVariablesSimulated = (
 };
 
 export default function useSimulation(
-  project: ProjectRead | undefined,
   simInputs: Simulate,
   simulatedVariables: { qname: string; value: number | undefined }[],
   model: CombinedModelRead | undefined
 ) {
-  const { data: compound } =
-    useCompoundRetrieveQuery(
-      { id: project?.compound || 0 },
-      { skip: !project?.compound },
-    );
-  const { data: projectProtocols } = useProtocolListQuery(
-    { projectId: project?.id || 0 },
-    { skip: !project?.id },
-  );
-  const { groups } = useDataset(project?.id || 0);
-  const protocols = useMemo(() => {
-    const datasetProtocols = groups?.flatMap(group => group.protocols) || [];
-    if (projectProtocols && datasetProtocols) {
-      return [...projectProtocols, ...datasetProtocols];
-    }
-    return DEFAULT_PROTOCOLS;
-  }, [projectProtocols, groups])
+  const { compound, protocols } = useProtocols();
   const [loadingSimulate, setLoadingSimulate] = useState<boolean>(false);
   const [data, setData] = useState<SimulateResponse[]>([]);
   const [simulate, { error: simulateErrorBase }] =

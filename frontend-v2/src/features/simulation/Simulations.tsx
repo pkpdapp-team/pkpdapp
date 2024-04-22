@@ -163,7 +163,6 @@ const Simulations: FC = () => {
     [],
   [variables, sliderValues]);
   const { loadingSimulate, data } = useSimulation(
-    project,
     simInputs,
     simulatedVariables,
     model
