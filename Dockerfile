@@ -19,7 +19,7 @@ COPY .env.prod /app/
 ARG GIT_COMMIT_ID
 ENV REACT_APP_VERSION=$GIT_COMMIT_ID
 
-RUN npm run build
+RUN yarn build
 
 FROM python:3.10
 
