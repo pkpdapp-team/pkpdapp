@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
 import {
   DatasetRead,
   BiomarkerTypeListApiResponse,
@@ -32,31 +32,22 @@ export default function useDataset(selectedProject: number | null) {
   );
   const { data: subjects } = useSubjectListQuery(
     { datasetId: datasetIdOrZero },
-    { skip: !dataset }
+    { skip: !datasetIdOrZero }
   );
   const { data: subjectGroupData, refetch: refetchSubjectGroups } = useSubjectGroupListQuery(
     { datasetId: datasetIdOrZero },
-    { skip: !dataset }
+    { skip: !datasetIdOrZero }
   );
   const subjectGroups = subjectGroupData || DEFAULT_GROUPS;
   const { data: biomarkerTypeData, refetch: refetchBiomarkerTypes } = useBiomarkerTypeListQuery(
     { datasetId: datasetIdOrZero },
-    { skip: !dataset }
+    { skip: !datasetIdOrZero }
   );
   const biomarkerTypes = biomarkerTypeData || DEFAULT_BIOMARKERS;
 
   const [
     createDataset
   ] = useDatasetCreateMutation();
-
-  useEffect(() => {
-    if (dataset?.id) {
-      console.log('refetching groups and observations')
-      refetchSubjectGroups();
-      refetchBiomarkerTypes();
-    }
-  }, [dataset, refetchBiomarkerTypes, refetchSubjectGroups]);
-
   
   async function addDataset(projectId: number) {
     const response = await createDataset({
@@ -72,7 +63,9 @@ export default function useDataset(selectedProject: number | null) {
   const updateDataset = useCallback((newDataset: DatasetRead) => {
     console.log('updating dataset', newDataset)
     refetch();
-  }, [refetch]);
+    refetchSubjectGroups();
+    refetchBiomarkerTypes();
+  }, [refetch, refetchSubjectGroups, refetchBiomarkerTypes]);
 
   const subjectBiomarkers = biomarkerTypes.filter(b => b.is_continuous)
       .map(b => {
