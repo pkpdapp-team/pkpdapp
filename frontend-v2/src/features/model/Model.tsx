@@ -100,6 +100,7 @@ const Model: FC = () => {
     compound: 0,
     users: [],
     protocols: [],
+    datasets: [],
   };
 
   const defaultValues: FormData = {

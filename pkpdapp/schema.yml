@@ -4492,6 +4492,11 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ProjectAccess'
+        datasets:
+          type: array
+          items:
+            type: integer
+          readOnly: true
         protocols:
           type: array
           items:
@@ -5028,6 +5033,11 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ProjectAccess'
+        datasets:
+          type: array
+          items:
+            type: integer
+          readOnly: true
         protocols:
           type: array
           items:
@@ -5066,6 +5076,7 @@ components:
       required:
       - compound
       - created
+      - datasets
       - id
       - name
       - protocols

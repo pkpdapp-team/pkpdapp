@@ -3,16 +3,15 @@ import {
   DatasetRead,
   BiomarkerTypeListApiResponse,
   SubjectGroupListApiResponse,
-  useDatasetListQuery,
+  useDatasetRetrieveQuery,
   useDatasetCreateMutation,
   useProjectRetrieveQuery,
   useSubjectGroupListQuery,
   useSubjectListQuery,
   useUnitListQuery,
-  useBiomarkerTypeListQuery
+  useBiomarkerTypeListQuery,
 } from '../app/backendApi';
 
-const DEFAULT_DATASETS: DatasetRead[] = [];
 const DEFAULT_GROUPS: SubjectGroupListApiResponse = [];
 const DEFAULT_BIOMARKERS: BiomarkerTypeListApiResponse = [];
 
@@ -25,23 +24,23 @@ export default function useDataset(selectedProject: number | null) {
     { compoundId: project?.compound || 0 },
     { skip: !project?.compound },
   );
-  const { data: datasetData, refetch } = useDatasetListQuery(
-    { projectId: selectedProjectOrZero },
-    { skip: !selectedProject },
+  const datasetIdOrZero = project?.datasets[0] || 0;
+
+  const { data: dataset, refetch } = useDatasetRetrieveQuery(
+    { id: datasetIdOrZero },
+    { skip: !datasetIdOrZero }
   );
-  const datasets = datasetData || DEFAULT_DATASETS;
-  const [dataset] = datasets;
   const { data: subjects } = useSubjectListQuery(
-    { datasetId: dataset?.id || 0 },
+    { datasetId: datasetIdOrZero },
     { skip: !dataset }
   );
   const { data: subjectGroupData, refetch: refetchSubjectGroups } = useSubjectGroupListQuery(
-    { datasetId: dataset?.id || 0 },
+    { datasetId: datasetIdOrZero },
     { skip: !dataset }
   );
   const subjectGroups = subjectGroupData || DEFAULT_GROUPS;
   const { data: biomarkerTypeData, refetch: refetchBiomarkerTypes } = useBiomarkerTypeListQuery(
-    { datasetId: dataset?.id || 0 },
+    { datasetId: datasetIdOrZero },
     { skip: !dataset }
   );
   const biomarkerTypes = biomarkerTypeData || DEFAULT_BIOMARKERS;
