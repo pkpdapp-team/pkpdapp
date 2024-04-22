@@ -12,7 +12,6 @@ import {
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
 import {
-  Simulate,
   Simulation,
   SimulationPlotRead,
   SimulationRead,
@@ -34,6 +33,8 @@ import { FC, useCallback, useEffect, useMemo, useState, useRef } from "react";
 import SimulationPlotView from "./SimulationPlotView";
 import SimulationSliderView from "./SimulationSliderView";
 import useSimulation from "./useSimulation";
+import useSimulationInputs from "./useSimulationInputs";
+import useSimulatedVariables from "./useSimulatedVariables";
 import DropdownButton from "../../components/DropdownButton";
 import SettingsIcon from "@mui/icons-material/Settings";
 import FloatField from "../../components/FloatField";
@@ -45,7 +46,6 @@ import { selectIsProjectShared } from "../login/loginSlice";
 import { getConstVariables } from "../model/resetToSpeciesDefaults";
 import useDataset from "../../hooks/useDataset";
 import useExportSimulation from "./useExportSimulation";
-import { getSimulateInput, getVariablesSimulated } from "./useSimulation";
 
 type SliderValues = { [key: number]: number };
 
@@ -149,19 +149,8 @@ const Simulations: FC = () => {
   };
   const timeMax = simulation?.id && getTimeMax(simulation);
 
-  const simInputs = useMemo(() => simulation && sliderValues ?
-    getSimulateInput(
-      simulation,
-      sliderValues,
-      variables,
-      timeMax,
-    ) :
-    {} as Simulate,
-  [simulation, sliderValues, variables, timeMax]);
-  const simulatedVariables = useMemo(() => variables && sliderValues ?
-    getVariablesSimulated(variables, sliderValues) : 
-    [],
-  [variables, sliderValues]);
+  const simInputs = useSimulationInputs(simulation, sliderValues, variables, timeMax);
+  const simulatedVariables = useSimulatedVariables(variables, sliderValues);
   const { loadingSimulate, data } = useSimulation(
     simInputs,
     simulatedVariables,
