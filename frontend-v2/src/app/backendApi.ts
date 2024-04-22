@@ -2463,6 +2463,7 @@ export type Project = {
 export type ProjectRead = {
   id: number;
   user_access: ProjectAccessRead[];
+  datasets: number[];
   protocols: number[];
   name: string;
   description?: string;
@@ -2481,6 +2482,7 @@ export type PatchedProject = {
 export type PatchedProjectRead = {
   id?: number;
   user_access?: ProjectAccessRead[];
+  datasets?: number[];
   protocols?: number[];
   name?: string;
   description?: string;

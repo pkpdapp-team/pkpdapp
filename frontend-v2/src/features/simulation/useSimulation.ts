@@ -1,14 +1,12 @@
 import { useEffect, useState } from "react";
+import useProtocols from "./useProtocols";
 import {
-  CompoundRead,
   CombinedModelRead,
-  ProtocolListApiResponse,
   Simulate,
   SimulationRead,
   SimulateResponse,
   VariableRead,
-  VariableListApiResponse,
-  useCombinedModelSimulateCreateMutation,
+  useCombinedModelSimulateCreateMutation
 } from "../../app/backendApi";
 
 type SliderValues = { [key: number]: number };
@@ -86,14 +84,11 @@ export const getVariablesSimulated = (
 };
 
 export default function useSimulation(
-  simulation: SimulationRead | undefined,
-  sliderValues: SliderValues | undefined,
-  model: CombinedModelRead | undefined,
-  protocols: ProtocolListApiResponse | undefined,
-  variables: VariableListApiResponse | undefined,
-  compound: CompoundRead | undefined,
-  timeMax: number | undefined
+  simInputs: Simulate,
+  simulatedVariables: { qname: string; value: number | undefined }[],
+  model: CombinedModelRead | undefined
 ) {
+  const { compound, protocols } = useProtocols();
   const [loadingSimulate, setLoadingSimulate] = useState<boolean>(false);
   const [data, setData] = useState<SimulateResponse[]>([]);
   const [simulate, { error: simulateErrorBase }] =
@@ -107,23 +102,17 @@ export default function useSimulation(
   useEffect(() => {
     let ignore = false;
     if (
-      simulation?.id &&
-      sliderValues &&
-      variables &&
+      simInputs.outputs?.length > 2 &&
+      simInputs.time_max &&
       model &&
       protocols &&
       compound
     ) {
       setLoadingSimulate(true);
-      console.log("Simulating with params", getVariablesSimulated(variables, sliderValues));
+      console.log("Simulating with params", simulatedVariables);
       simulate({
         id: model.id,
-        simulate: getSimulateInput(
-          simulation,
-          sliderValues,
-          variables,
-          timeMax,
-        ),
+        simulate: simInputs,
       }).then((response) => {
         if (!ignore) {
           setLoadingSimulate(false);
@@ -142,10 +131,8 @@ export default function useSimulation(
     model,
     protocols,
     simulate,
-    simulation,
-    sliderValues,
-    timeMax,
-    variables,
+    simInputs,
+    simulatedVariables
   ]);
 
   return {
