@@ -9,6 +9,8 @@ RUN mkdir -p /app/frontend
 WORKDIR /app/frontend
 COPY frontend-v2/package.json /app/frontend
 COPY frontend-v2/yarn.lock /app/frontend/
+COPY frontend-v2/.yarnrc.yml /app/frontend/
+COPY frontend-v2/.yarn /app/frontend/.yarn
 
 RUN yarn install --immutable
 
