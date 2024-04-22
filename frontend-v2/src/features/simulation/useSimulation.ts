@@ -102,7 +102,7 @@ export default function useSimulation(
   useEffect(() => {
     let ignore = false;
     if (
-      simInputs.outputs?.length > 2 &&
+      simInputs.outputs?.length > 1 &&
       simInputs.time_max &&
       model &&
       protocols &&
