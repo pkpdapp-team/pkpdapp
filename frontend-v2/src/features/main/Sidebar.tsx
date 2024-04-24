@@ -168,7 +168,7 @@ export default function Sidebar() {
       return true;
     }
     if (page === PageName.DATA && PageName.MODEL in errors) {
-      return false;
+      return true;
     }
     if (
       page === PageName.SIMULATIONS &&
