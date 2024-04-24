@@ -28,7 +28,9 @@ const Data:FC = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   function handleNewUpload() {
-    setIsLoading(true);
+    if (groups.length === 0 || window.confirm('Are you sure you want to delete the current dataset?')) {
+      setIsLoading(true);
+    }
   }
 
   function onUploadComplete() {
