@@ -36,6 +36,10 @@ function TabPanel(props: TabPanelProps) {
 
 const MainContent: React.FC = () => {
   const page = useSelector((state: RootState) => state.main.selectedPage);
+  const projectId = useSelector(
+    (state: RootState) => state.main.selectedProject,
+  );
+  const projectIdOrZero = projectId || 0;
 
   return (
     <div>
@@ -43,19 +47,19 @@ const MainContent: React.FC = () => {
         <ProjectTable />
       </TabPanel>
       <TabPanel value={page} index={PageName.DRUG}>
-        <Drug />
+        <Drug key={projectIdOrZero} />
       </TabPanel>
       <TabPanel value={page} index={PageName.MODEL}>
-        <Model />
+        <Model key={projectIdOrZero} />
       </TabPanel>
       <TabPanel value={page} index={PageName.DATA}>
-        <Data />
+        <Data key={projectIdOrZero} />
       </TabPanel>
       <TabPanel value={page} index={PageName.TRIAL_DESIGN}>
-        <Protocols />
+        <Protocols key={projectIdOrZero} />
       </TabPanel>
       <TabPanel value={page} index={PageName.SIMULATIONS}>
-        <Simulations />
+        <Simulations key={projectIdOrZero} />
       </TabPanel>
       <TabPanel value={page} index={PageName.HELP}>
         <Help />
