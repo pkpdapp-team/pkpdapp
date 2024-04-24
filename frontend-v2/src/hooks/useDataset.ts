@@ -30,7 +30,7 @@ export default function useDataset(selectedProject: number | null) {
     { id: datasetIdOrZero },
     { skip: !datasetIdOrZero }
   );
-  const { data: subjects } = useSubjectListQuery(
+  const { data: subjects, refetch: refetchSubjects } = useSubjectListQuery(
     { datasetId: datasetIdOrZero },
     { skip: !datasetIdOrZero }
   );
@@ -63,9 +63,10 @@ export default function useDataset(selectedProject: number | null) {
   const updateDataset = useCallback((newDataset: DatasetRead) => {
     console.log('updating dataset', newDataset)
     refetch();
+    refetchSubjects();
     refetchSubjectGroups();
     refetchBiomarkerTypes();
-  }, [refetch, refetchSubjectGroups, refetchBiomarkerTypes]);
+  }, [refetch, refetchSubjects, refetchSubjectGroups, refetchBiomarkerTypes]);
 
   const subjectBiomarkers = biomarkerTypes.filter(b => b.is_continuous)
       .map(b => {
