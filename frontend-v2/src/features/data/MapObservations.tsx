@@ -136,83 +136,86 @@ const MapObservations: FC<IMapObservations> = ({state}: IMapObservations) => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {uniqueObservationIds.map((obsId) => {
-              const currentRow = observationRows.find(row => observationIdField ? row[observationIdField] === obsId : true);
-              const selectedVariable = variables?.find(variable => variable.qname === currentRow?.['Observation Variable']);
-              let selectedUnitSymbol = currentRow?.[observationUnitField || 'Observation_unit'];
-              selectedUnitSymbol = units?.find(unit => unit.symbol === selectedUnitSymbol)?.symbol;
-              const compatibleUnits = selectedVariable
-                ? units?.find(unit => unit.id === selectedVariable?.unit)?.compatible_units
-                : units;
-              ['%', 'fraction', 'ratio'].forEach(token => {
-                if (selectedUnitSymbol?.toLowerCase().includes(token)) {
-                  selectedUnitSymbol = '';
+            {uniqueObservationIds
+              .sort((a, b) => a > b ? 1 : -1)
+              .map((obsId) => {
+                const currentRow = observationRows.find(row => observationIdField ? row[observationIdField] === obsId : true);
+                const selectedVariable = variables?.find(variable => variable.qname === currentRow?.['Observation Variable']);
+                let selectedUnitSymbol = currentRow?.[observationUnitField || 'Observation_unit'];
+                selectedUnitSymbol = units?.find(unit => unit.symbol === selectedUnitSymbol)?.symbol;
+                const compatibleUnits = selectedVariable
+                  ? units?.find(unit => unit.id === selectedVariable?.unit)?.compatible_units
+                  : units;
+                ['%', 'fraction', 'ratio'].forEach(token => {
+                  if (selectedUnitSymbol?.toLowerCase().includes(token)) {
+                    selectedUnitSymbol = '';
+                  }
+                });
+                const compatibleVariables = modelOutputs.filter(variable => {
+                  const variableUnit = units?.find(unit => unit.id === variable.unit);
+                  const compatibleSymbols = variableUnit?.compatible_units.map(u => u.symbol);
+                  return observationUnitField && selectedUnitSymbol
+                    ? compatibleSymbols?.includes(selectedUnitSymbol)
+                    : true;
+                });
+                const unitsShouldBeFixed = observationUnitField && selectedUnitSymbol;
+                if (unitsAreFixed && !unitsShouldBeFixed) {
+                  setUnitsAreFixed(false);
                 }
-              });
-              const compatibleVariables = modelOutputs.filter(variable => {
-                const variableUnit = units?.find(unit => unit.id === variable.unit);
-                const compatibleSymbols = variableUnit?.compatible_units.map(u => u.symbol);
-                return observationUnitField && selectedUnitSymbol
-                  ? compatibleSymbols?.includes(selectedUnitSymbol)
-                  : true;
-              });
-              const unitsShouldBeFixed = observationUnitField && selectedUnitSymbol;
-              if (unitsAreFixed && !unitsShouldBeFixed) {
-                setUnitsAreFixed(false);
-              }
-              return (
-                <TableRow key={obsId}>
-                  <TableCell>
-                    {obsId}
-                  </TableCell>
-                  <TableCell>
-                    <FormControl fullWidth>
-                      <InputLabel id={`select-var-${obsId}-label`}>Variable</InputLabel>
-                      <Select
-                        labelId={`select-var-${obsId}-label`}
-                        id={`select-var-${obsId}`}
-                        label='Variable'
-                        value={selectedVariable?.qname}
-                        onChange={handleObservationChange(obsId)}
-                      >
-                        {compatibleVariables?.map((variable) => (
-                          <MenuItem
-                            key={variable.name}
-                            value={variable.qname}
-                          >
-                            {variable.name}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  </TableCell>
-                  <TableCell>
-                    {unitsAreFixed ?
-                      displayUnitSymbol(selectedUnitSymbol) :
+                return (
+                  <TableRow key={obsId}>
+                    <TableCell>
+                      {obsId}
+                    </TableCell>
+                    <TableCell>
                       <FormControl fullWidth>
-                        <InputLabel id={`select-unit-${obsId}-label`}>Units</InputLabel>
+                        <InputLabel id={`select-var-${obsId}-label`}>Variable</InputLabel>
                         <Select
-                          labelId={`select-unit-${obsId}-label`}
-                          id={`select-unit-${obsId}`}
-                          label='Units'
-                          value={displayUnitSymbol(selectedUnitSymbol)}
-                          onChange={handleUnitChange(obsId)}
+                          labelId={`select-var-${obsId}-label`}
+                          id={`select-var-${obsId}`}
+                          label='Variable'
+                          value={selectedVariable?.qname}
+                          onChange={handleObservationChange(obsId)}
                         >
-                          {compatibleUnits?.map((unit) => (
+                          {compatibleVariables?.map((variable) => (
                             <MenuItem
-                              key={unit.id}
-                              value={displayUnitSymbol(unit.symbol)}
+                              key={variable.name}
+                              value={variable.qname}
                             >
-                              {displayUnitSymbol(unit.symbol)}
+                              {variable.name}
                             </MenuItem>
                           ))}
                         </Select>
                       </FormControl>
-                    }
-                  </TableCell>
-                </TableRow>
-              )
-            })}
+                    </TableCell>
+                    <TableCell>
+                      {unitsAreFixed ?
+                        displayUnitSymbol(selectedUnitSymbol) :
+                        <FormControl fullWidth>
+                          <InputLabel id={`select-unit-${obsId}-label`}>Units</InputLabel>
+                          <Select
+                            labelId={`select-unit-${obsId}-label`}
+                            id={`select-unit-${obsId}`}
+                            label='Units'
+                            value={displayUnitSymbol(selectedUnitSymbol)}
+                            onChange={handleUnitChange(obsId)}
+                          >
+                            {compatibleUnits?.map((unit) => (
+                              <MenuItem
+                                key={unit.id}
+                                value={displayUnitSymbol(unit.symbol)}
+                              >
+                                {displayUnitSymbol(unit.symbol)}
+                              </MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+                      }
+                    </TableCell>
+                  </TableRow>
+                )
+              })
+            }
           </TableBody>
         </Table>
         <Table>
