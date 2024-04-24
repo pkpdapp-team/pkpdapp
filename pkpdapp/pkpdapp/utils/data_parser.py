@@ -216,7 +216,8 @@ class DataParser:
                         "percent" in xl or
                         "fraction" in xl or
                         "ratio" in xl or
-                        "%" in xl
+                        "%" in xl or
+                        "dimensionless" in xl
                     ):
                         return ""
                     else:

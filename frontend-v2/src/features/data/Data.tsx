@@ -7,6 +7,10 @@ import { DataGrid } from '@mui/x-data-grid';
 import LoadDataStepper from "./LoadDataStepper";
 import useDataset from "../../hooks/useDataset";
 
+function displayUnitSymbol(symbol: string | undefined) {
+  return symbol === '' ? 'dimensionless' : symbol;
+}
+
 const Data:FC = () => {
   const [tab, setTab] = useState(0);
   const projectId = useSelector(
@@ -82,7 +86,7 @@ const Data:FC = () => {
       'Time': row.time,
       'Time Unit': row.timeUnit?.symbol,
       'Observation': row.value,
-      'Observation Unit': row.unit?.symbol,
+      'Observation Unit': displayUnitSymbol(row.unit?.symbol),
       'Observation ID': row.label,
       'Observation Variable': row.qname,
       Group: groupId,

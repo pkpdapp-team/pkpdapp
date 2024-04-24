@@ -29,6 +29,10 @@ interface IMapObservations {
   firstTime: boolean;
 }
 
+function displayUnitSymbol(symbol: string | undefined) {
+  return symbol === '' ? 'dimensionless' : symbol;
+}
+
 const MapObservations: FC<IMapObservations> = ({state}: IMapObservations) => {
   const [unitsAreFixed, setUnitsAreFixed] = useState(true);
   const projectId = useSelector(
@@ -172,25 +176,35 @@ const MapObservations: FC<IMapObservations> = ({state}: IMapObservations) => {
                         onChange={handleObservationChange(obsId)}
                       >
                         {compatibleVariables?.map((variable) => (
-                          <MenuItem key={variable.name} value={variable.qname}>{variable.name}</MenuItem>
+                          <MenuItem
+                            key={variable.name}
+                            value={variable.qname}
+                          >
+                            {variable.name}
+                          </MenuItem>
                         ))}
                       </Select>
                     </FormControl>
                   </TableCell>
                   <TableCell>
                     {unitsAreFixed ?
-                      selectedUnitSymbol :
+                      displayUnitSymbol(selectedUnitSymbol) :
                       <FormControl fullWidth>
                         <InputLabel id={`select-unit-${obsId}-label`}>Units</InputLabel>
                         <Select
                           labelId={`select-unit-${obsId}-label`}
                           id={`select-unit-${obsId}`}
                           label='Units'
-                          value={selectedUnitSymbol || ''}
+                          value={displayUnitSymbol(selectedUnitSymbol)}
                           onChange={handleUnitChange(obsId)}
                         >
                           {compatibleUnits?.map((unit) => (
-                            <MenuItem key={unit.symbol} value={unit.symbol}>{unit.symbol}</MenuItem>
+                            <MenuItem
+                              key={unit.id}
+                              value={displayUnitSymbol(unit.symbol)}
+                            >
+                              {displayUnitSymbol(unit.symbol)}
+                            </MenuItem>
                           ))}
                         </Select>
                       </FormControl>
@@ -235,7 +249,7 @@ const MapObservations: FC<IMapObservations> = ({state}: IMapObservations) => {
                 <TableRow key={index}>
                   <TableCell>{obsId}</TableCell>
                   <TableCell>{observation}</TableCell>
-                  <TableCell>{obsUnit}</TableCell>
+                  <TableCell>{displayUnitSymbol(obsUnit)}</TableCell>
                   <TableCell>{obsVariable}</TableCell>
                 </TableRow>
               )
