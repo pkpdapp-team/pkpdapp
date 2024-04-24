@@ -1,4 +1,4 @@
-import { Box, Input, InputLabel } from '@mui/material';
+import { Box, Button, Input, InputLabel } from '@mui/material';
 import { GridRowId } from '@mui/x-data-grid';
 import { FC, FormEvent, useRef } from 'react';
 import { StepperState } from './LoadDataStepper';
@@ -54,13 +54,24 @@ const SubjectGroupForm: FC<ISubjectGroupForm> = ({ group, selected, state }) => 
       </InputLabel>
       <Input
         inputRef={selectedGroupInput}
-        type='number'
+        type='text'
         id='selected-group'
         defaultValue={group.id}
         sx={{
           fontSize: '0.75rem',
         }}
       />
+      {' '}
+      <Button
+        type='submit'
+        variant='contained'
+        sx={{
+          fontSize: '0.5rem',
+          padding: '0.25rem'
+        }}
+        >
+          Confirm
+        </Button>
     </Box>
   )
 }
