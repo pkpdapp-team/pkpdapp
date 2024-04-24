@@ -23,8 +23,8 @@ interface IStepper {
   onFinish: () => void
 }
 
-const stepLabels = ['Upload Data', 'Map Dosing', 'Map Observations', 'Stratification', 'Preview Dataset'];
-const stepComponents = [LoadData, MapDosing, MapObservations, Stratification, PreviewData];
+const stepLabels = ['Upload Data', 'Stratification', 'Map Dosing', 'Map Observations', 'Preview Dataset'];
+const stepComponents = [LoadData, Stratification, MapDosing, MapObservations, PreviewData];
 
 type Row = {[key: string]: string};
 type Data = Row[];
