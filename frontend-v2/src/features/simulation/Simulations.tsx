@@ -79,7 +79,11 @@ const Simulations: FC = () => {
   );
   const { groups } = useDataset(projectId);
   const [visibleGroups, setVisibleGroups] =
-    useState<string[]>(['Project', ...groups.map(group => group.name)]);
+    useState<string[]>(['Project']);
+  useEffect(() => {
+    // display groups by default, when they are loaded or deleted.
+    setVisibleGroups(['Project', ...groups.map(group => group.name)]);
+  }, [groups])
   const projectIdOrZero = projectId || 0;
   const { data: project, isLoading: isProjectLoading } =
     useProjectRetrieveQuery({ id: projectIdOrZero }, { skip: !projectId });
