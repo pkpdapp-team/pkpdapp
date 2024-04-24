@@ -70,6 +70,10 @@ const LoadData: FC<ILoadDataProps> = ({state, firstTime}) => {
   }
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
+    state.setTimeUnit('');
+    state.setAmountUnit('');
+    state.setErrors([]);
+    state.setWarnings([]);
     acceptedFiles.forEach((file) => {
       const reader = new FileReader()
 
