@@ -2,10 +2,11 @@ import { FC, useState } from "react";
 import { useSelector } from "react-redux";
 import { useProjectRetrieveQuery, useUnitListQuery } from "../../app/backendApi";
 import { RootState } from "../../app/store";
-import { Box, Button, Tab, Tabs, Typography } from "@mui/material";
+import { Box, Button, Stack, Tab, Tabs, Typography } from "@mui/material";
 import { DataGrid } from '@mui/x-data-grid';
 import LoadDataStepper from "./LoadDataStepper";
 import useDataset from "../../hooks/useDataset";
+import generateCSV from './generateCSV';
 
 function displayUnitSymbol(symbol: string | undefined) {
   return symbol === '' ? 'dimensionless' : symbol;
@@ -28,6 +29,7 @@ const Data:FC = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   function handleNewUpload() {
+
     if (groups.length === 0 || window.confirm('Are you sure you want to delete the current dataset?')) {
       setIsLoading(true);
     }
@@ -50,6 +52,17 @@ const Data:FC = () => {
       id: `group-tab-${index}`,
       'aria-controls': 'group-tabpanel'
     };
+  }
+
+  function downloadCSV() {
+    const csv = generateCSV(dataset, groups, subjectBiomarkers, units);
+    const blob = new Blob(['\ufeff', csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${project?.name} data.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
   }
 
   const group = groups[tab];
@@ -113,12 +126,20 @@ const Data:FC = () => {
     <LoadDataStepper onFinish={onUploadComplete} onCancel={onCancel}  /> :
     <>
       <Box sx={{ display: 'flex', justifyContent: 'end' }}>
-        <Button
-          variant="outlined"
-          onClick={handleNewUpload}
-        >
-          Upload new dataset
-        </Button>
+        <Stack spacing={1}>
+          <Button
+            variant="outlined"
+            onClick={handleNewUpload}
+          >
+            Upload new dataset
+          </Button>
+          <Button
+            variant="outlined"
+            onClick={downloadCSV}
+          >
+            Download CSV
+          </Button>
+        </Stack>
       </Box>
       <Tabs value={tab} onChange={handleTabChange}>ß
         {groups?.map((group, index) => (

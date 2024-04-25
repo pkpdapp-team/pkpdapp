@@ -37,54 +37,31 @@ const PreviewData: FC<IPreviewData> = ({ state, firstTime }: IPreviewData) => {
     fields.push('Observation_unit')
   }
 
-  function downloadCSV() {
-    const csvHeaders = fields.join(',');
-    const csvBody = data.map(row => fields.map(field => row[field]).join(',')).join('\n');
-    const csv = `${csvHeaders}\n${csvBody}`;
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'data.csv';
-    a.click();
-    window.URL.revokeObjectURL(url);
-  }
-
   return (
-    <>
-      <Box component="div" sx={{ maxHeight: "40vh", overflow: 'auto', overflowX: 'auto' }}>
-        <Table>
-          <TableHead>
-            <TableRow>
+    <Box component="div" sx={{ maxHeight: "40vh", overflow: 'auto', overflowX: 'auto' }}>
+      <Table>
+        <TableHead>
+          <TableRow>
+            {fields.map((field, index) => (
+              <TableCell key={index}>
+                <Typography variant="h6" component="div" sx={{ flexGrow: 1, marginBottom: 1 }} align="center">
+                  {field}
+                </Typography>
+              </TableCell>
+            ))}
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {data.map((row, index) => (
+            <TableRow key={index}>
               {fields.map((field, index) => (
-                <TableCell key={index}>
-                  <Typography variant="h6" component="div" sx={{ flexGrow: 1, marginBottom: 1 }} align="center">
-                    {field}
-                  </Typography>
-                </TableCell>
+                <TableCell key={index}>{row[field]}</TableCell>
               ))}
             </TableRow>
-          </TableHead>
-          <TableBody>
-            {data.map((row, index) => (
-              <TableRow key={index}>
-                {fields.map((field, index) => (
-                  <TableCell key={index}>{row[field]}</TableCell>
-                ))}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </Box>
-      <Box sx={{ display: 'flex', justifyContent: 'right' }}>
-        <Button
-          variant="outlined"
-          onClick={downloadCSV}
-        >
-          Download CSV
-        </Button>
-      </Box>
-    </>
+          ))}
+        </TableBody>
+      </Table>
+    </Box>
   )
 }
 
