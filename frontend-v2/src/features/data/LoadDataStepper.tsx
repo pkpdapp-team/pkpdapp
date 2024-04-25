@@ -31,6 +31,7 @@ type Data = Row[];
 type Field = string;
 
 export type StepperState = {
+  fileName: string;
   fields: Field[];
   normalisedFields: Field[];
   data: Data;
@@ -38,6 +39,7 @@ export type StepperState = {
   warnings: string[];
   timeUnit?: string;
   setTimeUnit: (timeUnit: string) => void;
+  setFileName: (fileName: string) => void;
   setFields: (fields: Field[]) => void;
   setNormalisedFields: (fields: Field[]) => void;
   setData: (data: Data) => void;
@@ -48,6 +50,7 @@ export type StepperState = {
 }
 
 const LoadDataStepper: FC<IStepper> = ({ onCancel, onFinish }) => {
+  const [fileName, setFileName] = useState<string>('');
   const [data, setData] = useState<Data>([]);
   let [errors, setErrors] = useState<string[]>([]);
   const [warnings, setWarnings] = useState<string[]>([]);
@@ -64,6 +67,7 @@ const LoadDataStepper: FC<IStepper> = ({ onCancel, onFinish }) => {
   const { dataset, updateDataset } = useDataset(selectedProject);
 
   const state = {
+    fileName,
     fields,
     normalisedFields,
     data,
@@ -71,6 +75,7 @@ const LoadDataStepper: FC<IStepper> = ({ onCancel, onFinish }) => {
     warnings,
     setErrors,
     setWarnings,
+    setFileName,
     setFields,
     setNormalisedFields,
     setData,
@@ -137,6 +142,11 @@ const LoadDataStepper: FC<IStepper> = ({ onCancel, onFinish }) => {
           </Step>
         ))}
       </Stepper>
+      {state.fileName &&
+        <Box padding={1} sx={{ display: 'flex', justifyContent: 'center' }}>
+          <Typography sx={{ fontWeight: 'bold' }}>File: {state.fileName}</Typography>
+        </Box>
+      }
       {errors.map(error => <Alert key={error} severity="error">{error}</Alert>)}
       {warnings.map(warning => <Alert key={warning} severity="warning">{warning}</Alert>)}
       {isFinished ? 

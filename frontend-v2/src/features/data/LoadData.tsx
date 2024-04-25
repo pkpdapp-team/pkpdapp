@@ -80,6 +80,7 @@ const LoadData: FC<ILoadDataProps> = ({state, firstTime}) => {
       reader.onabort = () => state.setErrors(['file reading was aborted'])
       reader.onerror = () => state.setErrors(['file reading has failed'])
       reader.onload = () => {
+        state.setFileName(file.name);
         // Parse the CSV data
         const rawCsv = reader.result as string;
         const csvData = Papa.parse(rawCsv.trim(), { header: true });
