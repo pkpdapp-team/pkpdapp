@@ -60,7 +60,6 @@ const Data:FC = () => {
     const qname = protocol.mapped_qname;
     const doseType = protocol.dose_type;
     return protocol.doses.map(dose => ({
-      id: dose.id,
       Amount: dose.amount,
       'Amount Unit': amountUnit,
       Time: dose.start_time,
@@ -71,8 +70,11 @@ const Data:FC = () => {
       'Interdose Interval': dose.repeat_interval,
       'Amount Variable': qname
     }))
-  });
-  const dosingColumns = dosingRows[0] ? Object.keys(dosingRows[0]).map((field) => ({
+  })
+  .map((row, index) => ({ id: index + 1, ...row }));
+  const dosingColumns = dosingRows[0] ? Object.keys(dosingRows[0])
+  .filter(field => field !== 'id')
+  .map((field) => ({
     field,
     headerName: field,
     minWidth: field === 'Amount Variable' ? 150 :
@@ -83,7 +85,6 @@ const Data:FC = () => {
     const group = dataset?.groups?.find(group => group.subjects.includes(row.subjectId));
     const groupId = group?.id_in_dataset || group?.name;
     return  ({
-      id: row.id,
       'Subject ID': row.subjectDatasetId,
       'Time': row.time,
       'Time Unit': row.timeUnit?.symbol,
@@ -95,9 +96,11 @@ const Data:FC = () => {
     })
   }))
   .filter(row => row.Group === groupId)
-  .map((row, index) => ({ ...row, id: index + 1 })) || [];
+  .map((row, index) => ({ id: index + 1, ...row })) || [];
   const [firstRow] = observations;
-  const columns = firstRow ? Object.keys(firstRow).map((field) => ({
+  const columns = firstRow ? Object.keys(firstRow)
+  .filter(field => field !== 'id')
+  .map((field) => ({
     field,
     headerName: field,
     minWidth: field === 'Observation Variable' ? 150 :
