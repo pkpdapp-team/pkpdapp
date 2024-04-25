@@ -149,7 +149,7 @@ const LoadDataStepper: FC<IStepper> = ({ onCancel, onFinish }) => {
           <Button onClick={handleBack}>Back</Button>
         }
         <Button
-          disabled={isFinished || errors.length > 0}
+          disabled={data.length === 0 || isFinished || errors.length > 0}
           variant="contained"
           color="primary"
           onClick={stepState.activeStep === stepLabels.length - 1 ? handleFinish : handleNext}

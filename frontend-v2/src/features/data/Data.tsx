@@ -107,7 +107,9 @@ const Data:FC = () => {
       field.length > 10 ? 120 : 30
   })) : [];
 
-  return isLoading ?
+  const noData = !groups.length && !observations.length;
+
+  return (isLoading || noData) ?
     <LoadDataStepper onFinish={onUploadComplete} onCancel={onCancel}  /> :
     <>
       <Box sx={{ display: 'flex', justifyContent: 'end' }}>
