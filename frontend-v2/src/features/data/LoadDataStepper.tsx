@@ -49,7 +49,7 @@ export type StepperState = {
 
 const LoadDataStepper: FC<IStepper> = ({ onCancel, onFinish }) => {
   const [data, setData] = useState<Data>([]);
-  const [errors, setErrors] = useState<string[]>([]);
+  let [errors, setErrors] = useState<string[]>([]);
   const [warnings, setWarnings] = useState<string[]>([]);
   const [fields, setFields] = useState<string[]>([]);
   const [normalisedFields, setNormalisedFields] = useState<string[]>([]);
@@ -83,6 +83,13 @@ const LoadDataStepper: FC<IStepper> = ({ onCancel, onFinish }) => {
   const [stepState, setStepState] = useState({ activeStep: 0, maxStep: 0 });
   const StepComponent = stepComponents[stepState.activeStep];
   const isFinished = stepState.activeStep === stepLabels.length;
+  if (
+    data.length > 0 &&
+    !normalisedFields.includes('Time Unit') &&
+    !timeUnit
+  ) {
+    errors = [...errors, 'Time unit is not defined.']
+  }
 
   const handleNext = () => {
     setStepState((prevActiveStep) => ({ 

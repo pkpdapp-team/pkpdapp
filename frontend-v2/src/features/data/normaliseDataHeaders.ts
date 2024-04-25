@@ -23,7 +23,7 @@ const normalisation = {
   'Unit': ['unit', 'units'],
 }
 
-export const manditoryHeaders = ['Time', 'Observation', 'Time Unit']
+export const manditoryHeaders = ['Time', 'Observation']
 
 export const normalisedHeaders = Object.keys(normalisation)
 
