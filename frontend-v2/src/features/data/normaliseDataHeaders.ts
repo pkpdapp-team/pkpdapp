@@ -43,10 +43,10 @@ export const validateNormalisedFields = (fields: string[]) => {
     );
   }
   if (!fields.includes('Amount')) {
-    warnings.push('Amount has not been defined. Dosing amounts can be set in Trial Design.');
+    warnings.push('This CSV contains no dosing information. Dosing amounts and units can be set in Trial Design.');
   }
-  if (!fields.includes('Amount Unit')) {
-    warnings.push('Amount Unit has not been defined. Dosing units can be set in Trial Design.');
+  if (fields.includes('Amount') && !fields.includes('Amount Unit')) {
+    warnings.push('Amount units have not been defined in the dataset and need to be defined manually.');
   }
   if (fields.includes('Observation') && !fields.includes('Observation Unit')) {
     warnings.push('Observation units have not been defined in the dataset and need to be defined manually.');
