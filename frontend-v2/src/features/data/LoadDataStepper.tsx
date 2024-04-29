@@ -137,7 +137,12 @@ const LoadDataStepper: FC<IStepper> = ({ csv = '', onCancel, onFinish }) => {
   }
 
   return (
-    <Box sx={{ width: '100%' }}>
+    <Box sx={{
+      display: 'flex',
+      flexDirection: 'column',
+      height: '80vh',
+      width: '100%'
+    }}>
       <Stepper activeStep={stepState.activeStep} alternativeLabel>
         {stepLabels.map((step, index) => (
           <Step key={index}>
@@ -145,7 +150,7 @@ const LoadDataStepper: FC<IStepper> = ({ csv = '', onCancel, onFinish }) => {
           </Step>
         ))}
       </Stepper>
-      <Box sx={{ height: '70vh' }} >
+      <Box sx={{ flexGrow: 1 }}>
         {state.fileName &&
           <Box padding={1} sx={{ display: 'flex', justifyContent: 'center' }}>
             <Typography sx={{ fontWeight: 'bold' }}>File: {state.fileName}</Typography>
