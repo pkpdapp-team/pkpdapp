@@ -40,6 +40,9 @@ const DosingProtocols: FC<IDosingProtocols> = ({
   const amountField = state.fields.find(
     (field, i) => state.normalisedFields[i] === 'Amount'
   );
+  const amountVariableField = state.fields.find(
+    (field, i) => state.normalisedFields[i] === 'Amount Variable'
+  );
   const dosingRows = amountField ? state.data.filter(row => row[amountField] && row[amountField] !== '.') : [];
   const administrationIds = administrationIdField ?
     dosingRows.map(row => row[administrationIdField]) :
@@ -64,7 +67,7 @@ const DosingProtocols: FC<IDosingProtocols> = ({
     const { value } = event.target;
     nextData.filter(row => administrationIdField ? row[administrationIdField] === id : true)
       .forEach(row => {
-        row['Amount Variable'] = value;
+        row[amountVariableField || 'Amount Variable'] = value;
       })
     state.setData(nextData);
   }
@@ -116,7 +119,7 @@ const DosingProtocols: FC<IDosingProtocols> = ({
           <TableBody>
             {uniqueAdministrationIds.map((adminId, index) => {
               const currentRow = dosingRows.find(row => administrationIdField ? row[administrationIdField] === adminId : true);
-              const selectedVariable = variables?.find(variable => variable.qname === currentRow?.['Amount Variable']);
+              const selectedVariable = variables?.find(variable => variable.qname === currentRow?.[amountVariableField || 'Amount Variable']);
               const compatibleUnits = units?.find(unit => unit.id === selectedVariable?.unit)?.compatible_units;
               const adminUnit = amountUnitField && currentRow && currentRow[amountUnitField];
               const amount = amountField && currentRow?.[amountField];

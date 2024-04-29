@@ -62,6 +62,9 @@ const MapObservations: FC<IMapObservations> = ({state}: IMapObservations) => {
   const observationIdField = state.fields.find(
     (field, i) => state.normalisedFields[i] === 'Observation ID'
   );
+  const observationVariableField = state.fields.find(
+    (field, i) => state.normalisedFields[i] === 'Observation Variable'
+  );
   const observationRows = observationField ? state.data.filter(row => row[observationField] !== '.') : [];
   const observationIds = observationIdField ?
     observationRows.map(row => row[observationIdField]) :
@@ -92,7 +95,7 @@ const MapObservations: FC<IMapObservations> = ({state}: IMapObservations) => {
     const defaultUnit = units?.find(unit => unit.id === selectedVariable?.unit);
     nextData.filter(row => observationIdField ? row[observationIdField] === id : true)
       .forEach(row => {
-        row['Observation Variable'] = value;
+        row[observationVariableField || 'Observation Variable'] = value;
         const selectedUnitSymbol = row[observationUnitField || 'Observation_unit'];
         if (!selectedUnitSymbol && defaultUnit) {
           row['Observation_unit'] = defaultUnit?.symbol
@@ -140,7 +143,9 @@ const MapObservations: FC<IMapObservations> = ({state}: IMapObservations) => {
               .sort((a, b) => a > b ? 1 : -1)
               .map((obsId) => {
                 const currentRow = observationRows.find(row => observationIdField ? row[observationIdField] === obsId : true);
-                const selectedVariable = variables?.find(variable => variable.qname === currentRow?.['Observation Variable']);
+                const selectedVariable = variables?.find(
+                  variable => variable.qname === currentRow?.[observationVariableField || 'Observation Variable']
+                );
                 let selectedUnitSymbol = currentRow?.[observationUnitField || 'Observation_unit'];
                 selectedUnitSymbol = units?.find(unit => unit.symbol === selectedUnitSymbol)?.symbol;
                 const compatibleUnits = selectedVariable
