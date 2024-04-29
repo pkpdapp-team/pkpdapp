@@ -145,7 +145,7 @@ const LoadDataStepper: FC<IStepper> = ({ csv = '', onCancel, onFinish }) => {
           </Step>
         ))}
       </Stepper>
-      <Box sx={{ minHeight: '60vh' }} >
+      <Box sx={{ height: '70vh' }} >
         {state.fileName &&
           <Box padding={1} sx={{ display: 'flex', justifyContent: 'center' }}>
             <Typography sx={{ fontWeight: 'bold' }}>File: {state.fileName}</Typography>
