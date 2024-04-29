@@ -26,12 +26,22 @@ const Data:FC = () => {
     { skip: !project?.compound },
   );
   const { dataset, groups, subjectBiomarkers } = useDataset(projectIdOrZero);
+  const csv = generateCSV(dataset, groups, subjectBiomarkers, units);
   const [isLoading, setIsLoading] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+
+  function editDataset() {
+    if(csv) {
+      setIsEditing(true);
+      setIsLoading(false);
+    }
+  }
 
   function handleNewUpload() {
 
     if (groups.length === 0 || window.confirm('Are you sure you want to delete the current dataset?')) {
       setIsLoading(true);
+      setIsEditing(false);
     }
   }
 
@@ -41,6 +51,7 @@ const Data:FC = () => {
 
   function onCancel() {
     setIsLoading(false);
+    setIsEditing(false);
   }
 
   function handleTabChange(event: React.SyntheticEvent, newValue: number) {
@@ -55,7 +66,6 @@ const Data:FC = () => {
   }
 
   function downloadCSV() {
-    const csv = generateCSV(dataset, groups, subjectBiomarkers, units);
     const blob = new Blob(['\ufeff', csv], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -122,8 +132,8 @@ const Data:FC = () => {
 
   const noData = !groups.length && !observations.length;
 
-  return (isLoading || noData) ?
-    <LoadDataStepper onFinish={onUploadComplete} onCancel={onCancel}  /> :
+  return (isLoading || isEditing || noData) ?
+    <LoadDataStepper csv={isEditing ? csv : ''} onFinish={onUploadComplete} onCancel={onCancel}  /> :
     <>
       <Box sx={{ display: 'flex', justifyContent: 'end' }}>
         <Stack spacing={1}>
@@ -132,6 +142,13 @@ const Data:FC = () => {
             onClick={handleNewUpload}
           >
             Upload new dataset
+          </Button>
+          <Button
+            variant="outlined"
+            onClick={editDataset}
+            disabled={!csv}
+          >
+            Edit dataset
           </Button>
           <Button
             variant="outlined"

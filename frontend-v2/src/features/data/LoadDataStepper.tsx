@@ -16,9 +16,11 @@ import { RootState } from "../../app/store";
 import { DatasetRead, useDatasetCsvUpdateMutation } from '../../app/backendApi';
 import Stratification from './Stratification';
 import useDataset from '../../hooks/useDataset';
+import { normaliseHeader } from './normaliseDataHeaders';
 import { Alert } from '@mui/material';
 
 interface IStepper {
+  csv: string,
   onCancel: () => void,
   onFinish: () => void
 }
@@ -49,13 +51,14 @@ export type StepperState = {
   setAmountUnit: (amountUnit: string) => void;
 }
 
-const LoadDataStepper: FC<IStepper> = ({ onCancel, onFinish }) => {
+const LoadDataStepper: FC<IStepper> = ({ csv = '', onCancel, onFinish }) => {
+  const csvData = Papa.parse(csv, { header: true });
   const [fileName, setFileName] = useState<string>('');
-  const [data, setData] = useState<Data>([]);
+  const [data, setData] = useState<Data>(csvData.data as Data || []);
   let [errors, setErrors] = useState<string[]>([]);
   const [warnings, setWarnings] = useState<string[]>([]);
-  const [fields, setFields] = useState<string[]>([]);
-  const [normalisedFields, setNormalisedFields] = useState<string[]>([]);
+  const [fields, setFields] = useState<string[]>(csvData.meta.fields || []);
+  const [normalisedFields, setNormalisedFields] = useState<string[]>(fields.map(normaliseHeader));
   const [timeUnit, setTimeUnit] = useState<string | undefined>(undefined);
   const [amountUnit, setAmountUnit] = useState<string | undefined>(undefined);
   const selectedProject = useSelector(
