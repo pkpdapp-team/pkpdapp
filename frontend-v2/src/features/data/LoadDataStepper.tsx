@@ -28,7 +28,7 @@ interface IStepper {
 const stepLabels = ['Upload Data', 'Stratification', 'Map Dosing', 'Map Observations', 'Preview Dataset'];
 const stepComponents = [LoadData, Stratification, MapDosing, MapObservations, PreviewData];
 
-type Row = {[key: string]: string};
+type Row = { [key: string]: string };
 type Data = Row[];
 type Field = string;
 
@@ -100,8 +100,8 @@ const LoadDataStepper: FC<IStepper> = ({ csv = '', onCancel, onFinish }) => {
   }
 
   const handleNext = () => {
-    setStepState((prevActiveStep) => ({ 
-      activeStep: prevActiveStep.activeStep + 1, 
+    setStepState((prevActiveStep) => ({
+      activeStep: prevActiveStep.activeStep + 1,
       maxStep: Math.max(prevActiveStep.maxStep, prevActiveStep.activeStep + 1)
     }));
   };
@@ -145,31 +145,39 @@ const LoadDataStepper: FC<IStepper> = ({ csv = '', onCancel, onFinish }) => {
           </Step>
         ))}
       </Stepper>
-      {state.fileName &&
-        <Box padding={1} sx={{ display: 'flex', justifyContent: 'center' }}>
-          <Typography sx={{ fontWeight: 'bold' }}>File: {state.fileName}</Typography>
-        </Box>
-      }
-      {errors.map(error => <Alert key={error} severity="error">{error}</Alert>)}
-      {warnings.map(warning => <Alert key={warning} severity="warning">{warning}</Alert>)}
-      {isFinished ? 
-        <Typography>'The process is completed'</Typography> :
-        <StepComponent state={state} firstTime={stepState.activeStep === stepState.maxStep}/>
-      }
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', marginTop: 1 }}>
-        {stepState.activeStep === 0 ?
-          <Button onClick={onCancel}>Cancel</Button> :
-          <Button onClick={handleBack}>Back</Button>
+      <Box sx={{ minHeight: '60vh' }} >
+        {state.fileName &&
+          <Box padding={1} sx={{ display: 'flex', justifyContent: 'center' }}>
+            <Typography sx={{ fontWeight: 'bold' }}>File: {state.fileName}</Typography>
+          </Box>
         }
-        <Button
-          disabled={data.length === 0 || isFinished || errors.length > 0}
-          variant="contained"
-          color="primary"
-          onClick={stepState.activeStep === stepLabels.length - 1 ? handleFinish : handleNext}
-        >
-          {stepState.activeStep === stepLabels.length - 1 ? 'Finish' : 'Next'}
-        </Button>
+        {errors.map(error => <Alert key={error} severity="error">{error}</Alert>)}
+        {warnings.map(warning => <Alert key={warning} severity="warning">{warning}</Alert>)}
+        {isFinished ?
+          <Typography>'The process is completed'</Typography> :
+          <StepComponent state={state} firstTime={stepState.activeStep === stepState.maxStep} />
+        }
       </Box>
+      <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            marginTop: 1
+          }}
+        >
+          {stepState.activeStep === 0 ?
+            <Button onClick={onCancel}>Cancel</Button> :
+            <Button onClick={handleBack}>Back</Button>
+          }
+          <Button
+            disabled={data.length === 0 || isFinished || errors.length > 0}
+            variant="contained"
+            color="primary"
+            onClick={stepState.activeStep === stepLabels.length - 1 ? handleFinish : handleNext}
+          >
+            {stepState.activeStep === stepLabels.length - 1 ? 'Finish' : 'Next'}
+          </Button>
+        </Box>
     </Box>
   );
 }

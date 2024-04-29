@@ -159,7 +159,9 @@ const Stratification: FC<IStratification> = ({ state, firstTime }: IStratificati
       </Tabs>
       <Box role='tabpanel' id='protocol-tabpanel'>
         {groups[tab]
-          ? <ProtocolDataGrid group={groups[tab]}  state={state} />
+          ? <Box component="div" sx={{ maxHeight: "40vh", overflow: 'auto', overflowX: 'auto' }}>
+              <ProtocolDataGrid group={groups[tab]}  state={state} />
+            </Box>
           : <Typography>This dataset has no subject group column.</Typography>
         }
       </Box>

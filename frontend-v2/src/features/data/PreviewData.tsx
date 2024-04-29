@@ -38,7 +38,7 @@ const PreviewData: FC<IPreviewData> = ({ state, firstTime }: IPreviewData) => {
   }
 
   return (
-    <Box component="div" sx={{ maxHeight: "40vh", overflow: 'auto', overflowX: 'auto' }}>
+    <Box component="div" sx={{ maxHeight: "65vh", overflow: 'auto', overflowX: 'auto' }}>
       <Table>
         <TableHead>
           <TableRow>
