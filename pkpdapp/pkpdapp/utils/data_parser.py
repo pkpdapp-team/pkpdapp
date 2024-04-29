@@ -12,61 +12,59 @@ from io import StringIO
 class DataParser:
     alternate_col_names = {
         "ADMINISTRATION_ID": [
-            "Administration ID", "CMT", "Cmt", "cmt", "ADM", "Adm", "adm"
+            "administration id", "cmt", "adm", "adm_id", "administration_id"
         ],
         "SUBJECT_ID": [
-            "ID", "id", "Subject_id", "Subject", "SUBJID",
-            "SUBJECT_ID"
+            "id", "subject_id", "subject", "subjid"
         ],
         "TIME": [
-            "Time", "TIME", "TIMEPOINT", "t", "T", "time",
+            "time", "timepoint", "t"
         ],
         "TIME_UNIT": [
-            "Time_unit", "Time_units", "TIMEUNIT", "TIME_UNIT", "Units_Time"
+            "time_unit", "time_units", "timeunit", "units_time"
         ],
         "AMOUNT": [
-            "Amt", "Amount", "AMT", "AMOUNT"
+            "amt", "amount", "amount"
         ],
         "AMOUNT_UNIT": [
-            "Amt_unit", "Amt_units", "AMTUNIT", "UNIT", "AMOUNT_UNIT", "Units_AMT"
+            "amt_unit", "amt_units", "amtunit", "unit", "amount_unit", "units_amt"
         ],
         "AMOUNT_VARIABLE": [
-            "Amount Variable", "AMOUNT_VARIABLE"
+            "amount variable", "amount_variable", "amount_var",
+            "amt_var", "amtvar", "amt_variable"
         ],
         "OBSERVATION": [
-            "DV", "Observation", "Y", "YVAL", "OBSERVATION", "Conc",
-            "OBSERVATION_VALUE", "OBSERVATIONVALUE"
+            "dv", "observation", "y", "yval", "conc",
+            "observation_value", "observationvalue"
         ],
         "OBSERVATION_NAME": [
-            "Observation_id", "YDESC", "YNAME", "YTYPE", "OBSERVATION_ID",
-            "OBSERVATION_NAME", "OBSERVATIONID", "OBSERVATIONNAME"
+            "observation_id", "ydesc", "yname", "ytype",
+            "observation_name", "observationid", "observationname"
         ],
         "OBSERVATION_UNIT": [
-            "DV_units", "Observation_unit", "YUNIT", "UNIT", "Units_Conc",
-            "OBSERVATION_UNIT",
-            "OBSERVATIONUNIT"
+            "dv_units", "observation_unit", "yunit", "unit", "units_conc",
+            "observationunit"
         ],
         "OBSERVATION_VARIABLE": [
-            "Observation Variable", "OBSERVATION_VARIABLE"
+            "observation variable", "observation_variable", "observation_var"
         ],
         "COMPOUND": [
-            "Compound", "COMPOUND"
+            "compound"
         ],
         "ROUTE": [
-            "Route", "ROUTE"
+            "route"
         ],
         "INFUSION_TIME": [
-            "TINF", "Tinf", "tinf", "Infusion_time", "INFUSIONTIME",
-            "INFUSION_TIME"
+            "tinf", "infusion_time", "infusiontime"
         ],
         "GROUP_ID": [
-            "Group ID", "Group", "GROUP", "cohort", "Cohort", "COHORT"
+            "group id", "group_id", "group", "cohort"
         ],
         "ADDITIONAL_DOSES": [
-            "ADDL", "Addl", "addl", "ADDITIONAL_DOSES"
+            "addl", "additional_doses"
         ],
         "INTERDOSE_INTERVAL": [
-            "II", "INFUSION_INTERVAL"
+            "ii", "infusion_interval"
         ]
     }
 
@@ -101,6 +99,7 @@ class DataParser:
         return col_name not in self.required_cols + self.optional_cols
 
     def validate(self, data: pd.DataFrame):
+        data.columns = data.columns.str.lower()
         colnames = data.columns.astype(str).tolist()
 
         # check that all required columns are present
