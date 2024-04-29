@@ -76,7 +76,7 @@ const MapObservations: FC<IMapObservations> = ({state}: IMapObservations) => {
     (field, i) => ['Observation Unit', 'Unit'].includes(state.normalisedFields[i])
   );
   const observationUnits = observationRows.map(row => row[observationUnitField || 'Observation_unit']);
-  const observationVariables = observationRows.map(row => row['Observation Variable']);
+  const observationVariables = observationRows.map(row => row[observationVariableField || 'Observation Variable']);
 
   const filterOutputs = model?.is_library_model
     ? ["environment.t", "PDCompartment.C_Drug"]
