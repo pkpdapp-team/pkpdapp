@@ -15,10 +15,10 @@ const PreviewData: FC<IPreviewData> = ({ state, firstTime }: IPreviewData) => {
   if (!state.fields.find(field => field === 'Group ID')) {
     fields.push('Group ID')
   }
-  if (!state.fields.find(field => field === 'Amount Variable')) {
+  if (!state.normalisedFields.find(field => field === 'Amount Variable')) {
     fields.push('Amount Variable')
   }
-  if (!state.fields.find(field => field === 'Observation Variable')) {
+  if (!state.normalisedFields.find(field => field === 'Observation Variable')) {
     fields.push('Observation Variable')
   }
   if (!state.normalisedFields.find(field => field === 'Amount')) {
