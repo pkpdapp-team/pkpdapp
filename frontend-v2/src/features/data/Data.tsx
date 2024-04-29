@@ -47,6 +47,7 @@ const Data:FC = () => {
 
   function onUploadComplete() {
     setIsLoading(false);
+    setIsEditing(false);
   }
 
   function onCancel() {
