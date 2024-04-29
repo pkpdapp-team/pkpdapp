@@ -1,5 +1,5 @@
 import { FC } from 'react';
-import { Box, Button, Table, TableHead, TableRow, TableCell, TableBody, Typography } from "@mui/material";
+import { Box, Table, TableHead, TableRow, TableCell, TableBody, Typography } from "@mui/material";
 import { StepperState } from "./LoadDataStepper";
 
 interface IPreviewData {

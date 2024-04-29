@@ -1,4 +1,4 @@
-import { FC, useState } from 'react';
+import { FC } from 'react';
 import {
   Alert,
   Box,
@@ -34,7 +34,6 @@ function displayUnitSymbol(symbol: string | undefined) {
 }
 
 const MapObservations: FC<IMapObservations> = ({state}: IMapObservations) => {
-  const [unitsAreFixed, setUnitsAreFixed] = useState(true);
   const projectId = useSelector(
     (state: RootState) => state.main.selectedProject,
   );
@@ -163,10 +162,6 @@ const MapObservations: FC<IMapObservations> = ({state}: IMapObservations) => {
                     ? compatibleSymbols?.includes(selectedUnitSymbol)
                     : true;
                 });
-                const unitsShouldBeFixed = observationUnitField && selectedUnitSymbol;
-                if (unitsAreFixed && !unitsShouldBeFixed) {
-                  setUnitsAreFixed(false);
-                }
                 return (
                   <TableRow key={obsId}>
                     <TableCell>
@@ -194,28 +189,25 @@ const MapObservations: FC<IMapObservations> = ({state}: IMapObservations) => {
                       </FormControl>
                     </TableCell>
                     <TableCell>
-                      {unitsAreFixed ?
-                        displayUnitSymbol(selectedUnitSymbol) :
-                        <FormControl fullWidth>
-                          <InputLabel id={`select-unit-${obsId}-label`}>Units</InputLabel>
-                          <Select
-                            labelId={`select-unit-${obsId}-label`}
-                            id={`select-unit-${obsId}`}
-                            label='Units'
-                            value={displayUnitSymbol(selectedUnitSymbol)}
-                            onChange={handleUnitChange(obsId)}
-                          >
-                            {compatibleUnits?.map((unit) => (
-                              <MenuItem
-                                key={unit.id}
-                                value={displayUnitSymbol(unit.symbol)}
-                              >
-                                {displayUnitSymbol(unit.symbol)}
-                              </MenuItem>
-                            ))}
-                          </Select>
-                        </FormControl>
-                      }
+                      <FormControl fullWidth>
+                        <InputLabel id={`select-unit-${obsId}-label`}>Units</InputLabel>
+                        <Select
+                          labelId={`select-unit-${obsId}-label`}
+                          id={`select-unit-${obsId}`}
+                          label='Units'
+                          value={displayUnitSymbol(selectedUnitSymbol)}
+                          onChange={handleUnitChange(obsId)}
+                        >
+                          {compatibleUnits?.map((unit) => (
+                            <MenuItem
+                              key={unit.id}
+                              value={displayUnitSymbol(unit.symbol)}
+                            >
+                              {displayUnitSymbol(unit.symbol)}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
                     </TableCell>
                   </TableRow>
                 )

@@ -37,7 +37,6 @@ function parseDosingRow(
   const amountUnit = units?.find(unit => unit.id === protocol.amount_unit)?.symbol || '';
   const timeUnit = units?.find(unit => unit.id === protocol.time_unit)?.symbol || '';
   const qname = protocol.mapped_qname;
-  const doseType = protocol.dose_type;
   return protocol.doses.map(dose => ({
     'Adm': adminId,
     'Group': groupId,

@@ -156,23 +156,20 @@ const DosingProtocols: FC<IDosingProtocols> = ({
                     </FormControl>
                   </TableCell>
                   <TableCell>
-                    {adminUnit ?
-                      adminUnit :
-                      <FormControl fullWidth>
-                        <InputLabel id={`select-unit-${adminId}-label`}>Units</InputLabel>
-                        <Select
-                          labelId={`select-unit-${adminId}-label`}
-                          id={`select-unit-${adminId}`}
-                          label='Units'
-                          value={currentRow?.[amountUnitField || 'Amt_unit']}
-                          onChange={handleAmountUnitChange(adminId)}
-                        >
-                          {compatibleUnits?.map((unit) => (
-                            <MenuItem key={unit.symbol} value={unit.symbol}>{unit.symbol}</MenuItem>
-                          ))}
-                        </Select>
-                      </FormControl>
-                    }
+                    <FormControl fullWidth>
+                      <InputLabel id={`select-unit-${adminId}-label`}>Units</InputLabel>
+                      <Select
+                        labelId={`select-unit-${adminId}-label`}
+                        id={`select-unit-${adminId}`}
+                        label='Units'
+                        value={currentRow?.[amountUnitField || 'Amt_unit']}
+                        onChange={handleAmountUnitChange(adminId)}
+                      >
+                        {compatibleUnits?.map((unit) => (
+                          <MenuItem key={unit.symbol} value={unit.symbol}>{unit.symbol}</MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
                   </TableCell>
                 </TableRow>
               )
