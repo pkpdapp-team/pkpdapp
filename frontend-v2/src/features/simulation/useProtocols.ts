@@ -7,6 +7,7 @@ import {
   useCompoundRetrieveQuery,
   useProjectRetrieveQuery,
   useProtocolListQuery,
+  useSubjectGroupListQuery
 } from "../../app/backendApi";
 
 const DEFAULT_PROTOCOLS: ProtocolRead[] = [];
@@ -30,8 +31,13 @@ export default function useProtocols() {
     { projectId: projectIdOrZero },
     { skip: !projectId },
   );
-  const { groups } = useDataset(projectIdOrZero);
-
+  const { groups: subjectGroups } = useDataset(projectIdOrZero);
+  const { data: projectGroups } = useSubjectGroupListQuery(
+    { projectId: projectIdOrZero },
+    { skip: !projectId }
+  );
+  const groups = useMemo(() => subjectGroups.concat(projectGroups || []), [subjectGroups, projectGroups]);
+  
   const protocols = useMemo(() => {
     const datasetProtocols = groups?.flatMap(group => group.protocols) || [];
     if (projectProtocols && datasetProtocols) {
