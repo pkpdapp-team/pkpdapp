@@ -162,7 +162,7 @@ const DosingProtocols: FC<IDosingProtocols> = ({
                         labelId={`select-unit-${adminId}-label`}
                         id={`select-unit-${adminId}`}
                         label='Units'
-                        value={currentRow?.[amountUnitField || 'Amt_unit']}
+                        value={adminUnit}
                         onChange={handleAmountUnitChange(adminId)}
                       >
                         {compatibleUnits?.map((unit) => (
