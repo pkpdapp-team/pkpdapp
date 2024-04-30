@@ -93,9 +93,17 @@ const Protocols: FC = () => {
   const handleTabChange = async (event: ChangeEvent<{}>, newValue: number) => {
     setTab(newValue);
     if (project && allGroups && newValue === allGroups.length + 1) {
+      const existingNames = allGroups?.map(g => g.name);
+      let newGroupId = newValue;
+      let newGroupName = `Group ${newValue}`;
+      while (existingNames?.includes(newGroupName)) {
+        newGroupId++;
+        newGroupName = `Group ${newGroupId}`;
+      }
       await createSubjectGroup({
         subjectGroup: {
-          name: `Group ${newValue}`,
+          name: newGroupName,
+          id_in_dataset: `${newGroupId}`,
           project: project.id,
           protocols: filteredProtocols.map(p => {
             const { id, project, ...newProtocol } = p;
