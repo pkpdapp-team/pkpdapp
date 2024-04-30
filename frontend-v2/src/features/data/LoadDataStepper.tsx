@@ -49,6 +49,8 @@ export type StepperState = {
   setWarnings: (warnings: string[]) => void;
   amountUnit?: string;
   setAmountUnit: (amountUnit: string) => void;
+  primaryCohort: string;
+  setPrimaryCohort: (primaryCohort: string) => void;
 }
 
 const LoadDataStepper: FC<IStepper> = ({ csv = '', onCancel, onFinish }) => {
@@ -61,6 +63,7 @@ const LoadDataStepper: FC<IStepper> = ({ csv = '', onCancel, onFinish }) => {
   const [normalisedFields, setNormalisedFields] = useState<string[]>(fields.map(normaliseHeader));
   const [timeUnit, setTimeUnit] = useState<string | undefined>(undefined);
   const [amountUnit, setAmountUnit] = useState<string | undefined>(undefined);
+  const [primaryCohort, setPrimaryCohort] = useState('Group');
   const selectedProject = useSelector(
     (state: RootState) => state.main.selectedProject,
   );
@@ -85,7 +88,9 @@ const LoadDataStepper: FC<IStepper> = ({ csv = '', onCancel, onFinish }) => {
     timeUnit,
     setTimeUnit,
     amountUnit,
-    setAmountUnit
+    setAmountUnit,
+    primaryCohort,
+    setPrimaryCohort
   };
 
   const [stepState, setStepState] = useState({ activeStep: 0, maxStep: 0 });

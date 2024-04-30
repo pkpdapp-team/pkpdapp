@@ -33,8 +33,8 @@ const Stratification: FC<IStratification> = ({ state, firstTime }: IStratificati
   });
 
   const [firstRow] = state.data;
-  const [primaryCohort, setPrimaryCohort] = useState('Group');
   const [tab, setTab] = useState(0);
+  const { primaryCohort, setPrimaryCohort } = state;
 
   const primaryCohortIndex = catCovariates.indexOf(primaryCohort);
   const groupColumnValues = uniqueCovariateValues[primaryCohortIndex] || [];
