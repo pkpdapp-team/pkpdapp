@@ -34,7 +34,6 @@ const Stratification: FC<IStratification> = ({ state, firstTime }: IStratificati
 
   const [firstRow] = state.data;
   const [primaryCohort, setPrimaryCohort] = useState('Group');
-  const [secondary, setSecondary] = useState<string[]>([]);
   const [tab, setTab] = useState(0);
 
   const primaryCohortIndex = catCovariates.indexOf(primaryCohort);
@@ -69,24 +68,6 @@ const Stratification: FC<IStratification> = ({ state, firstTime }: IStratificati
     state.setData(newData);
   };
 
-  const handleSecondaryChange = (event: ChangeEvent<HTMLInputElement>) => {
-    let newState: string[] = [];
-    if (!event.target.checked) {
-      newState = secondary.filter(value => value !== event.target.value);
-      return;
-    } else {
-      newState = [ ...new Set([...secondary, event.target.value])];
-    }
-  
-    setSecondary(newState);
-    const newData = [ ...state.data ];
-    newData.forEach(row => {
-      row['Group ID'] = [
-        row[primaryCohort], ...newState.map(field => row[field])
-      ].join('-');
-    });
-  };
-
   function a11yProps(index: number) {
     return {
       id: `protocol-tab-${index}`,
@@ -109,9 +90,6 @@ const Stratification: FC<IStratification> = ({ state, firstTime }: IStratificati
               <TableCell id='heading-primary'>
                 <Typography>Primary Grouping</Typography>
               </TableCell>
-              <TableCell id='heading-secondary'>
-                <Typography>Secondary Grouping</Typography>
-              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -130,16 +108,6 @@ const Stratification: FC<IStratification> = ({ state, firstTime }: IStratificati
                       checked={isPrimary}
                       onChange={handlePrimaryChange}
                       inputProps={{ 'aria-labelledby': primaryLabel }}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Checkbox
-                      disabled={isPrimary}
-                      name="secondary"
-                      value={field}
-                      checked={secondary.includes(field)}
-                      onChange={handleSecondaryChange}
-                      inputProps={{ 'aria-labelledby': secondaryLabel }}
                     />
                   </TableCell>
                 </TableRow>
