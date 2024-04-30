@@ -4713,6 +4713,10 @@ components:
           type: integer
           nullable: true
           description: Dataset that this group belongs to.
+        project:
+          type: integer
+          nullable: true
+          description: Project that this group belongs to.
     PatchedUnit:
       type: object
       properties:
@@ -5456,6 +5460,10 @@ components:
           type: integer
           nullable: true
           description: Dataset that this group belongs to.
+        project:
+          type: integer
+          nullable: true
+          description: Project that this group belongs to.
       required:
       - id
       - name

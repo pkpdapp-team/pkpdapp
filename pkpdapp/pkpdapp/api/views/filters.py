@@ -172,6 +172,8 @@ class ProjectFilter(filters.BaseFilterBackend):
                     queryset = BiomarkerType.objects.filter(dataset__project=project)
                 elif queryset.model == Subject:
                     queryset = Subject.objects.filter(dataset__project=project)
+                elif queryset.model == SubjectGroup:
+                    queryset = project.groups.all()
                 elif queryset.model == Variable:
                     queryset = queryset.filter(
                         Q(pd_model__project=project)

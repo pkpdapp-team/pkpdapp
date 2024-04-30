@@ -24,6 +24,7 @@ import {
   useProjectRetrieveQuery,
   useSimulationListQuery,
   useSimulationUpdateMutation,
+  useSubjectGroupListQuery,
   useUnitListQuery,
   useVariableListQuery,
   useVariableUpdateMutation,
@@ -77,7 +78,12 @@ const Simulations: FC = () => {
   const projectId = useSelector(
     (state: RootState) => state.main.selectedProject,
   );
-  const { groups } = useDataset(projectId);
+  const { groups: subjectGroups } = useDataset(projectId);
+  const { data: projectGroups } = useSubjectGroupListQuery(
+    { projectId: projectId || 0},
+    { skip: !projectId }
+  );
+  const groups = useMemo(() => subjectGroups.concat(projectGroups || []), [subjectGroups, projectGroups]);
   const [visibleGroups, setVisibleGroups] =
     useState<string[]>(['Project']);
   useEffect(() => {

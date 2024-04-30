@@ -1,4 +1,4 @@
-import { FC, useState } from "react";
+import { FC, useMemo, useState } from "react";
 import Plot from "react-plotly.js";
 import {
   CombinedModelRead,
@@ -8,6 +8,7 @@ import {
   UnitRead,
   VariableRead,
   useProtocolListQuery,
+  useSubjectGroupListQuery
 } from "../../app/backendApi";
 import { Config, Data, Layout, Icon as PlotlyIcon } from "plotly.js";
 import {
@@ -157,7 +158,12 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
   );
   useProtocolListQuery({ projectId: projectId || 0 }, { skip: !projectId });
 
-  const { groups, subjectBiomarkers } = useDataset(projectId);
+  const { groups: subjectGroups, subjectBiomarkers } = useDataset(projectId);
+  const { data: projectGroups } = useSubjectGroupListQuery(
+    { projectId: projectId || 0},
+    { skip: !projectId }
+  );
+  const groups = useMemo(() => subjectGroups.concat(projectGroups || []), [subjectGroups, projectGroups]);
 
   const [open, setOpen] = useState(false);
 

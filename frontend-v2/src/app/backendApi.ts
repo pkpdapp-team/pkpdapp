@@ -2148,6 +2148,7 @@ export type SubjectGroup = {
   name: string;
   id_in_dataset?: string | null;
   dataset?: number | null;
+  project?: number | null;
 };
 export type SubjectGroupRead = {
   id: number;
@@ -2156,6 +2157,7 @@ export type SubjectGroupRead = {
   name: string;
   id_in_dataset?: string | null;
   dataset?: number | null;
+  project?: number | null;
 };
 export type DatasetRead = {
   id: number;
@@ -2691,6 +2693,7 @@ export type PatchedSubjectGroup = {
   name?: string;
   id_in_dataset?: string | null;
   dataset?: number | null;
+  project?: number | null;
 };
 export type PatchedSubjectGroupRead = {
   id?: number;
@@ -2699,6 +2702,7 @@ export type PatchedSubjectGroupRead = {
   name?: string;
   id_in_dataset?: string | null;
   dataset?: number | null;
+  project?: number | null;
 };
 export type Unit = {
   symbol: string;

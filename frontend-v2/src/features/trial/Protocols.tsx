@@ -39,6 +39,11 @@ const Protocols: FC = () => {
     { datasetId: dataset?.id || 0 },
     { skip: !dataset }
   );
+  const { data: projectGroups, refetch: refetchProjectGroups } = useSubjectGroupListQuery(
+    { projectId: selectedProjectOrZero},
+    { skip: !selectedProject }
+  );
+  const allGroups = subjectGroups?.concat(projectGroups || []);
   const { data: project, isLoading: isProjectLoading } =
     useProjectRetrieveQuery(
       { id: selectedProjectOrZero },
@@ -80,42 +85,47 @@ const Protocols: FC = () => {
     }
   });
 
+  const refetchAllGroups = () => {
+    refetchSubjectGroups();
+    refetchProjectGroups();
+  }
+
   const handleTabChange = async (event: ChangeEvent<{}>, newValue: number) => {
     setTab(newValue);
-    if (dataset && subjectGroups && newValue === subjectGroups.length + 1) {
+    if (project && allGroups && newValue === allGroups.length + 1) {
       await createSubjectGroup({
         subjectGroup: {
           name: `Group ${newValue}`,
-          dataset: dataset?.id,
+          project: project.id,
           protocols: filteredProtocols.map(p => {
             const { id, project, ...newProtocol } = p;
             return {
               ...newProtocol,
-              dataset: dataset?.id,
-              project: null,
+              dataset: null,
+              project,
               name: `${newProtocol.name} - Group ${newValue}`,
             };
           })
         }
       });
-      refetchSubjectGroups();
+      refetchAllGroups();
     }
   };
 
   const removeGroup = (groupID: number) => async () => {
-    const subjectGroup = subjectGroups?.find(g => g.id === groupID);
+    const subjectGroup = allGroups?.find(g => g.id === groupID);
     const subjectCount = subjectGroup?.subjects.length || 0;
     if (subjectCount === 0 || window?.confirm(
       `Are you sure you want to delete group ${subjectGroup?.name} and all its subjects?`
     )) {
       setTab(tab - 1);
       await destroySubjectGroup({ id: groupID });
-      refetchSubjectGroups();
+      refetchAllGroups();
     }
   }
 
   const onProtocolChange = () => {
-    refetchSubjectGroups();
+    refetchAllGroups();
   }
 
   function a11yProps(index: number) {
@@ -125,7 +135,7 @@ const Protocols: FC = () => {
     };
   }
 
-  const subjectGroup = tab === 0 ? null : subjectGroups?.[tab-1];
+  const subjectGroup = tab === 0 ? null : allGroups?.[tab-1];
   const selectedProtocols = tab === 0
     ? filteredProtocols
     : subjectGroup?.protocols;
@@ -137,7 +147,7 @@ const Protocols: FC = () => {
           label={'Project'}
           {...a11yProps(0)}
         />
-        {subjectGroups?.map((group, index) => {
+        {allGroups?.map((group, index) => {
           const selectedDoses = group.protocols?.flatMap(p => p?.doses) || [];
           return (
             <Tab

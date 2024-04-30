@@ -26,6 +26,12 @@ class SubjectGroup(models.Model):
         blank=True, null=True,
         help_text='Dataset that this group belongs to.'
     )
+    project = models.ForeignKey(
+        'Project', on_delete=models.CASCADE,
+        related_name='groups',
+        blank=True, null=True,
+        help_text='Project that this group belongs to.'
+    )
 
     def __str__(self):
         return self.name
