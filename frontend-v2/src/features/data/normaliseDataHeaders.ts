@@ -11,7 +11,7 @@ const normalisation = {
   'Event ID': ['event id', 'evid'],
   'ID': ['id', 'subject', 'animal number'],
   'Ignored Observation': ['ignored observation', 'mdv'],
-  'Infusion Duration': ['infusion duration', 'infusion_time', 'dur'],
+  'Infusion Duration': ['infusion time', 'infusion duration', 'infusion_time', 'dur', 'tinf', 'infusiontime'],
   'Infusion Rate': ['infusion rate', 'rate'],
   'Interdose Interval': ['interdose interval', 'ii', 'tau', 'dosing interval'],
   'Observation': ['observation', 'dv', 'c', 'y', 'conc', 'cobs', 'obs'],
