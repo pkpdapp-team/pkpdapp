@@ -23,6 +23,7 @@ import SimulationPlotForm from "./SimulationPlotForm";
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
 import useDataset from "../../hooks/useDataset";
+import useSubjectGroups from "../../hooks/useSubjectGroups";
 
 function ranges(
   minY: number | undefined,
@@ -158,12 +159,8 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
   );
   useProtocolListQuery({ projectId: projectId || 0 }, { skip: !projectId });
 
-  const { groups: subjectGroups, subjectBiomarkers } = useDataset(projectId);
-  const { data: projectGroups } = useSubjectGroupListQuery(
-    { projectId: projectId || 0},
-    { skip: !projectId }
-  );
-  const groups = useMemo(() => subjectGroups.concat(projectGroups || []), [subjectGroups, projectGroups]);
+  const { groups } = useSubjectGroups();
+  const { subjectBiomarkers } = useDataset(projectId);
 
   const [open, setOpen] = useState(false);
 
@@ -205,7 +202,7 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
 
   const plotData = plot.y_axes.map((y_axis) => {
     return data.map((d, index) => {
-      const group = groups[index - 1];
+      const group = groups?.[index - 1];
       const visible = index === 0 
         ? visibleGroups.includes('Project')
         : visibleGroups.includes(group?.name || "");
@@ -459,19 +456,18 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
             : yCompatibleUnit.conversion_factor,
         )
       : 1.0;
-    const scatterplotData = groups
-      .map(group => {
-        const visible = visibleGroups.includes(group.name);
-        const groupBiomarkers = biomarkerData?.filter(d => group.subjects.includes(d.subjectId));
-        return {
-          name: group.name,
-          x: groupBiomarkers?.map(d => d?.time * timeConversionFactor),
-          y: groupBiomarkers?.map(d => d?.value * yConversionFactor),
-          type: 'scatter',
-          mode: 'markers',
-          visible: visible ? true : 'legendonly'
-        }
-      });
+    const scatterplotData = groups?.map(group => {
+      const visible = visibleGroups.includes(group.name);
+      const groupBiomarkers = biomarkerData?.filter(d => group.subjects.includes(d.subjectId));
+      return {
+        name: group.name,
+        x: groupBiomarkers?.map(d => d?.time * timeConversionFactor),
+        y: groupBiomarkers?.map(d => d?.value * yConversionFactor),
+        type: 'scatter',
+        mode: 'markers',
+        visible: visible ? true : 'legendonly'
+      }
+    });
     combinedPlotData = combinedPlotData.concat(scatterplotData as Data[]);
   });
   

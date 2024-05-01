@@ -27,6 +27,7 @@ import Doses from "./Doses";
 import HelpButton from "../../components/HelpButton";
 import { defaultHeaderSx } from "../../shared/tableHeadersSx";
 import useDataset from "../../hooks/useDataset";
+import useSubjectGroups from "../../hooks/useSubjectGroups";
 
 const Protocols: FC = () => {
   const [tab, setTab] = useState(0);
@@ -35,15 +36,7 @@ const Protocols: FC = () => {
   );
   const selectedProjectOrZero = selectedProject || 0;
   const { dataset } = useDataset(selectedProject);
-  const { data: subjectGroups, refetch: refetchSubjectGroups } = useSubjectGroupListQuery(
-    { datasetId: dataset?.id || 0 },
-    { skip: !dataset }
-  );
-  const { data: projectGroups, refetch: refetchProjectGroups } = useSubjectGroupListQuery(
-    { projectId: selectedProjectOrZero},
-    { skip: !selectedProject }
-  );
-  const allGroups = subjectGroups?.concat(projectGroups || []);
+  const { groups, refetchGroups } = useSubjectGroups();
   const { data: project, isLoading: isProjectLoading } =
     useProjectRetrieveQuery(
       { id: selectedProjectOrZero },
@@ -85,15 +78,10 @@ const Protocols: FC = () => {
     }
   });
 
-  const refetchAllGroups = () => {
-    refetchSubjectGroups();
-    refetchProjectGroups();
-  }
-
   const handleTabChange = async (event: ChangeEvent<{}>, newValue: number) => {
     setTab(newValue);
-    if (project && allGroups && newValue === allGroups.length + 1) {
-      const existingNames = allGroups?.map(g => g.name);
+    if (project && groups && newValue === groups.length + 1) {
+      const existingNames = groups?.map(g => g.name);
       let newGroupId = newValue;
       let newGroupName = `Group ${newValue}`;
       while (existingNames?.includes(newGroupName)) {
@@ -116,24 +104,24 @@ const Protocols: FC = () => {
           })
         }
       });
-      refetchAllGroups();
+      refetchGroups();
     }
   };
 
   const removeGroup = (groupID: number) => async () => {
-    const subjectGroup = allGroups?.find(g => g.id === groupID);
+    const subjectGroup = groups?.find(g => g.id === groupID);
     const subjectCount = subjectGroup?.subjects.length || 0;
     if (subjectCount === 0 || window?.confirm(
       `Are you sure you want to delete group ${subjectGroup?.name} and all its subjects?`
     )) {
       setTab(tab - 1);
       await destroySubjectGroup({ id: groupID });
-      refetchAllGroups();
+      refetchGroups();
     }
   }
 
   const onProtocolChange = () => {
-    refetchAllGroups();
+    refetchGroups();
   }
 
   function a11yProps(index: number) {
@@ -143,7 +131,7 @@ const Protocols: FC = () => {
     };
   }
 
-  const subjectGroup = tab === 0 ? null : allGroups?.[tab-1];
+  const subjectGroup = tab === 0 ? null : groups?.[tab-1];
   const selectedProtocols = tab === 0
     ? filteredProtocols
     : subjectGroup?.protocols;
@@ -155,7 +143,7 @@ const Protocols: FC = () => {
           label={'Project'}
           {...a11yProps(0)}
         />
-        {allGroups?.map((group, index) => {
+        {groups?.map((group, index) => {
           const selectedDoses = group.protocols?.flatMap(p => p?.doses) || [];
           return (
             <Tab

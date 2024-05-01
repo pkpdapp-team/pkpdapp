@@ -45,7 +45,7 @@ import paramPriority from "../model/paramPriority";
 import HelpButton from "../../components/HelpButton";
 import { selectIsProjectShared } from "../login/loginSlice";
 import { getConstVariables } from "../model/resetToSpeciesDefaults";
-import useDataset from "../../hooks/useDataset";
+import useSubjectGroups from "../../hooks/useSubjectGroups";
 import useExportSimulation from "./useExportSimulation";
 
 type SliderValues = { [key: number]: number };
@@ -78,17 +78,13 @@ const Simulations: FC = () => {
   const projectId = useSelector(
     (state: RootState) => state.main.selectedProject,
   );
-  const { groups: subjectGroups } = useDataset(projectId);
-  const { data: projectGroups } = useSubjectGroupListQuery(
-    { projectId: projectId || 0},
-    { skip: !projectId }
-  );
-  const groups = useMemo(() => subjectGroups.concat(projectGroups || []), [subjectGroups, projectGroups]);
+  const { groups } = useSubjectGroups();
   const [visibleGroups, setVisibleGroups] =
     useState<string[]>(['Project']);
   useEffect(() => {
     // display groups by default, when they are loaded or deleted.
-    setVisibleGroups(['Project', ...groups.map(group => group.name)]);
+    const groupData = groups || [];
+    setVisibleGroups(['Project', ...groupData.map(group => group.name)]);
   }, [groups])
   const projectIdOrZero = projectId || 0;
   const { data: project, isLoading: isProjectLoading } =
@@ -484,7 +480,7 @@ const Simulations: FC = () => {
         }
       >
         <Stack direction="column">
-          {!!groups.length && (
+          {!!groups?.length && (
             <>
               <Typography
                 sx={{
@@ -505,7 +501,7 @@ const Simulations: FC = () => {
                   }
                   label='Project'
                 />
-                {groups.map((group) => (
+                {groups?.map((group) => (
                   <FormControlLabel
                     key={group.name}
                     control={

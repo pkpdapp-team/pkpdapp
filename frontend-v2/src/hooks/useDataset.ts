@@ -6,11 +6,11 @@ import {
   useDatasetRetrieveQuery,
   useDatasetCreateMutation,
   useProjectRetrieveQuery,
-  useSubjectGroupListQuery,
   useSubjectListQuery,
   useUnitListQuery,
   useBiomarkerTypeListQuery,
 } from '../app/backendApi';
+import useSubjectGroups from './useSubjectGroups';
 
 const DEFAULT_GROUPS: SubjectGroupListApiResponse = [];
 const DEFAULT_BIOMARKERS: BiomarkerTypeListApiResponse = [];
@@ -34,11 +34,8 @@ export default function useDataset(selectedProject: number | null) {
     { datasetId: datasetIdOrZero },
     { skip: !datasetIdOrZero }
   );
-  const { data: subjectGroupData, refetch: refetchSubjectGroups } = useSubjectGroupListQuery(
-    { datasetId: datasetIdOrZero },
-    { skip: !datasetIdOrZero }
-  );
-  const subjectGroups = subjectGroupData || DEFAULT_GROUPS;
+  const { datasetGroups: datasetGroupData, refetchDatasetGroups } = useSubjectGroups();
+  const subjectGroups = datasetGroupData || DEFAULT_GROUPS;
   const { data: biomarkerTypeData, refetch: refetchBiomarkerTypes } = useBiomarkerTypeListQuery(
     { datasetId: datasetIdOrZero },
     { skip: !datasetIdOrZero }
@@ -64,9 +61,9 @@ export default function useDataset(selectedProject: number | null) {
     console.log('updating dataset', newDataset)
     refetch();
     refetchSubjects();
-    refetchSubjectGroups();
+    refetchDatasetGroups();
     refetchBiomarkerTypes();
-  }, [refetch, refetchSubjects, refetchSubjectGroups, refetchBiomarkerTypes]);
+  }, [refetch, refetchSubjects, refetchDatasetGroups, refetchBiomarkerTypes]);
 
   const subjectBiomarkers = biomarkerTypes.filter(b => b.is_continuous)
       .map(b => {
