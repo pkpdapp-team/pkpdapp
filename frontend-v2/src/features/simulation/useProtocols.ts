@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
-import useDataset from "../../hooks/useDataset";
+import useSubjectGroups from "../../hooks/useSubjectGroups";
 import {
   ProtocolRead,
   useCompoundRetrieveQuery,
@@ -31,13 +31,8 @@ export default function useProtocols() {
     { projectId: projectIdOrZero },
     { skip: !projectId },
   );
-  const { groups: subjectGroups } = useDataset(projectIdOrZero);
-  const { data: projectGroups } = useSubjectGroupListQuery(
-    { projectId: projectIdOrZero },
-    { skip: !projectId }
-  );
-  const groups = useMemo(() => subjectGroups.concat(projectGroups || []), [subjectGroups, projectGroups]);
-  
+  const { groups } = useSubjectGroups();
+
   const protocols = useMemo(() => {
     const datasetProtocols = groups?.flatMap(group => group.protocols) || [];
     if (projectProtocols && datasetProtocols) {

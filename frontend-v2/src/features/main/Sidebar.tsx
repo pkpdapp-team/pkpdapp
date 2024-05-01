@@ -40,7 +40,7 @@ import SsidChartIcon from "@mui/icons-material/SsidChart";
 import ContactSupportIcon from "@mui/icons-material/ContactSupport";
 import TableViewIcon from "@mui/icons-material/TableView";
 import "@fontsource/comfortaa"; // Defaults to weight 400
-import useDataset from "../../hooks/useDataset";
+import useSubjectGroups from "../../hooks/useSubjectGroups";
 
 
 const drawerWidth = 240;
@@ -54,7 +54,7 @@ export default function Sidebar() {
   const selectedProject = useSelector(
     (state: RootState) => state.main.selectedProject,
   );
-  const { groups: subjectGroups } = useDataset(selectedProject);
+  const { groups } = useSubjectGroups();
   const dirtyCount = useSelector((state: RootState) => state.main.dirtyCount);
   const projectId = useSelector(
     (state: RootState) => state.main.selectedProject,
@@ -96,7 +96,7 @@ export default function Sidebar() {
     );
   };
 
-  const doses = subjectGroups?.flatMap(group => group.protocols.map(p => p.doses));
+  const doses = groups?.flatMap(group => group.protocols.map(p => p.doses));
   const groupsAreIncomplete = doses?.some(dosing => dosing.length === 0);
 
   const errors: { [key: string]: string } = {};
