@@ -23,6 +23,7 @@ import {
   useUnitListQuery,
   useVariableListQuery
 } from "../../app/backendApi";
+import useObservationRows from './useObservationRows';
 
 interface IMapObservations {
   state: StepperState;
@@ -55,29 +56,18 @@ const MapObservations: FC<IMapObservations> = ({state}: IMapObservations) => {
     { skip: !project || !project.compound },
   );
 
-  const observationField = state.fields.find(
-    (field, i) => state.normalisedFields[i] === 'Observation'
-  ) || '';
-  const observationIdField = state.fields.find(
-    (field, i) => state.normalisedFields[i] === 'Observation ID'
-  );
-  const observationVariableField = state.fields.find(
-    (field, i) => state.normalisedFields[i] === 'Observation Variable'
-  );
-  const observationRows = observationField ? state.data.filter(row => row[observationField] !== '.') : [];
-  const observationIds = observationIdField ?
-    observationRows.map(row => row[observationIdField]) :
-    [observationField];
-  const uniqueObservationIds = [...new Set(observationIds)];
-  const observationValues = observationField ?
-    observationRows.map(row => row[observationField]) :
-    [];
-  const observationUnitField = state.fields.find(
-    (field, i) => ['Observation Unit', 'Unit'].includes(state.normalisedFields[i])
-  );
-  const observationUnits = observationRows.map(row => row[observationUnitField || 'Observation_unit']);
-  const observationVariables = observationRows.map(row => row[observationVariableField || 'Observation Variable']);
-
+  const {
+    observationRows,
+    observationIdField,
+    observationUnitField,
+    observationVariableField,
+    observationIds,
+    uniqueObservationIds,
+    observationUnits,
+    observationValues,
+    observationVariables
+  } = useObservationRows(state);
+  
   const filterOutputs = model?.is_library_model
     ? ["environment.t", "PDCompartment.C_Drug"]
     : [];
