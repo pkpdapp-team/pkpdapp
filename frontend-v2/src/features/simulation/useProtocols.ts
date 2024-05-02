@@ -6,8 +6,7 @@ import {
   ProtocolRead,
   useCompoundRetrieveQuery,
   useProjectRetrieveQuery,
-  useProtocolListQuery,
-  useSubjectGroupListQuery
+  useProtocolListQuery
 } from "../../app/backendApi";
 
 const DEFAULT_PROTOCOLS: ProtocolRead[] = [];

@@ -24,7 +24,6 @@ import {
   useProjectRetrieveQuery,
   useSimulationListQuery,
   useSimulationUpdateMutation,
-  useSubjectGroupListQuery,
   useUnitListQuery,
   useVariableListQuery,
   useVariableUpdateMutation,

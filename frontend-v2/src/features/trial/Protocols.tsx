@@ -17,7 +17,6 @@ import { Add, Error } from "@mui/icons-material";
 import {
   useSubjectGroupCreateMutation,
   useSubjectGroupDestroyMutation,
-  useSubjectGroupListQuery,
   useUnitListQuery,
   useProjectRetrieveQuery,
   useProtocolListQuery,

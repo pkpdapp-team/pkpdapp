@@ -1,4 +1,4 @@
-import { FC, useMemo, useState } from "react";
+import { FC, useState } from "react";
 import Plot from "react-plotly.js";
 import {
   CombinedModelRead,
@@ -7,8 +7,7 @@ import {
   Simulation,
   UnitRead,
   VariableRead,
-  useProtocolListQuery,
-  useSubjectGroupListQuery
+  useProtocolListQuery
 } from "../../app/backendApi";
 import { Config, Data, Layout, Icon as PlotlyIcon } from "plotly.js";
 import {

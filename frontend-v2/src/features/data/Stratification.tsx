@@ -1,7 +1,6 @@
 import { ChangeEvent, FC, useState } from 'react';
 import {
   Box,
-  Checkbox,
   Radio,
   Table,
   TableHead,
@@ -22,7 +21,7 @@ interface IStratification {
   firstTime: boolean;
 }
 
-const Stratification: FC<IStratification> = ({ state, firstTime }: IStratification) => {
+const Stratification: FC<IStratification> = ({ state }: IStratification) => {
   const idField = state.fields.find((field, index) => state.normalisedFields[index] === 'ID');
   const catCovariates = state.fields.filter((field, index) =>
     state.normalisedFields[index] === 'Cat Covariate'
@@ -95,7 +94,6 @@ const Stratification: FC<IStratification> = ({ state, firstTime }: IStratificati
           <TableBody>
             {catCovariates.map((field, index) => {
               const primaryLabel = `heading-primary field-${field}`;
-              const secondaryLabel = `heading-secondary field-${field}`;
               const isPrimary = primaryCohort === field;
               return (
                 <TableRow key={field}>
