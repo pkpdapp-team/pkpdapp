@@ -68,6 +68,19 @@ const LoadData: FC<ILoadDataProps> = ({state, firstTime}) => {
     });
     state.setData(newData);
   }
+  if (state.normalisedFields.includes('Infusion Duration')) {
+    const infusionTimeIndex = state.normalisedFields.indexOf('Infusion Duration');
+    const infusionTimeField = state.fields[infusionTimeIndex];
+    const hasZeroInfusionTIme = state.data.some(row => parseFloat(row[infusionTimeField]) === 0);
+    if (hasZeroInfusionTIme) {
+      const newData = [...state.data];
+      newData.forEach(row => {
+        const infusionTime = parseFloat(row[infusionTimeField]);
+        row[infusionTimeField] = infusionTime === 0 ? '0.0833' : row[infusionTimeField];
+      });
+      state.setData(newData);
+    }
+  }
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     state.setTimeUnit('');
