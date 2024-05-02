@@ -33,5 +33,8 @@ class SubjectGroup(models.Model):
         help_text='Project that this group belongs to.'
     )
 
+    def get_project(self):
+        return self.project
+
     def __str__(self):
         return self.name
