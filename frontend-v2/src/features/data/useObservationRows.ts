@@ -4,11 +4,16 @@ import { Row } from "./LoadData";
 
 function mergeObservationColumns(state: StepperState, observationFields: string[]) {
   const rows: Row[] = [];
+  const amountIndex = state.normalisedFields.indexOf('Amount');
+  const amountField = state.fields[amountIndex];
   observationFields.forEach((field, i) => {
     const observationId = `${i + 1}`;
     state.data.forEach(row => {
       const value = row[field];
-      const newRow = { ...row, Observation: value, Observation_id: observationId };
+      const newRow: Row = { ...row, Observation: value, Observation_id: observationId };
+      if (i > 0) {
+        newRow[amountField] = '.';
+      }
       rows.push(newRow);
     });
   });
