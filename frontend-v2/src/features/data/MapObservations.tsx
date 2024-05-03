@@ -57,16 +57,15 @@ const MapObservations: FC<IMapObservations> = ({state}: IMapObservations) => {
   );
 
   const {
-    observationRows,
     observationIdField,
     observationUnitField,
     observationVariableField,
     observationIds,
-    uniqueObservationIds,
     observationUnits,
     observationValues,
     observationVariables
   } = useObservationRows(state);
+  const uniqueObservationIds = [...new Set(observationIds)];
   
   const filterOutputs = model?.is_library_model
     ? ["environment.t", "PDCompartment.C_Drug"]
@@ -130,12 +129,13 @@ const MapObservations: FC<IMapObservations> = ({state}: IMapObservations) => {
           {uniqueObservationIds
             .sort((a, b) => a > b ? 1 : -1)
             .map((obsId) => {
-              const currentRow = observationRows.find(row => observationIdField ? row[observationIdField] === obsId : true);
+              const currentRow = observationIds.indexOf(obsId);
+              const obsVariable = observationVariables[currentRow];
+              const obsUnit = observationUnits[currentRow];
               const selectedVariable = variables?.find(
-                variable => variable.qname === currentRow?.[observationVariableField || 'Observation Variable']
+                variable => variable.qname === obsVariable
               );
-              let selectedUnitSymbol = currentRow?.[observationUnitField || 'Observation_unit'];
-              selectedUnitSymbol = units?.find(unit => unit.symbol === selectedUnitSymbol)?.symbol;
+              let selectedUnitSymbol = units?.find(unit => unit.symbol === obsUnit)?.symbol;
               const compatibleUnits = selectedVariable
                 ? units?.find(unit => unit.id === selectedVariable?.unit)?.compatible_units
                 : units;

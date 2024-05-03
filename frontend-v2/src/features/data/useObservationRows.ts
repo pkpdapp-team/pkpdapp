@@ -7,7 +7,7 @@ function mergeObservationColumns(state: StepperState, observationFields: string[
   const amountIndex = state.normalisedFields.indexOf('Amount');
   const amountField = state.fields[amountIndex];
   observationFields.forEach((field, i) => {
-    const observationId = `${i + 1}`;
+    const observationId = field;
     state.data.forEach(row => {
       const value = row[field];
       const newRow: Row = { ...row, Observation: value, Observation_id: observationId };
@@ -50,7 +50,6 @@ export default function useObservationRows(state: StepperState) {
   const observationIds = observationIdField ?
     observationRows.map(row => row[observationIdField || 'Observation_id']) :
     [observationField];
-  const uniqueObservationIds = [...new Set(observationIds)];
   const observationValues = observationField ?
     observationRows.map(row => row[observationField]) :
     [];
@@ -70,7 +69,6 @@ export default function useObservationRows(state: StepperState) {
     observationUnitField,
     observationVariableField,
     observationIds,
-    uniqueObservationIds,
     observationUnits,
     observationValues,
     observationVariables
