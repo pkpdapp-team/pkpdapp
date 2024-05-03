@@ -4,6 +4,9 @@ import { useProjectRetrieveQuery, useUnitListQuery } from "../../app/backendApi"
 import { RootState } from "../../app/store";
 import { Box, Button, Stack, Tab, Tabs, Typography } from "@mui/material";
 import { DataGrid } from '@mui/x-data-grid';
+import EditIcon from '@mui/icons-material/Edit';
+import FileDownloadIcon from '@mui/icons-material/FileDownload';
+import FileUploadIcon from '@mui/icons-material/FileUpload';
 import LoadDataStepper from "./LoadDataStepper";
 import useDataset from "../../hooks/useDataset";
 import generateCSV from './generateCSV';
@@ -141,19 +144,22 @@ const Data:FC = () => {
           <Button
             variant="outlined"
             onClick={handleNewUpload}
+            startIcon={<FileUploadIcon />}
           >
-            Upload new dataset
+            New dataset
           </Button>
           <Button
             variant="outlined"
             onClick={editDataset}
             disabled={!csv}
+            startIcon={<EditIcon />}
           >
             Edit dataset
           </Button>
           <Button
             variant="outlined"
             onClick={downloadCSV}
+            startIcon={<FileDownloadIcon />}
           >
             Download CSV
           </Button>
