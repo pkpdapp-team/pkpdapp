@@ -31,7 +31,7 @@ interface IDosingProtocols {
 
 const DosingProtocols: FC<IDosingProtocols> = ({
   administrationIdField,
-  amountUnitField,
+  amountUnitField = 'Amt_unit',
   amountUnit,
   state,
   units,
@@ -76,7 +76,7 @@ const DosingProtocols: FC<IDosingProtocols> = ({
     const { value } = event.target;
     nextData.filter(row => administrationIdField ? row[administrationIdField] === id : true)
       .forEach(row => {
-        row[amountUnitField || 'Amt_unit'] = value;
+        row[amountUnitField] = value;
       })
     state.setData(nextData);
   }

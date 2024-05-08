@@ -56,7 +56,7 @@ const MapDosing: FC<IMapDosing> = ({ state, firstTime }: IMapDosing) => {
   return hasDosingRows ? 
     <DosingProtocols
       administrationIdField={administrationIdField || ''}
-      amountUnitField={amountUnitField || ''}
+      amountUnitField={amountUnitField}
       amountUnit={amountUnit}
       state={state}
       units={units || []}
