@@ -2,6 +2,9 @@ import { StepperState } from "./LoadDataStepper";
 import { normaliseHeader } from "./normaliseDataHeaders";
 import { Row } from "./LoadData";
 
+const DEFAULT_VARIABLE_FIELD = 'Observation Variable';
+const DEFAULT_UNIT_FIELD = 'Observation_unit';
+
 function mergeObservationColumns(state: StepperState, observationFields: string[]) {
   const rows: Row[] = [];
   const amountIndex = state.normalisedFields.indexOf('Amount');
@@ -55,12 +58,12 @@ export default function useObservationRows(state: StepperState) {
     [];
   const observationUnitField = fields.find(
     (field, i) => ['Observation Unit', 'Unit'].includes(normalisedFields[i])
-  );
+  ) || DEFAULT_UNIT_FIELD;
   const observationVariableField = fields.find(
     (field, i) => normalisedFields[i] === 'Observation Variable'
-  );
-  const observationUnits = observationRows.map(row => row[observationUnitField || 'Observation_unit']);
-  const observationVariables = observationRows.map(row => row[observationVariableField || 'Observation Variable']);
+  ) || DEFAULT_VARIABLE_FIELD;
+  const observationUnits = observationRows.map(row => row[observationUnitField]);
+  const observationVariables = observationRows.map(row => row[observationVariableField]);
 
   return {
     observationRows,

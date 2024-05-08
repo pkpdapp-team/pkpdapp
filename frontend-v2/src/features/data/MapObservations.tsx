@@ -83,10 +83,10 @@ const MapObservations: FC<IMapObservations> = ({state}: IMapObservations) => {
     const defaultUnit = units?.find(unit => unit.id === selectedVariable?.unit);
     nextData.filter(row => observationIdField ? row[observationIdField] === id : true)
       .forEach(row => {
-        row[observationVariableField || 'Observation Variable'] = value;
-        const selectedUnitSymbol = row[observationUnitField || 'Observation_unit'];
+        row[observationVariableField] = value;
+        const selectedUnitSymbol = row[observationUnitField];
         if (!selectedUnitSymbol && defaultUnit) {
-          row['Observation_unit'] = defaultUnit?.symbol
+          row[observationUnitField] = defaultUnit?.symbol
         }
       });
     state.setData(nextData);
@@ -96,7 +96,7 @@ const MapObservations: FC<IMapObservations> = ({state}: IMapObservations) => {
     const { value } = event.target;
     nextData.filter(row => observationIdField ? row[observationIdField] === id : true)
       .forEach(row => {
-        row[observationUnitField || 'Observation_unit'] = value;
+        row[observationUnitField] = value;
       });
     state.setData(nextData);
   }
