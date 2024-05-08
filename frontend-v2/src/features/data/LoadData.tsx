@@ -81,6 +81,24 @@ const LoadData: FC<ILoadDataProps> = ({state, firstTime}) => {
       state.setData(newData);
     }
   }
+  if (!state.fields.includes('Time')) {
+    const timeFieldIndex = state.normalisedFields.indexOf('Time');
+    const timeField = state.fields[timeFieldIndex];
+    if (timeFieldIndex > -1 && timeField !== 'Time') {
+      const newData = [ ...state.data ];
+      newData.forEach(row => {
+        if (row[timeField]) {
+          row['Time'] = row[timeField];
+          delete row[timeField];
+        }
+      });
+      const newFields = Object.keys(newData[0]);
+      state.setFields(newFields);
+      state.setData(newData);
+      const normalisedFields = newFields.map(normaliseHeader);
+      state.setNormalisedFields(normalisedFields);
+    }
+  }
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     state.setTimeUnit('');
