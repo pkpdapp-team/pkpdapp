@@ -9,7 +9,7 @@ const normalisation = {
   'Censoring': ['cens', 'blq', 'lloq'],
   'Cont Covariate': ['cont covariate', 'weight', 'wt', 'bw', 'age', 'dose'],
   'Event ID': ['event id', 'evid'],
-  'ID': ['id', 'subject', 'animal number'],
+  'ID': ['id', 'subject', 'animal number', 'subject_id', 'subjid'],
   'Ignored Observation': ['ignored observation', 'mdv'],
   'Infusion Duration': ['infusion time', 'infusion duration', 'infusion_time', 'dur', 'tinf', 'infusiontime'],
   'Infusion Rate': ['infusion rate', 'rate'],
