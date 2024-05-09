@@ -1,7 +1,7 @@
 import { FC } from 'react';
-import { Box, Table, TableHead, TableRow, TableCell, TableBody, Typography } from "@mui/material";
+import { Box } from "@mui/material";
+import { DataGrid } from '@mui/x-data-grid';
 import { StepperState } from "./LoadDataStepper";
-import { Data, Field } from "./LoadData";
 
 interface IPreviewData {
   state: StepperState;
@@ -73,28 +73,18 @@ const PreviewData: FC<IPreviewData> = ({ state, firstTime }: IPreviewData) => {
 
   return (
     <Box component="div" sx={{ maxHeight: "65vh", overflow: 'auto', overflowX: 'auto' }}>
-      <Table>
-        <TableHead>
-          <TableRow>
-            {visibleFields.map((field, index) => (
-              <TableCell key={index}>
-                <Typography variant="h6" component="div" sx={{ flexGrow: 1, marginBottom: 1 }} align="center">
-                  {field}
-                </Typography>
-              </TableCell>
-            ))}
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {data.map((row, index) => (
-            <TableRow key={index}>
-              {visibleFields.map((field, index) => (
-                <TableCell key={index}>{row[field]}</TableCell>
-              ))}
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+      <DataGrid
+        rows={data.map((row, index) => ({ id: index, ...row }))}
+        columns={
+          visibleFields.map((field) => ({
+            field,
+            headerName: field,
+            minWidth: (field.endsWith('_var') || field.endsWith('Variable')) ? 150 :
+              field.length > 10 ? 130 : 30
+          }))
+        }
+        autoHeight
+      />
     </Box>
   )
 }
