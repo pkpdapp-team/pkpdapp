@@ -6,6 +6,7 @@ import MapHeaders from './MapHeaders';
 import { normaliseHeader, validateNormalisedFields } from './normaliseDataHeaders';
 import { StepperState } from './LoadDataStepper';
 import SetUnits from './SetUnits';
+import { time } from 'console';
 
 export type Row = {[key: string]: string};
 export type Data = Row[];
@@ -38,66 +39,91 @@ interface ILoadDataProps {
   firstTime: boolean;
 }
 
-const LoadData: FC<ILoadDataProps> = ({state, firstTime}) => {
-  const [showData, setShowData] = useState<boolean>(state.data.length > 0 && state.fields.length > 0);
-  // Add ID field if it doesn't exist. Assume ascending time values for each subject.
-  if (!state.normalisedFields.includes('ID')) {
-    state.setNormalisedFields([...state.normalisedFields, 'ID']);
-    state.setFields([...state.fields, 'ID']);
-    let subjectCount = 1
-    const timeFieldIndex = state.normalisedFields.indexOf('Time');
-    const timeField = state.fields[timeFieldIndex];
-    const newData = state.data.map((row, index) => {
-      if (index > 0) {
-        const time = parseFloat(row[timeField]);
-        const prevTime = parseFloat(state.data[index - 1][timeField]);
-        if (time < prevTime) {
-          subjectCount++;
-        }
+function updateDataWithFields(state: StepperState, data: Data) {
+  if (data.length > 0) {
+    const newFields = Object.keys(data[0]);
+    state.setFields(newFields);
+    state.setData(data);
+    const normalisedFields = newFields.map(normaliseHeader);
+    state.setNormalisedFields(normalisedFields);
+  }
+}
+
+/*
+Add ID field if it doesn't exist.
+Assume ascending time values for each subject.
+*/
+function createDefaultSubjects(state: StepperState) {
+  let subjectCount = 1
+  const timeFieldIndex = state.normalisedFields.indexOf('Time');
+  const timeField = state.fields[timeFieldIndex];
+  const newData = state.data.map((row, index) => {
+    if (index > 0) {
+      const time = parseFloat(row[timeField]);
+      const prevTime = parseFloat(state.data[index - 1][timeField]);
+      if (time < prevTime) {
+        subjectCount++;
       }
-      return {...row, ID: `${subjectCount}`};
+    }
+    return {...row, ID: `${subjectCount}`};
+  });
+  updateDataWithFields(state, newData);
+}
+
+function createDefaultSubjectGroup(state: StepperState) {
+  const newData = [ ...state.data ];
+  newData.forEach(row => {
+    row['Group'] = '1';
+  });
+  updateDataWithFields(state, newData);
+}
+
+function setMinimumInfusionTime(state: StepperState) {
+  const infusionTimeIndex = state.normalisedFields.indexOf('Infusion Duration');
+  const infusionTimeField = state.fields[infusionTimeIndex];
+  const hasZeroInfusionTIme = state.data.some(row => parseFloat(row[infusionTimeField]) === 0);
+  if (hasZeroInfusionTIme) {
+    const newData = [...state.data];
+    newData.forEach(row => {
+      const infusionTime = parseFloat(row[infusionTimeField]);
+      row[infusionTimeField] = infusionTime === 0 ? '0.0833' : row[infusionTimeField];
     });
     state.setData(newData);
   }
-  if (!state.fields.includes('Group')) {
-    state.setNormalisedFields([...state.normalisedFields, 'Cat Covariate']);
-    state.setFields([...state.fields, 'Group']);
+}
+
+function normaliseTimeColumn(state: StepperState) {
+  const timeFieldIndex = state.normalisedFields.indexOf('Time');
+  const timeField = state.fields[timeFieldIndex];
+  const normalisedTimeField = 
+    state.fields.includes('Time') ? 'T' : 'Time';
+  if (timeFieldIndex > -1 && timeField !== normalisedTimeField) {
     const newData = [ ...state.data ];
     newData.forEach(row => {
-      row['Group'] = '1';
+      if (row[timeField]) {
+        row[normalisedTimeField] = row[timeField];
+        delete row[timeField];
+      }
     });
-    state.setData(newData);
+    updateDataWithFields(state, newData);
+  }
+}
+
+const LoadData: FC<ILoadDataProps> = ({state, firstTime}) => {
+  const [showData, setShowData] = useState<boolean>(state.data.length > 0 && state.fields.length > 0);
+  if (!state.normalisedFields.includes('ID')) {
+    createDefaultSubjects(state);
+  }
+  if (!state.normalisedFields.includes('Cat Covariate')) {
+    createDefaultSubjectGroup(state);
   }
   if (state.normalisedFields.includes('Infusion Duration')) {
-    const infusionTimeIndex = state.normalisedFields.indexOf('Infusion Duration');
-    const infusionTimeField = state.fields[infusionTimeIndex];
-    const hasZeroInfusionTIme = state.data.some(row => parseFloat(row[infusionTimeField]) === 0);
-    if (hasZeroInfusionTIme) {
-      const newData = [...state.data];
-      newData.forEach(row => {
-        const infusionTime = parseFloat(row[infusionTimeField]);
-        row[infusionTimeField] = infusionTime === 0 ? '0.0833' : row[infusionTimeField];
-      });
-      state.setData(newData);
-    }
+    setMinimumInfusionTime(state);
   }
-  if (!state.fields.includes('Time')) {
-    const timeFieldIndex = state.normalisedFields.indexOf('Time');
-    const timeField = state.fields[timeFieldIndex];
-    if (timeFieldIndex > -1 && timeField !== 'Time') {
-      const newData = [ ...state.data ];
-      newData.forEach(row => {
-        if (row[timeField]) {
-          row['Time'] = row[timeField];
-          delete row[timeField];
-        }
-      });
-      const newFields = Object.keys(newData[0]);
-      state.setFields(newFields);
-      state.setData(newData);
-      const normalisedFields = newFields.map(normaliseHeader);
-      state.setNormalisedFields(normalisedFields);
-    }
+  const timeFieldIndex = state.normalisedFields.indexOf('Time');
+  const timeField = state.fields[timeFieldIndex];
+  if (timeFieldIndex > -1 && timeField !== 'Time') {
+    normaliseTimeColumn(state);
   }
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
@@ -118,13 +144,17 @@ const LoadData: FC<ILoadDataProps> = ({state, firstTime}) => {
         const fields = csvData.meta.fields || [];
         const normalisedFields = fields.map(normaliseHeader);
         const fieldValidation = validateNormalisedFields(normalisedFields);
+        const primaryCohort = fields.find(
+          (field, index) => normalisedFields[index] === 'Cat Covariate'
+        ) || 'Group';
         const errors = csvData.errors
           .map((e) => e.message).concat(fieldValidation.errors);
         state.setData(csvData.data as Data);
         state.setFields(fields);
-        state.setNormalisedFields(normalisedFields)
+        state.setNormalisedFields(normalisedFields);
+        state.setPrimaryCohort(primaryCohort);
         state.setErrors(errors);
-        state.setWarnings(fieldValidation.warnings)
+        state.setWarnings(fieldValidation.warnings);
         if (csvData.data.length > 0 && csvData.meta.fields) {
           setShowData(true);
         }

@@ -22,7 +22,6 @@ const normalisation = {
   'Regressor': ['x', 'regressor'],
   'Time': ['time', 't', 'ivar'],
   'Time Unit': ['time unit', 'time_unit', 'time_units', 't_units', 'tunit', 'units_time'],
-  'Unit': ['unit', 'units'],
 }
 
 export const manditoryHeaders = ['Time', 'Observation']
