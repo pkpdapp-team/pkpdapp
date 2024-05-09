@@ -81,8 +81,8 @@ function createDefaultSubjectGroup(state: StepperState) {
 function setMinimumInfusionTime(state: StepperState) {
   const infusionTimeIndex = state.normalisedFields.indexOf('Infusion Duration');
   const infusionTimeField = state.fields[infusionTimeIndex];
-  const hasZeroInfusionTIme = state.data.some(row => parseFloat(row[infusionTimeField]) === 0);
-  if (hasZeroInfusionTIme) {
+  const hasZeroInfusionTime = state.data.some(row => parseFloat(row[infusionTimeField]) === 0);
+  if (hasZeroInfusionTime) {
     const newData = [...state.data];
     newData.forEach(row => {
       const infusionTime = parseFloat(row[infusionTimeField]);
