@@ -1,45 +1,45 @@
 import { FC } from 'react';
 import { Box, Table, TableHead, TableRow, TableCell, TableBody, Typography } from "@mui/material";
 import { StepperState } from "./LoadDataStepper";
-import { Data } from "./LoadData";
+import { Data, Field } from "./LoadData";
 
 interface IPreviewData {
   state: StepperState;
   firstTime: boolean;
 }
 
-const PreviewData: FC<IPreviewData> = ({ state, firstTime }: IPreviewData) => {
-  function normaliseColumn(data: Data, type: string) {
-    const fieldIndex = state.normalisedFields.indexOf(type);
-    const field = state.fields[fieldIndex];
-    const normalisedField = type;
-    const newData = [ ...data ];
-    if (fieldIndex > -1 && field !== normalisedField) {
-      const fields = [...state.fields];
-      const normalisedFields = [...state.normalisedFields];
-      normalisedFields[fieldIndex] = 'Ignore';
-      if (!fields.includes(normalisedField)) {
-        fields.push(normalisedField);
-        normalisedFields.push(type);
-      } else {
-        const normalisedFieldIndex = fields.indexOf(normalisedField);
-        normalisedFields[normalisedFieldIndex] = type;
-      }
-      newData.forEach(row => {
-        if (row[field]) {
-          row[normalisedField] = row[field];
-        }
-      });
-      state.setData(newData);
-      state.setFields(fields);
-      state.setNormalisedFields(normalisedFields);
+function useNormalisedColumn(state: StepperState, type: string) {
+  const fieldIndex = state.normalisedFields.indexOf(type);
+  const field = state.fields[fieldIndex];
+  const normalisedField = type;
+  const newData = [ ...state.data ];
+  if (fieldIndex > -1 && field !== normalisedField) {
+    const newFields = [...state.fields];
+    const newNormalisedFields = [...state.normalisedFields];
+    newNormalisedFields[fieldIndex] = 'Ignore';
+    if (!newFields.includes(normalisedField)) {
+      newFields.push(normalisedField);
+      newNormalisedFields.push(type);
+    } else {
+      const normalisedFieldIndex = newFields.indexOf(normalisedField);
+      newNormalisedFields[normalisedFieldIndex] = type;
     }
-    return newData;
+    newData.forEach(row => {
+      if (row[field]) {
+        row[normalisedField] = row[field];
+      }
+    });
+    state.setData(newData);
+    state.setFields(newFields);
+    state.setNormalisedFields(newNormalisedFields);
   }
+  return newData;
+}
 
+const PreviewData: FC<IPreviewData> = ({ state, firstTime }: IPreviewData) => {
+  useNormalisedColumn(state, 'Time');
+  useNormalisedColumn(state, 'ID');
   const { data } = state;
-  normaliseColumn(data, 'Time');
-  normaliseColumn(data, 'ID');
   const fields = [
     ...state.fields
   ];
