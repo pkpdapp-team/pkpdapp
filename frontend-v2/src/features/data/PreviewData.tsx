@@ -21,6 +21,9 @@ const PreviewData: FC<IPreviewData> = ({ state, firstTime }: IPreviewData) => {
       if (!fields.includes(normalisedField)) {
         fields.push(normalisedField);
         normalisedFields.push(type);
+      } else {
+        const normalisedFieldIndex = fields.indexOf(normalisedField);
+        normalisedFields[normalisedFieldIndex] = type;
       }
       newData.forEach(row => {
         if (row[field]) {
@@ -64,13 +67,16 @@ const PreviewData: FC<IPreviewData> = ({ state, firstTime }: IPreviewData) => {
   ) {
     fields.push('Observation_unit')
   }
+  const visibleFields = fields.filter(
+    (field, index) => state.normalisedFields[index] !== 'Ignore'
+  );
 
   return (
     <Box component="div" sx={{ maxHeight: "65vh", overflow: 'auto', overflowX: 'auto' }}>
       <Table>
         <TableHead>
           <TableRow>
-            {fields.map((field, index) => (
+            {visibleFields.map((field, index) => (
               <TableCell key={index}>
                 <Typography variant="h6" component="div" sx={{ flexGrow: 1, marginBottom: 1 }} align="center">
                   {field}
@@ -82,7 +88,7 @@ const PreviewData: FC<IPreviewData> = ({ state, firstTime }: IPreviewData) => {
         <TableBody>
           {data.map((row, index) => (
             <TableRow key={index}>
-              {fields.map((field, index) => (
+              {visibleFields.map((field, index) => (
                 <TableCell key={index}>{row[field]}</TableCell>
               ))}
             </TableRow>
