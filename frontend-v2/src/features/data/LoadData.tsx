@@ -92,6 +92,22 @@ function setMinimumInfusionTime(state: StepperState) {
   }
 }
 
+function normaliseSubjectColumn(state: StepperState) {
+  const subjectFieldIndex = state.normalisedFields.indexOf('ID');
+  const subjectField = state.fields[subjectFieldIndex];
+  const normalisedSubjectField = 'ID';
+  if (subjectFieldIndex > -1 && subjectField !== normalisedSubjectField) {
+    const newData = [ ...state.data ];
+    newData.forEach(row => {
+      if (row[subjectField]) {
+        row[normalisedSubjectField] = row[subjectField];
+        delete row[subjectField];
+      }
+    });
+    updateDataWithFields(state, newData);
+  }
+}
+
 function normaliseTimeColumn(state: StepperState) {
   const timeFieldIndex = state.normalisedFields.indexOf('Time');
   const timeField = state.fields[timeFieldIndex];
@@ -111,6 +127,11 @@ function normaliseTimeColumn(state: StepperState) {
 
 const LoadData: FC<ILoadDataProps> = ({state, firstTime}) => {
   const [showData, setShowData] = useState<boolean>(state.data.length > 0 && state.fields.length > 0);
+  const subjectFieldIndex = state.normalisedFields.indexOf('ID');
+  const subjectField = state.fields[subjectFieldIndex];
+  if (subjectFieldIndex > -1 && subjectField !== 'ID') {
+    normaliseSubjectColumn(state);
+  }
   if (!state.normalisedFields.includes('ID')) {
     createDefaultSubjects(state);
   }
