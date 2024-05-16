@@ -133,7 +133,18 @@ const Protocols: FC = () => {
   const subjectGroup = tab === 0 ? null : groups?.[tab-1];
   const selectedProtocols = tab === 0
     ? filteredProtocols
-    : subjectGroup?.protocols;
+    : subjectGroup
+      ? [...subjectGroup.protocols]
+      : [];
+
+  // sort protocols alphabetically by name
+  selectedProtocols?.sort((a, b) => {
+    if (a.name < b.name) {
+      return -1;
+    } else {
+      return 1;
+    }
+  });
 
   return (
     <>
