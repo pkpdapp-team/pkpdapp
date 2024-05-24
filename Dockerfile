@@ -2,7 +2,7 @@
 
 FROM node:20 as build
 
-ENV YARN_VERSION 4.1.1
+ENV YARN_VERSION 4.2.2
 RUN yarn policies set-version $YARN_VERSION
 
 RUN mkdir -p /app/frontend
