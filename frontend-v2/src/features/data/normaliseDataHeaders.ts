@@ -14,7 +14,7 @@ const normalisation = {
   'Infusion Duration': ['infusion time', 'infusion duration', 'infusion_time', 'dur', 'tinf', 'infusiontime'],
   'Infusion Rate': ['infusion rate', 'rate'],
   'Interdose Interval': ['interdose interval', 'ii', 'tau', 'dosing interval'],
-  'Observation': ['observation', 'dv', 'c', 'y', 'conc', 'cobs', 'obs'],
+  'Observation': ['observation', 'dv', 'c', 'y', 'conc', 'cobs', 'obs', 'concentration'],
   'Observation Unit': ['observation unit', 'observation_unit', 'dv_units', 'c_units', 'y_units', 'yunit', 'cunit', 'obs_units', 'obs_unit', 'obsunit', 'units_conc'],
   'Observation ID': ['observation id', 'observation_id', 'ytype', 'dvid'],
   'Observation Variable': ['observation variable', 'observation_var'],
