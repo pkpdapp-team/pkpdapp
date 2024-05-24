@@ -40,6 +40,7 @@ const PreviewData: FC<IPreviewData> = ({ state, firstTime }: IPreviewData) => {
   useNormalisedColumn(state, 'Time');
   useNormalisedColumn(state, 'ID');
   useNormalisedColumn(state, 'Observation');
+  useNormalisedColumn(state, 'Amount');
   const { data } = state;
   const fields = [
     ...state.fields
