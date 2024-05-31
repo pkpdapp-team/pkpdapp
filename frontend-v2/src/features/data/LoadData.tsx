@@ -6,12 +6,15 @@ import MapHeaders from './MapHeaders';
 import { normaliseHeader, validateNormalisedFields } from './normaliseDataHeaders';
 import { StepperState } from './LoadDataStepper';
 import SetUnits from './SetUnits';
-import { time } from 'console';
 
 export type Row = {[key: string]: string};
 export type Data = Row[];
 export type Field = string;
 
+const ALLOWED_TYPES = [
+  'text/csv',
+  'text/plain'
+];
 
 const style = {
   dropArea: {
@@ -115,6 +118,10 @@ const LoadData: FC<ILoadDataProps> = ({state, firstTime}) => {
       reader.onabort = () => state.setErrors(['file reading was aborted'])
       reader.onerror = () => state.setErrors(['file reading has failed'])
       reader.onload = () => {
+        if (!ALLOWED_TYPES.includes(file.type)) {
+          state.setErrors(['Only CSV files are supported. Please upload a CSV file.']);
+          return;
+        }
         state.setFileName(file.name);
         // Parse the CSV data
         const rawCsv = reader.result as string;
