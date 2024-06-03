@@ -14,15 +14,24 @@ interface IProtocolDataGrid {
   state: StepperState
 }
 
+const ROW_COLS = ['Time', 'Time Unit', 'Amount', 'Amount Unit', 'Observation', 'Observation Unit'];
+
 const ProtocolDataGrid: FC<IProtocolDataGrid> = ({ group, state }) => {
   const [selected, setSelected] = useState<GridRowId[]>([]);
   const idField = state.fields.find((field, index) => state.normalisedFields[index] === 'ID');
   const { subjects } = group;
+  const outputColumns = state.fields.filter((field, index) => ROW_COLS.includes(state.normalisedFields[index]));
   const subjectRows = subjects.map(subject => {
     const row = state.data.find(row => idField && row[idField] === subject);
-    return { id: subject, ...row };
+    const rowEntries: string[][] = outputColumns.map((field) => row ? [field, row[field]] : [field, '']);
+    return {
+      id: subject,
+      'Group ID': group.id,
+      'ID': subject,
+    ...Object.fromEntries(rowEntries)
+  };
   }).filter(Boolean);
-  const subjectColumns = state.fields.map((field) => ({ field, headerName: field }));
+  const subjectColumns = ['Group ID', 'ID', ...outputColumns].map((field) => ({ field, headerName: field }));
 
   function onRowSelectionModelChange(selection: GridRowId[]) {
     setSelected(selection);
