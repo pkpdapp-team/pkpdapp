@@ -80,7 +80,7 @@ const CreateDosingProtocols: FC<IDosingProtocols> = ({
         Map dosing compartments to your subject groups here.
         You can set dose amounts, units and intervals under Trial Design, once you have uploaded your data.
       </Alert>
-      <Box component="div" sx={{ maxHeight: "40vh", overflow: 'auto', overflowX: 'auto' }}>
+      <Box component="div" marginTop={2} sx={{ maxHeight: "40vh", overflow: 'auto', overflowX: 'auto' }}>
         <Table>
           <TableHead>
             <TableRow>

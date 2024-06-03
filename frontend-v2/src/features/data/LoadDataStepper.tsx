@@ -157,9 +157,9 @@ const LoadDataStepper: FC<IStepper> = ({ csv = '', onCancel, onFinish }) => {
       </Stepper>
       <Box sx={{ flexGrow: 1 }}>
         {state.fileName &&
-          <Box padding={1} sx={{ display: 'flex', justifyContent: 'center' }}>
-            <Typography sx={{ fontWeight: 'bold' }}>File: {state.fileName}</Typography>
-          </Box>
+          <Alert severity='info'>
+            {state.fileName}
+          </Alert>
         }
         {errors.map(error => <Alert key={error} severity="error">{error}</Alert>)}
         {warnings.map(warning => <Alert key={warning} severity="warning">{warning}</Alert>)}

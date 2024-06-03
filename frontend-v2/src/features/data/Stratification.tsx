@@ -1,7 +1,9 @@
 import { ChangeEvent, FC, useState } from 'react';
 import {
+  Alert,
   Box,
   Radio,
+  Stack,
   Table,
   TableHead,
   TableRow,
@@ -76,61 +78,66 @@ const Stratification: FC<IStratification> = ({ state }: IStratification) => {
 
   return (
     <>
-      {!!catCovariates.length && 
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>
-                <Typography>Covariate</Typography>
-              </TableCell>
-              <TableCell>
-                <Typography>Values</Typography>
-              </TableCell>
-              <TableCell id='heading-primary'>
-                <Typography>Primary Grouping</Typography>
-              </TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {catCovariates.map((field, index) => {
-              const primaryLabel = `heading-primary field-${field}`;
-              const isPrimary = primaryCohort === field;
-              return (
-                <TableRow key={field}>
-                  <TableCell id={`field-${field}`}>{field}</TableCell>
-                  <TableCell>{uniqueCovariateValues[index].join(',')}</TableCell>
-                  <TableCell>
-                    <Radio
-                      name="primary"
-                      value={field}
-                      checked={isPrimary}
-                      onChange={handlePrimaryChange}
-                      inputProps={{ 'aria-labelledby': primaryLabel }}
-                    />
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-      }
-      <Tabs value={tab} onChange={handleTabChange}>
-        {groups.map((group, index) => (
-          <Tab
-            key={group.name}
-            label={group.name}
-            {...a11yProps(index)}
-          />
-        ))}
-      </Tabs>
-      <Box role='tabpanel' id='protocol-tabpanel'>
-        {groups[tab]
-          ? <Box component="div" sx={{ maxHeight: "40vh", overflow: 'auto', overflowX: 'auto' }}>
-              <ProtocolDataGrid group={groups[tab]}  state={state} />
-            </Box>
-          : <Typography>This dataset has no subject group column.</Typography>
+      <Alert severity='info'>
+        Stratify your observations into groups based on the covariates you have provided.
+      </Alert>
+      <Stack marginTop={2} spacing={2}>
+        {!!catCovariates.length && 
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>
+                  <Typography>Covariate</Typography>
+                </TableCell>
+                <TableCell>
+                  <Typography>Values</Typography>
+                </TableCell>
+                <TableCell id='heading-primary'>
+                  <Typography>Use as Group ID?</Typography>
+                </TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {catCovariates.map((field, index) => {
+                const primaryLabel = `heading-primary field-${field}`;
+                const isPrimary = primaryCohort === field;
+                return (
+                  <TableRow key={field}>
+                    <TableCell id={`field-${field}`}>{field}</TableCell>
+                    <TableCell>{uniqueCovariateValues[index].join(',')}</TableCell>
+                    <TableCell>
+                      <Radio
+                        name="primary"
+                        value={field}
+                        checked={isPrimary}
+                        onChange={handlePrimaryChange}
+                        inputProps={{ 'aria-labelledby': primaryLabel }}
+                      />
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
         }
-      </Box>
+        <Tabs value={tab} onChange={handleTabChange}>
+          {groups.map((group, index) => (
+            <Tab
+              key={group.name}
+              label={group.name}
+              {...a11yProps(index)}
+            />
+          ))}
+        </Tabs>
+        <Box role='tabpanel' id='protocol-tabpanel'>
+          {groups[tab]
+            ? <Box component="div" sx={{ maxHeight: "30vh", overflow: 'auto', overflowX: 'auto' }}>
+                <ProtocolDataGrid group={groups[tab]}  state={state} />
+              </Box>
+            : <Typography>This dataset has no subject group column.</Typography>
+          }
+        </Box>
+      </Stack>
     </>
   );
 }
