@@ -25,6 +25,7 @@ import {
   useVariableListQuery
 } from "../../app/backendApi";
 import useObservationRows from './useObservationRows';
+import { validateState } from './normaliseDataHeaders';
 
 interface IMapObservations {
   state: StepperState;
@@ -100,6 +101,15 @@ const MapObservations: FC<IMapObservations> = ({state}: IMapObservations) => {
         row[observationUnitField] = value;
       });
     state.setData(nextData);
+    const{ errors, warnings } = validateState(
+      {
+        ...state,
+        data: nextData,
+        normalisedFields: [...state.normalisedFields, 'Observation Unit']
+      }
+    );
+    state.setErrors(errors);
+    state.setWarnings(warnings);
   }
   return (
     <>

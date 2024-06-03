@@ -164,7 +164,7 @@ const LoadDataStepper: FC<IStepper> = ({ csv = '', onCancel, onFinish }) => {
         {errors.map(error => <Alert key={error} severity="error">{error}</Alert>)}
         {warnings.map(warning => <Alert key={warning} severity="warning">{warning}</Alert>)}
         {isFinished ?
-          <Typography>'The process is completed'</Typography> :
+          <Typography>Saving data…</Typography> :
           <StepComponent state={state} firstTime={stepState.activeStep === stepState.maxStep} />
         }
       </Box>

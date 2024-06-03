@@ -37,7 +37,7 @@ const CreateDosingProtocols: FC<IDosingProtocols> = ({
   variables
 }: IDosingProtocols) => {
   const amountField = state.fields.find(
-    (field, i) => state.normalisedFields[i] === 'Amount'
+    (field, i) => field === 'Amount' || state.normalisedFields[i] === 'Amount'
   );
   if (!amountField) {
     const newFields = [...state.fields, 'Amount'];
