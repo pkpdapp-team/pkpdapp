@@ -1,5 +1,5 @@
 import { FC, useState } from "react";
-import Plot from "react-plotly.js";
+import createPlotlyComponent from "react-plotly.js/factory";
 import {
   CombinedModelRead,
   CompoundRead,
@@ -9,7 +9,7 @@ import {
   VariableRead,
   useProtocolListQuery
 } from "../../app/backendApi";
-import { Config, Data, Layout, Icon as PlotlyIcon } from "plotly.js";
+import Plotly, { Config, Data, Layout, Icon as PlotlyIcon } from "plotly.js";
 import {
   Button,
   Dialog,
@@ -23,6 +23,8 @@ import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
 import useDataset from "../../hooks/useDataset";
 import useSubjectGroups from "../../hooks/useSubjectGroups";
+
+const Plot = createPlotlyComponent(Plotly);
 
 function ranges(
   minY: number | undefined,
