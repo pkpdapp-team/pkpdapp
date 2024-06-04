@@ -9,7 +9,7 @@ import {
   useProtocolUpdateMutation,
   useVariableRetrieveQuery,
 } from "../../app/backendApi";
-import { Delete } from "@mui/icons-material";
+import Delete from "@mui/icons-material/Delete";
 import { useFieldArray, useForm } from "react-hook-form";
 import UnitField from "../../components/UnitField";
 import FloatField from "../../components/FloatField";

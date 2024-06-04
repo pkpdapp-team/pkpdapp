@@ -21,7 +21,7 @@ import {
 } from "../../app/backendApi";
 import { Control } from "react-hook-form";
 import { FormData } from "./Project";
-import { Delete } from "@mui/icons-material";
+import Delete from "@mui/icons-material/Delete";
 import { useSelector } from "react-redux";
 import { selectCurrentUser } from "../login/loginSlice";
 

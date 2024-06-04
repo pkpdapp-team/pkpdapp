@@ -20,13 +20,11 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import {
-  CloseFullscreen,
-  Delete,
-  OpenInFull,
-  Replay,
-  Save,
-} from "@mui/icons-material";
+import CloseFullscreen from "@mui/icons-material/CloseFullscreen";
+import Delete from "@mui/icons-material/Delete";
+import OpenInFull from "@mui/icons-material/OpenInFull";
+import Replay from "@mui/icons-material/Replay";
+import Save from "@mui/icons-material/Save";
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
 import { selectIsProjectShared } from "../login/loginSlice";

@@ -25,7 +25,7 @@ import TextField from "../../components/TextField";
 import UnitField from "../../components/UnitField";
 import SelectField from "../../components/SelectField";
 import DropdownButton from "../../components/DropdownButton";
-import { Delete } from "@mui/icons-material";
+import Delete from "@mui/icons-material/Delete";
 import FloatField from "../../components/FloatField";
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";

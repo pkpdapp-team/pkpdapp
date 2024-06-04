@@ -13,7 +13,8 @@ import {
   Tabs,
   Tab
 } from "@mui/material";
-import { Add, Error } from "@mui/icons-material";
+import Add from "@mui/icons-material/Add";
+import Error from "@mui/icons-material/Error";
 import {
   useSubjectGroupCreateMutation,
   useSubjectGroupDestroyMutation,
