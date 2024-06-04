@@ -1,3 +1,5 @@
+import { StepperState } from "./LoadDataStepper";
+
 const normalisation = {
   'Ignore': ['ignore'],
   'Additional Doses': ['additional doses', 'additional dose', 'addl'],
@@ -28,28 +30,32 @@ export const manditoryHeaders = ['Time', 'Observation']
 
 export const normalisedHeaders = Object.keys(normalisation)
 
-export const validateNormalisedFields = (fields: string[]) => {
+export const validateState = (state: StepperState) => {
+  const dataFields = state.data.length ? Object.keys(state.data[0]) : [];
+  const normalisedFields = dataFields.map(normaliseHeader);
   const errors: string[] = [];
+  const hasNoDosing = !normalisedFields.includes('Amount') || state.data.every(row => row['Amount'] === '.');
   // check for mandatory fields
   for (const field of manditoryHeaders) {
-    if (!fields.includes(field)) {
+    if (!normalisedFields.includes(field)) {
       errors.push(`${field} has not been defined`);
     }
   }
   const warnings: string[] = [];
-  if (!fields.includes('ID')) {
+  if (!normalisedFields.includes('ID')) {
     warnings.push(
       `ID has not been defined. Subject IDs will be assigned automatically, according to the time column,
       if time is provided in ascending order for each individual.`
     );
   }
-  if (!fields.includes('Amount')) {
-    warnings.push('This CSV contains no dosing information. Dosing amounts and units can be set in Trial Design.');
+  if (!normalisedFields.includes('Amount Unit')) {
+    if (hasNoDosing) {
+      warnings.push('This CSV contains no dosing information. Dosing amounts and units can be set in Trial Design.');
+    } else {
+      warnings.push('Amount units have not been defined in the dataset and need to be defined manually.');
+    }
   }
-  if (fields.includes('Amount') && !fields.includes('Amount Unit')) {
-    warnings.push('Amount units have not been defined in the dataset and need to be defined manually.');
-  }
-  if (fields.includes('Observation') && !fields.includes('Observation Unit')) {
+  if (normalisedFields.includes('Observation') && !normalisedFields.includes('Observation Unit')) {
     warnings.push('Observation units have not been defined in the dataset and need to be defined manually.');
   }
   return { errors, warnings };

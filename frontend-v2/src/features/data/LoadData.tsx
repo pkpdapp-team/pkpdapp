@@ -3,7 +3,7 @@ import Papa from 'papaparse'
 import { FC, useCallback, useState} from 'react'
 import {useDropzone} from 'react-dropzone'
 import MapHeaders from './MapHeaders';
-import { normaliseHeader, validateNormalisedFields } from './normaliseDataHeaders';
+import { normaliseHeader, validateState } from './normaliseDataHeaders';
 import { StepperState } from './LoadDataStepper';
 import SetUnits from './SetUnits';
 
@@ -128,7 +128,12 @@ const LoadData: FC<ILoadDataProps> = ({state, firstTime}) => {
         const csvData = Papa.parse(rawCsv.trim(), { header: true });
         const fields = csvData.meta.fields || [];
         const normalisedFields = fields.map(normaliseHeader);
-        const fieldValidation = validateNormalisedFields(normalisedFields);
+        const fieldValidation = validateState({
+          ...state,
+          data: csvData.data as Data,
+          fields,
+          normalisedFields
+        });
         const primaryCohort = fields.find(
           (field, index) => normalisedFields[index] === 'Cat Covariate'
         ) || 'Group';
@@ -150,9 +155,12 @@ const LoadData: FC<ILoadDataProps> = ({state, firstTime}) => {
   }, [state])
   const {getRootProps, getInputProps} = useDropzone({onDrop})
 
-  const setNormalisedFields = (fields: Field[]) => {
-    state.setNormalisedFields(fields);
-    const { errors, warnings } = validateNormalisedFields(fields);
+  const setNormalisedFields = (normalisedFields: Field[]) => {
+    state.setNormalisedFields(normalisedFields);
+    const { errors, warnings } = validateState({
+      ...state,
+      normalisedFields,
+    });
     state.setErrors(errors);
     state.setWarnings(warnings);
   }

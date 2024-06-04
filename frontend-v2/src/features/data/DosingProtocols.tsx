@@ -19,6 +19,7 @@ import {
   UnitRead,
   VariableRead
 } from "../../app/backendApi";
+import { validateState } from './normaliseDataHeaders';
 
 interface IDosingProtocols {
   administrationIdField: string;
@@ -79,6 +80,15 @@ const DosingProtocols: FC<IDosingProtocols> = ({
         row[amountUnitField] = value;
       })
     state.setData(nextData);
+    const{ errors, warnings } = validateState(
+      { 
+        ...state,
+        data: nextData,
+        normalisedFields: [...state.normalisedFields, 'Amount Unit']
+      }
+    );
+    state.setErrors(errors);
+    state.setWarnings(warnings);
   }
   return (
     <>
