@@ -79,8 +79,8 @@ export default function Sidebar() {
     { id: projectIdOrZero },
     { skip: !projectId },
   );
-  const { REACT_APP_ROCHE } = process.env;
-  const isRocheLogo = typeof REACT_APP_ROCHE === 'string' ? REACT_APP_ROCHE === 'true' : REACT_APP_ROCHE;
+  const { VITE_APP_ROCHE } = import.meta.env;
+  const isRocheLogo = typeof VITE_APP_ROCHE === 'string' ? VITE_APP_ROCHE === 'true' : VITE_APP_ROCHE;
 
   const modelIsIncomplete = (
     mdl: CombinedModelRead | null,

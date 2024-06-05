@@ -23,7 +23,7 @@ interface LoginProps {
   errorMessage?: string;
 }
 
-const { REACT_APP_HELP_URL } = process.env;
+const { VITE_APP_HELP_URL } = import.meta.env;
 
 const Login: FC<LoginProps> = ({ onLogin, isLoading, errorMessage }) => {
   const { handleSubmit, control } = useForm<LoginFormInputs>();
@@ -37,8 +37,8 @@ const Login: FC<LoginProps> = ({ onLogin, isLoading, errorMessage }) => {
       <CssBaseline />
       <form onSubmit={handleSubmit(onSubmit)}>
         <Stack spacing={2} sx={{ marginTop: 10 }}>
-          { REACT_APP_HELP_URL &&
-            <Typography variant="caption">To get access to pkpd explorer and for other details please consult the <a href={REACT_APP_HELP_URL}>help page</a></Typography>
+          { VITE_APP_HELP_URL &&
+            <Typography variant="caption">To get access to pkpd explorer and for other details please consult the <a href={VITE_APP_HELP_URL}>help page</a></Typography>
           }
           <Box display="flex" justifyContent="center" alignItems="center">
           <Typography

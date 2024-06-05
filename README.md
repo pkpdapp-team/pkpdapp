@@ -55,8 +55,8 @@ For search/bind, connecting to the LDAP server either anonymously or with a fixe
 - `AUTH_LDAP_ADMIN_GROUP`: (optional) user must be in this LDAP group to be a superuser (e.g. `cn=admin,ou=groups,dc=example,dc=com`). If not set, then no user will be a superuser.
 
 There are also a number of optional variables that can be set:
-- `REACT_APP_ROCHE`: set to true to enable Roche branding
-- `REACT_APP_HELP_URL`: url of help page shown on login
+- `VITE_APP_ROCHE`: set to true to enable Roche branding
+- `VITE_APP_HELP_URL`: url of help page shown on login
 
 
 ### SSL Certificate

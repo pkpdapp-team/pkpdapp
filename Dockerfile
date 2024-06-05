@@ -19,7 +19,7 @@ COPY .env.prod /app/
 
 # use git on the host to set REACT_APP_VERSION to the current git commit
 ARG GIT_COMMIT_ID
-ENV REACT_APP_VERSION=$GIT_COMMIT_ID
+ENV VITE_APP_VERSION=$GIT_COMMIT_ID
 
 RUN yarn build
 
