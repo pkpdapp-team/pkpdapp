@@ -1,4 +1,4 @@
-import { FC, useState } from "react";
+import { FC, SyntheticEvent, useState } from "react";
 import { useSelector } from "react-redux";
 import { useProjectRetrieveQuery, useUnitListQuery } from "../../app/backendApi";
 import { RootState } from "../../app/store";
@@ -58,7 +58,7 @@ const Data:FC = () => {
     setIsEditing(false);
   }
 
-  function handleTabChange(event: React.SyntheticEvent, newValue: number) {
+  function handleTabChange(event: SyntheticEvent, newValue: number) {
     setTab(newValue);
   }
 

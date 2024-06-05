@@ -1,3 +1,4 @@
+import { FC } from "react";
 import {
   Accordion,
   AccordionDetails,
@@ -17,7 +18,7 @@ interface Props {
 }
 
 // tab that lists questions as mui accordian components
-const HelpTab: React.FC<Props> = ({ questions, videos }) => {
+const HelpTab: FC<Props> = ({ questions, videos }) => {
   return (
     <div>
       <Stack spacing={1} sx={{ marginBottom: 2 }}>

@@ -1,4 +1,4 @@
-import React from "react";
+import { ReactElement } from "react";
 import { Control, FieldPath, FieldValues } from "react-hook-form";
 import { SelectProps } from "@mui/material";
 import {
@@ -26,7 +26,7 @@ function UnitField<T extends FieldValues>({
   rules,
   selectProps,
   isPreclinicalPerKg,
-}: Props<T>): React.ReactElement {
+}: Props<T>): ReactElement {
   if (!isPreclinicalPerKg) {
     isPreclinicalPerKg = false;
   }

@@ -1,3 +1,4 @@
+import { FC } from "react";
 import {
   Alert,
   FormControl,
@@ -19,7 +20,7 @@ interface IMapObservations {
   firstTime: boolean;
 }
 
-const SetUnits: React.FC<IMapObservations> = ({state, firstTime}: IMapObservations) => {
+const SetUnits: FC<IMapObservations> = ({state, firstTime}: IMapObservations) => {
   const projectId = useSelector((state: RootState) => state.main.selectedProject);
   const { data: project, isLoading: isProjectLoading } = useProjectRetrieveQuery({id: projectId || 0}, { skip: !projectId })
   const { data: units, isLoading: isLoadingUnits } = useUnitListQuery({ compoundId: project?.compound}, { skip: !project || !project.compound});

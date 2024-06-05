@@ -1,4 +1,4 @@
-import * as React from "react";
+import { FC } from "react";
 import {
   CombinedModelRead,
   CompoundRead,
@@ -40,7 +40,7 @@ interface Props {
   units: UnitRead[];
 }
 
-const ParametersTab: React.FC<Props> = ({
+const ParametersTab: FC<Props> = ({
   model,
   project,
   control,

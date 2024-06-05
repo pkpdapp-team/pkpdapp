@@ -29,7 +29,7 @@ import {
   useVariableUpdateMutation,
 } from "../../app/backendApi";
 import { useFieldArray, useForm } from "react-hook-form";
-import { FC, useCallback, useEffect, useMemo, useState, useRef } from "react";
+import { ChangeEvent, FC, useCallback, useEffect, useMemo, useState, useRef } from "react";
 import SimulationPlotView from "./SimulationPlotView";
 import SimulationSliderView from "./SimulationSliderView";
 import useSimulation from "./useSimulation";
@@ -378,7 +378,7 @@ const Simulations: FC = () => {
     });
   };
 
-  const handleVisibleGroups = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleVisibleGroups = (event: ChangeEvent<HTMLInputElement>) => {
     if (!event.target.checked) {
       const newState = visibleGroups.filter(name => name !== event.target.value);
       setVisibleGroups(newState);

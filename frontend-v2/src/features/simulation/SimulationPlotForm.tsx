@@ -1,4 +1,4 @@
-import React from "react";
+import { FC } from "react";
 import {
   Control,
   FieldArrayWithId,
@@ -41,7 +41,7 @@ interface SimulationPlotFormProps {
   compound: CompoundRead;
 }
 
-const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({
+const SimulationPlotForm: FC<SimulationPlotFormProps> = ({
   index,
   plot,
   variables,

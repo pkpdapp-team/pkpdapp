@@ -1,4 +1,4 @@
-import React from "react";
+import { FC, ReactNode } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
 import { PageName } from "./mainSlice";
@@ -12,10 +12,10 @@ import Help from "../help/Help";
 import Data from '../data/Data';
 
 interface TabPanelProps {
-  children?: React.ReactNode;
+  children?: ReactNode;
   index: PageName;
   value: PageName;
-  error?: React.ReactNode;
+  error?: ReactNode;
 }
 
 function TabPanel(props: TabPanelProps) {
@@ -34,7 +34,7 @@ function TabPanel(props: TabPanelProps) {
   );
 }
 
-const MainContent: React.FC = () => {
+const MainContent: FC = () => {
   const page = useSelector((state: RootState) => state.main.selectedPage);
   const projectId = useSelector(
     (state: RootState) => state.main.selectedProject,

@@ -1,4 +1,4 @@
-import React from "react";
+import { ReactElement } from "react";
 import { Control, Controller, FieldPath, FieldValues } from "react-hook-form";
 import {
   Select,
@@ -34,7 +34,7 @@ function SelectField<T extends FieldValues>({
   rules,
   selectProps,
   formControlProps,
-}: Props<T>): React.ReactElement {
+}: Props<T>): ReactElement {
   const labelId = `${name}-label`;
   const displayEmpty = selectProps?.displayEmpty || true;
   const pixelPerChar = 9;
