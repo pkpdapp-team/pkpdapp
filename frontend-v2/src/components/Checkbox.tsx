@@ -1,4 +1,4 @@
-import React from "react";
+import { ReactElement } from "react";
 import { Control, Controller, FieldPath, FieldValues } from "react-hook-form";
 import { Checkbox as MaterialCheckbox, CheckboxProps, FormControlLabel } from "@mui/material";
 
@@ -16,7 +16,7 @@ function Checkbox<T extends FieldValues>({
   control,
   rules,
   checkboxFieldProps,
-}: Props<T>): React.ReactElement {
+}: Props<T>): ReactElement {
   return (
     <Controller
       name={name}

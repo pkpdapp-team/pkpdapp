@@ -128,7 +128,7 @@ export const DynamicTabs: FC<PropsWithChildren<DynamicTabsProps>> = ({
         </Box>
         <Box sx={{ margin: 2 }}>
           {Children.map(children, (child, index) => {
-            return cloneElement(child as React.ReactElement<any>, {
+            return cloneElement(child as ReactElement<any>, {
               index,
             });
           })}

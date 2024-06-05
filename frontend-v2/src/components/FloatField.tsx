@@ -1,4 +1,4 @@
-import React from "react";
+import { ChangeEvent, FocusEvent, ReactElement } from "react";
 import { Control, Controller, FieldPath, FieldValues } from "react-hook-form";
 import { TextField, TextFieldProps } from "@mui/material";
 import { useFieldState } from "../app/hooks";
@@ -34,7 +34,7 @@ function FloatField<T extends FieldValues>({
   textFieldProps,
   data_cy,
   sx
-}: Props<T>): React.ReactElement {
+}: Props<T>): ReactElement {
   const [fieldValue, setFieldValue] = useFieldState({ name, control });
 
   return (
@@ -46,7 +46,7 @@ function FloatField<T extends FieldValues>({
         field: { onChange, onBlur, value },
         fieldState: { error, isDirty, isTouched },
       }) => {
-        const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+        const handleBlur = (e: FocusEvent<HTMLInputElement>) => {
           const updatedValue = convert(e.target.value);
           if (updatedValue !== value) {
             e.target.value = updatedValue as any;
@@ -55,7 +55,7 @@ function FloatField<T extends FieldValues>({
           onBlur();
         };
 
-        const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
           setFieldValue(convert(e.target.value));
         };
         return (

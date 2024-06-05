@@ -1,4 +1,4 @@
-import React from "react";
+import { FC, ReactNode } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -11,10 +11,10 @@ interface HelpDialogProps {
   open: boolean;
   title: string;
   onClose: () => void;
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
-const HelpDialog: React.FC<HelpDialogProps> = ({
+const HelpDialog: FC<HelpDialogProps> = ({
   open,
   title,
   onClose,

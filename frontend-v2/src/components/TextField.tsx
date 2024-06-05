@@ -1,4 +1,4 @@
-import React from "react";
+import { ChangeEvent, FocusEvent, ReactElement } from "react";
 import {
   Control,
   Controller,
@@ -29,7 +29,7 @@ function TextField<T extends FieldValues>({
   textFieldProps,
   autoShrink,
   sx
-}: Props<T>): React.ReactElement {
+}: Props<T>): ReactElement {
   const [fieldValue, setFieldValue] = useFieldState({ name, control });
 
   if (mode === undefined) {
@@ -45,14 +45,14 @@ function TextField<T extends FieldValues>({
         field: { onChange, onBlur, value },
         fieldState: { error, isDirty, isTouched },
       }) => {
-        const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+        const handleBlur = (e: FocusEvent<HTMLInputElement>) => {
           if (mode === "onBlur" && e.target.value !== value) {
             onChange(e);
           }
           onBlur();
         };
 
-        const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
           setFieldValue(e.target.value);
           if (mode === "onChange") {
             onChange(e);

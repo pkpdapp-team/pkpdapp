@@ -1,4 +1,3 @@
-import React from 'react';
 import { toast, ToastOptions } from 'react-toastify';
 import { Notification } from './../components/Notification/Notification';
 import { NotificationTypes } from '../components/Notification/notificationTypes';

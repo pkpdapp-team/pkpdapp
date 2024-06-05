@@ -1,5 +1,5 @@
 // src/components/ProjectTable.tsx
-import React from "react";
+import { FC, useState } from "react";
 import { useSelector } from "react-redux";
 import {
   Table,
@@ -43,8 +43,8 @@ enum SortOptions {
 
 const SM_SIM_TIME = 48;
 const LM_SIM_TIME = 672;
-const ProjectTable: React.FC = () => {
-  const [sortBy, setSortBy] = React.useState<SortOptions>(SortOptions.CREATED);
+const ProjectTable: FC = () => {
+  const [sortBy, setSortBy] = useState<SortOptions>(SortOptions.CREATED);
   const toast = useCustomToast();
 
   const handleSortBy = (option: SortOptions) => {
