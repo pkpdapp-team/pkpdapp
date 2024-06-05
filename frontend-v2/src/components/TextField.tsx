@@ -5,7 +5,7 @@ import {
   FieldPath,
   FieldValues
 } from "react-hook-form";
-import * as material from "@mui/material";
+import { SxProps, TextField as MaterialTextField, TextFieldProps } from "@mui/material";
 import { useFieldState } from "../app/hooks";
 import { getLabel } from "../shared/getRequiredLabel";
 
@@ -15,9 +15,9 @@ type Props<T extends FieldValues> = {
   control: Control<T>;
   rules?: Record<string, unknown>;
   mode?: "onChange" | "onBlur";
-  textFieldProps?: material.TextFieldProps;
+  textFieldProps?: TextFieldProps;
   autoShrink?: boolean;
-  sx?: material.SxProps
+  sx?: SxProps
 };
 
 function TextField<T extends FieldValues>({
@@ -59,7 +59,7 @@ function TextField<T extends FieldValues>({
           }
         };
         return (
-          <material.TextField
+          <MaterialTextField
             label={
               !error
                 ? getLabel(label || '', Boolean(rules?.required))

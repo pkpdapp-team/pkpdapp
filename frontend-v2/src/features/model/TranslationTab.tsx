@@ -1,4 +1,4 @@
-import * as React from "react";
+import { FC } from "react";
 import { CombinedModel, Project } from "../../app/backendApi";
 import { Control } from "react-hook-form";
 
@@ -8,7 +8,7 @@ interface Props {
   control: Control<CombinedModel>;
 }
 
-const TranslationTab: React.FC<Props> = ({
+const TranslationTab: FC<Props> = ({
   model,
   project,
   control,

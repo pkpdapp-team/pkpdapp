@@ -1,6 +1,6 @@
 import React from "react";
 import { Control, Controller, FieldPath, FieldValues } from "react-hook-form";
-import * as material from "@mui/material";
+import { TextField, TextFieldProps } from "@mui/material";
 import { useFieldState } from "../app/hooks";
 import { getLabel } from "../shared/getRequiredLabel";
 
@@ -9,7 +9,7 @@ type Props<T extends FieldValues> = {
   name: FieldPath<T>;
   control: Control<T>;
   rules?: Record<string, unknown>;
-  textFieldProps?: material.TextFieldProps;
+  textFieldProps?: TextFieldProps;
   data_cy?: string;
   sx?: Record<string, string>
 };
@@ -59,7 +59,7 @@ function FloatField<T extends FieldValues>({
           setFieldValue(convert(e.target.value));
         };
         return (
-          <material.TextField
+          <TextField
             label={
               !error
                 ? getLabel(label || '', Boolean(rules?.required))

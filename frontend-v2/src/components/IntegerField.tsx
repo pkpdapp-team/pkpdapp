@@ -1,6 +1,6 @@
 import React from "react";
 import { Control, Controller, FieldPath, FieldValues } from "react-hook-form";
-import * as material from "@mui/material";
+import { TextField, TextFieldProps } from "@mui/material";
 import { useFieldState } from "../app/hooks";
 
 type Props<T extends FieldValues> = {
@@ -8,7 +8,7 @@ type Props<T extends FieldValues> = {
   name: FieldPath<T>;
   control: Control<T>;
   rules?: Object;
-  textFieldProps?: material.TextFieldProps;
+  textFieldProps?: TextFieldProps;
 };
 
 function convert(value: any) {
@@ -49,7 +49,7 @@ function IntegerField<T extends FieldValues>({
           setFieldValue(convert(e.target.value));
         };
         return (
-          <material.TextField
+          <TextField
             label={
               !error
                 ? label
