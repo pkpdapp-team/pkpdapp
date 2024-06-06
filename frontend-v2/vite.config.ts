@@ -3,15 +3,6 @@ import svgr from '@svgr/rollup';
 import { defineConfig } from 'vite';
 import viteTsconfigPaths from 'vite-tsconfig-paths';
 
-function manualChunks(id) {
-  if (id.includes('node_modules/plotly.js')) {
-    return 'plotly';
-  }
-  if (id.includes('node_modules')) {
-    return 'vendor';
-  }
-}
-
 const proxy = {
   "/backend": {
     "target": "http://localhost:8000",
@@ -35,7 +26,11 @@ export default defineConfig({
     outDir: 'build',
     rollupOptions: {
       output: {
-        manualChunks
+        manualChunks: {
+          plotly: ['plotly.js'],
+          material: ['@mui/material', '@mui/icons-material', '@mui/x-data-grid'],
+          vendor: ['@reduxjs/toolkit', 'papaparse', 'react', 'react-dom', 'react-hook-form', 'react-dropzone', 'react-redux', 'react-toastify'],
+        }
       }
     },
   },
