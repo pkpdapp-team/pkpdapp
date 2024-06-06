@@ -74,6 +74,7 @@
     "start-server-and-test": "^2.0.3",
     "typescript": "^5.4.5",
     "vite": "^5.2.11",
+    "vite-bundle-visualizer": "^1.2.1",
     "vite-tsconfig-paths": "^4.3.2",
     "web-vitals": "^2.1.4"
   },
