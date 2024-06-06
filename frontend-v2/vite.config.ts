@@ -29,7 +29,7 @@ export default defineConfig({
         manualChunks: {
           plotly: ['plotly.js'],
           material: ['@mui/material', '@mui/icons-material', '@mui/x-data-grid'],
-          vendor: ['@reduxjs/toolkit', 'papaparse', 'react', 'react-dom', 'react-hook-form', 'react-dropzone', 'react-redux', 'react-toastify'],
+          vendor: ['@reduxjs/toolkit', '@reduxjs/toolkit/query', 'papaparse', 'react', 'react-dom', 'react-hook-form', 'react-dropzone', 'react-redux', 'react-toastify'],
         }
       }
     },
