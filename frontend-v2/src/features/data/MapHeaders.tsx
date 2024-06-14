@@ -36,15 +36,14 @@ const MapHeaders: FC<IMapHeaders> = ({data, fields, normalisedFields, setNormali
                   label="Column Type"
                   onChange={handleFieldChange(index)}
                 >
-                  {Object.entries(groupedHeaders).map(([group, headers]) => {
-                    const groupHeaders = headers.map(header => (
-                      <MenuItem key={header} value={header}>{header}</MenuItem>
-                    ));
-                    return [
+                  {Object.entries(groupedHeaders).map(([group, headers]) => (
+                    [
                       <ListSubheader key={group}>{group}</ListSubheader>,
-                      ...groupHeaders
+                      ...headers.map(header => (
+                        <MenuItem key={header} value={header}>{header}</MenuItem>
+                      ))
                     ]
-                  })}
+                  ))}
                 </Select>
               </FormControl>
             </TableCell>
