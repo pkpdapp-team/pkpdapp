@@ -31,8 +31,7 @@ export const manditoryHeaders = ['Time', 'Observation']
 export const normalisedHeaders = Object.keys(normalisation)
 
 export const validateState = (state: StepperState) => {
-  const dataFields = state.data.length ? Object.keys(state.data[0]) : [];
-  const normalisedFields = dataFields.map(normaliseHeader);
+  const { normalisedFields } = state;
   const errors: string[] = [];
   const hasNoDosing = !normalisedFields.includes('Amount') || state.data.every(row => row['Amount'] === '.');
   // check for mandatory fields
@@ -48,7 +47,7 @@ export const validateState = (state: StepperState) => {
       if time is provided in ascending order for each individual.`
     );
   }
-  if (!normalisedFields.includes('Amount Unit')) {
+  if (hasNoDosing || !normalisedFields.includes('Amount Unit')) {
     if (hasNoDosing) {
       warnings.push('This CSV contains no dosing information. Dosing amounts and units can be set in Trial Design.');
     } else {
