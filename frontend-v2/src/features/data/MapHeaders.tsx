@@ -1,7 +1,7 @@
 import { FC } from "react";
-import { Table, TableHead, TableRow, TableCell, TableBody, Select, FormControl, MenuItem, InputLabel, Typography } from "@mui/material";
+import { Table, TableHead, TableRow, TableCell, TableBody, Select, FormControl, ListSubheader, MenuItem, InputLabel, Typography, Menu } from "@mui/material";
 import { Data, Field } from "./LoadData";
-import { normalisedHeaders } from "./normaliseDataHeaders";
+import { groupedHeaders } from "./normaliseDataHeaders";
 
 interface IMapHeaders {
   data: Data;
@@ -11,8 +11,6 @@ interface IMapHeaders {
 }
 
 const MapHeaders: FC<IMapHeaders> = ({data, fields, normalisedFields, setNormalisedFields}: IMapHeaders) => {
-
-  const normalisedHeadersOptions = normalisedHeaders.map((header) => ({value: header, label: header}));
   
   const handleFieldChange = (index: number) => (event: any) => {
     const newFields = [...normalisedFields];
@@ -38,9 +36,15 @@ const MapHeaders: FC<IMapHeaders> = ({data, fields, normalisedFields, setNormali
                   label="Column Type"
                   onChange={handleFieldChange(index)}
                 >
-                  {normalisedHeadersOptions.map((option) => (
-                    <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>
-                  ))}
+                  {Object.entries(groupedHeaders).map(([group, headers]) => {
+                    const groupHeaders = headers.map(header => (
+                      <MenuItem key={header} value={header}>{header}</MenuItem>
+                    ));
+                    return [
+                      <ListSubheader key={group}>{group}</ListSubheader>,
+                      ...groupHeaders
+                    ]
+                  })}
                 </Select>
               </FormControl>
             </TableCell>

@@ -26,6 +26,24 @@ const normalisation = {
   'Time Unit': ['time unit', 'time_unit', 'time_units', 't_units', 'tunit', 'units_time'],
 }
 
+export const groupedHeaders = {
+  'Frequently Used': [
+    'Ignore', 'ID', 'Time', 'Time Unit', 'Observation', 'Observation Unit', 'Amount', 'Amount Unit'
+  ],
+  'Dosing': [
+    'Administration ID', 'Additional Doses', 'Infusion Rate', 'Infusion Duration', 'Interdose Interval'
+  ],
+  'Observation': [
+    'Observation ID', 'Censoring', 'Ignored Observation'
+  ],
+  'PKPD Model': [
+    'Amount Variable', 'Observation Variable'
+  ],
+  'Other': [
+    'Cat Covariate', 'Cont Covariate', 'Event ID', 'Occasion', 'Regressor'
+  ],
+}
+
 export const manditoryHeaders = ['Time', 'Observation']
 
 export const normalisedHeaders = Object.keys(normalisation)
