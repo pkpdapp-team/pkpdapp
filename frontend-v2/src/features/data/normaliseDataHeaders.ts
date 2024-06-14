@@ -65,5 +65,5 @@ export const normaliseHeader = (header: string) => {
       return key
     }
   }
-  return ''
+  return 'Ignore'
 }
