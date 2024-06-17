@@ -532,7 +532,7 @@ class InferenceMixin:
                 self._inference_method(x0, sigma0)
             )
 
-    @ staticmethod
+    @staticmethod
     def get_inference_type_and_method(inference):
         inference_type = inference.algorithm.category
         methodname = inference.algorithm.name
