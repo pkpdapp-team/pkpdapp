@@ -24,9 +24,7 @@ const LINK_COLUMN = 2;
 const KEYWORDS_COLUMN = 3;
 
 const Help: FC = () => {
-  const [tutorialVideos, setTutorialVideos] = useState<TutorialVideo[]>(
-    [],
-  );
+  const [tutorialVideos, setTutorialVideos] = useState<TutorialVideo[]>([]);
   useEffect(() => {
     parse(tutorialVideosUrl, {
       download: true,
@@ -87,13 +85,12 @@ const Help: FC = () => {
     SubPageName.TRAILDESIGN,
     SubPageName.SIMULATION,
   ];
-  const disabledTabs = tabNames.filter((name, index) => tutorials[index].length === 0);
+  const disabledTabs = tabNames.filter(
+    (name, index) => tutorials[index].length === 0,
+  );
 
   return (
-    <DynamicTabs
-      tabNames={tabNames}
-      disabledTabs={disabledTabs}
-    >
+    <DynamicTabs tabNames={tabNames} disabledTabs={disabledTabs}>
       {questions.map((question, index) => (
         <TabPanel key={index}>
           <HelpTab questions={question} videos={tutorials[index]} />

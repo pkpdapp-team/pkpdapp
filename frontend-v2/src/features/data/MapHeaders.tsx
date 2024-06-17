@@ -1,5 +1,18 @@
 import { FC } from "react";
-import { Table, TableHead, TableRow, TableCell, TableBody, Select, FormControl, ListSubheader, MenuItem, InputLabel, Typography, Menu } from "@mui/material";
+import {
+  Table,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableBody,
+  Select,
+  FormControl,
+  ListSubheader,
+  MenuItem,
+  InputLabel,
+  Typography,
+  Menu,
+} from "@mui/material";
 import { Data, Field } from "./LoadData";
 import { groupedHeaders } from "./normaliseDataHeaders";
 
@@ -10,13 +23,17 @@ interface IMapHeaders {
   setNormalisedFields: (fields: Field[]) => void;
 }
 
-const MapHeaders: FC<IMapHeaders> = ({data, fields, normalisedFields, setNormalisedFields}: IMapHeaders) => {
-  
+const MapHeaders: FC<IMapHeaders> = ({
+  data,
+  fields,
+  normalisedFields,
+  setNormalisedFields,
+}: IMapHeaders) => {
   const handleFieldChange = (index: number) => (event: any) => {
     const newFields = [...normalisedFields];
     newFields[index] = event.target.value;
     setNormalisedFields(newFields);
-  }
+  };
 
   return (
     <Table>
@@ -24,11 +41,18 @@ const MapHeaders: FC<IMapHeaders> = ({data, fields, normalisedFields, setNormali
         <TableRow>
           {fields.map((field, index) => (
             <TableCell key={index}>
-              <Typography variant="h6" component="div" sx={{ flexGrow: 1, marginBottom: 1 }} align="center">
+              <Typography
+                variant="h6"
+                component="div"
+                sx={{ flexGrow: 1, marginBottom: 1 }}
+                align="center"
+              >
                 {field}
               </Typography>
               <FormControl fullWidth>
-                <InputLabel id={`select-${index}-label`}>Column Type</InputLabel>
+                <InputLabel id={`select-${index}-label`}>
+                  Column Type
+                </InputLabel>
                 <Select
                   labelId={`select-${index}-label`}
                   id={`select-${index}`}
@@ -36,14 +60,14 @@ const MapHeaders: FC<IMapHeaders> = ({data, fields, normalisedFields, setNormali
                   label="Column Type"
                   onChange={handleFieldChange(index)}
                 >
-                  {Object.entries(groupedHeaders).map(([group, headers]) => (
-                    [
-                      <ListSubheader key={group}>{group}</ListSubheader>,
-                      ...headers.map(header => (
-                        <MenuItem key={header} value={header}>{header}</MenuItem>
-                      ))
-                    ]
-                  ))}
+                  {Object.entries(groupedHeaders).map(([group, headers]) => [
+                    <ListSubheader key={group}>{group}</ListSubheader>,
+                    ...headers.map((header) => (
+                      <MenuItem key={header} value={header}>
+                        {header}
+                      </MenuItem>
+                    )),
+                  ])}
                 </Select>
               </FormControl>
             </TableCell>
@@ -60,7 +84,7 @@ const MapHeaders: FC<IMapHeaders> = ({data, fields, normalisedFields, setNormali
         ))}
       </TableBody>
     </Table>
-  )
-}
+  );
+};
 
 export default MapHeaders;

@@ -1,9 +1,9 @@
-import { useMemo } from 'react';
-import { VariableRead } from '../../app/backendApi';
+import { useMemo } from "react";
+import { VariableRead } from "../../app/backendApi";
 
 type SliderValues = { [key: number]: number };
 
-const DEFAULT_VARS: { qname: string, value: number | undefined }[] = [];
+const DEFAULT_VARS: { qname: string; value: number | undefined }[] = [];
 
 const getVariablesSimulated = (
   variables?: VariableRead[],
@@ -22,10 +22,13 @@ const getVariablesSimulated = (
 
 export default function useSimulatedVariables(
   variables: VariableRead[] | undefined,
-  sliderValues: SliderValues | undefined
+  sliderValues: SliderValues | undefined,
 ) {
-  return useMemo(() => variables && sliderValues ?
-    getVariablesSimulated(variables, sliderValues) :
-    DEFAULT_VARS,
-  [variables, sliderValues]);
+  return useMemo(
+    () =>
+      variables && sliderValues
+        ? getVariablesSimulated(variables, sliderValues)
+        : DEFAULT_VARS,
+    [variables, sliderValues],
+  );
 }

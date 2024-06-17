@@ -1,28 +1,32 @@
 import { FC, SyntheticEvent, useState } from "react";
 import { useSelector } from "react-redux";
-import { useProjectRetrieveQuery, useUnitListQuery } from "../../app/backendApi";
+import {
+  useProjectRetrieveQuery,
+  useUnitListQuery,
+} from "../../app/backendApi";
 import { RootState } from "../../app/store";
 import { Box, Button, Stack, Tab, Tabs, Typography } from "@mui/material";
-import { DataGrid } from '@mui/x-data-grid';
-import EditIcon from '@mui/icons-material/Edit';
-import FileDownloadIcon from '@mui/icons-material/FileDownload';
-import FileUploadIcon from '@mui/icons-material/FileUpload';
+import { DataGrid } from "@mui/x-data-grid";
+import EditIcon from "@mui/icons-material/Edit";
+import FileDownloadIcon from "@mui/icons-material/FileDownload";
+import FileUploadIcon from "@mui/icons-material/FileUpload";
 import LoadDataStepper from "./LoadDataStepper";
 import useDataset from "../../hooks/useDataset";
-import generateCSV from './generateCSV';
+import generateCSV from "./generateCSV";
 
 function displayUnitSymbol(symbol: string | undefined) {
-  return symbol === '' ? 'dimensionless' : symbol;
+  return symbol === "" ? "dimensionless" : symbol;
 }
 
-const Data:FC = () => {
+const Data: FC = () => {
   const [tab, setTab] = useState(0);
   const projectId = useSelector(
     (state: RootState) => state.main.selectedProject,
   );
   const projectIdOrZero = projectId || 0;
-  const { data: project } =
-    useProjectRetrieveQuery({ id: projectIdOrZero }, { skip: !projectId }
+  const { data: project } = useProjectRetrieveQuery(
+    { id: projectIdOrZero },
+    { skip: !projectId },
   );
   const { data: units } = useUnitListQuery(
     { compoundId: project?.compound || 0 },
@@ -34,15 +38,17 @@ const Data:FC = () => {
   const [isEditing, setIsEditing] = useState(false);
 
   function editDataset() {
-    if(csv) {
+    if (csv) {
       setIsEditing(true);
       setIsLoading(false);
     }
   }
 
   function handleNewUpload() {
-
-    if (groups.length === 0 || window.confirm('Are you sure you want to delete the current dataset?')) {
+    if (
+      groups.length === 0 ||
+      window.confirm("Are you sure you want to delete the current dataset?")
+    ) {
       setIsLoading(true);
       setIsEditing(false);
     }
@@ -65,14 +71,14 @@ const Data:FC = () => {
   function a11yProps(index: number) {
     return {
       id: `group-tab-${index}`,
-      'aria-controls': 'group-tabpanel'
+      "aria-controls": "group-tabpanel",
     };
   }
 
   function downloadCSV() {
-    const blob = new Blob(['\ufeff', csv], { type: 'text/csv' });
+    const blob = new Blob(["\ufeff", csv], { type: "text/csv" });
     const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
     a.download = `${project?.name} data.csv`;
     a.click();
@@ -81,65 +87,87 @@ const Data:FC = () => {
 
   const group = groups[tab];
   const protocols = group?.protocols || [];
-  const dosingRows = protocols.flatMap(protocol => {
-    const amountUnit = units?.find(unit => unit.id === protocol.amount_unit)?.symbol || '';
-    const timeUnit = units?.find(unit => unit.id === protocol.time_unit)?.symbol || '';
-    const qname = protocol.mapped_qname;
-    const doseType = protocol.dose_type;
-    return protocol.doses.map(dose => ({
-      Amount: dose.amount,
-      'Amount Unit': amountUnit,
-      Time: dose.start_time,
-      'Time Unit': timeUnit,
-      Duration: dose.duration,
-      Route: doseType,
-      'Additional Doses': (dose?.repeats || 1) - 1,
-      'Interdose Interval': dose.repeat_interval,
-      'Amount Variable': qname
-    }))
-  })
-  .map((row, index) => ({ id: index + 1, ...row }));
-  const dosingColumns = dosingRows[0] ? Object.keys(dosingRows[0])
-  .filter(field => field !== 'id')
-  .map((field) => ({
-    field,
-    headerName: field,
-    minWidth: field === 'Amount Variable' ? 150 :
-        field.length > 10 ? 130 : 30
-  })) : [];
-  const groupId = group?.id_in_dataset || group?.name;
-  const observations = subjectBiomarkers?.flatMap(biomarkerRows => biomarkerRows.map((row) => {
-    const group = dataset?.groups?.find(group => group.subjects.includes(row.subjectId));
-    const groupId = group?.id_in_dataset || group?.name;
-    return  ({
-      'Subject ID': row.subjectDatasetId,
-      'Time': row.time,
-      'Time Unit': row.timeUnit?.symbol,
-      'Observation': row.value,
-      'Observation Unit': displayUnitSymbol(row.unit?.symbol),
-      'Observation ID': row.label,
-      'Observation Variable': row.qname,
-      Group: groupId,
+  const dosingRows = protocols
+    .flatMap((protocol) => {
+      const amountUnit =
+        units?.find((unit) => unit.id === protocol.amount_unit)?.symbol || "";
+      const timeUnit =
+        units?.find((unit) => unit.id === protocol.time_unit)?.symbol || "";
+      const qname = protocol.mapped_qname;
+      const doseType = protocol.dose_type;
+      return protocol.doses.map((dose) => ({
+        Amount: dose.amount,
+        "Amount Unit": amountUnit,
+        Time: dose.start_time,
+        "Time Unit": timeUnit,
+        Duration: dose.duration,
+        Route: doseType,
+        "Additional Doses": (dose?.repeats || 1) - 1,
+        "Interdose Interval": dose.repeat_interval,
+        "Amount Variable": qname,
+      }));
     })
-  }))
-  .filter(row => row.Group === groupId)
-  .map((row, index) => ({ id: index + 1, ...row })) || [];
+    .map((row, index) => ({ id: index + 1, ...row }));
+  const dosingColumns = dosingRows[0]
+    ? Object.keys(dosingRows[0])
+        .filter((field) => field !== "id")
+        .map((field) => ({
+          field,
+          headerName: field,
+          minWidth:
+            field === "Amount Variable" ? 150 : field.length > 10 ? 130 : 30,
+        }))
+    : [];
+  const groupId = group?.id_in_dataset || group?.name;
+  const observations =
+    subjectBiomarkers
+      ?.flatMap((biomarkerRows) =>
+        biomarkerRows.map((row) => {
+          const group = dataset?.groups?.find((group) =>
+            group.subjects.includes(row.subjectId),
+          );
+          const groupId = group?.id_in_dataset || group?.name;
+          return {
+            "Subject ID": row.subjectDatasetId,
+            Time: row.time,
+            "Time Unit": row.timeUnit?.symbol,
+            Observation: row.value,
+            "Observation Unit": displayUnitSymbol(row.unit?.symbol),
+            "Observation ID": row.label,
+            "Observation Variable": row.qname,
+            Group: groupId,
+          };
+        }),
+      )
+      .filter((row) => row.Group === groupId)
+      .map((row, index) => ({ id: index + 1, ...row })) || [];
   const [firstRow] = observations;
-  const columns = firstRow ? Object.keys(firstRow)
-  .filter(field => field !== 'id')
-  .map((field) => ({
-    field,
-    headerName: field,
-    minWidth: field === 'Observation Variable' ? 150 :
-      field.length > 10 ? 120 : 30
-  })) : [];
+  const columns = firstRow
+    ? Object.keys(firstRow)
+        .filter((field) => field !== "id")
+        .map((field) => ({
+          field,
+          headerName: field,
+          minWidth:
+            field === "Observation Variable"
+              ? 150
+              : field.length > 10
+                ? 120
+                : 30,
+        }))
+    : [];
 
   const noData = !groups.length && !observations.length;
 
-  return (isLoading || isEditing || noData) ?
-    <LoadDataStepper csv={isEditing ? csv : ''} onFinish={onUploadComplete} onCancel={onCancel}  /> :
+  return isLoading || isEditing || noData ? (
+    <LoadDataStepper
+      csv={isEditing ? csv : ""}
+      onFinish={onUploadComplete}
+      onCancel={onCancel}
+    />
+  ) : (
     <>
-      <Box sx={{ display: 'flex', justifyContent: 'end' }}>
+      <Box sx={{ display: "flex", justifyContent: "end" }}>
         <Stack spacing={1}>
           <Button
             variant="outlined"
@@ -165,42 +193,32 @@ const Data:FC = () => {
           </Button>
         </Stack>
       </Box>
-      <Tabs value={tab} onChange={handleTabChange}>ß
+      <Tabs value={tab} onChange={handleTabChange}>
+        ß
         {groups?.map((group, index) => (
-          <Tab
-            key={group.id}
-            label={group.name}
-            {...a11yProps(index)}
-          />
+          <Tab key={group.id} label={group.name} {...a11yProps(index)} />
         ))}
       </Tabs>
       <Box role="tabpanel" id={`group-tabpanel`}>
-        {dosingRows.length !== 0 && 
+        {dosingRows.length !== 0 && (
           <Box padding={1}>
             <Typography variant="h6" component="h2" gutterBottom>
               Protocols
             </Typography>
-            <DataGrid
-              rows={dosingRows}
-              columns={dosingColumns}
-              autoHeight
-            />
-          </Box>  
-        }
-        {observations.length !== 0 &&
+            <DataGrid rows={dosingRows} columns={dosingColumns} autoHeight />
+          </Box>
+        )}
+        {observations.length !== 0 && (
           <Box padding={1}>
             <Typography variant="h6" component="h2" gutterBottom>
               Observations
             </Typography>
-            <DataGrid
-              rows={observations}
-              columns={columns}
-              autoHeight
-            />
+            <DataGrid rows={observations} columns={columns} autoHeight />
           </Box>
-        }
+        )}
       </Box>
-    </>;
-}
+    </>
+  );
+};
 
 export default Data;

@@ -5,12 +5,12 @@ import {
   UnitRead,
   VariableRead,
   useProtocolCreateMutation,
-  useProtocolDestroyMutation
+  useProtocolDestroyMutation,
 } from "../../app/backendApi";
 
 interface EditProtocolProps {
   compound: CompoundRead;
-  project: ProjectRead,
+  project: ProjectRead;
   units: UnitRead[];
   timeVariable: VariableRead | undefined;
   variable: VariableRead;
@@ -23,7 +23,7 @@ export default function useEditProtocol({
   units,
   timeVariable,
   variable,
-  watchProtocolId
+  watchProtocolId,
 }: EditProtocolProps) {
   const hasProtocol: boolean = watchProtocolId != null;
   const variableUnit = units.find((unit) => unit.id === variable.unit);
@@ -55,7 +55,7 @@ export default function useEditProtocol({
         time_unit: defaultTimeUnit?.id || undefined,
         name: variable.name,
         project: project.id,
-        mapped_qname: variable.qname
+        mapped_qname: variable.qname,
       },
     });
   };

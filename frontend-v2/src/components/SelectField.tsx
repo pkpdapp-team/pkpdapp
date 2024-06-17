@@ -51,7 +51,7 @@ function SelectField<T extends FieldValues>({
       }) => (
         <FormControl {...formControlProps} style={{ minWidth: labelWidth }}>
           <InputLabel id={labelId} shrink={displayEmpty}>
-            {getLabel(label || '', Boolean(rules?.required))}
+            {getLabel(label || "", Boolean(rules?.required))}
           </InputLabel>
           <Select
             labelId={labelId}

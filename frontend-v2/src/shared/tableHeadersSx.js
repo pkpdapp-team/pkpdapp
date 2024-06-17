@@ -1,5 +1,5 @@
 export const defaultHeaderSx = {
-    display: "flex",
-    fontWeight: "bold",
-    alignItems: "center",
-  };
+  display: "flex",
+  fontWeight: "bold",
+  alignItems: "center",
+};

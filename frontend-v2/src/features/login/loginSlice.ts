@@ -46,7 +46,7 @@ export const fetchSession = createAsyncThunk<
 
 class ServerError extends Error {
   constructor(message: string) {
-    super(message)
+    super(message);
     this.name = "ServerError";
   }
 }
@@ -54,7 +54,8 @@ function isResponseOk(response: Response) {
   if (response.status >= 200 && response.status <= 299) {
     return response.json();
   } else {
-    return response.json()
+    return response
+      .json()
       .then((data) => {
         throw new ServerError(data.detail);
       })
@@ -96,7 +97,7 @@ export const login = createAsyncThunk<
         return { isAuthenticated: true, user: data.user };
       })
       .catch((err) => {
-        return rejectWithValue({ error: err.message});
+        return rejectWithValue({ error: err.message });
       });
     return response;
   },
@@ -170,13 +171,18 @@ export const { setCredentials } = slice.actions;
 
 export default slice.reducer;
 
-export const selectIsProjectShared = (state: RootState, project: ProjectRead | undefined) => {
+export const selectIsProjectShared = (
+  state: RootState,
+  project: ProjectRead | undefined,
+) => {
   const currentUser = selectCurrentUser(state);
   const myUserId = currentUser?.id || 0;
-  const isSharedWithMe = project?.user_access.some((ua: ProjectAccessRead) => ua.user === myUserId && ua.read_only === true) || false;
+  const isSharedWithMe =
+    project?.user_access.some(
+      (ua: ProjectAccessRead) => ua.user === myUserId && ua.read_only === true,
+    ) || false;
   return isSharedWithMe;
-
-}
+};
 
 export const selectCurrentUser = (state: RootState) => state.login.user;
 export const selectCsrf = (state: RootState) => state.login.csrf;

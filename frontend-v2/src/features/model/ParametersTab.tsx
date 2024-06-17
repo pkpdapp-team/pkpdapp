@@ -21,10 +21,7 @@ import {
 } from "@mui/material";
 import ParameterRow from "./ParameterRow";
 import HelpButton from "../../components/HelpButton";
-import {
-  getConstVariables,
-  getNoReset,
-} from "./resetToSpeciesDefaults";
+import { getConstVariables, getNoReset } from "./resetToSpeciesDefaults";
 import { FormData } from "./Model";
 import { defaultHeaderSx } from "../../shared/tableHeadersSx";
 import { useSelector } from "react-redux";
@@ -51,7 +48,9 @@ const ParametersTab: FC<Props> = ({
   const [setParamsToDefault] =
     useCombinedModelSetParamsToDefaultsUpdateMutation();
 
-  const isSharedWithMe = useSelector((state: RootState) => selectIsProjectShared(state, project));
+  const isSharedWithMe = useSelector((state: RootState) =>
+    selectIsProjectShared(state, project),
+  );
 
   let constVariables = getConstVariables(variables, model);
   const noReset = getNoReset(project);

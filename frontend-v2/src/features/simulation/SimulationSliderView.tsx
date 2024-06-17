@@ -1,10 +1,4 @@
-import {
-  ChangeEvent,
-  FC, 
-  SyntheticEvent,
-  useEffect,
-  useState,
-} from "react";
+import { ChangeEvent, FC, SyntheticEvent, useEffect, useState } from "react";
 import {
   SimulationSlider,
   UnitRead,
@@ -45,7 +39,6 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
   onSave,
   units,
 }) => {
-
   const projectId = useSelector(
     (state: RootState) => state.main.selectedProject,
   );
@@ -53,7 +46,9 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
     { id: projectId || 0 },
     { skip: !projectId },
   );
-  const isSharedWithMe = useSelector((state: RootState) => selectIsProjectShared(state, project));
+  const isSharedWithMe = useSelector((state: RootState) =>
+    selectIsProjectShared(state, project),
+  );
 
   const { data: variable, isLoading } = useVariableRetrieveQuery({
     id: slider.variable,
@@ -154,7 +149,11 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
           </IconButton>
         </Tooltip>
         <Tooltip title={"Save value to parameters"} placement="top">
-          <IconButton aria-label="save" onClick={handleSave} disabled={isSharedWithMe}>
+          <IconButton
+            aria-label="save"
+            onClick={handleSave}
+            disabled={isSharedWithMe}
+          >
             <Save />
           </IconButton>
         </Tooltip>
@@ -169,7 +168,11 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
           </IconButton>
         </Tooltip>
         <Tooltip title={"Remove slider"} placement="top">
-          <IconButton aria-label="delete" onClick={handleDelete} disabled={isSharedWithMe}>
+          <IconButton
+            aria-label="delete"
+            onClick={handleDelete}
+            disabled={isSharedWithMe}
+          >
             <Delete />
           </IconButton>
         </Tooltip>

@@ -40,36 +40,90 @@ const MapVariablesTab: FC<Props> = ({
   compound,
 }: Props) => {
   const [dosings, setDosing] = useState<
-    { key: number; hasDosingSelected: boolean; projectId: number, species: ProjectSpeciesEnum | undefined  }[]
+    {
+      key: number;
+      hasDosingSelected: boolean;
+      projectId: number;
+      species: ProjectSpeciesEnum | undefined;
+    }[]
   >([]);
   const [linkToPds, setLinkToPd] = useState<
-    { key: number; hasPdSelected: boolean; projectId: number, species: ProjectSpeciesEnum | undefined }[]
+    {
+      key: number;
+      hasPdSelected: boolean;
+      projectId: number;
+      species: ProjectSpeciesEnum | undefined;
+    }[]
   >([]);
   const [lagTimes, setLagTimes] = useState<
-    { key: number; hasLagTimeSelected: boolean; projectId: number, species: ProjectSpeciesEnum | undefined }[]
+    {
+      key: number;
+      hasLagTimeSelected: boolean;
+      projectId: number;
+      species: ProjectSpeciesEnum | undefined;
+    }[]
   >([]);
 
-  const updateDosings = useCallback((key: number, value: boolean) => {
-    setDosing((prevDosings) => [
-      ...prevDosings.filter(({ key: dosingKey, species, projectId }) => key !== dosingKey && species === project.species && projectId === project.id),
-      { key, hasDosingSelected: value, projectId: project?.id, species: project?.species },
-    ]);
-  }, [project?.id, project?.species]);
+  const updateDosings = useCallback(
+    (key: number, value: boolean) => {
+      setDosing((prevDosings) => [
+        ...prevDosings.filter(
+          ({ key: dosingKey, species, projectId }) =>
+            key !== dosingKey &&
+            species === project.species &&
+            projectId === project.id,
+        ),
+        {
+          key,
+          hasDosingSelected: value,
+          projectId: project?.id,
+          species: project?.species,
+        },
+      ]);
+    },
+    [project?.id, project?.species],
+  );
 
-  const updateLinksToPd = useCallback((key: number, value: boolean) => {
-    setLinkToPd((prevLinks) => [
-      ...prevLinks.filter(({ key: linkKey, species, projectId }) => key !== linkKey && species === project.species && projectId === project.id),
-      { key, hasPdSelected: value, projectId: project?.id, species: project?.species },
-    ]);
-  }, [project?.id, project?.species]);
+  const updateLinksToPd = useCallback(
+    (key: number, value: boolean) => {
+      setLinkToPd((prevLinks) => [
+        ...prevLinks.filter(
+          ({ key: linkKey, species, projectId }) =>
+            key !== linkKey &&
+            species === project.species &&
+            projectId === project.id,
+        ),
+        {
+          key,
+          hasPdSelected: value,
+          projectId: project?.id,
+          species: project?.species,
+        },
+      ]);
+    },
+    [project?.id, project?.species],
+  );
 
-  const updateLagTimes = useCallback((key: number, value: boolean) => {
-    setLagTimes((prevLags) => [
-      ...prevLags.filter(({ key: lagKey, species, projectId }) => key !== lagKey && species === project.species && projectId === project.id),
-      { key, hasLagTimeSelected: value, projectId: project?.id, species: project?.species },
-    ]);
-  }, [project?.id, project?.species]);
-  
+  const updateLagTimes = useCallback(
+    (key: number, value: boolean) => {
+      setLagTimes((prevLags) => [
+        ...prevLags.filter(
+          ({ key: lagKey, species, projectId }) =>
+            key !== lagKey &&
+            species === project.species &&
+            projectId === project.id,
+        ),
+        {
+          key,
+          hasLagTimeSelected: value,
+          projectId: project?.id,
+          species: project?.species,
+        },
+      ]);
+    },
+    [project?.id, project?.species],
+  );
+
   const iconRef = useRef<HTMLDivElement | null>(null);
   const isAnyDosingSelected = dosings
     .filter(({ projectId }) => projectId === project?.id)
@@ -191,16 +245,16 @@ const MapVariablesTab: FC<Props> = ({
   );
 
   const sortVariables = (variable1: VariableRead, variable2: VariableRead) => {
-    if (variable1.name.startsWith('C') && variable2.name.startsWith('A')) {
+    if (variable1.name.startsWith("C") && variable2.name.startsWith("A")) {
       return -1;
     }
 
-    if (variable1.name.startsWith('A') && variable2.name.startsWith('C')) {
+    if (variable1.name.startsWith("A") && variable2.name.startsWith("C")) {
       return 1;
     }
 
     return variable1.name < variable2.name ? -1 : 1;
-  }
+  };
 
   return (
     <TableContainer sx={{ width: "90%" }}>
@@ -213,7 +267,7 @@ const MapVariablesTab: FC<Props> = ({
             <TableCell>
               <div style={{ ...defaultHeaderSx }}>
                 Unit
-                  <HelpButton title={"Unit"}>{unitsHelp}</HelpButton>
+                <HelpButton title={"Unit"}>{unitsHelp}</HelpButton>
               </div>
             </TableCell>
             <TableCell>

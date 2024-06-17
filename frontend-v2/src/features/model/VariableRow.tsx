@@ -116,7 +116,9 @@ const VariableRow: FC<Props> = ({
     }
   }
 
-  const isSharedWithMe = useSelector((state: RootState) => selectIsProjectShared(state, project));
+  const isSharedWithMe = useSelector((state: RootState) =>
+    selectIsProjectShared(state, project),
+  );
 
   useEffect(() => {
     reset(variable);

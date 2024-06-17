@@ -8,11 +8,7 @@ interface Props {
   control: Control<CombinedModel>;
 }
 
-const TranslationTab: FC<Props> = ({
-  model,
-  project,
-  control,
-}: Props) => {
+const TranslationTab: FC<Props> = ({ model, project, control }: Props) => {
   return <div>This is a placeholder component.</div>;
 };
 

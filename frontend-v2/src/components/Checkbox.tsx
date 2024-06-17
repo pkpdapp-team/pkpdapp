@@ -1,6 +1,10 @@
 import { ReactElement } from "react";
 import { Control, Controller, FieldPath, FieldValues } from "react-hook-form";
-import { Checkbox as MaterialCheckbox, CheckboxProps, FormControlLabel } from "@mui/material";
+import {
+  Checkbox as MaterialCheckbox,
+  CheckboxProps,
+  FormControlLabel,
+} from "@mui/material";
 
 type Props<T extends FieldValues> = {
   label: string;
