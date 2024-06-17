@@ -6,7 +6,7 @@ import {
   ProtocolRead,
   useCompoundRetrieveQuery,
   useProjectRetrieveQuery,
-  useProtocolListQuery
+  useProtocolListQuery,
 } from "../../app/backendApi";
 
 const DEFAULT_PROTOCOLS: ProtocolRead[] = [];
@@ -17,15 +17,11 @@ export default function useProtocols() {
   );
   const projectIdOrZero = projectId || 0;
   const { data: project, isLoading: isProjectLoading } =
-    useProjectRetrieveQuery(
-      { id: projectIdOrZero },
-      { skip: !projectId }
+    useProjectRetrieveQuery({ id: projectIdOrZero }, { skip: !projectId });
+  const { data: compound } = useCompoundRetrieveQuery(
+    { id: project?.compound || 0 },
+    { skip: !project?.compound },
   );
-  const { data: compound } =
-    useCompoundRetrieveQuery(
-      { id: project?.compound || 0 },
-      { skip: !project?.compound },
-    );
   const { data: projectProtocols } = useProtocolListQuery(
     { projectId: projectIdOrZero },
     { skip: !projectId },
@@ -33,7 +29,7 @@ export default function useProtocols() {
   const { groups } = useSubjectGroups();
 
   const protocols = useMemo(() => {
-    const datasetProtocols = groups?.flatMap(group => group.protocols) || [];
+    const datasetProtocols = groups?.flatMap((group) => group.protocols) || [];
     if (projectProtocols && datasetProtocols) {
       return [...projectProtocols, ...datasetProtocols];
     }
@@ -44,6 +40,6 @@ export default function useProtocols() {
     project,
     compound,
     protocols,
-    isProjectLoading
-  }
+    isProjectLoading,
+  };
 }

@@ -30,7 +30,7 @@ import {
   useCombinedModelListQuery,
   usePharmacodynamicRetrieveQuery,
   useProjectRetrieveQuery,
-  useProtocolListQuery
+  useProtocolListQuery,
 } from "../../app/backendApi";
 import DnsIcon from "@mui/icons-material/Dns";
 import BiotechIcon from "@mui/icons-material/Biotech";
@@ -41,7 +41,6 @@ import ContactSupportIcon from "@mui/icons-material/ContactSupport";
 import TableViewIcon from "@mui/icons-material/TableView";
 import "@fontsource/comfortaa"; // Defaults to weight 400
 import useSubjectGroups from "../../hooks/useSubjectGroups";
-
 
 const drawerWidth = 240;
 
@@ -70,34 +69,39 @@ export default function Sidebar() {
     { skip: !projectId },
   );
   const model = models?.[0] || null;
-  const { data: pd_model } =
-    usePharmacodynamicRetrieveQuery(
-      { id: model?.pd_model || 0 },
-      { skip: !model?.pd_model },
-    );
+  const { data: pd_model } = usePharmacodynamicRetrieveQuery(
+    { id: model?.pd_model || 0 },
+    { skip: !model?.pd_model },
+  );
   const { data: project } = useProjectRetrieveQuery(
     { id: projectIdOrZero },
     { skip: !projectId },
   );
   const { VITE_APP_ROCHE } = import.meta.env;
-  const isRocheLogo = typeof VITE_APP_ROCHE === 'string' ? VITE_APP_ROCHE === 'true' : VITE_APP_ROCHE;
+  const isRocheLogo =
+    typeof VITE_APP_ROCHE === "string"
+      ? VITE_APP_ROCHE === "true"
+      : VITE_APP_ROCHE;
 
   const modelIsIncomplete = (
     mdl: CombinedModelRead | null,
     prtcls: ProtocolListApiResponse | undefined,
   ) => {
-
-    const isTumourModel = pd_model?.is_library_model && pd_model?.name.startsWith("tumour_growth");
+    const isTumourModel =
+      pd_model?.is_library_model && pd_model?.name.startsWith("tumour_growth");
     const noKillModel = !mdl?.pd_model2;
     return (
       (mdl && mdl.pk_model === null) ||
-      (mdl && mdl.pd_model && mdl.mappings.length === 0 && !(isTumourModel && noKillModel)) ||
+      (mdl &&
+        mdl.pd_model &&
+        mdl.mappings.length === 0 &&
+        !(isTumourModel && noKillModel)) ||
       (prtcls && prtcls.length === 0)
     );
   };
 
-  const doses = groups?.flatMap(group => group.protocols.map(p => p.doses));
-  const groupsAreIncomplete = doses?.some(dosing => dosing.length === 0);
+  const doses = groups?.flatMap((group) => group.protocols.map((p) => p.doses));
+  const groupsAreIncomplete = doses?.some((dosing) => dosing.length === 0);
 
   const errors: { [key: string]: string } = {};
   if (modelIsIncomplete(model, protocols)) {
@@ -147,12 +151,12 @@ export default function Sidebar() {
     dispatch(setPage(chosenPage));
 
     switch (chosenPage) {
-      case (PageName.MODEL):
+      case PageName.MODEL:
         dispatch(setSubPage(SubPageName.PKPDMODEL));
         break;
-      case (PageName.HELP):
+      case PageName.HELP:
         dispatch(setSubPage(SubPageName.TUTORIALS));
-        break
+        break;
       default:
         dispatch(setSubPage(null));
         break;

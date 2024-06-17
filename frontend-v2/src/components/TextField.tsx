@@ -1,11 +1,10 @@
 import { ChangeEvent, FocusEvent, ReactElement } from "react";
+import { Control, Controller, FieldPath, FieldValues } from "react-hook-form";
 import {
-  Control,
-  Controller,
-  FieldPath,
-  FieldValues
-} from "react-hook-form";
-import { SxProps, TextField as MaterialTextField, TextFieldProps } from "@mui/material";
+  SxProps,
+  TextField as MaterialTextField,
+  TextFieldProps,
+} from "@mui/material";
 import { useFieldState } from "../app/hooks";
 import { getLabel } from "../shared/getRequiredLabel";
 
@@ -17,7 +16,7 @@ type Props<T extends FieldValues> = {
   mode?: "onChange" | "onBlur";
   textFieldProps?: TextFieldProps;
   autoShrink?: boolean;
-  sx?: SxProps
+  sx?: SxProps;
 };
 
 function TextField<T extends FieldValues>({
@@ -28,7 +27,7 @@ function TextField<T extends FieldValues>({
   mode,
   textFieldProps,
   autoShrink,
-  sx
+  sx,
 }: Props<T>): ReactElement {
   const [fieldValue, setFieldValue] = useFieldState({ name, control });
 
@@ -62,13 +61,15 @@ function TextField<T extends FieldValues>({
           <MaterialTextField
             label={
               !error
-                ? getLabel(label || '', Boolean(rules?.required))
+                ? getLabel(label || "", Boolean(rules?.required))
                 : error?.message ||
                   (error?.type === "required" ? "Required" : "")
             }
             name={name}
             id={name}
-            InputLabelProps={autoShrink !== undefined ? { shrink: autoShrink } : {}}
+            InputLabelProps={
+              autoShrink !== undefined ? { shrink: autoShrink } : {}
+            }
             variant="outlined"
             value={
               fieldValue === undefined || fieldValue === null ? "" : fieldValue

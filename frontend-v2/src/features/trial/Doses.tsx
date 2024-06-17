@@ -1,5 +1,12 @@
 import { FC, useEffect, useMemo } from "react";
-import { TableCell, TableRow, IconButton, Button, Stack, Typography } from "@mui/material";
+import {
+  TableCell,
+  TableRow,
+  IconButton,
+  Button,
+  Stack,
+  Typography,
+} from "@mui/material";
 import {
   ProjectRead,
   Protocol,
@@ -15,7 +22,7 @@ import UnitField from "../../components/UnitField";
 import FloatField from "../../components/FloatField";
 import IntegerField from "../../components/IntegerField";
 import useDirty from "../../hooks/useDirty";
-import useInterval from '../../hooks/useInterval';
+import useInterval from "../../hooks/useInterval";
 import HelpButton from "../../components/HelpButton";
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
@@ -29,17 +36,16 @@ interface Props {
 }
 
 const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
-  const { data: compound } =
-    useCompoundRetrieveQuery(
-      { id: project?.compound || 0 },
-      { skip: !project || !project.compound },
-    );
+  const { data: compound } = useCompoundRetrieveQuery(
+    { id: project?.compound || 0 },
+    { skip: !project || !project.compound },
+  );
   const { data: variable, isLoading: isVariableLoading } =
     useVariableRetrieveQuery(
       { id: protocol.variables[0] || 0 },
       { skip: !protocol.variables.length },
     );
-  const mappedVariable = protocol.mapped_qname || variable?.qname || '';
+  const mappedVariable = protocol.mapped_qname || variable?.qname || "";
   const {
     control,
     handleSubmit,
@@ -50,7 +56,9 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
   });
   useDirty(isDirty);
   const [updateProtocol] = useProtocolUpdateMutation();
-  const isSharedWithMe = useSelector((state: RootState) => selectIsProjectShared(state, project));
+  const isSharedWithMe = useSelector((state: RootState) =>
+    selectIsProjectShared(state, project),
+  );
 
   const {
     fields: doses,
@@ -65,24 +73,28 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
     reset(protocol);
   }, [protocol, reset]);
 
-  const handleSave = useMemo(() => handleSubmit(async (data: Protocol) => {
-    if (JSON.stringify(data) !== JSON.stringify(protocol)) {
-      await updateProtocol({ id: protocol.id, protocol: data });
-      onChange();
-    }
-  }), [handleSubmit, onChange, protocol, updateProtocol]);
+  const handleSave = useMemo(
+    () =>
+      handleSubmit(async (data: Protocol) => {
+        if (JSON.stringify(data) !== JSON.stringify(protocol)) {
+          await updateProtocol({ id: protocol.id, protocol: data });
+          onChange();
+        }
+      }),
+    [handleSubmit, onChange, protocol, updateProtocol],
+  );
 
   // save protocol every second if dirty
   useInterval({
     callback: handleSave,
     delay: 1000,
-    isDirty
+    isDirty,
   });
 
   const isPreclinical = project.species !== "H";
   const defaultProps = {
     disabled: isSharedWithMe,
-  }
+  };
   const defaultSymbol = isPreclinical ? "mg/kg" : "mg";
   const defaultUnit = units.find((u) => u.symbol === defaultSymbol);
   const baseUnit = units.find((u) => u.id === protocol.amount_unit);
@@ -94,10 +106,10 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
       await updateProtocol({ id: protocol.id, protocol: newProtocol });
       onChange();
     }
-    if (defaultUnit?.id && baseUnit?.symbol === '') {
+    if (defaultUnit?.id && baseUnit?.symbol === "") {
       setDefaultAmountUnit();
     }
-  }, [defaultUnit?.id, baseUnit?.symbol, protocol, updateProtocol, onChange])
+  }, [defaultUnit?.id, baseUnit?.symbol, protocol, updateProtocol, onChange]);
 
   if (isVariableLoading) {
     return <div>Loading...</div>;
@@ -207,14 +219,17 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
           </TableCell>
           <TableCell align="center">
             {index !== 0 && (
-              <IconButton onClick={() => handleDeleteRow(index)} disabled={isSharedWithMe}>
+              <IconButton
+                onClick={() => handleDeleteRow(index)}
+                disabled={isSharedWithMe}
+              >
                 <Delete />
               </IconButton>
             )}
           </TableCell>
         </TableRow>
       ))}
-      <Stack direction='row' width='max-content'>
+      <Stack direction="row" width="max-content">
         <Button
           onClick={handleAddRow}
           variant="outlined"

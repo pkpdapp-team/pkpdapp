@@ -51,11 +51,10 @@ const Model: FC = () => {
   const { data: protocols, isLoading: isProtocolsLoading } =
     useProtocolListQuery({ projectId: projectIdOrZero }, { skip: !projectId });
   const model = models?.[0] || null;
-  const { data: pd_model } =
-    usePharmacodynamicRetrieveQuery(
-      { id: model?.pd_model || 0 },
-      { skip: !model?.pd_model },
-    );
+  const { data: pd_model } = usePharmacodynamicRetrieveQuery(
+    { id: model?.pd_model || 0 },
+    { skip: !model?.pd_model },
+  );
 
   const [updateModel] = useCombinedModelUpdateMutation();
   const { data: variables, isLoading: isVariablesLoading } =
@@ -202,27 +201,36 @@ const Model: FC = () => {
   }
 
   const tabErrors: { [key: string]: string } = {};
-  const tabKeys = [SubPageName.PKPDMODEL, SubPageName.MAPVARIABLES, SubPageName.PARAMETERS];
+  const tabKeys = [
+    SubPageName.PKPDMODEL,
+    SubPageName.MAPVARIABLES,
+    SubPageName.PARAMETERS,
+  ];
   if (model.pk_model === null) {
     tabErrors[tabKeys[0]] = "Please select a PK model to simulate";
   }
   const hasPdModel = model.pd_model !== null;
-  const isTumourModel =  hasPdModel && pd_model?.is_library_model && pd_model?.name.startsWith("tumour_growth");
+  const isTumourModel =
+    hasPdModel &&
+    pd_model?.is_library_model &&
+    pd_model?.name.startsWith("tumour_growth");
   const noKillModel = !model.pd_model2;
-  if (model.pd_model &&  model.mappings.length === 0) {
+  if (model.pd_model && model.mappings.length === 0) {
     // put exception for tumour growth models with no kill
     if (!(isTumourModel && noKillModel)) {
       tabErrors[tabKeys[1]] =
         "Please select a PK variable to link PK and PD models (Link to PD column)";
     }
   }
-  if (model.has_lag && !model.derived_variables.find((dv) => dv.type === "TLG")) {
+  if (
+    model.has_lag &&
+    !model.derived_variables.find((dv) => dv.type === "TLG")
+  ) {
     tabErrors[tabKeys[1]] = "Please select a lag time variable";
   }
   if (protocols && protocols.length === 0) {
     tabErrors[tabKeys[1]] = "Please select a dosing compartment";
   }
-  
 
   const isOtherSpeciesSelected = project.species === "O";
 

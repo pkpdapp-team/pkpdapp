@@ -1,9 +1,5 @@
-import { useMemo } from 'react';
-import {
-  Simulate,
-  SimulationRead,
-  VariableRead,
-} from '../../app/backendApi';
+import { useMemo } from "react";
+import { Simulate, SimulationRead, VariableRead } from "../../app/backendApi";
 
 type SliderValues = { [key: number]: number };
 
@@ -73,13 +69,11 @@ export default function useSimulationInputs(
   variables: VariableRead[] | undefined,
   timeMax: number | undefined,
 ) {
-  return useMemo(() => simulation && sliderValues ?
-    getSimulateInput(
-      simulation,
-      sliderValues,
-      variables,
-      timeMax,
-    ) :
-    DEFAULT_INPUTS,
-  [simulation, sliderValues, variables, timeMax]);
+  return useMemo(
+    () =>
+      simulation && sliderValues
+        ? getSimulateInput(simulation, sliderValues, variables, timeMax)
+        : DEFAULT_INPUTS,
+    [simulation, sliderValues, variables, timeMax],
+  );
 }

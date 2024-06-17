@@ -4,7 +4,7 @@ import {
   CombinedModelRead,
   Simulate,
   SimulateResponse,
-  useCombinedModelSimulateCreateMutation
+  useCombinedModelSimulateCreateMutation,
 } from "../../app/backendApi";
 interface ErrorObject {
   error: string;
@@ -13,7 +13,7 @@ interface ErrorObject {
 export default function useSimulation(
   simInputs: Simulate,
   simulatedVariables: { qname: string; value: number | undefined }[],
-  model: CombinedModelRead | undefined
+  model: CombinedModelRead | undefined,
 ) {
   const { compound, protocols } = useProtocols();
   const [loadingSimulate, setLoadingSimulate] = useState<boolean>(false);
@@ -53,18 +53,11 @@ export default function useSimulation(
     return () => {
       ignore = true;
     };
-  }, [
-    compound,
-    model,
-    protocols,
-    simulate,
-    simInputs,
-    simulatedVariables
-  ]);
+  }, [compound, model, protocols, simulate, simInputs, simulatedVariables]);
 
   return {
     loadingSimulate,
     data,
-    error: simulateError
+    error: simulateError,
   };
 }

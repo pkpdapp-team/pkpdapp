@@ -9,7 +9,7 @@ import Simulations from "../simulation/Simulations";
 import Protocols from "../trial/Protocols";
 import { Box } from "@mui/material";
 import Help from "../help/Help";
-import Data from '../data/Data';
+import Data from "../data/Data";
 
 interface TabPanelProps {
   children?: ReactNode;

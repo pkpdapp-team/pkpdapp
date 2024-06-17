@@ -9,7 +9,7 @@ import {
   cloneElement,
   createContext,
   useContext,
-  useState
+  useState,
 } from "react";
 import Box from "@mui/material/Box";
 import Tabs from "@mui/material/Tabs";
@@ -75,34 +75,38 @@ export const DynamicTabs: FC<PropsWithChildren<DynamicTabsProps>> = ({
 
   const handleChange = (event: SyntheticEvent, newValue: number) => {
     const previousTabs = tabNames.filter((__, index) => index < newValue);
-    const previousErrors = previousTabs.map(tabName => tabErrors && tabErrors[tabName]).filter(val => val !== undefined);
-    
+    const previousErrors = previousTabs
+      .map((tabName) => tabErrors && tabErrors[tabName])
+      .filter((val) => val !== undefined);
+
     if (tabErrors && previousErrors?.length && newValue > currentTab) {
       toast({
         type: notificationTypes.ERROR,
-        text: previousErrors.join('; ') || '',
-        autoClose: 3500
-      })
-    } else if (tabNames[newValue] === 'Parameters' && isOtherSpeciesSelected) {
+        text: previousErrors.join("; ") || "",
+        autoClose: 3500,
+      });
+    } else if (tabNames[newValue] === "Parameters" && isOtherSpeciesSelected) {
       toast({
         type: notificationTypes.INFORMATION,
         text: "Currently selected species is 'Other'. Please ensure all parameters are correct",
-        autoClose: 3500
-      })
+        autoClose: 3500,
+      });
       setCurrentTab(newValue);
-      dispatch(setSubPage(tabNames[newValue]))
-    } else if (tabNames[newValue] === 'Map Variables' && tumourModelWithNoKillModel) {
+      dispatch(setSubPage(tabNames[newValue]));
+    } else if (
+      tabNames[newValue] === "Map Variables" &&
+      tumourModelWithNoKillModel
+    ) {
       toast({
         type: notificationTypes.INFORMATION,
         text: "You have selected a tumour growth model without a kill model. Please ensure this is correct",
-        autoClose: 3500
-      })
+        autoClose: 3500,
+      });
       setCurrentTab(newValue);
-      dispatch(setSubPage(tabNames[newValue]))
-
+      dispatch(setSubPage(tabNames[newValue]));
     } else {
       setCurrentTab(newValue);
-      dispatch(setSubPage(tabNames[newValue]))
+      dispatch(setSubPage(tabNames[newValue]));
     }
   };
 

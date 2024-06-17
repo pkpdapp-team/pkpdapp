@@ -9,13 +9,7 @@ import {
   usePharmacokineticListQuery,
 } from "../../app/backendApi";
 import { Control } from "react-hook-form";
-import {
-  Stack,
-  Typography,
-  Grid,
-  Tooltip,
-  Box,
-} from "@mui/material";
+import { Stack, Typography, Grid, Tooltip, Box } from "@mui/material";
 import KeyboardDoubleArrowRightIcon from "@mui/icons-material/KeyboardDoubleArrowRight";
 import KeyboardDoubleArrowDownIcon from "@mui/icons-material/KeyboardDoubleArrowDown";
 import SelectField from "../../components/SelectField";
@@ -45,7 +39,7 @@ const pk_model_order = [
   "two_compartment_tmdd_QSS",
   "two_compartment_tmdd_full_constant_target",
   "two_compartment_tmdd_qss_constant_target",
-]
+];
 
 const pd_model_order = [
   "direct_effects_emax",
@@ -67,7 +61,7 @@ const pd_model_order = [
   "tumour_growth_inhibition_delay_signal_distribution_conc_prop_kill",
   "tumour_growth_inhibition_delay_signal_distribution_emax_kill",
   "tumour_growth_inhibition_delay_signal_distribution_exp_conc_kill",
-]
+];
 
 const PKPDModelTab: FC<Props> = ({ model, project, control }: Props) => {
   // get list of pd models
@@ -76,7 +70,9 @@ const PKPDModelTab: FC<Props> = ({ model, project, control }: Props) => {
   const { data: pkModels, isLoading: pkModelLoading } =
     usePharmacokineticListQuery();
   const [showCode, setShowCode] = useState(false);
-  const isSharedWithMe = useSelector((state: RootState) => selectIsProjectShared(state, project));
+  const isSharedWithMe = useSelector((state: RootState) =>
+    selectIsProjectShared(state, project),
+  );
 
   const loading = [pdModelLoading, pkModelLoading];
   if (loading.some((l) => l)) {
@@ -85,7 +81,6 @@ const PKPDModelTab: FC<Props> = ({ model, project, control }: Props) => {
   if (!pdModels || !pkModels) {
     return <div>Error loading models.</div>;
   }
-
 
   const clinical = project.species === "H";
   const pkModelsFiltered = pkModels.filter(
@@ -100,10 +95,10 @@ const PKPDModelTab: FC<Props> = ({ model, project, control }: Props) => {
 
   const pd_model_options: { value: number | string; label: string }[] =
     pdModelsFiltered
-    .filter((m) => !m.name.includes("tumour_growth_inhibition"))
-    .map((m) => {
-      return { value: m.id, label: m.name };
-    });
+      .filter((m) => !m.name.includes("tumour_growth_inhibition"))
+      .map((m) => {
+        return { value: m.id, label: m.name };
+      });
   pd_model_options.sort((a, b) => {
     const aName = a.label;
     const bName = b.label;
@@ -144,14 +139,14 @@ const PKPDModelTab: FC<Props> = ({ model, project, control }: Props) => {
 
   const pd_model = model.pd_model ? pd_model_map[model.pd_model] : null;
   const pd_model2 = model.pd_model2 ? pd_model_map[model.pd_model2] : null;
-  const pdModelHasHillCoefficient = 
-    pd_model?.name.includes("indirect") 
-    || pd_model?.name.includes("direct")
-    || pd_model2?.name.includes("emax_kill");
+  const pdModelHasHillCoefficient =
+    pd_model?.name.includes("indirect") ||
+    pd_model?.name.includes("direct") ||
+    pd_model2?.name.includes("emax_kill");
 
   const defaultProps = {
     disabled: isSharedWithMe,
-  }
+  };
 
   return (
     <Grid container spacing={2}>
@@ -208,7 +203,9 @@ const PKPDModelTab: FC<Props> = ({ model, project, control }: Props) => {
                     label="Effect Compartment"
                     name="model.has_effect"
                     control={control}
-                    checkboxFieldProps={{ disabled: !model.pk_model || isSharedWithMe }}
+                    checkboxFieldProps={{
+                      disabled: !model.pk_model || isSharedWithMe,
+                    }}
                   />
                 </div>
               </Tooltip>
@@ -218,7 +215,9 @@ const PKPDModelTab: FC<Props> = ({ model, project, control }: Props) => {
                     label="Lag Time"
                     name="model.has_lag"
                     control={control}
-                    checkboxFieldProps={{ disabled: !model.pk_model || isSharedWithMe }}
+                    checkboxFieldProps={{
+                      disabled: !model.pk_model || isSharedWithMe,
+                    }}
                   />
                 </div>
               </Tooltip>
@@ -228,7 +227,9 @@ const PKPDModelTab: FC<Props> = ({ model, project, control }: Props) => {
                     label="Bioavailability"
                     name="model.has_bioavailability"
                     control={control}
-                    checkboxFieldProps={{ disabled: !model.pk_model || isSharedWithMe }}
+                    checkboxFieldProps={{
+                      disabled: !model.pk_model || isSharedWithMe,
+                    }}
                   />
                 </div>
               </Tooltip>
@@ -249,7 +250,7 @@ const PKPDModelTab: FC<Props> = ({ model, project, control }: Props) => {
             />
           </Stack>
         </Grid>
-        
+
         <Box width="100%" />
         {pdIsTumourGrowth && (
           <>
@@ -288,7 +289,9 @@ const PKPDModelTab: FC<Props> = ({ model, project, control }: Props) => {
                       label="Hill Coefficient"
                       name="model.has_hill_coefficient"
                       control={control}
-                      checkboxFieldProps={{ disabled: !model.pd_model || isSharedWithMe }}
+                      checkboxFieldProps={{
+                        disabled: !model.pd_model || isSharedWithMe,
+                      }}
                     />
                   </div>
                 </Tooltip>

@@ -6,7 +6,7 @@ import {
   Popover,
 } from "@mui/material";
 import { FC, MouseEvent, ReactNode, useState } from "react";
-import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 
 type Option = {
   label: string;

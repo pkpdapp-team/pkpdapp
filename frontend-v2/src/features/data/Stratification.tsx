@@ -1,4 +1,4 @@
-import { ChangeEvent, FC, useState } from 'react';
+import { ChangeEvent, FC, useState } from "react";
 import {
   Alert,
   Box,
@@ -11,12 +11,10 @@ import {
   TableBody,
   Tabs,
   Tab,
-  Typography
+  Typography,
 } from "@mui/material";
 import { StepperState } from "./LoadDataStepper";
-import ProtocolDataGrid from './ProtocolDataGrid';
-
-
+import ProtocolDataGrid from "./ProtocolDataGrid";
 
 interface IStratification {
   state: StepperState;
@@ -24,12 +22,14 @@ interface IStratification {
 }
 
 const Stratification: FC<IStratification> = ({ state }: IStratification) => {
-  const idField = state.fields.find((field, index) => state.normalisedFields[index] === 'ID');
-  const catCovariates = state.fields.filter((field, index) =>
-    state.normalisedFields[index] === 'Cat Covariate'
+  const idField = state.fields.find(
+    (field, index) => state.normalisedFields[index] === "ID",
   );
-  const uniqueCovariateValues = catCovariates.map(field => {
-    const values = state.data.map(row => row[field]);
+  const catCovariates = state.fields.filter(
+    (field, index) => state.normalisedFields[index] === "Cat Covariate",
+  );
+  const uniqueCovariateValues = catCovariates.map((field) => {
+    const values = state.data.map((row) => row[field]);
     return [...new Set(values)];
   });
 
@@ -40,7 +40,9 @@ const Stratification: FC<IStratification> = ({ state }: IStratification) => {
   const primaryCohortIndex = catCovariates.indexOf(primaryCohort);
   const groupColumnValues = uniqueCovariateValues[primaryCohortIndex] || [];
   const groups = groupColumnValues.map((value, index) => {
-    const subjects = state.data.filter(row => row[primaryCohort] === value).map(row => idField ? row[idField] : '');
+    const subjects = state.data
+      .filter((row) => row[primaryCohort] === value)
+      .map((row) => (idField ? row[idField] : ""));
     return {
       id: value,
       name: `Group ${index + 1}`,
@@ -48,23 +50,23 @@ const Stratification: FC<IStratification> = ({ state }: IStratification) => {
     };
   });
 
-  if (!firstRow['Group ID']) {
-    const newData = [ ...state.data ];
-    newData.forEach(row => {
-      row['Group ID'] = row[primaryCohort] || '1';
+  if (!firstRow["Group ID"]) {
+    const newData = [...state.data];
+    newData.forEach((row) => {
+      row["Group ID"] = row[primaryCohort] || "1";
     });
     state.setData(newData);
   }
 
   const handleTabChange = (event: ChangeEvent<{}>, newValue: number) => {
     setTab(newValue);
-  }
+  };
 
   const handlePrimaryChange = (event: ChangeEvent<HTMLInputElement>) => {
     setPrimaryCohort(event.target.value);
-    const newData = [ ...state.data ];
-    newData.forEach(row => {
-      row['Group ID'] = row[event.target.value];
+    const newData = [...state.data];
+    newData.forEach((row) => {
+      row["Group ID"] = row[event.target.value];
     });
     state.setData(newData);
   };
@@ -72,17 +74,18 @@ const Stratification: FC<IStratification> = ({ state }: IStratification) => {
   function a11yProps(index: number) {
     return {
       id: `protocol-tab-${index}`,
-      'aria-controls': `protocol-tabpanel`,
+      "aria-controls": `protocol-tabpanel`,
     };
   }
 
   return (
     <>
-      <Alert severity='info'>
-        Stratify your observations into groups based on the covariates you have provided.
+      <Alert severity="info">
+        Stratify your observations into groups based on the covariates you have
+        provided.
       </Alert>
       <Stack marginTop={2} spacing={2}>
-        {!!catCovariates.length && 
+        {!!catCovariates.length && (
           <Table>
             <TableHead>
               <TableRow>
@@ -92,7 +95,7 @@ const Stratification: FC<IStratification> = ({ state }: IStratification) => {
                 <TableCell>
                   <Typography>Values</Typography>
                 </TableCell>
-                <TableCell id='heading-primary'>
+                <TableCell id="heading-primary">
                   <Typography>Use as Group ID?</Typography>
                 </TableCell>
               </TableRow>
@@ -104,14 +107,16 @@ const Stratification: FC<IStratification> = ({ state }: IStratification) => {
                 return (
                   <TableRow key={field}>
                     <TableCell id={`field-${field}`}>{field}</TableCell>
-                    <TableCell>{uniqueCovariateValues[index].join(',')}</TableCell>
+                    <TableCell>
+                      {uniqueCovariateValues[index].join(",")}
+                    </TableCell>
                     <TableCell>
                       <Radio
                         name="primary"
                         value={field}
                         checked={isPrimary}
                         onChange={handlePrimaryChange}
-                        inputProps={{ 'aria-labelledby': primaryLabel }}
+                        inputProps={{ "aria-labelledby": primaryLabel }}
                       />
                     </TableCell>
                   </TableRow>
@@ -119,27 +124,27 @@ const Stratification: FC<IStratification> = ({ state }: IStratification) => {
               })}
             </TableBody>
           </Table>
-        }
+        )}
         <Tabs value={tab} onChange={handleTabChange}>
           {groups.map((group, index) => (
-            <Tab
-              key={group.name}
-              label={group.name}
-              {...a11yProps(index)}
-            />
+            <Tab key={group.name} label={group.name} {...a11yProps(index)} />
           ))}
         </Tabs>
-        <Box role='tabpanel' id='protocol-tabpanel'>
-          {groups[tab]
-            ? <Box component="div" sx={{ maxHeight: "30vh", overflow: 'auto', overflowX: 'auto' }}>
-                <ProtocolDataGrid group={groups[tab]}  state={state} />
-              </Box>
-            : <Typography>This dataset has no subject group column.</Typography>
-          }
+        <Box role="tabpanel" id="protocol-tabpanel">
+          {groups[tab] ? (
+            <Box
+              component="div"
+              sx={{ maxHeight: "30vh", overflow: "auto", overflowX: "auto" }}
+            >
+              <ProtocolDataGrid group={groups[tab]} state={state} />
+            </Box>
+          ) : (
+            <Typography>This dataset has no subject group column.</Typography>
+          )}
         </Box>
       </Stack>
     </>
   );
-}
+};
 
 export default Stratification;

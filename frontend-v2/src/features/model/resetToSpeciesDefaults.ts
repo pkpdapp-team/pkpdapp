@@ -30,8 +30,9 @@ export const getConstVariables = (
     );
     // if Aa is not dosed, then we will filter out F and ka (for library models)
     const aaIsNotDosed =
-      variables.filter((variable) => variable.protocol && variable.name === "Aa")
-        .length === 0;
+      variables.filter(
+        (variable) => variable.protocol && variable.name === "Aa",
+      ).length === 0;
     if (aaIsNotDosed) {
       constVariables = constVariables.filter(
         (variable) => !["F", "ka"].includes(variable.name),

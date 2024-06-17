@@ -1,6 +1,6 @@
-import { toast, ToastOptions } from 'react-toastify';
-import { Notification } from './../components/Notification/Notification';
-import { NotificationTypes } from '../components/Notification/notificationTypes';
+import { toast, ToastOptions } from "react-toastify";
+import { Notification } from "./../components/Notification/Notification";
+import { NotificationTypes } from "../components/Notification/notificationTypes";
 
 // @ts-nocheck
 type ToastProps = {
@@ -20,17 +20,25 @@ const defaultOptions: ToastOptions = {
   hideProgressBar: true,
   style: {
     padding: 0,
-    background: 'none',
-    boxShadow: 'none',
-    top: '60px',
-    minWidth: 'fit-content'
-  }
+    background: "none",
+    boxShadow: "none",
+    top: "60px",
+    minWidth: "fit-content",
+  },
 };
 
 export const useCustomToast =
   () =>
   ({ type, text, autoClose, onClick }: ToastProps) =>
-    toast(<Notification onClick={onClick} text={text} variant={type} testId={text} />, {
-      ...defaultOptions,
-      autoClose
-    });
+    toast(
+      <Notification
+        onClick={onClick}
+        text={text}
+        variant={type}
+        testId={text}
+      />,
+      {
+        ...defaultOptions,
+        autoClose,
+      },
+    );

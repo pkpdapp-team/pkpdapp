@@ -29,7 +29,15 @@ import {
   useVariableUpdateMutation,
 } from "../../app/backendApi";
 import { useFieldArray, useForm } from "react-hook-form";
-import { ChangeEvent, FC, useCallback, useEffect, useMemo, useState, useRef } from "react";
+import {
+  ChangeEvent,
+  FC,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useRef,
+} from "react";
 import SimulationPlotView from "./SimulationPlotView";
 import SimulationSliderView from "./SimulationSliderView";
 import useSimulation from "./useSimulation";
@@ -52,7 +60,6 @@ type SliderValues = { [key: number]: number };
 interface ErrorObject {
   error: string;
 }
-
 
 const getSliderInitialValues = (
   simulation?: SimulationRead,
@@ -78,13 +85,12 @@ const Simulations: FC = () => {
     (state: RootState) => state.main.selectedProject,
   );
   const { groups } = useSubjectGroups();
-  const [visibleGroups, setVisibleGroups] =
-    useState<string[]>(['Project']);
+  const [visibleGroups, setVisibleGroups] = useState<string[]>(["Project"]);
   useEffect(() => {
     // display groups by default, when they are loaded or deleted.
     const groupData = groups || [];
-    setVisibleGroups(['Project', ...groupData.map(group => group.name)]);
-  }, [groups])
+    setVisibleGroups(["Project", ...groupData.map((group) => group.name)]);
+  }, [groups]);
   const projectIdOrZero = projectId || 0;
   const { data: project, isLoading: isProjectLoading } =
     useProjectRetrieveQuery({ id: projectIdOrZero }, { skip: !projectId });
@@ -120,14 +126,19 @@ const Simulations: FC = () => {
     );
   const [updateVariable] = useVariableUpdateMutation();
 
-  const [sliderValues, setSliderValues] = useState<
-    SliderValues | undefined
-  >(undefined);
+  const [sliderValues, setSliderValues] = useState<SliderValues | undefined>(
+    undefined,
+  );
   const handleChangeSlider = useCallback((variable: number, value: number) => {
-    setSliderValues(prevSliderValues => ({ ...prevSliderValues, [variable]: value }));
+    setSliderValues((prevSliderValues) => ({
+      ...prevSliderValues,
+      [variable]: value,
+    }));
   }, []);
 
-  const isSharedWithMe = useSelector((state: RootState) => selectIsProjectShared(state, project));
+  const isSharedWithMe = useSelector((state: RootState) =>
+    selectIsProjectShared(state, project),
+  );
 
   const defaultSimulation: SimulationRead = {
     id: 0,
@@ -154,12 +165,17 @@ const Simulations: FC = () => {
   };
   const timeMax = simulation?.id && getTimeMax(simulation);
 
-  const simInputs = useSimulationInputs(simulation, sliderValues, variables, timeMax);
+  const simInputs = useSimulationInputs(
+    simulation,
+    sliderValues,
+    variables,
+    timeMax,
+  );
   const simulatedVariables = useSimulatedVariables(variables, sliderValues);
   const { loadingSimulate, data } = useSimulation(
     simInputs,
     simulatedVariables,
-    model
+    model,
   );
 
   const {
@@ -203,9 +219,10 @@ const Simulations: FC = () => {
   useEffect(() => {
     const height = parametersRef?.current?.clientHeight || 0;
     setParametersHeight(height);
-  }, [parametersRef?.current?.clientHeight])
+  }, [parametersRef?.current?.clientHeight]);
 
-  const updateWindowDimensions = () => window.innerWidth < 1000 && setLayout('horizontal');
+  const updateWindowDimensions = () =>
+    window.innerWidth < 1000 && setLayout("horizontal");
   window.addEventListener("resize", updateWindowDimensions);
 
   // reset form and sliders if simulation changes
@@ -224,7 +241,7 @@ const Simulations: FC = () => {
     simInputs,
     simulatedVariables,
     model,
-    project
+    project,
   });
   const simulateError: ErrorObject | undefined = simulateErrorBase
     ? "data" in simulateErrorBase
@@ -284,7 +301,11 @@ const Simulations: FC = () => {
 
   const orderedSliders = sliders.map((slider, i) => {
     const variable = variables.find((v) => v.id === slider.variable);
-    return { ...slider, priority: variable ? paramPriority(variable) : 0, fieldArrayIndex: i };
+    return {
+      ...slider,
+      priority: variable ? paramPriority(variable) : 0,
+      fieldArrayIndex: i,
+    };
   });
   orderedSliders.sort((a, b) => a.priority - b.priority);
 
@@ -362,10 +383,10 @@ const Simulations: FC = () => {
     };
     addSimulationSlider(defaultSlider);
   };
-  
+
   const handleRemoveSlider = (index: number) => () => {
     removeSlider(index);
-  }
+  };
 
   const handleSaveSlider = (slider: SimulationSlider) => (value: number) => {
     const variable = variables?.find((v) => v.id === slider.variable);
@@ -380,17 +401,27 @@ const Simulations: FC = () => {
 
   const handleVisibleGroups = (event: ChangeEvent<HTMLInputElement>) => {
     if (!event.target.checked) {
-      const newState = visibleGroups.filter(name => name !== event.target.value);
+      const newState = visibleGroups.filter(
+        (name) => name !== event.target.value,
+      );
       setVisibleGroups(newState);
       return;
     } else {
       const newState = new Set([...visibleGroups, event.target.value]);
       setVisibleGroups([...newState]);
     }
-  }
+  };
   return (
-    <Grid container sx={{ marginBottom: layout === 'vertical' ? 0 : `${parametersHeight}px` }}>
-      <Grid item xl={layout === "vertical" ? 8 : 12} md={layout === "vertical" ? 7 : 12} xs={layout === "vertical" ? 6 : 12}>
+    <Grid
+      container
+      sx={{ marginBottom: layout === "vertical" ? 0 : `${parametersHeight}px` }}
+    >
+      <Grid
+        item
+        xl={layout === "vertical" ? 8 : 12}
+        md={layout === "vertical" ? 7 : 12}
+        xs={layout === "vertical" ? 6 : 12}
+      >
         <Stack direction={"row"} alignItems={"center"}>
           <DropdownButton
             useIcon={false}
@@ -409,7 +440,7 @@ const Simulations: FC = () => {
               alignItems={"center"}
               spacing={2}
               justifyContent="flex-start"
-              paddingTop='1rem'
+              paddingTop="1rem"
             >
               <FloatField
                 label="Simulation Duration"
@@ -422,16 +453,19 @@ const Simulations: FC = () => {
                 name="time_max_unit"
                 baseUnit={units.find((u) => u.id === simulation?.time_max_unit)}
                 control={control}
-                selectProps={{ style: { flexShrink: 0 }, disabled: isSharedWithMe }}
+                selectProps={{
+                  style: { flexShrink: 0 },
+                  disabled: isSharedWithMe,
+                }}
               />
               <div>
                 <Button variant="contained" onClick={exportSimulation}>
                   Export to CSV
                 </Button>
                 <HelpButton title={"Export to CSV"}>
-                  A variables are reported in pmol, C or T variables are reported
-                  in pmol/L and AUC variables are reported in pmol/L*h. These
-                  units cannot be changed in the current version.
+                  A variables are reported in pmol, C or T variables are
+                  reported in pmol/L and AUC variables are reported in pmol/L*h.
+                  These units cannot be changed in the current version.
                 </HelpButton>
               </div>
             </Stack>
@@ -439,7 +473,13 @@ const Simulations: FC = () => {
         )}
         <Grid container spacing={1}>
           {plots.map((plot, index) => (
-            <Grid item xl={layout === "vertical" ? 12 : 6} md={layout === "vertical" ? 12 : 6} xs={layout === "vertical" ? 12 : 12} key={index}>
+            <Grid
+              item
+              xl={layout === "vertical" ? 12 : 6}
+              md={layout === "vertical" ? 12 : 6}
+              xs={layout === "vertical" ? 12 : 12}
+              key={index}
+            >
               {data?.length && model ? (
                 <SimulationPlotView
                   index={index}
@@ -474,8 +514,20 @@ const Simulations: FC = () => {
         xs={layout === "vertical" ? 5 : 12}
         sx={
           layout === "vertical"
-            ? { position: "fixed", right: 0, paddingLeft: "1rem", width: '100%' }
-            : { position: "fixed", bottom: 0, paddingBottom: '3rem', height: 'auto', backgroundColor: 'white', width: '-webkit-fill-available' }
+            ? {
+                position: "fixed",
+                right: 0,
+                paddingLeft: "1rem",
+                width: "100%",
+              }
+            : {
+                position: "fixed",
+                bottom: 0,
+                paddingBottom: "3rem",
+                height: "auto",
+                backgroundColor: "white",
+                width: "-webkit-fill-available",
+              }
         }
       >
         <Stack direction="column">
@@ -493,12 +545,12 @@ const Simulations: FC = () => {
                 <FormControlLabel
                   control={
                     <Checkbox
-                      checked={visibleGroups.includes('Project')}
-                      value='Project'
+                      checked={visibleGroups.includes("Project")}
+                      value="Project"
                       onChange={handleVisibleGroups}
                     />
                   }
-                  label='Project'
+                  label="Project"
                 />
                 {groups?.map((group) => (
                   <FormControlLabel

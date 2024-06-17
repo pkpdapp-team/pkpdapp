@@ -6,23 +6,23 @@
   box-shadow: 0 0 8px 0 #00000029;
   display: flex;
   min-height: 6.6rem;
-  width: 20rem
+  width: 20rem;
 }
 
 .notification__content {
-    display: flex;
-    width: 100%;
+  display: flex;
+  width: 100%;
 }
 
 .notification__text {
-    display: flex;
-    flex-direction: column;
-    max-width: 25rem;
+  display: flex;
+  flex-direction: column;
+  max-width: 25rem;
 }
 
 .notification__message {
-    font-size: .9rem;
-    font-weight: 100;
+  font-size: 0.9rem;
+  font-weight: 100;
 }
 
 .notification__text {

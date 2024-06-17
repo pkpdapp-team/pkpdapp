@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useSelector } from "react-redux";
 import {
   useProjectRetrieveQuery,
-  useSubjectGroupListQuery
+  useSubjectGroupListQuery,
 } from "../app/backendApi";
 import { RootState } from "../app/store";
 
@@ -11,22 +11,23 @@ export default function useSubjectGroups() {
     (state: RootState) => state.main.selectedProject,
   );
   const selectedProjectOrZero = selectedProject || 0;
-  const { data: project } =
-    useProjectRetrieveQuery(
-      { id: selectedProjectOrZero },
-      { skip: !selectedProject }
+  const { data: project } = useProjectRetrieveQuery(
+    { id: selectedProjectOrZero },
+    { skip: !selectedProject },
   );
-  const { data: datasetGroups, refetch: refetchDatasetGroups } = useSubjectGroupListQuery(
-    { datasetId: project?.datasets[0] || 0 },
-    { skip: !project }
-  );
-  const { data: projectGroups, refetch: refetchProjectGroups } = useSubjectGroupListQuery(
-    { projectId: selectedProjectOrZero},
-    { skip: !selectedProject }
-  );
+  const { data: datasetGroups, refetch: refetchDatasetGroups } =
+    useSubjectGroupListQuery(
+      { datasetId: project?.datasets[0] || 0 },
+      { skip: !project },
+    );
+  const { data: projectGroups, refetch: refetchProjectGroups } =
+    useSubjectGroupListQuery(
+      { projectId: selectedProjectOrZero },
+      { skip: !selectedProject },
+    );
   const groups = useMemo(
     () => datasetGroups?.concat(projectGroups || []),
-    [datasetGroups, projectGroups]
+    [datasetGroups, projectGroups],
   );
 
   function refetchGroups() {
@@ -40,6 +41,6 @@ export default function useSubjectGroups() {
     projectGroups,
     refetchGroups,
     refetchDatasetGroups,
-    refetchProjectGroups
-  }
+    refetchProjectGroups,
+  };
 }

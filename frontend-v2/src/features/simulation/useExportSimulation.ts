@@ -6,7 +6,7 @@ import {
   useCombinedModelSimulateCreateMutation,
   useUnitListQuery,
   useVariableListQuery,
-  ProjectRead
+  ProjectRead,
 } from "../../app/backendApi";
 
 interface iExportSimulation {
@@ -16,14 +16,9 @@ interface iExportSimulation {
   project: ProjectRead | undefined;
 }
 
-const parseResponse = (
-  data: any,
-  timeCol: number,
-  label: string,
-) => {
+const parseResponse = (data: any, timeCol: number, label: string) => {
   const cols = Object.keys(data.outputs);
-  const nrows =
-    data.outputs[Object.keys(data.outputs)[0]].length;
+  const nrows = data.outputs[Object.keys(data.outputs)[0]].length;
   const ncols = cols.length;
   // move time to first column
   if (timeCol !== -1) {
@@ -42,13 +37,13 @@ const parseResponse = (
     rowi++;
   }
   return rows;
-}
+};
 
 export default function useExportSimulation({
   simInputs,
   simulatedVariables,
   model,
-  project
+  project,
 }: iExportSimulation): [() => void, { error: any }] {
   const { groups } = useDataset(project?.id || 0);
   const { compound, protocols } = useProtocols();
@@ -61,7 +56,7 @@ export default function useExportSimulation({
     { skip: !project?.compound },
   );
   const [simulate, { error: simulateErrorBase }] =
-        useCombinedModelSimulateCreateMutation();
+    useCombinedModelSimulateCreateMutation();
   const exportSimulation = () => {
     if (
       simInputs.variables &&
@@ -75,7 +70,6 @@ export default function useExportSimulation({
       project &&
       groups
     ) {
-
       console.log("Export to CSV: simulating with params", simulatedVariables);
       simulate({
         id: model.id,
@@ -87,11 +81,13 @@ export default function useExportSimulation({
           const vars = cols.map((vid) =>
             variables.find((v) => v.id === parseInt(vid)),
           );
-          const varUnits = vars.map((v) =>
-            units.find((u) => u.id === v?.unit)
+          const varUnits = vars.map((v) => units.find((u) => u.id === v?.unit));
+          const varNames = vars.map(
+            (v, i) => `${v?.qname} (${varUnits[i]?.symbol || ""})`,
           );
-          const varNames = vars.map((v, i) => `${v?.qname} (${varUnits[i]?.symbol || ''})`);
-          const timeCol = varNames.findIndex(n => n.startsWith("environment.t"));
+          const timeCol = varNames.findIndex((n) =>
+            n.startsWith("environment.t"),
+          );
           // move time to first column
           if (timeCol !== -1) {
             const timeName = varNames[timeCol];
@@ -100,13 +96,14 @@ export default function useExportSimulation({
           }
           rows = [
             ...rows,
-            [...varNames, 'Group'],
+            [...varNames, "Group"],
             ...response.data.flatMap((data, index) => {
-              const label = index === 0 ?
-                'Project' :
-                groups[index - 1].id_in_dataset || groups[index - 1].name;
-              return parseResponse(data, timeCol, label)
-            })
+              const label =
+                index === 0
+                  ? "Project"
+                  : groups[index - 1].id_in_dataset || groups[index - 1].name;
+              return parseResponse(data, timeCol, label);
+            }),
           ];
         }
         const csvContent = rows.map((e) => e.join(",")).join("\n");
