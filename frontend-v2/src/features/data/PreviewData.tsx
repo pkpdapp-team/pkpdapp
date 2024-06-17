@@ -38,9 +38,18 @@ function useNormalisedColumn(state: StepperState, type: string) {
 
 const PreviewData: FC<IPreviewData> = ({ state, firstTime }: IPreviewData) => {
   useNormalisedColumn(state, 'Time');
+  useNormalisedColumn(state, 'Time Unit');
   useNormalisedColumn(state, 'ID');
   useNormalisedColumn(state, 'Observation');
+  useNormalisedColumn(state, 'Observation Unit');
+  useNormalisedColumn(state, 'Observation ID');
   useNormalisedColumn(state, 'Amount');
+  useNormalisedColumn(state, 'Amount Unit');
+  useNormalisedColumn(state, 'Administration ID');
+  useNormalisedColumn(state, 'Additional Doses');
+  useNormalisedColumn(state, 'Infusion Duration');
+  useNormalisedColumn(state, 'Infusion Rate');
+  useNormalisedColumn(state, 'Interdose Interval');
   const { data } = state;
   const fields = [
     ...state.fields
