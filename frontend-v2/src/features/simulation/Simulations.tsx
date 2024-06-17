@@ -337,7 +337,7 @@ const Simulations: FC = () => {
 
   outputsSorted.sort((a, b) => b.priority - a.priority);
 
-  let constVariables = model ? getConstVariables(variables, model) : [];
+  const constVariables = model ? getConstVariables(variables, model) : [];
   const addPlotOptions = outputsSorted.map((variable) => ({
     value: variable.id,
     label: variable.description

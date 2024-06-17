@@ -41,7 +41,7 @@ interface Props {
   project: ProjectRead;
   isSelected: boolean;
   otherProjectNames: string[];
-  isAnyProjectSelected: Boolean;
+  isAnyProjectSelected: boolean;
 }
 
 export interface FormData {
