@@ -21,13 +21,14 @@ class DataParser:
             "time", "timepoint", "t"
         ],
         "TIME_UNIT": [
-            "time_unit", "time_units", "timeunit", "units_time"
+            "time unit", "time_unit", "time_units", "timeunit", "units_time"
         ],
         "AMOUNT": [
-            "amt", "amount", "amount"
+            "amt", "amount"
         ],
         "AMOUNT_UNIT": [
-            "amt_unit", "amt_units", "amtunit", "unit", "amount_unit", "units_amt"
+            "amount unit", "amt_unit", "amt_units", "amtunit", "unit",
+            "amount_unit", "units_amt"
         ],
         "AMOUNT_VARIABLE": [
             "amount variable", "amount_variable", "amount_var",
@@ -38,12 +39,12 @@ class DataParser:
             "observation_value", "observationvalue"
         ],
         "OBSERVATION_NAME": [
-            "observation_id", "ydesc", "yname", "ytype",
+            "observation id", "observation_id", "ydesc", "yname", "ytype",
             "observation_name", "observationid", "observationname"
         ],
         "OBSERVATION_UNIT": [
-            "dv_units", "observation_unit", "yunit", "unit", "units_conc",
-            "observationunit"
+            "observation unit", "dv_units", "observation_unit", "yunit", "unit",
+            "units_conc", "observationunit"
         ],
         "OBSERVATION_VARIABLE": [
             "observation variable", "observation_variable", "observation_var"
@@ -55,16 +56,16 @@ class DataParser:
             "route"
         ],
         "INFUSION_TIME": [
-            "tinf", "infusion_time", "infusiontime"
+            "infusion duration", "tinf", "infusion_time", "infusiontime"
         ],
         "GROUP_ID": [
             "group id", "group_id", "group", "cohort"
         ],
         "ADDITIONAL_DOSES": [
-            "addl", "additional_doses"
+            "additional doses", "addl", "additional_doses"
         ],
         "INTERDOSE_INTERVAL": [
-            "ii", "infusion_interval"
+            "interdose interval", "ii", "infusion_interval"
         ]
     }
 
