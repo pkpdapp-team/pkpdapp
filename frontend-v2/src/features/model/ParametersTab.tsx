@@ -52,7 +52,7 @@ const ParametersTab: FC<Props> = ({
     selectIsProjectShared(state, project),
   );
 
-  let constVariables = getConstVariables(variables, model);
+  const constVariables = getConstVariables(variables, model);
   const noReset = getNoReset(project);
 
   const myResetToSpeciesDefaults = () => {
