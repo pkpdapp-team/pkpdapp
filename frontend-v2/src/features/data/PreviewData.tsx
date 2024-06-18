@@ -13,7 +13,7 @@ function useNormalisedColumn(state: StepperState, type: string) {
   const field = state.fields[fieldIndex];
   const normalisedField = type;
   const newData = [...state.data];
-  if (fieldIndex > -1 && field !== normalisedField) {
+  if (fieldIndex > -1 && field.toLowerCase() !== normalisedField.toLowerCase()) {
     const newFields = [...state.fields];
     const newNormalisedFields = [...state.normalisedFields];
     newNormalisedFields[fieldIndex] = "Ignore";
