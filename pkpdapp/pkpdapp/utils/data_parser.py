@@ -225,7 +225,7 @@ class DataParser:
                 data[unit_col] = data[unit_col].map(convert_percent_to_dim)
 
         # check that time is set for all rows
-        if (data["TIME"].apply(pd.to_numeric, errors='coerce')).isna().any():
+        if pd.to_numeric(data["TIME"], errors='coerce').isna().any():
             raise RuntimeError(
                 (
                     'Error parsing file, '
