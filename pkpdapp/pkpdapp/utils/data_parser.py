@@ -224,7 +224,7 @@ class DataParser:
                         return x
                 data[unit_col] = data[unit_col].map(convert_percent_to_dim)
 
-        # check that time ise set for all rows
+        # check that time is set for all rows
         if (data["TIME"].apply(pd.to_numeric, errors='coerce')).isna().any():
             raise RuntimeError(
                 (
@@ -232,7 +232,7 @@ class DataParser:
                     'contains missing time values'
                 )
             )
- 
+
         # put in default infusion time if not present
         delta_time = data.sort_values(by=["TIME"]).groupby(
             ["SUBJECT_ID"]
