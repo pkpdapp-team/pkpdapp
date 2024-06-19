@@ -126,6 +126,13 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
     }));
   };
 
+  const restart = () => {
+    setStepState((prevActiveStep) => ({
+      ...prevActiveStep,
+      activeStep: 0,
+    }));
+  };
+
   const handleFinish = async () => {
     handleNext();
     if (dataset?.id) {
@@ -141,13 +148,30 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
           updateDataset(response.data as unknown as DatasetRead);
           onFinish();
         } else {
-          const { data } = response.error as { data: { csv: string[] } };
-          setErrors(data.csv);
+          const { data, error, originalStatus } = response.error as {
+            data: { csv: string[] },
+            error?: string,
+            originalStatus?: number,
+          };
+          if (data.csv) {
+            setErrors(data.csv);
+            restart();
+            return false;
+          }
+          if (error) {
+            setErrors([`${originalStatus}: ${error}`]);
+            restart();
+            return false;
+          }
+          setErrors(["Unknown error saving CSV"]);
+          restart();
+          return false;
         }
       } catch (e) {
         console.error(e);
         const { message } = e as Error;
         setErrors([message]);
+        restart();
       }
     }
   };
