@@ -19,7 +19,7 @@ function mergeObservationColumns(
       const newRow: Row = {
         ...row,
         Observation: value,
-        Observation_id: observationId,
+        "Observation ID": observationId,
       };
       if (i > 0) {
         newRow[amountField] = ".";
@@ -35,7 +35,7 @@ function mergeObservationColumns(
   return rows;
 }
 
-export default function useObservationRows(state: StepperState) {
+export default function useObservationRows(state: StepperState, tab: string) {
   let fields = [...state.fields];
   let normalisedFields = [...state.normalisedFields];
   const observationFields =
@@ -48,7 +48,7 @@ export default function useObservationRows(state: StepperState) {
   if (observationFields.length > 1) {
     rows = mergeObservationColumns(state, observationFields);
     observationField = "Observation";
-    observationIdField = "Observation_id";
+    observationIdField = "Observation ID";
     fields = Object.keys(rows[0]);
     normalisedFields = fields.map(normaliseHeader);
     state.setFields(fields);
@@ -56,14 +56,13 @@ export default function useObservationRows(state: StepperState) {
     state.setData(rows);
   }
   const observationRows = observationField
-    ? rows.filter((row) => row[observationField] !== ".")
+    ? rows.filter(
+        (row) => row["Group ID"] === tab && row[observationField] !== ".",
+      )
     : [];
   const observationIds = observationIdField
-    ? observationRows.map((row) => row[observationIdField || "Observation_id"])
+    ? observationRows.map((row) => row[observationIdField || "Observation ID"])
     : [observationField];
-  const observationValues = observationField
-    ? observationRows.map((row) => row[observationField])
-    : [];
   const observationUnitField =
     fields.find((field, i) =>
       ["Observation Unit", "Unit"].includes(normalisedFields[i]),
@@ -79,14 +78,16 @@ export default function useObservationRows(state: StepperState) {
   );
 
   return {
-    observationRows,
+    observationRows: observationRows.map((row, index) => ({
+      ...row,
+      id: index,
+    })),
     observationField,
     observationIdField,
     observationUnitField,
     observationVariableField,
     observationIds,
     observationUnits,
-    observationValues,
     observationVariables,
   };
 }
