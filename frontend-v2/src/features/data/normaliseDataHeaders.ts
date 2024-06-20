@@ -43,7 +43,6 @@ const normalisation = {
   Observation: [
     "observation",
     "dv",
-    "c",
     "y",
     "conc",
     "cobs",
