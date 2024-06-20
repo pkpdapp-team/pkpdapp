@@ -232,16 +232,15 @@ class DataParser:
                     'contains missing time values'
                 )
             )
-        
+
         # convert subject id to integer
         try:
             data["SUBJECT_ID"] = pd.to_numeric(data["SUBJECT_ID"], errors='raise')
-        except (ValueError, TypeError) as _:
+        except (ValueError, TypeError):
             subject_ids = data["SUBJECT_ID"].unique().tolist()
             subject_ids.sort()
             subject_id_map = {k: i for i, k in enumerate(subject_ids)}
             data["SUBJECT_ID"] = data["SUBJECT_ID"].map(subject_id_map)
-
 
         # put in default infusion time if not present
         delta_time = data.sort_values(by=["TIME"]).groupby(
