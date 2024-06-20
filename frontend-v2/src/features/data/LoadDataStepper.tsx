@@ -16,7 +16,7 @@ import { RootState } from "../../app/store";
 import { DatasetRead, useDatasetCsvUpdateMutation } from "../../app/backendApi";
 import Stratification from "./Stratification";
 import useDataset from "../../hooks/useDataset";
-import { normaliseHeader } from "./normaliseDataHeaders";
+import { normaliseHeader, validateDataRow } from "./normaliseDataHeaders";
 import { Alert } from "@mui/material";
 
 interface IStepper {
@@ -137,7 +137,8 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
     handleNext();
     if (dataset?.id) {
       try {
-        const csv = Papa.unparse(data);
+        const dataToUpload = data.filter(row => validateDataRow(row, normalisedFields, fields))
+        const csv = Papa.unparse(dataToUpload);
         const response = await updateDatasetCsv({
           id: dataset.id,
           datasetCsv: {
