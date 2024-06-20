@@ -68,16 +68,16 @@ const PreviewData: FC<IPreviewData> = ({ state, firstTime }: IPreviewData) => {
     fields.push("Amount");
   }
   if (!state.normalisedFields.find((field) => field === "Time Unit")) {
-    fields.push("Time_unit");
+    fields.push("Time Unit");
   }
   if (!state.normalisedFields.find((field) => field === "Amount Unit")) {
-    fields.push("Amt_unit");
+    fields.push("Amount Unit");
   }
   if (
     !state.normalisedFields.find((field) => field === "Observation Unit") &&
-    !state.fields.find((field) => field === "Observation_unit")
+    !state.fields.find((field) => field === "Observation Unit")
   ) {
-    fields.push("Observation_unit");
+    fields.push("Observation Unit");
   }
   const visibleFields = fields.filter(
     (field, index) => state.normalisedFields[index] !== "Ignore",

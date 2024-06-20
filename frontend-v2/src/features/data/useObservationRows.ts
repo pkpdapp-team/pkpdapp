@@ -3,7 +3,7 @@ import { normaliseHeader } from "./normaliseDataHeaders";
 import { Row } from "./LoadData";
 
 const DEFAULT_VARIABLE_FIELD = "Observation Variable";
-const DEFAULT_UNIT_FIELD = "Observation_unit";
+const DEFAULT_UNIT_FIELD = "Observation Unit";
 
 function mergeObservationColumns(
   state: StepperState,

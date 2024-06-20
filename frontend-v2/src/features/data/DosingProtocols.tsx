@@ -29,7 +29,7 @@ interface IDosingProtocols {
 
 const DosingProtocols: FC<IDosingProtocols> = ({
   administrationIdField,
-  amountUnitField = "Amt_unit",
+  amountUnitField = "Amount Unit",
   amountUnit,
   state,
   units,
