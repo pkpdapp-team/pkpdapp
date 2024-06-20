@@ -161,17 +161,6 @@ const MapObservations: FC<IMapObservations> = ({ state }: IMapObservations) => {
                     selectedUnitSymbol = "";
                   }
                 });
-                const compatibleVariables = modelOutputs.filter((variable) => {
-                  const variableUnit = units?.find(
-                    (unit) => unit.id === variable.unit,
-                  );
-                  const compatibleSymbols = variableUnit?.compatible_units.map(
-                    (u) => u.symbol,
-                  );
-                  return observationUnitField && selectedUnitSymbol
-                    ? compatibleSymbols?.includes(selectedUnitSymbol)
-                    : true;
-                });
                 return (
                   <TableRow key={obsId}>
                     <TableCell>{obsId}</TableCell>
@@ -187,7 +176,7 @@ const MapObservations: FC<IMapObservations> = ({ state }: IMapObservations) => {
                           value={selectedVariable?.qname}
                           onChange={handleObservationChange(obsId)}
                         >
-                          {compatibleVariables?.map((variable) => (
+                          {modelOutputs?.map((variable) => (
                             <MenuItem
                               key={variable.name}
                               value={variable.qname}
