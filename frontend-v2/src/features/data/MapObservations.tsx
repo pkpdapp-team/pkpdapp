@@ -1,4 +1,5 @@
-import { FC } from "react";
+import { ChangeEvent, FC, useState } from "react";
+import { DataGrid } from "@mui/x-data-grid";
 import {
   Alert,
   Box,
@@ -6,6 +7,8 @@ import {
   FormControl,
   MenuItem,
   InputLabel,
+  Tab,
+  Tabs,
   Table,
   TableHead,
   TableRow,
@@ -37,6 +40,9 @@ function displayUnitSymbol(symbol: string | undefined) {
 }
 
 const MapObservations: FC<IMapObservations> = ({ state }: IMapObservations) => {
+  const [tab, setTab] = useState(0);
+  const groupIDs = [...new Set(state.data.map((row) => row["Group ID"]))];
+  const selectedGroup = groupIDs[tab];
   const projectId = useSelector(
     (state: RootState) => state.main.selectedProject,
   );
@@ -60,14 +66,14 @@ const MapObservations: FC<IMapObservations> = ({ state }: IMapObservations) => {
   );
 
   const {
+    observationRows,
     observationIdField,
     observationUnitField,
     observationVariableField,
     observationIds,
     observationUnits,
-    observationValues,
     observationVariables,
-  } = useObservationRows(state);
+  } = useObservationRows(state, selectedGroup);
   const uniqueObservationIds = [...new Set(observationIds)];
 
   const filterOutputs = model?.is_library_model
@@ -121,6 +127,42 @@ const MapObservations: FC<IMapObservations> = ({ state }: IMapObservations) => {
     state.setErrors(errors);
     state.setWarnings(warnings);
   };
+
+  function handleTabChange(event: ChangeEvent<{}>, newValue: number) {
+    setTab(newValue);
+  }
+
+  function a11yProps(index: number) {
+    return {
+      id: `group-tab-${index}`,
+      "aria-controls": `group-tabpanel`,
+    };
+  }
+
+  const columns = [
+    "ID",
+    "Observation ID",
+    "Observation",
+    "Observation Unit",
+    "Time",
+    "Observation Variable",
+  ].map((normalisedField) => {
+    const field =
+      state.fields.find(
+        (field, index) => state.normalisedFields[index] === normalisedField,
+      ) || normalisedField;
+    return {
+      field,
+      header: field,
+      minWidth:
+        field.endsWith("_var") || field.endsWith("Variable")
+          ? 150
+          : field.length > 10
+            ? 130
+            : 30,
+    };
+  });
+
   return (
     <>
       <Alert severity="info">Map observations to variables in the model.</Alert>
@@ -215,43 +257,22 @@ const MapObservations: FC<IMapObservations> = ({ state }: IMapObservations) => {
               })}
           </TableBody>
         </Table>
+        <Tabs value={tab} onChange={handleTabChange}>
+          {groupIDs.map((groupID, index) => (
+            <Tab
+              key={groupID}
+              label={`Group ${groupID}`}
+              {...a11yProps(index)}
+            />
+          ))}
+        </Tabs>
         <Box
+          role="tabpanel"
+          id="group-tabpanel"
           component="div"
           sx={{ maxHeight: "30vh", overflow: "auto", overflowX: "auto" }}
         >
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>
-                  <Typography>Name</Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography>Observation</Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography>Observation Unit</Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography>Mapping</Typography>
-                </TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {observationValues.map((observation, index) => {
-                const obsId = observationIds[index];
-                const obsUnit = observationUnits[index];
-                const obsVariable = observationVariables[index];
-                return (
-                  <TableRow key={index}>
-                    <TableCell>{obsId}</TableCell>
-                    <TableCell>{observation}</TableCell>
-                    <TableCell>{displayUnitSymbol(obsUnit)}</TableCell>
-                    <TableCell>{obsVariable}</TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+          <DataGrid rows={observationRows} columns={columns} />
         </Box>
       </Stack>
     </>
