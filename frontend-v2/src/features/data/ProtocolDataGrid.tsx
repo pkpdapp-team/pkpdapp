@@ -15,12 +15,8 @@ interface IProtocolDataGrid {
 }
 
 const ROW_COLS = [
-  "Time",
-  "Time Unit",
   "Amount",
   "Amount Unit",
-  "Observation",
-  "Observation Unit",
 ];
 
 const ProtocolDataGrid: FC<IProtocolDataGrid> = ({ group, state }) => {
