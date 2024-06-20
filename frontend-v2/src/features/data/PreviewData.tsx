@@ -2,6 +2,7 @@ import { FC } from "react";
 import { Alert, Box } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import { StepperState } from "./LoadDataStepper";
+import { validateDataRow } from "./normaliseDataHeaders";
 
 interface IPreviewData {
   state: StepperState;
@@ -81,6 +82,7 @@ const PreviewData: FC<IPreviewData> = ({ state, firstTime }: IPreviewData) => {
   const visibleFields = fields.filter(
     (field, index) => state.normalisedFields[index] !== "Ignore",
   );
+  const visibleRows = data.filter((row) => validateDataRow(row, state.normalisedFields, state.fields));
 
   return (
     <>
@@ -93,7 +95,7 @@ const PreviewData: FC<IPreviewData> = ({ state, firstTime }: IPreviewData) => {
         sx={{ maxHeight: "65vh", overflow: "auto", overflowX: "auto" }}
       >
         <DataGrid
-          rows={data.map((row, index) => ({ id: index, ...row }))}
+          rows={visibleRows.map((row, index) => ({ id: index, ...row }))}
           columns={visibleFields.map((field) => ({
             field,
             headerName: field,

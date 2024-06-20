@@ -111,8 +111,17 @@ export const manditoryHeaders = ["Time", "Observation"];
 
 export const normalisedHeaders = Object.keys(normalisation);
 
+export const validateDataRow = (row: Record<string, string>, normalisedFields: string[], fields: string[]) => {
+  const timeField = fields.find((field, i) => normalisedFields[i] === "Time");
+  if (!timeField) {
+    return false;
+  }
+  const time = parseFloat(row[timeField]);
+  return !isNaN(time);
+}
+
 export const validateState = (state: StepperState) => {
-  const { normalisedFields } = state;
+  const { fields, normalisedFields } = state;
   const errors: string[] = [];
   const hasNoDosing =
     !normalisedFields.includes("Amount") ||
@@ -123,7 +132,17 @@ export const validateState = (state: StepperState) => {
       errors.push(`${field} has not been defined`);
     }
   }
+
   const warnings: string[] = [];
+
+  const timeField = fields.find((field, i) => normalisedFields[i] === "Time");
+  const timeValues = timeField ? state.data.map((row) => parseFloat(row[timeField])) : [];
+  const timeIsValid = timeValues.every((time) => !isNaN(time));
+  const invalidTimes = timeValues.filter((time) => isNaN(time));
+  if (!timeIsValid) {
+    warnings.push(`CSV contains empty or invalid Time values. ${invalidTimes.length} rows will be ignored`);
+  }
+
   if (!normalisedFields.includes("ID")) {
     warnings.push(
       `ID has not been defined. Subject IDs will be assigned automatically, according to the time column,
