@@ -14,26 +14,23 @@ const IGNORED_COLUMNS = [ 'Ignore' ];
 function useNormalisedColumn(state: StepperState, type: string) {
   const fieldIndex = state.normalisedFields.indexOf(type);
   const field = state.fields[fieldIndex];
-  const normalisedField = type;
   const newData = [...state.data];
   if (
     fieldIndex > -1 &&
-    field.toLowerCase() !== normalisedField.toLowerCase()
+    field.toLowerCase() !== type.toLowerCase()
   ) {
     const newFields = [...state.fields];
     const newNormalisedFields = [...state.normalisedFields];
     newNormalisedFields[fieldIndex] = "Ignore";
-    if (!newFields.includes(normalisedField)) {
-      newFields.push(normalisedField);
+    if (!newFields.includes(type)) {
+      newFields.push(type);
       newNormalisedFields.push(type);
     } else {
-      const normalisedFieldIndex = newFields.indexOf(normalisedField);
+      const normalisedFieldIndex = newFields.indexOf(type);
       newNormalisedFields[normalisedFieldIndex] = type;
     }
     newData.forEach((row) => {
-      if (row[field]) {
-        row[normalisedField] = row[field];
-      }
+      row[type] = row[field] || '';
     });
     state.setData(newData);
     state.setFields(newFields);
@@ -62,8 +59,10 @@ const PreviewData: FC<IPreviewData> = ({ state, firstTime }: IPreviewData) => {
   const { data } = state;
   const fields = Object.keys(data[0]);
   const visibleFields = fields.filter(
-    (field, index) => !IGNORED_COLUMNS.includes(state.normalisedFields[index])
-  );
+    (field) => {
+      const index = state.fields.indexOf(field);
+      return !IGNORED_COLUMNS.includes(state.normalisedFields[index]);
+  });
   const visibleRows = data.filter((row) =>
     validateDataRow(row, state.normalisedFields, state.fields),
   );
