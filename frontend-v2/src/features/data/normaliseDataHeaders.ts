@@ -1,3 +1,4 @@
+import { Field } from "./LoadData";
 import { StepperState } from "./LoadDataStepper";
 
 const normalisation = {
@@ -112,13 +113,21 @@ export const normalisedHeaders = Object.keys(normalisation);
 
 export const validateDataRow = (
   row: Record<string, string>,
-  normalisedFields: string[],
+  normalisedFields: Map<string, string>,
   fields: string[],
 ) => {
-  const timeField = fields.find((field, i) => normalisedFields[i] === "Time");
-  const censorField = fields.find((field, i) => normalisedFields[i] === "Censoring");
-  const mdvField = fields.find((field, i) => normalisedFields[i] === "Ignored Observation");
-  const observationField = fields.find((field, i) => normalisedFields[i] === "Observation") || "Observation";
+  const timeField = fields.find(
+    (field) => normalisedFields.get(field) === "Time",
+  );
+  const censorField = fields.find(
+    (field) => normalisedFields.get(field) === "Censoring",
+  );
+  const mdvField = fields.find(
+    (field) => normalisedFields.get(field) === "Ignored Observation",
+  );
+  const observationField =
+    fields.find((field) => normalisedFields.get(field) === "Observation") ||
+    "Observation";
   const observation = parseFloat(row[observationField]);
   const hasObservation = !isNaN(observation);
   if (!timeField) {
@@ -139,20 +148,23 @@ export const validateDataRow = (
 
 export const validateState = (state: StepperState) => {
   const { fields, normalisedFields } = state;
+  const normalisedHeaders = [...normalisedFields.values()];
   const errors: string[] = [];
   const hasNoDosing =
-    !normalisedFields.includes("Amount") ||
+    !normalisedHeaders.includes("Amount") ||
     state.data.every((row) => row["Amount"] === ".");
   // check for mandatory fields
   for (const field of manditoryHeaders) {
-    if (!normalisedFields.includes(field)) {
+    if (!normalisedHeaders.includes(field)) {
       errors.push(`${field} has not been defined`);
     }
   }
 
   const warnings: string[] = [];
 
-  const timeField = fields.find((field, i) => normalisedFields[i] === "Time");
+  const timeField = fields.find(
+    (field) => normalisedFields.get(field) === "Time",
+  );
   const timeValues = timeField
     ? state.data.map((row) => parseFloat(row[timeField]))
     : [];
@@ -164,13 +176,13 @@ export const validateState = (state: StepperState) => {
     );
   }
 
-  if (!normalisedFields.includes("ID")) {
+  if (!normalisedHeaders.includes("ID")) {
     warnings.push(
       `ID has not been defined. Subject IDs will be assigned automatically, according to the time column,
       if time is provided in ascending order for each individual.`,
     );
   }
-  if (hasNoDosing || !normalisedFields.includes("Amount Unit")) {
+  if (hasNoDosing || !normalisedHeaders.includes("Amount Unit")) {
     if (hasNoDosing) {
       warnings.push(
         "This CSV contains no dosing information. Dosing amounts and units can be set in Trial Design.",
@@ -182,8 +194,8 @@ export const validateState = (state: StepperState) => {
     }
   }
   if (
-    normalisedFields.includes("Observation") &&
-    !normalisedFields.includes("Observation Unit")
+    normalisedHeaders.includes("Observation") &&
+    !normalisedHeaders.includes("Observation Unit")
   ) {
     warnings.push(
       "Observation units have not been defined in the dataset and need to be defined manually.",
@@ -191,11 +203,12 @@ export const validateState = (state: StepperState) => {
   }
   return { errors, warnings };
 };
-export const normaliseHeader = (header: string) => {
+
+export function normaliseHeader(header: string): [Field, string] {
   for (const [key, value] of Object.entries(normalisation)) {
     if (value.includes(header.toLowerCase())) {
-      return key;
+      return [header, key];
     }
   }
-  return "Ignore";
-};
+  return [header, "Ignore"];
+}

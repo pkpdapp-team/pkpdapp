@@ -44,13 +44,13 @@ const MapDosing: FC<IMapDosing> = ({ state, firstTime }: IMapDosing) => {
   );
 
   const amountField = state.fields.find(
-    (field, i) => state.normalisedFields[i] === "Amount",
+    (field) => state.normalisedFields.get(field) === "Amount",
   );
-  const amountUnitField = state.fields.find((field, i) =>
-    ["Amount Unit", "Unit"].includes(state.normalisedFields[i]),
+  const amountUnitField = state.fields.find((field) =>
+    ["Amount Unit", "Unit"].includes(state.normalisedFields.get(field) || ""),
   );
   const administrationIdField = state.fields.find(
-    (field, i) => state.normalisedFields[i] === "Administration ID",
+    (field) => state.normalisedFields.get(field) === "Administration ID",
   );
   const hasDosingRows = amountField && administrationIdField;
 

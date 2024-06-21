@@ -19,19 +19,19 @@ export interface IProtocol {
 
 export function getSubjectDoses(state: StepperState): SubjectDoses[] {
   const idField = state.fields.find(
-    (field, index) => state.normalisedFields[index] === "ID",
+    (field) => state.normalisedFields.get(field) === "ID",
   );
   const amountField = state.fields.find(
-    (field, index) => state.normalisedFields[index] === "Amount",
+    (field) => state.normalisedFields.get(field) === "Amount",
   );
-  const amountUnitField = state.fields.find((field, index) =>
-    ["Amount Unit", "Unit"].includes(state.normalisedFields[index]),
+  const amountUnitField = state.fields.find((field) =>
+    ["Amount Unit", "Unit"].includes(state.normalisedFields.get(field) || ""),
   );
   const timeField = state.fields.find(
-    (field, index) => state.normalisedFields[index] === "Time",
+    (field) => state.normalisedFields.get(field) === "Time",
   );
   const timeUnitField = state.fields.find(
-    (field, index) => state.normalisedFields[index] === "Time Unit",
+    (field) => state.normalisedFields.get(field) === "Time Unit",
   );
   const routeField = state.fields.find(
     (field) => field.toLowerCase() === "route",

@@ -23,10 +23,10 @@ interface IStratification {
 
 const Stratification: FC<IStratification> = ({ state }: IStratification) => {
   const idField = state.fields.find(
-    (field, index) => state.normalisedFields[index] === "ID",
+    (field) => state.normalisedFields.get(field) === "ID",
   );
   const catCovariates = state.fields.filter(
-    (field, index) => state.normalisedFields[index] === "Cat Covariate",
+    (field) => state.normalisedFields.get(field) === "Cat Covariate",
   );
   const uniqueCovariateValues = catCovariates.map((field) => {
     const values = state.data.map((row) => row[field]);

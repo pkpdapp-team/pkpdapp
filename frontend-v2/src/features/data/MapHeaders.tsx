@@ -11,7 +11,6 @@ import {
   MenuItem,
   InputLabel,
   Typography,
-  Menu,
 } from "@mui/material";
 import { Data, Field } from "./LoadData";
 import { groupedHeaders } from "./normaliseDataHeaders";
@@ -19,8 +18,8 @@ import { groupedHeaders } from "./normaliseDataHeaders";
 interface IMapHeaders {
   data: Data;
   fields: Field[];
-  normalisedFields: Field[];
-  setNormalisedFields: (fields: Field[]) => void;
+  normalisedFields: Map<Field, string>;
+  setNormalisedFields: (fields: Map<Field, string>) => void;
 }
 
 const MapHeaders: FC<IMapHeaders> = ({
@@ -29,9 +28,9 @@ const MapHeaders: FC<IMapHeaders> = ({
   normalisedFields,
   setNormalisedFields,
 }: IMapHeaders) => {
-  const handleFieldChange = (index: number) => (event: any) => {
-    const newFields = [...normalisedFields];
-    newFields[index] = event.target.value;
+  const handleFieldChange = (field: string) => (event: any) => {
+    const newFields = new Map(normalisedFields) as Map<Field, string>;
+    newFields.set(field, event.target.value as string);
     setNormalisedFields(newFields);
   };
 
@@ -56,9 +55,9 @@ const MapHeaders: FC<IMapHeaders> = ({
                 <Select
                   labelId={`select-${index}-label`}
                   id={`select-${index}`}
-                  value={normalisedFields[index]}
+                  value={normalisedFields.get(field)}
                   label="Column Type"
-                  onChange={handleFieldChange(index)}
+                  onChange={handleFieldChange(field)}
                 >
                   {Object.entries(groupedHeaders).map(([group, headers]) => [
                     <ListSubheader key={group}>{group}</ListSubheader>,

@@ -97,8 +97,8 @@ const MapObservations: FC<IMapObservations> = ({ state }: IMapObservations) => {
       );
       nextData
         .map((row) => {
-          row[observationVariableField] = row[observationVariableField] || '';
-          row[observationUnitField] = row[observationUnitField] || '';
+          row[observationVariableField] = row[observationVariableField] || "";
+          row[observationUnitField] = row[observationUnitField] || "";
           return row;
         })
         .filter((row) =>
@@ -127,7 +127,10 @@ const MapObservations: FC<IMapObservations> = ({ state }: IMapObservations) => {
     const { errors, warnings } = validateState({
       ...state,
       data: nextData,
-      normalisedFields: [...state.normalisedFields, "Observation Unit"],
+      normalisedFields: new Map([
+        ...state.normalisedFields.entries(),
+        ["Observation Unit", "Observation Unit"],
+      ]),
     });
     state.setErrors(errors);
     state.setWarnings(warnings);
@@ -154,7 +157,7 @@ const MapObservations: FC<IMapObservations> = ({ state }: IMapObservations) => {
   ].map((normalisedField) => {
     const field =
       state.fields.find(
-        (field, index) => state.normalisedFields[index] === normalisedField,
+        (field) => state.normalisedFields.get(field) === normalisedField,
       ) || normalisedField;
     return {
       field,

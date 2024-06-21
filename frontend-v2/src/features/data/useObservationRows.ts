@@ -10,8 +10,10 @@ function mergeObservationColumns(
   observationFields: string[],
 ) {
   const rows: Row[] = [];
-  const amountIndex = state.normalisedFields.indexOf("Amount");
-  const amountField = state.fields[amountIndex];
+  const amountField =
+    state.fields.find(
+      (field) => state.normalisedFields.get(field) === "Amount",
+    ) || "Amount";
   observationFields.forEach((field, i) => {
     const observationId = field;
     state.data.forEach((row) => {
@@ -37,12 +39,13 @@ function mergeObservationColumns(
 
 export default function useObservationRows(state: StepperState, tab: string) {
   let fields = [...state.fields];
-  let normalisedFields = [...state.normalisedFields];
+  let normalisedFields = state.normalisedFields;
   const observationFields =
-    fields.filter((field, i) => normalisedFields[i] === "Observation") || [];
+    fields.filter((field) => normalisedFields.get(field) === "Observation") ||
+    [];
   let [observationField] = observationFields;
   let observationIdField = fields.find(
-    (field, i) => state.normalisedFields[i] === "Observation ID",
+    (field) => state.normalisedFields.get(field) === "Observation ID",
   );
   let rows = state.data;
   if (observationFields.length > 1) {
@@ -50,7 +53,7 @@ export default function useObservationRows(state: StepperState, tab: string) {
     observationField = "Observation";
     observationIdField = "Observation ID";
     fields = Object.keys(rows[0]);
-    normalisedFields = fields.map(normaliseHeader);
+    normalisedFields = new Map(fields.map(normaliseHeader));
     state.setFields(fields);
     state.setNormalisedFields(normalisedFields);
     state.setData(rows);
@@ -64,12 +67,13 @@ export default function useObservationRows(state: StepperState, tab: string) {
     ? observationRows.map((row) => row[observationIdField || "Observation ID"])
     : [observationField];
   const observationUnitField =
-    fields.find((field, i) =>
-      ["Observation Unit", "Unit"].includes(normalisedFields[i]),
+    fields.find((field) =>
+      ["Observation Unit", "Unit"].includes(normalisedFields.get(field) || ""),
     ) || DEFAULT_UNIT_FIELD;
   const observationVariableField =
-    fields.find((field, i) => normalisedFields[i] === "Observation Variable") ||
-    DEFAULT_VARIABLE_FIELD;
+    fields.find(
+      (field) => normalisedFields.get(field) === "Observation Variable",
+    ) || DEFAULT_VARIABLE_FIELD;
   const observationUnits = observationRows.map(
     (row) => row[observationUnitField],
   );
