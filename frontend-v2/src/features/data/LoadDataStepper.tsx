@@ -4,7 +4,7 @@ import Papa from "papaparse";
 import Box from "@mui/material/Box";
 import Stepper from "@mui/material/Stepper";
 import Step from "@mui/material/Step";
-import StepLabel from "@mui/material/StepLabel";
+import StepButton from "@mui/material/StepButton";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import LoadData from "./LoadData";
@@ -112,6 +112,13 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
     errors = [...errors, "Time unit is not defined."];
   }
 
+  const handleStep = (step: number) => () => {
+    setStepState((prevActiveStep) => ({
+      ...prevActiveStep,
+      activeStep: step,
+      maxStep: Math.max(prevActiveStep.maxStep, step + 1),
+    }));
+  };
   const handleNext = () => {
     setStepState((prevActiveStep) => ({
       activeStep: prevActiveStep.activeStep + 1,
@@ -188,14 +195,19 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
         width: "100%",
       }}
     >
-      <Stepper activeStep={stepState.activeStep} alternativeLabel>
+      <Stepper nonLinear activeStep={stepState.activeStep} alternativeLabel>
         {stepLabels.map((step, index) => (
           <Step key={index}>
-            <StepLabel>{step}</StepLabel>
+            <StepButton
+              onClick={handleStep(index)}
+              disabled={data.length === 0 || isFinished || errors.length > 0}
+            >
+              {step}
+            </StepButton>
           </Step>
         ))}
       </Stepper>
-      <Box sx={{ flexGrow: 1, maxHeight: '70vh' }}>
+      <Box sx={{ flexGrow: 1, maxHeight: "70vh" }}>
         {state.fileName && <Alert severity="info">{state.fileName}</Alert>}
         {errors.map((error) => (
           <Alert key={error} severity="error">
@@ -221,7 +233,7 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
           display: "flex",
           justifyContent: "space-between",
           marginTop: 1,
-          paddingBottom: 2
+          paddingBottom: 2,
         }}
       >
         {stepState.activeStep === 0 ? (
