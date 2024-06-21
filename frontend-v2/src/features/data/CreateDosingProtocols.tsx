@@ -34,11 +34,15 @@ const CreateDosingProtocols: FC<IDosingProtocols> = ({
   variables,
 }: IDosingProtocols) => {
   const amountField = state.fields.find(
-    (field, i) => field === "Amount" || state.normalisedFields[i] === "Amount",
+    (field) =>
+      field === "Amount" || state.normalisedFields.get(field) === "Amount",
   );
   if (!amountField) {
     const newFields = [...state.fields, "Amount"];
-    const newNormalisedFields = [...state.normalisedFields, "Amount"];
+    const newNormalisedFields = new Map([
+      ...state.normalisedFields.entries(),
+      ["Amount", "Amount"],
+    ]);
     const newData = state.data.map((row) => ({ ...row, Amount: "." }));
     state.setFields(newFields);
     state.setNormalisedFields(newNormalisedFields);
@@ -99,7 +103,7 @@ const CreateDosingProtocols: FC<IDosingProtocols> = ({
             </TableRow>
           </TableHead>
           <TableBody>
-            {uniqueAdministrationIds.map((adminId, index) => {
+            {uniqueAdministrationIds.map((adminId) => {
               const currentRow = state.data.find((row) =>
                 administrationIdField
                   ? row[administrationIdField] === adminId

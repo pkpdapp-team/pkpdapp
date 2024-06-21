@@ -22,7 +22,7 @@ const SubjectGroupForm: FC<ISubjectGroupForm> = ({
 }) => {
   const selectedGroupInput = useRef<HTMLInputElement>(null);
   const idField = state.fields.find(
-    (field, index) => state.normalisedFields[index] === "ID",
+    (field) => state.normalisedFields.get(field) === "ID",
   );
 
   function onSubmitGroupIDForm(event: FormEvent<HTMLFormElement>) {

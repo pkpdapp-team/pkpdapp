@@ -47,7 +47,7 @@ type Field = string;
 export type StepperState = {
   fileName: string;
   fields: Field[];
-  normalisedFields: Field[];
+  normalisedFields: Map<Field, string>;
   data: Data;
   errors: string[];
   warnings: string[];
@@ -55,7 +55,7 @@ export type StepperState = {
   setTimeUnit: (timeUnit: string) => void;
   setFileName: (fileName: string) => void;
   setFields: (fields: Field[]) => void;
-  setNormalisedFields: (fields: Field[]) => void;
+  setNormalisedFields: (fields: Map<Field, string>) => void;
   setData: (data: Data) => void;
   setErrors: (errors: string[]) => void;
   setWarnings: (warnings: string[]) => void;
@@ -72,8 +72,8 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
   let [errors, setErrors] = useState<string[]>([]);
   const [warnings, setWarnings] = useState<string[]>([]);
   const [fields, setFields] = useState<string[]>(csvData.meta.fields || []);
-  const [normalisedFields, setNormalisedFields] = useState<string[]>(
-    fields.map(normaliseHeader),
+  const [normalisedFields, setNormalisedFields] = useState<Map<Field, string>>(
+    new Map(fields.map(normaliseHeader)),
   );
   const [timeUnit, setTimeUnit] = useState<string | undefined>(undefined);
   const [amountUnit, setAmountUnit] = useState<string | undefined>(undefined);
@@ -108,7 +108,12 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
   const [stepState, setStepState] = useState({ activeStep: 0, maxStep: 0 });
   const StepComponent = stepComponents[stepState.activeStep];
   const isFinished = stepState.activeStep === stepLabels.length;
-  if (data.length > 0 && !normalisedFields.includes("Time Unit") && !timeUnit) {
+  const normalisedHeaders = [...normalisedFields.values()];
+  if (
+    data.length > 0 &&
+    !normalisedHeaders.includes("Time Unit") &&
+    !timeUnit
+  ) {
     errors = [...errors, "Time unit is not defined."];
   }
 
@@ -144,18 +149,17 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
     handleNext();
     if (dataset?.id) {
       try {
-        const dataToUpload = data.map((row) => {
-          const newRow: Record<string, string> = {};
-          Object.keys(row).forEach((field) => {
-            const index = fields.indexOf(field);
-            if (normalisedFields[index] !== "Ignore") {
-              newRow[field] = row[field];
-            }
-          });
-          return newRow;
-        }).filter((row) =>
-          validateDataRow(row, normalisedFields, fields),
-        );
+        const dataToUpload = data
+          .map((row) => {
+            const newRow: Record<string, string> = {};
+            Object.keys(row).forEach((field) => {
+              if (normalisedFields.get(field) !== "Ignore") {
+                newRow[field] = row[field];
+              }
+            });
+            return newRow;
+          })
+          .filter((row) => validateDataRow(row, normalisedFields, fields));
         const csv = Papa.unparse(dataToUpload);
         const response = await updateDatasetCsv({
           id: dataset.id,

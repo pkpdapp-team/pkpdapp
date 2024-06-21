@@ -45,14 +45,13 @@ const SetUnits: FC<IMapObservations> = ({
     return <Typography variant="h5">No project or units found</Typography>;
   }
 
+  const normalisedHeaders = [...state.normalisedFields.values()];
   const secondUnit = units.find((unit) => unit.symbol === "s");
   const timeUnits = secondUnit?.compatible_units.map((unit) => unit.symbol);
   const timeUnitOptions =
     timeUnits?.map((unit) => ({ value: unit, label: unit })) || [];
 
-  const noTimeUnit = !state.normalisedFields.find(
-    (field) => field === "Time Unit",
-  );
+  const noTimeUnit = !normalisedHeaders.find((field) => field === "Time Unit");
 
   function setTimeUnit(event: SelectChangeEvent) {
     state.setTimeUnit(event.target?.value);
@@ -63,7 +62,10 @@ const SetUnits: FC<IMapObservations> = ({
     state.setData(newData);
     const { errors, warnings } = validateState({
       ...state,
-      normalisedFields: [...state.normalisedFields, "Time Unit"],
+      normalisedFields: new Map([
+        ...state.normalisedFields.entries(),
+        ["Time Unit", "Time Unit"],
+      ]),
     });
     state.setErrors(errors);
     state.setWarnings(warnings);

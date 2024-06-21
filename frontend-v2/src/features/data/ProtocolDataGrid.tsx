@@ -19,11 +19,11 @@ const ROW_COLS = ["Amount", "Amount Unit"];
 const ProtocolDataGrid: FC<IProtocolDataGrid> = ({ group, state }) => {
   const [selected, setSelected] = useState<GridRowId[]>([]);
   const idField = state.fields.find(
-    (field, index) => state.normalisedFields[index] === "ID",
+    (field) => state.normalisedFields.get(field) === "ID",
   );
   const { subjects } = group;
-  const outputColumns = state.fields.filter((field, index) =>
-    ROW_COLS.includes(state.normalisedFields[index]),
+  const outputColumns = state.fields.filter((field) =>
+    ROW_COLS.includes(state.normalisedFields.get(field) || ""),
   );
   const subjectRows = subjects
     .map((subject) => {

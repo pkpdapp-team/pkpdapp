@@ -36,10 +36,10 @@ const DosingProtocols: FC<IDosingProtocols> = ({
   variables,
 }: IDosingProtocols) => {
   const amountField = state.fields.find(
-    (field, i) => state.normalisedFields[i] === "Amount",
+    (field) => state.normalisedFields.get(field) === "Amount",
   );
   const amountVariableField = state.fields.find(
-    (field, i) => state.normalisedFields[i] === "Amount Variable",
+    (field) => state.normalisedFields.get(field) === "Amount Variable",
   );
   const dosingRows = amountField
     ? state.data.filter((row) => row[amountField] && row[amountField] !== ".")
@@ -92,7 +92,10 @@ const DosingProtocols: FC<IDosingProtocols> = ({
     const { errors, warnings } = validateState({
       ...state,
       data: nextData,
-      normalisedFields: [...state.normalisedFields, "Amount Unit"],
+      normalisedFields: new Map([
+        ...state.normalisedFields.entries(),
+        [amountUnitField, "Amount Unit"],
+      ]),
     });
     state.setErrors(errors);
     state.setWarnings(warnings);
@@ -128,7 +131,7 @@ const DosingProtocols: FC<IDosingProtocols> = ({
             </TableRow>
           </TableHead>
           <TableBody>
-            {uniqueAdministrationIds.map((adminId, index) => {
+            {uniqueAdministrationIds.map((adminId) => {
               const currentRow = dosingRows.find((row) =>
                 administrationIdField
                   ? row[administrationIdField] === adminId

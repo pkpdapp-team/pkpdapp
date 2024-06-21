@@ -9,28 +9,25 @@ interface IPreviewData {
   firstTime: boolean;
 }
 
-const IGNORED_COLUMNS = [ 'Ignore' ];
+const IGNORED_COLUMNS = ["Ignore"];
 
 function useNormalisedColumn(state: StepperState, type: string) {
-  const fieldIndex = state.normalisedFields.indexOf(type);
-  const field = state.fields[fieldIndex];
+  const normalisedHeaders = [...state.normalisedFields.entries()];
+  const [field] =
+    normalisedHeaders.find(([key, value]) => value === type) || [];
   const newData = [...state.data];
-  if (
-    fieldIndex > -1 &&
-    field.toLowerCase() !== type.toLowerCase()
-  ) {
+  if (field && field.toLowerCase() !== type.toLowerCase()) {
     const newFields = [...state.fields];
-    const newNormalisedFields = [...state.normalisedFields];
-    newNormalisedFields[fieldIndex] = "Ignore";
+    const newNormalisedFields = new Map([
+      ...state.normalisedFields.entries(),
+      [field, "Ignore"],
+      [type, type],
+    ]);
     if (!newFields.includes(type)) {
       newFields.push(type);
-      newNormalisedFields.push(type);
-    } else {
-      const normalisedFieldIndex = newFields.indexOf(type);
-      newNormalisedFields[normalisedFieldIndex] = type;
     }
     newData.forEach((row) => {
-      row[type] = row[field] || '';
+      row[type] = row[field] || "";
     });
     state.setData(newData);
     state.setFields(newFields);
@@ -59,10 +56,10 @@ const PreviewData: FC<IPreviewData> = ({ state, firstTime }: IPreviewData) => {
   const { data } = state;
   const fields = Object.keys(data[0]);
   const visibleFields = fields.filter(
-    (field) => {
-      const index = state.fields.indexOf(field);
-      return !IGNORED_COLUMNS.includes(state.normalisedFields[index]);
-  });
+    (field) =>
+      !IGNORED_COLUMNS.includes(state.normalisedFields.get(field) || ""),
+  );
+  console.log(fields, visibleFields, state.normalisedFields);
   const visibleRows = data.filter((row) =>
     validateDataRow(row, state.normalisedFields, state.fields),
   );
@@ -70,7 +67,7 @@ const PreviewData: FC<IPreviewData> = ({ state, firstTime }: IPreviewData) => {
   return (
     <>
       <Alert severity="info">
-        Preview your data. Click 'Finish' to upload and save.
+        Preview your data. Click &lsquo;Finish&rsquo; to upload and save.
       </Alert>
       <Box
         component="div"

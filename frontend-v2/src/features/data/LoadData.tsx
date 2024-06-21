@@ -44,7 +44,7 @@ function updateDataAndResetFields(state: StepperState, data: Data) {
     const newFields = Object.keys(data[0]);
     state.setFields(newFields);
     state.setData(data);
-    const normalisedFields = newFields.map(normaliseHeader);
+    const normalisedFields = new Map(newFields.map(normaliseHeader));
     state.setNormalisedFields(normalisedFields);
   }
 }
@@ -55,8 +55,10 @@ Assume ascending time values for each subject.
 */
 function createDefaultSubjects(state: StepperState) {
   let subjectCount = 1;
-  const timeFieldIndex = state.normalisedFields.indexOf("Time");
-  const timeField = state.fields[timeFieldIndex];
+  const timeField =
+    state.fields.find(
+      (field) => state.normalisedFields.get(field) === "Time",
+    ) || "Time";
   const newData = state.data.map((row, index) => {
     if (index > 0) {
       const time = parseFloat(row[timeField]);
@@ -79,8 +81,10 @@ function createDefaultSubjectGroup(state: StepperState) {
 }
 
 function setMinimumInfusionTime(state: StepperState) {
-  const infusionTimeIndex = state.normalisedFields.indexOf("Infusion Duration");
-  const infusionTimeField = state.fields[infusionTimeIndex];
+  const infusionTimeField =
+    state.fields.find(
+      (field) => state.normalisedFields.get(field) === "Infusion Duration",
+    ) || "Infusion Duration";
   const hasZeroInfusionTime = state.data.some(
     (row) => parseFloat(row[infusionTimeField]) === 0,
   );
@@ -99,13 +103,14 @@ const LoadData: FC<ILoadDataProps> = ({ state, firstTime }) => {
   const [showData, setShowData] = useState<boolean>(
     state.data.length > 0 && state.fields.length > 0,
   );
-  if (!state.normalisedFields.includes("ID")) {
+  const normalisedHeaders = [...state.normalisedFields.values()];
+  if (!normalisedHeaders.includes("ID")) {
     createDefaultSubjects(state);
   }
-  if (!state.normalisedFields.includes("Cat Covariate")) {
+  if (!normalisedHeaders.includes("Cat Covariate")) {
     createDefaultSubjectGroup(state);
   }
-  if (state.normalisedFields.includes("Infusion Duration")) {
+  if (normalisedHeaders.includes("Infusion Duration")) {
     setMinimumInfusionTime(state);
   }
 
@@ -132,7 +137,7 @@ const LoadData: FC<ILoadDataProps> = ({ state, firstTime }) => {
           const rawCsv = reader.result as string;
           const csvData = Papa.parse(rawCsv.trim(), { header: true });
           const fields = csvData.meta.fields || [];
-          const normalisedFields = fields.map(normaliseHeader);
+          const normalisedFields = new Map(fields.map(normaliseHeader));
           const fieldValidation = validateState({
             ...state,
             data: csvData.data as Data,
@@ -141,7 +146,7 @@ const LoadData: FC<ILoadDataProps> = ({ state, firstTime }) => {
           });
           const primaryCohort =
             fields.find(
-              (field, index) => normalisedFields[index] === "Cat Covariate",
+              (field) => normalisedFields.get(field) === "Cat Covariate",
             ) || "Group";
           const errors = csvData.errors
             .map((e) => e.message)
@@ -163,7 +168,7 @@ const LoadData: FC<ILoadDataProps> = ({ state, firstTime }) => {
   );
   const { getRootProps, getInputProps } = useDropzone({ onDrop });
 
-  const setNormalisedFields = (normalisedFields: Field[]) => {
+  const setNormalisedFields = (normalisedFields: Map<Field, string>) => {
     state.setNormalisedFields(normalisedFields);
     const { errors, warnings } = validateState({
       ...state,
@@ -189,7 +194,7 @@ const LoadData: FC<ILoadDataProps> = ({ state, firstTime }) => {
         <Box {...getRootProps({ style: style.dropArea })}>
           <input {...getInputProps()} />
           <Typography>
-            Drag 'n' drop some files here, or click to select files
+            Drag &amp; drop some files here, or click to select files
           </Typography>
         </Box>
       </Box>
