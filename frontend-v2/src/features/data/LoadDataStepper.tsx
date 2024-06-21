@@ -144,17 +144,18 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
     handleNext();
     if (dataset?.id) {
       try {
-        const dataToUpload = data.filter((row) =>
-          validateDataRow(row, normalisedFields, fields),
-        ).map((row) => {
+        const dataToUpload = data.map((row) => {
           const newRow: Record<string, string> = {};
-          Object.keys(row).forEach((field, index) => {
-            if (normalisedFields[index] === "Ignore") {
+          Object.keys(row).forEach((field) => {
+            const index = fields.indexOf(field);
+            if (normalisedFields[index] !== "Ignore") {
               newRow[field] = row[field];
             }
           });
           return newRow;
-        });
+        }).filter((row) =>
+          validateDataRow(row, normalisedFields, fields),
+        );
         const csv = Papa.unparse(dataToUpload);
         const response = await updateDatasetCsv({
           id: dataset.id,
