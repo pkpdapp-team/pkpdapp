@@ -14,7 +14,10 @@ function useNormalisedColumn(state: StepperState, type: string) {
   const field = state.fields[fieldIndex];
   const normalisedField = type;
   const newData = [...state.data];
-  if (fieldIndex > -1 && field.toLowerCase() !== normalisedField.toLowerCase()) {
+  if (
+    fieldIndex > -1 &&
+    field.toLowerCase() !== normalisedField.toLowerCase()
+  ) {
     const newFields = [...state.fields];
     const newNormalisedFields = [...state.normalisedFields];
     newNormalisedFields[fieldIndex] = "Ignore";
@@ -82,7 +85,9 @@ const PreviewData: FC<IPreviewData> = ({ state, firstTime }: IPreviewData) => {
   const visibleFields = fields.filter(
     (field, index) => state.normalisedFields[index] !== "Ignore",
   );
-  const visibleRows = data.filter((row) => validateDataRow(row, state.normalisedFields, state.fields));
+  const visibleRows = data.filter((row) =>
+    validateDataRow(row, state.normalisedFields, state.fields),
+  );
 
   return (
     <>

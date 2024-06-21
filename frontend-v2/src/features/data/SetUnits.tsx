@@ -58,7 +58,7 @@ const SetUnits: FC<IMapObservations> = ({
     state.setTimeUnit(event.target?.value);
     const newData = state.data.map((row) => ({
       ...row,
-      'Time Unit': event.target?.value,
+      "Time Unit": event.target?.value,
     }));
     state.setData(newData);
     const { errors, warnings } = validateState({

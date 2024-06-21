@@ -14,10 +14,7 @@ interface IProtocolDataGrid {
   state: StepperState;
 }
 
-const ROW_COLS = [
-  "Amount",
-  "Amount Unit",
-];
+const ROW_COLS = ["Amount", "Amount Unit"];
 
 const ProtocolDataGrid: FC<IProtocolDataGrid> = ({ group, state }) => {
   const [selected, setSelected] = useState<GridRowId[]>([]);

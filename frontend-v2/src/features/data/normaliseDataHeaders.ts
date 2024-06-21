@@ -110,14 +110,18 @@ export const manditoryHeaders = ["Time", "Observation"];
 
 export const normalisedHeaders = Object.keys(normalisation);
 
-export const validateDataRow = (row: Record<string, string>, normalisedFields: string[], fields: string[]) => {
+export const validateDataRow = (
+  row: Record<string, string>,
+  normalisedFields: string[],
+  fields: string[],
+) => {
   const timeField = fields.find((field, i) => normalisedFields[i] === "Time");
   if (!timeField) {
     return false;
   }
   const time = parseFloat(row[timeField]);
   return !isNaN(time);
-}
+};
 
 export const validateState = (state: StepperState) => {
   const { fields, normalisedFields } = state;
@@ -135,11 +139,15 @@ export const validateState = (state: StepperState) => {
   const warnings: string[] = [];
 
   const timeField = fields.find((field, i) => normalisedFields[i] === "Time");
-  const timeValues = timeField ? state.data.map((row) => parseFloat(row[timeField])) : [];
+  const timeValues = timeField
+    ? state.data.map((row) => parseFloat(row[timeField]))
+    : [];
   const timeIsValid = timeValues.every((time) => !isNaN(time));
   const invalidTimes = timeValues.filter((time) => isNaN(time));
   if (!timeIsValid) {
-    warnings.push(`CSV contains empty or invalid Time values. ${invalidTimes.length} rows will be ignored`);
+    warnings.push(
+      `CSV contains empty or invalid Time values. ${invalidTimes.length} rows will be ignored`,
+    );
   }
 
   if (!normalisedFields.includes("ID")) {

@@ -137,7 +137,9 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
     handleNext();
     if (dataset?.id) {
       try {
-        const dataToUpload = data.filter(row => validateDataRow(row, normalisedFields, fields))
+        const dataToUpload = data.filter((row) =>
+          validateDataRow(row, normalisedFields, fields),
+        );
         const csv = Papa.unparse(dataToUpload);
         const response = await updateDatasetCsv({
           id: dataset.id,
@@ -150,9 +152,9 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
           onFinish();
         } else {
           const { data, error, originalStatus } = response.error as {
-            data: { csv: string[] },
-            error?: string,
-            originalStatus?: number,
+            data: { csv: string[] };
+            error?: string;
+            originalStatus?: number;
           };
           if (data.csv) {
             setErrors(data.csv);
