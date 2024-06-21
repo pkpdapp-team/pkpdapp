@@ -149,7 +149,7 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
         ).map((row) => {
           const newRow: Record<string, string> = {};
           Object.keys(row).forEach((field, index) => {
-            if (!["Ignore","Ignored Observation"].includes(normalisedFields[index])) {
+            if (normalisedFields[index] === "Ignore") {
               newRow[field] = row[field];
             }
           });

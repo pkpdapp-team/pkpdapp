@@ -116,11 +116,22 @@ export const validateDataRow = (
   fields: string[],
 ) => {
   const timeField = fields.find((field, i) => normalisedFields[i] === "Time");
+  const censorField = fields.find((field, i) => normalisedFields[i] === "Censoring");
+  const mdvField = fields.find((field, i) => normalisedFields[i] === "Ignored Observation");
   if (!timeField) {
     return false;
   }
+  if (censorField && parseInt(row[censorField]) === 1) {
+    return false;
+  }
+  if (mdvField && parseInt(row[mdvField]) === 1) {
+    return false;
+  }
   const time = parseFloat(row[timeField]);
-  return !isNaN(time);
+  if (isNaN(time)) {
+    return false;
+  }
+  return true;
 };
 
 export const validateState = (state: StepperState) => {

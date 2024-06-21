@@ -9,7 +9,7 @@ interface IPreviewData {
   firstTime: boolean;
 }
 
-const IGNORED_COLUMNS = [ 'Ignore', 'Ignored Observation' ];
+const IGNORED_COLUMNS = [ 'Ignore' ];
 
 function useNormalisedColumn(state: StepperState, type: string) {
   const fieldIndex = state.normalisedFields.indexOf(type);
