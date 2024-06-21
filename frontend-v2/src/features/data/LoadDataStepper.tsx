@@ -146,7 +146,15 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
       try {
         const dataToUpload = data.filter((row) =>
           validateDataRow(row, normalisedFields, fields),
-        );
+        ).map((row) => {
+          const newRow: Record<string, string> = {};
+          Object.keys(row).forEach((field, index) => {
+            if (!["Ignore","Ignored Observation"].includes(normalisedFields[index])) {
+              newRow[field] = row[field];
+            }
+          });
+          return newRow;
+        });
         const csv = Papa.unparse(dataToUpload);
         const response = await updateDatasetCsv({
           id: dataset.id,
