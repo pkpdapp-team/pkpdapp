@@ -96,6 +96,11 @@ const MapObservations: FC<IMapObservations> = ({ state }: IMapObservations) => {
         (unit) => unit.id === selectedVariable?.unit,
       );
       nextData
+        .map((row) => {
+          row[observationVariableField] = row[observationVariableField] || '';
+          row[observationUnitField] = row[observationUnitField] || '';
+          return row;
+        })
         .filter((row) =>
           observationIdField ? row[observationIdField] === id : true,
         )

@@ -25,18 +25,18 @@ const HEADERS: string[] = [
   "ID",
   "Group",
   "Time",
-  "Time_unit",
+  "Time Unit",
   "Observation",
-  "Observation_unit",
-  "Observation_id",
-  "Observation_var",
-  "Adm",
-  "Amt",
-  "Amt_unit",
-  "Amt_var",
-  "Infusion_time",
-  "II",
-  "ADDL",
+  "Observation Unit",
+  "Observation ID",
+  "Observation Variable",
+  "Administration ID",
+  "Amount",
+  "Amount Unit",
+  "Amount Variable",
+  "Infusion Duration",
+  "Interdose Interval",
+  "Additional Doses",
 ];
 
 function parseDosingRow(
@@ -51,16 +51,16 @@ function parseDosingRow(
     units?.find((unit) => unit.id === protocol.time_unit)?.symbol || "";
   const qname = protocol.mapped_qname;
   return protocol.doses.map((dose) => ({
-    Adm: adminId,
+    "Administration ID": adminId,
     Group: groupId,
-    Amt: dose.amount.toString(),
-    Amt_unit: amountUnit,
+    Amount: dose.amount.toString(),
+    "Amount Unit": amountUnit,
     Time: dose.start_time.toString(),
-    Time_unit: timeUnit,
-    Infusion_time: dose.duration,
-    ADDL: (dose?.repeats || 1) - 1,
-    II: dose.repeat_interval,
-    Amt_var: qname,
+    "Time Unit": timeUnit,
+    "Infusion Duration": dose.duration,
+    "Additional Doses": (dose?.repeats || 1) - 1,
+    "Interdose Interval": dose.repeat_interval,
+    "Amount Variable": qname,
     Observation: ".",
   }));
 }
@@ -72,13 +72,13 @@ function parseBiomarkerRow(
   return {
     ID: row.subjectDatasetId,
     Time: row.time.toString(),
-    Time_unit: row.timeUnit?.symbol,
+    "Time Unit": row.timeUnit?.symbol,
     Observation: row.value.toString(),
-    Observation_unit: row.unit?.symbol,
-    Observation_id: row.label,
-    Observation_var: row.qname,
+    "Observation Unit": row.unit?.symbol,
+    "Observation ID": row.label,
+    "Observation Variable": row.qname,
     Group: groupId,
-    Amt: ".",
+    Amount: ".",
   };
 }
 

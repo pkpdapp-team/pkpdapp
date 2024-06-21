@@ -9,6 +9,8 @@ interface IPreviewData {
   firstTime: boolean;
 }
 
+const IGNORED_COLUMNS = [ 'Ignore', 'Ignored Observation' ];
+
 function useNormalisedColumn(state: StepperState, type: string) {
   const fieldIndex = state.normalisedFields.indexOf(type);
   const field = state.fields[fieldIndex];
@@ -54,36 +56,13 @@ const PreviewData: FC<IPreviewData> = ({ state, firstTime }: IPreviewData) => {
   useNormalisedColumn(state, "Infusion Duration");
   useNormalisedColumn(state, "Infusion Rate");
   useNormalisedColumn(state, "Interdose Interval");
+  useNormalisedColumn(state, "Censoring");
+  useNormalisedColumn(state, "Event ID");
+  useNormalisedColumn(state, "Ignored Observation");
   const { data } = state;
-  const fields = [...state.fields];
-  if (!state.fields.find((field) => field === "Group ID")) {
-    fields.push("Group ID");
-  }
-  if (!state.normalisedFields.find((field) => field === "Amount Variable")) {
-    fields.push("Amount Variable");
-  }
-  if (
-    !state.normalisedFields.find((field) => field === "Observation Variable")
-  ) {
-    fields.push("Observation Variable");
-  }
-  if (!state.normalisedFields.find((field) => field === "Amount")) {
-    fields.push("Amount");
-  }
-  if (!state.normalisedFields.find((field) => field === "Time Unit")) {
-    fields.push("Time Unit");
-  }
-  if (!state.normalisedFields.find((field) => field === "Amount Unit")) {
-    fields.push("Amount Unit");
-  }
-  if (
-    !state.normalisedFields.find((field) => field === "Observation Unit") &&
-    !state.fields.find((field) => field === "Observation Unit")
-  ) {
-    fields.push("Observation Unit");
-  }
+  const fields = Object.keys(data[0]);
   const visibleFields = fields.filter(
-    (field, index) => state.normalisedFields[index] !== "Ignore",
+    (field, index) => !IGNORED_COLUMNS.includes(state.normalisedFields[index])
   );
   const visibleRows = data.filter((row) =>
     validateDataRow(row, state.normalisedFields, state.fields),
