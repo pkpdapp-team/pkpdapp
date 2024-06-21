@@ -121,13 +121,10 @@ export const validateDataRow = (
   const observationField = fields.find((field, i) => normalisedFields[i] === "Observation") || "Observation";
   const observation = parseFloat(row[observationField]);
   const hasObservation = !isNaN(observation);
-  const amountField = fields.find((field, i) => normalisedFields[i] === "Amount") || "Amount";
-  const amount = parseFloat(row[amountField]);
-  const hasAmount = !isNaN(amount);
   if (!timeField) {
     return false;
   }
-  if (hasAmount && censorField && parseInt(row[censorField]) === 1) {
+  if (hasObservation && censorField && parseInt(row[censorField]) === 1) {
     return false;
   }
   if (hasObservation && mdvField && parseInt(row[mdvField]) === 1) {
