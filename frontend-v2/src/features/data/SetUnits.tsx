@@ -45,7 +45,7 @@ const SetUnits: FC<IMapObservations> = ({
     return <Typography variant="h5">No project or units found</Typography>;
   }
 
-  const normalisedHeaders = [...state.normalisedFields.values()];
+  const normalisedHeaders = state.normalisedHeaders;
   const secondUnit = units.find((unit) => unit.symbol === "s");
   const timeUnits = secondUnit?.compatible_units.map((unit) => unit.symbol);
   const timeUnitOptions =

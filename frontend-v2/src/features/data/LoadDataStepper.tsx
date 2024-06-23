@@ -47,6 +47,7 @@ type Field = string;
 export type StepperState = {
   fileName: string;
   fields: Field[];
+  normalisedHeaders: Field[];
   normalisedFields: Map<Field, string>;
   data: Data;
   errors: string[];
@@ -54,7 +55,6 @@ export type StepperState = {
   timeUnit?: string;
   setTimeUnit: (timeUnit: string) => void;
   setFileName: (fileName: string) => void;
-  setFields: (fields: Field[]) => void;
   setNormalisedFields: (fields: Map<Field, string>) => void;
   setData: (data: Data) => void;
   setErrors: (errors: string[]) => void;
@@ -67,13 +67,13 @@ export type StepperState = {
 
 const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
   const csvData = Papa.parse(csv, { header: true });
+  const csvFields = csvData.meta.fields || [];
   const [fileName, setFileName] = useState<string>("");
   const [data, setData] = useState<Data>((csvData.data as Data) || []);
   let [errors, setErrors] = useState<string[]>([]);
   const [warnings, setWarnings] = useState<string[]>([]);
-  const [fields, setFields] = useState<string[]>(csvData.meta.fields || []);
   const [normalisedFields, setNormalisedFields] = useState<Map<Field, string>>(
-    new Map(fields.map(normaliseHeader)),
+    new Map(csvFields.map(normaliseHeader)),
   );
   const [timeUnit, setTimeUnit] = useState<string | undefined>(undefined);
   const [amountUnit, setAmountUnit] = useState<string | undefined>(undefined);
@@ -86,7 +86,6 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
 
   const state = {
     fileName,
-    fields,
     normalisedFields,
     data,
     errors,
@@ -94,7 +93,6 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
     setErrors,
     setWarnings,
     setFileName,
-    setFields,
     setNormalisedFields,
     setData,
     timeUnit,
@@ -103,6 +101,12 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
     setAmountUnit,
     primaryCohort,
     setPrimaryCohort,
+    get fields() {
+      return [...normalisedFields.keys()];
+    },
+    get normalisedHeaders() {
+      return [...normalisedFields.values()];
+    },
   };
 
   const [stepState, setStepState] = useState({ activeStep: 0, maxStep: 0 });
@@ -159,7 +163,7 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
             });
             return newRow;
           })
-          .filter((row) => validateDataRow(row, normalisedFields, fields));
+          .filter((row) => validateDataRow(row, normalisedFields));
         const csv = Papa.unparse(dataToUpload);
         const response = await updateDatasetCsv({
           id: dataset.id,

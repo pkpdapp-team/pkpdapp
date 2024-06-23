@@ -3,6 +3,7 @@ import { Alert, Box } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import { StepperState } from "./LoadDataStepper";
 import { validateDataRow } from "./normaliseDataHeaders";
+import { Data } from "./LoadData";
 
 interface IPreviewData {
   state: StepperState;
@@ -13,55 +14,50 @@ const IGNORED_COLUMNS = ["Ignore"];
 
 function useNormalisedColumn(state: StepperState, type: string) {
   const normalisedHeaders = [...state.normalisedFields.entries()];
-  const [field] =
-    normalisedHeaders.find(([key, value]) => value === type) || [];
-  const newData = [...state.data];
+  const matchingFields =
+    normalisedHeaders.filter(([key, value]) => value === type) || [];
+  if (matchingFields.length !== 1) {
+    // only normalise a column if there is exactly one column of that type.
+    return state.data;
+  }
+  const [field] = matchingFields[0];
   if (field && field.toLowerCase() !== type.toLowerCase()) {
-    const newFields = [...state.fields];
     const newNormalisedFields = new Map([
       ...state.normalisedFields.entries(),
       [field, "Ignore"],
       [type, type],
     ]);
-    if (!newFields.includes(type)) {
-      newFields.push(type);
-    }
-    newData.forEach((row) => {
-      row[type] = row[field] || "";
+    newNormalisedFields.delete(field);
+    const newData: Data = state.data.map((row) => {
+      const newRow = { ...row };
+      newRow[type] = row[field] || "";
+      delete newRow[field];
+      return newRow;
     });
     state.setData(newData);
-    state.setFields(newFields);
     state.setNormalisedFields(newNormalisedFields);
+    return newData;
   }
-  return newData;
+  return state.data;
 }
 
-const PreviewData: FC<IPreviewData> = ({ state, firstTime }: IPreviewData) => {
-  useNormalisedColumn(state, "Time");
-  useNormalisedColumn(state, "Time Unit");
-  useNormalisedColumn(state, "ID");
-  useNormalisedColumn(state, "Observation");
-  useNormalisedColumn(state, "Observation Unit");
-  useNormalisedColumn(state, "Observation ID");
-  useNormalisedColumn(state, "Amount");
-  useNormalisedColumn(state, "Amount Unit");
-  useNormalisedColumn(state, "Administration ID");
-  useNormalisedColumn(state, "Additional Doses");
-  useNormalisedColumn(state, "Infusion Duration");
-  useNormalisedColumn(state, "Infusion Rate");
-  useNormalisedColumn(state, "Interdose Interval");
-  useNormalisedColumn(state, "Censoring");
-  useNormalisedColumn(state, "Event ID");
-  useNormalisedColumn(state, "Ignored Observation");
-  const { data } = state;
-  const fields = Object.keys(data[0]);
+const PreviewData: FC<IPreviewData> = ({ state }: IPreviewData) => {
+  const normalisedHeaders = state.normalisedHeaders
+  /* 
+    Don't rename cat covariates to 'Cat Covariate'
+    or ignored columns to 'Ignore'.
+  */
+    .filter((header) => !["Cat Covariate", "Ignore"].includes(header));
+  normalisedHeaders.forEach((header) => {
+    useNormalisedColumn(state, header);
+  });
+  const { data, fields } = state;
   const visibleFields = fields.filter(
     (field) =>
       !IGNORED_COLUMNS.includes(state.normalisedFields.get(field) || ""),
   );
-  console.log(fields, visibleFields, state.normalisedFields);
   const visibleRows = data.filter((row) =>
-    validateDataRow(row, state.normalisedFields, state.fields),
+    validateDataRow(row, state.normalisedFields),
   );
 
   return (

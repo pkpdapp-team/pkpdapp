@@ -112,6 +112,13 @@ const MapObservations: FC<IMapObservations> = ({ state }: IMapObservations) => {
           }
         });
       state.setData(nextData);
+      state.setNormalisedFields(
+        new Map([
+          ...state.normalisedFields.entries(),
+          [observationVariableField, "Observation Variable"],
+          [observationUnitField, "Observation Unit"],
+        ]),
+      );
     };
   const handleUnitChange = (id: string) => (event: SelectChangeEvent) => {
     const nextData = [...state.data];

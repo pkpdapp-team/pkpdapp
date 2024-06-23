@@ -38,7 +38,7 @@ function mergeObservationColumns(
 }
 
 export default function useObservationRows(state: StepperState, tab: string) {
-  let fields = [...state.fields];
+  const fields = state.fields;
   let normalisedFields = state.normalisedFields;
   const observationFields =
     fields.filter((field) => normalisedFields.get(field) === "Observation") ||
@@ -52,9 +52,14 @@ export default function useObservationRows(state: StepperState, tab: string) {
     rows = mergeObservationColumns(state, observationFields);
     observationField = "Observation";
     observationIdField = "Observation ID";
-    fields = Object.keys(rows[0]);
-    normalisedFields = new Map(fields.map(normaliseHeader));
-    state.setFields(fields);
+    const mergedFields = Object.keys(rows[0]);
+    normalisedFields = new Map(
+      mergedFields.map((field) =>
+        state.normalisedFields.has(field)
+          ? [field, state.normalisedFields.get(field)]
+          : normaliseHeader(field),
+      ),
+    ) as Map<string, string>;
     state.setNormalisedFields(normalisedFields);
     state.setData(rows);
   }

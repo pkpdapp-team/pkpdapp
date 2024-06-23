@@ -29,6 +29,7 @@ const normalisation = {
   Censoring: ["cens", "blq", "lloq"],
   "Cont Covariate": ["cont covariate", "weight", "wt", "bw", "age", "dose"],
   "Event ID": ["event id", "evid"],
+  "Group ID": ["group id"],
   ID: ["id", "subject", "animal number", "subject_id", "subjid"],
   "Ignored Observation": ["ignored observation", "mdv"],
   "Infusion Duration": [
@@ -102,6 +103,7 @@ export const groupedHeaders = {
     "Cat Covariate",
     "Cont Covariate",
     "Event ID",
+    "Group ID",
     "Occasion",
     "Regressor",
   ],
@@ -114,8 +116,8 @@ export const normalisedHeaders = Object.keys(normalisation);
 export const validateDataRow = (
   row: Record<string, string>,
   normalisedFields: Map<string, string>,
-  fields: string[],
 ) => {
+  const fields = [...normalisedFields.keys()];
   const timeField = fields.find(
     (field) => normalisedFields.get(field) === "Time",
   );
@@ -147,8 +149,7 @@ export const validateDataRow = (
 };
 
 export const validateState = (state: StepperState) => {
-  const { fields, normalisedFields } = state;
-  const normalisedHeaders = [...normalisedFields.values()];
+  const { fields, normalisedFields, normalisedHeaders } = state;
   const errors: string[] = [];
   const hasNoDosing =
     !normalisedHeaders.includes("Amount") ||
