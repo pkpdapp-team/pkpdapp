@@ -17,20 +17,26 @@ import { groupedHeaders } from "./normaliseDataHeaders";
 
 interface IMapHeaders {
   data: Data;
-  fields: Field[];
   normalisedFields: Map<Field, string>;
   setNormalisedFields: (fields: Map<Field, string>) => void;
 }
 
 const MapHeaders: FC<IMapHeaders> = ({
   data,
-  fields,
   normalisedFields,
   setNormalisedFields,
 }: IMapHeaders) => {
+  const fields = [...normalisedFields.keys()];
+  const newData = { ...data };
   const handleFieldChange = (field: string) => (event: any) => {
-    const newFields = new Map(normalisedFields) as Map<Field, string>;
-    newFields.set(field, event.target.value as string);
+    const newFields = new Map([
+      ...normalisedFields.entries(),
+      [field, event.target.value],
+    ]);
+    // there can only be one ID column
+    if (event.target.value === "ID" && field !== "ID") {
+      newFields.set("ID", "Ignore");
+    }
     setNormalisedFields(newFields);
   };
 

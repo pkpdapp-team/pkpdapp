@@ -38,9 +38,10 @@ const DosingProtocols: FC<IDosingProtocols> = ({
   const amountField = state.fields.find(
     (field) => state.normalisedFields.get(field) === "Amount",
   );
-  const amountVariableField = state.fields.find(
-    (field) => state.normalisedFields.get(field) === "Amount Variable",
-  );
+  const amountVariableField =
+    state.fields.find(
+      (field) => state.normalisedFields.get(field) === "Amount Variable",
+    ) || "Amount Variable";
   const dosingRows = amountField
     ? state.data.filter((row) => row[amountField] && row[amountField] !== ".")
     : [];
@@ -74,9 +75,15 @@ const DosingProtocols: FC<IDosingProtocols> = ({
           administrationIdField ? row[administrationIdField] === id : true,
         )
         .forEach((row) => {
-          row[amountVariableField || "Amount Variable"] = value;
+          row[amountVariableField] = value;
         });
       state.setData(nextData);
+      state.setNormalisedFields(
+        new Map([
+          ...state.normalisedFields.entries(),
+          [amountVariableField, "Amount Variable"],
+        ]),
+      );
     };
   const handleAmountUnitChange = (id: string) => (event: SelectChangeEvent) => {
     const nextData = [...state.data];

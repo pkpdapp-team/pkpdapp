@@ -42,7 +42,6 @@ interface ILoadDataProps {
 function updateDataAndResetFields(state: StepperState, data: Data) {
   if (data.length > 0) {
     const newFields = Object.keys(data[0]);
-    state.setFields(newFields);
     state.setData(data);
     const normalisedFields = new Map(newFields.map(normaliseHeader));
     state.setNormalisedFields(normalisedFields);
@@ -103,7 +102,7 @@ const LoadData: FC<ILoadDataProps> = ({ state, firstTime }) => {
   const [showData, setShowData] = useState<boolean>(
     state.data.length > 0 && state.fields.length > 0,
   );
-  const normalisedHeaders = [...state.normalisedFields.values()];
+  const normalisedHeaders = state.normalisedHeaders;
   if (!normalisedHeaders.includes("ID")) {
     createDefaultSubjects(state);
   }
@@ -138,11 +137,14 @@ const LoadData: FC<ILoadDataProps> = ({ state, firstTime }) => {
           const csvData = Papa.parse(rawCsv.trim(), { header: true });
           const fields = csvData.meta.fields || [];
           const normalisedFields = new Map(fields.map(normaliseHeader));
+          state.setData(csvData.data as Data);
+          state.setNormalisedFields(normalisedFields);
           const fieldValidation = validateState({
             ...state,
             data: csvData.data as Data,
             fields,
             normalisedFields,
+            normalisedHeaders: [...normalisedFields.values()],
           });
           const primaryCohort =
             fields.find(
@@ -151,9 +153,6 @@ const LoadData: FC<ILoadDataProps> = ({ state, firstTime }) => {
           const errors = csvData.errors
             .map((e) => e.message)
             .concat(fieldValidation.errors);
-          state.setData(csvData.data as Data);
-          state.setFields(fields);
-          state.setNormalisedFields(normalisedFields);
           state.setPrimaryCohort(primaryCohort);
           state.setErrors(errors);
           state.setWarnings(fieldValidation.warnings);
@@ -205,7 +204,6 @@ const LoadData: FC<ILoadDataProps> = ({ state, firstTime }) => {
         {showData && (
           <MapHeaders
             data={state.data}
-            fields={state.fields}
             setNormalisedFields={setNormalisedFields}
             normalisedFields={state.normalisedFields}
           />

@@ -38,13 +38,11 @@ const CreateDosingProtocols: FC<IDosingProtocols> = ({
       field === "Amount" || state.normalisedFields.get(field) === "Amount",
   );
   if (!amountField) {
-    const newFields = [...state.fields, "Amount"];
     const newNormalisedFields = new Map([
       ...state.normalisedFields.entries(),
       ["Amount", "Amount"],
     ]);
     const newData = state.data.map((row) => ({ ...row, Amount: "." }));
-    state.setFields(newFields);
     state.setNormalisedFields(newNormalisedFields);
     state.setData(newData);
   }
@@ -78,6 +76,12 @@ const CreateDosingProtocols: FC<IDosingProtocols> = ({
           row["Amount Variable"] = value;
         });
       state.setData(nextData);
+      state.setNormalisedFields(
+        new Map([
+          ...state.normalisedFields.entries(),
+          ["Amount Variable", "Amount Variable"],
+        ]),
+      );
     };
   return (
     <>
