@@ -172,6 +172,7 @@ const LoadData: FC<ILoadDataProps> = ({ state, firstTime }) => {
     const { errors, warnings } = validateState({
       ...state,
       normalisedFields,
+      normalisedHeaders: [...normalisedFields.values()],
     });
     state.setErrors(errors);
     state.setWarnings(warnings);
