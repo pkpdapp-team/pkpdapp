@@ -66,6 +66,9 @@ class DataParser:
         ],
         "INTERDOSE_INTERVAL": [
             "interdose interval", "ii", "infusion_interval"
+        ],
+        "EVENT_ID": [
+            "event id", "event_id", "eventid", "evid"
         ]
     }
 
@@ -78,6 +81,7 @@ class DataParser:
 
     optional_cols = [
         "TIME_UNIT",
+        "ADMINISTRATION_ID",
         "AMOUNT_UNIT",
         "AMOUNT_VARIABLE",
         "OBSERVATION_UNIT",
@@ -88,7 +92,8 @@ class DataParser:
         "INFUSION_TIME",
         "GROUP_ID",
         "ADDITIONAL_DOSES",
-        "INTERDOSE_INTERVAL"
+        "INTERDOSE_INTERVAL",
+        "EVENT_ID"
     ]
 
     alternate_unit_names = {
@@ -196,6 +201,9 @@ class DataParser:
         # put in default subject group if not present
         if "GROUP_ID" not in found_cols:
             data["GROUP_ID"] = 1
+        # put in default event ID if not present
+        if "EVENT_ID" not in found_cols:
+            data["EVENT_ID"] = None
 
         # put in default additional dosing columns if not present
         if "ADDITIONAL_DOSES" not in found_cols:
