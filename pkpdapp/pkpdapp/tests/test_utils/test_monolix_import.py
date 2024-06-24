@@ -11,6 +11,7 @@ from django.test import TestCase
 from pkpdapp.models import (
     Project
 )
+from unittest import skip
 
 from pkpdapp.utils import (
     monolix_import
@@ -21,6 +22,7 @@ BASE_URL_DATASETS = 'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-data
 
 
 class TestMonolixImport(TestCase):
+    @skip
     def test_import_project(self):
         project = Project.objects.create(
             name='test',

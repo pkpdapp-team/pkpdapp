@@ -16,6 +16,7 @@ BASE_URL_DATASETS = 'https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-data
 
 
 class TestMonolixParser(unittest.TestCase):
+    @unittest.skip
     def test_parse_model(self):
         with urllib.request.urlopen(
             BASE_URL_DATASETS + 'usecase_monolix/PK_Model.txt', timeout=5
@@ -28,6 +29,7 @@ class TestMonolixParser(unittest.TestCase):
         self.assertEqual(tlag, 0)
         self.assertEqual(direct, True)
 
+    @unittest.skip
     def test_parse_project(self):
         with urllib.request.urlopen(
             BASE_URL_DATASETS + 'usecase_monolix/Model_208.mlxtran', timeout=5

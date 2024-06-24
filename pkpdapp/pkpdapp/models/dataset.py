@@ -170,6 +170,7 @@ class Dataset(models.Model):
             observation_name = row["OBSERVATION_NAME"]
             route = row['ROUTE']
             infusion_time = row['INFUSION_TIME']
+            event_id = row['EVENT_ID']
             try:
                 repeats = int(row['ADDITIONAL_DOSES']) + 1
                 repeat_interval = float(row['INTERDOSE_INTERVAL'])
@@ -181,7 +182,12 @@ class Dataset(models.Model):
 
             subject = subjects[subject_id]
 
-            if observation != ".":  # measurement observation
+            has_observation = observation != "."
+            is_observation_event = True
+            if event_id:
+                event_id = int(event_id)
+                is_observation_event = event_id == 0
+            if is_observation_event and has_observation:  # measurement observation
                 try:
                     observation = float(observation)
                 except ValueError:
@@ -197,7 +203,12 @@ class Dataset(models.Model):
                 amount_convertable_to_float = True
             except ValueError:
                 amount_convertable_to_float = False
-            if amount_convertable_to_float and float(amount) > 0.0:
+            has_amount = amount_convertable_to_float and float(amount) > 0.0
+            is_dosing_event = True
+            if event_id:
+                event_id = int(event_id)
+                is_dosing_event = event_id == 1 or event_id == 4
+            if is_dosing_event and has_amount:
                 # dose observation
                 if route == 'IV':
                     route = Protocol.DoseType.DIRECT
