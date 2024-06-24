@@ -18,17 +18,18 @@ class DataParser:
             "id", "subject_id", "subject", "subjid", "animal number"
         ],
         "TIME": [
-            "time", "timepoint", "t"
+            "time", "timepoint", "t", "hour_actual", "ivar",
         ],
         "TIME_UNIT": [
-            "time unit", "time_unit", "time_units", "timeunit", "units_time"
+            "time unit", "time_unit", "time_units", "timeunit", "units_time", "unit_time", "unit time",
         ],
         "AMOUNT": [
             "amt", "amount"
         ],
         "AMOUNT_UNIT": [
             "amount unit", "amt_unit", "amt_units", "amtunit", "unit",
-            "amount_unit", "units_amt"
+            "amount_unit", "units_amt", "unit_amount", "unit amount", 
+            "dose unit", "dose_unit", "unit dose", "unit_dose"
         ],
         "AMOUNT_VARIABLE": [
             "amount variable", "amount_variable", "amount_var",
@@ -44,7 +45,9 @@ class DataParser:
         ],
         "OBSERVATION_UNIT": [
             "observation unit", "dv_units", "observation_unit", "yunit", "unit",
-            "units_conc", "observationunit"
+            "units_conc", "observationunit", "unit_observation", "unit observation", 
+            "observation_unit", "concentration unit", "concentration_unit", 
+            "unit concentration", "unit_concentration",
         ],
         "OBSERVATION_VARIABLE": [
             "observation variable", "observation_variable", "observation_var"
