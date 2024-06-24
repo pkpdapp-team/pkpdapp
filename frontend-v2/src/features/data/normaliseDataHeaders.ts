@@ -81,7 +81,7 @@ const normalisation = {
   "Observation Variable": ["observation variable", "observation_var"],
   Occasion: ["occasion", "occ"],
   Regressor: ["x", "regressor"],
-  Time: ["time", "t", "ivar", "Hour_Actual"],
+  Time: ["time", "t", "ivar", "hour_actual"],
   "Time Unit": [
     "time unit",
     "time_unit",
