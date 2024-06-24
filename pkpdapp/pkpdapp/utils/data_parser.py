@@ -21,14 +21,15 @@ class DataParser:
             "time", "timepoint", "t", "hour_actual", "ivar",
         ],
         "TIME_UNIT": [
-            "time unit", "time_unit", "time_units", "timeunit", "units_time", "unit_time", "unit time",
+            "time unit", "time_unit", "time_units", "timeunit", "units_time",
+            "unit_time", "unit time",
         ],
         "AMOUNT": [
             "amt", "amount"
         ],
         "AMOUNT_UNIT": [
             "amount unit", "amt_unit", "amt_units", "amtunit", "unit",
-            "amount_unit", "units_amt", "unit_amount", "unit amount", 
+            "amount_unit", "units_amt", "unit_amount", "unit amount",
             "dose unit", "dose_unit", "unit dose", "unit_dose"
         ],
         "AMOUNT_VARIABLE": [
@@ -45,8 +46,8 @@ class DataParser:
         ],
         "OBSERVATION_UNIT": [
             "observation unit", "dv_units", "observation_unit", "yunit", "unit",
-            "units_conc", "observationunit", "unit_observation", "unit observation", 
-            "observation_unit", "concentration unit", "concentration_unit", 
+            "units_conc", "observationunit", "unit_observation", "unit observation",
+            "observation_unit", "concentration unit", "concentration_unit",
             "unit concentration", "unit_concentration",
         ],
         "OBSERVATION_VARIABLE": [
