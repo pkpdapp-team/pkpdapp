@@ -184,9 +184,11 @@ class Dataset(models.Model):
 
             has_observation = observation != "."
             is_observation_event = True
-            if event_id is not None:
+            try:
                 event_id_int = int(event_id)
                 is_observation_event = event_id_int == 0
+            catch ValueError:
+                is_observation_event = has_observation
             if is_observation_event and has_observation:  # measurement observation
                 try:
                     observation = float(observation)
