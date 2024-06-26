@@ -184,9 +184,11 @@ class Dataset(models.Model):
 
             has_observation = observation != "."
             is_observation_event = True
-            if event_id:
-                event_id = int(event_id)
-                is_observation_event = event_id == 0
+            try:
+                event_id_int = int(event_id)
+                is_observation_event = event_id_int == 0
+            except ValueError:
+                is_observation_event = has_observation
             if is_observation_event and has_observation:  # measurement observation
                 try:
                     observation = float(observation)
@@ -205,9 +207,11 @@ class Dataset(models.Model):
                 amount_convertable_to_float = False
             has_amount = amount_convertable_to_float and float(amount) > 0.0
             is_dosing_event = True
-            if event_id:
-                event_id = int(event_id)
-                is_dosing_event = event_id == 1 or event_id == 4
+            try:
+                event_id_int = int(event_id)
+                is_dosing_event = event_id_int == 1 or event_id_int == 4
+            except ValueError:
+                is_dosing_event = has_amount
             if is_dosing_event and has_amount:
                 # dose observation
                 if route == 'IV':
