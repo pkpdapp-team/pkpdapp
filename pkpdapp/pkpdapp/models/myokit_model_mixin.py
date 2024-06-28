@@ -692,7 +692,7 @@ def _get_dosing_events(
         doses,
         amount_conversion_factor=1.0,
         time_conversion_factor=1.0,
-        last_dose_time=0.0,
+        tlag_time=0.0,
         time_max=None
 ):
     dosing_events = []
@@ -700,13 +700,12 @@ def _get_dosing_events(
         if d.repeat_interval <= 0:
             continue
         start_times = np.arange(
-            d.start_time + last_dose_time,
-            d.start_time + last_dose_time + d.repeat_interval * d.repeats,
+            d.start_time + tlag_time,
+            d.start_time + tlag_time + d.repeat_interval * d.repeats,
             d.repeat_interval,
         )
         if len(start_times) == 0:
             continue
-        last_dose_time = start_times[-1]
         dose_level = d.amount / d.duration
         dosing_events += [(
             (amount_conversion_factor / time_conversion_factor) * dose_level,
