@@ -260,7 +260,7 @@ class DataParser:
         )["TIME"].diff().dropna()
         min_delta_time = delta_time[delta_time > 0].min()
         if "INFUSION_TIME" not in found_cols:
-            data["INFUSION_TIME"] = min_delta_time / 100.0
+            data["INFUSION_TIME"] = min(0.0833, min_delta_time / 100.0)
 
         # check that infusion time is not zero or negative
         if (
