@@ -95,14 +95,16 @@ const DosingProtocols: FC<IDosingProtocols> = ({
       .forEach((row) => {
         row[amountUnitField] = value;
       });
+    const newNormalisedFields = new Map([
+      ...state.normalisedFields.entries(),
+      [amountUnitField, "Amount Unit"],
+    ]);
     state.setData(nextData);
+    state.setNormalisedFields(newNormalisedFields);
     const { errors, warnings } = validateState({
       ...state,
       data: nextData,
-      normalisedFields: new Map([
-        ...state.normalisedFields.entries(),
-        [amountUnitField, "Amount Unit"],
-      ]),
+      normalisedFields: newNormalisedFields,
     });
     state.setErrors(errors);
     state.setWarnings(warnings);

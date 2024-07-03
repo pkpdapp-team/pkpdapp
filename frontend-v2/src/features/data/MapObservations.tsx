@@ -22,6 +22,7 @@ import { StepperState } from "./LoadDataStepper";
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
 import {
+  UnitListApiResponse,
   useCombinedModelListQuery,
   useProjectRetrieveQuery,
   useUnitListQuery,
@@ -37,6 +38,30 @@ interface IMapObservations {
 
 function displayUnitSymbol(symbol: string | undefined) {
   return symbol === "" ? "dimensionless" : symbol;
+}
+
+/**
+ * check that every row with an observation variable has a valid unit symbol.
+ * @param state 
+ * @param {string} observationVariableField 
+ * @param {string} observationUnitField 
+ * @param units 
+ * @returns {boolean}
+ */
+function validateUnitSymbol(
+  state: StepperState,
+  observationVariableField: string,
+  observationUnitField: string,
+  units: UnitListApiResponse,
+) {
+  const observationRows = state.data.filter((row) => !!row[observationVariableField]);
+  const dataUnits = observationRows.map((row) => row[observationUnitField]);
+  const validSymbols = [...units.map((unit) => unit.symbol), "dimensionless"];
+  let validUnit = true;
+  dataUnits.forEach((unit) => {
+    validUnit = validUnit && validSymbols.includes(unit);
+  });
+  return validUnit;
 }
 
 const MapObservations: FC<IMapObservations> = ({ state }: IMapObservations) => {
@@ -92,8 +117,14 @@ const MapObservations: FC<IMapObservations> = ({ state }: IMapObservations) => {
       const selectedVariable = variables?.find(
         (variable) => variable.qname === value,
       );
-      const defaultUnit = units?.find(
-        (unit) => unit.id === selectedVariable?.unit,
+      const compatibleUnits = units
+        ?.find((unit) => unit.id === selectedVariable?.unit)
+        ?.compatible_units.map((unit) => unit.symbol);
+      let validUnit = validateUnitSymbol(
+        state,
+        observationVariableField,
+        observationUnitField,
+        units as UnitListApiResponse,
       );
       nextData
         .map((row) => {
@@ -106,19 +137,26 @@ const MapObservations: FC<IMapObservations> = ({ state }: IMapObservations) => {
         )
         .forEach((row) => {
           row[observationVariableField] = value;
-          const selectedUnitSymbol = row[observationUnitField];
-          if (!selectedUnitSymbol && defaultUnit) {
-            row[observationUnitField] = defaultUnit?.symbol;
-          }
+          validUnit =
+            validUnit && !!compatibleUnits?.includes(row[observationUnitField]);
         });
+      const newNormalisedFields = new Map([
+        ...state.normalisedFields.entries(),
+        [observationVariableField, "Observation Variable"],
+        [observationUnitField, "Observation Unit"],
+      ]);
       state.setData(nextData);
-      state.setNormalisedFields(
-        new Map([
-          ...state.normalisedFields.entries(),
-          [observationVariableField, "Observation Variable"],
-          [observationUnitField, "Observation Unit"],
-        ]),
-      );
+      state.setNormalisedFields(newNormalisedFields);
+      const { errors, warnings } = validateState({
+        ...state,
+        data: nextData,
+        normalisedFields: newNormalisedFields,
+      });
+      if (!validUnit) {
+        errors.push("Mapped observation variables must have units.");
+      }
+      state.setErrors(errors);
+      state.setWarnings(warnings);
     };
   const handleUnitChange = (id: string) => (event: SelectChangeEvent) => {
     const nextData = [...state.data];
@@ -139,6 +177,15 @@ const MapObservations: FC<IMapObservations> = ({ state }: IMapObservations) => {
         ["Observation Unit", "Observation Unit"],
       ]),
     });
+    let validUnit = validateUnitSymbol(
+      { ...state, data: nextData },
+      observationVariableField,
+      observationUnitField,
+      units as UnitListApiResponse,
+    );
+    if (!validUnit) {
+      errors.push("Mapped observation variables must have units.");
+    }
     state.setErrors(errors);
     state.setWarnings(warnings);
   };
