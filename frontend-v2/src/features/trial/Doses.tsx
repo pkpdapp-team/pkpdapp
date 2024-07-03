@@ -173,7 +173,7 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
           </TableCell>
           <TableCell>
             <FloatField
-              label={index === 0 ? "Start Time" : "Time After Last Dose"}
+              label="Start Time"
               name={`doses.${index}.start_time`}
               control={control}
               rules={{ required: true }}
