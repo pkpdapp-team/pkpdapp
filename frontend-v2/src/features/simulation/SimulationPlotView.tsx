@@ -25,6 +25,19 @@ import useDataset from "../../hooks/useDataset";
 import useSubjectGroups from "../../hooks/useSubjectGroups";
 
 const Plot = createPlotlyComponent(Plotly);
+// https://github.com/plotly/plotly.js/blob/8c47c16daaa2020468baf9376130e085a4f01ec6/src/components/color/attributes.js#L4-L16
+const plotColours = [
+  '#1f77b4',  // muted blue
+  '#ff7f0e',  // safety orange
+  '#2ca02c',  // cooked asparagus green
+  '#d62728',  // brick red
+  '#9467bd',  // muted purple
+  '#8c564b',  // chestnut brown
+  '#e377c2',  // raspberry yogurt pink
+  '#7f7f7f',  // middle gray
+  '#bcbd22',  // curry yellow-green
+  '#17becf'   // blue-teal
+];
 
 function ranges(
   minY: number | undefined,
@@ -265,6 +278,9 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
             y: variableValues.map((v) => v * yconversionFactor),
             name: `${variableName} ${group?.name || "project"}` || "unknown",
             visible: visible ? true : "legendonly",
+            line: {
+              color: plotColours[index % plotColours.length],
+            }
           };
         } else {
           return {
@@ -463,7 +479,7 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
             : yCompatibleUnit.conversion_factor,
         )
       : 1.0;
-    const scatterplotData = groups?.map((group) => {
+    const scatterplotData = groups?.map((group, index) => {
       const visible = visibleGroups.includes(group.name);
       const groupBiomarkers = biomarkerData?.filter((d) =>
         group.subjects.includes(d.subjectId),
@@ -475,6 +491,9 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
         type: "scatter",
         mode: "markers",
         visible: visible ? true : "legendonly",
+        marker: {
+          color: plotColours[index + 1 % plotColours.length],
+        }
       };
     });
     combinedPlotData = combinedPlotData.concat(scatterplotData as Data[]);
