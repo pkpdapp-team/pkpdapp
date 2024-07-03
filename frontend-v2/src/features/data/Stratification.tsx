@@ -57,10 +57,7 @@ const Stratification: FC<IStratification> = ({ state }: IStratification) => {
     });
     state.setData(newData);
     state.setNormalisedFields(
-      new Map([
-        ...state.normalisedFields.entries(),
-        ["Group ID", "Group ID"]
-      ]),
+      new Map([...state.normalisedFields.entries(), ["Group ID", "Group ID"]]),
     );
   }
 

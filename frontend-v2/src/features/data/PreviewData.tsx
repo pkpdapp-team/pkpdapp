@@ -43,7 +43,7 @@ function useNormalisedColumn(state: StepperState, type: string) {
 
 const PreviewData: FC<IPreviewData> = ({ state }: IPreviewData) => {
   const normalisedHeaders = state.normalisedHeaders
-  /* 
+    /* 
     Don't rename cat covariates to 'Cat Covariate'
     or ignored columns to 'Ignore'.
   */
