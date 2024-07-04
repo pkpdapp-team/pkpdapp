@@ -59,13 +59,15 @@ const SetUnits: FC<IMapObservations> = ({
       ...row,
       "Time Unit": event.target?.value,
     }));
+    const newNormalisedFields = new Map([
+      ...state.normalisedFields.entries(),
+      ["Time Unit", "Time Unit"],
+    ]);
     state.setData(newData);
+    state.setNormalisedFields(newNormalisedFields);
     const { errors, warnings } = validateState({
       ...state,
-      normalisedFields: new Map([
-        ...state.normalisedFields.entries(),
-        ["Time Unit", "Time Unit"],
-      ]),
+      normalisedFields: newNormalisedFields,
     });
     state.setErrors(errors);
     state.setWarnings(warnings);
