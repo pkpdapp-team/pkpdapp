@@ -221,7 +221,20 @@ export const validateState = (state: StepperState) => {
   const invalidTimes = timeValues.filter((time) => isNaN(time));
   if (!timeIsValid) {
     warnings.push(
-      `CSV contains empty or invalid Time values. ${invalidTimes.length} rows will be ignored`,
+      `CSV contains empty or invalid time values. ${invalidTimes.length} rows will be ignored`,
+    );
+  }
+
+  const timeUnitField = fields.find(
+    (field) => normalisedFields.get(field) === "Time Unit",
+  );
+  const timeUnitValues = timeUnitField
+    ? state.data.map((row) => row[timeUnitField])
+    : [];
+  const uniqueTimeUnits = [...new Set(timeUnitValues)].filter(Boolean);
+  if (uniqueTimeUnits.length > 1) {
+    errors.push(
+      `Invalid data file: file contains multiple time units: [${[...uniqueTimeUnits].join(", ")}].`,
     );
   }
 
