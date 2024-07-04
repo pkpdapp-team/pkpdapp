@@ -16,6 +16,27 @@ import {
 import { StepperState } from "./LoadDataStepper";
 import ProtocolDataGrid from "./ProtocolDataGrid";
 
+type Group = {
+  id: string;
+  name: string;
+  subjects: string[];
+};
+
+function validateGroupMembers(groups: Group[]) {
+  const subjectMemberships = {} as Record<string, string[]>;
+  groups.forEach((group) => {
+    group.subjects.forEach((subject) => {
+      const subjectGroups = subjectMemberships[subject]
+        ? [...subjectMemberships[subject], group.id]
+        : [group.id];
+      subjectMemberships[subject] = subjectGroups;
+    });
+  });
+  return Object.values(subjectMemberships).every(
+    (groups) => groups.length === 1,
+  );
+}
+
 interface IStratification {
   state: StepperState;
   firstTime: boolean;
@@ -49,6 +70,15 @@ const Stratification: FC<IStratification> = ({ state }: IStratification) => {
       subjects: [...new Set(subjects)],
     };
   });
+  const isValidGrouping = validateGroupMembers(groups);
+  if (!isValidGrouping && state.errors.length === 0) {
+    state.setErrors([
+      "Invalid group subjects. Each subject ID can only belong to a single cohort.",
+    ]);
+  }
+  if (isValidGrouping && state.errors.length > 0) {
+    state.setErrors([]);
+  }
 
   if (!firstRow["Group ID"]) {
     const newData = [...state.data];
