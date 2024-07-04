@@ -16,7 +16,11 @@ import { RootState } from "../../app/store";
 import { DatasetRead, useDatasetCsvUpdateMutation } from "../../app/backendApi";
 import Stratification from "./Stratification";
 import useDataset from "../../hooks/useDataset";
-import { normaliseHeader, validateDataRow } from "./normaliseDataHeaders";
+import {
+  normaliseHeader,
+  removeIgnoredObservations,
+  validateDataRow,
+} from "./normaliseDataHeaders";
 import { Alert } from "@mui/material";
 
 interface IStepper {
@@ -163,7 +167,8 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
             });
             return newRow;
           })
-          .filter((row) => validateDataRow(row, normalisedFields));
+          .filter((row) => validateDataRow(row, normalisedFields))
+          .map((row) => removeIgnoredObservations(row, normalisedFields));
         const csv = Papa.unparse(dataToUpload);
         const response = await updateDatasetCsv({
           id: dataset.id,

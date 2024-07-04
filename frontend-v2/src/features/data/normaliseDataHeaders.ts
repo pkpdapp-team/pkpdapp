@@ -138,24 +138,36 @@ export const validateDataRow = (
   const timeField = fields.find(
     (field) => normalisedFields.get(field) === "Time",
   );
-  const censorField = fields.find(
-    (field) => normalisedFields.get(field) === "Censoring",
-  );
-  const mdvField = fields.find(
-    (field) => normalisedFields.get(field) === "Ignored Observation",
-  );
+
+  const amountField =
+    fields.find((field) => normalisedFields.get(field) === "Amount") ||
+    "Amount";
+  const amount = parseFloat(row[amountField]);
+  const hasAmount = !isNaN(amount);
+
   const observationField =
     fields.find((field) => normalisedFields.get(field) === "Observation") ||
     "Observation";
   const observation = parseFloat(row[observationField]);
   const hasObservation = !isNaN(observation);
+
+  const censorField = fields.find(
+    (field) => normalisedFields.get(field) === "Censoring",
+  );
+  const censoredRow = censorField && parseInt(row[censorField]) === 1;
+
+  const mdvField = fields.find(
+    (field) => normalisedFields.get(field) === "Ignored Observation",
+  );
+  const ignoreMDV = !hasAmount && mdvField && parseInt(row[mdvField]) === 1;
+
   if (!timeField) {
     return false;
   }
-  if (hasObservation && censorField && parseInt(row[censorField]) === 1) {
+  if (hasObservation && censoredRow) {
     return false;
   }
-  if (hasObservation && mdvField && parseInt(row[mdvField]) === 1) {
+  if (hasObservation && ignoreMDV) {
     return false;
   }
   const time = parseFloat(row[timeField]);
@@ -164,6 +176,25 @@ export const validateDataRow = (
   }
   return true;
 };
+
+export function removeIgnoredObservations(
+  row: Record<string, string>,
+  normalisedFields: Map<string, string>,
+) {
+  const newRow = { ...row };
+  const fields = [...normalisedFields.keys()];
+  const mdvField = fields.find(
+    (field) => normalisedFields.get(field) === "Ignored Observation",
+  );
+  const mdv = mdvField && parseInt(row[mdvField]);
+  const observationField =
+    fields.find((field) => normalisedFields.get(field) === "Observation") ||
+    "Observation";
+  if (mdv === 1) {
+    newRow[observationField] = ".";
+  }
+  return newRow;
+}
 
 export const validateState = (state: StepperState) => {
   const { fields, normalisedFields, normalisedHeaders } = state;
