@@ -42,10 +42,10 @@ function displayUnitSymbol(symbol: string | undefined) {
 
 /**
  * check that every row with an observation variable has a valid unit symbol.
- * @param state 
- * @param {string} observationVariableField 
- * @param {string} observationUnitField 
- * @param units 
+ * @param state
+ * @param {string} observationVariableField
+ * @param {string} observationUnitField
+ * @param units
  * @returns {boolean}
  */
 function validateUnitSymbol(
@@ -54,7 +54,9 @@ function validateUnitSymbol(
   observationUnitField: string,
   units: UnitListApiResponse,
 ) {
-  const observationRows = state.data.filter((row) => !!row[observationVariableField]);
+  const observationRows = state.data.filter(
+    (row) => !!row[observationVariableField],
+  );
   const dataUnits = observationRows.map((row) => row[observationUnitField]);
   const validSymbols = [...units.map((unit) => unit.symbol), "dimensionless"];
   let validUnit = true;
