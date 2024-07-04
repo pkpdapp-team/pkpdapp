@@ -229,7 +229,7 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
           </Step>
         ))}
       </Stepper>
-      <Box sx={{ flexGrow: 1, maxHeight: "70vh" }}>
+      <Box sx={{ flexGrow: 1, maxHeight: "80vh", overflow: 'scroll' }}>
         {state.fileName && <Alert severity="info">{state.fileName}</Alert>}
         {errors.map((error) => (
           <Alert key={error} severity="error">
@@ -255,7 +255,7 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
           display: "flex",
           justifyContent: "space-between",
           marginTop: 1,
-          paddingBottom: 2,
+          paddingBottom: 1,
         }}
       >
         {stepState.activeStep === 0 ? (
