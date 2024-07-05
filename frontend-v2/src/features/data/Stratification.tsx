@@ -15,12 +15,28 @@ import {
 } from "@mui/material";
 import { StepperState } from "./LoadDataStepper";
 import ProtocolDataGrid from "./ProtocolDataGrid";
+import { getProtocols, getSubjectDoses, IProtocol } from "./protocolUtils";
 
 type Group = {
   id: string;
   name: string;
   subjects: string[];
 };
+
+function validateGroupProtocols(groups: Group[], protocols: IProtocol[]) {
+  const groupedProtocols: string[][] = [];
+  groups.forEach((group) => {
+    let groupProtocols: string[] = [];
+    group.subjects.forEach((subject) => {
+      const subjectProtocols = protocols
+        .filter((protocol) => protocol.subjects.includes(subject))
+        .map((protocol) => protocol.label);
+      groupProtocols = [...groupProtocols, ...subjectProtocols];
+    });
+    groupedProtocols.push([...new Set(groupProtocols)]);
+  });
+  return groupedProtocols.every((protocols) => protocols.length <= 1);
+}
 
 function validateGroupMembers(groups: Group[]) {
   const subjectMemberships = {} as Record<string, string[]>;
@@ -43,6 +59,9 @@ interface IStratification {
 }
 
 const Stratification: FC<IStratification> = ({ state }: IStratification) => {
+  const subjectDoses = getSubjectDoses(state);
+  const protocols = getProtocols(subjectDoses);
+
   const idField = state.fields.find(
     (field) => state.normalisedFields.get(field) === "ID",
   );
@@ -71,13 +90,34 @@ const Stratification: FC<IStratification> = ({ state }: IStratification) => {
     };
   });
   const isValidGrouping = validateGroupMembers(groups);
-  if (!isValidGrouping && state.errors.length === 0) {
-    state.setErrors([
-      "Invalid group subjects. Each subject ID can only belong to a single cohort.",
-    ]);
+  const groupErrorMessage =
+    "Invalid group subjects. Each subject ID can only belong to a single cohort.";
+  if (!isValidGrouping && !state.errors.includes(groupErrorMessage)) {
+    const newErrors = [...state.errors, groupErrorMessage];
+    state.setErrors(newErrors);
   }
-  if (isValidGrouping && state.errors.length > 0) {
-    state.setErrors([]);
+
+  if (isValidGrouping && state.errors.includes(groupErrorMessage)) {
+    const newErrors = state.errors.filter(
+      (error) => error !== groupErrorMessage,
+    );
+    state.setErrors(newErrors);
+  }
+
+  const isValidDosing = validateGroupProtocols(groups, protocols);
+  const doseWarningMessage =
+    "Doses within a group are inconsistent. Please choose another grouping or enter the dosing information in Trial Design.";
+  const warningMessageIndex = state.warnings.indexOf(doseWarningMessage);
+
+  if (isValidDosing && warningMessageIndex > -1) {
+    const newWarnings = state.warnings.filter(
+      (warning) => warning !== doseWarningMessage,
+    );
+    state.setWarnings(newWarnings);
+  }
+  if (!isValidDosing && warningMessageIndex === -1) {
+    const newWarnings = [...state.warnings, doseWarningMessage];
+    state.setWarnings(newWarnings);
   }
 
   if (!firstRow["Group ID"]) {

@@ -4,6 +4,7 @@ export interface IDose {
   subject: string;
   amount: number;
   amountUnit?: string;
+  label: string;
   route?: string;
   time?: number;
   timeUnit?: string;
@@ -81,20 +82,27 @@ export function uniqueDoses(subjectDoses: SubjectDoses[] = []) {
 }
 
 export function getProtocols(subjectDoses: SubjectDoses[] = []): IProtocol[] {
-  return uniqueDoses(subjectDoses).map((doses) => {
-    const subjects: string[] = [];
-    subjectDoses.forEach((subjectDosing) => {
-      const subjectId = subjectDosing[0]?.subject;
-      if (subjectUsesProtocol(subjectDosing, doses)) {
-        subjects.push(subjectId);
-      }
-    });
-    return {
-      label: doses[0]?.label,
-      doses,
-      subjects,
-    };
+  let protocols = uniqueDoses(subjectDoses).map((doses: IDose[], index) => {
+    if (doses.length > 0) {
+      const subjects: string[] = [];
+      subjectDoses.forEach((subjectDosing) => {
+        const subjectId = subjectDosing[0]?.subject;
+        if (
+          subjectId !== undefined &&
+          subjectUsesProtocol(subjectDosing, doses)
+        ) {
+          subjects.push(subjectId);
+        }
+      });
+      return {
+        label: `${doses[0].label} ${index}`,
+        doses,
+        subjects,
+      };
+    }
+    return null;
   });
+  return protocols.filter(Boolean) as IProtocol[];
 }
 
 export function subjectUsesProtocol(

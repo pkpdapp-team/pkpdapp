@@ -22,6 +22,7 @@ import {
   validateDataRow,
 } from "./normaliseDataHeaders";
 import { Alert } from "@mui/material";
+import { IProtocol, getSubjectDoses, getProtocols } from "./protocolUtils";
 
 interface IStepper {
   csv: string;
@@ -69,6 +70,21 @@ export type StepperState = {
   setPrimaryCohort: (primaryCohort: string) => void;
 };
 
+function validateSubjectProtocols(protocols: IProtocol[]) {
+  const subjectMemberships: Record<string, string[]> = {};
+  protocols.forEach((protocol) => {
+    protocol.subjects.forEach((subject) => {
+      const subjectProtocols: string[] = subjectMemberships[subject]
+        ? [...subjectMemberships[subject], protocol.label]
+        : [protocol.label];
+      subjectMemberships[subject] = subjectProtocols;
+    });
+  });
+  return Object.values(subjectMemberships).every(
+    (protocols) => protocols.length === 1,
+  );
+}
+
 const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
   const csvData = Papa.parse(csv, { header: true });
   const csvFields = csvData.meta.fields || [];
@@ -112,6 +128,15 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
       return [...normalisedFields.values()];
     },
   };
+  const subjectDoses = getSubjectDoses(state);
+  const protocols = getProtocols(subjectDoses);
+  const areValidProtocols = validateSubjectProtocols(protocols);
+  const protocolErrorMessage =
+    "Invalid data file. Each subject ID can only belong to one dosing protocol.";
+
+  if (!areValidProtocols && !errors.includes(protocolErrorMessage)) {
+    errors = [...errors, protocolErrorMessage];
+  }
 
   const [stepState, setStepState] = useState({ activeStep: 0, maxStep: 0 });
   const StepComponent = stepComponents[stepState.activeStep];
@@ -229,7 +254,7 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
           </Step>
         ))}
       </Stepper>
-      <Box sx={{ flexGrow: 1, maxHeight: "80vh", overflow: 'scroll' }}>
+      <Box sx={{ flexGrow: 1, maxHeight: "80vh", overflow: "scroll" }}>
         {state.fileName && <Alert severity="info">{state.fileName}</Alert>}
         {errors.map((error) => (
           <Alert key={error} severity="error">
