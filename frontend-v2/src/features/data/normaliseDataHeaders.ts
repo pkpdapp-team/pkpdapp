@@ -196,6 +196,59 @@ export function removeIgnoredObservations(
   return newRow;
 }
 
+export type Group = {
+  id: string;
+  name: string;
+  subjects: string[];
+};
+
+export function validateGroupMembers(groups: Group[]) {
+  const subjectMemberships = {} as Record<string, string[]>;
+  groups.forEach((group) => {
+    group.subjects.forEach((subject) => {
+      const subjectGroups = subjectMemberships[subject]
+        ? [...subjectMemberships[subject], group.id]
+        : [group.id];
+      subjectMemberships[subject] = subjectGroups;
+    });
+  });
+  return Object.values(subjectMemberships).every(
+    (groups) => groups.length === 1,
+  );
+}
+
+function validateCatCovariates(state: StepperState) {
+  const idField = state.fields.find(
+    (field) => state.normalisedFields.get(field) === "ID",
+  );
+  const catCovariates = state.fields.filter(
+    (field) => state.normalisedFields.get(field) === "Cat Covariate",
+  );
+  const uniqueCovariateValues = catCovariates.map((field) => {
+    const values = state.data.map((row) => row[field]);
+    return [...new Set(values)];
+  });
+  const validationErrors: Record<string, string> = {};
+  catCovariates.forEach((covariate, index) => {
+    const groupColumnValues = uniqueCovariateValues[index] || [];
+    const groups = groupColumnValues.map((value) => {
+      const subjects = state.data
+        .filter((row) => row[covariate] === value)
+        .map((row) => (idField ? row[idField] : ""));
+      return {
+        id: value,
+        name: `Group ${index + 1}`,
+        subjects: [...new Set(subjects)],
+      };
+    });
+    if (!validateGroupMembers(groups)) {
+      validationErrors[covariate] =
+        `${covariate}: value is not unique for individual subjects.`;
+    }
+  });
+  return validationErrors;
+}
+
 export const validateState = (state: StepperState) => {
   const { fields, normalisedFields, normalisedHeaders } = state;
   const errors: string[] = [];
@@ -209,7 +262,7 @@ export const validateState = (state: StepperState) => {
     }
   }
 
-  const warnings: string[] = [];
+  const warnings: string[] = Object.values(validateCatCovariates(state));
 
   const timeField = fields.find(
     (field) => normalisedFields.get(field) === "Time",
