@@ -16,12 +16,7 @@ import {
 import { StepperState } from "./LoadDataStepper";
 import ProtocolDataGrid from "./ProtocolDataGrid";
 import { getProtocols, getSubjectDoses, IProtocol } from "./protocolUtils";
-
-type Group = {
-  id: string;
-  name: string;
-  subjects: string[];
-};
+import { Group, validateGroupMembers } from "./normaliseDataHeaders";
 
 function validateGroupProtocols(groups: Group[], protocols: IProtocol[]) {
   const groupedProtocols: string[][] = [];
@@ -36,21 +31,6 @@ function validateGroupProtocols(groups: Group[], protocols: IProtocol[]) {
     groupedProtocols.push([...new Set(groupProtocols)]);
   });
   return groupedProtocols.every((protocols) => protocols.length <= 1);
-}
-
-function validateGroupMembers(groups: Group[]) {
-  const subjectMemberships = {} as Record<string, string[]>;
-  groups.forEach((group) => {
-    group.subjects.forEach((subject) => {
-      const subjectGroups = subjectMemberships[subject]
-        ? [...subjectMemberships[subject], group.id]
-        : [group.id];
-      subjectMemberships[subject] = subjectGroups;
-    });
-  });
-  return Object.values(subjectMemberships).every(
-    (groups) => groups.length === 1,
-  );
 }
 
 interface IStratification {
