@@ -82,7 +82,7 @@ export function uniqueDoses(subjectDoses: SubjectDoses[] = []) {
 }
 
 export function getProtocols(subjectDoses: SubjectDoses[] = []): IProtocol[] {
-  let protocols = uniqueDoses(subjectDoses).map((doses: IDose[], index) => {
+  const protocols = uniqueDoses(subjectDoses).map((doses: IDose[], index) => {
     if (doses.length > 0) {
       const subjects: string[] = [];
       subjectDoses.forEach((subjectDosing) => {

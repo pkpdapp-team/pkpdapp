@@ -218,9 +218,9 @@ export function validateGroupMembers(groups: Group[]) {
 }
 
 export function groupsFromCatCovariate(state: StepperState, covariate: string) {
-  const idField = state.fields.find(
-    (field) => state.normalisedFields.get(field) === "ID",
-  ) || "ID";
+  const idField =
+    state.fields.find((field) => state.normalisedFields.get(field) === "ID") ||
+    "ID";
   const columnValues = state.data.map((row) => row[covariate]);
   const uniqueColumnValues = [...new Set(columnValues)];
   const groups = uniqueColumnValues.map((value, index) => {
@@ -237,18 +237,11 @@ export function groupsFromCatCovariate(state: StepperState, covariate: string) {
 }
 
 function validateCatCovariates(state: StepperState) {
-  const idField = state.fields.find(
-    (field) => state.normalisedFields.get(field) === "ID",
-  );
   const catCovariates = state.fields.filter(
     (field) => state.normalisedFields.get(field) === "Cat Covariate",
   );
-  const uniqueCovariateValues = catCovariates.map((field) => {
-    const values = state.data.map((row) => row[field]);
-    return [...new Set(values)];
-  });
   const validationErrors: Record<string, string> = {};
-  catCovariates.forEach((covariate, index) => {
+  catCovariates.forEach((covariate) => {
     const groups = groupsFromCatCovariate(state, covariate);
     if (!validateGroupMembers(groups)) {
       validationErrors[covariate] =

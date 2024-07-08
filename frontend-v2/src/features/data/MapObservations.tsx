@@ -179,7 +179,7 @@ const MapObservations: FC<IMapObservations> = ({ state }: IMapObservations) => {
         ["Observation Unit", "Observation Unit"],
       ]),
     });
-    let validUnit = validateUnitSymbol(
+    const validUnit = validateUnitSymbol(
       { ...state, data: nextData },
       observationVariableField,
       observationUnitField,

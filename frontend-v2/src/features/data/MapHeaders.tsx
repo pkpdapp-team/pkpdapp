@@ -27,7 +27,6 @@ const MapHeaders: FC<IMapHeaders> = ({
   setNormalisedFields,
 }: IMapHeaders) => {
   const fields = [...normalisedFields.keys()];
-  const newData = { ...data };
   const handleFieldChange = (field: string) => (event: any) => {
     const newFields = new Map([
       ...normalisedFields.entries(),

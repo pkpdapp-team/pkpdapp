@@ -16,7 +16,11 @@ import {
 import { StepperState } from "./LoadDataStepper";
 import ProtocolDataGrid from "./ProtocolDataGrid";
 import { getProtocols, getSubjectDoses, IProtocol } from "./protocolUtils";
-import { Group, groupsFromCatCovariate, validateGroupMembers } from "./normaliseDataHeaders";
+import {
+  Group,
+  groupsFromCatCovariate,
+  validateGroupMembers,
+} from "./normaliseDataHeaders";
 
 function validateGroupProtocols(groups: Group[], protocols: IProtocol[]) {
   const groupedProtocols: string[][] = [];
@@ -42,9 +46,6 @@ const Stratification: FC<IStratification> = ({ state }: IStratification) => {
   const subjectDoses = getSubjectDoses(state);
   const protocols = getProtocols(subjectDoses);
 
-  const idField = state.fields.find(
-    (field) => state.normalisedFields.get(field) === "ID",
-  );
   const catCovariates = state.fields.filter(
     (field) => state.normalisedFields.get(field) === "Cat Covariate",
   );
