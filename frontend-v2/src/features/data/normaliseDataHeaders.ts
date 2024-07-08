@@ -217,6 +217,25 @@ export function validateGroupMembers(groups: Group[]) {
   );
 }
 
+export function groupsFromCatCovariate(state: StepperState, covariate: string) {
+  const idField = state.fields.find(
+    (field) => state.normalisedFields.get(field) === "ID",
+  ) || "ID";
+  const columnValues = state.data.map((row) => row[covariate]);
+  const uniqueColumnValues = [...new Set(columnValues)];
+  const groups = uniqueColumnValues.map((value, index) => {
+    const subjects = state.data
+      .filter((row) => row[covariate] === value)
+      .map((row) => row[idField]);
+    return {
+      id: value,
+      name: `Group ${index + 1}`,
+      subjects: [...new Set(subjects)],
+    };
+  });
+  return groups;
+}
+
 function validateCatCovariates(state: StepperState) {
   const idField = state.fields.find(
     (field) => state.normalisedFields.get(field) === "ID",
@@ -230,17 +249,7 @@ function validateCatCovariates(state: StepperState) {
   });
   const validationErrors: Record<string, string> = {};
   catCovariates.forEach((covariate, index) => {
-    const groupColumnValues = uniqueCovariateValues[index] || [];
-    const groups = groupColumnValues.map((value) => {
-      const subjects = state.data
-        .filter((row) => row[covariate] === value)
-        .map((row) => (idField ? row[idField] : ""));
-      return {
-        id: value,
-        name: `Group ${index + 1}`,
-        subjects: [...new Set(subjects)],
-      };
-    });
+    const groups = groupsFromCatCovariate(state, covariate);
     if (!validateGroupMembers(groups)) {
       validationErrors[covariate] =
         `${covariate}: value is not unique for individual subjects.`;
