@@ -16,7 +16,7 @@ import {
 import { StepperState } from "./LoadDataStepper";
 import ProtocolDataGrid from "./ProtocolDataGrid";
 import { getProtocols, getSubjectDoses, IProtocol } from "./protocolUtils";
-import { Group, validateGroupMembers } from "./normaliseDataHeaders";
+import { Group, groupsFromCatCovariate, validateGroupMembers } from "./normaliseDataHeaders";
 
 function validateGroupProtocols(groups: Group[], protocols: IProtocol[]) {
   const groupedProtocols: string[][] = [];
@@ -57,18 +57,7 @@ const Stratification: FC<IStratification> = ({ state }: IStratification) => {
   const [tab, setTab] = useState(0);
   const { primaryCohort, setPrimaryCohort } = state;
 
-  const primaryCohortIndex = catCovariates.indexOf(primaryCohort);
-  const groupColumnValues = uniqueCovariateValues[primaryCohortIndex] || [];
-  const groups = groupColumnValues.map((value, index) => {
-    const subjects = state.data
-      .filter((row) => row[primaryCohort] === value)
-      .map((row) => (idField ? row[idField] : ""));
-    return {
-      id: value,
-      name: `Group ${index + 1}`,
-      subjects: [...new Set(subjects)],
-    };
-  });
+  const groups = groupsFromCatCovariate(state, primaryCohort);
   const isValidGrouping = validateGroupMembers(groups);
   const groupErrorMessage =
     "Invalid group subjects. Each subject ID can only belong to a single cohort.";
