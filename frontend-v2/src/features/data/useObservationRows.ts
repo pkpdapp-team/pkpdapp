@@ -60,6 +60,8 @@ export default function useObservationRows(state: StepperState, tab: string) {
           : normaliseHeader(field),
       ),
     ) as Map<string, string>;
+    normalisedFields.set("Observation", "Observation");
+    normalisedFields.set("Observation ID", "Observation ID");
     state.setNormalisedFields(normalisedFields);
     state.setData(rows);
   }
