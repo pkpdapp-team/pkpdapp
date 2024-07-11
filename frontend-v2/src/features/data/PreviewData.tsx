@@ -44,10 +44,14 @@ function useNormalisedColumn(state: StepperState, type: string) {
 const PreviewData: FC<IPreviewData> = ({ state }: IPreviewData) => {
   const normalisedHeaders = state.normalisedHeaders
     /* 
-    Don't rename cat covariates to 'Cat Covariate'
+    Don't rename cat covariates to 'Cat Covariate',
+    continuous covariates to 'Cont Covariate',
     or ignored columns to 'Ignore'.
   */
-    .filter((header) => !["Cat Covariate", "Ignore"].includes(header));
+    .filter(
+      (header) =>
+        !["Cat Covariate", "Cont Covariate", "Ignore"].includes(header),
+    );
   normalisedHeaders.forEach((header) => {
     useNormalisedColumn(state, header);
   });
