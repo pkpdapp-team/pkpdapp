@@ -6,75 +6,104 @@
 
 import pkpdapp.tests  # noqa: F401
 from django.test import TestCase
-from pkpdapp.models import (
-    Unit, Compound
-)
+from pkpdapp.models import Unit, Compound
 
 
 class TestUnitModel(TestCase):
     def setUp(self):
         self.compound = Compound.objects.create(
-            name='test_unit_model',
-            description='description for my cool compound',
+            name="test_unit_model",
+            description="description for my cool compound",
         )
 
-    def check_compatible_unit(
-            self, unit_symbol, compatible_units, compound=None
-    ):
+    def check_compatible_unit(self, unit_symbol, compatible_units, compound=None):
         unit = Unit.objects.get(symbol=unit_symbol)
         compat_symbols = [
-            u.symbol for u in unit.get_compatible_units(compound=compound)]
+            u.symbol for u in unit.get_compatible_units(compound=compound)
+        ]
         self.assertCountEqual(compat_symbols, compatible_units)
 
     def test_compatible_units(self):
-        self.check_compatible_unit('s', ['s', 'min', 'h', 'day', 'week'])
+        self.check_compatible_unit("s", ["s", "min", "h", "day", "week"])
         self.check_compatible_unit(
-            'ng/mL', ['ng/mL', 'µg/mL', 'mg/L', 'ng/L', 'g/L', 'g/dL', 'pg/mL', 'pg/L', 'µg/L', 'mg/mL', 'g/mL'
-                      ])
+            "ng/mL",
+            [
+                "ng/mL",
+                "µg/mL",
+                "mg/L",
+                "ng/L",
+                "g/L",
+                "g/dL",
+                "pg/mL",
+                "pg/L",
+                "µg/L",
+                "mg/mL",
+                "g/mL",
+            ],
+        )
 
     def test_compatible_units_mols(self):
-        self.check_compatible_unit('nmol', ['mol', 'nmol', 'pmol', 'µmol'])
+        self.check_compatible_unit("nmol", ["mol", "nmol", "pmol", "µmol"])
         self.check_compatible_unit(
-            'nmol',
-            [
-                'mol', 'nmol', 'pmol', 'µmol', 'mg', 'g', 'ng', 'kg'
-            ],
-            compound=self.compound
+            "nmol",
+            ["mol", "nmol", "pmol", "µmol", "mg", "g", "ng", "kg"],
+            compound=self.compound,
         )
-        self.check_compatible_unit('mg', ['mg', 'g', 'ng', 'kg'])
+        self.check_compatible_unit("mg", ["mg", "g", "ng", "kg"])
         self.check_compatible_unit(
-            'mg',
-            ['mol', 'nmol', 'pmol', 'µmol', 'mg', 'g', 'ng', 'kg'],
-            compound=self.compound
+            "mg",
+            ["mol", "nmol", "pmol", "µmol", "mg", "g", "ng", "kg"],
+            compound=self.compound,
         )
         self.check_compatible_unit(
-            'nmol/L',
+            "nmol/L",
             [
-                'nmol/L', 'pmol/L', 'µmol/L', 'mg/L',
-                'g/L', 'ng/mL', 'ng/L', 'pg/mL', 'µg/mL', 'g/dL',
-                'mmol/L', 'mol/L', 'pmol/mL', 'nmol/mL', 'µmol/mL',
-                'mmol/mL', 'mol/mL', 'pg/L', 'µg/L', 'mg/mL', 'g/mL'
-                
+                "nmol/L",
+                "pmol/L",
+                "µmol/L",
+                "mg/L",
+                "g/L",
+                "ng/mL",
+                "ng/L",
+                "pg/mL",
+                "µg/mL",
+                "g/dL",
+                "mmol/L",
+                "mol/L",
+                "pmol/mL",
+                "nmol/mL",
+                "µmol/mL",
+                "mmol/mL",
+                "mol/mL",
+                "pg/L",
+                "µg/L",
+                "mg/mL",
+                "g/mL",
             ],
-            compound=self.compound
+            compound=self.compound,
         )
 
     def test_compatible_units_mols_per_kg(self):
+        self.check_compatible_unit("nmol/kg", ["nmol/kg", "pmol/kg", "µmol/kg"])
         self.check_compatible_unit(
-            'nmol/kg', ['nmol/kg', 'pmol/kg', 'µmol/kg'])
-        self.check_compatible_unit(
-            'nmol/kg',
-            ['nmol/kg', 'pmol/kg', 'µmol/kg', 'mg/kg',
-                'pg/kg', 'µg/kg', 'ng/kg', ''],
-            compound=self.compound
+            "nmol/kg",
+            ["nmol/kg", "pmol/kg", "µmol/kg", "mg/kg", "pg/kg", "µg/kg", "ng/kg", ""],
+            compound=self.compound,
         )
+        self.check_compatible_unit("mg/kg", ["mg/kg", "pg/kg", "µg/kg", "ng/kg", ""])
         self.check_compatible_unit(
-            'mg/kg', ['mg/kg', 'pg/kg', 'µg/kg', 'ng/kg', ''])
-        self.check_compatible_unit(
-            'mg/kg',
+            "mg/kg",
             [
-                'nmol/kg', 'pmol/kg', 'µmol/kg', 'mg/kg',
-                'pg/kg', 'µg/kg', 'ng/kg', 'g/mol', 'g/nmol', ''
+                "nmol/kg",
+                "pmol/kg",
+                "µmol/kg",
+                "mg/kg",
+                "pg/kg",
+                "µg/kg",
+                "ng/kg",
+                "g/mol",
+                "g/nmol",
+                "",
             ],
-            compound=self.compound
+            compound=self.compound,
         )
