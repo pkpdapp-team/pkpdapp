@@ -251,12 +251,12 @@ class Dataset(models.Model):
                             biomarker_type=covariates[covariate_name]
                         )
 
-        self.merge_protocols()
-
-    def merge_protocols(self):
+        self.merge_protocols_per_group()
+    
+    def merge_protocols(self, subjects):
         unique_protocols = []
         protocol_subjects = []
-        for subject in self.subjects.all():
+        for subject in subjects:
             if subject.protocol is None:
                 continue
             protocol = subject.protocol
@@ -277,3 +277,30 @@ class Dataset(models.Model):
             for subject in subjects:
                 subject.protocol = protocol
                 subject.save()
+        
+        return unique_protocols
+
+    def merge_protocols_per_group(self):
+        groups = self.groups.all()
+        if len(groups) == 0:
+            subjects_per_group = [list(self.subjects.all())]
+        else:
+            subjects_per_group = [list(group.subjects.all()) for group in groups]
+        for subjects in subjects_per_group:
+            unique_protocols = self.merge_protocols(subjects)
+            if len(unique_protocols) > 1:
+                raise ValueError("More than one unique protocol per group")
+            if len(unique_protocols) == 0:
+                raise ValueError("No unique protocol found")
+            group_protocol = unique_protocols[0]
+            # if there are no doses, add a default zero dose
+            if len(group_protocol.doses.all()) == 0:
+                Dose.objects.create(
+                    start_time=0.0,
+                    amount=0.0,
+                    duration=0.0833,
+                    protocol=group_protocol,
+                    repeats=1,
+                    repeat_interval=1.0
+                )
+            
