@@ -288,8 +288,6 @@ class Dataset(models.Model):
             subjects_per_group = [list(group.subjects.all()) for group in groups]
         for subjects in subjects_per_group:
             unique_protocols = self.merge_protocols(subjects)
-            if len(unique_protocols) > 1:
-                raise ValueError("More than one unique protocol per group")
             if len(unique_protocols) == 0:
                 raise ValueError("No unique protocol found")
             group_protocol = unique_protocols[0]
