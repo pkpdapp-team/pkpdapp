@@ -8,8 +8,14 @@ import pandas as pd
 from django.db import models
 from pkpdapp.models import Project
 from pkpdapp.models import (
-    Dose, Biomarker, BiomarkerType, Subject, Protocol, Unit,
-    CategoricalBiomarker, SubjectGroup
+    Dose,
+    Biomarker,
+    BiomarkerType,
+    Subject,
+    Protocol,
+    Unit,
+    CategoricalBiomarker,
+    SubjectGroup,
 )
 from pkpdapp.utils import DataParser
 
@@ -18,28 +24,28 @@ class Dataset(models.Model):
     """
     A PKPD dataset containing one or more :model:`pkpdapp.Biomarker`.
     """
-    name = models.CharField(
-        max_length=100,
-        help_text='name of the dataset'
-    )
+
+    name = models.CharField(max_length=100, help_text="name of the dataset")
     datetime = models.DateTimeField(
         help_text=(
-            'date/time the experiment was conducted. '
-            'All time measurements are relative to this date/time, ' +
-            'which is in YYYY-MM-DD HH:MM:SS format. For example, ' +
-            '2020-07-18 14:30:59'
+            "date/time the experiment was conducted. "
+            "All time measurements are relative to this date/time, "
+            + "which is in YYYY-MM-DD HH:MM:SS format. For example, "
+            + "2020-07-18 14:30:59"
         ),
-        null=True, blank=True
+        null=True,
+        blank=True,
     )
     description = models.TextField(
-        help_text='short description of the dataset',
-        blank=True, default=''
+        help_text="short description of the dataset", blank=True, default=""
     )
     project = models.ForeignKey(
-        Project, on_delete=models.CASCADE,
-        related_name='datasets',
-        blank=True, null=True,
-        help_text='Project that "owns" this model'
+        Project,
+        on_delete=models.CASCADE,
+        related_name="datasets",
+        blank=True,
+        null=True,
+        help_text='Project that "owns" this model',
     )
 
     def __str__(self):
@@ -63,17 +69,17 @@ class Dataset(models.Model):
         # assume AMOUNT_UNIT and TIME_UNIT are constant for each bt
         bts_unique = data_without_dose[
             [
-                'OBSERVATION_NAME',
-                'OBSERVATION_UNIT',
-                'OBSERVATION_VARIABLE',
-                'TIME_UNIT'
+                "OBSERVATION_NAME",
+                "OBSERVATION_UNIT",
+                "OBSERVATION_VARIABLE",
+                "TIME_UNIT",
             ]
         ].drop_duplicates()
         biomarker_types = {}
         for i, row in bts_unique.iterrows():
-            unit = Unit.objects.get(symbol=row['OBSERVATION_UNIT'])
-            observation_name = row['OBSERVATION_NAME']
-            observation_variable = row['OBSERVATION_VARIABLE']
+            unit = Unit.objects.get(symbol=row["OBSERVATION_UNIT"])
+            observation_name = row["OBSERVATION_NAME"]
+            observation_variable = row["OBSERVATION_VARIABLE"]
             biomarker_types[observation_name] = BiomarkerType.objects.create(
                 name=observation_name,
                 description="",
@@ -83,13 +89,13 @@ class Dataset(models.Model):
                 display_time_unit=time_unit,
                 dataset=self,
                 color=i,
-                mapped_qname=observation_variable
+                mapped_qname=observation_variable,
             )
 
         # create subjects
         subjects = {}
-        for i, row in data[['SUBJECT_ID', 'GROUP_ID']].drop_duplicates().iterrows():
-            subject_id = row['SUBJECT_ID']
+        for i, row in data[["SUBJECT_ID", "GROUP_ID"]].drop_duplicates().iterrows():
+            subject_id = row["SUBJECT_ID"]
 
             subjects[subject_id] = Subject.objects.create(
                 id_in_dataset=subject_id,
@@ -98,46 +104,45 @@ class Dataset(models.Model):
             )
 
         # create subject groups
-        for i, row in data[['GROUP_ID']].drop_duplicates().iterrows():
-            group_id = row['GROUP_ID']
-            group_name = f'Group {group_id}'
+        for i, row in data[["GROUP_ID"]].drop_duplicates().iterrows():
+            group_id = row["GROUP_ID"]
+            group_name = f"Group {group_id}"
             group = SubjectGroup.objects.create(
-                name=group_name,
-                id_in_dataset=group_id,
-                dataset=self
+                name=group_name, id_in_dataset=group_id, dataset=self
             )
-            for i, row in data[
-                data['GROUP_ID'] == group_id
-            ][['SUBJECT_ID']].drop_duplicates().iterrows():
-                subject_id = row['SUBJECT_ID']
+            for i, row in (
+                data[data["GROUP_ID"] == group_id][["SUBJECT_ID"]]
+                .drop_duplicates()
+                .iterrows()
+            ):
+                subject_id = row["SUBJECT_ID"]
                 subject = subjects[subject_id]
                 subject.group = group
                 subject.save()
         # create subject protocol
-        for i, row in data[
-            ['SUBJECT_ID', 'ROUTE', "AMOUNT_UNIT", "AMOUNT_VARIABLE"]
-        ].drop_duplicates().iterrows():
-            subject_id = row['SUBJECT_ID']
-            route = row['ROUTE']
-            amount_unit = Unit.objects.get(symbol=row['AMOUNT_UNIT'])
+        for i, row in (
+            data[["SUBJECT_ID", "ROUTE", "AMOUNT_UNIT", "AMOUNT_VARIABLE"]]
+            .drop_duplicates()
+            .iterrows()
+        ):
+            subject_id = row["SUBJECT_ID"]
+            route = row["ROUTE"]
+            amount_unit = Unit.objects.get(symbol=row["AMOUNT_UNIT"])
             subject = subjects[subject_id]
-            mapped_qname = row['AMOUNT_VARIABLE']
-            if route == 'IV':
+            mapped_qname = row["AMOUNT_VARIABLE"]
+            if route == "IV":
                 route = Protocol.DoseType.DIRECT
             else:
                 route = Protocol.DoseType.INDIRECT
             if not subject.protocol:
                 subject.protocol = Protocol.objects.create(
-                    name='{}-{}'.format(
-                        self.name,
-                        subject
-                    ),
+                    name="{}-{}".format(self.name, subject),
                     time_unit=time_unit,
                     amount_unit=amount_unit,
                     dose_type=route,
                     mapped_qname=mapped_qname,
                     group=subject.group,
-                    dataset=self
+                    dataset=self,
                 )
                 subject.save()
 
@@ -147,7 +152,7 @@ class Dataset(models.Model):
         parser = DataParser()
         for covariate_name in data.columns:
             if parser.is_covariate_column(covariate_name):
-                dimensionless_unit = Unit.objects.get(symbol='')
+                dimensionless_unit = Unit.objects.get(symbol="")
                 covariates[covariate_name] = BiomarkerType.objects.create(
                     name=covariate_name,
                     description="",
@@ -168,12 +173,12 @@ class Dataset(models.Model):
             amount_unit = row["AMOUNT_UNIT"]
             observation = row["OBSERVATION"]
             observation_name = row["OBSERVATION_NAME"]
-            route = row['ROUTE']
-            infusion_time = row['INFUSION_TIME']
-            event_id = row['EVENT_ID']
+            route = row["ROUTE"]
+            infusion_time = row["INFUSION_TIME"]
+            event_id = row["EVENT_ID"]
             try:
-                repeats = int(row['ADDITIONAL_DOSES']) + 1
-                repeat_interval = float(row['INTERDOSE_INTERVAL'])
+                repeats = int(row["ADDITIONAL_DOSES"]) + 1
+                repeat_interval = float(row["INTERDOSE_INTERVAL"])
             except ValueError:
                 repeats = 1
                 repeat_interval = 1.0
@@ -198,7 +203,7 @@ class Dataset(models.Model):
                     time=time,
                     subject=subject,
                     value=observation,
-                    biomarker_type=biomarker_types[observation_name]
+                    biomarker_type=biomarker_types[observation_name],
                 )
             try:
                 float(amount)
@@ -214,7 +219,7 @@ class Dataset(models.Model):
                 is_dosing_event = has_amount
             if is_dosing_event and has_amount:
                 # dose observation
-                if route == 'IV':
+                if route == "IV":
                     route = Protocol.DoseType.DIRECT
                 else:
                     route = Protocol.DoseType.INDIRECT
@@ -238,21 +243,19 @@ class Dataset(models.Model):
                 if covariate_value != ".":
                     # only insert if value has changed
                     last_value = last_covariate_value[covariate_name]
-                    if (
-                        last_value is None or
-                        (last_value is not None and
-                         covariate_value != last_value)
+                    if last_value is None or (
+                        last_value is not None and covariate_value != last_value
                     ):
                         last_covariate_value[covariate_name] = covariate_value
                         CategoricalBiomarker.objects.create(
                             time=time,
                             subject=subject,
                             value=covariate_value,
-                            biomarker_type=covariates[covariate_name]
+                            biomarker_type=covariates[covariate_name],
                         )
 
         self.merge_protocols_per_group()
-    
+
     def merge_protocols(self, subjects):
         unique_protocols = []
         protocol_subjects = []
@@ -277,7 +280,7 @@ class Dataset(models.Model):
             for subject in subjects:
                 subject.protocol = protocol
                 subject.save()
-        
+
         return unique_protocols
 
     def merge_protocols_per_group(self):
@@ -299,6 +302,5 @@ class Dataset(models.Model):
                     duration=0.0833,
                     protocol=group_protocol,
                     repeats=1,
-                    repeat_interval=1.0
+                    repeat_interval=1.0,
                 )
-            
