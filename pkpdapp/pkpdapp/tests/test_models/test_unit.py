@@ -29,7 +29,7 @@ class TestUnitModel(TestCase):
     def test_compatible_units(self):
         self.check_compatible_unit('s', ['s', 'min', 'h', 'day', 'week'])
         self.check_compatible_unit(
-            'ng/mL', ['ng/mL', 'µg/mL', 'mg/L', 'ng/L', 'g/L', 'g/dL', 'pg/mL'
+            'ng/mL', ['ng/mL', 'µg/mL', 'mg/L', 'ng/L', 'g/L', 'g/dL', 'pg/mL', 'pg/L', 'µg/L', 'mg/mL', 'g/mL'
                       ])
 
     def test_compatible_units_mols(self):
@@ -51,7 +51,10 @@ class TestUnitModel(TestCase):
             'nmol/L',
             [
                 'nmol/L', 'pmol/L', 'µmol/L', 'mg/L',
-                'g/L', 'ng/mL', 'ng/L', 'pg/mL', 'µg/mL', 'g/dL'
+                'g/L', 'ng/mL', 'ng/L', 'pg/mL', 'µg/mL', 'g/dL',
+                'mmol/L', 'mol/L', 'pmol/mL', 'nmol/mL', 'µmol/mL',
+                'mmol/mL', 'mol/mL', 'pg/L', 'µg/L', 'mg/mL', 'g/mL'
+                
             ],
             compound=self.compound
         )
