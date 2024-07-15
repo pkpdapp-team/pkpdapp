@@ -101,7 +101,7 @@ export default function Sidebar() {
   };
 
   const doses = groups?.flatMap((group) => group.protocols.map((p) => p.doses));
-  const groupsAreIncomplete = doses?.some((dosing) => dosing.length === 0);
+  const groupsAreIncomplete = doses?.some((dosing) => !dosing[0]?.amount);
 
   const errors: { [key: string]: string } = {};
   if (modelIsIncomplete(model, protocols)) {
