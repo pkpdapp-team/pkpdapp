@@ -308,16 +308,16 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
     concentrationUnit,
   );
 
-  let yAxisTitle = plotData
+  const yAxisVariables = plotData
     //@ts-expect-error
     .filter((d) => !d.yaxis)
-    .map((d) => d.name)
-    .join(", ");
-  let y2AxisTitle = plotData
+    .map((d) => d.name?.split(' ')[0]);
+  const y2AxisVariables = plotData
     //@ts-expect-error
     .filter((d) => d.yaxis)
-    .map((d) => d.name)
-    .join(", ");
+    .map((d) => d.name?.split(' ')[0]);
+  let yAxisTitle = [...new Set(yAxisVariables)].join(", ");
+  let y2AxisTitle = [...new Set(y2AxisVariables)].join(", ");
   let xAxisTitle = "Time";
   const yUnit = units.find((u) => u.id === plot.y_unit);
   const y2Unit = units.find((u) => u.id === plot.y_unit2);
