@@ -31,7 +31,7 @@ class UnitSerializer(serializers.ModelSerializer):
         compound = self.context.get("compound")
         compatible_units = unit.get_compatible_units(compound=compound)
         sorted_units = compatible_units.order_by(
-            "-g", "-m", "K", "A", "cd", "mol", "s", "-multiplier"
+            "-g", "-m", "-mol", "-s", "K", "A", "cd", "-multiplier"
         )
         return [
             {

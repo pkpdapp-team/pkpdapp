@@ -18,7 +18,7 @@ class UnitView(viewsets.ModelViewSet):
     queryset = Unit.objects.all()
     serializer_class = UnitSerializer
     filter_backends = [DosedPkModelFilter, PdModelFilter, filters.OrderingFilter]
-    ordering = ["-g", "-m", "K", "A", "cd", "mol", "s", "-multiplier"]
+    ordering = ["-g", "-m", "-mol", "-s", "K", "A", "cd", "-multiplier"]
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
