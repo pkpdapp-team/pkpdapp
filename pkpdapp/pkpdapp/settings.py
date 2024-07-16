@@ -19,7 +19,7 @@ https://docs.djangoproject.com/en/3.0/ref/settings/.
 import os
 import dj_database_url
 import ldap
-from django_auth_ldap.config import LDAPSearch, GroupOfNamesType
+from django_auth_ldap.config import LDAPSearch, GroupOfNamesType, LDAPSearchUnion
 
 # Set BASE_DIR to two directories up
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -143,13 +143,20 @@ if use_ldap:
             "AUTH_LDAP_BIND_DN", "cn=read-only-admin,dc=example,dc=com"
         )
         AUTH_LDAP_BIND_PASSWORD = os.environ.get("AUTH_LDAP_BIND_PASSWORD", "password")
-        AUTH_LDAP_USER_SEARCH = LDAPSearch(
-            os.environ.get(
-                "AUTH_LDAP_SEARCH_BASE", "ou=mathematicians,dc=example,dc=com"
-            ),
-            ldap.SCOPE_SUBTREE,
-            os.environ.get("AUTH_LDAP_SEARCH_FILTER", "(uid=%(user)s)"),
+        search_base = os.environ.get(
+            "AUTH_LDAP_SEARCH_BASE", "ou=mathematicians,dc=example,dc=com"
         )
+        search_filter = os.environ.get(
+            "AUTH_LDAP_SEARCH_BASE", "ou=mathematicians,dc=example,dc=com"
+        )
+        searches = [LDAPSearch(search_base, ldap.SCOPE_SUBTREE, search_filter)]
+        for base_index in [2, 3, 4, 5]:
+            search_base = os.environ.get(f"AUTH_LDAP_SEARCH_BASE{base_index}", None)
+            if search_base is not None:
+                searches.append(
+                    LDAPSearch(search_base, ldap.SCOPE_SUBTREE, search_filter)
+                )
+        AUTH_LDAP_USER_SEARCH = LDAPSearchUnion(*searches)
 
 DJOSER = {
     "PASSWORD_RESET_CONFIRM_URL": "reset-password/{uid}/{token}",
@@ -411,4 +418,4 @@ CELERY_BROKER_TRANSPORT_OPTIONS = {
     "interval_max": 0.5,
 }
 
-TEST_RUNNER = 'snapshottest.django.TestRunner'
+TEST_RUNNER = "snapshottest.django.TestRunner"
