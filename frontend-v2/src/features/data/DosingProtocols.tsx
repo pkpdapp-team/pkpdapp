@@ -37,7 +37,7 @@ const DosingProtocols: FC<IDosingProtocols> = ({
 }: IDosingProtocols) => {
   const amountField = state.fields.find(
     (field) => state.normalisedFields.get(field) === "Amount",
-  );
+  ) || "Amount";
   const amountVariableField =
     state.fields.find(
       (field) => state.normalisedFields.get(field) === "Amount Variable",
@@ -50,8 +50,8 @@ const DosingProtocols: FC<IDosingProtocols> = ({
     : [];
   const uniqueAdministrationIds = [...new Set(administrationIds)];
   const routeField = state.fields.find(
-    (field) => field.toLowerCase() === "route",
-  );
+    (field) => state.normalisedFields.get(field) === "Administration Name",
+  ) || "Administration Name";
 
   const isAmount = (variable: VariableRead) => {
     const amountUnits = units?.find(
@@ -156,8 +156,8 @@ const DosingProtocols: FC<IDosingProtocols> = ({
               )?.compatible_units;
               const adminUnit =
                 amountUnitField && currentRow && currentRow[amountUnitField];
-              const amount = amountField && currentRow?.[amountField];
-              const route = routeField && currentRow?.[routeField];
+              const amount = currentRow?.[amountField];
+              const route = currentRow?.[routeField];
               return (
                 <TableRow key={adminId}>
                   <TableCell>{adminId}</TableCell>

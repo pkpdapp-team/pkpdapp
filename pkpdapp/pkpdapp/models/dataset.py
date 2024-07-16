@@ -121,12 +121,14 @@ class Dataset(models.Model):
                 subject.save()
         # create subject protocol
         for i, row in (
-            data[["SUBJECT_ID", "ROUTE", "AMOUNT_UNIT", "AMOUNT_VARIABLE"]]
+            data[[
+                "SUBJECT_ID", "ADMINISTRATION_NAME", "AMOUNT_UNIT", "AMOUNT_VARIABLE"
+            ]]
             .drop_duplicates()
             .iterrows()
         ):
             subject_id = row["SUBJECT_ID"]
-            route = row["ROUTE"]
+            route = row["ADMINISTRATION_NAME"]
             amount_unit = Unit.objects.get(symbol=row["AMOUNT_UNIT"])
             subject = subjects[subject_id]
             mapped_qname = row["AMOUNT_VARIABLE"]
@@ -173,7 +175,6 @@ class Dataset(models.Model):
             amount_unit = row["AMOUNT_UNIT"]
             observation = row["OBSERVATION"]
             observation_name = row["OBSERVATION_NAME"]
-            route = row["ROUTE"]
             infusion_time = row["INFUSION_TIME"]
             event_id = row["EVENT_ID"]
             try:
@@ -218,11 +219,6 @@ class Dataset(models.Model):
             except ValueError:
                 is_dosing_event = has_amount
             if is_dosing_event and has_amount:
-                # dose observation
-                if route == "IV":
-                    route = Protocol.DoseType.DIRECT
-                else:
-                    route = Protocol.DoseType.INDIRECT
 
                 protocol = subject.protocol
                 start_time = float(time)

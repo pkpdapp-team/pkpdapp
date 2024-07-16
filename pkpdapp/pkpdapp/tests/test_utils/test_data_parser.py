@@ -42,7 +42,7 @@ class TestDataParser(TestCase):
                 "OBSERVATION_UNIT",
                 "OBSERVATION_NAME",
                 "COMPOUND",
-                "ROUTE",
+                "ADMINISTRATION_NAME",
                 "INFUSION_TIME",
             ]
             for col in expected:

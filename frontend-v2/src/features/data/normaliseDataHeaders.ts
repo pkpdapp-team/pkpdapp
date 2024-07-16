@@ -5,6 +5,7 @@ const normalisation = {
   Ignore: ["ignore"],
   "Additional Doses": ["additional doses", "additional dose", "addl"],
   "Administration ID": ["administration id", "cmt", "adm"],
+  "Administration Name": ['route'],
   Amount: ["amount", "amt"],
   "Amount Unit": [
     "amount unit",
@@ -30,7 +31,6 @@ const normalisation = {
     "group",
     "cohort",
     "study",
-    "route",
     "matrix",
     "species",
     "strain",
@@ -109,6 +109,7 @@ export const groupedHeaders = {
   ],
   Dosing: [
     "Administration ID",
+    "Administration Name",
     "Additional Doses",
     "Infusion Rate",
     "Infusion Duration",

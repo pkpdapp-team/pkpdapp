@@ -42,12 +42,14 @@ interface IStratification {
   firstTime: boolean;
 }
 
+const CAT_COVARIATE_COLUMNS = ["Cat Covariate", "Administration Name"];
+
 const Stratification: FC<IStratification> = ({ state }: IStratification) => {
   const subjectDoses = getSubjectDoses(state);
   const protocols = getProtocols(subjectDoses);
 
   const catCovariates = state.fields.filter(
-    (field) => state.normalisedFields.get(field) === "Cat Covariate",
+    (field) => CAT_COVARIATE_COLUMNS.includes(state.normalisedFields.get(field) || ""),
   );
   const uniqueCovariateValues = catCovariates.map((field) => {
     const values = state.data.map((row) => row[field]);
