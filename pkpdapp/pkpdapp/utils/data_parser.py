@@ -56,8 +56,8 @@ class DataParser:
         "COMPOUND": [
             "compound"
         ],
-        "ROUTE": [
-            "route"
+        "ADMINISTRATION_NAME": [
+            "administration name", "route"
         ],
         "INFUSION_TIME": [
             "infusion duration", "tinf", "infusion_time", "infusiontime"
@@ -86,13 +86,13 @@ class DataParser:
     optional_cols = [
         "TIME_UNIT",
         "ADMINISTRATION_ID",
+        "ADMINISTRATION_NAME",
         "AMOUNT_UNIT",
         "AMOUNT_VARIABLE",
         "OBSERVATION_UNIT",
         "OBSERVATION_NAME",
         "OBSERVATION_VARIABLE",
         "COMPOUND",
-        "ROUTE",
         "INFUSION_TIME",
         "GROUP_ID",
         "ADDITIONAL_DOSES",
@@ -198,9 +198,9 @@ class DataParser:
         if "COMPOUND" not in found_cols:
             data["COMPOUND"] = "unknown compound"
 
-        # put in default route name if not present
-        if "ROUTE" not in found_cols:
-            data["ROUTE"] = "IV"
+        # put in default administration name if not present
+        if "ADMINISTRATION_NAME" not in found_cols:
+            data["ADMINISTRATION_NAME"] = "IV"
 
         # put in default subject group if not present
         if "GROUP_ID" not in found_cols:
