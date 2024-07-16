@@ -154,7 +154,8 @@ export const validateDataRow = (
   const censorField = fields.find(
     (field) => normalisedFields.get(field) === "Censoring",
   );
-  const censoredRow = censorField && parseInt(row[censorField]) === 1;
+  const censoredRow =
+    !hasAmount && censorField && parseInt(row[censorField]) === 1;
 
   const mdvField = fields.find(
     (field) => normalisedFields.get(field) === "Ignored Observation",
@@ -183,14 +184,18 @@ export function removeIgnoredObservations(
 ) {
   const newRow = { ...row };
   const fields = [...normalisedFields.keys()];
+  const censorField = fields.find(
+    (field) => normalisedFields.get(field) === "Censoring",
+  );
   const mdvField = fields.find(
     (field) => normalisedFields.get(field) === "Ignored Observation",
   );
   const mdv = mdvField && parseInt(row[mdvField]);
+  const censoring = censorField && parseInt(row[censorField]);
   const observationField =
     fields.find((field) => normalisedFields.get(field) === "Observation") ||
     "Observation";
-  if (mdv === 1) {
+  if (mdv === 1 || censoring === 1) {
     newRow[observationField] = ".";
   }
   return newRow;
