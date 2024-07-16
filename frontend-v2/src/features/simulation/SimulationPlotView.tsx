@@ -217,9 +217,11 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
   let maxY2: number | undefined = undefined;
 
   const plotData = plot.y_axes
-    .map((y_axis) => {
+    .map((y_axis, i) => {
+      const colourOffset = data.length * i;
       return data.map((d, index) => {
         const group = groups?.[index - 1];
+        const colourIndex = index + colourOffset;
         const visible =
           index === 0
             ? visibleGroups.includes("Project")
@@ -272,6 +274,7 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
               maxY = Math.max(maxY, ...y);
             }
           }
+
           return {
             yaxis: y_axis.right ? "y2" : undefined,
             x: d.time.map((t) => t * xconversionFactor),
@@ -279,7 +282,7 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
             name: `${variableName} ${group?.name || "project"}` || "unknown",
             visible: visible ? true : "legendonly",
             line: {
-              color: plotColours[index % plotColours.length],
+              color: plotColours[colourIndex % plotColours.length],
             },
           };
         } else {
@@ -311,11 +314,11 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
   const yAxisVariables = plotData
     //@ts-expect-error
     .filter((d) => !d.yaxis)
-    .map((d) => d.name?.split(' ')[0]);
+    .map((d) => d.name?.split(" ")[0]);
   const y2AxisVariables = plotData
     //@ts-expect-error
     .filter((d) => d.yaxis)
-    .map((d) => d.name?.split(' ')[0]);
+    .map((d) => d.name?.split(" ")[0]);
   let yAxisTitle = [...new Set(yAxisVariables)].join(", ");
   let y2AxisTitle = [...new Set(y2AxisVariables)].join(", ");
   let xAxisTitle = "Time";
@@ -451,12 +454,13 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
       return variable?.id;
     }) || [];
   let combinedPlotData = [...plotData];
-  plot.y_axes.forEach((y_axis) => {
+  plot.y_axes.forEach((y_axis, i) => {
     const xAxisUnit = units.find((u) => u.id === plot.x_unit);
     const yAxisUnit = y_axis.right
       ? units.find((u) => u.id === plot.y_unit2)
       : units.find((u) => u.id === plot.y_unit);
 
+    const colourOffset = data.length * i;
     const biomarkerIndex = biomarkerVariables.indexOf(y_axis.variable);
     const biomarkerData = subjectBiomarkers?.[biomarkerIndex];
     const { qname, unit, timeUnit } = biomarkerData?.[0] || {};
@@ -484,15 +488,18 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
       const groupBiomarkers = biomarkerData?.filter((d) =>
         group.subjects.includes(d.subjectId),
       );
+      const colourIndex = index + colourOffset + 1;
+
       return {
         name: group.name,
         x: groupBiomarkers?.map((d) => d?.time * timeConversionFactor),
         y: groupBiomarkers?.map((d) => d?.value * yConversionFactor),
+        yaxis: y_axis.right ? "y2" : undefined,
         type: "scatter",
         mode: "markers",
         visible: visible ? true : "legendonly",
         marker: {
-          color: plotColours[index + (1 % plotColours.length)],
+          color: plotColours[colourIndex % plotColours.length],
         },
       };
     });
