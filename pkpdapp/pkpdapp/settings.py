@@ -146,9 +146,7 @@ if use_ldap:
         search_base = os.environ.get(
             "AUTH_LDAP_SEARCH_BASE", "ou=mathematicians,dc=example,dc=com"
         )
-        search_filter = os.environ.get(
-            "AUTH_LDAP_SEARCH_BASE", "ou=mathematicians,dc=example,dc=com"
-        )
+        search_filter = os.environ.get("AUTH_LDAP_SEARCH_FILTER", "(uid=%(user)s)"),
         searches = [LDAPSearch(search_base, ldap.SCOPE_SUBTREE, search_filter)]
         for base_index in [2, 3, 4, 5]:
             search_base = os.environ.get(f"AUTH_LDAP_SEARCH_BASE{base_index}", None)
