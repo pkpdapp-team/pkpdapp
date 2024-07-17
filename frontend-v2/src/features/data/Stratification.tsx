@@ -42,7 +42,7 @@ interface IStratification {
   firstTime: boolean;
 }
 
-const CAT_COVARIATE_COLUMNS = ["Cat Covariate", "Administration Name"];
+const CAT_COVARIATE_COLUMNS = ["Cat Covariate", "Administration Name", "ID"];
 
 const Stratification: FC<IStratification> = ({ state }: IStratification) => {
   const subjectDoses = getSubjectDoses(state);
