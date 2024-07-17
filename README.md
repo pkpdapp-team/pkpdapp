@@ -58,6 +58,7 @@ For search/bind, connecting to the LDAP server either anonymously or with a fixe
 There are also a number of optional variables that can be set:
 - `VITE_APP_ROCHE`: set to true to enable Roche branding
 - `VITE_APP_HELP_URL`: url of help page shown on login
+- `VITE_APP_GA_ID`: Google Analytics ID to enable analytics.
 
 
 ### SSL Certificate
