@@ -2,6 +2,7 @@ import react from '@vitejs/plugin-react';
 import svgr from '@svgr/rollup';
 import { defineConfig } from 'vite';
 import viteTsconfigPaths from 'vite-tsconfig-paths';
+import { VitePluginRadar } from 'vite-plugin-radar';
 
 const proxy = {
   "/backend": {
@@ -19,9 +20,17 @@ const proxy = {
     }
   },
 }
+
+const { VITE_APP_GA_ID } = process.env;
+const radarOptions = {
+  enableDev: true,
+  analytics: {
+    id: VITE_APP_GA_ID,
+  }
+};
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react(), viteTsconfigPaths(), svgr()],
+  plugins: [react(), viteTsconfigPaths(), svgr(), VitePluginRadar(radarOptions)],
   build: {
     outDir: 'build',
     rollupOptions: {

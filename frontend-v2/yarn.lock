@@ -5417,6 +5417,7 @@ __metadata:
     typescript-eslint: "npm:^7.10.0"
     vite: "npm:^5.2.11"
     vite-bundle-visualizer: "npm:^1.2.1"
+    vite-plugin-radar: "npm:^0.9.6"
     vite-tsconfig-paths: "npm:^4.3.2"
     web-vitals: "npm:^2.1.4"
   languageName: unknown
@@ -9130,6 +9131,15 @@ __metadata:
   bin:
     vite-bundle-visualizer: bin.js
   checksum: 10c0/038946556ba742726927047de97b0e38fbc2191ebbeb79d2e0767d1fb6fad1500ffeaea6c69bd9c906fdd26327165c9adcdb211286da166fb08ab02100149b41
+  languageName: node
+  linkType: hard
+
+"vite-plugin-radar@npm:^0.9.6":
+  version: 0.9.6
+  resolution: "vite-plugin-radar@npm:0.9.6"
+  peerDependencies:
+    vite: ^2.0.0 || ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0
+  checksum: 10c0/6cfada1de71fbd7c4605ca3a45855bc8810368db3a63c0e979da0e0803ac3df5bea62ff11fc1095e94cd68b106d42499e30e1fc942955d0a0d993a53f2070f4b
   languageName: node
   linkType: hard
 
