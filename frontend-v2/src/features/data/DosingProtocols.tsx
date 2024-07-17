@@ -35,9 +35,10 @@ const DosingProtocols: FC<IDosingProtocols> = ({
   units,
   variables,
 }: IDosingProtocols) => {
-  const amountField = state.fields.find(
-    (field) => state.normalisedFields.get(field) === "Amount",
-  ) || "Amount";
+  const amountField =
+    state.fields.find(
+      (field) => state.normalisedFields.get(field) === "Amount",
+    ) || "Amount";
   const amountVariableField =
     state.fields.find(
       (field) => state.normalisedFields.get(field) === "Amount Variable",
@@ -49,9 +50,10 @@ const DosingProtocols: FC<IDosingProtocols> = ({
     ? dosingRows.map((row) => row[administrationIdField])
     : [];
   const uniqueAdministrationIds = [...new Set(administrationIds)];
-  const routeField = state.fields.find(
-    (field) => state.normalisedFields.get(field) === "Administration Name",
-  ) || "Administration Name";
+  const routeField =
+    state.fields.find(
+      (field) => state.normalisedFields.get(field) === "Administration Name",
+    ) || "Administration Name";
 
   const isAmount = (variable: VariableRead) => {
     const amountUnits = units?.find(

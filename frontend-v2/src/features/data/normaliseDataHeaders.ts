@@ -5,7 +5,7 @@ const normalisation = {
   Ignore: ["ignore"],
   "Additional Doses": ["additional doses", "additional dose", "addl"],
   "Administration ID": ["administration id", "cmt", "adm"],
-  "Administration Name": ['route'],
+  "Administration Name": ["route"],
   Amount: ["amount", "amt"],
   "Amount Unit": [
     "amount unit",
