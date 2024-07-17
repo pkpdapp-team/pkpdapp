@@ -5600,7 +5600,7 @@ __metadata:
     eslint-plugin-react-hooks: "npm:^4.6.2"
     openapi-types: "npm:^12.1.3"
     papaparse: "npm:^5.4.1"
-    plotly.js: "npm:plotly.js-basic-dist-min@^2.33.0"
+    plotly.js-basic-dist-min: "npm:^2.33.0"
     prettier: "npm:^3.3.3"
     react: "npm:^18.3.1"
     react-dom: "npm:^18.3.1"
@@ -7633,7 +7633,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"plotly.js@npm:plotly.js-basic-dist-min@^2.33.0":
+"plotly.js-basic-dist-min@npm:^2.33.0":
   version: 2.33.0
   resolution: "plotly.js-basic-dist-min@npm:2.33.0"
   checksum: 10c0/266ae66bb1cb9e592e8e7d8af4285e6534c78ce5ddfef9e8f62550b49bf66f16e6bbddcd237993e8adfd011bdfae4ac60fcf8e5aa726f1bebfaade52bd4b2b26

@@ -9,13 +9,14 @@ import {
   VariableRead,
   useProtocolListQuery,
 } from "../../app/backendApi";
-import Plotly, {
+import {
   Config,
   Data,
   Layout,
   Icon as PlotlyIcon,
   ScatterData,
 } from "plotly.js";
+import Plotly from "plotly.js-basic-dist-min";
 import {
   Button,
   Dialog,

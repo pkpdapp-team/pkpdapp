@@ -6,3 +6,4 @@ declare module "*.svg" {
     React.SVGProps<SVGSVGElement>
   >;
 }
+declare module "plotly.js-basic-dist-min";
