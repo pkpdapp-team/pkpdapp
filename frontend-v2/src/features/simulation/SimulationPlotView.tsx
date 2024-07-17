@@ -9,7 +9,13 @@ import {
   VariableRead,
   useProtocolListQuery,
 } from "../../app/backendApi";
-import Plotly, { Config, Data, Layout, Icon as PlotlyIcon } from "plotly.js";
+import Plotly, {
+  Config,
+  Data,
+  Layout,
+  Icon as PlotlyIcon,
+  ScatterData,
+} from "plotly.js";
 import {
   Button,
   Dialog,
@@ -297,7 +303,7 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
         }
       });
     })
-    .flat() as Data[];
+    .flat() as Partial<ScatterData>[];
 
   const concentrationUnit = units.find((unit) => unit.symbol === "pmol/L");
   if (concentrationUnit === undefined) {
@@ -312,11 +318,9 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
   );
 
   const yAxisVariables = plotData
-    //@ts-expect-error
     .filter((d) => !d.yaxis)
     .map((d) => d.name?.split(" ")[0]);
   const y2AxisVariables = plotData
-    //@ts-expect-error
     .filter((d) => d.yaxis)
     .map((d) => d.name?.split(" ")[0]);
   let yAxisTitle = [...new Set(yAxisVariables)].join(", ");
@@ -503,7 +507,9 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
         },
       };
     });
-    combinedPlotData = combinedPlotData.concat(scatterplotData as Data[]);
+    combinedPlotData = combinedPlotData.concat(
+      scatterplotData as ScatterData[],
+    );
   });
 
   return (
