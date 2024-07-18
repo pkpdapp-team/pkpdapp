@@ -1,5 +1,5 @@
 // src/components/ProjectTable.tsx
-import { ChangeEvent, FC, useState } from "react";
+import { ChangeEvent, FC, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import {
   Box,
@@ -16,11 +16,13 @@ import {
 import Add from "@mui/icons-material/Add";
 import Error from "@mui/icons-material/Error";
 import {
+  useCombinedModelListQuery,
   useSubjectGroupCreateMutation,
   useSubjectGroupDestroyMutation,
   useUnitListQuery,
   useProjectRetrieveQuery,
   useProtocolListQuery,
+  useVariableListQuery,
 } from "../../app/backendApi";
 import { RootState } from "../../app/store";
 import Doses from "./Doses";
@@ -47,6 +49,18 @@ const Protocols: FC = () => {
       { projectId: selectedProjectOrZero },
       { skip: !selectedProject },
     );
+  const { data: models, isLoading: isModelsLoading } =
+    useCombinedModelListQuery(
+      { projectId: selectedProjectOrZero },
+      { skip: !selectedProject },
+    );
+  const model = useMemo(() => {
+    return models?.[0] || undefined;
+  }, [models]);
+  const { data: variables } = useVariableListQuery(
+    { dosedPkModelId: model?.id || 0 },
+    { skip: !model?.id },
+  );
   const { data: units, isLoading: unitsLoading } = useUnitListQuery(
     { compoundId: project?.compound || 0 },
     { skip: !project?.compound },
@@ -85,12 +99,17 @@ const Protocols: FC = () => {
           id_in_dataset: `${newGroupId}`,
           project: project.id,
           protocols: filteredProtocols.map((p) => {
-            const { id, project, ...newProtocol } = p;
+            const { id, project, mapped_qname, ...newProtocol } = p;
+            const linkedVariableId = p.variables[0];
+            const mappedQName =
+              mapped_qname ||
+              variables?.find((v) => v.id === linkedVariableId)?.qname;
             return {
               ...newProtocol,
               dataset: null,
               project,
               name: `${newProtocol.name} - Group ${newValue}`,
+              mapped_qname: mappedQName,
             };
           }),
         },
