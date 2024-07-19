@@ -167,7 +167,7 @@ const ProjectTable: FC = () => {
         return addProject({ project });
       })
       .then((newProject) => {
-        if ("data" in newProject) {
+        if (newProject?.data) {
           addDataset(newProject.data.id);
           addCombinedModel({
             combinedModel: {
@@ -177,7 +177,7 @@ const ProjectTable: FC = () => {
               derived_variables: [],
             },
           }).then((combinedModel) => {
-            if ("data" in combinedModel) {
+            if (combinedModel?.data) {
               const defaultXUnit =
                 units?.find((u) => u.symbol === "h")?.id ||
                 combinedModel.data.time_unit;

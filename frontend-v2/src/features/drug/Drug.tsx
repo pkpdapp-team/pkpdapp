@@ -95,7 +95,7 @@ const Drug: FC = () => {
           );
           updateCompound({ id: compound.id, compound: data }).then((result) => {
             // if the compound has no efficacy experiments, but the result has, then set the first one as the use_efficacy
-            if ("data" in result) {
+            if (result?.data) {
               if (
                 compound.efficacy_experiments.length === 0 &&
                 result.data.efficacy_experiments.length > 0

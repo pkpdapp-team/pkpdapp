@@ -1,5 +1,5 @@
 import { Box, Button, Input, InputLabel } from "@mui/material";
-import { GridRowId } from "@mui/x-data-grid";
+import { GridRowSelectionModel } from "@mui/x-data-grid";
 import { FC, FormEvent, useRef } from "react";
 import { StepperState } from "./LoadDataStepper";
 
@@ -12,7 +12,7 @@ type SubjectGroup = {
 interface ISubjectGroupForm {
   group: SubjectGroup;
   state: StepperState;
-  selected: GridRowId[];
+  selected: GridRowSelectionModel;
 }
 
 const SubjectGroupForm: FC<ISubjectGroupForm> = ({
