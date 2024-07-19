@@ -16,6 +16,7 @@ RUN yarn install --immutable
 
 COPY frontend-v2 /app/frontend/
 COPY .env.prod /app/
+COPY .env.prod /app/frontend/.env
 
 # use git on the host to set REACT_APP_VERSION to the current git commit
 ARG GIT_COMMIT_ID
