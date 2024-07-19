@@ -101,7 +101,7 @@ const VariableRow: FC<Props> = ({
   });
   async function onAddProtocol() {
     const value = await addProtocol();
-    if ("data" in value) {
+    if (value?.data) {
       setValue("protocol", value.data.id);
       updateVariable({
         id: variable.id,

@@ -76,7 +76,7 @@ export default function useExportSimulation({
         simulate: simInputs,
       }).then((response) => {
         let rows = simulatedVariables.map((p) => [p.qname, p.value]);
-        if ("data" in response) {
+        if (response?.data) {
           const cols = Object.keys(response.data[0].outputs);
           const vars = cols.map((vid) =>
             variables.find((v) => v.id === parseInt(vid)),

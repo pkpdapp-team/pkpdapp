@@ -1,5 +1,5 @@
 import { FC, useState } from "react";
-import { DataGrid, GridRowId } from "@mui/x-data-grid";
+import { DataGrid, GridRowSelectionModel } from "@mui/x-data-grid";
 import { StepperState } from "./LoadDataStepper";
 import SubjectGroupForm from "./SubjectGroupForm";
 
@@ -17,7 +17,7 @@ interface IProtocolDataGrid {
 const ROW_COLS = ["Administration Name", "Amount", "Amount Unit"];
 
 const ProtocolDataGrid: FC<IProtocolDataGrid> = ({ group, state }) => {
-  const [selected, setSelected] = useState<GridRowId[]>([]);
+  const [selected, setSelected] = useState<GridRowSelectionModel>([]);
   const idField = state.fields.find(
     (field) => state.normalisedFields.get(field) === "ID",
   );
@@ -44,7 +44,7 @@ const ProtocolDataGrid: FC<IProtocolDataGrid> = ({ group, state }) => {
     headerName: field,
   }));
 
-  function onRowSelectionModelChange(selection: GridRowId[]) {
+  function onRowSelectionModelChange(selection: GridRowSelectionModel) {
     setSelected(selection);
   }
   return (

@@ -155,7 +155,7 @@ const Model: FC = () => {
     }
     return updateModel({ id: model.id, combinedModel: data.model }).then(
       (response) => {
-        if ("data" in response) {
+        if (response?.data) {
           // if the pk_model has changed, need to reset the simulation time_max_unit and set default parameters again
           if (data.model.pk_model !== model?.pk_model && simulation) {
             const time_max_unit = response.data.time_unit;
