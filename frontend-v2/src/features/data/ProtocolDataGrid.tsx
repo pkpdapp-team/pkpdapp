@@ -25,9 +25,14 @@ const ProtocolDataGrid: FC<IProtocolDataGrid> = ({ group, state }) => {
   const outputColumns = state.fields.filter((field) =>
     ROW_COLS.includes(state.normalisedFields.get(field) || ""),
   );
+  const amountField =
+    state.fields.find(
+      (field) => state.normalisedFields.get(field) === "Amount",
+    ) || "Amount";
+  const dosingRows = state.data.filter((row) => row[amountField] !== ".");
   const subjectRows = subjects
     .map((subject) => {
-      const row = state.data.find((row) => idField && row[idField] === subject);
+      const row = dosingRows.find((row) => idField && row[idField] === subject);
       const rowEntries: string[][] = outputColumns.map((field) =>
         row ? [field, row[field]] : [field, ""],
       );
