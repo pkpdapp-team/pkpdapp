@@ -728,5 +728,5 @@ def get_subject_groups(project):
         return []
     dataset = project.datasets.first()
     if dataset is None:
-        return []
+        return project.groups.all()
     return dataset.groups.all().union(project.groups.all())
