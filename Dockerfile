@@ -64,6 +64,7 @@ COPY --from=build /app/frontend/build /usr/share/nginx/html
 
 # we're running as the www-data user, so make the files owned by this user
 RUN chown -R www-data:www-data .
+RUN chown -R www-data:www-data /usr/share/nginx/html
 
 # make /var/www/.config dir and make it writable (myokit writes to it)
 RUN mkdir -p /var/www/.config
