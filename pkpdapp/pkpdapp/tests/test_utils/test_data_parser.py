@@ -20,6 +20,7 @@ class TestDataParser(TestCase):
         for filename in [
             "datasets/TCB4dataset.csv",
             "datasets/demo_pk_data_upload.csv",
+            "datasets/Mean%20IL6R%20for%20PKD%20explor%20plasma%20only%20with%20dosing%20export.csv",  # noqa: E501
             "usecase_monolix/TE_Data.txt",
             "usecase0/usecase0.csv",
             "usecase1/usecase1.csv",
@@ -136,3 +137,8 @@ class TestDataParser(TestCase):
                     "stored_unit__symbol", flat=True
                 )
                 self.assertCountEqual(biomarker_units, expected_units)
+            if filename == "datasets/Mean%20IL6R%20for%20PKD%20explor%20plasma%20only%20with%20dosing%20export.csv":  # noqa: E501
+                # check the right number of subjects and protocols added
+                self.assertEqual(dataset.subjects.count(), 3)
+                protocols = list(dataset.protocols.all())
+                self.assertEqual(len(protocols), 6)
