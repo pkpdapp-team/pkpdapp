@@ -104,12 +104,14 @@ class Dataset(models.Model):
             )
 
         # create subject groups
+        groups = {}
         for i, row in data[["GROUP_ID"]].drop_duplicates().iterrows():
             group_id = row["GROUP_ID"]
             group_name = f"Group {group_id}"
             group = SubjectGroup.objects.create(
                 name=group_name, id_in_dataset=group_id, dataset=self
             )
+            groups[group_id] = group
             for i, row in (
                 data[data["GROUP_ID"] == group_id][["SUBJECT_ID"]]
                 .drop_duplicates()
@@ -119,11 +121,11 @@ class Dataset(models.Model):
                 subject = subjects[subject_id]
                 subject.group = group
                 subject.save()
-        # create subject protocol
+        # create group protocol
+        dosing_rows = data.query('AMOUNT_VARIABLE != ""')
         for i, row in (
-            data[[
-                "SUBJECT_ID",
-                "ADMINISTRATION_ID",
+            dosing_rows[[
+                "GROUP_ID",
                 "ADMINISTRATION_NAME",
                 "AMOUNT_UNIT",
                 "AMOUNT_VARIABLE"
@@ -131,22 +133,22 @@ class Dataset(models.Model):
             .drop_duplicates()
             .iterrows()
         ):
-            subject_id = row["SUBJECT_ID"]
+            group_id = row["GROUP_ID"]
             route = row["ADMINISTRATION_NAME"]
             amount_unit = Unit.objects.get(symbol=row["AMOUNT_UNIT"])
-            subject = subjects[subject_id]
+            group = groups[group_id]
             mapped_qname = row["AMOUNT_VARIABLE"]
-            if not subject.protocol:
-                subject.protocol = Protocol.objects.create(
-                    name="{}-{}".format(self.name, subject),
-                    time_unit=time_unit,
-                    amount_unit=amount_unit,
-                    dose_type=route,
-                    mapped_qname=mapped_qname,
-                    group=subject.group,
-                    dataset=self,
-                )
-                subject.save()
+            protocol = Protocol.objects.create(
+                name="{}-{}".format(self.name, group.name),
+                time_unit=time_unit,
+                amount_unit=amount_unit,
+                dose_type=route,
+                mapped_qname=mapped_qname,
+                group=group,
+                dataset=self,
+            )
+            group.protocols.add(protocol)
+            group.save()
 
         # insert covariate columns as categorical for now
         covariates = {}
@@ -168,15 +170,35 @@ class Dataset(models.Model):
                 )
                 last_covariate_value[covariate_name] = None
 
-        for i, row in data.iterrows():
-            subject_id = row["SUBJECT_ID"]
+        # parse dosing rows
+        dosing_rows = data.query('AMOUNT_VARIABLE != ""')
+        for i, row in (
+            dosing_rows[[
+                "GROUP_ID",
+                "TIME",
+                "AMOUNT",
+                "AMOUNT_UNIT",
+                "AMOUNT_VARIABLE",
+                "INFUSION_TIME",
+                "EVENT_ID",
+                "ADMINISTRATION_NAME",
+                "ADDITIONAL_DOSES",
+                "INTERDOSE_INTERVAL",
+            ]]
+            .drop_duplicates()
+            .iterrows()
+        ):
+            group_id = row["GROUP_ID"]
             time = row["TIME"]
             amount = row["AMOUNT"]
             amount_unit = row["AMOUNT_UNIT"]
-            observation = row["OBSERVATION"]
-            observation_name = row["OBSERVATION_NAME"]
+            mapped_qname = row["AMOUNT_VARIABLE"]
             infusion_time = row["INFUSION_TIME"]
             event_id = row["EVENT_ID"]
+
+            group = groups[group_id]
+            protocol = group.protocols.get(mapped_qname=mapped_qname)
+
             try:
                 repeats = int(row["ADDITIONAL_DOSES"]) + 1
                 repeat_interval = float(row["INTERDOSE_INTERVAL"])
@@ -185,6 +207,41 @@ class Dataset(models.Model):
                 repeat_interval = 1.0
 
             amount_unit = Unit.objects.get(symbol=amount_unit)
+
+            try:
+                float(amount)
+                amount_convertable_to_float = True
+            except ValueError:
+                amount_convertable_to_float = False
+            has_amount = amount_convertable_to_float and float(amount) > 0.0
+            is_dosing_event = True
+            try:
+                event_id_int = int(event_id)
+                is_dosing_event = event_id_int == 1 or event_id_int == 4
+            except ValueError:
+                is_dosing_event = has_amount
+
+            if is_dosing_event and has_amount:
+
+                start_time = float(time)
+                amount = float(amount)
+                infusion_time = float(infusion_time)
+                Dose.objects.create(
+                    start_time=start_time,
+                    amount=amount,
+                    duration=infusion_time,
+                    protocol=protocol,
+                    repeats=repeats,
+                    repeat_interval=repeat_interval,
+                )
+
+        # parse observation rows
+        for i, row in data.iterrows():
+            subject_id = row["SUBJECT_ID"]
+            time = row["TIME"]
+            observation = row["OBSERVATION"]
+            observation_name = row["OBSERVATION_NAME"]
+            event_id = row["EVENT_ID"]
 
             subject = subjects[subject_id]
 
@@ -206,32 +263,6 @@ class Dataset(models.Model):
                     value=observation,
                     biomarker_type=biomarker_types[observation_name],
                 )
-            try:
-                float(amount)
-                amount_convertable_to_float = True
-            except ValueError:
-                amount_convertable_to_float = False
-            has_amount = amount_convertable_to_float and float(amount) > 0.0
-            is_dosing_event = True
-            try:
-                event_id_int = int(event_id)
-                is_dosing_event = event_id_int == 1 or event_id_int == 4
-            except ValueError:
-                is_dosing_event = has_amount
-            if is_dosing_event and has_amount:
-
-                protocol = subject.protocol
-                start_time = float(time)
-                amount = float(amount)
-                infusion_time = float(infusion_time)
-                Dose.objects.create(
-                    start_time=start_time,
-                    amount=amount,
-                    duration=infusion_time,
-                    protocol=protocol,
-                    repeats=repeats,
-                    repeat_interval=repeat_interval,
-                )
 
             # insert covariate columns as categorical for now
             for covariate_name in covariates.keys():
@@ -251,14 +282,11 @@ class Dataset(models.Model):
                         )
 
         self.merge_protocols_per_group()
+        self.create_default_protocol_doses()
 
-    def merge_protocols(self, subjects):
+    def merge_protocols(self, protocols):
         unique_protocols = []
-        protocol_subjects = []
-        for subject in subjects:
-            if subject.protocol is None:
-                continue
-            protocol = subject.protocol
+        for protocol in protocols:
             index = None
             for i, other_protocol in enumerate(unique_protocols):
                 if protocol.is_same_as(other_protocol):
@@ -266,37 +294,25 @@ class Dataset(models.Model):
                     break
             if index is None:
                 unique_protocols.append(protocol)
-                protocol_subjects.append([subject])
             else:
-                protocol_subjects[index].append(subject)
                 protocol.delete()
-
-        # migrate subjects to unique_protocols
-        for protocol, subjects in zip(unique_protocols, protocol_subjects):
-            for subject in subjects:
-                subject.protocol = protocol
-                subject.save()
-
         return unique_protocols
 
     def merge_protocols_per_group(self):
-        groups = self.groups.all()
-        if len(groups) == 0:
-            subjects_per_group = [list(self.subjects.all())]
-        else:
-            subjects_per_group = [list(group.subjects.all()) for group in groups]
-        for subjects in subjects_per_group:
-            unique_protocols = self.merge_protocols(subjects)
-            if len(unique_protocols) == 0:
-                raise ValueError("No unique protocol found")
-            group_protocol = unique_protocols[0]
+        for group in self.groups.all():
+            protocols = group.protocols.all()
+            group.protocols.set(self.merge_protocols(protocols))
+            group.save()
+
+    def create_default_protocol_doses(self):
+        for protocol in self.protocols.all():
             # if there are no doses, add a default zero dose
-            if len(group_protocol.doses.all()) == 0:
+            if len(protocol.doses.all()) == 0:
                 Dose.objects.create(
                     start_time=0.0,
                     amount=0.0,
                     duration=0.0833,
-                    protocol=group_protocol,
+                    protocol=protocol,
                     repeats=1,
                     repeat_interval=1.0,
                 )
