@@ -21,6 +21,7 @@ class TestDataParser(TestCase):
             "datasets/TCB4dataset.csv",
             "datasets/demo_pk_data_upload.csv",
             "datasets/Mean%20IL6R%20for%20PKD%20explor%20plasma%20only%20with%20dosing%20export.csv",  # noqa: E501
+            "datasets/CCL2_DRF_MLX_v06_export.csv",
             "usecase_monolix/TE_Data.txt",
             "usecase0/usecase0.csv",
             "usecase1/usecase1.csv",
@@ -142,3 +143,10 @@ class TestDataParser(TestCase):
                 self.assertEqual(dataset.subjects.count(), 3)
                 protocols = list(dataset.protocols.all())
                 self.assertEqual(len(protocols), 6)
+            if filename == "datasets/CCL2_DRF_MLX_v06_export.csv":
+                # check the right number of subjects and protocols added
+                self.assertEqual(dataset.subjects.count(), 16)
+                protocols = list(dataset.protocols.all())
+                self.assertEqual(len(protocols), 5)
+                groups = list(dataset.groups.all())
+                self.assertEqual(len(groups), 5)
