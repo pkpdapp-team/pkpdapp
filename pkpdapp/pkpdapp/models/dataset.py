@@ -138,6 +138,10 @@ class Dataset(models.Model):
             amount_unit = Unit.objects.get(symbol=row["AMOUNT_UNIT"])
             group = groups[group_id]
             mapped_qname = row["AMOUNT_VARIABLE"]
+            if route == "IV":
+                route = Protocol.DoseType.DIRECT
+            else:
+                route = Protocol.DoseType.INDIRECT
             protocol = Protocol.objects.create(
                 name="{}-{}".format(self.name, group.name),
                 time_unit=time_unit,
