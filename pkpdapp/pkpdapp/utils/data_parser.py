@@ -204,13 +204,13 @@ class DataParser:
 
         # put in default subject group if not present
         if "GROUP_ID" not in found_cols:
-            data["GROUP_ID"] = 1
+            data["GROUP_ID"] = data["SUBJECT_ID"]
         # put in default event ID if not present
         if "EVENT_ID" not in found_cols:
             data["EVENT_ID"] = None
         # put in default administration ID if not present
         if "ADMINISTRATION_ID" not in found_cols:
-            data["ADMINISTRATION_ID"] = None
+            data["ADMINISTRATION_ID"] = 1
 
         # put in default additional dosing columns if not present
         if "ADDITIONAL_DOSES" not in found_cols:

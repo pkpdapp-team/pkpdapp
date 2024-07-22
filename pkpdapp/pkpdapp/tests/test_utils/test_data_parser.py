@@ -125,10 +125,8 @@ class TestDataParser(TestCase):
 
                 # check the right number of subjects and protocols added
                 self.assertEqual(dataset.subjects.count(), 66)
-                protocols = set(
-                    [subject.protocol for subject in dataset.subjects.all()]
-                )
-                self.assertEqual(len(protocols), 39)
+                protocols = list(dataset.protocols.all())
+                self.assertEqual(len(protocols), 0)
             if filename == "usecase_monolix/TE_Data.txt":
                 expected_names = ["observation", "dose", "dose_units", "dose_cat"]
                 biomarker_names = dataset.biomarker_types.values_list("name", flat=True)
