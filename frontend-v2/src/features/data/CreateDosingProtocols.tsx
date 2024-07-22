@@ -74,12 +74,14 @@ const CreateDosingProtocols: FC<IDosingProtocols> = ({
         )
         .forEach((row) => {
           row["Amount Variable"] = value;
+          row["Amount Unit"] = amountUnit?.symbol === "pmol" ? "mg" : "mg/kg";
         });
       state.setData(nextData);
       state.setNormalisedFields(
         new Map([
           ...state.normalisedFields.entries(),
           ["Amount Variable", "Amount Variable"],
+          ["Amount Unit", "Amount Unit"],
         ]),
       );
     };
