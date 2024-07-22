@@ -285,28 +285,7 @@ class Dataset(models.Model):
                             biomarker_type=covariates[covariate_name],
                         )
 
-        self.merge_protocols_per_group()
         self.create_default_protocol_doses()
-
-    def merge_protocols(self, protocols):
-        unique_protocols = []
-        for protocol in protocols:
-            index = None
-            for i, other_protocol in enumerate(unique_protocols):
-                if protocol.is_same_as(other_protocol):
-                    index = i
-                    break
-            if index is None:
-                unique_protocols.append(protocol)
-            else:
-                protocol.delete()
-        return unique_protocols
-
-    def merge_protocols_per_group(self):
-        for group in self.groups.all():
-            protocols = group.protocols.all()
-            group.protocols.set(self.merge_protocols(protocols))
-            group.save()
 
     def create_default_protocol_doses(self):
         for protocol in self.protocols.all():
