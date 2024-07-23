@@ -205,7 +205,6 @@ const Data: FC = () => {
         </Grid>
       </Grid>
       <Tabs value={tab} onChange={handleTabChange}>
-        ß
         {groups?.map((group, index) => (
           <Tab key={group.id} label={group.name} {...a11yProps(index)} />
         ))}
