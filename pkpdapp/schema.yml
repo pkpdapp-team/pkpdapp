@@ -2808,6 +2808,12 @@ paths:
         schema:
           type: integer
         description: Enable conversions based on compound information
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
       tags:
       - unit
       security:
@@ -3613,10 +3619,13 @@ components:
     DatasetCsv:
       type: object
       properties:
+        name:
+          type: string
         csv:
           type: string
       required:
       - csv
+      - name
     DerivedVariable:
       type: object
       properties:

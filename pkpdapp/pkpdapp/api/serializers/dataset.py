@@ -34,11 +34,12 @@ class DatasetSerializer(serializers.ModelSerializer):
 
 
 class DatasetCsvSerializer(serializers.ModelSerializer):
+    name = serializers.CharField()
     csv = serializers.CharField()
 
     class Meta:
         model = Dataset
-        fields = ['csv']
+        fields = ['name', 'csv']
 
     def validate_csv(self, csv):
         parser = DataParser()
@@ -56,4 +57,6 @@ class DatasetCsvSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         data = validated_data['csv']
         instance.replace_data(data)
+        instance.name = validated_data['name']
+        instance.save()
         return instance

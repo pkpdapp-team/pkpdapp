@@ -199,6 +199,7 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
         const response = await updateDatasetCsv({
           id: dataset.id,
           datasetCsv: {
+            name: fileName,
             csv,
           },
         });

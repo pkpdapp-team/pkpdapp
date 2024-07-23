@@ -5,7 +5,7 @@ import {
   useUnitListQuery,
 } from "../../app/backendApi";
 import { RootState } from "../../app/store";
-import { Box, Button, Stack, Tab, Tabs, Typography } from "@mui/material";
+import { Box, Button, Grid, Stack, Tab, Tabs, Typography } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import EditIcon from "@mui/icons-material/Edit";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
@@ -159,6 +159,8 @@ const Data: FC = () => {
 
   const noData = !groups.length && !observations.length;
 
+  const pageTitle = dataset?.name !== "New Dataset" ? dataset?.name : "";
+
   return isLoading || isEditing || noData ? (
     <LoadDataStepper
       csv={isEditing ? csv : ""}
@@ -167,32 +169,41 @@ const Data: FC = () => {
     />
   ) : (
     <>
-      <Box sx={{ display: "flex", justifyContent: "end" }}>
-        <Stack spacing={1}>
-          <Button
-            variant="outlined"
-            onClick={handleNewUpload}
-            startIcon={<FileUploadIcon />}
-          >
-            New dataset
-          </Button>
-          <Button
-            variant="outlined"
-            onClick={editDataset}
-            disabled={!csv}
-            startIcon={<EditIcon />}
-          >
-            Edit dataset
-          </Button>
-          <Button
-            variant="outlined"
-            onClick={downloadCSV}
-            startIcon={<FileDownloadIcon />}
-          >
-            Download CSV
-          </Button>
-        </Stack>
-      </Box>
+      <Grid container spacing={2}>
+        <Grid item xs={9.5}>
+          {pageTitle && (
+            <Typography variant="h5" component="h1" gutterBottom>
+              {pageTitle}
+            </Typography>
+          )}
+        </Grid>
+        <Grid item sx={{ justifyContent: "end" }} xs={2.5}>
+          <Stack spacing={1}>
+            <Button
+              variant="outlined"
+              onClick={handleNewUpload}
+              startIcon={<FileUploadIcon />}
+            >
+              New dataset
+            </Button>
+            <Button
+              variant="outlined"
+              onClick={editDataset}
+              disabled={!csv}
+              startIcon={<EditIcon />}
+            >
+              Edit dataset
+            </Button>
+            <Button
+              variant="outlined"
+              onClick={downloadCSV}
+              startIcon={<FileDownloadIcon />}
+            >
+              Download CSV
+            </Button>
+          </Stack>
+        </Grid>
+      </Grid>
       <Tabs value={tab} onChange={handleTabChange}>
         ß
         {groups?.map((group, index) => (
