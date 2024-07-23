@@ -170,15 +170,15 @@ const Data: FC = () => {
   ) : (
     <>
       <Grid container spacing={2}>
-        <Grid item xs={9.5}>
+        <Grid item xs={true}>
           {pageTitle && (
             <Typography variant="h5" component="h1" gutterBottom>
               {pageTitle}
             </Typography>
           )}
         </Grid>
-        <Grid item sx={{ justifyContent: "end" }} xs={2.5}>
-          <Stack spacing={1}>
+        <Grid container sx={{ justifyContent: "end" }} xs={true}>
+          <Stack spacing={1} width={"fit-content"}>
             <Button
               variant="outlined"
               onClick={handleNewUpload}
