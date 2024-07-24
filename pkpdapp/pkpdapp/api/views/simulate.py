@@ -62,7 +62,7 @@ class SimulateBaseView(views.APIView):
         time_max = request.data.get('time_max', None)
         try:
             result = m.simulate(outputs, variables, time_max)
-        except myokit.SimulationError as e:
+        except myokit.MyokitError as e:
             serialized_result = ErrorResponseSerializer({'error': str(e)})
             return Response(
                 serialized_result.data, status=status.HTTP_400_BAD_REQUEST
