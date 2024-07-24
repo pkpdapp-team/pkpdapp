@@ -20,7 +20,7 @@ import {
   Group,
   groupsFromCatCovariate,
   validateGroupMembers,
-} from "./normaliseDataHeaders";
+} from "./dataValidation";
 
 function validateGroupProtocols(groups: Group[], protocols: IProtocol[]) {
   const groupedProtocols: string[][] = [];

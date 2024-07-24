@@ -1,5 +1,5 @@
 import { StepperState } from "./LoadDataStepper";
-import { normaliseHeader } from "./normaliseDataHeaders";
+import { normaliseHeader } from "./dataValidation";
 import { Row } from "./LoadData";
 
 const DEFAULT_VARIABLE_FIELD = "Observation Variable";

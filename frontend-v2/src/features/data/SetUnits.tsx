@@ -16,7 +16,7 @@ import {
 } from "../../app/backendApi";
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
-import { validateState } from "./normaliseDataHeaders";
+import { validateState } from "./dataValidation";
 
 interface IMapObservations {
   state: StepperState;

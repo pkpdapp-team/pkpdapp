@@ -13,7 +13,7 @@ import {
   Typography,
 } from "@mui/material";
 import { Data, Field } from "./LoadData";
-import { groupedHeaders } from "./normaliseDataHeaders";
+import { groupedHeaders } from "./dataValidation";
 
 interface IMapHeaders {
   data: Data;

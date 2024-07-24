@@ -20,7 +20,7 @@ import {
   normaliseHeader,
   removeIgnoredObservations,
   validateDataRow,
-} from "./normaliseDataHeaders";
+} from "./dataValidation";
 import { Alert } from "@mui/material";
 import { IProtocol, getSubjectDoses, getProtocols } from "./protocolUtils";
 

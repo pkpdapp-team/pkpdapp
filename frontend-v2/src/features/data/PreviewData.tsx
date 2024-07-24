@@ -2,7 +2,7 @@ import { FC } from "react";
 import { Alert, Box } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import { StepperState } from "./LoadDataStepper";
-import { validateDataRow } from "./normaliseDataHeaders";
+import { validateDataRow } from "./dataValidation";
 import { Data } from "./LoadData";
 
 interface IPreviewData {
