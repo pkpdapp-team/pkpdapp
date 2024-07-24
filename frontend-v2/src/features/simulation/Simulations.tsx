@@ -172,7 +172,7 @@ const Simulations: FC = () => {
     timeMax,
   );
   const simulatedVariables = useSimulatedVariables(variables, sliderValues);
-  const { loadingSimulate, data } = useSimulation(
+  const { loadingSimulate, data, error: simulateError } = useSimulation(
     simInputs,
     simulatedVariables,
     model,
@@ -237,15 +237,15 @@ const Simulations: FC = () => {
     }
   }, [simulation, reset, variables]);
 
-  const [exportSimulation, { error: simulateErrorBase }] = useExportSimulation({
+  const [exportSimulation, { error: exportSimulateErrorBase }] = useExportSimulation({
     simInputs,
     simulatedVariables,
     model,
     project,
   });
-  const simulateError: ErrorObject | undefined = simulateErrorBase
-    ? "data" in simulateErrorBase
-      ? (simulateErrorBase.data as ErrorObject)
+  const exportSimulateError: ErrorObject | undefined = exportSimulateErrorBase
+    ? "data" in exportSimulateErrorBase
+      ? (exportSimulateErrorBase.data as ErrorObject)
       : { error: "Unknown error" }
     : undefined;
 
@@ -503,6 +503,11 @@ const Simulations: FC = () => {
         <Snackbar open={Boolean(simulateError)} autoHideDuration={6000}>
           <Alert severity="error">
             Error simulating model: {simulateError?.error || "unknown error"}
+          </Alert>
+        </Snackbar>
+        <Snackbar open={Boolean(exportSimulateError)} autoHideDuration={6000}>
+          <Alert severity="error">
+            Error exporting model: {exportSimulateError?.error || "unknown error"}
           </Alert>
         </Snackbar>
       </Grid>
