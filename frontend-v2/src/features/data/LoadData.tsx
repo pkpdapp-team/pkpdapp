@@ -3,7 +3,7 @@ import Papa from "papaparse";
 import { FC, useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import MapHeaders from "./MapHeaders";
-import { normaliseHeader, validateState } from "./normaliseDataHeaders";
+import { normaliseHeader, validateState } from "./dataValidation";
 import { StepperState } from "./LoadDataStepper";
 import SetUnits from "./SetUnits";
 

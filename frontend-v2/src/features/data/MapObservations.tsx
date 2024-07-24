@@ -29,7 +29,7 @@ import {
   useVariableListQuery,
 } from "../../app/backendApi";
 import useObservationRows from "./useObservationRows";
-import { validateState } from "./normaliseDataHeaders";
+import { validateState } from "./dataValidation";
 
 interface IMapObservations {
   state: StepperState;

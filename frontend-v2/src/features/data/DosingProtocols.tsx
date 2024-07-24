@@ -16,7 +16,7 @@ import {
 } from "@mui/material";
 import { StepperState } from "./LoadDataStepper";
 import { UnitRead, VariableRead } from "../../app/backendApi";
-import { validateState } from "./normaliseDataHeaders";
+import { validateState } from "./dataValidation";
 
 interface IDosingProtocols {
   administrationIdField: string;
