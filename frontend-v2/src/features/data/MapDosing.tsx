@@ -46,13 +46,29 @@ const MapDosing: FC<IMapDosing> = ({ state, firstTime }: IMapDosing) => {
   const amountField = state.fields.find(
     (field) => state.normalisedFields.get(field) === "Amount",
   );
-  const amountUnitField = state.fields.find((field) =>
-    ["Amount Unit", "Unit"].includes(state.normalisedFields.get(field) || ""),
-  );
+  const amountUnitField =
+    state.fields.find((field) =>
+      ["Amount Unit", "Unit"].includes(state.normalisedFields.get(field) || ""),
+    ) || "Amount Unit";
   const administrationIdField = state.fields.find(
     (field) => state.normalisedFields.get(field) === "Administration ID",
   );
   const hasDosingRows = amountField && administrationIdField;
+  const hasInvalidUnits =
+    hasDosingRows &&
+    state.data
+      .map((row) => row[amountUnitField])
+      .some((symbol) => !units?.find((unit) => unit.symbol === symbol));
+  if (
+    hasInvalidUnits &&
+    amountUnitField !== "Amount Unit" &&
+    state.normalisedFields.get(amountUnitField) !== "Ignore"
+  ) {
+    const newNormalisedFields = new Map(state.normalisedFields);
+    newNormalisedFields.set(amountUnitField, "Ignore");
+    newNormalisedFields.set("Amount Unit", "Amount Unit");
+    state.setNormalisedFields(newNormalisedFields);
+  }
 
   return hasDosingRows ? (
     <DosingProtocols
