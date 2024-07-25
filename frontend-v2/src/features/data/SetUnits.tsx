@@ -52,6 +52,14 @@ const SetUnits: FC<IMapObservations> = ({
     timeUnits?.map((unit) => ({ value: unit, label: unit })) || [];
 
   const noTimeUnit = !normalisedHeaders.find((field) => field === "Time Unit");
+  const invalidTimeUnits = state.errors.find((error) =>
+    error.includes("file contains multiple time units"),
+  );
+  const showTimeUnitSelector = noTimeUnit || invalidTimeUnits;
+  const timeUnitField =
+    state.fields.find(
+      (field) => state.normalisedFields.get(field) === "Time Unit",
+    ) || "Time Unit";
 
   function setTimeUnit(event: SelectChangeEvent) {
     state.setTimeUnit(event.target?.value);
@@ -61,6 +69,7 @@ const SetUnits: FC<IMapObservations> = ({
     }));
     const newNormalisedFields = new Map([
       ...state.normalisedFields.entries(),
+      [timeUnitField, "Ignore"],
       ["Time Unit", "Time Unit"],
     ]);
     state.setData(newData);
@@ -74,7 +83,7 @@ const SetUnits: FC<IMapObservations> = ({
   }
   return (
     <div>
-      {noTimeUnit && (
+      {showTimeUnitSelector && (
         <Alert severity="info">
           <Stack direction="row" spacing="1rem">
             <Typography>Please select a unit for all time values.</Typography>
