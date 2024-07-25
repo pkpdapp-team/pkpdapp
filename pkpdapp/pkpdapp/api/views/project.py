@@ -53,6 +53,7 @@ class ProjectView(EnablePartialUpdateMixin, viewsets.ModelViewSet):
         serializer = self.serializer_class(new_obj)
         return response.Response(serializer.data)
 
+
 class ProjectAccessView(viewsets.ModelViewSet):
     queryset = ProjectAccess.objects.all()
     serializer_class = ProjectAccessSerializer
