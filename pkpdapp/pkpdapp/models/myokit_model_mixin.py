@@ -729,4 +729,4 @@ def get_subject_groups(project):
     dataset = project.datasets.first()
     if dataset is None:
         return project.groups.all()
-    return dataset.groups.all().union(project.groups.all())
+    return dataset.groups.all().union(project.groups.all()).order_by("id")
