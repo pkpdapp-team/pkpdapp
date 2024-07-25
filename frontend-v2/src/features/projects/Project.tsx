@@ -4,6 +4,7 @@ import { useForm, useFieldArray } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import useDataset from "../../hooks/useDataset";
 import {
   TableCell,
   TableRow,
@@ -82,6 +83,8 @@ const ProjectRow: FC<Props> = ({
     { value: "SM", label: "Small Molecule" },
     { value: "LM", label: "Large Molecule" },
   ];
+
+  const { dataset, addDataset } = useDataset(project.id);
 
   const [showConfirmDelete, setShowConfirmDelete] = useState<boolean>(false);
 
@@ -182,6 +185,9 @@ const ProjectRow: FC<Props> = ({
   };
 
   const handleSelectProject = () => {
+    if (dataset === undefined) {
+      addDataset(project.id);
+    }
     dispatch(setProject(project.id));
   };
 
