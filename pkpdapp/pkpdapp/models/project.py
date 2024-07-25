@@ -80,12 +80,11 @@ class Project(models.Model):
             for user_access in self.projectaccess_set.all():
                 user_access.copy(new_project)
         else:
-            project_access = ProjectAccess.objects.create(
+            ProjectAccess.objects.create(
                 user=user,
                 project=new_project,
                 read_only=False,
             )
-            self.projectaccess_set.set([project_access])
         return new_project
 
 
