@@ -50,11 +50,8 @@ class ProjectView(EnablePartialUpdateMixin, viewsets.ModelViewSet):
     def copy(self, request, pk):
         obj = self.get_object()
         new_obj = obj.copy(user=request.user)
-        serializer = self.serializer_class(new_obj, data=request.data)
-        if serializer.is_valid():
-            return response.Response(serializer.data)
-        return response.Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
-
+        serializer = self.serializer_class(new_obj)
+        return response.Response(serializer.data)
 
 class ProjectAccessView(viewsets.ModelViewSet):
     queryset = ProjectAccess.objects.all()
