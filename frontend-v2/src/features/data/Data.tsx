@@ -95,17 +95,19 @@ const Data: FC = () => {
         units?.find((unit) => unit.id === protocol.time_unit)?.symbol || "";
       const qname = protocol.mapped_qname;
       const doseType = protocol.dose_type;
-      return protocol.doses.map((dose) => ({
-        Amount: dose.amount,
-        "Amount Unit": amountUnit,
-        Time: dose.start_time,
-        "Time Unit": timeUnit,
-        Duration: dose.duration,
-        Route: doseType,
-        "Additional Doses": (dose?.repeats || 1) - 1,
-        "Interdose Interval": dose.repeat_interval,
-        "Amount Variable": qname,
-      }));
+      return protocol.doses
+        .map((dose) => ({
+          Amount: dose.amount,
+          "Amount Unit": amountUnit,
+          Time: dose.start_time,
+          "Time Unit": timeUnit,
+          Duration: dose.duration,
+          Route: doseType,
+          "Additional Doses": (dose?.repeats || 1) - 1,
+          "Interdose Interval": dose.repeat_interval,
+          "Amount Variable": qname,
+        }))
+        .sort((a, b) => a.Time - b.Time);
     })
     .map((row, index) => ({ id: index + 1, ...row }));
   const dosingColumns = dosingRows[0]
