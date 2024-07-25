@@ -26,7 +26,8 @@ export default function useSubjectGroups() {
       { skip: !selectedProject },
     );
   const groups = useMemo(
-    () => datasetGroups?.concat(projectGroups || []),
+    () =>
+      datasetGroups?.concat(projectGroups || []).sort((a, b) => a.id - b.id),
     [datasetGroups, projectGroups],
   );
 
