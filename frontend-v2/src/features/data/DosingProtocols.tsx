@@ -17,6 +17,7 @@ import {
 import { StepperState } from "./LoadDataStepper";
 import { UnitRead, VariableRead } from "../../app/backendApi";
 import { validateState } from "./dataValidation";
+import { Row } from "./LoadData";
 
 interface IDosingProtocols {
   administrationIdField: string;
@@ -43,9 +44,13 @@ const DosingProtocols: FC<IDosingProtocols> = ({
     state.fields.find(
       (field) => state.normalisedFields.get(field) === "Amount Variable",
     ) || "Amount Variable";
-  const dosingRows = amountField
-    ? state.data.filter((row) => row[amountField] && row[amountField] !== ".")
-    : [];
+  const dosingRows: Row[] = amountField
+    ? state.data.filter(
+        (row) =>
+          (row[amountField] && row[amountField] !== ".") ||
+          parseInt(row[administrationIdField]),
+      )
+    : state.data.filter((row) => parseInt(row[administrationIdField]));
   const administrationIds = administrationIdField
     ? dosingRows.map((row) => row[administrationIdField])
     : [];
