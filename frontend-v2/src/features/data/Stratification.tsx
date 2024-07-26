@@ -88,7 +88,7 @@ const Stratification: FC<IStratification> = ({ state }: IStratification) => {
   }
   if (!isValidDosing && !state.errors.includes(doseErrorMessage)) {
     const newErrors = [...state.errors, doseErrorMessage];
-    state.setWarnings(newErrors);
+    state.setErrors(newErrors);
   }
 
   if (!firstRow["Group ID"]) {
