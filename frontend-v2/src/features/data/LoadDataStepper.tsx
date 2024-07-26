@@ -88,7 +88,6 @@ function validateSubjectProtocols(protocols: IProtocol[]) {
 const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
   const csvData = Papa.parse(csv, { header: true });
   const csvFields = csvData.meta.fields || [];
-  const [fileName, setFileName] = useState<string>("");
   const [data, setData] = useState<Data>((csvData.data as Data) || []);
   let [errors, setErrors] = useState<string[]>([]);
   const [warnings, setWarnings] = useState<string[]>([]);
@@ -103,6 +102,9 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
   );
   const [updateDatasetCsv] = useDatasetCsvUpdateMutation();
   const { dataset, updateDataset } = useDataset(selectedProject);
+  const [fileName, setFileName] = useState<string>(
+    dataset?.name || "New Dataset",
+  );
 
   const state = {
     fileName,
