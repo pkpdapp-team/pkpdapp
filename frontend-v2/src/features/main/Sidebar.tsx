@@ -103,17 +103,25 @@ export default function Sidebar() {
   const doses = groups?.flatMap((group) => group.protocols.map((p) => p.doses));
   const groupsAreIncomplete = doses?.some((dosing) => !dosing[0]?.amount);
 
+  const warnings: { [key: string]: string } = {};
   const errors: { [key: string]: string } = {};
   if (modelIsIncomplete(model, protocols)) {
     errors[PageName.MODEL] =
       "Model is incomplete, see the Model tab for details";
   }
   if (groupsAreIncomplete) {
-    errors[PageName.TRIAL_DESIGN] =
-      "Trial design is incomplete, see the Trial Design tab for details";
+    warnings[PageName.TRIAL_DESIGN] =
+      "Trial design is incomplete, one or more dose amounts are zero";
   }
 
   const errorComponents: { [key: string]: ReactNode } = {};
+  for (const key in warnings) {
+    errorComponents[key] = (
+      <Tooltip title={warnings[key]}>
+        <ErrorIcon color="warning" />
+      </Tooltip>
+    );
+  } 
   for (const key in errors) {
     errorComponents[key] = (
       <Tooltip title={errors[key]}>
