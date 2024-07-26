@@ -16,6 +16,7 @@ import {
 } from "@mui/material";
 import { StepperState } from "./LoadDataStepper";
 import { UnitRead, VariableRead } from "../../app/backendApi";
+import { Row } from "./LoadData";
 
 interface IDosingProtocols {
   administrationIdField: string;
@@ -37,6 +38,13 @@ const CreateDosingProtocols: FC<IDosingProtocols> = ({
     (field) =>
       field === "Amount" || state.normalisedFields.get(field) === "Amount",
   );
+  const dosingRows: Row[] = amountField
+    ? state.data.filter(
+        (row) =>
+          (row[amountField] && row[amountField] !== ".") ||
+          parseInt(row[administrationIdField]),
+      )
+    : state.data.filter((row) => parseInt(row[administrationIdField]));
   if (!amountField) {
     const newNormalisedFields = new Map([
       ...state.normalisedFields.entries(),
@@ -46,8 +54,9 @@ const CreateDosingProtocols: FC<IDosingProtocols> = ({
     state.setNormalisedFields(newNormalisedFields);
     state.setData(newData);
   }
+
   const administrationIds = administrationIdField
-    ? state.data.map((row) => row[administrationIdField])
+    ? dosingRows.map((row) => row[administrationIdField])
     : [];
   const uniqueAdministrationIds = [...new Set(administrationIds)];
 

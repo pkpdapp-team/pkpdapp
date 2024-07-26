@@ -53,6 +53,7 @@ const MapDosing: FC<IMapDosing> = ({ state, firstTime }: IMapDosing) => {
   const administrationIdField = state.fields.find(
     (field) => state.normalisedFields.get(field) === "Administration ID",
   );
+
   const hasDosingRows = amountField && administrationIdField;
   const hasInvalidUnits =
     hasDosingRows &&
@@ -81,7 +82,7 @@ const MapDosing: FC<IMapDosing> = ({ state, firstTime }: IMapDosing) => {
     />
   ) : (
     <CreateDosingProtocols
-      administrationIdField={"Group"}
+      administrationIdField={administrationIdField || "Group ID"}
       amountUnitField={amountUnitField || ""}
       amountUnit={amountUnit}
       state={state}
