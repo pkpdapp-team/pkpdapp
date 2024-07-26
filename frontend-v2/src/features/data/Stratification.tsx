@@ -77,19 +77,18 @@ const Stratification: FC<IStratification> = ({ state }: IStratification) => {
   }
 
   const isValidDosing = validateGroupProtocols(groups, protocols);
-  const doseWarningMessage =
-    "Doses within a group are inconsistent. Please choose another grouping or enter the dosing information in Trial Design.";
-  const warningMessageIndex = state.warnings.indexOf(doseWarningMessage);
+  const doseErrorMessage =
+    "Doses within a group are inconsistent. Please choose another grouping or ignore administration columns and enter the dosing information in Trial Design.";
 
-  if (isValidDosing && warningMessageIndex > -1) {
-    const newWarnings = state.warnings.filter(
-      (warning) => warning !== doseWarningMessage,
+  if (isValidDosing && state.errors.includes(doseErrorMessage)) {
+    const newErrors = state.errors.filter(
+      (error) => error !== doseErrorMessage,
     );
-    state.setWarnings(newWarnings);
+    state.setErrors(newErrors);
   }
-  if (!isValidDosing && warningMessageIndex === -1) {
-    const newWarnings = [...state.warnings, doseWarningMessage];
-    state.setWarnings(newWarnings);
+  if (!isValidDosing && !state.errors.includes(doseErrorMessage)) {
+    const newErrors = [...state.errors, doseErrorMessage];
+    state.setErrors(newErrors);
   }
 
   if (!firstRow["Group ID"]) {
