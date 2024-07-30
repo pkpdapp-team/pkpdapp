@@ -57,7 +57,6 @@ const CreateDosingProtocols: FC<IDosingProtocols> = ({
     ? dosingRows.map((row) => row[administrationIdField])
     : [];
   const uniqueAdministrationIds = [...new Set(administrationIds)];
-  console.log({ administrationIdField, amountField, uniqueAdministrationIds });
 
   const isAmount = (variable: VariableRead) => {
     const amountUnits = units?.find(
