@@ -11,15 +11,18 @@ export enum PageName {
 }
 
 export enum SubPageName {
-  PKPDMODEL = 'PK/PD Model',
-  MAPVARIABLES = 'Map Variables',
-  PARAMETERS = 'Parameters',
-  TUTORIALS = 'Tutorials',
-  PROJECTS = 'Projects',
-  DRUG = 'Drug',
-  MODEL = 'Model',
-  TRAILDESIGN = 'Trial Design',
-  SIMULATION = 'Simulation'
+  PKPDMODEL = "PK/PD Model",
+  MAPVARIABLES = "Map Variables",
+  PARAMETERS = "Parameters",
+  TUTORIALS = "Tutorials",
+  PROJECTS = "Projects",
+  DRUG = "Drug",
+  MODEL = "Model",
+  TRAILDESIGN = "Trial Design",
+  SIMULATION = "Simulation",
+  LOAD_DATA = "Load Data",
+  STRATIFICATION = "Stratification",
+  VISUALISATION = "Visualisation",
 }
 
 interface MainState {
@@ -58,8 +61,11 @@ const mainSlice = createSlice({
   },
 });
 
-
-
-export const { setPage, setSubPage, setProject, incrementDirtyCount, decrementDirtyCount } =
-  mainSlice.actions;
+export const {
+  setPage,
+  setSubPage,
+  setProject,
+  incrementDirtyCount,
+  decrementDirtyCount,
+} = mainSlice.actions;
 export default mainSlice.reducer;

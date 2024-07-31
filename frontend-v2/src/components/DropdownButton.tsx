@@ -5,8 +5,8 @@ import {
   ListItemText,
   Popover,
 } from "@mui/material";
-import React, { useState } from "react";
-import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import { FC, MouseEvent, ReactNode, useState } from "react";
+import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 
 type Option = {
   label: string;
@@ -16,13 +16,13 @@ type Option = {
 type Props = {
   options: Option[];
   onOptionSelected: (value: any) => void;
-  children?: React.ReactNode;
+  children?: ReactNode;
   disabled?: boolean;
   data_cy?: string;
   useIcon?: boolean;
 };
 
-const DropdownButton: React.FC<Props> = ({
+const DropdownButton: FC<Props> = ({
   data_cy,
   options,
   onOptionSelected,
@@ -36,7 +36,7 @@ const DropdownButton: React.FC<Props> = ({
     useIcon = true;
   }
 
-  const handleButtonClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+  const handleButtonClick = (event: MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
   };
 

@@ -1,5 +1,5 @@
 // src/components/ProjectTable.tsx
-import React from "react";
+import { FC, useState } from "react";
 import { useSelector } from "react-redux";
 import {
   Table,
@@ -32,6 +32,7 @@ import { useCustomToast } from "../../hooks/useCustomToast";
 import { notificationTypes } from "../../components/Notification/notificationTypes";
 import { ReactComponent as FolderLogo } from "../../shared/assets/svg/folder.svg";
 import { defaultHeaderSx } from "../../shared/tableHeadersSx";
+import useDataset from "../../hooks/useDataset";
 
 enum SortOptions {
   CREATED = "created",
@@ -42,8 +43,8 @@ enum SortOptions {
 
 const SM_SIM_TIME = 48;
 const LM_SIM_TIME = 672;
-const ProjectTable: React.FC = () => {
-  const [sortBy, setSortBy] = React.useState<SortOptions>(SortOptions.CREATED);
+const ProjectTable: FC = () => {
+  const [sortBy, setSortBy] = useState<SortOptions>(SortOptions.CREATED);
   const toast = useCustomToast();
 
   const handleSortBy = (option: SortOptions) => {
@@ -76,6 +77,7 @@ const ProjectTable: React.FC = () => {
   const [addCombinedModel] = useCombinedModelCreateMutation();
   const [addCompound] = useCompoundCreateMutation();
   const [addSimulation] = useSimulationCreateMutation();
+  const { addDataset } = useDataset(selectedProject);
 
   if (isLoading || unitsLoading || compoundsLoading) {
     return <div>Loading...</div>;
@@ -165,7 +167,8 @@ const ProjectTable: React.FC = () => {
         return addProject({ project });
       })
       .then((newProject) => {
-        if ("data" in newProject) {
+        if (newProject?.data) {
+          addDataset(newProject.data.id);
           addCombinedModel({
             combinedModel: {
               name: `model for project ${newProject.data.id}`,
@@ -174,7 +177,7 @@ const ProjectTable: React.FC = () => {
               derived_variables: [],
             },
           }).then((combinedModel) => {
-            if ("data" in combinedModel) {
+            if (combinedModel?.data) {
               const defaultXUnit =
                 units?.find((u) => u.symbol === "h")?.id ||
                 combinedModel.data.time_unit;

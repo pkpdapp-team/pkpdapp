@@ -42,6 +42,12 @@ class Subject(models.Model):
         default=dict,
         help_text='subject metadata',
     )
+    group = models.ForeignKey(
+        'SubjectGroup', on_delete=models.CASCADE,
+        related_name='subjects',
+        blank=True, null=True,
+        help_text='subject group containing this subject.'
+    )
 
     def get_project(self):
         return self.dataset.get_project()

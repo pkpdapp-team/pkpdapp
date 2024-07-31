@@ -14,7 +14,6 @@ class ProtocolSerializer(serializers.ModelSerializer):
     doses = DoseSerializer(
         many=True
     )
-    dataset = serializers.SerializerMethodField('get_dataset')
     variables = serializers.PrimaryKeyRelatedField(
         many=True, read_only=True
     )

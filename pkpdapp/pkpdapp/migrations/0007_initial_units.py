@@ -19,10 +19,6 @@ def load_units(apps, schema_editor):
 
     units = [
         {
-            "symbol": "nmol/L",
-            "unit": 1e-9 * mol / L,
-        },
-        {
             "symbol": "mol",
             "unit": mol,
         },
@@ -43,12 +39,40 @@ def load_units(apps, schema_editor):
             "unit": 1e-12 * mol / L,
         },
         {
+            "symbol": "nmol/L",
+            "unit": 1e-9 * mol / L,
+        },
+        {
             "symbol": "µmol/L",
             "unit": 1e-6 * mol / L,
         },
         {
-            "symbol": "nmol/L",
-            "unit": 1e-9 * mol / L,
+            "symbol": "mmol/L",
+            "unit": 1e-3 * mol / L,
+        },
+        {
+            "symbol": "mol/L",
+            "unit": mol / L,
+        },
+        {
+            "symbol": "pmol/mL",
+            "unit": 1e-12 * mol / (1e-3 * L),
+        },
+        {
+            "symbol": "nmol/mL",
+            "unit": 1e-9 * mol / (1e-3 * L),
+        },
+        {
+            "symbol": "µmol/mL",
+            "unit": 1e-6 * mol / (1e-3 * L),
+        },
+        {
+            "symbol": "mmol/mL",
+            "unit": 1e-3 * mol / (1e-3 * L),
+        },
+        {
+            "symbol": "mol/mL",
+            "unit": mol / (1e-3 * L),
         },
         {
             "symbol": "µL/min/mg",
@@ -168,8 +192,12 @@ def load_units(apps, schema_editor):
             "unit": 1e-9 * g,
         },
         {
-            "symbol": "ng/mL",
-            "unit": 1e-9 * g / (1e-3 * L),
+            "symbol": "pg/L",
+            "unit": 1e-12 * g / L,
+        },
+        {
+            "symbol": "µg/L",
+            "unit": 1e-6 * g / L,
         },
         {
             "symbol": "mg/L",
@@ -195,6 +223,15 @@ def load_units(apps, schema_editor):
             "symbol": "µg/mL",
             "unit": 1e-6 * g / (1e-3 * L),
         },
+        {
+            "symbol": "mg/mL",
+            "unit": 1e-3 * g / (1e-3 * L),
+        },
+        {
+            "symbol": "g/mL",
+            "unit": g / (1e-3 * L),
+        },
+
         {
             "symbol": "10^6/mcL",
             "unit": 1e6 / (1e-3 * cL),

@@ -40,7 +40,7 @@ import SsidChartIcon from "@mui/icons-material/SsidChart";
 import ContactSupportIcon from "@mui/icons-material/ContactSupport";
 import TableViewIcon from "@mui/icons-material/TableView";
 import "@fontsource/comfortaa"; // Defaults to weight 400
-
+import useSubjectGroups from "../../hooks/useSubjectGroups";
 
 const drawerWidth = 240;
 
@@ -53,6 +53,7 @@ export default function Sidebar() {
   const selectedProject = useSelector(
     (state: RootState) => state.main.selectedProject,
   );
+  const { groups } = useSubjectGroups();
   const dirtyCount = useSelector((state: RootState) => state.main.dirtyCount);
   const projectId = useSelector(
     (state: RootState) => state.main.selectedProject,
@@ -68,39 +69,59 @@ export default function Sidebar() {
     { skip: !projectId },
   );
   const model = models?.[0] || null;
-  const { data: pd_model } =
-    usePharmacodynamicRetrieveQuery(
-      { id: model?.pd_model || 0 },
-      { skip: !model?.pd_model },
-    );
+  const { data: pd_model } = usePharmacodynamicRetrieveQuery(
+    { id: model?.pd_model || 0 },
+    { skip: !model?.pd_model },
+  );
   const { data: project } = useProjectRetrieveQuery(
     { id: projectIdOrZero },
     { skip: !projectId },
   );
-  const { REACT_APP_ROCHE } = process.env;
-  const isRocheLogo = typeof REACT_APP_ROCHE === 'string' ? REACT_APP_ROCHE === 'true' : REACT_APP_ROCHE;
+  const { VITE_APP_ROCHE } = import.meta.env;
+  const isRocheLogo =
+    typeof VITE_APP_ROCHE === "string"
+      ? VITE_APP_ROCHE === "true"
+      : VITE_APP_ROCHE;
 
   const modelIsIncomplete = (
     mdl: CombinedModelRead | null,
     prtcls: ProtocolListApiResponse | undefined,
   ) => {
-
-    const isTumourModel = pd_model?.is_library_model && pd_model?.name.startsWith("tumour_growth");
+    const isTumourModel =
+      pd_model?.is_library_model && pd_model?.name.startsWith("tumour_growth");
     const noKillModel = !mdl?.pd_model2;
     return (
       (mdl && mdl.pk_model === null) ||
-      (mdl && mdl.pd_model && mdl.mappings.length === 0 && !(isTumourModel && noKillModel)) ||
+      (mdl &&
+        mdl.pd_model &&
+        mdl.mappings.length === 0 &&
+        !(isTumourModel && noKillModel)) ||
       (prtcls && prtcls.length === 0)
     );
   };
 
+  const doses = groups?.flatMap((group) => group.protocols.map((p) => p.doses));
+  const groupsAreIncomplete = doses?.some((dosing) => !dosing[0]?.amount);
+
+  const warnings: { [key: string]: string } = {};
   const errors: { [key: string]: string } = {};
   if (modelIsIncomplete(model, protocols)) {
     errors[PageName.MODEL] =
       "Model is incomplete, see the Model tab for details";
   }
+  if (groupsAreIncomplete) {
+    warnings[PageName.TRIAL_DESIGN] =
+      "Trial design is incomplete, one or more dose amounts are zero";
+  }
 
   const errorComponents: { [key: string]: ReactNode } = {};
+  for (const key in warnings) {
+    errorComponents[key] = (
+      <Tooltip title={warnings[key]}>
+        <ErrorIcon color="warning" />
+      </Tooltip>
+    );
+  } 
   for (const key in errors) {
     errorComponents[key] = (
       <Tooltip title={errors[key]}>
@@ -138,12 +159,12 @@ export default function Sidebar() {
     dispatch(setPage(chosenPage));
 
     switch (chosenPage) {
-      case (PageName.MODEL):
+      case PageName.MODEL:
         dispatch(setSubPage(SubPageName.PKPDMODEL));
         break;
-      case (PageName.HELP):
+      case PageName.HELP:
         dispatch(setSubPage(SubPageName.TUTORIALS));
-        break
+        break;
       default:
         dispatch(setSubPage(null));
         break;
@@ -158,7 +179,7 @@ export default function Sidebar() {
     if (page === PageName.TRIAL_DESIGN && PageName.MODEL in errors) {
       return true;
     }
-    if (page === PageName.DATA) {
+    if (page === PageName.DATA && PageName.MODEL in errors) {
       return true;
     }
     if (

@@ -6,51 +6,47 @@
 
 from pkpdapp.utils import DataParser
 from rest_framework import serializers
-from drf_spectacular.utils import extend_schema_field
-import codecs
 from pkpdapp.models import (
-    Dataset, Protocol,
+    Dataset
 )
-from pkpdapp.api.serializers import ProtocolSerializer
+from pkpdapp.api.serializers import (
+    BiomarkerTypeSerializer, ProtocolSerializer, SubjectGroupSerializer
+)
 
 
 class DatasetSerializer(serializers.ModelSerializer):
-    biomarker_types = serializers.PrimaryKeyRelatedField(
+    biomarker_types = BiomarkerTypeSerializer(
         many=True, read_only=True
     )
     subjects = serializers.PrimaryKeyRelatedField(
         many=True, read_only=True
     )
-    protocols = serializers.SerializerMethodField('get_protocols')
+    groups = SubjectGroupSerializer(
+        many=True, read_only=True
+    )
+    protocols = ProtocolSerializer(
+        many=True, read_only=True
+    )
 
     class Meta:
         model = Dataset
         fields = '__all__'
 
-    @extend_schema_field(ProtocolSerializer(many=True))
-    def get_protocols(self, dataset):
-        protocols = [
-            Protocol.objects.get(pk=p['protocol'])
-            for p in dataset.subjects.values('protocol').distinct()
-            if p['protocol'] is not None
-        ]
-        return ProtocolSerializer(protocols, many=True).data
-
 
 class DatasetCsvSerializer(serializers.ModelSerializer):
-    csv = serializers.FileField()
+    name = serializers.CharField()
+    csv = serializers.CharField()
 
     class Meta:
         model = Dataset
-        fields = ['csv']
+        fields = ['name', 'csv']
 
     def validate_csv(self, csv):
-        utf8_file = codecs.EncodedFile(csv.open(), "utf-8")
         parser = DataParser()
 
         # error in columns
         try:
-            data = parser.parse_from_stream(utf8_file)
+            data = parser.parse_from_str(csv)
         except RuntimeError as err:
             raise serializers.ValidationError(str(err))
         except UnicodeDecodeError as err:
@@ -61,4 +57,6 @@ class DatasetCsvSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         data = validated_data['csv']
         instance.replace_data(data)
+        instance.name = validated_data['name']
+        instance.save()
         return instance

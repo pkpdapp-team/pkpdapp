@@ -1,10 +1,5 @@
-import {
-  FC,
-  ReactNode,
-  useState,
-  useEffect
-} from "react";
-import { HelpOutline } from "@mui/icons-material";
+import { FC, ReactNode, useState, useEffect } from "react";
+import HelpOutline from "@mui/icons-material/HelpOutline";
 import { IconButton, Tooltip } from "@mui/material";
 import { tooltipWrapper } from "../shared/tooltipWrapper";
 import { useSelector } from "react-redux";
@@ -43,19 +38,19 @@ const HelpButton: FC<HelpButtonProps> = ({ title, children }) => {
         title={tooltipWrapper(children, handleClose)}
         disableHoverListener={true}
         open={open}
-        TransitionProps={{ timeout: { enter: 200, exit: 0} }}
+        TransitionProps={{ timeout: { enter: 200, exit: 0 } }}
         componentsProps={{
           tooltip: {
             sx: {
               bgcolor: "common.white",
               color: "common.black",
-              boxShadow: "2px 2px 5px rgba(0, 0, 0, .3)"
+              boxShadow: "2px 2px 5px rgba(0, 0, 0, .3)",
             },
           },
         }}
       >
         <IconButton onClick={handleOpen}>
-            <HelpOutline />
+          <HelpOutline />
         </IconButton>
       </Tooltip>
     </>

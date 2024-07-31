@@ -21,7 +21,7 @@ import {
 } from "../../app/backendApi";
 import { Control } from "react-hook-form";
 import { FormData } from "./Project";
-import { Delete } from "@mui/icons-material";
+import Delete from "@mui/icons-material/Delete";
 import { useSelector } from "react-redux";
 import { selectCurrentUser } from "../login/loginSlice";
 
@@ -43,7 +43,6 @@ const UserAccess: FC<Props> = ({
   control,
   onClose,
 }) => {
-
   const { data: users } = useUserListQuery();
 
   // create map from user id to user object
@@ -52,23 +51,23 @@ const UserAccess: FC<Props> = ({
     userMap.set(user.id, user);
   });
 
-  
-
   const addUser = (id: number) => {
     append({ user: id, read_only: true });
   };
 
   const deleteAccess = (access: ProjectAccess, index: number) => () => {
     remove(index);
-  }
+  };
 
   const currentUser = useSelector(selectCurrentUser);
   const myUserId = currentUser?.id || 0;
 
   // create list of user options for select
-  const userOptions = users?.filter(user => user.id !== myUserId).map((user) => {
-    return { value: user.id, label: user.username };
-  });
+  const userOptions = users
+    ?.filter((user) => user.id !== myUserId)
+    .map((user) => {
+      return { value: user.id, label: user.username };
+    });
   userOptions?.push({ value: 0, label: "Add User" });
 
   return (
@@ -105,14 +104,14 @@ const UserAccess: FC<Props> = ({
                   <TableRow key={user.user}>
                     <TableCell>{userName}</TableCell>
                     <TableCell>
-                    {!isMe && (
-                      <IconButton onClick={deleteAccess(user, i)}>
-                        <Delete />
-                      </IconButton>
-                    )}
+                      {!isMe && (
+                        <IconButton onClick={deleteAccess(user, i)}>
+                          <Delete />
+                        </IconButton>
+                      )}
                     </TableCell>
                   </TableRow>
-                )
+                );
               })}
             </TableBody>
           </Table>

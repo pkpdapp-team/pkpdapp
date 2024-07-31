@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import { FC, useEffect, useState } from "react";
 import { DynamicTabs, TabPanel } from "../../components/DynamicTabs";
 import HelpTab from "./HelpTab";
 import { parse } from "papaparse";
@@ -23,10 +23,8 @@ const TYPE_COLUMN = 1;
 const LINK_COLUMN = 2;
 const KEYWORDS_COLUMN = 3;
 
-const Help: React.FC = () => {
-  const [tutorialVideos, setTutorialVideos] = React.useState<TutorialVideo[]>(
-    [],
-  );
+const Help: FC = () => {
+  const [tutorialVideos, setTutorialVideos] = useState<TutorialVideo[]>([]);
   useEffect(() => {
     parse(tutorialVideosUrl, {
       download: true,
@@ -87,13 +85,12 @@ const Help: React.FC = () => {
     SubPageName.TRAILDESIGN,
     SubPageName.SIMULATION,
   ];
-  const disabledTabs = tabNames.filter((name, index) => tutorials[index].length === 0);
+  const disabledTabs = tabNames.filter(
+    (name, index) => tutorials[index].length === 0,
+  );
 
   return (
-    <DynamicTabs
-      tabNames={tabNames}
-      disabledTabs={disabledTabs}
-    >
+    <DynamicTabs tabNames={tabNames} disabledTabs={disabledTabs}>
       {questions.map((question, index) => (
         <TabPanel key={index}>
           <HelpTab questions={question} videos={tutorials[index]} />

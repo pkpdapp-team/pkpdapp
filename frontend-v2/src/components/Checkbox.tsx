@@ -1,13 +1,17 @@
-import React from "react";
+import { ReactElement } from "react";
 import { Control, Controller, FieldPath, FieldValues } from "react-hook-form";
-import * as material from "@mui/material";
+import {
+  Checkbox as MaterialCheckbox,
+  CheckboxProps,
+  FormControlLabel,
+} from "@mui/material";
 
 type Props<T extends FieldValues> = {
   label: string;
   name: FieldPath<T>;
   control: Control<T>;
   rules?: Object;
-  checkboxFieldProps?: material.CheckboxProps;
+  checkboxFieldProps?: CheckboxProps;
 };
 
 function Checkbox<T extends FieldValues>({
@@ -16,7 +20,7 @@ function Checkbox<T extends FieldValues>({
   control,
   rules,
   checkboxFieldProps,
-}: Props<T>): React.ReactElement {
+}: Props<T>): ReactElement {
   return (
     <Controller
       name={name}
@@ -27,9 +31,9 @@ function Checkbox<T extends FieldValues>({
         fieldState: { error },
       }) => {
         return (
-          <material.FormControlLabel
+          <FormControlLabel
             control={
-              <material.Checkbox
+              <MaterialCheckbox
                 name={name}
                 id={name}
                 checked={value === undefined ? false : value}

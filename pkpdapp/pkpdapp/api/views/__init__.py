@@ -12,7 +12,8 @@ from .filters import (
     DosedPkModelFilter,
     PdModelFilter,
     ProjectFilter,
-    InferenceFilter
+    InferenceFilter,
+    DatasetFilter
 )
 from .permissions import (
     NotADatasetDose,
@@ -45,6 +46,7 @@ from .simulate import (
     SimulatePdView,
 )
 from .subject import SubjectView
+from .subject_group import SubjectGroupView
 from .unit import UnitView
 from .user import UserView
 from .variable import VariableView

@@ -1,4 +1,4 @@
-import React from "react";
+import { FC } from "react";
 import {
   Control,
   FieldArrayWithId,
@@ -25,7 +25,7 @@ import TextField from "../../components/TextField";
 import UnitField from "../../components/UnitField";
 import SelectField from "../../components/SelectField";
 import DropdownButton from "../../components/DropdownButton";
-import { Delete } from "@mui/icons-material";
+import Delete from "@mui/icons-material/Delete";
 import FloatField from "../../components/FloatField";
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
@@ -41,7 +41,7 @@ interface SimulationPlotFormProps {
   compound: CompoundRead;
 }
 
-const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({
+const SimulationPlotForm: FC<SimulationPlotFormProps> = ({
   index,
   plot,
   variables,
@@ -57,7 +57,9 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({
     { id: projectId || 0 },
     { skip: !projectId },
   );
-  const isSharedWithMe = useSelector((state: RootState) => selectIsProjectShared(state, project));
+  const isSharedWithMe = useSelector((state: RootState) =>
+    selectIsProjectShared(state, project),
+  );
 
   const baseXUnitId = units
     ? units.find((u) => u.symbol === "h")?.id
@@ -211,11 +213,11 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({
 
   const defaultProps = {
     disabled: isSharedWithMe,
-  }
+  };
 
   return (
     <Stack>
-      <Typography sx={{ fontWeight: "bold", paddingBottom: '1rem' }}>
+      <Typography sx={{ fontWeight: "bold", paddingBottom: "1rem" }}>
         X Axis
       </Typography>
       <Stack direction={"row"} spacing={2} alignItems={"center"}>
@@ -235,7 +237,7 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({
         />
       </Stack>
       <Divider sx={{ margin: 2 }} />
-      <Typography sx={{ fontWeight: "bold", paddingBottom: '1rem' }}>
+      <Typography sx={{ fontWeight: "bold", paddingBottom: "1rem" }}>
         Y Axis
       </Typography>
       <DropdownButton
@@ -296,7 +298,10 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({
                 />
               </Grid>
               <Grid item xs={2}>
-                <IconButton onClick={() => handleRemoveYAxis(yAxis)} disabled={isSharedWithMe}>
+                <IconButton
+                  onClick={() => handleRemoveYAxis(yAxis)}
+                  disabled={isSharedWithMe}
+                >
                   <Delete />
                 </IconButton>
               </Grid>
@@ -307,7 +312,8 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({
       <Divider sx={{ margin: 2 }} />
       <Stack direction={"row"} spacing={2} alignItems={"center"}>
         <Typography sx={{ fontWeight: "bold", paddingBottom: "1rem" }}>
-          Reference lines (if Efficacy-Safety Data have been defined in Drug and Target)
+          Reference lines (if Efficacy-Safety Data have been defined in Drug and
+          Target)
         </Typography>
       </Stack>
       <DropdownButton
@@ -336,7 +342,10 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({
                 />
               </Grid>
               <Grid item xs={2}>
-                <IconButton onClick={() => handleRemoveCxLine(cxLineIndex)} disabled={isSharedWithMe}>
+                <IconButton
+                  onClick={() => handleRemoveCxLine(cxLineIndex)}
+                  disabled={isSharedWithMe}
+                >
                   <Delete />
                 </IconButton>
               </Grid>
@@ -357,7 +366,12 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({
       >
         Add Variable
       </DropdownButton>
-      <Stack direction={"row"} spacing={2} alignItems={"center"} sx={{ paddingTop: '1rem'}}>
+      <Stack
+        direction={"row"}
+        spacing={2}
+        alignItems={"center"}
+        sx={{ paddingTop: "1rem" }}
+      >
         <UnitField
           label="Unit"
           name={`plots.${index}.y_unit2`}
@@ -401,7 +415,10 @@ const SimulationPlotForm: React.FC<SimulationPlotFormProps> = ({
                 />
               </Grid>
               <Grid item xs={2}>
-                <IconButton onClick={() => handleRemoveYAxis(yAxis)} disabled={isSharedWithMe}>
+                <IconButton
+                  onClick={() => handleRemoveYAxis(yAxis)}
+                  disabled={isSharedWithMe}
+                >
                   <Delete />
                 </IconButton>
               </Grid>

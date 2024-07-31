@@ -2,8 +2,9 @@
 import { FC, useEffect, useMemo, useState } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import useDataset from "../../hooks/useDataset";
 import {
   TableCell,
   TableRow,
@@ -13,7 +14,8 @@ import {
   Tooltip,
   Stack,
 } from "@mui/material";
-import { Delete, PersonAdd } from "@mui/icons-material";
+import Delete from "@mui/icons-material/Delete";
+import PersonAdd from "@mui/icons-material/PersonAdd";
 import {
   Compound,
   Project,
@@ -31,7 +33,7 @@ import UserAccess from "./UserAccess";
 import { setProject } from "../main/mainSlice";
 import TextField from "../../components/TextField";
 import useDirty from "../../hooks/useDirty";
-import useInterval from '../../hooks/useInterval';
+import useInterval from "../../hooks/useInterval";
 import ConfirmationDialog from "../../components/ConfirmationDialog";
 import { selectCurrentUser, selectIsProjectShared } from "../login/loginSlice";
 import { RootState } from "../../app/store";
@@ -40,7 +42,7 @@ interface Props {
   project: ProjectRead;
   isSelected: boolean;
   otherProjectNames: string[];
-  isAnyProjectSelected: Boolean;
+  isAnyProjectSelected: boolean;
 }
 
 export interface FormData {
@@ -75,19 +77,20 @@ const ProjectRow: FC<Props> = ({
     destroyProject, // This is the destructured mutation result
   ] = useProjectDestroyMutation();
 
-  const [ projectCopyUpdate ] = useProjectCopyUpdateMutation();
+  const [projectCopyUpdate] = useProjectCopyUpdateMutation();
 
   const modalityOptions = [
     { value: "SM", label: "Small Molecule" },
     { value: "LM", label: "Large Molecule" },
   ];
 
+  const { dataset, addDataset } = useDataset(project.id);
+
   const [showConfirmDelete, setShowConfirmDelete] = useState<boolean>(false);
 
-  const {
-    data: compound,
-    isLoading,
-  } = useCompoundRetrieveQuery({ id: project.compound });
+  const { data: compound, isLoading } = useCompoundRetrieveQuery({
+    id: project.compound,
+  });
   const defaultCompound: CompoundRead = {
     id: 1,
     name: "",
@@ -118,29 +121,37 @@ const ProjectRow: FC<Props> = ({
     name: "project.user_access",
   });
 
-  const isSharedWithMe = useSelector((state: RootState) => selectIsProjectShared(state, project));
-  const currentUser = useSelector((state: RootState) => selectCurrentUser(state));
-  const [ projectAccessDestroy ] = useProjectAccessDestroyMutation();
+  const isSharedWithMe = useSelector((state: RootState) =>
+    selectIsProjectShared(state, project),
+  );
+  const currentUser = useSelector((state: RootState) =>
+    selectCurrentUser(state),
+  );
+  const [projectAccessDestroy] = useProjectAccessDestroyMutation();
 
   useEffect(() => {
     reset({ project, compound });
   }, [project, compound, reset]);
 
-  const handleSave = useMemo(() => handleSubmit((data: FormData) => {
-    if (compound && project) {
-      if (JSON.stringify(compound) !== JSON.stringify(data.compound)) {
-        updateCompound({ id: compound.id, compound: data.compound });
-      }
-      if (JSON.stringify(project) !== JSON.stringify(data.project)) {
-        updateProject({ id: project.id, project: data.project });
-      }
-    }
-  }), [handleSubmit, compound, project, updateCompound, updateProject]);
+  const handleSave = useMemo(
+    () =>
+      handleSubmit((data: FormData) => {
+        if (compound && project) {
+          if (JSON.stringify(compound) !== JSON.stringify(data.compound)) {
+            updateCompound({ id: compound.id, compound: data.compound });
+          }
+          if (JSON.stringify(project) !== JSON.stringify(data.project)) {
+            updateProject({ id: project.id, project: data.project });
+          }
+        }
+      }),
+    [handleSubmit, compound, project, updateCompound, updateProject],
+  );
 
   useInterval({
     callback: handleSave,
     delay: 1000,
-    isDirty
+    isDirty,
   });
 
   if (isLoading) {
@@ -157,20 +168,26 @@ const ProjectRow: FC<Props> = ({
   };
 
   const handleRemoveUserAccess = () => {
-    const projectAccess = project.user_access.find((access) => access.user === currentUser?.id);
+    const projectAccess = project.user_access.find(
+      (access) => access.user === currentUser?.id,
+    );
     if (projectAccess) {
       projectAccessDestroy({ id: projectAccess.id });
     }
-  }
+  };
 
-  const handleDelete = isSharedWithMe ? handleRemoveUserAccess : handleDeleteProject;
-
+  const handleDelete = isSharedWithMe
+    ? handleRemoveUserAccess
+    : handleDeleteProject;
 
   const userAccessClose = () => {
     setUserAccessOpen(false);
   };
 
   const handleSelectProject = () => {
+    if (dataset === undefined) {
+      addDataset(project.id);
+    }
     dispatch(setProject(project.id));
   };
 
@@ -180,8 +197,8 @@ const ProjectRow: FC<Props> = ({
   };
 
   const defaultSx = {
-    backgroundColor: 'white'
-  }
+    backgroundColor: "white",
+  };
 
   const validateName = (value: string) => {
     if (otherProjectNames.includes(value)) {
@@ -192,25 +209,31 @@ const ProjectRow: FC<Props> = ({
 
   const copyProject = () => {
     projectCopyUpdate({ id: project.id, project: project });
-  }
+  };
 
-  const deleteMessage = isSharedWithMe ? 
-    "This will remove this shared project from your list, the original project will be unaffected, do you wish to proceed?" 
-    : "Are you sure you want to permanently delete this project? If it is shared with any other users, it will be removed from their list as well"
-  const deleteTooltip = isSharedWithMe ?
-    "Remove shared project from your list"
+  const deleteMessage = isSharedWithMe
+    ? "This will remove this shared project from your list, the original project will be unaffected, do you wish to proceed?"
+    : "Are you sure you want to permanently delete this project? If it is shared with any other users, it will be removed from their list as well";
+  const deleteTooltip = isSharedWithMe
+    ? "Remove shared project from your list"
     : "Delete Project";
 
   return (
     <>
-      <TableRow data-cy={`project-${project.id}`} style={{ backgroundColor: isSelected ? '#E3E9F8' : '#FFF' }}>
+      <TableRow
+        data-cy={`project-${project.id}`}
+        style={{ backgroundColor: isSelected ? "#E3E9F8" : "#FFF" }}
+      >
         <TableCell
           rowSpan={isSelected ? 2 : 1}
           sx={{ verticalAlign: "top" }}
           padding="checkbox"
         >
           <Radio
-            sx={{ marginTop: 4, color: isAnyProjectSelected ? 'inherit' : 'red' }}
+            sx={{
+              marginTop: 4,
+              color: isAnyProjectSelected ? "inherit" : "red",
+            }}
             checked={isSelected}
             onClick={handleSelectProject}
           />
@@ -225,7 +248,7 @@ const ProjectRow: FC<Props> = ({
           />
         </TableCell>
         <TableCell>
-          <Typography component='span'>
+          <Typography component="span">
             {speciesOptions.find((s) => s.value === project.species)?.label}
           </Typography>
         </TableCell>
@@ -245,7 +268,7 @@ const ProjectRow: FC<Props> = ({
           }
         </TableCell>
         <TableCell>
-          <Stack component='span' direction="row" spacing={0.0}>
+          <Stack component="span" direction="row" spacing={0.0}>
             <Tooltip title={deleteTooltip}>
               <IconButton onClick={() => setShowConfirmDelete(true)}>
                 <Delete />
@@ -259,13 +282,16 @@ const ProjectRow: FC<Props> = ({
               onCancel={() => setShowConfirmDelete(false)}
             />
             <Tooltip title="Copy Project">
-            <IconButton onClick={copyProject}>
-              <ContentCopyIcon />
-            </IconButton>
+              <IconButton onClick={copyProject}>
+                <ContentCopyIcon />
+              </IconButton>
             </Tooltip>
 
             <Tooltip title="Share Project">
-              <IconButton onClick={() => setUserAccessOpen(true)} disabled={isSharedWithMe}>
+              <IconButton
+                onClick={() => setUserAccessOpen(true)}
+                disabled={isSharedWithMe}
+              >
                 <PersonAdd />
               </IconButton>
             </Tooltip>
@@ -278,20 +304,20 @@ const ProjectRow: FC<Props> = ({
               remove={remove}
               project={project}
             />
-            { isSharedWithMe && (
-            <Tooltip title="This project is shared with me as view-only">
-              <div>
-              <IconButton disabled>
-                <VisibilityIcon />
-              </IconButton>
-              </div>
-            </Tooltip>
+            {isSharedWithMe && (
+              <Tooltip title="This project is shared with me as view-only">
+                <div>
+                  <IconButton disabled>
+                    <VisibilityIcon />
+                  </IconButton>
+                </div>
+              </Tooltip>
             )}
           </Stack>
         </TableCell>
       </TableRow>
       {isSelected && (
-        <TableRow style={{ backgroundColor: '#E3E9F8' }}>
+        <TableRow style={{ backgroundColor: "#E3E9F8" }}>
           <TableCell colSpan={4}>
             <TextField
               label="Description"

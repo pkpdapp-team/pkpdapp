@@ -31,7 +31,6 @@ import ConfirmationDialog from "../../components/ConfirmationDialog";
 import SelectField from "../../components/SelectField";
 import { selectIsProjectShared } from "../login/loginSlice";
 
-
 const Drug: FC = () => {
   const projectId = useSelector(
     (state: RootState) => state.main.selectedProject,
@@ -49,8 +48,9 @@ const Drug: FC = () => {
     { skip: !project?.compound },
   );
 
-
-  const isSharedWithMe = useSelector((state: RootState) => selectIsProjectShared(state, project));
+  const isSharedWithMe = useSelector((state: RootState) =>
+    selectIsProjectShared(state, project),
+  );
 
   const [showConfirmDelete, setShowConfirmDelete] = useState<boolean>(false);
 
@@ -81,36 +81,44 @@ const Drug: FC = () => {
     reset(compound);
   }, [compound, reset]);
 
-  const submit = useMemo(() => handleSubmit((data) => {
-    if (data && compound && JSON.stringify(data) !== JSON.stringify(compound)) {
-      // strange bug in react-hook-form is creating efficancy_experiments with undefined compounds, remove these for now.
-      data.efficacy_experiments = data.efficacy_experiments.filter(
-        (efficacy_experiment) => efficacy_experiment.compound !== undefined,
-      );
-      updateCompound({ id: compound.id, compound: data }).then((result) => {
-        // if the compound has no efficacy experiments, but the result has, then set the first one as the use_efficacy
-        if ("data" in result) {
-          if (
-            compound.efficacy_experiments.length === 0 &&
-            result.data.efficacy_experiments.length > 0
-          ) {
-            updateCompound({
-              id: compound.id,
-              compound: {
-                ...data,
-                use_efficacy: result.data.efficacy_experiments[0].id,
-              },
-            });
-          }
+  const submit = useMemo(
+    () =>
+      handleSubmit((data) => {
+        if (
+          data &&
+          compound &&
+          JSON.stringify(data) !== JSON.stringify(compound)
+        ) {
+          // strange bug in react-hook-form is creating efficancy_experiments with undefined compounds, remove these for now.
+          data.efficacy_experiments = data.efficacy_experiments.filter(
+            (efficacy_experiment) => efficacy_experiment.compound !== undefined,
+          );
+          updateCompound({ id: compound.id, compound: data }).then((result) => {
+            // if the compound has no efficacy experiments, but the result has, then set the first one as the use_efficacy
+            if (result?.data) {
+              if (
+                compound.efficacy_experiments.length === 0 &&
+                result.data.efficacy_experiments.length > 0
+              ) {
+                updateCompound({
+                  id: compound.id,
+                  compound: {
+                    ...data,
+                    use_efficacy: result.data.efficacy_experiments[0].id,
+                  },
+                });
+              }
+            }
+          });
         }
-      });
-    }
-  }), [compound, handleSubmit, updateCompound]);
+      }),
+    [compound, handleSubmit, updateCompound],
+  );
 
   useInterval({
-    callback: submit, 
+    callback: submit,
     delay: 1000,
-    isDirty
+    isDirty,
   });
 
   const addNewEfficacyExperiment = () => {
@@ -155,13 +163,14 @@ const Drug: FC = () => {
   };
 
   const molMassUnit = units.find((u) => u.id === compound.molecular_mass_unit);
-  const molMassUnits= molMassUnit?.compatible_units.filter((unit) => unit.symbol.endsWith("mol"));
-  const molMassUnitOpt= molMassUnits
+  const molMassUnits = molMassUnit?.compatible_units.filter((unit) =>
+    unit.symbol.endsWith("mol"),
+  );
+  const molMassUnitOpt = molMassUnits
     ? molMassUnits.map((unit: { [key: string]: string }) => {
         return { value: unit.id, label: unit.symbol };
       })
     : [];
-
 
   const defaultProps = { disabled: isSharedWithMe };
 
@@ -222,7 +231,11 @@ const Drug: FC = () => {
           <Typography variant="h6" component="h2" gutterBottom>
             Efficacy-Safety Data
           </Typography>
-          <Button variant="outlined" onClick={addNewEfficacyExperiment} disabled={isSharedWithMe}>
+          <Button
+            variant="outlined"
+            onClick={addNewEfficacyExperiment}
+            disabled={isSharedWithMe}
+          >
             Add new
           </Button>
           <List>
@@ -255,7 +268,10 @@ const Drug: FC = () => {
                       </div>
                     </Tooltip>
                     <Tooltip title="Delete this efficacy-safety data">
-                      <IconButton onClick={() => setShowConfirmDelete(true)} disabled={isSharedWithMe}>
+                      <IconButton
+                        onClick={() => setShowConfirmDelete(true)}
+                        disabled={isSharedWithMe}
+                      >
                         <DeleteIcon />
                       </IconButton>
                     </Tooltip>

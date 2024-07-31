@@ -45,7 +45,7 @@ class ErrorResponseSerializer(serializers.Serializer):
 @extend_schema(
     request=SimulateSerializer,
     responses={
-        200: SimulateResponseSerializer,
+        200: SimulateResponseSerializer(many=True),
         400: ErrorResponseSerializer,
         404: None,
     },
@@ -62,12 +62,12 @@ class SimulateBaseView(views.APIView):
         time_max = request.data.get('time_max', None)
         try:
             result = m.simulate(outputs, variables, time_max)
-        except myokit.SimulationError as e:
+        except myokit.MyokitError as e:
             serialized_result = ErrorResponseSerializer({'error': str(e)})
             return Response(
                 serialized_result.data, status=status.HTTP_400_BAD_REQUEST
             )
-        serialized_result = SimulateResponseSerializer(result)
+        serialized_result = SimulateResponseSerializer(result, many=True)
         return Response(serialized_result.data)
 
 

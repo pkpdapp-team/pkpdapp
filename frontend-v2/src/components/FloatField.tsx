@@ -1,6 +1,6 @@
-import React from "react";
+import { ChangeEvent, FocusEvent, ReactElement } from "react";
 import { Control, Controller, FieldPath, FieldValues } from "react-hook-form";
-import * as material from "@mui/material";
+import { TextField, TextFieldProps } from "@mui/material";
 import { useFieldState } from "../app/hooks";
 import { getLabel } from "../shared/getRequiredLabel";
 
@@ -9,9 +9,9 @@ type Props<T extends FieldValues> = {
   name: FieldPath<T>;
   control: Control<T>;
   rules?: Record<string, unknown>;
-  textFieldProps?: material.TextFieldProps;
+  textFieldProps?: TextFieldProps;
   data_cy?: string;
-  sx?: Record<string, string>
+  sx?: Record<string, string>;
 };
 
 function convert(value: any) {
@@ -33,8 +33,8 @@ function FloatField<T extends FieldValues>({
   rules,
   textFieldProps,
   data_cy,
-  sx
-}: Props<T>): React.ReactElement {
+  sx,
+}: Props<T>): ReactElement {
   const [fieldValue, setFieldValue] = useFieldState({ name, control });
 
   return (
@@ -46,7 +46,7 @@ function FloatField<T extends FieldValues>({
         field: { onChange, onBlur, value },
         fieldState: { error, isDirty, isTouched },
       }) => {
-        const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+        const handleBlur = (e: FocusEvent<HTMLInputElement>) => {
           const updatedValue = convert(e.target.value);
           if (updatedValue !== value) {
             e.target.value = updatedValue as any;
@@ -55,14 +55,14 @@ function FloatField<T extends FieldValues>({
           onBlur();
         };
 
-        const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
           setFieldValue(convert(e.target.value));
         };
         return (
-          <material.TextField
+          <TextField
             label={
               !error
-                ? getLabel(label || '', Boolean(rules?.required))
+                ? getLabel(label || "", Boolean(rules?.required))
                 : error?.message ||
                   (error?.type === "required" ? "Required" : "")
             }

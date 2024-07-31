@@ -3,7 +3,7 @@
 # is released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-from rest_framework import viewsets
+from rest_framework import filters, viewsets
 from pkpdapp.api.views import (
     DosedPkModelFilter,
     PdModelFilter,
@@ -17,7 +17,8 @@ from drf_spectacular.types import OpenApiTypes
 class UnitView(viewsets.ModelViewSet):
     queryset = Unit.objects.all()
     serializer_class = UnitSerializer
-    filter_backends = [DosedPkModelFilter, PdModelFilter]
+    filter_backends = [DosedPkModelFilter, PdModelFilter, filters.OrderingFilter]
+    ordering = ["-g", "-m", "-mol", "-s", "K", "A", "cd", "-multiplier"]
 
     def get_serializer_context(self):
         context = super().get_serializer_context()

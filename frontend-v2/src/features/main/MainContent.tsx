@@ -1,4 +1,4 @@
-import React from "react";
+import { FC, ReactNode } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
 import { PageName } from "./mainSlice";
@@ -9,12 +9,13 @@ import Simulations from "../simulation/Simulations";
 import Protocols from "../trial/Protocols";
 import { Box } from "@mui/material";
 import Help from "../help/Help";
+import Data from "../data/Data";
 
 interface TabPanelProps {
-  children?: React.ReactNode;
+  children?: ReactNode;
   index: PageName;
   value: PageName;
-  error?: React.ReactNode;
+  error?: ReactNode;
 }
 
 function TabPanel(props: TabPanelProps) {
@@ -33,8 +34,12 @@ function TabPanel(props: TabPanelProps) {
   );
 }
 
-const MainContent: React.FC = () => {
+const MainContent: FC = () => {
   const page = useSelector((state: RootState) => state.main.selectedPage);
+  const projectId = useSelector(
+    (state: RootState) => state.main.selectedProject,
+  );
+  const projectIdOrZero = projectId || 0;
 
   return (
     <div>
@@ -42,16 +47,19 @@ const MainContent: React.FC = () => {
         <ProjectTable />
       </TabPanel>
       <TabPanel value={page} index={PageName.DRUG}>
-        <Drug />
+        <Drug key={projectIdOrZero} />
       </TabPanel>
       <TabPanel value={page} index={PageName.MODEL}>
-        <Model />
+        <Model key={projectIdOrZero} />
+      </TabPanel>
+      <TabPanel value={page} index={PageName.DATA}>
+        <Data key={projectIdOrZero} />
       </TabPanel>
       <TabPanel value={page} index={PageName.TRIAL_DESIGN}>
-        <Protocols />
+        <Protocols key={projectIdOrZero} />
       </TabPanel>
       <TabPanel value={page} index={PageName.SIMULATIONS}>
-        <Simulations />
+        <Simulations key={projectIdOrZero} />
       </TabPanel>
       <TabPanel value={page} index={PageName.HELP}>
         <Help />

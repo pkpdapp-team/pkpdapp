@@ -158,6 +158,12 @@ paths:
   /api/biomarker_type/:
     get:
       operationId: biomarker_type_list
+      parameters:
+      - in: query
+        name: dataset_id
+        schema:
+          type: integer
+        description: Filter results by dataset ID
       tags:
       - biomarker_type
       security:
@@ -539,7 +545,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SimulateResponse'
+                type: array
+                items:
+                  $ref: '#/components/schemas/SimulateResponse'
           description: ''
         '400':
           content:
@@ -693,6 +701,12 @@ paths:
   /api/dataset/:
     get:
       operationId: dataset_list
+      parameters:
+      - in: query
+        name: project_id
+        schema:
+          type: integer
+        description: Filter results by project ID
       tags:
       - dataset
       security:
@@ -845,6 +859,12 @@ paths:
       - dataset
       requestBody:
         content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DatasetCsv'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DatasetCsv'
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/DatasetCsv'
@@ -1662,7 +1682,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SimulateResponse'
+                type: array
+                items:
+                  $ref: '#/components/schemas/SimulateResponse'
           description: ''
         '400':
           content:
@@ -2168,6 +2190,11 @@ paths:
       operationId: protocol_list
       parameters:
       - in: query
+        name: dataset_id
+        schema:
+          type: integer
+        description: Filter results by dataset ID
+      - in: query
         name: project_id
         schema:
           type: integer
@@ -2471,6 +2498,17 @@ paths:
   /api/subject/:
     get:
       operationId: subject_list
+      parameters:
+      - in: query
+        name: dataset_id
+        schema:
+          type: integer
+        description: Filter results by dataset ID
+      - in: query
+        name: project_id
+        schema:
+          type: integer
+        description: Filter results by project ID
       tags:
       - subject
       security:
@@ -2609,6 +2647,158 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/subject_group/:
+    get:
+      operationId: subject_group_list
+      parameters:
+      - in: query
+        name: dataset_id
+        schema:
+          type: integer
+        description: Filter results by dataset ID
+      - in: query
+        name: project_id
+        schema:
+          type: integer
+        description: Filter results by project ID
+      tags:
+      - subject_group
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SubjectGroup'
+          description: ''
+    post:
+      operationId: subject_group_create
+      tags:
+      - subject_group
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubjectGroup'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SubjectGroup'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SubjectGroup'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubjectGroup'
+          description: ''
+  /api/subject_group/{id}/:
+    get:
+      operationId: subject_group_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this subject group.
+        required: true
+      tags:
+      - subject_group
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubjectGroup'
+          description: ''
+    put:
+      operationId: subject_group_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this subject group.
+        required: true
+      tags:
+      - subject_group
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubjectGroup'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SubjectGroup'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SubjectGroup'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubjectGroup'
+          description: ''
+    patch:
+      operationId: subject_group_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this subject group.
+        required: true
+      tags:
+      - subject_group
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedSubjectGroup'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedSubjectGroup'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedSubjectGroup'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubjectGroup'
+          description: ''
+    delete:
+      operationId: subject_group_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this subject group.
+        required: true
+      tags:
+      - subject_group
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
   /api/unit/:
     get:
       operationId: unit_list
@@ -2618,6 +2808,12 @@ paths:
         schema:
           type: integer
         description: Enable conversions based on compound information
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
       tags:
       - unit
       security:
@@ -3126,6 +3322,10 @@ components:
         axis:
           type: boolean
           description: True/False if biomarker type displayed on LHS/RHS axis
+        mapped_qname:
+          type: string
+          description: qname of the mapped model variable
+          maxLength: 50
         stored_unit:
           type: integer
           description: unit for the value stored in :model:`pkpdapp.Biomarker`
@@ -3374,12 +3574,17 @@ components:
         biomarker_types:
           type: array
           items:
-            type: integer
+            $ref: '#/components/schemas/BiomarkerType'
           readOnly: true
         subjects:
           type: array
           items:
             type: integer
+          readOnly: true
+        groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/SubjectGroup'
           readOnly: true
         protocols:
           type: array
@@ -3406,6 +3611,7 @@ components:
           description: Project that "owns" this model
       required:
       - biomarker_types
+      - groups
       - id
       - name
       - protocols
@@ -3413,11 +3619,13 @@ components:
     DatasetCsv:
       type: object
       properties:
+        name:
+          type: string
         csv:
           type: string
-          format: uri
       required:
       - csv
+      - name
     DerivedVariable:
       type: object
       properties:
@@ -3605,8 +3813,6 @@ components:
           description: If executing, this is the celery task id
           maxLength: 40
         metadata:
-          type: object
-          additionalProperties: {}
           description: metadata for inference
         project:
           type: integer
@@ -3865,6 +4071,10 @@ components:
         axis:
           type: boolean
           description: True/False if biomarker type displayed on LHS/RHS axis
+        mapped_qname:
+          type: string
+          description: qname of the mapped model variable
+          maxLength: 50
         stored_unit:
           type: integer
           description: unit for the value stored in :model:`pkpdapp.Biomarker`
@@ -4058,12 +4268,17 @@ components:
         biomarker_types:
           type: array
           items:
-            type: integer
+            $ref: '#/components/schemas/BiomarkerType'
           readOnly: true
         subjects:
           type: array
           items:
             type: integer
+          readOnly: true
+        groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/SubjectGroup'
           readOnly: true
         protocols:
           type: array
@@ -4174,8 +4389,6 @@ components:
           description: If executing, this is the celery task id
           maxLength: 40
         metadata:
-          type: object
-          additionalProperties: {}
           description: metadata for inference
         project:
           type: integer
@@ -4288,6 +4501,11 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ProjectAccess'
+        datasets:
+          type: array
+          items:
+            type: integer
+          readOnly: true
         protocols:
           type: array
           items:
@@ -4347,9 +4565,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Dose'
-        dataset:
-          type: string
-          readOnly: true
         variables:
           type: array
           items:
@@ -4374,6 +4589,15 @@ components:
           maxLength: 100
         dose_type:
           $ref: '#/components/schemas/DoseTypeEnum'
+        mapped_qname:
+          type: string
+          nullable: true
+          description: qname of the mapped dosing compartment for each dose
+          maxLength: 50
+        dataset:
+          type: integer
+          nullable: true
+          description: Dataset that uses this protocol.
         project:
           type: integer
           nullable: true
@@ -4391,6 +4615,10 @@ components:
           type: integer
           nullable: true
           description: unit for the amount value stored in each dose
+        group:
+          type: integer
+          nullable: true
+          description: Group that uses this protocol
     PatchedSimulation:
       type: object
       properties:
@@ -4462,6 +4690,42 @@ components:
           type: integer
           nullable: true
           description: dosing protocol for this subject.
+        group:
+          type: integer
+          nullable: true
+          description: subject group containing this subject.
+    PatchedSubjectGroup:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        subjects:
+          type: array
+          items:
+            type: integer
+          readOnly: true
+        protocols:
+          type: array
+          items:
+            $ref: '#/components/schemas/Protocol'
+        name:
+          type: string
+          description: name of the group
+          maxLength: 100
+        id_in_dataset:
+          type: string
+          nullable: true
+          description: unique identifier in the dataset
+          maxLength: 20
+        dataset:
+          type: integer
+          nullable: true
+          description: Dataset that this group belongs to.
+        project:
+          type: integer
+          nullable: true
+          description: Project that this group belongs to.
     PatchedUnit:
       type: object
       properties:
@@ -4782,6 +5046,11 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ProjectAccess'
+        datasets:
+          type: array
+          items:
+            type: integer
+          readOnly: true
         protocols:
           type: array
           items:
@@ -4820,6 +5089,7 @@ components:
       required:
       - compound
       - created
+      - datasets
       - id
       - name
       - protocols
@@ -4867,9 +5137,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Dose'
-        dataset:
-          type: string
-          readOnly: true
         variables:
           type: array
           items:
@@ -4894,6 +5161,15 @@ components:
           maxLength: 100
         dose_type:
           $ref: '#/components/schemas/DoseTypeEnum'
+        mapped_qname:
+          type: string
+          nullable: true
+          description: qname of the mapped dosing compartment for each dose
+          maxLength: 50
+        dataset:
+          type: integer
+          nullable: true
+          description: Dataset that uses this protocol.
         project:
           type: integer
           nullable: true
@@ -4911,8 +5187,11 @@ components:
           type: integer
           nullable: true
           description: unit for the amount value stored in each dose
+        group:
+          type: integer
+          nullable: true
+          description: Group that uses this protocol
       required:
-      - dataset
       - doses
       - id
       - name
@@ -5154,10 +5433,51 @@ components:
           type: integer
           nullable: true
           description: dosing protocol for this subject.
+        group:
+          type: integer
+          nullable: true
+          description: subject group containing this subject.
       required:
       - dataset
       - id
       - id_in_dataset
+    SubjectGroup:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        subjects:
+          type: array
+          items:
+            type: integer
+          readOnly: true
+        protocols:
+          type: array
+          items:
+            $ref: '#/components/schemas/Protocol'
+        name:
+          type: string
+          description: name of the group
+          maxLength: 100
+        id_in_dataset:
+          type: string
+          nullable: true
+          description: unique identifier in the dataset
+          maxLength: 20
+        dataset:
+          type: integer
+          nullable: true
+          description: Dataset that this group belongs to.
+        project:
+          type: integer
+          nullable: true
+          description: Project that this group belongs to.
+      required:
+      - id
+      - name
+      - protocols
+      - subjects
     TypeEnum:
       enum:
       - RO

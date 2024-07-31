@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef } from "react";
 
 type IntervalProps = {
   callback: () => void;
@@ -6,7 +6,11 @@ type IntervalProps = {
   isDirty?: boolean;
 };
 
-export default function useInterval({ callback, delay, isDirty = false }: IntervalProps){
+export default function useInterval({
+  callback,
+  delay,
+  isDirty = false,
+}: IntervalProps) {
   const savedCallback = useRef<() => void>();
 
   useEffect(() => {
@@ -26,6 +30,6 @@ export default function useInterval({ callback, delay, isDirty = false }: Interv
   }, [delay, isDirty]);
 
   useEffect(() => {
-    return () => savedCallback.current!()
+    return () => savedCallback.current!();
   }, []);
 }

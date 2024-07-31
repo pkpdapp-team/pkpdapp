@@ -50,13 +50,15 @@ For search/bind, connecting to the LDAP server either anonymously or with a fixe
 - `AUTH_LDAP_BIND_DN`: distinguished name of an authorized user (e.g. `cn=read-only-admin,dc=example,dc=com`)
 - `AUTH_LDAP_BIND_PASSWORD`: password for the authorized user
 - `AUTH_LDAP_SEARCH_BASE`: where to perform the search (e.g. `ou=mathematicians,dc=example,dc=com`)
+- `AUTH_LDAP_SEARCH_BASE{i}`: additional search bases (optional, `i` can be one of `[2, 3, 4, 5]`). e.g. `AUTH_LDAP_SEARCH_BASE2=ou=scientists,dc=example,dc=com`
 - `AUTH_LDAP_SEARCH_FILTER`: search filter based on authenticated username (`uid=%(user)s`)
 - `AUTH_LDAP_USER_GROUP`: (optional) authentication will only succeed if user is in this LDAP group (e.g. `cn=user,ou=groups,dc=example,dc=com`). If not set, then any user in the search base will be authenticated.
 - `AUTH_LDAP_ADMIN_GROUP`: (optional) user must be in this LDAP group to be a superuser (e.g. `cn=admin,ou=groups,dc=example,dc=com`). If not set, then no user will be a superuser.
 
 There are also a number of optional variables that can be set:
-- `REACT_APP_ROCHE`: set to true to enable Roche branding
-- `REACT_APP_HELP_URL`: url of help page shown on login
+- `VITE_APP_ROCHE`: set to true to enable Roche branding
+- `VITE_APP_HELP_URL`: url of help page shown on login
+- `VITE_APP_GA_ID`: Google Analytics ID to enable analytics.
 
 
 ### SSL Certificate

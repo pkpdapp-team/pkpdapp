@@ -11,45 +11,69 @@ from io import StringIO
 
 class DataParser:
     alternate_col_names = {
+        "ADMINISTRATION_ID": [
+            "administration id", "cmt", "adm", "adm_id", "administration_id"
+        ],
         "SUBJECT_ID": [
-            "ID", "id", "Subject_id", "Subject", "SUBJID",
-            "SUBJECT_ID"
+            "id", "subject_id", "subject", "subjid", "animal number"
         ],
         "TIME": [
-            "Time", "TIME", "TIMEPOINT", "t", "T", "time"
+            "time", "timepoint", "t", "hour_actual", "ivar",
         ],
         "TIME_UNIT": [
-            "Time_unit", "Time_units", "TIMEUNIT", "TIME_UNIT"
+            "time unit", "time_unit", "time_units", "timeunit", "units_time",
+            "unit_time", "unit time",
         ],
         "AMOUNT": [
-            "Amt", "Amount", "AMT", "AMOUNT"
+            "amt", "amount"
         ],
         "AMOUNT_UNIT": [
-            "Amt_unit", "Amt_units", "AMTUNIT", "UNIT", "AMOUNT_UNIT"
+            "amount unit", "amt_unit", "amt_units", "amtunit", "unit",
+            "amount_unit", "units_amt", "unit_amount", "unit amount",
+            "dose unit", "dose_unit", "unit dose", "unit_dose"
+        ],
+        "AMOUNT_VARIABLE": [
+            "amount variable", "amount_variable", "amount_var",
+            "amt_var", "amtvar", "amt_variable"
         ],
         "OBSERVATION": [
-            "DV", "Observation", "Y", "YVAL", "OBSERVATION",
-            "OBSERVATION_VALUE", "OBSERVATIONVALUE"
+            "dv", "observation", "y", "yval", "conc",
+            "observation_value", "observationvalue"
         ],
         "OBSERVATION_NAME": [
-            "Observation_id", "YDESC", "YNAME", "YTYPE", "OBSERVATION_ID",
-            "OBSERVATION_NAME", "OBSERVATIONID", "OBSERVATIONNAME"
+            "observation id", "observation_id", "ydesc", "yname", "ytype",
+            "observation_name", "observationid", "observationname"
         ],
         "OBSERVATION_UNIT": [
-            "DV_units", "Observation_unit", "YUNIT", "UNIT",
-            "OBSERVATION_UNIT",
-            "OBSERVATIONUNIT"
+            "observation unit", "dv_units", "observation_unit", "yunit", "unit",
+            "units_conc", "observationunit", "unit_observation", "unit observation",
+            "observation_unit", "concentration unit", "concentration_unit",
+            "unit concentration", "unit_concentration",
+        ],
+        "OBSERVATION_VARIABLE": [
+            "observation variable", "observation_variable", "observation_var"
         ],
         "COMPOUND": [
-            "Compound", "COMPOUND"
+            "compound"
         ],
-        "ROUTE": [
-            "Route", "ROUTE"
+        "ADMINISTRATION_NAME": [
+            "administration name", "route"
         ],
         "INFUSION_TIME": [
-            "TINF", "Tinf", "tinf", "Infusion_time", "INFUSIONTIME",
-            "INFUSION_TIME"
+            "infusion duration", "tinf", "infusion_time", "infusiontime"
         ],
+        "GROUP_ID": [
+            "group id", "group_id", "group", "cohort"
+        ],
+        "ADDITIONAL_DOSES": [
+            "additional doses", "addl", "additional_doses"
+        ],
+        "INTERDOSE_INTERVAL": [
+            "interdose interval", "ii", "infusion_interval"
+        ],
+        "EVENT_ID": [
+            "event id", "event_id", "eventid", "evid"
+        ]
     }
 
     required_cols = [
@@ -61,15 +85,22 @@ class DataParser:
 
     optional_cols = [
         "TIME_UNIT",
+        "ADMINISTRATION_ID",
+        "ADMINISTRATION_NAME",
         "AMOUNT_UNIT",
+        "AMOUNT_VARIABLE",
         "OBSERVATION_UNIT",
         "OBSERVATION_NAME",
+        "OBSERVATION_VARIABLE",
         "COMPOUND",
-        "ROUTE",
         "INFUSION_TIME",
+        "GROUP_ID",
+        "ADDITIONAL_DOSES",
+        "INTERDOSE_INTERVAL",
+        "EVENT_ID"
     ]
 
-    altername_unit_names = {
+    alternate_unit_names = {
         "h": ["hour"],
         "day": ["d"],
     }
@@ -78,6 +109,7 @@ class DataParser:
         return col_name not in self.required_cols + self.optional_cols
 
     def validate(self, data: pd.DataFrame):
+        data.columns = data.columns.str.lower()
         colnames = data.columns.astype(str).tolist()
 
         # check that all required columns are present
@@ -137,7 +169,7 @@ class DataParser:
 
         # map alternate unit names to standard names
         inv_altername_unit_names = {}
-        for k, v in self.altername_unit_names.items():
+        for k, v in self.alternate_unit_names.items():
             for v2 in v:
                 inv_altername_unit_names[v2] = k
 
@@ -154,13 +186,37 @@ class DataParser:
         if "OBSERVATION_NAME" not in found_cols:
             data["OBSERVATION_NAME"] = "observation"
 
+        # put in blank observation variable if not present
+        if "OBSERVATION_VARIABLE" not in found_cols:
+            data["OBSERVATION_VARIABLE"] = ""
+
+        # put in blank amount variable if not present
+        if "AMOUNT_VARIABLE" not in found_cols:
+            data["AMOUNT_VARIABLE"] = ""
+
         # put in default compound name if not present
         if "COMPOUND" not in found_cols:
             data["COMPOUND"] = "unknown compound"
 
-        # put in default route name if not present
-        if "ROUTE" not in found_cols:
-            data["ROUTE"] = "IV"
+        # put in default administration name if not present
+        if "ADMINISTRATION_NAME" not in found_cols:
+            data["ADMINISTRATION_NAME"] = "IV"
+
+        # put in default subject group if not present
+        if "GROUP_ID" not in found_cols:
+            data["GROUP_ID"] = data["SUBJECT_ID"]
+        # put in default event ID if not present
+        if "EVENT_ID" not in found_cols:
+            data["EVENT_ID"] = None
+        # put in default administration ID if not present
+        if "ADMINISTRATION_ID" not in found_cols:
+            data["ADMINISTRATION_ID"] = 1
+
+        # put in default additional dosing columns if not present
+        if "ADDITIONAL_DOSES" not in found_cols:
+            data["ADDITIONAL_DOSES"] = ""
+        if "INTERDOSE_INTERVAL" not in found_cols:
+            data["INTERDOSE_INTERVAL"] = ""
 
         # put in default units if not present, convert any percentage units
         # to dimensionless
@@ -169,25 +225,41 @@ class DataParser:
                 data[unit_col] = ""
             else:
                 def convert_percent_to_dim(x):
-                    xl = x.lower()
+                    xl = str(x).lower()
                     if (
+                        "nan" in xl or
                         "percent" in xl or
                         "fraction" in xl or
                         "ratio" in xl or
-                        "%" in xl
+                        "%" in xl or
+                        "dimensionless" in xl
                     ):
                         return ""
                     else:
                         return x
                 data[unit_col] = data[unit_col].map(convert_percent_to_dim)
 
+        # check that time is set for all rows
+        if pd.to_numeric(data["TIME"], errors='coerce').isna().any():
+            raise RuntimeError(
+                (
+                    'Error parsing file, '
+                    'contains missing time values'
+                )
+            )
+
+        # convert subject id to integer
+        try:
+            data["SUBJECT_ID"] = pd.to_numeric(data["SUBJECT_ID"], errors='raise')
+        except (ValueError, TypeError):
+            subject_ids = data["SUBJECT_ID"].unique().tolist()
+            subject_ids.sort()
+            subject_id_map = {k: i for i, k in enumerate(subject_ids)}
+            data["SUBJECT_ID"] = data["SUBJECT_ID"].map(subject_id_map)
+
         # put in default infusion time if not present
-        delta_time = data.sort_values(by=["TIME"]).groupby(
-            ["SUBJECT_ID"]
-        )["TIME"].diff().dropna()
-        min_delta_time = delta_time[delta_time > 0].min()
         if "INFUSION_TIME" not in found_cols:
-            data["INFUSION_TIME"] = min_delta_time / 100.0
+            data["INFUSION_TIME"] = 0.0833
 
         # check that infusion time is not zero or negative
         if (

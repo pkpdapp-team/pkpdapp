@@ -1,11 +1,10 @@
-import React from "react";
+import { ChangeEvent, FocusEvent, ReactElement } from "react";
+import { Control, Controller, FieldPath, FieldValues } from "react-hook-form";
 import {
-  Control,
-  Controller,
-  FieldPath,
-  FieldValues
-} from "react-hook-form";
-import * as material from "@mui/material";
+  SxProps,
+  TextField as MaterialTextField,
+  TextFieldProps,
+} from "@mui/material";
 import { useFieldState } from "../app/hooks";
 import { getLabel } from "../shared/getRequiredLabel";
 
@@ -15,9 +14,9 @@ type Props<T extends FieldValues> = {
   control: Control<T>;
   rules?: Record<string, unknown>;
   mode?: "onChange" | "onBlur";
-  textFieldProps?: material.TextFieldProps;
+  textFieldProps?: TextFieldProps;
   autoShrink?: boolean;
-  sx?: material.SxProps
+  sx?: SxProps;
 };
 
 function TextField<T extends FieldValues>({
@@ -28,8 +27,8 @@ function TextField<T extends FieldValues>({
   mode,
   textFieldProps,
   autoShrink,
-  sx
-}: Props<T>): React.ReactElement {
+  sx,
+}: Props<T>): ReactElement {
   const [fieldValue, setFieldValue] = useFieldState({ name, control });
 
   if (mode === undefined) {
@@ -45,30 +44,32 @@ function TextField<T extends FieldValues>({
         field: { onChange, onBlur, value },
         fieldState: { error, isDirty, isTouched },
       }) => {
-        const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+        const handleBlur = (e: FocusEvent<HTMLInputElement>) => {
           if (mode === "onBlur" && e.target.value !== value) {
             onChange(e);
           }
           onBlur();
         };
 
-        const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
           setFieldValue(e.target.value);
           if (mode === "onChange") {
             onChange(e);
           }
         };
         return (
-          <material.TextField
+          <MaterialTextField
             label={
               !error
-                ? getLabel(label || '', Boolean(rules?.required))
+                ? getLabel(label || "", Boolean(rules?.required))
                 : error?.message ||
                   (error?.type === "required" ? "Required" : "")
             }
             name={name}
             id={name}
-            InputLabelProps={autoShrink !== undefined ? { shrink: autoShrink } : {}}
+            InputLabelProps={
+              autoShrink !== undefined ? { shrink: autoShrink } : {}
+            }
             variant="outlined"
             value={
               fieldValue === undefined || fieldValue === null ? "" : fieldValue

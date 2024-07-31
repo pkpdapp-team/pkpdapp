@@ -20,6 +20,8 @@ class TestDataParser(TestCase):
         for filename in [
             "datasets/TCB4dataset.csv",
             "datasets/demo_pk_data_upload.csv",
+            "datasets/Mean%20IL6R%20for%20PKD%20explor%20plasma%20only%20with%20dosing%20export.csv",  # noqa: E501
+            "datasets/CCL2_DRF_MLX_v06_export.csv",
             "usecase_monolix/TE_Data.txt",
             "usecase0/usecase0.csv",
             "usecase1/usecase1.csv",
@@ -42,7 +44,7 @@ class TestDataParser(TestCase):
                 "OBSERVATION_UNIT",
                 "OBSERVATION_NAME",
                 "COMPOUND",
-                "ROUTE",
+                "ADMINISTRATION_NAME",
                 "INFUSION_TIME",
             ]
             for col in expected:
@@ -64,12 +66,12 @@ class TestDataParser(TestCase):
                     "Cells",
                 ]
                 covariate_columns = [
-                    "SUBJECT_GROUP",
-                    "DOSE_GROUP",
-                    "CL",
-                    "YTYPE",
+                    "subject_group",
+                    "dose_group",
+                    "cl",
+                    "ytype",
                     "mdv",
-                    "STUDYID",
+                    "studyid",
                 ]
                 self.assertCountEqual(
                     biomarker_types_in_file + covariate_columns,
@@ -79,11 +81,11 @@ class TestDataParser(TestCase):
             if filename == "usecase0/usecase0.csv":
                 # check that categorical covariate SEX is added
                 self.assertIn(
-                    "SEX", dataset.biomarker_types.values_list("name", flat=True)
+                    "sex", dataset.biomarker_types.values_list("name", flat=True)
                 )
 
                 # check that SEX is "Male" for single subjects
-                sex_bt = dataset.biomarker_types.get(name="SEX")
+                sex_bt = dataset.biomarker_types.get(name="sex")
                 sex_data = sex_bt.data()
                 self.assertEqual(len(sex_data["values"]), 1)
                 self.assertEqual(sex_data["values"].iloc[0], "Male")
@@ -106,18 +108,17 @@ class TestDataParser(TestCase):
                     "Basophils absolute",
                 ]
                 covariate_columns = [
-                    "DOSE",
-                    "EVID",
-                    "CENS",
-                    "WT",
-                    "YTYPE",
-                    "MDV",
-                    "STUDYID",
-                    "SPECIES",
-                    "SEX",
-                    "SUBJECT_GROUP",
-                    "STUDYID.1",
-                    "DOSE_GROUP",
+                    "dose",
+                    "cens",
+                    "wt",
+                    "ytype",
+                    "mdv",
+                    "studyid",
+                    "species",
+                    "sex",
+                    "subject_group",
+                    "studyid.1",
+                    "dose_group",
                 ]
                 self.assertCountEqual(
                     dataset.biomarker_types.values_list("name", flat=True),
@@ -126,12 +127,10 @@ class TestDataParser(TestCase):
 
                 # check the right number of subjects and protocols added
                 self.assertEqual(dataset.subjects.count(), 66)
-                protocols = set(
-                    [subject.protocol for subject in dataset.subjects.all()]
-                )
-                self.assertEqual(len(protocols), 39)
+                protocols = list(dataset.protocols.all())
+                self.assertEqual(len(protocols), 0)
             if filename == "usecase_monolix/TE_Data.txt":
-                expected_names = ["observation", "Dose", "Dose_units", "Dose_cat"]
+                expected_names = ["observation", "dose", "dose_units", "dose_cat"]
                 biomarker_names = dataset.biomarker_types.values_list("name", flat=True)
                 self.assertCountEqual(biomarker_names, expected_names)
                 expected_units = ["", "", "", ""]
@@ -139,3 +138,15 @@ class TestDataParser(TestCase):
                     "stored_unit__symbol", flat=True
                 )
                 self.assertCountEqual(biomarker_units, expected_units)
+            if filename == "datasets/Mean%20IL6R%20for%20PKD%20explor%20plasma%20only%20with%20dosing%20export.csv":  # noqa: E501
+                # check the right number of subjects and protocols added
+                self.assertEqual(dataset.subjects.count(), 3)
+                protocols = list(dataset.protocols.all())
+                self.assertEqual(len(protocols), 6)
+            if filename == "datasets/CCL2_DRF_MLX_v06_export.csv":
+                # check the right number of subjects and protocols added
+                self.assertEqual(dataset.subjects.count(), 16)
+                protocols = list(dataset.protocols.all())
+                self.assertEqual(len(protocols), 5)
+                groups = list(dataset.groups.all())
+                self.assertEqual(len(groups), 5)

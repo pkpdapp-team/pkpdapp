@@ -16,6 +16,7 @@ from pkpdapp.models import (
     BiomarkerType,
     Variable,
     Subject,
+    SubjectGroup,
     Inference,
     InferenceChain,
     LogLikelihood,
@@ -113,6 +114,34 @@ class InferenceFilter(filters.BaseFilterBackend):
         return queryset
 
 
+class DatasetFilter(filters.BaseFilterBackend):
+    """
+    Filter that only allows users to filter by dataset.
+    """
+
+    def filter_queryset(self, request, queryset, view):
+        dataset_id = request.query_params.get("dataset_id")
+        if dataset_id is not None:
+            try:
+                dataset = Dataset.objects.get(id=dataset_id)
+                if queryset.model == BiomarkerType:
+                    queryset = dataset.biomarker_types.all()
+                elif queryset.model == SubjectGroup:
+                    queryset = dataset.groups.all()
+                elif queryset.model == Subject:
+                    queryset = dataset.subjects.all()
+                elif queryset.model == Protocol:
+                    queryset = dataset.protocols.all()
+                elif queryset.model == Variable:
+                    queryset = dataset.variables.all()
+                else:
+                    raise RuntimeError(queryset_model_not_recognised_text)
+            except Dataset.DoesNotExist:
+                queryset = queryset.model.objects.none()
+
+        return queryset
+
+
 class ProjectFilter(filters.BaseFilterBackend):
     """
     Filter that only allows users to filter by project.
@@ -143,6 +172,8 @@ class ProjectFilter(filters.BaseFilterBackend):
                     queryset = BiomarkerType.objects.filter(dataset__project=project)
                 elif queryset.model == Subject:
                     queryset = Subject.objects.filter(dataset__project=project)
+                elif queryset.model == SubjectGroup:
+                    queryset = project.groups.all()
                 elif queryset.model == Variable:
                     queryset = queryset.filter(
                         Q(pd_model__project=project)

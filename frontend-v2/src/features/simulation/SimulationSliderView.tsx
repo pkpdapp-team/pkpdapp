@@ -1,10 +1,4 @@
-import {
-  ChangeEvent,
-  FC, 
-  SyntheticEvent,
-  useEffect,
-  useState,
-} from "react";
+import { ChangeEvent, FC, SyntheticEvent, useEffect, useState } from "react";
 import {
   SimulationSlider,
   UnitRead,
@@ -20,13 +14,11 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import {
-  CloseFullscreen,
-  Delete,
-  OpenInFull,
-  Replay,
-  Save,
-} from "@mui/icons-material";
+import CloseFullscreen from "@mui/icons-material/CloseFullscreen";
+import Delete from "@mui/icons-material/Delete";
+import OpenInFull from "@mui/icons-material/OpenInFull";
+import Replay from "@mui/icons-material/Replay";
+import Save from "@mui/icons-material/Save";
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
 import { selectIsProjectShared } from "../login/loginSlice";
@@ -47,7 +39,6 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
   onSave,
   units,
 }) => {
-
   const projectId = useSelector(
     (state: RootState) => state.main.selectedProject,
   );
@@ -55,7 +46,9 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
     { id: projectId || 0 },
     { skip: !projectId },
   );
-  const isSharedWithMe = useSelector((state: RootState) => selectIsProjectShared(state, project));
+  const isSharedWithMe = useSelector((state: RootState) =>
+    selectIsProjectShared(state, project),
+  );
 
   const { data: variable, isLoading } = useVariableRetrieveQuery({
     id: slider.variable,
@@ -156,7 +149,11 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
           </IconButton>
         </Tooltip>
         <Tooltip title={"Save value to parameters"} placement="top">
-          <IconButton aria-label="save" onClick={handleSave} disabled={isSharedWithMe}>
+          <IconButton
+            aria-label="save"
+            onClick={handleSave}
+            disabled={isSharedWithMe}
+          >
             <Save />
           </IconButton>
         </Tooltip>
@@ -171,7 +168,11 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
           </IconButton>
         </Tooltip>
         <Tooltip title={"Remove slider"} placement="top">
-          <IconButton aria-label="delete" onClick={handleDelete} disabled={isSharedWithMe}>
+          <IconButton
+            aria-label="delete"
+            onClick={handleDelete}
+            disabled={isSharedWithMe}
+          >
             <Delete />
           </IconButton>
         </Tooltip>

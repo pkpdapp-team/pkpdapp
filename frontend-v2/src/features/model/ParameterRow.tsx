@@ -11,7 +11,7 @@ import {
 } from "../../app/backendApi";
 import UnitField from "../../components/UnitField";
 import useDirty from "../../hooks/useDirty";
-import useInterval from '../../hooks/useInterval';
+import useInterval from "../../hooks/useInterval";
 import FloatField from "../../components/FloatField";
 import { selectIsProjectShared } from "../login/loginSlice";
 import { useSelector } from "react-redux";
@@ -40,18 +40,24 @@ const ParameterRow: FC<Props> = ({ project, model, variable, units }) => {
   const isDirty = isDirtyForm;
   useDirty(isDirty);
 
-  const isSharedWithMe = useSelector((state: RootState) => selectIsProjectShared(state, project));
+  const isSharedWithMe = useSelector((state: RootState) =>
+    selectIsProjectShared(state, project),
+  );
 
-  const submit = useMemo(() => handleSubmit((data) => {
-    if (JSON.stringify(data) !== JSON.stringify(variable)) {
-      updateVariable({ id: variable.id, variable: data });
-    }
-  }), [handleSubmit, updateVariable, variable]);
+  const submit = useMemo(
+    () =>
+      handleSubmit((data) => {
+        if (JSON.stringify(data) !== JSON.stringify(variable)) {
+          updateVariable({ id: variable.id, variable: data });
+        }
+      }),
+    [handleSubmit, updateVariable, variable],
+  );
 
   useInterval({
     callback: submit,
     delay: 1000,
-    isDirty
+    isDirty,
   });
 
   if (variable.constant !== true) {
@@ -82,10 +88,10 @@ const ParameterRow: FC<Props> = ({ project, model, variable, units }) => {
       </TableCell>
       <TableCell>{type}</TableCell>
       <TableCell>
-        <FloatField 
-          name="lower_bound" 
-          control={control} 
-          label="Lower" 
+        <FloatField
+          name="lower_bound"
+          control={control}
+          label="Lower"
           textFieldProps={defaultProps}
         />
       </TableCell>
@@ -100,10 +106,10 @@ const ParameterRow: FC<Props> = ({ project, model, variable, units }) => {
         />
       </TableCell>
       <TableCell>
-        <FloatField 
-          name="upper_bound" 
-          control={control} 
-          label="Upper" 
+        <FloatField
+          name="upper_bound"
+          control={control}
+          label="Upper"
           textFieldProps={defaultProps}
         />
       </TableCell>

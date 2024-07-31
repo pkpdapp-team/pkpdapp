@@ -1,3 +1,4 @@
+import { FC } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -5,7 +6,6 @@ import {
   DialogActions,
   Button,
 } from "@mui/material";
-import React from "react";
 
 interface ConfirmationDialogProps {
   open: boolean;
@@ -15,7 +15,7 @@ interface ConfirmationDialogProps {
   onCancel: () => void;
 }
 
-const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
+const ConfirmationDialog: FC<ConfirmationDialogProps> = ({
   open,
   title,
   message,

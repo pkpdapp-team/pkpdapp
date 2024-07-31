@@ -1,6 +1,9 @@
 import {
   Alert,
   Button,
+  Checkbox,
+  FormControlLabel,
+  FormGroup,
   Grid,
   Snackbar,
   Stack,
@@ -9,8 +12,6 @@ import {
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
 import {
-  Simulate,
-  SimulateResponse,
   Simulation,
   SimulationPlotRead,
   SimulationRead,
@@ -19,10 +20,8 @@ import {
   UnitRead,
   VariableRead,
   useCombinedModelListQuery,
-  useCombinedModelSimulateCreateMutation,
   useCompoundRetrieveQuery,
   useProjectRetrieveQuery,
-  useProtocolListQuery,
   useSimulationListQuery,
   useSimulationUpdateMutation,
   useUnitListQuery,
@@ -30,9 +29,20 @@ import {
   useVariableUpdateMutation,
 } from "../../app/backendApi";
 import { useFieldArray, useForm } from "react-hook-form";
-import { FC, useCallback, useEffect, useMemo, useState, useRef } from "react";
+import {
+  ChangeEvent,
+  FC,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useRef,
+} from "react";
 import SimulationPlotView from "./SimulationPlotView";
 import SimulationSliderView from "./SimulationSliderView";
+import useSimulation from "./useSimulation";
+import useSimulationInputs from "./useSimulationInputs";
+import useSimulatedVariables from "./useSimulatedVariables";
 import DropdownButton from "../../components/DropdownButton";
 import SettingsIcon from "@mui/icons-material/Settings";
 import FloatField from "../../components/FloatField";
@@ -42,66 +52,14 @@ import paramPriority from "../model/paramPriority";
 import HelpButton from "../../components/HelpButton";
 import { selectIsProjectShared } from "../login/loginSlice";
 import { getConstVariables } from "../model/resetToSpeciesDefaults";
+import useSubjectGroups from "../../hooks/useSubjectGroups";
+import useExportSimulation from "./useExportSimulation";
 
 type SliderValues = { [key: number]: number };
 
 interface ErrorObject {
   error: string;
 }
-
-const getSimulateInput = (
-  simulation: Simulation,
-  sliderValues: SliderValues,
-  variables?: VariableRead[],
-  timeMax?: number,
-  allOutputs: boolean = false,
-): Simulate => {
-  const outputs: string[] = [];
-  const simulateVariables: { [key: string]: number } = {};
-  for (const slider of simulation?.sliders || []) {
-    if (sliderValues[slider.variable]) {
-      const variable = variables?.find((v) => v.id === slider.variable);
-      if (variable) {
-        simulateVariables[variable.qname] = sliderValues[slider.variable];
-      }
-    }
-  }
-  if (allOutputs) {
-    for (const v of variables || []) {
-      if (!v.constant) {
-        outputs.push(v.qname);
-      }
-    }
-  } else {
-    for (const plot of simulation?.plots || []) {
-      for (const y_axis of plot.y_axes) {
-        const variable = variables?.find((v) => v.id === y_axis.variable);
-        if (variable && !outputs.includes(variable.qname)) {
-          outputs.push(variable.qname);
-        }
-      }
-    }
-  }
-  // add time as an output
-  const timeVariable = variables?.find(
-    (v) => v.name === "time" || v.name === "t",
-  );
-  outputs.push(timeVariable?.qname || "time");
-
-  // for some reason we need to ask for concentration or myokit produces a kink in the output
-  const alwaysAsk = ["PKCompartment.C1"];
-  for (const v of alwaysAsk) {
-    const variable = variables?.find((vv) => vv.qname === v);
-    if (variable && !outputs.includes(variable.qname)) {
-      outputs.push(variable.qname);
-    }
-  }
-  return {
-    variables: simulateVariables,
-    outputs,
-    time_max: timeMax || undefined,
-  };
-};
 
 const getSliderInitialValues = (
   simulation?: SimulationRead,
@@ -122,25 +80,17 @@ const getSliderInitialValues = (
   return initialValues;
 };
 
-const getVariablesSimulated = (
-  variables?: VariableRead[],
-  sliderValues?: SliderValues,
-) => {
-  const constantVariables = variables?.filter((v) => v.constant) || [];
-  const merged = constantVariables.map((v: VariableRead) => {
-    const result = { qname: v.qname, value: v.default_value };
-    if (sliderValues && sliderValues[v.id]) {
-      result.value = sliderValues[v.id];
-    }
-    return result;
-  });
-  return merged;
-};
-
 const Simulations: FC = () => {
   const projectId = useSelector(
     (state: RootState) => state.main.selectedProject,
   );
+  const { groups } = useSubjectGroups();
+  const [visibleGroups, setVisibleGroups] = useState<string[]>(["Project"]);
+  useEffect(() => {
+    // display groups by default, when they are loaded or deleted.
+    const groupData = groups || [];
+    setVisibleGroups(["Project", ...groupData.map((group) => group.name)]);
+  }, [groups]);
   const projectIdOrZero = projectId || 0;
   const { data: project, isLoading: isProjectLoading } =
     useProjectRetrieveQuery({ id: projectIdOrZero }, { skip: !projectId });
@@ -149,10 +99,6 @@ const Simulations: FC = () => {
       { projectId: projectIdOrZero },
       { skip: !projectId },
     );
-  const { data: protocols } = useProtocolListQuery(
-    { projectId: projectIdOrZero },
-    { skip: !projectId },
-  );
   const model = useMemo(() => {
     return models?.[0] || undefined;
   }, [models]);
@@ -173,14 +119,6 @@ const Simulations: FC = () => {
     { compoundId: project?.compound || 0 },
     { skip: !project?.compound },
   );
-  const [simulate, { error: simulateErrorBase }] =
-    useCombinedModelSimulateCreateMutation();
-  const simulateError: ErrorObject | undefined = simulateErrorBase
-    ? "data" in simulateErrorBase
-      ? (simulateErrorBase.data as ErrorObject)
-      : { error: "Unknown error" }
-    : undefined;
-  const [data, setData] = useState<SimulateResponse | null>(null);
   const { data: compound, isLoading: isLoadingCompound } =
     useCompoundRetrieveQuery(
       { id: project?.compound || 0 },
@@ -188,16 +126,19 @@ const Simulations: FC = () => {
     );
   const [updateVariable] = useVariableUpdateMutation();
 
-  const [sliderValues, setSliderValues] = useState<
-    SliderValues | undefined
-  >(undefined);
+  const [sliderValues, setSliderValues] = useState<SliderValues | undefined>(
+    undefined,
+  );
   const handleChangeSlider = useCallback((variable: number, value: number) => {
-    setSliderValues(prevSliderValues => ({ ...prevSliderValues, [variable]: value }));
-    setLoadingSimulate(true);
+    setSliderValues((prevSliderValues) => ({
+      ...prevSliderValues,
+      [variable]: value,
+    }));
   }, []);
-  const [loadingSimulate, setLoadingSimulate] = useState<boolean>(false);
 
-  const isSharedWithMe = useSelector((state: RootState) => selectIsProjectShared(state, project));
+  const isSharedWithMe = useSelector((state: RootState) =>
+    selectIsProjectShared(state, project),
+  );
 
   const defaultSimulation: SimulationRead = {
     id: 0,
@@ -209,6 +150,33 @@ const Simulations: FC = () => {
     project: projectIdOrZero,
     time_max_unit: model?.time_unit || 0,
   };
+
+  // generate a simulation if slider values change
+  const getTimeMax = (sim: SimulationRead): number => {
+    const timeMaxUnit = units?.find((u) => u.id === sim.time_max_unit);
+    const compatibleTimeUnit = timeMaxUnit?.compatible_units?.find(
+      (u) => parseInt(u.id) === model?.time_unit,
+    );
+    const timeMaxConversionFactor = compatibleTimeUnit
+      ? parseFloat(compatibleTimeUnit.conversion_factor)
+      : 1.0;
+    const timeMax = (sim?.time_max || 0) * timeMaxConversionFactor;
+    return timeMax;
+  };
+  const timeMax = simulation?.id && getTimeMax(simulation);
+
+  const simInputs = useSimulationInputs(
+    simulation,
+    sliderValues,
+    variables,
+    timeMax,
+  );
+  const simulatedVariables = useSimulatedVariables(variables, sliderValues);
+  const { loadingSimulate, data, error: simulateError } = useSimulation(
+    simInputs,
+    simulatedVariables,
+    model,
+  );
 
   const {
     reset,
@@ -251,9 +219,10 @@ const Simulations: FC = () => {
   useEffect(() => {
     const height = parametersRef?.current?.clientHeight || 0;
     setParametersHeight(height);
-  }, [parametersRef?.current?.clientHeight])
+  }, [parametersRef?.current?.clientHeight]);
 
-  const updateWindowDimensions = () => window.innerWidth < 1000 && setLayout('horizontal');
+  const updateWindowDimensions = () =>
+    window.innerWidth < 1000 && setLayout("horizontal");
   window.addEventListener("resize", updateWindowDimensions);
 
   // reset form and sliders if simulation changes
@@ -268,138 +237,17 @@ const Simulations: FC = () => {
     }
   }, [simulation, reset, variables]);
 
-  const getTimeMax = (sim: SimulationRead): number => {
-    const timeMaxUnit = units?.find((u) => u.id === sim.time_max_unit);
-    const compatibleTimeUnit = timeMaxUnit?.compatible_units?.find(
-      (u) => parseInt(u.id) === model?.time_unit,
-    );
-    const timeMaxConversionFactor = compatibleTimeUnit
-      ? parseFloat(compatibleTimeUnit.conversion_factor)
-      : 1.0;
-    const timeMax = (sim?.time_max || 0) * timeMaxConversionFactor;
-    return timeMax;
-  };
-  const timeMax = simulation?.id && getTimeMax(simulation);
-
-  // generate a simulation if slider values change
-  useEffect(() => {
-    let ignore = false;
-    if (
-      simulation?.id &&
-      sliderValues &&
-      variables &&
-      model &&
-      protocols &&
-      compound
-    ) {
-      console.log("Simulating with params", getVariablesSimulated(variables, sliderValues));
-      simulate({
-        id: model.id,
-        simulate: getSimulateInput(
-          simulation,
-          sliderValues,
-          variables,
-          timeMax,
-        ),
-      }).then((response) => {
-        if (!ignore) {
-          setLoadingSimulate(false);
-          if ("data" in response) {
-            const responseData = response.data as SimulateResponse;
-            setData(responseData);
-          }
-        }
-      });
-    }
-    return () => {
-      ignore = true;
-    };
-  }, [
-    simulation,
-    simulate,
-    sliderValues,
+  const [exportSimulation, { error: exportSimulateErrorBase }] = useExportSimulation({
+    simInputs,
+    simulatedVariables,
     model,
-    protocols,
-    variables,
-    compound,
-    timeMax,
-  ]);
-
-  const exportSimulation = () => {
-    if (
-      simulation &&
-      variables &&
-      model &&
-      protocols &&
-      compound &&
-      sliderValues &&
-      project
-    ) {
-      const allParams = getVariablesSimulated(variables, sliderValues);
-      console.log("Export to CSV: simulating with params", allParams);
-      simulate({
-        id: model.id,
-        simulate: getSimulateInput(
-          simulation,
-          sliderValues,
-          variables,
-          timeMax,
-          true,
-        ),
-      }).then((response) => {
-        if ("data" in response) {
-          const responseData = response.data as SimulateResponse;
-          const nrows =
-            responseData.outputs[Object.keys(responseData.outputs)[0]].length;
-          const cols = Object.keys(responseData.outputs);
-          const vars = cols.map((vid) =>
-            variables.find((v) => v.id === parseInt(vid)),
-          );
-          const varUnits = vars.map((v) => 
-            units?.find((u) => u.id === v?.unit)
-          );
-          const varNames = vars.map((v, i) => `${v?.qname} (${varUnits[i]?.symbol || ''})`);
-          const timeCol = varNames.findIndex(n => n.startsWith("environment.t")); 
-          // move time to first column
-          if (timeCol !== -1) {
-            const timeName = varNames[timeCol];
-            varNames[timeCol] = varNames[0];
-            varNames[0] = timeName.replace("environment.t", "time");
-            const timeId = cols[timeCol];
-            cols[timeCol] = cols[0];
-            cols[0] = timeId;
-          }
-          const ncols = cols.length;
-          const nparams = allParams.length;
-          const rows = new Array(nrows + 1 + nparams);
-          let rowi = 0;
-          for (let i = 0; i < nparams; i++) {
-            rows[rowi] = [allParams[i].qname, allParams[i].value];
-            rowi++;
-          }
-          rowi++;
-          rows[rowi] = varNames;
-          rowi++;
-          for (let i = 0; i < nrows; i++) {
-            rows[rowi] = new Array(ncols);
-            for (let j = 0; j < ncols; j++) {
-              rows[rowi][j] = responseData.outputs[cols[j]][i];
-            }
-            rowi++;
-          }
-          const csvContent = rows.map((e) => e.join(",")).join("\n");
-          const blob = new Blob([csvContent], {
-            type: "text/csv;charset=utf-8;",
-          });
-          const url = URL.createObjectURL(blob);
-          const link = document.createElement("a");
-          link.download = `${project.name}.csv`;
-          link.href = url;
-          link.click();
-        }
-      });
-    }
-  };
+    project,
+  });
+  const exportSimulateError: ErrorObject | undefined = exportSimulateErrorBase
+    ? "data" in exportSimulateErrorBase
+      ? (exportSimulateErrorBase.data as ErrorObject)
+      : { error: "Unknown error" }
+    : undefined;
 
   // save simulation every second if dirty
   useEffect(() => {
@@ -453,7 +301,11 @@ const Simulations: FC = () => {
 
   const orderedSliders = sliders.map((slider, i) => {
     const variable = variables.find((v) => v.id === slider.variable);
-    return { ...slider, priority: variable ? paramPriority(variable) : 0, fieldArrayIndex: i };
+    return {
+      ...slider,
+      priority: variable ? paramPriority(variable) : 0,
+      fieldArrayIndex: i,
+    };
   });
   orderedSliders.sort((a, b) => a.priority - b.priority);
 
@@ -485,7 +337,7 @@ const Simulations: FC = () => {
 
   outputsSorted.sort((a, b) => b.priority - a.priority);
 
-  let constVariables = model ? getConstVariables(variables, model) : [];
+  const constVariables = model ? getConstVariables(variables, model) : [];
   const addPlotOptions = outputsSorted.map((variable) => ({
     value: variable.id,
     label: variable.description
@@ -531,10 +383,10 @@ const Simulations: FC = () => {
     };
     addSimulationSlider(defaultSlider);
   };
-  
+
   const handleRemoveSlider = (index: number) => () => {
     removeSlider(index);
-  }
+  };
 
   const handleSaveSlider = (slider: SimulationSlider) => (value: number) => {
     const variable = variables?.find((v) => v.id === slider.variable);
@@ -547,9 +399,29 @@ const Simulations: FC = () => {
     });
   };
 
+  const handleVisibleGroups = (event: ChangeEvent<HTMLInputElement>) => {
+    if (!event.target.checked) {
+      const newState = visibleGroups.filter(
+        (name) => name !== event.target.value,
+      );
+      setVisibleGroups(newState);
+      return;
+    } else {
+      const newState = new Set([...visibleGroups, event.target.value]);
+      setVisibleGroups([...newState]);
+    }
+  };
   return (
-    <Grid container sx={{ marginBottom: layout === 'vertical' ? 0 : `${parametersHeight}px` }}>
-      <Grid item xl={layout === "vertical" ? 8 : 12} md={layout === "vertical" ? 7 : 12} xs={layout === "vertical" ? 6 : 12}>
+    <Grid
+      container
+      sx={{ marginBottom: layout === "vertical" ? 0 : `${parametersHeight}px` }}
+    >
+      <Grid
+        item
+        xl={layout === "vertical" ? 8 : 12}
+        md={layout === "vertical" ? 7 : 12}
+        xs={layout === "vertical" ? 6 : 12}
+      >
         <Stack direction={"row"} alignItems={"center"}>
           <DropdownButton
             useIcon={false}
@@ -568,7 +440,7 @@ const Simulations: FC = () => {
               alignItems={"center"}
               spacing={2}
               justifyContent="flex-start"
-              paddingTop='1rem'
+              paddingTop="1rem"
             >
               <FloatField
                 label="Simulation Duration"
@@ -581,16 +453,19 @@ const Simulations: FC = () => {
                 name="time_max_unit"
                 baseUnit={units.find((u) => u.id === simulation?.time_max_unit)}
                 control={control}
-                selectProps={{ style: { flexShrink: 0 }, disabled: isSharedWithMe }}
+                selectProps={{
+                  style: { flexShrink: 0 },
+                  disabled: isSharedWithMe,
+                }}
               />
               <div>
                 <Button variant="contained" onClick={exportSimulation}>
                   Export to CSV
                 </Button>
                 <HelpButton title={"Export to CSV"}>
-                  A variables are reported in pmol, C or T variables are reported
-                  in pmol/L and AUC variables are reported in pmol/L*h. These
-                  units cannot be changed in the current version.
+                  A variables are reported in pmol, C or T variables are
+                  reported in pmol/L and AUC variables are reported in pmol/L*h.
+                  These units cannot be changed in the current version.
                 </HelpButton>
               </div>
             </Stack>
@@ -598,8 +473,14 @@ const Simulations: FC = () => {
         )}
         <Grid container spacing={1}>
           {plots.map((plot, index) => (
-            <Grid item xl={layout === "vertical" ? 12 : 6} md={layout === "vertical" ? 12 : 6} xs={layout === "vertical" ? 12 : 12} key={index}>
-              {data && model ? (
+            <Grid
+              item
+              xl={layout === "vertical" ? 12 : 6}
+              md={layout === "vertical" ? 12 : 6}
+              xs={layout === "vertical" ? 12 : 12}
+              key={index}
+            >
+              {data?.length && model ? (
                 <SimulationPlotView
                   index={index}
                   plot={plot}
@@ -611,6 +492,7 @@ const Simulations: FC = () => {
                   units={units}
                   compound={compound}
                   model={model}
+                  visibleGroups={visibleGroups}
                 />
               ) : (
                 <div>Loading...</div>
@@ -623,6 +505,11 @@ const Simulations: FC = () => {
             Error simulating model: {simulateError?.error || "unknown error"}
           </Alert>
         </Snackbar>
+        <Snackbar open={Boolean(exportSimulateError)} autoHideDuration={6000}>
+          <Alert severity="error">
+            Error exporting model: {exportSimulateError?.error || "unknown error"}
+          </Alert>
+        </Snackbar>
       </Grid>
       <Grid
         ref={parametersRef}
@@ -632,11 +519,60 @@ const Simulations: FC = () => {
         xs={layout === "vertical" ? 5 : 12}
         sx={
           layout === "vertical"
-            ? { position: "fixed", right: 0, paddingLeft: "1rem", width: '100%' }
-            : { position: "fixed", bottom: 0, paddingBottom: '3rem', height: 'auto', backgroundColor: 'white', width: '-webkit-fill-available' }
+            ? {
+                position: "fixed",
+                right: 0,
+                paddingLeft: "1rem",
+                width: "100%",
+              }
+            : {
+                position: "fixed",
+                bottom: 0,
+                paddingBottom: "3rem",
+                height: "auto",
+                backgroundColor: "white",
+                width: "-webkit-fill-available",
+              }
         }
       >
         <Stack direction="column">
+          {!!groups?.length && (
+            <>
+              <Typography
+                sx={{
+                  fontWeight: "bold",
+                  fontSize: "1.2rem",
+                }}
+              >
+                Groups
+              </Typography>
+              <FormGroup>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={visibleGroups.includes("Project")}
+                      value="Project"
+                      onChange={handleVisibleGroups}
+                    />
+                  }
+                  label="Project"
+                />
+                {groups?.map((group) => (
+                  <FormControlLabel
+                    key={group.name}
+                    control={
+                      <Checkbox
+                        checked={visibleGroups.includes(group.name)}
+                        value={group.name}
+                        onChange={handleVisibleGroups}
+                      />
+                    }
+                    label={group.name}
+                  />
+                ))}
+              </FormGroup>
+            </>
+          )}
           <div
             style={{
               display: "flex",

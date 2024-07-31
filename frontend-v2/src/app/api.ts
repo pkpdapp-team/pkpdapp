@@ -26,7 +26,9 @@ export const api = backendApi.enhanceEndpoints({
       providesTags: (result, error, { id }) => [{ type: "Project", id }],
     },
     projectCopyUpdate: {
-      invalidatesTags: (result, error, { id }) => [{ type: "Project", id: "LIST" }],
+      invalidatesTags: (result, error, { id }) => [
+        { type: "Project", id: "LIST" },
+      ],
     },
     projectUpdate: {
       invalidatesTags: (result, error, { id }) => [{ type: "Project", id }],
@@ -91,7 +93,13 @@ export const api = backendApi.enhanceEndpoints({
       invalidatesTags: (result, error, { id }) => [{ type: "Dataset", id }],
     },
     datasetCreate: {
-      invalidatesTags: [{ type: "Dataset", id: "LIST" }],
+      invalidatesTags: (result, error, { dataset }) => 
+        dataset.project ? [
+          { type: "Dataset", id: "LIST" },
+          { type: "Project", id: dataset.project },
+        ] : [
+          { type: "Dataset", id: "LIST" },
+        ]
     },
     datasetDestroy: {
       invalidatesTags: (result, error, { id }) => [

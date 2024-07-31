@@ -1,6 +1,6 @@
-import React from "react";
+import { ChangeEvent, FocusEvent, ReactElement } from "react";
 import { Control, Controller, FieldPath, FieldValues } from "react-hook-form";
-import * as material from "@mui/material";
+import { TextField, TextFieldProps } from "@mui/material";
 import { useFieldState } from "../app/hooks";
 
 type Props<T extends FieldValues> = {
@@ -8,7 +8,7 @@ type Props<T extends FieldValues> = {
   name: FieldPath<T>;
   control: Control<T>;
   rules?: Object;
-  textFieldProps?: material.TextFieldProps;
+  textFieldProps?: TextFieldProps;
 };
 
 function convert(value: any) {
@@ -25,7 +25,7 @@ function IntegerField<T extends FieldValues>({
   control,
   rules,
   textFieldProps,
-}: Props<T>): React.ReactElement {
+}: Props<T>): ReactElement {
   const [fieldValue, setFieldValue] = useFieldState({ name, control });
   return (
     <Controller
@@ -36,7 +36,7 @@ function IntegerField<T extends FieldValues>({
         field: { onChange, onBlur, value },
         fieldState: { error, isDirty, isTouched },
       }) => {
-        const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+        const handleBlur = (e: FocusEvent<HTMLInputElement>) => {
           const updatedValue = convert(e.target.value);
           if (updatedValue !== value) {
             e.target.value = updatedValue;
@@ -45,11 +45,11 @@ function IntegerField<T extends FieldValues>({
           onBlur();
         };
 
-        const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
           setFieldValue(convert(e.target.value));
         };
         return (
-          <material.TextField
+          <TextField
             label={
               !error
                 ? label

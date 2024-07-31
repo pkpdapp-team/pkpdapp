@@ -1,5 +1,5 @@
 import { FC, useState } from "react";
-import Plot from "react-plotly.js";
+import createPlotlyComponent from "react-plotly.js/factory";
 import {
   CombinedModelRead,
   CompoundRead,
@@ -9,7 +9,14 @@ import {
   VariableRead,
   useProtocolListQuery,
 } from "../../app/backendApi";
-import { Config, Data, Layout, Icon as PlotlyIcon } from "plotly.js";
+import {
+  Config,
+  Data,
+  Layout,
+  Icon as PlotlyIcon,
+  ScatterData,
+} from "plotly.js";
+import Plotly from "plotly.js-basic-dist-min";
 import {
   Button,
   Dialog,
@@ -21,6 +28,23 @@ import { Control, FieldArrayWithId, UseFormSetValue } from "react-hook-form";
 import SimulationPlotForm from "./SimulationPlotForm";
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
+import useDataset from "../../hooks/useDataset";
+import useSubjectGroups from "../../hooks/useSubjectGroups";
+
+const Plot = createPlotlyComponent(Plotly);
+// https://github.com/plotly/plotly.js/blob/8c47c16daaa2020468baf9376130e085a4f01ec6/src/components/color/attributes.js#L4-L16
+const plotColours = [
+  "#1f77b4", // muted blue
+  "#ff7f0e", // safety orange
+  "#2ca02c", // cooked asparagus green
+  "#d62728", // brick red
+  "#9467bd", // muted purple
+  "#8c564b", // chestnut brown
+  "#e377c2", // raspberry yogurt pink
+  "#7f7f7f", // middle gray
+  "#bcbd22", // curry yellow-green
+  "#17becf", // blue-teal
+];
 
 function ranges(
   minY: number | undefined,
@@ -101,7 +125,9 @@ function genIcLines(
     ? concentrationUnitIds.includes(plot.y_unit)
     : false;
 
-  const exp = compound.efficacy_experiments.find(exp => exp.id === compound.use_efficacy);
+  const exp = compound.efficacy_experiments.find(
+    (exp) => exp.id === compound.use_efficacy,
+  );
   if (yAxisIsConcentration && exp) {
     if (exp.hill_coefficient && exp.c50) {
       const yAxisUnit = units.find((unit) => unit.id === plot.y_unit);
@@ -127,7 +153,7 @@ function genIcLines(
 interface SimulationPlotProps {
   index: number;
   plot: FieldArrayWithId<Simulation, "plots", "id">;
-  data: SimulateResponse;
+  data: SimulateResponse[];
   variables: VariableRead[];
   control: Control<Simulation>;
   setValue: UseFormSetValue<Simulation>;
@@ -135,6 +161,7 @@ interface SimulationPlotProps {
   units: UnitRead[];
   compound: CompoundRead;
   model: CombinedModelRead;
+  visibleGroups: string[];
 }
 
 const SimulationPlotView: FC<SimulationPlotProps> = ({
@@ -148,11 +175,15 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
   units,
   compound,
   model,
+  visibleGroups,
 }) => {
   const projectId = useSelector(
     (state: RootState) => state.main.selectedProject,
   );
   useProtocolListQuery({ projectId: projectId || 0 }, { skip: !projectId });
+
+  const { groups } = useSubjectGroups();
+  const { subjectBiomarkers } = useDataset(projectId);
 
   const [open, setOpen] = useState(false);
 
@@ -183,7 +214,7 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
     ? parseFloat(xcompatibleUnit.conversion_factor)
     : 1.0;
 
-  const convertedTime = data.time.map((t) => t * xconversionFactor);
+  const convertedTime = data[0].time.map((t) => t * xconversionFactor);
   const minX = Math.min(...convertedTime);
   const maxX = Math.max(...convertedTime);
 
@@ -192,71 +223,88 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
   let maxY: number | undefined = undefined;
   let maxY2: number | undefined = undefined;
 
-  const plotData: Data[] = plot.y_axes.map((y_axis) => {
-    const variableValues = data.outputs[y_axis.variable];
-    const variable = variables.find((v) => v.id === y_axis.variable);
-    const variableName = variable?.name;
-    const variableUnit = units.find((u) => u.id === variable?.unit);
+  const plotData = plot.y_axes
+    .map((y_axis, i) => {
+      const colourOffset = data.length * i;
+      return data.map((d, index) => {
+        const group = groups?.[index - 1];
+        const colourIndex = index + colourOffset;
+        const visible =
+          index === 0
+            ? visibleGroups.includes("Project")
+            : visibleGroups.includes(group?.name || "");
+        const variableValues = d.outputs[y_axis.variable];
+        const variable = variables.find((v) => v.id === y_axis.variable);
+        const variableName = variable?.name;
+        const variableUnit = units.find((u) => u.id === variable?.unit);
 
-    const yaxisUnit = y_axis.right
-      ? units.find((u) => u.id === plot.y_unit2)
-      : units.find((u) => u.id === plot.y_unit);
-    const ycompatibleUnit = variableUnit?.compatible_units.find(
-      (u) => parseInt(u.id) === yaxisUnit?.id,
-    );
+        const yaxisUnit = y_axis.right
+          ? units.find((u) => u.id === plot.y_unit2)
+          : units.find((u) => u.id === plot.y_unit);
+        const ycompatibleUnit = variableUnit?.compatible_units.find(
+          (u) => parseInt(u.id) === yaxisUnit?.id,
+        );
 
-    const is_target = model.is_library_model
-      ? variableName?.includes("CT1") || variableName?.includes("AT1")
-      : false;
-    const yconversionFactor = ycompatibleUnit
-      ? parseFloat(
-          is_target
-            ? ycompatibleUnit.target_conversion_factor
-            : ycompatibleUnit.conversion_factor,
-        )
-      : 1.0;
+        const is_target = model.is_library_model
+          ? variableName?.includes("CT1") || variableName?.includes("AT1")
+          : false;
+        const yconversionFactor = ycompatibleUnit
+          ? parseFloat(
+              is_target
+                ? ycompatibleUnit.target_conversion_factor
+                : ycompatibleUnit.conversion_factor,
+            )
+          : 1.0;
 
-    if (variableValues) {
-      const y = variableValues.map((v) => v * yconversionFactor);
-      if (y_axis.right) {
-        if (minY2 === undefined) {
-          minY2 = Math.min(...y);
+        if (variableValues) {
+          const y = variableValues.map((v) => v * yconversionFactor);
+          if (y_axis.right) {
+            if (minY2 === undefined) {
+              minY2 = Math.min(...y);
+            } else {
+              minY2 = Math.min(minY2, ...y);
+            }
+            if (maxY2 === undefined) {
+              maxY2 = Math.max(...y);
+            } else {
+              maxY2 = Math.max(maxY2, ...y);
+            }
+          } else {
+            if (minY === undefined) {
+              minY = Math.min(...y);
+            } else {
+              minY = Math.min(minY, ...y);
+            }
+            if (maxY === undefined) {
+              maxY = Math.max(...y);
+            } else {
+              maxY = Math.max(maxY, ...y);
+            }
+          }
+
+          return {
+            yaxis: y_axis.right ? "y2" : undefined,
+            x: d.time.map((t) => t * xconversionFactor),
+            y: variableValues.map((v) => v * yconversionFactor),
+            name: `${variableName} ${group?.name || "project"}` || "unknown",
+            visible: visible ? true : "legendonly",
+            line: {
+              color: plotColours[colourIndex % plotColours.length],
+            },
+          };
         } else {
-          minY2 = Math.min(minY2, ...y);
+          return {
+            yaxis: y_axis.right ? "y2" : undefined,
+            x: [],
+            y: [],
+            type: "scatter",
+            name: `${y_axis.variable} ${group?.name || "project"}`,
+            visible: visible ? true : "legendonly",
+          };
         }
-        if (maxY2 === undefined) {
-          maxY2 = Math.max(...y);
-        } else {
-          maxY2 = Math.max(maxY2, ...y);
-        }
-      } else {
-        if (minY === undefined) {
-          minY = Math.min(...y);
-        } else {
-          minY = Math.min(minY, ...y);
-        }
-        if (maxY === undefined) {
-          maxY = Math.max(...y);
-        } else {
-          maxY = Math.max(maxY, ...y);
-        }
-      }
-      return {
-        yaxis: y_axis.right ? "y2" : undefined,
-        x: convertedTime,
-        y: variableValues.map((v) => v * yconversionFactor),
-        name: variableName || "unknown",
-      };
-    } else {
-      return {
-        yaxis: y_axis.right ? "y2" : undefined,
-        x: [],
-        y: [],
-        type: "scatter",
-        name: `${y_axis.variable}`,
-      };
-    }
-  });
+      });
+    })
+    .flat() as Partial<ScatterData>[];
 
   const concentrationUnit = units.find((unit) => unit.symbol === "pmol/L");
   if (concentrationUnit === undefined) {
@@ -270,16 +318,14 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
     concentrationUnit,
   );
 
-  let yAxisTitle = plotData
-    //@ts-expect-error
+  const yAxisVariables = plotData
     .filter((d) => !d.yaxis)
-    .map((d) => d.name)
-    .join(", ");
-  let y2AxisTitle = plotData
-    //@ts-expect-error
+    .map((d) => d.name?.split(" ")[0]);
+  const y2AxisVariables = plotData
     .filter((d) => d.yaxis)
-    .map((d) => d.name)
-    .join(", ");
+    .map((d) => d.name?.split(" ")[0]);
+  let yAxisTitle = [...new Set(yAxisVariables)].join(", ");
+  let y2AxisTitle = [...new Set(y2AxisVariables)].join(", ");
   let xAxisTitle = "Time";
   const yUnit = units.find((u) => u.id === plot.y_unit);
   const y2Unit = units.find((u) => u.id === plot.y_unit2);
@@ -406,10 +452,71 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
     scrollZoom: true,
   };
 
+  const biomarkerVariables =
+    subjectBiomarkers?.map((d) => {
+      const observation = d?.[0];
+      const variable = variables.find((v) => v.qname === observation?.qname);
+      return variable?.id;
+    }) || [];
+  let combinedPlotData = [...plotData];
+  plot.y_axes.forEach((y_axis, i) => {
+    const xAxisUnit = units.find((u) => u.id === plot.x_unit);
+    const yAxisUnit = y_axis.right
+      ? units.find((u) => u.id === plot.y_unit2)
+      : units.find((u) => u.id === plot.y_unit);
+
+    const colourOffset = data.length * i;
+    const biomarkerIndex = biomarkerVariables.indexOf(y_axis.variable);
+    const biomarkerData = subjectBiomarkers?.[biomarkerIndex];
+    const { qname, unit, timeUnit } = biomarkerData?.[0] || {};
+    const yCompatibleUnit = unit?.compatible_units.find(
+      (u) => parseInt(u.id) === yAxisUnit?.id,
+    );
+    const timeCompatibleUnit = timeUnit?.compatible_units.find(
+      (u) => parseInt(u.id) === xAxisUnit?.id,
+    );
+    const timeConversionFactor = timeCompatibleUnit
+      ? parseFloat(timeCompatibleUnit.conversion_factor)
+      : 1.0;
+    const is_target = model.is_library_model
+      ? qname?.includes("CT1") || qname?.includes("AT1")
+      : false;
+    const yConversionFactor = yCompatibleUnit
+      ? parseFloat(
+          is_target
+            ? yCompatibleUnit.target_conversion_factor
+            : yCompatibleUnit.conversion_factor,
+        )
+      : 1.0;
+    const scatterplotData = groups?.map((group, index) => {
+      const visible = visibleGroups.includes(group.name);
+      const groupBiomarkers = biomarkerData?.filter((d) =>
+        group.subjects.includes(d.subjectId),
+      );
+      const colourIndex = index + colourOffset + 1;
+
+      return {
+        name: group.name,
+        x: groupBiomarkers?.map((d) => d?.time * timeConversionFactor),
+        y: groupBiomarkers?.map((d) => d?.value * yConversionFactor),
+        yaxis: y_axis.right ? "y2" : undefined,
+        type: "scatter",
+        mode: "markers",
+        visible: visible ? true : "legendonly",
+        marker: {
+          color: plotColours[colourIndex % plotColours.length],
+        },
+      };
+    });
+    combinedPlotData = combinedPlotData.concat(
+      scatterplotData as ScatterData[],
+    );
+  });
+
   return (
     <>
       <Plot
-        data={plotData}
+        data={combinedPlotData as Data[]}
         layout={plotLayout}
         style={{ width: "100%", height: "100%" }}
         config={config}
