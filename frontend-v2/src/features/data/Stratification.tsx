@@ -37,6 +37,35 @@ function validateGroupProtocols(groups: Group[], protocols: IProtocol[]) {
   return groupedProtocols.every((protocols) => protocols.length <= 1);
 }
 
+/**
+ * Generate a unique administration ID for each group.
+ * @param data
+ * @returns data with administration ID column.
+ */
+function generateAdministrationIds(data: { [key: string]: string }[]) {
+  const newData = data.map((row) => ({ ...row }));
+  const uniqueGroupIds = [...new Set(data.map((row) => row["Group ID"]))];
+  newData.forEach((row) => {
+    const administrationId = uniqueGroupIds.indexOf(row["Group ID"]) + 1;
+    row["Administration ID"] = `${administrationId}`;
+  });
+  return newData;
+}
+
+/**
+ * Assign a group ID to each row based on a categorical covariate column.
+ * @param data
+ * @param columnName
+ * @returns data with group ID and administration ID columns.
+ */
+function groupDataRows(data: { [key: string]: string }[], columnName: string) {
+  const newData = data.map((row) => ({ ...row }));
+  newData.forEach((row) => {
+    row["Group ID"] = row[columnName] || "1";
+  });
+  return newData;
+}
+
 interface IStratification {
   state: StepperState;
   firstTime: boolean;
@@ -55,12 +84,15 @@ const Stratification: FC<IStratification> = ({ state }: IStratification) => {
     const values = state.data.map((row) => row[field]);
     return [...new Set(values)];
   });
+  const administrationIdField = state.fields.find(
+    (field) => state.normalisedFields.get(field) === "Administration ID",
+  );
 
   const [firstRow] = state.data;
   const [tab, setTab] = useState(0);
-  const { primaryCohort, setPrimaryCohort } = state;
+  const { groupColumn, setGroupColumn } = state;
 
-  const groups = groupsFromCatCovariate(state, primaryCohort);
+  const groups = groupsFromCatCovariate(state, groupColumn);
   const isValidGrouping = validateGroupMembers(groups);
   const groupErrorMessage =
     "Invalid group subjects. Each subject ID can only belong to a single cohort.";
@@ -92,10 +124,10 @@ const Stratification: FC<IStratification> = ({ state }: IStratification) => {
   }
 
   if (!firstRow["Group ID"]) {
-    const newData = [...state.data];
-    newData.forEach((row) => {
-      row["Group ID"] = row[primaryCohort] || "1";
-    });
+    let newData = groupDataRows(state.data, groupColumn);
+    if (!administrationIdField) {
+      newData = generateAdministrationIds(newData);
+    }
     state.setData(newData);
     state.setNormalisedFields(
       new Map([...state.normalisedFields.entries(), ["Group ID", "Group ID"]]),
@@ -106,12 +138,13 @@ const Stratification: FC<IStratification> = ({ state }: IStratification) => {
     setTab(newValue);
   };
 
-  const handlePrimaryChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setPrimaryCohort(event.target.value);
-    const newData = [...state.data];
-    newData.forEach((row) => {
-      row["Group ID"] = row[event.target.value];
-    });
+  const handleGroupChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const newGroup = event.target.value;
+    let newData = groupDataRows(state.data, newGroup);
+    if (!administrationIdField) {
+      newData = generateAdministrationIds(newData);
+    }
+    setGroupColumn(newGroup);
     state.setData(newData);
   };
 
@@ -147,7 +180,7 @@ const Stratification: FC<IStratification> = ({ state }: IStratification) => {
             <TableBody>
               {catCovariates.map((field, index) => {
                 const primaryLabel = `heading-primary field-${field}`;
-                const isPrimary = primaryCohort === field;
+                const isPrimary = groupColumn === field;
                 return (
                   <TableRow key={field}>
                     <TableCell id={`field-${field}`}>{field}</TableCell>
@@ -159,7 +192,7 @@ const Stratification: FC<IStratification> = ({ state }: IStratification) => {
                         name="primary"
                         value={field}
                         checked={isPrimary}
-                        onChange={handlePrimaryChange}
+                        onChange={handleGroupChange}
                         inputProps={{ "aria-labelledby": primaryLabel }}
                       />
                     </TableCell>

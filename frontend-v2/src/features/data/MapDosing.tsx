@@ -82,7 +82,7 @@ const MapDosing: FC<IMapDosing> = ({ state, firstTime }: IMapDosing) => {
     />
   ) : (
     <CreateDosingProtocols
-      administrationIdField={administrationIdField || "Group ID"}
+      administrationIdField={administrationIdField || "Administration ID"}
       amountUnitField={amountUnitField || ""}
       amountUnit={amountUnit}
       state={state}

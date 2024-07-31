@@ -38,11 +38,10 @@ const CreateDosingProtocols: FC<IDosingProtocols> = ({
     (field) =>
       field === "Amount" || state.normalisedFields.get(field) === "Amount",
   );
-  const dosingRows: Row[] =
-    administrationIdField === "Group ID"
-      ? state.data
-      : // ignore rows with no amount and administration ID set to 0.
-        state.data.filter((row) => parseInt(row[administrationIdField]));
+  // ignore rows with no amount and administration ID set to 0.
+  const dosingRows: Row[] = state.data.filter((row) =>
+    parseInt(row[administrationIdField]),
+  );
   if (!amountField) {
     const newNormalisedFields = new Map([
       ...state.normalisedFields.entries(),
