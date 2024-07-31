@@ -121,7 +121,7 @@ export default function Sidebar() {
         <ErrorIcon color="warning" />
       </Tooltip>
     );
-  } 
+  }
   for (const key in errors) {
     errorComponents[key] = (
       <Tooltip title={errors[key]}>
