@@ -12,7 +12,7 @@ interface IPreviewData {
 
 const IGNORED_COLUMNS = ["Ignore"];
 
-function useNormalisedColumn(state: StepperState, type: string) {
+function normaliseDataColumn(state: StepperState, type: string) {
   const normalisedHeaders = [...state.normalisedFields.entries()];
   const matchingFields =
     normalisedHeaders.filter(([key, value]) => value === type) || [];
@@ -53,7 +53,7 @@ const PreviewData: FC<IPreviewData> = ({ state }: IPreviewData) => {
         !["Cat Covariate", "Cont Covariate", "Ignore"].includes(header),
     );
   normalisedHeaders.forEach((header) => {
-    useNormalisedColumn(state, header);
+    normaliseDataColumn(state, header);
   });
   const { data, fields } = state;
   const visibleFields = fields.filter(

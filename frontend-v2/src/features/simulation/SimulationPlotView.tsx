@@ -286,7 +286,7 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
             yaxis: y_axis.right ? "y2" : undefined,
             x: d.time.map((t) => t * xconversionFactor),
             y: variableValues.map((v) => v * yconversionFactor),
-            name: `${variableName} ${group?.name || "project"}` || "unknown",
+            name: `${variableName} ${group?.name || "project"}`,
             visible: visible ? true : "legendonly",
             line: {
               color: plotColours[colourIndex % plotColours.length],
