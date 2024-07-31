@@ -112,7 +112,7 @@ const Data: FC = () => {
     .map((row, index) => ({ id: index + 1, ...row }));
   const dosingColumns = dosingRows[0]
     ? Object.keys(dosingRows[0])
-        .filter((field) => field !== "id")
+        .filter((field) => field !== "id" && field !== "Route")
         .map((field) => ({
           field,
           headerName: field,
