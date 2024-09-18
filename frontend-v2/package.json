@@ -80,7 +80,7 @@
     "start-server-and-test": "^2.0.4",
     "typescript": "^5.5.3",
     "typescript-eslint": "^7.16.1",
-    "vite": "^5.3.4",
+    "vite": "^5.3.6",
     "vite-bundle-visualizer": "^1.2.1",
     "vite-plugin-radar": "^0.9.6",
     "vite-tsconfig-paths": "^4.3.2",
