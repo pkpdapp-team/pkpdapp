@@ -1,10 +1,11 @@
-import { Box, Stack, Typography } from "@mui/material";
+import { Box, Button, Stack, Typography } from "@mui/material";
 import Papa from "papaparse";
 import { FC, useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import MapHeaders from "./MapHeaders";
 import { normaliseHeader, validateState } from "./dataValidation";
 import { StepperState } from "./LoadDataStepper";
+import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
 import SetUnits from "./SetUnits";
 
 export type Row = { [key: string]: string };
@@ -22,7 +23,6 @@ const style = {
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    cursor: "pointer",
     ":hover": {
       backgroundColor: "#f0f0f0",
     },
@@ -193,8 +193,15 @@ const LoadData: FC<ILoadDataProps> = ({ state, firstTime }) => {
       <Box style={style.dropAreaContainer}>
         <Box {...getRootProps({ style: style.dropArea })}>
           <input {...getInputProps()} />
-          <Typography>
+          <Typography style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             Drag &amp; drop some files here, or click to select files
+            <Button
+              variant='outlined'
+              startIcon={<FileDownloadOutlinedIcon />}
+              style={{ marginTop: '.5rem' }}
+            >
+              Upload Dataset
+            </Button>
           </Typography>
         </Box>
       </Box>
