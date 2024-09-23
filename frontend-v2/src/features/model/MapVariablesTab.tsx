@@ -194,6 +194,7 @@ const MapVariablesTab: FC<Props> = ({
     </>
   );
 
+  const aucHelp = <p>Lorem Ipsum (TODO: add help copy.)</p>;
   const sROHelp = (
     <p>
       The receptor occupancy for SM and LM (calc_RO) is calculated from the
@@ -308,6 +309,20 @@ const MapVariablesTab: FC<Props> = ({
                 </TableCell>
               </Tooltip>
             )}
+            <Tooltip
+              placement="top-start"
+              title="Calculate secondary parameters."
+            >
+              <TableCell>
+                <div style={{ ...defaultHeaderSx }}>
+                  {" "}
+                  Secondary parameters
+                  <HelpButton title={"Secondary Parameters"}>
+                    {aucHelp}
+                  </HelpButton>
+                </div>
+              </TableCell>
+            </Tooltip>
             <Tooltip
               placement="top-start"
               title="Select drug concentration that drives RO"
