@@ -2492,13 +2492,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mui/x-data-grid@npm:^7.17.0":
-  version: 7.17.0
-  resolution: "@mui/x-data-grid@npm:7.17.0"
+"@mui/x-data-grid@npm:^7.18.0":
+  version: 7.18.0
+  resolution: "@mui/x-data-grid@npm:7.18.0"
   dependencies:
     "@babel/runtime": "npm:^7.25.6"
     "@mui/utils": "npm:^5.16.6"
-    "@mui/x-internals": "npm:7.17.0"
+    "@mui/x-internals": "npm:7.18.0"
     clsx: "npm:^2.1.1"
     prop-types: "npm:^15.8.1"
     reselect: "npm:^5.1.1"
@@ -2514,19 +2514,19 @@ __metadata:
       optional: true
     "@emotion/styled":
       optional: true
-  checksum: 10c0/10f1366e99453ce2199826af8bd235355abc63122e2f288b88ca701ec047ebd6bfcbf164925a58d13857a74bda4a4e36390f114991b7dc73232d9f6972e63a0f
+  checksum: 10c0/265a71c99f2bacd7ff15489629306711c2e30815b7dd560cf53b754c7693d82c84aaaf2c214d453e51cb201426a54128c2ea46c916a5d036188a813732177807
   languageName: node
   linkType: hard
 
-"@mui/x-internals@npm:7.17.0":
-  version: 7.17.0
-  resolution: "@mui/x-internals@npm:7.17.0"
+"@mui/x-internals@npm:7.18.0":
+  version: 7.18.0
+  resolution: "@mui/x-internals@npm:7.18.0"
   dependencies:
     "@babel/runtime": "npm:^7.25.6"
     "@mui/utils": "npm:^5.16.6"
   peerDependencies:
     react: ^17.0.0 || ^18.0.0
-  checksum: 10c0/00acd303f5e4c4d10fcef5dd81ee3e2168bffcd0d52b7e8e71baa43fd4e87d7da828f622145e4e6563043992e37418ced8973a62c177b162f0d31a2a6e76369a
+  checksum: 10c0/bdf95a3b18430c6e200229ca30c53ca9857c478d4bd30c144c6a2d97c330b872775adfeac4652be3b748635a5c952c00415dbbdaf2a792db188ea9e522a56e57
   languageName: node
   linkType: hard
 
@@ -3209,13 +3209,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react@npm:^18.3.7":
-  version: 18.3.7
-  resolution: "@types/react@npm:18.3.7"
+"@types/react@npm:^18.3.8":
+  version: 18.3.8
+  resolution: "@types/react@npm:18.3.8"
   dependencies:
     "@types/prop-types": "npm:*"
     csstype: "npm:^3.0.2"
-  checksum: 10c0/460f40eadf1fd035344b2ff9061d5c2314db9403f76d05fff7724c78543737c95829e1628567c63d27b542647867eca5b6f284dfd38f1d3b70754f32c4cbecb7
+  checksum: 10c0/367312c9fe276639ecb142265e090a4dd04bb39f8d718cbab546de3f1ddcfddeff415e1147d0fc40f734badaa7420b7b109d511bd4304b2c4c9c36164612fdf8
   languageName: node
   linkType: hard
 
@@ -5640,7 +5640,7 @@ __metadata:
     "@fontsource/comfortaa": "npm:^5.1.0"
     "@mui/icons-material": "npm:^6.1.1"
     "@mui/material": "npm:^6.1.1"
-    "@mui/x-data-grid": "npm:^7.17.0"
+    "@mui/x-data-grid": "npm:^7.18.0"
     "@reduxjs/toolkit": "npm:^2.2.7"
     "@rtk-query/codegen-openapi": "npm:^1.2.0"
     "@svgr/rollup": "npm:^8.1.0"
@@ -5651,7 +5651,7 @@ __metadata:
     "@types/jest": "npm:^29.5.13"
     "@types/node": "npm:^20.16.5"
     "@types/papaparse": "npm:^5.3.14"
-    "@types/react": "npm:^18.3.7"
+    "@types/react": "npm:^18.3.8"
     "@types/react-dom": "npm:^18.3.0"
     "@types/react-plotly.js": "npm:^2.6.3"
     "@vitejs/plugin-react": "npm:^4.3.1"
@@ -5677,10 +5677,10 @@ __metadata:
     start-server-and-test: "npm:^2.0.8"
     typescript: "npm:^5.6.2"
     typescript-eslint: "npm:^7.18.0"
-    vite: "npm:^5.4.6"
+    vite: "npm:^5.4.7"
     vite-bundle-visualizer: "npm:^1.2.1"
     vite-plugin-radar: "npm:^0.9.6"
-    vite-tsconfig-paths: "npm:^4.3.2"
+    vite-tsconfig-paths: "npm:^5.0.1"
     web-vitals: "npm:^2.1.4"
   languageName: unknown
   linkType: soft
@@ -9480,9 +9480,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vite-tsconfig-paths@npm:^4.3.2":
-  version: 4.3.2
-  resolution: "vite-tsconfig-paths@npm:4.3.2"
+"vite-tsconfig-paths@npm:^5.0.1":
+  version: 5.0.1
+  resolution: "vite-tsconfig-paths@npm:5.0.1"
   dependencies:
     debug: "npm:^4.1.1"
     globrex: "npm:^0.1.2"
@@ -9492,13 +9492,13 @@ __metadata:
   peerDependenciesMeta:
     vite:
       optional: true
-  checksum: 10c0/f390ac1d1c3992fc5ac50f9274c1090f8b55ab34a89ea88893db9a6924a3b26c9f64bc1163615150ad100749db73b6b2cf1d57f6cd60df6e762ceb5b8ad30024
+  checksum: 10c0/3c68a4d5df21ed4ef81749c20e91c5978989ed06bffc01688b3f1a0fe65951b461a68f0c017ad930a088cfe7a8cc04d0c8d955dfb8719d5edc7fb0ba9bf38a73
   languageName: node
   linkType: hard
 
-"vite@npm:^5.4.6":
-  version: 5.4.6
-  resolution: "vite@npm:5.4.6"
+"vite@npm:^5.4.7":
+  version: 5.4.7
+  resolution: "vite@npm:5.4.7"
   dependencies:
     esbuild: "npm:^0.21.3"
     fsevents: "npm:~2.3.3"
@@ -9535,7 +9535,7 @@ __metadata:
       optional: true
   bin:
     vite: bin/vite.js
-  checksum: 10c0/5f87be3a10e970eaf9ac52dfab39cf9fff583036685252fb64570b6d7bfa749f6d221fb78058f5ef4b5664c180d45a8e7a7ff68d7f3770e69e24c7c68b958bde
+  checksum: 10c0/0ca7ca60f71c61f3855bbabf7e33909bec32933b35914d4d281813c728183e78e7ce5be05735a7671df3a994613d3881f520a32a80715faa92effb28deee9320
   languageName: node
   linkType: hard
 
