@@ -165,7 +165,7 @@ const LoadData: FC<ILoadDataProps> = ({ state, firstTime }) => {
     },
     [state],
   );
-  const { getRootProps, getInputProps } = useDropzone({ onDrop });
+  const { getRootProps, getInputProps, open } = useDropzone({ onDrop, noClick: true });
 
   const setNormalisedFields = (normalisedFields: Map<Field, string>) => {
     state.setNormalisedFields(normalisedFields);
@@ -206,6 +206,8 @@ const LoadData: FC<ILoadDataProps> = ({ state, firstTime }) => {
                 variant="outlined"
                 startIcon={<FileDownloadOutlinedIcon />}
                 style={{ marginTop: ".5rem" }}
+                onClick={open}
+                onKeyDown={open}
               >
                 Upload Dataset
               </Button>
