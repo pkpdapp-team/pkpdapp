@@ -13,7 +13,7 @@ import MapObservations from "./MapObservations";
 import MapDosing from "./MapDosing";
 import PreviewData from "./PreviewData";
 import { RootState } from "../../app/store";
-import { DatasetRead, useDatasetCsvUpdateMutation, useDatasetDestroyMutation } from "../../app/backendApi";
+import { DatasetRead, useDatasetCsvUpdateMutation } from "../../app/backendApi";
 import Stratification from "./Stratification";
 import useDataset from "../../hooks/useDataset";
 import {
