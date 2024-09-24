@@ -1,6 +1,6 @@
 import { Box, Button, Stack, Typography } from "@mui/material";
 import Papa from "papaparse";
-import { FC, useCallback, useState } from "react";
+import { FC, useCallback, useState, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
 import MapHeaders from "./MapHeaders";
 import { normaliseHeader, validateState } from "./dataValidation";
@@ -112,6 +112,10 @@ const LoadData: FC<ILoadDataProps> = ({ state, firstTime }) => {
   if (normalisedHeaders.includes("Infusion Duration")) {
     setMinimumInfusionTime(state);
   }
+
+  useEffect(() => {
+    setShowData(state.data.length > 0 && state.fields.length > 0)
+  }, [state.data.length, state.fields.length])
 
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
