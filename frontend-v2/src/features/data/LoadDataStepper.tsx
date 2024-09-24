@@ -13,7 +13,7 @@ import MapObservations from "./MapObservations";
 import MapDosing from "./MapDosing";
 import PreviewData from "./PreviewData";
 import { RootState } from "../../app/store";
-import { DatasetRead, useDatasetCsvUpdateMutation } from "../../app/backendApi";
+import { DatasetRead, useDatasetCsvUpdateMutation, useDatasetDestroyMutation } from "../../app/backendApi";
 import Stratification from "./Stratification";
 import useDataset from "../../hooks/useDataset";
 import {
@@ -21,7 +21,7 @@ import {
   removeIgnoredObservations,
   validateDataRow,
 } from "./dataValidation";
-import { Alert } from "@mui/material";
+import { Alert, Tooltip } from "@mui/material";
 import { IProtocol, getSubjectDoses, getProtocols } from "./protocolUtils";
 
 interface IStepper {
@@ -239,6 +239,17 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
     }
   };
 
+  const onResetDataset = () => {
+    setData([]);
+    setErrors([]);
+    setWarnings([]);
+    setTimeUnit(undefined);
+    setAmountUnit(undefined);
+    setPrimaryCohort("Group");
+    setFileName("New Dataset");
+    restart();
+  };
+
   return (
     <Box
       sx={{
@@ -289,23 +300,32 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
           paddingBottom: 1,
         }}
       >
-        {stepState.activeStep === 0 ? (
-          <Button onClick={onCancel}>Cancel</Button>
-        ) : (
-          <Button onClick={handleBack}>Back</Button>
-        )}
-        <Button
-          disabled={data.length === 0 || isFinished || errors.length > 0}
-          variant="contained"
-          color="primary"
-          onClick={
-            stepState.activeStep === stepLabels.length - 1
-              ? handleFinish
-              : handleNext
-          }
+        <Tooltip title='You can cancel and upload new file' placement='top' arrow>
+          <Button variant='outlined' onClick={onResetDataset} disabled={!data.length}>Cancel</Button>
+        </Tooltip>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+          }}
         >
-          {stepState.activeStep === stepLabels.length - 1 ? "Finish" : "Next"}
-        </Button>
+          <Button variant='outlined' onClick={handleBack} disabled={stepState.activeStep === 0}>Previous</Button>
+          <Button
+            sx={{
+              marginLeft: '1rem'
+            }}
+            variant='contained'
+            disabled={data.length === 0 || isFinished || errors.length > 0}
+            color="primary"
+            onClick={
+              stepState.activeStep === stepLabels.length - 1
+                ? handleFinish
+                : handleNext
+            }
+          >
+            {stepState.activeStep === stepLabels.length - 1 ? "Finish" : "Next"}
+          </Button>
+        </Box>
       </Box>
     </Box>
   );
