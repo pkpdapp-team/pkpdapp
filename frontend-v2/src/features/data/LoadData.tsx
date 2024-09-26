@@ -99,9 +99,7 @@ function setMinimumInfusionTime(state: StepperState) {
 }
 
 const LoadData: FC<ILoadDataProps> = ({ state, firstTime }) => {
-  const [showData, setShowData] = useState<boolean>(
-    state.data.length > 0 && state.fields.length > 0,
-  );
+  const showData = state.data.length > 0 && state.fields.length > 0;
   const normalisedHeaders = state.normalisedHeaders;
   if (!normalisedHeaders.includes("ID")) {
     createDefaultSubjects(state);
@@ -112,10 +110,6 @@ const LoadData: FC<ILoadDataProps> = ({ state, firstTime }) => {
   if (normalisedHeaders.includes("Infusion Duration")) {
     setMinimumInfusionTime(state);
   }
-
-  useEffect(() => {
-    setShowData(state.data.length > 0 && state.fields.length > 0)
-  }, [state.data.length, state.fields.length])
 
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
@@ -160,9 +154,6 @@ const LoadData: FC<ILoadDataProps> = ({ state, firstTime }) => {
           state.setPrimaryCohort(primaryCohort);
           state.setErrors(errors);
           state.setWarnings(fieldValidation.warnings);
-          if (csvData.data.length > 0 && csvData.meta.fields) {
-            setShowData(true);
-          }
         };
         reader.readAsText(file);
       });

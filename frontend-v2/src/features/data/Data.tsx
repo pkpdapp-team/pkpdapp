@@ -60,8 +60,10 @@ const Data: FC = () => {
   }
 
   function onCancel() {
-    setIsLoading(false);
-    setIsEditing(false);
+    if (window.confirm("Any unsaved changes will be lost. Continue?")) {
+      setIsLoading(false);
+      setIsEditing(false);
+    }
   }
 
   function handleTabChange(event: SyntheticEvent, newValue: number) {
