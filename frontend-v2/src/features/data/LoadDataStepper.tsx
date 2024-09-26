@@ -240,14 +240,16 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
   };
 
   const onResetDataset = () => {
-    setData([]);
-    setErrors([]);
-    setWarnings([]);
-    setTimeUnit(undefined);
-    setAmountUnit(undefined);
-    setPrimaryCohort("Group");
-    setFileName("New Dataset");
-    restart();
+    if (window.confirm("Any unsaved changes will be lost. Continue?")) {
+      setData([]);
+      setErrors([]);
+      setWarnings([]);
+      setTimeUnit(undefined);
+      setAmountUnit(undefined);
+      setPrimaryCohort("Group");
+      setFileName("New Dataset");
+      restart();
+    };
   };
 
   return (
@@ -301,7 +303,7 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
         }}
       >
         <Tooltip title='You can cancel and upload new file' placement='top' arrow>
-          <Button variant='outlined' onClick={onResetDataset} disabled={!data.length}>Cancel</Button>
+          <Button variant='outlined' onClick={csv ? onCancel : onResetDataset}>Cancel</Button>
         </Tooltip>
         <Box
           sx={{
