@@ -84,10 +84,10 @@ const SetUnits: FC<IMapObservations> = ({
   return (
     <div>
       {showTimeUnitSelector && (
-        <Alert severity="info">
-          <Stack direction="row" spacing="1rem">
+        <Alert severity="info" sx={{ display: "flex", alignItems: "center" }}>
+          <Stack direction="row" spacing="1rem" sx={{ alignItems: "center" }}>
             <Typography>Please select a unit for all time values.</Typography>
-            <FormControl sx={{ minWidth: "10rem" }}>
+            <FormControl size='small' sx={{ minWidth: "10rem" }}>
               <InputLabel id="select-time-unit-label">Set Time Unit</InputLabel>
               <Select
                 labelId="select-time-unit-label"

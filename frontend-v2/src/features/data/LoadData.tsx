@@ -160,7 +160,10 @@ const LoadData: FC<ILoadDataProps> = ({ state, firstTime }) => {
     },
     [state],
   );
-  const { getRootProps, getInputProps, open } = useDropzone({ onDrop, noClick: true });
+  const { getRootProps, getInputProps, open } = useDropzone({
+    onDrop,
+    noClick: true,
+  });
 
   const setNormalisedFields = (normalisedFields: Map<Field, string>) => {
     state.setNormalisedFields(normalisedFields);
@@ -173,8 +176,16 @@ const LoadData: FC<ILoadDataProps> = ({ state, firstTime }) => {
     state.setWarnings(warnings);
   };
 
+  const noTimeUnit = !state.normalisedHeaders.find(
+    (field) => field === "Time Unit",
+  );
+  const invalidTimeUnits = state.errors.find((error) =>
+    error.includes("file contains multiple time units"),
+  );
+  const showTimeUnitSelector = noTimeUnit || invalidTimeUnits;
+
   return (
-    <Stack spacing={2}>
+    <Stack sx={{ display: 'flex', flexDirection: 'column', flexGrow: '1', flexShrink: '0'}} spacing={2}>
       <Box
         sx={{
           width: "100%",
@@ -212,12 +223,25 @@ const LoadData: FC<ILoadDataProps> = ({ state, firstTime }) => {
       )}
       <Box
         component="div"
-        sx={{ maxHeight: "40vh", overflow: "auto", overflowX: "auto" }}
+        sx={{
+          maxHeight: showTimeUnitSelector ? "62vh" : "74vh",
+          marginTop: showTimeUnitSelector ? "0" : "-3vh !important",
+        }}
       >
         {showData && (
-          <div>
-            <Typography variant='h4'>Imported Data Table</Typography>
-            <Typography variant='body2' style={{ marginTop: '.5rem'}}>The column types, which are automatically suggested based on the headers in the data, can be customized in the table by selecting the desired type from the dropdown lists</Typography>
+          <div
+            style={{
+              maxHeight: "inherit",
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            <Typography variant="h4">Imported Data Table</Typography>
+            <Typography variant="body2" style={{ marginTop: ".5rem" }}>
+              The column types, which are automatically suggested based on the
+              headers in the data, can be customized in the table by selecting
+              the desired type from the dropdown lists
+            </Typography>
             <MapHeaders
               data={state.data}
               setNormalisedFields={setNormalisedFields}

@@ -21,8 +21,10 @@ import {
   removeIgnoredObservations,
   validateDataRow,
 } from "./dataValidation";
-import { Alert, Tooltip } from "@mui/material";
+import { Tooltip } from "@mui/material";
 import { IProtocol, getSubjectDoses, getProtocols } from "./protocolUtils";
+import { DataNotifications } from "./DataNotifications";
+import { DataNotificationsButton } from "./DataNotficationsButton";
 
 interface IStepper {
   csv: string;
@@ -105,6 +107,10 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
   const [fileName, setFileName] = useState<string>(
     dataset?.name || "New Dataset",
   );
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+
+  const onOpenNotifications = () =>
+    setIsNotificationsOpen(!isNotificationsOpen);
 
   const state = {
     fileName,
@@ -249,7 +255,7 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
       setPrimaryCohort("Group");
       setFileName("New Dataset");
       restart();
-    };
+    }
   };
 
   return (
@@ -261,7 +267,7 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
         width: "100%",
       }}
     >
-      <Stepper nonLinear activeStep={stepState.activeStep} alternativeLabel>
+      <Stepper nonLinear activeStep={stepState.activeStep}>
         {stepLabels.map((step, index) => (
           <Step key={index}>
             <StepButton
@@ -273,18 +279,14 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
           </Step>
         ))}
       </Stepper>
-      <Box sx={{ flexGrow: 1, maxHeight: "80vh", overflow: "scroll" }}>
-        {state.fileName && <Alert severity="info">{state.fileName}</Alert>}
-        {errors.map((error) => (
-          <Alert key={error} severity="error">
-            {error}
-          </Alert>
-        ))}
-        {warnings.map((warning) => (
-          <Alert key={warning} severity="warning">
-            {warning}
-          </Alert>
-        ))}
+      {Boolean(data?.length) && (
+        <DataNotificationsButton
+          onOpenNotifications={onOpenNotifications}
+          errors={errors}
+          warnings={warnings}
+        />
+      )}
+      <Box sx={{ flexGrow: 1, maxHeight: "80vh" }}>
         {isFinished ? (
           <Typography>Saving data…</Typography>
         ) : (
@@ -302,8 +304,14 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
           paddingBottom: 1,
         }}
       >
-        <Tooltip title='You can cancel and upload new file' placement='top' arrow>
-          <Button variant='outlined' onClick={csv ? onCancel : onResetDataset}>Cancel</Button>
+        <Tooltip
+          title="You can cancel and upload new file"
+          placement="top"
+          arrow
+        >
+          <Button variant="outlined" onClick={csv ? onCancel : onResetDataset}>
+            Cancel
+          </Button>
         </Tooltip>
         <Box
           sx={{
@@ -311,12 +319,18 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
             justifyContent: "space-between",
           }}
         >
-          <Button variant='outlined' onClick={handleBack} disabled={stepState.activeStep === 0}>Previous</Button>
+          <Button
+            variant="outlined"
+            onClick={handleBack}
+            disabled={stepState.activeStep === 0}
+          >
+            Previous
+          </Button>
           <Button
             sx={{
-              marginLeft: '1rem'
+              marginLeft: "1rem",
             }}
-            variant='contained'
+            variant="contained"
             disabled={data.length === 0 || isFinished || errors.length > 0}
             color="primary"
             onClick={
@@ -329,6 +343,13 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
           </Button>
         </Box>
       </Box>
+      <DataNotifications
+        fileName={state.fileName}
+        isOpen={isNotificationsOpen}
+        handleOpenChange={onOpenNotifications}
+        errors={errors}
+        warnings={warnings}
+      />
     </Box>
   );
 };
