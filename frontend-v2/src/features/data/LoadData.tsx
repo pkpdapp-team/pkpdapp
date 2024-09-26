@@ -1,6 +1,6 @@
 import { Box, Stack, Typography } from "@mui/material";
 import Papa from "papaparse";
-import { FC, useCallback, useState, useEffect } from "react";
+import { FC, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 import MapHeaders from "./MapHeaders";
 import { normaliseHeader, validateState } from "./dataValidation";
