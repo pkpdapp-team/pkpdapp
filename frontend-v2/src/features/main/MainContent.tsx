@@ -10,6 +10,7 @@ import Protocols from "../trial/Protocols";
 import { Box } from "@mui/material";
 import Help from "../help/Help";
 import Data from "../data/Data";
+import SecondaryParameters from "../secondary/SecondaryParameters";
 
 interface TabPanelProps {
   children?: ReactNode;
@@ -60,6 +61,9 @@ const MainContent: FC = () => {
       </TabPanel>
       <TabPanel value={page} index={PageName.SIMULATIONS}>
         <Simulations key={projectIdOrZero} />
+      </TabPanel>
+      <TabPanel value={page} index={PageName.SECONDARY}>
+        <SecondaryParameters key={projectIdOrZero} />
       </TabPanel>
       <TabPanel value={page} index={PageName.HELP}>
         <Help />

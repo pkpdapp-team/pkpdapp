@@ -39,6 +39,7 @@ import VaccinesIcon from "@mui/icons-material/Vaccines";
 import SsidChartIcon from "@mui/icons-material/SsidChart";
 import ContactSupportIcon from "@mui/icons-material/ContactSupport";
 import TableViewIcon from "@mui/icons-material/TableView";
+import QueryStatsIcon from "@mui/icons-material/QueryStats";
 import "@fontsource/comfortaa"; // Defaults to weight 400
 import useSubjectGroups from "../../hooks/useSubjectGroups";
 
@@ -137,6 +138,7 @@ export default function Sidebar() {
     [PageName.TRIAL_DESIGN]: <VaccinesIcon />,
     [PageName.DATA]: <TableViewIcon />,
     [PageName.SIMULATIONS]: <SsidChartIcon />,
+    [PageName.SECONDARY]: <QueryStatsIcon />,
     [PageName.HELP]: <ContactSupportIcon />,
   };
 

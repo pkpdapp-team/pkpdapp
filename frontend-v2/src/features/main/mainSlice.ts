@@ -7,6 +7,7 @@ export enum PageName {
   DATA = "Data",
   TRIAL_DESIGN = "Trial Design",
   SIMULATIONS = "Simulations",
+  SECONDARY = "Secondary Parameters",
   HELP = "Help & Feedback",
 }
 
