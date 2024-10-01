@@ -208,24 +208,23 @@ export default function Sidebar() {
 
   const drawer = (
     <div style={{ marginTop: "7rem" }}>
-      <ListItem
-        key={projectsPage?.key}
-        disablePadding
-        selected={isPageSelected(projectsPage?.key)}
-      >
-        <ListItemButton
-          onClick={handlePageClick(projectsPage?.key)}
-          disabled={isPageDisabled(projectsPage?.key)}
-          disableRipple={true}
-        >
-          <ListItemIcon>
-            {projectsPage?.value in errorComponents
-              ? errorComponents[projectsPage?.value]
-              : icons[projectsPage?.value]}
-          </ListItemIcon>
-          <ListItemText primary={projectsPage?.value} />
-        </ListItemButton>
-      </ListItem>
+      <List>
+        <ListItem key={projectsPage?.key} disablePadding>
+          <ListItemButton
+            onClick={handlePageClick(projectsPage?.key)}
+            disabled={isPageDisabled(projectsPage?.key)}
+            disableRipple={true}
+            selected={isPageSelected(projectsPage?.key)}
+          >
+            <ListItemIcon>
+              {projectsPage?.value in errorComponents
+                ? errorComponents[projectsPage?.value]
+                : icons[projectsPage?.value]}
+            </ListItemIcon>
+            <ListItemText primary={projectsPage?.value} />
+          </ListItemButton>
+        </ListItem>
+      </List>
       {projectIdOrZero !== 0 && (
         <>
           <Typography
@@ -243,11 +242,12 @@ export default function Sidebar() {
           </Typography>
           <List>
             {steps.map(({ key, value }) => (
-              <ListItem key={key} disablePadding selected={isPageSelected(key)}>
+              <ListItem key={key} disablePadding>
                 <ListItemButton
                   onClick={handlePageClick(key)}
                   disabled={isPageDisabled(key)}
                   disableRipple={true}
+                  selected={isPageSelected(key)}
                 >
                   <ListItemIcon>
                     {value in errorComponents
