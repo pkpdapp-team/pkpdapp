@@ -1921,7 +1921,7 @@ export type PkpdMappingRead = {
   /** variable in PD part of model */
   pd_variable: number;
 };
-export type TypeEnum = "RO" | "FUP" | "BPR" | "TLG";
+export type TypeEnum = "AUC" | "RO" | "FUP" | "BPR" | "TLG";
 export type DerivedVariable = {
   /** true if object has been stored */
   read_only?: boolean;
@@ -1929,6 +1929,7 @@ export type DerivedVariable = {
   datetime?: string | null;
   /** type of derived variable
     
+    * `AUC` - area under curve
     * `RO` - receptor occupancy
     * `FUP` - faction unbound plasma
     * `BPR` - blood plasma ratio
@@ -1947,6 +1948,7 @@ export type DerivedVariableRead = {
   datetime?: string | null;
   /** type of derived variable
     
+    * `AUC` - area under curve
     * `RO` - receptor occupancy
     * `FUP` - faction unbound plasma
     * `BPR` - blood plasma ratio

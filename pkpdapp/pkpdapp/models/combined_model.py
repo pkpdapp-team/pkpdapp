@@ -317,6 +317,26 @@ class CombinedModel(MyokitModelMixin, StoredModel):
             myokit_compartment = myokit_var.parent()
             var_name = derived_variable.pk_variable.name
             if (
+                derived_variable.type == DerivedVariable.Type.AREA_UNDER_CURVE
+            ):  # noqa: E501
+                new_names = [f"calc_{var_name}_AUC"]
+                has_name = any(
+                    [
+                        myokit_compartment.has_variable(new_name)
+                        for new_name in new_names
+                    ]
+                )
+                if has_name:
+                    continue
+                var = myokit_compartment.add_variable(
+                    new_names[0],
+                    rhs=myokit.Name(myokit_var),
+                    initial_value=0
+                )
+                var.meta[
+                    "desc"
+                ] = f'Area under curve for {myokit_var.meta["desc"]}'  # noqa: E501
+            elif (
                 derived_variable.type == DerivedVariable.Type.RECEPTOR_OCCUPANCY
             ):  # noqa: E501
                 new_names = [f"calc_{var_name}_RO"]
@@ -674,6 +694,7 @@ class DerivedVariable(StoredModel):
     )
 
     class Type(models.TextChoices):
+        AREA_UNDER_CURVE = "AUC", "area under curve"
         RECEPTOR_OCCUPANCY = "RO", "receptor occupancy"
         FRACTION_UNBOUND_PLASMA = "FUP", "faction unbound plasma"
         BLOOD_PLASMA_RATIO = "BPR", "blood plasma ratio"
