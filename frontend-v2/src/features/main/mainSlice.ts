@@ -14,6 +14,7 @@ export enum SubPageName {
   PKPDMODEL = "PK/PD Model",
   MAPVARIABLES = "Map Variables",
   PARAMETERS = "Parameters",
+  SECONDARYPARAMETERS = "Secondary Parameters",
   TUTORIALS = "Tutorials",
   PROJECTS = "Projects",
   DRUG = "Drug",
