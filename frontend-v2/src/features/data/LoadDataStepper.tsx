@@ -246,10 +246,10 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
       setWarnings([]);
       setTimeUnit(undefined);
       setAmountUnit(undefined);
-      setPrimaryCohort("Group");
+      setGroupColumn("Group");
       setFileName("New Dataset");
       restart();
-    };
+    }
   };
 
   return (
@@ -302,8 +302,14 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
           paddingBottom: 1,
         }}
       >
-        <Tooltip title='You can cancel and upload new file' placement='top' arrow>
-          <Button variant='outlined' onClick={csv ? onCancel : onResetDataset}>Cancel</Button>
+        <Tooltip
+          title="You can cancel and upload new file"
+          placement="top"
+          arrow
+        >
+          <Button variant="outlined" onClick={csv ? onCancel : onResetDataset}>
+            Cancel
+          </Button>
         </Tooltip>
         <Box
           sx={{
@@ -311,12 +317,18 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
             justifyContent: "space-between",
           }}
         >
-          <Button variant='outlined' onClick={handleBack} disabled={stepState.activeStep === 0}>Previous</Button>
+          <Button
+            variant="outlined"
+            onClick={handleBack}
+            disabled={stepState.activeStep === 0}
+          >
+            Previous
+          </Button>
           <Button
             sx={{
-              marginLeft: '1rem'
+              marginLeft: "1rem",
             }}
-            variant='contained'
+            variant="contained"
             disabled={data.length === 0 || isFinished || errors.length > 0}
             color="primary"
             onClick={
