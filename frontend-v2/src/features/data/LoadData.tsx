@@ -144,14 +144,14 @@ const LoadData: FC<ILoadDataProps> = ({ state, firstTime }) => {
             normalisedFields,
             normalisedHeaders: [...normalisedFields.values()],
           });
-          const primaryCohort =
+          const groupColumn =
             fields.find(
               (field) => normalisedFields.get(field) === "Cat Covariate",
             ) || "Group";
           const errors = csvData.errors
             .map((e) => e.message)
             .concat(fieldValidation.errors);
-          state.setPrimaryCohort(primaryCohort);
+          state.setGroupColumn(groupColumn);
           state.setErrors(errors);
           state.setWarnings(fieldValidation.warnings);
         };

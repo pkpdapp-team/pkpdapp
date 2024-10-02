@@ -66,8 +66,8 @@ export type StepperState = {
   setWarnings: (warnings: string[]) => void;
   amountUnit?: string;
   setAmountUnit: (amountUnit: string) => void;
-  primaryCohort: string;
-  setPrimaryCohort: (primaryCohort: string) => void;
+  groupColumn: string;
+  setGroupColumn: (primaryCohort: string) => void;
 };
 
 function validateSubjectProtocols(protocols: IProtocol[]) {
@@ -96,7 +96,7 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
   );
   const [timeUnit, setTimeUnit] = useState<string | undefined>(undefined);
   const [amountUnit, setAmountUnit] = useState<string | undefined>(undefined);
-  const [primaryCohort, setPrimaryCohort] = useState("Group");
+  const [groupColumn, setGroupColumn] = useState("Group");
   const selectedProject = useSelector(
     (state: RootState) => state.main.selectedProject,
   );
@@ -121,8 +121,8 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
     setTimeUnit,
     amountUnit,
     setAmountUnit,
-    primaryCohort,
-    setPrimaryCohort,
+    groupColumn,
+    setGroupColumn,
     get fields() {
       return [...normalisedFields.keys()];
     },
