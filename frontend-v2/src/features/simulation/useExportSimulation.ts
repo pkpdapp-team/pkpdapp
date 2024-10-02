@@ -1,5 +1,5 @@
 import useProtocols from "./useProtocols";
-import useDataset from "../../hooks/useDataset";
+import useSubjectGroups from "../../hooks/useSubjectGroups";
 import {
   CombinedModelRead,
   Simulate,
@@ -45,7 +45,7 @@ export default function useExportSimulation({
   model,
   project,
 }: iExportSimulation): [() => void, { error: any }] {
-  const { groups } = useDataset(project?.id || 0);
+  const { groups } = useSubjectGroups();
   const { compound, protocols } = useProtocols();
   const { data: variables } = useVariableListQuery(
     { dosedPkModelId: model?.id || 0 },
