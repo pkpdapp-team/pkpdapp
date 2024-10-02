@@ -23,8 +23,7 @@ import {
 } from "./dataValidation";
 import { Tooltip } from "@mui/material";
 import { IProtocol, getSubjectDoses, getProtocols } from "./protocolUtils";
-import { DataNotifications } from "./DataNotifications";
-import { DataNotificationsButton } from "./DataNotficationsButton";
+import { Notifications } from "./Notifications";
 
 interface IStepper {
   csv: string;
@@ -108,8 +107,7 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
     dataset?.name || "New Dataset",
   );
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
-
-  const onOpenNotifications = () =>
+  const onNotificationsOpenChange = () =>
     setIsNotificationsOpen(!isNotificationsOpen);
 
   const state = {
@@ -157,6 +155,8 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
   ) {
     errors = [...errors, "Time unit is not defined."];
   }
+  const showData = state.data.length > 0 && state.fields.length > 0;
+  const notificationsCount = errors?.length + warnings?.length + 2;
 
   const handleStep = (step: number) => () => {
     setStepState((prevActiveStep) => ({
@@ -279,13 +279,16 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
           </Step>
         ))}
       </Stepper>
-      {Boolean(data?.length) && (
-        <DataNotificationsButton
-          onOpenNotifications={onOpenNotifications}
-          errors={errors}
-          warnings={warnings}
-        />
-      )}
+      <Notifications
+        isOpen={isNotificationsOpen}
+        showData={showData}
+        errors={errors}
+        warnings={warnings}
+        fileName={fileName}
+        state={state}
+        firstTime={stepState.activeStep === stepState.maxStep}
+        handleOpen={onNotificationsOpenChange}
+      />
       <Box sx={{ flexGrow: 1, maxHeight: "80vh" }}>
         {isFinished ? (
           <Typography>Saving data…</Typography>
@@ -293,6 +296,10 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
           <StepComponent
             state={state}
             firstTime={stepState.activeStep === stepState.maxStep}
+            notificationsInfo={{
+              isOpen: isNotificationsOpen,
+              count: notificationsCount,
+            }}
           />
         )}
       </Box>
@@ -343,13 +350,6 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
           </Button>
         </Box>
       </Box>
-      <DataNotifications
-        fileName={state.fileName}
-        isOpen={isNotificationsOpen}
-        handleOpenChange={onOpenNotifications}
-        errors={errors}
-        warnings={warnings}
-      />
     </Box>
   );
 };

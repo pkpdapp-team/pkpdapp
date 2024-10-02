@@ -28,6 +28,7 @@ const MapHeaders: FC<IMapHeaders> = ({
   data,
   normalisedFields,
   setNormalisedFields,
+  notificationsInfo
 }: IMapHeaders) => {
   const {
     page,
@@ -59,10 +60,11 @@ const MapHeaders: FC<IMapHeaders> = ({
       <TableContainer
         sx={{
           overflow: "auto",
-          maxHeight: "inherit",
+          maxHeight: notificationsInfo?.isOpen ? `calc(55vh - ${notificationsInfo?.count * 3}rem)` : '55vh',
+          transition: 'all .35s ease-in'
         }}
       >
-        <Table size="small">
+        <Table stickyHeader size="small">
           <TableHead>
             <TableRow>
               {fields.map((field, index) => (

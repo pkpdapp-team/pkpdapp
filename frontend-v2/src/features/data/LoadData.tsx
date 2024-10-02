@@ -6,7 +6,6 @@ import MapHeaders from "./MapHeaders";
 import { normaliseHeader, validateState } from "./dataValidation";
 import { StepperState } from "./LoadDataStepper";
 import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
-import SetUnits from "./SetUnits";
 
 export type Row = { [key: string]: string };
 export type Data = Row[];
@@ -37,6 +36,10 @@ const style = {
 interface ILoadDataProps {
   state: StepperState;
   firstTime: boolean;
+  notificationsInfo: {
+    isOpen: boolean;
+    count: number;
+  }
 }
 
 function updateDataAndResetFields(state: StepperState, data: Data) {
@@ -98,7 +101,7 @@ function setMinimumInfusionTime(state: StepperState) {
   }
 }
 
-const LoadData: FC<ILoadDataProps> = ({ state, firstTime }) => {
+const LoadData: FC<ILoadDataProps> = ({ state, firstTime, notificationsInfo }) => {
   const showData = state.data.length > 0 && state.fields.length > 0;
   const normalisedHeaders = state.normalisedHeaders;
   if (!normalisedHeaders.includes("ID")) {
@@ -186,16 +189,6 @@ const LoadData: FC<ILoadDataProps> = ({ state, firstTime }) => {
 
   return (
     <Stack sx={{ display: 'flex', flexDirection: 'column', flexGrow: '1', flexShrink: '0'}} spacing={2}>
-      <Box
-        sx={{
-          width: "100%",
-          maxHeight: "24vh",
-          overflow: "auto",
-          whiteSpace: "nowrap",
-        }}
-      >
-        {showData && <SetUnits state={state} firstTime={firstTime} />}
-      </Box>
       {!showData && (
         <Box style={style.dropAreaContainer}>
           <Box {...getRootProps({ style: style.dropArea })}>
@@ -223,10 +216,6 @@ const LoadData: FC<ILoadDataProps> = ({ state, firstTime }) => {
       )}
       <Box
         component="div"
-        sx={{
-          maxHeight: showTimeUnitSelector ? "62vh" : "74vh",
-          marginTop: showTimeUnitSelector ? "0" : "-3vh !important",
-        }}
       >
         {showData && (
           <div
@@ -246,6 +235,7 @@ const LoadData: FC<ILoadDataProps> = ({ state, firstTime }) => {
               data={state.data}
               setNormalisedFields={setNormalisedFields}
               normalisedFields={state.normalisedFields}
+              notificationsInfo={notificationsInfo}
             />
           </div>
         )}
