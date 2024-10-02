@@ -1,5 +1,7 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import useProtocols from "./useProtocols";
+import { SimulationContext } from "../../contexts/SimulationContext";
+
 import {
   CombinedModelRead,
   Simulate,
@@ -16,6 +18,7 @@ export default function useSimulation(
   model: CombinedModelRead | undefined,
 ) {
   const { compound, protocols } = useProtocols();
+  const { setSimulations } = useContext(SimulationContext);
   const [loadingSimulate, setLoadingSimulate] = useState<boolean>(false);
   const [data, setData] = useState<SimulateResponse[]>([]);
   const [simulate, { error: simulateErrorBase }] =
@@ -46,6 +49,7 @@ export default function useSimulation(
           if ("data" in response) {
             const responseData = response.data as SimulateResponse[];
             setData(responseData);
+            setSimulations(responseData);
           }
         }
       });
