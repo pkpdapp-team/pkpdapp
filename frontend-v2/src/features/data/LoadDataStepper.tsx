@@ -21,8 +21,9 @@ import {
   removeIgnoredObservations,
   validateDataRow,
 } from "./dataValidation";
-import { Alert, Tooltip } from "@mui/material";
+import { Tooltip } from "@mui/material";
 import { IProtocol, getSubjectDoses, getProtocols } from "./protocolUtils";
+import { Notifications } from "./Notifications";
 
 interface IStepper {
   csv: string;
@@ -105,6 +106,9 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
   const [fileName, setFileName] = useState<string>(
     dataset?.name || "New Dataset",
   );
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const onNotificationsOpenChange = () =>
+    setIsNotificationsOpen(!isNotificationsOpen);
 
   const state = {
     fileName,
@@ -151,6 +155,8 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
   ) {
     errors = [...errors, "Time unit is not defined."];
   }
+  const showData = state.data.length > 0 && state.fields.length > 0;
+  const notificationsCount = errors?.length + warnings?.length + 2;
 
   const handleStep = (step: number) => () => {
     setStepState((prevActiveStep) => ({
@@ -261,7 +267,7 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
         width: "100%",
       }}
     >
-      <Stepper nonLinear activeStep={stepState.activeStep} alternativeLabel>
+      <Stepper nonLinear activeStep={stepState.activeStep}>
         {stepLabels.map((step, index) => (
           <Step key={index}>
             <StepButton
@@ -273,24 +279,27 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
           </Step>
         ))}
       </Stepper>
-      <Box sx={{ flexGrow: 1, maxHeight: "80vh", overflow: "scroll" }}>
-        {state.fileName && <Alert severity="info">{state.fileName}</Alert>}
-        {errors.map((error) => (
-          <Alert key={error} severity="error">
-            {error}
-          </Alert>
-        ))}
-        {warnings.map((warning) => (
-          <Alert key={warning} severity="warning">
-            {warning}
-          </Alert>
-        ))}
+      <Notifications
+        isOpen={isNotificationsOpen}
+        showData={showData}
+        errors={errors}
+        warnings={warnings}
+        fileName={fileName}
+        state={state}
+        firstTime={stepState.activeStep === stepState.maxStep}
+        handleOpen={onNotificationsOpenChange}
+      />
+      <Box sx={{ flexGrow: 1, maxHeight: "80vh" }}>
         {isFinished ? (
           <Typography>Saving data…</Typography>
         ) : (
           <StepComponent
             state={state}
             firstTime={stepState.activeStep === stepState.maxStep}
+            notificationsInfo={{
+              isOpen: isNotificationsOpen,
+              count: notificationsCount,
+            }}
           />
         )}
       </Box>

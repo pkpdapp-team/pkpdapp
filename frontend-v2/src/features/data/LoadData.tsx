@@ -6,7 +6,6 @@ import MapHeaders from "./MapHeaders";
 import { normaliseHeader, validateState } from "./dataValidation";
 import { StepperState } from "./LoadDataStepper";
 import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
-import SetUnits from "./SetUnits";
 
 export type Row = { [key: string]: string };
 export type Data = Row[];
@@ -37,6 +36,10 @@ const style = {
 interface ILoadDataProps {
   state: StepperState;
   firstTime: boolean;
+  notificationsInfo: {
+    isOpen: boolean;
+    count: number;
+  }
 }
 
 function updateDataAndResetFields(state: StepperState, data: Data) {
@@ -98,7 +101,7 @@ function setMinimumInfusionTime(state: StepperState) {
   }
 }
 
-const LoadData: FC<ILoadDataProps> = ({ state, firstTime }) => {
+const LoadData: FC<ILoadDataProps> = ({ state, firstTime, notificationsInfo }) => {
   const showData = state.data.length > 0 && state.fields.length > 0;
   const normalisedHeaders = state.normalisedHeaders;
   if (!normalisedHeaders.includes("ID")) {
@@ -160,7 +163,10 @@ const LoadData: FC<ILoadDataProps> = ({ state, firstTime }) => {
     },
     [state],
   );
-  const { getRootProps, getInputProps, open } = useDropzone({ onDrop, noClick: true });
+  const { getRootProps, getInputProps, open } = useDropzone({
+    onDrop,
+    noClick: true,
+  });
 
   const setNormalisedFields = (normalisedFields: Map<Field, string>) => {
     state.setNormalisedFields(normalisedFields);
@@ -173,18 +179,16 @@ const LoadData: FC<ILoadDataProps> = ({ state, firstTime }) => {
     state.setWarnings(warnings);
   };
 
+  const noTimeUnit = !state.normalisedHeaders.find(
+    (field) => field === "Time Unit",
+  );
+  const invalidTimeUnits = state.errors.find((error) =>
+    error.includes("file contains multiple time units"),
+  );
+  const showTimeUnitSelector = noTimeUnit || invalidTimeUnits;
+
   return (
-    <Stack spacing={2}>
-      <Box
-        sx={{
-          width: "100%",
-          maxHeight: "24vh",
-          overflow: "auto",
-          whiteSpace: "nowrap",
-        }}
-      >
-        {showData && <SetUnits state={state} firstTime={firstTime} />}
-      </Box>
+    <Stack sx={{ display: 'flex', flexDirection: 'column', flexGrow: '1', flexShrink: '0'}} spacing={2}>
       {!showData && (
         <Box style={style.dropAreaContainer}>
           <Box {...getRootProps({ style: style.dropArea })}>
@@ -212,16 +216,26 @@ const LoadData: FC<ILoadDataProps> = ({ state, firstTime }) => {
       )}
       <Box
         component="div"
-        sx={{ maxHeight: "40vh", overflow: "auto", overflowX: "auto" }}
       >
         {showData && (
-          <div>
-            <Typography variant='h4'>Imported Data Table</Typography>
-            <Typography variant='body2' style={{ marginTop: '.5rem'}}>The column types, which are automatically suggested based on the headers in the data, can be customized in the table by selecting the desired type from the dropdown lists</Typography>
+          <div
+            style={{
+              maxHeight: "inherit",
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            <Typography variant="h4">Imported Data Table</Typography>
+            <Typography variant="body2" style={{ marginTop: ".5rem" }}>
+              The column types, which are automatically suggested based on the
+              headers in the data, can be customized in the table by selecting
+              the desired type from the dropdown lists
+            </Typography>
             <MapHeaders
               data={state.data}
               setNormalisedFields={setNormalisedFields}
               normalisedFields={state.normalisedFields}
+              notificationsInfo={notificationsInfo}
             />
           </div>
         )}
