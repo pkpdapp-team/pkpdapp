@@ -162,9 +162,9 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
     error.includes("file contains multiple time units"),
   );
   const showTimeUnitSelector = noTimeUnit || invalidTimeUnits;
-
   const showData = state.data.length > 0 && state.fields.length > 0;
-  const notificationsCount = errors?.length + warnings?.length + (showTimeUnitSelector || hasTimeUnitChanged ? 2 : 1);
+  const shouldShowTimeUnitNotification = showTimeUnitSelector || hasTimeUnitChanged;
+  const notificationsCount = errors?.length + warnings?.length + (shouldShowTimeUnitNotification ? 2 : 1);
 
   const handleStep = (step: number) => () => {
     setStepState((prevActiveStep) => ({
@@ -298,7 +298,7 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
         firstTime={stepState.activeStep === stepState.maxStep}
         handleOpen={onNotificationsOpenChange}
         setHasTimeUnitChanged={setHasTimeUnitChanged}
-        showTimeUnitSelector={showTimeUnitSelector || hasTimeUnitChanged}
+        showTimeUnitSelector={shouldShowTimeUnitNotification}
       />
       <Box sx={{ flexGrow: 1, maxHeight: "80vh" }}>
         {isFinished ? (

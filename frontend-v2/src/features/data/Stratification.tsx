@@ -12,13 +12,11 @@ import {
   Tabs,
   Tab,
   Typography,
-  TableContainer,
-  Tooltip,
+  TableContainer
 } from "@mui/material";
 import { StepperState } from "./LoadDataStepper";
 import ProtocolDataGrid from "./ProtocolDataGrid";
 import { getProtocols, getSubjectDoses, IProtocol } from "./protocolUtils";
-import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import {
   Group,
   groupsFromCatCovariate,
@@ -72,6 +70,10 @@ function groupDataRows(data: { [key: string]: string }[], columnName: string) {
 interface IStratification {
   state: StepperState;
   firstTime: boolean;
+  notificationsInfo: {
+    isOpen: boolean;
+    count: number;
+  }
 }
 
 const CAT_COVARIATE_COLUMNS = ["Cat Covariate", "Administration Name", "ID"];
@@ -248,8 +250,8 @@ const Stratification: FC<IStratification> = ({
               component="div"
               sx={{
                 height: notificationsInfo?.isOpen
-                  ? `calc(35vh - ${splitNotificationsCount(notificationsInfo?.count).second * 3}rem)`
-                  : "35vh",
+                  ? `calc(30vh - ${splitNotificationsCount(notificationsInfo?.count).second * 3}rem)`
+                  : "30vh",
                 overflow: "auto",
                 overflowX: "auto",
                 transition: "all .35s ease-in",
