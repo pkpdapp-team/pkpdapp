@@ -22,6 +22,10 @@ interface IMapHeaders {
   data: Data;
   normalisedFields: Map<Field, string>;
   setNormalisedFields: (fields: Map<Field, string>) => void;
+  notificationsInfo: {
+    isOpen: boolean;
+    count: number;
+  }
 }
 
 const MapHeaders: FC<IMapHeaders> = ({
