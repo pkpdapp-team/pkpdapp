@@ -53,17 +53,20 @@ const ProtocolDataGrid: FC<IProtocolDataGrid> = ({ group, state }) => {
     setSelected(selection);
   }
   return (
-    <>
+    <div style={{ height: 'inherit', display: 'flex', flexDirection: 'column'}}>
+          {selected.length > 0 && (
+        <SubjectGroupForm group={group} state={state} selected={selected} />
+      )}
       <DataGrid
+        density="compact"
         rows={subjectRows}
         columns={subjectColumns}
         checkboxSelection
         onRowSelectionModelChange={onRowSelectionModelChange}
+        disableVirtualization={false}
       />
-      {selected.length > 0 && (
-        <SubjectGroupForm group={group} state={state} selected={selected} />
-      )}
-    </>
+
+    </div>
   );
 };
 

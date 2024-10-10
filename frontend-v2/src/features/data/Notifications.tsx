@@ -15,7 +15,9 @@ export const Notifications = ({
     fileName,
     state,
     firstTime,
-    handleOpen
+    showTimeUnitSelector,
+    handleOpen,
+    setHasTimeUnitChanged
 } : {
     isOpen: boolean;
     showData: boolean;
@@ -24,7 +26,9 @@ export const Notifications = ({
     fileName: string;
     state: StepperState;
     firstTime: boolean;
+    showTimeUnitSelector: boolean;
     handleOpen: () => void;
+    setHasTimeUnitChanged: (state: boolean) => void;
 }) => {
 
     return (
@@ -80,7 +84,7 @@ export const Notifications = ({
               <Box sx={{ display: "flex", alignItems: "center" }}>
                 <InfoOutlinedIcon color="primary" fontSize="small" />{" "}
                 <Typography color="#1976d2" sx={{ marginLeft: ".5rem" }}>
-                  {showData ? "2" : "1"}
+                  {showData && showTimeUnitSelector ? "2" : "1"}
                 </Typography>
               </Box>
             </Box>
@@ -137,7 +141,7 @@ export const Notifications = ({
                 {fileName}
               </Alert>
             )}
-            {showData && <SetUnits state={state} firstTime={firstTime} />}
+            {showData && <SetUnits state={state} firstTime={firstTime} setHasTimeUnitChanged={setHasTimeUnitChanged} />}
           </Collapse>
         </Box>
       );

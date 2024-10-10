@@ -12,6 +12,7 @@ import {
   Tabs,
   Tab,
   Typography,
+  TableContainer
 } from "@mui/material";
 import { StepperState } from "./LoadDataStepper";
 import ProtocolDataGrid from "./ProtocolDataGrid";
@@ -69,11 +70,18 @@ function groupDataRows(data: { [key: string]: string }[], columnName: string) {
 interface IStratification {
   state: StepperState;
   firstTime: boolean;
+  notificationsInfo: {
+    isOpen: boolean;
+    count: number;
+  }
 }
 
 const CAT_COVARIATE_COLUMNS = ["Cat Covariate", "Administration Name", "ID"];
 
-const Stratification: FC<IStratification> = ({ state }: IStratification) => {
+const Stratification: FC<IStratification> = ({
+  state,
+  notificationsInfo,
+}: IStratification) => {
   const subjectDoses = getSubjectDoses(state);
   const protocols = getProtocols(subjectDoses);
 
@@ -155,53 +163,82 @@ const Stratification: FC<IStratification> = ({ state }: IStratification) => {
     };
   }
 
+  const splitNotificationsCount = (notificationCount: number) => ({
+    first: Math.floor(notificationCount / 2),
+    second: Math.ceil(notificationCount / 2),
+  });
+
   return (
-    <>
-      <Alert severity="info">
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
+      <Typography variant="h5">Stratification</Typography>
+      <Typography variant="body2" style={{ marginTop: ".5rem" }}>
         Stratify your observations into groups based on the covariates you have
         provided.
-      </Alert>
+      </Typography>
       <Stack marginTop={2} spacing={2}>
         {!!catCovariates.length && (
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>
-                  <Typography>Covariate</Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography>Values</Typography>
-                </TableCell>
-                <TableCell id="heading-primary">
-                  <Typography>Use as Group ID?</Typography>
-                </TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {catCovariates.map((field, index) => {
-                const primaryLabel = `heading-primary field-${field}`;
-                const isPrimary = groupColumn === field;
-                return (
-                  <TableRow key={field}>
-                    <TableCell id={`field-${field}`}>{field}</TableCell>
-                    <TableCell>
-                      {uniqueCovariateValues[index].join(",")}
-                    </TableCell>
-                    <TableCell>
-                      <Radio
-                        name="primary"
-                        value={field}
-                        checked={isPrimary}
-                        onChange={handleGroupChange}
-                        inputProps={{ "aria-labelledby": primaryLabel }}
-                      />
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+          <TableContainer
+            sx={{
+              maxHeight: notificationsInfo?.isOpen
+                ? `calc(10.1rem - ${splitNotificationsCount(notificationsInfo?.count).first * 3}rem)`
+                : "10.1rem",
+              transition: "all .35s ease-in",
+            }}
+          >
+            <Table stickyHeader size="small">
+              <TableHead>
+                <TableRow>
+                  <TableCell id="heading-primary" width="100px">
+                    <Typography>Group ID</Typography>
+                  </TableCell>
+                  <TableCell width="250px">
+                    <Typography>Covariate</Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography>Values</Typography>
+                  </TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {catCovariates.map((field, index) => {
+                  const primaryLabel = `heading-primary field-${field}`;
+                  const isPrimary = groupColumn === field;
+                  return (
+                    <TableRow key={field}>
+                      <TableCell sx={{ padding: "0 16px" }}>
+                        <Radio
+                          name="primary"
+                          value={field}
+                          checked={isPrimary}
+                          onChange={handleGroupChange}
+                          inputProps={{ "aria-labelledby": primaryLabel }}
+                          sx={{ padding: 0, transform: "scale(0.8)" }}
+                        />
+                      </TableCell>
+                      <TableCell id={`field-${field}`}>{field}</TableCell>
+                      <TableCell>
+                        {uniqueCovariateValues[index].join(",")}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </TableContainer>
         )}
+      </Stack>
+      <Stack sx={{ paddingTop: ".5rem" }}>
+        <Typography variant="h5">Groups</Typography>
+        <Typography variant="body2" style={{ marginTop: ".5rem" }}>
+          Please review the group assignment based on your stratification above.
+          If you want to move individuals between groups or assign them to a new
+          group, select them first and then follow the instructions.
+        </Typography>
         <Tabs value={tab} onChange={handleTabChange}>
           {groups.map((group, index) => (
             <Tab key={group.name} label={group.name} {...a11yProps(index)} />
@@ -211,7 +248,14 @@ const Stratification: FC<IStratification> = ({ state }: IStratification) => {
           {groups[tab] ? (
             <Box
               component="div"
-              sx={{ maxHeight: "30vh", overflow: "auto", overflowX: "auto" }}
+              sx={{
+                height: notificationsInfo?.isOpen
+                  ? `calc(30vh - ${splitNotificationsCount(notificationsInfo?.count).second * 3}rem)`
+                  : "30vh",
+                overflow: "auto",
+                overflowX: "auto",
+                transition: "all .35s ease-in",
+              }}
             >
               <ProtocolDataGrid group={groups[tab]} state={state} />
             </Box>
@@ -220,7 +264,7 @@ const Stratification: FC<IStratification> = ({ state }: IStratification) => {
           )}
         </Box>
       </Stack>
-    </>
+    </Box>
   );
 };
 

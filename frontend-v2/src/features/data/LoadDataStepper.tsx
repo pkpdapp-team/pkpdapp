@@ -145,6 +145,7 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
   }
 
   const [stepState, setStepState] = useState({ activeStep: 0, maxStep: 0 });
+  const [hasTimeUnitChanged, setHasTimeUnitChanged] = useState<boolean>(false);
   const StepComponent = stepComponents[stepState.activeStep];
   const isFinished = stepState.activeStep === stepLabels.length;
   const normalisedHeaders = [...normalisedFields.values()];
@@ -155,8 +156,15 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
   ) {
     errors = [...errors, "Time unit is not defined."];
   }
+
+  const noTimeUnit = !state.normalisedHeaders.find((field) => field === "Time Unit");
+  const invalidTimeUnits = state.errors.find((error) =>
+    error.includes("file contains multiple time units"),
+  );
+  const showTimeUnitSelector = noTimeUnit || invalidTimeUnits;
   const showData = state.data.length > 0 && state.fields.length > 0;
-  const notificationsCount = errors?.length + warnings?.length + 2;
+  const shouldShowTimeUnitNotification = showTimeUnitSelector || hasTimeUnitChanged;
+  const notificationsCount = errors?.length + warnings?.length + (shouldShowTimeUnitNotification ? 2 : 1);
 
   const handleStep = (step: number) => () => {
     setStepState((prevActiveStep) => ({
@@ -254,6 +262,7 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
       setAmountUnit(undefined);
       setGroupColumn("Group");
       setFileName("New Dataset");
+      setHasTimeUnitChanged(false);
       restart();
     }
   };
@@ -288,6 +297,8 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
         state={state}
         firstTime={stepState.activeStep === stepState.maxStep}
         handleOpen={onNotificationsOpenChange}
+        setHasTimeUnitChanged={setHasTimeUnitChanged}
+        showTimeUnitSelector={shouldShowTimeUnitNotification}
       />
       <Box sx={{ flexGrow: 1, maxHeight: "80vh" }}>
         {isFinished ? (

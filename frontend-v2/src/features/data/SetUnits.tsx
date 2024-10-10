@@ -26,6 +26,7 @@ interface IMapObservations {
 const SetUnits: FC<IMapObservations> = ({
   state,
   firstTime,
+  setHasTimeUnitChanged
 }: IMapObservations) => {
   const [isChanged, setIsChanged] = useState<boolean>(false);
   const projectId = useSelector(
@@ -56,7 +57,7 @@ const SetUnits: FC<IMapObservations> = ({
   const invalidTimeUnits = state.errors.find((error) =>
     error.includes("file contains multiple time units"),
   );
-  const showTimeUnitSelector = noTimeUnit || invalidTimeUnits && isChanged;
+  const showTimeUnitSelector = noTimeUnit || invalidTimeUnits;
   const timeUnitField =
     state.fields.find(
       (field) => state.normalisedFields.get(field) === "Time Unit",
@@ -82,6 +83,7 @@ const SetUnits: FC<IMapObservations> = ({
     state.setErrors(errors);
     state.setWarnings(warnings);
     setIsChanged(true);
+    setHasTimeUnitChanged(true);
   }
   return (
     <div>
