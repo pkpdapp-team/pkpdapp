@@ -1,4 +1,11 @@
-import { Box, Button, Input, InputLabel, TextField, Typography } from "@mui/material";
+import {
+  Box,
+  Button,
+  Input,
+  InputLabel,
+  TextField,
+  Typography,
+} from "@mui/material";
 import { GridRowSelectionModel } from "@mui/x-data-grid";
 import { FC, FormEvent, useRef } from "react";
 import { StepperState } from "./LoadDataStepper";
@@ -47,21 +54,21 @@ const SubjectGroupForm: FC<ISubjectGroupForm> = ({
       padding="1rem"
       sx={{
         width: "fit-content",
-        display: 'flex',
-        alignItems: 'center'
+        display: "flex",
+        alignItems: "center",
       }}
     >
-      <Typography variant="caption" sx={{ marginRight: '1rem'}}>
+      <Typography variant="caption" sx={{ marginRight: "1rem" }}>
         {selected?.length} rows selected.
       </Typography>
-      <Typography sx={{ marginRight: '1rem'}}>
+      <InputLabel sx={{ marginRight: "1rem" }} htmlFor="new-group-id-input">
         New Group ID
-      </Typography>
+      </InputLabel>
       <TextField
-        size='small'
+        id="new-group-id-input"
+        size="small"
         inputRef={selectedGroupInput}
         type="text"
-        id="selected-group"
         defaultValue={group.id}
         sx={{
           fontSize: "0.75rem",
@@ -73,7 +80,7 @@ const SubjectGroupForm: FC<ISubjectGroupForm> = ({
         sx={{
           fontSize: "0.5rem",
           padding: "0.25rem",
-          marginLeft: '1rem'
+          marginLeft: "1rem",
         }}
       >
         change
