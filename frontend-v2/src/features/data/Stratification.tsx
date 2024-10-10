@@ -237,7 +237,7 @@ const Stratification: FC<IStratification> = ({
         <Typography variant="body2" style={{ marginTop: ".5rem" }}>
           Please review the group assignment based on your stratification above.
           If you want to move individuals between groups or assign them to a new
-          group, select them first and the follow the instructions.
+          group, select them first and then follow the instructions.
         </Typography>
         <Tabs value={tab} onChange={handleTabChange}>
           {groups.map((group, index) => (
