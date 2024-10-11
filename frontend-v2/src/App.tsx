@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import "./App.css";
 
 import {
@@ -15,10 +15,18 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Typography } from "@mui/material";
 
+import { SimulationContext } from "./contexts/SimulationContext";
+import { SimulateResponse } from "./app/backendApi";
+
 function App() {
   const dispatch = useAppDispatch();
   const isAuth = useSelector(isAuthenticated);
   const error = useSelector((state: RootState) => state.login.error);
+  const [simulations, setSimulations] = useState<SimulateResponse[]>([]);
+  const simulationContext = {
+    simulations,
+    setSimulations,
+  };
 
   const onLogin = (username: string, password: string) => {
     dispatch(login({ username, password }));
@@ -29,7 +37,7 @@ function App() {
   }, [dispatch]);
 
   return (
-    <>
+    <SimulationContext.Provider value={simulationContext}>
       {isAuth ? (
         <>
           <Sidebar />
@@ -49,7 +57,7 @@ function App() {
       >
         pkpdx version {import.meta.env.VITE_APP_VERSION?.slice(0, 7) || "dev"}
       </Typography>
-    </>
+    </SimulationContext.Provider>
   );
 }
 
