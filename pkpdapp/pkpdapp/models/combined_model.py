@@ -331,7 +331,8 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 var = myokit_compartment.add_variable(
                     new_names[0],
                     rhs=myokit.Name(myokit_var),
-                    initial_value=0
+                    initial_value=0,
+                    unit=myokit_var.unit() * myokit.units.hour,
                 )
                 var.meta[
                     "desc"
