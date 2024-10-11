@@ -13,6 +13,7 @@ import {
   TableBody,
   Typography,
   SelectChangeEvent,
+  TableContainer,
 } from "@mui/material";
 import { StepperState } from "./LoadDataStepper";
 import { UnitRead, VariableRead } from "../../app/backendApi";
@@ -25,6 +26,10 @@ interface IDosingProtocols {
   state: StepperState;
   units: UnitRead[];
   variables: VariableRead[];
+  notificationsInfo: {
+    isOpen: boolean;
+    count: number;
+  };
 }
 
 const CreateDosingProtocols: FC<IDosingProtocols> = ({
@@ -33,6 +38,7 @@ const CreateDosingProtocols: FC<IDosingProtocols> = ({
   state,
   units,
   variables,
+  notificationsInfo,
 }: IDosingProtocols) => {
   const amountField = state.fields.find(
     (field) =>
@@ -93,66 +99,80 @@ const CreateDosingProtocols: FC<IDosingProtocols> = ({
     };
   return (
     <>
-      <Alert severity="info">
-        Map dosing compartments to your subject groups here. You can set dose
-        amounts, units and intervals under Trial Design, once you have uploaded
-        your data.
-      </Alert>
-      <Box
-        component="div"
-        marginTop={2}
-        sx={{ maxHeight: "40vh", overflow: "auto", overflowX: "auto" }}
-      >
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>
-                <Typography>{administrationIdField}</Typography>
-              </TableCell>
-              <TableCell>
-                <Typography>Dosing Compartment</Typography>
-              </TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {uniqueAdministrationIds.map((adminId) => {
-              const currentRow = state.data.find((row) =>
-                administrationIdField
-                  ? row[administrationIdField] === adminId
-                  : true,
-              );
-              const selectedVariable = variables?.find(
-                (variable) =>
-                  variable.qname === currentRow?.["Amount Variable"],
-              );
-              return (
-                <TableRow key={adminId}>
-                  <TableCell>{adminId}</TableCell>
-                  <TableCell>
-                    <FormControl fullWidth>
-                      <InputLabel id={`select-var-${adminId}-label`}>
-                        Variable
-                      </InputLabel>
-                      <Select
-                        labelId={`select-var-${adminId}-label`}
-                        id={`select-var-${adminId}`}
-                        label="Variable"
-                        value={selectedVariable?.qname}
-                        onChange={handleAmountMappingChange(adminId)}
-                      >
-                        {modelAmounts?.map((variable) => (
-                          <MenuItem key={variable.name} value={variable.qname}>
-                            {variable.name}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
+      <Box component="div">
+        <Typography variant="h5">Dosing</Typography>
+        <Typography variant="body2" style={{ marginTop: ".5rem", marginBottom: '.5rem' }}>
+          Map dosing compartments to your subject groups here. You can set dose
+          amounts, units and intervals under Trial Design, once you have
+          uploaded your data.
+        </Typography>
+        <TableContainer
+          sx={{
+            maxHeight: notificationsInfo?.isOpen
+              ? `calc(60vh - ${notificationsInfo?.count * 3}rem)`
+              : "60vh",
+            transition: "all .35s ease-in",
+          }}
+        >
+          <Table stickyHeader size="small">
+            <TableHead>
+              <TableRow>
+                <TableCell>
+                  <Typography>{administrationIdField}</Typography>
+                </TableCell>
+                <TableCell>
+                  <Typography>Dosing Compartment</Typography>
+                </TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {uniqueAdministrationIds.map((adminId) => {
+                const currentRow = state.data.find((row) =>
+                  administrationIdField
+                    ? row[administrationIdField] === adminId
+                    : true,
+                );
+                const selectedVariable = variables?.find(
+                  (variable) =>
+                    variable.qname === currentRow?.["Amount Variable"],
+                );
+                return (
+                  <TableRow key={adminId}>
+                    <TableCell>{adminId}</TableCell>
+                    <TableCell>
+                      <FormControl fullWidth>
+                        <InputLabel
+                          size="small"
+                          id={`select-var-${adminId}-label`}
+                        >
+                          Variable
+                        </InputLabel>
+                        <Select
+                          labelId={`select-var-${adminId}-label`}
+                          id={`select-var-${adminId}`}
+                          label="Variable"
+                          value={selectedVariable?.qname}
+                          onChange={handleAmountMappingChange(adminId)}
+                          size="small"
+                          margin="dense"
+                        >
+                          {modelAmounts?.map((variable) => (
+                            <MenuItem
+                              key={variable.name}
+                              value={variable.qname}
+                            >
+                              {variable.name}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </TableContainer>
       </Box>
     </>
   );

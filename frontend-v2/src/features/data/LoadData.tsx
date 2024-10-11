@@ -225,7 +225,7 @@ const LoadData: FC<ILoadDataProps> = ({ state, firstTime, notificationsInfo }) =
               flexDirection: "column",
             }}
           >
-            <Typography variant="h4">Imported Data Table</Typography>
+            <Typography variant="h5">Imported Data Table</Typography>
             <Typography variant="body2" style={{ marginTop: ".5rem" }}>
               The column types, which are automatically suggested based on the
               headers in the data, can be customized in the table by selecting
