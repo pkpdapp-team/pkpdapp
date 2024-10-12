@@ -328,11 +328,12 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 )
                 if has_name:
                     continue
+                time_var = pkpd_model.binding("time")
                 var = myokit_compartment.add_variable(
                     new_names[0],
                     rhs=myokit.Name(myokit_var),
                     initial_value=0,
-                    unit=myokit_var.unit() * myokit.units.hour,
+                    unit=myokit_var.unit() * time_var.unit(),
                 )
                 var.meta[
                     "desc"
