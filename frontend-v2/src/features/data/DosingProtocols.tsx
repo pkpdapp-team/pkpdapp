@@ -180,14 +180,14 @@ const DosingProtocols: FC<IDosingProtocols> = ({
                 const route = currentRow?.[routeField];
                 return (
                   <TableRow key={adminId}>
-                    <TableCell>{adminId}</TableCell>
-                    <TableCell>
+                    <TableCell sx={{ width: '5rem'}}>{adminId}</TableCell>
+                    <TableCell sx={{ width: '10rem'}}>
                       <Typography>{amount}</Typography>
                     </TableCell>
-                    <TableCell>
+                    <TableCell sx={{ width: '5rem'}}>
                       <Typography>{route}</Typography>
                     </TableCell>
-                    <TableCell>
+                    <TableCell sx={{ width: '10rem'}}>
                       <FormControl fullWidth>
                         <InputLabel size='small' id={`select-var-${adminId}-label`}>
                           Variable

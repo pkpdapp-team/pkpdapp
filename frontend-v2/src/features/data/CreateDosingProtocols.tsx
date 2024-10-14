@@ -97,6 +97,7 @@ const CreateDosingProtocols: FC<IDosingProtocols> = ({
         ]),
       );
     };
+
   return (
     <>
       <Box component="div">
@@ -138,7 +139,7 @@ const CreateDosingProtocols: FC<IDosingProtocols> = ({
                 );
                 return (
                   <TableRow key={adminId}>
-                    <TableCell>{adminId}</TableCell>
+                    <TableCell sx={{ width: '10rem'}}>{adminId}</TableCell>
                     <TableCell>
                       <FormControl fullWidth>
                         <InputLabel
