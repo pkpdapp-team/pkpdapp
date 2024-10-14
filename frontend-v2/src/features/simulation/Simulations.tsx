@@ -86,6 +86,7 @@ const Simulations: FC = () => {
   );
   const { groups } = useSubjectGroups();
   const [visibleGroups, setVisibleGroups] = useState<string[]>(["Project"]);
+  const [showReference, setShowReference] = useState<boolean>(false);
   useEffect(() => {
     // display groups by default, when they are loaded or deleted.
     const groupData = groups || [];
@@ -139,6 +140,8 @@ const Simulations: FC = () => {
   const isSharedWithMe = useSelector((state: RootState) =>
     selectIsProjectShared(state, project),
   );
+  
+  const EMPTY_OBJECT: SliderValues = {};
 
   const defaultSimulation: SimulationRead = {
     id: 0,
@@ -177,6 +180,20 @@ const Simulations: FC = () => {
     data,
     error: simulateError,
   } = useSimulation(simInputs, simulatedVariables, model);
+  
+  const refSimInputs = useSimulationInputs(
+    simulation,
+    EMPTY_OBJECT,
+    variables,
+    timeMax,
+  );
+  const referenceVariables = useSimulatedVariables(variables, EMPTY_OBJECT);
+  const {
+    loadingSimulate: loadingReference,
+    data: dataReference,
+    error: referenceError,
+  } = useSimulation(refSimInputs, referenceVariables, showReference ? model: undefined);
+  
 
   const {
     reset,
@@ -423,7 +440,7 @@ const Simulations: FC = () => {
         md={layout === "vertical" ? 7 : 12}
         xs={layout === "vertical" ? 6 : 12}
       >
-        <Stack direction={"row"} alignItems={"center"}>
+        <Stack direction={"row"} alignItems={"center"} spacing={2}>
           <DropdownButton
             useIcon={false}
             data_cy="add-plot"
@@ -433,6 +450,10 @@ const Simulations: FC = () => {
           >
             Add new plot
           </DropdownButton>
+          <FormControlLabel
+            control={<Checkbox checked={showReference} onChange={(e) => setShowReference(e.target.checked)}></Checkbox>}
+            label="Show reference"
+          />
         </Stack>
         {plots.length > 0 && (
           <>
@@ -486,6 +507,7 @@ const Simulations: FC = () => {
                   index={index}
                   plot={plot}
                   data={data}
+                  dataReference={showReference ? dataReference : []}
                   variables={variables || []}
                   control={control}
                   setValue={setValue}

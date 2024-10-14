@@ -53,7 +53,7 @@ export default function useSimulation(
     return () => {
       ignore = true;
     };
-  }, [compound, model, protocols, simulate, simInputs, simulatedVariables]);
+  }, [compound, model, protocols, simulate, JSON.stringify(simInputs), JSON.stringify(simulatedVariables)]);
 
   return {
     loadingSimulate,

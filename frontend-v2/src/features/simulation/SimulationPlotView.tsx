@@ -5,6 +5,9 @@ import {
   CompoundRead,
   SimulateResponse,
   Simulation,
+  SimulationYAxis,
+  SubjectGroup,
+  SubjectGroupRead,
   UnitRead,
   VariableRead,
   useProtocolListQuery,
@@ -150,10 +153,103 @@ function genIcLines(
   return icLines;
 }
 
+function generatePlotData(
+  d: SimulateResponse, 
+  visibleGroups: string[], 
+  colour: string, 
+  dash: string, 
+  index: number, 
+  group: SubjectGroupRead | undefined, 
+  y_axis: SimulationYAxis, 
+  plot: FieldArrayWithId<Simulation, "plots", "id">, 
+  units: UnitRead[], 
+  model: CombinedModelRead, 
+  variables: VariableRead[], 
+  xconversionFactor: number
+) {
+  const visible =
+    index === 0
+      ? visibleGroups.includes("Project")
+      : visibleGroups.includes(group?.name || "");
+  const variableValues = d.outputs[y_axis.variable];
+  const variable = variables.find((v) => v.id === y_axis.variable);
+  const variableName = variable?.name;
+  const variableUnit = units.find((u) => u.id === variable?.unit);
+
+  const yaxisUnit = y_axis.right
+    ? units.find((u) => u.id === plot.y_unit2)
+    : units.find((u) => u.id === plot.y_unit);
+  const ycompatibleUnit = variableUnit?.compatible_units.find(
+    (u) => parseInt(u.id) === yaxisUnit?.id,
+  );
+
+  const is_target = model.is_library_model
+    ? variableName?.includes("CT1") || variableName?.includes("AT1")
+    : false;
+  const yconversionFactor = ycompatibleUnit
+    ? parseFloat(
+        is_target
+          ? ycompatibleUnit.target_conversion_factor
+          : ycompatibleUnit.conversion_factor,
+      )
+    : 1.0;
+
+  if (variableValues) {
+    return {
+      yaxis: y_axis.right ? "y2" : undefined,
+      x: d.time.map((t) => t * xconversionFactor),
+      y: variableValues.map((v) => v * yconversionFactor),
+      name: `${variableName} ${group?.name || "project"}`,
+      visible: visible ? true : "legendonly",
+      line: {
+        color: colour,
+        dash: dash,
+      },
+    };
+  } else {
+    return {
+      yaxis: y_axis.right ? "y2" : undefined,
+      x: [],
+      y: [],
+      type: "scatter",
+      name: `${y_axis.variable} ${group?.name || "project"}`,
+      visible: visible ? true : "legendonly",
+    };
+  }
+}
+
+function minMaxAxisLimits(data: number[], minY: number | undefined, maxY: number | undefined, minY2: number | undefined, maxY2: number | undefined, has_right_axis: Boolean | undefined) {
+  if (has_right_axis) {
+    if (minY2 === undefined) {
+      minY2 = Math.min(...data);
+    } else {
+      minY2 = Math.min(minY2, ...data);
+    }
+    if (maxY2 === undefined) {
+      maxY2 = Math.max(...data);
+    } else {
+      maxY2 = Math.max(maxY2, ...data);
+    }
+  } else {
+    if (minY === undefined) {
+      minY = Math.min(...data);
+    } else {
+      minY = Math.min(minY, ...data);
+    }
+    if (maxY === undefined) {
+      maxY = Math.max(...data);
+    } else {
+      maxY = Math.max(maxY, ...data);
+    }
+  }
+  return { minY, maxY, minY2, maxY2 };
+}
+
 interface SimulationPlotProps {
   index: number;
   plot: FieldArrayWithId<Simulation, "plots", "id">;
   data: SimulateResponse[];
+  dataReference: SimulateResponse[];
   variables: VariableRead[];
   control: Control<Simulation>;
   setValue: UseFormSetValue<Simulation>;
@@ -168,6 +264,7 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
   index,
   plot,
   data,
+  dataReference,
   variables,
   control,
   setValue,
@@ -227,82 +324,20 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
     .map((y_axis, i) => {
       const colourOffset = data.length * i;
       return data.map((d, index) => {
-        const group = groups?.[index - 1];
         const colourIndex = index + colourOffset;
-        const visible =
-          index === 0
-            ? visibleGroups.includes("Project")
-            : visibleGroups.includes(group?.name || "");
-        const variableValues = d.outputs[y_axis.variable];
-        const variable = variables.find((v) => v.id === y_axis.variable);
-        const variableName = variable?.name;
-        const variableUnit = units.find((u) => u.id === variable?.unit);
-
-        const yaxisUnit = y_axis.right
-          ? units.find((u) => u.id === plot.y_unit2)
-          : units.find((u) => u.id === plot.y_unit);
-        const ycompatibleUnit = variableUnit?.compatible_units.find(
-          (u) => parseInt(u.id) === yaxisUnit?.id,
-        );
-
-        const is_target = model.is_library_model
-          ? variableName?.includes("CT1") || variableName?.includes("AT1")
-          : false;
-        const yconversionFactor = ycompatibleUnit
-          ? parseFloat(
-              is_target
-                ? ycompatibleUnit.target_conversion_factor
-                : ycompatibleUnit.conversion_factor,
-            )
-          : 1.0;
-
-        if (variableValues) {
-          const y = variableValues.map((v) => v * yconversionFactor);
-          if (y_axis.right) {
-            if (minY2 === undefined) {
-              minY2 = Math.min(...y);
-            } else {
-              minY2 = Math.min(minY2, ...y);
-            }
-            if (maxY2 === undefined) {
-              maxY2 = Math.max(...y);
-            } else {
-              maxY2 = Math.max(maxY2, ...y);
-            }
-          } else {
-            if (minY === undefined) {
-              minY = Math.min(...y);
-            } else {
-              minY = Math.min(minY, ...y);
-            }
-            if (maxY === undefined) {
-              maxY = Math.max(...y);
-            } else {
-              maxY = Math.max(maxY, ...y);
-            }
-          }
-
-          return {
-            yaxis: y_axis.right ? "y2" : undefined,
-            x: d.time.map((t) => t * xconversionFactor),
-            y: variableValues.map((v) => v * yconversionFactor),
-            name: `${variableName} ${group?.name || "project"}`,
-            visible: visible ? true : "legendonly",
-            line: {
-              color: plotColours[colourIndex % plotColours.length],
-            },
-          };
-        } else {
-          return {
-            yaxis: y_axis.right ? "y2" : undefined,
-            x: [],
-            y: [],
-            type: "scatter",
-            name: `${y_axis.variable} ${group?.name || "project"}`,
-            visible: visible ? true : "legendonly",
-          };
-        }
-      });
+        const colour = plotColours[colourIndex % plotColours.length]
+        const group = groups?.[index - 1];
+        const plotData = generatePlotData(d, visibleGroups, colour, 'solid', index, group, y_axis, plot, units, model, variables, xconversionFactor);
+        ({ minY, maxY, minY2, maxY2 } = minMaxAxisLimits(plotData.y, minY, maxY, minY2, maxY2, y_axis.right));
+        return plotData;
+      }).concat(dataReference.map((d, index) => {
+        const colourIndex = index + colourOffset;
+        const colour = plotColours[colourIndex % plotColours.length]
+        const group = groups?.[index - 1];
+        const plotDataReference = generatePlotData(dataReference[index], visibleGroups, colour, 'dot', index, group, y_axis, plot, units, model, variables, xconversionFactor);
+        ({ minY, maxY, minY2, maxY2 } = minMaxAxisLimits(plotDataReference.y, minY, maxY, minY2, maxY2, y_axis.right));
+          return plotDataReference;
+        }));
     })
     .flat() as Partial<ScatterData>[];
 
