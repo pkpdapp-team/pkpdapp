@@ -8,6 +8,9 @@ import {
   SimulateResponse,
   useCombinedModelSimulateCreateMutation,
 } from "../../app/backendApi";
+import { RootState } from "../../app/store";
+import { useSelector } from "react-redux";
+import { PageName } from "../main/mainSlice";
 interface ErrorObject {
   error: string;
 }
@@ -28,6 +31,7 @@ export default function useSimulation(
       ? (simulateErrorBase.data as ErrorObject)
       : { error: "Unknown error" }
     : undefined;
+  const page = useSelector((state: RootState) => state.main.selectedPage);
 
   useEffect(() => {
     let ignore = false;
@@ -36,7 +40,8 @@ export default function useSimulation(
       simInputs.time_max &&
       model &&
       protocols &&
-      compound
+      compound &&
+      page === PageName.SIMULATIONS
     ) {
       setLoadingSimulate(true);
       console.log("Simulating with params", simulatedVariables);
@@ -57,7 +62,7 @@ export default function useSimulation(
     return () => {
       ignore = true;
     };
-  }, [compound, model, protocols, simulate, simInputs, simulatedVariables]);
+  }, [compound, model, protocols, simulate, JSON.stringify(simInputs), JSON.stringify(simulatedVariables), page]);
 
   return {
     loadingSimulate,
