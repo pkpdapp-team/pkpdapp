@@ -1,4 +1,4 @@
-import { ChangeEvent, FC, useState } from "react";
+import { ChangeEvent, FC, useContext, useState } from "react";
 import {
   MenuItem,
   Select,
@@ -23,6 +23,7 @@ import {
   useVariableListQuery,
   VariableRead,
 } from "../../../app/backendApi";
+import { SimulationContext } from "../../../contexts/SimulationContext";
 
 function VariableRow({
   variable,
@@ -31,12 +32,15 @@ function VariableRow({
   variable: VariableRead;
   unit: UnitRead | undefined;
 }) {
-  const [threshold, setThreshold] = useState<number>(0);
+  const { thresholds, setThresholds } = useContext(SimulationContext);
   const [unitSymbol, setUnitSymbol] = useState<string | undefined>(
     unit?.symbol,
   );
   function onChangeThreshold(event: ChangeEvent<HTMLInputElement>) {
-    setThreshold(event.target.value as unknown as number);
+    setThresholds({
+      ...thresholds,
+      [variable.name]: parseFloat(event.target.value),
+    });
   }
   function onChangeUnit(event: SelectChangeEvent) {
     setUnitSymbol(event.target.value as string);
@@ -52,7 +56,7 @@ function VariableRow({
       <TableCell>
         <TextField
           type="number"
-          value={threshold}
+          value={thresholds[variable.name]}
           onChange={onChangeThreshold}
         />
       </TableCell>

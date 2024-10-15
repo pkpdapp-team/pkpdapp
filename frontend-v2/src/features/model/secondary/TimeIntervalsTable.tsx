@@ -1,4 +1,4 @@
-import { FC, useState } from "react";
+import { FC, useContext } from "react";
 import {
   Button,
   FormControl,
@@ -22,12 +22,8 @@ import {
   useUnitListQuery,
 } from "../../../app/backendApi";
 import { RootState } from "../../../app/store";
-
-type TimeInterval = {
-  start: number;
-  end: number;
-  unit: string;
-};
+import { SimulationContext } from "../../../contexts/SimulationContext";
+import { TimeInterval } from "../../../App";
 
 type TimeUnitSelectProps = {
   interval: TimeInterval;
@@ -106,13 +102,21 @@ function IntervalRow({ interval, onDelete, onUpdate }: IntervalRowProps) {
   );
 }
 
-const defaultIntervals: TimeInterval[] = [{ start: 0, end: 0, unit: "h" }];
-
 const TimeIntervalsTable: FC<TableProps> = (props) => {
-  const [intervals, setIntervals] = useState<TimeInterval[]>(defaultIntervals);
+  const { intervals, setIntervals } = useContext(SimulationContext);
 
   function addInterval() {
-    setIntervals([...intervals, { start: 0, end: 0, unit: "h" }]);
+    const lastInterval = intervals[intervals.length - 1];
+    let newInterval: TimeInterval = { start: 0, end: 0, unit: "h" };
+    if (lastInterval) {
+      const duration = lastInterval.end - lastInterval.start;
+      newInterval = {
+        start: lastInterval.end,
+        end: lastInterval.end + duration,
+        unit: lastInterval.unit,
+      };
+    }
+    setIntervals([...intervals, newInterval]);
   }
   function removeInterval(index: number) {
     setIntervals(intervals.filter((_, i) => i !== index));
