@@ -56,7 +56,7 @@ const MapHeaders: FC<IMapHeaders> = ({
 
   const visibleRows = useMemo(
     () => [...data].slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
-    [page, rowsPerPage],
+    [page, rowsPerPage, data],
   );
 
   return (
