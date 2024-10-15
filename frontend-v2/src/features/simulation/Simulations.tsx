@@ -190,11 +190,7 @@ const Simulations: FC = () => {
     timeMax,
   );
   const referenceVariables = useSimulatedVariables(variables, EMPTY_OBJECT);
-  const {
-    loadingSimulate: loadingReference,
-    data: dataReference,
-    error: referenceError,
-  } = useSimulation(
+  const { data: dataReference } = useSimulation(
     refSimInputs,
     referenceVariables,
     showReference ? model : undefined,
@@ -275,21 +271,20 @@ const Simulations: FC = () => {
   // save simulation every second if dirty
   useEffect(() => {
     const onSubmit = (dta: Simulation) => {
-      // empty string keeps getting in, so convert to null
       for (let i = 0; i < dta.plots.length; i++) {
-        // @ts-ignore
+        // @ts-expect-error empty string keeps getting in, so convert to null
         if (dta.plots[i].min === "") {
           dta.plots[i].min = null;
         }
-        // @ts-ignore
+        // @ts-expect-error empty string keeps getting in, so convert to null
         if (dta.plots[i].max === "") {
           dta.plots[i].max = null;
         }
-        // @ts-ignore
+        // @ts-expect-error empty string keeps getting in, so convert to null
         if (dta.plots[i].min2 === "") {
           dta.plots[i].min2 = null;
         }
-        // @ts-ignore
+        // @ts-expect-error empty string keeps getting in, so convert to null
         if (dta.plots[i].max2 === "") {
           dta.plots[i].max2 = null;
         }
