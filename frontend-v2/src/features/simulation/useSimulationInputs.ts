@@ -1,5 +1,10 @@
 import { useMemo } from "react";
-import { Simulate, SimulationRead, VariableRead } from "../../app/backendApi";
+import {
+  CombinedModelRead,
+  Simulate,
+  SimulationRead,
+  VariableRead,
+} from "../../app/backendApi";
 
 type SliderValues = { [key: number]: number };
 
@@ -10,6 +15,7 @@ const DEFAULT_INPUTS = {
 };
 
 const getSimulateInput = (
+  model: CombinedModelRead,
   simulation: SimulationRead,
   sliderValues: SliderValues,
   variables?: VariableRead[],
@@ -56,6 +62,18 @@ const getSimulateInput = (
       outputs.push(variable.qname);
     }
   }
+  // include variables with secondary parameters, for the Results page.
+  const derivedType = "AUC";
+  const results = variables?.filter((v) =>
+    model.derived_variables?.find(
+      (dv) => dv.pk_variable === v.id && dv.type === derivedType,
+    ),
+  );
+  results?.forEach((v) => {
+    outputs.push(v.qname);
+    outputs.push(`PKCompartment.calc_${v.name}_${derivedType}`);
+  });
+
   return {
     variables: simulateVariables,
     outputs,
@@ -64,6 +82,7 @@ const getSimulateInput = (
 };
 
 export default function useSimulationInputs(
+  model: CombinedModelRead | undefined,
   simulation: SimulationRead | undefined,
   sliderValues: SliderValues | undefined,
   variables: VariableRead[] | undefined,
@@ -71,8 +90,8 @@ export default function useSimulationInputs(
 ) {
   return useMemo(
     () =>
-      simulation && sliderValues
-        ? getSimulateInput(simulation, sliderValues, variables, timeMax)
+      model && simulation && sliderValues
+        ? getSimulateInput(model, simulation, sliderValues, variables, timeMax)
         : DEFAULT_INPUTS,
     [simulation, sliderValues, variables, timeMax],
   );

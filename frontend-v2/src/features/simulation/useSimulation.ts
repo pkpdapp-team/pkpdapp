@@ -15,6 +15,8 @@ interface ErrorObject {
   error: string;
 }
 
+const SIMULATION_PAGES = [PageName.SIMULATIONS, PageName.RESULTS];
+
 export default function useSimulation(
   simInputs: Simulate,
   simulatedVariables: { qname: string; value: number | undefined }[],
@@ -41,7 +43,7 @@ export default function useSimulation(
       model &&
       protocols &&
       compound &&
-      page === PageName.SIMULATIONS
+      SIMULATION_PAGES.includes(page)
     ) {
       setLoadingSimulate(true);
       console.log("Simulating with params", simulatedVariables);
@@ -62,7 +64,15 @@ export default function useSimulation(
     return () => {
       ignore = true;
     };
-  }, [compound, model, protocols, simulate, JSON.stringify(simInputs), JSON.stringify(simulatedVariables), page]);
+  }, [
+    compound,
+    model,
+    protocols,
+    simulate,
+    JSON.stringify(simInputs),
+    JSON.stringify(simulatedVariables),
+    page,
+  ]);
 
   return {
     loadingSimulate,
