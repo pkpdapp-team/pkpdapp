@@ -18,14 +18,42 @@ import { Typography } from "@mui/material";
 import { SimulationContext } from "./contexts/SimulationContext";
 import { SimulateResponse } from "./app/backendApi";
 
+export type TimeInterval = {
+  start: number;
+  end: number;
+  unit: string;
+};
+export type Thresholds = { [key: string]: number };
+
+const TIME_INTERVALS: TimeInterval[] = [
+  { start: 0, end: 168, unit: "h" },
+  { start: 168, end: 336, unit: "h" },
+  { start: 336, end: 504, unit: "h" },
+  { start: 504, end: 672, unit: "h" },
+  { start: 672, end: 840, unit: "h" },
+];
+
+const THRESHOLDS: Thresholds = {
+  C1: 1e4,
+  C1_t: 5e4,
+  CT1_f: 200,
+  CT1_b: 900,
+};
+
 function App() {
   const dispatch = useAppDispatch();
   const isAuth = useSelector(isAuthenticated);
   const error = useSelector((state: RootState) => state.login.error);
   const [simulations, setSimulations] = useState<SimulateResponse[]>([]);
+  const [intervals, setIntervals] = useState<TimeInterval[]>(TIME_INTERVALS);
+  const [thresholds, setThresholds] = useState<Thresholds>(THRESHOLDS);
   const simulationContext = {
     simulations,
     setSimulations,
+    intervals,
+    setIntervals,
+    thresholds,
+    setThresholds,
   };
 
   const onLogin = (username: string, password: string) => {

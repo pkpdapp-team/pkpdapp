@@ -1,4 +1,4 @@
-import { FC } from "react";
+import { FC, useContext } from "react";
 
 import { VariableRead } from "../../app/backendApi";
 import {
@@ -9,26 +9,8 @@ import {
   TableRow,
 } from "@mui/material";
 
-type TimeInterval = {
-  start: number;
-  end: number;
-  unit: string;
-};
-
-const timeIntervals = [
-  { start: 0, end: 168, unit: "h" },
-  { start: 168, end: 336, unit: "h" },
-  { start: 336, end: 504, unit: "h" },
-  { start: 504, end: 672, unit: "h" },
-  { start: 672, end: 840, unit: "h" },
-];
-
-const thresholds: { [key: string]: number } = {
-  C1: 1e4,
-  C1_t: 5e4,
-  CT1_f: 200,
-  CT1_b: 900,
-};
+import { SimulationContext } from "../../contexts/SimulationContext";
+import { TimeInterval } from "../../App";
 
 const IntervalRow: FC<{
   interval: { start: number; end: number; unit: string };
@@ -164,10 +146,11 @@ const VariableTable: FC<{
   aucValues: number[];
   times: number[];
 }> = ({ variable, values = [], aucValues = [], times = [] }) => {
-  const variablePerInterval = valuesPerInterval(timeIntervals, values, times);
-  const timePerInterval = timesPerInterval(times, timeIntervals);
-  const aucPerInterval = valuesPerInterval(timeIntervals, aucValues, times);
-  const timeOverThresholdPerInterval = timeIntervals.map((interval, k) => {
+  const { intervals, thresholds } = useContext(SimulationContext);
+  const variablePerInterval = valuesPerInterval(intervals, values, times);
+  const timePerInterval = timesPerInterval(times, intervals);
+  const aucPerInterval = valuesPerInterval(intervals, aucValues, times);
+  const timeOverThresholdPerInterval = intervals.map((interval, k) => {
     const intervalValues = variablePerInterval[k];
     const intervalTimes = timePerInterval[k];
     const threshold = thresholds[variable.name];
@@ -192,7 +175,7 @@ const VariableTable: FC<{
         </TableRow>
       </TableHead>
       <TableBody>
-        {timeIntervals.map((interval, k) => (
+        {intervals.map((interval, k) => (
           <IntervalRow
             key={interval.start}
             interval={interval}

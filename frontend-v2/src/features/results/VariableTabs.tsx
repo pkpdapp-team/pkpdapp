@@ -10,13 +10,6 @@ import {
 import { Box, Tab, Tabs, Typography } from "@mui/material";
 import VariableTable from "./VariableTable";
 
-const thresholds: { [key: string]: number } = {
-  C1: 1e4,
-  C1_t: 5e4,
-  CT1_f: 200,
-  CT1_b: 900,
-};
-
 interface VariableTabsProps {
   index: number;
 }
@@ -37,7 +30,7 @@ const VariableTabs: FC<VariableTabsProps> = ({ index }) => {
     { skip: !model?.id },
   );
 
-  const { simulations } = useContext(SimulationContext);
+  const { simulations, thresholds } = useContext(SimulationContext);
   const simulationVariableIDs = simulations?.[0]?.outputs
     ? Object.keys(simulations[0].outputs).map((key) => parseInt(key))
     : [];
