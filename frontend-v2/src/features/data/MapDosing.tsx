@@ -14,9 +14,13 @@ import {
 interface IMapDosing {
   state: StepperState;
   firstTime: boolean;
+  notificationsInfo: {
+    isOpen: boolean;
+    count: number;
+  }
 }
 
-const MapDosing: FC<IMapDosing> = ({ state, firstTime }: IMapDosing) => {
+const MapDosing: FC<IMapDosing> = ({ state, firstTime, notificationsInfo }: IMapDosing) => {
   const projectId = useSelector(
     (state: RootState) => state.main.selectedProject,
   );
@@ -79,6 +83,7 @@ const MapDosing: FC<IMapDosing> = ({ state, firstTime }: IMapDosing) => {
       state={state}
       units={units || []}
       variables={variables || []}
+      notificationsInfo={notificationsInfo}
     />
   ) : (
     <CreateDosingProtocols
@@ -88,6 +93,7 @@ const MapDosing: FC<IMapDosing> = ({ state, firstTime }: IMapDosing) => {
       state={state}
       units={units || []}
       variables={variables || []}
+      notificationsInfo={notificationsInfo}
     />
   );
 };
