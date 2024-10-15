@@ -140,7 +140,7 @@ const Simulations: FC = () => {
   const isSharedWithMe = useSelector((state: RootState) =>
     selectIsProjectShared(state, project),
   );
-  
+
   const EMPTY_OBJECT: SliderValues = {};
 
   const defaultSimulation: SimulationRead = {
@@ -169,6 +169,7 @@ const Simulations: FC = () => {
   const timeMax = simulation?.id && getTimeMax(simulation);
 
   const simInputs = useSimulationInputs(
+    model,
     simulation,
     sliderValues,
     variables,
@@ -180,8 +181,9 @@ const Simulations: FC = () => {
     data,
     error: simulateError,
   } = useSimulation(simInputs, simulatedVariables, model);
-  
+
   const refSimInputs = useSimulationInputs(
+    model,
     simulation,
     EMPTY_OBJECT,
     variables,
@@ -192,8 +194,11 @@ const Simulations: FC = () => {
     loadingSimulate: loadingReference,
     data: dataReference,
     error: referenceError,
-  } = useSimulation(refSimInputs, referenceVariables, showReference ? model: undefined);
-  
+  } = useSimulation(
+    refSimInputs,
+    referenceVariables,
+    showReference ? model : undefined,
+  );
 
   const {
     reset,
@@ -451,7 +456,12 @@ const Simulations: FC = () => {
             Add new plot
           </DropdownButton>
           <FormControlLabel
-            control={<Checkbox checked={showReference} onChange={(e) => setShowReference(e.target.checked)}></Checkbox>}
+            control={
+              <Checkbox
+                checked={showReference}
+                onChange={(e) => setShowReference(e.target.checked)}
+              ></Checkbox>
+            }
             label="Show reference"
           />
         </Stack>
