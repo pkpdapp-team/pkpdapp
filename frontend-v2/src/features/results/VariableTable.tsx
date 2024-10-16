@@ -16,8 +16,15 @@ const IntervalRow: FC<{
   interval: { start: number; end: number; unit: string };
   values: number[];
   aucValues: number[];
-  timeOverThreshold: number;
-}> = ({ interval, values, aucValues, timeOverThreshold }) => {
+  timeOverLowerThreshold: number;
+  timeOverUpperThreshold: number;
+}> = ({
+  interval,
+  values,
+  aucValues,
+  timeOverLowerThreshold,
+  timeOverUpperThreshold,
+}) => {
   const min = Math.min(...values);
   const max = Math.max(...values);
   const auc = aucValues[aucValues.length - 1] - aucValues[0];
@@ -29,7 +36,11 @@ const IntervalRow: FC<{
       <TableCell>{min > 1e4 ? min.toExponential(4) : min.toFixed(2)}</TableCell>
       <TableCell>{max > 1e4 ? max.toExponential(4) : max.toFixed(2)}</TableCell>
       <TableCell>{auc.toExponential(4)}</TableCell>
-      <TableCell>{timeOverThreshold.toFixed(2)}</TableCell>
+      <TableCell>{timeOverLowerThreshold.toFixed(2)}</TableCell>
+      <TableCell>{timeOverUpperThreshold.toFixed(2)}</TableCell>
+      <TableCell>
+        {(timeOverLowerThreshold - timeOverUpperThreshold).toFixed(2)}
+      </TableCell>
     </TableRow>
   );
 };
@@ -196,11 +207,17 @@ const VariableTable: FC<{
   const variablePerInterval = valuesPerInterval(intervals, values, times);
   const timePerInterval = timesPerInterval(times, intervals);
   const aucPerInterval = valuesPerInterval(intervals, aucValues, times);
-  const timeOverThresholdPerInterval = intervals.map((interval, k) => {
+  const timeOverLowerThresholdPerInterval = intervals.map((interval, k) => {
     const intervalValues = variablePerInterval[k];
     const intervalTimes = timePerInterval[k];
     const threshold = thresholds[variable.name];
-    return timeOverThreshold(intervalTimes, intervalValues, threshold);
+    return timeOverThreshold(intervalTimes, intervalValues, threshold?.lower);
+  });
+  const timeOverUpperThresholdPerInterval = intervals.map((interval, k) => {
+    const intervalValues = variablePerInterval[k];
+    const intervalTimes = timePerInterval[k];
+    const threshold = thresholds[variable.name];
+    return timeOverThreshold(intervalTimes, intervalValues, threshold?.upper);
   });
   const unit = units.find((u) => u.id === variable.unit);
   const aucUnit = aucVariable && units.find((u) => u.id === aucVariable.unit);
@@ -221,7 +238,17 @@ const VariableTable: FC<{
             <sub>max</sub> [{unit?.symbol}]
           </TableCell>
           <TableCell>AUC [{aucUnit?.symbol}]</TableCell>
-          <TableCell>Time over threshold [{timeUnit?.symbol}]</TableCell>
+          <TableCell>
+            Time over lower threshold
+            <br />t<sub>lower</sub> [{timeUnit?.symbol}]
+          </TableCell>
+          <TableCell>
+            Time over upper threshold
+            <br />t<sub>upper</sub> [{timeUnit?.symbol}]
+          </TableCell>
+          <TableCell>
+            t<sub>lower</sub>-t<sub>upper</sub> [{timeUnit?.symbol}]
+          </TableCell>
         </TableRow>
       </TableHead>
       <TableBody>
@@ -231,7 +258,8 @@ const VariableTable: FC<{
             interval={interval}
             values={variablePerInterval[k]}
             aucValues={aucPerInterval[k]}
-            timeOverThreshold={timeOverThresholdPerInterval[k]}
+            timeOverLowerThreshold={timeOverLowerThresholdPerInterval[k]}
+            timeOverUpperThreshold={timeOverUpperThresholdPerInterval[k]}
           />
         ))}
       </TableBody>

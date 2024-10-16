@@ -23,7 +23,8 @@ export type TimeInterval = {
   end: number;
   unit: string;
 };
-export type Thresholds = { [key: string]: number };
+type Threshold = { lower: number; upper: number };
+export type Thresholds = { [key: string]: Threshold };
 
 const TIME_INTERVALS: TimeInterval[] = [
   { start: 0, end: 168, unit: "h" },
@@ -34,10 +35,22 @@ const TIME_INTERVALS: TimeInterval[] = [
 ];
 
 const THRESHOLDS: Thresholds = {
-  C1: 1e4,
-  C1_t: 5e4,
-  CT1_f: 200,
-  CT1_b: 900,
+  C1: {
+    lower: 1e4,
+    upper: Infinity,
+  },
+  C1_t: {
+    lower: 5e4,
+    upper: Infinity,
+  },
+  CT1_f: {
+    lower: 200,
+    upper: Infinity,
+  },
+  CT1_b: {
+    lower: 900,
+    upper: Infinity,
+  },
 };
 
 function App() {
