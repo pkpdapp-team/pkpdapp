@@ -97,7 +97,7 @@ const MapHeaders: FC<IMapHeaders> = ({
                       label="Column Type"
                       onChange={handleFieldChange(field)}
                       size='small'
-                      margin="dence"
+                      margin="dense"
                     >
                       {Object.entries(groupedHeaders).map(
                         ([group, headers]) => [

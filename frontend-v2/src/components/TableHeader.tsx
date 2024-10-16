@@ -1,25 +1,10 @@
-import { Box, Tooltip, Typography } from "@mui/material";
+import { Box, Tooltip, Typography, TypographyTypeMap } from "@mui/material";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 
 type TableHeaderType = {
   label: string;
   tooltip?: string;
-  variant?:
-    | "body1"
-    | "body2"
-    | "button"
-    | "caption"
-    | "h1"
-    | "h2"
-    | "h3"
-    | "h4"
-    | "h5"
-    | "h6"
-    | "inherit"
-    | "overline"
-    | "subtitle1"
-    | "subtitle2"
-    | string;
+  variant?: TypographyTypeMap["props"]["variant"]
 };
 
 export const TableHeader = ({

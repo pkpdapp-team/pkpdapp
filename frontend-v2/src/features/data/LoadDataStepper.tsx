@@ -308,7 +308,7 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
         firstTime={stepState.activeStep === stepState.maxStep}
         handleOpen={onNotificationsOpenChange}
         setHasTimeUnitChanged={setHasTimeUnitChanged}
-        showTimeUnitSelector={shouldShowTimeUnitNotification}
+        showTimeUnitSelector={Boolean(shouldShowTimeUnitNotification)}
       />
       <Box
         sx={{
