@@ -104,21 +104,26 @@ function timesPerInterval(times: number[], timeIntervals: TimeInterval[]) {
 }
 
 /**
- * Given a list of times and cooresponding values, calculate the time that the values are above a threshold.
+ * Find the first pair of points where intervalValues crosses the threshold, starting from startIndex.
  * @param intervalTimes
  * @param intervalValues
  * @param threshold
- * @returns
+ * @param startIndex
+ * @returns [time, index] where time is the time the threshold was exceeded and index is the index of the last crossing point.
  */
-function timeOverThreshold(
+function thresholdCrossingPoints(
   intervalTimes: number[],
   intervalValues: number[],
   threshold: number,
+  startIndex: number = 0,
 ) {
-  const thresholdStart = intervalValues.findIndex((v) => v >= threshold);
-  const thresholdEnd = intervalValues.findIndex(
-    (v, i) => i > thresholdStart && v < threshold,
+  const thresholdStart = intervalValues.findIndex(
+    (v, i) => i >= startIndex && v >= threshold,
   );
+  const thresholdEnd =
+    thresholdStart === -1 // threshold never reached
+      ? -1
+      : intervalValues.findIndex((v, i) => i > thresholdStart && v < threshold);
   const startTime =
     thresholdStart > 0
       ? interpolate(
@@ -137,7 +142,37 @@ function timeOverThreshold(
             threshold,
           )
         : intervalTimes[intervalTimes.length - 1]; // threshold reached beyond the end of the interval
-  return endTime - startTime;
+  return [endTime - startTime, thresholdEnd];
+}
+
+/**
+ * Given a list of times and cooresponding values, calculate the time that the values are above a threshold.
+ * @param intervalTimes
+ * @param intervalValues
+ * @param threshold
+ * @returns
+ */
+function timeOverThreshold(
+  intervalTimes: number[],
+  intervalValues: number[],
+  threshold: number,
+) {
+  let cumulativeTime = 0;
+  function incrementTime(startIndex: number) {
+    const [thresholdTime, endIndex] = thresholdCrossingPoints(
+      intervalTimes,
+      intervalValues,
+      threshold,
+      startIndex,
+    );
+    cumulativeTime += thresholdTime;
+    if (endIndex === -1) {
+      return;
+    }
+    incrementTime(endIndex + 1);
+  }
+  incrementTime(0);
+  return cumulativeTime;
 }
 
 const VariableTable: FC<{
