@@ -211,13 +211,21 @@ const VariableTable: FC<{
     const intervalValues = variablePerInterval[k];
     const intervalTimes = timePerInterval[k];
     const threshold = thresholds[variable.name];
-    return timeOverThreshold(intervalTimes, intervalValues, threshold?.lower);
+    return timeOverThreshold(
+      intervalTimes,
+      intervalValues,
+      threshold?.lower || 0,
+    );
   });
   const timeOverUpperThresholdPerInterval = intervals.map((interval, k) => {
     const intervalValues = variablePerInterval[k];
     const intervalTimes = timePerInterval[k];
     const threshold = thresholds[variable.name];
-    return timeOverThreshold(intervalTimes, intervalValues, threshold?.upper);
+    return timeOverThreshold(
+      intervalTimes,
+      intervalValues,
+      threshold?.upper || Infinity,
+    );
   });
   const unit = units.find((u) => u.id === variable.unit);
   const aucUnit = aucVariable && units.find((u) => u.id === aucVariable.unit);
