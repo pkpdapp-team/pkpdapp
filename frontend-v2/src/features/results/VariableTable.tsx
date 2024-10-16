@@ -1,10 +1,6 @@
 import { FC, useContext } from "react";
 
-import {
-  UnitListApiResponse,
-  UnitRead,
-  VariableRead,
-} from "../../app/backendApi";
+import { UnitListApiResponse, VariableRead } from "../../app/backendApi";
 import {
   Table,
   TableBody,
