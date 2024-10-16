@@ -36,12 +36,29 @@ function VariableRow({
   const [unitSymbol, setUnitSymbol] = useState<string | undefined>(
     unit?.symbol,
   );
-  function onChangeThreshold(event: ChangeEvent<HTMLInputElement>) {
+  function onChangeLowerThreshold(event: ChangeEvent<HTMLInputElement>) {
     const newValue = parseFloat(event.target.value);
+    const oldThresholds = thresholds[variable.name];
     if (!isNaN(newValue)) {
       setThresholds({
         ...thresholds,
-        [variable.name]: newValue,
+        [variable.name]: {
+          ...oldThresholds,
+          lower: newValue,
+        },
+      });
+    }
+  }
+  function onChangeUpperThreshold(event: ChangeEvent<HTMLInputElement>) {
+    const newValue = parseFloat(event.target.value);
+    const oldThresholds = thresholds[variable.name];
+    if (!isNaN(newValue)) {
+      setThresholds({
+        ...thresholds,
+        [variable.name]: {
+          ...oldThresholds,
+          upper: newValue,
+        },
       });
     }
   }
@@ -59,8 +76,15 @@ function VariableRow({
       <TableCell>
         <TextField
           type="number"
-          defaultValue={thresholds[variable.name]}
-          onChange={onChangeThreshold}
+          defaultValue={thresholds[variable.name]?.lower}
+          onChange={onChangeLowerThreshold}
+        />
+      </TableCell>
+      <TableCell>
+        <TextField
+          type="number"
+          defaultValue={thresholds[variable.name]?.upper}
+          onChange={onChangeUpperThreshold}
         />
       </TableCell>
       <TableCell>
@@ -108,7 +132,8 @@ const ThresholdsTable: FC<TableProps> = (props) => {
     <Table {...props}>
       <TableHead>
         <TableCell>Variable</TableCell>
-        <TableCell>Threshold</TableCell>
+        <TableCell>Lower Threshold</TableCell>
+        <TableCell>Upper Threshold</TableCell>
         <TableCell>Unit</TableCell>
       </TableHead>
       <TableBody>

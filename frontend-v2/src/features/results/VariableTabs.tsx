@@ -96,7 +96,8 @@ const VariableTabs: FC<VariableTabsProps> = ({ index }) => {
         </Tabs>
         <Box id="cvar-tabpanel">
           <Typography>
-            Threshold: {thresholds[concentrationVariables[tab].name]}
+            Thresholds: {thresholds[concentrationVariables[tab].name]?.lower} –{" "}
+            {thresholds[concentrationVariables[tab].name]?.upper}
           </Typography>
           <VariableTable
             key={variable.id}
