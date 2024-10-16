@@ -37,10 +37,13 @@ function VariableRow({
     unit?.symbol,
   );
   function onChangeThreshold(event: ChangeEvent<HTMLInputElement>) {
-    setThresholds({
-      ...thresholds,
-      [variable.name]: parseFloat(event.target.value),
-    });
+    const newValue = parseFloat(event.target.value);
+    if (!isNaN(newValue)) {
+      setThresholds({
+        ...thresholds,
+        [variable.name]: newValue,
+      });
+    }
   }
   function onChangeUnit(event: SelectChangeEvent) {
     setUnitSymbol(event.target.value as string);
@@ -56,7 +59,7 @@ function VariableRow({
       <TableCell>
         <TextField
           type="number"
-          value={thresholds[variable.name]}
+          defaultValue={thresholds[variable.name]}
           onChange={onChangeThreshold}
         />
       </TableCell>

@@ -5,11 +5,14 @@ import { SimulationContext } from "../../contexts/SimulationContext";
 import { RootState } from "../../app/store";
 import {
   useCombinedModelListQuery,
+  useProjectRetrieveQuery,
+  useUnitListQuery,
   useVariableListQuery,
 } from "../../app/backendApi";
 import { Box, Tab, Tabs, Typography } from "@mui/material";
 import VariableTable from "./VariableTable";
 
+const TIME_VARS = ["time", "t"];
 interface VariableTabsProps {
   index: number;
 }
@@ -20,6 +23,10 @@ const VariableTabs: FC<VariableTabsProps> = ({ index }) => {
     (state: RootState) => state.main.selectedProject,
   );
   const projectIdOrZero = projectId || 0;
+  const { data: project } = useProjectRetrieveQuery(
+    { id: projectIdOrZero },
+    { skip: !projectId },
+  );
   const { data: models } = useCombinedModelListQuery(
     { projectId: projectIdOrZero },
     { skip: !projectId },
@@ -28,6 +35,10 @@ const VariableTabs: FC<VariableTabsProps> = ({ index }) => {
   const { data: variables } = useVariableListQuery(
     { dosedPkModelId: model?.id || 0 },
     { skip: !model?.id },
+  );
+  const { data: units } = useUnitListQuery(
+    { compoundId: project?.compound },
+    { skip: !project || !project.compound },
   );
 
   const { simulations, thresholds } = useContext(SimulationContext);
@@ -43,7 +54,7 @@ const VariableTabs: FC<VariableTabsProps> = ({ index }) => {
         ),
     ) || [];
 
-  function variableValues(name: string) {
+  function variableValues(name: string | undefined) {
     const variable = variables?.find((v) => v.name === name);
     return variable
       ? simulations.map((simulation) => simulation.outputs[variable.id])
@@ -58,9 +69,11 @@ const VariableTabs: FC<VariableTabsProps> = ({ index }) => {
   }
   const simulation = simulations[index];
   const variable = concentrationVariables[tab];
-  const aucVariable = variable && `calc_${variable.name}_AUC`;
+  const aucVariable =
+    variable && variables?.find((v) => v.name === `calc_${variable.name}_AUC`);
+  const timeVariable = variables?.find((v) => TIME_VARS.includes(v.name));
   const values = variableValues(variable?.name)[index];
-  const aucValues = variableValues(aucVariable)[index];
+  const aucValues = variableValues(aucVariable?.name)[index];
 
   try {
     return (
@@ -84,9 +97,12 @@ const VariableTabs: FC<VariableTabsProps> = ({ index }) => {
           <VariableTable
             key={variable.id}
             variable={variable}
+            aucVariable={aucVariable}
+            timeVariable={timeVariable}
             values={values}
             aucValues={aucValues}
             times={simulation.time}
+            units={units}
           />
         </Box>
       </>

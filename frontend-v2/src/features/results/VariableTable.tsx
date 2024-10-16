@@ -1,6 +1,10 @@
 import { FC, useContext } from "react";
 
-import { VariableRead } from "../../app/backendApi";
+import {
+  UnitListApiResponse,
+  UnitRead,
+  VariableRead,
+} from "../../app/backendApi";
 import {
   Table,
   TableBody,
@@ -26,9 +30,9 @@ const IntervalRow: FC<{
       <TableCell scope="row">
         {interval.start} – {interval.end} {interval.unit}
       </TableCell>
-      <TableCell>{min.toFixed(2)}</TableCell>
-      <TableCell>{max.toFixed(2)}</TableCell>
-      <TableCell>{auc.toFixed(2)}</TableCell>
+      <TableCell>{min > 1e4 ? min.toExponential(4) : min.toFixed(2)}</TableCell>
+      <TableCell>{max > 1e4 ? max.toExponential(4) : max.toFixed(2)}</TableCell>
+      <TableCell>{auc.toExponential(4)}</TableCell>
       <TableCell>{timeOverThreshold.toFixed(2)}</TableCell>
     </TableRow>
   );
@@ -177,10 +181,21 @@ function timeOverThreshold(
 
 const VariableTable: FC<{
   variable: VariableRead;
+  aucVariable?: VariableRead;
+  timeVariable?: VariableRead;
   values: number[];
   aucValues: number[];
   times: number[];
-}> = ({ variable, values = [], aucValues = [], times = [] }) => {
+  units: UnitListApiResponse | undefined;
+}> = ({
+  variable,
+  aucVariable,
+  timeVariable,
+  values = [],
+  aucValues = [],
+  times = [],
+  units = [],
+}) => {
   const { intervals, thresholds } = useContext(SimulationContext);
   const variablePerInterval = valuesPerInterval(intervals, values, times);
   const timePerInterval = timesPerInterval(times, intervals);
@@ -191,6 +206,10 @@ const VariableTable: FC<{
     const threshold = thresholds[variable.name];
     return timeOverThreshold(intervalTimes, intervalValues, threshold);
   });
+  const unit = units.find((u) => u.id === variable.unit);
+  const aucUnit = aucVariable && units.find((u) => u.id === aucVariable.unit);
+  const timeUnit =
+    timeVariable && units.find((u) => u.id === timeVariable.unit);
 
   return (
     <Table>
@@ -199,14 +218,14 @@ const VariableTable: FC<{
           <TableCell>Interval</TableCell>
           <TableCell>
             {variable.name}
-            <sub>min</sub>
+            <sub>min</sub> [{unit?.symbol}]
           </TableCell>
           <TableCell>
             {variable.name}
-            <sub>max</sub>
+            <sub>max</sub> [{unit?.symbol}]
           </TableCell>
-          <TableCell>AUC</TableCell>
-          <TableCell>Time over threshold</TableCell>
+          <TableCell>AUC [{aucUnit?.symbol}]</TableCell>
+          <TableCell>Time over threshold [{timeUnit?.symbol}]</TableCell>
         </TableRow>
       </TableHead>
       <TableBody>
