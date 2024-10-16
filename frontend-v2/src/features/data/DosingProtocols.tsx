@@ -1,6 +1,5 @@
 import { FC } from "react";
 import {
-  Alert,
   Box,
   Select,
   FormControl,
@@ -19,6 +18,12 @@ import { StepperState } from "./LoadDataStepper";
 import { UnitRead, VariableRead } from "../../app/backendApi";
 import { validateState } from "./dataValidation";
 import { Row } from "./LoadData";
+import { TableHeader } from "../../components/TableHeader";
+import {
+  calculateTableHeights,
+  getTableHeight,
+  SINGLE_TABLE_BREAKPOINTS,
+} from "../../shared/calculateTableHeights";
 
 interface IDosingProtocols {
   administrationIdField: string;
@@ -40,7 +45,7 @@ const DosingProtocols: FC<IDosingProtocols> = ({
   state,
   units,
   variables,
-  notificationsInfo
+  notificationsInfo,
 }: IDosingProtocols) => {
   const amountField =
     state.fields.find(
@@ -126,16 +131,18 @@ const DosingProtocols: FC<IDosingProtocols> = ({
   return (
     <>
       <Box component="div">
-        <Typography variant="h5">Dosing</Typography>
-        <Typography variant="body2" style={{ marginTop: ".5rem", marginBottom: '.5rem' }}>
-          Set a dosing compartment and unit for each of your subject groups
-          here.
-        </Typography>
+        <TableHeader
+          label="Dosing"
+          tooltip="Set a dosing compartment and unit for each of your subject groups
+          here."
+        />
         <TableContainer
           sx={{
-            maxHeight: notificationsInfo?.isOpen
-              ? `calc(60vh - ${notificationsInfo?.count * 3}rem)`
-              : "60vh",
+            maxHeight: calculateTableHeights({
+              baseHeight: getTableHeight({ steps: SINGLE_TABLE_BREAKPOINTS }),
+              isOpen: notificationsInfo.isOpen,
+              count: notificationsInfo.count,
+            }),
             transition: "all .35s ease-in",
           }}
         >
@@ -180,16 +187,19 @@ const DosingProtocols: FC<IDosingProtocols> = ({
                 const route = currentRow?.[routeField];
                 return (
                   <TableRow key={adminId}>
-                    <TableCell sx={{ width: '5rem'}}>{adminId}</TableCell>
-                    <TableCell sx={{ width: '10rem'}}>
+                    <TableCell sx={{ width: "5rem" }}>{adminId}</TableCell>
+                    <TableCell sx={{ width: "10rem" }}>
                       <Typography>{amount}</Typography>
                     </TableCell>
-                    <TableCell sx={{ width: '5rem'}}>
+                    <TableCell sx={{ width: "5rem" }}>
                       <Typography>{route}</Typography>
                     </TableCell>
-                    <TableCell sx={{ width: '10rem'}}>
+                    <TableCell sx={{ width: "10rem" }}>
                       <FormControl fullWidth>
-                        <InputLabel size='small' id={`select-var-${adminId}-label`}>
+                        <InputLabel
+                          size="small"
+                          id={`select-var-${adminId}-label`}
+                        >
                           Variable
                         </InputLabel>
                         <Select
@@ -198,8 +208,8 @@ const DosingProtocols: FC<IDosingProtocols> = ({
                           label="Variable"
                           value={selectedVariable?.qname}
                           onChange={handleAmountMappingChange(adminId)}
-                          size='small'
-                          margin='dense'
+                          size="small"
+                          margin="dense"
                         >
                           {modelAmounts?.map((variable) => (
                             <MenuItem
@@ -214,7 +224,10 @@ const DosingProtocols: FC<IDosingProtocols> = ({
                     </TableCell>
                     <TableCell>
                       <FormControl fullWidth>
-                        <InputLabel size='small' id={`select-unit-${adminId}-label`}>
+                        <InputLabel
+                          size="small"
+                          id={`select-unit-${adminId}-label`}
+                        >
                           Units
                         </InputLabel>
                         <Select
@@ -223,8 +236,8 @@ const DosingProtocols: FC<IDosingProtocols> = ({
                           label="Units"
                           value={adminUnit}
                           onChange={handleAmountUnitChange(adminId)}
-                                                    size='small'
-                          margin='dense'
+                          size="small"
+                          margin="dense"
                         >
                           {compatibleUnits?.map((unit) => (
                             <MenuItem key={unit.symbol} value={unit.symbol}>

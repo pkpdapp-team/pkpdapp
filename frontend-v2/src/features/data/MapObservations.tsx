@@ -1,7 +1,6 @@
 import { ChangeEvent, FC, useState } from "react";
 import { DataGrid } from "@mui/x-data-grid";
 import {
-  Alert,
   Box,
   Select,
   FormControl,
@@ -31,7 +30,8 @@ import {
 } from "../../app/backendApi";
 import useObservationRows from "./useObservationRows";
 import { validateState } from "./dataValidation";
-import { calculateTableHeights } from "../../shared/calculateTableHeights";
+import { calculateTableHeights, DOUBLE_TABLE_FIRST_BREAKPOINTS, DOUBLE_TABLE_SECOND_BREAKPOINTS, getTableHeight } from "../../shared/calculateTableHeights";
+import { TableHeader } from "../../components/TableHeader";
 
 interface IMapObservations {
   state: StepperState;
@@ -238,16 +238,16 @@ const MapObservations: FC<IMapObservations> = ({
 
   return (
     <>
-      <Typography variant="h5">Observations</Typography>
-      <Typography variant="body2" style={{ marginTop: ".5rem" }}>
-        Observation units have not been defined in the dataset and need to be
-        defined manually
-      </Typography>
+      <TableHeader
+        label="Observations"
+        tooltip="Observation units have not been defined in the dataset and need to be
+        defined manually."
+      />
       <Stack>
         <TableContainer
           sx={{
             maxHeight: calculateTableHeights({
-              baseHeight: "20vh",
+              baseHeight: getTableHeight({ steps: DOUBLE_TABLE_FIRST_BREAKPOINTS }),
               isOpen: notificationsInfo.isOpen,
               count: notificationsInfo.count,
               splitMode: "first",
@@ -356,11 +356,7 @@ const MapObservations: FC<IMapObservations> = ({
             </TableBody>
           </Table>
         </TableContainer>
-
-        <Typography variant="h5" sx={{ marginTop: '.5rem'}}>Groups</Typography>
-        <Typography variant="body2" style={{ marginTop: ".5rem" }}>
-          Test test test test test test test
-        </Typography>
+        <TableHeader label='Groups' />
         <Tabs value={tab} onChange={handleTabChange}>
           {groupIDs.map((groupID, index) => (
             <Tab
@@ -376,7 +372,7 @@ const MapObservations: FC<IMapObservations> = ({
           component="div"
           sx={{
             height: calculateTableHeights({
-              baseHeight: "30vh",
+              baseHeight: getTableHeight({ steps: DOUBLE_TABLE_SECOND_BREAKPOINTS }),
               isOpen: notificationsInfo.isOpen,
               count: notificationsInfo.count,
               splitMode: "second",

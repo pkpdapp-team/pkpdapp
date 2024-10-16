@@ -24,6 +24,10 @@ import {
 import { Tooltip } from "@mui/material";
 import { IProtocol, getSubjectDoses, getProtocols } from "./protocolUtils";
 import { Notifications } from "./Notifications";
+import {
+  CHANGE_STYLING_INNER_HEIGHT_LIMIT,
+  LOAD_STEPPER_MAIN_CONTENT_HEIGHT,
+} from "../../shared/calculateTableHeights";
 
 interface IStepper {
   csv: string;
@@ -157,14 +161,20 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
     errors = [...errors, "Time unit is not defined."];
   }
 
-  const noTimeUnit = !state.normalisedHeaders.find((field) => field === "Time Unit");
+  const noTimeUnit = !state.normalisedHeaders.find(
+    (field) => field === "Time Unit",
+  );
   const invalidTimeUnits = state.errors.find((error) =>
     error.includes("file contains multiple time units"),
   );
   const showTimeUnitSelector = noTimeUnit || invalidTimeUnits;
   const showData = state.data.length > 0 && state.fields.length > 0;
-  const shouldShowTimeUnitNotification = showTimeUnitSelector || hasTimeUnitChanged;
-  const notificationsCount = errors?.length + warnings?.length + (shouldShowTimeUnitNotification ? 2 : 1);
+  const shouldShowTimeUnitNotification =
+    showTimeUnitSelector || hasTimeUnitChanged;
+  const notificationsCount =
+    errors?.length +
+    warnings?.length +
+    (shouldShowTimeUnitNotification ? 2 : 1);
 
   const handleStep = (step: number) => () => {
     setStepState((prevActiveStep) => ({
@@ -272,7 +282,7 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
       sx={{
         display: "flex",
         flexDirection: "column",
-        height: "80vh",
+        height: LOAD_STEPPER_MAIN_CONTENT_HEIGHT,
         width: "100%",
       }}
     >
@@ -300,7 +310,16 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
         setHasTimeUnitChanged={setHasTimeUnitChanged}
         showTimeUnitSelector={shouldShowTimeUnitNotification}
       />
-      <Box sx={{ flexGrow: 1, maxHeight: "80vh" }}>
+      <Box
+        sx={{
+          flexGrow: 1,
+          maxHeight: "80vh",
+          overflowX:
+            window.innerHeight > CHANGE_STYLING_INNER_HEIGHT_LIMIT
+              ? "none"
+              : "auto",
+        }}
+      >
         {isFinished ? (
           <Typography>Saving data…</Typography>
         ) : (
