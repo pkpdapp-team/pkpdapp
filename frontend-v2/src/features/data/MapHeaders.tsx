@@ -17,7 +17,11 @@ import {
 import { Data, Field } from "./LoadData";
 import { groupedHeaders } from "./dataValidation";
 import { usePagination } from "../../hooks/usePagination";
-import { calculateTableHeights, getTableHeight, SINGLE_TABLE_BREAKPOINTS } from "../../shared/calculateTableHeights";
+import {
+  calculateTableHeights,
+  getTableHeight,
+  SINGLE_TABLE_BREAKPOINTS,
+} from "../../shared/calculateTableHeights";
 
 interface IMapHeaders {
   data: Data;
@@ -68,7 +72,7 @@ const MapHeaders: FC<IMapHeaders> = ({
           maxHeight: calculateTableHeights({
             baseHeight: getTableHeight({ steps: SINGLE_TABLE_BREAKPOINTS }),
             isOpen: notificationsInfo.isOpen,
-            count: notificationsInfo.count
+            count: notificationsInfo.count,
           }),
           transition: "all .35s ease-in",
         }}
@@ -87,7 +91,7 @@ const MapHeaders: FC<IMapHeaders> = ({
                     {field}
                   </Typography>
                   <FormControl fullWidth>
-                    <InputLabel size='small' id={`select-${index}-label`}>
+                    <InputLabel size="small" id={`select-${index}-label`}>
                       Column Type
                     </InputLabel>
                     <Select
@@ -96,7 +100,7 @@ const MapHeaders: FC<IMapHeaders> = ({
                       value={normalisedFields.get(field)}
                       label="Column Type"
                       onChange={handleFieldChange(field)}
-                      size='small'
+                      size="small"
                       margin="dense"
                     >
                       {Object.entries(groupedHeaders).map(

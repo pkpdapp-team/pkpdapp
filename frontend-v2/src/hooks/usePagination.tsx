@@ -10,18 +10,23 @@ export const usePagination = () => {
   const [page, setPage] = useState<number>(0);
   const [isDense, setIsDense] = useState(true);
 
-  const handleChangeRowsPerPage = (event: React.ChangeEventHandler<HTMLInputElement | HTMLTextAreaElement>): void => {
+  const handleChangeRowsPerPage = (
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ): void => {
     setRowsPerPage(page || 0);
     setPage(0);
   };
 
-  const handlePageChange = (event: React.MouseEvent<HTMLButtonElement, MouseEvent> | null, page: number): void => {
+  const handlePageChange = (
+    event: React.MouseEvent<HTMLButtonElement, MouseEvent> | null,
+    page: number,
+  ): void => {
     setPage(page);
   };
 
   const handleDenseChange = () => {
-    setIsDense(!isDense)
-  }
+    setIsDense(!isDense);
+  };
 
   return {
     page,
@@ -30,6 +35,6 @@ export const usePagination = () => {
     isDense,
     handleChangeRowsPerPage,
     handlePageChange,
-    handleDenseChange
+    handleDenseChange,
   };
 };
