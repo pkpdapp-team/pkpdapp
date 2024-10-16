@@ -75,6 +75,10 @@ const VariableTabs: FC<VariableTabsProps> = ({ index }) => {
   const values = variableValues(variable?.name)[index];
   const aucValues = variableValues(aucVariable?.name)[index];
 
+  if (!concentrationVariables[tab]) {
+    return <p>Loading…</p>;
+  }
+
   try {
     return (
       <>
