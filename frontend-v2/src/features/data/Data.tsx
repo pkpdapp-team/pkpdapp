@@ -33,7 +33,7 @@ const Data: FC = () => {
     { skip: !project?.compound },
   );
   const { dataset, groups, subjectBiomarkers } = useDataset(projectIdOrZero);
-  const csv = generateCSV(dataset, groups, subjectBiomarkers, units);
+  const csv = generateCSV(dataset, groups, subjectBiomarkers, units, "default");
   const [isLoading, setIsLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
@@ -77,7 +77,8 @@ const Data: FC = () => {
     };
   }
 
-  function downloadCSV() {
+  function downloadCSV(format: "default" | "nonmem") {
+    const csv = generateCSV(dataset, groups, subjectBiomarkers, units, format);
     const blob = new Blob(["\ufeff", csv], { type: "text/csv" });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -200,10 +201,17 @@ const Data: FC = () => {
             </Button>
             <Button
               variant="outlined"
-              onClick={downloadCSV}
+              onClick={() => downloadCSV("default")}
               startIcon={<FileDownloadIcon />}
             >
               Download CSV
+            </Button>
+            <Button
+              variant="outlined"
+              onClick={() => downloadCSV("nonmem")}
+              startIcon={<FileDownloadIcon />}
+            >
+              Download NONMEM
             </Button>
           </Stack>
         </Grid>
