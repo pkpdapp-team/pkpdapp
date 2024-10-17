@@ -17,6 +17,11 @@ import {
 import { Data, Field } from "./LoadData";
 import { groupedHeaders } from "./dataValidation";
 import { usePagination } from "../../hooks/usePagination";
+import {
+  calculateTableHeights,
+  getTableHeight,
+  SINGLE_TABLE_BREAKPOINTS,
+} from "../../shared/calculateTableHeights";
 
 interface IMapHeaders {
   data: Data;
@@ -25,14 +30,14 @@ interface IMapHeaders {
   notificationsInfo: {
     isOpen: boolean;
     count: number;
-  }
+  };
 }
 
 const MapHeaders: FC<IMapHeaders> = ({
   data,
   normalisedFields,
   setNormalisedFields,
-  notificationsInfo
+  notificationsInfo,
 }: IMapHeaders) => {
   const {
     page,
@@ -64,8 +69,12 @@ const MapHeaders: FC<IMapHeaders> = ({
       <TableContainer
         sx={{
           overflow: "auto",
-          maxHeight: notificationsInfo?.isOpen ? `calc(55vh - ${notificationsInfo?.count * 3}rem)` : '55vh',
-          transition: 'all .35s ease-in'
+          maxHeight: calculateTableHeights({
+            baseHeight: getTableHeight({ steps: SINGLE_TABLE_BREAKPOINTS }),
+            isOpen: notificationsInfo.isOpen,
+            count: notificationsInfo.count,
+          }),
+          transition: "all .35s ease-in",
         }}
       >
         <Table stickyHeader size="small">
@@ -74,7 +83,7 @@ const MapHeaders: FC<IMapHeaders> = ({
               {fields.map((field, index) => (
                 <TableCell key={index}>
                   <Typography
-                    variant="h6"
+                    variant="body1"
                     component="div"
                     sx={{ flexGrow: 1, marginBottom: 1 }}
                     align="center"
@@ -82,7 +91,7 @@ const MapHeaders: FC<IMapHeaders> = ({
                     {field}
                   </Typography>
                   <FormControl fullWidth>
-                    <InputLabel id={`select-${index}-label`}>
+                    <InputLabel size="small" id={`select-${index}-label`}>
                       Column Type
                     </InputLabel>
                     <Select
@@ -91,6 +100,8 @@ const MapHeaders: FC<IMapHeaders> = ({
                       value={normalisedFields.get(field)}
                       label="Column Type"
                       onChange={handleFieldChange(field)}
+                      size="small"
+                      margin="dense"
                     >
                       {Object.entries(groupedHeaders).map(
                         ([group, headers]) => [
@@ -127,7 +138,7 @@ const MapHeaders: FC<IMapHeaders> = ({
         page={page}
         onPageChange={handlePageChange}
         onRowsPerPageChange={handleChangeRowsPerPage}
-        sx={{ display: 'flex', justifyContent: 'center', flexShrink: '0'}}
+        sx={{ display: "flex", justifyContent: "center", flexShrink: "0" }}
       />
     </>
   );

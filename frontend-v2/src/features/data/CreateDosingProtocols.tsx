@@ -1,6 +1,5 @@
 import { FC } from "react";
 import {
-  Alert,
   Box,
   Select,
   FormControl,
@@ -18,6 +17,8 @@ import {
 import { StepperState } from "./LoadDataStepper";
 import { UnitRead, VariableRead } from "../../app/backendApi";
 import { Row } from "./LoadData";
+import { TableHeader } from "../../components/TableHeader";
+import { calculateTableHeights, getTableHeight, SINGLE_TABLE_BREAKPOINTS } from "../../shared/calculateTableHeights";
 
 interface IDosingProtocols {
   administrationIdField: string;
@@ -101,17 +102,19 @@ const CreateDosingProtocols: FC<IDosingProtocols> = ({
   return (
     <>
       <Box component="div">
-        <Typography variant="h5">Dosing</Typography>
-        <Typography variant="body2" style={{ marginTop: ".5rem", marginBottom: '.5rem' }}>
-          Map dosing compartments to your subject groups here. You can set dose
+        <TableHeader
+          label="Dosing"
+          tooltip="Map dosing compartments to your subject groups here. You can set dose
           amounts, units and intervals under Trial Design, once you have
-          uploaded your data.
-        </Typography>
+          uploaded your data."
+        />
         <TableContainer
           sx={{
-            maxHeight: notificationsInfo?.isOpen
-              ? `calc(60vh - ${notificationsInfo?.count * 3}rem)`
-              : "60vh",
+            maxHeight: calculateTableHeights({
+              baseHeight: getTableHeight({ steps: SINGLE_TABLE_BREAKPOINTS }),
+              isOpen: notificationsInfo.isOpen,
+              count: notificationsInfo.count,
+            }),
             transition: "all .35s ease-in",
           }}
         >
@@ -139,7 +142,7 @@ const CreateDosingProtocols: FC<IDosingProtocols> = ({
                 );
                 return (
                   <TableRow key={adminId}>
-                    <TableCell sx={{ width: '10rem'}}>{adminId}</TableCell>
+                    <TableCell sx={{ width: "10rem" }}>{adminId}</TableCell>
                     <TableCell>
                       <FormControl fullWidth>
                         <InputLabel

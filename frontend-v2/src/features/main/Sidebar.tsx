@@ -263,6 +263,16 @@ export default function Sidebar() {
           </List>
         </>
       )}
+      <Typography
+        sx={{
+          position: 'absolute',
+          bottom: 0,
+          margin: '.5rem',
+          color: "gray"
+        }}
+      >
+        pkpdx version {import.meta.env.VITE_APP_VERSION?.slice(0, 7) || "dev"}
+      </Typography>
     </div>
   );
 

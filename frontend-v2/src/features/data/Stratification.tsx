@@ -1,6 +1,5 @@
 import { ChangeEvent, FC, useState } from "react";
 import {
-  Alert,
   Box,
   Radio,
   Stack,
@@ -12,7 +11,7 @@ import {
   Tabs,
   Tab,
   Typography,
-  TableContainer
+  TableContainer,
 } from "@mui/material";
 import { StepperState } from "./LoadDataStepper";
 import ProtocolDataGrid from "./ProtocolDataGrid";
@@ -22,6 +21,8 @@ import {
   groupsFromCatCovariate,
   validateGroupMembers,
 } from "./dataValidation";
+import { TableHeader } from "../../components/TableHeader";
+import { calculateTableHeights, DOUBLE_TABLE_FIRST_BREAKPOINTS, DOUBLE_TABLE_SECOND_BREAKPOINTS, getTableHeight } from "../../shared/calculateTableHeights";
 
 function validateGroupProtocols(groups: Group[], protocols: IProtocol[]) {
   const groupedProtocols: string[][] = [];
@@ -73,7 +74,7 @@ interface IStratification {
   notificationsInfo: {
     isOpen: boolean;
     count: number;
-  }
+  };
 }
 
 const CAT_COVARIATE_COLUMNS = ["Cat Covariate", "Administration Name", "ID"];
@@ -163,11 +164,6 @@ const Stratification: FC<IStratification> = ({
     };
   }
 
-  const splitNotificationsCount = (notificationCount: number) => ({
-    first: Math.floor(notificationCount / 2),
-    second: Math.ceil(notificationCount / 2),
-  });
-
   return (
     <Box
       sx={{
@@ -175,25 +171,28 @@ const Stratification: FC<IStratification> = ({
         flexDirection: "column",
       }}
     >
-      <Typography variant="h5">Stratification</Typography>
-      <Typography variant="body2" style={{ marginTop: ".5rem" }}>
-        Stratify your observations into groups based on the covariates you have
-        provided.
-      </Typography>
+      <TableHeader
+        label="Stratification"
+        tooltip="Stratify your observations into groups based on the covariates you have
+        provided."
+      />
       <Stack marginTop={2} spacing={2}>
         {!!catCovariates.length && (
           <TableContainer
             sx={{
-              maxHeight: notificationsInfo?.isOpen
-                ? `calc(10.1rem - ${splitNotificationsCount(notificationsInfo?.count).first * 3}rem)`
-                : "10.1rem",
+              maxHeight: calculateTableHeights({ 
+                baseHeight: getTableHeight({ steps: DOUBLE_TABLE_FIRST_BREAKPOINTS }),
+                isOpen: notificationsInfo.isOpen,
+                count: notificationsInfo.count,
+                splitMode: 'first'
+              }),
               transition: "all .35s ease-in",
             }}
           >
             <Table stickyHeader size="small">
               <TableHead>
                 <TableRow>
-                  <TableCell id="heading-primary" width="100px">
+                  <TableCell id="heading-primary" width="120px">
                     <Typography>Group ID</Typography>
                   </TableCell>
                   <TableCell width="250px">
@@ -222,7 +221,7 @@ const Stratification: FC<IStratification> = ({
                       </TableCell>
                       <TableCell id={`field-${field}`}>{field}</TableCell>
                       <TableCell>
-                        {uniqueCovariateValues[index].join(",")}
+                        {uniqueCovariateValues[index]?.join(",")}
                       </TableCell>
                     </TableRow>
                   );
@@ -233,12 +232,12 @@ const Stratification: FC<IStratification> = ({
         )}
       </Stack>
       <Stack sx={{ paddingTop: ".5rem" }}>
-        <Typography variant="h5">Groups</Typography>
-        <Typography variant="body2" style={{ marginTop: ".5rem" }}>
-          Please review the group assignment based on your stratification above.
+        <TableHeader
+          label="Groups"
+          tooltip="Please review the group assignment based on your stratification above.
           If you want to move individuals between groups or assign them to a new
-          group, select them first and then follow the instructions.
-        </Typography>
+          group, select them first and then follow the instructions."
+        />
         <Tabs value={tab} onChange={handleTabChange}>
           {groups.map((group, index) => (
             <Tab key={group.name} label={group.name} {...a11yProps(index)} />
@@ -249,9 +248,12 @@ const Stratification: FC<IStratification> = ({
             <Box
               component="div"
               sx={{
-                height: notificationsInfo?.isOpen
-                  ? `calc(30vh - ${splitNotificationsCount(notificationsInfo?.count).second * 3}rem)`
-                  : "30vh",
+                height: calculateTableHeights({ 
+                  baseHeight: getTableHeight({ steps: DOUBLE_TABLE_SECOND_BREAKPOINTS }),
+                  isOpen: notificationsInfo.isOpen,
+                  count: notificationsInfo.count,
+                  splitMode: 'second'
+                }),
                 overflow: "auto",
                 overflowX: "auto",
                 transition: "all .35s ease-in",
