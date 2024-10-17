@@ -38,17 +38,6 @@ function App() {
       ) : (
         <Login onLogin={onLogin} isLoading={false} errorMessage={error} />
       )}
-      <Typography
-        sx={{
-          position: "fixed",
-          bottom: 0,
-          right: 0,
-          color: "gray",
-          paddingRight: 1,
-        }}
-      >
-        pkpdx version {import.meta.env.VITE_APP_VERSION?.slice(0, 7) || "dev"}
-      </Typography>
     </>
   );
 }

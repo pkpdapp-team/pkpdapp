@@ -21,6 +21,7 @@ import { validateState } from "./dataValidation";
 interface IMapObservations {
   state: StepperState;
   firstTime: boolean;
+  setHasTimeUnitChanged: (val: boolean) => void;
 }
 
 const SetUnits: FC<IMapObservations> = ({

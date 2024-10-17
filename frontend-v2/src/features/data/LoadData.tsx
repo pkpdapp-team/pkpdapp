@@ -6,6 +6,7 @@ import MapHeaders from "./MapHeaders";
 import { normaliseHeader, validateState } from "./dataValidation";
 import { StepperState } from "./LoadDataStepper";
 import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
+import { TableHeader } from "../../components/TableHeader";
 
 export type Row = { [key: string]: string };
 export type Data = Row[];
@@ -225,12 +226,9 @@ const LoadData: FC<ILoadDataProps> = ({ state, firstTime, notificationsInfo }) =
               flexDirection: "column",
             }}
           >
-            <Typography variant="h5">Imported Data Table</Typography>
-            <Typography variant="body2" style={{ marginTop: ".5rem" }}>
-              The column types, which are automatically suggested based on the
+            <TableHeader label="Imported Data Table" tooltip="The column types, which are automatically suggested based on the
               headers in the data, can be customized in the table by selecting
-              the desired type from the dropdown lists
-            </Typography>
+              the desired type from the dropdown lists." />
             <MapHeaders
               data={state.data}
               setNormalisedFields={setNormalisedFields}
