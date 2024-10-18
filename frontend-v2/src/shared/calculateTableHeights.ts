@@ -76,6 +76,10 @@ export const SINGLE_TABLE_BREAKPOINTS = [
     minHeight: 600,
     tableHeight: "44vh",
   },
+  {
+    minHeight: 500,
+    tableHeight: '44vh'
+  }
 ];
 
 export const DOUBLE_TABLE_FIRST_BREAKPOINTS = [
