@@ -1,13 +1,25 @@
 import { FC } from "react";
-import { Alert, Box } from "@mui/material";
+import {
+  Box,
+} from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import { StepperState } from "./LoadDataStepper";
 import { validateDataRow } from "./dataValidation";
 import { Data } from "./LoadData";
+import { TableHeader } from "../../components/TableHeader";
+import {
+  calculateTableHeights,
+  getTableHeight,
+  SINGLE_TABLE_BREAKPOINTS,
+} from "../../shared/calculateTableHeights";
 
 interface IPreviewData {
   state: StepperState;
   firstTime: boolean;
+  notificationsInfo: {
+    isOpen: boolean;
+    count: number;
+  };
 }
 
 const IGNORED_COLUMNS = ["Ignore"];
@@ -41,7 +53,10 @@ function normaliseDataColumn(state: StepperState, type: string) {
   return state.data;
 }
 
-const PreviewData: FC<IPreviewData> = ({ state }: IPreviewData) => {
+const PreviewData: FC<IPreviewData> = ({
+  state,
+  notificationsInfo,
+}: IPreviewData) => {
   const normalisedHeaders = state.normalisedHeaders
     /* 
     Don't rename cat covariates to 'Cat Covariate',
@@ -66,28 +81,36 @@ const PreviewData: FC<IPreviewData> = ({ state }: IPreviewData) => {
 
   return (
     <>
-      <Alert severity="info">
-        Preview your data. Click &lsquo;Finish&rsquo; to upload and save.
-      </Alert>
-      <Box
-        component="div"
-        marginTop={2}
-        sx={{ maxHeight: "65vh", overflow: "auto", overflowX: "auto" }}
-      >
-        <DataGrid
-          rows={visibleRows.map((row, index) => ({ id: index, ...row }))}
-          columns={visibleFields.map((field) => ({
-            field,
-            headerName: field,
-            minWidth:
-              field.endsWith("_var") || field.endsWith("Variable")
-                ? 150
-                : field.length > 10
-                  ? 130
-                  : 30,
-          }))}
-          autoHeight
-        />
+      <TableHeader
+        label="Preview Dataset"
+        tooltip="Preview your data. Click 'Finish' to upload and save."
+      />
+      <Box sx={{ width: "100%", marginTop: '.5rem' }}>
+        <Box
+          sx={{
+            height: calculateTableHeights({
+              baseHeight: getTableHeight({ steps: SINGLE_TABLE_BREAKPOINTS }),
+              count: notificationsInfo.count,
+              isOpen: notificationsInfo.isOpen,
+            }),
+            width: "100%",
+            transition: "all .35s ease-in",
+          }}
+        >
+          <DataGrid
+            rows={visibleRows.map((row, index) => ({ id: index, ...row }))}
+            columns={visibleFields.map((field) => ({
+              field,
+              headerName: field,
+              minWidth:
+                field.endsWith("_var") || field.endsWith("Variable")
+                  ? 150
+                  : field.length > 10
+                    ? 130
+                    : 30,
+            }))}
+          />
+        </Box>
       </Box>
     </>
   );
