@@ -128,7 +128,7 @@ function useModelFormDataCallback({
       if (!model || !project) {
         return;
       }
-      const { species, ...modelData } = data;
+      const { species, species_weight, species_weight_unit, ...modelData } = data;
       // if tlag checkbox is unchecked, then remove tlag derived variables
       if (modelData.has_lag !== model.has_lag && !modelData.has_lag) {
         modelData.derived_variables = modelData.derived_variables.filter(
@@ -139,11 +139,12 @@ function useModelFormDataCallback({
       if (modelData.pd_model !== model?.pd_model) {
         modelData.pd_model2 = null;
       }
-      // if species changed then update project
-      if (species !== project.species) {
+
+      // if species, species_weight, species_weight_unit changed then update project
+      if (species !== project.species || species_weight !== project.species_weight || species_weight_unit !== project.species_weight_unit) {
         updateProject({
           id: project.id,
-          project: { ...project, species },
+          project: { ...project, species, species_weight, species_weight_unit },
         });
         // if species has changed, then clear the models
         modelData.pk_model = null;
