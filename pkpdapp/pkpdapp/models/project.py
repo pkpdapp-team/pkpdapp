@@ -3,11 +3,19 @@
 # is released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-
+from pkpdapp.models import (
+    Unit,
+)
 from django.utils import timezone
 from django.db import models
 from django.contrib.auth.models import User
 from django.urls import reverse
+
+def get_species_weight_unit():
+    try:
+        return Unit.objects.get(symbol='g')
+    except Unit.DoesNotExist:
+        return None
 
 
 class Project(models.Model):
@@ -44,6 +52,18 @@ class Project(models.Model):
         choices=Species.choices,
         default=Species.OTHER,
         help_text="subject species",
+    )
+
+    species_weight = models.FloatField(
+        default=1.0,
+        help_text="species weight",
+    )
+
+    species_weight_unit = models.ForeignKey(
+        Unit,
+        on_delete=models.PROTECT,
+        related_name="species_weight_units",
+        default=get_species_weight_unit
     )
 
     def get_absolute_url(self):

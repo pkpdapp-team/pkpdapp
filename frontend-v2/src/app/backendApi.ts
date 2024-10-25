@@ -2095,6 +2095,8 @@ export type CombinedModel = {
   species?: CombinedModelSpeciesEnum;
   /** whether the pk model has saturation */
   has_saturation?: boolean;
+  /** whether the pk model has extravascular model */
+  has_extravascular?: boolean;
   /** whether the pk model has effect compartment */
   has_effect?: boolean;
   /** whether the pk model has lag */
@@ -2109,6 +2111,8 @@ export type CombinedModel = {
   project?: number | null;
   /** model */
   pk_model?: number | null;
+  /** extravascular model */
+  pk_model2?: number | null;
   /** PD part of model */
   pd_model?: number | null;
   /** second PD part of model */
@@ -2139,6 +2143,8 @@ export type CombinedModelRead = {
   species?: CombinedModelSpeciesEnum;
   /** whether the pk model has saturation */
   has_saturation?: boolean;
+  /** whether the pk model has extravascular model */
+  has_extravascular?: boolean;
   /** whether the pk model has effect compartment */
   has_effect?: boolean;
   /** whether the pk model has lag */
@@ -2153,6 +2159,8 @@ export type CombinedModelRead = {
   project?: number | null;
   /** model */
   pk_model?: number | null;
+  /** extravascular model */
+  pk_model2?: number | null;
   /** PD part of model */
   pd_model?: number | null;
   /** second PD part of model */
@@ -2177,6 +2185,8 @@ export type PatchedCombinedModel = {
   species?: CombinedModelSpeciesEnum;
   /** whether the pk model has saturation */
   has_saturation?: boolean;
+  /** whether the pk model has extravascular model */
+  has_extravascular?: boolean;
   /** whether the pk model has effect compartment */
   has_effect?: boolean;
   /** whether the pk model has lag */
@@ -2191,6 +2201,8 @@ export type PatchedCombinedModel = {
   project?: number | null;
   /** model */
   pk_model?: number | null;
+  /** extravascular model */
+  pk_model2?: number | null;
   /** PD part of model */
   pd_model?: number | null;
   /** second PD part of model */
@@ -2221,6 +2233,8 @@ export type PatchedCombinedModelRead = {
   species?: CombinedModelSpeciesEnum;
   /** whether the pk model has saturation */
   has_saturation?: boolean;
+  /** whether the pk model has extravascular model */
+  has_extravascular?: boolean;
   /** whether the pk model has effect compartment */
   has_effect?: boolean;
   /** whether the pk model has lag */
@@ -2235,6 +2249,8 @@ export type PatchedCombinedModelRead = {
   project?: number | null;
   /** model */
   pk_model?: number | null;
+  /** extravascular model */
+  pk_model2?: number | null;
   /** PD part of model */
   pd_model?: number | null;
   /** second PD part of model */
@@ -2737,7 +2753,9 @@ export type Inference = {
   /** If executing, this is the celery task id */
   task_id?: string | null;
   /** metadata for inference */
-  metadata?: any;
+  metadata?: {
+    [key: string]: any;
+  };
   /** Project that "owns" this inference object */
   project: number;
   /** algorithm used to perform the inference */
@@ -2771,7 +2789,9 @@ export type InferenceRead = {
   /** If executing, this is the celery task id */
   task_id?: string | null;
   /** metadata for inference */
-  metadata?: any;
+  metadata?: {
+    [key: string]: any;
+  };
   /** Project that "owns" this inference object */
   project: number;
   /** algorithm used to perform the inference */
@@ -2804,7 +2824,9 @@ export type PatchedInference = {
   /** If executing, this is the celery task id */
   task_id?: string | null;
   /** metadata for inference */
-  metadata?: any;
+  metadata?: {
+    [key: string]: any;
+  };
   /** Project that "owns" this inference object */
   project?: number;
   /** algorithm used to perform the inference */
@@ -2838,7 +2860,9 @@ export type PatchedInferenceRead = {
   /** If executing, this is the celery task id */
   task_id?: string | null;
   /** metadata for inference */
-  metadata?: any;
+  metadata?: {
+    [key: string]: any;
+  };
   /** Project that "owns" this inference object */
   project?: number;
   /** algorithm used to perform the inference */
@@ -3038,7 +3062,10 @@ export type Project = {
     * `K` - Monkey
     * `O` - Other */
   species?: ProjectSpeciesEnum;
+  /** species weight */
+  species_weight?: number;
   compound: number;
+  species_weight_unit?: number;
 };
 export type ProjectRead = {
   id: number;
@@ -3058,7 +3085,10 @@ export type ProjectRead = {
     * `K` - Monkey
     * `O` - Other */
   species?: ProjectSpeciesEnum;
+  /** species weight */
+  species_weight?: number;
   compound: number;
+  species_weight_unit?: number;
   /** users with access to this project */
   users: number[];
 };
@@ -3076,7 +3106,10 @@ export type PatchedProject = {
     * `K` - Monkey
     * `O` - Other */
   species?: ProjectSpeciesEnum;
+  /** species weight */
+  species_weight?: number;
   compound?: number;
+  species_weight_unit?: number;
 };
 export type PatchedProjectRead = {
   id?: number;
@@ -3096,7 +3129,10 @@ export type PatchedProjectRead = {
     * `K` - Monkey
     * `O` - Other */
   species?: ProjectSpeciesEnum;
+  /** species weight */
+  species_weight?: number;
   compound?: number;
+  species_weight_unit?: number;
   /** users with access to this project */
   users?: number[];
 };
