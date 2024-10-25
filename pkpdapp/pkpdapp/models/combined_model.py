@@ -80,6 +80,10 @@ class CombinedModel(MyokitModelMixin, StoredModel):
         default=False, help_text="whether the pk model has lag"
     )
 
+    has_anti_drug_antibodies = models.BooleanField(
+        default=False, help_text="whether the pk model has anti-drug antibodies"
+    )
+
     has_bioavailability = models.BooleanField(
         default=False, help_text="whether the pk model has bioavailability"
     )

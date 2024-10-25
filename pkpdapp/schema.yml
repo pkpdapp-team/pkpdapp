@@ -3593,6 +3593,9 @@ components:
         has_lag:
           type: boolean
           description: whether the pk model has lag
+        has_anti_drug_antibodies:
+          type: boolean
+          description: whether the pk model has anti-drug antibodies
         has_bioavailability:
           type: boolean
           description: whether the pk model has bioavailability
@@ -4338,6 +4341,9 @@ components:
         has_lag:
           type: boolean
           description: whether the pk model has lag
+        has_anti_drug_antibodies:
+          type: boolean
+          description: whether the pk model has anti-drug antibodies
         has_bioavailability:
           type: boolean
           description: whether the pk model has bioavailability
