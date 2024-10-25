@@ -31,6 +31,14 @@ class TestPkpdModel(TestCase):
         self.client = APIClient()
         self.client.force_authenticate(user=self.user)
 
+    def test_species_weight_unit_default(self):
+        pkpd_model = CombinedModel.objects.create(
+            name="my wonderful model",
+            pk_model=PharmacokineticModel.objects.get(name="one_compartment_clinical"),
+        )
+        # weight unit should be set to default (g)
+        self.assertEqual(pkpd_model.species_weight_unit.symbol, "g")
+
     def test_copy(self):
         pk_model = PharmacokineticModel.objects.get(name="one_compartment_clinical")
         pd_model = PharmacodynamicModel.objects.get(
