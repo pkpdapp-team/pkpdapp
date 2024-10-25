@@ -7,9 +7,12 @@ import {
   ProjectRead,
   usePharmacodynamicListQuery,
   usePharmacokineticListQuery,
+  useUnitListQuery,
 } from "../../app/backendApi";
 import { Control } from "react-hook-form";
 import { Stack, Grid, Tooltip, Box, Button } from "@mui/material";
+import FloatField from "../../components/FloatField";
+import UnitField from "../../components/UnitField";
 import SelectField from "../../components/SelectField";
 import Checkbox from "../../components/Checkbox";
 import { FormData } from "./Model";
@@ -19,6 +22,7 @@ import { RootState } from "../../app/store";
 import { selectIsProjectShared } from "../login/loginSlice";
 import { CodeModal } from "./CodeModal";
 import CodeOutlinedIcon from "@mui/icons-material/CodeOutlined";
+import { NEW_MODELS_FEATURE } from "../../shared/features";
 
 interface Props {
   model: CombinedModelRead;
@@ -69,25 +73,35 @@ const PKPDModelTab: FC<Props> = ({ model, project, control }: Props) => {
     usePharmacodynamicListQuery();
   const { data: pkModels, isLoading: pkModelLoading } =
     usePharmacokineticListQuery();
+  const { data: units, isLoading: isLoadingUnits } = useUnitListQuery(
+    { compoundId: project?.compound },
+    { skip: !project?.compound },
+  );
+  const [showCode, setShowCode] = useState(false);
   const isSharedWithMe = useSelector((state: RootState) =>
     selectIsProjectShared(state, project),
   );
   const [isCodeModalOpen, setIsCodeModalOpen] = useState(false);
   const [isSbmlModalOpen, setIsSbmlModalOpen] = useState(false);
 
-  const loading = [pdModelLoading, pkModelLoading];
+  const loading = [pdModelLoading, pkModelLoading, isLoadingUnits];
   if (loading.some((l) => l)) {
     return <div>Loading...</div>;
   }
-  if (!pdModels || !pkModels) {
+  if (!pdModels || !pkModels || !units) {
     return <div>Error loading models.</div>;
   }
 
   const clinical = project.species === "H";
-  const pkModelsFiltered = pkModels.filter(
-    (m: Pharmacokinetic) =>
-      !m.name.includes(!clinical ? "_clinical" : "_preclinical"),
-  );
+  const pkModelsFiltered = pkModels.filter((m) => {
+    let is_pk_model = !m.name.includes("absorption_");
+    if (NEW_MODELS_FEATURE) {
+      is_pk_model = is_pk_model && !m.name.includes("clinical");
+    } else {
+      is_pk_model = is_pk_model && !m.name.includes(!clinical ? "_clinical" : "_preclinical")
+    }
+    return is_pk_model;
+  });
   const pdModelsFiltered = pdModels.filter(
     (m) =>
       m.name !== "tumour_growth_inhibition_model_koch" &&
@@ -159,8 +173,22 @@ const PKPDModelTab: FC<Props> = ({ model, project, control }: Props) => {
             name="project.species"
             control={control}
             options={speciesOptions}
-            formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
+            formControlProps={{ sx: { width: "calc(50% - 3rem)" } }}
             selectProps={defaultProps}
+          />
+          <FloatField
+            sx={{ flex: "1" }}
+            label="Weight"
+            name={`project.species_weight`}
+            control={control}
+            textFieldProps={{ sx: { width: "calc(50% - 7rem)" }, ...defaultProps }}
+          />
+          <UnitField
+            label={"Unit"}
+            name={`project.species_weight_unit`}
+            control={control}
+            baseUnit={units.find((u) => u.id === project.species_weight_unit)}
+            selectProps={{ sx: { width: "6rem" }, ...defaultProps }}
           />
         </Stack>
       </Grid>
