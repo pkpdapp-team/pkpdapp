@@ -2113,6 +2113,8 @@ export type CombinedModel = {
   has_effect?: boolean;
   /** whether the pk model has lag */
   has_lag?: boolean;
+  /** whether the pk model has anti-drug antibodies */
+  has_anti_drug_antibodies?: boolean;
   /** whether the pk model has bioavailability */
   has_bioavailability?: boolean;
   /** whether the pd model has hill coefficient */
@@ -2162,6 +2164,8 @@ export type CombinedModelRead = {
   has_effect?: boolean;
   /** whether the pk model has lag */
   has_lag?: boolean;
+  /** whether the pk model has anti-drug antibodies */
+  has_anti_drug_antibodies?: boolean;
   /** whether the pk model has bioavailability */
   has_bioavailability?: boolean;
   /** whether the pd model has hill coefficient */
@@ -2204,6 +2208,8 @@ export type PatchedCombinedModel = {
   has_effect?: boolean;
   /** whether the pk model has lag */
   has_lag?: boolean;
+  /** whether the pk model has anti-drug antibodies */
+  has_anti_drug_antibodies?: boolean;
   /** whether the pk model has bioavailability */
   has_bioavailability?: boolean;
   /** whether the pd model has hill coefficient */
@@ -2253,6 +2259,8 @@ export type PatchedCombinedModelRead = {
   has_effect?: boolean;
   /** whether the pk model has lag */
   has_lag?: boolean;
+  /** whether the pk model has anti-drug antibodies */
+  has_anti_drug_antibodies?: boolean;
   /** whether the pk model has bioavailability */
   has_bioavailability?: boolean;
   /** whether the pd model has hill coefficient */
