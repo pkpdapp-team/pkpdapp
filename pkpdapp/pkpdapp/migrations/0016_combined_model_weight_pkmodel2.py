@@ -5,13 +5,13 @@ import django.db.models.deletion
 import pkpdapp.models.combined_model
 
 def set_default_unit(apps, schema_editor):
-    default_unit = pkpdapp.models.combined_model.get_species_weight_unit()
-    CombinedModels = apps.get_model("pkpdapp", "CombinedModel")
-    CombinedModels.objects.update(species_weight_unit=default_unit)
+    default_unit = pkpdapp.models.project.get_species_weight_unit()
+    Project = apps.get_model("pkpdapp", "Project")
+    Project.objects.update(species_weight_unit=default_unit)
 
 def revert_set_default_unit(apps, schema_editor):
-    CombinedModels = apps.get_model("pkpdapp", "CombinedModel")
-    CombinedModels.objects.update(species_weight_unit=None)
+    Project = apps.get_model("pkpdapp", "Project")
+    Project.objects.update(species_weight_unit=None)
 
 
 class Migration(migrations.Migration):
@@ -32,12 +32,12 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(blank=True, help_text='extravascular model', null=True, on_delete=django.db.models.deletion.PROTECT, related_name='pkpd_models2', to='pkpdapp.pharmacokineticmodel'),
         ),
         migrations.AddField(
-            model_name='combinedmodel',
+            model_name='project',
             name='species_weight',
             field=models.FloatField(default=1.0, help_text='species weight'),
         ),
         migrations.AddField(
-            model_name='combinedmodel',
+            model_name='project',
             name='species_weight_unit',
             field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.PROTECT, related_name='species_weight_units', to='pkpdapp.unit'),
         ),
@@ -45,7 +45,7 @@ class Migration(migrations.Migration):
         migrations.RunPython(set_default_unit, reverse_code=revert_set_default_unit),
 
         migrations.AlterField(
-            model_name='combinedmodel',
+            model_name='project',
             name='species_weight_unit',
             field=models.ForeignKey(null=False, on_delete=django.db.models.deletion.PROTECT, related_name='species_weight_units', to='pkpdapp.unit'),
         ),
