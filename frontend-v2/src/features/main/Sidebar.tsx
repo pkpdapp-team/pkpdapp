@@ -37,6 +37,7 @@ import BiotechIcon from "@mui/icons-material/Biotech";
 import FunctionsIcon from "@mui/icons-material/Functions";
 import VaccinesIcon from "@mui/icons-material/Vaccines";
 import SsidChartIcon from "@mui/icons-material/SsidChart";
+import QueryStatsIcon from "@mui/icons-material/QueryStats";
 import ContactSupportIcon from "@mui/icons-material/ContactSupport";
 import TableViewIcon from "@mui/icons-material/TableView";
 import "@fontsource/comfortaa"; // Defaults to weight 400
@@ -137,6 +138,7 @@ export default function Sidebar() {
     [PageName.TRIAL_DESIGN]: <VaccinesIcon />,
     [PageName.DATA]: <TableViewIcon />,
     [PageName.SIMULATIONS]: <SsidChartIcon />,
+    [PageName.RESULTS]: <QueryStatsIcon />,
     [PageName.HELP]: <ContactSupportIcon />,
   };
 

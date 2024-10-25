@@ -1,5 +1,5 @@
 // src/components/ProjectTable.tsx
-import { FC, useEffect } from "react";
+import { FC, useEffect, useContext } from "react";
 import { Control, useFieldArray, useForm } from "react-hook-form";
 import {
   TableCell,
@@ -25,6 +25,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
 import { selectIsProjectShared } from "../login/loginSlice";
 import useEditProtocol from "./useEditProtocol";
+import { SimulationContext } from "../../contexts/SimulationContext";
 
 interface Props {
   project: ProjectRead;
@@ -43,7 +44,7 @@ interface Props {
   isAnyLagTimeSelected: boolean;
 }
 
-type DerivedVariableType = "RO" | "FUP" | "BPR" | "TLG";
+type DerivedVariableType = "AUC" | "RO" | "FUP" | "BPR" | "TLG";
 
 const derivedVariableRegex = /calc_.*_(f|bl|RO)/;
 
@@ -79,6 +80,7 @@ const VariableRow: FC<Props> = ({
     control,
     name: "model.derived_variables",
   });
+  const { thresholds, setThresholds } = useContext(SimulationContext);
 
   const {
     handleSubmit,
@@ -244,6 +246,13 @@ const VariableRow: FC<Props> = ({
       pkpd_model: model.id,
       type,
     });
+
+    if (type === "AUC") {
+      setThresholds({
+        ...thresholds,
+        [variable.name]: 0,
+      });
+    }
   };
 
   const removeDerived = (index: number | number[]) => {
@@ -253,6 +262,7 @@ const VariableRow: FC<Props> = ({
   const noMapToPD = isPD || effectVariable === undefined || !isConcentration;
   const noDerivedVariables = !isConcentration || isPD;
   const isC1 = model.is_library_model && variable.qname.endsWith(".C1");
+  const disableAuc = false;
   const disableRo =
     !compound.dissociation_constant || !compound.target_concentration;
   const disableFUP =
@@ -344,6 +354,20 @@ const VariableRow: FC<Props> = ({
           )}
         </TableCell>
       )}
+      <TableCell>
+        {!noDerivedVariables && (
+          <FormControlLabel
+            disabled={disableAuc || isSharedWithMe}
+            control={
+              <MuiCheckbox
+                checked={isLinkedTo("AUC")}
+                onClick={onClickDerived("AUC")}
+              />
+            }
+            label=""
+          />
+        )}
+      </TableCell>
       <TableCell>
         {!noDerivedVariables && (
           <FormControlLabel
