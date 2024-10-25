@@ -145,17 +145,19 @@ const Model: FC = () => {
       data.model.pd_model2 = null;
     }
 
-    // if species changed then update project
-    if (data.project.species !== project.species) {
+    // if species, species_weight, species_weight_unit changed then update project
+    if (data.project.species !== project.species || data.project.species_weight !== project.species_weight || data.project.species_weight_unit !== project.species_weight_unit) {
       updateProject({
         id: project.id,
-        project: { ...project, species: data.project.species },
+        project: { ...project, species: data.project.species, species_weight: data.project.species_weight, species_weight_unit: data.project.species_weight_unit },
       });
 
       // if species has changed, then clear the models
-      data.model.pk_model = null;
-      data.model.pd_model = null;
-      data.model.pd_model2 = null;
+      if (data.project.species !== project.species) {
+        data.model.pk_model = null;
+        data.model.pd_model = null;
+        data.model.pd_model2 = null;
+      }
     }
     return updateModel({ id: model.id, combinedModel: data.model }).then(
       (response) => {

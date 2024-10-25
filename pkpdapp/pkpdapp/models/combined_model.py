@@ -20,11 +20,6 @@ from pkpdapp.utils.default_params import defaults
 
 logger = logging.getLogger(__name__)
 
-def get_species_weight_unit():
-    try:
-        return Unit.objects.get(symbol='g')
-    except Unit.DoesNotExist:
-        return None
 
 class CombinedModel(MyokitModelMixin, StoredModel):
     """
@@ -54,18 +49,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
         help_text="species",
     )
 
-    species_weight = models.FloatField(
-        default=1.0,
-        help_text="species weight",
-    )
-
-    species_weight_unit = models.ForeignKey(
-        Unit,
-        on_delete=models.PROTECT,
-        related_name="species_weight_units",
-        default=get_species_weight_unit
-    )
-
+    
     pk_model = models.ForeignKey(
         PharmacokineticModel,
         on_delete=models.PROTECT,

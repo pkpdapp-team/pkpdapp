@@ -3584,6 +3584,9 @@ components:
         has_saturation:
           type: boolean
           description: whether the pk model has saturation
+        has_extravascular:
+          type: boolean
+          description: whether the pk model has extravascular model
         has_effect:
           type: boolean
           description: whether the pk model has effect compartment
@@ -3609,6 +3612,10 @@ components:
           type: integer
           nullable: true
           description: model
+        pk_model2:
+          type: integer
+          nullable: true
+          description: extravascular model
         pd_model:
           type: integer
           nullable: true
@@ -4322,6 +4329,9 @@ components:
         has_saturation:
           type: boolean
           description: whether the pk model has saturation
+        has_extravascular:
+          type: boolean
+          description: whether the pk model has extravascular model
         has_effect:
           type: boolean
           description: whether the pk model has effect compartment
@@ -4347,6 +4357,10 @@ components:
           type: integer
           nullable: true
           description: model
+        pk_model2:
+          type: integer
+          nullable: true
+          description: extravascular model
         pd_model:
           type: integer
           nullable: true
@@ -4709,7 +4723,13 @@ components:
             * `H` - Human
             * `K` - Monkey
             * `O` - Other
+        species_weight:
+          type: number
+          format: double
+          description: species weight
         compound:
+          type: integer
+        species_weight_unit:
           type: integer
         users:
           type: array
@@ -5305,7 +5325,13 @@ components:
             * `H` - Human
             * `K` - Monkey
             * `O` - Other
+        species_weight:
+          type: number
+          format: double
+          description: species weight
         compound:
+          type: integer
+        species_weight_unit:
           type: integer
         users:
           type: array
