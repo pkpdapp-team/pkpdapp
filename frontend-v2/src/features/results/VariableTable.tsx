@@ -13,34 +13,15 @@ import { SimulationContext } from "../../contexts/SimulationContext";
 import { TimeInterval } from "../../App";
 
 const IntervalRow: FC<{
-  interval: { start: number; end: number; unit: string };
-  values: number[];
-  aucValues: number[];
-  timeOverLowerThreshold: number;
-  timeOverUpperThreshold: number;
-}> = ({
-  interval,
-  values,
-  aucValues,
-  timeOverLowerThreshold,
-  timeOverUpperThreshold,
-}) => {
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const auc = aucValues[aucValues.length - 1] - aucValues[0];
+  header: string;
+  values: string[];
+}> = ({ header, values }) => {
   return (
     <TableRow>
-      <TableCell scope="row">
-        {interval.start} – {interval.end} {interval.unit}
-      </TableCell>
-      <TableCell>{min > 1e4 ? min.toExponential(4) : min.toFixed(2)}</TableCell>
-      <TableCell>{max > 1e4 ? max.toExponential(4) : max.toFixed(2)}</TableCell>
-      <TableCell>{auc.toExponential(4)}</TableCell>
-      <TableCell>{timeOverLowerThreshold.toFixed(2)}</TableCell>
-      <TableCell>{timeOverUpperThreshold.toFixed(2)}</TableCell>
-      <TableCell>
-        {(timeOverLowerThreshold - timeOverUpperThreshold).toFixed(2)}
-      </TableCell>
+      <TableCell scope="row">{header}</TableCell>
+      {values.map((value, i) => (
+        <TableCell key={i}>{value}</TableCell>
+      ))}
     </TableRow>
   );
 };
@@ -186,6 +167,10 @@ function timeOverThreshold(
   return cumulativeTime;
 }
 
+function formattedNumber(value: number) {
+  return value > 1e4 ? value.toExponential(4) : value.toFixed(2);
+}
+
 const VariableTable: FC<{
   variable: VariableRead;
   aucVariable?: VariableRead;
@@ -232,43 +217,61 @@ const VariableTable: FC<{
   const timeUnit =
     timeVariable && units.find((u) => u.id === timeVariable.unit);
 
+  const headers = [
+    "Interval",
+    <>
+      {variable.name}
+      <sub>min</sub> [{unit?.symbol}]
+    </>,
+    <>
+      {variable.name}
+      <sub>max</sub> [{unit?.symbol}]
+    </>,
+    `AUC [${aucUnit?.symbol}]`,
+    <>
+      Time above lower threshold
+      <br />t<sub>lower</sub> [{timeUnit?.symbol}]
+    </>,
+    <>
+      Time above upper threshold
+      <br />t<sub>upper</sub> [{timeUnit?.symbol}]
+    </>,
+    <>
+      t<sub>lower</sub> - t<sub>upper</sub> [{timeUnit?.symbol}]
+    </>,
+  ];
+  const rows = intervals.map((interval, k) => {
+    const header = `${interval.start} – ${interval.end} ${interval.unit}`;
+    const min = Math.min(...variablePerInterval[k]);
+    const max = Math.max(...variablePerInterval[k]);
+    const auc =
+      aucPerInterval[k][aucPerInterval[k].length - 1] - aucPerInterval[k][0];
+    const values = [
+      formattedNumber(min),
+      formattedNumber(max),
+      formattedNumber(auc),
+      formattedNumber(timeOverLowerThresholdPerInterval[k]),
+      formattedNumber(timeOverUpperThresholdPerInterval[k]),
+      formattedNumber(
+        timeOverLowerThresholdPerInterval[k] -
+          timeOverUpperThresholdPerInterval[k],
+      ),
+    ];
+    return { header, values };
+  });
+
   return (
     <Table>
       <TableHead>
         <TableRow>
-          <TableCell>Interval</TableCell>
-          <TableCell>
-            {variable.name}
-            <sub>min</sub> [{unit?.symbol}]
-          </TableCell>
-          <TableCell>
-            {variable.name}
-            <sub>max</sub> [{unit?.symbol}]
-          </TableCell>
-          <TableCell>AUC [{aucUnit?.symbol}]</TableCell>
-          <TableCell>
-            Time over lower threshold
-            <br />t<sub>lower</sub> [{timeUnit?.symbol}]
-          </TableCell>
-          <TableCell>
-            Time over upper threshold
-            <br />t<sub>upper</sub> [{timeUnit?.symbol}]
-          </TableCell>
-          <TableCell>
-            t<sub>lower</sub>-t<sub>upper</sub> [{timeUnit?.symbol}]
-          </TableCell>
+          {headers.map((header, i) => (
+            <TableCell key={i}>{header}</TableCell>
+          ))}
         </TableRow>
       </TableHead>
       <TableBody>
-        {intervals.map((interval, k) => (
-          <IntervalRow
-            key={interval.start}
-            interval={interval}
-            values={variablePerInterval[k]}
-            aucValues={aucPerInterval[k]}
-            timeOverLowerThreshold={timeOverLowerThresholdPerInterval[k]}
-            timeOverUpperThreshold={timeOverUpperThresholdPerInterval[k]}
-          />
+        {rows.map((row) => (
+          <IntervalRow key={row.header} {...row} />
         ))}
       </TableBody>
     </Table>
