@@ -82,7 +82,6 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
     { skip: !project?.compound },
   );
   const [showCode, setShowCode] = useState(false);
-  const [showExtravascular, setShowExtravascular] = useState(false);
   const isSharedWithMe = useSelector((state: RootState) =>
     selectIsProjectShared(state, project),
   );
@@ -133,9 +132,10 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
   const pk_model_options = pkModelsFiltered.map((m) => {
     return { value: m.id, label: m.name };
   });
-  const pk_model2_options = pkModel2Filtered.map((m) => {
+  let pk_model2_options = pkModel2Filtered.map((m) => {
     return { value: m.id, label: m.name };
   });
+  pk_model2_options.push({ value: "", label: "None" });
   pk_model_options.sort((a, b) => {
     const aName = a.label.replace("_preclinical", "").replace("_clinical", "");
     const bName = b.label.replace("_preclinical", "").replace("_clinical", "");
@@ -311,22 +311,20 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
         </Grid>
 
       </Grid>
-      {showExtravascular && (
-        <Grid container item spacing={2}>
-          <Grid item xl={5} md={8} xs={10}>
-            <Stack direction="row" alignItems="center" spacing={1}>
-              <SelectField
-                label="Extravascular PK Model"
-                name="model.pk_model2"
-                control={control}
-                options={pk_model2_options}
-                formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
-                selectProps={defaultProps}
-              />
-            </Stack>
-          </Grid>
+      <Grid container item spacing={2}>
+        <Grid item xl={5} md={8} xs={10}>
+          <Stack direction="row" alignItems="center" spacing={1}>
+            <SelectField
+              label="Extravascular PK Model"
+              name="model.pk_model2"
+              control={control}
+              options={pk_model2_options}
+              formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
+              selectProps={defaultProps}
+            />
+          </Stack>
         </Grid>
-      )}
+      </Grid>
       <Grid container item spacing={2}>
         <Grid item xl={4} md={8} xs={10}>
           <Stack direction="row" alignItems="center" spacing={1}>

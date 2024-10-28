@@ -155,6 +155,7 @@ const Model: FC = () => {
       // if species has changed, then clear the models
       if (data.project.species !== project.species) {
         data.model.pk_model = null;
+        data.model.pk_model2 = null;
         data.model.pd_model = null;
         data.model.pd_model2 = null;
       }
