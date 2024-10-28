@@ -256,6 +256,7 @@ const Model: FC = () => {
             project={project}
             control={control}
             updateModel={updateModel}
+            compound={compound}
           />
         </TabPanel>
         <TabPanel>
