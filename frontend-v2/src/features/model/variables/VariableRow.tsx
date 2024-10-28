@@ -21,6 +21,9 @@ import { useSelector } from "react-redux";
 import { RootState } from "../../../app/store";
 import { selectIsProjectShared } from "../../login/loginSlice";
 import { useFormData, useVariableFormState } from "./variableUtils";
+import useEditProtocol from "./useEditProtocol";
+import { SimulationContext } from "../../contexts/SimulationContext";
+import { NEW_MODELS_FEATURE } from "../../shared/features";
 
 interface Props {
   project: ProjectRead;
@@ -89,7 +92,7 @@ const VariableRow: FC<Props> = ({
   const linkToPD = isPD
     ? false
     : mappings.find((mapping) => mapping.pk_variable === variable.id) !==
-      undefined;
+    undefined;
 
   const derivedIndex = (type: DerivedVariableType) => {
     return derivedVariables.findIndex(
@@ -120,9 +123,13 @@ const VariableRow: FC<Props> = ({
 
   const concentrationUnit = units.find((unit) => unit.symbol === "pmol/L");
   const isClinical = project.species === "H";
-  const amountUnit = units.find(
-    (unit) => unit.symbol === (isClinical ? "pmol" : "pmol/kg"),
-  );
+  const amountUnit = NEW_MODELS_FEATURE ?
+    units.find(
+      (unit) => unit.symbol === "pmol",
+    ) :
+    units.find(
+      (unit) => unit.symbol === (isClinical ? "pmol" : "pmol/kg"),
+    );
   const variableUnit = units.find((unit) => unit.id === variable.unit);
   if (concentrationUnit === undefined || amountUnit === undefined) {
     return <>No concentration or amount unit found</>;
@@ -137,6 +144,52 @@ const VariableRow: FC<Props> = ({
     amountUnit?.compatible_units.find(
       (unit) => parseInt(unit.id) === variable.unit,
     ) !== undefined;
+
+  const addPDMapping = () => {
+    if (effectVariable) {
+      if (mappings.length > 0) {
+        removeMapping(0);
+      }
+      appendMapping({
+        pk_variable: variable.id,
+        pd_variable: effectVariable.id,
+        pkpd_model: model.id,
+      });
+    }
+  };
+
+  const removePDMapping = () => {
+    const mapping_index = mappings.findIndex(
+      (mapping) => mapping.pk_variable === variable.id,
+    );
+    if (mapping_index >= 0) {
+      removeMapping(mapping_index);
+    }
+  };
+
+  const addDerived = (type: DerivedVariableType) => {
+    // can only be one 'FUP' and one 'BPR' across all variables
+    const sameType = derivedVariables
+      .map((d, i) => ({ ...d, index: i }))
+      .filter((ro) => ro.type === type)
+      .map((ro) => ro.index);
+
+    const onlyOne = type === "FUP" || type === "BPR";
+    if (onlyOne && sameType.length > 0) {
+      removeDerived(sameType);
+    }
+
+    derivedVariablesAppend({
+      pk_variable: variable.id,
+      pkpd_model: model.id,
+      type,
+    });
+  };
+
+
+  const removeDerived = (index: number | number[]) => {
+    derivedVariablesRemove(index);
+  };
 
   const noMapToPD = isPD || effectVariable === undefined || !isConcentration;
   const noDerivedVariables = !isConcentration || isPD;
