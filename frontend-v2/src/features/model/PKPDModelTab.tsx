@@ -8,6 +8,7 @@ import {
   usePharmacodynamicListQuery,
   usePharmacokineticListQuery,
   useUnitListQuery,
+  CompoundRead,
 } from "../../app/backendApi";
 import { Control } from "react-hook-form";
 import { Stack, Grid, Tooltip, Box, Button } from "@mui/material";
@@ -15,6 +16,7 @@ import FloatField from "../../components/FloatField";
 import UnitField from "../../components/UnitField";
 import SelectField from "../../components/SelectField";
 import Checkbox from "../../components/Checkbox";
+import { default as MuiCheckbox } from "@mui/material/Checkbox";
 import { FormData } from "./Model";
 import { speciesOptions } from "../projects/Project";
 import { useSelector } from "react-redux";
@@ -23,12 +25,14 @@ import { selectIsProjectShared } from "../login/loginSlice";
 import { CodeModal } from "./CodeModal";
 import CodeOutlinedIcon from "@mui/icons-material/CodeOutlined";
 import { NEW_MODELS_FEATURE } from "../../shared/features";
+import { CompareRounded } from "@mui/icons-material";
 
 interface Props {
   model: CombinedModelRead;
   project: ProjectRead;
   control: Control<FormData>;
   updateModel: (data: CombinedModelUpdateApiArg) => void;
+  compound: CompoundRead;
 }
 
 const pk_model_order = [
@@ -67,7 +71,7 @@ const pd_model_order = [
   "tumour_growth_inhibition_delay_signal_distribution_exp_conc_kill",
 ];
 
-const PKPDModelTab: FC<Props> = ({ model, project, control }: Props) => {
+const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) => {
   // get list of pd models
   const { data: pdModels, isLoading: pdModelLoading } =
     usePharmacodynamicListQuery();
@@ -78,6 +82,7 @@ const PKPDModelTab: FC<Props> = ({ model, project, control }: Props) => {
     { skip: !project?.compound },
   );
   const [showCode, setShowCode] = useState(false);
+  const [showExtravascular, setShowExtravascular] = useState(false);
   const isSharedWithMe = useSelector((state: RootState) =>
     selectIsProjectShared(state, project),
   );
@@ -102,6 +107,9 @@ const PKPDModelTab: FC<Props> = ({ model, project, control }: Props) => {
     }
     return is_pk_model;
   });
+  const pkModel2Filtered = pkModels.filter((m) => {
+    return m.name.includes("absorption_");
+  });
   const pdModelsFiltered = pdModels.filter(
     (m) =>
       m.name !== "tumour_growth_inhibition_model_koch" &&
@@ -123,6 +131,9 @@ const PKPDModelTab: FC<Props> = ({ model, project, control }: Props) => {
   });
   pd_model_options.push({ value: "", label: "None" });
   const pk_model_options = pkModelsFiltered.map((m) => {
+    return { value: m.id, label: m.name };
+  });
+  const pk_model2_options = pkModel2Filtered.map((m) => {
     return { value: m.id, label: m.name };
   });
   pk_model_options.sort((a, b) => {
@@ -216,18 +227,35 @@ const PKPDModelTab: FC<Props> = ({ model, project, control }: Props) => {
               flexWrap="wrap"
               justifyContent="space-between"
             >
-              <Tooltip title="Includes Michaelis-Menten parameters (CLmax and Km)">
-                <div>
-                  <Checkbox
-                    label="Saturation"
-                    name="model.has_saturation"
-                    control={control}
-                    checkboxFieldProps={{
-                      disabled: !model.pk_model || isSharedWithMe,
-                    }}
-                  />
-                </div>
-              </Tooltip>
+              {!NEW_MODELS_FEATURE &&
+                <Tooltip title="Includes Michaelis-Menten parameters (CLmax and Km)">
+                  <div>
+                    <Checkbox
+                      label="Saturation"
+                      name="model.has_saturation"
+                      control={control}
+                      checkboxFieldProps={{
+                        disabled: !model.pk_model || isSharedWithMe,
+                      }}
+                    />
+                  </div>
+                </Tooltip>
+              }
+              {NEW_MODELS_FEATURE &&
+                <Tooltip title="Add Extravascular PK model">
+                  <div>
+                    <FormControlLabel
+                      label="Extravascular"
+                      control={
+                        <MuiCheckbox
+                          checked={showExtravascular}
+                          onChange={() => setShowExtravascular(!showExtravascular)}
+                        />
+                      }
+                    />
+                  </div>
+                </Tooltip>
+              }
               <Tooltip title="Includes an effect compartment">
                 <div style={{ fontSize: "12px !important" }}>
                   <Checkbox
@@ -240,6 +268,20 @@ const PKPDModelTab: FC<Props> = ({ model, project, control }: Props) => {
                   />
                 </div>
               </Tooltip>
+              {NEW_MODELS_FEATURE &&
+                <Tooltip title="Includes Anti-Drug Antibodies">
+                  <div>
+                    <Checkbox
+                      label="ADA"
+                      name="model.has_anti_drug_antibodies"
+                      control={control}
+                      checkboxFieldProps={{
+                        disabled: !model.pk_model || isSharedWithMe || compound.compound_type !== "LM"
+                      }}
+                    />
+                  </div>
+                </Tooltip>
+              }
               <Tooltip title="Includes a time delay following PO or SC administration">
                 <div>
                   <Checkbox
@@ -267,7 +309,24 @@ const PKPDModelTab: FC<Props> = ({ model, project, control }: Props) => {
             </Stack>
           )}
         </Grid>
+
       </Grid>
+      {showExtravascular && (
+        <Grid container item spacing={2}>
+          <Grid item xl={5} md={8} xs={10}>
+            <Stack direction="row" alignItems="center" spacing={1}>
+              <SelectField
+                label="Extravascular PK Model"
+                name="model.pk_model2"
+                control={control}
+                options={pk_model2_options}
+                formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
+                selectProps={defaultProps}
+              />
+            </Stack>
+          </Grid>
+        </Grid>
+      )}
       <Grid container item spacing={2}>
         <Grid item xl={4} md={8} xs={10}>
           <Stack direction="row" alignItems="center" spacing={1}>
