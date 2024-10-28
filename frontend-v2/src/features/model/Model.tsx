@@ -309,7 +309,13 @@ const TabbedModelForm: FC<TabbedModelFormProps> = ({
         marginBottom={0}
       >
         <TabPanel>
-          <PKPDModelTab model={model} project={project} control={control} />
+          <PKPDModelTab
+            model={model}
+            project={project}
+            control={control}
+            updateModel={updateModel}
+            compound={compound}
+          />
         </TabPanel>
         <TabPanel>
           <MapVariablesTab
