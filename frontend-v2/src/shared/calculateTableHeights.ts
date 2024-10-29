@@ -41,13 +41,13 @@ type getTableHeightType = {
 };
 
 export const getTableHeight = ({ steps }: getTableHeightType) => {
-  const test1 = steps
+  const sortedHeights = steps
     .map(({ minHeight }) => minHeight)
     .sort((a, b) => b - a)
     .find((minHeight) => window.innerHeight > minHeight);
 
   return (
-    steps.find(({ minHeight }) => minHeight === test1)?.tableHeight || "inherit"
+    steps.find(({ minHeight }) => minHeight === sortedHeights)?.tableHeight || "inherit"
   );
 };
 
