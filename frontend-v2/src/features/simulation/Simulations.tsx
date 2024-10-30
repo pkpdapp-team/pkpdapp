@@ -215,11 +215,7 @@ const Simulations: FC = () => {
   const { data: dataReference } = useSimulation(
     refSimInputs,
     referenceVariables,
-    showReference ? model : undefined,
-  } = useSimulation(
-    refSimInputs,
-    referenceVariables,
-    showReference ? model : undefined,
+    showReference ? model : undefined
   );
 
   const {

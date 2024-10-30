@@ -265,6 +265,7 @@ interface SimulationPlotProps {
   compound: CompoundRead;
   model: CombinedModelRead;
   visibleGroups: string[];
+  shouldShowLegend: boolean;
 }
 
 const SimulationPlotView: FC<SimulationPlotProps> = ({
