@@ -3646,6 +3646,7 @@ components:
           description: |-
             type of derived variable
 
+            * `AUC` - area under curve
             * `RO` - receptor occupancy
             * `FUP` - faction unbound plasma
             * `BPR` - blood plasma ratio
@@ -5480,12 +5481,14 @@ components:
       - subjects
     TypeEnum:
       enum:
+      - AUC
       - RO
       - FUP
       - BPR
       - TLG
       type: string
       description: |-
+        * `AUC` - area under curve
         * `RO` - receptor occupancy
         * `FUP` - faction unbound plasma
         * `BPR` - blood plasma ratio
