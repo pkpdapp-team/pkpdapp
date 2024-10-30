@@ -255,13 +255,13 @@ const MapObservations: FC<IMapObservations> = ({
             transition: "all .35s ease-in",
           }}
         >
-          <Table stickyHeader size="small">
-            <TableHead>
+          <Table stickyHeader size="small" >
+            <TableHead >
               <TableRow>
-                <TableCell>
+                <TableCell sx={{ width: '15rem'}}>
                   <Typography>{observationIdField}</Typography>
                 </TableCell>
-                <TableCell>
+                <TableCell sx={{ width: '15rem'}}>
                   <Typography>Observation</Typography>
                 </TableCell>
                 <TableCell>
@@ -323,7 +323,7 @@ const MapObservations: FC<IMapObservations> = ({
                         </FormControl>
                       </TableCell>
                       <TableCell>
-                        <FormControl fullWidth>
+                        <FormControl sx={{ width: '15rem'}}>
                           <InputLabel
                             size="small"
                             id={`select-unit-${obsId}-label`}

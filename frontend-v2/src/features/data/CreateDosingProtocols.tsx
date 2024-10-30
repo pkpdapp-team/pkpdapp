@@ -144,7 +144,7 @@ const CreateDosingProtocols: FC<IDosingProtocols> = ({
                   <TableRow key={adminId}>
                     <TableCell sx={{ width: "10rem" }}>{adminId}</TableCell>
                     <TableCell>
-                      <FormControl fullWidth>
+                      <FormControl sx={{ width: '15rem'}}>
                         <InputLabel
                           size="small"
                           id={`select-var-${adminId}-label`}
