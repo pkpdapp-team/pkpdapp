@@ -1,13 +1,8 @@
 import {
   Alert,
-  Button,
-  Checkbox,
-  FormControlLabel,
-  FormGroup,
   Grid,
   Snackbar,
-  Stack,
-  Typography,
+  Box
 } from "@mui/material";
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
@@ -39,21 +34,48 @@ import {
   useRef,
 } from "react";
 import SimulationPlotView from "./SimulationPlotView";
-import SimulationSliderView from "./SimulationSliderView";
 import useSimulation from "./useSimulation";
 import useSimulationInputs from "./useSimulationInputs";
 import useSimulatedVariables from "./useSimulatedVariables";
-import DropdownButton from "../../components/DropdownButton";
-import SettingsIcon from "@mui/icons-material/Settings";
-import FloatField from "../../components/FloatField";
 import useDirty from "../../hooks/useDirty";
-import UnitField from "../../components/UnitField";
 import paramPriority from "../model/paramPriority";
-import HelpButton from "../../components/HelpButton";
 import { selectIsProjectShared } from "../login/loginSlice";
 import { getConstVariables } from "../model/resetToSpeciesDefaults";
 import useSubjectGroups from "../../hooks/useSubjectGroups";
 import useExportSimulation from "./useExportSimulation";
+import { SimulationsSidePanel } from "./SimulationsSidePanel";
+import { getTableHeight } from "../../shared/calculateTableHeights";
+
+const PlotsWidthSteps = [
+  {
+    minHeight: "1100",
+    tableHeight: "75vw",
+  },
+  {
+    minHeight: "1000",
+    tableHeight: "72vw",
+  },
+  {
+    minHeight: "900",
+    tableHeight: "70vw",
+  },
+  {
+    minHeight: "800",
+    tableHeight: "65vw",
+  },
+  {
+    minHeight: "700",
+    tableHeight: "60vw",
+  },
+  {
+    minHeight: "600",
+    tableHeight: "55vw",
+  },
+  {
+    minHeight: "500",
+    tableHeight: "53vw",
+  },
+];
 
 type SliderValues = { [key: number]: number };
 
@@ -136,7 +158,7 @@ const Simulations: FC = () => {
       [variable]: value,
     }));
   }, []);
-
+  const [shouldShowLegend, setShouldShowLegend] = useState(true);
   const isSharedWithMe = useSelector((state: RootState) =>
     selectIsProjectShared(state, project),
   );
@@ -193,7 +215,7 @@ const Simulations: FC = () => {
   const { data: dataReference } = useSimulation(
     refSimInputs,
     referenceVariables,
-    showReference ? model : undefined,
+    showReference ? model : undefined
   );
 
   const {
@@ -231,13 +253,6 @@ const Simulations: FC = () => {
   ];
   const defaultLayout = layoutOptions[0]?.value;
   const [layout, setLayout] = useState<string>(defaultLayout);
-  const parametersRef = useRef<HTMLDivElement | null>(null);
-  const [parametersHeight, setParametersHeight] = useState<number>(0);
-
-  useEffect(() => {
-    const height = parametersRef?.current?.clientHeight || 0;
-    setParametersHeight(height);
-  }, [parametersRef?.current?.clientHeight]);
 
   const updateWindowDimensions = () =>
     window.innerWidth < 1000 && setLayout("horizontal");
@@ -302,31 +317,6 @@ const Simulations: FC = () => {
     return () => clearInterval(intervalId);
   }, [handleSubmit, isDirty, simulation, updateSimulation]);
 
-  const loading = [
-    isProjectLoading,
-    isSimulationsLoading,
-    isModelsLoading,
-    isLoadingCompound,
-    isUnitsLoading,
-  ].some((v) => v);
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-
-  if (!simulation || !project || !models || !variables || !units || !compound) {
-    return <div>Not found</div>;
-  }
-
-  const orderedSliders = sliders.map((slider, i) => {
-    const variable = variables.find((v) => v.id === slider.variable);
-    return {
-      ...slider,
-      priority: variable ? paramPriority(variable) : 0,
-      fieldArrayIndex: i,
-    };
-  });
-  orderedSliders.sort((a, b) => a.priority - b.priority);
-
   const filterOutputs = model?.is_library_model
     ? ["environment.t", "PDCompartment.C_Drug"]
     : [];
@@ -355,20 +345,12 @@ const Simulations: FC = () => {
 
   outputsSorted.sort((a, b) => b.priority - a.priority);
 
-  const constVariables = model ? getConstVariables(variables, model) : [];
   const addPlotOptions = outputsSorted.map((variable) => ({
     value: variable.id,
     label: variable.description
       ? `${variable.name} (${variable.description})`
       : variable.name,
   }));
-  const sliderVarIds = sliders.map((v) => v.variable);
-  const addSliderOptions = constVariables
-    .filter((v) => !sliderVarIds.includes(v.id))
-    .map((variable) => ({
-      value: variable.id,
-      label: `${variable.name} (${variable.description})`,
-    }));
 
   const handleAddPlot = (variableId: number) => {
     const variable = variables?.find((v) => v.id === variableId);
@@ -394,6 +376,39 @@ const Simulations: FC = () => {
     addSimulationPlot(defaultPlot);
   };
 
+  const orderedSliders = sliders.map((slider, i) => {
+    const variable = variables.find((v) => v.id === slider.variable);
+    return {
+      ...slider,
+      priority: variable ? paramPriority(variable) : 0,
+      fieldArrayIndex: i,
+    };
+  });
+  orderedSliders.sort((a, b) => a.priority - b.priority);
+
+  const handleVisibleGroups = (event: ChangeEvent<HTMLInputElement>) => {
+    if (!event.target.checked) {
+      const newState = visibleGroups.filter(
+        (name) => name !== event.target.value,
+      );
+      setVisibleGroups(newState);
+      return;
+    } else {
+      const newState = new Set([...visibleGroups, event.target.value]);
+      setVisibleGroups([...newState]);
+    }
+  };
+
+  const constVariables = model ? getConstVariables(variables || [], model) : [];
+
+  const sliderVarIds = sliders.map((v) => v.variable);
+  const addSliderOptions = constVariables
+    .filter((v) => !sliderVarIds.includes(v.id))
+    .map((variable) => ({
+      value: variable.id,
+      label: `${variable.name} (${variable.description})`,
+    }));
+
   const handleAddSlider = (variableId: number) => {
     const defaultSlider: SimulationSliderRead = {
       id: 0,
@@ -417,96 +432,65 @@ const Simulations: FC = () => {
     });
   };
 
-  const handleVisibleGroups = (event: ChangeEvent<HTMLInputElement>) => {
-    if (!event.target.checked) {
-      const newState = visibleGroups.filter(
-        (name) => name !== event.target.value,
-      );
-      setVisibleGroups(newState);
-      return;
-    } else {
-      const newState = new Set([...visibleGroups, event.target.value]);
-      setVisibleGroups([...newState]);
-    }
-  };
+  const loading = [
+    isProjectLoading,
+    isSimulationsLoading,
+    isModelsLoading,
+    isLoadingCompound,
+    isUnitsLoading,
+  ].some((v) => v);
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!simulation || !project || !models || !variables || !units || !compound) {
+    return <div>Not found</div>;
+  }
+
   return (
-    <Grid
-      container
-      sx={{ marginBottom: layout === "vertical" ? 0 : `${parametersHeight}px` }}
-    >
-      <Grid
-        item
-        xl={layout === "vertical" ? 8 : 12}
-        md={layout === "vertical" ? 7 : 12}
-        xs={layout === "vertical" ? 6 : 12}
+    <Box sx={{ display: "flex" }}>
+      <SimulationsSidePanel
+        portalId="simulations-portal"
+        addPlotOptions={addPlotOptions}
+        handleAddPlot={handleAddPlot}
+        isSharedWithMe={isSharedWithMe}
+        layoutOptions={layoutOptions}
+        layout={layout}
+        setLayout={setLayout}
+        plots={plots}
+        control={control}
+        units={units}
+        simulation={simulation}
+        groups={groups}
+        visibleGroups={visibleGroups}
+        handleVisibleGroups={handleVisibleGroups}
+        addSliderOptions={addSliderOptions}
+        handleAddSlider={handleAddSlider}
+        orderedSliders={orderedSliders}
+        handleChangeSlider={handleChangeSlider}
+        handleRemoveSlider={handleRemoveSlider}
+        handleSaveSlider={handleSaveSlider}
+        exportSimulation={exportSimulation}
+        showReference={showReference}
+        setShowReference={setShowReference}
+        shouldShowLegend={shouldShowLegend}
+        setShouldShowLegend={setShouldShowLegend}
+      />
+      <Box
+        sx={{
+          maxHeight: "80vh",
+          maxWidth: getTableHeight({ steps: PlotsWidthSteps }),
+          overflow: "auto",
+        }}
       >
-        <Stack direction={"row"} alignItems={"center"} spacing={2}>
-          <DropdownButton
-            useIcon={false}
-            data_cy="add-plot"
-            options={addPlotOptions}
-            onOptionSelected={handleAddPlot}
-            disabled={isSharedWithMe}
-          >
-            Add new plot
-          </DropdownButton>
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={showReference}
-                onChange={(e) => setShowReference(e.target.checked)}
-              ></Checkbox>
-            }
-            label="Show reference"
-          />
-        </Stack>
-        {plots.length > 0 && (
-          <>
-            <Stack
-              direction={"row"}
-              alignItems={"center"}
-              spacing={2}
-              justifyContent="flex-start"
-              paddingTop="1rem"
-            >
-              <FloatField
-                label="Simulation Duration"
-                name="time_max"
-                control={control}
-                textFieldProps={{ disabled: isSharedWithMe }}
-              />
-              <UnitField
-                label="Unit"
-                name="time_max_unit"
-                baseUnit={units.find((u) => u.id === simulation?.time_max_unit)}
-                control={control}
-                selectProps={{
-                  style: { flexShrink: 0 },
-                  disabled: isSharedWithMe,
-                }}
-              />
-              <div>
-                <Button variant="contained" onClick={exportSimulation}>
-                  Export to CSV
-                </Button>
-                <HelpButton title={"Export to CSV"}>
-                  A variables are reported in pmol, C or T variables are
-                  reported in pmol/L and AUC variables are reported in pmol/L*h.
-                  These units cannot be changed in the current version.
-                </HelpButton>
-              </div>
-            </Stack>
-          </>
-        )}
-        <Grid container spacing={1}>
+        <Grid
+          container
+          columns={{ xl: 12, md: 12, sm: 12 }}
+          direction="row"
+          wrap={layout === "horizontal" ? "nowrap" : "wrap"}
+        >
           {plots.map((plot, index) => (
-            <Grid
-              item
-              xl={layout === "vertical" ? 12 : 6}
-              md={layout === "vertical" ? 12 : 6}
-              xs={12}
-              key={index}
-            >
+            <Grid xl={6} md={12} sm={12} item key={index}>
               {data?.length && model ? (
                 <SimulationPlotView
                   index={index}
@@ -521,146 +505,27 @@ const Simulations: FC = () => {
                   compound={compound}
                   model={model}
                   visibleGroups={visibleGroups}
+                  shouldShowLegend={shouldShowLegend}
                 />
               ) : (
                 <div>Loading...</div>
               )}
             </Grid>
           ))}
+          <Snackbar open={Boolean(simulateError)} autoHideDuration={6000}>
+            <Alert severity="error">
+              Error simulating model: {simulateError?.error || "unknown error"}
+            </Alert>
+          </Snackbar>
+          <Snackbar open={Boolean(exportSimulateError)} autoHideDuration={6000}>
+            <Alert severity="error">
+              Error exporting model:{" "}
+              {exportSimulateError?.error || "unknown error"}
+            </Alert>
+          </Snackbar>
         </Grid>
-        <Snackbar open={Boolean(simulateError)} autoHideDuration={6000}>
-          <Alert severity="error">
-            Error simulating model: {simulateError?.error || "unknown error"}
-          </Alert>
-        </Snackbar>
-        <Snackbar open={Boolean(exportSimulateError)} autoHideDuration={6000}>
-          <Alert severity="error">
-            Error exporting model:{" "}
-            {exportSimulateError?.error || "unknown error"}
-          </Alert>
-        </Snackbar>
-      </Grid>
-      <Grid
-        ref={parametersRef}
-        item
-        xl={layout === "vertical" ? 3 : 12}
-        md={layout === "vertical" ? 4 : 12}
-        xs={layout === "vertical" ? 5 : 12}
-        sx={
-          layout === "vertical"
-            ? {
-                position: "fixed",
-                right: 0,
-                paddingLeft: "1rem",
-                width: "100%",
-              }
-            : {
-                position: "fixed",
-                bottom: 0,
-                paddingBottom: "3rem",
-                height: "auto",
-                backgroundColor: "white",
-                width: "-webkit-fill-available",
-              }
-        }
-      >
-        <Stack direction="column">
-          {!!groups?.length && (
-            <>
-              <Typography
-                sx={{
-                  fontWeight: "bold",
-                  fontSize: "1.2rem",
-                }}
-              >
-                Groups
-              </Typography>
-              <FormGroup>
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={visibleGroups.includes("Project")}
-                      value="Project"
-                      onChange={handleVisibleGroups}
-                    />
-                  }
-                  label="Project"
-                />
-                {groups?.map((group) => (
-                  <FormControlLabel
-                    key={group.name}
-                    control={
-                      <Checkbox
-                        checked={visibleGroups.includes(group.name)}
-                        value={group.name}
-                        onChange={handleVisibleGroups}
-                      />
-                    }
-                    label={group.name}
-                  />
-                ))}
-              </FormGroup>
-            </>
-          )}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              paddingBottom: "1rem",
-            }}
-          >
-            <Typography
-              sx={{
-                fontWeight: "bold",
-                fontSize: "1.2rem",
-              }}
-            >
-              Parameters
-            </Typography>
-            <DropdownButton
-              useIcon={true}
-              options={layoutOptions}
-              onOptionSelected={(option) => {
-                setLayout(option);
-                window.dispatchEvent(new Event("resize"));
-              }}
-              data_cy="add-parameter-slider"
-            >
-              <SettingsIcon />
-            </DropdownButton>
-          </div>
-          <DropdownButton
-            useIcon={false}
-            options={addSliderOptions}
-            onOptionSelected={handleAddSlider}
-            data_cy="add-parameter-slider"
-            disabled={isSharedWithMe}
-          >
-            Add new
-          </DropdownButton>
-        </Stack>
-        <Grid sx={{ paddingRight: "1rem" }} container spacing={2}>
-          {orderedSliders.map((slider, index) => (
-            <Grid
-              item
-              xs={layout === "horizontal" ? 12 : 12}
-              md={layout === "horizontal" ? 6 : 12}
-              xl={layout === "horizontal" ? 4 : 12}
-              key={index}
-            >
-              <SimulationSliderView
-                index={index}
-                slider={slider}
-                onChange={handleChangeSlider}
-                onRemove={handleRemoveSlider(slider.fieldArrayIndex)}
-                onSave={handleSaveSlider(slider)}
-                units={units}
-              />
-            </Grid>
-          ))}
-        </Grid>
-      </Grid>
-    </Grid>
+      </Box>
+    </Box>
   );
 };
 

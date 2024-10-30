@@ -265,10 +265,10 @@ export default function Sidebar() {
       )}
       <Typography
         sx={{
-          position: 'absolute',
+          position: "absolute",
           bottom: 0,
-          margin: '.5rem',
-          color: "gray"
+          margin: ".5rem",
+          color: "gray",
         }}
       >
         pkpdx version {import.meta.env.VITE_APP_VERSION?.slice(0, 7) || "dev"}
@@ -397,12 +397,27 @@ export default function Sidebar() {
           {drawer}
         </Drawer>
       </Box>
+      {selectedPage === PageName.SIMULATIONS && (
+        <Box
+          component="nav"
+          sx={{
+            width: { sm: drawerWidth },
+            flexShrink: { sm: 0 },
+            height: "100vh",
+            backgroundColor: '#FBFBFA',
+            borderRight: '1px solid #DBD6D1'
+          }}
+          aria-label="mailbox folders"
+          id='simulations-portal'
+        />
+      )}
       <Box
         component="main"
         sx={{
           flexGrow: 1,
           p: 3,
           width: { sm: `calc(100% - ${drawerWidth}px)` },
+          paddingBottom: 0
         }}
       >
         <Toolbar />

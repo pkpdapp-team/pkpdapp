@@ -13,7 +13,6 @@ import { useAppDispatch } from "./app/hooks";
 import { RootState } from "./app/store";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { Typography } from "@mui/material";
 
 import { SimulationContext } from "./contexts/SimulationContext";
 import { SimulateResponse } from "./app/backendApi";

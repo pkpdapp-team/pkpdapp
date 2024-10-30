@@ -265,6 +265,7 @@ interface SimulationPlotProps {
   compound: CompoundRead;
   model: CombinedModelRead;
   visibleGroups: string[];
+  shouldShowLegend: boolean;
 }
 
 const SimulationPlotView: FC<SimulationPlotProps> = ({
@@ -280,6 +281,7 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
   compound,
   model,
   visibleGroups,
+  shouldShowLegend
 }) => {
   const projectId = useSelector(
     (state: RootState) => state.main.selectedProject,
@@ -460,6 +462,7 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
 
   const plotLayout: Partial<Layout> = {
     dragmode: "pan",
+    showlegend: shouldShowLegend,
     shapes: icLines.map((icLine, i) => {
       return {
         type: "line",

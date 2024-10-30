@@ -4,6 +4,7 @@ import {
   ListItemButton,
   ListItemText,
   Popover,
+  SxProps,
 } from "@mui/material";
 import { FC, MouseEvent, ReactNode, useState } from "react";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
@@ -20,6 +21,7 @@ type Props = {
   disabled?: boolean;
   data_cy?: string;
   useIcon?: boolean;
+  sx?: SxProps
 };
 
 const DropdownButton: FC<Props> = ({
@@ -29,6 +31,8 @@ const DropdownButton: FC<Props> = ({
   children,
   disabled,
   useIcon,
+  sx,
+  variant = 'contained'
 }) => {
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
 
@@ -56,6 +60,7 @@ const DropdownButton: FC<Props> = ({
     <div>
       {useIcon ? (
         <IconButton
+          sx={sx}
           onClick={handleButtonClick}
           disabled={isDisabled}
           data-cy={data_cy}
@@ -64,7 +69,8 @@ const DropdownButton: FC<Props> = ({
         </IconButton>
       ) : (
         <Button
-          variant="contained"
+          sx={sx}
+          variant={variant}
           onClick={handleButtonClick}
           disabled={isDisabled}
           data-cy={data_cy}
