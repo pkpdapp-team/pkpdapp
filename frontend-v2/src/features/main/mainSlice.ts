@@ -7,6 +7,7 @@ export enum PageName {
   DATA = "Data",
   TRIAL_DESIGN = "Trial Design",
   SIMULATIONS = "Simulations",
+  RESULTS = "Results",
   HELP = "Help & Feedback",
 }
 
@@ -14,6 +15,7 @@ export enum SubPageName {
   PKPDMODEL = "PK/PD Model",
   MAPVARIABLES = "Map Variables",
   PARAMETERS = "Parameters",
+  SECONDARYPARAMETERS = "Secondary Parameters",
   TUTORIALS = "Tutorials",
   PROJECTS = "Projects",
   DRUG = "Drug",
