@@ -158,7 +158,7 @@ const Simulations: FC = () => {
       [variable]: value,
     }));
   }, []);
-
+  const [shouldShowLegend, setShouldShowLegend] = useState(true);
   const isSharedWithMe = useSelector((state: RootState) =>
     selectIsProjectShared(state, project),
   );
@@ -476,6 +476,8 @@ const Simulations: FC = () => {
         exportSimulation={exportSimulation}
         showReference={showReference}
         setShowReference={setShowReference}
+        shouldShowLegend={shouldShowLegend}
+        setShouldShowLegend={setShouldShowLegend}
       />
       <Box
         sx={{
@@ -506,6 +508,7 @@ const Simulations: FC = () => {
                   compound={compound}
                   model={model}
                   visibleGroups={visibleGroups}
+                  shouldShowLegend={shouldShowLegend}
                 />
               ) : (
                 <div>Loading...</div>

@@ -17,10 +17,10 @@ import UnitField from "../../components/UnitField";
 import SimulationSliderView from "./SimulationSliderView";
 import HelpButton from "../../components/HelpButton";
 import { ExpandLess, ExpandMore } from "@mui/icons-material";
-import { useState } from "react";
+import { ChangeEvent, useState } from "react";
 import { getTableHeight } from "../../shared/calculateTableHeights";
-import { SimulationPlot, SimulationRead, SimulationSlider, SubjectGroupRead, UnitRead } from "../../app/backendApi";
-import { Control } from "react-hook-form";
+import { Simulation, SimulationPlot, SimulationRead, SimulationSlider, SubjectGroupRead, UnitRead } from "../../app/backendApi";
+import { UseFormReset } from "react-hook-form";
 
 type SimulationsSidePanelType = {
   portalId: string;
@@ -28,33 +28,32 @@ type SimulationsSidePanelType = {
     value: number;
     label: string;
   }[];
-  handleAddPlot: (plot: { value: number; label: string }) => void;
+  handleAddPlot: (plot: number) => void;
   isSharedWithMe: boolean;
   layoutOptions: { value: string, label: string }[];
   layout: string;
   setLayout: (layout: string) => void;
   plots: SimulationPlot[];
-  control: Control;
+  control: UseFormReset<Simulation>;
   units: UnitRead[];
   simulation: SimulationRead;
-  groups: SubjectGroupRead[];
+  groups?: SubjectGroupRead[];
   visibleGroups: string[];
-  handleVisibleGroups: (group: string) => void;
+  handleVisibleGroups: (group: ChangeEvent<HTMLInputElement>) => void;
   addSliderOptions: {
     value: number;
     label: string;
   }[];
-  handleAddSlider: (slider: {
-    value: number;
-    label: string;
-  }) => void;
+  handleAddSlider: (slider: number) => void;
   orderedSliders: SimulationSlider[];
-  handleChangeSlider: (slider: SimulationSlider) => void;
-  handleRemoveSlider: (slider: SimulationSlider) => void;
+  handleChangeSlider: (variable: number, value: number) => void;
+  handleRemoveSlider: (index: number) => void;
   handleSaveSlider: (slider: SimulationSlider) => void;
   exportSimulation: () => void;
   showReference: boolean;
   setShowReference: (reference: boolean) => void;
+  shouldShowLegend: boolean;
+  setShouldShowLegend: (value: boolean) => void
 };
 
 const ButtonSx = {
@@ -127,6 +126,8 @@ export const SimulationsSidePanel = ({
   exportSimulation,
   showReference,
   setShowReference,
+  shouldShowLegend,
+  setShouldShowLegend
 }: SimulationsSidePanelType) => {
   const portalRoot = document.getElementById(portalId);
   const [collapseLayout, setCollapseLayout] = useState(true);
@@ -368,6 +369,41 @@ export const SimulationsSidePanel = ({
                       ></Checkbox>
                     }
                     label="Show reference"
+                  />
+                </Collapse>
+              </Box>
+              <Box sx={{ width: "11rem" }}>
+                <Button
+                  sx={ButtonSx}
+                  disableTouchRipple
+                  disableRipple
+                  disableFocusRipple
+                  disableElevation
+                  onClick={() => setCollapseReference(!collapseReference)}
+                  startIcon={
+                    collapseReference ? <ExpandLess /> : <ExpandMore />
+                  }
+                >
+                  <Typography>Legend</Typography>
+                </Button>
+                <Collapse
+                  sx={{
+                    transition: "all .35s ease-in",
+                    marginBottom: ".5rem",
+                  }}
+                  timeout={350}
+                  easing="ease-in"
+                  in={collapseReference}
+                  component="div"
+                >
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={shouldShowLegend}
+                        onChange={(e) => setShouldShowLegend(e.target.checked)}
+                      ></Checkbox>
+                    }
+                    label="Show Legend"
                   />
                 </Collapse>
               </Box>
