@@ -1,80 +1,46 @@
 import { Box } from "@mui/material";
-import { FC, useContext } from "react";
+import { FC } from "react";
 
-import { SimulationContext } from "../../contexts/SimulationContext";
 import { VariableRead } from "../../app/backendApi";
 
 import VariableTable from "./VariableTable";
-import { tableRow } from "./utils";
-import { useVariables } from "./useVariables";
-import { useUnits } from "./useUnits";
+import { useTableRows } from "./useTableRows";
 
-const TIME_VARS = ["time", "t"];
 interface VariableRowsProps {
   groupIndex: number;
   intervalIndex: number;
+  parameterIndex: number;
+  columns: string;
   rows: VariableRead[];
 }
 
 const VariableRows: FC<VariableRowsProps> = ({
-  groupIndex,
-  intervalIndex,
+  groupIndex = -1,
+  intervalIndex = -1,
+  parameterIndex = -1,
+  columns = "",
   rows = [],
 }) => {
-  const units = useUnits();
-  const variables = useVariables();
-  const { intervals, simulations, thresholds } = useContext(SimulationContext);
-
-  const simulation = simulations[groupIndex];
-  const variable = rows[0];
-  const aucVariable =
-    variable && variables?.find((v) => v.name === `calc_${variable.name}_AUC`);
-  const timeVariable = variables?.find((v) => TIME_VARS.includes(v.name));
-  const unit = variable && units?.find((u) => u.id === variable.unit);
-  const aucUnit = aucVariable && units?.find((u) => u.id === aucVariable.unit);
-  const timeUnit =
-    timeVariable && units?.find((u) => u.id === timeVariable.unit);
-
   if (!rows[0]) {
     return <p>Loading…</p>;
   }
 
-  const tableRows = rows.map((row) => {
-    const header = row.name;
-    const aucVariable =
-      variable && variables?.find((v) => v.name === `calc_${row.name}_AUC`);
-    const unit = row && units?.find((u) => u.id === row.unit);
-    const aucUnit =
-      aucVariable && units?.find((u) => u.id === aucVariable.unit);
-    return tableRow(
-      header,
-      intervals[intervalIndex],
-      row,
-      intervals,
-      variables,
-      simulation,
-      thresholds,
-      unit,
-      aucUnit,
-      timeUnit,
-    );
+  const tableRows = useTableRows({
+    rows,
+    groupIndex,
+    intervalIndex,
+    parameterIndex,
   });
 
   try {
     return (
-      <>
-        <Box id="interval-tabpanel">
-          <VariableTable
-            rowColumn="Variable"
-            rows={tableRows}
-            timeVariable={timeVariable}
-            simulation={simulation}
-            unit={unit}
-            aucUnit={aucUnit}
-            timeUnit={timeUnit}
-          />
-        </Box>
-      </>
+      <Box id="interval-tabpanel">
+        <VariableTable
+          rowColumn="Variable"
+          columns={columns}
+          rows={tableRows}
+        />
+      </Box>
     );
   } catch (e: any) {
     console.error(e);

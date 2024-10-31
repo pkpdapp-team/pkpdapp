@@ -1,23 +1,22 @@
 import { Box } from "@mui/material";
 import { FC } from "react";
 
-import { TimeInterval } from "../../App";
-
 import VariableTable from "./VariableTable";
+import { Parameter } from "./useParameters";
 import { useTableRows } from "./useTableRows";
 
-interface IntervalRowsProps {
+interface ParameterRowsProps {
   groupIndex: number;
+  intervalIndex: number;
   variableIndex: number;
-  parameterIndex: number;
   columns: string;
-  rows: TimeInterval[];
+  rows: Parameter[];
 }
 
-const IntervalRows: FC<IntervalRowsProps> = ({
+const ParameterRows: FC<ParameterRowsProps> = ({
   groupIndex = -1,
+  intervalIndex = -1,
   variableIndex = -1,
-  parameterIndex = -1,
   columns = "",
   rows = [],
 }) => {
@@ -28,15 +27,15 @@ const IntervalRows: FC<IntervalRowsProps> = ({
   const tableRows = useTableRows({
     rows,
     groupIndex,
+    intervalIndex,
     variableIndex,
-    parameterIndex,
   });
 
   try {
     return (
-      <Box id="cvar-tabpanel">
+      <Box id="interval-tabpanel">
         <VariableTable
-          rowColumn="Interval"
+          rowColumn="Variable"
           columns={columns}
           rows={tableRows}
         />
@@ -48,4 +47,4 @@ const IntervalRows: FC<IntervalRowsProps> = ({
   }
 };
 
-export default IntervalRows;
+export default ParameterRows;

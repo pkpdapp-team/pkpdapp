@@ -1,6 +1,5 @@
-import { FC } from "react";
+import { FC, useContext } from "react";
 
-import { UnitRead, VariableRead } from "../../app/backendApi";
 import {
   Table,
   TableBody,
@@ -9,11 +8,13 @@ import {
   TableRow,
 } from "@mui/material";
 
-import { SimulateResponse } from "../../app/backendApi";
-import { parameters } from "./parameters";
+import { useParameters } from "./useParameters";
+import { useConcentrationVariables } from "./useConcentrationVariables";
+import { SimulationContext } from "../../contexts/SimulationContext";
+import useSubjectGroups from "../../hooks/useSubjectGroups";
 
 const IntervalRow: FC<{
-  header: string;
+  header: string | JSX.Element;
   values: string[];
 }> = ({ header, values }) => {
   return (
@@ -27,39 +28,51 @@ const IntervalRow: FC<{
 };
 
 type TableRow = {
-  header: string;
+  header: string | JSX.Element;
   values: string[];
 };
 
 const VariableTable: FC<{
   rowColumn: string;
+  columns: string;
   rows: TableRow[];
-  timeVariable?: VariableRead;
-  simulation: SimulateResponse;
-  unit?: UnitRead;
-  aucUnit?: UnitRead;
-  timeUnit?: UnitRead;
-}> = ({ rowColumn, rows, simulation, unit, aucUnit, timeUnit }) => {
-  const columns = parameters({
-    simulation,
-    unit,
-    aucUnit,
-    timeUnit,
-  });
+}> = ({ rowColumn, columns, rows }) => {
+  const { groups } = useSubjectGroups();
+  const parameters = useParameters();
+  const concentrationVariables = useConcentrationVariables();
+  const { intervals } = useContext(SimulationContext);
+
+  let columnHeadings = [] as (string | JSX.Element)[];
+  if (columns === "parameters") {
+    columnHeadings = parameters.map((parameter) => parameter.name);
+  }
+  if (columns === "variables") {
+    columnHeadings = concentrationVariables.map((variable) => variable.name);
+  }
+  if (columns === "intervals") {
+    columnHeadings = intervals.map(
+      (interval) => `${interval.start} – ${interval.end}`,
+    );
+  }
+  if (columns === "groups") {
+    columnHeadings = groups
+      ? [{ name: "Project" }, ...groups].map((group) => group.name)
+      : [];
+  }
 
   return (
     <Table size="small">
       <TableHead>
         <TableRow>
           <TableCell>{rowColumn}</TableCell>
-          {columns.map((column, i) => (
-            <TableCell key={i}>{column.header}</TableCell>
+          {columnHeadings.map((column, i) => (
+            <TableCell key={i}>{column}</TableCell>
           ))}
         </TableRow>
       </TableHead>
       <TableBody>
-        {rows.map((row) => (
-          <IntervalRow key={row.header} {...row} />
+        {rows.map((row, index) => (
+          <IntervalRow key={index} {...row} />
         ))}
       </TableBody>
     </Table>

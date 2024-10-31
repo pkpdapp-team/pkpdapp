@@ -1,11 +1,12 @@
 import {
   SimulateResponse,
-  UnitRead,
   VariableListApiResponse,
   VariableRead,
 } from "../../app/backendApi";
-import { Thresholds, TimeInterval } from "../../App";
-import { parameters } from "./parameters";
+import { TimeInterval } from "../../App";
+
+import { Parameter } from "./useParameters";
+import { columns } from "./columns";
 
 /**
  * Given x0 in the range [x[0], x[1]], return the linearly interpolated value y0 in the range [y[0], y[1]].
@@ -158,31 +159,36 @@ export function formattedNumber(value: number, threshold: number = 1e4) {
 }
 
 export function tableRow(
-  header: string,
+  header: string | JSX.Element,
   interval: TimeInterval,
   variable: VariableRead,
   intervals: TimeInterval[],
   variables: VariableListApiResponse | undefined,
   simulation: SimulateResponse,
-  thresholds: Thresholds,
-  unit: UnitRead | undefined,
-  aucUnit: UnitRead | undefined,
-  timeUnit: UnitRead | undefined,
+  parameters: Parameter[],
+  parameter: Parameter,
+  concentrationVariables: VariableRead[],
+  simulations: SimulateResponse[],
 ) {
-  const aucVariable = variables?.find(
-    (v) => v.name === `calc_${variable.name}_AUC`,
-  );
-  const columns = parameters({
-    intervals,
+  const aucVariable =
+    variable && variables?.find((v) => v.name === `calc_${variable.name}_AUC`);
+  const tableColumns = columns({
     variable,
-    simulation,
-    thresholds,
     aucVariable,
-    unit,
-    aucUnit,
-    timeUnit,
+    concentrationVariables,
+    simulation,
+    simulations,
+    parameter,
+    parameters,
+    interval,
+    intervals,
   });
-  const intervalIndex = intervals.indexOf(interval);
-  const values = columns.map((column) => column.value(intervalIndex));
+  const values = tableColumns.map((column, index) => {
+    return column.value(
+      interval ? intervals.indexOf(interval) : index,
+      simulation ? simulation : simulations[index],
+      variable ? variable : concentrationVariables[index],
+    );
+  });
   return { header, values };
 }
