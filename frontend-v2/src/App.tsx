@@ -16,6 +16,7 @@ import "react-toastify/dist/ReactToastify.css";
 
 import { SimulationContext } from "./contexts/SimulationContext";
 import { SimulateResponse } from "./app/backendApi";
+import { Typography } from "@mui/material";
 
 export type TimeInterval = {
   start: number;

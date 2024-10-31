@@ -135,6 +135,7 @@ export const SimulationsSidePanel = ({
   const [collapseGroups, setCollapseGroups] = useState(true);
   const [collapseParameters, setCollapseParameters] = useState(true);
   const [collapseReference, setCollapseReference] = useState(true);
+  const [collapseLegend, setCollapseLegend] = useState(true);
 
   if (!portalRoot) return null;
 
@@ -379,7 +380,7 @@ export const SimulationsSidePanel = ({
                   disableRipple
                   disableFocusRipple
                   disableElevation
-                  onClick={() => setCollapseReference(!collapseReference)}
+                  onClick={() => setCollapseLegend(!collapseLegend)}
                   startIcon={
                     collapseReference ? <ExpandLess /> : <ExpandMore />
                   }
@@ -393,7 +394,7 @@ export const SimulationsSidePanel = ({
                   }}
                   timeout={350}
                   easing="ease-in"
-                  in={collapseReference}
+                  in={collapseLegend}
                   component="div"
                 >
                   <FormControlLabel
