@@ -9,6 +9,7 @@ import {
 } from "./utils";
 import { SimulationContext } from "../../contexts/SimulationContext";
 import { useVariables } from "./useVariables";
+import { Thresholds, TimeInterval } from "../../App";
 
 export type Parameter = {
   name: string | JSX.Element;
@@ -18,6 +19,51 @@ export type Parameter = {
     variable: VariableRead,
     aucVariable?: VariableRead,
   ) => string;
+};
+
+const variablePerInterval = (
+  intervals: TimeInterval[],
+  variable: VariableRead,
+  simulation: SimulateResponse,
+  intervalIndex: number,
+) => {
+  const variableValuesPerInterval = valuesPerInterval(
+    intervals,
+    variable,
+    simulation,
+  );
+  const intervalValues = variableValuesPerInterval[intervalIndex];
+  const timePerInterval = timesPerInterval(simulation.time, intervals);
+  const intervalTimes = timePerInterval[intervalIndex];
+  return [intervalValues, intervalTimes];
+};
+
+const timeOverLowerThresholdPerInterval = (
+  intervalValues: number[],
+  intervalTimes: number[],
+  variable: VariableRead,
+  thresholds: Thresholds,
+) => {
+  const threshold = variable && thresholds[variable.name];
+  return timeOverThreshold(
+    intervalTimes,
+    intervalValues,
+    threshold?.lower || 0,
+  );
+};
+
+const timeOverUpperThresholdPerInterval = (
+  intervalValues: number[],
+  intervalTimes: number[],
+  variable: VariableRead,
+  thresholds: Thresholds,
+) => {
+  const threshold = variable && thresholds[variable.name];
+  return timeOverThreshold(
+    intervalTimes,
+    intervalValues,
+    threshold?.upper || Infinity,
+  );
 };
 
 export function useParameters() {
@@ -31,12 +77,13 @@ export function useParameters() {
         simulation: SimulateResponse,
         variable: VariableRead,
       ) {
-        const variablePerInterval = valuesPerInterval(
+        const [intervalValues] = variablePerInterval(
           intervals,
           variable,
           simulation,
+          intervalIndex,
         );
-        return formattedNumber(Math.min(...variablePerInterval[intervalIndex]));
+        return formattedNumber(Math.min(...intervalValues));
       },
     },
     {
@@ -46,12 +93,13 @@ export function useParameters() {
         simulation: SimulateResponse,
         variable: VariableRead,
       ) {
-        const variablePerInterval = valuesPerInterval(
+        const [intervalValues] = variablePerInterval(
           intervals,
           variable,
           simulation,
+          intervalIndex,
         );
-        return formattedNumber(Math.max(...variablePerInterval[intervalIndex]));
+        return formattedNumber(Math.max(...intervalValues));
       },
     },
     {
@@ -64,10 +112,14 @@ export function useParameters() {
         const aucVariable = variables?.find(
           (v) => v.name === `calc_${variable.name}_AUC`,
         );
-        const aucPerInterval = aucVariable
-          ? valuesPerInterval(intervals, aucVariable, simulation)
+        const [auc] = aucVariable
+          ? variablePerInterval(
+              intervals,
+              aucVariable,
+              simulation,
+              intervalIndex,
+            )
           : [];
-        const auc = aucPerInterval[intervalIndex];
         return auc ? formattedNumber(auc[auc.length - 1] - auc[0]) : "";
       },
     },
@@ -82,29 +134,19 @@ export function useParameters() {
         simulation: SimulateResponse,
         variable: VariableRead,
       ) {
-        const timeOverLowerThresholdPerInterval = intervals.map(
-          (interval, k) => {
-            const variablePerInterval = valuesPerInterval(
-              intervals,
-              variable,
-              simulation,
-            );
-            const intervalValues = variablePerInterval[k];
-            const timePerInterval = timesPerInterval(
-              simulation.time,
-              intervals,
-            );
-            const intervalTimes = timePerInterval[k];
-            const threshold = variable && thresholds[variable.name];
-            return timeOverThreshold(
-              intervalTimes,
-              intervalValues,
-              threshold?.lower || 0,
-            );
-          },
+        const [intervalValues, intervalTimes] = variablePerInterval(
+          intervals,
+          variable,
+          simulation,
+          intervalIndex,
         );
         return formattedNumber(
-          timeOverLowerThresholdPerInterval[intervalIndex],
+          timeOverLowerThresholdPerInterval(
+            intervalValues,
+            intervalTimes,
+            variable,
+            thresholds,
+          ),
         );
       },
     },
@@ -119,29 +161,19 @@ export function useParameters() {
         simulation: SimulateResponse,
         variable: VariableRead,
       ) {
-        const timeOverUpperThresholdPerInterval = intervals.map(
-          (interval, k) => {
-            const variablePerInterval = valuesPerInterval(
-              intervals,
-              variable,
-              simulation,
-            );
-            const intervalValues = variablePerInterval[k];
-            const timePerInterval = timesPerInterval(
-              simulation.time,
-              intervals,
-            );
-            const intervalTimes = timePerInterval[k];
-            const threshold = variable && thresholds[variable.name];
-            return timeOverThreshold(
-              intervalTimes,
-              intervalValues,
-              threshold?.upper || Infinity,
-            );
-          },
+        const [intervalValues, intervalTimes] = variablePerInterval(
+          intervals,
+          variable,
+          simulation,
+          intervalIndex,
         );
         return formattedNumber(
-          timeOverUpperThresholdPerInterval[intervalIndex],
+          timeOverUpperThresholdPerInterval(
+            intervalValues,
+            intervalTimes,
+            variable,
+            thresholds,
+          ),
         );
       },
     },
@@ -156,51 +188,25 @@ export function useParameters() {
         simulation: SimulateResponse,
         variable: VariableRead,
       ) {
-        const timeOverLowerThresholdPerInterval = intervals.map(
-          (interval, k) => {
-            const variablePerInterval = valuesPerInterval(
-              intervals,
-              variable,
-              simulation,
-            );
-            const intervalValues = variablePerInterval[k];
-            const timePerInterval = timesPerInterval(
-              simulation.time,
-              intervals,
-            );
-            const intervalTimes = timePerInterval[k];
-            const threshold = variable && thresholds[variable.name];
-            return timeOverThreshold(
-              intervalTimes,
-              intervalValues,
-              threshold?.lower || 0,
-            );
-          },
-        );
-        const timeOverUpperThresholdPerInterval = intervals.map(
-          (interval, k) => {
-            const variablePerInterval = valuesPerInterval(
-              intervals,
-              variable,
-              simulation,
-            );
-            const intervalValues = variablePerInterval[k];
-            const timePerInterval = timesPerInterval(
-              simulation.time,
-              intervals,
-            );
-            const intervalTimes = timePerInterval[k];
-            const threshold = variable && thresholds[variable.name];
-            return timeOverThreshold(
-              intervalTimes,
-              intervalValues,
-              threshold?.upper || Infinity,
-            );
-          },
+        const [intervalValues, intervalTimes] = variablePerInterval(
+          intervals,
+          variable,
+          simulation,
+          intervalIndex,
         );
         return formattedNumber(
-          timeOverLowerThresholdPerInterval[intervalIndex] -
-            timeOverUpperThresholdPerInterval[intervalIndex],
+          timeOverLowerThresholdPerInterval(
+            intervalValues,
+            intervalTimes,
+            variable,
+            thresholds,
+          ) -
+            timeOverUpperThresholdPerInterval(
+              intervalValues,
+              intervalTimes,
+              variable,
+              thresholds,
+            ),
         );
       },
     },
