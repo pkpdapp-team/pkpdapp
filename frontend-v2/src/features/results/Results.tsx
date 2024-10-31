@@ -9,13 +9,10 @@ import {
 } from "@mui/material";
 
 import useSubjectGroups from "../../hooks/useSubjectGroups";
-import IntervalRows from "./IntervalRows";
-import VariableRows from "./VariableRows";
-import GroupRows from "./GroupRows";
+import { ResultsTable } from "./ResultsTable";
 import { SimulationContext } from "../../contexts/SimulationContext";
 import { useConcentrationVariables } from "./useConcentrationVariables";
 import { useParameters } from "./useParameters";
-import ParameterRows from "./ParameterRows";
 
 const options = [
   { name: "Parameters", value: "parameters" },
@@ -181,39 +178,43 @@ const Results: FC = () => {
         </FormControl>
         <Box id="group-tabpanel">
           {rows === "intervals" && (
-            <IntervalRows
+            <ResultsTable
               groupIndex={columns === "groups" ? -1 : group}
               variableIndex={columns === "variables" ? -1 : variable}
               parameterIndex={columns === "parameters" ? -1 : parameter}
               columns={columns}
               rows={intervals}
+              rowColumn="Interval"
             />
           )}
           {rows === "variables" && (
-            <VariableRows
+            <ResultsTable
               groupIndex={columns === "groups" ? -1 : group}
               intervalIndex={columns === "intervals" ? -1 : interval}
               parameterIndex={columns === "parameters" ? -1 : parameter}
               columns={columns}
               rows={concentrationVariables}
+              rowColumn="Variable"
             />
           )}
           {rows === "groups" && (
-            <GroupRows
+            <ResultsTable
               variableIndex={columns === "variables" ? -1 : variable}
               intervalIndex={columns === "intervals" ? -1 : interval}
               parameterIndex={columns === "parameters" ? -1 : parameter}
               columns={columns}
               rows={[{ name: "Project" }, ...groups]}
+              rowColumn="Group"
             />
           )}
           {rows === "parameters" && (
-            <ParameterRows
+            <ResultsTable
               groupIndex={columns === "groups" ? -1 : group}
               variableIndex={columns === "variables" ? -1 : variable}
               intervalIndex={columns === "intervals" ? -1 : interval}
               columns={columns}
               rows={parameters}
+              rowColumn="Parameter"
             />
           )}
         </Box>
