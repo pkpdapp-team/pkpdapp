@@ -80,23 +80,18 @@ export const ResultsTable: FC<ResultsTableProps> = ({
   }
 
   try {
-    let columnHeadings = [] as (string | JSX.Element)[];
-    if (parameterIndex === "columns") {
-      columnHeadings = parameters.map((parameter) => parameter.name);
-    }
-    if (variableIndex === "columns") {
-      columnHeadings = concentrationVariables.map((variable) => variable.name);
-    }
-    if (intervalIndex === "columns") {
-      columnHeadings = intervals.map(
-        (interval) => `${interval.start} – ${interval.end}`,
-      );
-    }
-    if (groupIndex === "columns") {
-      columnHeadings = groups
-        ? [{ name: "Project" }, ...groups].map((group) => group.name)
-        : [];
-    }
+    const columnHeadings =
+      parameterIndex === "columns"
+        ? parameters.map((parameter) => parameter.name)
+        : variableIndex === "columns"
+          ? concentrationVariables.map((variable) => variable.name)
+          : intervalIndex === "columns"
+            ? intervals.map((interval) => `${interval.start} – ${interval.end}`)
+            : groupIndex === "columns"
+              ? groups
+                ? [{ name: "Project" }, ...groups].map((group) => group.name)
+                : []
+              : [];
 
     return (
       <Table size="small">
