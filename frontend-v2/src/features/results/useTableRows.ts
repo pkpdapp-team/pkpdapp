@@ -1,9 +1,8 @@
 import { useContext } from "react";
 
 import { SimulationContext } from "../../contexts/SimulationContext";
-import { VariableRead } from "../../app/backendApi";
 
-import { FilterIndex, RowData } from "./Results";
+import { FilterIndex, RowData } from "./ResultsTab";
 import { useConcentrationVariables } from "./useConcentrationVariables";
 import { useParameters } from "./useParameters";
 import { useVariables } from "./useVariables";

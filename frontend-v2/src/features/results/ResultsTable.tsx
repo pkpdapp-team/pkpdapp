@@ -13,7 +13,7 @@ import useSubjectGroups from "../../hooks/useSubjectGroups";
 import { useParameters } from "./useParameters";
 import { useConcentrationVariables } from "./useConcentrationVariables";
 
-import { FilterIndex, RowData } from "./Results";
+import { FilterIndex, RowData } from "./ResultsTab";
 import { useTableRows } from "./useTableRows";
 
 const IntervalRow: FC<{
