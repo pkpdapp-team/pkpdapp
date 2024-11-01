@@ -7,11 +7,11 @@ interface ParametersProps {
   variable?: VariableRead;
   aucVariable?: VariableRead;
   concentrationVariables?: VariableRead[];
-  simulation: SimulateResponse;
+  simulation?: SimulateResponse;
   simulations: SimulateResponse[];
-  parameter: Parameter;
+  parameter?: Parameter;
   parameters: Parameter[];
-  interval: TimeInterval;
+  interval?: TimeInterval;
   intervals: TimeInterval[];
 }
 
@@ -50,7 +50,7 @@ export function columns({
       };
     });
   }
-  if (variable && !parameter) {
+  if (simulation && variable && !parameter) {
     return parameters.map((parameter) => {
       return {
         header: parameter.name,

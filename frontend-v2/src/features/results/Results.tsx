@@ -1,6 +1,5 @@
 import { FC, useContext, useState } from "react";
 import {
-  Box,
   FormControl,
   InputLabel,
   MenuItem,
@@ -8,11 +7,14 @@ import {
   SelectChangeEvent,
 } from "@mui/material";
 
+import { TimeInterval } from "../../App";
+import { VariableRead } from "../../app/backendApi";
 import useSubjectGroups from "../../hooks/useSubjectGroups";
-import { ResultsTable } from "./ResultsTable";
 import { SimulationContext } from "../../contexts/SimulationContext";
+
 import { useConcentrationVariables } from "./useConcentrationVariables";
-import { useParameters } from "./useParameters";
+import { useParameters, Parameter } from "./useParameters";
+import { ResultsTable } from "./ResultsTable";
 
 const options = [
   { name: "Parameters", value: "parameters" },
@@ -21,7 +23,19 @@ const options = [
   { name: "Groups", value: "groups" },
 ];
 
+export type FilterIndex = number | "rows" | "columns";
+export type RowData =
+  | { name: string }[]
+  | Parameter[]
+  | TimeInterval[]
+  | VariableRead[];
+
 const Results: FC = () => {
+  const { groups = [] } = useSubjectGroups();
+  const { intervals } = useContext(SimulationContext);
+  const concentrationVariables = useConcentrationVariables();
+  const parameters = useParameters();
+
   const [columns, setColumns] = useState("parameters");
   const [rows, setRows] = useState("variables");
   const [group, setGroup] = useState(0);
@@ -29,10 +43,43 @@ const Results: FC = () => {
   const [interval, setInterval] = useState(0);
   const [parameter, setParameter] = useState(0);
 
-  const { groups = [] } = useSubjectGroups();
-  const { intervals } = useContext(SimulationContext);
-  const concentrationVariables = useConcentrationVariables();
-  const parameters = useParameters();
+  const groupIndex: FilterIndex =
+    columns === "groups" ? "columns" : rows === "groups" ? "rows" : group;
+  const variableIndex: FilterIndex =
+    columns === "variables"
+      ? "columns"
+      : rows === "variables"
+        ? "rows"
+        : variable;
+  const intervalIndex: FilterIndex =
+    columns === "intervals"
+      ? "columns"
+      : rows === "intervals"
+        ? "rows"
+        : interval;
+  const parameterIndex: FilterIndex =
+    columns === "parameters"
+      ? "columns"
+      : rows === "parameters"
+        ? "rows"
+        : parameter;
+
+  const rowData: RowData =
+    rows === "parameters"
+      ? parameters
+      : rows === "variables"
+        ? concentrationVariables
+        : rows === "intervals"
+          ? intervals
+          : [{ name: "Project" }, ...groups];
+  const rowColumn =
+    rows === "parameters"
+      ? "Parameter"
+      : rows === "variables"
+        ? "Variable"
+        : rows === "intervals"
+          ? "Interval"
+          : "Group";
 
   function handleRowsChange(event: SelectChangeEvent) {
     setRows(event.target.value);
@@ -147,7 +194,6 @@ const Results: FC = () => {
             label={rowFilter1?.label}
             value={rowFilter1?.value.toString()}
             onChange={rowFilter1?.filter}
-            aria-controls="cvar-tabpanel"
           >
             {rowFilter1?.items.map((item, index) => {
               return (
@@ -165,7 +211,6 @@ const Results: FC = () => {
             label={rowFilter2?.label}
             value={rowFilter2?.value.toString()}
             onChange={rowFilter2?.filter}
-            aria-controls="cvar-tabpanel"
           >
             {rowFilter2?.items.map((item, index) => {
               return (
@@ -176,48 +221,14 @@ const Results: FC = () => {
             })}
           </Select>
         </FormControl>
-        <Box id="group-tabpanel">
-          {rows === "intervals" && (
-            <ResultsTable
-              groupIndex={columns === "groups" ? -1 : group}
-              variableIndex={columns === "variables" ? -1 : variable}
-              parameterIndex={columns === "parameters" ? -1 : parameter}
-              columns={columns}
-              rows={intervals}
-              rowColumn="Interval"
-            />
-          )}
-          {rows === "variables" && (
-            <ResultsTable
-              groupIndex={columns === "groups" ? -1 : group}
-              intervalIndex={columns === "intervals" ? -1 : interval}
-              parameterIndex={columns === "parameters" ? -1 : parameter}
-              columns={columns}
-              rows={concentrationVariables}
-              rowColumn="Variable"
-            />
-          )}
-          {rows === "groups" && (
-            <ResultsTable
-              variableIndex={columns === "variables" ? -1 : variable}
-              intervalIndex={columns === "intervals" ? -1 : interval}
-              parameterIndex={columns === "parameters" ? -1 : parameter}
-              columns={columns}
-              rows={[{ name: "Project" }, ...groups]}
-              rowColumn="Group"
-            />
-          )}
-          {rows === "parameters" && (
-            <ResultsTable
-              groupIndex={columns === "groups" ? -1 : group}
-              variableIndex={columns === "variables" ? -1 : variable}
-              intervalIndex={columns === "intervals" ? -1 : interval}
-              columns={columns}
-              rows={parameters}
-              rowColumn="Parameter"
-            />
-          )}
-        </Box>
+        <ResultsTable
+          groupIndex={groupIndex}
+          variableIndex={variableIndex}
+          parameterIndex={parameterIndex}
+          intervalIndex={intervalIndex}
+          rows={rowData}
+          rowColumn={rowColumn}
+        />
       </>
     );
   } catch (e: any) {

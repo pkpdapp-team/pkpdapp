@@ -1,20 +1,20 @@
 import { useContext } from "react";
 
 import { SimulationContext } from "../../contexts/SimulationContext";
+import { VariableRead } from "../../app/backendApi";
 
+import { FilterIndex, RowData } from "./Results";
 import { useConcentrationVariables } from "./useConcentrationVariables";
-import { Parameter, useParameters } from "./useParameters";
+import { useParameters } from "./useParameters";
 import { useVariables } from "./useVariables";
 import { tableRow } from "./utils";
-import { VariableRead } from "../../app/backendApi";
-import { TimeInterval } from "../../App";
 
 interface TableRowsProps {
-  rows: { name: string }[] | VariableRead[] | TimeInterval[] | Parameter[];
-  groupIndex?: number;
-  intervalIndex?: number;
-  variableIndex?: number;
-  parameterIndex?: number;
+  rows: RowData;
+  groupIndex: FilterIndex;
+  intervalIndex: FilterIndex;
+  variableIndex: FilterIndex;
+  parameterIndex: FilterIndex;
 }
 export function useTableRows({
   rows,
@@ -30,29 +30,46 @@ export function useTableRows({
 
   return rows.map((row, index) => {
     const header =
-      intervalIndex === undefined &&
-      "start" in row &&
-      "end" in row &&
-      "unit" in row
+      "start" in row && "end" in row && "unit" in row
         ? `${row.start} – ${row.end} [${row.unit}]`
         : "name" in row
           ? row.name
           : "";
-    return tableRow(
+    const interval =
+      intervalIndex === "columns"
+        ? undefined
+        : intervalIndex === "rows"
+          ? intervals[index]
+          : intervals[intervalIndex];
+    const variable =
+      variableIndex === "columns"
+        ? undefined
+        : variableIndex === "rows"
+          ? concentrationVariables[index]
+          : concentrationVariables[variableIndex];
+    const simulation =
+      groupIndex === "columns"
+        ? undefined
+        : groupIndex === "rows"
+          ? simulations[index]
+          : simulations[groupIndex];
+    const parameter =
+      parameterIndex === "columns"
+        ? undefined
+        : parameterIndex === "rows"
+          ? parameters[index]
+          : parameters[parameterIndex];
+    return tableRow({
       header,
-      intervalIndex === undefined ? intervals[index] : intervals[intervalIndex],
-      variableIndex === undefined
-        ? concentrationVariables[index]
-        : concentrationVariables[variableIndex],
-      intervals,
       variables,
-      groupIndex === undefined ? simulations[index] : simulations[groupIndex],
-      parameters,
-      parameterIndex === undefined
-        ? parameters[index]
-        : parameters[parameterIndex],
+      interval,
+      intervals,
+      variable,
       concentrationVariables,
+      parameter,
+      parameters,
+      simulation,
       simulations,
-    );
+    });
   });
 }
