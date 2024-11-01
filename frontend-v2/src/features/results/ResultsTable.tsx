@@ -7,16 +7,14 @@ import {
 } from "@mui/material";
 import { FC, useContext } from "react";
 
-import { TimeInterval } from "../../App";
-import { VariableRead } from "../../app/backendApi";
 import { SimulationContext } from "../../contexts/SimulationContext";
 import useSubjectGroups from "../../hooks/useSubjectGroups";
 
 import { useParameters } from "./useParameters";
 import { useConcentrationVariables } from "./useConcentrationVariables";
 
+import { FilterIndex, RowData } from "./Results";
 import { useTableRows } from "./useTableRows";
-import { Parameter } from "./useParameters";
 
 const IntervalRow: FC<{
   header: string | JSX.Element;
@@ -38,21 +36,30 @@ type TableRow = {
 };
 
 interface ResultsTableProps {
-  groupIndex?: number;
-  intervalIndex?: number;
-  variableIndex?: number;
-  parameterIndex?: number;
-  columns: string;
-  rows: { name: string }[] | Parameter[] | TimeInterval[] | VariableRead[];
+  groupIndex: FilterIndex;
+  intervalIndex: FilterIndex;
+  variableIndex: FilterIndex;
+  parameterIndex: FilterIndex;
+  rows: RowData;
   rowColumn: string;
 }
 
+/**
+ * A table of results where each cell represents a given group, interval, variable, and parameter.
+ * One of the index props should be "rows" and another should be "columns". The rest should be set
+ * to the index of the item to display in each table cell.
+ * @param groupIndex "rows" or "columns" or the index of the group to display in the table.
+ * @param intervalIndex "rows" or "columns" or the index of the interval to display in the table.
+ * @param variableIndex "rows" or "columns" or the index of the variable to display in the table.
+ * @param parameterIndex "rows" or "columns" or the index of the parameter to display in the table.
+ * @param rows an array of row data.
+ * @param rowColumn The name of the row column.
+ */
 export const ResultsTable: FC<ResultsTableProps> = ({
   groupIndex,
   intervalIndex,
   variableIndex,
   parameterIndex,
-  columns = "",
   rows = [],
   rowColumn = "",
 }) => {
@@ -74,18 +81,18 @@ export const ResultsTable: FC<ResultsTableProps> = ({
 
   try {
     let columnHeadings = [] as (string | JSX.Element)[];
-    if (columns === "parameters") {
+    if (parameterIndex === "columns") {
       columnHeadings = parameters.map((parameter) => parameter.name);
     }
-    if (columns === "variables") {
+    if (variableIndex === "columns") {
       columnHeadings = concentrationVariables.map((variable) => variable.name);
     }
-    if (columns === "intervals") {
+    if (intervalIndex === "columns") {
       columnHeadings = intervals.map(
         (interval) => `${interval.start} – ${interval.end}`,
       );
     }
-    if (columns === "groups") {
+    if (groupIndex === "columns") {
       columnHeadings = groups
         ? [{ name: "Project" }, ...groups].map((group) => group.name)
         : [];

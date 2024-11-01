@@ -158,18 +158,31 @@ export function formattedNumber(value: number, threshold: number = 1e4) {
   return value > threshold ? value.toExponential(4) : value.toFixed(2);
 }
 
-export function tableRow(
-  header: string | JSX.Element,
-  interval: TimeInterval,
-  variable: VariableRead,
-  intervals: TimeInterval[],
-  variables: VariableListApiResponse | undefined,
-  simulation: SimulateResponse,
-  parameters: Parameter[],
-  parameter: Parameter,
-  concentrationVariables: VariableRead[],
-  simulations: SimulateResponse[],
-) {
+interface TableRowProps {
+  header: string | JSX.Element;
+  interval?: TimeInterval;
+  intervals: TimeInterval[];
+  variables: VariableListApiResponse | undefined;
+  simulation?: SimulateResponse;
+  simulations: SimulateResponse[];
+  parameter?: Parameter;
+  parameters: Parameter[];
+  variable?: VariableRead;
+  concentrationVariables: VariableRead[];
+}
+
+export function tableRow({
+  header,
+  interval,
+  intervals,
+  variable,
+  concentrationVariables,
+  variables,
+  simulation,
+  simulations,
+  parameter,
+  parameters,
+}: TableRowProps) {
   const aucVariable =
     variable && variables?.find((v) => v.name === `calc_${variable.name}_AUC`);
   const tableColumns = columns({
