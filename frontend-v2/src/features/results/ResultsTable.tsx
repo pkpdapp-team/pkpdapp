@@ -2,6 +2,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableContainer,
   TableHead,
   TableRow,
 } from "@mui/material";
@@ -15,6 +16,38 @@ import { useConcentrationVariables } from "./useConcentrationVariables";
 
 import { FilterIndex, RowData } from "./ResultsTab";
 import { useTableRows } from "./useTableRows";
+import { getTableHeight } from "../../shared/calculateTableHeights";
+
+const RESULTS_TABLE_HEIGHTS = [
+  {
+    minHeight: "1100",
+    tableHeight: "74vh",
+  },
+  {
+    minHeight: "1000",
+    tableHeight: "71vh",
+  },
+  {
+    minHeight: "900",
+    tableHeight: "69vh",
+  },
+  {
+    minHeight: "800",
+    tableHeight: "64vh",
+  },
+  {
+    minHeight: "700",
+    tableHeight: "59vh",
+  },
+  {
+    minHeight: "600",
+    tableHeight: "54vh",
+  },
+  {
+    minHeight: "500",
+    tableHeight: "52vh",
+  },
+];
 
 const IntervalRow: FC<{
   header: string | JSX.Element;
@@ -22,9 +55,9 @@ const IntervalRow: FC<{
 }> = ({ header, values }) => {
   return (
     <TableRow>
-      <TableCell scope="row">{header}</TableCell>
+      <TableCell sx={{ textWrap: 'nowrap'}}  scope="row">{header}</TableCell>
       {values.map((value, i) => (
-        <TableCell key={i}>{value}</TableCell>
+        <TableCell  key={i}>{value}</TableCell>
       ))}
     </TableRow>
   );
@@ -94,21 +127,23 @@ export const ResultsTable: FC<ResultsTableProps> = ({
               : [];
 
     return (
-      <Table size="small">
-        <TableHead>
-          <TableRow>
-            <TableCell>{rowColumn}</TableCell>
-            {columnHeadings.map((column, i) => (
-              <TableCell key={i}>{column}</TableCell>
+      <TableContainer sx={{ width: 'fit-content', maxWidth: '100%', maxHeight: getTableHeight({ steps: RESULTS_TABLE_HEIGHTS })}}>
+        <Table stickyHeader size="small">
+          <TableHead>
+            <TableRow>
+              <TableCell>{rowColumn}</TableCell>
+              {columnHeadings.map((column, i) => (
+                <TableCell sx={{ textWrap: 'nowrap' }} key={i}>{column}</TableCell>
+              ))}
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {tableRows.map((row, index) => (
+              <IntervalRow key={index} {...row} />
             ))}
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {tableRows.map((row, index) => (
-            <IntervalRow key={index} {...row} />
-          ))}
-        </TableBody>
-      </Table>
+          </TableBody>
+        </Table>
+      </TableContainer>
     );
   } catch (e: any) {
     console.error(e);

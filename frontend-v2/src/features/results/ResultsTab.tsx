@@ -156,6 +156,7 @@ const ResultsTab: FC = () => {
             onChange={(event) => setColumns(event.target.value)}
             label="Columns"
             labelId="columns-label"
+            sx={{ minWidth: '10rem', marginRight: '1rem'}}
           >
             {options
               .filter((option) => option.value !== rows)
@@ -175,6 +176,7 @@ const ResultsTab: FC = () => {
             onChange={handleRowsChange}
             label="Rows"
             labelId="rows-label"
+            sx={{ minWidth: '10rem', marginRight: '1rem'}}
           >
             {options
               .filter((option) => option.value !== columns)
@@ -194,6 +196,7 @@ const ResultsTab: FC = () => {
             label={rowFilter1?.label}
             value={rowFilter1?.value.toString()}
             onChange={rowFilter1?.filter}
+            sx={{ minWidth: '10rem', marginRight: '1rem'}}
           >
             {rowFilter1?.items.map((item, index) => {
               return (
@@ -211,6 +214,7 @@ const ResultsTab: FC = () => {
             label={rowFilter2?.label}
             value={rowFilter2?.value.toString()}
             onChange={rowFilter2?.filter}
+            sx={{ minWidth: '10rem'}}
           >
             {rowFilter2?.items.map((item, index) => {
               return (
