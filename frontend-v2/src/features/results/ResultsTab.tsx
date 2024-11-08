@@ -157,7 +157,7 @@ const ResultsTab: FC = () => {
           {rowFilter1?.label?.toLowerCase()} &apos;
           {rowFilter1?.items?.[rowFilter1?.value.toString()]?.name}&apos; and{" "}
           {rowFilter2?.label.toLowerCase()} &apos;
-          {rowFilter2?.items?.[rowFilter2?.value.toString()]?.name}&apos;`
+          {rowFilter2?.items?.[rowFilter2?.value.toString()]?.name}&apos;
         </div>
       );
     }
