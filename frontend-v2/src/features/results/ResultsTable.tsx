@@ -21,31 +21,31 @@ import { getTableHeight } from "../../shared/calculateTableHeights";
 const RESULTS_TABLE_HEIGHTS = [
   {
     minHeight: "1100",
-    tableHeight: "74vh",
+    tableHeight: "70vh",
   },
   {
     minHeight: "1000",
-    tableHeight: "71vh",
+    tableHeight: "65vh",
   },
   {
     minHeight: "900",
-    tableHeight: "69vh",
+    tableHeight: "60vh",
   },
   {
     minHeight: "800",
-    tableHeight: "64vh",
+    tableHeight: "58vh",
   },
   {
     minHeight: "700",
-    tableHeight: "59vh",
+    tableHeight: "53vh",
   },
   {
     minHeight: "600",
-    tableHeight: "54vh",
+    tableHeight: "40vh",
   },
   {
     minHeight: "500",
-    tableHeight: "52vh",
+    tableHeight: "40vh",
   },
 ];
 
