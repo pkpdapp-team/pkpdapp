@@ -32,9 +32,7 @@ class MyokitModelMixin:
 
         return variables
 
-    def _get_myokit_protocols(
-        self, model, dosing_protocols, override_tlag, time_max
-    ):
+    def _get_myokit_protocols(self, model, dosing_protocols, override_tlag, time_max):
         protocols = {}
         is_target = False
         time_var = model.binding("time")
@@ -44,6 +42,12 @@ class MyokitModelMixin:
         else:
             compound = project.compound
 
+        species_weight_in_kg = 1.0
+        if project is not None:
+            kg_conversion_factor = project.species_weight_unit.convert_to(
+                myokit.units.kg, compound=compound
+            )
+            species_weight_in_kg = project.species_weight * kg_conversion_factor
         for qname, protocol in dosing_protocols.items():
             amount_var = model.get(qname)
             set_administration(model, amount_var)
@@ -55,8 +59,21 @@ class MyokitModelMixin:
             if self.is_library_model:
                 is_target = "CT1" in qname or "AT1" in qname
 
-            amount_conversion_factor = protocol.amount_unit.convert_to(
-                amount_var.unit(), compound=compound, is_target=is_target
+            # if the amount unit is in per kg, use species weight to convert
+            # to per animal
+            protocol_amount_unit = protocol.amount_unit
+            additional_conversion_factor = 1.0
+            if protocol.amount_unit.symbol.endswith("/kg"):
+                if project is not None:
+                    additional_conversion_factor = species_weight_in_kg
+                    protocol_amount_unit.g += 1
+                    protocol_amount_unit.multiplier += 3.0
+
+            amount_conversion_factor = (
+                protocol_amount_unit.convert_to(
+                    amount_var.unit(), compound=compound, is_target=is_target
+                )
+                * additional_conversion_factor
             )
 
             time_conversion_factor = protocol.time_unit.convert_to(
@@ -68,7 +85,7 @@ class MyokitModelMixin:
                 amount_conversion_factor,
                 time_conversion_factor,
                 tlag_value,
-                time_max
+                time_max,
             )
             protocols[_get_pacing_label(amount_var)] = get_protocol(dosing_events)
         return protocols
@@ -85,6 +102,7 @@ class MyokitModelMixin:
 
     def _get_tlag_value(self, qname):
         from pkpdapp.models import Variable
+
         # get tlag value default to 0
         derived_param = qname + "_tlag_ud"
         try:
@@ -119,7 +137,7 @@ class MyokitModelMixin:
         return self.parse_mmt_string(self.mmt)
 
     def create_myokit_simulator(
-            self, override_tlag=None, model=None, time_max=None, dosing_protocols=None
+        self, override_tlag=None, model=None, time_max=None, dosing_protocols=None
     ):
         if override_tlag is None:
             override_tlag = {}
@@ -141,7 +159,7 @@ class MyokitModelMixin:
             model=model,
             dosing_protocols=dosing_protocols,
             override_tlag=override_tlag,
-            time_max=time_max
+            time_max=time_max,
         )
 
         with lock:
@@ -443,7 +461,7 @@ class MyokitModelMixin:
         return self.time_max
 
     def simulate_model(
-            self, outputs=None, variables=None, time_max=None, dosing_protocols=None
+        self, outputs=None, variables=None, time_max=None, dosing_protocols=None
     ):
         model = self.get_myokit_model()
         # Convert units
@@ -456,7 +474,7 @@ class MyokitModelMixin:
             override_tlag=override_tlag,
             model=model,
             time_max=time_max,
-            dosing_protocols=dosing_protocols
+            dosing_protocols=dosing_protocols,
         )
         # TODO: take these from simulation model
         sim.set_tolerance(abs_tol=1e-06, rel_tol=1e-08)
@@ -501,12 +519,8 @@ class MyokitModelMixin:
 
         # add a dose_rate variable to the model for each
         # dosed variable
-        dosing_variables = [
-            v for v in self.variables.filter(state=True) if v.protocol
-        ]
-        project_dosing_protocols = {
-            v.qname: v.protocol for v in dosing_variables
-        }
+        dosing_variables = [v for v in self.variables.filter(state=True) if v.protocol]
+        project_dosing_protocols = {v.qname: v.protocol for v in dosing_variables}
         model_dosing_protocols = [project_dosing_protocols]
 
         project = self.get_project()
@@ -522,8 +536,9 @@ class MyokitModelMixin:
                 variables=variables,
                 time_max=time_max,
                 outputs=outputs,
-                dosing_protocols=dosing_protocols
-            ) for dosing_protocols in model_dosing_protocols
+                dosing_protocols=dosing_protocols,
+            )
+            for dosing_protocols in model_dosing_protocols
         ]
 
 
@@ -691,11 +706,11 @@ def _add_dose_compartment(model, drug_amount, time_unit):
 
 
 def _get_dosing_events(
-        doses,
-        amount_conversion_factor=1.0,
-        time_conversion_factor=1.0,
-        tlag_time=0.0,
-        time_max=None
+    doses,
+    amount_conversion_factor=1.0,
+    time_conversion_factor=1.0,
+    tlag_time=0.0,
+    time_max=None,
 ):
     dosing_events = []
     for d in doses.all():
@@ -709,11 +724,14 @@ def _get_dosing_events(
         if len(start_times) == 0:
             continue
         dose_level = d.amount / d.duration
-        dosing_events += [(
-            (amount_conversion_factor / time_conversion_factor) * dose_level,
-            time_conversion_factor * start_time,
-            time_conversion_factor * d.duration,
-        ) for start_time in start_times]
+        dosing_events += [
+            (
+                (amount_conversion_factor / time_conversion_factor) * dose_level,
+                time_conversion_factor * start_time,
+                time_conversion_factor * d.duration,
+            )
+            for start_time in start_times
+        ]
     # if any dosing events are close to time_max,
     # make them equal to time_max
     if time_max is not None:
