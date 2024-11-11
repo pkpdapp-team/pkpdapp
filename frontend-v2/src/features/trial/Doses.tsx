@@ -30,6 +30,7 @@ import { RootState } from "../../app/store";
 import { selectIsProjectShared } from "../login/loginSlice";
 import { TableHeader } from "../../components/TableHeader";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
+import { NEW_MODELS_FEATURE } from "../../shared/features";
 
 interface Props {
   onChange: () => void;
@@ -96,12 +97,18 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
   });
 
   const isPreclinical = project.species !== "H";
+  const isPreclinicalPerKg = NEW_MODELS_FEATURE ? false : isPreclinical;
   const defaultProps = {
     disabled: isSharedWithMe,
   };
   const defaultSymbol = isPreclinical ? "mg/kg" : "mg";
   const defaultUnit = units.find((u) => u.symbol === defaultSymbol);
   const baseUnit = units.find((u) => u.id === protocol.amount_unit);
+  const baseUnit2 = NEW_MODELS_FEATURE ? units.find((u) => u.symbol === "mg/kg") : undefined;
+  console.log("baseUnit", baseUnit);
+  console.log("defaultUnit", defaultUnit);
+  console.log("protocol", protocol);
+  console.log("units", units);
 
   useEffect(() => {
     // set default amount unit to mg/kg or mg, if not set already.
@@ -222,7 +229,8 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
                 name={`amount_unit`}
                 control={control}
                 baseUnit={baseUnit}
-                isPreclinicalPerKg={isPreclinical}
+                baseUnit2={baseUnit2}
+                isPreclinicalPerKg={isPreclinicalPerKg}
                 selectProps={defaultProps}
               />
             ) : (
