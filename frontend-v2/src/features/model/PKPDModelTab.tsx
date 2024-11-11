@@ -129,9 +129,10 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
     return aIndex - bIndex;
   });
   pd_model_options.push({ value: "", label: "None" });
-  const pk_model_options = pkModelsFiltered.map((m) => {
+  let pk_model_options = pkModelsFiltered.map((m) => {
     return { value: m.id, label: m.name };
   });
+  pk_model_options.push({ value: "", label: "None" });
   let pk_model2_options = pkModel2Filtered.map((m) => {
     return { value: m.id, label: m.name };
   });
