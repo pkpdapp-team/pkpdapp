@@ -5,6 +5,7 @@ import {
   MenuItem,
   Select,
   SelectChangeEvent,
+  Typography,
 } from "@mui/material";
 
 import { TimeInterval } from "../../App";
@@ -146,6 +147,46 @@ const ResultsTab: FC = () => {
     rowFilter2 = columns === "intervals" ? variableSelect : intervalSelect;
   }
 
+  const generateTableHeader = () => {
+    if (rows === "parameters" || columns === "parameters") {
+      const var1 = rows === "parameters" ? columns : rows;
+
+      return (
+        <div>
+          All Secondary PK parameters of all selected {var1} of{" "}
+          {rowFilter1?.label?.toLowerCase()} &apos;
+          {rowFilter1?.items?.[rowFilter1?.value.toString()]?.name}&apos; and{" "}
+          {rowFilter2?.label.toLowerCase()} &apos;
+          {rowFilter2?.items?.[rowFilter2?.value.toString()]?.name}&apos;
+        </div>
+      );
+    }
+
+    const var1 =
+      rowFilter1?.label === "Parameter"
+        ? rowFilter1?.items?.[rowFilter1?.value.toString()]?.name
+        : rowFilter2?.items?.[rowFilter2?.value.toString()]?.name;
+    const var2 =
+      rowFilter1?.label === "Parameter" ? rowFilter2?.label : rowFilter1?.label;
+    const var3 =
+      rowFilter1?.label === "Parameter"
+        ? rowFilter2?.items?.[rowFilter2?.value.toString()]?.name
+        : rowFilter1?.items?.[rowFilter1?.value.toString()]?.name;
+
+    const desc1 = () => {
+      if (var2 === "Interval") return "and time interval";
+      if (var2 === "Group") return "of group";
+      if (var2 === "Variable") return "for variable";
+    };
+
+    return (
+      <div>
+        Secondary PK Parameter ({var1}) of all {columns} for all {rows}{" "}
+        {desc1()} &apos;{var3}&apos;
+      </div>
+    );
+  };
+
   try {
     return (
       <>
@@ -156,7 +197,7 @@ const ResultsTab: FC = () => {
             onChange={(event) => setColumns(event.target.value)}
             label="Columns"
             labelId="columns-label"
-            sx={{ minWidth: '10rem', marginRight: '1rem'}}
+            sx={{ minWidth: "10rem", marginRight: "1rem" }}
           >
             {options
               .filter((option) => option.value !== rows)
@@ -176,7 +217,7 @@ const ResultsTab: FC = () => {
             onChange={handleRowsChange}
             label="Rows"
             labelId="rows-label"
-            sx={{ minWidth: '10rem', marginRight: '1rem'}}
+            sx={{ minWidth: "10rem", marginRight: "1rem" }}
           >
             {options
               .filter((option) => option.value !== columns)
@@ -196,7 +237,7 @@ const ResultsTab: FC = () => {
             label={rowFilter1?.label}
             value={rowFilter1?.value.toString()}
             onChange={rowFilter1?.filter}
-            sx={{ minWidth: '10rem', marginRight: '1rem'}}
+            sx={{ minWidth: "10rem", marginRight: "1rem" }}
           >
             {rowFilter1?.items.map((item, index) => {
               return (
@@ -214,7 +255,7 @@ const ResultsTab: FC = () => {
             label={rowFilter2?.label}
             value={rowFilter2?.value.toString()}
             onChange={rowFilter2?.filter}
-            sx={{ minWidth: '10rem'}}
+            sx={{ minWidth: "10rem" }}
           >
             {rowFilter2?.items.map((item, index) => {
               return (
@@ -225,6 +266,7 @@ const ResultsTab: FC = () => {
             })}
           </Select>
         </FormControl>
+        <Typography variant="h5">{generateTableHeader()}</Typography>
         <ResultsTable
           groupIndex={groupIndex}
           variableIndex={variableIndex}
