@@ -42,6 +42,12 @@ class MyokitModelMixin:
         else:
             compound = project.compound
 
+        species_weight_in_kg = 1.0
+        if project is not None:
+            kg_conversion_factor = project.species_weight_unit.convert_to(
+                myokit.units.kg, compound=compound
+            )
+            species_weight_in_kg = project.species_weight * kg_conversion_factor
         for qname, protocol in dosing_protocols.items():
             amount_var = model.get(qname)
             set_administration(model, amount_var)
@@ -53,8 +59,21 @@ class MyokitModelMixin:
             if self.is_library_model:
                 is_target = "CT1" in qname or "AT1" in qname
 
-            amount_conversion_factor = protocol.amount_unit.convert_to(
-                amount_var.unit(), compound=compound, is_target=is_target
+            # if the amount unit is in per kg, use species weight to convert
+            # to per animal
+            protocol_amount_unit = protocol.amount_unit
+            additional_conversion_factor = 1.0
+            if protocol.amount_unit.symbol.endswith("/kg"):
+                if project is not None:
+                    additional_conversion_factor = species_weight_in_kg
+                    protocol_amount_unit.g += 1
+                    protocol_amount_unit.multiplier += 3.0
+
+            amount_conversion_factor = (
+                protocol_amount_unit.convert_to(
+                    amount_var.unit(), compound=compound, is_target=is_target
+                )
+                * additional_conversion_factor
             )
 
             time_conversion_factor = protocol.time_unit.convert_to(
