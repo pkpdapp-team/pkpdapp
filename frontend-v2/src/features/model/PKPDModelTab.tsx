@@ -172,6 +172,7 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
 
   const defaultProps = {
     disabled: isSharedWithMe,
+    displayEmpty: true,
   };
 
   return (
