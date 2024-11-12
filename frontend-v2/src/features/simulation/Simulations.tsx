@@ -254,10 +254,6 @@ const Simulations: FC = () => {
   const defaultLayout = layoutOptions[0]?.value;
   const [layout, setLayout] = useState<string>(defaultLayout);
 
-  const updateWindowDimensions = () =>
-    window.innerWidth < 1000 && setLayout("horizontal");
-  window.addEventListener("resize", updateWindowDimensions);
-
   // reset form and sliders if simulation changes
   useEffect(() => {
     if (simulation && variables) {

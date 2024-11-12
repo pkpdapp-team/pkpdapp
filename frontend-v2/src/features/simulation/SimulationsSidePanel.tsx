@@ -213,7 +213,6 @@ export const SimulationsSidePanel = ({
                             checked={layout === value}
                             onChange={() => {
                               setLayout(value);
-                              window.dispatchEvent(new Event("resize"));
                             }}
                           />
                         }

@@ -461,6 +461,8 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
   // const { dticky, dticky2 } = dticks(rangey, rangey2, plot);
 
   const plotLayout: Partial<Layout> = {
+    width: 650,
+    autosize: false,
     dragmode: "pan",
     showlegend: shouldShowLegend,
     shapes: icLines.map((icLine, i) => {
