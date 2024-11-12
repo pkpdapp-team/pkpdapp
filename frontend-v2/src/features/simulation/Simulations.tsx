@@ -31,7 +31,6 @@ import {
   useEffect,
   useMemo,
   useState,
-  useRef,
 } from "react";
 import SimulationPlotView from "./SimulationPlotView";
 import useSimulation from "./useSimulation";
