@@ -266,6 +266,7 @@ interface SimulationPlotProps {
   model: CombinedModelRead;
   visibleGroups: string[];
   shouldShowLegend: boolean;
+  layout: string;
 }
 
 const SimulationPlotView: FC<SimulationPlotProps> = ({
@@ -281,7 +282,8 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
   compound,
   model,
   visibleGroups,
-  shouldShowLegend
+  shouldShowLegend,
+  layout
 }) => {
   const projectId = useSelector(
     (state: RootState) => state.main.selectedProject,
@@ -460,9 +462,25 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
   // axis dticks
   // const { dticky, dticky2 } = dticks(rangey, rangey2, plot);
 
+  const getPlotWidth = () => {
+    if (window.innerWidth > 1900 ) {
+      return 650
+    }
+
+    if (window.innerWidth > 1700) {
+      return 550
+    }
+
+    if (window.innerWidth > 1500) {
+      return screen.width > 1400 ? 450 : 650
+    }
+
+    return 680;
+  }
+
   const plotLayout: Partial<Layout> = {
-    autosize: true,
-    width: 550,
+    autosize: false,
+    width: getPlotWidth(),
     dragmode: "pan",
     showlegend: shouldShowLegend,
     shapes: icLines.map((icLine, i) => {

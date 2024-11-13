@@ -501,6 +501,7 @@ const Simulations: FC = () => {
                   model={model}
                   visibleGroups={visibleGroups}
                   shouldShowLegend={shouldShowLegend}
+                  layout={layout}
                 />
               ) : (
                 <div>Loading...</div>
