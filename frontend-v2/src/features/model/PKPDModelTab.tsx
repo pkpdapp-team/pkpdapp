@@ -132,9 +132,9 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
     return { value: m.id, label: m.name };
   });
   pk_model_options.push({ value: "", label: "None" });
-  let pk_model2_options = pkModel2Filtered.map((m) => {
+  let pk_model2_options = model.pk_model ? pkModel2Filtered.map((m) => {
     return { value: m.id, label: m.name };
-  });
+  }) : [];
   pk_model2_options.push({ value: "", label: "None" });
   pk_model_options.sort((a, b) => {
     const aName = a.label.replace("_preclinical", "").replace("_clinical", "");
@@ -224,9 +224,7 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
                 "& .MuiFormControlLabel-label": { fontSize: ".9rem" },
               }}
               direction="row"
-              alignItems="center"
-              flexWrap="wrap"
-              justifyContent="space-between"
+              spacing={3}
             >
               {!NEW_MODELS_FEATURE &&
                 <Tooltip title="Includes Michaelis-Menten parameters (CLmax and Km)">
@@ -283,30 +281,7 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
                   </div>
                 </Tooltip>
               }
-              <Tooltip title="Includes a time delay following PO or SC administration">
-                <div>
-                  <Checkbox
-                    label="Lag Time"
-                    name="model.has_lag"
-                    control={control}
-                    checkboxFieldProps={{
-                      disabled: !model.pk_model || isSharedWithMe,
-                    }}
-                  />
-                </div>
-              </Tooltip>
-              <Tooltip title="Includes bioavailability (F), if not selected F=1">
-                <div>
-                  <Checkbox
-                    label="Bioavailability"
-                    name="model.has_bioavailability"
-                    control={control}
-                    checkboxFieldProps={{
-                      disabled: !model.pk_model || isSharedWithMe,
-                    }}
-                  />
-                </div>
-              </Tooltip>
+
             </Stack>
           )}
         </Grid>
@@ -324,6 +299,39 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
               selectProps={defaultProps}
             />
           </Stack>
+          <Stack
+            sx={{
+              display: "flex",
+              "& .MuiFormControlLabel-label": { fontSize: ".9rem" },
+            }}
+            direction="row"
+            spacing={3}
+          >
+            <Tooltip title="Includes a time delay following PO or SC administration">
+              <div>
+                <Checkbox
+                  label="Lag Time"
+                  name="model.has_lag"
+                  control={control}
+                  checkboxFieldProps={{
+                    disabled: !model.pk_model || isSharedWithMe,
+                  }}
+                />
+              </div>
+            </Tooltip>
+            <Tooltip title="Includes bioavailability (F), if not selected F=1">
+              <div>
+                <Checkbox
+                  label="Bioavailability"
+                  name="model.has_bioavailability"
+                  control={control}
+                  checkboxFieldProps={{
+                    disabled: !model.pk_model || isSharedWithMe,
+                  }}
+                />
+              </div>
+            </Tooltip>
+          </Stack>
         </Grid>
       </Grid>
       <Grid container item spacing={2}>
@@ -340,6 +348,7 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
             />
           </Stack>
         </Grid>
+
 
         <Box width="100%" />
         {pdIsTumourGrowth && (
