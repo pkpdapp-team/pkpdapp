@@ -31,7 +31,6 @@ import {
   useEffect,
   useMemo,
   useState,
-  useRef,
 } from "react";
 import SimulationPlotView from "./SimulationPlotView";
 import useSimulation from "./useSimulation";
@@ -253,10 +252,6 @@ const Simulations: FC = () => {
   ];
   const defaultLayout = layoutOptions[0]?.value;
   const [layout, setLayout] = useState<string>(defaultLayout);
-
-  const updateWindowDimensions = () =>
-    window.innerWidth < 1000 && setLayout("horizontal");
-  window.addEventListener("resize", updateWindowDimensions);
 
   // reset form and sliders if simulation changes
   useEffect(() => {
@@ -506,6 +501,7 @@ const Simulations: FC = () => {
                   model={model}
                   visibleGroups={visibleGroups}
                   shouldShowLegend={shouldShowLegend}
+                  layout={layout}
                 />
               ) : (
                 <div>Loading...</div>
