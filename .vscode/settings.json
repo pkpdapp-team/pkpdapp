@@ -1,0 +1,14 @@
+{
+    "editor.tabSize": 2,
+    "[python]": {
+        "editor.tabSize": 4
+    },
+    "[javascript]": {
+        "editor.tabSize": 2
+    },
+    "[typescript]": {
+        "editor.tabSize": 2
+    },
+    "editor.formatOnSave": true,
+    "editor.formatOnPaste": true
+}
