@@ -93,7 +93,7 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
   };
   const defaultSymbol = isPreclinical ? "mg/kg" : "mg";
   const defaultUnit = units.find((u) => u.symbol === defaultSymbol);
-  const baseUnit = units.find((u) => u.id === protocol.amount_unit);
+  const baseUnit = NEW_MODELS_FEATURE ? units.find((u) => u.symbol === "mg") : undefined;
   const baseUnit2 = NEW_MODELS_FEATURE ? units.find((u) => u.symbol === "mg/kg") : undefined;
   console.log("baseUnit", baseUnit);
   console.log("defaultUnit", defaultUnit);

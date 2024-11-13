@@ -140,6 +140,11 @@ const Model: FC = () => {
       );
     }
 
+    // if pk model has changed, need to clear secondary pk model
+    if (data.model.pk_model !== model?.pk_model) {
+      data.model.pk_model2 = null;
+    }
+
     // if only pd_model has changed, need to clear pd_model2
     if (data.model.pd_model !== model?.pd_model) {
       data.model.pd_model2 = null;
