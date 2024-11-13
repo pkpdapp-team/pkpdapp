@@ -131,9 +131,9 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
     return { value: m.id, label: m.name };
   });
   pk_model_options.push({ value: "", label: "None" });
-  let pk_model2_options = pkModel2Filtered.map((m) => {
+  let pk_model2_options = model.pk_model ? pkModel2Filtered.map((m) => {
     return { value: m.id, label: m.name };
-  });
+  }) : [];
   pk_model2_options.push({ value: "", label: "None" });
   pk_model_options.sort((a, b) => {
     const aName = a.label.replace("_preclinical", "").replace("_clinical", "");
@@ -228,49 +228,18 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
               selectProps={defaultProps}
             />
           </Stack>
-          {
-            model.pk_model && (
-              <Stack
-                sx={{
-                  display: "flex",
-                  "& .MuiFormControlLabel-label": { fontSize: ".9rem" },
-                }}
-                direction="row"
-                alignItems="center"
-                flexWrap="wrap"
-                justifyContent="space-between"
-              >
-                {!NEW_MODELS_FEATURE &&
-                  <Tooltip title="Includes Michaelis-Menten parameters (CLmax and Km)">
-                    <div>
-                      <Checkbox
-                        label="Saturation"
-                        name="model.has_saturation"
-                        control={control}
-                        checkboxFieldProps={{
-                          disabled: !model.pk_model || isSharedWithMe,
-                        }}
-                      />
-                    </div>
-                  </Tooltip>
-                }
-                {NEW_MODELS_FEATURE &&
-                  <Tooltip title="Add Extravascular PK model">
-                    <div>
-                      <FormControlLabel
-                        label="Extravascular"
-                        control={
-                          <MuiCheckbox
-                            checked={showExtravascular}
-                            onChange={() => setShowExtravascular(!showExtravascular)}
-                          />
-                        }
-                      />
-                    </div>
-                  </Tooltip>
-                }
-                <Tooltip title="Includes an effect compartment">
-                  <div style={{ fontSize: "12px !important" }}>
+          {model.pk_model && (
+            <Stack
+              sx={{
+                display: "flex",
+                "& .MuiFormControlLabel-label": { fontSize: ".9rem" },
+              }}
+              direction="row"
+              spacing={3}
+            >
+              {!NEW_MODELS_FEATURE &&
+                <Tooltip title="Includes Michaelis-Menten parameters (CLmax and Km)">
+                  <div>
                     <Checkbox
                       label="Effect Compartment"
                       name="model.has_effect"
@@ -281,81 +250,98 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
                     />
                   </div>
                 </Tooltip>
-                {NEW_MODELS_FEATURE &&
-                  <Tooltip title="Includes Anti-Drug Antibodies">
-                    <div>
-                      <Checkbox
-                        label="ADA"
-                        name="model.has_anti_drug_antibodies"
-                        control={control}
-                        checkboxFieldProps={{
-                          disabled: !model.pk_model || isSharedWithMe || compound.compound_type !== "LM"
-                        }}
-                      />
-                    </div>
-                  </Tooltip>
-                }
-                <Tooltip title="Includes a time delay following PO or SC administration">
+              }
+              {NEW_MODELS_FEATURE &&
+                <Tooltip title="Includes Anti-Drug Antibodies">
                   <div>
                     <Checkbox
-                      label="Lag Time"
-                      name="model.has_lag"
+                      label="ADA"
+                      name="model.has_anti_drug_antibodies"
                       control={control}
                       checkboxFieldProps={{
-                        disabled: !model.pk_model || isSharedWithMe,
+                        disabled: !model.pk_model || isSharedWithMe || compound.compound_type !== "LM"
                       }}
                     />
                   </div>
                 </Tooltip>
-                <Tooltip title="Includes bioavailability (F), if not selected F=1">
-                  <div>
-                    <Checkbox
-                      label="Bioavailability"
-                      name="model.has_bioavailability"
-                      control={control}
-                      checkboxFieldProps={{
-                        disabled: !model.pk_model || isSharedWithMe,
-                      }}
-                    />
-                  </div>
-                </Tooltip>
-              </Stack>
-            )
-          }
-        </Grid >
-
-      </Grid >
-      {showExtravascular && (
+              }
+              <Tooltip title="Includes a time delay following PO or SC administration">
+                <div>
+                  <Checkbox
+                    label="Lag Time"
+                    name="model.has_lag"
+                    control={control}
+                    checkboxFieldProps={{
+                      disabled: !model.pk_model || isSharedWithMe,
+                    }}
+                  />
+                </div>
+              </Tooltip>
+            </Stack>
+          )}
+        </Grid>
+      </Grid>
+      <Grid container item spacing={2}>
+        <Grid item xl={5} md={8} xs={10}>
+          <Stack direction="row" alignItems="center" spacing={1}>
+            <SelectField
+              label="Extravascular PK Model"
+              name="model.pk_model2"
+              control={control}
+              options={pk_model2_options}
+              formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
+              selectProps={defaultProps}
+            />
+          </Stack>
+          <Stack
+            sx={{
+              display: "flex",
+              "& .MuiFormControlLabel-label": { fontSize: ".9rem" },
+            }}
+            direction="row"
+            spacing={3}
+          >
+            <Tooltip title="Includes a time delay following PO or SC administration">
+              <div>
+                <Checkbox
+                  label="Lag Time"
+                  name="model.has_lag"
+                  control={control}
+                  checkboxFieldProps={{
+                    disabled: !model.pk_model || isSharedWithMe,
+                  }}
+                />
+              </div>
+            </Tooltip>
+            <Tooltip title="Includes bioavailability (F), if not selected F=1">
+              <div>
+                <Checkbox
+                  label="Bioavailability"
+                  name="model.has_bioavailability"
+                  control={control}
+                  checkboxFieldProps={{
+                    disabled: !model.pk_model || isSharedWithMe,
+                  }}
+                />
+              </div>
+            </Tooltip>
+          </Stack>
+        </Grid>
         <Grid container item spacing={2}>
-          <Grid item xl={5} md={8} xs={10}>
+          <Grid item xl={4} md={8} xs={10}>
             <Stack direction="row" alignItems="center" spacing={1}>
               <SelectField
-                label="Extravascular PK Model"
-                name="model.pk_model2"
+                size="small"
+                label="PD Model"
+                name="model.pd_model"
                 control={control}
-                options={pk_model2_options}
+                options={pd_model_options}
                 formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
                 selectProps={defaultProps}
               />
             </Stack>
           </Grid>
         </Grid>
-      )}
-      <Grid container item spacing={2}>
-        <Grid item xl={4} md={8} xs={10}>
-          <Stack direction="row" alignItems="center" spacing={1}>
-            <SelectField
-              size="small"
-              label="PD Model"
-              name="model.pd_model"
-              control={control}
-              options={pd_model_options}
-              formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
-              selectProps={defaultProps}
-            />
-          </Stack>
-        </Grid>
-
         <Box width="100%" />
         {pdIsTumourGrowth && (
           <>

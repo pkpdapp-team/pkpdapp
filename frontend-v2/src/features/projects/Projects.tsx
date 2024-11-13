@@ -167,11 +167,14 @@ const ProjectTable: FC = () => {
       new_name = `${new_name_base}${append}`;
       name_exists = projectNames.includes(new_name);
     }
+
+    const kg_unit = units?.find((u) => u.symbol === "kg")?.id;
     const project: Project = {
       name: new_name,
       description: "",
       compound: 0,
       user_access,
+      species_weight_unit: kg_unit,
     };
 
     let compound: Compound | undefined = undefined;
