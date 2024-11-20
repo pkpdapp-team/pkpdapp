@@ -136,8 +136,11 @@ export const SimulationsSidePanel = ({
   const [collapseParameters, setCollapseParameters] = useState(true);
   const [collapseReference, setCollapseReference] = useState(true);
   const [collapseLegend, setCollapseLegend] = useState(true);
+  console.log("side panel before check");
 
   if (!portalRoot) return null;
+
+  console.log("side panel");
 
   return ReactDOM.createPortal(
     <Box

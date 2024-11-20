@@ -197,11 +197,12 @@ const Simulations: FC = () => {
     timeMax,
   );
   const simulatedVariables = useSimulatedVariables(variables, sliderValues);
+  const hasPlots = simulation ? simulation.plots.length > 0 : false;
   const {
     loadingSimulate,
     data,
     error: simulateError,
-  } = useSimulation(simInputs, simulatedVariables, model);
+  } = useSimulation(simInputs, simulatedVariables, model, hasPlots);
 
   const refSimInputs = useSimulationInputs(
     model,
@@ -441,6 +442,8 @@ const Simulations: FC = () => {
   if (!simulation || !project || !models || !variables || !units || !compound) {
     return <div>Not found</div>;
   }
+
+  console.log("should render", simulation, project, models, variables, units, compound);
 
   return (
     <Box sx={{ display: "flex" }}>

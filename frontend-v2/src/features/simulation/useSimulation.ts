@@ -21,6 +21,7 @@ export default function useSimulation(
   simInputs: Simulate,
   simulatedVariables: { qname: string; value: number | undefined }[],
   model: CombinedModelRead | undefined,
+  run_simulation: boolean = true
 ) {
   const { compound, protocols } = useProtocols();
   const { setSimulations } = useContext(SimulationContext);
@@ -38,6 +39,7 @@ export default function useSimulation(
   useEffect(() => {
     let ignore = false;
     if (
+      run_simulation &&
       simInputs.outputs?.length > 1 &&
       simInputs.time_max &&
       model &&
