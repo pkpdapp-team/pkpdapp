@@ -35,7 +35,6 @@ import {
 import SimulationPlotView from "./SimulationPlotView";
 import useSimulation from "./useSimulation";
 import useSimulationInputs from "./useSimulationInputs";
-import useSimulatedVariables from "./useSimulatedVariables";
 import useDirty from "../../hooks/useDirty";
 import paramPriority from "../model/paramPriority";
 import { selectIsProjectShared } from "../login/loginSlice";
@@ -151,7 +150,9 @@ const Simulations: FC = () => {
   const [sliderValues, setSliderValues] = useState<SliderValues | undefined>(
     undefined,
   );
+  console.log('sliderValues', sliderValues);
   const handleChangeSlider = useCallback((variable: number, value: number) => {
+    console.log('handleChangeSlider', variable, value);
     setSliderValues((prevSliderValues) => ({
       ...prevSliderValues,
       [variable]: value,
@@ -196,12 +197,11 @@ const Simulations: FC = () => {
     variables,
     timeMax,
   );
-  const simulatedVariables = useSimulatedVariables(variables, sliderValues);
   const {
     loadingSimulate,
     data,
     error: simulateError,
-  } = useSimulation(simInputs, simulatedVariables, model);
+  } = useSimulation(simInputs, model);
 
   const refSimInputs = useSimulationInputs(
     model,
@@ -210,10 +210,8 @@ const Simulations: FC = () => {
     variables,
     timeMax,
   );
-  const referenceVariables = useSimulatedVariables(variables, EMPTY_OBJECT);
   const { data: dataReference } = useSimulation(
     refSimInputs,
-    referenceVariables,
     showReference ? model : undefined
   );
 
@@ -256,6 +254,7 @@ const Simulations: FC = () => {
   // reset form and sliders if simulation changes
   useEffect(() => {
     if (simulation && variables) {
+      console.log('reset form and sliders if simulation changes');
       setSliderValues((s) => {
         const initialValues = getSliderInitialValues(simulation, s, variables);
         return initialValues;
@@ -268,7 +267,6 @@ const Simulations: FC = () => {
   const [exportSimulation, { error: exportSimulateErrorBase }] =
     useExportSimulation({
       simInputs,
-      simulatedVariables,
       model,
       project,
     });

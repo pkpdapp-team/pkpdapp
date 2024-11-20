@@ -11,7 +11,6 @@ import {
 
 interface iExportSimulation {
   simInputs: Simulate;
-  simulatedVariables: { qname: string; value: number | undefined }[];
   model: CombinedModelRead | undefined;
   project: ProjectRead | undefined;
 }
@@ -41,7 +40,6 @@ const parseResponse = (data: any, timeCol: number, label: string) => {
 
 export default function useExportSimulation({
   simInputs,
-  simulatedVariables,
   model,
   project,
 }: iExportSimulation): [() => void, { error: any }] {
@@ -70,12 +68,12 @@ export default function useExportSimulation({
       project &&
       groups
     ) {
-      console.log("Export to CSV: simulating with params", simulatedVariables);
+      console.log("Export to CSV: simulating with params", simInputs.variables);
       simulate({
         id: model.id,
         simulate: simInputs,
       }).then((response) => {
-        let rows = simulatedVariables.map((p) => [p.qname, p.value]);
+        let rows = Object.keys(simInputs.variables).map((key) => [key, simInputs.variables[key]]);
         if (response?.data) {
           const cols = Object.keys(response.data[0].outputs);
           const vars = cols.map((vid) =>
