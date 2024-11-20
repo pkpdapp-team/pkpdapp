@@ -143,9 +143,9 @@ export const SimulationsSidePanel = ({
   if (!portalRoot) return null;
 
   return ReactDOM.createPortal(
-    <div
+    <Box
       className={animationClasses}
-      style={{
+      sx={{
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-between",
@@ -480,7 +480,7 @@ export const SimulationsSidePanel = ({
           be changed in the current version.
         </HelpButton>
       </Box>
-    </div>,
+    </Box>,
     portalRoot,
   );
 };
