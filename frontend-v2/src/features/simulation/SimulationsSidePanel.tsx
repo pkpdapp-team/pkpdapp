@@ -141,12 +141,15 @@ export const SimulationsSidePanel = ({
 
   return ReactDOM.createPortal(
     <Box
+      id='simulations-content'
       sx={{
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-between",
         height: "100%",
         paddingBottom: "1rem",
+        backgroundColor: "#FBFBFA",
+        borderRight: "1px solid #DBD6D1",
       }}
     >
       <Box

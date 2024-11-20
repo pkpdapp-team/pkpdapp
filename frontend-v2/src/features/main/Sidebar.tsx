@@ -42,8 +42,12 @@ import ContactSupportIcon from "@mui/icons-material/ContactSupport";
 import TableViewIcon from "@mui/icons-material/TableView";
 import "@fontsource/comfortaa"; // Defaults to weight 400
 import useSubjectGroups from "../../hooks/useSubjectGroups";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import "./Sidebar.css";
 
-const drawerWidth = 240;
+const drawerExpandedWidth = 240;
+const drawerCollapsedWidth = 50;
 
 export default function Sidebar() {
   const dispatch = useAppDispatch();
@@ -208,7 +212,34 @@ export default function Sidebar() {
     (step) => step !== projectsPage && step !== helpPage,
   );
 
-  const drawer = (
+  const [isExpanded, setIsExpanded] = useState(true);
+  const onCollapse = () => {
+    const element = document.getElementById("main-content");
+    element?.classList.remove("on-expand");
+    element?.classList.add("on-collapse");
+
+    const simulationsNav = document.getElementById("simulations-content");
+    if (simulationsNav) {
+      simulationsNav?.classList.remove("on-expand");
+      simulationsNav?.classList.add("on-collapse");
+    }
+    setIsExpanded(false);
+  };
+
+  const onExpand = () => {
+    const element = document.getElementById("main-content");
+    element?.classList.remove("on-collapse");
+    element?.classList.add("on-expand");
+
+    const simulationsNav = document.getElementById("simulations-content");
+    if (simulationsNav) {
+      simulationsNav?.classList.remove("on-collapse");
+      simulationsNav?.classList.add("on-expand");
+    }
+    setIsExpanded(true);
+  };
+
+  const drawerMobile = (
     <div style={{ marginTop: "7rem" }}>
       <List>
         <ListItem key={projectsPage?.key} disablePadding>
@@ -276,14 +307,102 @@ export default function Sidebar() {
     </div>
   );
 
+  const drawer = (
+    <div style={{ marginTop: "7rem", transition: "all .35s linear" }}>
+      {isExpanded ? (
+        <IconButton onClick={onCollapse} sx={{ marginLeft: ".5rem" }}>
+          <ArrowBackIcon />
+        </IconButton>
+      ) : (
+        <IconButton onClick={onExpand} sx={{ marginLeft: ".5rem" }}>
+          <ArrowForwardIcon />
+        </IconButton>
+      )}
+
+      <List>
+        <ListItem key={projectsPage?.key} disablePadding>
+          <ListItemButton
+            onClick={handlePageClick(projectsPage?.key)}
+            disabled={isPageDisabled(projectsPage?.key)}
+            disableRipple={true}
+            selected={isPageSelected(projectsPage?.key)}
+          >
+            <ListItemIcon>
+              {projectsPage?.value in errorComponents
+                ? errorComponents[projectsPage?.value]
+                : icons[projectsPage?.value]}
+            </ListItemIcon>
+            <ListItemText primary={projectsPage?.value} />
+          </ListItemButton>
+        </ListItem>
+      </List>
+      {projectIdOrZero !== 0 && (
+        <>
+          {isExpanded ? (
+            <Typography
+              variant="subtitle1"
+              noWrap
+              component="div"
+              sx={{
+                flexGrow: 1,
+                color: "gray",
+                paddingLeft: "1rem",
+                paddingTop: "1rem",
+              }}
+            >
+              STEPS
+            </Typography>
+          ) : (
+            <Divider sx={{ paddingTop: "21px", marginBottom: "22px" }} />
+          )}
+
+          <List>
+            {steps.map(({ key, value }) => (
+              <ListItem key={key} disablePadding>
+                <ListItemButton
+                  onClick={handlePageClick(key)}
+                  disabled={isPageDisabled(key)}
+                  disableRipple={true}
+                  selected={isPageSelected(key)}
+                >
+                  <ListItemIcon>
+                    {value in errorComponents
+                      ? errorComponents[value]
+                      : icons[value]}
+                  </ListItemIcon>
+                  <ListItemText sx={{ textWrap: "nowrap" }} primary={value} />
+                </ListItemButton>
+              </ListItem>
+            ))}
+          </List>
+        </>
+      )}
+      {isExpanded && (
+        <Typography
+          sx={{
+            position: "absolute",
+            bottom: 0,
+            margin: ".5rem",
+            color: "gray",
+            textWrap: "nowrap",
+          }}
+        >
+          pkpdx version {import.meta.env.VITE_APP_VERSION?.slice(0, 7) || "dev"}
+        </Typography>
+      )}
+    </div>
+  );
+
   return (
-    <Box sx={{ display: "flex" }}>
+    <Box sx={{ display: "flex", overflowX: "hidden" }}>
       <CssBaseline />
       <AppBar
         position="fixed"
         sx={{
           width: { sm: `100%` },
-          ml: { sm: `${drawerWidth}px` },
+          ml: {
+            sm: `${isExpanded ? drawerExpandedWidth : drawerCollapsedWidth}px`,
+          },
           zIndex: 9998,
           backgroundColor: "white",
         }}
@@ -362,7 +481,12 @@ export default function Sidebar() {
       </AppBar>
       <Box
         component="nav"
-        sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
+        sx={{
+          width: {
+            sm: isExpanded ? drawerExpandedWidth : drawerCollapsedWidth,
+          },
+          flexShrink: { sm: 0 },
+        }}
         aria-label="mailbox folders"
       >
         {/* The implementation can be swapped with js to avoid SEO duplication of links. */}
@@ -377,11 +501,11 @@ export default function Sidebar() {
             display: { xs: "block", sm: "none" },
             "& .MuiDrawer-paper": {
               boxSizing: "border-box",
-              width: drawerWidth,
+              width: drawerExpandedWidth,
             },
           }}
         >
-          {drawer}
+          {drawerMobile}
         </Drawer>
         <Drawer
           variant="permanent"
@@ -389,7 +513,9 @@ export default function Sidebar() {
             display: { xs: "none", sm: "block" },
             "& .MuiDrawer-paper": {
               boxSizing: "border-box",
-              width: drawerWidth,
+              transition: "all .35s linear",
+              width: isExpanded ? drawerExpandedWidth : drawerCollapsedWidth,
+              overflowX: "hidden",
             },
           }}
           open
@@ -401,23 +527,26 @@ export default function Sidebar() {
         <Box
           component="nav"
           sx={{
-            width: { sm: drawerWidth },
+            width: {
+              sm: drawerExpandedWidth,
+            },
+            transition: "all .35s linear",
             flexShrink: { sm: 0 },
             height: "100vh",
-            backgroundColor: '#FBFBFA',
-            borderRight: '1px solid #DBD6D1'
           }}
           aria-label="mailbox folders"
-          id='simulations-portal'
+          id="simulations-portal"
         />
       )}
       <Box
         component="main"
+        id="main-content"
         sx={{
           flexGrow: 1,
+          transition: "all .35s linear",
           p: 3,
-          width: { sm: `calc(100% - ${drawerWidth}px)` },
-          paddingBottom: 0
+          overflowX: "hidden",
+          paddingBottom: 0,
         }}
       >
         <Toolbar />

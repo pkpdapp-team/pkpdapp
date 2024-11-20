@@ -43,38 +43,6 @@ import { getConstVariables } from "../model/resetToSpeciesDefaults";
 import useSubjectGroups from "../../hooks/useSubjectGroups";
 import useExportSimulation from "./useExportSimulation";
 import { SimulationsSidePanel } from "./SimulationsSidePanel";
-import { getTableHeight } from "../../shared/calculateTableHeights";
-
-const PlotsWidthSteps = [
-  {
-    minHeight: "1100",
-    tableHeight: "75vw",
-  },
-  {
-    minHeight: "1000",
-    tableHeight: "72vw",
-  },
-  {
-    minHeight: "900",
-    tableHeight: "70vw",
-  },
-  {
-    minHeight: "800",
-    tableHeight: "65vw",
-  },
-  {
-    minHeight: "700",
-    tableHeight: "60vw",
-  },
-  {
-    minHeight: "600",
-    tableHeight: "55vw",
-  },
-  {
-    minHeight: "500",
-    tableHeight: "53vw",
-  },
-];
 
 type SliderValues = { [key: number]: number };
 
@@ -474,7 +442,7 @@ const Simulations: FC = () => {
       <Box
         sx={{
           maxHeight: "80vh",
-          maxWidth: getTableHeight({ steps: PlotsWidthSteps }),
+          maxWidth: '100%',
           overflow: "auto",
         }}
       >
