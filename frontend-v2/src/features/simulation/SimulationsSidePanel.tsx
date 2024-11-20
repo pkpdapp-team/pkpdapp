@@ -19,8 +19,15 @@ import HelpButton from "../../components/HelpButton";
 import { ExpandLess, ExpandMore } from "@mui/icons-material";
 import { ChangeEvent, useState } from "react";
 import { getTableHeight } from "../../shared/calculateTableHeights";
-import { Simulation, SimulationPlot, SimulationRead, SimulationSlider, SubjectGroupRead, UnitRead } from "../../app/backendApi";
-import { UseFormReset } from "react-hook-form";
+import {
+  Simulation,
+  SimulationPlot,
+  SimulationRead,
+  SimulationSlider,
+  SubjectGroupRead,
+  UnitRead,
+} from "../../app/backendApi";
+import { Control } from "react-hook-form";
 
 type SimulationsSidePanelType = {
   portalId: string;
@@ -30,11 +37,11 @@ type SimulationsSidePanelType = {
   }[];
   handleAddPlot: (plot: number) => void;
   isSharedWithMe: boolean;
-  layoutOptions: { value: string, label: string }[];
+  layoutOptions: { value: string; label: string }[];
   layout: string;
   setLayout: (layout: string) => void;
   plots: SimulationPlot[];
-  control: UseFormReset<Simulation>;
+  control: Control<Simulation, any>;
   units: UnitRead[];
   simulation: SimulationRead;
   groups?: SubjectGroupRead[];
@@ -45,15 +52,15 @@ type SimulationsSidePanelType = {
     label: string;
   }[];
   handleAddSlider: (slider: number) => void;
-  orderedSliders: SimulationSlider[];
+  orderedSliders: (SimulationSlider & { fieldArrayIndex: number })[];
   handleChangeSlider: (variable: number, value: number) => void;
-  handleRemoveSlider: (index: number) => void;
-  handleSaveSlider: (slider: SimulationSlider) => void;
+  handleRemoveSlider: (index: number) => () => void;
+  handleSaveSlider: (slider: SimulationSlider) => (value: number) => void;
   exportSimulation: () => void;
   showReference: boolean;
   setShowReference: (reference: boolean) => void;
   shouldShowLegend: boolean;
-  setShouldShowLegend: (value: boolean) => void
+  setShouldShowLegend: (value: boolean) => void;
 };
 
 const ButtonSx = {
@@ -73,31 +80,31 @@ const ButtonSx = {
 
 const SidePanelSteps = [
   {
-    minHeight: "1100",
+    minHeight: 1100,
     tableHeight: "75vh",
   },
   {
-    minHeight: "1000",
+    minHeight: 1000,
     tableHeight: "72vh",
   },
   {
-    minHeight: "900",
+    minHeight: 900,
     tableHeight: "70vh",
   },
   {
-    minHeight: "800",
+    minHeight: 800,
     tableHeight: "65vh",
   },
   {
-    minHeight: "700",
+    minHeight: 700,
     tableHeight: "60vh",
   },
   {
-    minHeight: "600",
+    minHeight: 600,
     tableHeight: "55vh",
   },
   {
-    minHeight: "500",
+    minHeight: 500,
     tableHeight: "53vh",
   },
 ];
@@ -127,7 +134,7 @@ export const SimulationsSidePanel = ({
   showReference,
   setShowReference,
   shouldShowLegend,
-  setShouldShowLegend
+  setShouldShowLegend,
 }: SimulationsSidePanelType) => {
   const portalRoot = document.getElementById(portalId);
   const [collapseLayout, setCollapseLayout] = useState(true);
