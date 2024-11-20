@@ -1,9 +1,4 @@
-import {
-  Alert,
-  Grid,
-  Snackbar,
-  Box
-} from "@mui/material";
+import { Alert, Grid, Snackbar, Box } from "@mui/material";
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
 import {
@@ -35,7 +30,6 @@ import {
 import SimulationPlotView from "./SimulationPlotView";
 import useSimulation from "./useSimulation";
 import useSimulationInputs from "./useSimulationInputs";
-import useSimulatedVariables from "./useSimulatedVariables";
 import useDirty from "../../hooks/useDirty";
 import paramPriority from "../model/paramPriority";
 import { selectIsProjectShared } from "../login/loginSlice";
@@ -164,12 +158,11 @@ const Simulations: FC = () => {
     variables,
     timeMax,
   );
-  const simulatedVariables = useSimulatedVariables(variables, sliderValues);
   const {
     loadingSimulate,
     data,
     error: simulateError,
-  } = useSimulation(simInputs, simulatedVariables, model);
+  } = useSimulation(simInputs, model);
 
   const refSimInputs = useSimulationInputs(
     model,
@@ -178,11 +171,9 @@ const Simulations: FC = () => {
     variables,
     timeMax,
   );
-  const referenceVariables = useSimulatedVariables(variables, EMPTY_OBJECT);
   const { data: dataReference } = useSimulation(
     refSimInputs,
-    referenceVariables,
-    showReference ? model : undefined
+    showReference ? model : undefined,
   );
 
   const {
@@ -236,7 +227,6 @@ const Simulations: FC = () => {
   const [exportSimulation, { error: exportSimulateErrorBase }] =
     useExportSimulation({
       simInputs,
-      simulatedVariables,
       model,
       project,
     });
@@ -340,7 +330,7 @@ const Simulations: FC = () => {
   };
 
   const orderedSliders = sliders.map((slider, i) => {
-    const variable = variables.find((v) => v.id === slider.variable);
+    const variable = variables?.find((v) => v.id === slider.variable);
     return {
       ...slider,
       priority: variable ? paramPriority(variable) : 0,

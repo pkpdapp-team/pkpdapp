@@ -32,10 +32,8 @@ const Results: FC = () => {
     setTab(newValue);
   };
 
-  const handleTabRemove = async (table) => {
-    if (
-      window.confirm("Are you sure you want to delete the current Table?")
-    ) {
+  const handleTabRemove = async (table: Table) => {
+    if (window.confirm("Are you sure you want to delete the current Table?")) {
       const removedIndex = tables.map(({ id }) => id).indexOf(table.id);
       setTables(tables.filter(({ id }) => id !== table.id));
 
@@ -79,9 +77,9 @@ const Results: FC = () => {
                 key={table.id}
                 label={table.name}
                 {...a11yProps(index)}
-                sx={{ maxHeight: '48px', minHeight: 0}}
+                sx={{ maxHeight: "48px", minHeight: 0 }}
                 icon={
-                  index === 0 ? null : (
+                  index === 0 ? undefined : (
                     <IconButton
                       onClick={(e) => {
                         e.stopPropagation();

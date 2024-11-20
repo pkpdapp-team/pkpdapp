@@ -14,31 +14,55 @@ const DEFAULT_INPUTS = {
   time_max: 0,
 };
 
+enum simulationInputMode {
+  REQUESTED_OUTPUTS = "REQUESTED",
+  ALL_OUTPUTS = "ALL",
+  ALL_OUTPUTS_NO_AMOUNTS = "ALL_NO_AMOUNTS",
+}
+
 const getSimulateInput = (
   model: CombinedModelRead,
   simulation: SimulationRead,
   sliderValues: SliderValues,
   variables?: VariableRead[],
   timeMax?: number,
-  allOutputs: boolean = false,
+  mode: simulationInputMode = simulationInputMode.REQUESTED_OUTPUTS,
 ): Simulate => {
   const outputs: string[] = [];
+
+  const constantVariables = variables?.filter((v) => v.constant) || [];
   const simulateVariables: { [key: string]: number } = {};
-  for (const slider of simulation?.sliders || []) {
-    if (sliderValues[slider.variable]) {
-      const variable = variables?.find((v) => v.id === slider.variable);
-      if (variable) {
-        simulateVariables[variable.qname] = sliderValues[slider.variable];
-      }
+  constantVariables.forEach((v: VariableRead) => {
+    const result = { qname: v.qname, value: v.default_value || 0 };
+    if (sliderValues && sliderValues[v.id]) {
+      result.value = sliderValues[v.id];
     }
-  }
-  if (allOutputs) {
+    simulateVariables[result.qname] = result.value;
+  });
+
+  if (mode == simulationInputMode.ALL_OUTPUTS) {
     for (const v of variables || []) {
       if (!v.constant) {
         outputs.push(v.qname);
       }
     }
-  } else {
+  } else if (mode == simulationInputMode.ALL_OUTPUTS_NO_AMOUNTS) {
+    const amountNames = ["Aa", "A1", "A2", "A3"];
+    for (const v of variables || []) {
+      let isAmount = model.is_library_model && amountNames.includes(v.name);
+      if (!v.constant && !isAmount) {
+        outputs.push(v.qname);
+      }
+    }
+    for (const plot of simulation?.plots || []) {
+      for (const y_axis of plot.y_axes) {
+        const variable = variables?.find((v) => v.id === y_axis.variable);
+        if (variable && !outputs.includes(variable.qname)) {
+          outputs.push(variable.qname);
+        }
+      }
+    }
+  } else if (mode == simulationInputMode.REQUESTED_OUTPUTS) {
     for (const plot of simulation?.plots || []) {
       for (const y_axis of plot.y_axes) {
         const variable = variables?.find((v) => v.id === y_axis.variable);
@@ -91,7 +115,7 @@ export default function useSimulationInputs(
   return useMemo(
     () =>
       model && simulation && sliderValues
-        ? getSimulateInput(model, simulation, sliderValues, variables, timeMax)
+        ? getSimulateInput(model, simulation, sliderValues, variables, timeMax, simulationInputMode.ALL_OUTPUTS_NO_AMOUNTS)
         : DEFAULT_INPUTS,
     [simulation, sliderValues, variables, timeMax],
   );
