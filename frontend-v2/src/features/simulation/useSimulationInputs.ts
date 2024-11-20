@@ -29,15 +29,16 @@ const getSimulateInput = (
   mode: simulationInputMode = simulationInputMode.REQUESTED_OUTPUTS,
 ): Simulate => {
   const outputs: string[] = [];
+
+  const constantVariables = variables?.filter((v) => v.constant) || [];
   const simulateVariables: { [key: string]: number } = {};
-  for (const slider of simulation?.sliders || []) {
-    if (sliderValues[slider.variable]) {
-      const variable = variables?.find((v) => v.id === slider.variable);
-      if (variable) {
-        simulateVariables[variable.qname] = sliderValues[slider.variable];
-      }
+  constantVariables.forEach((v: VariableRead) => {
+    const result = { qname: v.qname, value: v.default_value || 0 };
+    if (sliderValues && sliderValues[v.id]) {
+      result.value = sliderValues[v.id];
     }
-  }
+    simulateVariables[result.qname] = result.value;
+  });
 
   if (mode == simulationInputMode.ALL_OUTPUTS) {
     for (const v of variables || []) {
