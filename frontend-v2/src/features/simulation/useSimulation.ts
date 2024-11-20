@@ -19,7 +19,6 @@ const SIMULATION_PAGES = [PageName.SIMULATIONS, PageName.RESULTS];
 
 export default function useSimulation(
   simInputs: Simulate,
-  simulatedVariables: { qname: string; value: number | undefined }[],
   model: CombinedModelRead | undefined,
   run_simulation: boolean = true
 ) {
@@ -48,7 +47,7 @@ export default function useSimulation(
       SIMULATION_PAGES.includes(page)
     ) {
       setLoadingSimulate(true);
-      console.log("Simulating with params", simulatedVariables);
+      console.log("Simulating with params", simInputs.variables);
       simulate({
         id: model.id,
         simulate: simInputs,
@@ -72,7 +71,6 @@ export default function useSimulation(
     protocols,
     simulate,
     JSON.stringify(simInputs),
-    JSON.stringify(simulatedVariables),
     page,
   ]);
 
