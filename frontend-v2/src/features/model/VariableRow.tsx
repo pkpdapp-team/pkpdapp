@@ -250,7 +250,10 @@ const VariableRow: FC<Props> = ({
     if (type === "AUC") {
       setThresholds({
         ...thresholds,
-        [variable.name]: 0,
+        [variable.name]: {
+          lower: 0,
+          upper: Infinity,
+        },
       });
     }
   };

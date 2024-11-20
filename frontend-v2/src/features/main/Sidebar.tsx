@@ -108,6 +108,9 @@ export default function Sidebar() {
 
   const doses = groups?.flatMap((group) => group.protocols.map((p) => p.doses));
   const groupsAreIncomplete = doses?.some((dosing) => !dosing[0]?.amount);
+  const noSecondaryParameters = model ?
+    model.derived_variables.reduce((acc, dv) => { return acc && dv.type !== "AUC"; }, true) :
+    false;
 
   const warnings: { [key: string]: string } = {};
   const errors: { [key: string]: string } = {};
@@ -151,7 +154,7 @@ export default function Sidebar() {
     setMobileOpen(!mobileOpen);
   };
 
-  const { onCollapse, onExpand, isExpanded, animationClasses } = useCollapsibleSidebar(); 
+  const { onCollapse, onExpand, setHasSimulationsExpandedChanged, isExpanded, animationClasses } = useCollapsibleSidebar(); 
 
   const pageKeys = Object.keys(PageName);
   const pageValues = Object.values(PageName);
@@ -165,6 +168,9 @@ export default function Sidebar() {
 
   const handlePageClick = (key: string) => () => {
     const chosenPage = PageName[key as keyof typeof PageName];
+    if (key !== PageName.SIMULATIONS) {
+      setHasSimulationsExpandedChanged(false);
+    }
     dispatch(setPage(chosenPage));
 
     switch (chosenPage) {
@@ -186,6 +192,9 @@ export default function Sidebar() {
       return false;
     }
     if (page === PageName.TRIAL_DESIGN && PageName.MODEL in errors) {
+      return true;
+    }
+    if (page === PageName.RESULTS && noSecondaryParameters) {
       return true;
     }
     if (page === PageName.DATA && PageName.MODEL in errors) {
@@ -294,7 +303,6 @@ export default function Sidebar() {
           <ArrowForwardIcon />
         </IconButton>
       )}
-
       <List>
         <ListItem key={projectsPage?.key} disablePadding>
           <ListItemButton

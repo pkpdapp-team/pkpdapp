@@ -20,31 +20,31 @@ import { getTableHeight } from "../../shared/calculateTableHeights";
 
 const RESULTS_TABLE_HEIGHTS = [
   {
-    minHeight: "1100",
+    minHeight: 1100,
     tableHeight: "70vh",
   },
   {
-    minHeight: "1000",
+    minHeight: 1000,
     tableHeight: "65vh",
   },
   {
-    minHeight: "900",
+    minHeight: 900,
     tableHeight: "60vh",
   },
   {
-    minHeight: "800",
+    minHeight: 800,
     tableHeight: "58vh",
   },
   {
-    minHeight: "700",
+    minHeight: 700,
     tableHeight: "53vh",
   },
   {
-    minHeight: "600",
+    minHeight: 600,
     tableHeight: "40vh",
   },
   {
-    minHeight: "500",
+    minHeight: 500,
     tableHeight: "40vh",
   },
 ];
@@ -55,9 +55,11 @@ const IntervalRow: FC<{
 }> = ({ header, values }) => {
   return (
     <TableRow>
-      <TableCell sx={{ textWrap: 'nowrap'}}  scope="row">{header}</TableCell>
+      <TableCell sx={{ textWrap: "nowrap" }} scope="row">
+        {header}
+      </TableCell>
       {values.map((value, i) => (
-        <TableCell  key={i}>{value}</TableCell>
+        <TableCell key={i}>{value}</TableCell>
       ))}
     </TableRow>
   );
@@ -127,13 +129,21 @@ export const ResultsTable: FC<ResultsTableProps> = ({
               : [];
 
     return (
-      <TableContainer sx={{ width: 'fit-content', maxWidth: '100%', maxHeight: getTableHeight({ steps: RESULTS_TABLE_HEIGHTS })}}>
+      <TableContainer
+        sx={{
+          width: "fit-content",
+          maxWidth: "100%",
+          maxHeight: getTableHeight({ steps: RESULTS_TABLE_HEIGHTS }),
+        }}
+      >
         <Table stickyHeader size="small">
           <TableHead>
             <TableRow>
               <TableCell>{rowColumn}</TableCell>
               {columnHeadings.map((column, i) => (
-                <TableCell sx={{ textWrap: 'nowrap' }} key={i}>{column}</TableCell>
+                <TableCell sx={{ textWrap: "nowrap" }} key={i}>
+                  {column}
+                </TableCell>
               ))}
             </TableRow>
           </TableHead>

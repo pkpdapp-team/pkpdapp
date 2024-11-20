@@ -21,7 +21,8 @@ type Props = {
   disabled?: boolean;
   data_cy?: string;
   useIcon?: boolean;
-  sx?: SxProps
+  sx?: SxProps;
+  variant?: "text" | "outlined" | "contained";
 };
 
 const DropdownButton: FC<Props> = ({
@@ -32,7 +33,7 @@ const DropdownButton: FC<Props> = ({
   disabled,
   useIcon,
   sx,
-  variant = 'contained'
+  variant = "contained",
 }) => {
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
 
