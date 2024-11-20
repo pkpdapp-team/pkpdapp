@@ -16,6 +16,7 @@ import "react-toastify/dist/ReactToastify.css";
 
 import { SimulationContext } from "./contexts/SimulationContext";
 import { SimulateResponse } from "./app/backendApi";
+import { CollapsibleSidebarProvider } from "./shared/contexts/CollapsibleSidebarContext";
 
 export type TimeInterval = {
   start: number;
@@ -80,8 +81,10 @@ function App() {
     <SimulationContext.Provider value={simulationContext}>
       {isAuth ? (
         <>
-          <Sidebar />
-          <ToastContainer />
+          <CollapsibleSidebarProvider>
+            <Sidebar />
+            <ToastContainer />
+          </CollapsibleSidebarProvider>
         </>
       ) : (
         <Login onLogin={onLogin} isLoading={false} errorMessage={error} />

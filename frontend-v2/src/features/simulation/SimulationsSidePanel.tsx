@@ -21,6 +21,8 @@ import { ChangeEvent, useState } from "react";
 import { getTableHeight } from "../../shared/calculateTableHeights";
 import { Simulation, SimulationPlot, SimulationRead, SimulationSlider, SubjectGroupRead, UnitRead } from "../../app/backendApi";
 import { UseFormReset } from "react-hook-form";
+import '../../App.css'
+import { useCollapsibleSidebar } from "../../shared/contexts/CollapsibleSidebarContext";
 
 type SimulationsSidePanelType = {
   portalId: string;
@@ -136,13 +138,14 @@ export const SimulationsSidePanel = ({
   const [collapseParameters, setCollapseParameters] = useState(true);
   const [collapseReference, setCollapseReference] = useState(true);
   const [collapseLegend, setCollapseLegend] = useState(true);
+  const { animationClasses } = useCollapsibleSidebar(); 
 
   if (!portalRoot) return null;
 
   return ReactDOM.createPortal(
-    <Box
-      id='simulations-content'
-      sx={{
+    <div
+      className={animationClasses}
+      style={{
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-between",
@@ -477,7 +480,7 @@ export const SimulationsSidePanel = ({
           be changed in the current version.
         </HelpButton>
       </Box>
-    </Box>,
+    </div>,
     portalRoot,
   );
 };

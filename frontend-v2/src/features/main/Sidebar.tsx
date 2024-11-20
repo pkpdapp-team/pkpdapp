@@ -44,7 +44,8 @@ import "@fontsource/comfortaa"; // Defaults to weight 400
 import useSubjectGroups from "../../hooks/useSubjectGroups";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
-import "./Sidebar.css";
+import { useCollapsibleSidebar } from "../../shared/contexts/CollapsibleSidebarContext";
+import '../../App.css'
 
 const drawerExpandedWidth = 240;
 const drawerCollapsedWidth = 50;
@@ -150,6 +151,8 @@ export default function Sidebar() {
     setMobileOpen(!mobileOpen);
   };
 
+  const { onCollapse, onExpand, isExpanded, animationClasses } = useCollapsibleSidebar(); 
+
   const pageKeys = Object.keys(PageName);
   const pageValues = Object.values(PageName);
 
@@ -211,33 +214,6 @@ export default function Sidebar() {
   const steps = pages.filter(
     (step) => step !== projectsPage && step !== helpPage,
   );
-
-  const [isExpanded, setIsExpanded] = useState(true);
-  const onCollapse = () => {
-    const element = document.getElementById("main-content");
-    element?.classList.remove("on-expand");
-    element?.classList.add("on-collapse");
-
-    const simulationsNav = document.getElementById("simulations-content");
-    if (simulationsNav) {
-      simulationsNav?.classList.remove("on-expand");
-      simulationsNav?.classList.add("on-collapse");
-    }
-    setIsExpanded(false);
-  };
-
-  const onExpand = () => {
-    const element = document.getElementById("main-content");
-    element?.classList.remove("on-collapse");
-    element?.classList.add("on-expand");
-
-    const simulationsNav = document.getElementById("simulations-content");
-    if (simulationsNav) {
-      simulationsNav?.classList.remove("on-collapse");
-      simulationsNav?.classList.add("on-expand");
-    }
-    setIsExpanded(true);
-  };
 
   const drawerMobile = (
     <div style={{ marginTop: "7rem" }}>
@@ -310,11 +286,11 @@ export default function Sidebar() {
   const drawer = (
     <div style={{ marginTop: "7rem", transition: "all .35s linear" }}>
       {isExpanded ? (
-        <IconButton onClick={onCollapse} sx={{ marginLeft: ".5rem" }}>
+        <IconButton aria-label='collapse-navigation' onClick={onCollapse} sx={{ marginLeft: ".5rem" }}>
           <ArrowBackIcon />
         </IconButton>
       ) : (
-        <IconButton onClick={onExpand} sx={{ marginLeft: ".5rem" }}>
+        <IconButton aria-label='expand-navigation' onClick={onExpand} sx={{ marginLeft: ".5rem" }}>
           <ArrowForwardIcon />
         </IconButton>
       )}
@@ -341,7 +317,6 @@ export default function Sidebar() {
           {isExpanded ? (
             <Typography
               variant="subtitle1"
-              noWrap
               component="div"
               sx={{
                 flexGrow: 1,
@@ -487,7 +462,7 @@ export default function Sidebar() {
           },
           flexShrink: { sm: 0 },
         }}
-        aria-label="mailbox folders"
+        aria-label="navigation"
       >
         {/* The implementation can be swapped with js to avoid SEO duplication of links. */}
         <Drawer
@@ -513,8 +488,8 @@ export default function Sidebar() {
             display: { xs: "none", sm: "block" },
             "& .MuiDrawer-paper": {
               boxSizing: "border-box",
-              transition: "all .35s linear",
               width: isExpanded ? drawerExpandedWidth : drawerCollapsedWidth,
+              transition: "width .35s linear",
               overflowX: "hidden",
             },
           }}
@@ -530,20 +505,19 @@ export default function Sidebar() {
             width: {
               sm: drawerExpandedWidth,
             },
-            transition: "all .35s linear",
             flexShrink: { sm: 0 },
             height: "100vh",
           }}
-          aria-label="mailbox folders"
+          aria-label="simulations-sidebar"
           id="simulations-portal"
         />
       )}
       <Box
         component="main"
         id="main-content"
+        className={animationClasses}
         sx={{
           flexGrow: 1,
-          transition: "all .35s linear",
           p: 3,
           overflowX: "hidden",
           paddingBottom: 0,
