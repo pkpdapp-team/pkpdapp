@@ -30,7 +30,7 @@ export function useTableRows({
   return rows.map((row, index) => {
     const header =
       "start" in row && "end" in row && "unit" in row
-        ? `${row.start} – ${row.end} [${row.unit}]`
+        ? `${row.start} – ${row.end} [${row.unit.symbol}]`
         : "name" in row
           ? row.name
           : "";

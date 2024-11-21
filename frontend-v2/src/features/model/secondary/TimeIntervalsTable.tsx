@@ -30,7 +30,7 @@ type TimeUnitSelectProps = {
   onChange: (interval: TimeInterval) => void;
 };
 
-function TimeUnitSelect({ interval, onChange }: TimeUnitSelectProps) {
+function useTimeUnits() {
   const projectId = useSelector(
     (state: RootState) => state.main.selectedProject,
   );
@@ -43,19 +43,31 @@ function TimeUnitSelect({ interval, onChange }: TimeUnitSelectProps) {
     { skip: !project || !project.compound },
   );
   const hourUnit = units?.find((unit) => unit.symbol === "h");
-  const timeUnits = hourUnit?.compatible_units.map((unit) => unit.symbol);
+  return hourUnit?.compatible_units || [];
+}
+
+function TimeUnitSelect({ interval, onChange }: TimeUnitSelectProps) {
+  const timeUnits = useTimeUnits();
   const timeUnitOptions =
-    timeUnits?.map((unit) => ({ value: unit, label: unit })) || [];
+    timeUnits?.map((unit) => ({ value: unit.symbol, label: unit.symbol })) ||
+    [];
+  const defaultTimeUnit = "h";
 
   function onChangeUnit(event: SelectChangeEvent) {
-    onChange({ ...interval, unit: event.target.value });
+    const unit = timeUnits?.find((unit) => unit.symbol === event.target.value);
+    if (unit) {
+      onChange({ ...interval, unit });
+    }
   }
 
   return (
     <FormControl>
-      <Select value={interval.unit} onChange={onChangeUnit}>
+      <Select
+        value={interval.unit.symbol || defaultTimeUnit}
+        onChange={onChangeUnit}
+      >
         {timeUnitOptions.map((option) => (
-          <MenuItem key={option.value} value={option.value}>
+          <MenuItem key={option.label} value={option.value}>
             {option.label}
           </MenuItem>
         ))}
@@ -104,19 +116,23 @@ function IntervalRow({ interval, onDelete, onUpdate }: IntervalRowProps) {
 
 const TimeIntervalsTable: FC<TableProps> = (props) => {
   const { intervals, setIntervals } = useContext(SimulationContext);
+  const timeUnits = useTimeUnits();
+  const hourUnit = timeUnits?.find((unit) => unit.symbol === "h");
 
   function addInterval() {
     const lastInterval = intervals[intervals.length - 1];
-    let newInterval: TimeInterval = { start: 0, end: 0, unit: "h" };
-    if (lastInterval) {
-      const duration = lastInterval.end - lastInterval.start;
-      newInterval = {
-        start: lastInterval.end,
-        end: lastInterval.end + duration,
-        unit: lastInterval.unit,
-      };
+    if (hourUnit) {
+      let newInterval: TimeInterval = { start: 0, end: 0, unit: hourUnit };
+      if (lastInterval) {
+        const duration = lastInterval.end - lastInterval.start;
+        newInterval = {
+          start: lastInterval.end,
+          end: lastInterval.end + duration,
+          unit: lastInterval.unit,
+        };
+      }
+      setIntervals([...intervals, newInterval]);
     }
-    setIntervals([...intervals, newInterval]);
   }
   function removeInterval(index: number) {
     setIntervals(intervals.filter((_, i) => i !== index));

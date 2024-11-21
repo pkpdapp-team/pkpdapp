@@ -20,7 +20,7 @@ import { SimulateResponse } from "./app/backendApi";
 export type TimeInterval = {
   start: number;
   end: number;
-  unit: string;
+  unit: { [key: string]: string };
 };
 type Threshold = { lower: number; upper: number };
 export type Thresholds = { [key: string]: Threshold };
