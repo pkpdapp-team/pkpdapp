@@ -25,32 +25,9 @@ export type TimeInterval = {
 type Threshold = { lower: number; upper: number };
 export type Thresholds = { [key: string]: Threshold };
 
-const TIME_INTERVALS: TimeInterval[] = [
-  { start: 0, end: 168, unit: "h" },
-  { start: 168, end: 336, unit: "h" },
-  { start: 336, end: 504, unit: "h" },
-  { start: 504, end: 672, unit: "h" },
-  { start: 672, end: 840, unit: "h" },
-];
+const TIME_INTERVALS: TimeInterval[] = [];
 
-const THRESHOLDS: Thresholds = {
-  C1: {
-    lower: 1e4,
-    upper: Infinity,
-  },
-  C1_t: {
-    lower: 5e4,
-    upper: Infinity,
-  },
-  CT1_f: {
-    lower: 200,
-    upper: Infinity,
-  },
-  CT1_b: {
-    lower: 900,
-    upper: Infinity,
-  },
-};
+const THRESHOLDS: Thresholds = {};
 
 function App() {
   const dispatch = useAppDispatch();
