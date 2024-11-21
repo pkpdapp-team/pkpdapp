@@ -486,7 +486,7 @@ export default function Sidebar() {
           },
           flexShrink: { sm: 0 },
         }}
-        aria-label="navigation"
+        aria-label="project navigation"
       >
         {/* The implementation can be swapped with js to avoid SEO duplication of links. */}
         <Drawer
