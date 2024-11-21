@@ -403,20 +403,19 @@ export default function Sidebar() {
           {drawer}
         </Drawer>
       </Box>
-      {selectedPage === PageName.SIMULATIONS && (
-        <Box
-          component="nav"
-          sx={{
-            width: { sm: drawerWidth },
-            flexShrink: { sm: 0 },
-            height: "100vh",
-            backgroundColor: '#FBFBFA',
-            borderRight: '1px solid #DBD6D1'
-          }}
-          aria-label="mailbox folders"
-          id='simulations-portal'
-        />
-      )}
+      <Box
+        component="nav"
+        sx={{
+          width: { sm: selectedPage === PageName.SIMULATIONS ? drawerWidth : 0 },
+          flexShrink: { sm: 0 },
+          height: "100vh",
+          backgroundColor: '#FBFBFA',
+          borderRight: '1px solid #DBD6D1'
+        }}
+        aria-label="mailbox folders"
+        id='simulations-portal'
+        zIndex={0}
+      />
       <Box
         component="main"
         sx={{

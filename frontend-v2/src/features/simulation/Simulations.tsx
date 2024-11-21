@@ -150,9 +150,7 @@ const Simulations: FC = () => {
   const [sliderValues, setSliderValues] = useState<SliderValues | undefined>(
     undefined,
   );
-  console.log('sliderValues', sliderValues);
   const handleChangeSlider = useCallback((variable: number, value: number) => {
-    console.log('handleChangeSlider', variable, value);
     setSliderValues((prevSliderValues) => ({
       ...prevSliderValues,
       [variable]: value,
@@ -198,11 +196,15 @@ const Simulations: FC = () => {
     timeMax,
   );
   const hasPlots = simulation ? simulation.plots.length > 0 : false;
+  const hasSecondaryParameters = model ?
+    model.derived_variables.reduce((acc, dv) => { return acc || dv.type === "AUC"; }, false) :
+    false;
+
   const {
     loadingSimulate,
     data,
     error: simulateError,
-  } = useSimulation(simInputs, simulatedVariables, model, hasPlots);
+  } = useSimulation(simInputs, model, hasPlots || hasSecondaryParameters);
 
   const refSimInputs = useSimulationInputs(
     model,
@@ -255,7 +257,6 @@ const Simulations: FC = () => {
   // reset form and sliders if simulation changes
   useEffect(() => {
     if (simulation && variables) {
-      console.log('reset form and sliders if simulation changes');
       setSliderValues((s) => {
         const initialValues = getSliderInitialValues(simulation, s, variables);
         return initialValues;
@@ -440,8 +441,6 @@ const Simulations: FC = () => {
   if (!simulation || !project || !models || !variables || !units || !compound) {
     return <div>Not found</div>;
   }
-
-  console.log("should render", simulation, project, models, variables, units, compound);
 
   return (
     <Box sx={{ display: "flex" }}>

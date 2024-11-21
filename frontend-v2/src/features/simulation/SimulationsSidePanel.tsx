@@ -17,10 +17,13 @@ import UnitField from "../../components/UnitField";
 import SimulationSliderView from "./SimulationSliderView";
 import HelpButton from "../../components/HelpButton";
 import { ExpandLess, ExpandMore } from "@mui/icons-material";
-import { ChangeEvent, useState } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 import { getTableHeight } from "../../shared/calculateTableHeights";
 import { Simulation, SimulationPlot, SimulationRead, SimulationSlider, SubjectGroupRead, UnitRead } from "../../app/backendApi";
 import { UseFormReset } from "react-hook-form";
+import { useSelector } from "react-redux";
+import { RootState } from "../../app/store";
+import { PageName } from "../main/mainSlice";
 
 type SimulationsSidePanelType = {
   portalId: string;
@@ -129,6 +132,9 @@ export const SimulationsSidePanel = ({
   shouldShowLegend,
   setShouldShowLegend
 }: SimulationsSidePanelType) => {
+  const selectedPage = useSelector(
+    (state: RootState) => state.main.selectedPage,
+  );
   const portalRoot = document.getElementById(portalId);
   const [collapseLayout, setCollapseLayout] = useState(true);
   const [collapseOptions, setCollapseOptions] = useState(true);
@@ -136,11 +142,8 @@ export const SimulationsSidePanel = ({
   const [collapseParameters, setCollapseParameters] = useState(true);
   const [collapseReference, setCollapseReference] = useState(true);
   const [collapseLegend, setCollapseLegend] = useState(true);
-  console.log("side panel before check");
 
-  if (!portalRoot) return null;
-
-  console.log("side panel");
+  if (!portalRoot || selectedPage !== PageName.SIMULATIONS) return null;
 
   return ReactDOM.createPortal(
     <Box
