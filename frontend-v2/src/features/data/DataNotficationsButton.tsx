@@ -4,13 +4,13 @@ import WarningAmberOutlinedIcon from "@mui/icons-material/WarningAmberOutlined";
 import ErrorOutlineOutlinedIcon from "@mui/icons-material/ErrorOutlineOutlined";
 
 export const DataNotificationsButton = ({
-    onOpenNotifications,
-    warnings,
-    errors
-} : {
-    onOpenNotifications: () => void;
-    warnings: string[];
-    errors: string[];
+  onOpenNotifications,
+  warnings,
+  errors,
+}: {
+  onOpenNotifications: () => void;
+  warnings: string[];
+  errors: string[];
 }) => (
   <Button
     sx={{

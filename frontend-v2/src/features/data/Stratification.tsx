@@ -22,7 +22,12 @@ import {
   validateGroupMembers,
 } from "./dataValidation";
 import { TableHeader } from "../../components/TableHeader";
-import { calculateTableHeights, DOUBLE_TABLE_FIRST_BREAKPOINTS, DOUBLE_TABLE_SECOND_BREAKPOINTS, getTableHeight } from "../../shared/calculateTableHeights";
+import {
+  calculateTableHeights,
+  DOUBLE_TABLE_FIRST_BREAKPOINTS,
+  DOUBLE_TABLE_SECOND_BREAKPOINTS,
+  getTableHeight,
+} from "../../shared/calculateTableHeights";
 
 function validateGroupProtocols(groups: Group[], protocols: IProtocol[]) {
   const groupedProtocols: string[][] = [];
@@ -180,11 +185,13 @@ const Stratification: FC<IStratification> = ({
         {!!catCovariates.length && (
           <TableContainer
             sx={{
-              maxHeight: calculateTableHeights({ 
-                baseHeight: getTableHeight({ steps: DOUBLE_TABLE_FIRST_BREAKPOINTS }),
+              maxHeight: calculateTableHeights({
+                baseHeight: getTableHeight({
+                  steps: DOUBLE_TABLE_FIRST_BREAKPOINTS,
+                }),
                 isOpen: notificationsInfo.isOpen,
                 count: notificationsInfo.count,
-                splitMode: 'first'
+                splitMode: "first",
               }),
               transition: "all .35s ease-in",
             }}
@@ -248,11 +255,13 @@ const Stratification: FC<IStratification> = ({
             <Box
               component="div"
               sx={{
-                height: calculateTableHeights({ 
-                  baseHeight: getTableHeight({ steps: DOUBLE_TABLE_SECOND_BREAKPOINTS }),
+                height: calculateTableHeights({
+                  baseHeight: getTableHeight({
+                    steps: DOUBLE_TABLE_SECOND_BREAKPOINTS,
+                  }),
                   isOpen: notificationsInfo.isOpen,
                   count: notificationsInfo.count,
-                  splitMode: 'second'
+                  splitMode: "second",
                 }),
                 overflow: "auto",
                 overflowX: "auto",

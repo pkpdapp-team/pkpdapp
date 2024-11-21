@@ -13,7 +13,7 @@ type Props<T extends FieldValues> = {
   selectProps?: SelectProps;
   compound?: Compound;
   isPreclinicalPerKg?: boolean;
-  sx?: SxProps
+  sx?: SxProps;
 };
 
 function UnitField<T extends FieldValues>({
@@ -24,7 +24,7 @@ function UnitField<T extends FieldValues>({
   rules,
   selectProps,
   isPreclinicalPerKg,
-  sx
+  sx,
 }: Props<T>): ReactElement {
   if (!isPreclinicalPerKg) {
     isPreclinicalPerKg = false;

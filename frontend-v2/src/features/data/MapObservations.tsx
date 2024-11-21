@@ -30,7 +30,12 @@ import {
 } from "../../app/backendApi";
 import useObservationRows from "./useObservationRows";
 import { validateState } from "./dataValidation";
-import { calculateTableHeights, DOUBLE_TABLE_FIRST_BREAKPOINTS, DOUBLE_TABLE_SECOND_BREAKPOINTS, getTableHeight } from "../../shared/calculateTableHeights";
+import {
+  calculateTableHeights,
+  DOUBLE_TABLE_FIRST_BREAKPOINTS,
+  DOUBLE_TABLE_SECOND_BREAKPOINTS,
+  getTableHeight,
+} from "../../shared/calculateTableHeights";
 import { TableHeader } from "../../components/TableHeader";
 
 interface IMapObservations {
@@ -247,7 +252,9 @@ const MapObservations: FC<IMapObservations> = ({
         <TableContainer
           sx={{
             maxHeight: calculateTableHeights({
-              baseHeight: getTableHeight({ steps: DOUBLE_TABLE_FIRST_BREAKPOINTS }),
+              baseHeight: getTableHeight({
+                steps: DOUBLE_TABLE_FIRST_BREAKPOINTS,
+              }),
               isOpen: notificationsInfo.isOpen,
               count: notificationsInfo.count,
               splitMode: "first",
@@ -255,13 +262,13 @@ const MapObservations: FC<IMapObservations> = ({
             transition: "all .35s ease-in",
           }}
         >
-          <Table stickyHeader size="small" >
-            <TableHead >
+          <Table stickyHeader size="small">
+            <TableHead>
               <TableRow>
-                <TableCell sx={{ width: '15rem'}}>
+                <TableCell sx={{ width: "15rem" }}>
                   <Typography>{observationIdField}</Typography>
                 </TableCell>
-                <TableCell sx={{ width: '15rem'}}>
+                <TableCell sx={{ width: "15rem" }}>
                   <Typography>Observation</Typography>
                 </TableCell>
                 <TableCell>
@@ -323,7 +330,7 @@ const MapObservations: FC<IMapObservations> = ({
                         </FormControl>
                       </TableCell>
                       <TableCell>
-                        <FormControl sx={{ width: '15rem'}}>
+                        <FormControl sx={{ width: "15rem" }}>
                           <InputLabel
                             size="small"
                             id={`select-unit-${obsId}-label`}
@@ -356,7 +363,7 @@ const MapObservations: FC<IMapObservations> = ({
             </TableBody>
           </Table>
         </TableContainer>
-        <TableHeader label='Groups' />
+        <TableHeader label="Groups" />
         <Tabs value={tab} onChange={handleTabChange}>
           {groupIDs.map((groupID, index) => (
             <Tab
@@ -372,7 +379,9 @@ const MapObservations: FC<IMapObservations> = ({
           component="div"
           sx={{
             height: calculateTableHeights({
-              baseHeight: getTableHeight({ steps: DOUBLE_TABLE_SECOND_BREAKPOINTS }),
+              baseHeight: getTableHeight({
+                steps: DOUBLE_TABLE_SECOND_BREAKPOINTS,
+              }),
               isOpen: notificationsInfo.isOpen,
               count: notificationsInfo.count,
               splitMode: "second",

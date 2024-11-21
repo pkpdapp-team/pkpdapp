@@ -20,11 +20,13 @@ const SIMULATION_PAGES = [PageName.SIMULATIONS, PageName.RESULTS];
 export default function useSimulation(
   simInputs: Simulate,
   model: CombinedModelRead | undefined,
+  runSimulation: boolean = true,
 ) {
   const { compound, protocols } = useProtocols();
   const { setSimulations } = useContext(SimulationContext);
   const [loadingSimulate, setLoadingSimulate] = useState<boolean>(false);
   const [data, setData] = useState<SimulateResponse[]>([]);
+  const [lastSimulate, setLastSimulate] = useState<Simulate | undefined>();
   const [simulate, { error: simulateErrorBase }] =
     useCombinedModelSimulateCreateMutation();
   const simulateError: ErrorObject | undefined = simulateErrorBase
@@ -36,13 +38,17 @@ export default function useSimulation(
 
   useEffect(() => {
     let ignore = false;
+    const simulateInputsDifferent =
+      JSON.stringify(simInputs) !== JSON.stringify(lastSimulate);
     if (
+      runSimulation &&
       simInputs.outputs?.length > 1 &&
       simInputs.time_max &&
       model &&
       protocols &&
       compound &&
-      SIMULATION_PAGES.includes(page)
+      SIMULATION_PAGES.includes(page) &&
+      simulateInputsDifferent
     ) {
       setLoadingSimulate(true);
       console.log("Simulating with params", simInputs.variables);
@@ -56,6 +62,7 @@ export default function useSimulation(
             const responseData = response.data as SimulateResponse[];
             setData(responseData);
             setSimulations(responseData);
+            setLastSimulate(simInputs);
           }
         }
       });
@@ -70,6 +77,7 @@ export default function useSimulation(
     simulate,
     JSON.stringify(simInputs),
     page,
+    runSimulation,
   ]);
 
   return {

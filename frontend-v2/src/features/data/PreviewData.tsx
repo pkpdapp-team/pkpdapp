@@ -1,7 +1,5 @@
 import { FC } from "react";
-import {
-  Box,
-} from "@mui/material";
+import { Box } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import { StepperState } from "./LoadDataStepper";
 import { validateDataRow } from "./dataValidation";
@@ -85,7 +83,7 @@ const PreviewData: FC<IPreviewData> = ({
         label="Preview Dataset"
         tooltip="Preview your data. Click 'Finish' to upload and save."
       />
-      <Box sx={{ width: "100%", marginTop: '.5rem' }}>
+      <Box sx={{ width: "100%", marginTop: ".5rem" }}>
         <Box
           sx={{
             height: calculateTableHeights({
