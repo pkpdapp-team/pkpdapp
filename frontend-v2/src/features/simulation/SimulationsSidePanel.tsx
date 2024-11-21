@@ -17,7 +17,7 @@ import UnitField from "../../components/UnitField";
 import SimulationSliderView from "./SimulationSliderView";
 import HelpButton from "../../components/HelpButton";
 import { ExpandLess, ExpandMore } from "@mui/icons-material";
-import { ChangeEvent, useEffect, useState } from "react";
+import { ChangeEvent, useState } from "react";
 import { getTableHeight } from "../../shared/calculateTableHeights";
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
