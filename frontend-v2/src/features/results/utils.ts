@@ -42,18 +42,18 @@ export function valuesPerInterval(
     const start =
       startIndex > 0
         ? interpolate(
-          [times[startIndex - 1], times[startIndex]],
-          [values[startIndex - 1], values[startIndex]],
-          interval.start,
-        )
+            [times[startIndex - 1], times[startIndex]],
+            [values[startIndex - 1], values[startIndex]],
+            interval.start,
+          )
         : values[0];
     const end =
       endIndex > -1
         ? interpolate(
-          [times[endIndex - 1], times[endIndex]],
-          [values[endIndex - 1], values[endIndex]],
-          interval.end,
-        )
+            [times[endIndex - 1], times[endIndex]],
+            [values[endIndex - 1], values[endIndex]],
+            interval.end,
+          )
         : values[values.length - 1];
     const intervalValues = [
       start,
@@ -109,20 +109,20 @@ export function thresholdCrossingPoints(
   const startTime =
     thresholdStart > 0
       ? interpolate(
-        [intervalValues[thresholdStart - 1], intervalValues[thresholdStart]],
-        [intervalTimes[thresholdStart - 1], intervalTimes[thresholdStart]],
-        threshold,
-      )
+          [intervalValues[thresholdStart - 1], intervalValues[thresholdStart]],
+          [intervalTimes[thresholdStart - 1], intervalTimes[thresholdStart]],
+          threshold,
+        )
       : intervalTimes[0];
   const endTime =
     thresholdStart === -1 // threshold never reached
       ? startTime
       : thresholdEnd > 0
         ? interpolate(
-          [intervalValues[thresholdEnd - 1], intervalValues[thresholdEnd]],
-          [intervalTimes[thresholdEnd - 1], intervalTimes[thresholdEnd]],
-          threshold,
-        )
+            [intervalValues[thresholdEnd - 1], intervalValues[thresholdEnd]],
+            [intervalTimes[thresholdEnd - 1], intervalTimes[thresholdEnd]],
+            threshold,
+          )
         : intervalTimes[intervalTimes.length - 1]; // threshold reached beyond the end of the interval
   return [endTime - startTime, thresholdEnd];
 }

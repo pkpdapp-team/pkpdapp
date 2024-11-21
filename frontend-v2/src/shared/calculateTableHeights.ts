@@ -47,7 +47,8 @@ export const getTableHeight = ({ steps }: getTableHeightType) => {
     .find((minHeight) => window.innerHeight > minHeight);
 
   return (
-    steps.find(({ minHeight }) => minHeight === sortedHeights)?.tableHeight || "inherit"
+    steps.find(({ minHeight }) => minHeight === sortedHeights)?.tableHeight ||
+    "inherit"
   );
 };
 
@@ -78,8 +79,8 @@ export const SINGLE_TABLE_BREAKPOINTS = [
   },
   {
     minHeight: 500,
-    tableHeight: '44vh'
-  }
+    tableHeight: "44vh",
+  },
 ];
 
 export const DOUBLE_TABLE_FIRST_BREAKPOINTS = [

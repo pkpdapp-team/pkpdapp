@@ -25,7 +25,7 @@ type Props<T extends FieldValues> = {
   rules?: Record<string, unknown>;
   selectProps?: SelectProps;
   formControlProps?: FormControlProps;
-  sx?: SxProps
+  sx?: SxProps;
 };
 
 function SelectField<T extends FieldValues>({
@@ -36,7 +36,7 @@ function SelectField<T extends FieldValues>({
   rules,
   selectProps,
   formControlProps,
-  sx
+  sx,
 }: Props<T>): ReactElement {
   const labelId = `${name}-label`;
   const displayEmpty = selectProps?.displayEmpty || true;
@@ -52,7 +52,11 @@ function SelectField<T extends FieldValues>({
         field: { onChange, onBlur, value },
         fieldState: { error },
       }) => (
-        <FormControl sx={sx} {...formControlProps} style={{ minWidth: labelWidth }}>
+        <FormControl
+          sx={sx}
+          {...formControlProps}
+          style={{ minWidth: labelWidth }}
+        >
           <InputLabel id={labelId} shrink={displayEmpty}>
             {getLabel(label || "", Boolean(rules?.required))}
           </InputLabel>

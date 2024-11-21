@@ -73,7 +73,10 @@ export default function useExportSimulation({
         id: model.id,
         simulate: simInputs,
       }).then((response) => {
-        let rows = Object.keys(simInputs.variables).map((key) => [key, simInputs.variables[key]]);
+        let rows = Object.keys(simInputs.variables).map((key) => [
+          key,
+          simInputs.variables[key],
+        ]);
         if (response?.data) {
           const cols = Object.keys(response.data[0].outputs);
           const vars = cols.map((vid) =>

@@ -103,9 +103,11 @@ export default function Sidebar() {
 
   const doses = groups?.flatMap((group) => group.protocols.map((p) => p.doses));
   const groupsAreIncomplete = doses?.some((dosing) => !dosing[0]?.amount);
-  const noSecondaryParameters = model ?
-    model.derived_variables.reduce((acc, dv) => { return acc && dv.type !== "AUC"; }, true) :
-    false;
+  const noSecondaryParameters = model
+    ? model.derived_variables.reduce((acc, dv) => {
+        return acc && dv.type !== "AUC";
+      }, true)
+    : false;
 
   const warnings: { [key: string]: string } = {};
   const errors: { [key: string]: string } = {};
@@ -406,14 +408,16 @@ export default function Sidebar() {
       <Box
         component="nav"
         sx={{
-          width: { sm: selectedPage === PageName.SIMULATIONS ? drawerWidth : 0 },
+          width: {
+            sm: selectedPage === PageName.SIMULATIONS ? drawerWidth : 0,
+          },
           flexShrink: { sm: 0 },
           height: "100vh",
-          backgroundColor: '#FBFBFA',
-          borderRight: '1px solid #DBD6D1'
+          backgroundColor: "#FBFBFA",
+          borderRight: "1px solid #DBD6D1",
         }}
         aria-label="mailbox folders"
-        id='simulations-portal'
+        id="simulations-portal"
         zIndex={0}
       />
       <Box
@@ -422,7 +426,7 @@ export default function Sidebar() {
           flexGrow: 1,
           p: 3,
           width: { sm: `calc(100% - ${drawerWidth}px)` },
-          paddingBottom: 0
+          paddingBottom: 0,
         }}
       >
         <Toolbar />
