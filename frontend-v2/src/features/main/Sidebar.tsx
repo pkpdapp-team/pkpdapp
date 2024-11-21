@@ -45,7 +45,7 @@ import useSubjectGroups from "../../hooks/useSubjectGroups";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import { useCollapsibleSidebar } from "../../shared/contexts/CollapsibleSidebarContext";
-import '../../App.css'
+import "../../App.css";
 
 const drawerExpandedWidth = 240;
 const drawerCollapsedWidth = 50;
@@ -156,7 +156,13 @@ export default function Sidebar() {
     setMobileOpen(!mobileOpen);
   };
 
-  const { onCollapse, onExpand, setHasSimulationsExpandedChanged, isExpanded, animationClasses } = useCollapsibleSidebar(); 
+  const {
+    onCollapse,
+    onExpand,
+    setHasSimulationsExpandedChanged,
+    isExpanded,
+    animationClasses,
+  } = useCollapsibleSidebar();
 
   const pageKeys = Object.keys(PageName);
   const pageValues = Object.values(PageName);
@@ -297,11 +303,19 @@ export default function Sidebar() {
   const drawer = (
     <div style={{ marginTop: "7rem", transition: "all .35s linear" }}>
       {isExpanded ? (
-        <IconButton aria-label='collapse-navigation' onClick={onCollapse} sx={{ marginLeft: ".5rem" }}>
+        <IconButton
+          aria-label="collapse-navigation"
+          onClick={onCollapse}
+          sx={{ marginLeft: ".5rem" }}
+        >
           <ArrowBackIcon />
         </IconButton>
       ) : (
-        <IconButton aria-label='expand-navigation' onClick={onExpand} sx={{ marginLeft: ".5rem" }}>
+        <IconButton
+          aria-label="expand-navigation"
+          onClick={onExpand}
+          sx={{ marginLeft: ".5rem" }}
+        >
           <ArrowForwardIcon />
         </IconButton>
       )}
@@ -472,7 +486,7 @@ export default function Sidebar() {
           },
           flexShrink: { sm: 0 },
         }}
-        aria-label="navigation"
+        aria-label="project navigation"
       >
         {/* The implementation can be swapped with js to avoid SEO duplication of links. */}
         <Drawer
@@ -512,16 +526,13 @@ export default function Sidebar() {
         component="nav"
         sx={{
           width: {
-            sm: selectedPage === PageName.SIMULATIONS ? drawerWidth : 0,
+            sm: selectedPage === PageName.SIMULATIONS ? drawerExpandedWidth : 0,
           },
           flexShrink: { sm: 0 },
           height: "100vh",
-          backgroundColor: "#FBFBFA",
-          borderRight: "1px solid #DBD6D1",
         }}
-          aria-label="simulations-sidebar"
+        aria-label="simulations sidebar"
           id="simulations-portal"
-        zIndex={0}
       />
       <Box
         component="main"
