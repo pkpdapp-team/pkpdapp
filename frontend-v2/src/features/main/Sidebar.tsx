@@ -486,7 +486,7 @@ export default function Sidebar() {
           },
           flexShrink: { sm: 0 },
         }}
-        aria-label="project navigation"
+        aria-label="main"
       >
         {/* The implementation can be swapped with js to avoid SEO duplication of links. */}
         <Drawer
@@ -532,7 +532,7 @@ export default function Sidebar() {
           height: "100vh",
         }}
         aria-label="simulations sidebar"
-          id="simulations-portal"
+        id="simulations-portal"
       />
       <Box
         component="main"
