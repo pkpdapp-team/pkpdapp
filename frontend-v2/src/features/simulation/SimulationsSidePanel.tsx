@@ -19,6 +19,9 @@ import HelpButton from "../../components/HelpButton";
 import { ExpandLess, ExpandMore } from "@mui/icons-material";
 import { ChangeEvent, useState } from "react";
 import { getTableHeight } from "../../shared/calculateTableHeights";
+import { useSelector } from "react-redux";
+import { RootState } from "../../app/store";
+import { PageName } from "../main/mainSlice";
 import {
   Simulation,
   SimulationPlot,
@@ -136,6 +139,9 @@ export const SimulationsSidePanel = ({
   shouldShowLegend,
   setShouldShowLegend,
 }: SimulationsSidePanelType) => {
+  const selectedPage = useSelector(
+    (state: RootState) => state.main.selectedPage,
+  );
   const portalRoot = document.getElementById(portalId);
   const [collapseLayout, setCollapseLayout] = useState(true);
   const [collapseOptions, setCollapseOptions] = useState(true);
@@ -144,7 +150,7 @@ export const SimulationsSidePanel = ({
   const [collapseReference, setCollapseReference] = useState(true);
   const [collapseLegend, setCollapseLegend] = useState(true);
 
-  if (!portalRoot) return null;
+  if (!portalRoot || selectedPage !== PageName.SIMULATIONS) return null;
 
   return ReactDOM.createPortal(
     <Box

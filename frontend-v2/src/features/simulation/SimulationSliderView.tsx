@@ -62,15 +62,13 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
   // update the slider value if the variable default value changes
   const defaultValue = variable?.default_value || 1.0;
   const [value, setValue] = useState<number>(defaultValue);
-
   useEffect(() => {
     // don't set the value of the slider until the variable is loaded
     if (variable) {
-      const defaultValue = variable.default_value || 1.0;
       setValue(defaultValue);
       onChange(slider.variable, defaultValue);
     }
-  }, [onChange, variable]);
+  }, [onChange, defaultValue, variable]);
 
   const handleSliderChange = (
     event: Event | SyntheticEvent<Element, Event>,
