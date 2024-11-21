@@ -1,9 +1,4 @@
-import {
-  Alert,
-  Grid,
-  Snackbar,
-  Box
-} from "@mui/material";
+import { Alert, Grid, Snackbar, Box } from "@mui/material";
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
 import {
@@ -46,31 +41,31 @@ import { getTableHeight } from "../../shared/calculateTableHeights";
 
 const PlotsWidthSteps = [
   {
-    minHeight: "1100",
+    minHeight: 1100,
     tableHeight: "75vw",
   },
   {
-    minHeight: "1000",
+    minHeight: 1000,
     tableHeight: "72vw",
   },
   {
-    minHeight: "900",
+    minHeight: 900,
     tableHeight: "70vw",
   },
   {
-    minHeight: "800",
+    minHeight: 800,
     tableHeight: "65vw",
   },
   {
-    minHeight: "700",
+    minHeight: 700,
     tableHeight: "60vw",
   },
   {
-    minHeight: "600",
+    minHeight: 600,
     tableHeight: "55vw",
   },
   {
-    minHeight: "500",
+    minHeight: 500,
     tableHeight: "53vw",
   },
 ];
@@ -215,7 +210,7 @@ const Simulations: FC = () => {
   );
   const { data: dataReference } = useSimulation(
     refSimInputs,
-    showReference ? model : undefined
+    showReference ? model : undefined,
   );
 
   const {
@@ -372,7 +367,7 @@ const Simulations: FC = () => {
   };
 
   const orderedSliders = sliders.map((slider, i) => {
-    const variable = variables.find((v) => v.id === slider.variable);
+    const variable = variables?.find((v) => v.id === slider.variable);
     return {
       ...slider,
       priority: variable ? paramPriority(variable) : 0,

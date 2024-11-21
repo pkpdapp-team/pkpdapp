@@ -31,6 +31,18 @@ export type RowData =
   | TimeInterval[]
   | VariableRead[];
 
+type Item =
+  | { name: string }
+  | Parameter
+  | (TimeInterval & { name: string })
+  | VariableRead;
+type RowFilter = {
+  filter: (event: SelectChangeEvent) => void;
+  value: number;
+  items: Item[];
+  label: string;
+};
+
 const ResultsTab: FC = () => {
   const { groups = [] } = useSubjectGroups();
   const { intervals } = useContext(SimulationContext);
@@ -102,8 +114,8 @@ const ResultsTab: FC = () => {
     setParameter(newValue);
   }
 
-  let rowFilter1;
-  let rowFilter2;
+  let rowFilter1: RowFilter | undefined;
+  let rowFilter2: RowFilter | undefined;
 
   const groupSelect = {
     filter: handleGroupChange,
@@ -155,23 +167,23 @@ const ResultsTab: FC = () => {
         <div>
           All Secondary PK parameters of all selected {var1} of{" "}
           {rowFilter1?.label?.toLowerCase()} &apos;
-          {rowFilter1?.items?.[rowFilter1?.value.toString()]?.name}&apos; and{" "}
+          {rowFilter1?.items?.[rowFilter1?.value]?.name}&apos; and{" "}
           {rowFilter2?.label.toLowerCase()} &apos;
-          {rowFilter2?.items?.[rowFilter2?.value.toString()]?.name}&apos;
+          {rowFilter2?.items?.[rowFilter2?.value]?.name}&apos;
         </div>
       );
     }
 
     const var1 =
       rowFilter1?.label === "Parameter"
-        ? rowFilter1?.items?.[rowFilter1?.value.toString()]?.name
-        : rowFilter2?.items?.[rowFilter2?.value.toString()]?.name;
+        ? rowFilter1?.items?.[rowFilter1?.value]?.name
+        : rowFilter2?.items?.[rowFilter2?.value]?.name;
     const var2 =
       rowFilter1?.label === "Parameter" ? rowFilter2?.label : rowFilter1?.label;
     const var3 =
       rowFilter1?.label === "Parameter"
-        ? rowFilter2?.items?.[rowFilter2?.value.toString()]?.name
-        : rowFilter1?.items?.[rowFilter1?.value.toString()]?.name;
+        ? rowFilter2?.items?.[rowFilter2?.value]?.name
+        : rowFilter1?.items?.[rowFilter1?.value]?.name;
 
     const desc1 = () => {
       if (var2 === "Interval") return "and time interval";
