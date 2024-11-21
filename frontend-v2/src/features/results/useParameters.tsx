@@ -83,7 +83,9 @@ export function useParameters() {
           simulation,
           intervalIndex,
         );
-        return formattedNumber(Math.min(...intervalValues));
+        return intervalValues
+          ? formattedNumber(Math.min(...intervalValues))
+          : 0;
       },
     },
     {
@@ -99,7 +101,9 @@ export function useParameters() {
           simulation,
           intervalIndex,
         );
-        return formattedNumber(Math.max(...intervalValues));
+        return intervalValues
+          ? formattedNumber(Math.max(...intervalValues))
+          : 0;
       },
     },
     {
@@ -140,14 +144,16 @@ export function useParameters() {
           simulation,
           intervalIndex,
         );
-        return formattedNumber(
-          timeOverLowerThresholdPerInterval(
-            intervalValues,
-            intervalTimes,
-            variable,
-            thresholds,
-          ),
-        );
+        return intervalValues
+          ? formattedNumber(
+              timeOverLowerThresholdPerInterval(
+                intervalValues,
+                intervalTimes,
+                variable,
+                thresholds,
+              ),
+            )
+          : 0;
       },
     },
     {
@@ -167,14 +173,16 @@ export function useParameters() {
           simulation,
           intervalIndex,
         );
-        return formattedNumber(
-          timeOverUpperThresholdPerInterval(
-            intervalValues,
-            intervalTimes,
-            variable,
-            thresholds,
-          ),
-        );
+        return intervalValues
+          ? formattedNumber(
+              timeOverUpperThresholdPerInterval(
+                intervalValues,
+                intervalTimes,
+                variable,
+                thresholds,
+              ),
+            )
+          : 0;
       },
     },
     {
@@ -194,20 +202,22 @@ export function useParameters() {
           simulation,
           intervalIndex,
         );
-        return formattedNumber(
-          timeOverLowerThresholdPerInterval(
-            intervalValues,
-            intervalTimes,
-            variable,
-            thresholds,
-          ) -
-            timeOverUpperThresholdPerInterval(
-              intervalValues,
-              intervalTimes,
-              variable,
-              thresholds,
-            ),
-        );
+        return intervalValues
+          ? formattedNumber(
+              timeOverLowerThresholdPerInterval(
+                intervalValues,
+                intervalTimes,
+                variable,
+                thresholds,
+              ) -
+                timeOverUpperThresholdPerInterval(
+                  intervalValues,
+                  intervalTimes,
+                  variable,
+                  thresholds,
+                ),
+            )
+          : 0;
       },
     },
   ] as Parameter[];
