@@ -108,9 +108,11 @@ export default function Sidebar() {
 
   const doses = groups?.flatMap((group) => group.protocols.map((p) => p.doses));
   const groupsAreIncomplete = doses?.some((dosing) => !dosing[0]?.amount);
-  const noSecondaryParameters = model ?
-    model.derived_variables.reduce((acc, dv) => { return acc && dv.type !== "AUC"; }, true) :
-    false;
+  const noSecondaryParameters = model
+    ? model.derived_variables.reduce((acc, dv) => {
+        return acc && dv.type !== "AUC";
+      }, true)
+    : false;
 
   const warnings: { [key: string]: string } = {};
   const errors: { [key: string]: string } = {};
@@ -511,12 +513,12 @@ export default function Sidebar() {
           component="nav"
           sx={{
             width: {
-              sm: drawerExpandedWidth,
+              sm: selectedPage === PageName.SIMULATIONS ? drawerExpandedWidth : 0,,
             },
             flexShrink: { sm: 0 },
             height: "100vh",
           }}
-          aria-label="simulations-sidebar"
+          aria-label="simulations sidebar"
           id="simulations-portal"
         />
       )}

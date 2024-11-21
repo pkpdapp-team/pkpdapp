@@ -31,7 +31,9 @@ function TabPanel(props: TabPanelProps) {
       style={{ width: '100%'}}
       {...other}
     >
-      <Box sx={{ p: 3, zIndex: value === index ? 1000 : 1, paddingBottom: 0 }}>{children}</Box>
+      <Box sx={{ p: 3, zIndex: value === index ? 1000 : 1, paddingBottom: 0 }}>
+        {children}
+      </Box>
     </div>
   );
 }

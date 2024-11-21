@@ -115,7 +115,14 @@ export default function useSimulationInputs(
   return useMemo(
     () =>
       model && simulation && sliderValues
-        ? getSimulateInput(model, simulation, sliderValues, variables, timeMax, simulationInputMode.ALL_OUTPUTS_NO_AMOUNTS)
+        ? getSimulateInput(
+            model,
+            simulation,
+            sliderValues,
+            variables,
+            timeMax,
+            simulationInputMode.ALL_OUTPUTS_NO_AMOUNTS,
+          )
         : DEFAULT_INPUTS,
     [simulation, sliderValues, variables, timeMax],
   );

@@ -18,7 +18,11 @@ import { StepperState } from "./LoadDataStepper";
 import { UnitRead, VariableRead } from "../../app/backendApi";
 import { Row } from "./LoadData";
 import { TableHeader } from "../../components/TableHeader";
-import { calculateTableHeights, getTableHeight, SINGLE_TABLE_BREAKPOINTS } from "../../shared/calculateTableHeights";
+import {
+  calculateTableHeights,
+  getTableHeight,
+  SINGLE_TABLE_BREAKPOINTS,
+} from "../../shared/calculateTableHeights";
 
 interface IDosingProtocols {
   administrationIdField: string;
@@ -144,7 +148,7 @@ const CreateDosingProtocols: FC<IDosingProtocols> = ({
                   <TableRow key={adminId}>
                     <TableCell sx={{ width: "10rem" }}>{adminId}</TableCell>
                     <TableCell>
-                      <FormControl sx={{ width: '15rem'}}>
+                      <FormControl sx={{ width: "15rem" }}>
                         <InputLabel
                           size="small"
                           id={`select-var-${adminId}-label`}

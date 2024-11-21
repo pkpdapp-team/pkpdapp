@@ -17,10 +17,14 @@ interface IMapDosing {
   notificationsInfo: {
     isOpen: boolean;
     count: number;
-  }
+  };
 }
 
-const MapDosing: FC<IMapDosing> = ({ state, firstTime, notificationsInfo }: IMapDosing) => {
+const MapDosing: FC<IMapDosing> = ({
+  state,
+  firstTime,
+  notificationsInfo,
+}: IMapDosing) => {
   const projectId = useSelector(
     (state: RootState) => state.main.selectedProject,
   );

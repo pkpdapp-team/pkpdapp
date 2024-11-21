@@ -40,9 +40,6 @@ const HEADERS: string[] = [
   "Additional Doses",
 ];
 
-
-  
-
 function parseDosingRow(
   protocol: ProtocolRead,
   units: UnitListApiResponse | undefined,
@@ -139,10 +136,10 @@ export default function generateCSV(
   return Papa.unparse(rows);
 }
 const NONMEM_HEADER_MAPPING: { [key: string]: string } = {
-  "Time": "TIME",
-  "Observation": "DV",
+  Time: "TIME",
+  Observation: "DV",
   "Administration ID": "CMT",
-  "Amount": "AMT",
+  Amount: "AMT",
   "Interdose Interval": "II",
   "Additional Doses": "ADDL",
 };
@@ -157,9 +154,14 @@ function nonMemModifier(rows: Data) {
       row["MDV"] = 1;
       row["EVID"] = 1;
     }
-    
+
     // RATE column
-    if ("Infusion Duration" in row && "Amount" in row && row["Infusion Duration"] !== undefined && row["Amount"] !== undefined) {
+    if (
+      "Infusion Duration" in row &&
+      "Amount" in row &&
+      row["Infusion Duration"] !== undefined &&
+      row["Amount"] !== undefined
+    ) {
       const duration = row["Infusion Duration"];
       const amount = row["Amount"];
       const rate = amount / duration;
@@ -168,7 +170,7 @@ function nonMemModifier(rows: Data) {
     } else {
       row["RATE"] = ".";
     }
-    
+
     // all empty values should be replaced with "."
     HEADERS.forEach((key) => {
       if (!(key in row)) {
