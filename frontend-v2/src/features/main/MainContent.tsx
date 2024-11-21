@@ -30,7 +30,9 @@ function TabPanel(props: TabPanelProps) {
       aria-labelledby={`simple-tab-${index}`}
       {...other}
     >
-      <Box sx={{ p: 3, zIndex: value === index ? 1000 : 1, paddingBottom: 0 }}>{children}</Box>
+      <Box sx={{ p: 3, zIndex: value === index ? 1000 : 1, paddingBottom: 0 }}>
+        {children}
+      </Box>
     </div>
   );
 }

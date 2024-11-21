@@ -40,7 +40,7 @@ interface ILoadDataProps {
   notificationsInfo: {
     isOpen: boolean;
     count: number;
-  }
+  };
 }
 
 function updateDataAndResetFields(state: StepperState, data: Data) {
@@ -102,7 +102,11 @@ function setMinimumInfusionTime(state: StepperState) {
   }
 }
 
-const LoadData: FC<ILoadDataProps> = ({ state, firstTime, notificationsInfo }) => {
+const LoadData: FC<ILoadDataProps> = ({
+  state,
+  firstTime,
+  notificationsInfo,
+}) => {
   const showData = state.data.length > 0 && state.fields.length > 0;
   const normalisedHeaders = state.normalisedHeaders;
   if (!normalisedHeaders.includes("ID")) {
@@ -189,7 +193,15 @@ const LoadData: FC<ILoadDataProps> = ({ state, firstTime, notificationsInfo }) =
   const showTimeUnitSelector = noTimeUnit || invalidTimeUnits;
 
   return (
-    <Stack sx={{ display: 'flex', flexDirection: 'column', flexGrow: '1', flexShrink: '0'}} spacing={2}>
+    <Stack
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        flexGrow: "1",
+        flexShrink: "0",
+      }}
+      spacing={2}
+    >
       {!showData && (
         <Box style={style.dropAreaContainer}>
           <Box {...getRootProps({ style: style.dropArea })}>
@@ -215,9 +227,7 @@ const LoadData: FC<ILoadDataProps> = ({ state, firstTime, notificationsInfo }) =
           </Box>
         </Box>
       )}
-      <Box
-        component="div"
-      >
+      <Box component="div">
         {showData && (
           <div
             style={{
@@ -226,9 +236,12 @@ const LoadData: FC<ILoadDataProps> = ({ state, firstTime, notificationsInfo }) =
               flexDirection: "column",
             }}
           >
-            <TableHeader label="Imported Data Table" tooltip="The column types, which are automatically suggested based on the
+            <TableHeader
+              label="Imported Data Table"
+              tooltip="The column types, which are automatically suggested based on the
               headers in the data, can be customized in the table by selecting
-              the desired type from the dropdown lists." />
+              the desired type from the dropdown lists."
+            />
             <MapHeaders
               data={state.data}
               setNormalisedFields={setNormalisedFields}

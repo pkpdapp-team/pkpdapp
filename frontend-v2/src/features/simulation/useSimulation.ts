@@ -20,7 +20,7 @@ const SIMULATION_PAGES = [PageName.SIMULATIONS, PageName.RESULTS];
 export default function useSimulation(
   simInputs: Simulate,
   model: CombinedModelRead | undefined,
-  runSimulation: boolean = true
+  runSimulation: boolean = true,
 ) {
   const { compound, protocols } = useProtocols();
   const { setSimulations } = useContext(SimulationContext);
@@ -38,7 +38,8 @@ export default function useSimulation(
 
   useEffect(() => {
     let ignore = false;
-    const simulateInputsDifferent = JSON.stringify(simInputs) !== JSON.stringify(lastSimulate);
+    const simulateInputsDifferent =
+      JSON.stringify(simInputs) !== JSON.stringify(lastSimulate);
     if (
       runSimulation &&
       simInputs.outputs?.length > 1 &&

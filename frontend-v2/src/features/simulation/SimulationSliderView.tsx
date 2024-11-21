@@ -139,19 +139,37 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
   }
 
   return (
-    <div data-cy={`parameter-slider-${variable.name}`} style={{ backgroundColor: '#f5f5f2', width: '12rem', padding: '.5rem', border: '1px solid #DBD7D3', marginTop: '.5rem', borderRadius: '5px' }}>
+    <div
+      data-cy={`parameter-slider-${variable.name}`}
+      style={{
+        backgroundColor: "#f5f5f2",
+        width: "12rem",
+        padding: ".5rem",
+        border: "1px solid #DBD7D3",
+        marginTop: ".5rem",
+        borderRadius: "5px",
+      }}
+    >
       <Stack direction="row" spacing={0} alignItems="center">
         <Tooltip title={variable.description} placement="bottom">
-          <Typography id="discrete-slider" gutterBottom sx={{ flexGrow: 1, fontWeight: 'bold' }}>
+          <Typography
+            id="discrete-slider"
+            gutterBottom
+            sx={{ flexGrow: 1, fontWeight: "bold" }}
+          >
             {unit?.symbol
               ? `${variable.name} [${unit?.symbol}]`
               : variable.name}
           </Typography>
         </Tooltip>
       </Stack>
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+      <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
         <Tooltip title={"Reset to saved default value"} placement="top">
-          <IconButton aria-label="reset" onClick={handleReset} sx={{ padding: '2px' }}>
+          <IconButton
+            aria-label="reset"
+            onClick={handleReset}
+            sx={{ padding: "2px" }}
+          >
             <Replay fontSize="small" />
           </IconButton>
         </Tooltip>
@@ -160,18 +178,26 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
             aria-label="save"
             onClick={handleSave}
             disabled={isSharedWithMe}
-            sx={{ padding: '2px' }}
+            sx={{ padding: "2px" }}
           >
             <Save fontSize="small" />
           </IconButton>
         </Tooltip>
         <Tooltip title={"Widen range"} placement="top">
-          <IconButton aria-label="widen" onClick={handleWider} sx={{ padding: '2px' }}>
+          <IconButton
+            aria-label="widen"
+            onClick={handleWider}
+            sx={{ padding: "2px" }}
+          >
             <OpenInFull fontSize="small" />
           </IconButton>
         </Tooltip>
         <Tooltip title={"Narrow range"} placement="top">
-          <IconButton aria-label="restrict" onClick={handleNarrow} sx={{ padding: '2px' }}>
+          <IconButton
+            aria-label="restrict"
+            onClick={handleNarrow}
+            sx={{ padding: "2px" }}
+          >
             <CloseFullscreen fontSize="small" />
           </IconButton>
         </Tooltip>
@@ -180,7 +206,7 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
             aria-label="delete"
             onClick={handleDelete}
             disabled={isSharedWithMe}
-            sx={{ padding: '2px' }}
+            sx={{ padding: "2px" }}
           >
             <Delete fontSize="small" />
           </IconButton>

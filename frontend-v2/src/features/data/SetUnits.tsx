@@ -27,7 +27,7 @@ interface IMapObservations {
 const SetUnits: FC<IMapObservations> = ({
   state,
   firstTime,
-  setHasTimeUnitChanged
+  setHasTimeUnitChanged,
 }: IMapObservations) => {
   const [isChanged, setIsChanged] = useState<boolean>(false);
   const projectId = useSelector(
@@ -89,10 +89,23 @@ const SetUnits: FC<IMapObservations> = ({
   return (
     <div>
       {(showTimeUnitSelector || isChanged) && (
-        <Alert severity="info" sx={{ display: "flex", alignItems: "center", height: '3rem', borderLeft: '5px solid #0288d1', margin: '.2rem' }}>
+        <Alert
+          severity="info"
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            height: "3rem",
+            borderLeft: "5px solid #0288d1",
+            margin: ".2rem",
+          }}
+        >
           <Stack direction="row" spacing="1rem" sx={{ alignItems: "center" }}>
             <Typography>Please select a unit for all time values.</Typography>
-            <FormControl size='small' sx={{ minWidth: "10rem" }} error={!state.timeUnit}>
+            <FormControl
+              size="small"
+              sx={{ minWidth: "10rem" }}
+              error={!state.timeUnit}
+            >
               <InputLabel id="select-time-unit-label">Set Time Unit</InputLabel>
               <Select
                 labelId="select-time-unit-label"

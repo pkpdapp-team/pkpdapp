@@ -191,9 +191,11 @@ const Simulations: FC = () => {
     timeMax,
   );
   const hasPlots = simulation ? simulation.plots.length > 0 : false;
-  const hasSecondaryParameters = model ?
-    model.derived_variables.reduce((acc, dv) => { return acc || dv.type === "AUC"; }, false) :
-    false;
+  const hasSecondaryParameters = model
+    ? model.derived_variables.reduce((acc, dv) => {
+        return acc || dv.type === "AUC";
+      }, false)
+    : false;
 
   const {
     loadingSimulate,
