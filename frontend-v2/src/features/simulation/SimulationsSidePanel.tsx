@@ -31,6 +31,8 @@ import {
   UnitRead,
 } from "../../app/backendApi";
 import { Control } from "react-hook-form";
+import { useCollapsibleSidebar } from "../../shared/contexts/CollapsibleSidebarContext";
+import '../../App.css'
 
 type SimulationsSidePanelType = {
   portalId: string;
@@ -143,23 +145,27 @@ export const SimulationsSidePanel = ({
     (state: RootState) => state.main.selectedPage,
   );
   const portalRoot = document.getElementById(portalId);
-  const [collapseLayout, setCollapseLayout] = useState(true);
-  const [collapseOptions, setCollapseOptions] = useState(true);
-  const [collapseGroups, setCollapseGroups] = useState(true);
-  const [collapseParameters, setCollapseParameters] = useState(true);
-  const [collapseReference, setCollapseReference] = useState(true);
-  const [collapseLegend, setCollapseLegend] = useState(true);
+  const [collapseLayout, setCollapseLayout] = useState(false);
+  const [collapseOptions, setCollapseOptions] = useState(false);
+  const [collapseGroups, setCollapseGroups] = useState(false);
+  const [collapseParameters, setCollapseParameters] = useState(false);
+  const [collapseReference, setCollapseReference] = useState(false);
+  const [collapseLegend, setCollapseLegend] = useState(false);
+  const { simulationAnimationClasses } = useCollapsibleSidebar(); 
 
   if (!portalRoot || selectedPage !== PageName.SIMULATIONS) return null;
 
   return ReactDOM.createPortal(
     <Box
+      className={simulationAnimationClasses}
       sx={{
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-between",
         height: "100%",
         paddingBottom: "1rem",
+        backgroundColor: "#FBFBFA",
+        borderRight: "1px solid #DBD6D1"
       }}
     >
       <Box

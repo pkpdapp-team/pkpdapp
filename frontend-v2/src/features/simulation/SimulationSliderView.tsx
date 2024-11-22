@@ -212,8 +212,7 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
           </IconButton>
         </Tooltip>
       </Box>
-      <Grid container spacing={2} alignItems="center">
-        <Grid item xs={8}>
+      <Box alignItems="center">
           <Slider
             value={typeof value === "number" ? value : 0}
             min={minValue}
@@ -224,9 +223,10 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
             valueLabelDisplay="off"
             aria-labelledby="input-slider"
           />
-        </Grid>
-        <Grid item xs={4}>
+      </Box>
+      <Box alignItems="center">
           <Input
+          sx={{ width: '100%'}}
             value={value}
             size="small"
             onChange={handleInputChange}
@@ -239,8 +239,7 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
               "aria-labelledby": "input-slider",
             }}
           />
-        </Grid>
-      </Grid>
+      </Box>
     </div>
   );
 };

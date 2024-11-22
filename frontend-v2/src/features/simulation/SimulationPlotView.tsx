@@ -22,6 +22,7 @@ import {
 import Plotly from "plotly.js-basic-dist-min";
 import {
   Button,
+  debounce,
   Dialog,
   DialogActions,
   DialogContent,
@@ -267,6 +268,9 @@ interface SimulationPlotProps {
   visibleGroups: string[];
   shouldShowLegend: boolean;
   layout: string;
+  dimensions: {
+    width: number;
+  }
 }
 
 const SimulationPlotView: FC<SimulationPlotProps> = ({
@@ -283,7 +287,7 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
   model,
   visibleGroups,
   shouldShowLegend,
-  layout,
+  dimensions,
 }) => {
   const projectId = useSelector(
     (state: RootState) => state.main.selectedProject,
@@ -459,28 +463,21 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
     ln: { type: "log", dtick: Math.log10(Math.E) },
   };
 
-  // axis dticks
-  // const { dticky, dticky2 } = dticks(rangey, rangey2, plot);
-
   const getPlotWidth = () => {
-    if (window.innerWidth > 1900) {
-      return 650;
+    const buffor = 10;
+    const columnCount = screen.width > 2500 ? 3 : 2;
+    if (screen.width > 1536) {
+      return dimensions.width / columnCount - buffor;
     }
 
-    if (window.innerWidth > 1700) {
-      return 550;
-    }
-
-    if (window.innerWidth > 1500) {
-      return screen.width > 1400 ? 450 : 650;
-    }
-
-    return 680;
+    return dimensions.width - buffor;
   };
+
+  const plotWidth = getPlotWidth();
 
   const plotLayout: Partial<Layout> = {
     autosize: false,
-    width: getPlotWidth(),
+    width: plotWidth,
     dragmode: "pan",
     showlegend: shouldShowLegend,
     shapes: icLines.map((icLine, i) => {
