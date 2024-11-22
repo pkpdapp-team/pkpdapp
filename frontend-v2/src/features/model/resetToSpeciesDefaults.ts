@@ -1,3 +1,4 @@
+// @ts-expect-error MutationTrigger isn't exported from Redux any more.
 import { MutationTrigger } from "@reduxjs/toolkit/dist/query/react/buildHooks";
 import {
   CombinedModelRead,
