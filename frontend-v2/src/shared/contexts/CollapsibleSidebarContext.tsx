@@ -7,7 +7,9 @@ const CollapsibleSidebarContext = createContext({
   onExpand: () => {
     return;
   },
-  setHasSimulationsExpandedChanged: (isChanged: boolean) => { return; },
+  setHasSimulationsExpandedChanged: (isChanged: boolean) => {
+    return;
+  },
   isExpanded: true,
   animationClasses: "",
   simulationAnimationClasses: "",
@@ -22,14 +24,20 @@ export const CollapsibleSidebarProvider = ({
   const [hasExpandedChanged, setHasExpandedChanged] = useState(false);
   const [hasSimulationsExpandedChanged, setHasSimulationsExpandedChanged] =
     useState(false);
+
+  const eventCollapse = new Event("eventCollapse");
+  const eventExpand = new Event("eventExpand");
+
   const onCollapse = () => {
     setHasExpandedChanged(true);
+    dispatchEvent(eventCollapse)
     setHasSimulationsExpandedChanged(true);
     setIsExpanded(false);
   };
 
   const onExpand = () => {
     setHasExpandedChanged(true);
+    dispatchEvent(eventExpand);
     setHasSimulationsExpandedChanged(true);
     setIsExpanded(true);
   };

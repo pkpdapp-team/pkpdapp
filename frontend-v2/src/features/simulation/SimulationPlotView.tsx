@@ -1,4 +1,4 @@
-import { FC, useEffect, useState } from "react";
+import { FC, useState } from "react";
 import createPlotlyComponent from "react-plotly.js/factory";
 import {
   CombinedModelRead,
@@ -34,7 +34,6 @@ import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
 import useDataset from "../../hooks/useDataset";
 import useSubjectGroups from "../../hooks/useSubjectGroups";
-import { useCollapsibleSidebar } from "../../shared/contexts/CollapsibleSidebarContext";
 
 const Plot = createPlotlyComponent(Plotly);
 // https://github.com/plotly/plotly.js/blob/8c47c16daaa2020468baf9376130e085a4f01ec6/src/components/color/attributes.js#L4-L16
@@ -269,6 +268,9 @@ interface SimulationPlotProps {
   visibleGroups: string[];
   shouldShowLegend: boolean;
   layout: string;
+  dimensions: {
+    width: number;
+  }
 }
 
 const SimulationPlotView: FC<SimulationPlotProps> = ({
@@ -285,32 +287,12 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
   model,
   visibleGroups,
   shouldShowLegend,
-  layout,
+  dimensions,
 }) => {
   const projectId = useSelector(
     (state: RootState) => state.main.selectedProject,
   );
   useProtocolListQuery({ projectId: projectId || 0 }, { skip: !projectId });
-
-  const [dimensions, setDimensions] = useState({
-    height: window.innerHeight,
-    width: window.innerWidth,
-  });
-
-  useEffect(() => {
-    const debouncedHandleResize = debounce(function handleResize() {
-      setDimensions({
-        height: window.innerHeight,
-        width: window.innerWidth,
-      });
-    }, 200);
-
-    window.addEventListener("resize", debouncedHandleResize);
-
-    return () => {
-      window.removeEventListener("resize", debouncedHandleResize);
-    };
-  });
 
   const { groups } = useSubjectGroups();
   const { subjectBiomarkers } = useDataset(projectId);
@@ -481,35 +463,17 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
     ln: { type: "log", dtick: Math.log10(Math.E) },
   };
 
-  // axis dticks
-  // const { dticky, dticky2 } = dticks(rangey, rangey2, plot);
-
   const getPlotWidth = () => {
-    if (window.innerWidth > 2500) {
-      return 980;
-    }
-    if (window.innerWidth > 2300) {
-      return 900;
-    }
-    if (window.innerWidth > 2100) {
-      return 750;
-    }
-    if (window.innerWidth > 1900) {
-      return 650;
-    }
-    if (window.innerWidth > 1700) {
-      return 550;
-    }
-    if (window.innerWidth > 1500) {
-      return screen.width > 1400 ? 450 : 650;
+    const buffor = 10;
+    const columnCount = screen.width > 2500 ? 3 : 2;
+    if (screen.width > 1536) {
+      return dimensions.width / columnCount - buffor;
     }
 
-    return 680;
+    return dimensions.width - buffor;
   };
 
-  const { isExpanded } = useCollapsibleSidebar();
-
-  const plotWidth = getPlotWidth() + (isExpanded ? 0 : 95);
+  const plotWidth = getPlotWidth();
 
   const plotLayout: Partial<Layout> = {
     autosize: false,

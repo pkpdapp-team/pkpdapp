@@ -17,7 +17,7 @@ import UnitField from "../../components/UnitField";
 import SimulationSliderView from "./SimulationSliderView";
 import HelpButton from "../../components/HelpButton";
 import { ExpandLess, ExpandMore } from "@mui/icons-material";
-import { ChangeEvent, useEffect, useState } from "react";
+import { ChangeEvent, useState } from "react";
 import { getTableHeight } from "../../shared/calculateTableHeights";
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
@@ -145,12 +145,12 @@ export const SimulationsSidePanel = ({
     (state: RootState) => state.main.selectedPage,
   );
   const portalRoot = document.getElementById(portalId);
-  const [collapseLayout, setCollapseLayout] = useState(true);
-  const [collapseOptions, setCollapseOptions] = useState(true);
-  const [collapseGroups, setCollapseGroups] = useState(true);
-  const [collapseParameters, setCollapseParameters] = useState(true);
-  const [collapseReference, setCollapseReference] = useState(true);
-  const [collapseLegend, setCollapseLegend] = useState(true);
+  const [collapseLayout, setCollapseLayout] = useState(false);
+  const [collapseOptions, setCollapseOptions] = useState(false);
+  const [collapseGroups, setCollapseGroups] = useState(false);
+  const [collapseParameters, setCollapseParameters] = useState(false);
+  const [collapseReference, setCollapseReference] = useState(false);
+  const [collapseLegend, setCollapseLegend] = useState(false);
   const { simulationAnimationClasses } = useCollapsibleSidebar(); 
 
   if (!portalRoot || selectedPage !== PageName.SIMULATIONS) return null;
@@ -165,7 +165,7 @@ export const SimulationsSidePanel = ({
         height: "100%",
         paddingBottom: "1rem",
         backgroundColor: "#FBFBFA",
-        borderRight: "1px solid #DBD6D1",
+        borderRight: "1px solid #DBD6D1"
       }}
     >
       <Box

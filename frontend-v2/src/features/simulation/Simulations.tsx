@@ -1,4 +1,4 @@
-import { Alert, Grid, Snackbar, Box } from "@mui/material";
+import { Alert, Grid, Snackbar, Box, debounce } from "@mui/material";
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
 import {
@@ -25,6 +25,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import SimulationPlotView from "./SimulationPlotView";
@@ -37,6 +38,7 @@ import { getConstVariables } from "../model/resetToSpeciesDefaults";
 import useSubjectGroups from "../../hooks/useSubjectGroups";
 import useExportSimulation from "./useExportSimulation";
 import { SimulationsSidePanel } from "./SimulationsSidePanel";
+import { useCollapsibleSidebar } from "../../shared/contexts/CollapsibleSidebarContext";
 
 type SliderValues = { [key: number]: number };
 
@@ -392,6 +394,30 @@ const Simulations: FC = () => {
     });
   };
 
+  const [dimensions, setDimensions] = useState({
+    width: window.innerWidth,
+  });
+
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    const debouncedHandleResize = debounce(function handleResize() {
+      setDimensions({
+        width: containerRef?.current?.clientWidth,
+      });
+    }, 1000);
+
+    window.addEventListener("resize", debouncedHandleResize);
+    window.addEventListener("eventCollapse", debouncedHandleResize);
+    window.addEventListener("eventExpand", debouncedHandleResize);
+
+    return () => {
+      window.removeEventListener("resize", debouncedHandleResize);
+      window.removeEventListener("eventCollapse", debouncedHandleResize);
+      window.removeEventListener("eventExpand", debouncedHandleResize);
+    };
+  });
+  
   const loading = [
     isProjectLoading,
     isSimulationsLoading,
@@ -408,7 +434,7 @@ const Simulations: FC = () => {
   }
 
   return (
-    <Box sx={{ display: "flex" }}>
+    <Box sx={{ display: "flex" }} ref={containerRef}>
       <SimulationsSidePanel
         portalId="simulations-portal"
         addPlotOptions={addPlotOptions}
@@ -439,7 +465,7 @@ const Simulations: FC = () => {
       <Box
         sx={{
           maxHeight: "80vh",
-          maxWidth: '100%',
+          maxWidth: "100%",
           overflow: "auto",
         }}
       >
@@ -450,7 +476,7 @@ const Simulations: FC = () => {
           wrap={layout === "horizontal" ? "nowrap" : "wrap"}
         >
           {plots.map((plot, index) => (
-            <Grid xl={6} md={12} sm={12} item key={index}>
+            <Grid xl={screen.width > 2500 ? 4 : 6} md={12} sm={12} item key={index}>
               {data?.length && model ? (
                 <SimulationPlotView
                   index={index}
@@ -467,6 +493,7 @@ const Simulations: FC = () => {
                   visibleGroups={visibleGroups}
                   shouldShowLegend={shouldShowLegend}
                   layout={layout}
+                  dimensions={dimensions}
                 />
               ) : (
                 <div>Loading...</div>
