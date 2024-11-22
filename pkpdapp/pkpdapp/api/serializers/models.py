@@ -12,6 +12,7 @@ from pkpdapp.models import (
     MyokitModelMixin,
     DerivedVariable,
     Variable,
+    TimeInterval,
 )
 from pkpdapp.api.serializers import ValidSbml, ValidMmt
 
@@ -31,6 +32,12 @@ class DerivedVariableSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class TimeIntervalSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TimeInterval
+        fields = "__all__"
+
+
 class BaseDosedPharmacokineticSerializer(serializers.ModelSerializer):
     class Meta:
         model = CombinedModel
@@ -40,6 +47,7 @@ class BaseDosedPharmacokineticSerializer(serializers.ModelSerializer):
 class CombinedModelSerializer(serializers.ModelSerializer):
     mappings = PkpdMappingSerializer(many=True)
     derived_variables = DerivedVariableSerializer(many=True)
+    time_intervals = TimeIntervalSerializer(many=True)
     components = serializers.SerializerMethodField("get_components")
     variables = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
     mmt = serializers.SerializerMethodField("get_mmt", read_only=True)
@@ -70,10 +78,12 @@ class CombinedModelSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         mappings_data = validated_data.pop("mappings", [])
         derived_variables_data = validated_data.pop("derived_variables", [])
+        time_intervals_data = validated_data.pop("time_intervals", [])
         new_pkpd_model = BaseDosedPharmacokineticSerializer().create(validated_data)
         for field_datas, Serializer in [
             (mappings_data, PkpdMappingSerializer),
             (derived_variables_data, DerivedVariableSerializer),
+            (time_intervals_data, TimeIntervalSerializer),
         ]:
             for field_data in field_datas:
                 serializer = Serializer()
@@ -85,8 +95,10 @@ class CombinedModelSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         mappings_data = validated_data.pop("mappings", [])
         derived_var_data = validated_data.pop("derived_variables", [])
+        time_interval_data = validated_data.pop("time_intervals", [])
         old_mappings = list((instance.mappings).all())
         old_derived_vars = list((instance.derived_variables).all())
+        old_time_intervals = list((instance.time_intervals).all())
 
         pk_model_changed = False
         if "pk_model" in validated_data:
@@ -124,6 +136,16 @@ class CombinedModelSerializer(serializers.ModelSerializer):
                     derived_var["pkpd_model"] = new_pkpd_model
                     new_model = serializer.create(derived_var)
 
+            for time_interval in time_interval_data:
+                serializer = TimeIntervalSerializer()
+                try:
+                    old_model = old_time_intervals.pop(0)
+                    new_model = serializer.update(old_model, time_interval)
+                    new_model.save()
+                except IndexError:
+                    time_interval["pkpd_model"] = new_pkpd_model
+                    new_model = serializer.create(time_interval)
+
             for mapping in mappings_data:
                 serializer = PkpdMappingSerializer()
                 try:
@@ -134,10 +156,12 @@ class CombinedModelSerializer(serializers.ModelSerializer):
                     mapping["pkpd_model"] = new_pkpd_model
                     new_model = serializer.create(mapping)
 
-        # delete any remaining old mappings and derived variables
+        # delete any remaining old mappings, derived variables and time intervals
         for old_model in old_mappings:
             old_model.delete()
         for old_model in old_derived_vars:
+            old_model.delete()
+        for old_model in old_time_intervals:
             old_model.delete()
 
         # update model since mappings might have changed

@@ -86,6 +86,7 @@ const Model: FC = () => {
     project: projectIdOrZero,
     mappings: [],
     derived_variables: [],
+    time_intervals: [],
     components: "",
     variables: [],
     mmt: "",
