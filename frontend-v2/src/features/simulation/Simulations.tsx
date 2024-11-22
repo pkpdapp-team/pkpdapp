@@ -22,6 +22,7 @@ import { useFieldArray, useForm } from "react-hook-form";
 import {
   ChangeEvent,
   FC,
+  MutableRefObject,
   useCallback,
   useEffect,
   useMemo,
@@ -398,12 +399,12 @@ const Simulations: FC = () => {
     width: window.innerWidth,
   });
 
-  const containerRef = useRef(null);
+  const containerRef: MutableRefObject<HTMLElement | null> = useRef(null);
 
   useEffect(() => {
     const debouncedHandleResize = debounce(function handleResize() {
       setDimensions({
-        width: containerRef?.current?.clientWidth,
+        width: containerRef?.current?.clientWidth || 0,
       });
     }, 1000);
 
@@ -417,7 +418,7 @@ const Simulations: FC = () => {
       window.removeEventListener("eventExpand", debouncedHandleResize);
     };
   });
-  
+
   const loading = [
     isProjectLoading,
     isSimulationsLoading,
@@ -476,7 +477,13 @@ const Simulations: FC = () => {
           wrap={layout === "horizontal" ? "nowrap" : "wrap"}
         >
           {plots.map((plot, index) => (
-            <Grid xl={screen.width > 2500 ? 4 : 6} md={12} sm={12} item key={index}>
+            <Grid
+              xl={screen.width > 2500 ? 4 : 6}
+              md={12}
+              sm={12}
+              item
+              key={index}
+            >
               {data?.length && model ? (
                 <SimulationPlotView
                   index={index}
