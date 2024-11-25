@@ -62,6 +62,7 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
   // update the slider value if the variable default value changes
   const defaultValue = variable?.default_value || 1.0;
   const [value, setValue] = useState<number>(defaultValue);
+  const [editing, setEditing] = useState<boolean>(false);
   useEffect(() => {
     // don't set the value of the slider until the variable is loaded
     if (variable) {
@@ -104,6 +105,7 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
   };
 
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setEditing(true)
     setValue(Number(event.target.value));
   };
 
@@ -119,16 +121,28 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
   const stepValue = (maxValue - minValue) / 1000.0;
 
   const handleBlur = () => {
+    setEditing(false)
     let truncatedValue = value;
     if (value < minValue) {
-      setValue(minValue);
       truncatedValue = minValue;
     } else if (value > maxValue) {
       setValue(maxValue);
-      truncatedValue = maxValue;
     }
+    setValue(truncatedValue);
     onChange(slider.variable, truncatedValue);
   };
+
+  const formatNumber = (value: number) => {
+    if (editing) {
+      return value;
+    }
+    if (value < 0.001) {
+      return value.toExponential(3);
+    } else if (value > 1000) {
+      return value.toExponential(3);
+    }
+    return value.toFixed(3);
+  }
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -213,32 +227,32 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
         </Tooltip>
       </Box>
       <Box alignItems="center">
-          <Slider
-            value={typeof value === "number" ? value : 0}
-            min={minValue}
-            max={maxValue}
-            step={stepValue}
-            onChange={handleSliderChange}
-            onChangeCommitted={handleBlur}
-            valueLabelDisplay="off"
-            aria-labelledby="input-slider"
-          />
+        <Slider
+          value={typeof value === "number" ? value : 0}
+          min={minValue}
+          max={maxValue}
+          step={stepValue}
+          onChange={handleSliderChange}
+          onChangeCommitted={handleBlur}
+          valueLabelDisplay="off"
+          aria-labelledby="input-slider"
+        />
       </Box>
       <Box alignItems="center">
-          <Input
-          sx={{ width: '100%'}}
-            value={value}
-            size="small"
-            onChange={handleInputChange}
-            onBlur={handleBlur}
-            inputProps={{
-              step: stepValue,
-              min: minValue,
-              max: maxValue,
-              type: "number",
-              "aria-labelledby": "input-slider",
-            }}
-          />
+        <Input
+          sx={{ width: '100%' }}
+          value={formatNumber(value)}
+          size="small"
+          onChange={handleInputChange}
+          onBlur={handleBlur}
+          inputProps={{
+            step: stepValue,
+            min: minValue,
+            max: maxValue,
+            type: "number",
+            "aria-labelledby": "input-slider",
+          }}
+        />
       </Box>
     </div>
   );
