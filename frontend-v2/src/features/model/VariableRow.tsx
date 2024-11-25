@@ -128,11 +128,11 @@ const VariableRow: FC<Props> = ({
     const intervalId = setInterval(() => {
       if (isDirty) {
         handleSubmit((data) => {
-          // @ts-expect-error
+          // @ts-expect-error - lower_bound and upper_bound can be null
           if (data.lower_bound === "") {
             data.lower_bound = null;
           }
-          // @ts-expect-error
+          // @ts-expect-error - lower_bound and upper_bound can be null
           if (data.upper_bound === "") {
             data.upper_bound = null;
           }

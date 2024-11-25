@@ -1,6 +1,6 @@
 import { Tabs, Tab, Box, Button, IconButton } from "@mui/material";
 import RemoveCircleOutlineIcon from "@mui/icons-material/RemoveCircleOutline";
-import { ChangeEvent, FC, useEffect, useState } from "react";
+import { SyntheticEvent, FC, useState } from "react";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import ResultsTab from "./ResultsTab";
 import { TableHeader } from "../../components/TableHeader";
@@ -28,7 +28,7 @@ const Results: FC = () => {
     setTab(newTables?.length - 1);
   };
 
-  const handleTabChange = async (event: ChangeEvent<{}>, newValue: number) => {
+  const handleTabChange = async (event: SyntheticEvent, newValue: number) => {
     setTab(newValue);
   };
 

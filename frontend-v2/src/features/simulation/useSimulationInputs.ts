@@ -49,7 +49,7 @@ const getSimulateInput = (
   } else if (mode == simulationInputMode.ALL_OUTPUTS_NO_AMOUNTS) {
     const amountNames = ["Aa", "A1", "A2", "A3"];
     for (const v of variables || []) {
-      let isAmount = model.is_library_model && amountNames.includes(v.name);
+      const isAmount = model.is_library_model && amountNames.includes(v.name);
       if (!v.constant && !isAmount) {
         outputs.push(v.qname);
       }
