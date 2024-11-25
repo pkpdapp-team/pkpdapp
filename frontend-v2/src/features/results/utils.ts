@@ -1,9 +1,9 @@
 import {
   SimulateResponse,
+  TimeIntervalRead,
   VariableListApiResponse,
   VariableRead,
 } from "../../app/backendApi";
-import { TimeInterval } from "../../App";
 
 import { Parameter } from "./useParameters";
 import { columns } from "./columns";
@@ -27,7 +27,7 @@ function interpolate(x: [number, number], y: [number, number], x0: number) {
  * @returns interpolated values per interval
  */
 export function valuesPerInterval(
-  timeIntervals: TimeInterval[],
+  timeIntervals: TimeIntervalRead[],
   variable?: VariableRead,
   simulation?: SimulateResponse,
 ) {
@@ -37,14 +37,14 @@ export function valuesPerInterval(
     if (values.length === 0) {
       return [];
     }
-    const startIndex = times.findIndex((t) => t >= interval.start);
-    const endIndex = times.findIndex((t) => t >= interval.end);
+    const startIndex = times.findIndex((t) => t >= interval.start_time);
+    const endIndex = times.findIndex((t) => t >= interval.end_time);
     const start =
       startIndex > 0
         ? interpolate(
             [times[startIndex - 1], times[startIndex]],
             [values[startIndex - 1], values[startIndex]],
-            interval.start,
+            interval.start_time,
           )
         : values[0];
     const end =
@@ -52,7 +52,7 @@ export function valuesPerInterval(
         ? interpolate(
             [times[endIndex - 1], times[endIndex]],
             [values[endIndex - 1], values[endIndex]],
-            interval.end,
+            interval.end_time,
           )
         : values[values.length - 1];
     const intervalValues = [
@@ -72,15 +72,15 @@ export function valuesPerInterval(
  */
 export function timesPerInterval(
   times: number[],
-  timeIntervals: TimeInterval[],
+  timeIntervals: TimeIntervalRead[],
 ) {
   return timeIntervals.map((interval) => {
-    const startIndex = times.findIndex((t) => t >= interval.start);
-    const endIndex = times.findIndex((t) => t >= interval.end);
+    const startIndex = times.findIndex((t) => t >= interval.start_time);
+    const endIndex = times.findIndex((t) => t >= interval.end_time);
     return [
-      interval.start,
+      interval.start_time,
       ...times.slice(startIndex + 1, endIndex - 1),
-      interval.end,
+      interval.end_time,
     ];
   });
 }
@@ -163,8 +163,8 @@ export function formattedNumber(value: number, threshold: number = 1e4) {
 
 interface TableRowProps {
   header: string | JSX.Element;
-  interval?: TimeInterval;
-  intervals: TimeInterval[];
+  interval?: TimeIntervalRead;
+  intervals: TimeIntervalRead[];
   variables: VariableListApiResponse | undefined;
   simulation?: SimulateResponse;
   simulations: SimulateResponse[];

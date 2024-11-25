@@ -1959,10 +1959,40 @@ export type DerivedVariableRead = {
   /** base variable in PK part of model */
   pk_variable: number;
 };
+export type TimeInterval = {
+  /** true if object has been stored */
+  read_only?: boolean;
+  /** datetime the object was stored. */
+  datetime?: string | null;
+  /** start time of interval */
+  start_time: number;
+  /** end time of interval */
+  end_time: number;
+  /** PKPD model that this time interval is for */
+  pkpd_model: number;
+  /** unit of interval */
+  unit: number;
+};
+export type TimeIntervalRead = {
+  id: number;
+  /** true if object has been stored */
+  read_only?: boolean;
+  /** datetime the object was stored. */
+  datetime?: string | null;
+  /** start time of interval */
+  start_time: number;
+  /** end time of interval */
+  end_time: number;
+  /** PKPD model that this time interval is for */
+  pkpd_model: number;
+  /** unit of interval */
+  unit: number;
+};
 export type CombinedModelSpeciesEnum = "H" | "R" | "N" | "M";
 export type CombinedModel = {
   mappings: PkpdMapping[];
   derived_variables: DerivedVariable[];
+  time_intervals: TimeInterval[];
   /** true if object has been stored */
   read_only?: boolean;
   /** datetime the object was stored. */
@@ -2001,6 +2031,7 @@ export type CombinedModelRead = {
   id: number;
   mappings: PkpdMappingRead[];
   derived_variables: DerivedVariableRead[];
+  time_intervals: TimeIntervalRead[];
   components: string;
   variables: number[];
   mmt: string;
@@ -2043,6 +2074,7 @@ export type CombinedModelRead = {
 export type PatchedCombinedModel = {
   mappings?: PkpdMapping[];
   derived_variables?: DerivedVariable[];
+  time_intervals?: TimeInterval[];
   /** true if object has been stored */
   read_only?: boolean;
   /** datetime the object was stored. */
@@ -2081,6 +2113,7 @@ export type PatchedCombinedModelRead = {
   id?: number;
   mappings?: PkpdMappingRead[];
   derived_variables?: DerivedVariableRead[];
+  time_intervals?: TimeIntervalRead[];
   components?: string;
   variables?: number[];
   mmt?: string;

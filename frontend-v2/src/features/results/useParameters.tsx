@@ -1,6 +1,10 @@
 import { useContext } from "react";
 
-import { SimulateResponse, VariableRead } from "../../app/backendApi";
+import {
+  SimulateResponse,
+  TimeIntervalRead,
+  VariableRead,
+} from "../../app/backendApi";
 import {
   formattedNumber,
   timeOverThreshold,
@@ -9,7 +13,8 @@ import {
 } from "./utils";
 import { SimulationContext } from "../../contexts/SimulationContext";
 import { useVariables } from "./useVariables";
-import { Thresholds, TimeInterval } from "../../App";
+import { Thresholds } from "../../App";
+import { useModelTimeIntervals } from "../../hooks/useModelTimeIntervals";
 
 export type Parameter = {
   name: string | JSX.Element;
@@ -22,7 +27,7 @@ export type Parameter = {
 };
 
 const variablePerInterval = (
-  intervals: TimeInterval[],
+  intervals: TimeIntervalRead[],
   variable: VariableRead,
   simulation: SimulateResponse,
   intervalIndex: number,
@@ -67,7 +72,8 @@ const timeOverUpperThresholdPerInterval = (
 };
 
 export function useParameters() {
-  const { intervals, thresholds } = useContext(SimulationContext);
+  const { thresholds } = useContext(SimulationContext);
+  const [intervals] = useModelTimeIntervals();
   const variables = useVariables();
   return [
     {

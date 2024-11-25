@@ -6,9 +6,8 @@ import {
   TableHead,
   TableRow,
 } from "@mui/material";
-import { FC, useContext } from "react";
+import { FC } from "react";
 
-import { SimulationContext } from "../../contexts/SimulationContext";
 import useSubjectGroups from "../../hooks/useSubjectGroups";
 
 import { useParameters } from "./useParameters";
@@ -17,6 +16,7 @@ import { useConcentrationVariables } from "./useConcentrationVariables";
 import { FilterIndex, RowData } from "./ResultsTab";
 import { useTableRows } from "./useTableRows";
 import { getTableHeight } from "../../shared/calculateTableHeights";
+import { useModelTimeIntervals } from "../../hooks/useModelTimeIntervals";
 
 const RESULTS_TABLE_HEIGHTS = [
   {
@@ -101,7 +101,7 @@ export const ResultsTable: FC<ResultsTableProps> = ({
   const { groups } = useSubjectGroups();
   const parameters = useParameters();
   const concentrationVariables = useConcentrationVariables();
-  const { intervals } = useContext(SimulationContext);
+  const [intervals] = useModelTimeIntervals();
   const tableRows = useTableRows({
     rows,
     groupIndex,
@@ -121,7 +121,9 @@ export const ResultsTable: FC<ResultsTableProps> = ({
         : variableIndex === "columns"
           ? concentrationVariables.map((variable) => variable.name)
           : intervalIndex === "columns"
-            ? intervals.map((interval) => `${interval.start} – ${interval.end}`)
+            ? intervals.map(
+                (interval) => `${interval.start_time} – ${interval.end_time}`,
+              )
             : groupIndex === "columns"
               ? groups
                 ? [{ name: "Project" }, ...groups].map((group) => group.name)
