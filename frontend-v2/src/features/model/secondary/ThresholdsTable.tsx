@@ -25,6 +25,43 @@ import {
   VariableRead,
 } from "../../../app/backendApi";
 
+function useModel() {
+  const projectId = useSelector(
+    (state: RootState) => state.main.selectedProject,
+  );
+  const projectIdOrZero = projectId || 0;
+  const { data: models } = useCombinedModelListQuery(
+    { projectId: projectIdOrZero },
+    { skip: !projectId },
+  );
+  return models?.[0] || null;
+}
+
+function useUnits() {
+  const projectId = useSelector(
+    (state: RootState) => state.main.selectedProject,
+  );
+  const projectIdOrZero = projectId || 0;
+  const { data: project } = useProjectRetrieveQuery(
+    { id: projectIdOrZero },
+    { skip: !projectId },
+  );
+  const { data: units } = useUnitListQuery(
+    { compoundId: project?.compound },
+    { skip: !project || !project.compound },
+  );
+  return units;
+}
+
+function useVariables() {
+  const model = useModel();
+  const { data: variables } = useVariableListQuery(
+    { dosedPkModelId: model?.id || 0 },
+    { skip: !model?.id },
+  );
+  return variables;
+}
+
 function VariableRow({
   variable,
   unit,
@@ -99,27 +136,9 @@ function VariableRow({
 }
 
 const ThresholdsTable: FC<TableProps> = (props) => {
-  const projectId = useSelector(
-    (state: RootState) => state.main.selectedProject,
-  );
-  const projectIdOrZero = projectId || 0;
-  const { data: project } = useProjectRetrieveQuery(
-    { id: projectIdOrZero },
-    { skip: !projectId },
-  );
-  const { data: models } = useCombinedModelListQuery(
-    { projectId: projectIdOrZero },
-    { skip: !projectId },
-  );
-  const model = models?.[0] || null;
-  const { data: variables } = useVariableListQuery(
-    { dosedPkModelId: model?.id || 0 },
-    { skip: !model?.id },
-  );
-  const { data: units } = useUnitListQuery(
-    { compoundId: project?.compound },
-    { skip: !project || !project.compound },
-  );
+  const units = useUnits();
+  const variables = useVariables();
+  const model = useModel();
 
   const concentrationVariables = variables?.filter((variable) =>
     model?.derived_variables?.find(
