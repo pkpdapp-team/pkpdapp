@@ -3507,6 +3507,10 @@ export type Variable = {
   upper_bound?: number | null;
   /** default value for this variable */
   default_value?: number;
+  /** lower threshold for this variable */
+  lower_threshold?: number | null;
+  /** upper threshold for this variable */
+  upper_threshold?: number | null;
   /** True if default_value is stored as the log of this value */
   is_log?: boolean;
   /** name of the variable */
@@ -3553,6 +3557,10 @@ export type VariableRead = {
   upper_bound?: number | null;
   /** default value for this variable */
   default_value?: number;
+  /** lower threshold for this variable */
+  lower_threshold?: number | null;
+  /** upper threshold for this variable */
+  upper_threshold?: number | null;
   /** True if default_value is stored as the log of this value */
   is_log?: boolean;
   /** name of the variable */
@@ -3598,6 +3606,10 @@ export type PatchedVariable = {
   upper_bound?: number | null;
   /** default value for this variable */
   default_value?: number;
+  /** lower threshold for this variable */
+  lower_threshold?: number | null;
+  /** upper threshold for this variable */
+  upper_threshold?: number | null;
   /** True if default_value is stored as the log of this value */
   is_log?: boolean;
   /** name of the variable */
@@ -3644,6 +3656,10 @@ export type PatchedVariableRead = {
   upper_bound?: number | null;
   /** default value for this variable */
   default_value?: number;
+  /** lower threshold for this variable */
+  lower_threshold?: number | null;
+  /** upper threshold for this variable */
+  upper_threshold?: number | null;
   /** True if default_value is stored as the log of this value */
   is_log?: boolean;
   /** name of the variable */

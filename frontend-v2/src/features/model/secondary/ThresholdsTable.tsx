@@ -1,4 +1,4 @@
-import { ChangeEvent, FC, useContext, useState } from "react";
+import { ChangeEvent, FC, useState } from "react";
 import {
   MenuItem,
   Select,
@@ -21,9 +21,9 @@ import {
   useProjectRetrieveQuery,
   useUnitListQuery,
   useVariableListQuery,
+  useVariableUpdateMutation,
   VariableRead,
 } from "../../../app/backendApi";
-import { SimulationContext } from "../../../contexts/SimulationContext";
 
 function VariableRow({
   variable,
@@ -32,32 +32,30 @@ function VariableRow({
   variable: VariableRead;
   unit: UnitRead | undefined;
 }) {
-  const { thresholds, setThresholds } = useContext(SimulationContext);
+  const [updateVariable] = useVariableUpdateMutation();
   const [unitSymbol, setUnitSymbol] = useState<string | undefined>(
     unit?.symbol,
   );
   function onChangeLowerThreshold(event: ChangeEvent<HTMLInputElement>) {
     const newValue = parseFloat(event.target.value);
-    const oldThresholds = thresholds[variable.name];
     if (!isNaN(newValue)) {
-      setThresholds({
-        ...thresholds,
-        [variable.name]: {
-          ...oldThresholds,
-          lower: newValue,
+      updateVariable({
+        id: variable.id,
+        variable: {
+          ...variable,
+          lower_threshold: newValue,
         },
       });
     }
   }
   function onChangeUpperThreshold(event: ChangeEvent<HTMLInputElement>) {
     const newValue = parseFloat(event.target.value);
-    const oldThresholds = thresholds[variable.name];
     if (!isNaN(newValue)) {
-      setThresholds({
-        ...thresholds,
-        [variable.name]: {
-          ...oldThresholds,
-          upper: newValue,
+      updateVariable({
+        id: variable.id,
+        variable: {
+          ...variable,
+          upper_threshold: newValue,
         },
       });
     }
@@ -76,14 +74,14 @@ function VariableRow({
       <TableCell>
         <TextField
           type="number"
-          defaultValue={thresholds[variable.name]?.lower}
+          defaultValue={variable.lower_threshold || 0}
           onChange={onChangeLowerThreshold}
         />
       </TableCell>
       <TableCell>
         <TextField
           type="number"
-          defaultValue={thresholds[variable.name]?.upper}
+          defaultValue={variable.upper_threshold || Infinity}
           onChange={onChangeUpperThreshold}
         />
       </TableCell>
