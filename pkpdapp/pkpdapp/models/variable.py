@@ -40,6 +40,14 @@ class Variable(StoredModel):
     upper_threshold = models.FloatField(
         blank=True, null=True, help_text="upper threshold for this variable"
     )
+    threshold_unit = models.ForeignKey(
+        Unit,
+        on_delete=models.PROTECT,
+        blank=True,
+        null=True,
+        related_name="thresholds",
+        help_text="unit for the threshold values",
+    )
 
     is_log = models.BooleanField(
         default=False,
