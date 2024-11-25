@@ -15,6 +15,7 @@ import { SimulationContext } from "../../contexts/SimulationContext";
 import { useVariables } from "./useVariables";
 import { Thresholds } from "../../App";
 import { useModelTimeIntervals } from "../../hooks/useModelTimeIntervals";
+import { useUnits } from "./useUnits";
 
 export type Parameter = {
   name: string | JSX.Element;
@@ -25,6 +26,24 @@ export type Parameter = {
     aucVariable?: VariableRead,
   ) => string;
 };
+
+function useNormalisedIntervals(intervals: TimeIntervalRead[]) {
+  const units = useUnits();
+  return intervals.map((interval) => {
+    const intervalUnit = units?.find((unit) => unit.id === interval.unit);
+    const hourUnit = intervalUnit?.compatible_units.find(
+      (u) => u.symbol === "h",
+    );
+    const conversionFactor = parseFloat(hourUnit?.conversion_factor || "1");
+    const start_time = interval.start_time * conversionFactor;
+    const end_time = interval.end_time * conversionFactor;
+    return {
+      ...interval,
+      start_time,
+      end_time,
+    };
+  });
+}
 
 const variablePerInterval = (
   intervals: TimeIntervalRead[],
@@ -73,8 +92,9 @@ const timeOverUpperThresholdPerInterval = (
 
 export function useParameters() {
   const { thresholds } = useContext(SimulationContext);
-  const [intervals] = useModelTimeIntervals();
+  const [baseIntervals] = useModelTimeIntervals();
   const variables = useVariables();
+  const intervals = useNormalisedIntervals(baseIntervals);
   return [
     {
       name: "Min",
