@@ -69,6 +69,7 @@ function VariableRow({
   variable: VariableRead;
   unit: UnitRead | undefined;
 }) {
+  const units = useUnits();
   const [updateVariable] = useVariableUpdateMutation();
   const [unitSymbol, setUnitSymbol] = useState<string | undefined>(
     unit?.symbol,
@@ -99,6 +100,16 @@ function VariableRow({
   }
   function onChangeUnit(event: SelectChangeEvent) {
     setUnitSymbol(event.target.value as string);
+    const unit = units?.find((unit) => unit.symbol === event.target.value);
+    if (unit) {
+      updateVariable({
+        id: variable.id,
+        variable: {
+          ...variable,
+          threshold_unit: unit.id,
+        },
+      });
+    }
   }
 
   return (
@@ -158,7 +169,9 @@ const ThresholdsTable: FC<TableProps> = (props) => {
           <VariableRow
             key={variable.id}
             variable={variable}
-            unit={units?.find((unit) => unit.id === variable.unit)}
+            unit={units?.find(
+              (unit) => unit.id === (variable.threshold_unit || variable.unit),
+            )}
           />
         ))}
       </TableBody>

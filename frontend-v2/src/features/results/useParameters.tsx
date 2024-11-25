@@ -1,6 +1,7 @@
 import {
   SimulateResponse,
   TimeIntervalRead,
+  VariableListApiResponse,
   VariableRead,
 } from "../../app/backendApi";
 import {
@@ -37,6 +38,30 @@ function useNormalisedIntervals(intervals: TimeIntervalRead[]) {
       ...interval,
       start_time,
       end_time,
+    };
+  });
+}
+
+function useNormalisedVariables(variables: VariableListApiResponse) {
+  const units = useUnits();
+  return variables.map((variable) => {
+    const variableUnit = units?.find(
+      (unit) => unit.id === variable.threshold_unit,
+    );
+    const defaultUnit = variableUnit?.compatible_units.find(
+      (u) => u.symbol === "pmol/L",
+    );
+    const conversionFactor = parseFloat(defaultUnit?.conversion_factor || "1");
+    const lower_threshold = variable.lower_threshold
+      ? variable.lower_threshold * conversionFactor
+      : null;
+    const upper_threshold = variable.upper_threshold
+      ? variable.upper_threshold * conversionFactor
+      : null;
+    return {
+      ...variable,
+      lower_threshold,
+      upper_threshold,
     };
   });
 }
@@ -78,8 +103,9 @@ const timeOverUpperThresholdPerInterval = (
 
 export function useParameters() {
   const [baseIntervals] = useModelTimeIntervals();
-  const variables = useVariables();
+  const baseVariables = useVariables();
   const intervals = useNormalisedIntervals(baseIntervals);
+  const variables = useNormalisedVariables(baseVariables || []);
   return [
     {
       name: "Min",
@@ -147,23 +173,26 @@ export function useParameters() {
       value(
         intervalIndex: number,
         simulation: SimulateResponse,
-        variable: VariableRead,
+        baseVariable: VariableRead,
       ) {
-        const [intervalValues, intervalTimes] = variablePerInterval(
-          intervals,
-          variable,
-          simulation,
-          intervalIndex,
-        );
-        return intervalValues
-          ? formattedNumber(
-              timeOverLowerThresholdPerInterval(
-                intervalValues,
-                intervalTimes,
-                variable,
-              ),
-            )
-          : 0;
+        const variable = variables.find((v) => v.id === baseVariable.id);
+        if (variable) {
+          const [intervalValues, intervalTimes] = variablePerInterval(
+            intervals,
+            variable,
+            simulation,
+            intervalIndex,
+          );
+          return intervalValues
+            ? formattedNumber(
+                timeOverLowerThresholdPerInterval(
+                  intervalValues,
+                  intervalTimes,
+                  variable,
+                ),
+              )
+            : 0;
+        }
       },
     },
     {
@@ -175,23 +204,26 @@ export function useParameters() {
       value(
         intervalIndex: number,
         simulation: SimulateResponse,
-        variable: VariableRead,
+        baseVariable: VariableRead,
       ) {
-        const [intervalValues, intervalTimes] = variablePerInterval(
-          intervals,
-          variable,
-          simulation,
-          intervalIndex,
-        );
-        return intervalValues
-          ? formattedNumber(
-              timeOverUpperThresholdPerInterval(
-                intervalValues,
-                intervalTimes,
-                variable,
-              ),
-            )
-          : 0;
+        const variable = variables.find((v) => v.id === baseVariable.id);
+        if (variable) {
+          const [intervalValues, intervalTimes] = variablePerInterval(
+            intervals,
+            variable,
+            simulation,
+            intervalIndex,
+          );
+          return intervalValues
+            ? formattedNumber(
+                timeOverUpperThresholdPerInterval(
+                  intervalValues,
+                  intervalTimes,
+                  variable,
+                ),
+              )
+            : 0;
+        }
       },
     },
     {
@@ -203,28 +235,31 @@ export function useParameters() {
       value(
         intervalIndex: number,
         simulation: SimulateResponse,
-        variable: VariableRead,
+        baseVariable: VariableRead,
       ) {
-        const [intervalValues, intervalTimes] = variablePerInterval(
-          intervals,
-          variable,
-          simulation,
-          intervalIndex,
-        );
-        return intervalValues
-          ? formattedNumber(
-              timeOverLowerThresholdPerInterval(
-                intervalValues,
-                intervalTimes,
-                variable,
-              ) -
-                timeOverUpperThresholdPerInterval(
+        const variable = variables.find((v) => v.id === baseVariable.id);
+        if (variable) {
+          const [intervalValues, intervalTimes] = variablePerInterval(
+            intervals,
+            variable,
+            simulation,
+            intervalIndex,
+          );
+          return intervalValues
+            ? formattedNumber(
+                timeOverLowerThresholdPerInterval(
                   intervalValues,
                   intervalTimes,
                   variable,
-                ),
-            )
-          : 0;
+                ) -
+                  timeOverUpperThresholdPerInterval(
+                    intervalValues,
+                    intervalTimes,
+                    variable,
+                  ),
+              )
+            : 0;
+        }
       },
     },
   ] as Parameter[];
