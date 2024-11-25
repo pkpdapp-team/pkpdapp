@@ -34,6 +34,12 @@ class Variable(StoredModel):
     default_value = models.FloatField(
         default=1, help_text="default value for this variable"
     )
+    lower_threshold = models.FloatField(
+        blank=True, null=True, help_text="lower threshold for this variable"
+    )
+    upper_threshold = models.FloatField(
+        blank=True, null=True, help_text="upper threshold for this variable"
+    )
 
     is_log = models.BooleanField(
         default=False,
@@ -411,4 +417,6 @@ class Variable(StoredModel):
         self.unit_symbol = variable.unit_symbol
         self.constant = variable.constant
         self.protocol = new_protocol
+        self.lower_threshold = variable.lower_threshold
+        self.upper_threshold = variable.upper_threshold
         self.save()

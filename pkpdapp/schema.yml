@@ -4847,6 +4847,16 @@ components:
           type: number
           format: double
           description: default value for this variable
+        lower_threshold:
+          type: number
+          format: double
+          nullable: true
+          description: lower threshold for this variable
+        upper_threshold:
+          type: number
+          format: double
+          nullable: true
+          description: upper threshold for this variable
         is_log:
           type: boolean
           description: True if default_value is stored as the log of this value
@@ -5656,6 +5666,16 @@ components:
           type: number
           format: double
           description: default value for this variable
+        lower_threshold:
+          type: number
+          format: double
+          nullable: true
+          description: lower threshold for this variable
+        upper_threshold:
+          type: number
+          format: double
+          nullable: true
+          description: upper threshold for this variable
         is_log:
           type: boolean
           description: True if default_value is stored as the log of this value

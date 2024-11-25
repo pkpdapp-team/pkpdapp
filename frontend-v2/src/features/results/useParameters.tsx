@@ -1,5 +1,3 @@
-import { useContext } from "react";
-
 import {
   SimulateResponse,
   TimeIntervalRead,
@@ -11,9 +9,7 @@ import {
   timesPerInterval,
   valuesPerInterval,
 } from "./utils";
-import { SimulationContext } from "../../contexts/SimulationContext";
 import { useVariables } from "./useVariables";
-import { Thresholds } from "../../App";
 import { useModelTimeIntervals } from "../../hooks/useModelTimeIntervals";
 import { useUnits } from "./useUnits";
 
@@ -66,32 +62,21 @@ const timeOverLowerThresholdPerInterval = (
   intervalValues: number[],
   intervalTimes: number[],
   variable: VariableRead,
-  thresholds: Thresholds,
 ) => {
-  const threshold = variable && thresholds[variable.name];
-  return timeOverThreshold(
-    intervalTimes,
-    intervalValues,
-    threshold?.lower || 0,
-  );
+  const threshold = variable?.lower_threshold || 0;
+  return timeOverThreshold(intervalTimes, intervalValues, threshold);
 };
 
 const timeOverUpperThresholdPerInterval = (
   intervalValues: number[],
   intervalTimes: number[],
   variable: VariableRead,
-  thresholds: Thresholds,
 ) => {
-  const threshold = variable && thresholds[variable.name];
-  return timeOverThreshold(
-    intervalTimes,
-    intervalValues,
-    threshold?.upper || Infinity,
-  );
+  const threshold = variable?.upper_threshold || Infinity;
+  return timeOverThreshold(intervalTimes, intervalValues, threshold);
 };
 
 export function useParameters() {
-  const { thresholds } = useContext(SimulationContext);
   const [baseIntervals] = useModelTimeIntervals();
   const variables = useVariables();
   const intervals = useNormalisedIntervals(baseIntervals);
@@ -176,7 +161,6 @@ export function useParameters() {
                 intervalValues,
                 intervalTimes,
                 variable,
-                thresholds,
               ),
             )
           : 0;
@@ -205,7 +189,6 @@ export function useParameters() {
                 intervalValues,
                 intervalTimes,
                 variable,
-                thresholds,
               ),
             )
           : 0;
@@ -234,13 +217,11 @@ export function useParameters() {
                 intervalValues,
                 intervalTimes,
                 variable,
-                thresholds,
               ) -
                 timeOverUpperThresholdPerInterval(
                   intervalValues,
                   intervalTimes,
                   variable,
-                  thresholds,
                 ),
             )
           : 0;

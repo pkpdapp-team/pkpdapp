@@ -17,27 +17,15 @@ import "react-toastify/dist/ReactToastify.css";
 import { SimulationContext } from "./contexts/SimulationContext";
 import { SimulateResponse } from "./app/backendApi";
 import { CollapsibleSidebarProvider } from "./shared/contexts/CollapsibleSidebarContext";
-import { useModelTimeIntervals } from "./hooks/useModelTimeIntervals";
-
-type Threshold = { lower: number; upper: number };
-export type Thresholds = { [key: string]: Threshold };
-
-const THRESHOLDS: Thresholds = {};
 
 function App() {
   const dispatch = useAppDispatch();
   const isAuth = useSelector(isAuthenticated);
   const error = useSelector((state: RootState) => state.login.error);
-  const [intervals, setIntervals] = useModelTimeIntervals();
   const [simulations, setSimulations] = useState<SimulateResponse[]>([]);
-  const [thresholds, setThresholds] = useState<Thresholds>(THRESHOLDS);
   const simulationContext = {
     simulations,
     setSimulations,
-    intervals,
-    setIntervals,
-    thresholds,
-    setThresholds,
   };
 
   const onLogin = (username: string, password: string) => {
