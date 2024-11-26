@@ -19,5 +19,5 @@ export function useUnits() {
     { compoundId: project?.compound },
     { skip: !project || !project.compound },
   );
-  return units;
+  return units || [];
 }

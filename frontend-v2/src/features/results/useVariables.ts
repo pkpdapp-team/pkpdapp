@@ -20,5 +20,5 @@ export function useVariables() {
     { dosedPkModelId: model?.id || 0 },
     { skip: !model?.id },
   );
-  return variables;
+  return variables || [];
 }

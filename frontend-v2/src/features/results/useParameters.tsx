@@ -105,7 +105,7 @@ export function useParameters() {
   const [baseIntervals] = useModelTimeIntervals();
   const baseVariables = useVariables();
   const intervals = useNormalisedIntervals(baseIntervals);
-  const variables = useNormalisedVariables(baseVariables || []);
+  const variables = useNormalisedVariables(baseVariables);
   return [
     {
       name: "Min",
