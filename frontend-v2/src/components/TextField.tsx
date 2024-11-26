@@ -16,7 +16,7 @@ type Props<T extends FieldValues> = {
   mode?: "onChange" | "onBlur";
   textFieldProps?: TextFieldProps;
   autoShrink?: boolean;
-  size: 'small' | 'medium'
+  size?: 'small' | 'medium'
   sx?: SxProps;
 };
 
