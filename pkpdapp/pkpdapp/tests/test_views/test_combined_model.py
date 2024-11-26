@@ -62,6 +62,7 @@ class CombinedModelTestCase(APITestCase):
             "pk_model": pk.id,
             "mappings": [],
             "derived_variables": [],
+            "time_intervals": [],
         }
         if pd is not None:
             data["pd_model"] = pd.id

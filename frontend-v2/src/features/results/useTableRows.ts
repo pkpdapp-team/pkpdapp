@@ -7,6 +7,8 @@ import { useConcentrationVariables } from "./useConcentrationVariables";
 import { useParameters } from "./useParameters";
 import { useVariables } from "./useVariables";
 import { tableRow } from "./utils";
+import { useModelTimeIntervals } from "../../hooks/useModelTimeIntervals";
+import { useUnits } from "./useUnits";
 
 interface TableRowsProps {
   rows: RowData;
@@ -22,15 +24,19 @@ export function useTableRows({
   variableIndex,
   parameterIndex,
 }: TableRowsProps) {
+  const units = useUnits();
   const variables = useVariables();
   const parameters = useParameters();
   const concentrationVariables = useConcentrationVariables();
-  const { intervals, simulations } = useContext(SimulationContext);
+  const { simulations } = useContext(SimulationContext);
+  const [intervals] = useModelTimeIntervals();
 
   return rows.map((row, index) => {
+    const rowUnit =
+      "unit" in row ? units?.find((unit) => unit.id === row.unit) : undefined;
     const header =
-      "start" in row && "end" in row && "unit" in row
-        ? `${row.start} – ${row.end} [${row.unit.symbol}]`
+      "start_time" in row && "end_time" in row
+        ? `${row.start_time} – ${row.end_time} [${rowUnit?.symbol}]`
         : "name" in row
           ? row.name
           : "";

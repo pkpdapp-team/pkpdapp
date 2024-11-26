@@ -1959,10 +1959,40 @@ export type DerivedVariableRead = {
   /** base variable in PK part of model */
   pk_variable: number;
 };
+export type TimeInterval = {
+  /** true if object has been stored */
+  read_only?: boolean;
+  /** datetime the object was stored. */
+  datetime?: string | null;
+  /** start time of interval */
+  start_time: number;
+  /** end time of interval */
+  end_time: number;
+  /** PKPD model that this time interval is for */
+  pkpd_model: number;
+  /** unit of interval */
+  unit: number;
+};
+export type TimeIntervalRead = {
+  id: number;
+  /** true if object has been stored */
+  read_only?: boolean;
+  /** datetime the object was stored. */
+  datetime?: string | null;
+  /** start time of interval */
+  start_time: number;
+  /** end time of interval */
+  end_time: number;
+  /** PKPD model that this time interval is for */
+  pkpd_model: number;
+  /** unit of interval */
+  unit: number;
+};
 export type CombinedModelSpeciesEnum = "H" | "R" | "N" | "M";
 export type CombinedModel = {
   mappings: PkpdMapping[];
   derived_variables: DerivedVariable[];
+  time_intervals: TimeInterval[];
   /** true if object has been stored */
   read_only?: boolean;
   /** datetime the object was stored. */
@@ -2001,6 +2031,7 @@ export type CombinedModelRead = {
   id: number;
   mappings: PkpdMappingRead[];
   derived_variables: DerivedVariableRead[];
+  time_intervals: TimeIntervalRead[];
   components: string;
   variables: number[];
   mmt: string;
@@ -2043,6 +2074,7 @@ export type CombinedModelRead = {
 export type PatchedCombinedModel = {
   mappings?: PkpdMapping[];
   derived_variables?: DerivedVariable[];
+  time_intervals?: TimeInterval[];
   /** true if object has been stored */
   read_only?: boolean;
   /** datetime the object was stored. */
@@ -2081,6 +2113,7 @@ export type PatchedCombinedModelRead = {
   id?: number;
   mappings?: PkpdMappingRead[];
   derived_variables?: DerivedVariableRead[];
+  time_intervals?: TimeIntervalRead[];
   components?: string;
   variables?: number[];
   mmt?: string;
@@ -3474,6 +3507,10 @@ export type Variable = {
   upper_bound?: number | null;
   /** default value for this variable */
   default_value?: number;
+  /** lower threshold for this variable */
+  lower_threshold?: number | null;
+  /** upper threshold for this variable */
+  upper_threshold?: number | null;
   /** True if default_value is stored as the log of this value */
   is_log?: boolean;
   /** name of the variable */
@@ -3496,6 +3533,8 @@ export type Variable = {
   display?: boolean;
   /** False/True if biomarker type displayed on LHS/RHS axis */
   axis?: boolean;
+  /** unit for the threshold values */
+  threshold_unit?: number | null;
   /** variable values are in this unit (note this might be different from the unit in the stored sbml) */
   unit?: number | null;
   /** pharmacodynamic model */
@@ -3520,6 +3559,10 @@ export type VariableRead = {
   upper_bound?: number | null;
   /** default value for this variable */
   default_value?: number;
+  /** lower threshold for this variable */
+  lower_threshold?: number | null;
+  /** upper threshold for this variable */
+  upper_threshold?: number | null;
   /** True if default_value is stored as the log of this value */
   is_log?: boolean;
   /** name of the variable */
@@ -3542,6 +3585,8 @@ export type VariableRead = {
   display?: boolean;
   /** False/True if biomarker type displayed on LHS/RHS axis */
   axis?: boolean;
+  /** unit for the threshold values */
+  threshold_unit?: number | null;
   /** variable values are in this unit (note this might be different from the unit in the stored sbml) */
   unit?: number | null;
   /** pharmacodynamic model */
@@ -3565,6 +3610,10 @@ export type PatchedVariable = {
   upper_bound?: number | null;
   /** default value for this variable */
   default_value?: number;
+  /** lower threshold for this variable */
+  lower_threshold?: number | null;
+  /** upper threshold for this variable */
+  upper_threshold?: number | null;
   /** True if default_value is stored as the log of this value */
   is_log?: boolean;
   /** name of the variable */
@@ -3587,6 +3636,8 @@ export type PatchedVariable = {
   display?: boolean;
   /** False/True if biomarker type displayed on LHS/RHS axis */
   axis?: boolean;
+  /** unit for the threshold values */
+  threshold_unit?: number | null;
   /** variable values are in this unit (note this might be different from the unit in the stored sbml) */
   unit?: number | null;
   /** pharmacodynamic model */
@@ -3611,6 +3662,10 @@ export type PatchedVariableRead = {
   upper_bound?: number | null;
   /** default value for this variable */
   default_value?: number;
+  /** lower threshold for this variable */
+  lower_threshold?: number | null;
+  /** upper threshold for this variable */
+  upper_threshold?: number | null;
   /** True if default_value is stored as the log of this value */
   is_log?: boolean;
   /** name of the variable */
@@ -3633,6 +3688,8 @@ export type PatchedVariableRead = {
   display?: boolean;
   /** False/True if biomarker type displayed on LHS/RHS axis */
   axis?: boolean;
+  /** unit for the threshold values */
+  threshold_unit?: number | null;
   /** variable values are in this unit (note this might be different from the unit in the stored sbml) */
   unit?: number | null;
   /** pharmacodynamic model */

@@ -1,4 +1,4 @@
-import { FC, useContext, useState } from "react";
+import { FC, useState } from "react";
 import {
   FormControl,
   InputLabel,
@@ -8,14 +8,13 @@ import {
   Typography,
 } from "@mui/material";
 
-import { TimeInterval } from "../../App";
-import { VariableRead } from "../../app/backendApi";
+import { TimeIntervalRead, VariableRead } from "../../app/backendApi";
 import useSubjectGroups from "../../hooks/useSubjectGroups";
-import { SimulationContext } from "../../contexts/SimulationContext";
 
 import { useConcentrationVariables } from "./useConcentrationVariables";
 import { useParameters, Parameter } from "./useParameters";
 import { ResultsTable } from "./ResultsTable";
+import { useModelTimeIntervals } from "../../hooks/useModelTimeIntervals";
 
 const options = [
   { name: "Parameters", value: "parameters" },
@@ -28,13 +27,13 @@ export type FilterIndex = number | "rows" | "columns";
 export type RowData =
   | { name: string }[]
   | Parameter[]
-  | TimeInterval[]
+  | TimeIntervalRead[]
   | VariableRead[];
 
 type Item =
   | { name: string }
   | Parameter
-  | (TimeInterval & { name: string })
+  | (TimeIntervalRead & { name: string })
   | VariableRead;
 type RowFilter = {
   filter: (event: SelectChangeEvent) => void;
@@ -45,7 +44,7 @@ type RowFilter = {
 
 const ResultsTab: FC = () => {
   const { groups = [] } = useSubjectGroups();
-  const { intervals } = useContext(SimulationContext);
+  const [intervals] = useModelTimeIntervals();
   const concentrationVariables = useConcentrationVariables();
   const parameters = useParameters();
 
@@ -126,7 +125,10 @@ const ResultsTab: FC = () => {
   const intervalSelect = {
     filter: handleIntervalChange,
     value: interval,
-    items: intervals.map((i) => ({ name: `${i.start} - ${i.end}`, ...i })),
+    items: intervals.map((i) => ({
+      name: `${i.start_time} - ${i.end_time}`,
+      ...i,
+    })),
     label: "Interval",
   };
   const variableSelect = {

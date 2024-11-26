@@ -1,5 +1,8 @@
-import { SimulateResponse, VariableRead } from "../../app/backendApi";
-import { TimeInterval } from "../../App";
+import {
+  SimulateResponse,
+  TimeIntervalRead,
+  VariableRead,
+} from "../../app/backendApi";
 
 import { Parameter } from "./useParameters";
 
@@ -11,8 +14,8 @@ interface ParametersProps {
   simulations: SimulateResponse[];
   parameter?: Parameter;
   parameters: Parameter[];
-  interval?: TimeInterval;
-  intervals: TimeInterval[];
+  interval?: TimeIntervalRead;
+  intervals: TimeIntervalRead[];
 }
 
 export function columns({
@@ -37,7 +40,7 @@ export function columns({
   if (parameter && !interval) {
     return intervals.map((interval) => {
       return {
-        header: `${interval.start} – ${interval.end}`,
+        header: `${interval.start_time} – ${interval.end_time}`,
         value: parameter.value,
       };
     });

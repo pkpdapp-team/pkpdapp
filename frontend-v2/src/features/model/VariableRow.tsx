@@ -1,5 +1,5 @@
 // src/components/ProjectTable.tsx
-import { FC, useEffect, useContext } from "react";
+import { FC, useEffect } from "react";
 import { Control, useFieldArray, useForm } from "react-hook-form";
 import {
   TableCell,
@@ -25,7 +25,6 @@ import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
 import { selectIsProjectShared } from "../login/loginSlice";
 import useEditProtocol from "./useEditProtocol";
-import { SimulationContext } from "../../contexts/SimulationContext";
 
 interface Props {
   project: ProjectRead;
@@ -80,7 +79,6 @@ const VariableRow: FC<Props> = ({
     control,
     name: "model.derived_variables",
   });
-  const { thresholds, setThresholds } = useContext(SimulationContext);
 
   const {
     handleSubmit,
@@ -130,11 +128,11 @@ const VariableRow: FC<Props> = ({
     const intervalId = setInterval(() => {
       if (isDirty) {
         handleSubmit((data) => {
-          // @ts-expect-error
+          // @ts-expect-error - lower_bound and upper_bound can be null
           if (data.lower_bound === "") {
             data.lower_bound = null;
           }
-          // @ts-expect-error
+          // @ts-expect-error - lower_bound and upper_bound can be null
           if (data.upper_bound === "") {
             data.upper_bound = null;
           }
@@ -246,16 +244,6 @@ const VariableRow: FC<Props> = ({
       pkpd_model: model.id,
       type,
     });
-
-    if (type === "AUC") {
-      setThresholds({
-        ...thresholds,
-        [variable.name]: {
-          lower: 0,
-          upper: Infinity,
-        },
-      });
-    }
   };
 
   const removeDerived = (index: number | number[]) => {

@@ -17,6 +17,8 @@ from pkpdapp.models import (
     Project,
     DerivedVariable,
     Compound,
+    TimeInterval,
+    Unit,
 )
 
 
@@ -56,6 +58,13 @@ class TestPkpdModel(TestCase):
             pk_variable=a1,
             type=DerivedVariable.Type.TLAG,
         )
+        hour_unit = Unit.objects.get(symbol="h")
+        time_interval = TimeInterval.objects.create(
+            pkpd_model=pkpd_model,
+            start_time=0,
+            end_time=168,
+            unit=hour_unit
+        )
         new_compound = Compound.objects.create(name="new compound")
         new_project = Project.objects.create(name="new project", compound=new_compound)
         cl.default_value = 1.123
@@ -76,6 +85,10 @@ class TestPkpdModel(TestCase):
             pkpd_model_copy.derived_variables.count(),
             pkpd_model.derived_variables.count(),
         )  # noqa E501
+        self.assertEqual(
+            pkpd_model_copy.time_intervals.count(),
+            pkpd_model.time_intervals.count(),
+        )
         # check the variables are the same content but different objects
         for var in pkpd_model.variables.all():
             copy = pkpd_model_copy.variables.get(qname=var.qname)
@@ -98,6 +111,12 @@ class TestPkpdModel(TestCase):
                 pk_variable__qname=derived.pk_variable.qname
             )  # noqa E501
             self.assertNotEqual(copy.id, derived.id)
+        # check the time intervals are the same content but different objects
+        for time_interval in pkpd_model.time_intervals.all():
+            copy = pkpd_model_copy.time_intervals.get(
+                start_time=time_interval.start_time
+            )
+            self.assertNotEqual(copy.id, time_interval.id)
 
     def test_combined_model_creation(self):
         pk_model = PharmacokineticModel.objects.get(name="one_compartment_clinical")
@@ -177,6 +196,29 @@ class TestPkpdModel(TestCase):
         self.assertFalse(
             pkpd_model.get_myokit_model().get("PDCompartment.C_Drug").is_constant()
         )
+
+    def test_combined_model_with_time_interval(self):
+        pk_model = PharmacokineticModel.objects.get(name="one_compartment_clinical")
+        pd_model = PharmacodynamicModel.objects.get(
+            name="indirect_effects_stimulation_production"
+        )
+        pkpd_model = CombinedModel.objects.create(
+            name="my wonderful model",
+            pk_model=pk_model,
+            pd_model=pd_model,
+            project=self.project,
+        )
+        hour_unit = Unit.objects.get(symbol="h")
+        TimeInterval.objects.create(
+            pkpd_model=pkpd_model,
+            start_time=0,
+            end_time=168,
+            unit=hour_unit,
+        )
+        self.assertEqual(pkpd_model.time_intervals.count(), 1)
+        self.assertEqual(pkpd_model.time_intervals.first().unit, hour_unit)
+        self.assertEqual(pkpd_model.time_intervals.first().start_time, 0)
+        self.assertEqual(pkpd_model.time_intervals.first().end_time, 168)
 
     def test_combine_multiple_pd_models(self):
         pk = PharmacokineticModel.objects.get(

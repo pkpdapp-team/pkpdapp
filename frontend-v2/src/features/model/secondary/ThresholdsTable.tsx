@@ -1,4 +1,4 @@
-import { ChangeEvent, FC, useContext, useState } from "react";
+import { ChangeEvent, FC, useState } from "react";
 import {
   MenuItem,
   Select,
@@ -21,9 +21,46 @@ import {
   useProjectRetrieveQuery,
   useUnitListQuery,
   useVariableListQuery,
+  useVariableUpdateMutation,
   VariableRead,
 } from "../../../app/backendApi";
-import { SimulationContext } from "../../../contexts/SimulationContext";
+
+function useModel() {
+  const projectId = useSelector(
+    (state: RootState) => state.main.selectedProject,
+  );
+  const projectIdOrZero = projectId || 0;
+  const { data: models } = useCombinedModelListQuery(
+    { projectId: projectIdOrZero },
+    { skip: !projectId },
+  );
+  return models?.[0] || null;
+}
+
+function useUnits() {
+  const projectId = useSelector(
+    (state: RootState) => state.main.selectedProject,
+  );
+  const projectIdOrZero = projectId || 0;
+  const { data: project } = useProjectRetrieveQuery(
+    { id: projectIdOrZero },
+    { skip: !projectId },
+  );
+  const { data: units } = useUnitListQuery(
+    { compoundId: project?.compound },
+    { skip: !project || !project.compound },
+  );
+  return units;
+}
+
+function useVariables() {
+  const model = useModel();
+  const { data: variables } = useVariableListQuery(
+    { dosedPkModelId: model?.id || 0 },
+    { skip: !model?.id },
+  );
+  return variables;
+}
 
 function VariableRow({
   variable,
@@ -32,38 +69,47 @@ function VariableRow({
   variable: VariableRead;
   unit: UnitRead | undefined;
 }) {
-  const { thresholds, setThresholds } = useContext(SimulationContext);
+  const units = useUnits();
+  const [updateVariable] = useVariableUpdateMutation();
   const [unitSymbol, setUnitSymbol] = useState<string | undefined>(
     unit?.symbol,
   );
   function onChangeLowerThreshold(event: ChangeEvent<HTMLInputElement>) {
     const newValue = parseFloat(event.target.value);
-    const oldThresholds = thresholds[variable.name];
     if (!isNaN(newValue)) {
-      setThresholds({
-        ...thresholds,
-        [variable.name]: {
-          ...oldThresholds,
-          lower: newValue,
+      updateVariable({
+        id: variable.id,
+        variable: {
+          ...variable,
+          lower_threshold: newValue,
         },
       });
     }
   }
   function onChangeUpperThreshold(event: ChangeEvent<HTMLInputElement>) {
     const newValue = parseFloat(event.target.value);
-    const oldThresholds = thresholds[variable.name];
     if (!isNaN(newValue)) {
-      setThresholds({
-        ...thresholds,
-        [variable.name]: {
-          ...oldThresholds,
-          upper: newValue,
+      updateVariable({
+        id: variable.id,
+        variable: {
+          ...variable,
+          upper_threshold: newValue,
         },
       });
     }
   }
   function onChangeUnit(event: SelectChangeEvent) {
     setUnitSymbol(event.target.value as string);
+    const unit = units?.find((unit) => unit.symbol === event.target.value);
+    if (unit) {
+      updateVariable({
+        id: variable.id,
+        variable: {
+          ...variable,
+          threshold_unit: unit.id,
+        },
+      });
+    }
   }
 
   return (
@@ -76,14 +122,14 @@ function VariableRow({
       <TableCell>
         <TextField
           type="number"
-          defaultValue={thresholds[variable.name]?.lower}
+          defaultValue={variable.lower_threshold || 0}
           onChange={onChangeLowerThreshold}
         />
       </TableCell>
       <TableCell>
         <TextField
           type="number"
-          defaultValue={thresholds[variable.name]?.upper}
+          defaultValue={variable.upper_threshold || Infinity}
           onChange={onChangeUpperThreshold}
         />
       </TableCell>
@@ -101,27 +147,9 @@ function VariableRow({
 }
 
 const ThresholdsTable: FC<TableProps> = (props) => {
-  const projectId = useSelector(
-    (state: RootState) => state.main.selectedProject,
-  );
-  const projectIdOrZero = projectId || 0;
-  const { data: project } = useProjectRetrieveQuery(
-    { id: projectIdOrZero },
-    { skip: !projectId },
-  );
-  const { data: models } = useCombinedModelListQuery(
-    { projectId: projectIdOrZero },
-    { skip: !projectId },
-  );
-  const model = models?.[0] || null;
-  const { data: variables } = useVariableListQuery(
-    { dosedPkModelId: model?.id || 0 },
-    { skip: !model?.id },
-  );
-  const { data: units } = useUnitListQuery(
-    { compoundId: project?.compound },
-    { skip: !project || !project.compound },
-  );
+  const units = useUnits();
+  const variables = useVariables();
+  const model = useModel();
 
   const concentrationVariables = variables?.filter((variable) =>
     model?.derived_variables?.find(
@@ -141,7 +169,9 @@ const ThresholdsTable: FC<TableProps> = (props) => {
           <VariableRow
             key={variable.id}
             variable={variable}
-            unit={units?.find((unit) => unit.id === variable.unit)}
+            unit={units?.find(
+              (unit) => unit.id === (variable.threshold_unit || variable.unit),
+            )}
           />
         ))}
       </TableBody>

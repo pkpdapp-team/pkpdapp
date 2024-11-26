@@ -3376,6 +3376,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/DerivedVariable'
+        time_intervals:
+          type: array
+          items:
+            $ref: '#/components/schemas/TimeInterval'
         components:
           type: string
           readOnly: true
@@ -3459,6 +3463,7 @@ components:
       - mappings
       - mmt
       - name
+      - time_intervals
       - time_unit
       - variables
     CombinedModelSpeciesEnum:
@@ -4105,6 +4110,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/DerivedVariable'
+        time_intervals:
+          type: array
+          items:
+            $ref: '#/components/schemas/TimeInterval'
         components:
           type: string
           readOnly: true
@@ -4838,6 +4847,16 @@ components:
           type: number
           format: double
           description: default value for this variable
+        lower_threshold:
+          type: number
+          format: double
+          nullable: true
+          description: lower threshold for this variable
+        upper_threshold:
+          type: number
+          format: double
+          nullable: true
+          description: upper threshold for this variable
         is_log:
           type: boolean
           description: True if default_value is stored as the log of this value
@@ -4883,6 +4902,10 @@ components:
         axis:
           type: boolean
           description: False/True if biomarker type displayed on LHS/RHS axis
+        threshold_unit:
+          type: integer
+          nullable: true
+          description: unit for the threshold values
         unit:
           type: integer
           nullable: true
@@ -5479,6 +5502,40 @@ components:
       - name
       - protocols
       - subjects
+    TimeInterval:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        read_only:
+          type: boolean
+          description: true if object has been stored
+        datetime:
+          type: string
+          format: date-time
+          nullable: true
+          description: datetime the object was stored.
+        start_time:
+          type: number
+          format: double
+          description: start time of interval
+        end_time:
+          type: number
+          format: double
+          description: end time of interval
+        pkpd_model:
+          type: integer
+          description: PKPD model that this time interval is for
+        unit:
+          type: integer
+          description: unit of interval
+      required:
+      - end_time
+      - id
+      - pkpd_model
+      - start_time
+      - unit
     TypeEnum:
       enum:
       - AUC
@@ -5613,6 +5670,16 @@ components:
           type: number
           format: double
           description: default value for this variable
+        lower_threshold:
+          type: number
+          format: double
+          nullable: true
+          description: lower threshold for this variable
+        upper_threshold:
+          type: number
+          format: double
+          nullable: true
+          description: upper threshold for this variable
         is_log:
           type: boolean
           description: True if default_value is stored as the log of this value
@@ -5658,6 +5725,10 @@ components:
         axis:
           type: boolean
           description: False/True if biomarker type displayed on LHS/RHS axis
+        threshold_unit:
+          type: integer
+          nullable: true
+          description: unit for the threshold values
         unit:
           type: integer
           nullable: true

@@ -1,0 +1,28 @@
+name: Frontend build
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+      - ui-enhancements
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend-v2
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: "lts/iron"
+          cache: "yarn"
+          cache-dependency-path: ./frontend-v2/yarn.lock
+      - name: Install dependencies
+        run: yarn install --immutable
+      - name: Build
+        run: npm run build

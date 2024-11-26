@@ -177,6 +177,7 @@ const ProjectTable: FC = () => {
               project: newProject.data.id,
               mappings: [],
               derived_variables: [],
+              time_intervals: [],
             },
           }).then((combinedModel) => {
             if (combinedModel?.data) {

@@ -1,15 +1,18 @@
-import { useContext } from "react";
-
-import { SimulateResponse, VariableRead } from "../../app/backendApi";
+import {
+  SimulateResponse,
+  TimeIntervalRead,
+  VariableListApiResponse,
+  VariableRead,
+} from "../../app/backendApi";
 import {
   formattedNumber,
   timeOverThreshold,
   timesPerInterval,
   valuesPerInterval,
 } from "./utils";
-import { SimulationContext } from "../../contexts/SimulationContext";
 import { useVariables } from "./useVariables";
-import { Thresholds, TimeInterval } from "../../App";
+import { useModelTimeIntervals } from "../../hooks/useModelTimeIntervals";
+import { useUnits } from "./useUnits";
 
 export type Parameter = {
   name: string | JSX.Element;
@@ -21,8 +24,50 @@ export type Parameter = {
   ) => string;
 };
 
+function useNormalisedIntervals(intervals: TimeIntervalRead[]) {
+  const units = useUnits();
+  return intervals.map((interval) => {
+    const intervalUnit = units?.find((unit) => unit.id === interval.unit);
+    const hourUnit = intervalUnit?.compatible_units.find(
+      (u) => u.symbol === "h",
+    );
+    const conversionFactor = parseFloat(hourUnit?.conversion_factor || "1");
+    const start_time = interval.start_time * conversionFactor;
+    const end_time = interval.end_time * conversionFactor;
+    return {
+      ...interval,
+      start_time,
+      end_time,
+    };
+  });
+}
+
+function useNormalisedVariables(variables: VariableListApiResponse) {
+  const units = useUnits();
+  return variables.map((variable) => {
+    const variableUnit = units?.find(
+      (unit) => unit.id === variable.threshold_unit,
+    );
+    const defaultUnit = variableUnit?.compatible_units.find(
+      (u) => u.symbol === "pmol/L",
+    );
+    const conversionFactor = parseFloat(defaultUnit?.conversion_factor || "1");
+    const lower_threshold = variable.lower_threshold
+      ? variable.lower_threshold * conversionFactor
+      : null;
+    const upper_threshold = variable.upper_threshold
+      ? variable.upper_threshold * conversionFactor
+      : null;
+    return {
+      ...variable,
+      lower_threshold,
+      upper_threshold,
+    };
+  });
+}
+
 const variablePerInterval = (
-  intervals: TimeInterval[],
+  intervals: TimeIntervalRead[],
   variable: VariableRead,
   simulation: SimulateResponse,
   intervalIndex: number,
@@ -42,33 +87,25 @@ const timeOverLowerThresholdPerInterval = (
   intervalValues: number[],
   intervalTimes: number[],
   variable: VariableRead,
-  thresholds: Thresholds,
 ) => {
-  const threshold = variable && thresholds[variable.name];
-  return timeOverThreshold(
-    intervalTimes,
-    intervalValues,
-    threshold?.lower || 0,
-  );
+  const threshold = variable?.lower_threshold || 0;
+  return timeOverThreshold(intervalTimes, intervalValues, threshold);
 };
 
 const timeOverUpperThresholdPerInterval = (
   intervalValues: number[],
   intervalTimes: number[],
   variable: VariableRead,
-  thresholds: Thresholds,
 ) => {
-  const threshold = variable && thresholds[variable.name];
-  return timeOverThreshold(
-    intervalTimes,
-    intervalValues,
-    threshold?.upper || Infinity,
-  );
+  const threshold = variable?.upper_threshold || Infinity;
+  return timeOverThreshold(intervalTimes, intervalValues, threshold);
 };
 
 export function useParameters() {
-  const { intervals, thresholds } = useContext(SimulationContext);
-  const variables = useVariables();
+  const [baseIntervals] = useModelTimeIntervals();
+  const baseVariables = useVariables();
+  const intervals = useNormalisedIntervals(baseIntervals);
+  const variables = useNormalisedVariables(baseVariables);
   return [
     {
       name: "Min",
@@ -136,24 +173,26 @@ export function useParameters() {
       value(
         intervalIndex: number,
         simulation: SimulateResponse,
-        variable: VariableRead,
+        baseVariable: VariableRead,
       ) {
-        const [intervalValues, intervalTimes] = variablePerInterval(
-          intervals,
-          variable,
-          simulation,
-          intervalIndex,
-        );
-        return intervalValues
-          ? formattedNumber(
-              timeOverLowerThresholdPerInterval(
-                intervalValues,
-                intervalTimes,
-                variable,
-                thresholds,
-              ),
-            )
-          : 0;
+        const variable = variables.find((v) => v.id === baseVariable.id);
+        if (variable) {
+          const [intervalValues, intervalTimes] = variablePerInterval(
+            intervals,
+            variable,
+            simulation,
+            intervalIndex,
+          );
+          return intervalValues
+            ? formattedNumber(
+                timeOverLowerThresholdPerInterval(
+                  intervalValues,
+                  intervalTimes,
+                  variable,
+                ),
+              )
+            : 0;
+        }
       },
     },
     {
@@ -165,24 +204,26 @@ export function useParameters() {
       value(
         intervalIndex: number,
         simulation: SimulateResponse,
-        variable: VariableRead,
+        baseVariable: VariableRead,
       ) {
-        const [intervalValues, intervalTimes] = variablePerInterval(
-          intervals,
-          variable,
-          simulation,
-          intervalIndex,
-        );
-        return intervalValues
-          ? formattedNumber(
-              timeOverUpperThresholdPerInterval(
-                intervalValues,
-                intervalTimes,
-                variable,
-                thresholds,
-              ),
-            )
-          : 0;
+        const variable = variables.find((v) => v.id === baseVariable.id);
+        if (variable) {
+          const [intervalValues, intervalTimes] = variablePerInterval(
+            intervals,
+            variable,
+            simulation,
+            intervalIndex,
+          );
+          return intervalValues
+            ? formattedNumber(
+                timeOverUpperThresholdPerInterval(
+                  intervalValues,
+                  intervalTimes,
+                  variable,
+                ),
+              )
+            : 0;
+        }
       },
     },
     {
@@ -194,30 +235,31 @@ export function useParameters() {
       value(
         intervalIndex: number,
         simulation: SimulateResponse,
-        variable: VariableRead,
+        baseVariable: VariableRead,
       ) {
-        const [intervalValues, intervalTimes] = variablePerInterval(
-          intervals,
-          variable,
-          simulation,
-          intervalIndex,
-        );
-        return intervalValues
-          ? formattedNumber(
-              timeOverLowerThresholdPerInterval(
-                intervalValues,
-                intervalTimes,
-                variable,
-                thresholds,
-              ) -
-                timeOverUpperThresholdPerInterval(
+        const variable = variables.find((v) => v.id === baseVariable.id);
+        if (variable) {
+          const [intervalValues, intervalTimes] = variablePerInterval(
+            intervals,
+            variable,
+            simulation,
+            intervalIndex,
+          );
+          return intervalValues
+            ? formattedNumber(
+                timeOverLowerThresholdPerInterval(
                   intervalValues,
                   intervalTimes,
                   variable,
-                  thresholds,
-                ),
-            )
-          : 0;
+                ) -
+                  timeOverUpperThresholdPerInterval(
+                    intervalValues,
+                    intervalTimes,
+                    variable,
+                  ),
+              )
+            : 0;
+        }
       },
     },
   ] as Parameter[];

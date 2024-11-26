@@ -202,6 +202,9 @@ class CombinedModel(MyokitModelMixin, StoredModel):
             old_var = self.variables.get(qname=variable.qname)
             variable.copy(old_var, project)
 
+        for time_interval in self.time_intervals.all():
+            time_interval.copy(stored_model)
+
         return stored_model
 
     def create_myokit_model(self):
@@ -740,4 +743,38 @@ class DerivedVariable(StoredModel):
             "type": self.type,
         }
         stored_mapping = DerivedVariable.objects.create(**stored_kwargs)
+        return stored_mapping
+
+
+class TimeInterval(StoredModel):
+    pkpd_model = models.ForeignKey(
+        CombinedModel,
+        on_delete=models.CASCADE,
+        related_name="time_intervals",
+        help_text="PKPD model that this time interval is for",
+    )
+    start_time = models.FloatField(
+        help_text="start time of interval"
+    )
+    end_time = models.FloatField(
+        help_text="end time of interval"
+    )
+    unit = models.ForeignKey(
+        Unit,
+        on_delete=models.PROTECT,
+        help_text="unit of interval",
+    )
+
+    def __str__(self):
+        return f"{self.start_time} - {self.end_time} [{self.unit}]"
+
+    def copy(self, new_pkpd_model):
+        stored_kwargs = {
+            "pkpd_model": new_pkpd_model,
+            "start_time": self.start_time,
+            "end_time": self.end_time,
+            "unit": self.unit,
+            "read_only": self.read_only,
+        }
+        stored_mapping = TimeInterval.objects.create(**stored_kwargs)
         return stored_mapping
