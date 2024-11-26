@@ -31,7 +31,7 @@ import {
   useProjectAccessDestroyMutation,
 } from "../../app/backendApi";
 import UserAccess from "./UserAccess";
-import { setProject } from "../main/mainSlice";
+import { decrementDirtyCount, incrementDirtyCount, setProject } from "../main/mainSlice";
 import TextField from "../../components/TextField";
 import useDirty from "../../hooks/useDirty";
 import ConfirmationDialog from "../../components/ConfirmationDialog";
@@ -121,7 +121,6 @@ const ProjectRow: FC<Props> = ({
   } = useForm<FormData>({
     defaultValues: { project, compound: defaultCompound },
   });
-  useDirty(isDirty);
 
   const [userAccessOpen, setUserAccessOpen] = useState<boolean>(false);
 
@@ -151,10 +150,12 @@ const ProjectRow: FC<Props> = ({
       handleSubmit((data: FormData) => {
         if (compound && project) {
           if (JSON.stringify(compound) !== JSON.stringify(data.compound)) {
-            updateCompound({ id: compound.id, compound: data.compound });
+            dispatch(incrementDirtyCount())
+            updateCompound({ id: compound.id, compound: data.compound }).then(() => dispatch(decrementDirtyCount()));;
           }
           if (JSON.stringify(project) !== JSON.stringify(data.project)) {
-            updateProject({ id: project.id, project: data.project });
+            dispatch(incrementDirtyCount())
+            updateProject({ id: project.id, project: data.project }).then(() => dispatch(decrementDirtyCount()));
           }
         }
       }),
