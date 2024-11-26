@@ -25,6 +25,7 @@ type Props<T extends FieldValues> = {
   rules?: Record<string, unknown>;
   selectProps?: SelectProps;
   formControlProps?: FormControlProps;
+  size?: 'small' | 'medium'
   sx?: SxProps;
 };
 
@@ -36,6 +37,7 @@ function SelectField<T extends FieldValues>({
   rules,
   selectProps,
   formControlProps,
+  size = 'medium',
   sx,
 }: Props<T>): ReactElement {
   const labelId = `${name}-label`;
@@ -61,6 +63,7 @@ function SelectField<T extends FieldValues>({
             {getLabel(label || "", Boolean(rules?.required))}
           </InputLabel>
           <Select
+            size={size}
             labelId={labelId}
             name={name}
             id={name}

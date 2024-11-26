@@ -58,7 +58,7 @@ const Results: FC = () => {
       <TableHeader label="Results" key="results-header" />
       <Box
         sx={{
-          display: "flex ",
+          display: "flex",
           justifyContent: "space-between",
           borderBottom: "1px solid #c2bab5",
         }}

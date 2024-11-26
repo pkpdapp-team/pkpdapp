@@ -10,6 +10,7 @@ type Props<T extends FieldValues> = {
   control: Control<T>;
   rules?: Record<string, unknown>;
   textFieldProps?: TextFieldProps;
+  size?: "small" | "medium";
   data_cy?: string;
   sx?: Record<string, string>;
 };
@@ -33,6 +34,7 @@ function FloatField<T extends FieldValues>({
   rules,
   textFieldProps,
   data_cy,
+  size = "medium",
   sx,
 }: Props<T>): ReactElement {
   const [fieldValue, setFieldValue] = useFieldState({ name, control });
@@ -60,6 +62,7 @@ function FloatField<T extends FieldValues>({
         };
         return (
           <TextField
+            size={size}
             label={
               !error
                 ? getLabel(label || "", Boolean(rules?.required))

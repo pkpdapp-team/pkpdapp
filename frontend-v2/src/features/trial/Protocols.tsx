@@ -12,6 +12,8 @@ import {
   TableRow,
   Tabs,
   Tab,
+  IconButton,
+  Stack,
 } from "@mui/material";
 import Add from "@mui/icons-material/Add";
 import Error from "@mui/icons-material/Error";
@@ -30,6 +32,12 @@ import HelpButton from "../../components/HelpButton";
 import { defaultHeaderSx } from "../../shared/tableHeadersSx";
 import useDataset from "../../hooks/useDataset";
 import useSubjectGroups from "../../hooks/useSubjectGroups";
+import { TableHeader } from "../../components/TableHeader";
+import RemoveCircleOutlineIcon from "@mui/icons-material/RemoveCircleOutline";
+import {
+  getTableHeight,
+  SINGLE_TABLE_BREAKPOINTS,
+} from "../../shared/calculateTableHeights";
 
 const Protocols: FC = () => {
   const [tab, setTab] = useState(0);
@@ -83,39 +91,42 @@ const Protocols: FC = () => {
     (protocol) => protocol.variables.length > 0,
   );
 
-  const handleTabChange = async (event: ChangeEvent<{}>, newValue: number) => {
+  const handleTabChange = (event: ChangeEvent<{}>, newValue: number) => {
     setTab(newValue);
-    if (project && groups && newValue === groups.length + 1) {
-      const existingNames = groups?.map((g) => g.name);
-      let newGroupId = newValue;
-      let newGroupName = `Group ${newValue}`;
-      while (existingNames?.includes(newGroupName)) {
-        newGroupId++;
-        newGroupName = `Group ${newGroupId}`;
-      }
-      await createSubjectGroup({
-        subjectGroup: {
-          name: newGroupName,
-          id_in_dataset: `${newGroupId}`,
-          project: project.id,
-          protocols: filteredProtocols.map((p) => {
-            const { id, project, mapped_qname, ...newProtocol } = p;
-            const linkedVariableId = p.variables[0];
-            const mappedQName =
-              mapped_qname ||
-              variables?.find((v) => v.id === linkedVariableId)?.qname;
-            return {
-              ...newProtocol,
-              dataset: null,
-              project,
-              name: `${newProtocol.name} - Group ${newValue}`,
-              mapped_qname: mappedQName,
-            };
-          }),
-        },
-      });
-      refetchGroups();
+  };
+
+
+  const handleAddTab = async () => {
+    const newValue = groups?.length || 1;
+    const existingNames = groups?.map((g) => g.name);
+    let newGroupId = newValue;
+    let newGroupName = `Group ${newValue}`;
+    while (existingNames?.includes(newGroupName)) {
+      newGroupId++;
+      newGroupName = `Group ${newGroupId}`;
     }
+    await createSubjectGroup({
+      subjectGroup: {
+        name: newGroupName,
+        id_in_dataset: `${newGroupId}`,
+        project: project.id,
+        protocols: filteredProtocols.map((p) => {
+          const { id, project, mapped_qname, ...newProtocol } = p;
+          const linkedVariableId = p.variables[0];
+          const mappedQName =
+            mapped_qname ||
+            variables?.find((v) => v.id === linkedVariableId)?.qname;
+          return {
+            ...newProtocol,
+            dataset: null,
+            project,
+            name: `${newProtocol.name} - Group ${newValue}`,
+            mapped_qname: mappedQName,
+          };
+        }),
+      },
+    });
+    refetchGroups();
   };
 
   const removeGroup = (groupID: number) => async () => {
@@ -131,6 +142,7 @@ const Protocols: FC = () => {
       await destroySubjectGroup({ id: groupID });
       refetchGroups();
     }
+    setTab(0);
   };
 
   const onProtocolChange = () => {
@@ -163,50 +175,82 @@ const Protocols: FC = () => {
 
   return (
     <>
-      <Tabs value={tab} onChange={handleTabChange}>
-        <Tab label={"Project"} {...a11yProps(0)} />
-        {groups?.map((group, index) => {
-          const selectedDoses = group.protocols?.flatMap((p) => p?.doses) || [];
-          return (
-            <Tab
-              key={group.id}
-              label={group.name}
-              {...a11yProps(index + 1)}
-              icon={
-                selectedDoses.length === 0 ? <Error color="error" /> : undefined
-              }
-              iconPosition="end"
-            />
-          );
-        })}
-        <Tab
-          label={"New Group"}
-          {...a11yProps((dataset?.groups?.length || 0) + 1)}
-          icon={<Add />}
-          iconPosition="start"
-        />
-      </Tabs>
+      <TableHeader label="Trial Design" />
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          borderBottom: "1px solid #c2bab5",
+        }}
+      >
+        <Tabs
+          variant="scrollable"
+          scrollButtons
+          allowScrollButtonsMobile
+          sx={{ width: "fit-content" }}
+          value={tab}
+          onChange={handleTabChange}
+        >
+          <Tab label={"Project"} {...a11yProps(0)} />
+          {groups?.map((group, index) => {
+            const selectedDoses =
+              group.protocols?.flatMap((p) => p?.doses) || [];
+            return (
+              <Tab
+                key={group.id}
+                label={group.name}
+                {...a11yProps(index + 1)}
+                icon={
+                  !groups?.[index] ? undefined : (
+                    <IconButton
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        removeGroup(groups?.[index]?.id)();
+                      }}
+                    >
+                      {selectedDoses.length === 0 && (
+                        <Error color="error" sx={{ marginRight: ".5rem" }} />
+                      )}
+                      <RemoveCircleOutlineIcon fontSize="small" />
+                    </IconButton>
+                  )
+                }
+                iconPosition="end"
+              />
+            );
+          })}
+        </Tabs>
+        <Box
+          sx={{ display: "flex", width: "fit-content", alignItems: "center" }}
+        >
+          <Button
+            variant="contained"
+            sx={{
+              marginRight: "1rem",
+              width: "fit-content",
+              textWrap: "nowrap",
+              height: "2rem",
+            }}
+            onClick={handleAddTab}
+          >
+            Add Group
+          </Button>
+        </Box>
+      </Box>
       <Box role="tabpanel" id={`group-tabpanel`}>
-        <TableContainer sx={{ width: "90%" }}>
-          <Table>
+        <TableContainer
+          sx={{
+            height: getTableHeight({ steps: SINGLE_TABLE_BREAKPOINTS }),
+          }}
+        >
+          <Table stickyHeader>
             <TableHead>
               <TableRow>
-                <TableCell>
-                  <div style={{ ...defaultHeaderSx }}>
-                    {" "}
-                    Site of Admin
-                    <HelpButton title="Site of Admin">
-                      Defines the site of drug administration. A1/A1_t/A1_f =
-                      IV, Aa = SC or PO. The site of drug administration can be
-                      selected under Model/ Map Variables
-                    </HelpButton>
-                  </div>
-                </TableCell>
-                <TableCell>
+                <TableCell size="small" sx={{ textWrap: "nowrap" }}>
                   {" "}
                   <div style={{ ...defaultHeaderSx }}>Dose</div>
                 </TableCell>
-                <TableCell>
+                <TableCell size="small" sx={{ textWrap: "nowrap" }}>
                   <div style={{ ...defaultHeaderSx }}>
                     {" "}
                     Dose Unit
@@ -215,11 +259,11 @@ const Protocols: FC = () => {
                     </HelpButton>
                   </div>
                 </TableCell>
-                <TableCell>
+                <TableCell size="small" sx={{ textWrap: "nowrap" }}>
                   {" "}
                   <div style={{ ...defaultHeaderSx }}>Number of Doses</div>
                 </TableCell>
-                <TableCell>
+                <TableCell size="small" sx={{ textWrap: "nowrap" }}>
                   <div style={{ ...defaultHeaderSx }}>
                     {" "}
                     Start Time
@@ -228,7 +272,7 @@ const Protocols: FC = () => {
                     </HelpButton>
                   </div>
                 </TableCell>
-                <TableCell>
+                <TableCell size="small" sx={{ textWrap: "nowrap" }}>
                   <div style={{ ...defaultHeaderSx }}>
                     {" "}
                     Dose Duration
@@ -238,16 +282,20 @@ const Protocols: FC = () => {
                     </HelpButton>
                   </div>
                 </TableCell>
-                <TableCell>
+                <TableCell size="small" sx={{ textWrap: "nowrap" }}>
                   {" "}
                   <div style={{ ...defaultHeaderSx }}>Dosing Interval</div>
                 </TableCell>
-                <TableCell>
+                <TableCell size="small" sx={{ textWrap: "nowrap" }}>
                   {" "}
                   <div style={{ ...defaultHeaderSx }}>Time Unit</div>
                 </TableCell>
                 {tab === 0 && (
-                  <TableCell align="right">
+                  <TableCell
+                    align="right"
+                    size="small"
+                    sx={{ textWrap: "nowrap" }}
+                  >
                     <div style={{ ...defaultHeaderSx }}> Remove </div>
                   </TableCell>
                 )}
@@ -273,13 +321,6 @@ const Protocols: FC = () => {
             </TableBody>
           </Table>
         </TableContainer>
-        {subjectGroup?.id && (
-          <Box sx={{ display: "flex", justifyContent: "end" }}>
-            <Button variant="outlined" onClick={removeGroup(subjectGroup.id)}>
-              Remove Group
-            </Button>
-          </Box>
-        )}
       </Box>
     </>
   );
