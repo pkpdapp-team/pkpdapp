@@ -6,7 +6,7 @@ import {
   TableHead,
   TableRow,
 } from "@mui/material";
-import { FC } from "react";
+import { FC, ReactElement } from "react";
 
 import useSubjectGroups from "../../hooks/useSubjectGroups";
 
@@ -77,6 +77,9 @@ interface ResultsTableProps {
   parameterIndex: FilterIndex;
   rows: RowData;
   rowColumn: string;
+  concentrationUnit: string;
+  timeUnit: string;
+  children?: ReactElement;
 }
 
 /**
@@ -89,6 +92,8 @@ interface ResultsTableProps {
  * @param parameterIndex "rows" or "columns" or the index of the parameter to display in the table.
  * @param rows an array of row data.
  * @param rowColumn The name of the row column.
+ * @param concentrationUnit The unit of the displayed concentration values.
+ * @param timeUnit The unit of the displayed time values.
  */
 export const ResultsTable: FC<ResultsTableProps> = ({
   groupIndex,
@@ -97,9 +102,15 @@ export const ResultsTable: FC<ResultsTableProps> = ({
   parameterIndex,
   rows = [],
   rowColumn = "",
+  concentrationUnit = "pmol/L",
+  timeUnit = "h",
+  children,
 }) => {
   const { groups } = useSubjectGroups();
-  const parameters = useParameters();
+  const parameters = useParameters({
+    variableUnit: concentrationUnit,
+    timeUnit,
+  });
   const concentrationVariables = useConcentrationVariables();
   const [intervals] = useModelTimeIntervals();
   const tableRows = useTableRows({
@@ -108,6 +119,8 @@ export const ResultsTable: FC<ResultsTableProps> = ({
     intervalIndex,
     variableIndex,
     parameterIndex,
+    concentrationUnit,
+    timeUnit,
   });
 
   if (!rows[0]) {
@@ -155,8 +168,10 @@ export const ResultsTable: FC<ResultsTableProps> = ({
             ))}
           </TableBody>
         </Table>
+        {children}
       </TableContainer>
     );
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (e: any) {
     console.error(e);
     return <div>Error {e.message}</div>;

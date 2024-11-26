@@ -1,5 +1,6 @@
 import { FC, useState } from "react";
 import {
+  Box,
   FormControl,
   InputLabel,
   MenuItem,
@@ -15,6 +16,65 @@ import { useConcentrationVariables } from "./useConcentrationVariables";
 import { useParameters, Parameter } from "./useParameters";
 import { ResultsTable } from "./ResultsTable";
 import { useModelTimeIntervals } from "../../hooks/useModelTimeIntervals";
+import { useUnits } from "./useUnits";
+
+function TimeUnitSelect({
+  timeUnit,
+  onChangeTimeUnit,
+}: {
+  timeUnit: string;
+  onChangeTimeUnit: (event: SelectChangeEvent) => void;
+}) {
+  const units = useUnits();
+  const timeUnits = units?.find(
+    (unit) => unit.symbol === "h",
+  )?.compatible_units;
+  return (
+    <FormControl size="small">
+      <InputLabel id="time-unit-label">Time Unit</InputLabel>
+      <Select
+        labelId="time-unit-label"
+        value={timeUnit}
+        onChange={onChangeTimeUnit}
+      >
+        {timeUnits?.map((unit) => (
+          <MenuItem key={unit.id} value={unit.symbol}>
+            {unit.symbol}
+          </MenuItem>
+        ))}
+      </Select>
+    </FormControl>
+  );
+}
+
+function ConcentrationUnitSelect({
+  concentrationUnit,
+  onChangeConcentrationUnit,
+}: {
+  concentrationUnit: string;
+  onChangeConcentrationUnit: (event: SelectChangeEvent) => void;
+}) {
+  const units = useUnits();
+  const concentrationUnits = units?.find(
+    (unit) => unit.symbol === "pmol/L",
+  )?.compatible_units;
+  return (
+    <FormControl size="small">
+      <InputLabel id="conc-unit-label">Concentration Unit</InputLabel>
+      <Select
+        labelId="conc-unit-label"
+        value={concentrationUnit}
+        onChange={onChangeConcentrationUnit}
+      >
+        {concentrationUnits?.map((unit) => (
+          <MenuItem key={unit.id} value={unit.symbol}>
+            {unit.symbol}
+          </MenuItem>
+        ))}
+      </Select>
+    </FormControl>
+  );
+}
 
 const options = [
   { name: "Parameters", value: "parameters" },
@@ -43,10 +103,22 @@ type RowFilter = {
 };
 
 const ResultsTab: FC = () => {
+  const [timeUnit, setTimeUnit] = useState("h");
+  const [concentrationUnit, setConcentrationUnit] = useState("pmol/L");
+  function onChangeTimeUnit(event: SelectChangeEvent) {
+    setTimeUnit(event.target.value);
+  }
+  function onChangeConcentrationUnit(event: SelectChangeEvent) {
+    setConcentrationUnit(event.target.value);
+  }
+
   const { groups = [] } = useSubjectGroups();
   const [intervals] = useModelTimeIntervals();
   const concentrationVariables = useConcentrationVariables();
-  const parameters = useParameters();
+  const parameters = useParameters({
+    variableUnit: concentrationUnit,
+    timeUnit,
+  });
 
   const [columns, setColumns] = useState("parameters");
   const [rows, setRows] = useState("variables");
@@ -288,9 +360,30 @@ const ResultsTab: FC = () => {
           intervalIndex={intervalIndex}
           rows={rowData}
           rowColumn={rowColumn}
-        />
+          concentrationUnit={concentrationUnit}
+          timeUnit={timeUnit}
+        >
+          <Box
+            sx={{
+              justifyContent: "flex-end",
+              display: "flex",
+              mt: "1rem",
+              gap: "0.5rem",
+            }}
+          >
+            <ConcentrationUnitSelect
+              concentrationUnit={concentrationUnit}
+              onChangeConcentrationUnit={onChangeConcentrationUnit}
+            />
+            <TimeUnitSelect
+              timeUnit={timeUnit}
+              onChangeTimeUnit={onChangeTimeUnit}
+            />
+          </Box>
+        </ResultsTable>
       </>
     );
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (e: any) {
     console.error(e);
     return <div>Error {e.message}</div>;
