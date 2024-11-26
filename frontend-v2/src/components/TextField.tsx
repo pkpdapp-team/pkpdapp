@@ -16,6 +16,7 @@ type Props<T extends FieldValues> = {
   mode?: "onChange" | "onBlur";
   textFieldProps?: TextFieldProps;
   autoShrink?: boolean;
+  size: 'small' | 'medium'
   sx?: SxProps;
 };
 
@@ -25,6 +26,7 @@ function TextField<T extends FieldValues>({
   control,
   rules,
   mode,
+  size = 'medium',
   textFieldProps,
   autoShrink,
   sx,
@@ -59,6 +61,7 @@ function TextField<T extends FieldValues>({
         };
         return (
           <MaterialTextField
+            size={size}
             label={
               !error
                 ? getLabel(label || "", Boolean(rules?.required))

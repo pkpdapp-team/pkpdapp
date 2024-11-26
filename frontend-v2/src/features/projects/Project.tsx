@@ -33,7 +33,6 @@ import {
 import UserAccess from "./UserAccess";
 import { decrementDirtyCount, incrementDirtyCount, setProject } from "../main/mainSlice";
 import TextField from "../../components/TextField";
-import useDirty from "../../hooks/useDirty";
 import ConfirmationDialog from "../../components/ConfirmationDialog";
 import { selectCurrentUser, selectIsProjectShared } from "../login/loginSlice";
 import { RootState } from "../../app/store";
@@ -211,7 +210,6 @@ const ProjectRow: FC<Props> = ({
   const defaultProps = {
     fullWidth: true,
     disabled: isSharedWithMe,
-    size: "small",
   };
 
   const defaultSx = {
@@ -259,6 +257,7 @@ const ProjectRow: FC<Props> = ({
               name="project.name"
               control={control}
               textFieldProps={defaultProps}
+              size='small'
               rules={{ required: true, validate: validateName }}
               sx={{ ...defaultSx }}
             />
@@ -272,6 +271,7 @@ const ProjectRow: FC<Props> = ({
               name="compound.name"
               control={control}
               textFieldProps={defaultProps}
+              size='small'
               rules={{ required: true }}
               sx={defaultSx}
             />
