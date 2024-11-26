@@ -101,7 +101,13 @@ const timeOverUpperThresholdPerInterval = (
   return timeOverThreshold(intervalTimes, intervalValues, threshold);
 };
 
-export function useParameters() {
+export function useParameters({
+  variableUnit = "pmol/L",
+  timeUnit = "h",
+}: {
+  variableUnit?: string;
+  timeUnit?: string;
+}) {
   const units = useUnits();
   const [baseIntervals] = useModelTimeIntervals();
   const baseVariables = useVariables();
@@ -109,23 +115,20 @@ export function useParameters() {
   const variables = useNormalisedVariables(baseVariables);
 
   function variableConversionFactor(variable: VariableRead) {
-    const displayUnit = units?.find(
-      (unit) => unit.id === variable.threshold_unit,
-    );
-    const variableUnit = displayUnit?.compatible_units.find(
+    const displayUnit = units?.find((unit) => unit.symbol === variableUnit);
+    const modelUnit = displayUnit?.compatible_units.find(
       (u) => +u.id === variable.unit,
     );
-    const conversionFactor = parseFloat(variableUnit?.conversion_factor || "1");
+    const conversionFactor = parseFloat(modelUnit?.conversion_factor || "1");
     return conversionFactor;
   }
 
-  function timeConversionFactor(intervalIndex: number) {
-    const interval = intervals[intervalIndex];
-    const displayUnit = units?.find((unit) => unit.id === interval.unit);
-    const timeUnit = displayUnit?.compatible_units.find(
+  function timeConversionFactor() {
+    const displayUnit = units?.find((unit) => unit.symbol === timeUnit);
+    const modelUnit = displayUnit?.compatible_units.find(
       (u) => u.symbol === "h",
     );
-    const conversionFactor = parseFloat(timeUnit?.conversion_factor || "1");
+    const conversionFactor = parseFloat(modelUnit?.conversion_factor || "1");
     return conversionFactor;
   }
 
@@ -186,8 +189,7 @@ export function useParameters() {
         const difference = auc ? auc[auc.length - 1] - auc[0] : 0;
         return formattedNumber(
           difference /
-            (variableConversionFactor(variable) *
-              timeConversionFactor(intervalIndex)),
+            (variableConversionFactor(variable) * timeConversionFactor()),
         );
       },
     },
@@ -217,7 +219,7 @@ export function useParameters() {
                 variable,
               )
             : 0;
-          return formattedNumber(tLower / timeConversionFactor(intervalIndex));
+          return formattedNumber(tLower / timeConversionFactor());
         }
       },
     },
@@ -247,7 +249,7 @@ export function useParameters() {
                 variable,
               )
             : 0;
-          return formattedNumber(tUpper / timeConversionFactor(intervalIndex));
+          return formattedNumber(tUpper / timeConversionFactor());
         }
       },
     },
@@ -284,9 +286,7 @@ export function useParameters() {
                 variable,
               )
             : 0;
-          return formattedNumber(
-            (tLower - tUpper) / timeConversionFactor(intervalIndex),
-          );
+          return formattedNumber((tLower - tUpper) / timeConversionFactor());
         }
       },
     },

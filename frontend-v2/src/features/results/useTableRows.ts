@@ -16,6 +16,8 @@ interface TableRowsProps {
   intervalIndex: FilterIndex;
   variableIndex: FilterIndex;
   parameterIndex: FilterIndex;
+  concentrationUnit?: string;
+  timeUnit?: string;
 }
 export function useTableRows({
   rows,
@@ -23,10 +25,15 @@ export function useTableRows({
   intervalIndex,
   variableIndex,
   parameterIndex,
+  concentrationUnit = "pmol/L",
+  timeUnit = "h",
 }: TableRowsProps) {
   const units = useUnits();
   const variables = useVariables();
-  const parameters = useParameters();
+  const parameters = useParameters({
+    variableUnit: concentrationUnit,
+    timeUnit,
+  });
   const concentrationVariables = useConcentrationVariables();
   const { simulations } = useContext(SimulationContext);
   const [intervals] = useModelTimeIntervals();
