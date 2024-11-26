@@ -25,12 +25,12 @@ import FloatField from "../../components/FloatField";
 import IntegerField from "../../components/IntegerField";
 import useDirty from "../../hooks/useDirty";
 import useInterval from "../../hooks/useInterval";
-import HelpButton from "../../components/HelpButton";
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
 import { selectIsProjectShared } from "../login/loginSlice";
 import { TableHeader } from "../../components/TableHeader";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
+
 interface Props {
   onChange: () => void;
   project: ProjectRead;

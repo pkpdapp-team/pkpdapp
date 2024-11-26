@@ -13,9 +13,7 @@ import {
   Tabs,
   Tab,
   IconButton,
-  Stack,
 } from "@mui/material";
-import Add from "@mui/icons-material/Add";
 import Error from "@mui/icons-material/Error";
 import {
   useCombinedModelListQuery,
@@ -35,9 +33,39 @@ import useSubjectGroups from "../../hooks/useSubjectGroups";
 import { TableHeader } from "../../components/TableHeader";
 import RemoveCircleOutlineIcon from "@mui/icons-material/RemoveCircleOutline";
 import {
-  getTableHeight,
-  SINGLE_TABLE_BREAKPOINTS,
+  getTableHeight
 } from "../../shared/calculateTableHeights";
+
+const TABLE_BREAKPOINTS = [
+  {
+    minHeight: 1100,
+    tableHeight: "78vh",
+  },
+  {
+    minHeight: 1000,
+    tableHeight: "75vh",
+  },
+  {
+    minHeight: 900,
+    tableHeight: "72vh",
+  },
+  {
+    minHeight: 800,
+    tableHeight: "68vh",
+  },
+  {
+    minHeight: 700,
+    tableHeight: "67vh",
+  },
+  {
+    minHeight: 600,
+    tableHeight: "60vh",
+  },
+  {
+    minHeight: 500,
+    tableHeight: "60vh",
+  },
+];
 
 const Protocols: FC = () => {
   const [tab, setTab] = useState(0);
@@ -240,7 +268,7 @@ const Protocols: FC = () => {
       <Box role="tabpanel" id={`group-tabpanel`}>
         <TableContainer
           sx={{
-            height: getTableHeight({ steps: SINGLE_TABLE_BREAKPOINTS }),
+            height: getTableHeight({ steps: TABLE_BREAKPOINTS }),
           }}
         >
           <Table stickyHeader>
