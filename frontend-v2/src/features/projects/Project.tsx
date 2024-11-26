@@ -13,6 +13,7 @@ import {
   Typography,
   Tooltip,
   Stack,
+  TextField as MaterialTextField,
 } from "@mui/material";
 import Delete from "@mui/icons-material/Delete";
 import PersonAdd from "@mui/icons-material/PersonAdd";
@@ -33,10 +34,14 @@ import UserAccess from "./UserAccess";
 import { setProject } from "../main/mainSlice";
 import TextField from "../../components/TextField";
 import useDirty from "../../hooks/useDirty";
-import useInterval from "../../hooks/useInterval";
 import ConfirmationDialog from "../../components/ConfirmationDialog";
 import { selectCurrentUser, selectIsProjectShared } from "../login/loginSlice";
 import { RootState } from "../../app/store";
+import EditIcon from "@mui/icons-material/Edit";
+import CheckIcon from "@mui/icons-material/Check";
+import CloseIcon from "@mui/icons-material/Close";
+import { DescriptionModal } from "./Description";
+import { useFieldState } from "../../app/hooks";
 
 interface Props {
   project: ProjectRead;
@@ -78,6 +83,14 @@ const ProjectRow: FC<Props> = ({
   ] = useProjectDestroyMutation();
 
   const [projectCopyUpdate] = useProjectCopyUpdateMutation();
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [isDescriptionModalOpen, setIsDescriptionModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (isEditMode) {
+      setIsEditMode(false);
+    }
+  }, [isSelected]);
 
   const modalityOptions = [
     { value: "SM", label: "Small Molecule" },
@@ -148,11 +161,14 @@ const ProjectRow: FC<Props> = ({
     [handleSubmit, compound, project, updateCompound, updateProject],
   );
 
-  useInterval({
-    callback: handleSave,
-    delay: 1000,
-    isDirty,
+  const [fieldValue, setFieldValue] = useFieldState({
+    name: "project.description",
+    control,
   });
+
+  const onCancel = () => {
+    setFieldValue(project.description);
+  };
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -194,6 +210,7 @@ const ProjectRow: FC<Props> = ({
   const defaultProps = {
     fullWidth: true,
     disabled: isSharedWithMe,
+    size: "small",
   };
 
   const defaultSx = {
@@ -224,42 +241,42 @@ const ProjectRow: FC<Props> = ({
         data-cy={`project-${project.id}`}
         style={{ backgroundColor: isSelected ? "#E3E9F8" : "#FFF" }}
       >
-        <TableCell
-          rowSpan={isSelected ? 2 : 1}
-          sx={{ verticalAlign: "top" }}
-          padding="checkbox"
-        >
+        <TableCell sx={{ verticalAlign: "top" }} padding="checkbox">
           <Radio
             sx={{
-              marginTop: 4,
+              marginTop: 2,
               color: isAnyProjectSelected ? "inherit" : "red",
             }}
             checked={isSelected}
             onClick={handleSelectProject}
+            size="small"
           />
         </TableCell>
         <TableCell>
-          <TextField
-            name="project.name"
-            control={control}
-            textFieldProps={defaultProps}
-            rules={{ required: true, validate: validateName }}
-            sx={defaultSx}
-          />
+          {isEditMode ? (
+            <TextField
+              name="project.name"
+              control={control}
+              textFieldProps={defaultProps}
+              rules={{ required: true, validate: validateName }}
+              sx={{ ...defaultSx }}
+            />
+          ) : (
+            <Typography>{project?.name}</Typography>
+          )}
         </TableCell>
         <TableCell>
-          <Typography component="span">
-            {speciesOptions.find((s) => s.value === project.species)?.label}
-          </Typography>
-        </TableCell>
-        <TableCell>
-          <TextField
-            name="compound.name"
-            control={control}
-            textFieldProps={defaultProps}
-            rules={{ required: true }}
-            sx={defaultSx}
-          />
+          {isEditMode ? (
+            <TextField
+              name="compound.name"
+              control={control}
+              textFieldProps={defaultProps}
+              rules={{ required: true }}
+              sx={defaultSx}
+            />
+          ) : (
+            <Typography>{compound?.name}</Typography>
+          )}
         </TableCell>
         <TableCell>
           {
@@ -268,67 +285,131 @@ const ProjectRow: FC<Props> = ({
           }
         </TableCell>
         <TableCell>
-          <Stack component="span" direction="row" spacing={0.0}>
-            <Tooltip title={deleteTooltip}>
-              <IconButton onClick={() => setShowConfirmDelete(true)}>
-                <Delete />
-              </IconButton>
-            </Tooltip>
-            <ConfirmationDialog
-              open={showConfirmDelete}
-              title={deleteTooltip}
-              message={deleteMessage}
-              onConfirm={handleDelete}
-              onCancel={() => setShowConfirmDelete(false)}
-            />
-            <Tooltip title="Copy Project">
-              <IconButton onClick={copyProject}>
-                <ContentCopyIcon />
-              </IconButton>
-            </Tooltip>
-
-            <Tooltip title="Share Project">
-              <IconButton
-                onClick={() => setUserAccessOpen(true)}
-                disabled={isSharedWithMe}
+          <Typography component="span">
+            {speciesOptions.find((s) => s.value === project.species)?.label}
+          </Typography>
+        </TableCell>
+        <TableCell>
+          <Typography component="span">
+            {isEditMode ? (
+              <Typography
+                sx={{ color: "blue", cursor: "pointer" }}
+                onClick={() => setIsDescriptionModalOpen(true)}
               >
-                <PersonAdd />
-              </IconButton>
-            </Tooltip>
-            <UserAccess
-              open={userAccessOpen}
-              control={control}
-              onClose={userAccessClose}
-              userAccess={userAccess as ProjectAccess[]}
-              append={append}
-              remove={remove}
-              project={project}
-            />
-            {isSharedWithMe && (
-              <Tooltip title="This project is shared with me as view-only">
-                <div>
-                  <IconButton disabled>
-                    <VisibilityIcon />
-                  </IconButton>
-                </div>
-              </Tooltip>
+                {project?.description?.length ? "Read" : "Add"}
+              </Typography>
+            ) : (
+              <Typography
+                onClick={() => setIsDescriptionModalOpen(true)}
+                sx={{ color: "blue", cursor: "pointer" }}
+              >
+                {project?.description?.length ? "Read" : ""}
+              </Typography>
             )}
-          </Stack>
+          </Typography>
+        </TableCell>
+        <TableCell>
+          {!isEditMode ? (
+            <Stack component="span" direction="row" spacing={0.0}>
+              <Tooltip title="Edit project">
+                <IconButton onClick={() => setIsEditMode(true)}>
+                  <EditIcon />
+                </IconButton>
+              </Tooltip>
+              <ConfirmationDialog
+                open={showConfirmDelete}
+                title={deleteTooltip}
+                message={deleteMessage}
+                onConfirm={handleDelete}
+                onCancel={() => setShowConfirmDelete(false)}
+              />
+              <Tooltip title="Copy Project">
+                <IconButton onClick={copyProject}>
+                  <ContentCopyIcon />
+                </IconButton>
+              </Tooltip>
+
+              <Tooltip title="Share Project">
+                <IconButton
+                  onClick={() => setUserAccessOpen(true)}
+                  disabled={isSharedWithMe}
+                >
+                  <PersonAdd />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title={deleteTooltip}>
+                <IconButton onClick={() => setShowConfirmDelete(true)}>
+                  <Delete />
+                </IconButton>
+              </Tooltip>
+              <UserAccess
+                open={userAccessOpen}
+                onClose={userAccessClose}
+                control={control}
+                userAccess={userAccess as ProjectAccess[]}
+                append={append}
+                remove={remove}
+                project={project}
+              />
+              {isSharedWithMe && (
+                <Tooltip title="This project is shared with me as view-only">
+                  <div>
+                    <IconButton disabled>
+                      <VisibilityIcon />
+                    </IconButton>
+                  </div>
+                </Tooltip>
+              )}
+            </Stack>
+          ) : (
+            <Stack
+              sx={{ justifyContent: "center" }}
+              component="span"
+              direction="row"
+              spacing={0.0}
+            >
+              <Tooltip title="Save changes">
+                <IconButton
+                  onClick={() => {
+                    setIsEditMode(false);
+                    handleSave();
+                  }}
+                >
+                  <CheckIcon />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="Discard changes">
+                <IconButton
+                  onClick={() => {
+                    setIsEditMode(false);
+                    reset();
+                  }}
+                >
+                  <CloseIcon />
+                </IconButton>
+              </Tooltip>
+            </Stack>
+          )}
         </TableCell>
       </TableRow>
-      {isSelected && (
-        <TableRow style={{ backgroundColor: "#E3E9F8" }}>
-          <TableCell colSpan={4}>
-            <TextField
-              label="Description"
-              name="project.description"
-              control={control}
-              textFieldProps={{ ...defaultProps, multiline: true }}
-              sx={defaultSx}
-            />
-          </TableCell>
-          <TableCell colSpan={1} />
-        </TableRow>
+      {isDescriptionModalOpen && (
+        <DescriptionModal
+          isOpen={isDescriptionModalOpen}
+          handleOpenChange={() => setIsDescriptionModalOpen(false)}
+          onCancel={onCancel}
+          isEditMode={isEditMode}
+          compound={compound}
+          project={project}
+        >
+          <MaterialTextField
+            onChange={(event) => setFieldValue(event.target.value)}
+            value={fieldValue}
+            sx={{ width: "50vw" }}
+            disabled={!isEditMode}
+            multiline
+            rows={15}
+          />
+        </DescriptionModal>
       )}
     </>
   );
