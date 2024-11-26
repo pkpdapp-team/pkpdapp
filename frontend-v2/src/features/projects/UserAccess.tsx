@@ -69,7 +69,7 @@ const UserAccess: FC<Props> = ({
     ?.filter((user) => user.id !== myUserId && !sharedUsers.includes(user.id))
     .map((user) => {
       return { value: user.id, label: user.username };
-    });
+    }) || [];
 
   return (
     <Dialog maxWidth="lg" open={open} onClose={onClose}>
