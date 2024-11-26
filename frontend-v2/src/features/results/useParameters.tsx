@@ -102,10 +102,33 @@ const timeOverUpperThresholdPerInterval = (
 };
 
 export function useParameters() {
+  const units = useUnits();
   const [baseIntervals] = useModelTimeIntervals();
   const baseVariables = useVariables();
   const intervals = useNormalisedIntervals(baseIntervals);
   const variables = useNormalisedVariables(baseVariables);
+
+  function variableConversionFactor(variable: VariableRead) {
+    const displayUnit = units?.find(
+      (unit) => unit.id === variable.threshold_unit,
+    );
+    const variableUnit = displayUnit?.compatible_units.find(
+      (u) => +u.id === variable.unit,
+    );
+    const conversionFactor = parseFloat(variableUnit?.conversion_factor || "1");
+    return conversionFactor;
+  }
+
+  function timeConversionFactor(intervalIndex: number) {
+    const interval = intervals[intervalIndex];
+    const displayUnit = units?.find((unit) => unit.id === interval.unit);
+    const timeUnit = displayUnit?.compatible_units.find(
+      (u) => u.symbol === "h",
+    );
+    const conversionFactor = parseFloat(timeUnit?.conversion_factor || "1");
+    return conversionFactor;
+  }
+
   return [
     {
       name: "Min",
@@ -120,9 +143,9 @@ export function useParameters() {
           simulation,
           intervalIndex,
         );
-        return intervalValues
-          ? formattedNumber(Math.min(...intervalValues))
-          : 0;
+
+        const min = intervalValues ? Math.min(...intervalValues) : 0;
+        return formattedNumber(min / variableConversionFactor(variable));
       },
     },
     {
@@ -138,9 +161,8 @@ export function useParameters() {
           simulation,
           intervalIndex,
         );
-        return intervalValues
-          ? formattedNumber(Math.max(...intervalValues))
-          : 0;
+        const max = intervalValues ? Math.max(...intervalValues) : 0;
+        return formattedNumber(max / variableConversionFactor(variable));
       },
     },
     {
@@ -161,7 +183,12 @@ export function useParameters() {
               intervalIndex,
             )
           : [];
-        return auc ? formattedNumber(auc[auc.length - 1] - auc[0]) : "";
+        const difference = auc ? auc[auc.length - 1] - auc[0] : 0;
+        return formattedNumber(
+          difference /
+            (variableConversionFactor(variable) *
+              timeConversionFactor(intervalIndex)),
+        );
       },
     },
     {
@@ -183,15 +210,14 @@ export function useParameters() {
             simulation,
             intervalIndex,
           );
-          return intervalValues
-            ? formattedNumber(
-                timeOverLowerThresholdPerInterval(
-                  intervalValues,
-                  intervalTimes,
-                  variable,
-                ),
+          const tLower = intervalValues
+            ? timeOverLowerThresholdPerInterval(
+                intervalValues,
+                intervalTimes,
+                variable,
               )
             : 0;
+          return formattedNumber(tLower / timeConversionFactor(intervalIndex));
         }
       },
     },
@@ -214,15 +240,14 @@ export function useParameters() {
             simulation,
             intervalIndex,
           );
-          return intervalValues
-            ? formattedNumber(
-                timeOverUpperThresholdPerInterval(
-                  intervalValues,
-                  intervalTimes,
-                  variable,
-                ),
+          const tUpper = intervalValues
+            ? timeOverUpperThresholdPerInterval(
+                intervalValues,
+                intervalTimes,
+                variable,
               )
             : 0;
+          return formattedNumber(tUpper / timeConversionFactor(intervalIndex));
         }
       },
     },
@@ -245,20 +270,23 @@ export function useParameters() {
             simulation,
             intervalIndex,
           );
-          return intervalValues
-            ? formattedNumber(
-                timeOverLowerThresholdPerInterval(
-                  intervalValues,
-                  intervalTimes,
-                  variable,
-                ) -
-                  timeOverUpperThresholdPerInterval(
-                    intervalValues,
-                    intervalTimes,
-                    variable,
-                  ),
+          const tLower = intervalValues
+            ? timeOverLowerThresholdPerInterval(
+                intervalValues,
+                intervalTimes,
+                variable,
               )
             : 0;
+          const tUpper = intervalValues
+            ? timeOverUpperThresholdPerInterval(
+                intervalValues,
+                intervalTimes,
+                variable,
+              )
+            : 0;
+          return formattedNumber(
+            (tLower - tUpper) / timeConversionFactor(intervalIndex),
+          );
         }
       },
     },
