@@ -44,7 +44,7 @@ type SimulationsSidePanelType = {
   isSharedWithMe: boolean;
   layoutOptions: { value: string; label: string }[];
   layout: string;
-  setLayout: (layout: string) => void;
+  setLayout: (layout: string[]) => void;
   plots: SimulationPlot[];
   control: Control<Simulation, any>;
   units: UnitRead[];
@@ -151,7 +151,15 @@ export const SimulationsSidePanel = ({
   const [collapseParameters, setCollapseParameters] = useState(false);
   const [collapseReference, setCollapseReference] = useState(false);
   const [collapseLegend, setCollapseLegend] = useState(false);
-  const { simulationAnimationClasses } = useCollapsibleSidebar(); 
+  const { simulationAnimationClasses } = useCollapsibleSidebar();
+
+  const onLayoutChange = (value: string) => {
+    if (layout.includes(value)) {
+      setLayout(layout.filter(layoutValue => value !== layoutValue))
+    } else {
+      setLayout([...layout, value]);
+    }
+  }
 
   if (!portalRoot || selectedPage !== PageName.SIMULATIONS) return null;
 
@@ -229,9 +237,9 @@ export const SimulationsSidePanel = ({
                         key={value}
                         control={
                           <Checkbox
-                            checked={layout === value}
+                            checked={layout.includes(value)}
                             onChange={() => {
-                              setLayout(value);
+                              onLayoutChange(value);
                             }}
                           />
                         }
