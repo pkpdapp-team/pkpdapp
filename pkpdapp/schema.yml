@@ -2337,6 +2337,153 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/results_table/:
+    get:
+      operationId: results_table_list
+      parameters:
+      - in: query
+        name: project_id
+        schema:
+          type: integer
+        description: Filter results by project ID
+      tags:
+      - results_table
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ResultsTable'
+          description: ''
+    post:
+      operationId: results_table_create
+      tags:
+      - results_table
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResultsTable'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ResultsTable'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ResultsTable'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultsTable'
+          description: ''
+  /api/results_table/{id}/:
+    get:
+      operationId: results_table_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this results table.
+        required: true
+      tags:
+      - results_table
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultsTable'
+          description: ''
+    put:
+      operationId: results_table_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this results table.
+        required: true
+      tags:
+      - results_table
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResultsTable'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ResultsTable'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ResultsTable'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultsTable'
+          description: ''
+    patch:
+      operationId: results_table_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this results table.
+        required: true
+      tags:
+      - results_table
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedResultsTable'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedResultsTable'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedResultsTable'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultsTable'
+          description: ''
+    delete:
+      operationId: results_table_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this results table.
+        required: true
+      tags:
+      - results_table
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
   /api/session/:
     get:
       operationId: session_retrieve
@@ -3362,6 +3509,18 @@ components:
         * `SA` - Sampling
         * `OP` - Optimisation
         * `OT` - Optimisation
+    ColumnsEnum:
+      enum:
+      - parameters
+      - variables
+      - groups
+      - intervals
+      type: string
+      description: |-
+        * `parameters` - Secondary parameters of the model.
+        * `variables` - Model variables.
+        * `groups` - Subject groups.
+        * `intervals` - Time intervals.
     CombinedModel:
       type: object
       properties:
@@ -4629,6 +4788,43 @@ components:
           type: integer
           nullable: true
           description: Group that uses this protocol
+    PatchedResultsTable:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          description: name of the table
+          maxLength: 100
+        rows:
+          allOf:
+          - $ref: '#/components/schemas/RowsEnum'
+          description: |-
+            parameter to display as table rows
+
+            * `parameters` - Secondary parameters of the model.
+            * `variables` - Model variables.
+            * `groups` - Subject groups.
+            * `intervals` - Time intervals.
+        columns:
+          allOf:
+          - $ref: '#/components/schemas/ColumnsEnum'
+          description: |-
+            parameter to display as table columns
+
+            * `parameters` - Secondary parameters of the model.
+            * `variables` - Model variables.
+            * `groups` - Subject groups.
+            * `intervals` - Time intervals.
+        filters:
+          nullable: true
+          description: Filters to apply to the table.
+        project:
+          type: integer
+          nullable: true
+          description: Project that this table belongs to.
     PatchedSimulation:
       type: object
       properties:
@@ -5221,6 +5417,60 @@ components:
       - name
       - subjects
       - variables
+    ResultsTable:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          description: name of the table
+          maxLength: 100
+        rows:
+          allOf:
+          - $ref: '#/components/schemas/RowsEnum'
+          description: |-
+            parameter to display as table rows
+
+            * `parameters` - Secondary parameters of the model.
+            * `variables` - Model variables.
+            * `groups` - Subject groups.
+            * `intervals` - Time intervals.
+        columns:
+          allOf:
+          - $ref: '#/components/schemas/ColumnsEnum'
+          description: |-
+            parameter to display as table columns
+
+            * `parameters` - Secondary parameters of the model.
+            * `variables` - Model variables.
+            * `groups` - Subject groups.
+            * `intervals` - Time intervals.
+        filters:
+          nullable: true
+          description: Filters to apply to the table.
+        project:
+          type: integer
+          nullable: true
+          description: Project that this table belongs to.
+      required:
+      - columns
+      - id
+      - name
+      - rows
+    RowsEnum:
+      enum:
+      - parameters
+      - variables
+      - groups
+      - intervals
+      type: string
+      description: |-
+        * `parameters` - Secondary parameters of the model.
+        * `variables` - Model variables.
+        * `groups` - Subject groups.
+        * `intervals` - Time intervals.
     Simulate:
       type: object
       properties:

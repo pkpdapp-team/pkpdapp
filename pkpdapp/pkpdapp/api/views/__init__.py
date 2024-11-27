@@ -45,6 +45,7 @@ from .simulate import (
     SimulateCombinedView,
     SimulatePdView,
 )
+from .results_table import ResultsTableView
 from .subject import SubjectView
 from .subject_group import SubjectGroupView
 from .unit import UnitView
