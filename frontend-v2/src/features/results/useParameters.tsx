@@ -17,7 +17,7 @@ import { useUnits } from "./useUnits";
 export type Parameter = {
   name: string | JSX.Element;
   value: (
-    intervalIndex: number,
+    interval: TimeIntervalRead,
     simulation: SimulateResponse,
     variable: VariableRead,
     aucVariable?: VariableRead,
@@ -70,13 +70,14 @@ const variablePerInterval = (
   intervals: TimeIntervalRead[],
   variable: VariableRead,
   simulation: SimulateResponse,
-  intervalIndex: number,
+  interval: TimeIntervalRead,
 ) => {
   const variableValuesPerInterval = valuesPerInterval(
     intervals,
     variable,
     simulation,
   );
+  const intervalIndex = intervals.findIndex((i) => i.id === interval.id);
   const intervalValues = variableValuesPerInterval[intervalIndex];
   const timePerInterval = timesPerInterval(simulation.time, intervals);
   const intervalTimes = timePerInterval[intervalIndex];
@@ -101,13 +102,23 @@ const timeOverUpperThresholdPerInterval = (
   return timeOverThreshold(intervalTimes, intervalValues, threshold);
 };
 
-export function useParameters({
-  variableUnit = "pmol/L",
-  timeUnit = "h",
-}: {
-  variableUnit?: string;
-  timeUnit?: string;
-}) {
+/**
+ * Generate a list of secondary parameters to calculate for the current model.
+ * Each parameter consists of a name and a function to calculate the formatted value of the parameter
+ * from a time interval, simulation, and a model variable.
+ * ```js
+ * {
+ *  name: "Min",
+ *  value: (interval, simulation, variable) => {
+ *    const [intervalValues] = variablePerInterval(intervals, variable, simulation, interval);
+ *    const min = intervalValues ? Math.min(...intervalValues) : 0;
+ *    return formattedNumber(min / variableConversionFactor(variable));
+ *  }
+ * }
+ * ```
+ * @returns an array of Parameter objects.
+ */
+export function useParameters() {
   const units = useUnits();
   const [baseIntervals] = useModelTimeIntervals();
   const baseVariables = useVariables();
@@ -115,7 +126,9 @@ export function useParameters({
   const variables = useNormalisedVariables(baseVariables);
 
   function variableConversionFactor(variable: VariableRead) {
-    const displayUnit = units?.find((unit) => unit.symbol === variableUnit);
+    const displayUnit = units?.find(
+      (unit) => unit.id === variable.threshold_unit,
+    );
     const modelUnit = displayUnit?.compatible_units.find(
       (u) => +u.id === variable.unit,
     );
@@ -123,8 +136,8 @@ export function useParameters({
     return conversionFactor;
   }
 
-  function timeConversionFactor() {
-    const displayUnit = units?.find((unit) => unit.symbol === timeUnit);
+  function timeConversionFactor(interval: TimeIntervalRead) {
+    const displayUnit = units?.find((unit) => unit.id === interval.unit);
     const modelUnit = displayUnit?.compatible_units.find(
       (u) => u.symbol === "h",
     );
@@ -136,7 +149,7 @@ export function useParameters({
     {
       name: "Min",
       value(
-        intervalIndex: number,
+        interval: TimeIntervalRead,
         simulation: SimulateResponse,
         variable: VariableRead,
       ) {
@@ -144,7 +157,7 @@ export function useParameters({
           intervals,
           variable,
           simulation,
-          intervalIndex,
+          interval,
         );
 
         const min = intervalValues ? Math.min(...intervalValues) : 0;
@@ -154,7 +167,7 @@ export function useParameters({
     {
       name: "Max",
       value(
-        intervalIndex: number,
+        interval: TimeIntervalRead,
         simulation: SimulateResponse,
         variable: VariableRead,
       ) {
@@ -162,7 +175,7 @@ export function useParameters({
           intervals,
           variable,
           simulation,
-          intervalIndex,
+          interval,
         );
         const max = intervalValues ? Math.max(...intervalValues) : 0;
         return formattedNumber(max / variableConversionFactor(variable));
@@ -171,7 +184,7 @@ export function useParameters({
     {
       name: "AUC",
       value(
-        intervalIndex: number,
+        interval: TimeIntervalRead,
         simulation: SimulateResponse,
         variable: VariableRead,
       ) {
@@ -179,17 +192,13 @@ export function useParameters({
           (v) => v.name === `calc_${variable.name}_AUC`,
         );
         const [auc] = aucVariable
-          ? variablePerInterval(
-              intervals,
-              aucVariable,
-              simulation,
-              intervalIndex,
-            )
+          ? variablePerInterval(intervals, aucVariable, simulation, interval)
           : [];
         const difference = auc ? auc[auc.length - 1] - auc[0] : 0;
         return formattedNumber(
           difference /
-            (variableConversionFactor(variable) * timeConversionFactor()),
+            (variableConversionFactor(variable) *
+              timeConversionFactor(interval)),
         );
       },
     },
@@ -200,7 +209,7 @@ export function useParameters({
         </>
       ),
       value(
-        intervalIndex: number,
+        interval: TimeIntervalRead,
         simulation: SimulateResponse,
         baseVariable: VariableRead,
       ) {
@@ -210,7 +219,7 @@ export function useParameters({
             intervals,
             variable,
             simulation,
-            intervalIndex,
+            interval,
           );
           const tLower = intervalValues
             ? timeOverLowerThresholdPerInterval(
@@ -219,7 +228,7 @@ export function useParameters({
                 variable,
               )
             : 0;
-          return formattedNumber(tLower / timeConversionFactor());
+          return formattedNumber(tLower / timeConversionFactor(interval));
         }
       },
     },
@@ -230,7 +239,7 @@ export function useParameters({
         </>
       ),
       value(
-        intervalIndex: number,
+        interval: TimeIntervalRead,
         simulation: SimulateResponse,
         baseVariable: VariableRead,
       ) {
@@ -240,7 +249,7 @@ export function useParameters({
             intervals,
             variable,
             simulation,
-            intervalIndex,
+            interval,
           );
           const tUpper = intervalValues
             ? timeOverUpperThresholdPerInterval(
@@ -249,7 +258,7 @@ export function useParameters({
                 variable,
               )
             : 0;
-          return formattedNumber(tUpper / timeConversionFactor());
+          return formattedNumber(tUpper / timeConversionFactor(interval));
         }
       },
     },
@@ -260,7 +269,7 @@ export function useParameters({
         </>
       ),
       value(
-        intervalIndex: number,
+        interval: TimeIntervalRead,
         simulation: SimulateResponse,
         baseVariable: VariableRead,
       ) {
@@ -270,7 +279,7 @@ export function useParameters({
             intervals,
             variable,
             simulation,
-            intervalIndex,
+            interval,
           );
           const tLower = intervalValues
             ? timeOverLowerThresholdPerInterval(
@@ -286,9 +295,15 @@ export function useParameters({
                 variable,
               )
             : 0;
-          return formattedNumber((tLower - tUpper) / timeConversionFactor());
+          return formattedNumber(
+            (tLower - tUpper) / timeConversionFactor(interval),
+          );
         }
       },
     },
   ] as Parameter[];
+}
+
+export function useParameterNames() {
+  return useParameters().map((parameter) => parameter.name);
 }

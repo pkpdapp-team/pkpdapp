@@ -25,11 +25,6 @@ import {
 import { RootState } from "../../../app/store";
 import { useModelTimeIntervals } from "../../../hooks/useModelTimeIntervals";
 
-type TimeUnitSelectProps = {
-  interval: TimeIntervalRead;
-  onChange: (interval: TimeIntervalRead) => void;
-};
-
 function useTimeUnits() {
   const projectId = useSelector(
     (state: RootState) => state.main.selectedProject,
@@ -46,10 +41,12 @@ function useTimeUnits() {
   return hourUnit?.compatible_units || [];
 }
 
-function TimeUnitSelect({ interval, onChange }: TimeUnitSelectProps) {
+function TimeUnitSelect() {
   const defaultTimeUnit = 9; // set hours by default
+  const [intervals, setIntervals] = useModelTimeIntervals();
+  const interval = intervals[0];
   const [selectedUnit, setSelectedUnit] = useState(
-    interval.unit || defaultTimeUnit,
+    interval?.unit || defaultTimeUnit,
   );
   const timeUnits = useTimeUnits();
   const timeUnitOptions =
@@ -59,13 +56,17 @@ function TimeUnitSelect({ interval, onChange }: TimeUnitSelectProps) {
     const unit = timeUnits?.find((unit) => unit.id === event.target.value);
     if (unit) {
       setSelectedUnit(+unit.id);
-      onChange({ ...interval, unit: +unit.id });
+      setIntervals(intervals.map((i) => ({ ...i, unit: +unit.id })));
     }
   }
 
   return (
     <FormControl>
-      <Select value={selectedUnit.toString()} onChange={onChangeUnit}>
+      <Select
+        value={selectedUnit.toString()}
+        onChange={onChangeUnit}
+        size="small"
+      >
         {timeUnitOptions.map((option) => (
           <MenuItem key={option.label} value={option.value}>
             {option.label}
@@ -80,11 +81,20 @@ type IntervalRowProps = {
   interval: TimeIntervalRead;
   onDelete: () => void;
   onUpdate: (interval: TimeIntervalRead) => void;
+  editUnits: boolean;
 };
 
-function IntervalRow({ interval, onDelete, onUpdate }: IntervalRowProps) {
+function IntervalRow({
+  interval,
+  onDelete,
+  onUpdate,
+  editUnits = false,
+}: IntervalRowProps) {
   const [start, setStart] = useState(interval.start_time);
   const [end, setEnd] = useState(interval.end_time);
+  const units = useTimeUnits();
+  const intervalUnit = units?.find((unit) => +unit.id === interval.unit);
+
   function onChangeStart(event: React.ChangeEvent<HTMLInputElement>) {
     const newStartTime = parseFloat(event.target.value);
     setStart(newStartTime);
@@ -99,13 +109,23 @@ function IntervalRow({ interval, onDelete, onUpdate }: IntervalRowProps) {
   return (
     <TableRow>
       <TableCell>
-        <TextField type="number" value={start} onChange={onChangeStart} />
+        <TextField
+          type="number"
+          value={start}
+          onChange={onChangeStart}
+          size="small"
+        />
       </TableCell>
       <TableCell>
-        <TextField type="number" value={end} onChange={onChangeEnd} />
+        <TextField
+          type="number"
+          value={end}
+          onChange={onChangeEnd}
+          size="small"
+        />
       </TableCell>
       <TableCell>
-        <TimeUnitSelect interval={interval} onChange={onUpdate} />
+        {editUnits ? <TimeUnitSelect /> : intervalUnit?.symbol}
       </TableCell>
       <TableCell>
         <IconButton onClick={onDelete}>
@@ -153,6 +173,7 @@ const TimeIntervalsTable: FC<TableProps> = (props) => {
 
   return (
     <>
+      <Button onClick={addInterval}>Add interval</Button>
       <Table {...props}>
         <TableHead>
           <TableCell>Start time</TableCell>
@@ -161,17 +182,17 @@ const TimeIntervalsTable: FC<TableProps> = (props) => {
           <TableCell>Remove</TableCell>
         </TableHead>
         <TableBody>
-          {intervals.map((interval) => (
+          {intervals.map((interval, index) => (
             <IntervalRow
               key={interval.start_time}
               interval={interval}
               onDelete={onDelete(interval.id)}
               onUpdate={onUpdate(interval.id)}
+              editUnits={index === 0}
             />
           ))}
         </TableBody>
       </Table>
-      <Button onClick={addInterval}>Add time interval</Button>
     </>
   );
 };

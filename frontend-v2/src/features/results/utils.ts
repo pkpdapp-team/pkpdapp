@@ -210,7 +210,7 @@ export function tableRow({
   });
   const values = tableColumns.map((column, index) => {
     return column.value(
-      interval ? intervals.indexOf(interval) : index,
+      interval ? interval : intervals[index],
       simulation ? simulation : simulations[index],
       variable ? variable : concentrationVariables[index],
     );
