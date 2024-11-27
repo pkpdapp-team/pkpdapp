@@ -32,19 +32,22 @@ export function valuesPerInterval(
   simulation?: SimulateResponse,
 ) {
   const times = simulation?.time || [];
+  const tMax = times[times.length - 1];
   const values = variable && simulation ? simulation.outputs[variable.id] : [];
   return timeIntervals.map((interval) => {
     if (values.length === 0) {
       return [];
     }
-    const startIndex = times.findIndex((t) => t >= interval.start_time);
-    const endIndex = times.findIndex((t) => t >= interval.end_time);
+    const startTime = Math.min(tMax, interval.start_time);
+    const endTime = Math.min(tMax, interval.end_time);
+    const startIndex = times.findIndex((t) => t >= startTime);
+    const endIndex = times.findIndex((t) => t >= endTime);
     const start =
       startIndex > 0
         ? interpolate(
             [times[startIndex - 1], times[startIndex]],
             [values[startIndex - 1], values[startIndex]],
-            interval.start_time,
+            startTime,
           )
         : values[0];
     const end =
@@ -52,7 +55,7 @@ export function valuesPerInterval(
         ? interpolate(
             [times[endIndex - 1], times[endIndex]],
             [values[endIndex - 1], values[endIndex]],
-            interval.end_time,
+            endTime,
           )
         : values[values.length - 1];
     const intervalValues = [
@@ -74,14 +77,18 @@ export function timesPerInterval(
   times: number[],
   timeIntervals: TimeIntervalRead[],
 ) {
+  const tMax = times[times.length - 1];
   return timeIntervals.map((interval) => {
-    const startIndex = times.findIndex((t) => t >= interval.start_time);
-    const endIndex = times.findIndex((t) => t >= interval.end_time);
-    return [
-      interval.start_time,
+    const startTime = Math.min(tMax, interval.start_time);
+    const endTime = Math.min(tMax, interval.end_time);
+    const startIndex = times.findIndex((t) => t >= startTime);
+    const endIndex = times.findIndex((t) => t >= endTime);
+    const intervalTimes = [
+      startTime,
       ...times.slice(startIndex + 1, endIndex - 1),
-      interval.end_time,
+      endTime,
     ];
+    return intervalTimes;
   });
 }
 
@@ -210,7 +217,7 @@ export function tableRow({
   });
   const values = tableColumns.map((column, index) => {
     return column.value(
-      interval ? intervals.indexOf(interval) : index,
+      interval ? interval : intervals[index],
       simulation ? simulation : simulations[index],
       variable ? variable : concentrationVariables[index],
     );

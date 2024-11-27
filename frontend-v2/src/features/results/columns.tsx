@@ -18,6 +18,10 @@ interface ParametersProps {
   intervals: TimeIntervalRead[];
 }
 
+/**
+ * Generate a list of table columns. Each column has a header, and a value function
+ * that returns the formatted value for each row in that column.
+ */
 export function columns({
   variable,
   aucVariable,
@@ -29,6 +33,7 @@ export function columns({
   interval,
   intervals = [],
 }: ParametersProps) {
+  // variables as colummns
   if (parameter && !variable) {
     return concentrationVariables.map((variable) => {
       return {
@@ -37,6 +42,7 @@ export function columns({
       };
     });
   }
+  // time intervals as columns
   if (parameter && !interval) {
     return intervals.map((interval) => {
       return {
@@ -45,6 +51,7 @@ export function columns({
       };
     });
   }
+  // simulations (groups) as columns
   if (parameter && !simulation) {
     return simulations.map(() => {
       return {
@@ -53,12 +60,13 @@ export function columns({
       };
     });
   }
+  // secondary parameters as columns
   if (simulation && variable && !parameter) {
     return parameters.map((parameter) => {
       return {
         header: parameter.name,
-        value: (intervalIndex: number) =>
-          parameter.value(intervalIndex, simulation, variable, aucVariable),
+        value: (interval: TimeIntervalRead) =>
+          parameter.value(interval, simulation, variable, aucVariable),
       };
     });
   }
