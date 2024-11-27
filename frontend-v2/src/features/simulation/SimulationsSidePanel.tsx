@@ -43,7 +43,7 @@ type SimulationsSidePanelType = {
   handleAddPlot: (plot: number) => void;
   isSharedWithMe: boolean;
   layoutOptions: { value: string; label: string }[];
-  layout: string;
+  layout: string[];
   setLayout: (layout: string[]) => void;
   plots: SimulationPlot[];
   control: Control<Simulation, any>;

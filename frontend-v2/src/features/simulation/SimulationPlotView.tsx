@@ -269,7 +269,6 @@ interface SimulationPlotProps {
   shouldShowLegend: boolean;
   isVertical: boolean;
   isHorizontal: boolean;
-  layout: string;
   dimensions: {
     width: number;
     height: number;
