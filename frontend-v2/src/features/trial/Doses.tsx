@@ -136,7 +136,7 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
 
   const selectedAmountId = getValues("amount_unit");
   const selectedAmountLabel =
-    baseUnit?.compatible_units?.find(({ id }) => id === selectedAmountId)
+    baseUnit?.compatible_units?.find(({ id }) => +id === selectedAmountId)
       ?.symbol || "";
 
   return (
