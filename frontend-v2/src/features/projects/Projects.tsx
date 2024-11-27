@@ -10,6 +10,7 @@ import {
   TableRow,
   IconButton,
   SvgIcon,
+  Box,
 } from "@mui/material";
 import {
   Compound,
@@ -28,11 +29,11 @@ import ProjectRow from "./Project";
 import { RootState } from "../../app/store";
 import DropdownButton from "../../components/DropdownButton";
 import SortIcon from "@mui/icons-material/Sort";
-import { useCustomToast } from "../../hooks/useCustomToast";
-import { notificationTypes } from "../../components/Notification/notificationTypes";
 import { ReactComponent as FolderLogo } from "../../shared/assets/svg/folder.svg";
 import { defaultHeaderSx } from "../../shared/tableHeadersSx";
 import useDataset from "../../hooks/useDataset";
+import { TableHeader } from "../../components/TableHeader";
+import DnsIcon from "@mui/icons-material/Dns";
 
 enum SortOptions {
   CREATED = "created",
@@ -45,14 +46,8 @@ const SM_SIM_TIME = 48;
 const LM_SIM_TIME = 672;
 const ProjectTable: FC = () => {
   const [sortBy, setSortBy] = useState<SortOptions>(SortOptions.CREATED);
-  const toast = useCustomToast();
 
   const handleSortBy = (option: SortOptions) => {
-    toast({
-      type: notificationTypes.SUCCESS,
-      text: "You must complete all mandatory fields",
-      autoClose: 35000,
-    });
     setSortBy((prev) => {
       if (prev === option) {
         return SortOptions.CREATED;
@@ -117,7 +112,6 @@ const ProjectTable: FC = () => {
   }
 
   const projectNames = projects?.map((project) => project.name) || [];
-
   const handleAddRow = (type: "SM" | "LM") => {
     const user_access = [
       { id: user?.id || 0, read_only: false, user: user?.id || 0, project: 0 },
@@ -201,126 +195,131 @@ const ProjectTable: FC = () => {
   };
 
   return (
-    <TableContainer sx={{ width: "90%" }}>
-      <DropdownButton
-        useIcon={false}
-        data_cy="create-project"
-        options={[
-          { label: "Small Molecule", value: "SM" },
-          { label: "Large Molecule", value: "LM" },
-        ]}
-        onOptionSelected={(value: "SM" | "LM") => handleAddRow(value)}
-      >
-        Create new project
-      </DropdownButton>
-      {projects?.length === 0 ? (
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            width: "100%",
-            height: "80vh",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
+    <>
+      <Box sx={{ display: "flex", justifyContent: "space-between", paddingBottom: '1rem' }}>
+        <TableHeader label="Projects" variant="h4" />
+        <DropdownButton
+          useIcon={false}
+          data_cy="create-project"
+          options={[
+            { label: "Small Molecule", value: "SM" },
+            { label: "Large Molecule", value: "LM" },
+          ]}
+          onOptionSelected={(value: "SM" | "LM") => handleAddRow(value)}
         >
-          <SvgIcon
-            color="primary"
-            sx={{ width: "10rem", height: "10rem" }}
-            viewBox="0 0 164 124"
+          New Project
+        </DropdownButton>
+      </Box>
+      <TableContainer
+        sx={{
+          height: "70vh",
+        }}
+      >
+        {projects?.length === 0 ? (
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              width: "100%",
+              height: "80vh",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
           >
-            <FolderLogo />
-          </SvgIcon>
-          <div style={{ fontWeight: "bold", marginTop: "2rem" }}>
-            No projects started
+            <SvgIcon
+              color="primary"
+              sx={{ width: "10rem", height: "10rem" }}
+              viewBox="0 0 164 124"
+            >
+              <FolderLogo />
+            </SvgIcon>
+            <div style={{ fontWeight: "bold", marginTop: "2rem" }}>
+              No projects started
+            </div>
+            <div>Create a new one</div>
           </div>
-          <div>Create a new one</div>
-        </div>
-      ) : (
-        <Table size="small">
-          <TableHead>
-            <TableRow>
-              <TableCell padding="checkbox">
-                <div style={{ ...defaultHeaderSx, display: "flex" }}>
-                  Select
-                  <div
-                    style={{
-                      ...defaultHeaderSx,
-                      color: "red",
-                      paddingLeft: "5px",
-                    }}
-                  >
-                    *
-                  </div>
-                </div>
-              </TableCell>
-              <TableCell>
-                <div style={{ ...defaultHeaderSx }}>
-                  Name{" "}
-                  <IconButton
-                    color={sortBy === SortOptions.NAME ? "success" : undefined}
-                    onClick={() => handleSortBy(SortOptions.NAME)}
-                  >
-                    <SortIcon />
-                  </IconButton>
-                </div>
-              </TableCell>
-              <TableCell>
-                <div style={{ ...defaultHeaderSx }}>
-                  Species{" "}
-                  <IconButton
-                    color={
-                      sortBy === SortOptions.SPECIES ? "success" : undefined
-                    }
-                    onClick={() => handleSortBy(SortOptions.SPECIES)}
-                  >
-                    <SortIcon />
-                  </IconButton>
-                </div>
-              </TableCell>
-              <TableCell>
-                <div style={{ ...defaultHeaderSx }}>
-                  Compound{" "}
-                  <IconButton
-                    color={
-                      sortBy === SortOptions.COMPOUND ? "success" : undefined
-                    }
-                    onClick={() => handleSortBy(SortOptions.COMPOUND)}
-                  >
-                    <SortIcon />
-                  </IconButton>
-                </div>
-              </TableCell>
-              <TableCell>
-                <div style={{ ...defaultHeaderSx }}>Modality</div>
-              </TableCell>
-              <TableCell>
-                <div style={{ ...defaultHeaderSx }}>Actions</div>
-              </TableCell>
-              <TableCell align="right"></TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {projects?.length === 0 && (
+        ) : (
+          <Table stickyHeader size="small">
+            <TableHead>
               <TableRow>
-                <TableCell colSpan={5}>No projects found</TableCell>
+                <TableCell
+                  sx={{ borderBottom: "solid 2px blue" }}
+                  padding="checkbox"
+                >
+                  <DnsIcon fontSize='small' sx={{ marginTop: '.5rem'}}/>
+                </TableCell>
+                <TableCell sx={{ borderBottom: "solid 2px blue" }}>
+                  <div style={{ ...defaultHeaderSx }}>
+                    Name{" "}
+                    <IconButton
+                      color={
+                        sortBy === SortOptions.NAME ? "success" : undefined
+                      }
+                      onClick={() => handleSortBy(SortOptions.NAME)}
+                    >
+                      <SortIcon />
+                    </IconButton>
+                  </div>
+                </TableCell>
+                <TableCell sx={{ borderBottom: "solid 2px blue" }}>
+                  <div style={{ ...defaultHeaderSx }}>
+                    Compound{" "}
+                    <IconButton
+                      color={
+                        sortBy === SortOptions.COMPOUND ? "success" : undefined
+                      }
+                      onClick={() => handleSortBy(SortOptions.COMPOUND)}
+                    >
+                      <SortIcon />
+                    </IconButton>
+                  </div>
+                </TableCell>
+                <TableCell sx={{ borderBottom: "solid 2px blue" }}>
+                  <div style={{ ...defaultHeaderSx }}>Modality</div>
+                </TableCell>
+                <TableCell sx={{ borderBottom: "solid 2px blue" }}>
+                  <div style={{ ...defaultHeaderSx }}>
+                    Species{" "}
+                    <IconButton
+                      color={
+                        sortBy === SortOptions.SPECIES ? "success" : undefined
+                      }
+                      onClick={() => handleSortBy(SortOptions.SPECIES)}
+                    >
+                      <SortIcon />
+                    </IconButton>
+                  </div>
+                </TableCell>
+                <TableCell sx={{ borderBottom: "solid 2px blue" }}>
+                  <div style={{ ...defaultHeaderSx }}>Description </div>
+                </TableCell>
+                <TableCell sx={{ borderBottom: "solid 2px blue" }} width='10rem'>
+                  <div style={{ ...defaultHeaderSx }}>Actions</div>
+                </TableCell>
               </TableRow>
-            )}
-            {projects?.map((project, i) => (
-              <ProjectRow
-                key={project.id}
-                isAnyProjectSelected={Boolean(selectedProject)}
-                project={project}
-                otherProjectNames={projectNames
-                  .slice(0, i)
-                  .concat(projectNames.slice(i + 1))}
-                isSelected={selectedProject === project.id}
-              />
-            ))}
-          </TableBody>
-        </Table>
-      )}
-    </TableContainer>
+            </TableHead>
+            <TableBody>
+              {projects?.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={5}>No projects found</TableCell>
+                </TableRow>
+              )}
+              {projects?.map((project, i) => (
+                <ProjectRow
+                  key={project.id}
+                  isAnyProjectSelected={Boolean(selectedProject)}
+                  project={project}
+                  otherProjectNames={projectNames
+                    .slice(0, i)
+                    .concat(projectNames.slice(i + 1))}
+                  isSelected={selectedProject === project.id}
+                />
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </TableContainer>
+    </>
   );
 };
 
