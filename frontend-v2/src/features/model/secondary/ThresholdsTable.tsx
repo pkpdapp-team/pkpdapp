@@ -124,6 +124,7 @@ function VariableRow({
           type="number"
           defaultValue={variable.lower_threshold || 0}
           onChange={onChangeLowerThreshold}
+          size="small"
         />
       </TableCell>
       <TableCell>
@@ -131,10 +132,11 @@ function VariableRow({
           type="number"
           defaultValue={variable.upper_threshold || Infinity}
           onChange={onChangeUpperThreshold}
+          size="small"
         />
       </TableCell>
       <TableCell>
-        <Select value={unitSymbol} onChange={onChangeUnit}>
+        <Select value={unitSymbol} onChange={onChangeUnit} size="small">
           {unit?.compatible_units?.map((unit) => (
             <MenuItem key={unit.id} value={unit.symbol}>
               {unit.symbol}
