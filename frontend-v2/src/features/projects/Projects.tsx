@@ -29,8 +29,6 @@ import ProjectRow from "./Project";
 import { RootState } from "../../app/store";
 import DropdownButton from "../../components/DropdownButton";
 import SortIcon from "@mui/icons-material/Sort";
-import { useCustomToast } from "../../hooks/useCustomToast";
-import { notificationTypes } from "../../components/Notification/notificationTypes";
 import { ReactComponent as FolderLogo } from "../../shared/assets/svg/folder.svg";
 import { defaultHeaderSx } from "../../shared/tableHeadersSx";
 import useDataset from "../../hooks/useDataset";
@@ -48,14 +46,8 @@ const SM_SIM_TIME = 48;
 const LM_SIM_TIME = 672;
 const ProjectTable: FC = () => {
   const [sortBy, setSortBy] = useState<SortOptions>(SortOptions.CREATED);
-  const toast = useCustomToast();
 
   const handleSortBy = (option: SortOptions) => {
-    toast({
-      type: notificationTypes.SUCCESS,
-      text: "You must complete all mandatory fields",
-      autoClose: 35000,
-    });
     setSortBy((prev) => {
       if (prev === option) {
         return SortOptions.CREATED;
