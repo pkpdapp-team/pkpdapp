@@ -114,6 +114,8 @@ function IntervalRow({
           value={start}
           onChange={onChangeStart}
           size="small"
+          error={start > end}
+          helperText={start > end ? "Start time must be before end time" : ""}
         />
       </TableCell>
       <TableCell>
@@ -122,6 +124,8 @@ function IntervalRow({
           value={end}
           onChange={onChangeEnd}
           size="small"
+          error={end < start}
+          helperText={end < start ? "End time must be after start time" : ""}
         />
       </TableCell>
       <TableCell>
