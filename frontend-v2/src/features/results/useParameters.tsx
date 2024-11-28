@@ -137,7 +137,7 @@ export function useParameters() {
   }
 
   function timeConversionFactor(interval: TimeIntervalRead) {
-    const displayUnit = units?.find((unit) => unit.id === interval.unit);
+    const displayUnit = units?.find((unit) => unit.id === interval?.unit);
     const modelUnit = displayUnit?.compatible_units.find(
       (u) => u.symbol === "h",
     );
