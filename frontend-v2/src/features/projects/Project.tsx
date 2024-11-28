@@ -31,7 +31,11 @@ import {
   useProjectAccessDestroyMutation,
 } from "../../app/backendApi";
 import UserAccess from "./UserAccess";
-import { decrementDirtyCount, incrementDirtyCount, setProject } from "../main/mainSlice";
+import {
+  decrementDirtyCount,
+  incrementDirtyCount,
+  setProject,
+} from "../main/mainSlice";
 import TextField from "../../components/TextField";
 import ConfirmationDialog from "../../components/ConfirmationDialog";
 import { selectCurrentUser, selectIsProjectShared } from "../login/loginSlice";
@@ -149,12 +153,16 @@ const ProjectRow: FC<Props> = ({
       handleSubmit((data: FormData) => {
         if (compound && project) {
           if (JSON.stringify(compound) !== JSON.stringify(data.compound)) {
-            dispatch(incrementDirtyCount())
-            updateCompound({ id: compound.id, compound: data.compound }).then(() => dispatch(decrementDirtyCount()));;
+            dispatch(incrementDirtyCount());
+            updateCompound({ id: compound.id, compound: data.compound }).then(
+              () => dispatch(decrementDirtyCount()),
+            );
           }
           if (JSON.stringify(project) !== JSON.stringify(data.project)) {
-            dispatch(incrementDirtyCount())
-            updateProject({ id: project.id, project: data.project }).then(() => dispatch(decrementDirtyCount()));
+            dispatch(incrementDirtyCount());
+            updateProject({ id: project.id, project: data.project }).then(() =>
+              dispatch(decrementDirtyCount()),
+            );
           }
         }
       }),
@@ -249,6 +257,7 @@ const ProjectRow: FC<Props> = ({
             checked={isSelected}
             onClick={handleSelectProject}
             size="small"
+            id={`project-${project.id}`}
           />
         </TableCell>
         <TableCell>
@@ -257,12 +266,14 @@ const ProjectRow: FC<Props> = ({
               name="project.name"
               control={control}
               textFieldProps={defaultProps}
-              size='small'
+              size="small"
               rules={{ required: true, validate: validateName }}
               sx={{ ...defaultSx }}
             />
           ) : (
-            <Typography>{project?.name}</Typography>
+            <label htmlFor={`project-${project.id}`}>
+              <Typography>{project?.name}</Typography>
+            </label>
           )}
         </TableCell>
         <TableCell>
@@ -271,7 +282,7 @@ const ProjectRow: FC<Props> = ({
               name="compound.name"
               control={control}
               textFieldProps={defaultProps}
-              size='small'
+              size="small"
               rules={{ required: true }}
               sx={defaultSx}
             />
