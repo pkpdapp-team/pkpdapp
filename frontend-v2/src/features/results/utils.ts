@@ -8,7 +8,7 @@ import {
 import { Parameter } from "./useParameters";
 import { columns } from "./columns";
 
-const TOLERANCE = 1e-8;
+const TOLERANCE = 5e-7;
 
 /**
  * Given x0 in the range [x[0], x[1]], return the linearly interpolated value y0 in the range [y[0], y[1]].
@@ -41,7 +41,9 @@ export function valuesPerInterval(
   if (!simulation.outputs[variable.id]) {
     return timeIntervals.map(() => []);
   }
-  const values = simulation.outputs[variable.id];
+  const values = simulation.outputs[variable.id].map((v) =>
+    Math.abs(v) < TOLERANCE ? 0 : v,
+  );
   return timeIntervals.map((interval) => {
     if (values.length === 0) {
       return [];
@@ -189,6 +191,7 @@ export function formattedNumber(
   if (Math.abs(value) < TOLERANCE) {
     return "0.000";
   }
+
   return value > upperThreshold || value < lowerThreshold
     ? value.toExponential(4)
     : value.toFixed(3);
