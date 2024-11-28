@@ -280,7 +280,7 @@ const ResultsTab: FC = () => {
             })}
           </Select>
         </FormControl>
-        <Typography variant="h5">{generateTableHeader()}</Typography>
+        <Typography sx={{ paddingTop: '.5rem', paddingBottom: '.5rem'}} variant="h5">{generateTableHeader()}</Typography>
         <ResultsTable
           groupIndex={groupIndex}
           variableIndex={variableIndex}

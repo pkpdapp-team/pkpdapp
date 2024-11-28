@@ -39,7 +39,6 @@ import { getConstVariables } from "../model/resetToSpeciesDefaults";
 import useSubjectGroups from "../../hooks/useSubjectGroups";
 import useExportSimulation from "./useExportSimulation";
 import { SimulationsSidePanel } from "./SimulationsSidePanel";
-import { useCollapsibleSidebar } from "../../shared/contexts/CollapsibleSidebarContext";
 
 type SliderValues = { [key: number]: number };
 
@@ -219,8 +218,8 @@ const Simulations: FC = () => {
     { value: "vertical", label: "Vertical" },
     { value: "horizontal", label: "Horizontal" },
   ];
-  const defaultLayout = layoutOptions[0]?.value;
-  const [layout, setLayout] = useState<string>(defaultLayout);
+  const defaultLayout = [layoutOptions[0]?.value, layoutOptions[1]?.value];
+  const [layout, setLayout] = useState<string[]>(defaultLayout);
 
   // reset form and sliders if simulation changes
   useEffect(() => {
@@ -397,6 +396,7 @@ const Simulations: FC = () => {
 
   const [dimensions, setDimensions] = useState({
     width: window.innerWidth,
+    height: window.innerHeight
   });
 
   const containerRef: MutableRefObject<HTMLElement | null> = useRef(null);
@@ -405,6 +405,7 @@ const Simulations: FC = () => {
     const debouncedHandleResize = debounce(function handleResize() {
       setDimensions({
         width: containerRef?.current?.clientWidth || 0,
+        height: containerRef?.current?.clientHeight || 0
       });
     }, 1000);
 
@@ -418,6 +419,19 @@ const Simulations: FC = () => {
       window.removeEventListener("eventExpand", debouncedHandleResize);
     };
   });
+
+  const isHorizontal = layout.includes('horizontal') || layout?.length === 0;
+  const isVertical = layout.includes('vertical') || layout?.length === 0;
+
+  const getXlLayout = () => {
+    if (isVertical && !isHorizontal) {
+      return 12
+    }
+
+    return screen.width > 2500 ? 4 : 6
+  }
+
+  const tableLayout = getXlLayout();
 
   const loading = [
     isProjectLoading,
@@ -474,13 +488,13 @@ const Simulations: FC = () => {
           container
           columns={{ xl: 12, md: 12, sm: 12 }}
           direction="row"
-          wrap={layout === "horizontal" ? "nowrap" : "wrap"}
+          wrap={isHorizontal && !isVertical ? "nowrap" : "wrap"}
         >
           {plots.map((plot, index) => (
             <Grid
-              xl={screen.width > 2500 ? 4 : 6}
-              md={12}
-              sm={12}
+              xl={tableLayout}
+              md={tableLayout}
+              sm={tableLayout}
               item
               key={index}
             >
@@ -499,7 +513,8 @@ const Simulations: FC = () => {
                   model={model}
                   visibleGroups={visibleGroups}
                   shouldShowLegend={shouldShowLegend}
-                  layout={layout}
+                  isVertical={isVertical}
+                  isHorizontal={isHorizontal}
                   dimensions={dimensions}
                 />
               ) : (

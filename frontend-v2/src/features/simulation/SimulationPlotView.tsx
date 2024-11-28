@@ -267,10 +267,12 @@ interface SimulationPlotProps {
   model: CombinedModelRead;
   visibleGroups: string[];
   shouldShowLegend: boolean;
-  layout: string;
+  isVertical: boolean;
+  isHorizontal: boolean;
   dimensions: {
     width: number;
-  }
+    height: number;
+  };
 }
 
 const SimulationPlotView: FC<SimulationPlotProps> = ({
@@ -287,6 +289,8 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
   model,
   visibleGroups,
   shouldShowLegend,
+  isVertical,
+  isHorizontal,
   dimensions,
 }) => {
   const projectId = useSelector(
@@ -463,21 +467,50 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
     ln: { type: "log", dtick: Math.log10(Math.E) },
   };
 
-  const getPlotWidth = () => {
+  const getPlotDimensions = () => {
     const buffor = 10;
     const columnCount = screen.width > 2500 ? 3 : 2;
-    if (screen.width > 1536) {
-      return dimensions.width / columnCount - buffor;
+    const layoutBreakpoint = 900;
+
+    if (isVertical && !isHorizontal) {
+      return dimensions.width > layoutBreakpoint
+        ? {
+            height: dimensions.height / 2 - buffor,
+            width: dimensions.width - buffor,
+          }
+        : {
+            height: dimensions.height / 1.5 - buffor,
+            width: dimensions.width - buffor,
+          };
     }
 
-    return dimensions.width - buffor;
-  };
+    if (!isVertical && isHorizontal) {
+      return dimensions.width > layoutBreakpoint
+        ? {
+            height: dimensions.height - buffor,
+            width: dimensions.width / columnCount - buffor,
+          }
+        : {
+            height: dimensions.height - buffor,
+            width: dimensions.width / 1.5 - buffor,
+          };
+    }
 
-  const plotWidth = getPlotWidth();
+    return dimensions.width > layoutBreakpoint
+      ? {
+          height: dimensions.height / 2 - buffor,
+          width: dimensions.width / columnCount - buffor,
+        }
+      : {
+          height: dimensions.height / 2 - buffor,
+          width: dimensions.width / columnCount - buffor,
+        };
+  };
 
   const plotLayout: Partial<Layout> = {
     autosize: false,
-    width: plotWidth,
+    width: getPlotDimensions()?.width,
+    height: getPlotDimensions()?.height,
     dragmode: "pan",
     showlegend: shouldShowLegend,
     shapes: icLines.map((icLine, i) => {
