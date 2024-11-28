@@ -147,6 +147,42 @@ export function useParameters() {
 
   return [
     {
+      name: "Start",
+      value(
+        interval: TimeIntervalRead,
+        simulation: SimulateResponse,
+        variable: VariableRead,
+      ) {
+        const [intervalValues] = variablePerInterval(
+          intervals,
+          variable,
+          simulation,
+          interval,
+        );
+        const start = intervalValues ? intervalValues[0] : 0;
+        return formattedNumber(start / variableConversionFactor(variable));
+      },
+    },
+    {
+      name: "End",
+      value(
+        interval: TimeIntervalRead,
+        simulation: SimulateResponse,
+        variable: VariableRead,
+      ) {
+        const [intervalValues] = variablePerInterval(
+          intervals,
+          variable,
+          simulation,
+          interval,
+        );
+        const end = intervalValues
+          ? intervalValues[intervalValues.length - 1]
+          : 0;
+        return formattedNumber(end / variableConversionFactor(variable));
+      },
+    },
+    {
       name: "Min",
       value(
         interval: TimeIntervalRead,
