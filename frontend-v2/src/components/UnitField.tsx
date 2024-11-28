@@ -12,6 +12,7 @@ type Props<T extends FieldValues> = {
   rules?: Record<string, unknown>;
   selectProps?: SelectProps;
   compound?: Compound;
+  size?: 'small' | 'medium'
   isPreclinicalPerKg?: boolean;
   sx?: SxProps;
 };
@@ -24,6 +25,7 @@ function UnitField<T extends FieldValues>({
   rules,
   selectProps,
   isPreclinicalPerKg,
+  size = 'medium',
   sx,
 }: Props<T>): ReactElement {
   if (!isPreclinicalPerKg) {
@@ -47,6 +49,7 @@ function UnitField<T extends FieldValues>({
 
   return (
     <SelectField
+      size={size}
       sx={sx}
       label={label}
       name={name}

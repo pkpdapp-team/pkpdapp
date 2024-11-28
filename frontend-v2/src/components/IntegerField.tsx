@@ -7,6 +7,7 @@ type Props<T extends FieldValues> = {
   label?: string;
   name: FieldPath<T>;
   control: Control<T>;
+  size?: 'small' | 'medium',
   rules?: Object;
   textFieldProps?: TextFieldProps;
 };
@@ -24,6 +25,7 @@ function IntegerField<T extends FieldValues>({
   name,
   control,
   rules,
+  size = 'medium',
   textFieldProps,
 }: Props<T>): ReactElement {
   const [fieldValue, setFieldValue] = useFieldState({ name, control });
@@ -57,6 +59,7 @@ function IntegerField<T extends FieldValues>({
                   (error?.type === "required" ? "Required" : "")
             }
             name={name}
+            size={size}
             id={name}
             variant="outlined"
             value={

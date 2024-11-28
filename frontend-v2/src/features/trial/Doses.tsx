@@ -6,6 +6,8 @@ import {
   Button,
   Stack,
   Typography,
+  Box,
+  Tooltip,
 } from "@mui/material";
 import {
   ProjectRead,
@@ -23,10 +25,11 @@ import FloatField from "../../components/FloatField";
 import IntegerField from "../../components/IntegerField";
 import useDirty from "../../hooks/useDirty";
 import useInterval from "../../hooks/useInterval";
-import HelpButton from "../../components/HelpButton";
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
 import { selectIsProjectShared } from "../login/loginSlice";
+import { TableHeader } from "../../components/TableHeader";
+import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 
 interface Props {
   onChange: () => void;
@@ -51,6 +54,7 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
     handleSubmit,
     reset,
     formState: { isDirty },
+    getValues,
   } = useForm<Protocol>({
     defaultValues: protocol,
   });
@@ -130,13 +134,68 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
     removeDose(index);
   };
 
+  const selectedAmountId = getValues("amount_unit");
+  const selectedAmountLabel =
+    baseUnit?.compatible_units?.find(({ id }) => +id === selectedAmountId)
+      ?.symbol || "";
+
+  const protocolName = (protocol?.mapped_qname || '').split('.').pop();
+
   return (
     <>
+      <TableRow>
+        <TableCell colSpan={8} sx={{ height: "2rem", padding: "5px" }}>
+          <Box
+            sx={{
+              paddingLeft: "16px",
+              display: "flex",
+              textWrap: "nowrap",
+              alignItems: "center",
+            }}
+          >
+            <TableHeader
+              variant="subtitle1"
+              label={`${protocolName} Administration`}
+              tooltip="Defines the site of drug administration. A1/A1_t/A1_f =
+                      IV, Aa = SC or PO. The site of drug administration can be
+                      selected under Model/ Map Variables"
+            />{" "}
+            <Stack
+              sx={{ paddingLeft: "1rem", alignItems: "center" }}
+              direction="row"
+              width="max-content"
+            >
+              <Button
+                size="small"
+                onClick={handleAddRow}
+                variant="contained"
+                sx={{
+                  width: "fit-content",
+                  textWrap: "nowrap",
+                  height: "2rem",
+                }}
+                disabled={false}
+              >
+                Add New Row
+              </Button>
+              <Tooltip
+                title="Adding an additional dosing line allows defining complex dosing
+                regimens (e.g. changing dosing frequency and/or dosing levels)"
+                arrow
+                placement="right"
+                PopperProps={{ sx: { marginLeft: "4px" } }}
+              >
+                <HelpOutlineIcon sx={{ marginLeft: "8px", color: "dimgray",  transform: "scale(0.85)", }} />
+              </Tooltip>
+            </Stack>
+          </Box>
+        </TableCell>
+      </TableRow>
       {doses.map((dose, index) => (
         <TableRow key={dose.id}>
-          <TableCell>{mappedVariable}</TableCell>
           <TableCell>
             <FloatField
+              size="small"
               label={"Dose"}
               name={`doses.${index}.amount`}
               control={control}
@@ -148,8 +207,9 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
             />
           </TableCell>
           <TableCell>
-            {protocol.amount_unit && index === 0 && (
+            {protocol.amount_unit && index === 0 ? (
               <UnitField
+                size="small"
                 label={"Unit"}
                 name={`amount_unit`}
                 control={control}
@@ -157,10 +217,13 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
                 isPreclinicalPerKg={isPreclinical}
                 selectProps={defaultProps}
               />
+            ) : (
+              <Typography>{selectedAmountLabel}</Typography>
             )}
           </TableCell>
           <TableCell>
             <IntegerField
+              size="small"
               label={"Number of Doses"}
               name={`doses.${index}.repeats`}
               control={control}
@@ -173,6 +236,7 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
           </TableCell>
           <TableCell>
             <FloatField
+              size="small"
               label="Start Time"
               name={`doses.${index}.start_time`}
               control={control}
@@ -182,6 +246,7 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
           </TableCell>
           <TableCell>
             <FloatField
+              size="small"
               label={"Dosing Duration"}
               name={`doses.${index}.duration`}
               control={control}
@@ -197,6 +262,7 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
           </TableCell>
           <TableCell>
             <FloatField
+              size="small"
               label={"Dosing Interval"}
               name={`doses.${index}.repeat_interval`}
               control={control}
@@ -211,11 +277,9 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
             />
           </TableCell>
           <TableCell>
-            {protocol.time_unit && index === 0 && (
-              <Typography>
-                {units.find((u) => u.id === protocol.time_unit)?.symbol}
-              </Typography>
-            )}
+            <Typography>
+              {units.find((u) => u.id === protocol.time_unit)?.symbol}
+            </Typography>
           </TableCell>
           <TableCell align="center">
             {index !== 0 && (
@@ -229,20 +293,6 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
           </TableCell>
         </TableRow>
       ))}
-      <Stack direction="row" width="max-content">
-        <Button
-          onClick={handleAddRow}
-          variant="outlined"
-          sx={{ fontSize: ".5rem" }}
-          disabled={isSharedWithMe}
-        >
-          Add New Row
-        </Button>
-        <HelpButton title="Add Dose Line">
-          Adding an additional dosing line allows defining complex dosing
-          regimens (e.g. changing dosing frequency and/or dosing levels)
-        </HelpButton>
-      </Stack>
     </>
   );
 };
