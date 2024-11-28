@@ -8,13 +8,20 @@ import {
   Typography,
 } from "@mui/material";
 
-import { TimeIntervalRead, VariableRead } from "../../app/backendApi";
+import {
+  ColumnsEnum,
+  ResultsTableRead,
+  RowsEnum,
+  TimeIntervalRead,
+  VariableRead,
+} from "../../app/backendApi";
 import useSubjectGroups from "../../hooks/useSubjectGroups";
 
 import { useConcentrationVariables } from "./useConcentrationVariables";
 import { useParameters, Parameter } from "./useParameters";
 import { ResultsTable } from "./ResultsTable";
 import { useModelTimeIntervals } from "../../hooks/useModelTimeIntervals";
+import { useResults } from "./useResults";
 
 const options = [
   { name: "Parameters", value: "parameters" },
@@ -42,18 +49,25 @@ type RowFilter = {
   label: string;
 };
 
-const ResultsTab: FC = () => {
+const ResultsTab: FC<{ table: ResultsTableRead }> = ({ table }) => {
   const { groups = [] } = useSubjectGroups();
   const [intervals] = useModelTimeIntervals();
   const concentrationVariables = useConcentrationVariables();
   const parameters = useParameters();
 
-  const [columns, setColumns] = useState("parameters");
-  const [rows, setRows] = useState("variables");
-  const [group, setGroup] = useState(0);
-  const [variable, setVariable] = useState(0);
-  const [interval, setInterval] = useState(0);
-  const [parameter, setParameter] = useState(0);
+  const [columns, setColumns] = useState(table.columns);
+  const [rows, setRows] = useState(table.rows);
+  const [group, setGroup] = useState(parseInt(table.filters?.groupIndex) || 0);
+  const [variable, setVariable] = useState(
+    parseInt(table.filters?.variableIndex) || 0,
+  );
+  const [interval, setInterval] = useState(
+    parseInt(table.filters?.intervalIndex) || 0,
+  );
+  const [parameter, setParameter] = useState(
+    parseInt(table.filters?.parameterIndex) || 0,
+  );
+  const { updateResults } = useResults();
 
   const groupIndex: FilterIndex =
     columns === "groups" ? "columns" : rows === "groups" ? "rows" : group;
@@ -93,24 +107,83 @@ const ResultsTab: FC = () => {
           ? "Interval"
           : "Group";
 
+  function getFilters() {
+    return { groupIndex, variableIndex, intervalIndex, parameterIndex };
+  }
+  function handleColumnsChange(event: SelectChangeEvent) {
+    const newColumns = event.target.value as ColumnsEnum;
+    setColumns(newColumns);
+    updateResults({
+      id: table.id,
+      resultsTable: {
+        ...table,
+        columns: newColumns,
+        rows,
+        filters: getFilters(),
+      },
+    });
+  }
+
   function handleRowsChange(event: SelectChangeEvent) {
-    setRows(event.target.value);
+    const newRows = event.target.value as RowsEnum;
+    setRows(newRows);
+    updateResults({
+      id: table.id,
+      resultsTable: { ...table, columns, rows: newRows, filters: getFilters() },
+    });
   }
   function handleGroupChange(event: SelectChangeEvent) {
     const newValue = parseInt(event.target.value);
     setGroup(newValue);
+
+    updateResults({
+      id: table.id,
+      resultsTable: {
+        ...table,
+        columns,
+        rows,
+        filters: { ...getFilters(), groupIndex: event.target.value },
+      },
+    });
   }
   function handleVariableChange(event: SelectChangeEvent) {
     const newValue = parseInt(event.target.value);
     setVariable(newValue);
+    updateResults({
+      id: table.id,
+      resultsTable: {
+        ...table,
+        columns,
+        rows,
+        filters: { ...getFilters(), variableIndex: event.target.value },
+      },
+    });
   }
   function handleIntervalChange(event: SelectChangeEvent) {
     const newValue = parseInt(event.target.value);
     setInterval(newValue);
+    updateResults({
+      id: table.id,
+      resultsTable: {
+        ...table,
+        columns,
+        rows,
+        filters: { ...getFilters(), intervalIndex: event.target.value },
+      },
+    });
   }
   function handleParameterChange(event: SelectChangeEvent) {
     const newValue = parseInt(event.target.value);
     setParameter(newValue);
+    updateResults({
+      id: table.id,
+      resultsTable: {
+        ...table,
+        columns,
+        rows,
+        filters: { ...getFilters(), parameterIndex: event.target.value },
+      },
+    });
   }
 
   let rowFilter1: RowFilter | undefined;
@@ -208,7 +281,7 @@ const ResultsTab: FC = () => {
           <InputLabel id="columns-label">Columns</InputLabel>
           <Select
             value={columns}
-            onChange={(event) => setColumns(event.target.value)}
+            onChange={handleColumnsChange}
             label="Columns"
             labelId="columns-label"
             sx={{ minWidth: "10rem", marginRight: "1rem" }}

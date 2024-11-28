@@ -4,38 +4,57 @@ import { SyntheticEvent, FC, useState } from "react";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import ResultsTab from "./ResultsTab";
 import { TableHeader } from "../../components/TableHeader";
-
-type Table = {
-  name: string;
-  id: number;
-};
+import { useResults } from "./useResults";
+import { ResultsTableRead } from "../../app/backendApi";
+import { useSelector } from "react-redux";
+import { RootState } from "../../app/store";
 
 const Results: FC = () => {
+  const projectId = useSelector(
+    (state: RootState) => state.main.selectedProject,
+  );
   const [tab, setTab] = useState(0);
-  const [tables, setTables] = useState<Table[]>([{ name: "Table 1", id: 0 }]);
+  const { results, createResults, deleteResults } = useResults();
 
-  const getHighestTableId = (): number =>
-    tables
-      ?.map(({ id }) => id)
-      .sort((id1: number, id2: number) => (id1 > id2 ? 1 : 0))
-      .pop() || 0;
+  const getNewTableName = (): string => {
+    const existingNames = results?.map((r) => r.name);
+    let newId = results?.length || 1;
+    let newTableName = `Table ${newId}`;
+    while (existingNames?.includes(newTableName)) {
+      newId++;
+      newTableName = `Table ${newId}`;
+    }
+    return newTableName;
+  };
 
   const handleTabAdd = async () => {
-    const newTableId = getHighestTableId() + 1;
-    const newTableName = `Table ${getHighestTableId() + 2}`;
-    const newTables = [...tables, { name: newTableName, id: newTableId }];
-    setTables(newTables);
-    setTab(newTables?.length - 1);
+    const newTableName = getNewTableName();
+    const lastTable = results[results.length - 1];
+    const newTable: ResultsTableRead = {
+      ...lastTable,
+      name: newTableName,
+      project: projectId,
+    };
+    newTable.columns ||= "parameters";
+    newTable.rows ||= "variables";
+    newTable.filters ||= {
+      parameterIndex: "columns",
+      variableIndex: "rows",
+      groupIndex: 0,
+      intervalIndex: 0,
+    };
+    createResults({ resultsTable: newTable });
+    setTab(results.length);
   };
 
   const handleTabChange = async (event: SyntheticEvent, newValue: number) => {
     setTab(newValue);
   };
 
-  const handleTabRemove = async (table: Table) => {
+  const handleTabRemove = async (table: ResultsTableRead) => {
     if (window.confirm("Are you sure you want to delete the current Table?")) {
-      const removedIndex = tables.map(({ id }) => id).indexOf(table.id);
-      setTables(tables.filter(({ id }) => id !== table.id));
+      const removedIndex = results?.map(({ id }) => id).indexOf(table.id) || -1;
+      deleteResults({ id: table.id });
 
       if (removedIndex === tab) {
         setTab(removedIndex - 1);
@@ -71,7 +90,7 @@ const Results: FC = () => {
           allowScrollButtonsMobile
           sx={{ width: "fit-content" }}
         >
-          {tables?.map((table, index) => {
+          {results?.map((table, index) => {
             return (
               <Tab
                 key={table.id}
@@ -120,7 +139,7 @@ const Results: FC = () => {
         </Box>
       </Box>
 
-      {tables.map((table, index) => {
+      {results.map((table, index) => {
         return (
           <Box
             key={table.id}
@@ -129,7 +148,7 @@ const Results: FC = () => {
             hidden={tab !== index}
             sx={{ p: 3 }}
           >
-            <ResultsTab />
+            <ResultsTab table={table} />
           </Box>
         );
       })}
