@@ -33,7 +33,13 @@ export function valuesPerInterval(
 ) {
   const times = simulation?.time || [];
   const tMax = times[times.length - 1];
-  const values = variable && simulation ? simulation.outputs[variable.id] : [];
+  if (!variable || !simulation) {
+    return timeIntervals.map(() => []);
+  }
+  if (!simulation.outputs[variable.id]) {
+    return timeIntervals.map(() => []);
+  }
+  const values = simulation.outputs[variable.id];
   return timeIntervals.map((interval) => {
     if (values.length === 0) {
       return [];
