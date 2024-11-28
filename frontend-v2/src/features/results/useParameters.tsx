@@ -77,7 +77,7 @@ const variablePerInterval = (
     variable,
     simulation,
   );
-  const intervalIndex = intervals.findIndex((i) => i.id === interval.id);
+  const intervalIndex = intervals.findIndex((i) => i.id === interval?.id);
   const intervalValues = variableValuesPerInterval[intervalIndex];
   const timePerInterval = timesPerInterval(simulation.time, intervals);
   const intervalTimes = timePerInterval[intervalIndex];
