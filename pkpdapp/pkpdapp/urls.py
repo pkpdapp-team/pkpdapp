@@ -18,6 +18,7 @@ from rest_framework import routers
 router = routers.DefaultRouter()
 router.register('dataset', api.DatasetView, basename='dataset')
 router.register('user', api.UserView, basename='user')
+router.register('results_table', api.ResultsTableView, basename='results')
 router.register('subject', api.SubjectView, basename='subject')
 router.register('subject_group', api.SubjectGroupView, basename='subject_group')
 router.register('compound', api.CompoundView, basename='compound')

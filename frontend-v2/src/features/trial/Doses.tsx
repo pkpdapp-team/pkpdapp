@@ -139,6 +139,8 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
     baseUnit?.compatible_units?.find(({ id }) => +id === selectedAmountId)
       ?.symbol || "";
 
+  const protocolName = (protocol?.mapped_qname || '').split('.').pop();
+
   return (
     <>
       <TableRow>
@@ -153,7 +155,7 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
           >
             <TableHeader
               variant="subtitle1"
-              label={`Specimen Parameters of ${mappedVariable}`}
+              label={`${protocolName} Administration`}
               tooltip="Defines the site of drug administration. A1/A1_t/A1_f =
                       IV, Aa = SC or PO. The site of drug administration can be
                       selected under Model/ Map Variables"

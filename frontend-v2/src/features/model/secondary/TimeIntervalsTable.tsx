@@ -184,7 +184,7 @@ const TimeIntervalsTable: FC<TableProps> = (props) => {
         <TableBody>
           {intervals.map((interval, index) => (
             <IntervalRow
-              key={interval.start_time}
+              key={interval.id}
               interval={interval}
               onDelete={onDelete(interval.id)}
               onUpdate={onUpdate(interval.id)}

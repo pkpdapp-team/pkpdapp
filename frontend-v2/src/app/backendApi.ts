@@ -767,6 +767,60 @@ const injectedRtkApi = api.injectEndpoints({
         method: "DELETE",
       }),
     }),
+    resultsTableList: build.query<
+      ResultsTableListApiResponse,
+      ResultsTableListApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/results_table/`,
+        params: { project_id: queryArg.projectId },
+      }),
+    }),
+    resultsTableCreate: build.mutation<
+      ResultsTableCreateApiResponse,
+      ResultsTableCreateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/results_table/`,
+        method: "POST",
+        body: queryArg.resultsTable,
+      }),
+    }),
+    resultsTableRetrieve: build.query<
+      ResultsTableRetrieveApiResponse,
+      ResultsTableRetrieveApiArg
+    >({
+      query: (queryArg) => ({ url: `/api/results_table/${queryArg.id}/` }),
+    }),
+    resultsTableUpdate: build.mutation<
+      ResultsTableUpdateApiResponse,
+      ResultsTableUpdateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/results_table/${queryArg.id}/`,
+        method: "PUT",
+        body: queryArg.resultsTable,
+      }),
+    }),
+    resultsTablePartialUpdate: build.mutation<
+      ResultsTablePartialUpdateApiResponse,
+      ResultsTablePartialUpdateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/results_table/${queryArg.id}/`,
+        method: "PATCH",
+        body: queryArg.patchedResultsTable,
+      }),
+    }),
+    resultsTableDestroy: build.mutation<
+      ResultsTableDestroyApiResponse,
+      ResultsTableDestroyApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/results_table/${queryArg.id}/`,
+        method: "DELETE",
+      }),
+    }),
     sessionRetrieve: build.query<
       SessionRetrieveApiResponse,
       SessionRetrieveApiArg
@@ -1567,6 +1621,39 @@ export type ProtocolPartialUpdateApiArg = {
 export type ProtocolDestroyApiResponse = unknown;
 export type ProtocolDestroyApiArg = {
   /** A unique integer value identifying this protocol. */
+  id: number;
+};
+export type ResultsTableListApiResponse = /** status 200  */ ResultsTableRead[];
+export type ResultsTableListApiArg = {
+  /** Filter results by project ID */
+  projectId?: number;
+};
+export type ResultsTableCreateApiResponse = /** status 201  */ ResultsTableRead;
+export type ResultsTableCreateApiArg = {
+  resultsTable: ResultsTable;
+};
+export type ResultsTableRetrieveApiResponse =
+  /** status 200  */ ResultsTableRead;
+export type ResultsTableRetrieveApiArg = {
+  /** A unique integer value identifying this results table. */
+  id: number;
+};
+export type ResultsTableUpdateApiResponse = /** status 200  */ ResultsTableRead;
+export type ResultsTableUpdateApiArg = {
+  /** A unique integer value identifying this results table. */
+  id: number;
+  resultsTable: ResultsTable;
+};
+export type ResultsTablePartialUpdateApiResponse =
+  /** status 200  */ ResultsTableRead;
+export type ResultsTablePartialUpdateApiArg = {
+  /** A unique integer value identifying this results table. */
+  id: number;
+  patchedResultsTable: PatchedResultsTable;
+};
+export type ResultsTableDestroyApiResponse = unknown;
+export type ResultsTableDestroyApiArg = {
+  /** A unique integer value identifying this results table. */
   id: number;
 };
 export type SessionRetrieveApiResponse = unknown;
@@ -3087,6 +3174,98 @@ export type PatchedProtocolRead = {
   /** Group that uses this protocol */
   group?: number | null;
 };
+export type RowsEnum = "parameters" | "variables" | "groups" | "intervals";
+export type ColumnsEnum = "parameters" | "variables" | "groups" | "intervals";
+export type ResultsTable = {
+  /** name of the table */
+  name: string;
+  /** parameter to display as table rows
+    
+    * `parameters` - Secondary parameters of the model.
+    * `variables` - Model variables.
+    * `groups` - Subject groups.
+    * `intervals` - Time intervals. */
+  rows: RowsEnum;
+  /** parameter to display as table columns
+    
+    * `parameters` - Secondary parameters of the model.
+    * `variables` - Model variables.
+    * `groups` - Subject groups.
+    * `intervals` - Time intervals. */
+  columns: ColumnsEnum;
+  /** Filters to apply to the table. */
+  filters?: any | null;
+  /** Project that this table belongs to. */
+  project?: number | null;
+};
+export type ResultsTableRead = {
+  id: number;
+  /** name of the table */
+  name: string;
+  /** parameter to display as table rows
+    
+    * `parameters` - Secondary parameters of the model.
+    * `variables` - Model variables.
+    * `groups` - Subject groups.
+    * `intervals` - Time intervals. */
+  rows: RowsEnum;
+  /** parameter to display as table columns
+    
+    * `parameters` - Secondary parameters of the model.
+    * `variables` - Model variables.
+    * `groups` - Subject groups.
+    * `intervals` - Time intervals. */
+  columns: ColumnsEnum;
+  /** Filters to apply to the table. */
+  filters?: any | null;
+  /** Project that this table belongs to. */
+  project?: number | null;
+};
+export type PatchedResultsTable = {
+  /** name of the table */
+  name?: string;
+  /** parameter to display as table rows
+    
+    * `parameters` - Secondary parameters of the model.
+    * `variables` - Model variables.
+    * `groups` - Subject groups.
+    * `intervals` - Time intervals. */
+  rows?: RowsEnum;
+  /** parameter to display as table columns
+    
+    * `parameters` - Secondary parameters of the model.
+    * `variables` - Model variables.
+    * `groups` - Subject groups.
+    * `intervals` - Time intervals. */
+  columns?: ColumnsEnum;
+  /** Filters to apply to the table. */
+  filters?: any | null;
+  /** Project that this table belongs to. */
+  project?: number | null;
+};
+export type PatchedResultsTableRead = {
+  id?: number;
+  /** name of the table */
+  name?: string;
+  /** parameter to display as table rows
+    
+    * `parameters` - Secondary parameters of the model.
+    * `variables` - Model variables.
+    * `groups` - Subject groups.
+    * `intervals` - Time intervals. */
+  rows?: RowsEnum;
+  /** parameter to display as table columns
+    
+    * `parameters` - Secondary parameters of the model.
+    * `variables` - Model variables.
+    * `groups` - Subject groups.
+    * `intervals` - Time intervals. */
+  columns?: ColumnsEnum;
+  /** Filters to apply to the table. */
+  filters?: any | null;
+  /** Project that this table belongs to. */
+  project?: number | null;
+};
 export type SimulationSlider = {
   variable: number;
 };
@@ -3794,6 +3973,12 @@ export const {
   useProtocolUpdateMutation,
   useProtocolPartialUpdateMutation,
   useProtocolDestroyMutation,
+  useResultsTableListQuery,
+  useResultsTableCreateMutation,
+  useResultsTableRetrieveQuery,
+  useResultsTableUpdateMutation,
+  useResultsTablePartialUpdateMutation,
+  useResultsTableDestroyMutation,
   useSessionRetrieveQuery,
   useSimulationListQuery,
   useSimulationCreateMutation,
