@@ -352,7 +352,7 @@ const Drug: FC = () => {
                           )
                         }
                         disabled={isSharedWithMe}
-                        id={`efficacy_experiment-${efficacy_experiment?.id}`}
+                        id={`efficacy_experiment-${efficacy_experiment?.theKey}`}
                       />
                     </div>
                   </Tooltip>
@@ -369,7 +369,7 @@ const Drug: FC = () => {
                     />
                   ) : (
                     <label
-                      htmlFor={`efficacy_experiment-${efficacy_experiment?.id}`}
+                      htmlFor={`efficacy_experiment-${efficacy_experiment?.theKey}`}
                     >
                       <Typography>
                         {getValues(`efficacy_experiments.${index}.name`) || "-"}
