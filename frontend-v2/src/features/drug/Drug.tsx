@@ -224,6 +224,8 @@ const Drug: FC = () => {
     setIsEditIndex(isEdit ? index : null);
   };
 
+  console.log("efficacy_experiments", efficacy_experiments);
+
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
       <TableHeader variant="h4" label="Drug & Target" />
@@ -291,7 +293,7 @@ const Drug: FC = () => {
             <Typography variant="h6" component="h2" gutterBottom>
               Efficacy-Safety Data
             </Typography>
-            <Tooltip 
+            <Tooltip
               arrow
               title={
                 isEditIndex !== null
@@ -334,7 +336,7 @@ const Drug: FC = () => {
             {efficacy_experiments.map((efficacy_experiment, index) => (
               <TableRow key={index}>
                 <TableCell width="5rem" size="small">
-                  <Tooltip 
+                  <Tooltip
                     arrow
                     placement={"top-end"}
                     title="Use this efficacy-safety data"
@@ -350,6 +352,7 @@ const Drug: FC = () => {
                           )
                         }
                         disabled={isSharedWithMe}
+                        id={`efficacy_experiment-${efficacy_experiment?.id}`}
                       />
                     </div>
                   </Tooltip>
@@ -365,9 +368,13 @@ const Drug: FC = () => {
                       textFieldProps={defaultProps}
                     />
                   ) : (
-                    <Typography>
-                      {getValues(`efficacy_experiments.${index}.name`) || "-"}
-                    </Typography>
+                    <label
+                      htmlFor={`efficacy_experiment-${efficacy_experiment?.id}`}
+                    >
+                      <Typography>
+                        {getValues(`efficacy_experiments.${index}.name`) || "-"}
+                      </Typography>
+                    </label>
                   )}
                 </TableCell>
                 <TableCell size="small">
