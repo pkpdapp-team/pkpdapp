@@ -160,7 +160,6 @@ const ProjectRow: FC<Props> = ({
               () => dispatch(decrementDirtyCount()),
             );
           }
-          console.log('project', project, data.project)
           if (JSON.stringify(project) !== JSON.stringify(data.project)) {
             dispatch(incrementDirtyCount());
             updateProject({ id: project.id, project: data.project }).then(() =>
@@ -173,8 +172,14 @@ const ProjectRow: FC<Props> = ({
   );
 
   const onCancel = () => {
-    setValue('project.description', project.description);
+    setValue("project.description", project.description);
   };
+
+  const onShareCanel = () => {
+    setValue("project.user_access", project.user_access);
+    setUserAccessOpen(false);
+    setIsEditMode(false);
+  }
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -341,7 +346,10 @@ const ProjectRow: FC<Props> = ({
 
               <Tooltip title="Share Project">
                 <IconButton
-                  onClick={() => setUserAccessOpen(true)}
+                  onClick={() => {
+                    setIsEditMode(true);
+                    setUserAccessOpen(true);
+                  }}
                   disabled={isSharedWithMe}
                 >
                   <PersonAdd />
@@ -352,15 +360,6 @@ const ProjectRow: FC<Props> = ({
                   <Delete />
                 </IconButton>
               </Tooltip>
-              <UserAccess
-                open={userAccessOpen}
-                onClose={userAccessClose}
-                control={control}
-                userAccess={userAccess as ProjectAccess[]}
-                append={append}
-                remove={remove}
-                project={project}
-              />
               {isSharedWithMe && (
                 <Tooltip title="This project is shared with me as view-only">
                   <div>
@@ -402,6 +401,16 @@ const ProjectRow: FC<Props> = ({
           )}
         </TableCell>
       </TableRow>
+      <UserAccess
+        open={userAccessOpen}
+        onClose={userAccessClose}
+        onCancel={onShareCanel}
+        control={control}
+        userAccess={userAccess as ProjectAccess[]}
+        append={append}
+        remove={remove}
+        project={project}
+      />
       {isDescriptionModalOpen && (
         <DescriptionModal
           isOpen={isDescriptionModalOpen}
@@ -412,7 +421,7 @@ const ProjectRow: FC<Props> = ({
           project={project}
         >
           <MaterialTextField
-            {...register('project.description')}
+            {...register("project.description")}
             sx={{ width: "50vw" }}
             disabled={!isEditMode}
             multiline
