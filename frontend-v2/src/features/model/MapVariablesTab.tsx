@@ -351,9 +351,7 @@ const MapVariablesTab: FC<Props> = ({
                 updateDosings={updateDosings}
                 isAnyDosingSelected={isAnyDosingSelected}
                 updateLinksToPd={updateLinksToPd}
-                isAnyLinkToPdSelected={isAnyLinkToPdSelected}
                 updateLagTimes={updateLagTimes}
-                isAnyLagTimeSelected={isAnyLagTimeSelected}
               />
             ))}
           </TableBody>
@@ -363,7 +361,6 @@ const MapVariablesTab: FC<Props> = ({
         <TableHeader
           variant="h5"
           label="Map RO, PD and secondary parameters"
-          sx={{ marginTop: ".5rem" }}
         />
       </Box>
       <TableContainer

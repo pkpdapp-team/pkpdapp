@@ -190,7 +190,6 @@ const PKPDModelTab: FC<Props> = ({ model, project, control }: Props) => {
               <Tooltip title="Includes Michaelis-Menten parameters (CLmax and Km)">
                 <div>
                   <Checkbox
-                    size="small"
                     label="Saturation"
                     name="model.has_saturation"
                     control={control}
