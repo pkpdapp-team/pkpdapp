@@ -37,6 +37,7 @@ interface DynamicTabsProps {
   tabErrors?: { [key: string]: string };
   isOtherSpeciesSelected?: boolean;
   tumourModelWithNoKillModel?: boolean;
+  marginBottom?: number;
 }
 
 interface TabPanelProps {
@@ -58,6 +59,7 @@ export const DynamicTabs: FC<PropsWithChildren<DynamicTabsProps>> = ({
   tabErrors,
   isOtherSpeciesSelected,
   tumourModelWithNoKillModel,
+  marginBottom = 5,
   children,
 }) => {
   const [currentTab, setCurrentTab] = useState(0);
@@ -113,7 +115,7 @@ export const DynamicTabs: FC<PropsWithChildren<DynamicTabsProps>> = ({
   return (
     <TabContext.Provider value={{ currentTab, setCurrentTab }}>
       <Box sx={{ width: "100%" }}>
-        <Box sx={{ borderBottom: 1, borderColor: "divider", marginBottom: 5 }}>
+        <Box sx={{ borderBottom: 1, borderColor: "divider", marginBottom: marginBottom }}>
           <Tabs
             value={currentTab}
             onChange={handleChange}

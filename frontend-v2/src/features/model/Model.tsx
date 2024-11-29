@@ -26,6 +26,7 @@ import SecondaryParametersTab from "./secondary/SecondaryParameters";
 import ParametersTab from "./ParametersTab";
 import useDirty from "../../hooks/useDirty";
 import { SubPageName } from "../main/mainSlice";
+import { TableHeader } from "../../components/TableHeader";
 
 export type FormData = {
   project: ProjectRead;
@@ -238,44 +239,48 @@ const Model: FC = () => {
   const isOtherSpeciesSelected = project.species === "O";
 
   return (
-    <DynamicTabs
-      tabNames={tabKeys}
-      tabErrors={tabErrors}
-      isOtherSpeciesSelected={isOtherSpeciesSelected}
-      tumourModelWithNoKillModel={isTumourModel && noKillModel}
-    >
-      <TabPanel>
-        <PKPDModelTab
-          model={model}
-          project={project}
-          control={control}
-          updateModel={updateModel}
-        />
-      </TabPanel>
-      <TabPanel>
-        <MapVariablesTab
-          model={model}
-          project={project}
-          control={control}
-          variables={variables}
-          units={units}
-          compound={compound}
-        />
-      </TabPanel>
-      <TabPanel>
-        <ParametersTab
-          model={model}
-          project={project}
-          control={control}
-          variables={variables}
-          units={units}
-          compound={compound}
-        />
-      </TabPanel>
-      <TabPanel>
-        <SecondaryParametersTab />
-      </TabPanel>
-    </DynamicTabs>
+    <>
+      <TableHeader variant="h4" label="Model" />
+      <DynamicTabs
+        tabNames={tabKeys}
+        tabErrors={tabErrors}
+        isOtherSpeciesSelected={isOtherSpeciesSelected}
+        tumourModelWithNoKillModel={isTumourModel && noKillModel}
+        marginBottom={0}
+      >
+        <TabPanel>
+          <PKPDModelTab
+            model={model}
+            project={project}
+            control={control}
+            updateModel={updateModel}
+          />
+        </TabPanel>
+        <TabPanel>
+          <MapVariablesTab
+            model={model}
+            project={project}
+            control={control}
+            variables={variables}
+            units={units}
+            compound={compound}
+          />
+        </TabPanel>
+        <TabPanel>
+          <ParametersTab
+            model={model}
+            project={project}
+            control={control}
+            variables={variables}
+            units={units}
+            compound={compound}
+          />
+        </TabPanel>
+        <TabPanel>
+          <SecondaryParametersTab />
+        </TabPanel>
+      </DynamicTabs>
+    </>
   );
 };
 
