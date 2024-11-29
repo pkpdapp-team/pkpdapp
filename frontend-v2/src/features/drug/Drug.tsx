@@ -224,8 +224,6 @@ const Drug: FC = () => {
     setIsEditIndex(isEdit ? index : null);
   };
 
-  console.log("units", units);
-
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
       <TableHeader variant="h4" label="Drug & Target" />
