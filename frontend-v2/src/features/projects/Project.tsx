@@ -120,6 +120,8 @@ const ProjectRow: FC<Props> = ({
     reset,
     handleSubmit,
     control,
+    setValue,
+    register,
     formState: { isDirty },
   } = useForm<FormData>({
     defaultValues: { project, compound: defaultCompound },
@@ -158,6 +160,7 @@ const ProjectRow: FC<Props> = ({
               () => dispatch(decrementDirtyCount()),
             );
           }
+          console.log('project', project, data.project)
           if (JSON.stringify(project) !== JSON.stringify(data.project)) {
             dispatch(incrementDirtyCount());
             updateProject({ id: project.id, project: data.project }).then(() =>
@@ -169,13 +172,8 @@ const ProjectRow: FC<Props> = ({
     [handleSubmit, compound, project, updateCompound, updateProject],
   );
 
-  const [fieldValue, setFieldValue] = useFieldState({
-    name: "project.description",
-    control,
-  });
-
   const onCancel = () => {
-    setFieldValue(project.description);
+    setValue('project.description', project.description);
   };
 
   if (isLoading) {
@@ -414,8 +412,7 @@ const ProjectRow: FC<Props> = ({
           project={project}
         >
           <MaterialTextField
-            onChange={(event) => setFieldValue(event.target.value)}
-            value={fieldValue}
+            {...register('project.description')}
             sx={{ width: "50vw" }}
             disabled={!isEditMode}
             multiline
