@@ -224,8 +224,6 @@ const Drug: FC = () => {
     setIsEditIndex(isEdit ? index : null);
   };
 
-  console.log("efficacy_experiments", efficacy_experiments);
-
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
       <TableHeader variant="h4" label="Drug & Target" />
@@ -408,7 +406,9 @@ const Drug: FC = () => {
                     />
                   ) : (
                     <Typography>
-                      {getValues(`efficacy_experiments.${index}.c50_unit`) ||
+                      {units.find(
+                        (u) => u.id === getValues(`efficacy_experiments.${index}.c50_unit`),
+                      )?.symbol ||
                         "-"}
                     </Typography>
                   )}

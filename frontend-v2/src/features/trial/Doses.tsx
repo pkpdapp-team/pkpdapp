@@ -195,6 +195,7 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
         <TableRow key={dose.id}>
           <TableCell>
             <FloatField
+              sx={{ minWidth: '6rem'}}
               size="small"
               label={"Dose"}
               name={`doses.${index}.amount`}
