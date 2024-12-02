@@ -307,7 +307,9 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
   };
 
   const handleRemovePlot = () => {
-    remove(index);
+    if (window.confirm("Are you sure you want to delete this plot?")) {
+      remove(index);
+    }
   };
 
   const handleClose = () => {
