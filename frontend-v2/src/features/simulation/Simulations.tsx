@@ -448,7 +448,7 @@ const Simulations: FC = () => {
   }
 
   return (
-    <Box sx={{ display: "flex" }} ref={containerRef}>
+    <Box sx={{ display: "flex", minHeight: '60vh', height: 'calc(80vh - 24px)' }} ref={containerRef}>
       <SimulationsSidePanel
         portalId="simulations-portal"
         addPlotOptions={addPlotOptions}
