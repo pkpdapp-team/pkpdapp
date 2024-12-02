@@ -301,7 +301,8 @@ export default function Sidebar() {
   );
 
   const drawer = (
-    <div style={{ marginTop: "7rem", transition: "all .35s linear" }}>
+    <div style={{ marginTop: "7rem", transition: "all .35s linear", display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '100%' }}>
+      <div>
       {isExpanded ? (
         <IconButton
           aria-label="collapse-navigation"
@@ -376,10 +377,12 @@ export default function Sidebar() {
           </List>
         </>
       )}
+      </div>
+      <div>
       {isExpanded && (
         <Typography
           sx={{
-            position: "absolute",
+            position: "",
             bottom: 0,
             margin: ".5rem",
             color: "gray",
@@ -389,6 +392,8 @@ export default function Sidebar() {
           pkpdx version {import.meta.env.VITE_APP_VERSION?.slice(0, 7) || "dev"}
         </Typography>
       )}
+      </div>
+
     </div>
   );
 
