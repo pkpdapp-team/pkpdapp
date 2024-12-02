@@ -32,6 +32,7 @@ interface Props {
   userAccess: ProjectAccess[];
   append: (value: ProjectAccess) => void;
   remove: (index: number) => void;
+  onCancel: () => void;
   control: Control<FormData>;
   onClose: () => void;
 }
@@ -41,7 +42,7 @@ const UserAccess: FC<Props> = ({
   userAccess,
   append,
   remove,
-  control,
+  onCancel,
   onClose,
 }) => {
   const { data: users } = useUserListQuery();
@@ -122,6 +123,13 @@ const UserAccess: FC<Props> = ({
               margin: ".5rem",
             }}
           >
+            <Button
+              variant="outlined"
+              sx={{ marginLeft: "1rem" }}
+              onClick={onCancel}
+            >
+              Cancel
+            </Button>
             <Button
               variant="contained"
               sx={{ marginLeft: "1rem" }}

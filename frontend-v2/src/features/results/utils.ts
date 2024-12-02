@@ -8,6 +8,8 @@ import {
 import { Parameter } from "./useParameters";
 import { columns } from "./columns";
 
+const TOLERANCE = 5e-7;
+
 /**
  * Given x0 in the range [x[0], x[1]], return the linearly interpolated value y0 in the range [y[0], y[1]].
  * @param x
@@ -33,7 +35,15 @@ export function valuesPerInterval(
 ) {
   const times = simulation?.time || [];
   const tMax = times[times.length - 1];
-  const values = variable && simulation ? simulation.outputs[variable.id] : [];
+  if (!variable || !simulation) {
+    return timeIntervals.map(() => []);
+  }
+  if (!simulation.outputs[variable.id]) {
+    return timeIntervals.map(() => []);
+  }
+  const values = simulation.outputs[variable.id].map((v) =>
+    Math.abs(v) < TOLERANCE ? 0 : v,
+  );
   return timeIntervals.map((interval) => {
     if (values.length === 0) {
       return [];
@@ -42,6 +52,9 @@ export function valuesPerInterval(
     const endTime = Math.min(tMax, interval.end_time);
     const startIndex = times.findIndex((t) => t >= startTime);
     const endIndex = times.findIndex((t) => t >= endTime);
+    if (startIndex === endIndex) {
+      return [values[startIndex], values[endIndex]];
+    }
     const start =
       startIndex > 0
         ? interpolate(
@@ -83,6 +96,9 @@ export function timesPerInterval(
     const endTime = Math.min(tMax, interval.end_time);
     const startIndex = times.findIndex((t) => t >= startTime);
     const endIndex = times.findIndex((t) => t >= endTime);
+    if (startIndex === endIndex) {
+      return [times[startIndex], times[endIndex]];
+    }
     const intervalTimes = [
       startTime,
       ...times.slice(startIndex + 1, endIndex - 1),
@@ -172,6 +188,10 @@ export function formattedNumber(
   if (value === 0) {
     return "0.000";
   }
+  if (Math.abs(value) < TOLERANCE) {
+    return "0.000";
+  }
+
   return value > upperThreshold || value < lowerThreshold
     ? value.toExponential(4)
     : value.toFixed(3);

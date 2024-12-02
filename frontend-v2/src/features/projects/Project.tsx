@@ -31,7 +31,11 @@ import {
   useProjectAccessDestroyMutation,
 } from "../../app/backendApi";
 import UserAccess from "./UserAccess";
-import { decrementDirtyCount, incrementDirtyCount, setProject } from "../main/mainSlice";
+import {
+  decrementDirtyCount,
+  incrementDirtyCount,
+  setProject,
+} from "../main/mainSlice";
 import TextField from "../../components/TextField";
 import ConfirmationDialog from "../../components/ConfirmationDialog";
 import { selectCurrentUser, selectIsProjectShared } from "../login/loginSlice";
@@ -116,6 +120,8 @@ const ProjectRow: FC<Props> = ({
     reset,
     handleSubmit,
     control,
+    setValue,
+    register,
     formState: { isDirty },
   } = useForm<FormData>({
     defaultValues: { project, compound: defaultCompound },
@@ -149,26 +155,31 @@ const ProjectRow: FC<Props> = ({
       handleSubmit((data: FormData) => {
         if (compound && project) {
           if (JSON.stringify(compound) !== JSON.stringify(data.compound)) {
-            dispatch(incrementDirtyCount())
-            updateCompound({ id: compound.id, compound: data.compound }).then(() => dispatch(decrementDirtyCount()));;
+            dispatch(incrementDirtyCount());
+            updateCompound({ id: compound.id, compound: data.compound }).then(
+              () => dispatch(decrementDirtyCount()),
+            );
           }
           if (JSON.stringify(project) !== JSON.stringify(data.project)) {
-            dispatch(incrementDirtyCount())
-            updateProject({ id: project.id, project: data.project }).then(() => dispatch(decrementDirtyCount()));
+            dispatch(incrementDirtyCount());
+            updateProject({ id: project.id, project: data.project }).then(() =>
+              dispatch(decrementDirtyCount()),
+            );
           }
         }
       }),
     [handleSubmit, compound, project, updateCompound, updateProject],
   );
 
-  const [fieldValue, setFieldValue] = useFieldState({
-    name: "project.description",
-    control,
-  });
-
   const onCancel = () => {
-    setFieldValue(project.description);
+    setValue("project.description", project.description);
   };
+
+  const onShareCanel = () => {
+    setValue("project.user_access", project.user_access);
+    setUserAccessOpen(false);
+    setIsEditMode(false);
+  }
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -249,6 +260,7 @@ const ProjectRow: FC<Props> = ({
             checked={isSelected}
             onClick={handleSelectProject}
             size="small"
+            id={`project-${project.id}`}
           />
         </TableCell>
         <TableCell>
@@ -257,12 +269,14 @@ const ProjectRow: FC<Props> = ({
               name="project.name"
               control={control}
               textFieldProps={defaultProps}
-              size='small'
+              size="small"
               rules={{ required: true, validate: validateName }}
               sx={{ ...defaultSx }}
             />
           ) : (
-            <Typography>{project?.name}</Typography>
+            <label htmlFor={`project-${project.id}`}>
+              <Typography>{project?.name}</Typography>
+            </label>
           )}
         </TableCell>
         <TableCell>
@@ -271,7 +285,7 @@ const ProjectRow: FC<Props> = ({
               name="compound.name"
               control={control}
               textFieldProps={defaultProps}
-              size='small'
+              size="small"
               rules={{ required: true }}
               sx={defaultSx}
             />
@@ -332,7 +346,10 @@ const ProjectRow: FC<Props> = ({
 
               <Tooltip title="Share Project">
                 <IconButton
-                  onClick={() => setUserAccessOpen(true)}
+                  onClick={() => {
+                    setIsEditMode(true);
+                    setUserAccessOpen(true);
+                  }}
                   disabled={isSharedWithMe}
                 >
                   <PersonAdd />
@@ -343,15 +360,6 @@ const ProjectRow: FC<Props> = ({
                   <Delete />
                 </IconButton>
               </Tooltip>
-              <UserAccess
-                open={userAccessOpen}
-                onClose={userAccessClose}
-                control={control}
-                userAccess={userAccess as ProjectAccess[]}
-                append={append}
-                remove={remove}
-                project={project}
-              />
               {isSharedWithMe && (
                 <Tooltip title="This project is shared with me as view-only">
                   <div>
@@ -393,6 +401,16 @@ const ProjectRow: FC<Props> = ({
           )}
         </TableCell>
       </TableRow>
+      <UserAccess
+        open={userAccessOpen}
+        onClose={userAccessClose}
+        onCancel={onShareCanel}
+        control={control}
+        userAccess={userAccess as ProjectAccess[]}
+        append={append}
+        remove={remove}
+        project={project}
+      />
       {isDescriptionModalOpen && (
         <DescriptionModal
           isOpen={isDescriptionModalOpen}
@@ -403,8 +421,7 @@ const ProjectRow: FC<Props> = ({
           project={project}
         >
           <MaterialTextField
-            onChange={(event) => setFieldValue(event.target.value)}
-            value={fieldValue}
+            {...register("project.description")}
             sx={{ width: "50vw" }}
             disabled={!isEditMode}
             multiline

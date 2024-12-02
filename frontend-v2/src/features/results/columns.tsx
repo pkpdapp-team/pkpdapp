@@ -65,8 +65,7 @@ export function columns({
     return parameters.map((parameter) => {
       return {
         header: parameter.name,
-        value: (interval: TimeIntervalRead) =>
-          parameter.value(interval, simulation, variable, aucVariable),
+        value: parameter.value,
       };
     });
   }

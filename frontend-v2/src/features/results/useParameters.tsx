@@ -1,6 +1,7 @@
 import {
   SimulateResponse,
   TimeIntervalRead,
+  UnitListApiResponse,
   VariableListApiResponse,
   VariableRead,
 } from "../../app/backendApi";
@@ -77,7 +78,7 @@ const variablePerInterval = (
     variable,
     simulation,
   );
-  const intervalIndex = intervals.findIndex((i) => i.id === interval.id);
+  const intervalIndex = intervals.findIndex((i) => i.id === interval?.id);
   const intervalValues = variableValuesPerInterval[intervalIndex];
   const timePerInterval = timesPerInterval(simulation.time, intervals);
   const intervalTimes = timePerInterval[intervalIndex];
@@ -93,6 +94,18 @@ const timeOverLowerThresholdPerInterval = (
   return timeOverThreshold(intervalTimes, intervalValues, threshold);
 };
 
+function variableConversionFactor(
+  variable: VariableRead,
+  units: UnitListApiResponse,
+) {
+  const modelUnit = units?.find((unit) => unit.id === variable.unit);
+  const displayUnit = modelUnit?.compatible_units.find(
+    (u) => +u.id === variable.threshold_unit,
+  );
+  const conversionFactor = parseFloat(displayUnit?.conversion_factor || "1");
+  return conversionFactor;
+}
+
 const timeOverUpperThresholdPerInterval = (
   intervalValues: number[],
   intervalTimes: number[],
@@ -101,6 +114,18 @@ const timeOverUpperThresholdPerInterval = (
   const threshold = variable?.upper_threshold || Infinity;
   return timeOverThreshold(intervalTimes, intervalValues, threshold);
 };
+
+function timeConversionFactor(
+  interval: TimeIntervalRead,
+  units: UnitListApiResponse,
+) {
+  const modelUnit = units?.find((unit) => unit.symbol === "h");
+  const displayUnit = modelUnit?.compatible_units.find(
+    (u) => +u.id === interval.unit,
+  );
+  const conversionFactor = parseFloat(displayUnit?.conversion_factor || "1");
+  return conversionFactor;
+}
 
 /**
  * Generate a list of secondary parameters to calculate for the current model.
@@ -125,27 +150,45 @@ export function useParameters() {
   const intervals = useNormalisedIntervals(baseIntervals);
   const variables = useNormalisedVariables(baseVariables);
 
-  function variableConversionFactor(variable: VariableRead) {
-    const displayUnit = units?.find(
-      (unit) => unit.id === variable.threshold_unit,
-    );
-    const modelUnit = displayUnit?.compatible_units.find(
-      (u) => +u.id === variable.unit,
-    );
-    const conversionFactor = parseFloat(modelUnit?.conversion_factor || "1");
-    return conversionFactor;
-  }
-
-  function timeConversionFactor(interval: TimeIntervalRead) {
-    const displayUnit = units?.find((unit) => unit.id === interval.unit);
-    const modelUnit = displayUnit?.compatible_units.find(
-      (u) => u.symbol === "h",
-    );
-    const conversionFactor = parseFloat(modelUnit?.conversion_factor || "1");
-    return conversionFactor;
-  }
-
   return [
+    {
+      name: "Start",
+      value(
+        interval: TimeIntervalRead,
+        simulation: SimulateResponse,
+        variable: VariableRead,
+      ) {
+        const [intervalValues] = variablePerInterval(
+          intervals,
+          variable,
+          simulation,
+          interval,
+        );
+        const start = intervalValues ? intervalValues[0] : 0;
+        return formattedNumber(
+          start * variableConversionFactor(variable, units),
+        );
+      },
+    },
+    {
+      name: "End",
+      value(
+        interval: TimeIntervalRead,
+        simulation: SimulateResponse,
+        variable: VariableRead,
+      ) {
+        const [intervalValues] = variablePerInterval(
+          intervals,
+          variable,
+          simulation,
+          interval,
+        );
+        const end = intervalValues
+          ? intervalValues[intervalValues.length - 1]
+          : 0;
+        return formattedNumber(end * variableConversionFactor(variable, units));
+      },
+    },
     {
       name: "Min",
       value(
@@ -161,7 +204,7 @@ export function useParameters() {
         );
 
         const min = intervalValues ? Math.min(...intervalValues) : 0;
-        return formattedNumber(min / variableConversionFactor(variable));
+        return formattedNumber(min * variableConversionFactor(variable, units));
       },
     },
     {
@@ -178,7 +221,7 @@ export function useParameters() {
           interval,
         );
         const max = intervalValues ? Math.max(...intervalValues) : 0;
-        return formattedNumber(max / variableConversionFactor(variable));
+        return formattedNumber(max * variableConversionFactor(variable, units));
       },
     },
     {
@@ -196,9 +239,9 @@ export function useParameters() {
           : [];
         const difference = auc ? auc[auc.length - 1] - auc[0] : 0;
         return formattedNumber(
-          difference /
-            (variableConversionFactor(variable) *
-              timeConversionFactor(interval)),
+          difference *
+            variableConversionFactor(variable, units) *
+            timeConversionFactor(interval, units),
         );
       },
     },
@@ -228,7 +271,9 @@ export function useParameters() {
                 variable,
               )
             : 0;
-          return formattedNumber(tLower / timeConversionFactor(interval));
+          return formattedNumber(
+            tLower * timeConversionFactor(interval, units),
+          );
         }
       },
     },
@@ -258,7 +303,9 @@ export function useParameters() {
                 variable,
               )
             : 0;
-          return formattedNumber(tUpper / timeConversionFactor(interval));
+          return formattedNumber(
+            tUpper * timeConversionFactor(interval, units),
+          );
         }
       },
     },
@@ -296,7 +343,7 @@ export function useParameters() {
               )
             : 0;
           return formattedNumber(
-            (tLower - tUpper) / timeConversionFactor(interval),
+            (tLower - tUpper) * timeConversionFactor(interval, units),
           );
         }
       },
