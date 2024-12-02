@@ -332,7 +332,7 @@ const ProjectRow: FC<Props> = ({
           {!isEditMode ? (
             <Stack component="span" direction="row" spacing={0.0}>
               <Tooltip title="Edit project">
-                <IconButton onClick={() => setIsEditMode(true)}>
+                <IconButton disabled={isSharedWithMe} onClick={() => setIsEditMode(true)}>
                   <EditIcon />
                 </IconButton>
               </Tooltip>
