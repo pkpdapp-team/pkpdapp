@@ -218,8 +218,7 @@ const Simulations: FC = () => {
     { value: "vertical", label: "Vertical" },
     { value: "horizontal", label: "Horizontal" },
   ];
-  const defaultLayout = [layoutOptions[0]?.value, layoutOptions[1]?.value];
-  const [layout, setLayout] = useState<string[]>(defaultLayout);
+  const [layout, setLayout] = useState<string[]>([]);
 
   // reset form and sliders if simulation changes
   useEffect(() => {
