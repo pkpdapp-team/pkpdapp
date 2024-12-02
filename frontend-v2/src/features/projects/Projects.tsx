@@ -34,6 +34,46 @@ import { defaultHeaderSx } from "../../shared/tableHeadersSx";
 import useDataset from "../../hooks/useDataset";
 import { TableHeader } from "../../components/TableHeader";
 import DnsIcon from "@mui/icons-material/Dns";
+import { getTableHeight } from "../../shared/calculateTableHeights";
+
+const PROJECT_TABLE_BREAKPOINTS = [
+  {
+    minHeight: 1100,
+    tableHeight: "80vh",
+  },
+  {
+    minHeight: 1000,
+    tableHeight: "80vh",
+  },
+  {
+    minHeight: 900,
+    tableHeight: "78vh",
+  },
+  {
+    minHeight: 800,
+    tableHeight: "75vh",
+  },
+  {
+    minHeight: 700,
+    tableHeight: "70vh",
+  },
+  {
+    minHeight: 600,
+    tableHeight: "65vh",
+  },
+  {
+    minHeight: 500,
+    tableHeight: "60vh",
+  },
+  {
+    minHeight: 400,
+    tableHeight: "55vh",
+  },
+  {
+    minHeight: 300,
+    tableHeight: "50vh",
+  },
+];
 
 enum SortOptions {
   CREATED = "created",
@@ -212,7 +252,7 @@ const ProjectTable: FC = () => {
       </Box>
       <TableContainer
         sx={{
-          height: "70vh",
+          height: getTableHeight({ steps: PROJECT_TABLE_BREAKPOINTS }),
         }}
       >
         {projects?.length === 0 ? (

@@ -277,7 +277,7 @@ const ResultsTab: FC<{ table: ResultsTableRead }> = ({ table }) => {
   try {
     return (
       <>
-        <FormControl size="small">
+        <FormControl size="small" sx={{ marginTop: '.5rem'}}>
           <InputLabel id="columns-label">Columns</InputLabel>
           <Select
             value={columns}
@@ -297,7 +297,7 @@ const ResultsTab: FC<{ table: ResultsTableRead }> = ({ table }) => {
               })}
           </Select>
         </FormControl>
-        <FormControl size="small">
+        <FormControl size="small" sx={{ marginTop: '.5rem'}}>
           <InputLabel id="rows-label">Rows</InputLabel>
           <Select
             value={rows}
@@ -317,7 +317,7 @@ const ResultsTab: FC<{ table: ResultsTableRead }> = ({ table }) => {
               })}
           </Select>
         </FormControl>
-        <FormControl size="small">
+        <FormControl size="small" sx={{ marginTop: '.5rem'}}>
           <InputLabel id="filter1-label">{rowFilter1?.label}</InputLabel>
           <Select
             labelId="filter1-label"
@@ -335,7 +335,7 @@ const ResultsTab: FC<{ table: ResultsTableRead }> = ({ table }) => {
             })}
           </Select>
         </FormControl>
-        <FormControl size="small">
+        <FormControl size="small" sx={{ marginTop: '.5rem'}}>
           <InputLabel id="filter2-label">{rowFilter2?.label}</InputLabel>
           <Select
             labelId="filter2-label"
