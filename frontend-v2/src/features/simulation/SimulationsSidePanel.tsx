@@ -157,7 +157,7 @@ export const SimulationsSidePanel = ({
     if (layout.includes(value)) {
       setLayout(layout.filter(layoutValue => value !== layoutValue))
     } else {
-      setLayout([...layout, value]);
+      setLayout(layout?.length ? [] : [value]);
     }
   }
 
