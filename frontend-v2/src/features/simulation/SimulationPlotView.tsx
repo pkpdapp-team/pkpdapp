@@ -272,6 +272,7 @@ interface SimulationPlotProps {
     width: number;
     height: number;
   };
+  plotCount: number;
 }
 
 const SimulationPlotView: FC<SimulationPlotProps> = ({
@@ -291,6 +292,7 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
   isVertical,
   isHorizontal,
   dimensions,
+  plotCount
 }) => {
   const projectId = useSelector(
     (state: RootState) => state.main.selectedProject,
@@ -470,7 +472,7 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
 
   const getPlotDimensions = () => {
     const buffor = 10;
-    const columnCount = screen.width > 2500 ? 3 : 2;
+    const columnCount = Math.min(plotCount, screen.width > 2500 ? 3 : 2);
     const layoutBreakpoint = 900;
 
     if (isVertical && !isHorizontal) {

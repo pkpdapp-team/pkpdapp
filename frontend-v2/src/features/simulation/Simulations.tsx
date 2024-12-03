@@ -434,6 +434,9 @@ const Simulations: FC = () => {
       return 12
     }
 
+    if (plots?.length === 1) return 12;
+    if (plots?.length === 2) return 6;
+
     return screen.width > 2500 ? 4 : 6
   }
 
@@ -482,6 +485,7 @@ const Simulations: FC = () => {
         setShowReference={setShowReference}
         shouldShowLegend={shouldShowLegend}
         setShouldShowLegend={setShouldShowLegend}
+        plotCount={plots?.length}
       />
       <Box
         sx={{
@@ -522,6 +526,7 @@ const Simulations: FC = () => {
                   isVertical={isVertical}
                   isHorizontal={isHorizontal}
                   dimensions={dimensions}
+                  plotCount={plots?.length}
                 />
               ) : (
                 <div>Loading...</div>
