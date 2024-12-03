@@ -166,6 +166,7 @@ function generatePlotData(
   model: CombinedModelRead,
   variables: VariableRead[],
   xconversionFactor: number,
+  isReference?: boolean
 ) {
   const visible =
     index === 0
@@ -199,7 +200,7 @@ function generatePlotData(
       yaxis: y_axis.right ? "y2" : undefined,
       x: d.time.map((t) => t * xconversionFactor),
       y: variableValues.map((v) => v * yconversionFactor),
-      name: `${variableName} ${group?.name || "project"}`,
+      name: `${isReference ? 'REF' : ''} ${variableName} ${group?.name || "project"}`,
       visible: visible ? true : "legendonly",
       line: {
         color: colour,
@@ -212,7 +213,7 @@ function generatePlotData(
       x: [],
       y: [],
       type: "scatter",
-      name: `${y_axis.variable} ${group?.name || "project"}`,
+      name: `${isReference ? 'REF' : ''} ${y_axis.variable} ${group?.name || "project"}`,
       visible: visible ? true : "legendonly",
     };
   }
@@ -409,6 +410,7 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
               model,
               variables,
               xconversionFactor,
+              true
             );
             ({ minY, maxY, minY2, maxY2 } = minMaxAxisLimits(
               plotDataReference.y,

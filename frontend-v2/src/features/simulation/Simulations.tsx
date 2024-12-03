@@ -424,7 +424,7 @@ const Simulations: FC = () => {
       width: containerRef?.current?.clientWidth || 0,
       height: containerRef?.current?.clientHeight || 0
     });
-  }, [plots?.length])
+  }, [data?.length, model, plots?.length])
 
   const isHorizontal = layout.includes('horizontal') || layout?.length === 0;
   const isVertical = layout.includes('vertical') || layout?.length === 0;
@@ -440,7 +440,7 @@ const Simulations: FC = () => {
     return screen.width > 2500 ? 4 : 6
   }
 
-  const tableLayout = getXlLayout(); 
+  const tableLayout = getXlLayout();
 
   const loading = [
     isProjectLoading,
