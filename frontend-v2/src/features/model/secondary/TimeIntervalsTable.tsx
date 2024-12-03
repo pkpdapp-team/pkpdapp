@@ -1,5 +1,6 @@
 import { FC, useState } from "react";
 import {
+  Box,
   Button,
   FormControl,
   IconButton,
@@ -9,14 +10,16 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableContainer,
   TableHead,
   TableProps,
   TableRow,
   TextField,
+  Typography,
 } from "@mui/material";
 import Delete from "@mui/icons-material/Delete";
 import { useSelector } from "react-redux";
-
+import AddCircleOutlineOutlinedIcon from "@mui/icons-material/AddCircleOutlineOutlined";
 import {
   TimeIntervalRead,
   useProjectRetrieveQuery,
@@ -24,6 +27,40 @@ import {
 } from "../../../app/backendApi";
 import { RootState } from "../../../app/store";
 import { useModelTimeIntervals } from "../../../hooks/useModelTimeIntervals";
+import {
+  getTableHeight,
+} from "../../../shared/calculateTableHeights";
+
+const TABLE_BREAKPOINTS = [
+  {
+    minHeight: 1100,
+    tableHeight: "35vh",
+  },
+  {
+    minHeight: 1000,
+    tableHeight: "32vh",
+  },
+  {
+    minHeight: 900,
+    tableHeight: "28vh",
+  },
+  {
+    minHeight: 800,
+    tableHeight: "26vh",
+  },
+  {
+    minHeight: 700,
+    tableHeight: "23vh",
+  },
+  {
+    minHeight: 600,
+    tableHeight: "19vh",
+  },
+  {
+    minHeight: 500,
+    tableHeight: "16vh",
+  },
+];
 
 function useTimeUnits() {
   const projectId = useSelector(
@@ -66,6 +103,7 @@ function TimeUnitSelect() {
         value={selectedUnit.toString()}
         onChange={onChangeUnit}
         size="small"
+        sx={{ minWidth: "6rem" }}
       >
         {timeUnitOptions.map((option) => (
           <MenuItem key={option.label} value={option.value}>
@@ -108,27 +146,27 @@ function IntervalRow({
 
   return (
     <TableRow>
-      <TableCell>
+      <TableCell sx={{ width: "20rem" }}>
         <TextField
+          size="small"
           type="number"
           value={start}
           onChange={onChangeStart}
-          size="small"
           error={start > end}
           helperText={start > end ? "Start time must be before end time" : ""}
         />
       </TableCell>
-      <TableCell>
+      <TableCell sx={{ width: "20rem" }}>
         <TextField
+          size="small"
           type="number"
           value={end}
           onChange={onChangeEnd}
-          size="small"
           error={end < start}
           helperText={end < start ? "End time must be after start time" : ""}
         />
       </TableCell>
-      <TableCell>
+      <TableCell sx={{ width: "10rem" }}>
         {editUnits ? <TimeUnitSelect /> : intervalUnit?.symbol}
       </TableCell>
       <TableCell>
@@ -177,26 +215,42 @@ const TimeIntervalsTable: FC<TableProps> = (props) => {
 
   return (
     <>
-      <Button onClick={addInterval}>Add interval</Button>
-      <Table {...props}>
-        <TableHead>
-          <TableCell>Start time</TableCell>
-          <TableCell>End time</TableCell>
-          <TableCell>Unit</TableCell>
-          <TableCell>Remove</TableCell>
-        </TableHead>
-        <TableBody>
-          {intervals.map((interval, index) => (
-            <IntervalRow
-              key={interval.id}
-              interval={interval}
-              onDelete={onDelete(interval.id)}
-              onUpdate={onUpdate(interval.id)}
-              editUnits={index === 0}
-            />
-          ))}
-        </TableBody>
-      </Table>
+      <Box sx={{ display: "flex" }}>
+        <Typography variant="h5" component="h2" sx={{ marginRight: "1rem" }}>
+          Define time intervals
+        </Typography>
+        <Button
+          size="small"
+          variant="contained"
+          startIcon={<AddCircleOutlineOutlinedIcon />}
+          onClick={addInterval}
+        >
+          Add
+        </Button>
+      </Box>
+      <TableContainer
+        sx={{ maxHeight: getTableHeight({ steps: TABLE_BREAKPOINTS }) }}
+      >
+        <Table {...props} stickyHeader>
+          <TableHead>
+            <TableCell sx={{ width: "20rem" }}>Start time</TableCell>
+            <TableCell sx={{ width: "20rem" }}>End time</TableCell>
+            <TableCell sx={{ width: "10rem" }}>Unit</TableCell>
+            <TableCell>Remove</TableCell>
+          </TableHead>
+          <TableBody>
+            {intervals.map((interval, index) => (
+              <IntervalRow
+                key={interval.id}
+                interval={interval}
+                onDelete={onDelete(interval.id)}
+                onUpdate={onUpdate(interval.id)}
+                editUnits={index === 0}
+              />
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
     </>
   );
 };

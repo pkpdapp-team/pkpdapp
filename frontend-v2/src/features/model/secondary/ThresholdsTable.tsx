@@ -6,6 +6,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableContainer,
   TableHead,
   TableProps,
   TableRow,
@@ -13,7 +14,6 @@ import {
   Tooltip,
 } from "@mui/material";
 import { useSelector } from "react-redux";
-
 import { RootState } from "../../../app/store";
 import {
   UnitRead,
@@ -24,6 +24,38 @@ import {
   useVariableUpdateMutation,
   VariableRead,
 } from "../../../app/backendApi";
+import { getTableHeight } from "../../../shared/calculateTableHeights";
+
+const TABLE_BREAKPOINTS = [
+  {
+    minHeight: 1100,
+    tableHeight: "35vh",
+  },
+  {
+    minHeight: 1000,
+    tableHeight: "32vh",
+  },
+  {
+    minHeight: 900,
+    tableHeight: "28vh",
+  },
+  {
+    minHeight: 800,
+    tableHeight: "26vh",
+  },
+  {
+    minHeight: 700,
+    tableHeight: "23vh",
+  },
+  {
+    minHeight: 600,
+    tableHeight: "19vh",
+  },
+  {
+    minHeight: 500,
+    tableHeight: "16vh",
+  },
+];
 
 function useModel() {
   const projectId = useSelector(
@@ -114,12 +146,12 @@ function VariableRow({
 
   return (
     <TableRow>
-      <TableCell>
+      <TableCell sx={{ width: "5rem" }}>
         <Tooltip title={`${variable.name}: ${variable.description}`}>
           <span>{variable.name}</span>
         </Tooltip>
       </TableCell>
-      <TableCell>
+      <TableCell sx={{ width: "20rem" }}>
         <TextField
           type="number"
           defaultValue={variable.lower_threshold || 0}
@@ -127,7 +159,7 @@ function VariableRow({
           size="small"
         />
       </TableCell>
-      <TableCell>
+      <TableCell sx={{ width: "20rem" }}>
         <TextField
           type="number"
           defaultValue={variable.upper_threshold || Infinity}
@@ -136,7 +168,12 @@ function VariableRow({
         />
       </TableCell>
       <TableCell>
-        <Select value={unitSymbol} onChange={onChangeUnit} size="small">
+        <Select
+          sx={{ minWidth: "8rem" }}
+          value={unitSymbol}
+          onChange={onChangeUnit}
+          size="small"
+        >
           {unit?.compatible_units?.map((unit) => (
             <MenuItem key={unit.id} value={unit.symbol}>
               {unit.symbol}
@@ -158,26 +195,34 @@ const ThresholdsTable: FC<TableProps> = (props) => {
       (dv) => dv.pk_variable === variable.id && dv.type === "AUC",
     ),
   );
+
   return (
-    <Table {...props}>
-      <TableHead>
-        <TableCell>Variable</TableCell>
-        <TableCell>Lower Threshold</TableCell>
-        <TableCell>Upper Threshold</TableCell>
-        <TableCell>Unit</TableCell>
-      </TableHead>
-      <TableBody>
-        {concentrationVariables?.map((variable) => (
-          <VariableRow
-            key={variable.id}
-            variable={variable}
-            unit={units?.find(
-              (unit) => unit.id === (variable.threshold_unit || variable.unit),
-            )}
-          />
-        ))}
-      </TableBody>
-    </Table>
+    <TableContainer
+      sx={{
+        maxHeight: getTableHeight({ steps: TABLE_BREAKPOINTS }),
+      }}
+    >
+      <Table {...props} stickyHeader>
+        <TableHead>
+          <TableCell>Variable</TableCell>
+          <TableCell>Lower Threshold</TableCell>
+          <TableCell>Upper Threshold</TableCell>
+          <TableCell>Unit</TableCell>
+        </TableHead>
+        <TableBody>
+          {concentrationVariables?.map((variable) => (
+            <VariableRow
+              key={variable.id}
+              variable={variable}
+              unit={units?.find(
+                (unit) =>
+                  unit.id === (variable.threshold_unit || variable.unit),
+              )}
+            />
+          ))}
+        </TableBody>
+      </Table>
+    </TableContainer>
   );
 };
 
