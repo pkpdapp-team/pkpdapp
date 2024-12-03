@@ -9,9 +9,7 @@ import {
   usePharmacokineticListQuery,
 } from "../../app/backendApi";
 import { Control } from "react-hook-form";
-import { Stack, Typography, Grid, Tooltip, Box } from "@mui/material";
-import KeyboardDoubleArrowRightIcon from "@mui/icons-material/KeyboardDoubleArrowRight";
-import KeyboardDoubleArrowDownIcon from "@mui/icons-material/KeyboardDoubleArrowDown";
+import { Stack, Grid, Tooltip, Box, Button } from "@mui/material";
 import SelectField from "../../components/SelectField";
 import Checkbox from "../../components/Checkbox";
 import { FormData } from "./Model";
@@ -19,6 +17,8 @@ import { speciesOptions } from "../projects/Project";
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
 import { selectIsProjectShared } from "../login/loginSlice";
+import { CodeModal } from "./CodeModal";
+import CodeOutlinedIcon from "@mui/icons-material/CodeOutlined";
 
 interface Props {
   model: CombinedModelRead;
@@ -69,10 +69,10 @@ const PKPDModelTab: FC<Props> = ({ model, project, control }: Props) => {
     usePharmacodynamicListQuery();
   const { data: pkModels, isLoading: pkModelLoading } =
     usePharmacokineticListQuery();
-  const [showCode, setShowCode] = useState(false);
   const isSharedWithMe = useSelector((state: RootState) =>
     selectIsProjectShared(state, project),
   );
+  const [isCodeModalOpen, setIsCodeModalOpen] = useState(false);
 
   const loading = [pdModelLoading, pkModelLoading];
   if (loading.some((l) => l)) {
@@ -149,10 +149,11 @@ const PKPDModelTab: FC<Props> = ({ model, project, control }: Props) => {
   };
 
   return (
-    <Grid container spacing={2}>
-      <Grid item xl={5} md={8} xs={10}>
+    <Grid container spacing={2} marginTop={5}>
+      <Grid item xl={4} md={8} xs={10}>
         <Stack direction="row" alignItems="center" spacing={1}>
           <SelectField
+            size="small"
             label="Species"
             name="project.species"
             control={control}
@@ -163,9 +164,10 @@ const PKPDModelTab: FC<Props> = ({ model, project, control }: Props) => {
         </Stack>
       </Grid>
       <Grid container item spacing={2}>
-        <Grid item xl={5} md={8} xs={10}>
+        <Grid item xl={4} md={8} xs={10}>
           <Stack direction="row" alignItems="center" spacing={1}>
             <SelectField
+              size="small"
               label="PK Model"
               name="model.pk_model"
               control={control}
@@ -238,9 +240,10 @@ const PKPDModelTab: FC<Props> = ({ model, project, control }: Props) => {
         </Grid>
       </Grid>
       <Grid container item spacing={2}>
-        <Grid item xl={5} md={8} xs={10}>
+        <Grid item xl={4} md={8} xs={10}>
           <Stack direction="row" alignItems="center" spacing={1}>
             <SelectField
+              size="small"
               label="PD Model"
               name="model.pd_model"
               control={control}
@@ -254,9 +257,10 @@ const PKPDModelTab: FC<Props> = ({ model, project, control }: Props) => {
         <Box width="100%" />
         {pdIsTumourGrowth && (
           <>
-            <Grid item xl={5} md={8} xs={10}>
+            <Grid item xl={4} md={8} xs={10}>
               <Stack direction="row" alignItems="center" spacing={1}>
                 <SelectField
+                  size="small"
                   label="Secondary PD Model"
                   name="model.pd_model2"
                   control={control}
@@ -297,29 +301,23 @@ const PKPDModelTab: FC<Props> = ({ model, project, control }: Props) => {
                 </Tooltip>
               )}
             </Stack>
+            <Button
+              variant="outlined"
+              onClick={() => setIsCodeModalOpen(true)}
+              sx={{ marginTop: "1rem" }}
+              endIcon={<CodeOutlinedIcon />}
+            >
+              Show code
+            </Button>
           </Grid>
         </Grid>
         <Box width="100%" height="0" />
-        <Grid item xs={5} sx={{ paddingTop: "1rem" }}>
-          <Stack
-            direction="row"
-            sx={{ cursor: "pointer" }}
-            onClick={() => setShowCode(!showCode)}
-          >
-            {showCode ? (
-              <KeyboardDoubleArrowDownIcon sx={{ color: "blue" }} />
-            ) : (
-              <KeyboardDoubleArrowRightIcon sx={{ color: "blue" }} />
-            )}
-            <Typography paddingLeft=".5rem">Show code</Typography>
-          </Stack>
-        </Grid>
-        {showCode && (
-          <Grid item xs={12}>
-            <Typography sx={{ whiteSpace: "pre-wrap" }}>{model.mmt}</Typography>
-          </Grid>
-        )}
       </Grid>
+      <CodeModal
+        isOpen={isCodeModalOpen}
+        onClose={() => setIsCodeModalOpen(false)}
+        code={model.mmt}
+      />
     </Grid>
   );
 };

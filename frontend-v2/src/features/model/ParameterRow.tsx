@@ -4,7 +4,6 @@ import { TableCell, TableRow, Tooltip, Typography } from "@mui/material";
 import {
   Variable,
   useVariableUpdateMutation,
-  CombinedModelRead,
   ProjectRead,
   UnitRead,
   VariableRead,
@@ -19,12 +18,11 @@ import { RootState } from "../../app/store";
 
 interface Props {
   project: ProjectRead;
-  model: CombinedModelRead;
   variable: VariableRead;
   units: UnitRead[];
 }
 
-const ParameterRow: FC<Props> = ({ project, model, variable, units }) => {
+const ParameterRow: FC<Props> = ({ project, variable, units }) => {
   const {
     control,
     handleSubmit,
@@ -81,22 +79,26 @@ const ParameterRow: FC<Props> = ({ project, model, variable, units }) => {
 
   return (
     <TableRow>
-      <TableCell>
+      <TableCell size="small" sx={{ width: "5rem" }}>
         <Tooltip title={variable.description}>
           <Typography>{variable.name}</Typography>
         </Tooltip>
       </TableCell>
-      <TableCell>{type}</TableCell>
-      <TableCell>
+      <TableCell size="small" sx={{ width: "5rem" }}>
+        {type}
+      </TableCell>
+      <TableCell size="small" sx={{ width: "10rem" }}>
         <FloatField
+          size="small"
           name="lower_bound"
           control={control}
           label="Lower"
           textFieldProps={defaultProps}
         />
       </TableCell>
-      <TableCell>
+      <TableCell size="small" sx={{ width: "10rem" }}>
         <FloatField
+          size="small"
           name="default_value"
           control={control}
           label="Value"
@@ -105,16 +107,19 @@ const ParameterRow: FC<Props> = ({ project, model, variable, units }) => {
           textFieldProps={defaultProps}
         />
       </TableCell>
-      <TableCell>
+      <TableCell size="small" sx={{ width: "10rem" }}>
         <FloatField
+          size="small"
           name="upper_bound"
           control={control}
           label="Upper"
           textFieldProps={defaultProps}
         />
       </TableCell>
-      <TableCell>
+      <TableCell size="small">
         <UnitField
+          size="small"
+          sx={{ minWidth: "8rem" }}
           label={"Unit"}
           name={"unit"}
           control={control}
