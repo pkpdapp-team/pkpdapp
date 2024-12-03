@@ -218,8 +218,7 @@ const Simulations: FC = () => {
     { value: "vertical", label: "Vertical" },
     { value: "horizontal", label: "Horizontal" },
   ];
-  const defaultLayout = [layoutOptions[0]?.value, layoutOptions[1]?.value];
-  const [layout, setLayout] = useState<string[]>(defaultLayout);
+  const [layout, setLayout] = useState<string[]>([]);
 
   // reset form and sliders if simulation changes
   useEffect(() => {
@@ -420,6 +419,13 @@ const Simulations: FC = () => {
     };
   });
 
+  useEffect(() => {
+    setDimensions({
+      width: containerRef?.current?.clientWidth || 0,
+      height: containerRef?.current?.clientHeight || 0
+    });
+  }, [data?.length, model, plots?.length])
+
   const isHorizontal = layout.includes('horizontal') || layout?.length === 0;
   const isVertical = layout.includes('vertical') || layout?.length === 0;
 
@@ -427,6 +433,9 @@ const Simulations: FC = () => {
     if (isVertical && !isHorizontal) {
       return 12
     }
+
+    if (plots?.length === 1) return 12;
+    if (plots?.length === 2) return 6;
 
     return screen.width > 2500 ? 4 : 6
   }
@@ -449,7 +458,7 @@ const Simulations: FC = () => {
   }
 
   return (
-    <Box sx={{ display: "flex" }} ref={containerRef}>
+    <Box sx={{ display: "flex", minHeight: '60vh', height: 'calc(80vh - 24px)' }} ref={containerRef}>
       <SimulationsSidePanel
         portalId="simulations-portal"
         addPlotOptions={addPlotOptions}
@@ -516,6 +525,7 @@ const Simulations: FC = () => {
                   isVertical={isVertical}
                   isHorizontal={isHorizontal}
                   dimensions={dimensions}
+                  plotCount={plots?.length}
                 />
               ) : (
                 <div>Loading...</div>

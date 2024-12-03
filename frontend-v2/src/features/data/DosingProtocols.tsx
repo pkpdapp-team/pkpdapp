@@ -236,6 +236,7 @@ const DosingProtocols: FC<IDosingProtocols> = ({
                           label="Units"
                           value={adminUnit}
                           onChange={handleAmountUnitChange(adminId)}
+                          sx={{ maxWidth: '10rem'}}
                           size="small"
                           margin="dense"
                         >

@@ -110,7 +110,15 @@ const SidePanelSteps = [
   },
   {
     minHeight: 500,
-    tableHeight: "53vh",
+    tableHeight: "50vh",
+  },
+  {
+    minHeight: 400,
+    tableHeight: "40vh",
+  },
+  {
+    minHeight: 300,
+    tableHeight: "30vh",
   },
 ];
 
@@ -157,7 +165,7 @@ export const SimulationsSidePanel = ({
     if (layout.includes(value)) {
       setLayout(layout.filter(layoutValue => value !== layoutValue))
     } else {
-      setLayout([...layout, value]);
+      setLayout(layout?.length ? [] : [value]);
     }
   }
 
@@ -171,6 +179,7 @@ export const SimulationsSidePanel = ({
         flexDirection: "column",
         justifyContent: "space-between",
         height: "100%",
+        maxHeight: '100%',
         paddingBottom: "1rem",
         backgroundColor: "#FBFBFA",
         borderRight: "1px solid #DBD6D1"

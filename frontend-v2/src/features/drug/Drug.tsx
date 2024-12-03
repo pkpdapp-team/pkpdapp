@@ -317,7 +317,7 @@ const Drug: FC = () => {
       </Grid>
       <TableContainer
         sx={{
-          width: "70%",
+          width: window.innerWidth > 1300 ? "70%" : "100%",
           maxHeight: getTableHeight({ steps: DOUBLE_TABLE_SECOND_BREAKPOINTS }),
         }}
       >
@@ -359,7 +359,7 @@ const Drug: FC = () => {
                   {isEditIndex === index ? (
                     <TextField
                       size="small"
-                      sx={{ flex: "1" }}
+                      sx={{ flex: "1", minWidth: '10rem' }}
                       label="Name"
                       name={`efficacy_experiments.${index}.name`}
                       control={control}
@@ -379,7 +379,7 @@ const Drug: FC = () => {
                   {isEditIndex === index ? (
                     <FloatField
                       size="small"
-                      sx={{ flex: "1" }}
+                      sx={{ flex: "1", minWidth: '5rem' }}
                       label="C50"
                       name={`efficacy_experiments.${index}.c50`}
                       control={control}
@@ -417,6 +417,7 @@ const Drug: FC = () => {
                   {isEditIndex === index ? (
                     <FloatField
                       size="small"
+                      sx={{ minWidth: '5rem' }}
                       label="Hill-coefficient"
                       name={`efficacy_experiments.${index}.hill_coefficient`}
                       control={control}

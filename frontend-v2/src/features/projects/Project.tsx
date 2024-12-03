@@ -44,7 +44,6 @@ import EditIcon from "@mui/icons-material/Edit";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
 import { DescriptionModal } from "./Description";
-import { useFieldState } from "../../app/hooks";
 
 interface Props {
   project: ProjectRead;
@@ -245,6 +244,12 @@ const ProjectRow: FC<Props> = ({
     ? "Remove shared project from your list"
     : "Delete Project";
 
+  const getRowNumber = () => {
+    if (window.innerHeight < 800) return Math.ceil(window.innerHeight / 100);
+
+    return 15;
+  }
+
   return (
     <>
       <TableRow
@@ -271,7 +276,7 @@ const ProjectRow: FC<Props> = ({
               textFieldProps={defaultProps}
               size="small"
               rules={{ required: true, validate: validateName }}
-              sx={{ ...defaultSx }}
+              sx={{ ...defaultSx, minWidth: '10rem' }}
             />
           ) : (
             <label htmlFor={`project-${project.id}`}>
@@ -287,7 +292,7 @@ const ProjectRow: FC<Props> = ({
               textFieldProps={defaultProps}
               size="small"
               rules={{ required: true }}
-              sx={defaultSx}
+              sx={{ ...defaultSx, minWidth: '10rem'}}
             />
           ) : (
             <Typography>{compound?.name}</Typography>
@@ -327,7 +332,7 @@ const ProjectRow: FC<Props> = ({
           {!isEditMode ? (
             <Stack component="span" direction="row" spacing={0.0}>
               <Tooltip title="Edit project">
-                <IconButton onClick={() => setIsEditMode(true)}>
+                <IconButton disabled={isSharedWithMe} onClick={() => setIsEditMode(true)}>
                   <EditIcon />
                 </IconButton>
               </Tooltip>
@@ -425,7 +430,7 @@ const ProjectRow: FC<Props> = ({
             sx={{ width: "50vw" }}
             disabled={!isEditMode}
             multiline
-            rows={15}
+            rows={getRowNumber()}
           />
         </DescriptionModal>
       )}

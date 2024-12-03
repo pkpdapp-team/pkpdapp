@@ -22,7 +22,6 @@ import {
 import Plotly from "plotly.js-basic-dist-min";
 import {
   Button,
-  debounce,
   Dialog,
   DialogActions,
   DialogContent,
@@ -167,6 +166,7 @@ function generatePlotData(
   model: CombinedModelRead,
   variables: VariableRead[],
   xconversionFactor: number,
+  isReference?: boolean
 ) {
   const visible =
     index === 0
@@ -200,7 +200,7 @@ function generatePlotData(
       yaxis: y_axis.right ? "y2" : undefined,
       x: d.time.map((t) => t * xconversionFactor),
       y: variableValues.map((v) => v * yconversionFactor),
-      name: `${variableName} ${group?.name || "project"}`,
+      name: `${isReference ? 'REF' : ''} ${variableName} ${group?.name || "project"}`,
       visible: visible ? true : "legendonly",
       line: {
         color: colour,
@@ -213,7 +213,7 @@ function generatePlotData(
       x: [],
       y: [],
       type: "scatter",
-      name: `${y_axis.variable} ${group?.name || "project"}`,
+      name: `${isReference ? 'REF' : ''} ${y_axis.variable} ${group?.name || "project"}`,
       visible: visible ? true : "legendonly",
     };
   }
@@ -273,6 +273,7 @@ interface SimulationPlotProps {
     width: number;
     height: number;
   };
+  plotCount: number;
 }
 
 const SimulationPlotView: FC<SimulationPlotProps> = ({
@@ -292,6 +293,7 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
   isVertical,
   isHorizontal,
   dimensions,
+  plotCount
 }) => {
   const projectId = useSelector(
     (state: RootState) => state.main.selectedProject,
@@ -308,7 +310,9 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
   };
 
   const handleRemovePlot = () => {
-    remove(index);
+    if (window.confirm("Are you sure you want to delete this plot?")) {
+      remove(index);
+    }
   };
 
   const handleClose = () => {
@@ -406,6 +410,7 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
               model,
               variables,
               xconversionFactor,
+              true
             );
             ({ minY, maxY, minY2, maxY2 } = minMaxAxisLimits(
               plotDataReference.y,
@@ -469,17 +474,17 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
 
   const getPlotDimensions = () => {
     const buffor = 10;
-    const columnCount = screen.width > 2500 ? 3 : 2;
+    const columnCount = Math.min(plotCount, screen.width > 2500 ? 3 : 2);
     const layoutBreakpoint = 900;
 
     if (isVertical && !isHorizontal) {
       return dimensions.width > layoutBreakpoint
         ? {
-            height: dimensions.height / 2 - buffor,
+            height: dimensions.height / 2 ,
             width: dimensions.width - buffor,
           }
         : {
-            height: dimensions.height / 1.5 - buffor,
+            height: dimensions.height / 1.5,
             width: dimensions.width - buffor,
           };
     }
@@ -487,22 +492,22 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
     if (!isVertical && isHorizontal) {
       return dimensions.width > layoutBreakpoint
         ? {
-            height: dimensions.height - buffor,
+            height: dimensions.height,
             width: dimensions.width / columnCount - buffor,
           }
         : {
-            height: dimensions.height - buffor,
+            height: dimensions.height,
             width: dimensions.width / 1.5 - buffor,
           };
     }
 
     return dimensions.width > layoutBreakpoint
       ? {
-          height: dimensions.height / 2 - buffor,
+          height: dimensions.height / 2,
           width: dimensions.width / columnCount - buffor,
         }
       : {
-          height: dimensions.height / 2 - buffor,
+          height: dimensions.height / 2,
           width: dimensions.width / columnCount - buffor,
         };
   };
