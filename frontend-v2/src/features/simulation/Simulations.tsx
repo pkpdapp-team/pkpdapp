@@ -485,7 +485,6 @@ const Simulations: FC = () => {
         setShowReference={setShowReference}
         shouldShowLegend={shouldShowLegend}
         setShouldShowLegend={setShouldShowLegend}
-        plotCount={plots?.length}
       />
       <Box
         sx={{
