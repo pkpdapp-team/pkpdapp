@@ -153,6 +153,7 @@ function VariableRow({
       </TableCell>
       <TableCell sx={{ width: "20rem" }}>
         <TextField
+          sx={{ minWidth: "5rem" }}
           type="number"
           defaultValue={variable.lower_threshold || 0}
           onChange={onChangeLowerThreshold}
@@ -161,6 +162,7 @@ function VariableRow({
       </TableCell>
       <TableCell sx={{ width: "20rem" }}>
         <TextField
+          sx={{ minWidth: "5rem" }}
           type="number"
           defaultValue={variable.upper_threshold || Infinity}
           onChange={onChangeUpperThreshold}

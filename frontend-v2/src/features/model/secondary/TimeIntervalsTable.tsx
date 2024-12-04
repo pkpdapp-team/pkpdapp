@@ -27,9 +27,7 @@ import {
 } from "../../../app/backendApi";
 import { RootState } from "../../../app/store";
 import { useModelTimeIntervals } from "../../../hooks/useModelTimeIntervals";
-import {
-  getTableHeight,
-} from "../../../shared/calculateTableHeights";
+import { getTableHeight } from "../../../shared/calculateTableHeights";
 
 const TABLE_BREAKPOINTS = [
   {
@@ -148,6 +146,7 @@ function IntervalRow({
     <TableRow>
       <TableCell sx={{ width: "20rem" }}>
         <TextField
+          sx={{ minWidth: "5rem" }}
           size="small"
           type="number"
           value={start}
@@ -158,6 +157,7 @@ function IntervalRow({
       </TableCell>
       <TableCell sx={{ width: "20rem" }}>
         <TextField
+          sx={{ minWidth: "5rem" }}
           size="small"
           type="number"
           value={end}
