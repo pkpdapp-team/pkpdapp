@@ -480,11 +480,11 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
     if (isVertical && !isHorizontal) {
       return dimensions.width > layoutBreakpoint
         ? {
-            height: dimensions.height / 2  - buffor,
+            height: dimensions.height / 2 - buffor,
             width: dimensions.width - buffor,
           }
         : {
-            height: dimensions.height / 1.5 - buffor,
+            height: dimensions.height / 1.5,
             width: dimensions.width - buffor,
           };
     }
@@ -492,22 +492,22 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
     if (!isVertical && isHorizontal) {
       return dimensions.width > layoutBreakpoint
         ? {
-            height: dimensions.height - buffor,
+            height: dimensions.height,
             width: dimensions.width / columnCount - buffor,
           }
         : {
-            height: dimensions.height - buffor,
+            height: dimensions.height,
             width: dimensions.width / 1.5 - buffor,
           };
     }
 
     return dimensions.width > layoutBreakpoint
       ? {
-          height: dimensions.height / 2 - buffor,
+          height: dimensions.height / 2,
           width: dimensions.width / columnCount - buffor,
         }
       : {
-          height: dimensions.height / 2 - buffor,
+          height: dimensions.height / 2,
           width: dimensions.width / columnCount - buffor,
         };
   };

@@ -63,6 +63,7 @@ function SelectField<T extends FieldValues>({
             {getLabel(label || "", Boolean(rules?.required))}
           </InputLabel>
           <Select
+            sx={sx}
             size={size}
             labelId={labelId}
             name={name}
