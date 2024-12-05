@@ -8,4 +8,4 @@ class Tag(models.Model):
     A tag for a model
     """
 
-    name = models.CharField(max_length=10, help_text="name of the tag")
+    name = models.CharField(max_length=20, help_text="name of the tag")
