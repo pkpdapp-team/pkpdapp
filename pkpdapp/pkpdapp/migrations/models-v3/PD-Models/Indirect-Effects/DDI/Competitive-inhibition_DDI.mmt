@@ -1,0 +1,117 @@
+[[model]]
+name: Competitive inhibition (DDI)
+author: Michael Gertz
+
+
+# Initial values:
+PKCompartment.Aa_victim = 0
+PKCompartment.Atr1_victim = 0
+PKCompartment.Atr2_victim = 0
+PKCompartment.Atr3_victim = 0
+PKCompartment.A1_victim = 0
+PKCompartment.A2_victim = 0
+PKCompartment.A3_victim = 0
+
+[environment]
+t = 0 in [h] bind time
+
+
+[PKCompartment]
+
+Ki = 100000 in [pmol/L]
+	desc: Inhibition constant
+	
+fm_victim = 1 in [dimensionless]
+	desc: metabolic fraction of the inhibited pathway (limited between 0 and 1)
+	
+ka_victim = 1 in [1/h]
+	desc: absorption rate constant of the victim drug 	
+	
+ktrA_victim = 1 in [1/h]
+	desc: transit rate constant of the victim drug 	
+	
+CLpIV_victim = 1 in [L/h]
+	desc: total plasma clearance of the victim drug following IV dosing
+	
+CLpXhep_victim = 0 in [L/h]
+	desc: extrahepatic clearance (e.g., renal clearance)
+	
+V1_victim = 1 in [L]
+  desc: Volume of the central compartment of the victim drug
+	
+V2_victim = 1 in [L]
+  desc: Volume of the first peripheral compartment of the victim drug
+
+V3_victim = 1 in [L]
+  desc: Volume of the second peripheral compartment of the victim drug
+
+Q1_victim = 1 in [L/h]
+  desc: Intercompartmental clearance of the victim drug between central and first peripheral compartment
+	
+Q2_victim = 1 in [L/h]
+  desc: Intercompartmental clearance of the victim drug between central and second peripheral compartment		
+	
+FG_victim = 1 in [dimensionless]
+  desc: intestinal availability of the victim drug (limited between 0 and 1, contributor to bioavailability)
+  
+Fa_victim = 1 in [dimensionless]
+  desc: fraction absorbed of the victim drug (limited between 0 and 1, contributor to bioavailability)  
+
+fup_victim = 0.05 in [dimensionless]
+  desc: fraction unbound in plasma of victim drug (limited between 0 and 1)
+
+BP_victim = 1 in [dimensionless]
+  desc: blood-to-plasma ratio of victim drug
+
+Qh = 90 in [L/h]
+  desc: hepatic blood flow of a typical individual
+	
+C_Drug = 0 in [pmol/L]
+	desc: Drug concentration causing the DDI effect 
+
+INH = 1+C_Drug/Ki in [dimensionless]
+	desc: Extent of systemic inhibition
+	
+FG = if(C_Drug = 0 , 
+	FG_victim , 
+	1) in [dimensionless]	
+	
+CLint = (CLpIV_victim-CLpXhep_victim)/BP_victim/(fup_victim/BP_victim*(1-(CLpIV_victim-CLpXhep_victim)/(Qh*BP_victim))) in [L/h]
+	desc: hepatic intrinsic clearance (back-calculated using well-stirred liver model)
+
+CLh = (CLint*fm_victim/INH+CLint*(1-fm_victim))*fup_victim/BP_victim*Qh/((CLint*fm_victim/INH+CLint*(1-fm_victim))*fup_victim/BP_victim+Qh) in [L/h]
+	desc: total hepatic blood clearance (accounting for inhibition and fm value of the affected metabolic pathway)
+
+FH = 1-(CLh/Qh) in [dimensionless]
+	desc: hepatic availability of the victim drug (contributor to bioavailability)
+	
+C1_victim = A1_victim/V1_victim in [pmol/L]
+  desc: Concentration of VICTIM drug in the central compartment
+
+C2_victim = A2_victim/V2_victim in [pmol/L]
+  desc: Concentration of VICTIM drug in the first peripheral compartment
+
+C3_victim = A3_victim/V3_victim in [pmol/L]
+  desc: Concentration of VICTIM drug in the second peripheral compartment
+	
+
+dot(Atr3_victim) = -ktrA_victim*Atr3_victim in [pmol]
+    desc: Amount of drug in the 3rd transit compartment
+
+dot(Atr2_victim) = ktrA_victim*(Atr3_victim-Atr2_victim) in [pmol]
+    desc: Amount of drug in the 2nd transit compartment
+
+dot(Atr1_victim) = ktrA_victim*(Atr2_victim-Atr1_victim) in [pmol]
+    desc: Amount of drug in the 1st transit compartment (most proximal to absorption compartment)	
+
+dot(Aa_victim) = ktrA_victim*Atr1_victim -Aa_victim*ka_victim in [pmol]
+    desc: Amount of drug in absorption compartment
+
+dot(A1_victim) = Aa_victim*ka_victim*(FH*Fa_victim*FG) - (CLh*BP_victim + CLpxhep_victim)*C1_victim - Q1_victim*(C1_victim - C2_victim) - Q2_victim*(C1_victim - C3_victim) in [pmol]
+  desc: Amount of VICTIM drug in the central compartment 
+
+dot(A2_victim) = Q1_victim*(C1_victim - C2_victim) in [pmol]
+  desc: Amount of VICTIM drug in the first peripheral compartment 
+	
+dot(A3_victim) = Q2_victim*(C1_victim - C3_victim) in [pmol]
+  desc: Amount of VICTIM drug in the second peripheral compartment 
