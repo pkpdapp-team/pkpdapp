@@ -89,6 +89,7 @@ const ParameterRow: FC<Props> = ({ project, variable, units }) => {
       </TableCell>
       <TableCell size="small" sx={{ width: "10rem" }}>
         <FloatField
+          sx={{ minWidth: "5rem" }}
           size="small"
           name="lower_bound"
           control={control}
@@ -98,6 +99,7 @@ const ParameterRow: FC<Props> = ({ project, variable, units }) => {
       </TableCell>
       <TableCell size="small" sx={{ width: "10rem" }}>
         <FloatField
+          sx={{ minWidth: "5rem" }}
           size="small"
           name="default_value"
           control={control}
@@ -109,6 +111,7 @@ const ParameterRow: FC<Props> = ({ project, variable, units }) => {
       </TableCell>
       <TableCell size="small" sx={{ width: "10rem" }}>
         <FloatField
+          sx={{ minWidth: "5rem" }}
           size="small"
           name="upper_bound"
           control={control}

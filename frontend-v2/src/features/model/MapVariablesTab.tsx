@@ -358,10 +358,7 @@ const MapVariablesTab: FC<Props> = ({
         </Table>
       </TableContainer>
       <Box sx={{ marginTop: ".5rem" }}>
-        <TableHeader
-          variant="h5"
-          label="Map RO, PD and secondary parameters"
-        />
+        <TableHeader variant="h5" label="Map RO, PD and secondary parameters" />
       </Box>
       <TableContainer
         sx={{
