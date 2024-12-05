@@ -1,0 +1,42 @@
+[[model]]
+name: Occular PK model
+author: Michael Gertz
+
+# tags: no tags
+
+# Initial values:
+PKCompartment.Avh = 0
+PKCompartment.Aah = 0
+
+[environment]
+t = 0 in [h] bind time
+
+
+[PKCompartment]
+
+Vvh = 4 in [mL]
+	desc: Vitreous humour volume
+	
+Vah = 0.15 in [mL]
+	desc: Aqueous humour volume 	
+
+Qah = 0.15 in [mL/h]
+	desc: Aqueous humour flow  
+	
+CLdif = 0.02 in [mL/h]
+	desc: Apparent clearance due to diffusion from the vitreous to aqueous humour 	
+	
+RateAbs = Qah*Cah in [pmol/h]
+	desc: Absorption rate
+	
+Cvh = Avh/Vvh in [pmol/L]
+	desc: Concentration of drug in the vitreous humour
+
+Cah = Aah/Vah in [pmol/L]
+	desc: Concentration of drug in the aqueous humour
+
+dot(Avh) = -CLdif*Cvh in [pmol]
+    desc: Amount of drug in the vitreous humour
+	
+dot(Aah) = CLdif*Cvh -RateAbs in [pmol]
+    desc: Amount of drug in the aqueous humour	
