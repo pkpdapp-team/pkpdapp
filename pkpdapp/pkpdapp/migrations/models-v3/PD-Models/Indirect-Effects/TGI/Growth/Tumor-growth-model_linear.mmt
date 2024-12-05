@@ -1,0 +1,28 @@
+[[model]]
+name: Tumor growth model (linear)
+author: Michael Gertz, Soledad Castano        
+
+
+# Initial values:
+PDCompartment.TS = PDCompartment.TS0
+
+
+[environment]
+t = 0 in [h] bind time
+    
+	
+[PDCompartment]
+
+TS0 = 0.1 in [mL]
+	desc: Initial tumor volume/ size 
+	
+kgl = 0.01 in [mL/h]
+	desc: Linear growth rate
+
+Growth = if(TS > 1e12,
+    0,
+    kgl) in [mL/h]
+	desc: Tumor growth rate	
+
+dot(TS) = Growth in [mL]
+	desc: Tumor volume/ size
