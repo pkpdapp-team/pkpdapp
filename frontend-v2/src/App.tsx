@@ -17,6 +17,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { SimulationContext } from "./contexts/SimulationContext";
 import { SimulateResponse } from "./app/backendApi";
 import { CollapsibleSidebarProvider } from "./shared/contexts/CollapsibleSidebarContext";
+import { ProjectDescriptionProvider } from "./shared/contexts/ProjectDescriptionContext";
 
 function App() {
   const dispatch = useAppDispatch();
@@ -41,8 +42,10 @@ function App() {
       {isAuth ? (
         <>
           <CollapsibleSidebarProvider>
-            <Sidebar />
-            <ToastContainer />
+            <ProjectDescriptionProvider>
+              <Sidebar />
+              <ToastContainer />
+            </ProjectDescriptionProvider>
           </CollapsibleSidebarProvider>
         </>
       ) : (
