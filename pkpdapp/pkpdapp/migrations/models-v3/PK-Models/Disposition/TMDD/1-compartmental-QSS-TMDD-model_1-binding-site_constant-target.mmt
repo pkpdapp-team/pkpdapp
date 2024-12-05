@@ -1,0 +1,89 @@
+[[model]]
+name: 1-compartmental QSS TMDD model (1 binding site) - constant target
+author: Michael Gertz, Soledad Castano
+
+
+# Initial values:
+PKCompartment.A1_t = 0
+PKCompartment.AT1_t = PKCompartment.CT1_0*PKCompartment.V1
+
+[environment]
+t = 0 in [h] bind time
+
+
+[PKCompartment]
+
+F = 1 in [dimensionless]
+  desc: Fraction absorbed / bioavailability 
+	
+V1 = 1 in [L]
+  desc: Volume of the central compartment 
+	
+CL = 1 in [L/h]
+  desc: Linear clearance from central compartment	
+
+CT1_0 = 1 in [pmol/L]
+  desc: Baseline concentration of the target in the central compartment
+
+KSS = 1 in [pmol/L]
+  desc: Apparent dissociation constant [KSS = (kint1+koff)/kon], if kint1 << koff KSS ~= KD and if kint1 >> koff KSS > KD]
+	
+kdegT1 = 1 in [1/h]
+  desc: Target degradation rate constant
+
+kint1 = kdegT1 in [1/h]
+  desc: Complex internalization rate constant
+	
+CLada = 0 in [L/h]
+  desc: ADA-mediated clearance 
+
+tada = 240 in [h]
+  desc: Time at which ADA-mediated clearance first occurs
+
+CLimm = if(environment.t < tada , 
+	0 , 
+	CLada) in [L/h]
+	
+
+b_term = C1_t - KSS - CT1_t in [pmol/L]
+  desc: b term of quadratic equation
+	
+c_term = C1_t * KSS in [pmol/L*pmol/L]
+  desc: c term of quadratic equation
+
+C1_t = A1_t/V1 in [pmol/L]
+  desc: Concentration of TOTAL drug in the central compartment	
+
+CT1_t = AT1_t/V1 in [pmol/L]	
+  desc: Concentration of TOTAL target in the central compartment	
+	
+C1_f = 0.5 * (b_term + (b_term^2 + 4*c_term)^0.5) in [pmol/L]
+  desc: Concentration of FREE drug in the central compartment
+
+C1_b = C1_t - C1_f in [pmol/L]
+  desc: Concentration of BOUND drug in the central compartment   
+
+CT1_b = C1_b in [pmol/L]
+  desc: Concentration of BOUND target in the central compartment
+
+CT1_f = CT1_t - CT1_b in [pmol/L]
+  desc: Concentration of FREE target in the central compartment
+
+RO_Model = CT1_b/CT1_t*100 in [dimensionless]
+  desc: Receptor (Target) occupancy from TMDD model
+	
+PerInh = (1-CT1_f/CT1_t)*100 in [dimensionless]
+  desc: Percent inhibition relative to TOTAL target	
+	
+PerInh_Baseline = (1-CT1_f/CT1_0)*100 in [dimensionless]	
+  desc: Percent inhibition relative to the initial steady-state concentrations of target
+  
+RateAbs = 0 in [pmol/h] 
+  desc: Absorption rate   
+  
+
+dot(A1_t) = RateAbs*F - CL*C1_f  - kint1*C1_b*V1 - CLimm*C1_t in [pmol]
+  desc: Amount of TOTAL drug in the central compartment
+
+dot(AT1_t) = kdegT1*V1*(CT1_0 - CT1_f) - (kint1+CLimm/V1)*CT1_b*V1 in [pmol]
+  desc: Amount of TOTAL target in the central compartment
