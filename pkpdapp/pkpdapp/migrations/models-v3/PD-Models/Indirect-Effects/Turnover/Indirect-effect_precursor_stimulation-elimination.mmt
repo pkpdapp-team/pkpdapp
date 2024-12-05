@@ -1,0 +1,51 @@
+[[model]]
+name: Indirect effect model with precursor (stimulation of precursor elimination)
+author: Michael Gertz, Soledad Castano  
+
+
+# Initial values:
+PDCompartment.P = PDCompartment.E0*PDCompartment.kdegE/(PDCompartment.kdegP*PDCompartment.FE)
+PDCompartment.E = PDCompartment.E0
+
+
+[environment]
+t = 0 in [h] bind time
+
+
+[PDCompartment]
+
+kdegP = 0.1 in [1/h]
+	desc: Degradation rate constant of precursor
+	
+FE = 1 in [dimensionless]
+	desc: Fraction of precursor that is converted to effect
+
+kdegE = 2 in [1/h]	
+	desc: Degradation rate constant of the effect
+
+E0 = 100 in [dimensionless]
+	desc: Baseline of the PD effect
+	
+Emax = 5 in [dimensionless]
+	desc: Maximal fold change from baseline (value range: 1 (no effect) to infinity)
+	
+C50 = 100000 in [pmol/L]
+	desc: Concentration that produces half-maximal effects
+
+HC = 1 in [dimensionless]
+	desc: Hill coefficient
+	
+C_Drug = 1 in [pmol/L]
+	desc: Drug concentration causing the PD effect
+
+P0 = E0*kdegE/(kdegP*FE) in [dimensionless]
+	desc: Baseline of the precursor
+
+STIM = C_Drug^HC/(C_Drug^HC+C50^HC) in [dimensionless]
+	desc: Extent of stimulation
+
+dot(P) = kdegP*P0 - kdegP*P*(FE*(1+(Emax-1)*STIM) + (1-FE)) in [dimensionless]
+	desc: Precursor
+	
+dot(E) = kdegP*P*(FE*(1+(Emax-1)*STIM)) - kdegE*E in [dimensionless]
+	desc: PD effect

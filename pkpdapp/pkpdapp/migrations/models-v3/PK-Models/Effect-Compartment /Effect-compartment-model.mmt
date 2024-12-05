@@ -1,0 +1,27 @@
+[[model]]
+name: Effect compartment model 
+author: Michael Gertz 
+
+
+# Initial values:
+PKCompartment.Ce = 0
+
+
+[environment]
+t = 0 in [h] bind time
+
+
+[PKCompartment]
+
+ke0 = 1 in [1/h]
+	desc: Equilibration rate constant effect compartment
+	
+Kp = 1 in [dimensionless]
+	desc: Effect compartment partitioning coefficient
+	
+C_Drug = 1 in [pmol/L]
+  desc: Concentration of variable linking to the effect compartment
+  
+ 
+dot(Ce) = ke0*(C_Drug - Ce/Kp) in [pmol/L]
+	desc: Concentration in the effect compartment

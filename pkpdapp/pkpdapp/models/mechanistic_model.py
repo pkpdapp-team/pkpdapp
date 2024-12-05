@@ -7,6 +7,7 @@
 from django.db import models
 from django.core.exceptions import ValidationError
 from pkpdapp.models import MyokitModelMixin
+from pkpdapp.models.tag import Tag
 
 
 class MechanisticModel(models.Model, MyokitModelMixin):
@@ -51,6 +52,17 @@ class MechanisticModel(models.Model, MyokitModelMixin):
             "whether this model is a library model (i.e. it is not an "
             "uploaded user model)"
         ),
+    )
+
+    library_version = models.IntegerField(
+        default=1,
+        help_text=("version number of the library model (1 or 3)"),
+    )
+
+    tags = models.ManyToManyField(
+        Tag,
+        blank=True,
+        help_text="tags for the model",
     )
 
     class Meta:

@@ -1,0 +1,50 @@
+[[model]]
+name: TGI signal distribution model (Emax kill)
+author: Michael Gertz, Soledad Castano
+
+
+# Initial values:
+PDCompartment.TS = PDCompartment.TS0
+PDCompartment.K1 = 0
+PDCompartment.K2 = 0
+PDCompartment.K3 = 0
+
+
+[environment]
+t = 0 in [h] bind time
+
+
+[PDCompartment]
+	
+TS0 = 0.1 in [mL]
+	desc: Initial tumor volume/ size
+	
+kmax = 0.015 in [1/h]
+	desc: Maximal kill rate constant
+	
+C50 = 1000000 in [pmol/L]
+	desc: Concentration of half-maximal effect
+
+Mtt = 72 in [h]
+	desc: Average duration of transduction
+	
+tau = Mtt/3 in [h]
+  desc: Delay in treatment effect
+
+C_Drug = 1 in [pmol/L]
+	desc: Drug concentration causing tumor killing
+
+Kill = kmax * (1 - exp(-log(2)/C50 * C_Drug)) in [1/h]
+	desc: Tumor kill rate constant
+
+dot(TS) = -K3*TS in [mL]
+	desc: Tumor size/ size 
+	
+dot(K1) = (Kill-K1)/tau in [1/h]
+	desc: Transit compartment 1 (delay of killing due to signal distribution) 
+
+dot(K2) = (K1-K2)/tau in [1/h]
+	desc: Transit compartment 2 (delay of killing due to signal distribution)
+
+dot(K3) = (K2-K3)/tau in [1/h]
+	desc: Transit compartment 3 (delay of killing due to signal distribution)

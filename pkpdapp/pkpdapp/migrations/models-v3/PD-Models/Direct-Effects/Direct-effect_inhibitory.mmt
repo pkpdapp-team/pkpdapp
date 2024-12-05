@@ -1,0 +1,33 @@
+[[model]]
+name: Direct effect model (inhibitory)
+author: Michael Gertz, Soledad Castano
+
+
+[environment]
+t = 0 in [h] bind time
+
+
+[PDCompartment]
+
+E0 = 100 in [dimensionless]
+	desc: Baseline of the PD effect
+	
+Imax = 0.80 in [dimensionless]
+	desc: Maximal Inhibitory effect (value range: 0 (no effect) to 1 (complete inhibition))
+	
+C50 = 100000 in [pmol/L]
+	desc: Concentration that produces half-maximal effects
+
+HC = 1 in [dimensionless]
+	desc: Hill coefficient
+	
+C_Drug = 1 in [pmol/L]
+	desc: Drug concentration causing the PD effect 
+
+INH = C_Drug^HC/(C_Drug^HC+C50^HC) in [dimensionless]
+	desc: Extent of inhibition
+
+E = if (E0 = 0 , 
+	-Imax*INH , 
+	E0 * (1-Imax*INH)) in [dimensionless]
+	desc: PD effect
