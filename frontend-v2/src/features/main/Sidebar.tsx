@@ -45,6 +45,8 @@ import useSubjectGroups from "../../hooks/useSubjectGroups";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import { useCollapsibleSidebar } from "../../shared/contexts/CollapsibleSidebarContext";
+import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
+import { useProjectDescription } from "../../shared/contexts/ProjectDescriptionContext";
 import "../../App.css";
 
 const drawerExpandedWidth = 240;
@@ -65,6 +67,7 @@ export default function Sidebar() {
     (state: RootState) => state.main.selectedProject,
   );
   const projectIdOrZero = projectId || 0;
+  const { onOpenDescriptionModal } = useProjectDescription();
 
   const { data: models } = useCombinedModelListQuery(
     { projectId: projectIdOrZero },
@@ -301,99 +304,125 @@ export default function Sidebar() {
   );
 
   const drawer = (
-    <div style={{ marginTop: "7rem", transition: "all .35s linear", display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '100%' }}>
+    <div
+      style={{
+        marginTop: "7rem",
+        transition: "all .35s linear",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "space-between",
+        height: "100%",
+      }}
+    >
       <div>
-      {isExpanded ? (
-        <IconButton
-          aria-label="collapse-navigation"
-          onClick={onCollapse}
-          sx={{ marginLeft: ".5rem" }}
-        >
-          <ArrowBackIcon />
-        </IconButton>
-      ) : (
-        <IconButton
-          aria-label="expand-navigation"
-          onClick={onExpand}
-          sx={{ marginLeft: ".5rem" }}
-        >
-          <ArrowForwardIcon />
-        </IconButton>
-      )}
-      <List>
-        <ListItem key={projectsPage?.key} disablePadding>
-          <ListItemButton
-            onClick={handlePageClick(projectsPage?.key)}
-            disabled={isPageDisabled(projectsPage?.key)}
-            disableRipple={true}
-            selected={isPageSelected(projectsPage?.key)}
+        {isExpanded ? (
+          <IconButton
+            aria-label="collapse-navigation"
+            onClick={onCollapse}
+            sx={{ marginLeft: ".5rem" }}
           >
-            <ListItemIcon>
-              {projectsPage?.value in errorComponents
-                ? errorComponents[projectsPage?.value]
-                : icons[projectsPage?.value]}
-            </ListItemIcon>
-            <ListItemText primary={projectsPage?.value} />
-          </ListItemButton>
-        </ListItem>
-      </List>
-      {projectIdOrZero !== 0 && (
-        <>
-          {isExpanded ? (
-            <Typography
-              variant="subtitle1"
-              component="div"
-              sx={{
-                flexGrow: 1,
-                color: "gray",
-                paddingLeft: "1rem",
-                paddingTop: "1rem",
-              }}
+            <ArrowBackIcon />
+          </IconButton>
+        ) : (
+          <Tooltip arrow title="Expand" placement="right">
+            <IconButton
+              aria-label="expand-navigation"
+              onClick={onExpand}
+              sx={{ marginLeft: ".5rem" }}
             >
-              STEPS
-            </Typography>
-          ) : (
-            <Divider sx={{ paddingTop: "21px", marginBottom: "22px" }} />
-          )}
+              <ArrowForwardIcon />
+            </IconButton>
+          </Tooltip>
+        )}
+        <List>
+          <ListItem key={projectsPage?.key} disablePadding>
+            <Tooltip
+              arrow
+              title={isExpanded ? "" : projectsPage?.value}
+              placement="right"
+            >
+              <ListItemButton
+                onClick={handlePageClick(projectsPage?.key)}
+                disabled={isPageDisabled(projectsPage?.key)}
+                disableRipple={true}
+                selected={isPageSelected(projectsPage?.key)}
+              >
+                <ListItemIcon>
+                  {projectsPage?.value in errorComponents
+                    ? errorComponents[projectsPage?.value]
+                    : icons[projectsPage?.value]}
+                </ListItemIcon>
+                <ListItemText primary={projectsPage?.value} />
+              </ListItemButton>
+            </Tooltip>
+          </ListItem>
+        </List>
+        {projectIdOrZero !== 0 && (
+          <>
+            {isExpanded ? (
+              <Typography
+                variant="subtitle1"
+                component="div"
+                sx={{
+                  flexGrow: 1,
+                  color: "gray",
+                  paddingLeft: "1rem",
+                  paddingTop: "1rem",
+                }}
+              >
+                STEPS
+              </Typography>
+            ) : (
+              <Divider sx={{ paddingTop: "21px", marginBottom: "22px" }} />
+            )}
 
-          <List>
-            {steps.map(({ key, value }) => (
-              <ListItem key={key} disablePadding>
-                <ListItemButton
-                  onClick={handlePageClick(key)}
-                  disabled={isPageDisabled(key)}
-                  disableRipple={true}
-                  selected={isPageSelected(key)}
-                >
-                  <ListItemIcon>
-                    {value in errorComponents
-                      ? errorComponents[value]
-                      : icons[value]}
-                  </ListItemIcon>
-                  <ListItemText sx={{ textWrap: "nowrap" }} primary={value} />
-                </ListItemButton>
-              </ListItem>
-            ))}
-          </List>
-        </>
-      )}
+            <List>
+              {steps.map(({ key, value }) => (
+                <ListItem key={key} disablePadding>
+                  <Tooltip
+                    arrow
+                    title={isExpanded ? "" : value}
+                    placement="right"
+                  >
+                    <ListItemButton
+                      onClick={handlePageClick(key)}
+                      disabled={isPageDisabled(key)}
+                      disableRipple={true}
+                      selected={isPageSelected(key)}
+                    >
+                      <ListItemIcon>
+                        {value in errorComponents
+                          ? errorComponents[value]
+                          : icons[value]}
+                      </ListItemIcon>
+                      <ListItemText
+                        sx={{ textWrap: "nowrap" }}
+                        primary={value}
+                      />
+                    </ListItemButton>
+                  </Tooltip>
+                </ListItem>
+              ))}
+            </List>
+          </>
+        )}
       </div>
       <div>
-      {isExpanded && (
-        <Typography
-          sx={{
-            position: "",
-            bottom: 0,
-            margin: ".5rem",
-            color: "gray",
-            textWrap: "nowrap",
-          }}
-        >
-          pkpdx version {import.meta.env.VITE_APP_VERSION?.slice(0, 7) || "dev"}
-        </Typography>
-      )}
+        {isExpanded && (
+          <Typography
+            sx={{
+              position: "",
+              bottom: 0,
+              margin: ".5rem",
+              color: "gray",
+              textWrap: "nowrap",
+            }}
+          >
+            pkpdx version{" "}
+            {import.meta.env.VITE_APP_VERSION?.slice(0, 7) || "dev"}
+          </Typography>
+        )}
       </div>
-
     </div>
   );
 
@@ -438,15 +467,47 @@ export default function Sidebar() {
             noWrap
             component="div"
             sx={{
-              flexGrow: 1,
               color: "#1976d2",
               fontWeight: "bold",
               paddingLeft: "1rem",
               fontFamily: "Comfortaa",
+              flexGrow: project ? 0 : 1
             }}
           >
-            pkpd explorer {project && ` - ${project.name}`}
+            pkpd explorer
           </Typography>
+          {project && (
+            <Box sx={{ display: "flex", alignItems: "center", flexGrow: 1 }}>
+              <Divider
+                orientation="vertical"
+                color="#000"
+                style={{ height: "1rem", marginLeft: "1rem", opacity: "0.2" }}
+              />
+              <Typography
+                variant="h6"
+                noWrap
+                component="div"
+                sx={{
+                  color: "#706b69",
+                  fontWeight: "bold",
+                  paddingLeft: "1rem",
+                  fontFamily: "Comfortaa",
+                }}
+              >
+                {project.name}
+              </Typography>
+              <Tooltip
+                arrow
+                title="Description"
+                placement="bottom"
+                PopperProps={{ style: { zIndex: 9999 } }}
+              >
+                <IconButton onClick={() => onOpenDescriptionModal(projectId)}>
+                  <DescriptionOutlinedIcon />
+                </IconButton>
+              </Tooltip>
+            </Box>
+          )}
           <div style={{ display: "flex" }}>
             <Typography
               variant="subtitle1"

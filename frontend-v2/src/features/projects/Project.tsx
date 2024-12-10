@@ -44,6 +44,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
 import { DescriptionModal } from "./Description";
+import { useProjectDescription } from "../../shared/contexts/ProjectDescriptionContext";
 
 interface Props {
   project: ProjectRead;
@@ -86,7 +87,7 @@ const ProjectRow: FC<Props> = ({
 
   const [projectCopyUpdate] = useProjectCopyUpdateMutation();
   const [isEditMode, setIsEditMode] = useState(false);
-  const [isDescriptionModalOpen, setIsDescriptionModalOpen] = useState(false);
+  const { isDescriptionModalOpen, onOpenDescriptionModal, onCloseDescriptionModal, descriptionProjectId } = useProjectDescription();
 
   useEffect(() => {
     if (isEditMode) {
@@ -314,13 +315,13 @@ const ProjectRow: FC<Props> = ({
             {isEditMode ? (
               <Typography
                 sx={{ color: "blue", cursor: "pointer" }}
-                onClick={() => setIsDescriptionModalOpen(true)}
+                onClick={() => onOpenDescriptionModal(project.id)}
               >
                 {project?.description?.length ? "Read" : "Add"}
               </Typography>
             ) : (
               <Typography
-                onClick={() => setIsDescriptionModalOpen(true)}
+                onClick={() => onOpenDescriptionModal(project.id)}
                 sx={{ color: "blue", cursor: "pointer" }}
               >
                 {project?.description?.length ? "Read" : ""}
@@ -416,10 +417,10 @@ const ProjectRow: FC<Props> = ({
         remove={remove}
         project={project}
       />
-      {isDescriptionModalOpen && (
+      {isDescriptionModalOpen && descriptionProjectId === project.id && (
         <DescriptionModal
           isOpen={isDescriptionModalOpen}
-          handleOpenChange={() => setIsDescriptionModalOpen(false)}
+          handleOpenChange={() => onCloseDescriptionModal()}
           onCancel={onCancel}
           isEditMode={isEditMode}
           compound={compound}
