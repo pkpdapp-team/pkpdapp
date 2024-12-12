@@ -49,7 +49,6 @@ class CombinedModel(MyokitModelMixin, StoredModel):
         help_text="species",
     )
 
-    
     pk_model = models.ForeignKey(
         PharmacokineticModel,
         on_delete=models.PROTECT,
@@ -75,6 +74,9 @@ class CombinedModel(MyokitModelMixin, StoredModel):
     )
     has_effect = models.BooleanField(
         default=False, help_text="whether the pk model has effect compartment"
+    )
+    number_of_effect_compartments = models.IntegerField(
+        default=0, help_text="number of effect compartments"
     )
     has_lag = models.BooleanField(
         default=False, help_text="whether the pk model has lag"
@@ -248,14 +250,27 @@ class CombinedModel(MyokitModelMixin, StoredModel):
             pd_model2 = myokit.Model()
         else:
             pd_model2 = self.pd_model2.create_myokit_model()
-            
+
         # combined both pk models
         if self.pk_model2 is not None:
-            pk_model.import_component(pk_model2.get("PKCompartment"), new_name="Extravascular")
+            pk_model.import_component(
+                pk_model2.get("PKCompartment"), new_name="Extravascular"
+            )
             # link RateAbs from Extravascular to PKCompartment
             pk_rate_abs = pk_model.get("PKCompartment.RateAbs")
             e_rate_abs = pk_model.get("Extravascular.RateAbs")
             pk_rate_abs.set_rhs(myokit.Name(e_rate_abs))
+
+        # add effect compartments
+        if self.number_of_effect_compartments > 0:
+            effect_compartment = PharmacokineticModel.objects.get(
+                name="Effect compartment model"
+            )
+            ec_myokit = effect_compartment.create_myokit_model()
+            for i in range(self.number_of_effect_compartments):
+                pk_model.import_component(
+                    ec_myokit.get("PKCompartment"), new_name=f"EffectCompartment{i+1}"
+                )
 
         have_both_models = self.pk_model is not None and self.pd_model is not None
         have_no_models = self.pk_model is None and self.pd_model is None
