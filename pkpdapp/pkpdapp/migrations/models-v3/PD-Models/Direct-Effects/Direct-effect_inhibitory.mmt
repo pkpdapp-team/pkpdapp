@@ -27,7 +27,7 @@ C_Drug = 1 in [pmol/L]
 INH = C_Drug^HC/(C_Drug^HC+C50^HC) in [dimensionless]
 	desc: Extent of inhibition
 
-E = if (E0 = 0 , 
-	-Imax*INH , 
+E = if(E0 == 0, 
+	-Imax*INH, 
 	E0 * (1-Imax*INH)) in [dimensionless]
 	desc: PD effect
