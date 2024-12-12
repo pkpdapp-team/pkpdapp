@@ -30,7 +30,7 @@ import { RootState } from "../../app/store";
 import { selectIsProjectShared } from "../login/loginSlice";
 import { TableHeader } from "../../components/TableHeader";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
-import { NEW_MODELS_FEATURE } from "../../shared/features";
+import { version } from "os";
 
 interface Props {
   onChange: () => void;
@@ -97,14 +97,15 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
   });
 
   const isPreclinical = project.species !== "H";
-  const isPreclinicalPerKg = NEW_MODELS_FEATURE ? false : isPreclinical;
+  const version_greater_than_2 = project.version ? project.version >= 3 : false;
+  const isPreclinicalPerKg = version_greater_than_2 ? false : isPreclinical;
   const defaultProps = {
     disabled: isSharedWithMe,
   };
   const defaultSymbol = isPreclinical ? "mg/kg" : "mg";
   const defaultUnit = units.find((u) => u.symbol === defaultSymbol);
-  const baseUnit = NEW_MODELS_FEATURE ? units.find((u) => u.symbol === "mg") : undefined;
-  const baseUnit2 = NEW_MODELS_FEATURE ? units.find((u) => u.symbol === "mg/kg") : undefined;
+  const baseUnit = version_greater_than_2 ? units.find((u) => u.symbol === "mg") : undefined;
+  const baseUnit2 = version_greater_than_2 ? units.find((u) => u.symbol === "mg/kg") : undefined;
   console.log("baseUnit", baseUnit);
   console.log("defaultUnit", defaultUnit);
   console.log("protocol", protocol);
@@ -232,6 +233,7 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
                 baseUnit2={baseUnit2}
                 isPreclinicalPerKg={isPreclinicalPerKg}
                 selectProps={defaultProps}
+                version_greater_than_2={version_greater_than_2}
               />
             ) : (
               <Typography>{selectedAmountLabel}</Typography>

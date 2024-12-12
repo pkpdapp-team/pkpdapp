@@ -11,7 +11,7 @@ import {
   CompoundRead,
 } from "../../app/backendApi";
 import { Control } from "react-hook-form";
-import { Stack, Grid, Tooltip, Box, Button } from "@mui/material";
+import { Stack, Grid, Tooltip, Box, Button, Typography } from "@mui/material";
 import FloatField from "../../components/FloatField";
 import UnitField from "../../components/UnitField";
 import SelectField from "../../components/SelectField";
@@ -24,8 +24,8 @@ import { RootState } from "../../app/store";
 import { selectIsProjectShared } from "../login/loginSlice";
 import { CodeModal } from "./CodeModal";
 import CodeOutlinedIcon from "@mui/icons-material/CodeOutlined";
-import { NEW_MODELS_FEATURE } from "../../shared/features";
 import { CompareRounded } from "@mui/icons-material";
+import { version } from "os";
 
 interface Props {
   model: CombinedModelRead;
@@ -96,28 +96,42 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
     return <div>Error loading models.</div>;
   }
 
+  const version_greater_than_2 = project.version ? project.version >= 3 : false;
+
   const clinical = project.species === "H";
   const pkModelsFiltered = pkModels.filter((m) => {
-    let is_pk_model = !m.name.includes("absorption_");
-    if (NEW_MODELS_FEATURE) {
-      is_pk_model = is_pk_model && !m.name.includes("clinical");
+    let is_pk_model = false;
+    if (version_greater_than_2) {
+      is_pk_model = m.model_type ? m.model_type === "PK" : false;
     } else {
       is_pk_model = is_pk_model && !m.name.includes(!clinical ? "_clinical" : "_preclinical")
     }
     return is_pk_model;
   });
   const pkModel2Filtered = pkModels.filter((m) => {
-    return m.name.includes("absorption_");
+    return version_greater_than_2 && m.model_type === "PKEX";
   });
   const pdModelsFiltered = pdModels.filter(
-    (m) =>
-      m.name !== "tumour_growth_inhibition_model_koch" &&
-      m.name !== "tumour_growth_inhibition_model_koch_reparametrised",
+    (m) => {
+      if (version_greater_than_2) {
+        return m.model_type === "PD" || m.model_type === "TG";
+      } else {
+        return !m.name.includes("tumour_growth_inhibition")
+      }
+    }
+  );
+  const pdModels2Filtered = pdModels.filter(
+    (m) => {
+      if (version_greater_than_2) {
+        return m.model_type === "TGI";
+      } else {
+        return m.name.includes("tumour_growth_inhibition")
+      }
+    }
   );
 
   const pd_model_options: { value: number | string; label: string }[] =
     pdModelsFiltered
-      .filter((m) => !m.name.includes("tumour_growth_inhibition"))
       .map((m) => {
         return { value: m.id, label: m.name };
       });
@@ -130,11 +144,11 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
   });
   pd_model_options.push({ value: "", label: "None" });
   let pk_model_options = pkModelsFiltered.map((m) => {
-    return { value: m.id, label: m.name };
+    return { value: m.id.toString(), label: m.name };
   });
   pk_model_options.push({ value: "", label: "None" });
   let pk_model2_options = model.pk_model ? pkModel2Filtered.map((m) => {
-    return { value: m.id, label: m.name };
+    return { value: m.id.toString(), label: m.name };
   }) : [];
   pk_model2_options.push({ value: "", label: "None" });
   pk_model_options.sort((a, b) => {
@@ -153,12 +167,14 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
   );
 
   const pdIsTumourGrowth =
-    model.pd_model &&
-    pd_model_map[model.pd_model].name.includes("tumour_growth") &&
-    !pd_model_map[model.pd_model].name.includes("inhibition");
+    model.pd_model && (
+      version_greater_than_2 ?
+        pd_model_map[model.pd_model].model_type === "TG" :
+        pd_model_map[model.pd_model].name.includes("tumour_growth") &&
+        !pd_model_map[model.pd_model].name.includes("inhibition")
+    );
   const pd_model2_options: { value: number | string; label: string }[] =
-    pdModelsFiltered
-      .filter((m) => m.name.includes("tumour_growth_inhibition"))
+    pdModels2Filtered
       .map((m) => {
         return { value: m.id, label: m.name };
       });
@@ -190,6 +206,7 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
             selectProps={defaultProps}
           />
           <FloatField
+            size="small"
             sx={{ flex: "1" }}
             label="Weight"
             name={`project.species_weight`}
@@ -197,11 +214,13 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
             textFieldProps={{ sx: { width: "calc(50% - 7rem)" }, ...defaultProps }}
           />
           <UnitField
+            size="small"
             label={"Unit"}
             name={`project.species_weight_unit`}
             control={control}
             baseUnit={units.find((u) => u.id === project.species_weight_unit)}
             selectProps={{ sx: { width: "6rem" }, ...defaultProps }}
+            version_greater_than_2={version_greater_than_2}
           />
         </Stack>
       </Grid>
@@ -221,13 +240,15 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
           {model.pk_model && (
             <Stack
               sx={{
+                marginTop: 2,
                 display: "flex",
                 "& .MuiFormControlLabel-label": { fontSize: ".9rem" },
               }}
               direction="row"
               spacing={3}
+
             >
-              {!NEW_MODELS_FEATURE &&
+              {!version_greater_than_2 &&
                 <Tooltip title="Includes Michaelis-Menten parameters (CLmax and Km)">
                   <div>
                     <Checkbox
@@ -241,34 +262,33 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
                   </div>
                 </Tooltip>
               }
-              {NEW_MODELS_FEATURE &&
-                <Tooltip title="Add Extravascular PK model">
-                  <div>
-                    <FormControlLabel
-                      label="Extravascular"
-                      control={
-                        <MuiCheckbox
-                          checked={showExtravascular}
-                          onChange={() => setShowExtravascular(!showExtravascular)}
-                        />
-                      }
+              {!version_greater_than_2 &&
+                <Tooltip title="Includes an effect compartment">
+                  <div style={{ fontSize: "12px !important" }}>
+                    <Checkbox
+                      label="Effect Compartment"
+                      name="model.has_effect"
+                      control={control}
+                      checkboxFieldProps={{
+                        disabled: !model.pk_model || isSharedWithMe,
+                      }}
                     />
                   </div>
-                </Tooltip>
-              }
-              <Tooltip title="Includes an effect compartment">
+                </Tooltip>}
+              {version_greater_than_2 &&
                 <div style={{ fontSize: "12px !important" }}>
-                  <Checkbox
-                    label="Effect Compartment"
-                    name="model.has_effect"
+                  <SelectField
+                    size="small"
+                    label="Effect Compartments"
+                    name="model.number_of_effect_compartments"
                     control={control}
-                    checkboxFieldProps={{
-                      disabled: !model.pk_model || isSharedWithMe,
-                    }}
+                    options={Array.from(Array(6).keys()).map((i) => { return { value: i, label: i.toString() } })}
+                    formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
+                    selectProps={defaultProps}
                   />
                 </div>
-              </Tooltip>
-              {NEW_MODELS_FEATURE &&
+              }
+              {version_greater_than_2 &&
                 <Tooltip title="Includes Anti-Drug Antibodies">
                   <div>
                     <Checkbox
@@ -292,6 +312,7 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
         <Grid item xl={5} md={8} xs={10}>
           <Stack direction="row" alignItems="center" spacing={1}>
             <SelectField
+              size="small"
               label="Extravascular PK Model"
               name="model.pk_model2"
               control={control}
