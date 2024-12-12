@@ -11,9 +11,10 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.urls import reverse
 
+
 def get_species_weight_unit():
     try:
-        return Unit.objects.get(symbol='g')
+        return Unit.objects.get(symbol="g")
     except Unit.DoesNotExist:
         return None
 
@@ -63,8 +64,10 @@ class Project(models.Model):
         Unit,
         on_delete=models.PROTECT,
         related_name="species_weight_units",
-        default=get_species_weight_unit
+        default=get_species_weight_unit,
     )
+
+    version = models.IntegerField(default=3)
 
     def get_absolute_url(self):
         return reverse("project-detail", kwargs={"pk": self.pk})
