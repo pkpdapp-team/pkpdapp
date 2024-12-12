@@ -27,7 +27,7 @@ C_Drug = 1 in [pmol/L]
 STIM = C_Drug^HC/(C_Drug^HC+C50^HC) in [dimensionless]
 	desc: Extent of stimulation
 
-E = if (E0 = 0 , 
-	+Emax*STIM , 
+E = if(E0 == 0, 
+	+Emax*STIM, 
 	E0 * (1+(Emax-1)*STIM)) in [dimensionless]
 	desc: PD effect
