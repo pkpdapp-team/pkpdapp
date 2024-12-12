@@ -49,7 +49,6 @@ class CombinedModel(MyokitModelMixin, StoredModel):
         help_text="species",
     )
 
-    
     pk_model = models.ForeignKey(
         PharmacokineticModel,
         on_delete=models.PROTECT,
@@ -75,6 +74,9 @@ class CombinedModel(MyokitModelMixin, StoredModel):
     )
     has_effect = models.BooleanField(
         default=False, help_text="whether the pk model has effect compartment"
+    )
+    number_of_effect_compartments = models.IntegerField(
+        default=0, help_text="number of effect compartments"
     )
     has_lag = models.BooleanField(
         default=False, help_text="whether the pk model has lag"
@@ -241,14 +243,27 @@ class CombinedModel(MyokitModelMixin, StoredModel):
             pd_model2 = myokit.Model()
         else:
             pd_model2 = self.pd_model2.create_myokit_model()
-            
+
         # combined both pk models
         if self.pk_model2 is not None:
-            pk_model.import_component(pk_model2.get("PKCompartment"), new_name="Extravascular")
+            pk_model.import_component(
+                pk_model2.get("PKCompartment"), new_name="Extravascular"
+            )
             # link RateAbs from Extravascular to PKCompartment
             pk_rate_abs = pk_model.get("PKCompartment.RateAbs")
             e_rate_abs = pk_model.get("Extravascular.RateAbs")
             pk_rate_abs.set_rhs(myokit.Name(e_rate_abs))
+
+        # add effect compartments
+        if self.number_of_effect_compartments > 0:
+            effect_compartment = PharmacokineticModel.objects.get(
+                name="Effect compartment model"
+            )
+            ec_myokit = effect_compartment.create_myokit_model()
+            for i in range(self.number_of_effect_compartments):
+                pk_model.import_component(
+                    ec_myokit.get("PKCompartment"), new_name=f"EffectCompartment{i+1}"
+                )
 
         have_both_models = self.pk_model is not None and self.pd_model is not None
         have_no_models = self.pk_model is None and self.pd_model is None
@@ -367,9 +382,9 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                     initial_value=0,
                     unit=myokit_var.unit() * time_var.unit(),
                 )
-                var.meta[
-                    "desc"
-                ] = f'Area under curve for {myokit_var.meta["desc"]}'  # noqa: E501
+                var.meta["desc"] = (
+                    f'Area under curve for {myokit_var.meta["desc"]}'  # noqa: E501
+                )
             elif (
                 derived_variable.type == DerivedVariable.Type.RECEPTOR_OCCUPANCY
             ):  # noqa: E501
@@ -383,25 +398,25 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 if has_name:
                     continue
                 var = myokit_compartment.add_variable(new_names[0])
-                var.meta[
-                    "desc"
-                ] = f'Receptor occupancy for {myokit_var.meta["desc"]}'  # noqa: E501
+                var.meta["desc"] = (
+                    f'Receptor occupancy for {myokit_var.meta["desc"]}'  # noqa: E501
+                )
                 kd_name = "KD_ud"
                 if myokit_compartment.has_variable(kd_name):
                     kd = myokit_compartment.get(kd_name)
                 else:
                     kd = myokit_compartment.add_variable(kd_name)
-                    kd.meta[
-                        "desc"
-                    ] = "User-defined Dissociation Constant used to calculate Receptor occupancy"  # noqa: E501
+                    kd.meta["desc"] = (
+                        "User-defined Dissociation Constant used to calculate Receptor occupancy"  # noqa: E501
+                    )
                 target_conc_name = "CT1_0_ud"
                 if myokit_compartment.has_variable(target_conc_name):
                     target_conc = myokit_compartment.get(target_conc_name)
                 else:
                     target_conc = myokit_compartment.add_variable(target_conc_name)
-                    target_conc.meta[
-                        "desc"
-                    ] = "User-defined Target Concentration used to calculate Receptor occupancy"  # noqa: E501
+                    target_conc.meta["desc"] = (
+                        "User-defined Target Concentration used to calculate Receptor occupancy"  # noqa: E501
+                    )
                 var.set_unit(myokit.Unit())
                 kd_unit = myokit_var.unit()
                 compound = self.project.compound
@@ -466,13 +481,13 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 if has_name:
                     continue
                 var = myokit_compartment.add_variable(new_names[0])
-                var.meta[
-                    "desc"
-                ] = f'Unbound Concentration for {myokit_var.meta["desc"]}'  # noqa: E501
+                var.meta["desc"] = (
+                    f'Unbound Concentration for {myokit_var.meta["desc"]}'  # noqa: E501
+                )
                 fup = myokit_compartment.add_variable(new_names[1])
-                fup.meta[
-                    "desc"
-                ] = "User-defined Fraction Unbound Plasma (Drug Target Tab)"  # noqa: E501
+                fup.meta["desc"] = (
+                    "User-defined Fraction Unbound Plasma (Drug Target Tab)"  # noqa: E501
+                )
                 var.set_unit(myokit_var.unit())
                 fup.set_rhs(self.project.compound.fraction_unbound_plasma)
                 fup.set_unit(myokit.units.dimensionless)
@@ -491,9 +506,9 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                     continue
                 var = myokit_compartment.add_variable(new_names[0])
                 bpr = myokit_compartment.add_variable(new_names[1])
-                bpr.meta[
-                    "desc"
-                ] = "User-defined Blood to Plasma Ratio (Drug Target Tab)"  # noqa: E501
+                bpr.meta["desc"] = (
+                    "User-defined Blood to Plasma Ratio (Drug Target Tab)"  # noqa: E501
+                )
                 var.meta["desc"] = f'Blood Concentration for {myokit_var.meta["desc"]}'
                 var.set_unit(myokit_var.unit())
                 bpr.set_rhs(self.project.compound.blood_to_plasma_ratio)
@@ -510,9 +525,9 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 if has_name:
                     continue
                 var = myokit_compartment.add_variable(new_names[0])
-                var.meta[
-                    "desc"
-                ] = "User-defined absorption lag time from specified compartment"
+                var.meta["desc"] = (
+                    "User-defined absorption lag time from specified compartment"
+                )
                 time_var = pkpd_model.binding("time")
                 var.set_unit(time_var.unit())
                 var.set_rhs(myokit.Number(0))
@@ -782,12 +797,8 @@ class TimeInterval(StoredModel):
         related_name="time_intervals",
         help_text="PKPD model that this time interval is for",
     )
-    start_time = models.FloatField(
-        help_text="start time of interval"
-    )
-    end_time = models.FloatField(
-        help_text="end time of interval"
-    )
+    start_time = models.FloatField(help_text="start time of interval")
+    end_time = models.FloatField(help_text="end time of interval")
     unit = models.ForeignKey(
         Unit,
         on_delete=models.PROTECT,
