@@ -54,9 +54,19 @@ class MechanisticModel(models.Model, MyokitModelMixin):
         ),
     )
 
-    library_version = models.IntegerField(
-        default=1,
-        help_text=("version number of the library model (1 or 3)"),
+    # model_type field, possible model types are PK-Model, PD-Model, PK-Extravascular, or Tumor-Growth
+    class ModelType(models.TextChoices):
+        PK_MODEL = "PK", "PK-Model"
+        PD_MODEL = "PD", "PD-Model"
+        PK_EXTRAVASCULAR = "PK-E", "PK-Extravascular"
+        TUMOR_GROWTH = "TG", "Tumor-Growth"
+
+    model_type = models.CharField(
+        blank=True,
+        null=True,
+        max_length=4,
+        choices=ModelType.choices,
+        help_text="type of model",
     )
 
     tags = models.ManyToManyField(

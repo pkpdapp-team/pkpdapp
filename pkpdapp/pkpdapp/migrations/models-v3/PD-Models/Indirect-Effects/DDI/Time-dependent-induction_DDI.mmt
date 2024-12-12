@@ -82,7 +82,7 @@ C_Drug = 0 in [pmol/L]
 IND = (Imax_IND-1)*C_Drug^hll_IND/(C_Drug^hll_IND + C50_IND^hll_IND) in [dimensionless]
 	desc: Drug-induced fold change in enzyme levels
 	
-FG = if(C_Drug = 0 , 
+FG = if(C_Drug == 0 , 
 	FG_victim , 
 	1) in [dimensionless]	
 	
@@ -117,7 +117,7 @@ dot(Atr1_victim) = ktrA_victim*(Atr2_victim-Atr1_victim) in [pmol]
 dot(Aa_victim) = ktrA_victim*Atr1_victim -Aa_victim*ka_victim in [pmol]
     desc: Amount of drug in absorption compartment
 
-dot(A1_victim) = Aa_victim*ka_victim*(FH*Fa_victim*FG) - (CLh*BP_victim + CLpxhep_victim)*C1_victim - Q1_victim*(C1_victim - C2_victim) - Q2_victim*(C1_victim - C3_victim) in [pmol]
+dot(A1_victim) = Aa_victim*ka_victim*(FH*Fa_victim*FG) - (CLh*BP_victim + CLpXhep_victim)*C1_victim - Q1_victim*(C1_victim - C2_victim) - Q2_victim*(C1_victim - C3_victim) in [pmol]
   desc: Amount of VICTIM drug in the central compartment 
 
 dot(A2_victim) = Q1_victim*(C1_victim - C2_victim) in [pmol]
