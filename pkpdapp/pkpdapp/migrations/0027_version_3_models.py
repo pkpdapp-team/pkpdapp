@@ -45,18 +45,26 @@ def load_pkpd_models(apps, schema_editor):
                 if is_tag == "1":
                     tags.append(first_row[2 + i])
             # type can be PK-Model, PD-Model, PK-Extravascular, or Tumor-Growth
-            if row[1] == "PK-Model" or row[1] == "PK-Extravascular":
+            if (
+                row[1] == "PK-Model"
+                or row[1] == "PK-Extravascular"
+                or row[1] == "PK-Effect-Compartment"
+            ):
                 model_class = PharmacokineticModel
                 if row[1] == "PK-Model":
                     model_type = "PK"
+                elif row[1] == "PK-Extravascular":
+                    model_type = "PKEX"
                 else:
-                    model_type = "PK-E"
+                    model_type = "PKEF"
             else:
                 model_class = PharmacodynamicModel
                 if row[1] == "PD-Model":
                     model_type = "PD"
-                else:
+                elif row[1] == "Tumor-Growth":
                     model_type = "TG"
+                else:
+                    model_type = "TGI"
             mmt_filename = f"pkpdapp/migrations/models-v3/{filename}"
             mmt_string = open(mmt_filename, "r").read()
             print("adding new model", mmt_filename)

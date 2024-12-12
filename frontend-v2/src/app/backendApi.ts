@@ -2111,6 +2111,8 @@ export type CombinedModel = {
   has_extravascular?: boolean;
   /** whether the pk model has effect compartment */
   has_effect?: boolean;
+  /** number of effect compartments */
+  number_of_effect_compartments?: number;
   /** whether the pk model has lag */
   has_lag?: boolean;
   /** whether the pk model has anti-drug antibodies */
@@ -2162,6 +2164,8 @@ export type CombinedModelRead = {
   has_extravascular?: boolean;
   /** whether the pk model has effect compartment */
   has_effect?: boolean;
+  /** number of effect compartments */
+  number_of_effect_compartments?: number;
   /** whether the pk model has lag */
   has_lag?: boolean;
   /** whether the pk model has anti-drug antibodies */
@@ -2206,6 +2210,8 @@ export type PatchedCombinedModel = {
   has_extravascular?: boolean;
   /** whether the pk model has effect compartment */
   has_effect?: boolean;
+  /** number of effect compartments */
+  number_of_effect_compartments?: number;
   /** whether the pk model has lag */
   has_lag?: boolean;
   /** whether the pk model has anti-drug antibodies */
@@ -2257,6 +2263,8 @@ export type PatchedCombinedModelRead = {
   has_extravascular?: boolean;
   /** whether the pk model has effect compartment */
   has_effect?: boolean;
+  /** number of effect compartments */
+  number_of_effect_compartments?: number;
   /** whether the pk model has lag */
   has_lag?: boolean;
   /** whether the pk model has anti-drug antibodies */
@@ -2905,6 +2913,9 @@ export type PatchedInferenceChainRead = {
   /** inference for this chain */
   inference?: number;
 };
+export type ModelTypeEnum = "PK" | "PKEF" | "PKEX" | "PD" | "TG" | "TGI";
+export type BlankEnum = "";
+export type NullEnum = null;
 export type Pharmacodynamic = {
   mmt?: string;
   /** true if object has been stored */
@@ -2919,8 +2930,19 @@ export type Pharmacodynamic = {
   time_max?: number;
   /** whether this model is a library model (i.e. it is not an uploaded user model) */
   is_library_model?: boolean;
+  /** type of model
+    
+    * `PK` - PK-Model
+    * `PKEF` - PK-Effect-Compartment
+    * `PKEX` - PK-Extravascular
+    * `PD` - PD-Model
+    * `TG` - Tumor-Growth
+    * `TGI` - Tumor-Growth-Inhibition */
+  model_type?: (ModelTypeEnum | BlankEnum | NullEnum) | null;
   /** Project that "owns" this model */
   project?: number | null;
+  /** tags for the model */
+  tags?: number[];
 };
 export type PharmacodynamicRead = {
   id: number;
@@ -2939,8 +2961,19 @@ export type PharmacodynamicRead = {
   time_max?: number;
   /** whether this model is a library model (i.e. it is not an uploaded user model) */
   is_library_model?: boolean;
+  /** type of model
+    
+    * `PK` - PK-Model
+    * `PKEF` - PK-Effect-Compartment
+    * `PKEX` - PK-Extravascular
+    * `PD` - PD-Model
+    * `TG` - Tumor-Growth
+    * `TGI` - Tumor-Growth-Inhibition */
+  model_type?: (ModelTypeEnum | BlankEnum | NullEnum) | null;
   /** Project that "owns" this model */
   project?: number | null;
+  /** tags for the model */
+  tags?: number[];
 };
 export type PatchedPharmacodynamic = {
   mmt?: string;
@@ -2956,8 +2989,19 @@ export type PatchedPharmacodynamic = {
   time_max?: number;
   /** whether this model is a library model (i.e. it is not an uploaded user model) */
   is_library_model?: boolean;
+  /** type of model
+    
+    * `PK` - PK-Model
+    * `PKEF` - PK-Effect-Compartment
+    * `PKEX` - PK-Extravascular
+    * `PD` - PD-Model
+    * `TG` - Tumor-Growth
+    * `TGI` - Tumor-Growth-Inhibition */
+  model_type?: (ModelTypeEnum | BlankEnum | NullEnum) | null;
   /** Project that "owns" this model */
   project?: number | null;
+  /** tags for the model */
+  tags?: number[];
 };
 export type PatchedPharmacodynamicRead = {
   id?: number;
@@ -2976,8 +3020,19 @@ export type PatchedPharmacodynamicRead = {
   time_max?: number;
   /** whether this model is a library model (i.e. it is not an uploaded user model) */
   is_library_model?: boolean;
+  /** type of model
+    
+    * `PK` - PK-Model
+    * `PKEF` - PK-Effect-Compartment
+    * `PKEX` - PK-Extravascular
+    * `PD` - PD-Model
+    * `TG` - Tumor-Growth
+    * `TGI` - Tumor-Growth-Inhibition */
+  model_type?: (ModelTypeEnum | BlankEnum | NullEnum) | null;
   /** Project that "owns" this model */
   project?: number | null;
+  /** tags for the model */
+  tags?: number[];
 };
 export type PharmacodynamicSbml = {};
 export type PharmacodynamicSbmlWrite = {
@@ -2998,6 +3053,17 @@ export type Pharmacokinetic = {
   time_max?: number;
   /** whether this model is a library model (i.e. it is not an uploaded user model) */
   is_library_model?: boolean;
+  /** type of model
+    
+    * `PK` - PK-Model
+    * `PKEF` - PK-Effect-Compartment
+    * `PKEX` - PK-Extravascular
+    * `PD` - PD-Model
+    * `TG` - Tumor-Growth
+    * `TGI` - Tumor-Growth-Inhibition */
+  model_type?: (ModelTypeEnum | BlankEnum | NullEnum) | null;
+  /** tags for the model */
+  tags?: number[];
 };
 export type PharmacokineticRead = {
   id: number;
@@ -3015,6 +3081,17 @@ export type PharmacokineticRead = {
   time_max?: number;
   /** whether this model is a library model (i.e. it is not an uploaded user model) */
   is_library_model?: boolean;
+  /** type of model
+    
+    * `PK` - PK-Model
+    * `PKEF` - PK-Effect-Compartment
+    * `PKEX` - PK-Extravascular
+    * `PD` - PD-Model
+    * `TG` - Tumor-Growth
+    * `TGI` - Tumor-Growth-Inhibition */
+  model_type?: (ModelTypeEnum | BlankEnum | NullEnum) | null;
+  /** tags for the model */
+  tags?: number[];
 };
 export type PatchedPharmacokinetic = {
   /** true if object has been stored */
@@ -3031,6 +3108,17 @@ export type PatchedPharmacokinetic = {
   time_max?: number;
   /** whether this model is a library model (i.e. it is not an uploaded user model) */
   is_library_model?: boolean;
+  /** type of model
+    
+    * `PK` - PK-Model
+    * `PKEF` - PK-Effect-Compartment
+    * `PKEX` - PK-Extravascular
+    * `PD` - PD-Model
+    * `TG` - Tumor-Growth
+    * `TGI` - Tumor-Growth-Inhibition */
+  model_type?: (ModelTypeEnum | BlankEnum | NullEnum) | null;
+  /** tags for the model */
+  tags?: number[];
 };
 export type PatchedPharmacokineticRead = {
   id?: number;
@@ -3048,6 +3136,17 @@ export type PatchedPharmacokineticRead = {
   time_max?: number;
   /** whether this model is a library model (i.e. it is not an uploaded user model) */
   is_library_model?: boolean;
+  /** type of model
+    
+    * `PK` - PK-Model
+    * `PKEF` - PK-Effect-Compartment
+    * `PKEX` - PK-Extravascular
+    * `PD` - PD-Model
+    * `TG` - Tumor-Growth
+    * `TGI` - Tumor-Growth-Inhibition */
+  model_type?: (ModelTypeEnum | BlankEnum | NullEnum) | null;
+  /** tags for the model */
+  tags?: number[];
 };
 export type ProjectAccess = {
   /** True if user has read access only */
@@ -3078,6 +3177,7 @@ export type Project = {
   species?: ProjectSpeciesEnum;
   /** species weight */
   species_weight?: number;
+  version?: number;
   compound: number;
   species_weight_unit?: number;
 };
@@ -3101,6 +3201,7 @@ export type ProjectRead = {
   species?: ProjectSpeciesEnum;
   /** species weight */
   species_weight?: number;
+  version?: number;
   compound: number;
   species_weight_unit?: number;
   /** users with access to this project */
@@ -3122,6 +3223,7 @@ export type PatchedProject = {
   species?: ProjectSpeciesEnum;
   /** species weight */
   species_weight?: number;
+  version?: number;
   compound?: number;
   species_weight_unit?: number;
 };
@@ -3145,6 +3247,7 @@ export type PatchedProjectRead = {
   species?: ProjectSpeciesEnum;
   /** species weight */
   species_weight?: number;
+  version?: number;
   compound?: number;
   species_weight_unit?: number;
   /** users with access to this project */

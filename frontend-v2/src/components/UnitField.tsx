@@ -3,7 +3,7 @@ import { Control, FieldPath, FieldValues } from "react-hook-form";
 import { SelectProps, SxProps } from "@mui/material";
 import { Compound, UnitRead } from "../app/backendApi";
 import SelectField from "./SelectField";
-import { NEW_MODELS_FEATURE } from "../shared/features";
+import { version } from "os";
 
 type Props<T extends FieldValues> = {
   label: string;
@@ -17,6 +17,7 @@ type Props<T extends FieldValues> = {
   size?: "small" | "medium";
   isPreclinicalPerKg?: boolean;
   sx?: SxProps;
+  version_greater_than_2?: boolean;
 };
 
 function UnitField<T extends FieldValues>({
@@ -30,6 +31,7 @@ function UnitField<T extends FieldValues>({
   isPreclinicalPerKg,
   size = "medium",
   sx,
+  version_greater_than_2 = false,
 }: Props<T>): ReactElement {
   if (!isPreclinicalPerKg) {
     isPreclinicalPerKg = false;
@@ -40,7 +42,7 @@ function UnitField<T extends FieldValues>({
     selectProps = { ...selectProps, disabled: true };
   }
 
-  const compatibleUnits = NEW_MODELS_FEATURE ?
+  const compatibleUnits = version_greater_than_2 ?
     baseUnit?.compatible_units.concat(baseUnit2?.compatible_units || []) :
     isPreclinicalPerKg
       ? baseUnit?.compatible_units.filter((unit) => unit.symbol.endsWith("/kg"))

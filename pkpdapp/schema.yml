@@ -3499,6 +3499,9 @@ components:
       - name
       - stored_time_unit
       - stored_unit
+    BlankEnum:
+      enum:
+      - ''
     CategoryEnum:
       enum:
       - SA
@@ -3590,6 +3593,9 @@ components:
         has_effect:
           type: boolean
           description: whether the pk model has effect compartment
+        number_of_effect_compartments:
+          type: integer
+          description: number of effect compartments
         has_lag:
           type: boolean
           description: whether the pk model has lag
@@ -4169,6 +4175,22 @@ components:
       - id
       - name
       - parent
+    ModelTypeEnum:
+      enum:
+      - PK
+      - PKEF
+      - PKEX
+      - PD
+      - TG
+      - TGI
+      type: string
+      description: |-
+        * `PK` - PK-Model
+        * `PKEF` - PK-Effect-Compartment
+        * `PKEX` - PK-Extravascular
+        * `PD` - PD-Model
+        * `TG` - Tumor-Growth
+        * `TGI` - Tumor-Growth-Inhibition
     Monolix:
       type: object
       properties:
@@ -4200,6 +4222,9 @@ components:
       - pd_model
       - pk_model
       - project_mlxtran
+    NullEnum:
+      enum:
+      - null
     PatchedAlgorithm:
       type: object
       properties:
@@ -4338,6 +4363,9 @@ components:
         has_effect:
           type: boolean
           description: whether the pk model has effect compartment
+        number_of_effect_compartments:
+          type: integer
+          description: number of effect compartments
         has_lag:
           type: boolean
           description: whether the pk model has lag
@@ -4650,10 +4678,30 @@ components:
           type: boolean
           description: whether this model is a library model (i.e. it is not an uploaded
             user model)
+        model_type:
+          nullable: true
+          description: |-
+            type of model
+
+            * `PK` - PK-Model
+            * `PKEF` - PK-Effect-Compartment
+            * `PKEX` - PK-Extravascular
+            * `PD` - PD-Model
+            * `TG` - Tumor-Growth
+            * `TGI` - Tumor-Growth-Inhibition
+          oneOf:
+          - $ref: '#/components/schemas/ModelTypeEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
         project:
           type: integer
           nullable: true
           description: Project that "owns" this model
+        tags:
+          type: array
+          items:
+            type: integer
+          description: tags for the model
     PatchedPharmacokinetic:
       type: object
       properties:
@@ -4687,6 +4735,26 @@ components:
           type: boolean
           description: whether this model is a library model (i.e. it is not an uploaded
             user model)
+        model_type:
+          nullable: true
+          description: |-
+            type of model
+
+            * `PK` - PK-Model
+            * `PKEF` - PK-Effect-Compartment
+            * `PKEX` - PK-Extravascular
+            * `PD` - PD-Model
+            * `TG` - Tumor-Growth
+            * `TGI` - Tumor-Growth-Inhibition
+          oneOf:
+          - $ref: '#/components/schemas/ModelTypeEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        tags:
+          type: array
+          items:
+            type: integer
+          description: tags for the model
     PatchedProject:
       type: object
       properties:
@@ -4733,6 +4801,8 @@ components:
           type: number
           format: double
           description: species weight
+        version:
+          type: integer
         compound:
           type: integer
         species_weight_unit:
@@ -5196,10 +5266,30 @@ components:
           type: boolean
           description: whether this model is a library model (i.e. it is not an uploaded
             user model)
+        model_type:
+          nullable: true
+          description: |-
+            type of model
+
+            * `PK` - PK-Model
+            * `PKEF` - PK-Effect-Compartment
+            * `PKEX` - PK-Extravascular
+            * `PD` - PD-Model
+            * `TG` - Tumor-Growth
+            * `TGI` - Tumor-Growth-Inhibition
+          oneOf:
+          - $ref: '#/components/schemas/ModelTypeEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
         project:
           type: integer
           nullable: true
           description: Project that "owns" this model
+        tags:
+          type: array
+          items:
+            type: integer
+          description: tags for the model
       required:
       - components
       - id
@@ -5246,6 +5336,26 @@ components:
           type: boolean
           description: whether this model is a library model (i.e. it is not an uploaded
             user model)
+        model_type:
+          nullable: true
+          description: |-
+            type of model
+
+            * `PK` - PK-Model
+            * `PKEF` - PK-Effect-Compartment
+            * `PKEX` - PK-Extravascular
+            * `PD` - PD-Model
+            * `TG` - Tumor-Growth
+            * `TGI` - Tumor-Growth-Inhibition
+          oneOf:
+          - $ref: '#/components/schemas/ModelTypeEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        tags:
+          type: array
+          items:
+            type: integer
+          description: tags for the model
       required:
       - id
       - name
@@ -5335,6 +5445,8 @@ components:
           type: number
           format: double
           description: species weight
+        version:
+          type: integer
         compound:
           type: integer
         species_weight_unit:
