@@ -261,111 +261,11 @@ class CombinedModel(MyokitModelMixin, StoredModel):
             e_rate_abs = pk_model.get("Extravascular.RateAbs")
             pk_rate_abs.set_rhs(myokit.Name(e_rate_abs))
 
-        # add effect compartments
-        if self.number_of_effect_compartments > 0:
-            effect_compartment = PharmacokineticModel.objects.get(
-                name="Effect compartment model"
-            )
-            ec_myokit = effect_compartment.create_myokit_model()
-            for i in range(self.number_of_effect_compartments):
-                pk_model.import_component(
-                    ec_myokit.get("PKCompartment"), new_name=f"EffectCompartment{i+1}"
-                )
-
-        have_both_models = self.pk_model is not None and self.pd_model is not None
-        have_no_models = self.pk_model is None and self.pd_model is None
-
-        # combine the two pd models. If any constants overlap prefer the
-        # pd_model (remove the constant from pd_model2) If any state variables
-        # overlap then add the rhs terms
-
-        if self.pd_model2 is not None:
-            pd2_time_var = pd_model2.binding("time")
-            pd2_time_var.set_binding(None)
-            pd2_time_component = pd2_time_var.parent()
-            pd2_time_component.remove_variable(pd2_time_var)
-            if pd2_time_component.count_variables() == 0:
-                pd_model2.remove_component(pd2_time_component)
-
-            pd2_components = list(pd_model2.components())
-            pd2_names = [
-                c.name().replace("PDCompartment", "PDCompartment2")
-                for c in pd2_components
-            ]
-            pd_model.import_component(
-                pd2_components,
-                new_name=pd2_names,
-            )
-
-            # deal with any state variables that overlap
-            for old_pd2_var in pd_model2.variables(state=True):
-                if pd_model.has_variable(old_pd2_var.qname()):
-                    pd_var = pd_model.get(old_pd2_var.qname())
-                    pd2_var = pd_model.get(
-                        pd_var.qname().replace("PDCompartment", "PDCompartment2")
-                    )
-                    pd_var.set_rhs(
-                        myokit.Plus(
-                            pd_var.rhs(),
-                            pd2_var.rhs().clone(
-                                {myokit.Name(pd2_var): myokit.Name(pd_var)}
-                            ),
-                        )
-                    )
-                    for eqn in pd_model.get("PDCompartment2").equations():
-                        if eqn.rhs.depends_on(myokit.Name(pd2_var)):
-                            lhs_var = eqn.lhs.var()
-                            lhs_var.set_rhs(
-                                eqn.rhs.clone(
-                                    {myokit.Name(pd2_var): myokit.Name(pd_var)}
-                                )
-                            )
-                    pd2_var.parent().remove_variable(pd2_var)
-
-            # deal with any constants that overlap
-            for old_pd2_var in pd_model2.variables(const=True):
-                if pd_model.has_variable(old_pd2_var.qname()):
-                    pd2_var = pd_model.get(
-                        old_pd2_var.qname().replace("PDCompartment", "PDCompartment2")
-                    )
-                    pd2_var.parent().remove_variable(pd2_var)
-
-        # use pk model as the base and import the pd model
-        pkpd_model = pk_model
-
-        # default model is one with just time
-        if have_no_models:
-            pkpd_model = myokit.parse_model(
-                """
-            [[model]]
-            [myokit]
-            time = 0 [s] bind time
-                in [s]
-        """
-            )
-
-        # remove time binding and variable from pd model
-        if have_both_models:
-            time_var = pd_model.binding("time")
-            time_var.set_binding(None)
-            time_component = time_var.parent()
-            time_component.remove_variable(time_var)
-            if time_component.count_variables() == 0:
-                pd_model.remove_component(time_component)
-
-        pd_components = list(pd_model.components())
-        pd_names = [c.name().replace("myokit", "PD") for c in pd_components]
-
-        if pd_components:
-            pkpd_model.import_component(
-                pd_components,
-                new_name=pd_names,
-            )
-
-        # do derived variables
+        # do derived variables for pk model
+        calc_C1_f_exists = False
         for derived_variable in self.derived_variables.all():
             try:
-                myokit_var = pkpd_model.get(derived_variable.pk_variable.qname)
+                myokit_var = pk_model.get(derived_variable.pk_variable.qname)
             except KeyError:
                 continue
             myokit_compartment = myokit_var.parent()
@@ -382,7 +282,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 )
                 if has_name:
                     continue
-                time_var = pkpd_model.binding("time")
+                time_var = pk_model.binding("time")
                 var = myokit_compartment.add_variable(
                     new_names[0],
                     rhs=myokit.Name(myokit_var),
@@ -478,6 +378,8 @@ class CombinedModel(MyokitModelMixin, StoredModel):
             elif (
                 derived_variable.type == DerivedVariable.Type.FRACTION_UNBOUND_PLASMA
             ):  # noqa: E501
+                if var_name == "C1":
+                    calc_C1_f_exists = True
                 new_names = [f"calc_{var_name}_f", "FUP_ud"]
                 has_name = any(
                     [
@@ -538,6 +440,113 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 raise ValueError(
                     f"Unknown derived variable type {derived_variable.type}"
                 )
+
+        # add effect compartments
+        if self.number_of_effect_compartments > 0:
+            effect_compartment = PharmacokineticModel.objects.get(
+                name="Effect compartment model"
+            )
+            ec_myokit = effect_compartment.create_myokit_model()
+            c1_variable_name = (
+                "PKCompartment.calc_C1_f" if calc_C1_f_exists else "PKCompartment.C1"
+            )
+            c1_variable = pk_model.get(c1_variable_name)
+            for i in range(self.number_of_effect_compartments):
+                pk_model.import_component(
+                    ec_myokit.get("PKCompartment"), new_name=f"EffectCompartment{i+1}"
+                )
+                c_drug = pk_model.get(f"EffectCompartment{i+1}.C_Drug")
+                c_drug.set_rhs(myokit.Name(c1_variable))
+
+        have_both_models = self.pk_model is not None and self.pd_model is not None
+        have_no_models = self.pk_model is None and self.pd_model is None
+
+        # combine the two pd models. If any constants overlap prefer the
+        # pd_model (remove the constant from pd_model2) If any state variables
+        # overlap then add the rhs terms
+
+        if self.pd_model2 is not None:
+            pd2_time_var = pd_model2.binding("time")
+            pd2_time_var.set_binding(None)
+            pd2_time_component = pd2_time_var.parent()
+            pd2_time_component.remove_variable(pd2_time_var)
+            if pd2_time_component.count_variables() == 0:
+                pd_model2.remove_component(pd2_time_component)
+
+            pd2_components = list(pd_model2.components())
+            pd2_names = [
+                c.name().replace("PDCompartment", "PDCompartment2")
+                for c in pd2_components
+            ]
+            pd_model.import_component(
+                pd2_components,
+                new_name=pd2_names,
+            )
+
+            # deal with any state variables that overlap
+            for old_pd2_var in pd_model2.variables(state=True):
+                if pd_model.has_variable(old_pd2_var.qname()):
+                    pd_var = pd_model.get(old_pd2_var.qname())
+                    pd2_var = pd_model.get(
+                        pd_var.qname().replace("PDCompartment", "PDCompartment2")
+                    )
+                    pd_var.set_rhs(
+                        myokit.Plus(
+                            pd_var.rhs(),
+                            pd2_var.rhs().clone(
+                                {myokit.Name(pd2_var): myokit.Name(pd_var)}
+                            ),
+                        )
+                    )
+                    for eqn in pd_model.get("PDCompartment2").equations():
+                        if eqn.rhs.depends_on(myokit.Name(pd2_var)):
+                            lhs_var = eqn.lhs.var()
+                            lhs_var.set_rhs(
+                                eqn.rhs.clone(
+                                    {myokit.Name(pd2_var): myokit.Name(pd_var)}
+                                )
+                            )
+                    pd2_var.parent().remove_variable(pd2_var)
+
+            # deal with any constants that overlap
+            for old_pd2_var in pd_model2.variables(const=True):
+                if pd_model.has_variable(old_pd2_var.qname()):
+                    pd2_var = pd_model.get(
+                        old_pd2_var.qname().replace("PDCompartment", "PDCompartment2")
+                    )
+                    pd2_var.parent().remove_variable(pd2_var)
+
+        # use pk model as the base and import the pd model
+        pkpd_model = pk_model
+
+        # default model is one with just time
+        if have_no_models:
+            pkpd_model = myokit.parse_model(
+                """
+            [[model]]
+            [myokit]
+            time = 0 [s] bind time
+                in [s]
+        """
+            )
+
+        # remove time binding and variable from pd model
+        if have_both_models:
+            time_var = pd_model.binding("time")
+            time_var.set_binding(None)
+            time_component = time_var.parent()
+            time_component.remove_variable(time_var)
+            if time_component.count_variables() == 0:
+                pd_model.remove_component(time_component)
+
+        pd_components = list(pd_model.components())
+        pd_names = [c.name().replace("myokit", "PD") for c in pd_components]
+
+        if pd_components:
+            pkpd_model.import_component(
+                pd_components,
+                new_name=pd_names,
+            )
 
         # do mappings
         for mapping in self.mappings.all():

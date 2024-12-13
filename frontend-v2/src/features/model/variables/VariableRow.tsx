@@ -154,11 +154,13 @@ const VariableRow: FC<Props> = ({
     return null;
   }
 
+  let variable_name = variable.name;
+
   return noDosing ? null : (
     <TableRow>
       <TableCell size="small" width="5rem">
         <Tooltip title={variable.description}>
-          <Typography>{variable.name}</Typography>
+          <Typography>{variable_name}</Typography>
         </Tooltip>
       </TableCell>
       <TableCell size="small" width="5rem">
