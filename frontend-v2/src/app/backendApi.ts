@@ -992,6 +992,42 @@ const injectedRtkApi = api.injectEndpoints({
         method: "DELETE",
       }),
     }),
+    tagList: build.query<TagListApiResponse, TagListApiArg>({
+      query: () => ({ url: `/api/tag/` }),
+    }),
+    tagCreate: build.mutation<TagCreateApiResponse, TagCreateApiArg>({
+      query: (queryArg) => ({
+        url: `/api/tag/`,
+        method: "POST",
+        body: queryArg.tag,
+      }),
+    }),
+    tagRetrieve: build.query<TagRetrieveApiResponse, TagRetrieveApiArg>({
+      query: (queryArg) => ({ url: `/api/tag/${queryArg.id}/` }),
+    }),
+    tagUpdate: build.mutation<TagUpdateApiResponse, TagUpdateApiArg>({
+      query: (queryArg) => ({
+        url: `/api/tag/${queryArg.id}/`,
+        method: "PUT",
+        body: queryArg.tag,
+      }),
+    }),
+    tagPartialUpdate: build.mutation<
+      TagPartialUpdateApiResponse,
+      TagPartialUpdateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/tag/${queryArg.id}/`,
+        method: "PATCH",
+        body: queryArg.patchedTag,
+      }),
+    }),
+    tagDestroy: build.mutation<TagDestroyApiResponse, TagDestroyApiArg>({
+      query: (queryArg) => ({
+        url: `/api/tag/${queryArg.id}/`,
+        method: "DELETE",
+      }),
+    }),
     unitList: build.query<UnitListApiResponse, UnitListApiArg>({
       query: (queryArg) => ({
         url: `/api/unit/`,
@@ -1756,6 +1792,34 @@ export type SubjectGroupPartialUpdateApiArg = {
 export type SubjectGroupDestroyApiResponse = unknown;
 export type SubjectGroupDestroyApiArg = {
   /** A unique integer value identifying this subject group. */
+  id: number;
+};
+export type TagListApiResponse = /** status 200  */ TagRead[];
+export type TagListApiArg = void;
+export type TagCreateApiResponse = /** status 201  */ TagRead;
+export type TagCreateApiArg = {
+  tag: Tag;
+};
+export type TagRetrieveApiResponse = /** status 200  */ TagRead;
+export type TagRetrieveApiArg = {
+  /** A unique integer value identifying this tag. */
+  id: number;
+};
+export type TagUpdateApiResponse = /** status 200  */ TagRead;
+export type TagUpdateApiArg = {
+  /** A unique integer value identifying this tag. */
+  id: number;
+  tag: Tag;
+};
+export type TagPartialUpdateApiResponse = /** status 200  */ TagRead;
+export type TagPartialUpdateApiArg = {
+  /** A unique integer value identifying this tag. */
+  id: number;
+  patchedTag: PatchedTag;
+};
+export type TagDestroyApiResponse = unknown;
+export type TagDestroyApiArg = {
+  /** A unique integer value identifying this tag. */
   id: number;
 };
 export type UnitListApiResponse = /** status 200  */ UnitRead[];
@@ -3698,6 +3762,24 @@ export type PatchedSubjectGroupRead = {
   /** Project that this group belongs to. */
   project?: number | null;
 };
+export type Tag = {
+  /** name of the tag */
+  name: string;
+};
+export type TagRead = {
+  id: number;
+  /** name of the tag */
+  name: string;
+};
+export type PatchedTag = {
+  /** name of the tag */
+  name?: string;
+};
+export type PatchedTagRead = {
+  id?: number;
+  /** name of the tag */
+  name?: string;
+};
 export type Unit = {
   /** symbol for unit display */
   symbol: string;
@@ -4151,6 +4233,12 @@ export const {
   useSubjectGroupUpdateMutation,
   useSubjectGroupPartialUpdateMutation,
   useSubjectGroupDestroyMutation,
+  useTagListQuery,
+  useTagCreateMutation,
+  useTagRetrieveQuery,
+  useTagUpdateMutation,
+  useTagPartialUpdateMutation,
+  useTagDestroyMutation,
   useUnitListQuery,
   useUnitCreateMutation,
   useUnitRetrieveQuery,

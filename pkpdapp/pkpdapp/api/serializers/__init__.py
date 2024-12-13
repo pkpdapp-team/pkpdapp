@@ -8,9 +8,7 @@
 
 from .polymorphicserializer import PolymorphicSerializer
 
-from .validators import (
-    ValidSbml, ValidMmt
-)
+from .validators import ValidSbml, ValidMmt
 from .monolix import MonolixSerializer
 from .auce import AuceSerializer
 from .biomarker_type import BiomarkerTypeSerializer
@@ -48,5 +46,4 @@ from .simulation import (
     SimulationCxLineSerializer,
     SimulationSliderSerializer,
 )
-
-
+from .tag import TagSerializer

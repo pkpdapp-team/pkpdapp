@@ -9,6 +9,7 @@ import {
   usePharmacokineticListQuery,
   useUnitListQuery,
   CompoundRead,
+  useTagListQuery,
 } from "../../app/backendApi";
 import { Control } from "react-hook-form";
 import { Stack, Grid, Tooltip, Box, Button, Typography, FormControl, InputLabel, Select, OutlinedInput, MenuItem, Chip, SelectChangeEvent } from "@mui/material";
@@ -81,10 +82,12 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
     { compoundId: project?.compound },
     { skip: !project?.compound },
   );
-  const [tags, setTags] = useState<string[]>([]);
+  // get list of possible tags
+  const { data: tagsData, isLoading: tagsLoading } = useTagListQuery();
+  const [tags, setTags] = useState<number[]>([]);
 
-  const handleTagChange = (event: SelectChangeEvent<string[]>, child: ReactNode) => {
-    setTags(event.target.value as string[]);
+  const handleTagChange = (event: SelectChangeEvent<number[]>, child: ReactNode) => {
+    setTags(event.target.value as number[]);
   }
   const isSharedWithMe = useSelector((state: RootState) =>
     selectIsProjectShared(state, project),
@@ -92,11 +95,11 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
   const [isCodeModalOpen, setIsCodeModalOpen] = useState(false);
   const [isSbmlModalOpen, setIsSbmlModalOpen] = useState(false);
 
-  const loading = [pdModelLoading, pkModelLoading, isLoadingUnits];
+  const loading = [pdModelLoading, pkModelLoading, isLoadingUnits, tagsLoading];
   if (loading.some((l) => l)) {
     return <div>Loading...</div>;
   }
-  if (!pdModels || !pkModels || !units) {
+  if (!pdModels || !pkModels || !units || !tagsData) {
     return <div>Error loading models.</div>;
   }
 
@@ -109,6 +112,14 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
       is_pk_model = m.model_type ? m.model_type === "PK" : false;
     } else {
       is_pk_model = is_pk_model && !m.name.includes(!clinical ? "_clinical" : "_preclinical")
+    }
+    if (!is_pk_model) { return false; }
+    if (m.tags) {
+      for (const tag of tags) {
+        if (!m.tags.includes(tag)) {
+          return false;
+        }
+      }
     }
     return is_pk_model;
   });
@@ -196,12 +207,12 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
     displayEmpty: true,
   };
 
-  const tagOptions = [
-    { value: "ADA", label: "ADA" },
-    { value: "Anti-Drug Antibodies", label: "Anti-Drug Antibodies" },
-  ];
+  const tagOptions = tagsData.map((tag) => {
+    return { value: tag.id, label: tag.name }
+  });
 
   const effectCompartmentTooltip = "Effect compartments will be driven by the concentration in the central compartment (C1), unless unbound concentration for C1 is selected, in which case the effect compartment is driven by the unbound concentration (calc_C1_f)";
+  const modelTypesLabel = "Filter by Model Type";
 
   return (
     <Grid container spacing={2} marginTop={5}>
@@ -241,8 +252,8 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
 
             direction="row" alignItems="center" spacing={1}
           >
-            <FormControl sx={{ width: "calc(100% - 3rem)" }}>
-              <InputLabel id="tags-label">Model Types</InputLabel>
+            <FormControl sx={{ width: "calc(100% - 3rem)" }} size="small">
+              <InputLabel id="tags-label">{modelTypesLabel}</InputLabel>
               <Select
                 size="small"
                 labelId="tags-label"
@@ -250,12 +261,13 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
                 multiple
                 value={tags}
                 onChange={handleTagChange}
-                input={<OutlinedInput id="select-multiple-tags" label="Chip" />}
+                input={<OutlinedInput id="select-multiple-tags" label={modelTypesLabel} />}
                 renderValue={(selected) => (
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                    {selected.map((value) => (
-                      <Chip key={value} label={value} />
-                    ))}
+                    {selected.map((value) => {
+                      const label = tagOptions.find((tag) => tag.value === value)?.label;
+                      return (<Chip key={value} label={label} />)
+                    })}
                   </Box>
                 )}
               >
