@@ -6,14 +6,14 @@
 # flake8: noqa F401
 
 
-from .login import (login_view, logout_view, get_csrf, SessionView, WhoAmIView)
+from .login import login_view, logout_view, get_csrf, SessionView, WhoAmIView
 from .filters import (
     UserAccessFilter,
     DosedPkModelFilter,
     PdModelFilter,
     ProjectFilter,
     InferenceFilter,
-    DatasetFilter
+    DatasetFilter,
 )
 from .permissions import (
     NotADatasetDose,
@@ -38,8 +38,11 @@ from .nca import NcaView
 from .project import ProjectView, ProjectAccessView
 from .protocol import ProtocolView
 from .inference import (
-    InferenceView, InferenceChainView, AlgorithmView,
-    StopInferenceView, InferenceWizardView,
+    InferenceView,
+    InferenceChainView,
+    AlgorithmView,
+    StopInferenceView,
+    InferenceWizardView,
 )
 from .simulate import (
     SimulateCombinedView,
@@ -52,3 +55,4 @@ from .unit import UnitView
 from .user import UserView
 from .variable import VariableView
 from .likelihoods import LogLikelihoodView
+from .tag import TagView
