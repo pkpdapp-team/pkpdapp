@@ -442,10 +442,10 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
 
   const yAxisVariables = plotData
     .filter((d) => !d.yaxis)
-    .map((d) => d.name?.split(" ")[0]);
+    .map((d) => d.name?.replace("REF ", "").split(" ")[0]);
   const y2AxisVariables = plotData
     .filter((d) => d.yaxis)
-    .map((d) => d.name?.split(" ")[0]);
+    .map((d) => d.name?.replace("REF ", "").split(" ")[0]);
   let yAxisTitle = [...new Set(yAxisVariables)].join(", ");
   let y2AxisTitle = [...new Set(y2AxisVariables)].join(", ");
   let xAxisTitle = "Time";
