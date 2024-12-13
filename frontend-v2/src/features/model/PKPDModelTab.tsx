@@ -1,4 +1,4 @@
-import { FC, useState } from "react";
+import { FC, ReactNode, useState } from "react";
 import {
   CombinedModelRead,
   CombinedModelUpdateApiArg,
@@ -11,7 +11,7 @@ import {
   CompoundRead,
 } from "../../app/backendApi";
 import { Control } from "react-hook-form";
-import { Stack, Grid, Tooltip, Box, Button, Typography } from "@mui/material";
+import { Stack, Grid, Tooltip, Box, Button, Typography, FormControl, InputLabel, Select, OutlinedInput, MenuItem, Chip, SelectChangeEvent } from "@mui/material";
 import FloatField from "../../components/FloatField";
 import UnitField from "../../components/UnitField";
 import SelectField from "../../components/SelectField";
@@ -81,7 +81,11 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
     { compoundId: project?.compound },
     { skip: !project?.compound },
   );
-  const [showCode, setShowCode] = useState(false);
+  const [tags, setTags] = useState<string[]>([]);
+
+  const handleTagChange = (event: SelectChangeEvent<string[]>, child: ReactNode) => {
+    setTags(event.target.value as string[]);
+  }
   const isSharedWithMe = useSelector((state: RootState) =>
     selectIsProjectShared(state, project),
   );
@@ -192,6 +196,13 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
     displayEmpty: true,
   };
 
+  const tagOptions = [
+    { value: "ADA", label: "ADA" },
+    { value: "Anti-Drug Antibodies", label: "Anti-Drug Antibodies" },
+  ];
+
+  const effectCompartmentTooltip = "Effect compartments will be driven by the concentration in the central compartment (C1), unless unbound concentration for C1 is selected, in which case the effect compartment is driven by the unbound concentration (calc_C1_f)";
+
   return (
     <Grid container spacing={2} marginTop={5}>
       <Grid item xl={4} md={8} xs={10}>
@@ -226,7 +237,47 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
       </Grid>
       <Grid container item spacing={2}>
         <Grid item xl={4} md={8} xs={10}>
-          <Stack direction="row" alignItems="center" spacing={1}>
+          <Stack
+
+            direction="row" alignItems="center" spacing={1}
+          >
+            <FormControl sx={{ width: "calc(100% - 3rem)" }}>
+              <InputLabel id="tags-label">Model Types</InputLabel>
+              <Select
+                size="small"
+                labelId="tags-label"
+                id="tags"
+                multiple
+                value={tags}
+                onChange={handleTagChange}
+                input={<OutlinedInput id="select-multiple-tags" label="Chip" />}
+                renderValue={(selected) => (
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                    {selected.map((value) => (
+                      <Chip key={value} label={value} />
+                    ))}
+                  </Box>
+                )}
+              >
+                {tagOptions.map((tag) => (
+                  <MenuItem
+                    key={tag.value}
+                    value={tag.value}
+                  >
+                    {tag.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Stack>
+          <Stack
+            sx={{
+              marginTop: 2,
+              display: "flex",
+              "& .MuiFormControlLabel-label": { fontSize: ".9rem" },
+            }}
+            direction="row" alignItems="center" spacing={1}
+          >
             <SelectField
               size="small"
               label="PK Model"
@@ -237,6 +288,7 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
               selectProps={defaultProps}
             />
           </Stack>
+
           {model.pk_model && (
             <Stack
               sx={{
@@ -276,17 +328,19 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
                   </div>
                 </Tooltip>}
               {version_greater_than_2 &&
-                <div style={{ fontSize: "12px !important" }}>
-                  <SelectField
-                    size="small"
-                    label="Effect Compartments"
-                    name="model.number_of_effect_compartments"
-                    control={control}
-                    options={Array.from(Array(6).keys()).map((i) => { return { value: i, label: i.toString() } })}
-                    formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
-                    selectProps={defaultProps}
-                  />
-                </div>
+                <Tooltip title={effectCompartmentTooltip}>
+                  <div style={{ fontSize: "12px !important" }}>
+                    <SelectField
+                      size="small"
+                      label="Effect Compartments"
+                      name="model.number_of_effect_compartments"
+                      control={control}
+                      options={Array.from(Array(6).keys()).map((i) => { return { value: i, label: i.toString() } })}
+                      formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
+                      selectProps={defaultProps}
+                    />
+                  </div>
+                </Tooltip>
               }
               {version_greater_than_2 &&
                 <Tooltip title="Includes Anti-Drug Antibodies">
