@@ -210,7 +210,11 @@ const MapVariablesTab: FC<Props> = ({
     if (aValue !== bValue) {
       return bValue - aValue;
     } else {
-      return a.name > b.name ? 1 : -1;
+      if (a.name === b.name) {
+        return a.qname > b.qname ? 1 : -1;
+      } else {
+        return a.name > b.name ? 1 : -1;
+      }
     }
   });
 
