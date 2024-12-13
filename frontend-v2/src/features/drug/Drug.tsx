@@ -24,7 +24,7 @@ import {
   useProjectRetrieveQuery,
   useUnitListQuery,
 } from "../../app/backendApi";
-import { useFieldArray, useForm } from "react-hook-form";
+import { useFieldArray, useForm, useFormState } from "react-hook-form";
 import FloatField from "../../components/FloatField";
 import UnitField from "../../components/UnitField";
 import { FC, useEffect, useMemo, useState } from "react";
@@ -39,6 +39,7 @@ import Delete from "@mui/icons-material/Delete";
 import { decrementDirtyCount, incrementDirtyCount } from "../main/mainSlice";
 import AddCircleOutlineOutlinedIcon from "@mui/icons-material/AddCircleOutlineOutlined";
 import { getTableHeight } from "../../shared/calculateTableHeights";
+import useDirty from "../../hooks/useDirty";
 
 export const DOUBLE_TABLE_SECOND_BREAKPOINTS = [
   {
@@ -103,6 +104,8 @@ const Drug: FC = () => {
         efficacy_experiments: [],
       },
     });
+  const { isDirty } = useFormState({ control });
+  useDirty(isDirty);
 
   const {
     fields: efficacy_experiments,
@@ -158,8 +161,14 @@ const Drug: FC = () => {
   );
 
   useEffect(() => {
+    if (isDirty) {
+      submit();
+    }
+  }, [isDirty, submit]);
+
+  useEffect(() => {
     submit();
-  }, [efficacy_experiments?.length]);
+  }, [efficacy_experiments?.length, submit]);
 
   const addNewEfficacyExperiment = () => {
     append([
@@ -359,7 +368,7 @@ const Drug: FC = () => {
                   {isEditIndex === index ? (
                     <TextField
                       size="small"
-                      sx={{ flex: "1", minWidth: '10rem' }}
+                      sx={{ flex: "1", minWidth: "10rem" }}
                       label="Name"
                       name={`efficacy_experiments.${index}.name`}
                       control={control}
@@ -379,7 +388,7 @@ const Drug: FC = () => {
                   {isEditIndex === index ? (
                     <FloatField
                       size="small"
-                      sx={{ flex: "1", minWidth: '5rem' }}
+                      sx={{ flex: "1", minWidth: "5rem" }}
                       label="C50"
                       name={`efficacy_experiments.${index}.c50`}
                       control={control}
@@ -407,9 +416,10 @@ const Drug: FC = () => {
                   ) : (
                     <Typography>
                       {units.find(
-                        (u) => u.id === getValues(`efficacy_experiments.${index}.c50_unit`),
-                      )?.symbol ||
-                        "-"}
+                        (u) =>
+                          u.id ===
+                          getValues(`efficacy_experiments.${index}.c50_unit`),
+                      )?.symbol || "-"}
                     </Typography>
                   )}
                 </TableCell>
@@ -417,7 +427,7 @@ const Drug: FC = () => {
                   {isEditIndex === index ? (
                     <FloatField
                       size="small"
-                      sx={{ minWidth: '5rem' }}
+                      sx={{ minWidth: "5rem" }}
                       label="Hill-coefficient"
                       name={`efficacy_experiments.${index}.hill_coefficient`}
                       control={control}
