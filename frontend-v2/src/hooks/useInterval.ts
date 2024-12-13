@@ -6,12 +6,14 @@ type IntervalProps = {
   isDirty?: boolean;
 };
 
+const defaultCallback = () => null;
+
 export default function useInterval({
   callback,
   delay,
   isDirty = false,
 }: IntervalProps) {
-  const savedCallback = useRef<() => void>();
+  const savedCallback = useRef<() => void>(defaultCallback);
 
   useEffect(() => {
     savedCallback.current = callback;
