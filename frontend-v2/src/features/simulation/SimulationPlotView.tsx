@@ -34,6 +34,8 @@ import { RootState } from "../../app/store";
 import useDataset from "../../hooks/useDataset";
 import useSubjectGroups from "../../hooks/useSubjectGroups";
 
+type ScatterDataWithVariable = ScatterData & { variable: string };
+
 const Plot = createPlotlyComponent(Plotly);
 // https://github.com/plotly/plotly.js/blob/8c47c16daaa2020468baf9376130e085a4f01ec6/src/components/color/attributes.js#L4-L16
 const plotColours = [
@@ -202,6 +204,7 @@ function generatePlotData(
       x: d.time.map((t) => t * xconversionFactor),
       y: variableValues.map((v) => v * yconversionFactor),
       name: name.trim(),
+      variable: variableName,
       visible: visible ? true : "legendonly",
       line: {
         color: colour,
@@ -216,6 +219,7 @@ function generatePlotData(
       y: [],
       type: "scatter",
       name: name.trim(),
+      variable: y_axis.variable,
       visible: visible ? true : "legendonly",
     };
   }
@@ -426,7 +430,7 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
           }),
         );
     })
-    .flat() as Partial<ScatterData>[];
+    .flat() as Partial<ScatterDataWithVariable>[];
 
   const concentrationUnit = units.find((unit) => unit.symbol === "pmol/L");
   if (concentrationUnit === undefined) {
@@ -442,10 +446,10 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
 
   const yAxisVariables = plotData
     .filter((d) => !d.yaxis)
-    .map((d) => d.name?.replace("REF ", "").split(" ")[0]);
+    .map((d) => d.variable);
   const y2AxisVariables = plotData
     .filter((d) => d.yaxis)
-    .map((d) => d.name?.replace("REF ", "").split(" ")[0]);
+    .map((d) => d.variable);
   let yAxisTitle = [...new Set(yAxisVariables)].join(", ");
   let y2AxisTitle = [...new Set(y2AxisVariables)].join(", ");
   let xAxisTitle = "Time";
