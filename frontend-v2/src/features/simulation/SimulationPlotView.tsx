@@ -166,7 +166,7 @@ function generatePlotData(
   model: CombinedModelRead,
   variables: VariableRead[],
   xconversionFactor: number,
-  isReference?: boolean
+  isReference?: boolean,
 ) {
   const visible =
     index === 0
@@ -196,11 +196,12 @@ function generatePlotData(
     : 1.0;
 
   if (variableValues) {
+    const name = `${isReference ? "REF" : ""} ${variableName} ${group?.name || "project"}`;
     return {
       yaxis: y_axis.right ? "y2" : undefined,
       x: d.time.map((t) => t * xconversionFactor),
       y: variableValues.map((v) => v * yconversionFactor),
-      name: `${isReference ? 'REF' : ''} ${variableName} ${group?.name || "project"}`,
+      name: name.trim(),
       visible: visible ? true : "legendonly",
       line: {
         color: colour,
@@ -208,12 +209,13 @@ function generatePlotData(
       },
     };
   } else {
+    const name = `${isReference ? "REF" : ""} ${y_axis.variable} ${group?.name || "project"}`;
     return {
       yaxis: y_axis.right ? "y2" : undefined,
       x: [],
       y: [],
       type: "scatter",
-      name: `${isReference ? 'REF' : ''} ${y_axis.variable} ${group?.name || "project"}`,
+      name: name.trim(),
       visible: visible ? true : "legendonly",
     };
   }
@@ -293,7 +295,7 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
   isVertical,
   isHorizontal,
   dimensions,
-  plotCount
+  plotCount,
 }) => {
   const projectId = useSelector(
     (state: RootState) => state.main.selectedProject,
@@ -410,7 +412,7 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
               model,
               variables,
               xconversionFactor,
-              true
+              true,
             );
             ({ minY, maxY, minY2, maxY2 } = minMaxAxisLimits(
               plotDataReference.y,
