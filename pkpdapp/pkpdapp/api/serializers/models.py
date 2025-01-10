@@ -3,6 +3,7 @@
 # is released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
+import myokit
 from rest_framework import serializers
 from pkpdapp.models import (
     PharmacokineticModel,
@@ -51,6 +52,7 @@ class CombinedModelSerializer(serializers.ModelSerializer):
     components = serializers.SerializerMethodField("get_components")
     variables = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
     mmt = serializers.SerializerMethodField("get_mmt", read_only=True)
+    sbml = serializers.SerializerMethodField("get_sbml", read_only=True)
     time_unit = serializers.SerializerMethodField("get_time_unit")
     is_library_model = serializers.SerializerMethodField("get_is_library_model")
 
@@ -70,6 +72,11 @@ class CombinedModelSerializer(serializers.ModelSerializer):
             return -1
         else:
             return unit.id
+
+    def get_sbml(self, m) -> str:
+        sbml_model = myokit.formats.sbml.Model.from_myokit_model(m.get_myokit_model())
+        sbml_writer = myokit.formats.sbml.SBMLWriter()
+        return sbml_writer.write_string(sbml_model)
 
     def get_components(self, m):
         model = m.get_myokit_model()

@@ -2122,6 +2122,7 @@ export type CombinedModelRead = {
   components: string;
   variables: number[];
   mmt: string;
+  sbml: string;
   time_unit: number;
   is_library_model: boolean;
   /** true if object has been stored */
@@ -2204,6 +2205,7 @@ export type PatchedCombinedModelRead = {
   components?: string;
   variables?: number[];
   mmt?: string;
+  sbml?: string;
   time_unit?: number;
   is_library_model?: boolean;
   /** true if object has been stored */
@@ -2737,7 +2739,9 @@ export type Inference = {
   /** If executing, this is the celery task id */
   task_id?: string | null;
   /** metadata for inference */
-  metadata?: any;
+  metadata?: {
+    [key: string]: any;
+  };
   /** Project that "owns" this inference object */
   project: number;
   /** algorithm used to perform the inference */
@@ -2771,7 +2775,9 @@ export type InferenceRead = {
   /** If executing, this is the celery task id */
   task_id?: string | null;
   /** metadata for inference */
-  metadata?: any;
+  metadata?: {
+    [key: string]: any;
+  };
   /** Project that "owns" this inference object */
   project: number;
   /** algorithm used to perform the inference */
@@ -2804,7 +2810,9 @@ export type PatchedInference = {
   /** If executing, this is the celery task id */
   task_id?: string | null;
   /** metadata for inference */
-  metadata?: any;
+  metadata?: {
+    [key: string]: any;
+  };
   /** Project that "owns" this inference object */
   project?: number;
   /** algorithm used to perform the inference */
@@ -2838,7 +2846,9 @@ export type PatchedInferenceRead = {
   /** If executing, this is the celery task id */
   task_id?: string | null;
   /** metadata for inference */
-  metadata?: any;
+  metadata?: {
+    [key: string]: any;
+  };
   /** Project that "owns" this inference object */
   project?: number;
   /** algorithm used to perform the inference */
@@ -3194,7 +3204,9 @@ export type ResultsTable = {
     * `intervals` - Time intervals. */
   columns: ColumnsEnum;
   /** Filters to apply to the table. */
-  filters?: any | null;
+  filters?: {
+    [key: string]: any;
+  } | null;
   /** Project that this table belongs to. */
   project?: number | null;
 };
@@ -3217,7 +3229,9 @@ export type ResultsTableRead = {
     * `intervals` - Time intervals. */
   columns: ColumnsEnum;
   /** Filters to apply to the table. */
-  filters?: any | null;
+  filters?: {
+    [key: string]: any;
+  } | null;
   /** Project that this table belongs to. */
   project?: number | null;
 };
@@ -3239,7 +3253,9 @@ export type PatchedResultsTable = {
     * `intervals` - Time intervals. */
   columns?: ColumnsEnum;
   /** Filters to apply to the table. */
-  filters?: any | null;
+  filters?: {
+    [key: string]: any;
+  } | null;
   /** Project that this table belongs to. */
   project?: number | null;
 };
@@ -3262,7 +3278,9 @@ export type PatchedResultsTableRead = {
     * `intervals` - Time intervals. */
   columns?: ColumnsEnum;
   /** Filters to apply to the table. */
-  filters?: any | null;
+  filters?: {
+    [key: string]: any;
+  } | null;
   /** Project that this table belongs to. */
   project?: number | null;
 };
