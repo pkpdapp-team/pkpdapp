@@ -74,9 +74,15 @@ class CombinedModelSerializer(serializers.ModelSerializer):
             return unit.id
 
     def get_sbml(self, m) -> str:
-        sbml_model = myokit.formats.sbml.Model.from_myokit_model(m.get_myokit_model())
-        sbml_writer = myokit.formats.sbml.SBMLWriter()
-        return sbml_writer.write_string(sbml_model)
+        try:
+            sbml_model = myokit.formats.sbml.Model.from_myokit_model(
+                m.get_myokit_model()
+            )
+            sbml_writer = myokit.formats.sbml.SBMLWriter()
+            output = sbml_writer.write_string(sbml_model)
+        except Exception as e:
+            output = f"Error converting to SBML: {e}"
+        return output
 
     def get_components(self, m):
         model = m.get_myokit_model()
