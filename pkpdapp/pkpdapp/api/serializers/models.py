@@ -3,7 +3,6 @@
 # is released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-import myokit
 from rest_framework import serializers
 from pkpdapp.models import (
     PharmacokineticModel,
@@ -75,11 +74,7 @@ class CombinedModelSerializer(serializers.ModelSerializer):
 
     def get_sbml(self, m) -> str:
         try:
-            sbml_model = myokit.formats.sbml.Model.from_myokit_model(
-                m.get_myokit_model()
-            )
-            sbml_writer = myokit.formats.sbml.SBMLWriter()
-            output = sbml_writer.write_string(sbml_model)
+            m.get_sbml()
         except Exception as e:
             output = f"Error converting to SBML: {e}"
         return output
