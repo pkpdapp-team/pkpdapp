@@ -91,6 +91,7 @@ const Model: FC = () => {
     components: "",
     variables: [],
     mmt: "",
+    sbml: "",
     time_unit: 0,
     is_library_model: false,
   };

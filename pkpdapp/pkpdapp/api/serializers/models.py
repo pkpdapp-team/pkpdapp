@@ -3,6 +3,7 @@
 # is released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
+import traceback
 from rest_framework import serializers
 from pkpdapp.models import (
     PharmacokineticModel,
@@ -74,10 +75,10 @@ class CombinedModelSerializer(serializers.ModelSerializer):
 
     def get_sbml(self, m) -> str:
         try:
-            m.get_sbml()
+            return m.get_sbml()
         except Exception as e:
-            output = f"Error converting to SBML: {e}"
-        return output
+            print(traceback.format_exc())
+            return f"Error converting to SBML: {e}"
 
     def get_components(self, m):
         model = m.get_myokit_model()

@@ -73,6 +73,7 @@ const PKPDModelTab: FC<Props> = ({ model, project, control }: Props) => {
     selectIsProjectShared(state, project),
   );
   const [isCodeModalOpen, setIsCodeModalOpen] = useState(false);
+  const [isSbmlModalOpen, setIsSbmlModalOpen] = useState(false);
 
   const loading = [pdModelLoading, pkModelLoading];
   if (loading.some((l) => l)) {
@@ -301,14 +302,26 @@ const PKPDModelTab: FC<Props> = ({ model, project, control }: Props) => {
                 </Tooltip>
               )}
             </Stack>
-            <Button
-              variant="outlined"
-              onClick={() => setIsCodeModalOpen(true)}
+            <Stack
+              direction="row"
+              spacing={1}
               sx={{ marginTop: "1rem" }}
-              endIcon={<CodeOutlinedIcon />}
             >
-              Show code
-            </Button>
+              <Button
+                variant="outlined"
+                onClick={() => setIsCodeModalOpen(true)}
+                endIcon={<CodeOutlinedIcon />}
+              >
+                Show MMT code
+              </Button>
+              <Button
+                variant="outlined"
+                onClick={() => setIsSbmlModalOpen(true)}
+                endIcon={<CodeOutlinedIcon />}
+              >
+                Show SBML code
+              </Button>
+            </Stack>
           </Grid>
         </Grid>
         <Box width="100%" height="0" />
@@ -317,6 +330,11 @@ const PKPDModelTab: FC<Props> = ({ model, project, control }: Props) => {
         isOpen={isCodeModalOpen}
         onClose={() => setIsCodeModalOpen(false)}
         code={model.mmt}
+      />
+      <CodeModal
+        isOpen={isSbmlModalOpen}
+        onClose={() => setIsSbmlModalOpen(false)}
+        code={model.sbml}
       />
     </Grid>
   );
