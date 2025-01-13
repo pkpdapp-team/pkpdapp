@@ -7,7 +7,6 @@ import {
 } from "../../app/backendApi";
 import {
   Box,
-  Grid,
   IconButton,
   Input,
   Slider,
@@ -105,7 +104,7 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
   };
 
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setEditing(true)
+    setEditing(true);
     setValue(Number(event.target.value));
   };
 
@@ -121,7 +120,7 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
   const stepValue = (maxValue - minValue) / 1000.0;
 
   const handleBlur = () => {
-    setEditing(false)
+    setEditing(false);
     let truncatedValue = value;
     if (value < minValue) {
       truncatedValue = minValue;
@@ -142,7 +141,7 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
       return value.toExponential(3);
     }
     return value.toFixed(3);
-  }
+  };
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -240,7 +239,7 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
       </Box>
       <Box alignItems="center">
         <Input
-          sx={{ width: '100%' }}
+          sx={{ width: "100%" }}
           value={formatNumber(value)}
           size="small"
           onChange={handleInputChange}

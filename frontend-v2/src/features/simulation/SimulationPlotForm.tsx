@@ -400,7 +400,7 @@ const SimulationPlotForm: FC<SimulationPlotFormProps> = ({
         />
       </Stack>
       <List>
-        {rhs_y_axes.map((yAxis, yAxisIndex) => (
+        {rhs_y_axes.map((yAxis) => (
           <ListItem key={yAxis.id}>
             <Grid container spacing={2}>
               <Grid item xs={7}>

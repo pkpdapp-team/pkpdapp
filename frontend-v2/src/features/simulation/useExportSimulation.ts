@@ -7,6 +7,7 @@ import {
   useUnitListQuery,
   useVariableListQuery,
   ProjectRead,
+  SimulateResponse,
 } from "../../app/backendApi";
 
 interface iExportSimulation {
@@ -15,7 +16,11 @@ interface iExportSimulation {
   project: ProjectRead | undefined;
 }
 
-const parseResponse = (data: any, timeCol: number, label: string) => {
+const parseResponse = (
+  data: SimulateResponse,
+  timeCol: number,
+  label: string,
+) => {
   const cols = Object.keys(data.outputs);
   const nrows = data.outputs[Object.keys(data.outputs)[0]].length;
   const ncols = cols.length;
