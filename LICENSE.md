@@ -1,6 +1,6 @@
 BSD 3-Clause License
 
-Copyright (c) 2024, PKPDApp
+Copyright (c) 2025, PKPDApp
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
