@@ -9,7 +9,7 @@ import {
   UnitRead,
   VariableRead,
 } from "../../app/backendApi";
-import { Layout, ScatterData } from "plotly.js";
+import { Layout, ScatterData, Shape } from "plotly.js";
 import { SubjectBiomarker } from "../../hooks/useDataset";
 
 export type ScatterDataWithVariable = ScatterData & { variable: string };
@@ -378,14 +378,61 @@ export const getPlotDimensions = ({
       };
 };
 
-type PlotLayoutProps = {
-  data: SimulateResponse[];
+function getBaseShape(icLine: number): Partial<Shape> {
+  return {
+    type: "line",
+    y0: icLine,
+    y1: icLine,
+    yref: "y",
+    ysizemode: "scaled",
+    line: {
+      color: "rgb(255, 0, 0)",
+      width: 1,
+      dash: "dot",
+    },
+  };
+}
+
+export const getICLineShapes = ({
+  icLines,
+  minX,
+  maxX,
+  plot,
+}: {
   icLines: number[];
+  minX: number;
+  maxX: number;
+  plot: FieldArrayWithId<Simulation, "plots", "id">;
+}) => {
+  // calculate shapes from icLines, if present.
+  const baseShapes = icLines.map((icLine) => getBaseShape(icLine));
+  const shapes: Partial<Shape>[] = baseShapes.map((baseShape, i) => {
+    const x0 = minX;
+    const x1 = maxX;
+    const labelText = `Cx = ${plot.cx_lines[i].value}%`;
+    return {
+      ...baseShape,
+      x0,
+      x1,
+      label: {
+        text: labelText,
+        font: {
+          color: "rgb(0, 0, 0)",
+        },
+        yanchor: "top",
+        xanchor: "center",
+        textposition: "middle",
+      },
+    };
+  });
+  return shapes;
+};
+
+type PlotLayoutProps = {
   plot: FieldArrayWithId<Simulation, "plots", "id">;
   plotDimensions: { height: number; width: number };
   shouldShowLegend: boolean;
   xAxisTitle: string;
-  xconversionFactor: number;
   yAxisTitle: string;
   y2AxisTitle: string;
   yRanges: {
@@ -396,13 +443,10 @@ type PlotLayoutProps = {
   };
 };
 export const getPlotLayout: (props: PlotLayoutProps) => Partial<Layout> = ({
-  data,
-  icLines,
   plot,
   plotDimensions,
   shouldShowLegend,
   xAxisTitle,
-  xconversionFactor,
   yAxisTitle,
   y2AxisTitle,
   yRanges: { minY, maxY, minY2, maxY2 },
@@ -415,9 +459,6 @@ export const getPlotLayout: (props: PlotLayoutProps) => Partial<Layout> = ({
     lg10: { type: "log" },
     ln: { type: "log", dtick: Math.log10(Math.E) },
   };
-  const convertedTime = data[0].time.map((t) => t * xconversionFactor);
-  const minX = Math.min(...convertedTime);
-  const maxX = Math.max(...convertedTime);
   // setup range for y-axis
   const { rangey, rangey2 } = ranges(minY, maxY, minY2, maxY2, plot);
   return {
@@ -426,31 +467,6 @@ export const getPlotLayout: (props: PlotLayoutProps) => Partial<Layout> = ({
     height: plotDimensions?.height,
     dragmode: "pan",
     showlegend: shouldShowLegend,
-    shapes: icLines.map((icLine, i) => {
-      return {
-        type: "line",
-        x0: minX,
-        y0: icLine,
-        x1: maxX,
-        y1: icLine,
-        yref: "y",
-        ysizemode: "scaled",
-        label: {
-          text: `Cx = ${plot.cx_lines[i].value}%`,
-          font: {
-            color: "rgb(0, 0, 0)",
-          },
-          yanchor: "top",
-          xanchor: "center",
-          textposition: "middle",
-        },
-        line: {
-          color: "rgb(255, 0, 0)",
-          width: 1,
-          dash: "dot",
-        },
-      };
-    }),
     legend: {
       orientation: "v",
       yanchor: "top",

@@ -28,6 +28,7 @@ import {
   createPlots,
   generateScatterPlots,
   genIcLines,
+  getICLineShapes,
   getPlotDimensions,
   getPlotLayout,
   getYRanges,
@@ -133,6 +134,10 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
     compound,
     concentrationUnit,
   );
+  const convertedTime = data[0].time.map((t) => t * xconversionFactor);
+  const minX = Math.min(...convertedTime);
+  const maxX = Math.max(...convertedTime);
+  const icLineShapes = getICLineShapes({ icLines, minX, maxX, plot });
 
   const yAxisVariables = plotData
     .filter((d) => !d.yaxis)
@@ -163,18 +168,20 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
     plotCount,
   });
 
-  const plotLayout: Partial<Layout> = getPlotLayout({
-    data,
-    icLines,
+  const basePlotLayout: Partial<Layout> = getPlotLayout({
     plot,
     plotDimensions,
     shouldShowLegend,
     xAxisTitle,
-    xconversionFactor,
     yAxisTitle,
     y2AxisTitle,
     yRanges,
   });
+
+  const plotLayout: Partial<Layout> = {
+    ...basePlotLayout,
+    shapes: icLineShapes,
+  };
 
   const biomarkerVariables =
     subjectBiomarkers?.map((d) => {
