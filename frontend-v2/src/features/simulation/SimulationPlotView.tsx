@@ -30,11 +30,10 @@ import {
   genIcLines,
   getPlotDimensions,
   getPlotLayout,
-  ranges,
+  getYRanges,
+  ScatterDataWithVariable,
 } from "./utils";
 import { useConfig } from "./config";
-
-type ScatterDataWithVariable = ScatterData & { variable: string };
 
 const Plot = createPlotlyComponent(Plotly);
 
@@ -109,11 +108,6 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
     ? parseFloat(xcompatibleUnit.conversion_factor)
     : 1.0;
 
-  const minY: number | undefined = undefined;
-  const minY2: number | undefined = undefined;
-  const maxY: number | undefined = undefined;
-  const maxY2: number | undefined = undefined;
-
   const plotData = createPlots({
     data,
     dataReference,
@@ -125,6 +119,8 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
     visibleGroups,
     xconversionFactor,
   }).flat() as Partial<ScatterDataWithVariable>[];
+
+  const yRanges = getYRanges({ plotData });
 
   const concentrationUnit = units.find((unit) => unit.symbol === "pmol/L");
   if (concentrationUnit === undefined) {
@@ -160,18 +156,6 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
     xAxisTitle = `${xAxisTitle}  [${xUnit.symbol}]`;
   }
 
-  // setup range for y-axis
-  const { rangey, rangey2 } = ranges(minY, maxY, minY2, maxY2, plot);
-
-  const axisScaleOptions: {
-    [key: string]: { type: "linear" | "log"; dtick?: number | string };
-  } = {
-    lin: { type: "linear" },
-    lg2: { type: "log", dtick: Math.log10(2) },
-    lg10: { type: "log" },
-    ln: { type: "log", dtick: Math.log10(Math.E) },
-  };
-
   const plotDimensions = getPlotDimensions({
     isVertical,
     isHorizontal,
@@ -180,18 +164,16 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
   });
 
   const plotLayout: Partial<Layout> = getPlotLayout({
-    axisScaleOptions,
     data,
     icLines,
     plot,
     plotDimensions,
-    rangey,
-    rangey2,
     shouldShowLegend,
     xAxisTitle,
     xconversionFactor,
     yAxisTitle,
     y2AxisTitle,
+    yRanges,
   });
 
   const biomarkerVariables =
