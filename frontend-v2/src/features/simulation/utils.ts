@@ -328,6 +328,40 @@ export const getYRanges = ({
   return { minY, maxY, minY2, maxY2 };
 };
 
+export const getAxisTitles = ({
+  plot,
+  plotData,
+  units,
+}: {
+  plot: FieldArrayWithId<Simulation, "plots", "id">;
+  plotData: Partial<ScatterDataWithVariable>[];
+  units: UnitRead[];
+}) => {
+  const yAxisVariables = plotData
+    .filter((d) => !d.yaxis)
+    .map((d) => d.variable);
+  const y2AxisVariables = plotData
+    .filter((d) => d.yaxis)
+    .map((d) => d.variable);
+  let yAxisTitle = [...new Set(yAxisVariables)].join(", ");
+  let y2AxisTitle = [...new Set(y2AxisVariables)].join(", ");
+  let xAxisTitle = "Time";
+  const yUnit = units.find((u) => u.id === plot.y_unit);
+  const y2Unit = units.find((u) => u.id === plot.y_unit2);
+  const xUnit = units.find((u) => u.id === plot.x_unit);
+  if (yUnit) {
+    yAxisTitle = `${yAxisTitle}  [${yUnit.symbol}]`;
+  }
+  if (y2Unit) {
+    y2AxisTitle = `${y2AxisTitle}  [${y2Unit.symbol}]`;
+  }
+  if (xUnit) {
+    xAxisTitle = `${xAxisTitle}  [${xUnit.symbol}]`;
+  }
+
+  return { yAxisTitle, y2AxisTitle, xAxisTitle };
+};
+
 export const getPlotDimensions = ({
   dimensions,
   isHorizontal,
@@ -428,10 +462,8 @@ export const getICLineShapes = ({
   return shapes;
 };
 
-type PlotLayoutProps = {
+type PlotAxesProps = {
   plot: FieldArrayWithId<Simulation, "plots", "id">;
-  plotDimensions: { height: number; width: number };
-  shouldShowLegend: boolean;
   xAxisTitle: string;
   yAxisTitle: string;
   y2AxisTitle: string;
@@ -442,15 +474,13 @@ type PlotLayoutProps = {
     maxY2: number | undefined;
   };
 };
-export const getPlotLayout: (props: PlotLayoutProps) => Partial<Layout> = ({
+export const getPlotAxes = ({
   plot,
-  plotDimensions,
-  shouldShowLegend,
   xAxisTitle,
   yAxisTitle,
   y2AxisTitle,
   yRanges: { minY, maxY, minY2, maxY2 },
-}) => {
+}: PlotAxesProps) => {
   const axisScaleOptions: {
     [key: string]: { type: "linear" | "log"; dtick?: number | string };
   } = {
@@ -462,18 +492,6 @@ export const getPlotLayout: (props: PlotLayoutProps) => Partial<Layout> = ({
   // setup range for y-axis
   const { rangey, rangey2 } = ranges(minY, maxY, minY2, maxY2, plot);
   return {
-    autosize: false,
-    width: plotDimensions?.width,
-    height: plotDimensions?.height,
-    dragmode: "pan",
-    showlegend: shouldShowLegend,
-    legend: {
-      orientation: "v",
-      yanchor: "top",
-      xanchor: "right",
-      y: 1,
-      x: 1,
-    },
     xaxis: {
       title: xAxisTitle,
       automargin: true,
@@ -497,6 +515,30 @@ export const getPlotLayout: (props: PlotLayoutProps) => Partial<Layout> = ({
       position: 1.0,
       exponentformat: "power",
       ...axisScaleOptions[plot.y2_scale || "lin"],
+    },
+  } as Partial<Layout>;
+};
+
+type PlotLayoutProps = {
+  plotDimensions: { height: number; width: number };
+  shouldShowLegend: boolean;
+};
+export const getPlotLayout: (props: PlotLayoutProps) => Partial<Layout> = ({
+  plotDimensions,
+  shouldShowLegend,
+}) => {
+  return {
+    autosize: false,
+    width: plotDimensions?.width,
+    height: plotDimensions?.height,
+    dragmode: "pan",
+    showlegend: shouldShowLegend,
+    legend: {
+      orientation: "v",
+      yanchor: "top",
+      xanchor: "right",
+      y: 1,
+      x: 1,
     },
     margin: {
       l: 50,

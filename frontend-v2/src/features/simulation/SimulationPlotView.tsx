@@ -29,10 +29,12 @@ import {
   generateScatterPlots,
   genIcLines,
   getICLineShapes,
+  getAxisTitles,
   getPlotDimensions,
   getPlotLayout,
   getYRanges,
   ScatterDataWithVariable,
+  getPlotAxes,
 } from "./utils";
 import { useConfig } from "./config";
 
@@ -139,27 +141,11 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
   const maxX = Math.max(...convertedTime);
   const icLineShapes = getICLineShapes({ icLines, minX, maxX, plot });
 
-  const yAxisVariables = plotData
-    .filter((d) => !d.yaxis)
-    .map((d) => d.variable);
-  const y2AxisVariables = plotData
-    .filter((d) => d.yaxis)
-    .map((d) => d.variable);
-  let yAxisTitle = [...new Set(yAxisVariables)].join(", ");
-  let y2AxisTitle = [...new Set(y2AxisVariables)].join(", ");
-  let xAxisTitle = "Time";
-  const yUnit = units.find((u) => u.id === plot.y_unit);
-  const y2Unit = units.find((u) => u.id === plot.y_unit2);
-  const xUnit = units.find((u) => u.id === plot.x_unit);
-  if (yUnit) {
-    yAxisTitle = `${yAxisTitle}  [${yUnit.symbol}]`;
-  }
-  if (y2Unit) {
-    y2AxisTitle = `${y2AxisTitle}  [${y2Unit.symbol}]`;
-  }
-  if (xUnit) {
-    xAxisTitle = `${xAxisTitle}  [${xUnit.symbol}]`;
-  }
+  const { xAxisTitle, yAxisTitle, y2AxisTitle } = getAxisTitles({
+    plot,
+    plotData,
+    units,
+  });
 
   const plotDimensions = getPlotDimensions({
     isVertical,
@@ -168,18 +154,22 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
     plotCount,
   });
 
-  const basePlotLayout: Partial<Layout> = getPlotLayout({
+  const plotAxes: Partial<Layout> = getPlotAxes({
     plot,
-    plotDimensions,
-    shouldShowLegend,
     xAxisTitle,
     yAxisTitle,
     y2AxisTitle,
     yRanges,
   });
 
+  const basePlotLayout: Partial<Layout> = getPlotLayout({
+    plotDimensions,
+    shouldShowLegend,
+  });
+
   const plotLayout: Partial<Layout> = {
     ...basePlotLayout,
+    ...plotAxes,
     shapes: icLineShapes,
   };
 
