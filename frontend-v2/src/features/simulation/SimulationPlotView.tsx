@@ -109,14 +109,10 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
     ? parseFloat(xcompatibleUnit.conversion_factor)
     : 1.0;
 
-  const convertedTime = data[0].time.map((t) => t * xconversionFactor);
-  const minX = Math.min(...convertedTime);
-  const maxX = Math.max(...convertedTime);
-
-  let minY: number | undefined = undefined;
-  let minY2: number | undefined = undefined;
-  let maxY: number | undefined = undefined;
-  let maxY2: number | undefined = undefined;
+  const minY: number | undefined = undefined;
+  const minY2: number | undefined = undefined;
+  const maxY: number | undefined = undefined;
+  const maxY2: number | undefined = undefined;
 
   const plotData = createPlots({
     data,
