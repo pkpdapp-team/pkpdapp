@@ -9,8 +9,11 @@ import {
   UnitRead,
   VariableRead,
 } from "../../app/backendApi";
-import { Layout } from "plotly.js";
+import { Layout, ScatterData } from "plotly.js";
 import { SubjectBiomarker } from "../../hooks/useDataset";
+
+export type ScatterDataWithVariable = ScatterData & { variable: string };
+
 // https://github.com/plotly/plotly.js/blob/8c47c16daaa2020468baf9376130e085a4f01ec6/src/components/color/attributes.js#L4-L16
 export const plotColours = [
   "#1f77b4", // muted blue
@@ -254,11 +257,6 @@ export const createPlots = ({
   visibleGroups: string[];
   xconversionFactor: number;
 }) => {
-  let minY: number | undefined = undefined;
-  let minY2: number | undefined = undefined;
-  let maxY: number | undefined = undefined;
-  let maxY2: number | undefined = undefined;
-
   return plot.y_axes.map((y_axis, i) => {
     const colourOffset = data.length * i;
     return data
@@ -266,7 +264,7 @@ export const createPlots = ({
         const colourIndex = index + colourOffset;
         const colour = plotColours[colourIndex % plotColours.length];
         const group = groups?.[index - 1];
-        const plotData = generatePlotData(
+        return generatePlotData(
           d,
           visibleGroups,
           colour,
@@ -280,22 +278,13 @@ export const createPlots = ({
           variables,
           xconversionFactor,
         );
-        ({ minY, maxY, minY2, maxY2 } = minMaxAxisLimits(
-          plotData.y,
-          minY,
-          maxY,
-          minY2,
-          maxY2,
-          y_axis.right,
-        ));
-        return plotData;
       })
       .concat(
         dataReference.map((d, index) => {
           const colourIndex = index + colourOffset;
           const colour = plotColours[colourIndex % plotColours.length];
           const group = groups?.[index - 1];
-          const plotDataReference = generatePlotData(
+          return generatePlotData(
             dataReference[index],
             visibleGroups,
             colour,
@@ -310,18 +299,33 @@ export const createPlots = ({
             xconversionFactor,
             true,
           );
-          ({ minY, maxY, minY2, maxY2 } = minMaxAxisLimits(
-            plotDataReference.y,
-            minY,
-            maxY,
-            minY2,
-            maxY2,
-            y_axis.right,
-          ));
-          return plotDataReference;
         }),
       );
   });
+};
+
+export const getYRanges = ({
+  plotData,
+}: {
+  plotData: Partial<ScatterDataWithVariable>[];
+}) => {
+  let minY: number | undefined = undefined;
+  let minY2: number | undefined = undefined;
+  let maxY: number | undefined = undefined;
+  let maxY2: number | undefined = undefined;
+  plotData.forEach((d) => {
+    const isRightAxis = d.yaxis === "y2";
+    const data = d.y as number[];
+    ({ minY, maxY, minY2, maxY2 } = minMaxAxisLimits(
+      data,
+      minY,
+      maxY,
+      minY2,
+      maxY2,
+      isRightAxis,
+    ));
+  });
+  return { minY, maxY, minY2, maxY2 };
 };
 
 export const getPlotDimensions = ({
@@ -375,38 +379,47 @@ export const getPlotDimensions = ({
 };
 
 type PlotLayoutProps = {
-  axisScaleOptions: {
-    [key: string]: { type: "linear" | "log"; dtick?: number | string };
-  };
   data: SimulateResponse[];
   icLines: number[];
   plot: FieldArrayWithId<Simulation, "plots", "id">;
   plotDimensions: { height: number; width: number };
-  rangey: number[] | undefined;
-  rangey2: number[] | undefined;
   shouldShowLegend: boolean;
   xAxisTitle: string;
   xconversionFactor: number;
   yAxisTitle: string;
   y2AxisTitle: string;
+  yRanges: {
+    minY: number | undefined;
+    maxY: number | undefined;
+    minY2: number | undefined;
+    maxY2: number | undefined;
+  };
 };
 export const getPlotLayout: (props: PlotLayoutProps) => Partial<Layout> = ({
-  axisScaleOptions,
   data,
   icLines,
   plot,
   plotDimensions,
-  rangey,
-  rangey2,
   shouldShowLegend,
   xAxisTitle,
   xconversionFactor,
   yAxisTitle,
   y2AxisTitle,
+  yRanges: { minY, maxY, minY2, maxY2 },
 }) => {
+  const axisScaleOptions: {
+    [key: string]: { type: "linear" | "log"; dtick?: number | string };
+  } = {
+    lin: { type: "linear" },
+    lg2: { type: "log", dtick: Math.log10(2) },
+    lg10: { type: "log" },
+    ln: { type: "log", dtick: Math.log10(Math.E) },
+  };
   const convertedTime = data[0].time.map((t) => t * xconversionFactor);
   const minX = Math.min(...convertedTime);
   const maxX = Math.max(...convertedTime);
+  // setup range for y-axis
+  const { rangey, rangey2 } = ranges(minY, maxY, minY2, maxY2, plot);
   return {
     autosize: false,
     width: plotDimensions?.width,
