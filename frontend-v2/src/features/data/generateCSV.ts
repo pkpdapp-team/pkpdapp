@@ -145,7 +145,7 @@ const NONMEM_HEADER_MAPPING: { [key: string]: string } = {
 };
 
 function nonMemModifier(rows: Data) {
-  rows.map((row) => {
+  rows.forEach((row) => {
     // add MDV and EVID columns
     if (row["Observation"] === ".") {
       row["MDV"] = 0;
