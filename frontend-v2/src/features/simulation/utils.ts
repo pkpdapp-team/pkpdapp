@@ -373,43 +373,38 @@ export const getPlotDimensions = ({
   isVertical: boolean;
   plotCount: number;
 }) => {
-  const buffor = 10;
+  const buffer = 10;
   const columnCount = Math.min(plotCount, screen.width > 2500 ? 3 : 2);
   const layoutBreakpoint = 900;
 
   if (isVertical && !isHorizontal) {
     return dimensions.width > layoutBreakpoint
       ? {
-          height: dimensions.height / 2 - buffor,
-          width: dimensions.width - buffor,
+          height: dimensions.height / 2 - buffer,
+          width: dimensions.width - buffer,
         }
       : {
-          height: dimensions.height / 1.5 - buffor,
-          width: dimensions.width - buffor,
+          height: dimensions.height / 1.5 - buffer,
+          width: dimensions.width - buffer,
         };
   }
 
   if (!isVertical && isHorizontal) {
     return dimensions.width > layoutBreakpoint
       ? {
-          height: dimensions.height - buffor,
-          width: dimensions.width / columnCount - buffor,
+          height: dimensions.height - buffer,
+          width: dimensions.width / columnCount - buffer,
         }
       : {
-          height: dimensions.height - buffor,
-          width: dimensions.width / 1.5 - buffor,
+          height: dimensions.height - buffer,
+          width: dimensions.width / 1.5 - buffer,
         };
   }
 
-  return dimensions.width > layoutBreakpoint
-    ? {
-        height: dimensions.height / 2 - buffor,
-        width: dimensions.width / columnCount - buffor,
-      }
-    : {
-        height: dimensions.height / 2 - buffor,
-        width: dimensions.width / columnCount - buffor,
-      };
+  return {
+    height: dimensions.height / 2 - buffer,
+    width: dimensions.width / columnCount - buffer,
+  };
 };
 
 function getBaseShape(icLine: number): Partial<Shape> {
