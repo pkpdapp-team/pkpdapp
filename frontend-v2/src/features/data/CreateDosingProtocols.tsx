@@ -1,4 +1,4 @@
-import { FC } from "react";
+import { ChangeEvent, FC } from "react";
 import {
   Box,
   Select,
@@ -13,6 +13,7 @@ import {
   Typography,
   SelectChangeEvent,
   TableContainer,
+  TextField,
 } from "@mui/material";
 import { StepperState } from "./LoadDataStepper";
 import { UnitRead, VariableRead } from "../../app/backendApi";
@@ -23,6 +24,41 @@ import {
   getTableHeight,
   SINGLE_TABLE_BREAKPOINTS,
 } from "../../shared/calculateTableHeights";
+
+type NumericTableCellProps = {
+  id: string;
+  disabled: boolean;
+  label: string;
+  onChange: (event: ChangeEvent<HTMLInputElement>) => void;
+  value: string | number | null | undefined;
+};
+const NumericTableCell: FC<NumericTableCellProps> = ({
+  id,
+  disabled,
+  label,
+  onChange,
+  value,
+}) => {
+  return (
+    <TableCell sx={{ width: "10rem" }}>
+      <TextField
+        id={id}
+        disabled={disabled}
+        label={label}
+        value={value}
+        onChange={onChange}
+        type="number"
+        size="small"
+        margin="dense"
+        slotProps={{
+          inputLabel: {
+            shrink: true,
+          },
+        }}
+      />
+    </TableCell>
+  );
+};
 
 interface IDosingProtocols {
   administrationIdField: string;
@@ -37,6 +73,13 @@ interface IDosingProtocols {
   };
 }
 
+function findFieldByName(name: string, state: StepperState) {
+  return (
+    state.fields.find((field) => state.normalisedFields.get(field) === name) ||
+    name
+  );
+}
+
 const CreateDosingProtocols: FC<IDosingProtocols> = ({
   administrationIdField,
   amountUnit,
@@ -49,6 +92,9 @@ const CreateDosingProtocols: FC<IDosingProtocols> = ({
     (field) =>
       field === "Amount" || state.normalisedFields.get(field) === "Amount",
   );
+  const amountUnitField = findFieldByName("Amount Unit", state);
+  const timeField = findFieldByName("Time", state);
+  const groupIdField = findFieldByName("Group ID", state);
   // ignore rows with no amount and administration ID set to 0.
   const dosingRows: Row[] = state.data.filter((row) =>
     parseInt(row[administrationIdField]),
@@ -81,26 +127,77 @@ const CreateDosingProtocols: FC<IDosingProtocols> = ({
   };
   const modelAmounts = variables?.filter(isAmount) || [];
 
-  const handleAmountMappingChange =
-    (id: string) => (event: SelectChangeEvent) => {
-      const nextData = [...state.data];
-      const { value } = event.target;
-      nextData
-        .filter((row) =>
-          administrationIdField ? row[administrationIdField] === id : true,
-        )
-        .forEach((row) => {
-          row["Amount Variable"] = value;
-          row["Amount Unit"] = amountUnit?.symbol === "pmol" ? "mg" : "mg/kg";
-        });
+  function createDosingRow(id: string, qname: string, nextData: Row[]) {
+    const subjectIds = nextData
+      .filter((row) => row[administrationIdField] === id)
+      .map((row) => row["ID"]);
+    const uniqueSubjectIds = [...new Set(subjectIds)];
+    uniqueSubjectIds.forEach((subjectId) => {
+      const groupId = state.data.find((row) => row["ID"] === subjectId)?.[
+        groupIdField
+      ];
+      const newRow: Row = {
+        ID: subjectId,
+        [administrationIdField]: id,
+        "Amount Variable": qname,
+        "Amount Unit": amountUnit?.symbol === "pmol" ? "mg" : "mg/kg",
+        Amount: "0",
+        Time: "0",
+        "Time Unit": "h",
+        "Infusion Duration": "0.0833",
+        "Additional Doses": ".",
+        "Interdose Interval": ".",
+        Observation: ".",
+      };
+      if (groupId) {
+        newRow[groupIdField] = groupId;
+        newRow["Group"] = groupId;
+      }
+      nextData.push(newRow);
       state.setData(nextData);
       state.setNormalisedFields(
         new Map([
           ...state.normalisedFields.entries(),
           ["Amount Variable", "Amount Variable"],
           ["Amount Unit", "Amount Unit"],
+          ["Infusion Duration", "Infusion Duration"],
+          ["Additional Doses", "Additional Doses"],
+          ["Interdose Interval", "Interdose Interval"],
         ]),
       );
+    });
+  }
+  const handleAmountMappingChange =
+    (id: string) => (event: SelectChangeEvent) => {
+      const nextData = [...state.data];
+      const { value } = event.target;
+      const dosingRows = nextData.filter(
+        (row) => row[administrationIdField] === id && row["Amount"] !== ".",
+      );
+      if (dosingRows.length) {
+        dosingRows.forEach((row) => {
+          row["Amount Variable"] = value;
+        });
+        state.setData(nextData);
+      } else {
+        createDosingRow(id, value, nextData);
+      }
+    };
+  type InputChangeEvent =
+    | ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    | SelectChangeEvent;
+  const handleInputChange =
+    (id: string, field: string) => (event: InputChangeEvent) => {
+      const nextData = [...state.data];
+      const { value } = event.target;
+      nextData
+        .filter(
+          (row) => row[administrationIdField] === id && row["Amount"] !== ".",
+        )
+        .forEach((row) => {
+          row[field] = value;
+        });
+      state.setData(nextData);
     };
 
   return (
@@ -131,24 +228,50 @@ const CreateDosingProtocols: FC<IDosingProtocols> = ({
                 <TableCell>
                   <Typography>Dosing Compartment</Typography>
                 </TableCell>
+                <TableCell>
+                  <Typography>Amount</Typography>
+                </TableCell>
+                <TableCell>
+                  <Typography>Amount Unit</Typography>
+                </TableCell>
+                <TableCell>
+                  <Typography>Time</Typography>
+                </TableCell>
+                <TableCell>
+                  <Typography>Time Unit</Typography>
+                </TableCell>
+                <TableCell>
+                  <Typography>Additional Doses</Typography>
+                </TableCell>
+                <TableCell>
+                  <Typography>Interdose Interval</Typography>
+                </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {uniqueAdministrationIds.map((adminId) => {
                 const currentRow = state.data.find((row) =>
                   administrationIdField
-                    ? row[administrationIdField] === adminId
+                    ? row[administrationIdField] === adminId &&
+                      row["Amount"] !== "."
                     : true,
                 );
                 const selectedVariable = variables?.find(
                   (variable) =>
                     variable.qname === currentRow?.["Amount Variable"],
                 );
+                const compatibleUnits = units?.find(
+                  (unit) => unit.id === selectedVariable?.unit,
+                )?.compatible_units;
+                const defaultAmountUnit =
+                  amountUnit?.symbol === "pmol" ? "mg" : "mg/kg";
+                const selectedAmountUnit =
+                  currentRow?.[amountUnitField] || defaultAmountUnit;
                 return (
                   <TableRow key={adminId}>
-                    <TableCell sx={{ width: "10rem" }}>{adminId}</TableCell>
-                    <TableCell>
-                      <FormControl sx={{ width: "15rem" }}>
+                    <TableCell sx={{ width: "5rem" }}>{adminId}</TableCell>
+                    <TableCell sx={{ width: "10rem" }}>
+                      <FormControl fullWidth>
                         <InputLabel
                           size="small"
                           id={`select-var-${adminId}-label`}
@@ -175,6 +298,67 @@ const CreateDosingProtocols: FC<IDosingProtocols> = ({
                         </Select>
                       </FormControl>
                     </TableCell>
+                    <NumericTableCell
+                      id={`input-amount-${adminId}`}
+                      disabled={!selectedVariable}
+                      label="Amount"
+                      onChange={handleInputChange(adminId, "Amount")}
+                      value={currentRow?.["Amount"]}
+                    />
+                    <TableCell sx={{ width: "10rem" }}>
+                      <FormControl fullWidth>
+                        <InputLabel
+                          size="small"
+                          id={`select-unit-${adminId}-label`}
+                        >
+                          Units
+                        </InputLabel>
+                        <Select
+                          labelId={`select-unit-${adminId}-label`}
+                          id={`select-unit-${adminId}`}
+                          label="Units"
+                          disabled={!selectedVariable}
+                          value={selectedAmountUnit}
+                          onChange={handleInputChange(adminId, amountUnitField)}
+                          sx={{ maxWidth: "10rem" }}
+                          size="small"
+                          margin="dense"
+                        >
+                          {compatibleUnits?.map((unit) => (
+                            <MenuItem key={unit.symbol} value={unit.symbol}>
+                              {unit.symbol}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </TableCell>
+                    <NumericTableCell
+                      id={`input-time-${adminId}`}
+                      disabled={!selectedVariable}
+                      label="Time"
+                      onChange={handleInputChange(adminId, timeField)}
+                      value={currentRow?.[timeField]}
+                    />
+                    <TableCell sx={{ width: "10rem" }}>
+                      <Typography>{currentRow?.["Time Unit"]}</Typography>
+                    </TableCell>
+                    <NumericTableCell
+                      id={`input-addDoses-${adminId}`}
+                      disabled={!selectedVariable}
+                      label="Additional Doses"
+                      onChange={handleInputChange(adminId, "Additional Doses")}
+                      value={currentRow?.["Additional Doses"]}
+                    />
+                    <NumericTableCell
+                      id={`input-doseInterval-${adminId}`}
+                      disabled={!selectedVariable}
+                      label="Interdose Interval"
+                      onChange={handleInputChange(
+                        adminId,
+                        "Interdose Interval",
+                      )}
+                      value={currentRow?.["Interdose Interval"]}
+                    />
                   </TableRow>
                 );
               })}

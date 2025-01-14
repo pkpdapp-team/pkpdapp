@@ -38,6 +38,13 @@ interface IDosingProtocols {
   };
 }
 
+function findFieldByName(name: string, state: StepperState) {
+  return (
+    state.fields.find((field) => state.normalisedFields.get(field) === name) ||
+    name
+  );
+}
+
 const DosingProtocols: FC<IDosingProtocols> = ({
   administrationIdField,
   amountUnitField = "Amount Unit",
@@ -47,14 +54,12 @@ const DosingProtocols: FC<IDosingProtocols> = ({
   variables,
   notificationsInfo,
 }: IDosingProtocols) => {
-  const amountField =
-    state.fields.find(
-      (field) => state.normalisedFields.get(field) === "Amount",
-    ) || "Amount";
-  const amountVariableField =
-    state.fields.find(
-      (field) => state.normalisedFields.get(field) === "Amount Variable",
-    ) || "Amount Variable";
+  const amountField = findFieldByName("Amount", state);
+  const amountVariableField = findFieldByName("Amount Variable", state);
+  const timeField = findFieldByName("Time", state);
+  const timeUnitField = findFieldByName("Time Unit", state);
+  const addlDosesField = findFieldByName("Additional Doses", state);
+  const interDoseField = findFieldByName("Interdose Interval", state);
   const dosingRows: Row[] = amountField
     ? state.data.filter(
         (row) =>
@@ -66,10 +71,6 @@ const DosingProtocols: FC<IDosingProtocols> = ({
     ? dosingRows.map((row) => row[administrationIdField])
     : [];
   const uniqueAdministrationIds = [...new Set(administrationIds)];
-  const routeField =
-    state.fields.find(
-      (field) => state.normalisedFields.get(field) === "Administration Name",
-    ) || "Administration Name";
 
   const isAmount = (variable: VariableRead) => {
     const amountUnits = units?.find(
@@ -153,16 +154,25 @@ const DosingProtocols: FC<IDosingProtocols> = ({
                   <Typography>{administrationIdField}</Typography>
                 </TableCell>
                 <TableCell>
-                  <Typography>Amount</Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography>Route</Typography>
-                </TableCell>
-                <TableCell>
                   <Typography>Dosing Compartment</Typography>
                 </TableCell>
                 <TableCell>
-                  <Typography>Unit</Typography>
+                  <Typography>Amount</Typography>
+                </TableCell>
+                <TableCell>
+                  <Typography>Amount Unit</Typography>
+                </TableCell>
+                <TableCell>
+                  <Typography>Time</Typography>
+                </TableCell>
+                <TableCell>
+                  <Typography>Time Unit</Typography>
+                </TableCell>
+                <TableCell>
+                  <Typography>Additional Doses</Typography>
+                </TableCell>
+                <TableCell>
+                  <Typography>Interdose Interval</Typography>
                 </TableCell>
               </TableRow>
             </TableHead>
@@ -184,16 +194,10 @@ const DosingProtocols: FC<IDosingProtocols> = ({
                 const adminUnit =
                   amountUnitField && currentRow && currentRow[amountUnitField];
                 const amount = currentRow?.[amountField];
-                const route = currentRow?.[routeField];
+                const time = currentRow?.[timeField];
                 return (
                   <TableRow key={adminId}>
                     <TableCell sx={{ width: "5rem" }}>{adminId}</TableCell>
-                    <TableCell sx={{ width: "10rem" }}>
-                      <Typography>{amount}</Typography>
-                    </TableCell>
-                    <TableCell sx={{ width: "5rem" }}>
-                      <Typography>{route}</Typography>
-                    </TableCell>
                     <TableCell sx={{ width: "10rem" }}>
                       <FormControl fullWidth>
                         <InputLabel
@@ -222,6 +226,9 @@ const DosingProtocols: FC<IDosingProtocols> = ({
                         </Select>
                       </FormControl>
                     </TableCell>
+                    <TableCell sx={{ width: "10rem" }}>
+                      <Typography>{amount}</Typography>
+                    </TableCell>
                     <TableCell>
                       <FormControl fullWidth>
                         <InputLabel
@@ -236,7 +243,7 @@ const DosingProtocols: FC<IDosingProtocols> = ({
                           label="Units"
                           value={adminUnit}
                           onChange={handleAmountUnitChange(adminId)}
-                          sx={{ maxWidth: '10rem'}}
+                          sx={{ maxWidth: "10rem" }}
                           size="small"
                           margin="dense"
                         >
@@ -247,6 +254,24 @@ const DosingProtocols: FC<IDosingProtocols> = ({
                           ))}
                         </Select>
                       </FormControl>
+                    </TableCell>
+                    <TableCell sx={{ width: "5rem" }}>
+                      <Typography>{time}</Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography>
+                        {currentRow?.[timeUnitField] || "."}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography>
+                        {currentRow?.[addlDosesField] || "."}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography>
+                        {currentRow?.[interDoseField] || "."}
+                      </Typography>
                     </TableCell>
                   </TableRow>
                 );
