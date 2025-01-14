@@ -144,7 +144,7 @@ export function generatePlotData(
   units: UnitRead[],
   model: CombinedModelRead,
   variables: VariableRead[],
-  xconversionFactor: number,
+  xConversionFactor: number,
   isReference?: boolean,
 ) {
   const visible =
@@ -159,47 +159,40 @@ export function generatePlotData(
   const yaxisUnit = y_axis.right
     ? units.find((u) => u.id === plot.y_unit2)
     : units.find((u) => u.id === plot.y_unit);
-  const ycompatibleUnit = variableUnit?.compatible_units.find(
+  const yCompatibleUnit = variableUnit?.compatible_units.find(
     (u) => parseInt(u.id) === yaxisUnit?.id,
   );
 
   const is_target = model.is_library_model
     ? variableName?.includes("CT1") || variableName?.includes("AT1")
     : false;
-  const yconversionFactor = ycompatibleUnit
+  const yConversionFactor = yCompatibleUnit
     ? parseFloat(
         is_target
-          ? ycompatibleUnit.target_conversion_factor
-          : ycompatibleUnit.conversion_factor,
+          ? yCompatibleUnit.target_conversion_factor
+          : yCompatibleUnit.conversion_factor,
       )
     : 1.0;
 
-  if (variableValues) {
-    const name = `${isReference ? "REF" : ""} ${variableName} ${group?.name || "project"}`;
-    return {
-      yaxis: y_axis.right ? "y2" : undefined,
-      x: d.time.map((t) => t * xconversionFactor),
-      y: variableValues.map((v) => v * yconversionFactor),
-      name: name.trim(),
-      variable: variableName,
-      visible: visible ? true : "legendonly",
-      line: {
-        color: colour,
-        dash: dash,
-      },
-    };
-  } else {
-    const name = `${isReference ? "REF" : ""} ${y_axis.variable} ${group?.name || "project"}`;
-    return {
-      yaxis: y_axis.right ? "y2" : undefined,
-      x: [],
-      y: [],
-      type: "scatter",
-      name: name.trim(),
-      variable: y_axis.variable,
-      visible: visible ? true : "legendonly",
-    };
-  }
+  const name = variableValues
+    ? `${isReference ? "REF" : ""} ${variableName} ${group?.name || "project"}`
+    : `${isReference ? "REF" : ""} ${y_axis.variable} ${group?.name || "project"}`;
+  const x = variableValues ? d.time.map((t) => t * xConversionFactor) : [];
+  const y = variableValues
+    ? variableValues.map((v) => v * yConversionFactor)
+    : [];
+  const yaxis = y_axis.right ? "y2" : undefined;
+  const basePlot = {
+    yaxis,
+    x,
+    y,
+    name: name.trim(),
+    variable: variableValues ? variableName : y_axis.variable,
+    visible: visible ? true : "legendonly",
+  };
+  return variableValues
+    ? { ...basePlot, line: { color: colour, dash: dash } }
+    : { ...basePlot, type: "scatter" };
 }
 
 export function minMaxAxisLimits(
@@ -236,6 +229,65 @@ export function minMaxAxisLimits(
   return { minY, maxY, minY2, maxY2 };
 }
 
+type PlotProps = {
+  colourOffset: number;
+  groups: SubjectGroupRead[] | undefined;
+  isReference?: boolean;
+  model: CombinedModelRead;
+  plot: FieldArrayWithId<Simulation, "plots", "id">;
+  units: UnitRead[];
+  variables: VariableRead[];
+  visibleGroups: string[];
+  xConversionFactor: number;
+  y_axis: SimulationYAxis;
+};
+const createPlot =
+  ({
+    colourOffset,
+    groups,
+    isReference = false,
+    model,
+    plot,
+    units,
+    variables,
+    visibleGroups,
+    xConversionFactor,
+    y_axis,
+  }: PlotProps) =>
+  (data: SimulateResponse, index: number) => {
+    const colourIndex = index + colourOffset;
+    const colour = plotColours[colourIndex % plotColours.length];
+    const group = groups?.[index - 1];
+    const style = isReference ? "dot" : "solid";
+    return generatePlotData(
+      data,
+      visibleGroups,
+      colour,
+      style,
+      index,
+      group,
+      y_axis,
+      plot,
+      units,
+      model,
+      variables,
+      xConversionFactor,
+      isReference,
+    );
+  };
+
+type PlotsProps = {
+  data: SimulateResponse[];
+  dataReference: SimulateResponse[];
+  groups: SubjectGroupRead[] | undefined;
+  model: CombinedModelRead;
+  plot: FieldArrayWithId<Simulation, "plots", "id">;
+  units: UnitRead[];
+  variables: VariableRead[];
+  visibleGroups: string[];
+  xConversionFactor: number;
+};
+
 export const createPlots = ({
   data,
   dataReference,
@@ -245,61 +297,39 @@ export const createPlots = ({
   units,
   variables,
   visibleGroups,
-  xconversionFactor,
-}: {
-  data: SimulateResponse[];
-  dataReference: SimulateResponse[];
-  groups: SubjectGroupRead[] | undefined;
-  model: CombinedModelRead;
-  plot: FieldArrayWithId<Simulation, "plots", "id">;
-  units: UnitRead[];
-  variables: VariableRead[];
-  visibleGroups: string[];
-  xconversionFactor: number;
-}) => {
+  xConversionFactor,
+}: PlotsProps) => {
   return plot.y_axes.map((y_axis, i) => {
     const colourOffset = data.length * i;
     return data
-      .map((d, index) => {
-        const colourIndex = index + colourOffset;
-        const colour = plotColours[colourIndex % plotColours.length];
-        const group = groups?.[index - 1];
-        return generatePlotData(
-          d,
-          visibleGroups,
-          colour,
-          "solid",
-          index,
-          group,
-          y_axis,
+      .map(
+        createPlot({
+          colourOffset,
+          groups,
+          model,
           plot,
           units,
-          model,
           variables,
-          xconversionFactor,
-        );
-      })
+          visibleGroups,
+          xConversionFactor,
+          y_axis,
+        }),
+      )
       .concat(
-        dataReference.map((d, index) => {
-          const colourIndex = index + colourOffset;
-          const colour = plotColours[colourIndex % plotColours.length];
-          const group = groups?.[index - 1];
-          return generatePlotData(
-            dataReference[index],
-            visibleGroups,
-            colour,
-            "dot",
-            index,
-            group,
-            y_axis,
+        dataReference.map(
+          createPlot({
+            colourOffset,
+            groups,
+            isReference: true,
+            model,
             plot,
             units,
-            model,
             variables,
-            xconversionFactor,
-            true,
-          );
-        }),
+            visibleGroups,
+            xConversionFactor,
+            y_axis,
+          }),
+        ),
       );
   });
 };
@@ -434,7 +464,7 @@ export const getICLineShapes = ({
   plot: FieldArrayWithId<Simulation, "plots", "id">;
 }) => {
   // calculate shapes from icLines, if present.
-  const baseShapes = icLines.map((icLine) => getBaseShape(icLine));
+  const baseShapes = icLines.map(getBaseShape);
   const shapes: Partial<Shape>[] = baseShapes.map((baseShape, i) => {
     const x0 = minX;
     const x1 = maxX;
