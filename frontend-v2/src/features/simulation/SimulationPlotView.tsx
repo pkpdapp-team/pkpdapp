@@ -103,12 +103,12 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
 
   const timeVariable = variables.find((v) => v.binding === "time");
   const timeUnit = units.find((u) => u.id === timeVariable?.unit);
-  const xaxisUnit = units.find((u) => u.id === plot.x_unit);
-  const xcompatibleUnit = timeUnit?.compatible_units.find(
-    (u) => parseInt(u.id) === xaxisUnit?.id,
+  const xAxisUnit = units.find((u) => u.id === plot.x_unit);
+  const xCompatibleUnit = timeUnit?.compatible_units.find(
+    (u) => parseInt(u.id) === xAxisUnit?.id,
   );
-  const xconversionFactor = xcompatibleUnit
-    ? parseFloat(xcompatibleUnit.conversion_factor)
+  const xConversionFactor = xCompatibleUnit
+    ? parseFloat(xCompatibleUnit.conversion_factor)
     : 1.0;
 
   const plotData = createPlots({
@@ -120,7 +120,7 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
     units,
     variables,
     visibleGroups,
-    xconversionFactor,
+    xConversionFactor,
   }).flat() as Partial<ScatterDataWithVariable>[];
 
   const yRanges = getYRanges({ plotData });
@@ -136,7 +136,7 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
     compound,
     concentrationUnit,
   );
-  const convertedTime = data[0].time.map((t) => t * xconversionFactor);
+  const convertedTime = data[0].time.map((t) => t * xConversionFactor);
   const minX = Math.min(...convertedTime);
   const maxX = Math.max(...convertedTime);
   const icLineShapes = getICLineShapes({ icLines, minX, maxX, plot });
