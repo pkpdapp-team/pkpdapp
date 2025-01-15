@@ -1,11 +1,4 @@
-import {
-  Box,
-  Button,
-  Input,
-  InputLabel,
-  TextField,
-  Typography,
-} from "@mui/material";
+import { Box, Button, InputLabel, TextField, Typography } from "@mui/material";
 import { GridRowSelectionModel } from "@mui/x-data-grid";
 import { FC, FormEvent, useRef } from "react";
 import { StepperState } from "./LoadDataStepper";

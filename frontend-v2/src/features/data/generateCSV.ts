@@ -6,16 +6,15 @@ import {
   UnitListApiResponse,
   UnitRead,
 } from "../../app/backendApi";
-import { duration } from "@mui/material";
 
-type Row = { [key: string]: any };
+type Row = { [key: string]: string | number | null | undefined };
 type Data = Row[];
 type SubjectBiomarker = {
-  subjectId: any;
+  subjectId: number;
   subjectDatasetId: number | undefined;
-  time: any;
+  time: number;
   timeUnit: UnitRead | undefined;
-  value: any;
+  value: number;
   unit: UnitRead | undefined;
   qname: string | undefined;
   label: string;
@@ -96,7 +95,7 @@ export default function generateCSV(
 
     const dosingRows: Row[] = group.protocols.flatMap(
       (protocol, protocolIndex) => {
-        const adminId = groupIndex + 1 + protocolIndex;
+        const adminId = (groupIndex + 1) * 10 + protocolIndex;
         return parseDosingRow(protocol, units, groupId, adminId);
       },
     );
@@ -162,8 +161,8 @@ function nonMemModifier(rows: Data) {
       row["Infusion Duration"] !== undefined &&
       row["Amount"] !== undefined
     ) {
-      const duration = row["Infusion Duration"];
-      const amount = row["Amount"];
+      const duration = row["Infusion Duration"] as number;
+      const amount = row["Amount"] as number;
       const rate = amount / duration;
       row["RATE"] = rate;
       delete row["Infusion Duration"];
