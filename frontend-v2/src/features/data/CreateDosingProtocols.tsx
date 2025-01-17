@@ -32,6 +32,44 @@ function findFieldByType(type: string, state: StepperState) {
   );
 }
 
+/**
+ * Assign an administration ID to each dosing row based on the dosing compartment and group ID.
+ * @param dosingRows
+ * @param administrationIdField
+ * @param groupIdField
+ * @returns an array of modified dosing rows.
+ */
+function generateAdministrationIds(
+  dosingRows: Row[],
+  administrationIdField: string,
+  groupIdField: string,
+) {
+  const dosingCompartments = [
+    ...new Set(dosingRows.map((row) => row["Amount Variable"])),
+  ];
+  const groupIds = dosingRows.map((row) => row[groupIdField]);
+  const uniqueGroupIds = [...new Set(groupIds)];
+  const administrationIds: string[] = [];
+  dosingRows.forEach((row) => {
+    const groupIndex = uniqueGroupIds.indexOf(row[groupIdField]) + 1;
+    const compartmentIndex = dosingCompartments.indexOf(row["Amount Variable"]);
+    const adminId = `${compartmentIndex * 10 + groupIndex}`;
+    if (row[administrationIdField] !== adminId) {
+      row[administrationIdField] = adminId;
+    }
+    administrationIds.push(adminId);
+  });
+  return dosingRows;
+}
+
+/**
+ * Create dosing rows for each subject and dosing compartment.
+ * Each row has an administration ID based on the dosing compartment and group ID.
+ * @param state stepper state
+ * @param administrationIdField column name for administration ID
+ * @param dosingCompartments dosing compartments for the model
+ * @param amountUnit amount unit for the model (either pmol or pmol/kg.)
+ */
 function createDosingRows(
   state: StepperState,
   administrationIdField: string,
@@ -49,12 +87,14 @@ function createDosingRows(
   const nextData = [...state.data];
   const uniqueIds = new Set(nextData.map((row) => row[idField]));
   const uniqueGroupIds = [...new Set(nextData.map((row) => row["Group ID"]))];
+  const newRows: Row[] = [];
   dosingCompartments.forEach((compartment, index) => {
     uniqueIds.forEach((id) => {
       const subjectRow = state.data.find((row) => row[idField] === id);
       const groupId = subjectRow?.["Group ID"];
       const groupIndex = groupId ? uniqueGroupIds.indexOf(groupId) + 1 : 0;
       const adminId = index * 10 + groupIndex;
+      const timeUnit = subjectRow?.[timeUnitField] || "h";
       const newRow: Row = {
         [idField]: id,
         [administrationIdField]: adminId.toString(),
@@ -62,7 +102,7 @@ function createDosingRows(
         [amountUnitField]: amountUnit?.symbol === "pmol" ? "mg" : "mg/kg",
         [amountField]: "0",
         [timeField]: "0",
-        [timeUnitField]: "h",
+        [timeUnitField]: timeUnit,
         "Infusion Duration": "0.0833",
         "Additional Doses": ".",
         "Interdose Interval": ".",
@@ -74,10 +114,11 @@ function createDosingRows(
       covariateFields.forEach((field) => {
         newRow[field] = subjectRow?.[field] || "";
       });
-      nextData.push(newRow);
+      newRows.push(newRow);
     });
   });
-  state.setData(nextData);
+  newRows.sort((a, b) => parseInt(a[idField]) - parseInt(b[idField]));
+  state.setData([...nextData, ...newRows]);
   state.setNormalisedFields(
     new Map([
       ...state.normalisedFields.entries(),
@@ -154,8 +195,9 @@ const CreateDosingProtocols: FC<IDosingProtocols> = ({
   );
   const amountUnitField = findFieldByType("Amount Unit", state);
   const timeField = findFieldByType("Time", state);
+  const groupIdField = findFieldByType("Group ID", state);
   // ignore rows with no amount and administration ID set to 0.
-  const dosingRows: Row[] = state.data.filter((row) =>
+  let dosingRows: Row[] = state.data.filter((row) =>
     parseInt(row[administrationIdField]),
   );
   if (!dosingRows.length) {
@@ -175,10 +217,12 @@ const CreateDosingProtocols: FC<IDosingProtocols> = ({
     state.setNormalisedFields(newNormalisedFields);
     state.setData(newData);
   }
-
-  const administrationIds = administrationIdField
-    ? dosingRows.map((row) => row[administrationIdField])
-    : [];
+  dosingRows = generateAdministrationIds(
+    dosingRows,
+    administrationIdField,
+    groupIdField,
+  );
+  const administrationIds = dosingRows.map((row) => row[administrationIdField]);
   const uniqueAdministrationIds = [...new Set(administrationIds)];
 
   const isAmount = (variable: VariableRead) => {
@@ -246,9 +290,6 @@ const CreateDosingProtocols: FC<IDosingProtocols> = ({
             <TableHead>
               <TableRow>
                 <TableCell>
-                  <Typography>{administrationIdField}</Typography>
-                </TableCell>
-                <TableCell>
                   <Typography>Group</Typography>
                 </TableCell>
                 <TableCell>
@@ -275,121 +316,111 @@ const CreateDosingProtocols: FC<IDosingProtocols> = ({
               </TableRow>
             </TableHead>
             <TableBody>
-              {uniqueAdministrationIds.map((adminId) => {
-                const currentRow = state.data.find((row) =>
-                  administrationIdField
-                    ? row[administrationIdField] === adminId &&
-                      row["Amount"] !== "."
-                    : true,
+              {dosingCompartments.map((compartment) => {
+                const dosingRows = state.data.filter(
+                  (row) =>
+                    row["Amount Variable"] === compartment &&
+                    row["Amount"] !== ".",
                 );
-                const selectedVariable = variables?.find(
-                  (variable) =>
-                    variable.qname === currentRow?.["Amount Variable"],
+                const administrationIds = dosingRows.map(
+                  (row) => row[administrationIdField],
                 );
-                const compatibleUnits = units?.find(
-                  (unit) => unit.id === selectedVariable?.unit,
-                )?.compatible_units;
-                const defaultAmountUnit =
-                  amountUnit?.symbol === "pmol" ? "mg" : "mg/kg";
-                const selectedAmountUnit =
-                  currentRow?.[amountUnitField] || defaultAmountUnit;
-                return (
-                  <TableRow key={adminId}>
-                    <TableCell sx={{ width: "5rem" }}>{adminId}</TableCell>
-                    <TableCell sx={{ width: "5rem" }}>
-                      {currentRow?.["Group ID"]}
-                    </TableCell>
-                    <TableCell sx={{ width: "10rem" }}>
-                      <FormControl fullWidth>
-                        <InputLabel
-                          size="small"
-                          id={`select-var-${adminId}-label`}
-                        >
-                          Variable
-                        </InputLabel>
-                        <Select
-                          labelId={`select-var-${adminId}-label`}
-                          id={`select-var-${adminId}`}
-                          label="Variable"
-                          value={selectedVariable?.qname}
-                          onChange={handleAmountMappingChange(adminId)}
-                          size="small"
-                          margin="dense"
-                        >
-                          {modelAmounts?.map((variable) => (
-                            <MenuItem
-                              key={variable.name}
-                              value={variable.qname}
-                            >
-                              {variable.name}
-                            </MenuItem>
-                          ))}
-                        </Select>
-                      </FormControl>
-                    </TableCell>
-                    <NumericTableCell
-                      id={`input-amount-${adminId}`}
-                      disabled={!selectedVariable}
-                      label="Amount"
-                      onChange={handleInputChange(adminId, "Amount")}
-                      value={currentRow?.["Amount"]}
-                    />
-                    <TableCell sx={{ width: "10rem" }}>
-                      <FormControl fullWidth>
-                        <InputLabel
-                          size="small"
-                          id={`select-unit-${adminId}-label`}
-                        >
-                          Units
-                        </InputLabel>
-                        <Select
-                          labelId={`select-unit-${adminId}-label`}
-                          id={`select-unit-${adminId}`}
-                          label="Units"
-                          disabled={!selectedVariable}
-                          value={selectedAmountUnit}
-                          onChange={handleInputChange(adminId, amountUnitField)}
-                          sx={{ maxWidth: "10rem" }}
-                          size="small"
-                          margin="dense"
-                        >
-                          {compatibleUnits?.map((unit) => (
-                            <MenuItem key={unit.symbol} value={unit.symbol}>
-                              {unit.symbol}
-                            </MenuItem>
-                          ))}
-                        </Select>
-                      </FormControl>
-                    </TableCell>
-                    <NumericTableCell
-                      id={`input-time-${adminId}`}
-                      disabled={!selectedVariable}
-                      label="Time"
-                      onChange={handleInputChange(adminId, timeField)}
-                      value={currentRow?.[timeField]}
-                    />
-                    <TableCell sx={{ width: "10rem" }}>
-                      <Typography>{currentRow?.["Time Unit"]}</Typography>
-                    </TableCell>
-                    <NumericTableCell
-                      id={`input-addDoses-${adminId}`}
-                      disabled={!selectedVariable}
-                      label="Additional Doses"
-                      onChange={handleInputChange(adminId, "Additional Doses")}
-                      value={currentRow?.["Additional Doses"]}
-                    />
-                    <NumericTableCell
-                      id={`input-doseInterval-${adminId}`}
-                      disabled={!selectedVariable}
-                      label="Interdose Interval"
-                      onChange={handleInputChange(
-                        adminId,
-                        "Interdose Interval",
-                      )}
-                      value={currentRow?.["Interdose Interval"]}
-                    />
-                  </TableRow>
-                );
+                const uniqueAdministrationIds = [...new Set(administrationIds)];
+                return uniqueAdministrationIds.map((adminId) => {
+                  const [currentRow] = dosingRows.filter((row) =>
+                    administrationIdField
+                      ? row[administrationIdField] === adminId
+                      : true,
+                  );
+                  const selectedVariable = variables?.find(
+                    (variable) =>
+                      variable.qname === currentRow?.["Amount Variable"],
+                  );
+                  const compatibleUnits = units?.find(
+                    (unit) => unit.id === selectedVariable?.unit,
+                  )?.compatible_units;
+                  const defaultAmountUnit =
+                    amountUnit?.symbol === "pmol" ? "mg" : "mg/kg";
+                  const selectedAmountUnit =
+                    currentRow?.[amountUnitField] || defaultAmountUnit;
+                  return (
+                    <TableRow key={adminId}>
+                      <TableCell sx={{ width: "5rem" }}>
+                        {currentRow?.[groupIdField]}
+                      </TableCell>
+                      <TableCell sx={{ width: "10rem" }}>
+                        {selectedVariable?.name}
+                      </TableCell>
+                      <NumericTableCell
+                        id={`input-amount-${adminId}`}
+                        disabled={!selectedVariable}
+                        label="Amount"
+                        onChange={handleInputChange(adminId, "Amount")}
+                        value={currentRow?.["Amount"]}
+                      />
+                      <TableCell sx={{ width: "10rem" }}>
+                        <FormControl fullWidth>
+                          <InputLabel
+                            size="small"
+                            id={`select-unit-${adminId}-label`}
+                          >
+                            Units
+                          </InputLabel>
+                          <Select
+                            labelId={`select-unit-${adminId}-label`}
+                            id={`select-unit-${adminId}`}
+                            label="Units"
+                            disabled={!selectedVariable}
+                            value={selectedAmountUnit}
+                            onChange={handleInputChange(
+                              adminId,
+                              amountUnitField,
+                            )}
+                            sx={{ maxWidth: "10rem" }}
+                            size="small"
+                            margin="dense"
+                          >
+                            {compatibleUnits?.map((unit) => (
+                              <MenuItem key={unit.symbol} value={unit.symbol}>
+                                {unit.symbol}
+                              </MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+                      </TableCell>
+                      <NumericTableCell
+                        id={`input-time-${adminId}`}
+                        disabled={!selectedVariable}
+                        label="Time"
+                        onChange={handleInputChange(adminId, timeField)}
+                        value={currentRow?.[timeField]}
+                      />
+                      <TableCell sx={{ width: "10rem" }}>
+                        <Typography>{currentRow?.["Time Unit"]}</Typography>
+                      </TableCell>
+                      <NumericTableCell
+                        id={`input-addDoses-${adminId}`}
+                        disabled={!selectedVariable}
+                        label="Additional Doses"
+                        onChange={handleInputChange(
+                          adminId,
+                          "Additional Doses",
+                        )}
+                        value={currentRow?.["Additional Doses"]}
+                      />
+                      <NumericTableCell
+                        id={`input-doseInterval-${adminId}`}
+                        disabled={!selectedVariable}
+                        label="Interdose Interval"
+                        onChange={handleInputChange(
+                          adminId,
+                          "Interdose Interval",
+                        )}
+                        value={currentRow?.["Interdose Interval"]}
+                      />
+                    </TableRow>
+                  );
+                });
               })}
             </TableBody>
           </Table>
