@@ -7,6 +7,7 @@ import { RootState } from "../../app/store";
 import {
   useCombinedModelListQuery,
   useProjectRetrieveQuery,
+  useProtocolListQuery,
   useUnitListQuery,
   useVariableListQuery,
 } from "../../app/backendApi";
@@ -34,6 +35,8 @@ const MapDosing: FC<IMapDosing> = ({
     { skip: !projectId },
   );
   const isPreclinical = project?.species !== "H";
+  const { data: projectProtocols, isLoading: isProtocolsLoading } =
+    useProtocolListQuery({ projectId: projectIdOrZero }, { skip: !projectId });
   const { data: models = [] } = useCombinedModelListQuery(
     { projectId: projectIdOrZero },
     { skip: !projectId },
@@ -79,6 +82,15 @@ const MapDosing: FC<IMapDosing> = ({
     state.setNormalisedFields(newNormalisedFields);
   }
 
+  const dosingCompartments = projectProtocols?.map((protocol) => {
+    return (
+      protocol.mapped_qname ||
+      variables?.find((variable) => variable.id === protocol.variables[0])
+        ?.qname ||
+      ""
+    );
+  });
+
   return hasDosingRows ? (
     <DosingProtocols
       administrationIdField={administrationIdField || ""}
@@ -94,6 +106,7 @@ const MapDosing: FC<IMapDosing> = ({
       administrationIdField={administrationIdField || "Administration ID"}
       amountUnitField={amountUnitField || ""}
       amountUnit={amountUnit}
+      dosingCompartments={dosingCompartments}
       state={state}
       units={units || []}
       variables={variables || []}

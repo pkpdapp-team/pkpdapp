@@ -51,10 +51,8 @@ function validateGroupProtocols(groups: Group[], protocols: IProtocol[]) {
  */
 function generateAdministrationIds(data: { [key: string]: string }[]) {
   const newData = data.map((row) => ({ ...row }));
-  const uniqueGroupIds = [...new Set(data.map((row) => row["Group ID"]))];
   newData.forEach((row) => {
-    const administrationId = uniqueGroupIds.indexOf(row["Group ID"]) + 1;
-    row["Administration ID"] = `${administrationId}`;
+    row["Administration ID"] = "0";
   });
   return newData;
 }

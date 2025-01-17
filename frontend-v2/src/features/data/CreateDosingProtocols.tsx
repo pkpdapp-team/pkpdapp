@@ -25,6 +25,53 @@ import {
   SINGLE_TABLE_BREAKPOINTS,
 } from "../../shared/calculateTableHeights";
 
+function createDosingRows(
+  state: StepperState,
+  administrationIdField: string,
+  dosingCompartments: string[],
+  amountUnit?: UnitRead,
+) {
+  const nextData = [...state.data];
+  const uniqueIds = new Set(nextData.map((row) => row["ID"]));
+  const uniqueGroupIds = [...new Set(nextData.map((row) => row["Group ID"]))];
+  dosingCompartments.forEach((compartment, index) => {
+    uniqueIds.forEach((id) => {
+      const groupId = state.data.find((row) => row["ID"] === id)?.["Group ID"];
+      const groupIndex = groupId ? uniqueGroupIds.indexOf(groupId) + 1 : 0;
+      const adminId = index * 10 + groupIndex;
+      const newRow: Row = {
+        ID: id,
+        [administrationIdField]: adminId.toString(),
+        "Amount Variable": compartment,
+        "Amount Unit": amountUnit?.symbol === "pmol" ? "mg" : "mg/kg",
+        Amount: "0",
+        Time: "0",
+        "Time Unit": "h",
+        "Infusion Duration": "0.0833",
+        "Additional Doses": ".",
+        "Interdose Interval": ".",
+        Observation: ".",
+      };
+      if (groupId) {
+        newRow["Group ID"] = groupId;
+        newRow[state.groupColumn] = groupId;
+      }
+      nextData.push(newRow);
+    });
+  });
+  state.setData(nextData);
+  state.setNormalisedFields(
+    new Map([
+      ...state.normalisedFields.entries(),
+      ["Amount Variable", "Amount Variable"],
+      ["Amount Unit", "Amount Unit"],
+      ["Infusion Duration", "Infusion Duration"],
+      ["Additional Doses", "Additional Doses"],
+      ["Interdose Interval", "Interdose Interval"],
+    ]),
+  );
+}
+
 type NumericTableCellProps = {
   id: string;
   disabled: boolean;
@@ -64,6 +111,7 @@ interface IDosingProtocols {
   administrationIdField: string;
   amountUnitField?: string;
   amountUnit?: UnitRead;
+  dosingCompartments?: string[];
   state: StepperState;
   units: UnitRead[];
   variables: VariableRead[];
@@ -83,6 +131,7 @@ function findFieldByName(name: string, state: StepperState) {
 const CreateDosingProtocols: FC<IDosingProtocols> = ({
   administrationIdField,
   amountUnit,
+  dosingCompartments = [],
   state,
   units,
   variables,
@@ -94,11 +143,18 @@ const CreateDosingProtocols: FC<IDosingProtocols> = ({
   );
   const amountUnitField = findFieldByName("Amount Unit", state);
   const timeField = findFieldByName("Time", state);
-  const groupIdField = findFieldByName("Group ID", state);
   // ignore rows with no amount and administration ID set to 0.
   const dosingRows: Row[] = state.data.filter((row) =>
     parseInt(row[administrationIdField]),
   );
+  if (!dosingRows.length) {
+    createDosingRows(
+      state,
+      administrationIdField,
+      dosingCompartments,
+      amountUnit,
+    );
+  }
   if (!amountField) {
     const newNormalisedFields = new Map([
       ...state.normalisedFields.entries(),
@@ -127,46 +183,6 @@ const CreateDosingProtocols: FC<IDosingProtocols> = ({
   };
   const modelAmounts = variables?.filter(isAmount) || [];
 
-  function createDosingRow(id: string, qname: string, nextData: Row[]) {
-    const subjectIds = nextData
-      .filter((row) => row[administrationIdField] === id)
-      .map((row) => row["ID"]);
-    const uniqueSubjectIds = [...new Set(subjectIds)];
-    uniqueSubjectIds.forEach((subjectId) => {
-      const groupId = state.data.find((row) => row["ID"] === subjectId)?.[
-        groupIdField
-      ];
-      const newRow: Row = {
-        ID: subjectId,
-        [administrationIdField]: id,
-        "Amount Variable": qname,
-        "Amount Unit": amountUnit?.symbol === "pmol" ? "mg" : "mg/kg",
-        Amount: "0",
-        Time: "0",
-        "Time Unit": "h",
-        "Infusion Duration": "0.0833",
-        "Additional Doses": ".",
-        "Interdose Interval": ".",
-        Observation: ".",
-      };
-      if (groupId) {
-        newRow[groupIdField] = groupId;
-        newRow[state.groupColumn] = groupId;
-      }
-      nextData.push(newRow);
-      state.setData(nextData);
-      state.setNormalisedFields(
-        new Map([
-          ...state.normalisedFields.entries(),
-          ["Amount Variable", "Amount Variable"],
-          ["Amount Unit", "Amount Unit"],
-          ["Infusion Duration", "Infusion Duration"],
-          ["Additional Doses", "Additional Doses"],
-          ["Interdose Interval", "Interdose Interval"],
-        ]),
-      );
-    });
-  }
   const handleAmountMappingChange =
     (id: string) => (event: SelectChangeEvent) => {
       const nextData = [...state.data];
@@ -174,14 +190,10 @@ const CreateDosingProtocols: FC<IDosingProtocols> = ({
       const dosingRows = nextData.filter(
         (row) => row[administrationIdField] === id && row["Amount"] !== ".",
       );
-      if (dosingRows.length) {
-        dosingRows.forEach((row) => {
-          row["Amount Variable"] = value;
-        });
-        state.setData(nextData);
-      } else {
-        createDosingRow(id, value, nextData);
-      }
+      dosingRows.forEach((row) => {
+        row["Amount Variable"] = value;
+      });
+      state.setData(nextData);
     };
   type InputChangeEvent =
     | ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -224,6 +236,9 @@ const CreateDosingProtocols: FC<IDosingProtocols> = ({
               <TableRow>
                 <TableCell>
                   <Typography>{administrationIdField}</Typography>
+                </TableCell>
+                <TableCell>
+                  <Typography>Group</Typography>
                 </TableCell>
                 <TableCell>
                   <Typography>Dosing Compartment</Typography>
@@ -270,6 +285,9 @@ const CreateDosingProtocols: FC<IDosingProtocols> = ({
                 return (
                   <TableRow key={adminId}>
                     <TableCell sx={{ width: "5rem" }}>{adminId}</TableCell>
+                    <TableCell sx={{ width: "5rem" }}>
+                      {currentRow?.["Group ID"]}
+                    </TableCell>
                     <TableCell sx={{ width: "10rem" }}>
                       <FormControl fullWidth>
                         <InputLabel

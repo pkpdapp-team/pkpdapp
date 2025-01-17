@@ -154,6 +154,9 @@ const DosingProtocols: FC<IDosingProtocols> = ({
                   <Typography>{administrationIdField}</Typography>
                 </TableCell>
                 <TableCell>
+                  <Typography>Group ID</Typography>
+                </TableCell>
+                <TableCell>
                   <Typography>Dosing Compartment</Typography>
                 </TableCell>
                 <TableCell>
@@ -198,6 +201,9 @@ const DosingProtocols: FC<IDosingProtocols> = ({
                 return (
                   <TableRow key={adminId}>
                     <TableCell sx={{ width: "5rem" }}>{adminId}</TableCell>
+                    <TableCell sx={{ width: "5rem" }}>
+                      <Typography>{currentRow?.["Group ID"] || "."}</Typography>
+                    </TableCell>
                     <TableCell sx={{ width: "10rem" }}>
                       <FormControl fullWidth>
                         <InputLabel
