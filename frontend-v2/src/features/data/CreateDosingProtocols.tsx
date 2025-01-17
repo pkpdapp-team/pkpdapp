@@ -151,7 +151,7 @@ const CreateDosingProtocols: FC<IDosingProtocols> = ({
       };
       if (groupId) {
         newRow[groupIdField] = groupId;
-        newRow["Group"] = groupId;
+        newRow[state.groupColumn] = groupId;
       }
       nextData.push(newRow);
       state.setData(nextData);
