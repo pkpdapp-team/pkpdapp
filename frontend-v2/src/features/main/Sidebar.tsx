@@ -109,8 +109,12 @@ export default function Sidebar() {
     );
   };
 
-  const doses = groups?.flatMap((group) => group.protocols.map((p) => p.doses));
-  const groupsAreIncomplete = doses?.some((dosing) => !dosing[0]?.amount);
+  const protocolsAreComplete = groups?.flatMap((group) => {
+    return group.protocols
+      .map((p) => p.doses.every((d) => d.amount > 0))
+      .some((d) => d);
+  });
+  const groupsAreComplete = protocolsAreComplete?.every((dosing) => dosing);
   const noSecondaryParameters = model
     ? model.derived_variables.reduce((acc, dv) => {
         return acc && dv.type !== "AUC";
@@ -123,7 +127,7 @@ export default function Sidebar() {
     errors[PageName.MODEL] =
       "Model is incomplete, see the Model tab for details";
   }
-  if (groupsAreIncomplete) {
+  if (!groupsAreComplete) {
     warnings[PageName.TRIAL_DESIGN] =
       "Trial design is incomplete, one or more dose amounts are zero";
   }
@@ -471,7 +475,7 @@ export default function Sidebar() {
               fontWeight: "bold",
               paddingLeft: "1rem",
               fontFamily: "Comfortaa",
-              flexGrow: project ? 0 : 1
+              flexGrow: project ? 0 : 1,
             }}
           >
             pkpd explorer
