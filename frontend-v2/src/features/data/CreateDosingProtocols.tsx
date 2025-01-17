@@ -25,37 +25,55 @@ import {
   SINGLE_TABLE_BREAKPOINTS,
 } from "../../shared/calculateTableHeights";
 
+function findFieldByType(type: string, state: StepperState) {
+  return (
+    state.fields.find((field) => state.normalisedFields.get(field) === type) ||
+    type
+  );
+}
+
 function createDosingRows(
   state: StepperState,
   administrationIdField: string,
   dosingCompartments: string[],
   amountUnit?: UnitRead,
 ) {
+  const idField = findFieldByType("ID", state);
+  const timeField = findFieldByType("Time", state);
+  const timeUnitField = findFieldByType("Time Unit", state);
+  const amountField = findFieldByType("Amount", state);
+  const amountUnitField = findFieldByType("Amount Unit", state);
+  const covariateFields = state.fields.filter(
+    (field) => state.normalisedFields.get(field) === "Cat Covariate",
+  );
   const nextData = [...state.data];
-  const uniqueIds = new Set(nextData.map((row) => row["ID"]));
+  const uniqueIds = new Set(nextData.map((row) => row[idField]));
   const uniqueGroupIds = [...new Set(nextData.map((row) => row["Group ID"]))];
   dosingCompartments.forEach((compartment, index) => {
     uniqueIds.forEach((id) => {
-      const groupId = state.data.find((row) => row["ID"] === id)?.["Group ID"];
+      const subjectRow = state.data.find((row) => row[idField] === id);
+      const groupId = subjectRow?.["Group ID"];
       const groupIndex = groupId ? uniqueGroupIds.indexOf(groupId) + 1 : 0;
       const adminId = index * 10 + groupIndex;
       const newRow: Row = {
-        ID: id,
+        [idField]: id,
         [administrationIdField]: adminId.toString(),
         "Amount Variable": compartment,
-        "Amount Unit": amountUnit?.symbol === "pmol" ? "mg" : "mg/kg",
-        Amount: "0",
-        Time: "0",
-        "Time Unit": "h",
+        [amountUnitField]: amountUnit?.symbol === "pmol" ? "mg" : "mg/kg",
+        [amountField]: "0",
+        [timeField]: "0",
+        [timeUnitField]: "h",
         "Infusion Duration": "0.0833",
         "Additional Doses": ".",
         "Interdose Interval": ".",
-        Observation: ".",
       };
       if (groupId) {
         newRow["Group ID"] = groupId;
         newRow[state.groupColumn] = groupId;
       }
+      covariateFields.forEach((field) => {
+        newRow[field] = subjectRow?.[field] || "";
+      });
       nextData.push(newRow);
     });
   });
@@ -121,13 +139,6 @@ interface IDosingProtocols {
   };
 }
 
-function findFieldByName(name: string, state: StepperState) {
-  return (
-    state.fields.find((field) => state.normalisedFields.get(field) === name) ||
-    name
-  );
-}
-
 const CreateDosingProtocols: FC<IDosingProtocols> = ({
   administrationIdField,
   amountUnit,
@@ -141,8 +152,8 @@ const CreateDosingProtocols: FC<IDosingProtocols> = ({
     (field) =>
       field === "Amount" || state.normalisedFields.get(field) === "Amount",
   );
-  const amountUnitField = findFieldByName("Amount Unit", state);
-  const timeField = findFieldByName("Time", state);
+  const amountUnitField = findFieldByType("Amount Unit", state);
+  const timeField = findFieldByType("Time", state);
   // ignore rows with no amount and administration ID set to 0.
   const dosingRows: Row[] = state.data.filter((row) =>
     parseInt(row[administrationIdField]),
