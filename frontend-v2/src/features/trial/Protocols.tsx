@@ -1,5 +1,5 @@
 // src/components/ProjectTable.tsx
-import { ChangeEvent, FC, useMemo, useState } from "react";
+import { FC, SyntheticEvent, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import {
   Box,
@@ -118,7 +118,10 @@ const Protocols: FC = () => {
     (protocol) => protocol.variables.length > 0,
   );
 
-  const handleTabChange = (event: ChangeEvent<{}>, newValue: number) => {
+  const handleTabChange = (
+    event: SyntheticEvent<Element, Event>,
+    newValue: number,
+  ) => {
     setTab(newValue);
   };
 
@@ -137,7 +140,7 @@ const Protocols: FC = () => {
         id_in_dataset: `${newGroupId}`,
         project: project.id,
         protocols: filteredProtocols.map((p) => {
-          const { id, project, mapped_qname, ...newProtocol } = p;
+          const { project, mapped_qname, ...newProtocol } = p;
           const linkedVariableId = p.variables[0];
           const mappedQName =
             mapped_qname ||
