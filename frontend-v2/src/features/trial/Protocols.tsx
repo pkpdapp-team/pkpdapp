@@ -28,13 +28,10 @@ import { RootState } from "../../app/store";
 import Doses from "./Doses";
 import HelpButton from "../../components/HelpButton";
 import { defaultHeaderSx } from "../../shared/tableHeadersSx";
-import useDataset from "../../hooks/useDataset";
 import useSubjectGroups from "../../hooks/useSubjectGroups";
 import { TableHeader } from "../../components/TableHeader";
 import RemoveCircleOutlineIcon from "@mui/icons-material/RemoveCircleOutline";
-import {
-  getTableHeight
-} from "../../shared/calculateTableHeights";
+import { getTableHeight } from "../../shared/calculateTableHeights";
 
 const TABLE_BREAKPOINTS = [
   {
@@ -73,7 +70,6 @@ const Protocols: FC = () => {
     (state: RootState) => state.main.selectedProject,
   );
   const selectedProjectOrZero = selectedProject || 0;
-  const { dataset } = useDataset(selectedProject);
   const { groups, refetchGroups } = useSubjectGroups();
   const { data: project, isLoading: isProjectLoading } =
     useProjectRetrieveQuery(
@@ -104,9 +100,12 @@ const Protocols: FC = () => {
   const [createSubjectGroup] = useSubjectGroupCreateMutation();
   const [destroySubjectGroup] = useSubjectGroupDestroyMutation();
 
-  const loading = [isProjectLoading, isProtocolsLoading, unitsLoading].some(
-    (x) => x,
-  );
+  const loading = [
+    isModelsLoading,
+    isProjectLoading,
+    isProtocolsLoading,
+    unitsLoading,
+  ].some((x) => x);
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -122,7 +121,6 @@ const Protocols: FC = () => {
   const handleTabChange = (event: ChangeEvent<{}>, newValue: number) => {
     setTab(newValue);
   };
-
 
   const handleAddTab = async () => {
     const newValue = groups?.length || 1;
