@@ -139,7 +139,7 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
     baseUnit?.compatible_units?.find(({ id }) => +id === selectedAmountId)
       ?.symbol || "";
 
-  const protocolName = (protocol?.mapped_qname || '').split('.').pop();
+  const protocolName = mappedVariable.split(".").pop();
 
   return (
     <>
@@ -185,7 +185,13 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
                 placement="right"
                 PopperProps={{ sx: { marginLeft: "4px" } }}
               >
-                <HelpOutlineIcon sx={{ marginLeft: "8px", color: "dimgray",  transform: "scale(0.85)", }} />
+                <HelpOutlineIcon
+                  sx={{
+                    marginLeft: "8px",
+                    color: "dimgray",
+                    transform: "scale(0.85)",
+                  }}
+                />
               </Tooltip>
             </Stack>
           </Box>
@@ -195,7 +201,7 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
         <TableRow key={dose.id}>
           <TableCell>
             <FloatField
-              sx={{ minWidth: '6rem'}}
+              sx={{ minWidth: "6rem" }}
               size="small"
               label={"Dose"}
               name={`doses.${index}.amount`}
