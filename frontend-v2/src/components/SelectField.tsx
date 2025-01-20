@@ -13,7 +13,7 @@ import {
 import { getLabel } from "../shared/getRequiredLabel";
 
 type Option = {
-  value: any;
+  value: string | number;
   label: string;
 };
 
@@ -25,7 +25,7 @@ type Props<T extends FieldValues> = {
   rules?: Record<string, unknown>;
   selectProps?: SelectProps;
   formControlProps?: FormControlProps;
-  size?: 'small' | 'medium'
+  size?: "small" | "medium";
   sx?: SxProps;
 };
 
@@ -37,7 +37,7 @@ function SelectField<T extends FieldValues>({
   rules,
   selectProps,
   formControlProps,
-  size = 'medium',
+  size = "medium",
   sx,
 }: Props<T>): ReactElement {
   const labelId = `${name}-label`;
@@ -69,7 +69,6 @@ function SelectField<T extends FieldValues>({
             name={name}
             id={name}
             value={value === undefined || value === null ? "" : value}
-            // @ts-ignore
             onChange={onChange}
             onBlur={onBlur}
             input={<OutlinedInput label={label} notched={displayEmpty} />}

@@ -24,7 +24,6 @@ interface ParametersProps {
  */
 export function columns({
   variable,
-  aucVariable,
   concentrationVariables = [],
   simulation,
   simulations = [],

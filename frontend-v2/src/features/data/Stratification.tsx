@@ -1,4 +1,4 @@
-import { ChangeEvent, FC, useState } from "react";
+import { ChangeEvent, FC, SyntheticEvent, useState } from "react";
 import {
   Box,
   Radio,
@@ -126,7 +126,10 @@ const Stratification: FC<IStratification> = ({
     );
   }
 
-  const handleTabChange = (event: ChangeEvent<{}>, newValue: number) => {
+  const handleTabChange = (
+    event: SyntheticEvent<Element, Event>,
+    newValue: number,
+  ) => {
     setTab(newValue);
   };
 

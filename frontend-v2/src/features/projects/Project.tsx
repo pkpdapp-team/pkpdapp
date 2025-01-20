@@ -87,7 +87,12 @@ const ProjectRow: FC<Props> = ({
 
   const [projectCopyUpdate] = useProjectCopyUpdateMutation();
   const [isEditMode, setIsEditMode] = useState(false);
-  const { isDescriptionModalOpen, onOpenDescriptionModal, onCloseDescriptionModal, descriptionProjectId } = useProjectDescription();
+  const {
+    isDescriptionModalOpen,
+    onOpenDescriptionModal,
+    onCloseDescriptionModal,
+    descriptionProjectId,
+  } = useProjectDescription();
 
   useEffect(() => {
     if (isEditMode) {
@@ -116,16 +121,10 @@ const ProjectRow: FC<Props> = ({
     molecular_mass: 100,
     target_molecular_mass: 100,
   };
-  const {
-    reset,
-    handleSubmit,
-    control,
-    setValue,
-    register,
-    formState: { isDirty },
-  } = useForm<FormData>({
-    defaultValues: { project, compound: defaultCompound },
-  });
+  const { reset, handleSubmit, control, setValue, register } =
+    useForm<FormData>({
+      defaultValues: { project, compound: defaultCompound },
+    });
 
   const [userAccessOpen, setUserAccessOpen] = useState<boolean>(false);
 
@@ -179,7 +178,7 @@ const ProjectRow: FC<Props> = ({
     setValue("project.user_access", project.user_access);
     setUserAccessOpen(false);
     setIsEditMode(false);
-  }
+  };
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -249,7 +248,7 @@ const ProjectRow: FC<Props> = ({
     if (window.innerHeight < 800) return Math.ceil(window.innerHeight / 100);
 
     return 15;
-  }
+  };
 
   return (
     <>
@@ -277,7 +276,7 @@ const ProjectRow: FC<Props> = ({
               textFieldProps={defaultProps}
               size="small"
               rules={{ required: true, validate: validateName }}
-              sx={{ ...defaultSx, minWidth: '10rem' }}
+              sx={{ ...defaultSx, minWidth: "10rem" }}
             />
           ) : (
             <label htmlFor={`project-${project.id}`}>
@@ -293,7 +292,7 @@ const ProjectRow: FC<Props> = ({
               textFieldProps={defaultProps}
               size="small"
               rules={{ required: true }}
-              sx={{ ...defaultSx, minWidth: '10rem'}}
+              sx={{ ...defaultSx, minWidth: "10rem" }}
             />
           ) : (
             <Typography>{compound?.name}</Typography>
@@ -333,7 +332,10 @@ const ProjectRow: FC<Props> = ({
           {!isEditMode ? (
             <Stack component="span" direction="row" spacing={0.0}>
               <Tooltip title="Edit project">
-                <IconButton disabled={isSharedWithMe} onClick={() => setIsEditMode(true)}>
+                <IconButton
+                  disabled={isSharedWithMe}
+                  onClick={() => setIsEditMode(true)}
+                >
                   <EditIcon />
                 </IconButton>
               </Tooltip>

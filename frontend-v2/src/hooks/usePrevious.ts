@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 
-function usePrevious(value: any) {
+function usePrevious(value: null) {
   const ref = useRef(null);
   useEffect(() => {
     ref.current = value; //assign the value of ref to the argument

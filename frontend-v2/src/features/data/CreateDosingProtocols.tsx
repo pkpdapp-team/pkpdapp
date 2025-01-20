@@ -222,34 +222,7 @@ const CreateDosingProtocols: FC<IDosingProtocols> = ({
     administrationIdField,
     groupIdField,
   );
-  const administrationIds = dosingRows.map((row) => row[administrationIdField]);
-  const uniqueAdministrationIds = [...new Set(administrationIds)];
 
-  const isAmount = (variable: VariableRead) => {
-    const amountUnits = units?.find(
-      (unit) => unit.symbol === amountUnit?.symbol,
-    )?.compatible_units;
-    const variableUnit = units?.find((unit) => unit.id === variable.unit);
-    return (
-      variableUnit?.symbol !== "" &&
-      amountUnits?.find((unit) => parseInt(unit.id) === variable.unit) !==
-        undefined
-    );
-  };
-  const modelAmounts = variables?.filter(isAmount) || [];
-
-  const handleAmountMappingChange =
-    (id: string) => (event: SelectChangeEvent) => {
-      const nextData = [...state.data];
-      const { value } = event.target;
-      const dosingRows = nextData.filter(
-        (row) => row[administrationIdField] === id && row["Amount"] !== ".",
-      );
-      dosingRows.forEach((row) => {
-        row["Amount Variable"] = value;
-      });
-      state.setData(nextData);
-    };
   type InputChangeEvent =
     | ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
     | SelectChangeEvent;

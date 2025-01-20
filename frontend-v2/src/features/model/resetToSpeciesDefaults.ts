@@ -63,7 +63,7 @@ type VariableMutation = MutationTrigger<
       string | FetchArgs,
       unknown,
       FetchBaseQueryError,
-      {},
+      unknown,
       FetchBaseQueryMeta
     >,
     never,

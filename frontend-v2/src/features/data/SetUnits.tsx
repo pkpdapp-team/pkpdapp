@@ -26,7 +26,6 @@ interface IMapObservations {
 
 const SetUnits: FC<IMapObservations> = ({
   state,
-  firstTime,
   setHasTimeUnitChanged,
 }: IMapObservations) => {
   const [isChanged, setIsChanged] = useState<boolean>(false);

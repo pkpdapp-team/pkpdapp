@@ -8,7 +8,6 @@ import {
   FormControlLabel,
   Tooltip,
   Typography,
-  Radio,
 } from "@mui/material";
 import {
   Variable,
@@ -43,12 +42,9 @@ interface Props {
 
 type DerivedVariableType = "AUC" | "RO" | "FUP" | "BPR" | "TLG";
 
-const derivedVariableRegex = /calc_.*_(f|bl|RO)/;
-
 const VariableRow: FC<Props> = ({
   project,
   compound,
-  model,
   variable,
   control,
   effectVariable,
@@ -59,15 +55,11 @@ const VariableRow: FC<Props> = ({
   updateLinksToPd,
   updateLagTimes,
 }) => {
-  const {
-    fields: mappings
-  } = useFieldArray({
+  const { fields: mappings } = useFieldArray({
     control,
     name: "model.mappings",
   });
-  const {
-    fields: derivedVariables
-  } = useFieldArray({
+  const { fields: derivedVariables } = useFieldArray({
     control,
     name: "model.derived_variables",
   });

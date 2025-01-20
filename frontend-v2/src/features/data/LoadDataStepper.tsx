@@ -94,7 +94,8 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
   const csvData = Papa.parse(csv, { header: true });
   const csvFields = csvData.meta.fields || [];
   const [data, setData] = useState<Data>((csvData.data as Data) || []);
-  let [errors, setErrors] = useState<string[]>([]);
+  const [errors, setErrors] = useState<string[]>([]);
+  let displayedErrors = [...errors];
   const [warnings, setWarnings] = useState<string[]>([]);
   const [normalisedFields, setNormalisedFields] = useState<Map<Field, string>>(
     new Map(csvFields.map(normaliseHeader)),
@@ -145,7 +146,7 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
     "Invalid data file. Each subject ID can only belong to one dosing protocol.";
 
   if (!areValidProtocols && !errors.includes(protocolErrorMessage)) {
-    errors = [...errors, protocolErrorMessage];
+    displayedErrors = [...displayedErrors, protocolErrorMessage];
   }
 
   const [stepState, setStepState] = useState({ activeStep: 0, maxStep: 0 });
@@ -158,7 +159,7 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
     !normalisedHeaders.includes("Time Unit") &&
     !timeUnit
   ) {
-    errors = [...errors, "Time unit is not defined."];
+    displayedErrors = [...displayedErrors, "Time unit is not defined."];
   }
 
   const noTimeUnit = !state.normalisedHeaders.find(
@@ -172,7 +173,7 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
   const shouldShowTimeUnitNotification =
     showTimeUnitSelector || hasTimeUnitChanged;
   const notificationsCount =
-    errors?.length +
+    displayedErrors?.length +
     warnings?.length +
     (shouldShowTimeUnitNotification ? 2 : 1);
 
@@ -291,7 +292,9 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
           <Step key={index}>
             <StepButton
               onClick={handleStep(index)}
-              disabled={data.length === 0 || isFinished || errors.length > 0}
+              disabled={
+                data.length === 0 || isFinished || displayedErrors.length > 0
+              }
             >
               {step}
             </StepButton>
@@ -301,7 +304,7 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
       <Notifications
         isOpen={isNotificationsOpen}
         showData={showData}
-        errors={errors}
+        errors={displayedErrors}
         warnings={warnings}
         fileName={fileName}
         state={state}

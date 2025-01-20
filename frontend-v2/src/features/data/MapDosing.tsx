@@ -23,7 +23,6 @@ interface IMapDosing {
 
 const MapDosing: FC<IMapDosing> = ({
   state,
-  firstTime,
   notificationsInfo,
 }: IMapDosing) => {
   const projectId = useSelector(
@@ -35,8 +34,10 @@ const MapDosing: FC<IMapDosing> = ({
     { skip: !projectId },
   );
   const isPreclinical = project?.species !== "H";
-  const { data: projectProtocols, isLoading: isProtocolsLoading } =
-    useProtocolListQuery({ projectId: projectIdOrZero }, { skip: !projectId });
+  const { data: projectProtocols } = useProtocolListQuery(
+    { projectId: projectIdOrZero },
+    { skip: !projectId },
+  );
   const { data: models = [] } = useCombinedModelListQuery(
     { projectId: projectIdOrZero },
     { skip: !projectId },

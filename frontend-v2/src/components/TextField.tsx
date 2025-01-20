@@ -16,7 +16,7 @@ type Props<T extends FieldValues> = {
   mode?: "onChange" | "onBlur";
   textFieldProps?: TextFieldProps;
   autoShrink?: boolean;
-  size?: 'small' | 'medium'
+  size?: "small" | "medium";
   sx?: SxProps;
 };
 
@@ -26,7 +26,7 @@ function TextField<T extends FieldValues>({
   control,
   rules,
   mode,
-  size = 'medium',
+  size = "medium",
   textFieldProps,
   autoShrink,
   sx,
@@ -44,7 +44,7 @@ function TextField<T extends FieldValues>({
       rules={rules}
       render={({
         field: { onChange, onBlur, value },
-        fieldState: { error, isDirty, isTouched },
+        fieldState: { error },
       }) => {
         const handleBlur = (e: FocusEvent<HTMLInputElement>) => {
           if (mode === "onBlur" && e.target.value !== value) {
