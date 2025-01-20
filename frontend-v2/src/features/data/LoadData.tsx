@@ -102,11 +102,7 @@ function setMinimumInfusionTime(state: StepperState) {
   }
 }
 
-const LoadData: FC<ILoadDataProps> = ({
-  state,
-  firstTime,
-  notificationsInfo,
-}) => {
+const LoadData: FC<ILoadDataProps> = ({ state, notificationsInfo }) => {
   const showData = state.data.length > 0 && state.fields.length > 0;
   const normalisedHeaders = state.normalisedHeaders;
   if (!normalisedHeaders.includes("ID")) {
@@ -183,14 +179,6 @@ const LoadData: FC<ILoadDataProps> = ({
     state.setErrors(errors);
     state.setWarnings(warnings);
   };
-
-  const noTimeUnit = !state.normalisedHeaders.find(
-    (field) => field === "Time Unit",
-  );
-  const invalidTimeUnits = state.errors.find((error) =>
-    error.includes("file contains multiple time units"),
-  );
-  const showTimeUnitSelector = noTimeUnit || invalidTimeUnits;
 
   return (
     <Stack

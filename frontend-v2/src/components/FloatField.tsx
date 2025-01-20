@@ -15,7 +15,7 @@ type Props<T extends FieldValues> = {
   sx?: Record<string, string>;
 };
 
-function convert(value: any) {
+function convert(value: string): number | null {
   if (typeof value === "string") {
     if (value !== "") {
       return parseFloat(value);
@@ -46,12 +46,12 @@ function FloatField<T extends FieldValues>({
       rules={rules}
       render={({
         field: { onChange, onBlur, value },
-        fieldState: { error, isDirty, isTouched },
+        fieldState: { error },
       }) => {
         const handleBlur = (e: FocusEvent<HTMLInputElement>) => {
           const updatedValue = convert(e.target.value);
           if (updatedValue !== value) {
-            e.target.value = updatedValue as any;
+            e.target.value = updatedValue?.toString() || "";
             onChange(e);
           }
           onBlur();

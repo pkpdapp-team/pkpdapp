@@ -3,5 +3,5 @@ import { SimulateResponse } from "../app/backendApi";
 
 export const SimulationContext = createContext({
   simulations: [] as SimulateResponse[],
-  setSimulations: (simulations: SimulateResponse[]) => {},
+  setSimulations: (_simulations: SimulateResponse[]) => {},
 });

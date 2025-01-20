@@ -1,16 +1,16 @@
 import { createContext, ReactNode, useContext, useState } from "react";
 
 type ProjectDescriptionContextType = {
-    isDescriptionModalOpen: boolean,
-    descriptionProjectId: number | null,
-    onOpenDescriptionModal: (id: number | null) => void,
-    onCloseDescriptionModal: () => void
-}
+  isDescriptionModalOpen: boolean;
+  descriptionProjectId: number | null;
+  onOpenDescriptionModal: (id: number | null) => void;
+  onCloseDescriptionModal: () => void;
+};
 
 const ProjectDescriptionContext = createContext<ProjectDescriptionContextType>({
   isDescriptionModalOpen: false,
   descriptionProjectId: null,
-  onOpenDescriptionModal: (id: number | null) => {
+  onOpenDescriptionModal: (_id: number | null) => {
     return;
   },
   onCloseDescriptionModal: () => {

@@ -31,8 +31,10 @@ export function useConfig({
             new ClipboardItem({ [blob.type]: blob }),
           ]);
           console.log("Image copied.");
-        } catch (err: any) {
-          console.error(err.name, err.message);
+        } catch (err: unknown) {
+          console.error(
+            err instanceof Error ? `${err.name} ${err.message}` : err,
+          );
         }
       },
     );

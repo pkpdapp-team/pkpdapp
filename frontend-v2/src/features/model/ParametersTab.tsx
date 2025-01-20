@@ -43,14 +43,7 @@ interface Props {
   units: UnitRead[];
 }
 
-const ParametersTab: FC<Props> = ({
-  model,
-  project,
-  control,
-  variables,
-  compound,
-  units,
-}) => {
+const ParametersTab: FC<Props> = ({ model, project, variables, units }) => {
   const [setParamsToDefault] =
     useCombinedModelSetParamsToDefaultsUpdateMutation();
 

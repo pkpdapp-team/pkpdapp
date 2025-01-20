@@ -1,4 +1,4 @@
-import { ChangeEvent, FC, useState } from "react";
+import { FC, SyntheticEvent, useState } from "react";
 import { DataGrid } from "@mui/x-data-grid";
 import {
   Box,
@@ -206,7 +206,10 @@ const MapObservations: FC<IMapObservations> = ({
     state.setWarnings(warnings);
   };
 
-  function handleTabChange(event: ChangeEvent<{}>, newValue: number) {
+  function handleTabChange(
+    event: SyntheticEvent<Element, Event>,
+    newValue: number,
+  ) {
     setTab(newValue);
   }
 

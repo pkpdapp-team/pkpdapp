@@ -13,6 +13,7 @@ import {
   Typography,
   TablePagination,
   TableContainer,
+  SelectChangeEvent,
 } from "@mui/material";
 import { Data, Field } from "./LoadData";
 import { groupedHeaders } from "./dataValidation";
@@ -47,7 +48,7 @@ const MapHeaders: FC<IMapHeaders> = ({
     handlePageChange,
   } = usePagination();
   const fields = [...normalisedFields.keys()];
-  const handleFieldChange = (field: string) => (event: any) => {
+  const handleFieldChange = (field: string) => (event: SelectChangeEvent) => {
     const newFields = new Map([
       ...normalisedFields.entries(),
       [field, event.target.value],

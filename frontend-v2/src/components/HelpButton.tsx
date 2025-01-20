@@ -10,7 +10,7 @@ interface HelpButtonProps {
   children: ReactNode;
 }
 
-const HelpButton: FC<HelpButtonProps> = ({ title, children }) => {
+const HelpButton: FC<HelpButtonProps> = ({ children }) => {
   const [open, setOpen] = useState(false);
   const selectedPage = useSelector(
     (state: RootState) => state.main.selectedPage,

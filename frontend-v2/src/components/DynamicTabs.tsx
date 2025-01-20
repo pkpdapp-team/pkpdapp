@@ -66,7 +66,7 @@ export const DynamicTabs: FC<PropsWithChildren<DynamicTabsProps>> = ({
   const toast = useCustomToast();
   const dispatch = useDispatch();
 
-  const errors: { [key: string]: ReactElement<any, string> } = {};
+  const errors: { [key: string]: ReactElement<unknown, string> } = {};
   for (const key in tabErrors) {
     errors[key] = (
       <Tooltip title={tabErrors[key]}>
@@ -115,7 +115,13 @@ export const DynamicTabs: FC<PropsWithChildren<DynamicTabsProps>> = ({
   return (
     <TabContext.Provider value={{ currentTab, setCurrentTab }}>
       <Box sx={{ width: "100%" }}>
-        <Box sx={{ borderBottom: 1, borderColor: "divider", marginBottom: marginBottom }}>
+        <Box
+          sx={{
+            borderBottom: 1,
+            borderColor: "divider",
+            marginBottom: marginBottom,
+          }}
+        >
           <Tabs
             value={currentTab}
             onChange={handleChange}
