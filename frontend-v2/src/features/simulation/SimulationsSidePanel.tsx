@@ -32,7 +32,7 @@ import {
 } from "../../app/backendApi";
 import { Control } from "react-hook-form";
 import { useCollapsibleSidebar } from "../../shared/contexts/CollapsibleSidebarContext";
-import '../../App.css'
+import "../../App.css";
 
 type SimulationsSidePanelType = {
   portalId: string;
@@ -46,7 +46,7 @@ type SimulationsSidePanelType = {
   layout: string[];
   setLayout: (layout: string[]) => void;
   plots: SimulationPlot[];
-  control: Control<Simulation, any>;
+  control: Control<Simulation, unknown>;
   units: UnitRead[];
   simulation: SimulationRead;
   groups?: SubjectGroupRead[];
@@ -163,11 +163,11 @@ export const SimulationsSidePanel = ({
 
   const onLayoutChange = (value: string) => {
     if (layout.includes(value)) {
-      setLayout(layout.filter(layoutValue => value !== layoutValue))
+      setLayout(layout.filter((layoutValue) => value !== layoutValue));
     } else {
       setLayout(layout?.length ? [] : [value]);
     }
-  }
+  };
 
   if (!portalRoot || selectedPage !== PageName.SIMULATIONS) return null;
 
@@ -179,10 +179,10 @@ export const SimulationsSidePanel = ({
         flexDirection: "column",
         justifyContent: "space-between",
         height: "100%",
-        maxHeight: '100%',
+        maxHeight: "100%",
         paddingBottom: "1rem",
         backgroundColor: "#FBFBFA",
-        borderRight: "1px solid #DBD6D1"
+        borderRight: "1px solid #DBD6D1",
       }}
     >
       <Box

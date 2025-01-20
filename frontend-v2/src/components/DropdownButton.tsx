@@ -16,7 +16,7 @@ type Option = {
 
 type Props = {
   options: Option[];
-  onOptionSelected: (value: any) => void;
+  onOptionSelected: (value: Option["value"]) => void;
   children?: ReactNode;
   disabled?: boolean;
   data_cy?: string;
