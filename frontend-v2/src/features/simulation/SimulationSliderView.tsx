@@ -119,7 +119,7 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
   );
   const stepValue = (maxValue - minValue) / 1000.0;
 
-  const handleBlur = () => {
+  const commitChanges = () => {
     setEditing(false);
     let truncatedValue = value;
     if (value < minValue) {
@@ -231,8 +231,10 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
           min={minValue}
           max={maxValue}
           step={stepValue}
+          shiftStep={stepValue * 10}
           onChange={handleSliderChange}
-          onChangeCommitted={handleBlur}
+          onPointerUp={commitChanges}
+          onKeyUp={commitChanges}
           valueLabelDisplay="off"
           aria-labelledby="input-slider"
         />
@@ -243,7 +245,7 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
           value={formatNumber(value)}
           size="small"
           onChange={handleInputChange}
-          onBlur={handleBlur}
+          onBlur={commitChanges}
           inputProps={{
             step: stepValue,
             min: minValue,
