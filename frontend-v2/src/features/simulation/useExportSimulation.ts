@@ -9,6 +9,8 @@ import {
   ProjectRead,
   SimulateResponse,
 } from "../../app/backendApi";
+import { FetchBaseQueryError } from "@reduxjs/toolkit/query";
+import { SerializedError } from "@reduxjs/toolkit";
 
 interface iExportSimulation {
   simInputs: Simulate;
@@ -47,7 +49,10 @@ export default function useExportSimulation({
   simInputs,
   model,
   project,
-}: iExportSimulation): [() => void, { error: any }] {
+}: iExportSimulation): [
+  () => void,
+  { error: FetchBaseQueryError | SerializedError | undefined },
+] {
   const { groups } = useSubjectGroups();
   const { compound, protocols } = useProtocols();
   const { data: variables } = useVariableListQuery(
