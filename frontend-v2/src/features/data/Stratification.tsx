@@ -43,22 +43,6 @@ function validateGroupProtocols(groups: Group[], protocols: IProtocol[]) {
   });
   return groupedProtocols.every((protocols) => protocols.length <= 1);
 }
-
-/**
- * Generate a unique administration ID for each group.
- * @param data
- * @returns data with administration ID column.
- */
-function generateAdministrationIds(data: { [key: string]: string }[]) {
-  const newData = data.map((row) => ({ ...row }));
-  const uniqueGroupIds = [...new Set(data.map((row) => row["Group ID"]))];
-  newData.forEach((row) => {
-    const administrationId = uniqueGroupIds.indexOf(row["Group ID"]) + 1;
-    row["Administration ID"] = `${administrationId}`;
-  });
-  return newData;
-}
-
 /**
  * Assign a group ID to each row based on a categorical covariate column.
  * @param data
@@ -98,9 +82,6 @@ const Stratification: FC<IStratification> = ({
     const values = state.data.map((row) => row[field]);
     return [...new Set(values)];
   });
-  const administrationIdField = state.fields.find(
-    (field) => state.normalisedFields.get(field) === "Administration ID",
-  );
 
   const [firstRow] = state.data;
   const [tab, setTab] = useState(0);
@@ -138,10 +119,7 @@ const Stratification: FC<IStratification> = ({
   }
 
   if (!firstRow["Group ID"]) {
-    let newData = groupDataRows(state.data, groupColumn);
-    if (!administrationIdField) {
-      newData = generateAdministrationIds(newData);
-    }
+    const newData = groupDataRows(state.data, groupColumn);
     state.setData(newData);
     state.setNormalisedFields(
       new Map([...state.normalisedFields.entries(), ["Group ID", "Group ID"]]),
@@ -154,10 +132,7 @@ const Stratification: FC<IStratification> = ({
 
   const handleGroupChange = (event: ChangeEvent<HTMLInputElement>) => {
     const newGroup = event.target.value;
-    let newData = groupDataRows(state.data, newGroup);
-    if (!administrationIdField) {
-      newData = generateAdministrationIds(newData);
-    }
+    const newData = groupDataRows(state.data, newGroup);
     setGroupColumn(newGroup);
     state.setData(newData);
   };

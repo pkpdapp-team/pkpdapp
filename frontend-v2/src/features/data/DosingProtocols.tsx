@@ -38,7 +38,7 @@ interface IDosingProtocols {
   };
 }
 
-function findFieldByName(name: string, state: StepperState) {
+function findFieldByType(name: string, state: StepperState) {
   return (
     state.fields.find((field) => state.normalisedFields.get(field) === name) ||
     name
@@ -54,12 +54,12 @@ const DosingProtocols: FC<IDosingProtocols> = ({
   variables,
   notificationsInfo,
 }: IDosingProtocols) => {
-  const amountField = findFieldByName("Amount", state);
-  const amountVariableField = findFieldByName("Amount Variable", state);
-  const timeField = findFieldByName("Time", state);
-  const timeUnitField = findFieldByName("Time Unit", state);
-  const addlDosesField = findFieldByName("Additional Doses", state);
-  const interDoseField = findFieldByName("Interdose Interval", state);
+  const amountField = findFieldByType("Amount", state);
+  const amountVariableField = findFieldByType("Amount Variable", state);
+  const timeField = findFieldByType("Time", state);
+  const timeUnitField = findFieldByType("Time Unit", state);
+  const addlDosesField = findFieldByType("Additional Doses", state);
+  const interDoseField = findFieldByType("Interdose Interval", state);
   const dosingRows: Row[] = amountField
     ? state.data.filter(
         (row) =>
@@ -154,6 +154,9 @@ const DosingProtocols: FC<IDosingProtocols> = ({
                   <Typography>{administrationIdField}</Typography>
                 </TableCell>
                 <TableCell>
+                  <Typography>Group ID</Typography>
+                </TableCell>
+                <TableCell>
                   <Typography>Dosing Compartment</Typography>
                 </TableCell>
                 <TableCell>
@@ -198,6 +201,9 @@ const DosingProtocols: FC<IDosingProtocols> = ({
                 return (
                   <TableRow key={adminId}>
                     <TableCell sx={{ width: "5rem" }}>{adminId}</TableCell>
+                    <TableCell sx={{ width: "5rem" }}>
+                      <Typography>{currentRow?.["Group ID"] || "."}</Typography>
+                    </TableCell>
                     <TableCell sx={{ width: "10rem" }}>
                       <FormControl fullWidth>
                         <InputLabel
