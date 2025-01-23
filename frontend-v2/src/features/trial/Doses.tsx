@@ -89,12 +89,15 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
   };
   const defaultSymbol = isPreclinical ? "mg/kg" : "mg";
   const defaultUnit = units.find((u) => u.symbol === defaultSymbol);
-  const baseUnit = version_greater_than_2 ? units.find((u) => u.symbol === "mg") : undefined;
+  const baseUnit = version_greater_than_2 ? units.find((u) => u.symbol === "mg") : units.find((u) => u.id === protocol.amount_unit);
   const baseUnit2 = version_greater_than_2 ? units.find((u) => u.symbol === "mg/kg") : undefined;
   console.log("baseUnit", baseUnit);
   console.log("defaultUnit", defaultUnit);
   console.log("protocol", protocol);
   console.log("units", units);
+  const dose_unit = units.find((u) => u.id === protocol.amount_unit);
+  console.log("dose_unit", dose_unit);
+
 
   useEffect(() => {
     // set default amount unit to mg/kg or mg, if not set already.

@@ -26,6 +26,7 @@ import { CodeModal } from "./CodeModal";
 import CodeOutlinedIcon from "@mui/icons-material/CodeOutlined";
 import { CompareRounded } from "@mui/icons-material";
 import { version } from "os";
+import React from "react";
 
 interface Props {
   model: CombinedModelRead;
@@ -103,6 +104,8 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
   }
 
   const version_greater_than_2 = project.version ? project.version >= 3 : false;
+  console.log("version_greater_than_2", version_greater_than_2);
+  console.log("pkModels", pkModels);
 
   const clinical = project.species === "H";
   const pkModelsFiltered = pkModels.filter((m) => {
@@ -110,7 +113,7 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
     if (version_greater_than_2) {
       is_pk_model = m.model_type ? m.model_type === "PK" : false;
     } else {
-      is_pk_model = is_pk_model && !m.name.includes(!clinical ? "_clinical" : "_preclinical")
+      is_pk_model = m.name.includes(clinical ? "_clinical" : "_preclinical")
     }
     if (!is_pk_model) { return false; }
     if (m.tags) {
@@ -122,6 +125,7 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
     }
     return is_pk_model;
   });
+  console.log("pkModelsFiltered", pkModelsFiltered);
   const pkModel2Filtered = pkModels.filter((m) => {
     return version_greater_than_2 && m.model_type === "PKEX";
   });
@@ -232,66 +236,67 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
             formControlProps={{ sx: { width: "calc(50% - 3rem)" } }}
             selectProps={defaultProps}
           />
-          <FloatField
-            size="small"
-            sx={{ flex: "1" }}
-            label="Weight"
-            name={`project.species_weight`}
-            control={control}
-            textFieldProps={{ sx: { width: "calc(50% - 7rem)" }, ...defaultProps }}
-          />
-          <UnitField
-            size="small"
-            label={"Unit"}
-            name={`project.species_weight_unit`}
-            control={control}
-            baseUnit={units.find((u) => u.id === project.species_weight_unit)}
-            selectProps={{ sx: { width: "6rem" }, ...defaultProps }}
-            version_greater_than_2={version_greater_than_2}
-          />
-        </Grid>
+          {version_greater_than_2 &&
+            <React.Fragment>
+              <FloatField
+                size="small"
+                sx={{ flex: "1" }}
+                label="Weight"
+                name={`project.species_weight`}
+                control={control}
+                textFieldProps={{ sx: { width: "calc(50% - 7rem)" }, ...defaultProps }}
+              />
+              <UnitField
+                size="small"
+                label={"Unit"}
+                name={`project.species_weight_unit`}
+                control={control}
+                baseUnit={units.find((u) => u.id === project.species_weight_unit)}
+                selectProps={{ sx: { width: "6rem" }, ...defaultProps }}
+                version_greater_than_2={version_greater_than_2}
+              />
+            </React.Fragment>
+          }
+        </Stack>
       </Grid>
       <Grid container item spacing={2}>
-        <Grid
-          size={{
-            xl: 4,
-            md: 8,
-            xs: 10,
-          }}
-        >
-          <Stack
-            direction="row" alignItems="center" spacing={1}
-          >
-            <FormControl sx={{ width: "calc(100% - 3rem)" }} size="small">
-              <InputLabel id="tags-label">{modelTypesLabel}</InputLabel>
-              <Select
-                size="small"
-                labelId="tags-label"
-                id="tags"
-                multiple
-                value={tags}
-                onChange={handleTagChange}
-                input={<OutlinedInput id="select-multiple-tags" label={modelTypesLabel} />}
-                renderValue={(selected) => (
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                    {selected.map((value) => {
-                      const label = tagOptions.find((tag) => tag.value === value)?.label;
-                      return (<Chip key={value} label={label} />)
-                    })}
-                  </Box>
-                )}
-              >
-                {tagOptions.map((tag) => (
-                  <MenuItem
-                    key={tag.value}
-                    value={tag.value}
-                  >
-                    {tag.label}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Stack>
+        <Grid item xl={4} md={8} xs={10}>
+          {version_greater_than_2 &&
+            <Stack
+
+              direction="row" alignItems="center" spacing={1}
+            >
+              <FormControl sx={{ width: "calc(100% - 3rem)" }} size="small">
+                <InputLabel id="tags-label">{modelTypesLabel}</InputLabel>
+                <Select
+                  size="small"
+                  labelId="tags-label"
+                  id="tags"
+                  multiple
+                  value={tags}
+                  onChange={handleTagChange}
+                  input={<OutlinedInput id="select-multiple-tags" label={modelTypesLabel} />}
+                  renderValue={(selected) => (
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                      {selected.map((value) => {
+                        const label = tagOptions.find((tag) => tag.value === value)?.label;
+                        return (<Chip key={value} label={label} />)
+                      })}
+                    </Box>
+                  )}
+                >
+                  {tagOptions.map((tag) => (
+                    <MenuItem
+                      key={tag.value}
+                      value={tag.value}
+                    >
+                      {tag.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Stack>
+          }
           <Stack
             sx={{
               marginTop: 2,
@@ -350,7 +355,7 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
                   </div>
                 </Tooltip>}
               {version_greater_than_2 &&
-                <Tooltip title={effectCompartmentTooltip}>
+                <Tooltip title={effectCompartmentTooltip} placement="top">
                   <div style={{ fontSize: "12px !important" }}>
                     <SelectField
                       size="small"
@@ -396,17 +401,19 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
       </Grid>
       <Grid container item spacing={2}>
         <Grid item xl={5} md={8} xs={10}>
-          <Stack direction="row" alignItems="center" spacing={1}>
-            <SelectField
-              size="small"
-              label="Extravascular PK Model"
-              name="model.pk_model2"
-              control={control}
-              options={pk_model2_options}
-              formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
-              selectProps={defaultProps}
-            />
-          </Stack>
+          {version_greater_than_2 &&
+            <Stack direction="row" alignItems="center" spacing={1}>
+              <SelectField
+                size="small"
+                label="Extravascular PK Model"
+                name="model.pk_model2"
+                control={control}
+                options={pk_model2_options}
+                formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
+                selectProps={defaultProps}
+              />
+            </Stack>
+          }
           <Stack
             sx={{
               display: "flex",
