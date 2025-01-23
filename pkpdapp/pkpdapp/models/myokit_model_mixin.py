@@ -43,7 +43,7 @@ class MyokitModelMixin:
             compound = project.compound
 
         species_weight_in_kg = 1.0
-        if project is not None:
+        if project is not None and project.version > 2:
             kg_conversion_factor = project.species_weight_unit.convert_to(
                 myokit.units.kg, compound=compound
             )
@@ -64,7 +64,7 @@ class MyokitModelMixin:
             protocol_amount_unit = protocol.amount_unit
             additional_conversion_factor = 1.0
             if protocol.amount_unit.symbol.endswith("/kg"):
-                if project is not None:
+                if project is not None and project.version > 2:
                     additional_conversion_factor = species_weight_in_kg
                     protocol_amount_unit.g += 1
                     protocol_amount_unit.multiplier += 3.0
