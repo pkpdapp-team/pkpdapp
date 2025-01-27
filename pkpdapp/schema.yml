@@ -3550,6 +3550,9 @@ components:
         mmt:
           type: string
           readOnly: true
+        sbml:
+          type: string
+          readOnly: true
         time_unit:
           type: integer
           readOnly: true
@@ -3622,6 +3625,7 @@ components:
       - mappings
       - mmt
       - name
+      - sbml
       - time_intervals
       - time_unit
       - variables
@@ -3978,6 +3982,8 @@ components:
           description: If executing, this is the celery task id
           maxLength: 40
         metadata:
+          type: object
+          additionalProperties: {}
           description: metadata for inference
         project:
           type: integer
@@ -4284,6 +4290,9 @@ components:
         mmt:
           type: string
           readOnly: true
+        sbml:
+          type: string
+          readOnly: true
         time_unit:
           type: integer
           readOnly: true
@@ -4558,6 +4567,8 @@ components:
           description: If executing, this is the celery task id
           maxLength: 40
         metadata:
+          type: object
+          additionalProperties: {}
           description: metadata for inference
         project:
           type: integer
@@ -4819,6 +4830,8 @@ components:
             * `groups` - Subject groups.
             * `intervals` - Time intervals.
         filters:
+          type: object
+          additionalProperties: {}
           nullable: true
           description: Filters to apply to the table.
         project:
@@ -5448,6 +5461,8 @@ components:
             * `groups` - Subject groups.
             * `intervals` - Time intervals.
         filters:
+          type: object
+          additionalProperties: {}
           nullable: true
           description: Filters to apply to the table.
         project:
