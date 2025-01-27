@@ -11,9 +11,9 @@ type ToastProps = {
 
 const defaultOptions: ToastOptions = {
   autoClose: Infinity,
-  position: toast.POSITION.TOP_RIGHT,
+  position: "top-right",
   pauseOnFocusLoss: false,
-  type: toast.TYPE.DEFAULT,
+  type: "default",
   pauseOnHover: false,
   closeButton: false,
   hideProgressBar: true,
