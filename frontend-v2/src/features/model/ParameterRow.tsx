@@ -1,7 +1,7 @@
 import { FC, ReactNode, useEffect, useMemo } from "react";
 import { FormData } from "./Model";
 import { Control, useFieldArray, useForm } from "react-hook-form";
-import { TableCell, TableRow, Tooltip, Typography, Select, SelectChangeEvent, MenuItem } from "@mui/material";
+import { TableCell, TableRow, Tooltip, Typography, Select, SelectChangeEvent, MenuItem, Stack } from "@mui/material";
 import {
   Variable,
   useVariableUpdateMutation,
@@ -24,11 +24,12 @@ interface Props {
   model: CombinedModelRead;
   project: ProjectRead;
   variable: VariableRead;
+  variables: VariableRead[];
   units: UnitRead[];
   modelControl: Control<FormData>;
 }
 
-const ParameterRow: FC<Props> = ({ model, project, variable, units, modelControl }) => {
+const ParameterRow: FC<Props> = ({ model, project, variable, variables, units, modelControl }) => {
   const {
     control,
     handleSubmit,
@@ -52,6 +53,7 @@ const ParameterRow: FC<Props> = ({ model, project, variable, units, modelControl
     fields: derivedVariables,
     append: derivedVariablesAppend,
     remove: derivedVariablesRemove,
+    update: derivedVariablesUpdate,
   } = useFieldArray({
     control: modelControl,
     name: "model.derived_variables",
@@ -93,39 +95,82 @@ const ParameterRow: FC<Props> = ({ model, project, variable, units, modelControl
   };
 
   const nonlinearityOptions: { value: DerivedVariableType | "", label: string }[] = [
-    { value: "MM", label: "Concentration-Dependent Michaelis-Menten" },
-    { value: "EMM", label: "Concentration-Dependent Extended Michaelis-Menten" },
-    { value: "EMX", label: "Dose-Dependent Maximum Effect" },
-    { value: "IMX", label: "Dose-Dependent Maximum Inhibitory Effect" },
-    { value: "POW", label: "Dose-Dependent Hill Effect" },
-    { value: "TDI", label: "Time-Dependent Inhibition" },
-    { value: "IND", label: "Time-Dependent Induction" },
+    { value: "MM", label: "Michaelis-Menten" },
+    { value: "EMM", label: "Extended Michaelis-Menten" },
+    { value: "EMX", label: "Dose Maximum Effect" },
+    { value: "IMX", label: "Dose Maximum Inhibitory Effect" },
+    { value: "POW", label: "Dose Hill Effect" },
+    { value: "TDI", label: "Time Inhibition" },
+    { value: "IND", label: "Time Induction" },
     { value: "", label: "None" },
   ];
 
   let nonlinearityValue = "";
+  let nonlinearityIndex = -1;
+  let nonlinearityConcentration: null | undefined | number = null;
   for (let i = 0; i < derivedVariables.length; i++) {
     if (derivedVariables[i].pk_variable === variable.id) {
+      if (derivedVariables[i].type === "MM" || derivedVariables[i].type === "EMM") {
+        nonlinearityConcentration = derivedVariables[i].secondary_variable;
+      }
       nonlinearityValue = derivedVariables[i].type;
+      nonlinearityIndex = i;
     }
   }
+  const timeVaryingVariables = variables.filter(
+    (variable) => !variable.constant,
+  );
+  const concentrationOptions = timeVaryingVariables.map((variable) => ({
+    value: variable.id,
+    label: variable.name,
+  }));
+  // variable C1 is the default concentration variable
+  const concentrationDefault = timeVaryingVariables.find(
+    (variable) => variable.name === "C1",
+  )?.id;
 
   const handleNonlinearityChange = (event: SelectChangeEvent<string>, child: ReactNode) => {
-    // remove any other nonlinearity for this variable
-    derivedVariables
-      .forEach((ro, index) => {
-        if (ro.pk_variable === variable.id) {
-          derivedVariablesRemove(index);
-        }
-      });
-
-    if (event.target.value !== "") {
+    // if current nonlinearity is empty, add new nonlinearity
+    if (nonlinearityIndex === -1 && event.target.value !== "") {
       const value = event.target.value as DerivedVariableType;
-      // add new nonlinearity
       derivedVariablesAppend({
         pk_variable: variable.id,
         pkpd_model: model.id,
         type: value,
+      });
+      return;
+    } else if (event.target.value === "") {
+      // remove current nonlinearity
+      derivedVariablesRemove(nonlinearityIndex);
+    } else if (event.target.value === "MM" || event.target.value === "EMM") {
+      // update the nonlinearity
+      const value = event.target.value as DerivedVariableType;
+      derivedVariablesUpdate(nonlinearityIndex, {
+        pk_variable: variable.id,
+        pkpd_model: model.id,
+        type: value,
+        secondary_variable: concentrationDefault,
+      });
+    } else {
+      // update the nonlinearity
+      const value = event.target.value as DerivedVariableType;
+      derivedVariablesUpdate(nonlinearityIndex, {
+        pk_variable: variable.id,
+        pkpd_model: model.id,
+        type: value,
+      });
+    }
+  }
+
+  const handleNonlinearityConcChange = (event: SelectChangeEvent<number>, child: ReactNode) => {
+    // update the secondary variable for the nonlinearity
+    if (event.target.value) {
+      const value = typeof event.target.value === "string" ? parseInt(event.target.value) : event.target.value;
+      derivedVariablesUpdate(nonlinearityIndex, {
+        pk_variable: variable.id,
+        pkpd_model: model.id,
+        type: nonlinearityValue as DerivedVariableType,
+        secondary_variable: value,
       });
     }
   }
@@ -185,13 +230,24 @@ const ParameterRow: FC<Props> = ({ model, project, variable, units, modelControl
         />
       </TableCell>
       <TableCell size="small">
-        <Select size="small" value={nonlinearityValue} onChange={handleNonlinearityChange} {...defaultProps}>
-          {nonlinearityOptions.map((option) => (
-            <MenuItem value={option.value} key={option.value}>
-              {option.label}
-            </MenuItem>
-          ))}
-        </Select>
+        <Stack direction="row" spacing={2}>
+          <Select size="small" value={nonlinearityValue} onChange={handleNonlinearityChange} {...defaultProps}>
+            {nonlinearityOptions.map((option) => (
+              <MenuItem value={option.value} key={option.value}>
+                {option.label}
+              </MenuItem>
+            ))}
+          </Select>
+          {nonlinearityConcentration && (
+            <Select size="small" value={nonlinearityConcentration} onChange={handleNonlinearityConcChange} {...defaultProps}>
+              {concentrationOptions.map((option) => (
+                <MenuItem value={option.value} key={option.value}>
+                  {option.label}
+                </MenuItem>
+              ))}
+            </Select>
+          )}
+        </Stack>
       </TableCell>
     </TableRow>
   );
