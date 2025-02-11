@@ -436,6 +436,22 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 time_var = pkpd_model.binding("time")
                 var.set_unit(time_var.unit())
                 var.set_rhs(myokit.Number(0))
+            elif derived_variable.type == DerivedVariable.Type.MICHAELIS_MENTEN:
+                pass
+            elif (
+                derived_variable.type == DerivedVariable.Type.EXTENTED_MICHAELIS_MENTEN
+            ):
+                pass
+            elif derived_variable.type == DerivedVariable.Type.EMAX:
+                pass
+            elif derived_variable.type == DerivedVariable.Type.IMAX:
+                pass
+            elif derived_variable.type == DerivedVariable.Type.POWER:
+                pass
+            elif derived_variable.type == DerivedVariable.Type.EXP_DECAY:
+                pass
+            elif derived_variable.type == DerivedVariable.Type.EXP_INCREASE:
+                pass
             else:
                 raise ValueError(
                     f"Unknown derived variable type {derived_variable.type}"
