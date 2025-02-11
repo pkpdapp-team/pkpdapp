@@ -437,20 +437,288 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 var.set_unit(time_var.unit())
                 var.set_rhs(myokit.Number(0))
             elif derived_variable.type == DerivedVariable.Type.MICHAELIS_MENTEN:
-                pass
+                #  base_variable_secondary_variable_MM = [base_variable * 1/(1+[secondary_variable/Km_X])]
+                second_var = derived_variable.secondary_variable
+                if second_var is None:
+                    continue
+                second_var_name = second_var.name
+                myokit_second_var = pk_model.get(second_var.qname)
+                new_names = [f"{var_name}_{second_var_name}_MM", "Km_{var_name}"]
+                has_name = any(
+                    [
+                        myokit_compartment.has_variable(new_name)
+                        for new_name in new_names
+                    ]
+                )  # noqa: E501
+                if has_name:
+                    continue
+                km_var = myokit_compartment.add_variable(new_names[1])
+                km_var.meta["desc"] = (
+                    f"Michaelis Menten constant for {var_name} and {second_var_name}"
+                )
+                km_var.set_unit(myokit_second_var.unit())
+                km_var.set_rhs(myokit.Number(1))
+
+                var = myokit_compartment.add_variable(new_names[0])
+                var.meta["desc"] = (
+                    f"Michaelis Menten for {var_name} and {second_var_name}"
+                )
+                var.set_unit(myokit_var.unit())
+                var.set_rhs(
+                    myokit.Multiply(
+                        myokit.Name(myokit_var),
+                        myokit.Divide(
+                            myokit.Number(1),
+                            myokit.Plus(
+                                myokit.Number(1),
+                                myokit.Divide(
+                                    myokit.Name(myokit_second_var),
+                                    myokit.Name(km_var),
+                                ),
+                            ),
+                        ),
+                    )
+                )
+
             elif (
                 derived_variable.type == DerivedVariable.Type.EXTENTED_MICHAELIS_MENTEN
             ):
-                pass
+                # base_variable_secondary_variable_eMM = [base_variable * 1/(1+[secondary_variable/Km_X]**h_X) + Xlin]
+                second_var = derived_variable.secondary_variable
+                if second_var is None:
+                    continue
+                second_var_name = second_var.name
+                myokit_second_var = pk_model.get(second_var.qname)
+                new_names = [
+                    f"{var_name}_{second_var_name}_eMM",
+                    "Km_{var_name}",
+                    "h_{var_name}",
+                    "{var_name}_lin",
+                ]
+                has_name = any(
+                    [
+                        myokit_compartment.has_variable(new_name)
+                        for new_name in new_names
+                    ]
+                )  # noqa: E501
+                if has_name:
+                    continue
+                km_var = myokit_compartment.add_variable(new_names[1])
+                km_var.meta["desc"] = (
+                    f"Michaelis Menten constant for {var_name} and {second_var_name}"
+                )
+                km_var.set_unit(myokit_second_var.unit())
+                km_var.set_rhs(myokit.Number(1))
+
+                h_var = myokit_compartment.add_variable(new_names[2])
+                h_var.meta["desc"] = (
+                    f"Hill coefficient for {var_name} and {second_var_name}"
+                )
+                h_var.set_unit(myokit.units.dimensionless)
+                h_var.set_rhs(myokit.Number(1))
+
+                lin_var = myokit_compartment.add_variable(new_names[3])
+                lin_var.meta["desc"] = (
+                    f"Linear term for {var_name} and {second_var_name}"
+                )
+                lin_var.set_unit(myokit_var.unit())
+                lin_var.set_rhs(myokit.Number(0))
+
+                var = myokit_compartment.add_variable(new_names[0])
+                var.meta["desc"] = (
+                    f"Michaelis Menten for {var_name} and {second_var_name}"
+                )
+                var.set_unit(myokit_var.unit())
+                var.set_rhs(
+                    myokit.Multiply(
+                        myokit.Name(myokit_var),
+                        myokit.Plus(
+                            myokit.Divide(
+                                myokit.Number(1),
+                                myokit.Plus(
+                                    myokit.Number(1),
+                                    myokit.Power(
+                                        myokit.Divide(
+                                            myokit.Name(myokit_second_var),
+                                            myokit.Name(km_var),
+                                        ),
+                                        myokit.Name(h_var),
+                                    ),
+                                ),
+                            ),
+                            myokit.Name(lin_var),
+                        ),
+                    )
+                )
             elif derived_variable.type == DerivedVariable.Type.EMAX:
-                pass
+                # base_variable_Emax = base_variable * C_Drug**h_CL/(C_Drug**h_CL+D50**h_CL) + Xmin
+                myokit_c_drug = pk_model.get("PDCompartment.C_Drug")
+                if myokit_c_drug is None:
+                    continue
+                new_names = [
+                    f"{var_name}_Emax",
+                    "D50_{var_name}",
+                    "h_{var_name}",
+                    "{var_name}_min",
+                ]
+                has_name = any(
+                    [
+                        myokit_compartment.has_variable(new_name)
+                        for new_name in new_names
+                    ]
+                )  # noqa: E501
+                if has_name:
+                    continue
+                d50_var = myokit_compartment.add_variable(new_names[1])
+                d50_var.meta["desc"] = f"Emax D50 for {var_name}"
+                d50_var.set_unit(myokit_c_drug.unit())
+                d50_var.set_rhs(myokit.Number(1))
+
+                h_var = myokit_compartment.add_variable(new_names[2])
+                h_var.meta["desc"] = f"Emax Hill coefficient for {var_name}"
+                h_var.set_unit(myokit.units.dimensionless)
+                h_var.set_rhs(myokit.Number(1))
+
+                min_var = myokit_compartment.add_variable(new_names[3])
+                min_var.meta["desc"] = f"Emax min for {var_name}"
+                min_var.set_unit(myokit_var.unit())
+                min_var.set_rhs(myokit.Number(0))
+
+                var = myokit_compartment.add_variable(new_names[0])
+                var.meta["desc"] = f"Emax for {var_name}"
+                var.set_unit(myokit_var.unit())
+                var.set_rhs(
+                    myokit.Plus(
+                        myokit.Multiply(
+                            myokit.Name(myokit_var),
+                            myokit.Divide(
+                                myokit.Power(
+                                    myokit.Name(myokit_c_drug),
+                                    myokit.Name(h_var),
+                                ),
+                                myokit.Plus(
+                                    myokit.Power(
+                                        myokit.Name(myokit_c_drug),
+                                        myokit.Name(h_var),
+                                    ),
+                                    myokit.Power(
+                                        myokit.Name(d50_var),
+                                        myokit.Name(h_var),
+                                    ),
+                                ),
+                            ),
+                        ),
+                        myokit.Name(min_var),
+                    )
+                )
             elif derived_variable.type == DerivedVariable.Type.IMAX:
-                pass
+                # base_variable_Imax = base_variable * [1-C_Drug**h_CL/(C_Drug**h_CL+D50**h_CL)] + Xmin
+                myokit_c_drug = pk_model.get("PDCompartment.C_Drug")
+                if myokit_c_drug is None:
+                    continue
+                new_names = [
+                    f"{var_name}_Imax",
+                    "D50_{var_name}",
+                    "h_{var_name}",
+                    "{var_name}_min",
+                ]
+                has_name = any(
+                    [
+                        myokit_compartment.has_variable(new_name)
+                        for new_name in new_names
+                    ]
+                )  # noqa: E501
+                if has_name:
+                    continue
+                d50_var = myokit_compartment.add_variable(new_names[1])
+                d50_var.meta["desc"] = f"Imax D50 for {var_name}"
+                d50_var.set_unit(myokit_c_drug.unit())
+                d50_var.set_rhs(myokit.Number(1))
+
+                h_var = myokit_compartment.add_variable(new_names[2])
+                h_var.meta["desc"] = f"Imax Hill coefficient for {var_name}"
+                h_var.set_unit(myokit.units.dimensionless)
+                h_var.set_rhs(myokit.Number(1))
+
+                min_var = myokit_compartment.add_variable(new_names[3])
+                min_var.meta["desc"] = f"Imax min for {var_name}"
+                min_var.set_unit(myokit_var.unit())
+                min_var.set_rhs(myokit.Number(0))
+
+                var = myokit_compartment.add_variable(new_names[0])
+                var.meta["desc"] = f"Imax for {var_name}"
+                var.set_unit(myokit_var.unit())
+                var.set_rhs(
+                    myokit.Plus(
+                        myokit.Multiply(
+                            myokit.Name(myokit_var),
+                            myokit.Minus(
+                                myokit.Number(1),
+                                myokit.Divide(
+                                    myokit.Power(
+                                        myokit.Name(myokit_c_drug),
+                                        myokit.Name(h_var),
+                                    ),
+                                    myokit.Plus(
+                                        myokit.Power(
+                                            myokit.Name(myokit_c_drug),
+                                            myokit.Name(h_var),
+                                        ),
+                                        myokit.Power(
+                                            myokit.Name(d50_var),
+                                            myokit.Name(h_var),
+                                        ),
+                                    ),
+                                ),
+                            ),
+                        ),
+                        myokit.Name(min_var),
+                    )
+                )
             elif derived_variable.type == DerivedVariable.Type.POWER:
-                pass
+                # base_variable_Power = base_variable * (C_Drug/Ref_D)**a_D
+                myokit_c_drug = pk_model.get("PDCompartment.C_Drug")
+                if myokit_c_drug is None:
+                    continue
+                new_names = [f"{var_name}_Power", "Ref_D_{var_name}", "a_D_{var_name}"]
+                has_name = any(
+                    [
+                        myokit_compartment.has_variable(new_name)
+                        for new_name in new_names
+                    ]
+                )  # noqa: E501
+                if has_name:
+                    continue
+                ref_d_var = myokit_compartment.add_variable(new_names[1])
+                ref_d_var.meta["desc"] = f"Power Reference for {var_name}"
+                ref_d_var.set_unit(myokit_c_drug.unit())
+                ref_d_var.set_rhs(myokit.Number(1))
+
+                a_d_var = myokit_compartment.add_variable(new_names[2])
+                a_d_var.meta["desc"] = f"Power Exponent for {var_name}"
+                a_d_var.set_unit(myokit.units.dimensionless)
+                a_d_var.set_rhs(myokit.Number(1))
+
+                var = myokit_compartment.add_variable(new_names[0])
+                var.meta["desc"] = f"Power for {var_name}"
+                var.set_unit(myokit_var.unit())
+                var.set_rhs(
+                    myokit.Multiply(
+                        myokit.Name(myokit_var),
+                        myokit.Power(
+                            myokit.Divide(
+                                myokit.Name(myokit_c_drug),
+                                myokit.Name(ref_d_var),
+                            ),
+                            myokit.Name(a_d_var),
+                        ),
+                    )
+                )
             elif derived_variable.type == DerivedVariable.Type.EXP_DECAY:
+                # base_variable_TDI = base_variable * exp(-k_X*time) +Xmin
                 pass
             elif derived_variable.type == DerivedVariable.Type.EXP_INCREASE:
+                # base_variable_IND = base_variable * [1-exp(-k_X*time)] +Xmin
                 pass
             else:
                 raise ValueError(
