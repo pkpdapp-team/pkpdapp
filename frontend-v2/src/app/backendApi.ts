@@ -2084,7 +2084,19 @@ export type PkpdMappingRead = {
   /** variable in PD part of model */
   pd_variable: number;
 };
-export type TypeEnum = "AUC" | "RO" | "FUP" | "BPR" | "TLG";
+export type TypeEnum =
+  | "AUC"
+  | "RO"
+  | "FUP"
+  | "BPR"
+  | "TLG"
+  | "MM"
+  | "EMM"
+  | "EMX"
+  | "IMX"
+  | "POW"
+  | "TDI"
+  | "IND";
 export type DerivedVariable = {
   /** true if object has been stored */
   read_only?: boolean;
@@ -2096,12 +2108,21 @@ export type DerivedVariable = {
     * `RO` - receptor occupancy
     * `FUP` - faction unbound plasma
     * `BPR` - blood plasma ratio
-    * `TLG` - dosing lag time */
+    * `TLG` - dosing lag time
+    * `MM` - Michaelis-Menten
+    * `EMM` - Extended Michaelis-Menten
+    * `EMX` - Emax
+    * `IMX` - Imax
+    * `POW` - Power
+    * `TDI` - Exponential Decay
+    * `IND` - Exponential Increase */
   type: TypeEnum;
   /** PKPD model that this derived variable is for */
   pkpd_model: number;
-  /** base variable in PK part of model */
+  /** base variable */
   pk_variable: number;
+  /** secondary variable */
+  secondary_variable?: number | null;
 };
 export type DerivedVariableRead = {
   id: number;
@@ -2115,12 +2136,21 @@ export type DerivedVariableRead = {
     * `RO` - receptor occupancy
     * `FUP` - faction unbound plasma
     * `BPR` - blood plasma ratio
-    * `TLG` - dosing lag time */
+    * `TLG` - dosing lag time
+    * `MM` - Michaelis-Menten
+    * `EMM` - Extended Michaelis-Menten
+    * `EMX` - Emax
+    * `IMX` - Imax
+    * `POW` - Power
+    * `TDI` - Exponential Decay
+    * `IND` - Exponential Increase */
   type: TypeEnum;
   /** PKPD model that this derived variable is for */
   pkpd_model: number;
-  /** base variable in PK part of model */
+  /** base variable */
   pk_variable: number;
+  /** secondary variable */
+  secondary_variable?: number | null;
 };
 export type TimeInterval = {
   /** true if object has been stored */

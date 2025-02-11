@@ -23,6 +23,7 @@ import { selectIsProjectShared } from "../../login/loginSlice";
 import { useFormData, useVariableFormState } from "./variableUtils";
 import useEditProtocol from "./useEditProtocol";
 import { SimulationContext } from "../../contexts/SimulationContext";
+import { derivedIndex } from "./derivedVariable";
 
 interface Props {
   project: ProjectRead;
@@ -38,8 +39,6 @@ interface Props {
   updateLinksToPd: (key: number, value: boolean) => void;
   updateLagTimes: (key: number, value: boolean) => void;
 }
-
-type DerivedVariableType = "AUC" | "RO" | "FUP" | "BPR" | "TLG";
 
 const VariableRow: FC<Props> = ({
   project,
@@ -93,12 +92,6 @@ const VariableRow: FC<Props> = ({
     : mappings.find((mapping) => mapping.pk_variable === variable.id) !==
     undefined;
 
-  const derivedIndex = (type: DerivedVariableType) => {
-    return derivedVariables.findIndex(
-      (ro) => ro.pk_variable === variable.id && ro.type === type,
-    );
-  };
-
   useEffect(() => {
     updateDosings(variable.id, hasProtocol);
   }, [variable.id, hasProtocol, updateDosings]);
@@ -107,7 +100,7 @@ const VariableRow: FC<Props> = ({
     updateLinksToPd(variable.id, linkToPD);
   }, [variable.id, linkToPD, updateLinksToPd]);
 
-  const isLinkedToTLG = derivedIndex("TLG") >= 0;
+  const isLinkedToTLG = derivedIndex("TLG", derivedVariables, variable) >= 0;
   useEffect(() => {
     updateLagTimes(variable.id, isLinkedToTLG);
   }, [variable.id, isLinkedToTLG, updateLagTimes]);

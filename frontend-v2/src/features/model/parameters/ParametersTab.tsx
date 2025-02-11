@@ -38,7 +38,7 @@ interface Props {
   units: UnitRead[];
 }
 
-const ParametersTab: FC<Props> = ({ model, project, variables, units }) => {
+const ParametersTab: FC<Props> = ({ model, project, variables, units, control }) => {
   const [setParamsToDefault] =
     useCombinedModelSetParamsToDefaultsUpdateMutation();
 
@@ -121,6 +121,9 @@ const ParametersTab: FC<Props> = ({ model, project, variables, units }) => {
                   </HelpButton>{" "}
                 </div>
               </TableCell>
+              <TableCell>
+                <div style={{ ...defaultHeaderSx }}>Nonlinearity</div>
+              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -131,6 +134,8 @@ const ParametersTab: FC<Props> = ({ model, project, variables, units }) => {
             )}
             {constVariables.map((variable) => (
               <ParameterRow
+                model={model}
+                modelControl={control}
                 key={variable.id}
                 variable={variable}
                 project={project}
