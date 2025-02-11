@@ -752,7 +752,16 @@ class DerivedVariable(StoredModel):
         "Variable",
         on_delete=models.CASCADE,
         related_name="derived_variables",
-        help_text="base variable in PK part of model",
+        help_text="base variable",
+    )
+
+    secondary_variable = models.ForeignKey(
+        "Variable",
+        on_delete=models.CASCADE,
+        related_name="secondary_derived_variables",
+        help_text="secondary variable",
+        blank=True,
+        null=True,
     )
 
     class Type(models.TextChoices):
@@ -761,6 +770,20 @@ class DerivedVariable(StoredModel):
         FRACTION_UNBOUND_PLASMA = "FUP", "faction unbound plasma"
         BLOOD_PLASMA_RATIO = "BPR", "blood plasma ratio"
         TLAG = "TLG", "dosing lag time"
+        #  base_variable_secondary_variable_MM = [base_variable * 1/(1+[secondary_variable/Km_X])]
+        MICHAELIS_MENTEN = "MM", "Michaelis-Menten"
+        # base_bariable_secondary_variable_eMM = [base_variable * 1/(1+[secondary_variable/Km_X]**h_X) + Xlin]
+        EXTENTED_MICHAELIS_MENTEN = "EMM", "Extended Michaelis-Menten"
+        # base_variable_Emax = base_variable * C_Drug**h_CL/(C_Drug**h_CL+D50**h_CL) + Xmin
+        EMAX = "EMX", "Emax"
+        # base_variable_Imax = base_variable * [1-C_Drug**h_CL/(C_Drug**h_CL+D50**h_CL)] + Xmin
+        IMAX = "IMX", "Imax"
+        # base_variable_Power = base_variable * (C_Drug/Ref_D)**a_D
+        POWER = "POW", "Power"
+        # base_variable_TDI = base_variable * exp(-k_X*time) +Xmin
+        EXP_DECAY = "TDI", "Exponential Decay"
+        # base_variable_IND = base_variable * [1-exp(-k_X*time)] +Xmin
+        EXP_INCREASE = "IND", "Exponential Increase"
 
     type = models.CharField(
         max_length=3, choices=Type.choices, help_text="type of derived variable"
