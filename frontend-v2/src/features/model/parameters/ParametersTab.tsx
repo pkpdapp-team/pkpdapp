@@ -135,6 +135,7 @@ const ParametersTab: FC<Props> = ({ model, project, variables, units, control })
             {constVariables.map((variable) => (
               <ParameterRow
                 model={model}
+                variables={variables}
                 modelControl={control}
                 key={variable.id}
                 variable={variable}
