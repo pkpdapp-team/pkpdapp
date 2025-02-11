@@ -25,6 +25,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
 import { selectIsProjectShared } from "../login/loginSlice";
 import useEditProtocol from "./useEditProtocol";
+import { DerivedVariableType, derivedIndex } from "./derivedVariable";
 
 interface Props {
   project: ProjectRead;
@@ -41,8 +42,6 @@ interface Props {
   updateLagTimes: (key: number, value: boolean) => void;
   isAnyLagTimeSelected: boolean;
 }
-
-type DerivedVariableType = "AUC" | "RO" | "FUP" | "BPR" | "TLG";
 
 const derivedVariableRegex = /calc_.*_(f|bl|RO)/;
 
@@ -131,18 +130,12 @@ const AdditionalParametersRow: FC<Props> = ({
     undefined;
 
   const onClickDerived = (type: DerivedVariableType) => () => {
-    const index = derivedIndex(type);
+    const index = derivedIndex(type, derivedVariables, variable);
     return index >= 0 ? removeDerived(index) : addDerived(type);
   };
 
-  const derivedIndex = (type: DerivedVariableType) => {
-    return derivedVariables.findIndex(
-      (ro) => ro.pk_variable === variable.id && ro.type === type,
-    );
-  };
-
   const isLinkedTo = (type: DerivedVariableType) => {
-    return derivedIndex(type) >= 0;
+    return derivedIndex(type, derivedVariables, variable) >= 0;
   };
 
   useEffect(() => {
@@ -153,7 +146,7 @@ const AdditionalParametersRow: FC<Props> = ({
     updateLinksToPd(variable.id, linkToPD);
   }, [variable.id, linkToPD, updateLinksToPd]);
 
-  const isLinkedToTLG = derivedIndex("TLG") >= 0;
+  const isLinkedToTLG = derivedIndex("TLG", derivedVariables, variable) >= 0;
   useEffect(() => {
     updateLagTimes(variable.id, isLinkedToTLG);
   }, [variable.id, isLinkedToTLG, updateLagTimes]);

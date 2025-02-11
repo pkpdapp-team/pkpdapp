@@ -3976,12 +3976,23 @@ components:
             * `FUP` - faction unbound plasma
             * `BPR` - blood plasma ratio
             * `TLG` - dosing lag time
+            * `MM` - Michaelis-Menten
+            * `EMM` - Extended Michaelis-Menten
+            * `EMX` - Emax
+            * `IMX` - Imax
+            * `POW` - Power
+            * `TDI` - Exponential Decay
+            * `IND` - Exponential Increase
         pkpd_model:
           type: integer
           description: PKPD model that this derived variable is for
         pk_variable:
           type: integer
-          description: base variable in PK part of model
+          description: base variable
+        secondary_variable:
+          type: integer
+          nullable: true
+          description: secondary variable
       required:
       - id
       - pk_variable
@@ -6120,6 +6131,13 @@ components:
       - FUP
       - BPR
       - TLG
+      - MM
+      - EMM
+      - EMX
+      - IMX
+      - POW
+      - TDI
+      - IND
       type: string
       description: |-
         * `AUC` - area under curve
@@ -6127,6 +6145,13 @@ components:
         * `FUP` - faction unbound plasma
         * `BPR` - blood plasma ratio
         * `TLG` - dosing lag time
+        * `MM` - Michaelis-Menten
+        * `EMM` - Extended Michaelis-Menten
+        * `EMX` - Emax
+        * `IMX` - Imax
+        * `POW` - Power
+        * `TDI` - Exponential Decay
+        * `IND` - Exponential Increase
     Unit:
       type: object
       properties:
