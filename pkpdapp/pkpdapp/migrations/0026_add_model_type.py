@@ -6,26 +6,48 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('pkpdapp', '0025_initial_tags'),
+        ("pkpdapp", "0025_initial_tags"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='pharmacodynamicmodel',
-            name='library_version',
+            model_name="pharmacodynamicmodel",
+            name="library_version",
         ),
         migrations.RemoveField(
-            model_name='pharmacokineticmodel',
-            name='library_version',
+            model_name="pharmacokineticmodel",
+            name="library_version",
         ),
         migrations.AddField(
-            model_name='pharmacodynamicmodel',
-            name='model_type',
-            field=models.CharField(blank=True, choices=[('PK', 'PK-Model'), ('PD', 'PD-Model'), ('PK-E', 'PK-Extravascular'), ('TG', 'Tumor-Growth')], help_text='type of model', max_length=4, null=True),
+            model_name="pharmacodynamicmodel",
+            name="model_type",
+            field=models.CharField(
+                blank=True,
+                choices=[
+                    ("PK", "PK-Model"),
+                    ("PD", "PD-Model"),
+                    ("PK-E", "PK-Extravascular"),
+                    ("TG", "Tumor-Growth"),
+                ],
+                help_text="type of model",
+                max_length=4,
+                null=True,
+            ),
         ),
         migrations.AddField(
-            model_name='pharmacokineticmodel',
-            name='model_type',
-            field=models.CharField(blank=True, choices=[('PK', 'PK-Model'), ('PD', 'PD-Model'), ('PK-E', 'PK-Extravascular'), ('TG', 'Tumor-Growth')], help_text='type of model', max_length=4, null=True),
+            model_name="pharmacokineticmodel",
+            name="model_type",
+            field=models.CharField(
+                blank=True,
+                choices=[
+                    ("PK", "PK-Model"),
+                    ("PD", "PD-Model"),
+                    ("PK-E", "PK-Extravascular"),
+                    ("TG", "Tumor-Growth"),
+                ],
+                help_text="type of model",
+                max_length=4,
+                null=True,
+            ),
         ),
     ]

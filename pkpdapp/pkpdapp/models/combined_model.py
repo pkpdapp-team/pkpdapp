@@ -278,7 +278,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 myokit_var = pk_model.get(derived_variable.pk_variable.qname)
             except KeyError:
                 logger.warning(
-                    f"Derived variable handler: Variable {derived_variable.pk_variable.qname} not found in model"
+                    f"Derived variable handler: Variable {derived_variable.pk_variable.qname} not found in model"  # noqa: E501
                 )
 
                 continue
@@ -568,7 +568,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 myokit_var = pkpd_model.get(derived_variable.pk_variable.qname)
             except KeyError:
                 logger.warning(
-                    f"Derived variable handler (PKPD): Variable {derived_variable.pk_variable.qname} not found in model"
+                    f"Derived variable handler (PKPD): Variable {derived_variable.pk_variable.qname} not found in model"  # noqa: E501
                 )
                 continue
 
@@ -590,7 +590,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
             elif derived_variable.type == DerivedVariable.Type.TLAG:  # noqa: E501
                 pass
             elif derived_variable.type == DerivedVariable.Type.MICHAELIS_MENTEN:
-                #  base_variable_secondary_variable_MM = [base_variable * 1/(1+[secondary_variable/Km_X])]
+                #  base_variable_secondary_variable_MM = [base_variable * 1/(1+[secondary_variable/Km_X])]  # noqa: E501
                 second_var = derived_variable.secondary_variable
                 if second_var is None:
                     continue
@@ -636,7 +636,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
             elif (
                 derived_variable.type == DerivedVariable.Type.EXTENDED_MICHAELIS_MENTEN
             ):
-                # base_variable_secondary_variable_eMM = [base_variable * 1/(1+[secondary_variable/Km_X]**h_X) + Xlin]
+                # base_variable_secondary_variable_eMM = [base_variable * 1/(1+[secondary_variable/Km_X]**h_X) + Xlin]  # noqa: E501
                 second_var = derived_variable.secondary_variable
                 if second_var is None:
                     continue
@@ -704,7 +704,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                     )
                 )
             elif derived_variable.type == DerivedVariable.Type.EMAX:
-                # base_variable_Emax = base_variable * C_Drug**h_CL/(C_Drug**h_CL+D50**h_CL) + Xmin
+                # base_variable_Emax = base_variable * C_Drug**h_CL/(C_Drug**h_CL+D50**h_CL) + Xmin  # noqa: E501
                 myokit_c_drug = pk_model.get("PDCompartment.C_Drug")
                 if myokit_c_drug is None:
                     continue
@@ -765,7 +765,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                     )
                 )
             elif derived_variable.type == DerivedVariable.Type.IMAX:
-                # base_variable_Imax = base_variable * [1-C_Drug**h_CL/(C_Drug**h_CL+D50**h_CL)] + Xmin
+                # base_variable_Imax = base_variable * [1-C_Drug**h_CL/(C_Drug**h_CL+D50**h_CL)] + Xmin  # noqa: E501
                 myokit_c_drug = pk_model.get("PDCompartment.C_Drug")
                 if myokit_c_drug is None:
                     continue
@@ -1189,19 +1189,12 @@ class DerivedVariable(StoredModel):
         FRACTION_UNBOUND_PLASMA = "FUP", "faction unbound plasma"
         BLOOD_PLASMA_RATIO = "BPR", "blood plasma ratio"
         TLAG = "TLG", "dosing lag time"
-        #  base_variable_secondary_variable_MM = [base_variable * 1/(1+[secondary_variable/Km_X])]
         MICHAELIS_MENTEN = "MM", "Michaelis-Menten"
-        # base_bariable_secondary_variable_eMM = [base_variable * 1/(1+[secondary_variable/Km_X]**h_X) + Xlin]
         EXTENDED_MICHAELIS_MENTEN = "EMM", "Extended Michaelis-Menten"
-        # base_variable_Emax = base_variable * C_Drug**h_CL/(C_Drug**h_CL+D50**h_CL) + Xmin
         EMAX = "EMX", "Emax"
-        # base_variable_Imax = base_variable * [1-C_Drug**h_CL/(C_Drug**h_CL+D50**h_CL)] + Xmin
         IMAX = "IMX", "Imax"
-        # base_variable_Power = base_variable * (C_Drug/Ref_D)**a_D
         POWER = "POW", "Power"
-        # base_variable_TDI = base_variable * exp(-k_X*time) +Xmin
         EXP_DECAY = "TDI", "Exponential Decay"
-        # base_variable_IND = base_variable * [1-exp(-k_X*time)] +Xmin
         EXP_INCREASE = "IND", "Exponential Increase"
 
     type = models.CharField(
