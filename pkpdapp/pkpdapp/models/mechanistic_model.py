@@ -54,7 +54,8 @@ class MechanisticModel(models.Model, MyokitModelMixin):
         ),
     )
 
-    # model_type field, possible model types are PK-Model, PD-Model, PK-Extravascular, or Tumor-Growth
+    # model_type field, possible model types are PK-Model, PD-Model,
+    # PK-Extravascular, or Tumor-Growth
     class ModelType(models.TextChoices):
         PK_MODEL = "PK", "PK-Model"
         PK_EFFECT_COMPARTMENT = "PKEF", "PK-Effect-Compartment"
