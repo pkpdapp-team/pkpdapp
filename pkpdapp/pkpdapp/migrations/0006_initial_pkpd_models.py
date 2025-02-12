@@ -6,10 +6,7 @@
 
 from django.db import migrations
 import urllib.request
-import codecs
-from myokit.formats.sbml import SBMLParser
 import myokit
-from pkpdapp.models import MyokitModelMixin
 
 
 def load_pkpd_models(apps, schema_editor):
