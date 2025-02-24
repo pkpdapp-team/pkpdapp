@@ -75,6 +75,7 @@ const ParameterRow: FC<Props> = ({ model, project, variable, variables, units, m
   }
 
   const isPD = variable.qname.startsWith("PD");
+  const isPK = variable.qname.startsWith("PK");
   const isUD = variable.qname.endsWith("_ud");
   const type = isUD ? "UD" : isPD ? "PD" : "PK";
 
@@ -89,9 +90,7 @@ const ParameterRow: FC<Props> = ({ model, project, variable, variables, units, m
     disabled: isSharedWithMe,
   };
 
-  const nonlinearityOptions: { value: DerivedVariableType | "", label: string }[] = [
-    { value: "MM", label: "Michaelis-Menten" },
-    { value: "EMM", label: "Extended Michaelis-Menten" },
+  let nonlinearityOptions: { value: DerivedVariableType | "", label: string }[] = [
     { value: "EMX", label: "Dose Maximum Effect" },
     { value: "IMX", label: "Dose Maximum Inhibitory Effect" },
     { value: "POW", label: "Dose Hill Effect" },
@@ -99,6 +98,15 @@ const ParameterRow: FC<Props> = ({ model, project, variable, variables, units, m
     { value: "IND", label: "Time Induction" },
     { value: "", label: "None" },
   ];
+
+  // Volume parameters should not have MM or EMM nonlinearity
+  if (!variable.name.startsWith("V")) {
+    nonlinearityOptions = [
+      { value: "MM", label: "Michaelis-Menten" },
+      { value: "EMM", label: "Extended Michaelis-Menten" },
+      ...nonlinearityOptions,
+    ];
+  }
 
   let nonlinearityValue = "";
   let nonlinearityIndex = -1;
@@ -113,7 +121,7 @@ const ParameterRow: FC<Props> = ({ model, project, variable, variables, units, m
     }
   }
   const timeVaryingVariables = variables.filter(
-    (variable) => !variable.constant,
+    (v) => !v.constant && v.qname.startsWith("PK") && !variable.refs_by.includes(v.id),
   );
   const concentrationOptions = timeVaryingVariables.map((variable) => ({
     value: variable.id,
@@ -125,6 +133,14 @@ const ParameterRow: FC<Props> = ({ model, project, variable, variables, units, m
   )?.id;
 
   const handleNonlinearityChange = (event: SelectChangeEvent<string>, child: ReactNode) => {
+    let secondaryVariable = undefined;
+    if (event.target.value === "MM" || event.target.value === "EMM") {
+      if (nonlinearityConcentration) {
+        secondaryVariable = nonlinearityConcentration;
+      } else {
+        secondaryVariable = concentrationDefault;
+      }
+    }
     // if current nonlinearity is empty, add new nonlinearity
     if (nonlinearityIndex === -1 && event.target.value !== "") {
       const value = event.target.value as DerivedVariableType;
@@ -132,20 +148,12 @@ const ParameterRow: FC<Props> = ({ model, project, variable, variables, units, m
         pk_variable: variable.id,
         pkpd_model: model.id,
         type: value,
+        secondary_variable: secondaryVariable,
       });
       return;
     } else if (event.target.value === "") {
       // remove current nonlinearity
       derivedVariablesRemove(nonlinearityIndex);
-    } else if (event.target.value === "MM" || event.target.value === "EMM") {
-      // update the nonlinearity
-      const value = event.target.value as DerivedVariableType;
-      derivedVariablesUpdate(nonlinearityIndex, {
-        pk_variable: variable.id,
-        pkpd_model: model.id,
-        type: value,
-        secondary_variable: concentrationDefault,
-      });
     } else {
       // update the nonlinearity
       const value = event.target.value as DerivedVariableType;
@@ -153,6 +161,7 @@ const ParameterRow: FC<Props> = ({ model, project, variable, variables, units, m
         pk_variable: variable.id,
         pkpd_model: model.id,
         type: value,
+        secondary_variable: secondaryVariable,
       });
     }
   }
@@ -225,24 +234,26 @@ const ParameterRow: FC<Props> = ({ model, project, variable, variables, units, m
         />
       </TableCell>
       <TableCell size="small">
-        <Stack direction="row" spacing={2}>
-          <Select size="small" value={nonlinearityValue} onChange={handleNonlinearityChange} {...defaultProps}>
-            {nonlinearityOptions.map((option) => (
-              <MenuItem value={option.value} key={option.value}>
-                {option.label}
-              </MenuItem>
-            ))}
-          </Select>
-          {nonlinearityConcentration && (
-            <Select size="small" value={nonlinearityConcentration} onChange={handleNonlinearityConcChange} {...defaultProps}>
-              {concentrationOptions.map((option) => (
+        {isPK && (
+          <Stack direction="row" spacing={2}>
+            <Select size="small" value={nonlinearityValue} onChange={handleNonlinearityChange} {...defaultProps}>
+              {nonlinearityOptions.map((option) => (
                 <MenuItem value={option.value} key={option.value}>
                   {option.label}
                 </MenuItem>
               ))}
             </Select>
-          )}
-        </Stack>
+            {nonlinearityConcentration && (
+              <Select size="small" value={nonlinearityConcentration} onChange={handleNonlinearityConcChange} {...defaultProps}>
+                {concentrationOptions.map((option) => (
+                  <MenuItem value={option.value} key={option.value}>
+                    {option.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            )}
+          </Stack>
+        )}
       </TableCell>
     </TableRow>
   );

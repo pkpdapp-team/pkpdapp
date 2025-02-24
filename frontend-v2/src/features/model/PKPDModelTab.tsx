@@ -104,8 +104,6 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
   }
 
   const version_greater_than_2 = project.version ? project.version >= 3 : false;
-  console.log("version_greater_than_2", version_greater_than_2);
-  console.log("pkModels", pkModels);
 
   const clinical = project.species === "H";
   const pkModelsFiltered = pkModels.filter((m) => {
@@ -125,7 +123,6 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
     }
     return is_pk_model;
   });
-  console.log("pkModelsFiltered", pkModelsFiltered);
   const pkModel2Filtered = pkModels.filter((m) => {
     return version_greater_than_2 && m.model_type === "PKEX";
   });

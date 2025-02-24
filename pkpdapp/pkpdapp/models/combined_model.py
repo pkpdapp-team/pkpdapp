@@ -705,8 +705,12 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 )
             elif derived_variable.type == DerivedVariable.Type.EMAX:
                 # base_variable_Emax = base_variable * C_Drug**h_CL/(C_Drug**h_CL+D50**h_CL) + Xmin  # noqa: E501
-                myokit_c_drug = pk_model.get("PDCompartment.C_Drug")
-                if myokit_c_drug is None:
+                try:
+                    myokit_c_drug = pkpd_model.get("PDCompartment.C_Drug")
+                except KeyError:
+                    logger.warning(
+                        "Derived variable handler (PKPD): C_Drug not found in model"
+                    )
                     continue
                 new_names = [
                     f"{var_name}_Emax",

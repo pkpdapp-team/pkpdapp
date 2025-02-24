@@ -5284,6 +5284,11 @@ components:
         id:
           type: integer
           readOnly: true
+        refs_by:
+          type: array
+          items:
+            type: integer
+          readOnly: true
         read_only:
           type: boolean
           description: true if object has been stored
@@ -6248,6 +6253,11 @@ components:
         id:
           type: integer
           readOnly: true
+        refs_by:
+          type: array
+          items:
+            type: integer
+          readOnly: true
         read_only:
           type: boolean
           description: true if object has been stored
@@ -6356,6 +6366,7 @@ components:
       - id
       - name
       - qname
+      - refs_by
     Y2ScaleEnum:
       enum:
       - lin
