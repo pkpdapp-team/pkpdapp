@@ -402,6 +402,13 @@ class Variable(StoredModel):
                 "create_variable got unexpected model type {}".format(type(model)),
             )
 
+    def refs_by(self):
+        model = self.get_model()
+        myokit_model = model.get_myokit_model()
+        variable = myokit_model.get(self.qname)
+        variables = [self.get_variable(model, v) for v in variable.refs_by()]
+        return variables
+
     # copy a variable to self. the qnames must match
     def copy(self, variable, new_project):
         if self.qname != variable.qname:
