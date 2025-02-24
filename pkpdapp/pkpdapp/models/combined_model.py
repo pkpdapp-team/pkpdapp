@@ -705,12 +705,15 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 )
             elif derived_variable.type == DerivedVariable.Type.EMAX:
                 # base_variable_Emax = base_variable * C_Drug**h_CL/(C_Drug**h_CL+D50**h_CL) + Xmin  # noqa: E501
-                try:
-                    myokit_c_drug = pkpd_model.get("PDCompartment.C_Drug")
-                except KeyError:
-                    logger.warning(
-                        "Derived variable handler (PKPD): C_Drug not found in model"
-                    )
+                first_dose_value = None
+                first_dose_unit = None
+                protocol = self.project.protocols.first()
+                if protocol:
+                    dose = protocol.doses.first()
+                    if dose:
+                        first_dose_value = dose.amount
+                        first_dose_unit = protocol.amount_unit.get_myokit_unit()
+                if first_dose_value is None:
                     continue
                 new_names = [
                     f"{var_name}_Emax",
@@ -728,7 +731,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                     continue
                 d50_var = myokit_compartment.add_variable(new_names[1])
                 d50_var.meta["desc"] = f"Emax D50 for {var_name}"
-                d50_var.set_unit(myokit_c_drug.unit())
+                d50_var.set_unit(first_dose_unit)
                 d50_var.set_rhs(myokit.Number(1))
 
                 h_var = myokit_compartment.add_variable(new_names[2])
@@ -750,12 +753,12 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                             myokit.Name(myokit_var),
                             myokit.Divide(
                                 myokit.Power(
-                                    myokit.Name(myokit_c_drug),
+                                    myokit.Number(first_dose_value),
                                     myokit.Name(h_var),
                                 ),
                                 myokit.Plus(
                                     myokit.Power(
-                                        myokit.Name(myokit_c_drug),
+                                        myokit.Number(first_dose_value),
                                         myokit.Name(h_var),
                                     ),
                                     myokit.Power(
