@@ -518,20 +518,26 @@ export const getPlotAxes = ({
   const { rangey, rangey2 } = ranges(minY, maxY, minY2, maxY2, plot);
   return {
     xaxis: {
-      title: xAxisTitle,
+      title: {
+        text: xAxisTitle,
+      },
       automargin: true,
       exponentformat: "power",
       ...axisScaleOptions[plot.x_scale || "lin"],
     },
     yaxis: {
-      title: yAxisTitle,
+      title: {
+        text: yAxisTitle,
+      },
       automargin: true,
       range: rangey,
       exponentformat: "power",
       ...axisScaleOptions[plot.y_scale || "lin"],
     },
     yaxis2: {
-      title: y2AxisTitle,
+      title: {
+        text: y2AxisTitle,
+      },
       anchor: "free",
       range: rangey2,
       overlaying: "y",
