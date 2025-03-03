@@ -2739,9 +2739,7 @@ export type Inference = {
   /** If executing, this is the celery task id */
   task_id?: string | null;
   /** metadata for inference */
-  metadata?: {
-    [key: string]: any;
-  };
+  metadata?: any;
   /** Project that "owns" this inference object */
   project: number;
   /** algorithm used to perform the inference */
@@ -2775,9 +2773,7 @@ export type InferenceRead = {
   /** If executing, this is the celery task id */
   task_id?: string | null;
   /** metadata for inference */
-  metadata?: {
-    [key: string]: any;
-  };
+  metadata?: any;
   /** Project that "owns" this inference object */
   project: number;
   /** algorithm used to perform the inference */
@@ -2810,9 +2806,7 @@ export type PatchedInference = {
   /** If executing, this is the celery task id */
   task_id?: string | null;
   /** metadata for inference */
-  metadata?: {
-    [key: string]: any;
-  };
+  metadata?: any;
   /** Project that "owns" this inference object */
   project?: number;
   /** algorithm used to perform the inference */
@@ -2846,9 +2840,7 @@ export type PatchedInferenceRead = {
   /** If executing, this is the celery task id */
   task_id?: string | null;
   /** metadata for inference */
-  metadata?: {
-    [key: string]: any;
-  };
+  metadata?: any;
   /** Project that "owns" this inference object */
   project?: number;
   /** algorithm used to perform the inference */
@@ -3204,9 +3196,7 @@ export type ResultsTable = {
     * `intervals` - Time intervals. */
   columns: ColumnsEnum;
   /** Filters to apply to the table. */
-  filters?: {
-    [key: string]: any;
-  } | null;
+  filters?: any | null;
   /** Project that this table belongs to. */
   project?: number | null;
 };
@@ -3229,9 +3219,7 @@ export type ResultsTableRead = {
     * `intervals` - Time intervals. */
   columns: ColumnsEnum;
   /** Filters to apply to the table. */
-  filters?: {
-    [key: string]: any;
-  } | null;
+  filters?: any | null;
   /** Project that this table belongs to. */
   project?: number | null;
 };
@@ -3253,9 +3241,7 @@ export type PatchedResultsTable = {
     * `intervals` - Time intervals. */
   columns?: ColumnsEnum;
   /** Filters to apply to the table. */
-  filters?: {
-    [key: string]: any;
-  } | null;
+  filters?: any | null;
   /** Project that this table belongs to. */
   project?: number | null;
 };
@@ -3278,9 +3264,7 @@ export type PatchedResultsTableRead = {
     * `intervals` - Time intervals. */
   columns?: ColumnsEnum;
   /** Filters to apply to the table. */
-  filters?: {
-    [key: string]: any;
-  } | null;
+  filters?: any | null;
   /** Project that this table belongs to. */
   project?: number | null;
 };
@@ -3338,6 +3322,12 @@ export type SimulationPlot = {
     * `lg10` - Log10
     * `ln` - Ln */
   y2_scale?: Y2ScaleEnum;
+  /** label for x axis */
+  x_label?: string;
+  /** label for y axis */
+  y_label?: string;
+  /** label for rhs y axis */
+  y2_label?: string;
   /** lower bound for the y axis */
   min?: number | null;
   /** upper bound for the y axis */
@@ -3380,6 +3370,12 @@ export type SimulationPlotRead = {
     * `lg10` - Log10
     * `ln` - Ln */
   y2_scale?: Y2ScaleEnum;
+  /** label for x axis */
+  x_label?: string;
+  /** label for y axis */
+  y_label?: string;
+  /** label for rhs y axis */
+  y2_label?: string;
   /** lower bound for the y axis */
   min?: number | null;
   /** upper bound for the y axis */

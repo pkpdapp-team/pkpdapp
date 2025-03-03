@@ -29,12 +29,12 @@ import {
   generateScatterPlots,
   genIcLines,
   getICLineShapes,
-  getAxisTitles,
   getPlotDimensions,
   getPlotLayout,
   getYRanges,
   ScatterDataWithVariable,
   getPlotAxes,
+  getDefaultAxisTitles,
 } from "./utils";
 import { useConfig } from "./config";
 
@@ -141,10 +141,20 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
   const maxX = Math.max(...convertedTime);
   const icLineShapes = getICLineShapes({ icLines, minX, maxX, plot });
 
-  const { xAxisTitle, yAxisTitle, y2AxisTitle } = getAxisTitles({
+  const yAxisVariables = plotData
+    .filter((d) => !d.yaxis)
+    .map((d) => d.variable)
+    .filter(Boolean);
+  const y2AxisVariables = plotData
+    .filter((d) => d.yaxis)
+    .map((d) => d.variable)
+    .filter(Boolean);
+
+  const defaultAxisTitles = getDefaultAxisTitles({
     plot,
-    plotData,
     units,
+    yAxisVariables,
+    y2AxisVariables,
   });
 
   const plotDimensions = getPlotDimensions({
@@ -156,9 +166,9 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
 
   const plotAxes: Partial<Layout> = getPlotAxes({
     plot,
-    xAxisTitle,
-    yAxisTitle,
-    y2AxisTitle,
+    xAxisTitle: plot.x_label || defaultAxisTitles.xAxisTitle,
+    yAxisTitle: plot.y_label || defaultAxisTitles.yAxisTitle,
+    y2AxisTitle: plot.y2_label || defaultAxisTitles.y2AxisTitle,
     yRanges,
   });
 

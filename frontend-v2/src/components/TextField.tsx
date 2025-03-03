@@ -18,6 +18,7 @@ type Props<T extends FieldValues> = {
   autoShrink?: boolean;
   size?: "small" | "medium";
   sx?: SxProps;
+  defaultValue?: string;
 };
 
 function TextField<T extends FieldValues>({
@@ -25,17 +26,18 @@ function TextField<T extends FieldValues>({
   name,
   control,
   rules,
-  mode,
+  mode = "onBlur",
   size = "medium",
   textFieldProps,
   autoShrink,
   sx,
+  defaultValue = "",
 }: Props<T>): ReactElement {
-  const [fieldValue, setFieldValue] = useFieldState({ name, control });
-
-  if (mode === undefined) {
-    mode = "onBlur";
-  }
+  const [fieldValue, setFieldValue] = useFieldState({
+    name,
+    control,
+    defaultValue,
+  });
 
   return (
     <Controller
@@ -47,8 +49,11 @@ function TextField<T extends FieldValues>({
         fieldState: { error },
       }) => {
         const handleBlur = (e: FocusEvent<HTMLInputElement>) => {
-          if (mode === "onBlur" && e.target.value !== value) {
-            onChange(e);
+          // save the default value, if the text field is empty.
+          const newValue = e.target.value || defaultValue;
+          setFieldValue(newValue);
+          if (mode === "onBlur" && newValue !== value) {
+            onChange({ target: { value: newValue } });
           }
           onBlur();
         };
@@ -74,9 +79,7 @@ function TextField<T extends FieldValues>({
               autoShrink !== undefined ? { shrink: autoShrink } : {}
             }
             variant="outlined"
-            value={
-              fieldValue === undefined || fieldValue === null ? "" : fieldValue
-            }
+            value={fieldValue}
             onChange={handleChange}
             onBlur={handleBlur}
             error={!!error}
