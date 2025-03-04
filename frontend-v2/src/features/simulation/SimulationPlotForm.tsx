@@ -242,19 +242,19 @@ const SimulationPlotForm: FC<SimulationPlotFormProps> = ({
           baseUnit={units.find((u) => u.id === baseXUnitId)}
           selectProps={defaultProps}
         />
-        <SelectField
-          label="X Axis Scale"
-          name={`plots.${index}.x_scale`}
-          options={axisScaleOptions}
-          control={control}
-          selectProps={defaultProps}
-        />
         <TextField
           label="X Axis Label"
           name={`plots.${index}.x_label`}
           control={control}
           textFieldProps={defaultProps}
           defaultValue={xAxisTitle}
+        />
+        <SelectField
+          label="X Axis Scale"
+          name={`plots.${index}.x_scale`}
+          options={axisScaleOptions}
+          control={control}
+          selectProps={defaultProps}
         />
       </Stack>
       <Divider sx={{ margin: 2 }} />
