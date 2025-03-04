@@ -3982,8 +3982,6 @@ components:
           description: If executing, this is the celery task id
           maxLength: 40
         metadata:
-          type: object
-          additionalProperties: {}
           description: metadata for inference
         project:
           type: integer
@@ -4567,8 +4565,6 @@ components:
           description: If executing, this is the celery task id
           maxLength: 40
         metadata:
-          type: object
-          additionalProperties: {}
           description: metadata for inference
         project:
           type: integer
@@ -4830,8 +4826,6 @@ components:
             * `groups` - Subject groups.
             * `intervals` - Time intervals.
         filters:
-          type: object
-          additionalProperties: {}
           nullable: true
           description: Filters to apply to the table.
         project:
@@ -5461,8 +5455,6 @@ components:
             * `groups` - Subject groups.
             * `intervals` - Time intervals.
         filters:
-          type: object
-          additionalProperties: {}
           nullable: true
           description: Filters to apply to the table.
         project:
@@ -5633,6 +5625,18 @@ components:
             * `lg2` - Log2
             * `lg10` - Log10
             * `ln` - Ln
+        x_label:
+          type: string
+          description: label for x axis
+          maxLength: 100
+        y_label:
+          type: string
+          description: label for y axis
+          maxLength: 100
+        y2_label:
+          type: string
+          description: label for rhs y axis
+          maxLength: 100
         min:
           type: number
           format: double

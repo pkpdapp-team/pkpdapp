@@ -358,21 +358,17 @@ export const getYRanges = ({
   return { minY, maxY, minY2, maxY2 };
 };
 
-export const getAxisTitles = ({
+export const getDefaultAxisTitles = ({
   plot,
-  plotData,
   units,
+  yAxisVariables,
+  y2AxisVariables,
 }: {
   plot: FieldArrayWithId<Simulation, "plots", "id">;
-  plotData: Partial<ScatterDataWithVariable>[];
   units: UnitRead[];
+  yAxisVariables: (string | undefined)[];
+  y2AxisVariables: (string | undefined)[];
 }) => {
-  const yAxisVariables = plotData
-    .filter((d) => !d.yaxis)
-    .map((d) => d.variable);
-  const y2AxisVariables = plotData
-    .filter((d) => d.yaxis)
-    .map((d) => d.variable);
   let yAxisTitle = [...new Set(yAxisVariables)].join(", ");
   let y2AxisTitle = [...new Set(y2AxisVariables)].join(", ");
   let xAxisTitle = "Time";

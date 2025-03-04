@@ -30,6 +30,7 @@ import FloatField from "../../components/FloatField";
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
 import { selectIsProjectShared } from "../login/loginSlice";
+import { getDefaultAxisTitles } from "./utils";
 
 interface SimulationPlotFormProps {
   index: number;
@@ -123,6 +124,19 @@ const SimulationPlotForm: FC<SimulationPlotFormProps> = ({
   if (baseY2UnitId === null) {
     baseY2UnitId = undefined;
   }
+
+  const yAxisVariables = lhs_y_axes.map(
+    (y) => variables.find((v) => v.id === y.variable)?.name,
+  );
+  const y2AxisVariables = rhs_y_axes.map(
+    (y) => variables.find((v) => v.id === y.variable)?.name,
+  );
+  const { xAxisTitle, yAxisTitle, y2AxisTitle } = getDefaultAxisTitles({
+    plot,
+    units,
+    yAxisVariables,
+    y2AxisVariables,
+  });
 
   const commonAddYAxis = (
     variableId: number,
@@ -235,6 +249,13 @@ const SimulationPlotForm: FC<SimulationPlotFormProps> = ({
           control={control}
           selectProps={defaultProps}
         />
+        <TextField
+          label="X Axis Label"
+          name={`plots.${index}.x_label`}
+          control={control}
+          textFieldProps={defaultProps}
+          defaultValue={xAxisTitle}
+        />
       </Stack>
       <Divider sx={{ margin: 2 }} />
       <Typography sx={{ fontWeight: "bold", paddingBottom: "1rem" }}>
@@ -261,6 +282,13 @@ const SimulationPlotForm: FC<SimulationPlotFormProps> = ({
           control={control}
           baseUnit={units.find((u) => u.id === baseYUnitId)}
           selectProps={{ disabled: lhs_y_axes.length === 0 || isSharedWithMe }}
+        />
+        <TextField
+          label="Y Axis Label"
+          name={`plots.${index}.y_label`}
+          control={control}
+          textFieldProps={defaultProps}
+          defaultValue={yAxisTitle}
         />
         <SelectField
           label="Y Axis Scale"
@@ -378,6 +406,13 @@ const SimulationPlotForm: FC<SimulationPlotFormProps> = ({
           control={control}
           baseUnit={units.find((u) => u.id === baseY2UnitId)}
           selectProps={{ disabled: rhs_y_axes.length === 0 || isSharedWithMe }}
+        />
+        <TextField
+          label="Y2 Axis Label"
+          name={`plots.${index}.y2_label`}
+          control={control}
+          textFieldProps={defaultProps}
+          defaultValue={y2AxisTitle}
         />
         <SelectField
           label="Y2 Axis Scale"
