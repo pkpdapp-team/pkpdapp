@@ -228,6 +228,10 @@ const SimulationPlotForm: FC<SimulationPlotFormProps> = ({
   const defaultProps = {
     disabled: isSharedWithMe,
   };
+  const axisLabelProps = {
+    ...defaultProps,
+    type: "search",
+  };
 
   return (
     <Stack>
@@ -246,7 +250,7 @@ const SimulationPlotForm: FC<SimulationPlotFormProps> = ({
           label="X Axis Label"
           name={`plots.${index}.x_label`}
           control={control}
-          textFieldProps={defaultProps}
+          textFieldProps={axisLabelProps}
           defaultValue={xAxisTitle}
         />
         <SelectField
@@ -287,7 +291,7 @@ const SimulationPlotForm: FC<SimulationPlotFormProps> = ({
           label="Y Axis Label"
           name={`plots.${index}.y_label`}
           control={control}
-          textFieldProps={defaultProps}
+          textFieldProps={axisLabelProps}
           defaultValue={yAxisTitle}
         />
         <SelectField
@@ -411,7 +415,7 @@ const SimulationPlotForm: FC<SimulationPlotFormProps> = ({
           label="Y2 Axis Label"
           name={`plots.${index}.y2_label`}
           control={control}
-          textFieldProps={defaultProps}
+          textFieldProps={axisLabelProps}
           defaultValue={y2AxisTitle}
         />
         <SelectField
