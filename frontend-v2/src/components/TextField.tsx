@@ -49,9 +49,9 @@ function TextField<T extends FieldValues>({
         fieldState: { error },
       }) => {
         const handleBlur = (e: FocusEvent<HTMLInputElement>) => {
-          // save the default value, if the text field is empty.
-          const newValue = e.target.value || defaultValue;
-          setFieldValue(newValue);
+          // Save an empty string in place of the default value.
+          const newValue =
+            e.target.value === defaultValue ? "" : e.target.value;
           if (mode === "onBlur" && newValue !== value) {
             onChange({ target: { value: newValue } });
           }
