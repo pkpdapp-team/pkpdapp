@@ -52,6 +52,8 @@ function TextField<T extends FieldValues>({
           // Save an empty string in place of the default value.
           const newValue =
             e.target.value === defaultValue ? "" : e.target.value;
+          // Display the default value in place of an empty field.
+          setFieldValue(newValue === "" ? defaultValue : newValue);
           if (mode === "onBlur" && newValue !== value) {
             onChange({ target: { value: newValue } });
           }
