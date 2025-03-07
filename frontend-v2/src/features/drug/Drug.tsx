@@ -217,6 +217,18 @@ const Drug: FC = () => {
     }
   };
 
+
+  const c50Unit = units.find((u) => u.symbol === "pmol/L")
+  const c50Units = c50Unit?.compatible_units.filter((unit) =>
+    ["pmol/L", "nmol/L", "µmol/L", "pg/mL", "ng/mL", "µg/mL", "ng/L", "µg/L", "mg/L"].includes(unit.symbol)
+  );
+  const c50UnitOpt = c50Units
+    ? c50Units.map((unit: { [key: string]: string }) => {
+      return { value: unit.id, label: unit.symbol };
+    }
+    )
+    : [];
+
   const molMassUnit = units.find((u) => u.id === compound.molecular_mass_unit);
   const molMassUnits = molMassUnit?.compatible_units.filter((unit) =>
     unit.symbol.endsWith("/mol"),
@@ -409,15 +421,12 @@ const Drug: FC = () => {
                 </TableCell>
                 <TableCell size="small">
                   {isEditIndex === index ? (
-                    <UnitField
+                    <SelectField
                       size="small"
                       label={"Unit"}
                       name={`efficacy_experiments.${index}.c50_unit`}
+                      options={c50UnitOpt}
                       control={control}
-                      baseUnit={units.find(
-                        (u) => u.id === efficacy_experiment.c50_unit,
-                      )}
-                      compound={compound}
                       selectProps={defaultProps}
                     />
                   ) : (
