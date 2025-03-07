@@ -623,7 +623,8 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                     continue
                 v.default_value = value
                 v.unit = unit
-                v.save()
+                if not v._state.adding:
+                    v.save()
 
 
 class PkpdMapping(StoredModel):
