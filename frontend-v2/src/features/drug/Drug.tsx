@@ -219,12 +219,12 @@ const Drug: FC = () => {
 
   const molMassUnit = units.find((u) => u.id === compound.molecular_mass_unit);
   const molMassUnits = molMassUnit?.compatible_units.filter((unit) =>
-    unit.symbol.endsWith("mol"),
+    unit.symbol.endsWith("/mol"),
   );
   const molMassUnitOpt = molMassUnits
     ? molMassUnits.map((unit: { [key: string]: string }) => {
-        return { value: unit.id, label: unit.symbol };
-      })
+      return { value: unit.id, label: unit.symbol };
+    })
     : [];
 
   const defaultProps = { disabled: isSharedWithMe };
