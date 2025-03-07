@@ -221,7 +221,7 @@ const ParameterRow: FC<Props> = ({ model, project, variable, variables, units, m
           textFieldProps={defaultProps}
         />
       </TableCell>
-      <TableCell size="small">
+      <TableCell size="small" sx={{ width: "10rem" }}>
         <UnitField
           size="small"
           sx={{ minWidth: "8rem" }}
@@ -236,7 +236,7 @@ const ParameterRow: FC<Props> = ({ model, project, variable, variables, units, m
       <TableCell size="small">
         {isPK && (
           <Stack direction="row" spacing={2}>
-            <Select size="small" value={nonlinearityValue} onChange={handleNonlinearityChange} {...defaultProps}>
+            <Select size="small" value={nonlinearityValue} onChange={handleNonlinearityChange} displayEmpty {...defaultProps}>
               {nonlinearityOptions.map((option) => (
                 <MenuItem value={option.value} key={option.value}>
                   {option.label}
@@ -255,7 +255,7 @@ const ParameterRow: FC<Props> = ({ model, project, variable, variables, units, m
           </Stack>
         )}
       </TableCell>
-    </TableRow>
+    </TableRow >
   );
 };
 
