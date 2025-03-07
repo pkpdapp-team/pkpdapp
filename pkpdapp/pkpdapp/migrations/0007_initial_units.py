@@ -231,7 +231,6 @@ def load_units(apps, schema_editor):
             "symbol": "g/mL",
             "unit": g / (1e-3 * L),
         },
-
         {
             "symbol": "10^6/mcL",
             "unit": 1e6 / (1e-3 * cL),
@@ -251,6 +250,10 @@ def load_units(apps, schema_editor):
         {
             "symbol": "g/mol",
             "unit": g / mol,
+        },
+        {
+            "symbol": "kg/mol",
+            "unit": 1e3 * g / mol,
         },
         {
             "symbol": "g/nmol",
