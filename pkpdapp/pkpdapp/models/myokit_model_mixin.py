@@ -213,56 +213,52 @@ class MyokitModelMixin:
                 removed_variables += ["PKCompartment.F"]
 
         model = self.get_myokit_model()
-        new_variables = [
-            Variable.get_variable(self, v)
-            for v in model.variables(const=True, sort=True)
-            if v.is_literal() and v.qname() not in removed_variables
-        ]
+        new_variables = []
+        old_variables = []
+        for v in model.variables(const=True, sort=True):
+            if v.is_literal() and v.qname() not in removed_variables:
+                v = Variable.get_variable(self, v)
+                if v._state.adding:
+                    new_variables.append(v)
+                else:
+                    # parameters could originally be outputs
+                    if not v.constant:
+                        v.constant = True
+                        v.save()
+                    old_variables.append(v)
 
-        # parameters could originally be outputs
-        for v in new_variables:
-            if not v.constant:
-                v.constant = True
-                v.save()
-        new_states = [
-            Variable.get_variable(self, v)
-            for v in model.variables(state=True, sort=True)
-            if v.qname() not in removed_variables
-        ]
-        new_outputs = [
-            Variable.get_variable(self, v)
-            for v in model.variables(const=False, state=False, sort=True)
-            if v.qname() not in removed_variables
-        ]
-        logger.debug("ALL NEW OUTPUTS")
-        for v in new_outputs:
-            if v.unit is not None:
-                logger.debug(
-                    f"{v.qname} [{v.unit.symbol}], "
-                    f"id = {v.id} constant = {v.constant}, "
-                    f"state = {v.state}"
-                )
-            else:
-                logger.debug(
-                    f"{v.qname}, id = {v.id} "
-                    f"constant = {v.constant}, "
-                    f"state = {v.state}"
-                )
+        new_states = []
+        old_states = []
+        for v in model.variables(state=True, sort=True):
+            if v.qname() not in removed_variables:
+                v = Variable.get_variable(self, v)
+                if v._state.adding:
+                    new_states.append(v)
+                else:
+                    old_states.append(v)
 
-        for v in new_outputs:
-            # if output not in states set state false
-            # so only states with initial conditions as
-            # parameters will have state set to true
-            if v not in new_states and v.state is True:
-                v.state = False
-                v.save()
+        new_outputs = []
+        old_outputs = []
+        for v in model.variables(const=False, state=False, sort=True):
+            if v.qname() not in removed_variables:
+                v = Variable.get_variable(self, v)
+                if v._state.adding:
+                    # if output not in states set state false
+                    # so only states with initial conditions as
+                    # parameters will have state set to true
+                    if v not in new_states and v.state is True:
+                        v.state = False
 
-            # parameters could originally be variables
-            if v.constant:
-                v.constant = False
-                v.save()
+                    new_outputs.append(v)
+                else:
+                    # outputs could originally be parameters
+                    if v.constant:
+                        v.constant = False
+                        v.save()
+                    old_outputs.append(v)
 
         all_new_variables = new_variables + new_states + new_outputs
+        all_old_variables = old_variables + old_states + old_outputs
         logger.debug("ALL NEW VARIABLES")
         for v in all_new_variables:
             if v.unit is not None:
@@ -276,25 +272,39 @@ class MyokitModelMixin:
                     f"constant = {v.constant}, state = {v.state}"
                 )
 
-        # for library models: set new variables to defaults
-        if self.is_library_model and hasattr(self, "reset_params_to_defaults"):
+        logger.debug("ALL OLD VARIABLES")
+        for v in all_old_variables:
+            if v.unit is not None:
+                logger.debug(
+                    f"{v.qname} [{v.unit.symbol}], id = {v.id} "
+                    f"constant = {v.constant}, state = {v.state}"
+                )
+            else:
+                logger.debug(
+                    f"{v.qname}, id = {v.id} "
+                    f"constant = {v.constant}, state = {v.state}"
+                )
+
+        # delete all variables that are not in new
+        for variable in self.variables.all():
+            if variable not in all_old_variables:
+                logger.debug(f"DELETING VARIABLE {variable.qname} (id = {variable.id})")
+                variable.delete()
+
+        # for library models: set created variables to defaults
+        if (
+            self.is_library_model
+            and hasattr(self, "reset_params_to_defaults")
+            and len(new_variables) > 0
+        ):
             project = self.get_project()
             if project is not None:
                 species = project.species
                 compound_type = project.compound.compound_type
-                self.reset_params_to_defaults(species, compound_type, all_new_variables)
+                self.reset_params_to_defaults(species, compound_type, new_variables)
 
-        # delete all variables that are not in new
-        for variable in self.variables.all():
-            if variable not in all_new_variables:
-                logger.debug(f"DELETING VARIABLE {variable.qname} (id = {variable.id})")
-                variable.delete()
-            else:
-                logger.debug(
-                    f"RETAINING VARIABLE {variable.qname} (id = {variable.id}, value = {variable.default_value})"  # noqa: E501
-                )
-
-        self.variables.set(all_new_variables)
+        # save all new variables
+        Variable.objects.bulk_create(all_new_variables)
 
     def set_variables_from_inference(self, inference):
         results_for_mle = inference.get_maximum_likelihood()

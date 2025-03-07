@@ -164,9 +164,7 @@ class Variable(StoredModel):
         constraints = [
             models.CheckConstraint(
                 check=((Q(is_log=True) & Q(lower_bound__gt=0)) | Q(is_log=False)),
-                name=(
-                    "%(class)s: log scale must have a lower bound greater than zero"
-                ),
+                name=("%(class)s: log scale must have a lower bound greater than zero"),
             ),
             models.CheckConstraint(
                 check=(
@@ -238,7 +236,7 @@ class Variable(StoredModel):
             else:
                 value = myokit_variable.value()
             qname = myokit_variable.qname()
-            return Variable.objects.create(
+            return Variable(
                 name=myokit_variable.name(),
                 qname=qname,
                 default_value=value,
@@ -307,7 +305,7 @@ class Variable(StoredModel):
             else:
                 value = myokit_variable.value()
             qname = myokit_variable.qname()
-            return Variable.objects.create(
+            return Variable(
                 name=myokit_variable.name(),
                 qname=qname,
                 description=myokit_variable.meta.get("desc", ""),
@@ -370,7 +368,7 @@ class Variable(StoredModel):
             else:
                 value = myokit_variable.value()
             qname = myokit_variable.qname()
-            return Variable.objects.create(
+            return Variable(
                 name=myokit_variable.name(),
                 qname=qname,
                 description=myokit_variable.meta.get("desc", ""),
@@ -388,6 +386,11 @@ class Variable(StoredModel):
 
     @staticmethod
     def get_variable(model, myokit_variable):
+        """
+        Gets a variable of the model from a myokit variable
+        returns a new variable if it does not exist.
+        Note that this new variable is not saved to the database!
+        """
         if isinstance(model, PharmacokineticModel):
             return Variable.get_variable_pk(model, myokit_variable)
         elif isinstance(model, CombinedModel):
