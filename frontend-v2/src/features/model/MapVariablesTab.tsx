@@ -225,7 +225,7 @@ const MapVariablesTab: FC<Props> = ({
     </>
   );
 
-  const aucHelp = <p>Lorem Ipsum (TODO: add help copy.)</p>;
+  const aucHelp = <p>Calculate secondary parameters for this variable (see "Secondary Parameters" tab)</p>;
   const sROHelp = (
     <p>
       The receptor occupancy for SM and LM (calc_RO) is calculated from the
