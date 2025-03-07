@@ -223,6 +223,13 @@ const Drug: FC = () => {
   );
   const molMassUnitOpt = molMassUnits
     ? molMassUnits.map((unit: { [key: string]: string }) => {
+      // add (Da) and (kDa) for clarity
+      if (unit.symbol === "g/mol") {
+        return { value: unit.id, label: `${unit.symbol} (Da)` };
+      }
+      if (unit.symbol === "kg/mol") {
+        return { value: unit.id, label: `${unit.symbol} (kDa)` };
+      }
       return { value: unit.id, label: unit.symbol };
     })
     : [];
