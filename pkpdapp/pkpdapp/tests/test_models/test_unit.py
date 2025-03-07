@@ -103,6 +103,7 @@ class TestUnitModel(TestCase):
                 "ng/kg",
                 "g/mol",
                 "g/nmol",
+                "kg/mol",
                 "",
             ],
             compound=self.compound,
