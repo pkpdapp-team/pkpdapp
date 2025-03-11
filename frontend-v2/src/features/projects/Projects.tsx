@@ -82,8 +82,8 @@ enum SortOptions {
   COMPOUND = "compound",
 }
 
-const SM_SIM_TIME = 48;
-const LM_SIM_TIME = 672;
+const SM_SIM_TIME = 24;
+const LM_SIM_TIME = 168;
 const ProjectTable: FC = () => {
   const [sortBy, setSortBy] = useState<SortOptions>(SortOptions.CREATED);
 
@@ -286,7 +286,7 @@ const ProjectTable: FC = () => {
                   sx={{ borderBottom: "solid 2px blue" }}
                   padding="checkbox"
                 >
-                  <DnsIcon fontSize='small' sx={{ marginTop: '.5rem'}}/>
+                  <DnsIcon fontSize='small' sx={{ marginTop: '.5rem' }} />
                 </TableCell>
                 <TableCell sx={{ borderBottom: "solid 2px blue" }}>
                   <div style={{ ...defaultHeaderSx }}>
