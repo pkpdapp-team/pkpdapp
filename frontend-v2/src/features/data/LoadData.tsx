@@ -7,6 +7,10 @@ import { normaliseHeader, validateState } from "./dataValidation";
 import { StepperState } from "./LoadDataStepper";
 import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
 import { TableHeader } from "../../components/TableHeader";
+import { useSelector } from "react-redux";
+import { RootState } from "../../app/store";
+import { selectIsProjectShared } from "../login/loginSlice";
+import { useProjectRetrieveQuery } from "../../app/backendApi";
 
 export type Row = { [key: string]: string };
 export type Data = Row[];
@@ -105,6 +109,14 @@ function setMinimumInfusionTime(state: StepperState) {
 const LoadData: FC<ILoadDataProps> = ({ state, notificationsInfo }) => {
   const showData = state.data.length > 0 && state.fields.length > 0;
   const normalisedHeaders = state.normalisedHeaders;
+  const projectId = useSelector(
+    (state: RootState) => state.main.selectedProject,
+  );
+  const { data: project, isLoading: isProjectLoading } =
+    useProjectRetrieveQuery({ id: projectId || 0 }, { skip: !projectId });
+  const isSharedWithMe = useSelector((state: RootState) =>
+    selectIsProjectShared(state, project),
+  );
   if (!normalisedHeaders.includes("ID")) {
     createDefaultSubjects(state);
   }
@@ -208,6 +220,7 @@ const LoadData: FC<ILoadDataProps> = ({ state, notificationsInfo }) => {
                 style={{ marginTop: ".5rem" }}
                 onClick={open}
                 onKeyDown={open}
+                disabled={isSharedWithMe || isProjectLoading}
               >
                 Upload Dataset
               </Button>
