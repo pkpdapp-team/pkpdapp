@@ -174,7 +174,7 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
                   textWrap: "nowrap",
                   height: "2rem",
                 }}
-                disabled={false}
+                disabled={isSharedWithMe}
               >
                 Add New Row
               </Button>

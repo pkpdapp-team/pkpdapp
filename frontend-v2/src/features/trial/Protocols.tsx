@@ -32,6 +32,7 @@ import useSubjectGroups from "../../hooks/useSubjectGroups";
 import { TableHeader } from "../../components/TableHeader";
 import RemoveCircleOutlineIcon from "@mui/icons-material/RemoveCircleOutline";
 import { getTableHeight } from "../../shared/calculateTableHeights";
+import { selectIsProjectShared } from "../login/loginSlice";
 
 const TABLE_BREAKPOINTS = [
   {
@@ -76,6 +77,9 @@ const Protocols: FC = () => {
       { id: selectedProjectOrZero },
       { skip: !selectedProject },
     );
+  const isSharedWithMe = useSelector((state: RootState) =>
+    selectIsProjectShared(state, project),
+  );
   const { data: projectProtocols, isLoading: isProtocolsLoading } =
     useProtocolListQuery(
       { projectId: selectedProjectOrZero },
@@ -261,6 +265,7 @@ const Protocols: FC = () => {
               height: "2rem",
             }}
             onClick={handleAddTab}
+            disabled={isSharedWithMe}
           >
             Add Group
           </Button>
