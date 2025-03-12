@@ -18,6 +18,7 @@ import { SimulationContext } from "./contexts/SimulationContext";
 import { SimulateResponse } from "./app/backendApi";
 import { CollapsibleSidebarProvider } from "./shared/contexts/CollapsibleSidebarContext";
 import { ProjectDescriptionProvider } from "./shared/contexts/ProjectDescriptionContext";
+import { PageName, setPage } from "./features/main/mainSlice";
 
 function App() {
   const dispatch = useAppDispatch();
@@ -31,6 +32,7 @@ function App() {
 
   const onLogin = (username: string, password: string) => {
     dispatch(login({ username, password }));
+    dispatch(setPage(PageName.PROJECTS));
   };
 
   useEffect(() => {
