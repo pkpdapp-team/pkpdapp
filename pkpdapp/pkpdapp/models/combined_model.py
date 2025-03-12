@@ -448,9 +448,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                     f'Unbound Concentration for {myokit_var.meta["desc"]}'  # noqa: E501
                 )
                 fup = myokit_compartment.add_variable(new_names[1])
-                fup.meta["desc"] = (
-                    "User-defined Fraction Unbound Plasma (Drug Target Tab)"  # noqa: E501
-                )
+                fup.meta["desc"] = "User-defined Fraction Unbound Plasma"  # noqa: E501
                 var.set_unit(myokit_var.unit())
                 fup.set_rhs(self.project.compound.fraction_unbound_plasma)
                 fup.set_unit(myokit.units.dimensionless)
@@ -469,9 +467,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                     continue
                 var = myokit_compartment.add_variable(new_names[0])
                 bpr = myokit_compartment.add_variable(new_names[1])
-                bpr.meta["desc"] = (
-                    "User-defined Blood to Plasma Ratio (Drug Target Tab)"  # noqa: E501
-                )
+                bpr.meta["desc"] = "User-defined Blood to Plasma Ratio"  # noqa: E501
                 var.meta["desc"] = f'Blood Concentration for {myokit_var.meta["desc"]}'
                 var.set_unit(myokit_var.unit())
                 bpr.set_rhs(self.project.compound.blood_to_plasma_ratio)
