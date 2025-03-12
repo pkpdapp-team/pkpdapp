@@ -18,7 +18,7 @@ export enum SubPageName {
   SECONDARYPARAMETERS = "Secondary Parameters",
   TUTORIALS = "Tutorials",
   PROJECTS = "Projects",
-  DRUG = "Drug",
+  DRUG = "Drug and Target",
   MODEL = "Model",
   TRAILDESIGN = "Trial Design",
   SIMULATION = "Simulation",
