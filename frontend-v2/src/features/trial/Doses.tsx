@@ -121,12 +121,13 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
 
   const handleAddRow = () => {
     const isSmallMolecule = compound?.compound_type === "SM";
+    const lastDose = doses[doses.length - 1];
     appendDose({
-      amount: 0,
-      duration: 0.0833,
-      repeats: 1,
-      start_time: 0,
-      repeat_interval: isSmallMolecule ? 24 : 168,
+      amount: lastDose.amount,
+      duration: lastDose.duration,
+      repeats: lastDose.repeats,
+      start_time: lastDose.start_time,
+      repeat_interval: lastDose.repeat_interval,
     });
   };
 
