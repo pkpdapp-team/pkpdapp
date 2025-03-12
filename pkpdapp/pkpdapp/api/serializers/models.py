@@ -176,6 +176,15 @@ class CombinedModelSerializer(serializers.ModelSerializer):
         # update model since mappings might have changed
         new_pkpd_model.update_model()
 
+        # if pk model has changed, go through all protocols of the project and delete
+        # any that are not associated with a variable
+        if pk_model_changed:
+            project = new_pkpd_model.project
+            if project is not None:
+                for protocol in project.protocols.all():
+                    if not protocol.variables.exists():
+                        protocol.delete()
+
         return new_pkpd_model
 
 
