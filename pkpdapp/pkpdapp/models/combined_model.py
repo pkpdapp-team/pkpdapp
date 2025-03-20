@@ -685,7 +685,10 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 var.set_rhs(
                     myokit.Plus(
                         myokit.Multiply(
-                            myokit.Name(myokit_var),
+                            myokit.Subtract(
+                                myokit.Name(myokit_var),
+                                myokit.Name(lin_var),
+                            ),
                             myokit.Divide(
                                 myokit.Number(1),
                                 myokit.Plus(
@@ -750,7 +753,10 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 var.set_rhs(
                     myokit.Plus(
                         myokit.Multiply(
-                            myokit.Name(myokit_var),
+                            myokit.Subtract(
+                                myokit.Name(myokit_var),
+                                myokit.Name(min_var),
+                            ),
                             myokit.Divide(
                                 myokit.Power(
                                     myokit.Number(first_dose_value),
@@ -811,7 +817,10 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 var.set_rhs(
                     myokit.Plus(
                         myokit.Multiply(
-                            myokit.Name(myokit_var),
+                            myokit.Subtract(
+                                myokit.Name(myokit_var),
+                                myokit.Name(min_var),
+                            ),
                             myokit.Minus(
                                 myokit.Number(1),
                                 myokit.Divide(
@@ -905,7 +914,10 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 var.set_rhs(
                     myokit.Plus(
                         myokit.Multiply(
-                            myokit.Name(myokit_var),
+                            myokit.Subtract(
+                                myokit.Name(myokit_var),
+                                myokit.Name(min_var),
+                            ),
                             myokit.Exp(
                                 myokit.PrefixMinus(
                                     myokit.Multiply(
@@ -946,7 +958,10 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 var.set_rhs(
                     myokit.Plus(
                         myokit.Multiply(
-                            myokit.Name(myokit_var),
+                            myokit.Subtract(
+                                myokit.Name(myokit_var),
+                                myokit.Name(min_var),
+                            ),
                             myokit.Minus(
                                 myokit.Number(1),
                                 myokit.Exp(
