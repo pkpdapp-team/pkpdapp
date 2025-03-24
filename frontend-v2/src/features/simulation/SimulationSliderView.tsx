@@ -109,23 +109,23 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
   };
 
   const baseValue = variable?.default_value || 1.0;
-  const minValue = Math.max(
-    variable?.lower_bound || -Infinity,
-    baseValue / range,
-  );
-  const maxValue = Math.min(
-    variable?.upper_bound || Infinity,
-    baseValue * range,
-  );
+  let minValue = variable?.lower_bound;
+  if (minValue === undefined || minValue === null) {
+    minValue = baseValue / range;
+  }
+  let maxValue = variable?.upper_bound;
+  if (maxValue === undefined || maxValue === null) {
+    maxValue = baseValue * range;
+  }
   const stepValue = (maxValue - minValue) / 1000.0;
 
-  const commitChanges = () => {
+  const commitChanges = (event: React.SyntheticEvent | Event, value: number | number[]) => {
     setEditing(false);
     let truncatedValue = value;
     if (value < minValue) {
       truncatedValue = minValue;
     } else if (value > maxValue) {
-      setValue(maxValue);
+      truncatedValue = maxValue;
     }
     setValue(truncatedValue);
     onChange(slider.variable, truncatedValue);
@@ -135,7 +135,9 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
     if (editing) {
       return value;
     }
-    if (value < 0.001) {
+    if (value === 0.0) {
+      return value.toFixed(3);
+    } else if (value < 0.001) {
       return value.toExponential(3);
     } else if (value > 1000) {
       return value.toExponential(3);
@@ -233,8 +235,7 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
           step={stepValue}
           shiftStep={stepValue * 10}
           onChange={handleSliderChange}
-          onPointerUp={commitChanges}
-          onKeyUp={commitChanges}
+          onChangeCommitted={commitChanges}
           valueLabelDisplay="off"
           aria-labelledby="input-slider"
         />
