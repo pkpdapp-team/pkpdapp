@@ -119,7 +119,15 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
   }
   const stepValue = (maxValue - minValue) / 1000.0;
 
-  const commitChanges = (event: React.SyntheticEvent | Event, value: number | number[]) => {
+  const commitChanges = () => {
+    commitChangesWithValue(new Event("commit"), value);
+  }
+
+  const commitChangesWithValue = (_event: React.SyntheticEvent | Event, value: number | number[]) => {
+    // value should always be a number
+    if (typeof value !== "number") {
+      return;
+    }
     setEditing(false);
     let truncatedValue = value;
     if (value < minValue) {
@@ -235,7 +243,7 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
           step={stepValue}
           shiftStep={stepValue * 10}
           onChange={handleSliderChange}
-          onChangeCommitted={commitChanges}
+          onChangeCommitted={commitChangesWithValue}
           valueLabelDisplay="off"
           aria-labelledby="input-slider"
         />
