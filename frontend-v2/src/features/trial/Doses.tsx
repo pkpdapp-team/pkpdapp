@@ -122,11 +122,13 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
   const handleAddRow = () => {
     const isSmallMolecule = compound?.compound_type === "SM";
     const lastDose = doses[doses.length - 1];
+    const increment = (lastDose.repeats && lastDose.repeats > 1) ? ((lastDose.repeat_interval || 1) * lastDose.repeats) : (lastDose.duration || 1);
+    const lastDoseEndTime = lastDose.start_time + increment;
     appendDose({
       amount: lastDose.amount,
       duration: lastDose.duration,
       repeats: lastDose.repeats,
-      start_time: lastDose.start_time,
+      start_time: lastDoseEndTime,
       repeat_interval: lastDose.repeat_interval,
     });
   };
@@ -248,7 +250,13 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
               label="Start Time"
               name={`doses.${index}.start_time`}
               control={control}
-              rules={{ required: true }}
+              rules={{
+                required: true,
+                min: {
+                  value: doses[index - 1]?.start_time + 1e4 * Number.EPSILON || 0,
+                  message: "value > prev. dose or 0",
+                }
+              }}
               textFieldProps={defaultProps}
             />
           </TableCell>
