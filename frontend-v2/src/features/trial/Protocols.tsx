@@ -165,12 +165,10 @@ const Protocols: FC = () => {
   const removeGroup = (groupID: number) => async () => {
     const subjectGroup = groups?.find((g) => g.id === groupID);
     const subjectCount = subjectGroup?.subjects.length || 0;
-    if (
-      subjectCount === 0 ||
-      window?.confirm(
-        `Are you sure you want to delete group ${subjectGroup?.name} and all its subjects?`,
-      )
-    ) {
+    const confirmationMessage = subjectCount === 0
+      ? `Are you sure you want to delete ${subjectGroup?.name}?`
+      : `Are you sure you want to delete group ${subjectGroup?.name} and all its subjects?`;
+    if (window?.confirm(confirmationMessage)) {
       setTab(tab - 1);
       await destroySubjectGroup({ id: groupID });
       refetchGroups();
