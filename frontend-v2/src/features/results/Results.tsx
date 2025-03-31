@@ -129,29 +129,24 @@ const Results: FC = () => {
           >
             Add Table
           </Button>
-          <Button
-            variant="outlined"
-            sx={{ width: "fit-content", textWrap: "nowrap", height: "2rem" }}
-            endIcon={<ArrowDropDownIcon />}
-          >
-            Export
-          </Button>
-        </Box>
-      </Box>
+        </Box >
+      </Box >
 
-      {results.map((table, index) => {
-        return (
-          <Box
-            key={table.id}
-            role="tabpanel"
-            id={`table-tabpanel-${index}`}
-            hidden={tab !== index}
-            sx={{ p: 3 }}
-          >
-            <ResultsTab table={table} />
-          </Box>
-        );
-      })}
+      {
+        results.map((table, index) => {
+          return (
+            <Box
+              key={table.id}
+              role="tabpanel"
+              id={`table-tabpanel-${index}`}
+              hidden={tab !== index}
+              sx={{ p: 3 }}
+            >
+              <ResultsTab table={table} />
+            </Box>
+          );
+        })
+      }
     </>
   );
 };
