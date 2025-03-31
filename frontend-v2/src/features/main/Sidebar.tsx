@@ -48,6 +48,7 @@ import { useCollapsibleSidebar } from "../../shared/contexts/CollapsibleSidebarC
 import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
 import { useProjectDescription } from "../../shared/contexts/ProjectDescriptionContext";
 import "../../App.css";
+import { useModelTimeIntervals } from "../../hooks/useModelTimeIntervals";
 
 const drawerExpandedWidth = 240;
 const drawerCollapsedWidth = 50;
@@ -86,6 +87,8 @@ export default function Sidebar() {
     { id: projectIdOrZero },
     { skip: !projectId },
   );
+
+  const [intervals] = useModelTimeIntervals();
   const { VITE_APP_ROCHE } = import.meta.env;
   const isRocheLogo =
     typeof VITE_APP_ROCHE === "string"
@@ -117,8 +120,8 @@ export default function Sidebar() {
   const groupsAreComplete = protocolsAreComplete?.every((dosing) => dosing);
   const noSecondaryParameters = model
     ? model.derived_variables.reduce((acc, dv) => {
-        return acc && dv.type !== "AUC";
-      }, true)
+      return acc && dv.type !== "AUC";
+    }, true)
     : false;
 
   const warnings: { [key: string]: string } = {};
@@ -219,6 +222,9 @@ export default function Sidebar() {
       page === PageName.SIMULATIONS &&
       (PageName.MODEL in errors || PageName.TRIAL_DESIGN in errors)
     ) {
+      return true;
+    }
+    if (page === PageName.RESULTS && intervals.length === 0) {
       return true;
     }
     if (selectedProject === null) {
