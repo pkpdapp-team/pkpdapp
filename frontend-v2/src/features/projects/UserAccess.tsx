@@ -9,10 +9,10 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  FormControl,
-  Select,
-  MenuItem,
   IconButton,
+  Box,
+  Button,
+  Typography,
 } from "@mui/material";
 import {
   ProjectAccess,
@@ -24,6 +24,7 @@ import { FormData } from "./Project";
 import Delete from "@mui/icons-material/Delete";
 import { useSelector } from "react-redux";
 import { selectCurrentUser } from "../login/loginSlice";
+import DropdownButton from "../../components/DropdownButton";
 
 interface Props {
   open: boolean;
@@ -31,6 +32,7 @@ interface Props {
   userAccess: ProjectAccess[];
   append: (value: ProjectAccess) => void;
   remove: (index: number) => void;
+  onCancel: () => void;
   control: Control<FormData>;
   onClose: () => void;
 }
@@ -40,7 +42,7 @@ const UserAccess: FC<Props> = ({
   userAccess,
   append,
   remove,
-  control,
+  onCancel,
   onClose,
 }) => {
   const { data: users } = useUserListQuery();
@@ -61,39 +63,28 @@ const UserAccess: FC<Props> = ({
 
   const currentUser = useSelector(selectCurrentUser);
   const myUserId = currentUser?.id || 0;
+  const sharedUsers = userAccess.map(({ user }) => user)
 
   // create list of user options for select
   const userOptions = users
-    ?.filter((user) => user.id !== myUserId)
+    ?.filter((user) => user.id !== myUserId && !sharedUsers.includes(user.id))
     .map((user) => {
       return { value: user.id, label: user.username };
-    });
-  userOptions?.push({ value: 0, label: "Add User" });
+    }) || [];
 
   return (
-    <Dialog open={open} onClose={onClose}>
-      <DialogTitle>User Access</DialogTitle>
-      <DialogContent>
+    <Dialog maxWidth="lg" open={open} onClose={onClose}>
+      <DialogTitle>
+        <Typography variant="h4">Share Project</Typography>
+      </DialogTitle>
+      <DialogContent sx={{ width: "50vw" }}>
         <TableContainer>
-          <Table>
+          <Typography sx={{ fontWeight: "bold" }}>Shared with:</Typography>
+          <Table size="small">
             <TableHead>
               <TableRow>
                 <TableCell>Username</TableCell>
                 <TableCell>Remove Access</TableCell>
-                <TableCell>
-                  <FormControl fullWidth>
-                    <Select
-                      value={0}
-                      onChange={(e) => addUser(e.target.value as number)}
-                    >
-                      {userOptions?.map((option) => (
-                        <MenuItem key={option.value} value={option.value}>
-                          {option.label}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -106,7 +97,7 @@ const UserAccess: FC<Props> = ({
                     <TableCell>
                       {!isMe && (
                         <IconButton onClick={deleteAccess(user, i)}>
-                          <Delete />
+                          <Delete fontSize="small" />
                         </IconButton>
                       )}
                     </TableCell>
@@ -115,6 +106,38 @@ const UserAccess: FC<Props> = ({
               })}
             </TableBody>
           </Table>
+          <DropdownButton
+            useIcon={false}
+            data_cy="add-y-axis"
+            options={userOptions}
+            onOptionSelected={addUser}
+            sx={{ marginTop: '1rem'}}
+          >
+            Add user
+          </DropdownButton>
+
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "flex-end",
+              margin: ".5rem",
+            }}
+          >
+            <Button
+              variant="outlined"
+              sx={{ marginLeft: "1rem" }}
+              onClick={onCancel}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="contained"
+              sx={{ marginLeft: "1rem" }}
+              onClick={onClose}
+            >
+              OK
+            </Button>
+          </Box>
         </TableContainer>
       </DialogContent>
     </Dialog>

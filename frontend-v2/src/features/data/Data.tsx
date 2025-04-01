@@ -5,7 +5,7 @@ import {
   useUnitListQuery,
 } from "../../app/backendApi";
 import { RootState } from "../../app/store";
-import { Box, Button, Grid, Stack, Tab, Tabs, Typography } from "@mui/material";
+import { Box, Button, Grid, Tab, Tabs, Typography } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import EditIcon from "@mui/icons-material/Edit";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
@@ -13,6 +13,41 @@ import FileUploadIcon from "@mui/icons-material/FileUpload";
 import LoadDataStepper from "./LoadDataStepper";
 import useDataset from "../../hooks/useDataset";
 import generateCSV from "./generateCSV";
+import { getTableHeight } from "../../shared/calculateTableHeights";
+
+const BOTH_TABLES_VISIBLE_BREAKPOINTS = [
+  {
+    minHeight: 1100,
+    tableHeight: "78vh",
+  },
+  {
+    minHeight: 1000,
+    tableHeight: "70vh",
+  },
+  {
+    minHeight: 900,
+    tableHeight: "73vh",
+  },
+  {
+    minHeight: 800,
+    tableHeight: "70vh",
+  },
+  {
+    minHeight: 700,
+    tableHeight: "65vh",
+  },
+  {
+    minHeight: 600,
+    tableHeight: "59vh",
+  },
+  {
+    minHeight: 500,
+    tableHeight: "55vh",
+  },
+];
+
+export const DATA_HEIGHT =
+  "72vh; @media (max-height: 1000px) { height: 65vh }; @media (max-height: 900px) { height: 60vh }; @media (max-height: 800px) { height: 58vh }; @media (max-height: 700px) { height: 44vh }; @media (max-height: 600px) { height: 42vh };";
 
 function displayUnitSymbol(symbol: string | undefined) {
   return symbol === "" ? "dimensionless" : symbol;
@@ -33,7 +68,7 @@ const Data: FC = () => {
     { skip: !project?.compound },
   );
   const { dataset, groups, subjectBiomarkers } = useDataset(projectIdOrZero);
-  const csv = generateCSV(dataset, groups, subjectBiomarkers, units);
+  const csv = generateCSV(dataset, groups, subjectBiomarkers, units, "default");
   const [isLoading, setIsLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
@@ -60,8 +95,10 @@ const Data: FC = () => {
   }
 
   function onCancel() {
-    setIsLoading(false);
-    setIsEditing(false);
+    if (window.confirm("Any unsaved changes will be lost. Continue?")) {
+      setIsLoading(false);
+      setIsEditing(false);
+    }
   }
 
   function handleTabChange(event: SyntheticEvent, newValue: number) {
@@ -75,7 +112,8 @@ const Data: FC = () => {
     };
   }
 
-  function downloadCSV() {
+  function downloadCSV(format: "default" | "nonmem") {
+    const csv = generateCSV(dataset, groups, subjectBiomarkers, units, format);
     const blob = new Blob(["\ufeff", csv], { type: "text/csv" });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -163,6 +201,9 @@ const Data: FC = () => {
 
   const pageTitle = dataset?.name !== "New Dataset" ? dataset?.name : "";
 
+  const isBothTablesVisible =
+    dosingRows.length !== 0 && observations.length !== 0;
+
   return isLoading || isEditing || noData ? (
     <LoadDataStepper
       csv={isEditing ? csv : ""}
@@ -179,31 +220,44 @@ const Data: FC = () => {
             </Typography>
           )}
         </Grid>
-        <Grid container sx={{ justifyContent: "end" }} xs={true}>
-          <Stack spacing={1} width={"fit-content"}>
-            <Button
-              variant="outlined"
-              onClick={handleNewUpload}
-              startIcon={<FileUploadIcon />}
-            >
-              New dataset
-            </Button>
-            <Button
-              variant="outlined"
-              onClick={editDataset}
-              disabled={!csv}
-              startIcon={<EditIcon />}
-            >
-              Edit dataset
-            </Button>
-            <Button
-              variant="outlined"
-              onClick={downloadCSV}
-              startIcon={<FileDownloadIcon />}
-            >
-              Download CSV
-            </Button>
-          </Stack>
+        <Grid
+          container
+          sx={{ display: "flex", justifyContent: "flex-end" }}
+          xs={true}
+        >
+          <Button
+            variant="outlined"
+            onClick={handleNewUpload}
+            startIcon={<FileUploadIcon />}
+            sx={{ margin: ".2rem", maxHeight: "2rem" }}
+          >
+            New dataset
+          </Button>
+          <Button
+            variant="outlined"
+            onClick={editDataset}
+            disabled={!csv}
+            startIcon={<EditIcon />}
+            sx={{ margin: ".2rem", maxHeight: "2rem" }}
+          >
+            Edit dataset
+          </Button>
+          <Button
+            variant="outlined"
+            onClick={() => downloadCSV("default")}
+            startIcon={<FileDownloadIcon />}
+            sx={{ margin: ".2rem", maxHeight: "2rem" }}
+          >
+            Download CSV
+          </Button>
+          <Button
+            variant="outlined"
+            onClick={() => downloadCSV("nonmem")}
+            startIcon={<FileDownloadIcon />}
+            sx={{ margin: ".2rem", maxHeight: "2rem" }}
+          >
+            Download NONMEM
+          </Button>
         </Grid>
       </Grid>
       <Tabs value={tab} onChange={handleTabChange}>
@@ -211,24 +265,72 @@ const Data: FC = () => {
           <Tab key={group.id} label={group.name} {...a11yProps(index)} />
         ))}
       </Tabs>
-      <Box role="tabpanel" id={`group-tabpanel`}>
-        {dosingRows.length !== 0 && (
+      {isBothTablesVisible ? (
+        <Box
+          role="tabpanel"
+          id={`group-tabpanel`}
+          sx={{
+            overflow: "auto",
+            maxHeight: getTableHeight({
+              steps: BOTH_TABLES_VISIBLE_BREAKPOINTS,
+            }),
+          }}
+        >
           <Box padding={1}>
             <Typography variant="h6" component="h2" gutterBottom>
               Protocols
             </Typography>
-            <DataGrid rows={dosingRows} columns={dosingColumns} autoHeight />
+            <Box>
+              <DataGrid rows={dosingRows} columns={dosingColumns} />
+            </Box>
           </Box>
-        )}
-        {observations.length !== 0 && (
           <Box padding={1}>
             <Typography variant="h6" component="h2" gutterBottom>
               Observations
             </Typography>
-            <DataGrid rows={observations} columns={columns} autoHeight />
+            <Box>
+              <DataGrid rows={observations} columns={columns} />
+            </Box>
           </Box>
-        )}
-      </Box>
+        </Box>
+      ) : (
+        <Box role="tabpanel" id={`group-tabpanel`}>
+          {dosingRows.length !== 0 && (
+            <Box padding={1}>
+              <Typography variant="h6" component="h2" gutterBottom>
+                Protocols
+              </Typography>
+              <Box sx={{ width: "100%", marginTop: ".5rem" }}>
+                <Box
+                  sx={{
+                    height: DATA_HEIGHT,
+                    overflow: "auto",
+                  }}
+                >
+                  <DataGrid rows={dosingRows} columns={dosingColumns} />
+                </Box>
+              </Box>
+            </Box>
+          )}
+          {observations.length !== 0 && (
+            <Box padding={1}>
+              <Typography variant="h6" component="h2" gutterBottom>
+                Observations
+              </Typography>
+              <Box sx={{ width: "100%", marginTop: ".5rem" }}>
+                <Box
+                  sx={{
+                    height: DATA_HEIGHT,
+                    overflow: "auto",
+                  }}
+                >
+                  <DataGrid rows={observations} columns={columns} />
+                </Box>
+              </Box>
+            </Box>
+          )}
+        </Box>
+      )}
     </>
   );
 };

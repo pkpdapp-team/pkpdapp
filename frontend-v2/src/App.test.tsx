@@ -11,5 +11,6 @@ test("renders learn react link", () => {
     </Provider>,
   );
 
+  // @ts-expect-error toBeInTheDocument doesn't exist in recent versions of Jest.
   expect(getByText(/learn/i)).toBeInTheDocument();
 });

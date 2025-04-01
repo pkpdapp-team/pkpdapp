@@ -111,6 +111,24 @@ class SimulationPlot(models.Model):
         help_text="scale for rhs y axis",
     )
 
+    x_label = models.CharField(
+        max_length=100,
+        blank=True,
+        help_text="label for x axis"
+    )
+
+    y_label = models.CharField(
+        max_length=100,
+        blank=True,
+        help_text="label for y axis"
+    )
+
+    y2_label = models.CharField(
+        max_length=100,
+        blank=True,
+        help_text="label for rhs y axis"
+    )
+
     x_unit = models.ForeignKey(
         "Unit",
         on_delete=models.PROTECT,

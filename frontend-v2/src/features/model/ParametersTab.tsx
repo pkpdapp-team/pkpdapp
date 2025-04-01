@@ -18,6 +18,7 @@ import {
   Stack,
   Button,
   Tooltip,
+  Box,
 } from "@mui/material";
 import ParameterRow from "./ParameterRow";
 import HelpButton from "../../components/HelpButton";
@@ -27,6 +28,11 @@ import { defaultHeaderSx } from "../../shared/tableHeadersSx";
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
 import { selectIsProjectShared } from "../login/loginSlice";
+import {
+  getTableHeight,
+  SINGLE_TABLE_BREAKPOINTS,
+} from "../../shared/calculateTableHeights";
+import { TableHeader } from "../../components/TableHeader";
 
 interface Props {
   model: CombinedModelRead;
@@ -37,14 +43,7 @@ interface Props {
   units: UnitRead[];
 }
 
-const ParametersTab: FC<Props> = ({
-  model,
-  project,
-  control,
-  variables,
-  compound,
-  units,
-}) => {
+const ParametersTab: FC<Props> = ({ model, project, variables, units }) => {
   const [setParamsToDefault] =
     useCombinedModelSetParamsToDefaultsUpdateMutation();
 
@@ -61,32 +60,43 @@ const ParametersTab: FC<Props> = ({
 
   return (
     <Stack spacing={2}>
-      {noReset ? (
-        <Tooltip title='No default parameters as "Other" has been selected as species (in "Projects")'>
-          <span>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={myResetToSpeciesDefaults}
-              disabled={noReset || isSharedWithMe}
-              sx={{ width: 270 }}
-            >
-              Reset to Species Defaults
-            </Button>
-          </span>
-        </Tooltip>
-      ) : (
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={myResetToSpeciesDefaults}
-          disabled={noReset || isSharedWithMe}
-          sx={{ width: 270 }}
-        >
-          Reset to Species Defaults
-        </Button>
-      )}
-      <TableContainer sx={{ width: "90%" }}>
+      <Box sx={{ display: "flex" }}>
+        <TableHeader variant="h5" label="Set Parameters" />
+        {noReset ? (
+          <Tooltip title='No default parameters as "Other" has been selected as species (in "Projects")'>
+            <span>
+              <Button
+                size="small"
+                variant="contained"
+                color="primary"
+                onClick={myResetToSpeciesDefaults}
+                disabled={noReset || isSharedWithMe}
+                sx={{ marginLeft: "1rem" }}
+              >
+                Reset to Species Defaults
+              </Button>
+            </span>
+          </Tooltip>
+        ) : (
+          <Button
+            size="small"
+            variant="contained"
+            color="primary"
+            onClick={myResetToSpeciesDefaults}
+            disabled={noReset || isSharedWithMe}
+            sx={{ marginLeft: "1rem" }}
+          >
+            Reset to Species Defaults
+          </Button>
+        )}
+      </Box>
+
+      <TableContainer
+        sx={{
+          width: "90%",
+          maxHeight: getTableHeight({ steps: SINGLE_TABLE_BREAKPOINTS }),
+        }}
+      >
         <Table>
           <TableHead>
             <TableRow>
@@ -128,7 +138,6 @@ const ParametersTab: FC<Props> = ({
               <ParameterRow
                 key={variable.id}
                 variable={variable}
-                model={model}
                 project={project}
                 units={units}
               />

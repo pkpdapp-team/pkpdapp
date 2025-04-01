@@ -9,6 +9,7 @@ import {
 } from "../../app/backendApi";
 import { Control } from "react-hook-form";
 import {
+  Box,
   Table,
   TableBody,
   TableCell,
@@ -21,6 +22,36 @@ import VariableRow from "./VariableRow";
 import HelpButton from "../../components/HelpButton";
 import { FormData } from "./Model";
 import { defaultHeaderSx } from "../../shared/tableHeadersSx";
+import { TableHeader } from "../../components/TableHeader";
+import AdditionalParametersRow from "./AdditionalParametersRow";
+import { getTableHeight } from "../../shared/calculateTableHeights";
+
+export const TABLE_BREAKPOINTS = [
+  {
+    minHeight: 1100,
+    tableHeight: "38uvh",
+  },
+  {
+    minHeight: 1000,
+    tableHeight: "36vh",
+  },
+  {
+    minHeight: 900,
+    tableHeight: "32vh",
+  },
+  {
+    minHeight: 800,
+    tableHeight: "30vh",
+  },
+  {
+    minHeight: 700,
+    tableHeight: "27vh",
+  },
+  {
+    minHeight: 600,
+    tableHeight: "23vh",
+  },
+];
 
 interface Props {
   model: CombinedModelRead;
@@ -194,6 +225,7 @@ const MapVariablesTab: FC<Props> = ({
     </>
   );
 
+  const aucHelp = <p>Calculate secondary parameters for this variable (see "Secondary Parameters" tab)</p>;
   const sROHelp = (
     <p>
       The receptor occupancy for SM and LM (calc_RO) is calculated from the
@@ -257,34 +289,89 @@ const MapVariablesTab: FC<Props> = ({
   };
 
   return (
-    <TableContainer sx={{ width: "90%" }}>
-      <Table>
-        <TableHead>
-          <TableRow>
+    <>
+      <TableHeader variant="h5" label="Select Dosing Route(s)" />
+      <TableContainer
+        sx={{
+          width: "90%",
+          marginTop: 0,
+          maxHeight: getTableHeight({ steps: TABLE_BREAKPOINTS }),
+        }}
+      >
+        <Table
+          stickyHeader
+          size="small"
+          sx={{ "& .MuiTableCell-head": { lineHeight: 1 } }}
+        >
+          <TableHead>
+            <TableRow>
+              <TableCell size="small">
+                <div style={{ ...defaultHeaderSx }}>Name</div>
+              </TableCell>
+              <TableCell size="small">
+                <div style={{ ...defaultHeaderSx }}>
+                  Unit
+                  <HelpButton title={"Unit"}>{unitsHelp}</HelpButton>
+                </div>
+              </TableCell>
+              <TableCell size="small">
+                <div style={{ ...defaultHeaderSx }}>Type</div>
+              </TableCell>
+              <Tooltip placement="top-start" title="Select dosing compartment">
+                <TableCell size="small">
+                  <div ref={iconRef} style={{ ...defaultHeaderSx }}>
+                    <p>
+                      Dosing Compartment <span style={{ color: "red" }}>*</span>
+                    </p>
+                    <HelpButton title={"Dosing Compartment"}>
+                      {dosingCompartmentHelp}
+                    </HelpButton>
+                  </div>
+                </TableCell>
+              </Tooltip>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {variables.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={5}>No variables found</TableCell>
+              </TableRow>
+            )}
+            {timeVaryingVariables.sort(sortVariables).map((variable) => (
+              <VariableRow
+                key={variable.id}
+                variable={variable}
+                model={model}
+                control={control}
+                project={project}
+                compound={compound}
+                effectVariable={effectVariable}
+                units={units}
+                timeVariable={timeVariable}
+                updateDosings={updateDosings}
+                isAnyDosingSelected={isAnyDosingSelected}
+                updateLinksToPd={updateLinksToPd}
+                updateLagTimes={updateLagTimes}
+              />
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+      <Box sx={{ marginTop: ".5rem" }}>
+        <TableHeader variant="h5" label="Map RO, PD and secondary parameters" />
+      </Box>
+      <TableContainer
+        sx={{
+          width: "90%",
+          marginTop: "1rem",
+          maxHeight: getTableHeight({ steps: TABLE_BREAKPOINTS }),
+        }}
+      >
+        <Table stickyHeader sx={{ "& .MuiTableCell-head": { lineHeight: 1 } }}>
+          <TableHead>
             <TableCell>
               <div style={{ ...defaultHeaderSx }}>Name</div>
             </TableCell>
-            <TableCell>
-              <div style={{ ...defaultHeaderSx }}>
-                Unit
-                <HelpButton title={"Unit"}>{unitsHelp}</HelpButton>
-              </div>
-            </TableCell>
-            <TableCell>
-              <div style={{ ...defaultHeaderSx }}>Type</div>
-            </TableCell>
-            <Tooltip placement="top-start" title="Select dosing compartment">
-              <TableCell>
-                <div ref={iconRef} style={{ ...defaultHeaderSx }}>
-                  <p>
-                    Dosing Compartment <span style={{ color: "red" }}>*</span>
-                  </p>
-                  <HelpButton title={"Dosing Compartment"}>
-                    {dosingCompartmentHelp}
-                  </HelpButton>
-                </div>
-              </TableCell>
-            </Tooltip>
             {haveTLag && (
               <TableCell>
                 <div style={{ ...defaultHeaderSx }}>
@@ -310,6 +397,20 @@ const MapVariablesTab: FC<Props> = ({
             )}
             <Tooltip
               placement="top-start"
+              title="Calculate secondary parameters."
+            >
+              <TableCell>
+                <div style={{ ...defaultHeaderSx }}>
+                  {" "}
+                  Secondary parameters
+                  <HelpButton title={"Secondary Parameters"}>
+                    {aucHelp}
+                  </HelpButton>
+                </div>
+              </TableCell>
+            </Tooltip>
+            <Tooltip
+              placement="top-start"
               title="Select drug concentration that drives RO"
             >
               <TableCell>
@@ -322,64 +423,62 @@ const MapVariablesTab: FC<Props> = ({
                 </div>
               </TableCell>
             </Tooltip>
-            <Tooltip
-              placement="top-start"
-              title="Unbound concentration is calculated"
-            >
-              <TableCell>
-                <div style={{ ...defaultHeaderSx }}>
-                  {" "}
-                  Unbound Concentration
-                  <HelpButton title={"Unbound Concentration"}>
-                    {unboundHelp}
-                  </HelpButton>
-                </div>
-              </TableCell>
-            </Tooltip>
-            <Tooltip
-              placement="top-start"
-              title="Blood concentration is calculated"
-            >
-              <TableCell>
-                <div style={{ ...defaultHeaderSx }}>
-                  {" "}
-                  Blood Concentration
-                  <HelpButton title={"Blood concentration"}>
-                    {bloodHelp}
-                  </HelpButton>
-                </div>
-              </TableCell>
-            </Tooltip>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {variables.length === 0 && (
-            <TableRow>
-              <TableCell colSpan={5}>No variables found</TableCell>
-            </TableRow>
-          )}
-          {timeVaryingVariables.sort(sortVariables).map((variable) => (
-            <VariableRow
-              key={variable.id}
-              variable={variable}
-              model={model}
-              control={control}
-              project={project}
-              compound={compound}
-              effectVariable={effectVariable}
-              units={units}
-              timeVariable={timeVariable}
-              updateDosings={updateDosings}
-              isAnyDosingSelected={isAnyDosingSelected}
-              updateLinksToPd={updateLinksToPd}
-              isAnyLinkToPdSelected={isAnyLinkToPdSelected}
-              updateLagTimes={updateLagTimes}
-              isAnyLagTimeSelected={isAnyLagTimeSelected}
-            />
-          ))}
-        </TableBody>
-      </Table>
-    </TableContainer>
+            {compound.compound_type === "SM" && (
+              <>
+                <Tooltip
+                  placement="top-start"
+                  title="Unbound concentration is calculated"
+                >
+                  <TableCell>
+                    <div style={{ ...defaultHeaderSx }}>
+                      {" "}
+                      Unbound Concentration
+                      <HelpButton title={"Unbound Concentration"}>
+                        {unboundHelp}
+                      </HelpButton>
+                    </div>
+                  </TableCell>
+                </Tooltip>
+                <Tooltip
+                  placement="top-start"
+                  title="Blood concentration is calculated"
+                >
+                  <TableCell>
+                    <div style={{ ...defaultHeaderSx }}>
+                      {" "}
+                      Blood Concentration
+                      <HelpButton title={"Blood concentration"}>
+                        {bloodHelp}
+                      </HelpButton>
+                    </div>
+                  </TableCell>
+                </Tooltip>
+              </>
+            )}
+          </TableHead>
+          <TableBody>
+            {timeVaryingVariables.sort(sortVariables).map((variable) => (
+              <AdditionalParametersRow
+                key={variable.id}
+                variable={variable}
+                model={model}
+                control={control}
+                project={project}
+                compound={compound}
+                effectVariable={effectVariable}
+                units={units}
+                timeVariable={timeVariable}
+                updateDosings={updateDosings}
+                updateLinksToPd={updateLinksToPd}
+                isAnyLinkToPdSelected={isAnyLinkToPdSelected}
+                updateLagTimes={updateLagTimes}
+                isAnyLagTimeSelected={isAnyLagTimeSelected}
+              />
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </>
   );
 };
 

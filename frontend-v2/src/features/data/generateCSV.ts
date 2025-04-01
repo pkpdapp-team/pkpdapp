@@ -7,14 +7,14 @@ import {
   UnitRead,
 } from "../../app/backendApi";
 
-type Row = { [key: string]: any };
+type Row = { [key: string]: string | number | null | undefined };
 type Data = Row[];
 type SubjectBiomarker = {
-  subjectId: any;
+  subjectId: number;
   subjectDatasetId: number | undefined;
-  time: any;
+  time: number;
   timeUnit: UnitRead | undefined;
-  value: any;
+  value: number;
   unit: UnitRead | undefined;
   qname: string | undefined;
   label: string;
@@ -87,6 +87,7 @@ export default function generateCSV(
   groups: SubjectGroupListApiResponse,
   subjectBiomarkers: SubjectBiomarker[][] | undefined,
   units: UnitListApiResponse | undefined,
+  format: "default" | "nonmem",
 ) {
   const rows: Data = [];
   groups.forEach((group, groupIndex) => {
@@ -94,7 +95,7 @@ export default function generateCSV(
 
     const dosingRows: Row[] = group.protocols.flatMap(
       (protocol, protocolIndex) => {
-        const adminId = groupIndex + 1 + protocolIndex;
+        const adminId = (groupIndex + 1) * 10 + protocolIndex;
         return parseDosingRow(protocol, units, groupId, adminId);
       },
     );
@@ -128,5 +129,63 @@ export default function generateCSV(
       });
     });
   });
+  if (format === "nonmem") {
+    nonMemModifier(rows);
+  }
   return Papa.unparse(rows);
+}
+const NONMEM_HEADER_MAPPING: { [key: string]: string } = {
+  Time: "TIME",
+  Observation: "DV",
+  "Administration ID": "CMT",
+  Amount: "AMT",
+  "Interdose Interval": "II",
+  "Additional Doses": "ADDL",
+};
+
+function nonMemModifier(rows: Data) {
+  rows.forEach((row) => {
+    // add MDV and EVID columns
+    if (row["Observation"] === ".") {
+      row["MDV"] = 0;
+      row["EVID"] = 0;
+    } else {
+      row["MDV"] = 1;
+      row["EVID"] = 1;
+    }
+
+    // RATE column
+    if (
+      "Infusion Duration" in row &&
+      "Amount" in row &&
+      row["Infusion Duration"] !== undefined &&
+      row["Amount"] !== undefined
+    ) {
+      const duration = row["Infusion Duration"] as number;
+      const amount = row["Amount"] as number;
+      const rate = amount / duration;
+      row["RATE"] = rate;
+      delete row["Infusion Duration"];
+    } else {
+      row["RATE"] = ".";
+    }
+
+    // all empty values should be replaced with "."
+    HEADERS.forEach((key) => {
+      if (!(key in row)) {
+        row[key] = ".";
+      }
+      if (row[key] === "" || row[key] === undefined) {
+        row[key] = ".";
+      }
+    });
+
+    // rename columns
+    Object.keys(NONMEM_HEADER_MAPPING).forEach((key) => {
+      const value = row[key];
+      const new_key = NONMEM_HEADER_MAPPING[key];
+      row[new_key] = value;
+      delete row[key];
+    });
+  });
 }

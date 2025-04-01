@@ -55,9 +55,8 @@ const Help: FC = () => {
   generic_questions = generic_questions.map((question, index) => {
     return {
       question: `Question ${index + 1}?`,
-      answer: `Answer ${
-        index + 1
-      }: Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.`,
+      answer: `Answer ${index + 1
+        }: Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.`,
     };
   });
 
@@ -67,19 +66,16 @@ const Help: FC = () => {
     generic_questions.slice(0, 0),
     generic_questions.slice(0, 0),
     generic_questions.slice(0, 0),
-    generic_questions.slice(0, 0),
   ];
   const tutorials = [
     tutorialVideos.filter((video) => video.type.includes("Tutorial")),
-    tutorialVideos.filter((video) => video.type === "Project"),
-    tutorialVideos.filter((video) => video.type === "Drug"),
+    tutorialVideos.filter((video) => video.type === "Drug and Target"),
     tutorialVideos.filter((video) => video.type === "Model"),
     tutorialVideos.filter((video) => video.type === "Trial Design"),
     tutorialVideos.filter((video) => video.type === "Simulation"),
   ];
   const tabNames = [
     SubPageName.TUTORIALS,
-    SubPageName.PROJECTS,
     SubPageName.DRUG,
     SubPageName.MODEL,
     SubPageName.TRAILDESIGN,

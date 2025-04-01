@@ -1,6 +1,5 @@
-import { ChangeEvent, FC, useState } from "react";
+import { ChangeEvent, FC, SyntheticEvent, useState } from "react";
 import {
-  Alert,
   Box,
   Radio,
   Stack,
@@ -12,6 +11,7 @@ import {
   Tabs,
   Tab,
   Typography,
+  TableContainer,
 } from "@mui/material";
 import { StepperState } from "./LoadDataStepper";
 import ProtocolDataGrid from "./ProtocolDataGrid";
@@ -21,6 +21,13 @@ import {
   groupsFromCatCovariate,
   validateGroupMembers,
 } from "./dataValidation";
+import { TableHeader } from "../../components/TableHeader";
+import {
+  calculateTableHeights,
+  DOUBLE_TABLE_FIRST_BREAKPOINTS,
+  DOUBLE_TABLE_SECOND_BREAKPOINTS,
+  getTableHeight,
+} from "../../shared/calculateTableHeights";
 
 function validateGroupProtocols(groups: Group[], protocols: IProtocol[]) {
   const groupedProtocols: string[][] = [];
@@ -36,22 +43,6 @@ function validateGroupProtocols(groups: Group[], protocols: IProtocol[]) {
   });
   return groupedProtocols.every((protocols) => protocols.length <= 1);
 }
-
-/**
- * Generate a unique administration ID for each group.
- * @param data
- * @returns data with administration ID column.
- */
-function generateAdministrationIds(data: { [key: string]: string }[]) {
-  const newData = data.map((row) => ({ ...row }));
-  const uniqueGroupIds = [...new Set(data.map((row) => row["Group ID"]))];
-  newData.forEach((row) => {
-    const administrationId = uniqueGroupIds.indexOf(row["Group ID"]) + 1;
-    row["Administration ID"] = `${administrationId}`;
-  });
-  return newData;
-}
-
 /**
  * Assign a group ID to each row based on a categorical covariate column.
  * @param data
@@ -69,11 +60,18 @@ function groupDataRows(data: { [key: string]: string }[], columnName: string) {
 interface IStratification {
   state: StepperState;
   firstTime: boolean;
+  notificationsInfo: {
+    isOpen: boolean;
+    count: number;
+  };
 }
 
 const CAT_COVARIATE_COLUMNS = ["Cat Covariate", "Administration Name", "ID"];
 
-const Stratification: FC<IStratification> = ({ state }: IStratification) => {
+const Stratification: FC<IStratification> = ({
+  state,
+  notificationsInfo,
+}: IStratification) => {
   const subjectDoses = getSubjectDoses(state);
   const protocols = getProtocols(subjectDoses);
 
@@ -84,9 +82,6 @@ const Stratification: FC<IStratification> = ({ state }: IStratification) => {
     const values = state.data.map((row) => row[field]);
     return [...new Set(values)];
   });
-  const administrationIdField = state.fields.find(
-    (field) => state.normalisedFields.get(field) === "Administration ID",
-  );
 
   const [firstRow] = state.data;
   const [tab, setTab] = useState(0);
@@ -124,26 +119,23 @@ const Stratification: FC<IStratification> = ({ state }: IStratification) => {
   }
 
   if (!firstRow["Group ID"]) {
-    let newData = groupDataRows(state.data, groupColumn);
-    if (!administrationIdField) {
-      newData = generateAdministrationIds(newData);
-    }
+    const newData = groupDataRows(state.data, groupColumn);
     state.setData(newData);
     state.setNormalisedFields(
       new Map([...state.normalisedFields.entries(), ["Group ID", "Group ID"]]),
     );
   }
 
-  const handleTabChange = (event: ChangeEvent<{}>, newValue: number) => {
+  const handleTabChange = (
+    event: SyntheticEvent<Element, Event>,
+    newValue: number,
+  ) => {
     setTab(newValue);
   };
 
   const handleGroupChange = (event: ChangeEvent<HTMLInputElement>) => {
     const newGroup = event.target.value;
-    let newData = groupDataRows(state.data, newGroup);
-    if (!administrationIdField) {
-      newData = generateAdministrationIds(newData);
-    }
+    const newData = groupDataRows(state.data, newGroup);
     setGroupColumn(newGroup);
     state.setData(newData);
   };
@@ -156,52 +148,81 @@ const Stratification: FC<IStratification> = ({ state }: IStratification) => {
   }
 
   return (
-    <>
-      <Alert severity="info">
-        Stratify your observations into groups based on the covariates you have
-        provided.
-      </Alert>
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
+      <TableHeader
+        label="Stratification"
+        tooltip="Stratify your observations into groups based on the covariates you have
+        provided."
+      />
       <Stack marginTop={2} spacing={2}>
         {!!catCovariates.length && (
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>
-                  <Typography>Covariate</Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography>Values</Typography>
-                </TableCell>
-                <TableCell id="heading-primary">
-                  <Typography>Use as Group ID?</Typography>
-                </TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {catCovariates.map((field, index) => {
-                const primaryLabel = `heading-primary field-${field}`;
-                const isPrimary = groupColumn === field;
-                return (
-                  <TableRow key={field}>
-                    <TableCell id={`field-${field}`}>{field}</TableCell>
-                    <TableCell>
-                      {uniqueCovariateValues[index].join(",")}
-                    </TableCell>
-                    <TableCell>
-                      <Radio
-                        name="primary"
-                        value={field}
-                        checked={isPrimary}
-                        onChange={handleGroupChange}
-                        inputProps={{ "aria-labelledby": primaryLabel }}
-                      />
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+          <TableContainer
+            sx={{
+              maxHeight: calculateTableHeights({
+                baseHeight: getTableHeight({
+                  steps: DOUBLE_TABLE_FIRST_BREAKPOINTS,
+                }),
+                isOpen: notificationsInfo.isOpen,
+                count: notificationsInfo.count,
+                splitMode: "first",
+              }),
+              transition: "all .35s ease-in",
+            }}
+          >
+            <Table stickyHeader size="small">
+              <TableHead>
+                <TableRow>
+                  <TableCell id="heading-primary" width="120px">
+                    <Typography>Group ID</Typography>
+                  </TableCell>
+                  <TableCell width="250px">
+                    <Typography>Covariate</Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography>Values</Typography>
+                  </TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {catCovariates.map((field, index) => {
+                  const primaryLabel = `heading-primary field-${field}`;
+                  const isPrimary = groupColumn === field;
+                  return (
+                    <TableRow key={field}>
+                      <TableCell sx={{ padding: "0 16px" }}>
+                        <Radio
+                          name="primary"
+                          value={field}
+                          checked={isPrimary}
+                          onChange={handleGroupChange}
+                          inputProps={{ "aria-labelledby": primaryLabel }}
+                          sx={{ padding: 0, transform: "scale(0.8)" }}
+                        />
+                      </TableCell>
+                      <TableCell id={`field-${field}`}>{field}</TableCell>
+                      <TableCell>
+                        {uniqueCovariateValues[index]?.join(",")}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </TableContainer>
         )}
+      </Stack>
+      <Stack sx={{ paddingTop: ".5rem" }}>
+        <TableHeader
+          label="Groups"
+          tooltip="Please review the group assignment based on your stratification above.
+          If you want to move individuals between groups or assign them to a new
+          group, select them first and then follow the instructions."
+        />
         <Tabs value={tab} onChange={handleTabChange}>
           {groups.map((group, index) => (
             <Tab key={group.name} label={group.name} {...a11yProps(index)} />
@@ -211,7 +232,19 @@ const Stratification: FC<IStratification> = ({ state }: IStratification) => {
           {groups[tab] ? (
             <Box
               component="div"
-              sx={{ maxHeight: "30vh", overflow: "auto", overflowX: "auto" }}
+              sx={{
+                height: calculateTableHeights({
+                  baseHeight: getTableHeight({
+                    steps: DOUBLE_TABLE_SECOND_BREAKPOINTS,
+                  }),
+                  isOpen: notificationsInfo.isOpen,
+                  count: notificationsInfo.count,
+                  splitMode: "second",
+                }),
+                overflow: "auto",
+                overflowX: "auto",
+                transition: "all .35s ease-in",
+              }}
             >
               <ProtocolDataGrid group={groups[tab]} state={state} />
             </Box>
@@ -220,7 +253,7 @@ const Stratification: FC<IStratification> = ({ state }: IStratification) => {
           )}
         </Box>
       </Stack>
-    </>
+    </Box>
   );
 };
 

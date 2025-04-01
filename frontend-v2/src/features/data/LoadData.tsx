@@ -1,11 +1,16 @@
-import { Box, Stack, Typography } from "@mui/material";
+import { Box, Button, Stack, Typography } from "@mui/material";
 import Papa from "papaparse";
-import { FC, useCallback, useState } from "react";
+import { FC, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 import MapHeaders from "./MapHeaders";
 import { normaliseHeader, validateState } from "./dataValidation";
 import { StepperState } from "./LoadDataStepper";
-import SetUnits from "./SetUnits";
+import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
+import { TableHeader } from "../../components/TableHeader";
+import { useSelector } from "react-redux";
+import { RootState } from "../../app/store";
+import { selectIsProjectShared } from "../login/loginSlice";
+import { useProjectRetrieveQuery } from "../../app/backendApi";
 
 export type Row = { [key: string]: string };
 export type Data = Row[];
@@ -22,7 +27,6 @@ const style = {
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    cursor: "pointer",
     ":hover": {
       backgroundColor: "#f0f0f0",
     },
@@ -37,6 +41,10 @@ const style = {
 interface ILoadDataProps {
   state: StepperState;
   firstTime: boolean;
+  notificationsInfo: {
+    isOpen: boolean;
+    count: number;
+  };
 }
 
 function updateDataAndResetFields(state: StepperState, data: Data) {
@@ -98,11 +106,17 @@ function setMinimumInfusionTime(state: StepperState) {
   }
 }
 
-const LoadData: FC<ILoadDataProps> = ({ state, firstTime }) => {
-  const [showData, setShowData] = useState<boolean>(
-    state.data.length > 0 && state.fields.length > 0,
-  );
+const LoadData: FC<ILoadDataProps> = ({ state, notificationsInfo }) => {
+  const showData = state.data.length > 0 && state.fields.length > 0;
   const normalisedHeaders = state.normalisedHeaders;
+  const projectId = useSelector(
+    (state: RootState) => state.main.selectedProject,
+  );
+  const { data: project, isLoading: isProjectLoading } =
+    useProjectRetrieveQuery({ id: projectId || 0 }, { skip: !projectId });
+  const isSharedWithMe = useSelector((state: RootState) =>
+    selectIsProjectShared(state, project),
+  );
   if (!normalisedHeaders.includes("ID")) {
     createDefaultSubjects(state);
   }
@@ -156,16 +170,16 @@ const LoadData: FC<ILoadDataProps> = ({ state, firstTime }) => {
           state.setGroupColumn(groupColumn);
           state.setErrors(errors);
           state.setWarnings(fieldValidation.warnings);
-          if (csvData.data.length > 0 && csvData.meta.fields) {
-            setShowData(true);
-          }
         };
         reader.readAsText(file);
       });
     },
     [state],
   );
-  const { getRootProps, getInputProps } = useDropzone({ onDrop });
+  const { getRootProps, getInputProps, open } = useDropzone({
+    onDrop,
+    noClick: true,
+  });
 
   const setNormalisedFields = (normalisedFields: Map<Field, string>) => {
     state.setNormalisedFields(normalisedFields);
@@ -179,35 +193,63 @@ const LoadData: FC<ILoadDataProps> = ({ state, firstTime }) => {
   };
 
   return (
-    <Stack spacing={2}>
-      <Box
-        sx={{
-          width: "100%",
-          maxHeight: "24vh",
-          overflow: "auto",
-          whiteSpace: "nowrap",
-        }}
-      >
-        {showData && <SetUnits state={state} firstTime={firstTime} />}
-      </Box>
-      <Box style={style.dropAreaContainer}>
-        <Box {...getRootProps({ style: style.dropArea })}>
-          <input {...getInputProps()} />
-          <Typography>
-            Drag &amp; drop some files here, or click to select files
-          </Typography>
+    <Stack
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        flexGrow: "1",
+        flexShrink: "0",
+      }}
+      spacing={2}
+    >
+      {!showData && (
+        <Box style={style.dropAreaContainer}>
+          <Box {...getRootProps({ style: style.dropArea })}>
+            <input {...getInputProps()} />
+            <Typography
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+              }}
+            >
+              Drag &amp; drop some files here, or click to select files
+              <Button
+                variant="outlined"
+                startIcon={<FileDownloadOutlinedIcon />}
+                style={{ marginTop: ".5rem" }}
+                onClick={open}
+                onKeyDown={open}
+                disabled={isSharedWithMe || isProjectLoading}
+              >
+                Upload Dataset
+              </Button>
+            </Typography>
+          </Box>
         </Box>
-      </Box>
-      <Box
-        component="div"
-        sx={{ maxHeight: "40vh", overflow: "auto", overflowX: "auto" }}
-      >
+      )}
+      <Box component="div">
         {showData && (
-          <MapHeaders
-            data={state.data}
-            setNormalisedFields={setNormalisedFields}
-            normalisedFields={state.normalisedFields}
-          />
+          <div
+            style={{
+              maxHeight: "inherit",
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            <TableHeader
+              label="Imported Data Table"
+              tooltip="The column types, which are automatically suggested based on the
+              headers in the data, can be customized in the table by selecting
+              the desired type from the dropdown lists."
+            />
+            <MapHeaders
+              data={state.data}
+              setNormalisedFields={setNormalisedFields}
+              normalisedFields={state.normalisedFields}
+              notificationsInfo={notificationsInfo}
+            />
+          </div>
         )}
       </Box>
     </Stack>

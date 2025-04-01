@@ -21,6 +21,7 @@ from pkpdapp.models import (
     InferenceChain,
     LogLikelihood,
     Simulation,
+    ResultsTable,
 )
 
 queryset_model_not_recognised_text = "queryset model {} not recognised"
@@ -174,6 +175,8 @@ class ProjectFilter(filters.BaseFilterBackend):
                     queryset = Subject.objects.filter(dataset__project=project)
                 elif queryset.model == SubjectGroup:
                     queryset = project.groups.all()
+                elif queryset.model == ResultsTable:
+                    queryset = project.results.all()
                 elif queryset.model == Variable:
                     queryset = queryset.filter(
                         Q(pd_model__project=project)

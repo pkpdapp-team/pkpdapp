@@ -10,7 +10,7 @@ type Props<T extends FieldValues> = {
   label: string;
   name: FieldPath<T>;
   control: Control<T>;
-  rules?: Object;
+  rules?: Record<string, unknown>;
   checkboxFieldProps?: CheckboxProps;
 };
 
@@ -26,10 +26,7 @@ function Checkbox<T extends FieldValues>({
       name={name}
       control={control}
       rules={rules}
-      render={({
-        field: { onChange, onBlur, value },
-        fieldState: { error },
-      }) => {
+      render={({ field: { onChange, onBlur, value } }) => {
         return (
           <FormControlLabel
             control={

@@ -1,6 +1,6 @@
 import { ReactElement } from "react";
 import { Control, FieldPath, FieldValues } from "react-hook-form";
-import { SelectProps } from "@mui/material";
+import { SelectProps, SxProps } from "@mui/material";
 import { Compound, UnitRead } from "../app/backendApi";
 import SelectField from "./SelectField";
 
@@ -12,7 +12,9 @@ type Props<T extends FieldValues> = {
   rules?: Record<string, unknown>;
   selectProps?: SelectProps;
   compound?: Compound;
+  size?: 'small' | 'medium'
   isPreclinicalPerKg?: boolean;
+  sx?: SxProps;
 };
 
 function UnitField<T extends FieldValues>({
@@ -23,6 +25,8 @@ function UnitField<T extends FieldValues>({
   rules,
   selectProps,
   isPreclinicalPerKg,
+  size = 'medium',
+  sx,
 }: Props<T>): ReactElement {
   if (!isPreclinicalPerKg) {
     isPreclinicalPerKg = false;
@@ -45,6 +49,8 @@ function UnitField<T extends FieldValues>({
 
   return (
     <SelectField
+      size={size}
+      sx={sx}
       label={label}
       name={name}
       options={options}

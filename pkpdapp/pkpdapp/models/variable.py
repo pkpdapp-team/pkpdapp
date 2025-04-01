@@ -34,6 +34,20 @@ class Variable(StoredModel):
     default_value = models.FloatField(
         default=1, help_text="default value for this variable"
     )
+    lower_threshold = models.FloatField(
+        blank=True, null=True, help_text="lower threshold for this variable"
+    )
+    upper_threshold = models.FloatField(
+        blank=True, null=True, help_text="upper threshold for this variable"
+    )
+    threshold_unit = models.ForeignKey(
+        Unit,
+        on_delete=models.PROTECT,
+        blank=True,
+        null=True,
+        related_name="thresholds",
+        help_text="unit for the threshold values",
+    )
 
     is_log = models.BooleanField(
         default=False,
@@ -150,9 +164,7 @@ class Variable(StoredModel):
         constraints = [
             models.CheckConstraint(
                 check=((Q(is_log=True) & Q(lower_bound__gt=0)) | Q(is_log=False)),
-                name=(
-                    "%(class)s: log scale must have a lower bound greater than zero"
-                ),
+                name=("%(class)s: log scale must have a lower bound greater than zero"),
             ),
             models.CheckConstraint(
                 check=(
@@ -224,7 +236,7 @@ class Variable(StoredModel):
             else:
                 value = myokit_variable.value()
             qname = myokit_variable.qname()
-            return Variable.objects.create(
+            return Variable(
                 name=myokit_variable.name(),
                 qname=qname,
                 default_value=value,
@@ -293,7 +305,7 @@ class Variable(StoredModel):
             else:
                 value = myokit_variable.value()
             qname = myokit_variable.qname()
-            return Variable.objects.create(
+            return Variable(
                 name=myokit_variable.name(),
                 qname=qname,
                 description=myokit_variable.meta.get("desc", ""),
@@ -356,7 +368,7 @@ class Variable(StoredModel):
             else:
                 value = myokit_variable.value()
             qname = myokit_variable.qname()
-            return Variable.objects.create(
+            return Variable(
                 name=myokit_variable.name(),
                 qname=qname,
                 description=myokit_variable.meta.get("desc", ""),
@@ -374,6 +386,11 @@ class Variable(StoredModel):
 
     @staticmethod
     def get_variable(model, myokit_variable):
+        """
+        Gets a variable of the model from a myokit variable
+        returns a new variable if it does not exist.
+        Note that this new variable is not saved to the database!
+        """
         if isinstance(model, PharmacokineticModel):
             return Variable.get_variable_pk(model, myokit_variable)
         elif isinstance(model, CombinedModel):
@@ -411,4 +428,6 @@ class Variable(StoredModel):
         self.unit_symbol = variable.unit_symbol
         self.constant = variable.constant
         self.protocol = new_protocol
+        self.lower_threshold = variable.lower_threshold
+        self.upper_threshold = variable.upper_threshold
         self.save()

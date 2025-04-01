@@ -2,7 +2,6 @@ import { toast, ToastOptions } from "react-toastify";
 import { Notification } from "./../components/Notification/Notification";
 import { NotificationTypes } from "../components/Notification/notificationTypes";
 
-// @ts-nocheck
 type ToastProps = {
   type: NotificationTypes;
   text: string;
@@ -12,9 +11,9 @@ type ToastProps = {
 
 const defaultOptions: ToastOptions = {
   autoClose: Infinity,
-  position: toast.POSITION.TOP_RIGHT,
+  position: "top-right",
   pauseOnFocusLoss: false,
-  type: toast.TYPE.DEFAULT,
+  type: "default",
   pauseOnHover: false,
   closeButton: false,
   hideProgressBar: true,

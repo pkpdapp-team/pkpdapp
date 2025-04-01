@@ -37,12 +37,21 @@ import BiotechIcon from "@mui/icons-material/Biotech";
 import FunctionsIcon from "@mui/icons-material/Functions";
 import VaccinesIcon from "@mui/icons-material/Vaccines";
 import SsidChartIcon from "@mui/icons-material/SsidChart";
+import QueryStatsIcon from "@mui/icons-material/QueryStats";
 import ContactSupportIcon from "@mui/icons-material/ContactSupport";
 import TableViewIcon from "@mui/icons-material/TableView";
 import "@fontsource/comfortaa"; // Defaults to weight 400
 import useSubjectGroups from "../../hooks/useSubjectGroups";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import { useCollapsibleSidebar } from "../../shared/contexts/CollapsibleSidebarContext";
+import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
+import { useProjectDescription } from "../../shared/contexts/ProjectDescriptionContext";
+import "../../App.css";
+import { useModelTimeIntervals } from "../../hooks/useModelTimeIntervals";
 
-const drawerWidth = 240;
+const drawerExpandedWidth = 240;
+const drawerCollapsedWidth = 50;
 
 export default function Sidebar() {
   const dispatch = useAppDispatch();
@@ -59,6 +68,7 @@ export default function Sidebar() {
     (state: RootState) => state.main.selectedProject,
   );
   const projectIdOrZero = projectId || 0;
+  const { onOpenDescriptionModal } = useProjectDescription();
 
   const { data: models } = useCombinedModelListQuery(
     { projectId: projectIdOrZero },
@@ -77,6 +87,8 @@ export default function Sidebar() {
     { id: projectIdOrZero },
     { skip: !projectId },
   );
+
+  const [intervals] = useModelTimeIntervals();
   const { VITE_APP_ROCHE } = import.meta.env;
   const isRocheLogo =
     typeof VITE_APP_ROCHE === "string"
@@ -100,8 +112,18 @@ export default function Sidebar() {
     );
   };
 
-  const doses = groups?.flatMap((group) => group.protocols.map((p) => p.doses));
-  const groupsAreIncomplete = doses?.some((dosing) => !dosing[0]?.amount);
+  const protocolsAreComplete = groups?.flatMap((group) => {
+    return group.protocols
+      .map((p) => p.doses.every((d) => d.amount > 0))
+      .some((d) => d);
+  });
+  const groupsAreComplete = protocolsAreComplete?.every((dosing) => dosing);
+  const noSecondaryParameters = model
+    ? model.derived_variables.reduce((acc, dv) => {
+      return acc && dv.type !== "AUC";
+    }, true)
+    : false;
+  const noIntervals = intervals.length === 0;
 
   const warnings: { [key: string]: string } = {};
   const errors: { [key: string]: string } = {};
@@ -109,7 +131,7 @@ export default function Sidebar() {
     errors[PageName.MODEL] =
       "Model is incomplete, see the Model tab for details";
   }
-  if (groupsAreIncomplete) {
+  if (!groupsAreComplete) {
     warnings[PageName.TRIAL_DESIGN] =
       "Trial design is incomplete, one or more dose amounts are zero";
   }
@@ -137,12 +159,21 @@ export default function Sidebar() {
     [PageName.TRIAL_DESIGN]: <VaccinesIcon />,
     [PageName.DATA]: <TableViewIcon />,
     [PageName.SIMULATIONS]: <SsidChartIcon />,
+    [PageName.RESULTS]: <QueryStatsIcon />,
     [PageName.HELP]: <ContactSupportIcon />,
   };
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
   };
+
+  const {
+    onCollapse,
+    onExpand,
+    setHasSimulationsExpandedChanged,
+    isExpanded,
+    animationClasses,
+  } = useCollapsibleSidebar();
 
   const pageKeys = Object.keys(PageName);
   const pageValues = Object.values(PageName);
@@ -156,6 +187,9 @@ export default function Sidebar() {
 
   const handlePageClick = (key: string) => () => {
     const chosenPage = PageName[key as keyof typeof PageName];
+    if (key !== PageName.SIMULATIONS) {
+      setHasSimulationsExpandedChanged(false);
+    }
     dispatch(setPage(chosenPage));
 
     switch (chosenPage) {
@@ -177,6 +211,9 @@ export default function Sidebar() {
       return false;
     }
     if (page === PageName.TRIAL_DESIGN && PageName.MODEL in errors) {
+      return true;
+    }
+    if (page === PageName.RESULTS && (noSecondaryParameters || noIntervals)) {
       return true;
     }
     if (page === PageName.DATA && PageName.MODEL in errors) {
@@ -206,7 +243,7 @@ export default function Sidebar() {
     (step) => step !== projectsPage && step !== helpPage,
   );
 
-  const drawer = (
+  const drawerMobile = (
     <div style={{ marginTop: "7rem" }}>
       <List>
         <ListItem key={projectsPage?.key} disablePadding>
@@ -261,17 +298,152 @@ export default function Sidebar() {
           </List>
         </>
       )}
+      <Typography
+        sx={{
+          position: "absolute",
+          bottom: 0,
+          margin: ".5rem",
+          color: "gray",
+        }}
+      >
+        pkpdx version {import.meta.env.VITE_APP_VERSION?.slice(0, 7) || "dev"}
+      </Typography>
+    </div>
+  );
+
+  const drawer = (
+    <div
+      style={{
+        marginTop: "7rem",
+        transition: "all .35s linear",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "space-between",
+        height: "100%",
+      }}
+    >
+      <div>
+        {isExpanded ? (
+          <IconButton
+            aria-label="collapse-navigation"
+            onClick={onCollapse}
+            sx={{ marginLeft: ".5rem" }}
+          >
+            <ArrowBackIcon />
+          </IconButton>
+        ) : (
+          <Tooltip arrow title="Expand" placement="right">
+            <IconButton
+              aria-label="expand-navigation"
+              onClick={onExpand}
+              sx={{ marginLeft: ".5rem" }}
+            >
+              <ArrowForwardIcon />
+            </IconButton>
+          </Tooltip>
+        )}
+        <List>
+          <ListItem key={projectsPage?.key} disablePadding>
+            <Tooltip
+              arrow
+              title={isExpanded ? "" : projectsPage?.value}
+              placement="right"
+            >
+              <ListItemButton
+                onClick={handlePageClick(projectsPage?.key)}
+                disabled={isPageDisabled(projectsPage?.key)}
+                disableRipple={true}
+                selected={isPageSelected(projectsPage?.key)}
+              >
+                <ListItemIcon>
+                  {projectsPage?.value in errorComponents
+                    ? errorComponents[projectsPage?.value]
+                    : icons[projectsPage?.value]}
+                </ListItemIcon>
+                <ListItemText primary={projectsPage?.value} />
+              </ListItemButton>
+            </Tooltip>
+          </ListItem>
+        </List>
+        {projectIdOrZero !== 0 && (
+          <>
+            {isExpanded ? (
+              <Typography
+                variant="subtitle1"
+                component="div"
+                sx={{
+                  flexGrow: 1,
+                  color: "gray",
+                  paddingLeft: "1rem",
+                  paddingTop: "1rem",
+                }}
+              >
+                STEPS
+              </Typography>
+            ) : (
+              <Divider sx={{ paddingTop: "21px", marginBottom: "22px" }} />
+            )}
+
+            <List>
+              {steps.map(({ key, value }) => (
+                <ListItem key={key} disablePadding>
+                  <Tooltip
+                    arrow
+                    title={isExpanded ? "" : value}
+                    placement="right"
+                  >
+                    <ListItemButton
+                      onClick={handlePageClick(key)}
+                      disabled={isPageDisabled(key)}
+                      disableRipple={true}
+                      selected={isPageSelected(key)}
+                    >
+                      <ListItemIcon>
+                        {value in errorComponents
+                          ? errorComponents[value]
+                          : icons[value]}
+                      </ListItemIcon>
+                      <ListItemText
+                        sx={{ textWrap: "nowrap" }}
+                        primary={value}
+                      />
+                    </ListItemButton>
+                  </Tooltip>
+                </ListItem>
+              ))}
+            </List>
+          </>
+        )}
+      </div>
+      <div>
+        {isExpanded && (
+          <Typography
+            sx={{
+              position: "",
+              bottom: 0,
+              margin: ".5rem",
+              color: "gray",
+              textWrap: "nowrap",
+            }}
+          >
+            pkpdx version{" "}
+            {import.meta.env.VITE_APP_VERSION?.slice(0, 7) || "dev"}
+          </Typography>
+        )}
+      </div>
     </div>
   );
 
   return (
-    <Box sx={{ display: "flex" }}>
+    <Box sx={{ display: "flex", overflowX: "hidden" }}>
       <CssBaseline />
       <AppBar
         position="fixed"
         sx={{
           width: { sm: `100%` },
-          ml: { sm: `${drawerWidth}px` },
+          ml: {
+            sm: `${isExpanded ? drawerExpandedWidth : drawerCollapsedWidth}px`,
+          },
           zIndex: 9998,
           backgroundColor: "white",
         }}
@@ -303,15 +475,47 @@ export default function Sidebar() {
             noWrap
             component="div"
             sx={{
-              flexGrow: 1,
               color: "#1976d2",
               fontWeight: "bold",
               paddingLeft: "1rem",
               fontFamily: "Comfortaa",
+              flexGrow: project ? 0 : 1,
             }}
           >
-            pkpd explorer {project && ` - ${project.name}`}
+            pkpd explorer
           </Typography>
+          {project && (
+            <Box sx={{ display: "flex", alignItems: "center", flexGrow: 1 }}>
+              <Divider
+                orientation="vertical"
+                color="#000"
+                style={{ height: "1rem", marginLeft: "1rem", opacity: "0.2" }}
+              />
+              <Typography
+                variant="h6"
+                noWrap
+                component="div"
+                sx={{
+                  color: "#706b69",
+                  fontWeight: "bold",
+                  paddingLeft: "1rem",
+                  fontFamily: "Comfortaa",
+                }}
+              >
+                {project.name}
+              </Typography>
+              <Tooltip
+                arrow
+                title="Description"
+                placement="bottom"
+                PopperProps={{ style: { zIndex: 9999 } }}
+              >
+                <IconButton onClick={() => onOpenDescriptionModal(projectId)}>
+                  <DescriptionOutlinedIcon />
+                </IconButton>
+              </Tooltip>
+            </Box>
+          )}
           <div style={{ display: "flex" }}>
             <Typography
               variant="subtitle1"
@@ -350,8 +554,13 @@ export default function Sidebar() {
       </AppBar>
       <Box
         component="nav"
-        sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
-        aria-label="mailbox folders"
+        sx={{
+          width: {
+            sm: isExpanded ? drawerExpandedWidth : drawerCollapsedWidth,
+          },
+          flexShrink: { sm: 0 },
+        }}
+        aria-label="main"
       >
         {/* The implementation can be swapped with js to avoid SEO duplication of links. */}
         <Drawer
@@ -365,11 +574,11 @@ export default function Sidebar() {
             display: { xs: "block", sm: "none" },
             "& .MuiDrawer-paper": {
               boxSizing: "border-box",
-              width: drawerWidth,
+              width: drawerExpandedWidth,
             },
           }}
         >
-          {drawer}
+          {drawerMobile}
         </Drawer>
         <Drawer
           variant="permanent"
@@ -377,7 +586,9 @@ export default function Sidebar() {
             display: { xs: "none", sm: "block" },
             "& .MuiDrawer-paper": {
               boxSizing: "border-box",
-              width: drawerWidth,
+              width: isExpanded ? drawerExpandedWidth : drawerCollapsedWidth,
+              transition: "width .35s linear",
+              overflowX: "hidden",
             },
           }}
           open
@@ -386,11 +597,26 @@ export default function Sidebar() {
         </Drawer>
       </Box>
       <Box
+        component="nav"
+        sx={{
+          width: {
+            sm: selectedPage === PageName.SIMULATIONS ? drawerExpandedWidth : 0,
+          },
+          flexShrink: { sm: 0 },
+          height: "100vh",
+        }}
+        aria-label="simulations sidebar"
+        id="simulations-portal"
+      />
+      <Box
         component="main"
+        id="main-content"
+        className={animationClasses}
         sx={{
           flexGrow: 1,
           p: 3,
-          width: { sm: `calc(100% - ${drawerWidth}px)` },
+          overflowX: "hidden",
+          paddingBottom: 0,
         }}
       >
         <Toolbar />

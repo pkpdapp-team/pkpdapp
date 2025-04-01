@@ -8,11 +8,12 @@ import {
   FormControl,
   OutlinedInput,
   FormControlProps,
+  SxProps,
 } from "@mui/material";
 import { getLabel } from "../shared/getRequiredLabel";
 
 type Option = {
-  value: any;
+  value: string | number;
   label: string;
 };
 
@@ -24,6 +25,8 @@ type Props<T extends FieldValues> = {
   rules?: Record<string, unknown>;
   selectProps?: SelectProps;
   formControlProps?: FormControlProps;
+  size?: "small" | "medium";
+  sx?: SxProps;
 };
 
 function SelectField<T extends FieldValues>({
@@ -34,6 +37,8 @@ function SelectField<T extends FieldValues>({
   rules,
   selectProps,
   formControlProps,
+  size = "medium",
+  sx,
 }: Props<T>): ReactElement {
   const labelId = `${name}-label`;
   const displayEmpty = selectProps?.displayEmpty || true;
@@ -49,16 +54,21 @@ function SelectField<T extends FieldValues>({
         field: { onChange, onBlur, value },
         fieldState: { error },
       }) => (
-        <FormControl {...formControlProps} style={{ minWidth: labelWidth }}>
+        <FormControl
+          sx={sx}
+          {...formControlProps}
+          style={{ minWidth: labelWidth }}
+        >
           <InputLabel id={labelId} shrink={displayEmpty}>
             {getLabel(label || "", Boolean(rules?.required))}
           </InputLabel>
           <Select
+            sx={sx}
+            size={size}
             labelId={labelId}
             name={name}
             id={name}
             value={value === undefined || value === null ? "" : value}
-            // @ts-ignore
             onChange={onChange}
             onBlur={onBlur}
             input={<OutlinedInput label={label} notched={displayEmpty} />}

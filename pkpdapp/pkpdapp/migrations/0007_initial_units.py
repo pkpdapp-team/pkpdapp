@@ -76,7 +76,7 @@ def load_units(apps, schema_editor):
         },
         {
             "symbol": "µL/min/mg",
-            "unit": 1e-6 * L / (60 * h * 1e-3 * g),
+            "unit": 1e-6 * L / ((1.0 / 60.0) * h * 1e-3 * g),
         },
         {
             "symbol": "h",
@@ -125,6 +125,10 @@ def load_units(apps, schema_editor):
         {
             "symbol": "mL/h/kg",
             "unit": 1e-3 * L / (h * 1e3 * g),
+        },
+        {
+            "symbol": "mL/min/kg",
+            "unit": 1e-3 * L / ((1.0 / 60.0) * h * 1e3 * g),
         },
         {
             "symbol": "L/day/kg",
@@ -231,7 +235,6 @@ def load_units(apps, schema_editor):
             "symbol": "g/mL",
             "unit": g / (1e-3 * L),
         },
-
         {
             "symbol": "10^6/mcL",
             "unit": 1e6 / (1e-3 * cL),
@@ -251,6 +254,10 @@ def load_units(apps, schema_editor):
         {
             "symbol": "g/mol",
             "unit": g / mol,
+        },
+        {
+            "symbol": "kg/mol",
+            "unit": 1e3 * g / mol,
         },
         {
             "symbol": "g/nmol",
@@ -336,7 +343,16 @@ def load_units(apps, schema_editor):
 
     for u in units:
         try:
-            Unit.objects.get(symbol=u["symbol"])
+            unit = Unit.objects.get(symbol=u["symbol"])
+            unit.g = u["unit"].exponents()[0]
+            unit.m = u["unit"].exponents()[1]
+            unit.s = u["unit"].exponents()[2]
+            unit.A = u["unit"].exponents()[3]
+            unit.K = u["unit"].exponents()[4]
+            unit.cd = u["unit"].exponents()[5]
+            unit.mol = u["unit"].exponents()[6]
+            unit.multiplier = u["unit"].multiplier_log_10()
+            unit.save()
         except Unit.DoesNotExist:
             Unit.objects.create(
                 symbol=u["symbol"],

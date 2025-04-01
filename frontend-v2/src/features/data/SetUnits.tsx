@@ -1,4 +1,4 @@
-import { FC } from "react";
+import { FC, useState } from "react";
 import {
   Alert,
   FormControl,
@@ -21,12 +21,14 @@ import { validateState } from "./dataValidation";
 interface IMapObservations {
   state: StepperState;
   firstTime: boolean;
+  setHasTimeUnitChanged: (val: boolean) => void;
 }
 
 const SetUnits: FC<IMapObservations> = ({
   state,
-  firstTime,
+  setHasTimeUnitChanged,
 }: IMapObservations) => {
+  const [isChanged, setIsChanged] = useState<boolean>(false);
   const projectId = useSelector(
     (state: RootState) => state.main.selectedProject,
   );
@@ -80,14 +82,29 @@ const SetUnits: FC<IMapObservations> = ({
     });
     state.setErrors(errors);
     state.setWarnings(warnings);
+    setIsChanged(true);
+    setHasTimeUnitChanged(true);
   }
   return (
     <div>
-      {showTimeUnitSelector && (
-        <Alert severity="info">
-          <Stack direction="row" spacing="1rem">
+      {(showTimeUnitSelector || isChanged) && (
+        <Alert
+          severity="info"
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            height: "3rem",
+            borderLeft: "5px solid #0288d1",
+            margin: ".2rem",
+          }}
+        >
+          <Stack direction="row" spacing="1rem" sx={{ alignItems: "center" }}>
             <Typography>Please select a unit for all time values.</Typography>
-            <FormControl sx={{ minWidth: "10rem" }}>
+            <FormControl
+              size="small"
+              sx={{ minWidth: "10rem" }}
+              error={!state.timeUnit}
+            >
               <InputLabel id="select-time-unit-label">Set Time Unit</InputLabel>
               <Select
                 labelId="select-time-unit-label"

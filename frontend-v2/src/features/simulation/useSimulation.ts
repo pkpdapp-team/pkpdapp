@@ -1,21 +1,29 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import useProtocols from "./useProtocols";
+import { SimulationContext } from "../../contexts/SimulationContext";
+
 import {
   CombinedModelRead,
   Simulate,
   SimulateResponse,
   useCombinedModelSimulateCreateMutation,
 } from "../../app/backendApi";
+import { RootState } from "../../app/store";
+import { useSelector } from "react-redux";
+import { PageName } from "../main/mainSlice";
 interface ErrorObject {
   error: string;
 }
 
+const SIMULATION_PAGES = [PageName.SIMULATIONS, PageName.RESULTS];
+
 export default function useSimulation(
   simInputs: Simulate,
-  simulatedVariables: { qname: string; value: number | undefined }[],
   model: CombinedModelRead | undefined,
+  runSimulation: boolean = true,
 ) {
   const { compound, protocols } = useProtocols();
+  const { setSimulations } = useContext(SimulationContext);
   const [loadingSimulate, setLoadingSimulate] = useState<boolean>(false);
   const [data, setData] = useState<SimulateResponse[]>([]);
   const [simulate, { error: simulateErrorBase }] =
@@ -25,18 +33,21 @@ export default function useSimulation(
       ? (simulateErrorBase.data as ErrorObject)
       : { error: "Unknown error" }
     : undefined;
+  const page = useSelector((state: RootState) => state.main.selectedPage);
 
   useEffect(() => {
     let ignore = false;
     if (
+      runSimulation &&
       simInputs.outputs?.length > 1 &&
       simInputs.time_max &&
       model &&
       protocols &&
-      compound
+      compound &&
+      SIMULATION_PAGES.includes(page)
     ) {
       setLoadingSimulate(true);
-      console.log("Simulating with params", simulatedVariables);
+      console.log("Simulating with params", simInputs.variables);
       simulate({
         id: model.id,
         simulate: simInputs,
@@ -46,6 +57,7 @@ export default function useSimulation(
           if ("data" in response) {
             const responseData = response.data as SimulateResponse[];
             setData(responseData);
+            setSimulations(responseData);
           }
         }
       });
@@ -53,7 +65,15 @@ export default function useSimulation(
     return () => {
       ignore = true;
     };
-  }, [compound, model, protocols, simulate, simInputs, simulatedVariables]);
+  }, [
+    compound,
+    model,
+    protocols,
+    simulate,
+    JSON.stringify(simInputs),
+    page,
+    runSimulation,
+  ]);
 
   return {
     loadingSimulate,

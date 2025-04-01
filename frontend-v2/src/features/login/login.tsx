@@ -94,7 +94,7 @@ const Login: FC<LoginProps> = ({ onLogin, isLoading, errorMessage }) => {
         local law, and all contents and passwords are confidential information,
         and that unauthorized disclosure or use of such confidential information
         may result in disciplinary action including termination of my employment
-        or services and/or legal action based on local law."
+        or services and/or legal action based on local law.
       </Typography>
     </Container>
   );

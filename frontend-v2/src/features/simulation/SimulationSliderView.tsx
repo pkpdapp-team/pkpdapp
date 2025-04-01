@@ -6,7 +6,7 @@ import {
   useVariableRetrieveQuery,
 } from "../../app/backendApi";
 import {
-  Grid,
+  Box,
   IconButton,
   Input,
   Slider,
@@ -61,11 +61,14 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
   // update the slider value if the variable default value changes
   const defaultValue = variable?.default_value || 1.0;
   const [value, setValue] = useState<number>(defaultValue);
-
+  const [editing, setEditing] = useState<boolean>(false);
   useEffect(() => {
-    setValue(defaultValue);
-    onChange(slider.variable, defaultValue);
-  }, [defaultValue, onChange, slider.variable]);
+    // don't set the value of the slider until the variable is loaded
+    if (variable) {
+      setValue(defaultValue);
+      onChange(slider.variable, defaultValue);
+    }
+  }, [onChange, defaultValue, variable]);
 
   const handleSliderChange = (
     event: Event | SyntheticEvent<Element, Event>,
@@ -77,8 +80,10 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
   };
 
   const handleReset = () => {
-    setValue(defaultValue);
-    onChange(slider.variable, defaultValue);
+    if (variable) {
+      setValue(defaultValue);
+      onChange(slider.variable, defaultValue);
+    }
   };
 
   const handleSave = () => {
@@ -99,30 +104,53 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
   };
 
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setEditing(true);
     setValue(Number(event.target.value));
   };
 
   const baseValue = variable?.default_value || 1.0;
-  const minValue = Math.max(
-    variable?.lower_bound || -Infinity,
-    baseValue / range,
-  );
-  const maxValue = Math.min(
-    variable?.upper_bound || Infinity,
-    baseValue * range,
-  );
+  let minValue = variable?.lower_bound;
+  if (minValue === undefined || minValue === null) {
+    minValue = baseValue / range;
+  }
+  let maxValue = variable?.upper_bound;
+  if (maxValue === undefined || maxValue === null) {
+    maxValue = baseValue * range;
+  }
   const stepValue = (maxValue - minValue) / 1000.0;
 
-  const handleBlur = () => {
+  const commitChanges = () => {
+    commitChangesWithValue(new Event("commit"), value);
+  }
+
+  const commitChangesWithValue = (_event: React.SyntheticEvent | Event, value: number | number[]) => {
+    // value should always be a number
+    if (typeof value !== "number") {
+      return;
+    }
+    setEditing(false);
     let truncatedValue = value;
     if (value < minValue) {
-      setValue(minValue);
       truncatedValue = minValue;
     } else if (value > maxValue) {
-      setValue(maxValue);
       truncatedValue = maxValue;
     }
+    setValue(truncatedValue);
     onChange(slider.variable, truncatedValue);
+  };
+
+  const formatNumber = (value: number) => {
+    if (editing) {
+      return value;
+    }
+    if (value === 0.0) {
+      return value.toFixed(3);
+    } else if (value < 0.001) {
+      return value.toExponential(3);
+    } else if (value > 1000) {
+      return value.toExponential(3);
+    }
+    return value.toFixed(3);
   };
 
   if (isLoading) {
@@ -134,18 +162,38 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
   }
 
   return (
-    <div data-cy={`parameter-slider-${variable.name}`}>
+    <div
+      data-cy={`parameter-slider-${variable.name}`}
+      style={{
+        backgroundColor: "#f5f5f2",
+        width: "12rem",
+        padding: ".5rem",
+        border: "1px solid #DBD7D3",
+        marginTop: ".5rem",
+        borderRadius: "5px",
+      }}
+    >
       <Stack direction="row" spacing={0} alignItems="center">
         <Tooltip title={variable.description} placement="bottom">
-          <Typography id="discrete-slider" gutterBottom sx={{ flexGrow: 1 }}>
+          <Typography
+            id="discrete-slider"
+            gutterBottom
+            sx={{ flexGrow: 1, fontWeight: "bold" }}
+          >
             {unit?.symbol
               ? `${variable.name} [${unit?.symbol}]`
               : variable.name}
           </Typography>
         </Tooltip>
+      </Stack>
+      <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
         <Tooltip title={"Reset to saved default value"} placement="top">
-          <IconButton aria-label="reset" onClick={handleReset}>
-            <Replay />
+          <IconButton
+            aria-label="reset"
+            onClick={handleReset}
+            sx={{ padding: "2px" }}
+          >
+            <Replay fontSize="small" />
           </IconButton>
         </Tooltip>
         <Tooltip title={"Save value to parameters"} placement="top">
@@ -153,18 +201,27 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
             aria-label="save"
             onClick={handleSave}
             disabled={isSharedWithMe}
+            sx={{ padding: "2px" }}
           >
-            <Save />
+            <Save fontSize="small" />
           </IconButton>
         </Tooltip>
         <Tooltip title={"Widen range"} placement="top">
-          <IconButton aria-label="widen" onClick={handleWider}>
-            <OpenInFull />
+          <IconButton
+            aria-label="widen"
+            onClick={handleWider}
+            sx={{ padding: "2px" }}
+          >
+            <OpenInFull fontSize="small" />
           </IconButton>
         </Tooltip>
         <Tooltip title={"Narrow range"} placement="top">
-          <IconButton aria-label="restrict" onClick={handleNarrow}>
-            <CloseFullscreen />
+          <IconButton
+            aria-label="restrict"
+            onClick={handleNarrow}
+            sx={{ padding: "2px" }}
+          >
+            <CloseFullscreen fontSize="small" />
           </IconButton>
         </Tooltip>
         <Tooltip title={"Remove slider"} placement="top">
@@ -172,40 +229,41 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
             aria-label="delete"
             onClick={handleDelete}
             disabled={isSharedWithMe}
+            sx={{ padding: "2px" }}
           >
-            <Delete />
+            <Delete fontSize="small" />
           </IconButton>
         </Tooltip>
-      </Stack>
-      <Grid container spacing={2} alignItems="center">
-        <Grid item xs={8}>
-          <Slider
-            value={typeof value === "number" ? value : 0}
-            min={minValue}
-            max={maxValue}
-            step={stepValue}
-            onChange={handleSliderChange}
-            onChangeCommitted={handleBlur}
-            valueLabelDisplay="off"
-            aria-labelledby="input-slider"
-          />
-        </Grid>
-        <Grid item xs={4}>
-          <Input
-            value={value}
-            size="small"
-            onChange={handleInputChange}
-            onBlur={handleBlur}
-            inputProps={{
-              step: stepValue,
-              min: minValue,
-              max: maxValue,
-              type: "number",
-              "aria-labelledby": "input-slider",
-            }}
-          />
-        </Grid>
-      </Grid>
+      </Box>
+      <Box alignItems="center">
+        <Slider
+          value={typeof value === "number" ? value : 0}
+          min={minValue}
+          max={maxValue}
+          step={stepValue}
+          shiftStep={stepValue * 10}
+          onChange={handleSliderChange}
+          onChangeCommitted={commitChangesWithValue}
+          valueLabelDisplay="off"
+          aria-labelledby="input-slider"
+        />
+      </Box>
+      <Box alignItems="center">
+        <Input
+          sx={{ width: "100%" }}
+          value={formatNumber(value)}
+          size="small"
+          onChange={handleInputChange}
+          onBlur={commitChanges}
+          inputProps={{
+            step: stepValue,
+            min: minValue,
+            max: maxValue,
+            type: "number",
+            "aria-labelledby": "input-slider",
+          }}
+        />
+      </Box>
     </div>
   );
 };

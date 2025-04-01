@@ -16,7 +16,9 @@ type Props<T extends FieldValues> = {
   mode?: "onChange" | "onBlur";
   textFieldProps?: TextFieldProps;
   autoShrink?: boolean;
+  size?: "small" | "medium";
   sx?: SxProps;
+  defaultValue?: string;
 };
 
 function TextField<T extends FieldValues>({
@@ -24,16 +26,18 @@ function TextField<T extends FieldValues>({
   name,
   control,
   rules,
-  mode,
+  mode = "onBlur",
+  size = "medium",
   textFieldProps,
   autoShrink,
   sx,
+  defaultValue = "",
 }: Props<T>): ReactElement {
-  const [fieldValue, setFieldValue] = useFieldState({ name, control });
-
-  if (mode === undefined) {
-    mode = "onBlur";
-  }
+  const [fieldValue, setFieldValue] = useFieldState({
+    name,
+    control,
+    defaultValue,
+  });
 
   return (
     <Controller
@@ -42,11 +46,16 @@ function TextField<T extends FieldValues>({
       rules={rules}
       render={({
         field: { onChange, onBlur, value },
-        fieldState: { error, isDirty, isTouched },
+        fieldState: { error },
       }) => {
         const handleBlur = (e: FocusEvent<HTMLInputElement>) => {
-          if (mode === "onBlur" && e.target.value !== value) {
-            onChange(e);
+          // Save an empty string in place of the default value.
+          const newValue =
+            e.target.value === defaultValue ? "" : e.target.value;
+          // Display the default value in place of an empty field.
+          setFieldValue(newValue === "" ? defaultValue : newValue);
+          if (mode === "onBlur" && newValue !== value) {
+            onChange({ target: { value: newValue } });
           }
           onBlur();
         };
@@ -59,6 +68,7 @@ function TextField<T extends FieldValues>({
         };
         return (
           <MaterialTextField
+            size={size}
             label={
               !error
                 ? getLabel(label || "", Boolean(rules?.required))
@@ -71,9 +81,7 @@ function TextField<T extends FieldValues>({
               autoShrink !== undefined ? { shrink: autoShrink } : {}
             }
             variant="outlined"
-            value={
-              fieldValue === undefined || fieldValue === null ? "" : fieldValue
-            }
+            value={fieldValue}
             onChange={handleChange}
             onBlur={handleBlur}
             error={!!error}

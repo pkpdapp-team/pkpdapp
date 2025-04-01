@@ -7,16 +7,22 @@ import {
   useUnitListQuery,
   useVariableListQuery,
   ProjectRead,
+  SimulateResponse,
 } from "../../app/backendApi";
+import { FetchBaseQueryError } from "@reduxjs/toolkit/query";
+import { SerializedError } from "@reduxjs/toolkit";
 
 interface iExportSimulation {
   simInputs: Simulate;
-  simulatedVariables: { qname: string; value: number | undefined }[];
   model: CombinedModelRead | undefined;
   project: ProjectRead | undefined;
 }
 
-const parseResponse = (data: any, timeCol: number, label: string) => {
+const parseResponse = (
+  data: SimulateResponse,
+  timeCol: number,
+  label: string,
+) => {
   const cols = Object.keys(data.outputs);
   const nrows = data.outputs[Object.keys(data.outputs)[0]].length;
   const ncols = cols.length;
@@ -41,10 +47,12 @@ const parseResponse = (data: any, timeCol: number, label: string) => {
 
 export default function useExportSimulation({
   simInputs,
-  simulatedVariables,
   model,
   project,
-}: iExportSimulation): [() => void, { error: any }] {
+}: iExportSimulation): [
+    () => void,
+    { error: FetchBaseQueryError | SerializedError | undefined },
+  ] {
   const { groups } = useSubjectGroups();
   const { compound, protocols } = useProtocols();
   const { data: variables } = useVariableListQuery(
@@ -70,12 +78,20 @@ export default function useExportSimulation({
       project &&
       groups
     ) {
-      console.log("Export to CSV: simulating with params", simulatedVariables);
+      console.log("Export to CSV: simulating with params", simInputs.variables);
       simulate({
         id: model.id,
         simulate: simInputs,
       }).then((response) => {
-        let rows = simulatedVariables.map((p) => [p.qname, p.value]);
+        let rows = Object.keys(simInputs.variables).map((key) => {
+          const variable = variables.find((v) => v.qname === key);
+          const unit = units.find((u) => u.id === variable?.unit);
+          return [
+            `${key} (${unit?.symbol || ""})`,
+            simInputs.variables[key],
+            ,
+          ];
+        });
         if (response?.data) {
           const cols = Object.keys(response.data[0].outputs);
           const vars = cols.map((vid) =>

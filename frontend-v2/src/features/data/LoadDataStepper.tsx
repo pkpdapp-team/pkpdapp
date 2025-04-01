@@ -21,8 +21,13 @@ import {
   removeIgnoredObservations,
   validateDataRow,
 } from "./dataValidation";
-import { Alert } from "@mui/material";
+import { Tooltip } from "@mui/material";
 import { IProtocol, getSubjectDoses, getProtocols } from "./protocolUtils";
+import { Notifications } from "./Notifications";
+import {
+  CHANGE_STYLING_INNER_HEIGHT_LIMIT,
+  LOAD_STEPPER_MAIN_CONTENT_HEIGHT,
+} from "../../shared/calculateTableHeights";
 
 interface IStepper {
   csv: string;
@@ -89,7 +94,8 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
   const csvData = Papa.parse(csv, { header: true });
   const csvFields = csvData.meta.fields || [];
   const [data, setData] = useState<Data>((csvData.data as Data) || []);
-  let [errors, setErrors] = useState<string[]>([]);
+  const [errors, setErrors] = useState<string[]>([]);
+  let displayedErrors = [...errors];
   const [warnings, setWarnings] = useState<string[]>([]);
   const [normalisedFields, setNormalisedFields] = useState<Map<Field, string>>(
     new Map(csvFields.map(normaliseHeader)),
@@ -105,6 +111,9 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
   const [fileName, setFileName] = useState<string>(
     dataset?.name || "New Dataset",
   );
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const onNotificationsOpenChange = () =>
+    setIsNotificationsOpen(!isNotificationsOpen);
 
   const state = {
     fileName,
@@ -137,10 +146,11 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
     "Invalid data file. Each subject ID can only belong to one dosing protocol.";
 
   if (!areValidProtocols && !errors.includes(protocolErrorMessage)) {
-    errors = [...errors, protocolErrorMessage];
+    displayedErrors = [...displayedErrors, protocolErrorMessage];
   }
 
   const [stepState, setStepState] = useState({ activeStep: 0, maxStep: 0 });
+  const [hasTimeUnitChanged, setHasTimeUnitChanged] = useState<boolean>(false);
   const StepComponent = stepComponents[stepState.activeStep];
   const isFinished = stepState.activeStep === stepLabels.length;
   const normalisedHeaders = [...normalisedFields.values()];
@@ -149,8 +159,23 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
     !normalisedHeaders.includes("Time Unit") &&
     !timeUnit
   ) {
-    errors = [...errors, "Time unit is not defined."];
+    displayedErrors = [...displayedErrors, "Time unit is not defined."];
   }
+
+  const noTimeUnit = !state.normalisedHeaders.find(
+    (field) => field === "Time Unit",
+  );
+  const invalidTimeUnits = state.errors.find((error) =>
+    error.includes("file contains multiple time units"),
+  );
+  const showTimeUnitSelector = noTimeUnit || invalidTimeUnits;
+  const showData = state.data.length > 0 && state.fields.length > 0;
+  const shouldShowTimeUnitNotification =
+    showTimeUnitSelector || hasTimeUnitChanged;
+  const notificationsCount =
+    displayedErrors?.length +
+    warnings?.length +
+    (shouldShowTimeUnitNotification ? 2 : 1);
 
   const handleStep = (step: number) => () => {
     setStepState((prevActiveStep) => ({
@@ -239,45 +264,75 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
     }
   };
 
+  const onResetDataset = () => {
+    if (window.confirm("Any unsaved changes will be lost. Continue?")) {
+      setData([]);
+      setErrors([]);
+      setWarnings([]);
+      setTimeUnit(undefined);
+      setAmountUnit(undefined);
+      setGroupColumn("Group");
+      setFileName("New Dataset");
+      setHasTimeUnitChanged(false);
+      restart();
+    }
+  };
+
   return (
     <Box
       sx={{
         display: "flex",
         flexDirection: "column",
-        height: "80vh",
+        height: LOAD_STEPPER_MAIN_CONTENT_HEIGHT,
         width: "100%",
       }}
     >
-      <Stepper nonLinear activeStep={stepState.activeStep} alternativeLabel>
+      <Stepper nonLinear activeStep={stepState.activeStep}>
         {stepLabels.map((step, index) => (
           <Step key={index}>
             <StepButton
               onClick={handleStep(index)}
-              disabled={data.length === 0 || isFinished || errors.length > 0}
+              disabled={
+                data.length === 0 || isFinished || displayedErrors.length > 0
+              }
             >
               {step}
             </StepButton>
           </Step>
         ))}
       </Stepper>
-      <Box sx={{ flexGrow: 1, maxHeight: "80vh", overflow: "scroll" }}>
-        {state.fileName && <Alert severity="info">{state.fileName}</Alert>}
-        {errors.map((error) => (
-          <Alert key={error} severity="error">
-            {error}
-          </Alert>
-        ))}
-        {warnings.map((warning) => (
-          <Alert key={warning} severity="warning">
-            {warning}
-          </Alert>
-        ))}
+      <Notifications
+        isOpen={isNotificationsOpen}
+        showData={showData}
+        errors={displayedErrors}
+        warnings={warnings}
+        fileName={fileName}
+        state={state}
+        firstTime={stepState.activeStep === stepState.maxStep}
+        handleOpen={onNotificationsOpenChange}
+        setHasTimeUnitChanged={setHasTimeUnitChanged}
+        showTimeUnitSelector={Boolean(shouldShowTimeUnitNotification)}
+      />
+      <Box
+        sx={{
+          flexGrow: 1,
+          maxHeight: "80vh",
+          overflowX:
+            window.innerHeight > CHANGE_STYLING_INNER_HEIGHT_LIMIT
+              ? "none"
+              : "auto",
+        }}
+      >
         {isFinished ? (
           <Typography>Saving data…</Typography>
         ) : (
           <StepComponent
             state={state}
             firstTime={stepState.activeStep === stepState.maxStep}
+            notificationsInfo={{
+              isOpen: isNotificationsOpen,
+              count: notificationsCount,
+            }}
           />
         )}
       </Box>
@@ -289,23 +344,44 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
           paddingBottom: 1,
         }}
       >
-        {stepState.activeStep === 0 ? (
-          <Button onClick={onCancel}>Cancel</Button>
-        ) : (
-          <Button onClick={handleBack}>Back</Button>
-        )}
-        <Button
-          disabled={data.length === 0 || isFinished || errors.length > 0}
-          variant="contained"
-          color="primary"
-          onClick={
-            stepState.activeStep === stepLabels.length - 1
-              ? handleFinish
-              : handleNext
-          }
+        <Tooltip
+          title="You can cancel and upload new file"
+          placement="top"
+          arrow
         >
-          {stepState.activeStep === stepLabels.length - 1 ? "Finish" : "Next"}
-        </Button>
+          <Button variant="outlined" onClick={csv ? onCancel : onResetDataset}>
+            Cancel
+          </Button>
+        </Tooltip>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+          }}
+        >
+          <Button
+            variant="outlined"
+            onClick={handleBack}
+            disabled={stepState.activeStep === 0}
+          >
+            Previous
+          </Button>
+          <Button
+            sx={{
+              marginLeft: "1rem",
+            }}
+            variant="contained"
+            disabled={data.length === 0 || isFinished || errors.length > 0}
+            color="primary"
+            onClick={
+              stepState.activeStep === stepLabels.length - 1
+                ? handleFinish
+                : handleNext
+            }
+          >
+            {stepState.activeStep === stepLabels.length - 1 ? "Finish" : "Next"}
+          </Button>
+        </Box>
       </Box>
     </Box>
   );

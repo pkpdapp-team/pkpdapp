@@ -7,11 +7,12 @@ type Props<T extends FieldValues> = {
   label?: string;
   name: FieldPath<T>;
   control: Control<T>;
-  rules?: Object;
+  size?: "small" | "medium";
+  rules?: Record<string, unknown>;
   textFieldProps?: TextFieldProps;
 };
 
-function convert(value: any) {
+function convert(value: string): number | string {
   if (typeof value === "string" && value !== "") {
     return parseInt(value);
   } else {
@@ -24,6 +25,7 @@ function IntegerField<T extends FieldValues>({
   name,
   control,
   rules,
+  size = "medium",
   textFieldProps,
 }: Props<T>): ReactElement {
   const [fieldValue, setFieldValue] = useFieldState({ name, control });
@@ -34,12 +36,12 @@ function IntegerField<T extends FieldValues>({
       rules={rules}
       render={({
         field: { onChange, onBlur, value },
-        fieldState: { error, isDirty, isTouched },
+        fieldState: { error },
       }) => {
         const handleBlur = (e: FocusEvent<HTMLInputElement>) => {
           const updatedValue = convert(e.target.value);
           if (updatedValue !== value) {
-            e.target.value = updatedValue;
+            e.target.value = updatedValue.toString();
             onChange(e);
           }
           onBlur();
@@ -57,6 +59,7 @@ function IntegerField<T extends FieldValues>({
                   (error?.type === "required" ? "Required" : "")
             }
             name={name}
+            size={size}
             id={name}
             variant="outlined"
             value={

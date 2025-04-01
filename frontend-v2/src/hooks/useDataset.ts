@@ -9,9 +9,21 @@ import {
   useSubjectListQuery,
   useUnitListQuery,
   useBiomarkerTypeListQuery,
+  UnitRead,
 } from "../app/backendApi";
 import useSubjectGroups from "./useSubjectGroups";
 
+export type SubjectBiomarker = {
+  id: number;
+  subjectId: number;
+  subjectDatasetId: number | undefined;
+  time: number;
+  timeUnit: UnitRead | undefined;
+  value: number;
+  unit: UnitRead | undefined;
+  qname: string | undefined;
+  label: string;
+};
 const DEFAULT_GROUPS: SubjectGroupListApiResponse = [];
 const DEFAULT_BIOMARKERS: BiomarkerTypeListApiResponse = [];
 
@@ -69,7 +81,7 @@ export default function useDataset(selectedProject: number | null) {
     [refetch, refetchSubjects, refetchDatasetGroups, refetchBiomarkerTypes],
   );
 
-  const subjectBiomarkers = biomarkerTypes
+  const subjectBiomarkers: SubjectBiomarker[][] = biomarkerTypes
     .filter((b) => b.is_continuous)
     .map((b) => {
       const timeUnit = units?.find((u) => u.id === b.display_time_unit);

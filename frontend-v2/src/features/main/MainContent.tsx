@@ -10,6 +10,7 @@ import Protocols from "../trial/Protocols";
 import { Box } from "@mui/material";
 import Help from "../help/Help";
 import Data from "../data/Data";
+import Results from "../results/Results";
 
 interface TabPanelProps {
   children?: ReactNode;
@@ -27,9 +28,12 @@ function TabPanel(props: TabPanelProps) {
       hidden={value !== index}
       id={`simple-tabpanel-${index}`}
       aria-labelledby={`simple-tab-${index}`}
+      style={{ width: '100%'}}
       {...other}
     >
-      <Box sx={{ p: 3, zIndex: value === index ? 1000 : 1 }}>{children}</Box>
+      <Box sx={{ p: 3, zIndex: value === index ? 1000 : 1, paddingBottom: 0 }}>
+        {children}
+      </Box>
     </div>
   );
 }
@@ -60,6 +64,9 @@ const MainContent: FC = () => {
       </TabPanel>
       <TabPanel value={page} index={PageName.SIMULATIONS}>
         <Simulations key={projectIdOrZero} />
+      </TabPanel>
+      <TabPanel value={page} index={PageName.RESULTS}>
+        <Results key={projectIdOrZero} />
       </TabPanel>
       <TabPanel value={page} index={PageName.HELP}>
         <Help />

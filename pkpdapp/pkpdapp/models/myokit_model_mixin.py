@@ -32,9 +32,7 @@ class MyokitModelMixin:
 
         return variables
 
-    def _get_myokit_protocols(
-        self, model, dosing_protocols, override_tlag, time_max
-    ):
+    def _get_myokit_protocols(self, model, dosing_protocols, override_tlag, time_max):
         protocols = {}
         is_target = False
         time_var = model.binding("time")
@@ -68,7 +66,7 @@ class MyokitModelMixin:
                 amount_conversion_factor,
                 time_conversion_factor,
                 tlag_value,
-                time_max
+                time_max,
             )
             protocols[_get_pacing_label(amount_var)] = get_protocol(dosing_events)
         return protocols
@@ -85,6 +83,7 @@ class MyokitModelMixin:
 
     def _get_tlag_value(self, qname):
         from pkpdapp.models import Variable
+
         # get tlag value default to 0
         derived_param = qname + "_tlag_ud"
         try:
@@ -119,7 +118,7 @@ class MyokitModelMixin:
         return self.parse_mmt_string(self.mmt)
 
     def create_myokit_simulator(
-            self, override_tlag=None, model=None, time_max=None, dosing_protocols=None
+        self, override_tlag=None, model=None, time_max=None, dosing_protocols=None
     ):
         if override_tlag is None:
             override_tlag = {}
@@ -141,7 +140,7 @@ class MyokitModelMixin:
             model=model,
             dosing_protocols=dosing_protocols,
             override_tlag=override_tlag,
-            time_max=time_max
+            time_max=time_max,
         )
 
         with lock:
@@ -214,56 +213,52 @@ class MyokitModelMixin:
                 removed_variables += ["PKCompartment.F"]
 
         model = self.get_myokit_model()
-        new_variables = [
-            Variable.get_variable(self, v)
-            for v in model.variables(const=True, sort=True)
-            if v.is_literal() and v.qname() not in removed_variables
-        ]
+        new_variables = []
+        old_variables = []
+        for v in model.variables(const=True, sort=True):
+            if v.is_literal() and v.qname() not in removed_variables:
+                v = Variable.get_variable(self, v)
+                if v._state.adding:
+                    new_variables.append(v)
+                else:
+                    # parameters could originally be outputs
+                    if not v.constant:
+                        v.constant = True
+                        v.save()
+                    old_variables.append(v)
 
-        # parameters could originally be outputs
-        for v in new_variables:
-            if not v.constant:
-                v.constant = True
-                v.save()
-        new_states = [
-            Variable.get_variable(self, v)
-            for v in model.variables(state=True, sort=True)
-            if v.qname() not in removed_variables
-        ]
-        new_outputs = [
-            Variable.get_variable(self, v)
-            for v in model.variables(const=False, state=False, sort=True)
-            if v.qname() not in removed_variables
-        ]
-        logger.debug("ALL NEW OUTPUTS")
-        for v in new_outputs:
-            if v.unit is not None:
-                logger.debug(
-                    f"{v.qname} [{v.unit.symbol}], "
-                    f"id = {v.id} constant = {v.constant}, "
-                    f"state = {v.state}"
-                )
-            else:
-                logger.debug(
-                    f"{v.qname}, id = {v.id} "
-                    f"constant = {v.constant}, "
-                    f"state = {v.state}"
-                )
+        new_states = []
+        old_states = []
+        for v in model.variables(state=True, sort=True):
+            if v.qname() not in removed_variables:
+                v = Variable.get_variable(self, v)
+                if v._state.adding:
+                    new_states.append(v)
+                else:
+                    old_states.append(v)
 
-        for v in new_outputs:
-            # if output not in states set state false
-            # so only states with initial conditions as
-            # parameters will have state set to true
-            if v not in new_states and v.state is True:
-                v.state = False
-                v.save()
+        new_outputs = []
+        old_outputs = []
+        for v in model.variables(const=False, state=False, sort=True):
+            if v.qname() not in removed_variables:
+                v = Variable.get_variable(self, v)
+                if v._state.adding:
+                    # if output not in states set state false
+                    # so only states with initial conditions as
+                    # parameters will have state set to true
+                    if v not in new_states and v.state is True:
+                        v.state = False
 
-            # parameters could originally be variables
-            if v.constant:
-                v.constant = False
-                v.save()
+                    new_outputs.append(v)
+                else:
+                    # outputs could originally be parameters
+                    if v.constant:
+                        v.constant = False
+                        v.save()
+                    old_outputs.append(v)
 
         all_new_variables = new_variables + new_states + new_outputs
+        all_old_variables = old_variables + old_states + old_outputs
         logger.debug("ALL NEW VARIABLES")
         for v in all_new_variables:
             if v.unit is not None:
@@ -277,25 +272,39 @@ class MyokitModelMixin:
                     f"constant = {v.constant}, state = {v.state}"
                 )
 
-        # for library models: set new variables to defaults
-        if self.is_library_model and hasattr(self, "reset_params_to_defaults"):
+        logger.debug("ALL OLD VARIABLES")
+        for v in all_old_variables:
+            if v.unit is not None:
+                logger.debug(
+                    f"{v.qname} [{v.unit.symbol}], id = {v.id} "
+                    f"constant = {v.constant}, state = {v.state}"
+                )
+            else:
+                logger.debug(
+                    f"{v.qname}, id = {v.id} "
+                    f"constant = {v.constant}, state = {v.state}"
+                )
+
+        # delete all variables that are not in new
+        for variable in self.variables.all():
+            if variable not in all_old_variables:
+                logger.debug(f"DELETING VARIABLE {variable.qname} (id = {variable.id})")
+                variable.delete()
+
+        # for library models: set created variables to defaults
+        if (
+            self.is_library_model
+            and hasattr(self, "reset_params_to_defaults")
+            and len(new_variables) > 0
+        ):
             project = self.get_project()
             if project is not None:
                 species = project.species
                 compound_type = project.compound.compound_type
-                self.reset_params_to_defaults(species, compound_type, all_new_variables)
+                self.reset_params_to_defaults(species, compound_type, new_variables)
 
-        # delete all variables that are not in new
-        for variable in self.variables.all():
-            if variable not in all_new_variables:
-                logger.debug(f"DELETING VARIABLE {variable.qname} (id = {variable.id})")
-                variable.delete()
-            else:
-                logger.debug(
-                    f"RETAINING VARIABLE {variable.qname} (id = {variable.id}, value = {variable.default_value})"  # noqa: E501
-                )
-
-        self.variables.set(all_new_variables)
+        # save all new variables
+        Variable.objects.bulk_create(all_new_variables)
 
     def set_variables_from_inference(self, inference):
         results_for_mle = inference.get_maximum_likelihood()
@@ -441,7 +450,7 @@ class MyokitModelMixin:
         return self.time_max
 
     def simulate_model(
-            self, outputs=None, variables=None, time_max=None, dosing_protocols=None
+        self, outputs=None, variables=None, time_max=None, dosing_protocols=None
     ):
         model = self.get_myokit_model()
         # Convert units
@@ -454,7 +463,7 @@ class MyokitModelMixin:
             override_tlag=override_tlag,
             model=model,
             time_max=time_max,
-            dosing_protocols=dosing_protocols
+            dosing_protocols=dosing_protocols,
         )
         # TODO: take these from simulation model
         sim.set_tolerance(abs_tol=1e-06, rel_tol=1e-08)
@@ -499,12 +508,8 @@ class MyokitModelMixin:
 
         # add a dose_rate variable to the model for each
         # dosed variable
-        dosing_variables = [
-            v for v in self.variables.filter(state=True) if v.protocol
-        ]
-        project_dosing_protocols = {
-            v.qname: v.protocol for v in dosing_variables
-        }
+        dosing_variables = [v for v in self.variables.filter(state=True) if v.protocol]
+        project_dosing_protocols = {v.qname: v.protocol for v in dosing_variables}
         model_dosing_protocols = [project_dosing_protocols]
 
         project = self.get_project()
@@ -520,8 +525,9 @@ class MyokitModelMixin:
                 variables=variables,
                 time_max=time_max,
                 outputs=outputs,
-                dosing_protocols=dosing_protocols
-            ) for dosing_protocols in model_dosing_protocols
+                dosing_protocols=dosing_protocols,
+            )
+            for dosing_protocols in model_dosing_protocols
         ]
 
 
@@ -689,11 +695,11 @@ def _add_dose_compartment(model, drug_amount, time_unit):
 
 
 def _get_dosing_events(
-        doses,
-        amount_conversion_factor=1.0,
-        time_conversion_factor=1.0,
-        tlag_time=0.0,
-        time_max=None
+    doses,
+    amount_conversion_factor=1.0,
+    time_conversion_factor=1.0,
+    tlag_time=0.0,
+    time_max=None,
 ):
     dosing_events = []
     for d in doses.all():
@@ -707,11 +713,14 @@ def _get_dosing_events(
         if len(start_times) == 0:
             continue
         dose_level = d.amount / d.duration
-        dosing_events += [(
-            (amount_conversion_factor / time_conversion_factor) * dose_level,
-            time_conversion_factor * start_time,
-            time_conversion_factor * d.duration,
-        ) for start_time in start_times]
+        dosing_events += [
+            (
+                (amount_conversion_factor / time_conversion_factor) * dose_level,
+                time_conversion_factor * start_time,
+                time_conversion_factor * d.duration,
+            )
+            for start_time in start_times
+        ]
     # if any dosing events are close to time_max,
     # make them equal to time_max
     if time_max is not None:

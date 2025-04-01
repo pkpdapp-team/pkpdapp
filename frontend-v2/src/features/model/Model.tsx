@@ -22,9 +22,11 @@ import { FC, useEffect, useMemo } from "react";
 import { DynamicTabs, TabPanel } from "../../components/DynamicTabs";
 import MapVariablesTab from "./MapVariablesTab";
 import PKPDModelTab from "./PKPDModelTab";
+import SecondaryParametersTab from "./secondary/SecondaryParameters";
 import ParametersTab from "./ParametersTab";
 import useDirty from "../../hooks/useDirty";
 import { SubPageName } from "../main/mainSlice";
+import { TableHeader } from "../../components/TableHeader";
 
 export type FormData = {
   project: ProjectRead;
@@ -85,9 +87,11 @@ const Model: FC = () => {
     project: projectIdOrZero,
     mappings: [],
     derived_variables: [],
+    time_intervals: [],
     components: "",
     variables: [],
     mmt: "",
+    sbml: "",
     time_unit: 0,
     is_library_model: false,
   };
@@ -205,6 +209,7 @@ const Model: FC = () => {
     SubPageName.PKPDMODEL,
     SubPageName.MAPVARIABLES,
     SubPageName.PARAMETERS,
+    SubPageName.SECONDARYPARAMETERS,
   ];
   if (model.pk_model === null) {
     tabErrors[tabKeys[0]] = "Please select a PK model to simulate";
@@ -235,41 +240,48 @@ const Model: FC = () => {
   const isOtherSpeciesSelected = project.species === "O";
 
   return (
-    <DynamicTabs
-      tabNames={tabKeys}
-      tabErrors={tabErrors}
-      isOtherSpeciesSelected={isOtherSpeciesSelected}
-      tumourModelWithNoKillModel={isTumourModel && noKillModel}
-    >
-      <TabPanel>
-        <PKPDModelTab
-          model={model}
-          project={project}
-          control={control}
-          updateModel={updateModel}
-        />
-      </TabPanel>
-      <TabPanel>
-        <MapVariablesTab
-          model={model}
-          project={project}
-          control={control}
-          variables={variables}
-          units={units}
-          compound={compound}
-        />
-      </TabPanel>
-      <TabPanel>
-        <ParametersTab
-          model={model}
-          project={project}
-          control={control}
-          variables={variables}
-          units={units}
-          compound={compound}
-        />
-      </TabPanel>
-    </DynamicTabs>
+    <>
+      <TableHeader variant="h4" label="Model" />
+      <DynamicTabs
+        tabNames={tabKeys}
+        tabErrors={tabErrors}
+        isOtherSpeciesSelected={isOtherSpeciesSelected}
+        tumourModelWithNoKillModel={isTumourModel && noKillModel}
+        marginBottom={0}
+      >
+        <TabPanel>
+          <PKPDModelTab
+            model={model}
+            project={project}
+            control={control}
+            updateModel={updateModel}
+          />
+        </TabPanel>
+        <TabPanel>
+          <MapVariablesTab
+            model={model}
+            project={project}
+            control={control}
+            variables={variables}
+            units={units}
+            compound={compound}
+          />
+        </TabPanel>
+        <TabPanel>
+          <ParametersTab
+            model={model}
+            project={project}
+            control={control}
+            variables={variables}
+            units={units}
+            compound={compound}
+          />
+        </TabPanel>
+        <TabPanel>
+          <SecondaryParametersTab />
+        </TabPanel>
+      </DynamicTabs>
+    </>
   );
 };
 

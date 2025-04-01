@@ -10,11 +10,12 @@ type Props<T extends FieldValues> = {
   control: Control<T>;
   rules?: Record<string, unknown>;
   textFieldProps?: TextFieldProps;
+  size?: "small" | "medium";
   data_cy?: string;
   sx?: Record<string, string>;
 };
 
-function convert(value: any) {
+function convert(value: string): number | null {
   if (typeof value === "string") {
     if (value !== "") {
       return parseFloat(value);
@@ -33,6 +34,7 @@ function FloatField<T extends FieldValues>({
   rules,
   textFieldProps,
   data_cy,
+  size = "medium",
   sx,
 }: Props<T>): ReactElement {
   const [fieldValue, setFieldValue] = useFieldState({ name, control });
@@ -44,12 +46,12 @@ function FloatField<T extends FieldValues>({
       rules={rules}
       render={({
         field: { onChange, onBlur, value },
-        fieldState: { error, isDirty, isTouched },
+        fieldState: { error },
       }) => {
         const handleBlur = (e: FocusEvent<HTMLInputElement>) => {
           const updatedValue = convert(e.target.value);
           if (updatedValue !== value) {
-            e.target.value = updatedValue as any;
+            e.target.value = updatedValue?.toString() || "";
             onChange(e);
           }
           onBlur();
@@ -60,6 +62,7 @@ function FloatField<T extends FieldValues>({
         };
         return (
           <TextField
+            size={size}
             label={
               !error
                 ? getLabel(label || "", Boolean(rules?.required))

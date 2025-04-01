@@ -767,6 +767,60 @@ const injectedRtkApi = api.injectEndpoints({
         method: "DELETE",
       }),
     }),
+    resultsTableList: build.query<
+      ResultsTableListApiResponse,
+      ResultsTableListApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/results_table/`,
+        params: { project_id: queryArg.projectId },
+      }),
+    }),
+    resultsTableCreate: build.mutation<
+      ResultsTableCreateApiResponse,
+      ResultsTableCreateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/results_table/`,
+        method: "POST",
+        body: queryArg.resultsTable,
+      }),
+    }),
+    resultsTableRetrieve: build.query<
+      ResultsTableRetrieveApiResponse,
+      ResultsTableRetrieveApiArg
+    >({
+      query: (queryArg) => ({ url: `/api/results_table/${queryArg.id}/` }),
+    }),
+    resultsTableUpdate: build.mutation<
+      ResultsTableUpdateApiResponse,
+      ResultsTableUpdateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/results_table/${queryArg.id}/`,
+        method: "PUT",
+        body: queryArg.resultsTable,
+      }),
+    }),
+    resultsTablePartialUpdate: build.mutation<
+      ResultsTablePartialUpdateApiResponse,
+      ResultsTablePartialUpdateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/results_table/${queryArg.id}/`,
+        method: "PATCH",
+        body: queryArg.patchedResultsTable,
+      }),
+    }),
+    resultsTableDestroy: build.mutation<
+      ResultsTableDestroyApiResponse,
+      ResultsTableDestroyApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/results_table/${queryArg.id}/`,
+        method: "DELETE",
+      }),
+    }),
     sessionRetrieve: build.query<
       SessionRetrieveApiResponse,
       SessionRetrieveApiArg
@@ -1569,6 +1623,39 @@ export type ProtocolDestroyApiArg = {
   /** A unique integer value identifying this protocol. */
   id: number;
 };
+export type ResultsTableListApiResponse = /** status 200  */ ResultsTableRead[];
+export type ResultsTableListApiArg = {
+  /** Filter results by project ID */
+  projectId?: number;
+};
+export type ResultsTableCreateApiResponse = /** status 201  */ ResultsTableRead;
+export type ResultsTableCreateApiArg = {
+  resultsTable: ResultsTable;
+};
+export type ResultsTableRetrieveApiResponse =
+  /** status 200  */ ResultsTableRead;
+export type ResultsTableRetrieveApiArg = {
+  /** A unique integer value identifying this results table. */
+  id: number;
+};
+export type ResultsTableUpdateApiResponse = /** status 200  */ ResultsTableRead;
+export type ResultsTableUpdateApiArg = {
+  /** A unique integer value identifying this results table. */
+  id: number;
+  resultsTable: ResultsTable;
+};
+export type ResultsTablePartialUpdateApiResponse =
+  /** status 200  */ ResultsTableRead;
+export type ResultsTablePartialUpdateApiArg = {
+  /** A unique integer value identifying this results table. */
+  id: number;
+  patchedResultsTable: PatchedResultsTable;
+};
+export type ResultsTableDestroyApiResponse = unknown;
+export type ResultsTableDestroyApiArg = {
+  /** A unique integer value identifying this results table. */
+  id: number;
+};
 export type SessionRetrieveApiResponse = unknown;
 export type SessionRetrieveApiArg = void;
 export type SimulationListApiResponse = /** status 200  */ SimulationRead[];
@@ -1921,7 +2008,7 @@ export type PkpdMappingRead = {
   /** variable in PD part of model */
   pd_variable: number;
 };
-export type TypeEnum = "RO" | "FUP" | "BPR" | "TLG";
+export type TypeEnum = "AUC" | "RO" | "FUP" | "BPR" | "TLG";
 export type DerivedVariable = {
   /** true if object has been stored */
   read_only?: boolean;
@@ -1929,6 +2016,7 @@ export type DerivedVariable = {
   datetime?: string | null;
   /** type of derived variable
     
+    * `AUC` - area under curve
     * `RO` - receptor occupancy
     * `FUP` - faction unbound plasma
     * `BPR` - blood plasma ratio
@@ -1947,6 +2035,7 @@ export type DerivedVariableRead = {
   datetime?: string | null;
   /** type of derived variable
     
+    * `AUC` - area under curve
     * `RO` - receptor occupancy
     * `FUP` - faction unbound plasma
     * `BPR` - blood plasma ratio
@@ -1957,10 +2046,40 @@ export type DerivedVariableRead = {
   /** base variable in PK part of model */
   pk_variable: number;
 };
+export type TimeInterval = {
+  /** true if object has been stored */
+  read_only?: boolean;
+  /** datetime the object was stored. */
+  datetime?: string | null;
+  /** start time of interval */
+  start_time: number;
+  /** end time of interval */
+  end_time: number;
+  /** PKPD model that this time interval is for */
+  pkpd_model: number;
+  /** unit of interval */
+  unit: number;
+};
+export type TimeIntervalRead = {
+  id: number;
+  /** true if object has been stored */
+  read_only?: boolean;
+  /** datetime the object was stored. */
+  datetime?: string | null;
+  /** start time of interval */
+  start_time: number;
+  /** end time of interval */
+  end_time: number;
+  /** PKPD model that this time interval is for */
+  pkpd_model: number;
+  /** unit of interval */
+  unit: number;
+};
 export type CombinedModelSpeciesEnum = "H" | "R" | "N" | "M";
 export type CombinedModel = {
   mappings: PkpdMapping[];
   derived_variables: DerivedVariable[];
+  time_intervals: TimeInterval[];
   /** true if object has been stored */
   read_only?: boolean;
   /** datetime the object was stored. */
@@ -1999,9 +2118,11 @@ export type CombinedModelRead = {
   id: number;
   mappings: PkpdMappingRead[];
   derived_variables: DerivedVariableRead[];
+  time_intervals: TimeIntervalRead[];
   components: string;
   variables: number[];
   mmt: string;
+  sbml: string;
   time_unit: number;
   is_library_model: boolean;
   /** true if object has been stored */
@@ -2041,6 +2162,7 @@ export type CombinedModelRead = {
 export type PatchedCombinedModel = {
   mappings?: PkpdMapping[];
   derived_variables?: DerivedVariable[];
+  time_intervals?: TimeInterval[];
   /** true if object has been stored */
   read_only?: boolean;
   /** datetime the object was stored. */
@@ -2079,9 +2201,11 @@ export type PatchedCombinedModelRead = {
   id?: number;
   mappings?: PkpdMappingRead[];
   derived_variables?: DerivedVariableRead[];
+  time_intervals?: TimeIntervalRead[];
   components?: string;
   variables?: number[];
   mmt?: string;
+  sbml?: string;
   time_unit?: number;
   is_library_model?: boolean;
   /** true if object has been stored */
@@ -3052,6 +3176,98 @@ export type PatchedProtocolRead = {
   /** Group that uses this protocol */
   group?: number | null;
 };
+export type RowsEnum = "parameters" | "variables" | "groups" | "intervals";
+export type ColumnsEnum = "parameters" | "variables" | "groups" | "intervals";
+export type ResultsTable = {
+  /** name of the table */
+  name: string;
+  /** parameter to display as table rows
+    
+    * `parameters` - Secondary parameters of the model.
+    * `variables` - Model variables.
+    * `groups` - Subject groups.
+    * `intervals` - Time intervals. */
+  rows: RowsEnum;
+  /** parameter to display as table columns
+    
+    * `parameters` - Secondary parameters of the model.
+    * `variables` - Model variables.
+    * `groups` - Subject groups.
+    * `intervals` - Time intervals. */
+  columns: ColumnsEnum;
+  /** Filters to apply to the table. */
+  filters?: any | null;
+  /** Project that this table belongs to. */
+  project?: number | null;
+};
+export type ResultsTableRead = {
+  id: number;
+  /** name of the table */
+  name: string;
+  /** parameter to display as table rows
+    
+    * `parameters` - Secondary parameters of the model.
+    * `variables` - Model variables.
+    * `groups` - Subject groups.
+    * `intervals` - Time intervals. */
+  rows: RowsEnum;
+  /** parameter to display as table columns
+    
+    * `parameters` - Secondary parameters of the model.
+    * `variables` - Model variables.
+    * `groups` - Subject groups.
+    * `intervals` - Time intervals. */
+  columns: ColumnsEnum;
+  /** Filters to apply to the table. */
+  filters?: any | null;
+  /** Project that this table belongs to. */
+  project?: number | null;
+};
+export type PatchedResultsTable = {
+  /** name of the table */
+  name?: string;
+  /** parameter to display as table rows
+    
+    * `parameters` - Secondary parameters of the model.
+    * `variables` - Model variables.
+    * `groups` - Subject groups.
+    * `intervals` - Time intervals. */
+  rows?: RowsEnum;
+  /** parameter to display as table columns
+    
+    * `parameters` - Secondary parameters of the model.
+    * `variables` - Model variables.
+    * `groups` - Subject groups.
+    * `intervals` - Time intervals. */
+  columns?: ColumnsEnum;
+  /** Filters to apply to the table. */
+  filters?: any | null;
+  /** Project that this table belongs to. */
+  project?: number | null;
+};
+export type PatchedResultsTableRead = {
+  id?: number;
+  /** name of the table */
+  name?: string;
+  /** parameter to display as table rows
+    
+    * `parameters` - Secondary parameters of the model.
+    * `variables` - Model variables.
+    * `groups` - Subject groups.
+    * `intervals` - Time intervals. */
+  rows?: RowsEnum;
+  /** parameter to display as table columns
+    
+    * `parameters` - Secondary parameters of the model.
+    * `variables` - Model variables.
+    * `groups` - Subject groups.
+    * `intervals` - Time intervals. */
+  columns?: ColumnsEnum;
+  /** Filters to apply to the table. */
+  filters?: any | null;
+  /** Project that this table belongs to. */
+  project?: number | null;
+};
 export type SimulationSlider = {
   variable: number;
 };
@@ -3106,6 +3322,12 @@ export type SimulationPlot = {
     * `lg10` - Log10
     * `ln` - Ln */
   y2_scale?: Y2ScaleEnum;
+  /** label for x axis */
+  x_label?: string;
+  /** label for y axis */
+  y_label?: string;
+  /** label for rhs y axis */
+  y2_label?: string;
   /** lower bound for the y axis */
   min?: number | null;
   /** upper bound for the y axis */
@@ -3148,6 +3370,12 @@ export type SimulationPlotRead = {
     * `lg10` - Log10
     * `ln` - Ln */
   y2_scale?: Y2ScaleEnum;
+  /** label for x axis */
+  x_label?: string;
+  /** label for y axis */
+  y_label?: string;
+  /** label for rhs y axis */
+  y2_label?: string;
   /** lower bound for the y axis */
   min?: number | null;
   /** upper bound for the y axis */
@@ -3472,6 +3700,10 @@ export type Variable = {
   upper_bound?: number | null;
   /** default value for this variable */
   default_value?: number;
+  /** lower threshold for this variable */
+  lower_threshold?: number | null;
+  /** upper threshold for this variable */
+  upper_threshold?: number | null;
   /** True if default_value is stored as the log of this value */
   is_log?: boolean;
   /** name of the variable */
@@ -3494,6 +3726,8 @@ export type Variable = {
   display?: boolean;
   /** False/True if biomarker type displayed on LHS/RHS axis */
   axis?: boolean;
+  /** unit for the threshold values */
+  threshold_unit?: number | null;
   /** variable values are in this unit (note this might be different from the unit in the stored sbml) */
   unit?: number | null;
   /** pharmacodynamic model */
@@ -3518,6 +3752,10 @@ export type VariableRead = {
   upper_bound?: number | null;
   /** default value for this variable */
   default_value?: number;
+  /** lower threshold for this variable */
+  lower_threshold?: number | null;
+  /** upper threshold for this variable */
+  upper_threshold?: number | null;
   /** True if default_value is stored as the log of this value */
   is_log?: boolean;
   /** name of the variable */
@@ -3540,6 +3778,8 @@ export type VariableRead = {
   display?: boolean;
   /** False/True if biomarker type displayed on LHS/RHS axis */
   axis?: boolean;
+  /** unit for the threshold values */
+  threshold_unit?: number | null;
   /** variable values are in this unit (note this might be different from the unit in the stored sbml) */
   unit?: number | null;
   /** pharmacodynamic model */
@@ -3563,6 +3803,10 @@ export type PatchedVariable = {
   upper_bound?: number | null;
   /** default value for this variable */
   default_value?: number;
+  /** lower threshold for this variable */
+  lower_threshold?: number | null;
+  /** upper threshold for this variable */
+  upper_threshold?: number | null;
   /** True if default_value is stored as the log of this value */
   is_log?: boolean;
   /** name of the variable */
@@ -3585,6 +3829,8 @@ export type PatchedVariable = {
   display?: boolean;
   /** False/True if biomarker type displayed on LHS/RHS axis */
   axis?: boolean;
+  /** unit for the threshold values */
+  threshold_unit?: number | null;
   /** variable values are in this unit (note this might be different from the unit in the stored sbml) */
   unit?: number | null;
   /** pharmacodynamic model */
@@ -3609,6 +3855,10 @@ export type PatchedVariableRead = {
   upper_bound?: number | null;
   /** default value for this variable */
   default_value?: number;
+  /** lower threshold for this variable */
+  lower_threshold?: number | null;
+  /** upper threshold for this variable */
+  upper_threshold?: number | null;
   /** True if default_value is stored as the log of this value */
   is_log?: boolean;
   /** name of the variable */
@@ -3631,6 +3881,8 @@ export type PatchedVariableRead = {
   display?: boolean;
   /** False/True if biomarker type displayed on LHS/RHS axis */
   axis?: boolean;
+  /** unit for the threshold values */
+  threshold_unit?: number | null;
   /** variable values are in this unit (note this might be different from the unit in the stored sbml) */
   unit?: number | null;
   /** pharmacodynamic model */
@@ -3735,6 +3987,12 @@ export const {
   useProtocolUpdateMutation,
   useProtocolPartialUpdateMutation,
   useProtocolDestroyMutation,
+  useResultsTableListQuery,
+  useResultsTableCreateMutation,
+  useResultsTableRetrieveQuery,
+  useResultsTableUpdateMutation,
+  useResultsTablePartialUpdateMutation,
+  useResultsTableDestroyMutation,
   useSessionRetrieveQuery,
   useSimulationListQuery,
   useSimulationCreateMutation,

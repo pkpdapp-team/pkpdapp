@@ -36,6 +36,7 @@ from .inference import (
 from .nca import NcaSerializer
 from .project import ProjectSerializer, ProjectAccessSerializer
 from .protocol import ProtocolSerializer
+from .results_table import ResultsTableSerializer
 from .subject_group import SubjectGroupSerializer
 from .dataset import DatasetSerializer, DatasetCsvSerializer
 from .subject import SubjectSerializer

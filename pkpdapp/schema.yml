@@ -2337,6 +2337,153 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/results_table/:
+    get:
+      operationId: results_table_list
+      parameters:
+      - in: query
+        name: project_id
+        schema:
+          type: integer
+        description: Filter results by project ID
+      tags:
+      - results_table
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ResultsTable'
+          description: ''
+    post:
+      operationId: results_table_create
+      tags:
+      - results_table
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResultsTable'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ResultsTable'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ResultsTable'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultsTable'
+          description: ''
+  /api/results_table/{id}/:
+    get:
+      operationId: results_table_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this results table.
+        required: true
+      tags:
+      - results_table
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultsTable'
+          description: ''
+    put:
+      operationId: results_table_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this results table.
+        required: true
+      tags:
+      - results_table
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResultsTable'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ResultsTable'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ResultsTable'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultsTable'
+          description: ''
+    patch:
+      operationId: results_table_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this results table.
+        required: true
+      tags:
+      - results_table
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedResultsTable'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedResultsTable'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedResultsTable'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultsTable'
+          description: ''
+    delete:
+      operationId: results_table_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this results table.
+        required: true
+      tags:
+      - results_table
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
   /api/session/:
     get:
       operationId: session_retrieve
@@ -3362,6 +3509,18 @@ components:
         * `SA` - Sampling
         * `OP` - Optimisation
         * `OT` - Optimisation
+    ColumnsEnum:
+      enum:
+      - parameters
+      - variables
+      - groups
+      - intervals
+      type: string
+      description: |-
+        * `parameters` - Secondary parameters of the model.
+        * `variables` - Model variables.
+        * `groups` - Subject groups.
+        * `intervals` - Time intervals.
     CombinedModel:
       type: object
       properties:
@@ -3376,6 +3535,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/DerivedVariable'
+        time_intervals:
+          type: array
+          items:
+            $ref: '#/components/schemas/TimeInterval'
         components:
           type: string
           readOnly: true
@@ -3385,6 +3548,9 @@ components:
             type: integer
           readOnly: true
         mmt:
+          type: string
+          readOnly: true
+        sbml:
           type: string
           readOnly: true
         time_unit:
@@ -3459,6 +3625,8 @@ components:
       - mappings
       - mmt
       - name
+      - sbml
+      - time_intervals
       - time_unit
       - variables
     CombinedModelSpeciesEnum:
@@ -3646,6 +3814,7 @@ components:
           description: |-
             type of derived variable
 
+            * `AUC` - area under curve
             * `RO` - receptor occupancy
             * `FUP` - faction unbound plasma
             * `BPR` - blood plasma ratio
@@ -4104,6 +4273,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/DerivedVariable'
+        time_intervals:
+          type: array
+          items:
+            $ref: '#/components/schemas/TimeInterval'
         components:
           type: string
           readOnly: true
@@ -4113,6 +4286,9 @@ components:
             type: integer
           readOnly: true
         mmt:
+          type: string
+          readOnly: true
+        sbml:
           type: string
           readOnly: true
         time_unit:
@@ -4619,6 +4795,43 @@ components:
           type: integer
           nullable: true
           description: Group that uses this protocol
+    PatchedResultsTable:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          description: name of the table
+          maxLength: 100
+        rows:
+          allOf:
+          - $ref: '#/components/schemas/RowsEnum'
+          description: |-
+            parameter to display as table rows
+
+            * `parameters` - Secondary parameters of the model.
+            * `variables` - Model variables.
+            * `groups` - Subject groups.
+            * `intervals` - Time intervals.
+        columns:
+          allOf:
+          - $ref: '#/components/schemas/ColumnsEnum'
+          description: |-
+            parameter to display as table columns
+
+            * `parameters` - Secondary parameters of the model.
+            * `variables` - Model variables.
+            * `groups` - Subject groups.
+            * `intervals` - Time intervals.
+        filters:
+          nullable: true
+          description: Filters to apply to the table.
+        project:
+          type: integer
+          nullable: true
+          description: Project that this table belongs to.
     PatchedSimulation:
       type: object
       properties:
@@ -4837,6 +5050,16 @@ components:
           type: number
           format: double
           description: default value for this variable
+        lower_threshold:
+          type: number
+          format: double
+          nullable: true
+          description: lower threshold for this variable
+        upper_threshold:
+          type: number
+          format: double
+          nullable: true
+          description: upper threshold for this variable
         is_log:
           type: boolean
           description: True if default_value is stored as the log of this value
@@ -4882,6 +5105,10 @@ components:
         axis:
           type: boolean
           description: False/True if biomarker type displayed on LHS/RHS axis
+        threshold_unit:
+          type: integer
+          nullable: true
+          description: unit for the threshold values
         unit:
           type: integer
           nullable: true
@@ -5197,6 +5424,60 @@ components:
       - name
       - subjects
       - variables
+    ResultsTable:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          description: name of the table
+          maxLength: 100
+        rows:
+          allOf:
+          - $ref: '#/components/schemas/RowsEnum'
+          description: |-
+            parameter to display as table rows
+
+            * `parameters` - Secondary parameters of the model.
+            * `variables` - Model variables.
+            * `groups` - Subject groups.
+            * `intervals` - Time intervals.
+        columns:
+          allOf:
+          - $ref: '#/components/schemas/ColumnsEnum'
+          description: |-
+            parameter to display as table columns
+
+            * `parameters` - Secondary parameters of the model.
+            * `variables` - Model variables.
+            * `groups` - Subject groups.
+            * `intervals` - Time intervals.
+        filters:
+          nullable: true
+          description: Filters to apply to the table.
+        project:
+          type: integer
+          nullable: true
+          description: Project that this table belongs to.
+      required:
+      - columns
+      - id
+      - name
+      - rows
+    RowsEnum:
+      enum:
+      - parameters
+      - variables
+      - groups
+      - intervals
+      type: string
+      description: |-
+        * `parameters` - Secondary parameters of the model.
+        * `variables` - Model variables.
+        * `groups` - Subject groups.
+        * `intervals` - Time intervals.
     Simulate:
       type: object
       properties:
@@ -5344,6 +5625,18 @@ components:
             * `lg2` - Log2
             * `lg10` - Log10
             * `ln` - Ln
+        x_label:
+          type: string
+          description: label for x axis
+          maxLength: 100
+        y_label:
+          type: string
+          description: label for y axis
+          maxLength: 100
+        y2_label:
+          type: string
+          description: label for rhs y axis
+          maxLength: 100
         min:
           type: number
           format: double
@@ -5478,14 +5771,50 @@ components:
       - name
       - protocols
       - subjects
+    TimeInterval:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        read_only:
+          type: boolean
+          description: true if object has been stored
+        datetime:
+          type: string
+          format: date-time
+          nullable: true
+          description: datetime the object was stored.
+        start_time:
+          type: number
+          format: double
+          description: start time of interval
+        end_time:
+          type: number
+          format: double
+          description: end time of interval
+        pkpd_model:
+          type: integer
+          description: PKPD model that this time interval is for
+        unit:
+          type: integer
+          description: unit of interval
+      required:
+      - end_time
+      - id
+      - pkpd_model
+      - start_time
+      - unit
     TypeEnum:
       enum:
+      - AUC
       - RO
       - FUP
       - BPR
       - TLG
       type: string
       description: |-
+        * `AUC` - area under curve
         * `RO` - receptor occupancy
         * `FUP` - faction unbound plasma
         * `BPR` - blood plasma ratio
@@ -5610,6 +5939,16 @@ components:
           type: number
           format: double
           description: default value for this variable
+        lower_threshold:
+          type: number
+          format: double
+          nullable: true
+          description: lower threshold for this variable
+        upper_threshold:
+          type: number
+          format: double
+          nullable: true
+          description: upper threshold for this variable
         is_log:
           type: boolean
           description: True if default_value is stored as the log of this value
@@ -5655,6 +5994,10 @@ components:
         axis:
           type: boolean
           description: False/True if biomarker type displayed on LHS/RHS axis
+        threshold_unit:
+          type: integer
+          nullable: true
+          description: unit for the threshold values
         unit:
           type: integer
           nullable: true

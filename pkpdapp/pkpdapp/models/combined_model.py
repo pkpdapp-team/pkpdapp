@@ -163,6 +163,13 @@ class CombinedModel(MyokitModelMixin, StoredModel):
         myokit_model = self.get_myokit_model()
         return myokit_model.code()
 
+    def get_sbml(self):
+        sbml_model = myokit.formats.sbml.Model.from_myokit_model(
+            self.get_myokit_model()
+        )
+        sbml_writer = myokit.formats.sbml.SBMLWriter()
+        return sbml_writer.write_string(sbml_model)
+
     def copy(self, project):
         stored_model_kwargs = {
             "name": self.name,
@@ -201,6 +208,9 @@ class CombinedModel(MyokitModelMixin, StoredModel):
         for variable in stored_model.variables.all():
             old_var = self.variables.get(qname=variable.qname)
             variable.copy(old_var, project)
+
+        for time_interval in self.time_intervals.all():
+            time_interval.copy(stored_model)
 
         return stored_model
 
@@ -317,6 +327,28 @@ class CombinedModel(MyokitModelMixin, StoredModel):
             myokit_compartment = myokit_var.parent()
             var_name = derived_variable.pk_variable.name
             if (
+                derived_variable.type == DerivedVariable.Type.AREA_UNDER_CURVE
+            ):  # noqa: E501
+                new_names = [f"calc_{var_name}_AUC"]
+                has_name = any(
+                    [
+                        myokit_compartment.has_variable(new_name)
+                        for new_name in new_names
+                    ]
+                )
+                if has_name:
+                    continue
+                time_var = pkpd_model.binding("time")
+                var = myokit_compartment.add_variable(
+                    new_names[0],
+                    rhs=myokit.Name(myokit_var),
+                    initial_value=0,
+                    unit=myokit_var.unit() * time_var.unit(),
+                )
+                var.meta["desc"] = (
+                    f'Area under curve for {myokit_var.meta["desc"]}'  # noqa: E501
+                )
+            elif (
                 derived_variable.type == DerivedVariable.Type.RECEPTOR_OCCUPANCY
             ):  # noqa: E501
                 new_names = [f"calc_{var_name}_RO"]
@@ -329,25 +361,25 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 if has_name:
                     continue
                 var = myokit_compartment.add_variable(new_names[0])
-                var.meta[
-                    "desc"
-                ] = f'Receptor occupancy for {myokit_var.meta["desc"]}'  # noqa: E501
+                var.meta["desc"] = (
+                    f'Receptor occupancy for {myokit_var.meta["desc"]}'  # noqa: E501
+                )
                 kd_name = "KD_ud"
                 if myokit_compartment.has_variable(kd_name):
                     kd = myokit_compartment.get(kd_name)
                 else:
                     kd = myokit_compartment.add_variable(kd_name)
-                    kd.meta[
-                        "desc"
-                    ] = "User-defined Dissociation Constant used to calculate Receptor occupancy"  # noqa: E501
+                    kd.meta["desc"] = (
+                        "User-defined Dissociation Constant used to calculate Receptor occupancy"  # noqa: E501
+                    )
                 target_conc_name = "CT1_0_ud"
                 if myokit_compartment.has_variable(target_conc_name):
                     target_conc = myokit_compartment.get(target_conc_name)
                 else:
                     target_conc = myokit_compartment.add_variable(target_conc_name)
-                    target_conc.meta[
-                        "desc"
-                    ] = "User-defined Target Concentration used to calculate Receptor occupancy"  # noqa: E501
+                    target_conc.meta["desc"] = (
+                        "User-defined Target Concentration used to calculate Receptor occupancy"  # noqa: E501
+                    )
                 var.set_unit(myokit.Unit())
                 kd_unit = myokit_var.unit()
                 compound = self.project.compound
@@ -412,13 +444,11 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 if has_name:
                     continue
                 var = myokit_compartment.add_variable(new_names[0])
-                var.meta[
-                    "desc"
-                ] = f'Unbound Concentration for {myokit_var.meta["desc"]}'  # noqa: E501
+                var.meta["desc"] = (
+                    f'Unbound Concentration for {myokit_var.meta["desc"]}'  # noqa: E501
+                )
                 fup = myokit_compartment.add_variable(new_names[1])
-                fup.meta[
-                    "desc"
-                ] = "User-defined Fraction Unbound Plasma (Drug Target Tab)"  # noqa: E501
+                fup.meta["desc"] = "User-defined Fraction Unbound Plasma"  # noqa: E501
                 var.set_unit(myokit_var.unit())
                 fup.set_rhs(self.project.compound.fraction_unbound_plasma)
                 fup.set_unit(myokit.units.dimensionless)
@@ -437,9 +467,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                     continue
                 var = myokit_compartment.add_variable(new_names[0])
                 bpr = myokit_compartment.add_variable(new_names[1])
-                bpr.meta[
-                    "desc"
-                ] = "User-defined Blood to Plasma Ratio (Drug Target Tab)"  # noqa: E501
+                bpr.meta["desc"] = "User-defined Blood to Plasma Ratio"  # noqa: E501
                 var.meta["desc"] = f'Blood Concentration for {myokit_var.meta["desc"]}'
                 var.set_unit(myokit_var.unit())
                 bpr.set_rhs(self.project.compound.blood_to_plasma_ratio)
@@ -456,9 +484,9 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 if has_name:
                     continue
                 var = myokit_compartment.add_variable(new_names[0])
-                var.meta[
-                    "desc"
-                ] = "User-defined absorption lag time from specified compartment"
+                var.meta["desc"] = (
+                    "User-defined absorption lag time from specified compartment"
+                )
                 time_var = pkpd_model.binding("time")
                 var.set_unit(time_var.unit())
                 var.set_rhs(myokit.Number(0))
@@ -591,7 +619,8 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                     continue
                 v.default_value = value
                 v.unit = unit
-                v.save()
+                if not v._state.adding:
+                    v.save()
 
 
 class PkpdMapping(StoredModel):
@@ -674,6 +703,7 @@ class DerivedVariable(StoredModel):
     )
 
     class Type(models.TextChoices):
+        AREA_UNDER_CURVE = "AUC", "area under curve"
         RECEPTOR_OCCUPANCY = "RO", "receptor occupancy"
         FRACTION_UNBOUND_PLASMA = "FUP", "faction unbound plasma"
         BLOOD_PLASMA_RATIO = "BPR", "blood plasma ratio"
@@ -717,4 +747,34 @@ class DerivedVariable(StoredModel):
             "type": self.type,
         }
         stored_mapping = DerivedVariable.objects.create(**stored_kwargs)
+        return stored_mapping
+
+
+class TimeInterval(StoredModel):
+    pkpd_model = models.ForeignKey(
+        CombinedModel,
+        on_delete=models.CASCADE,
+        related_name="time_intervals",
+        help_text="PKPD model that this time interval is for",
+    )
+    start_time = models.FloatField(help_text="start time of interval")
+    end_time = models.FloatField(help_text="end time of interval")
+    unit = models.ForeignKey(
+        Unit,
+        on_delete=models.PROTECT,
+        help_text="unit of interval",
+    )
+
+    def __str__(self):
+        return f"{self.start_time} - {self.end_time} [{self.unit}]"
+
+    def copy(self, new_pkpd_model):
+        stored_kwargs = {
+            "pkpd_model": new_pkpd_model,
+            "start_time": self.start_time,
+            "end_time": self.end_time,
+            "unit": self.unit,
+            "read_only": self.read_only,
+        }
+        stored_mapping = TimeInterval.objects.create(**stored_kwargs)
         return stored_mapping

@@ -5,7 +5,7 @@ import { UserRead, ProjectRead, ProjectAccessRead } from "../../app/backendApi";
 
 export const fetchCsrf = createAsyncThunk<string, undefined>(
   "login/fetchCsrf",
-  async (_, { dispatch }) => {
+  async () => {
     const csrfResponse = await fetch("/api/csrf/", {
       method: "GET",
       credentials: "include",
@@ -17,7 +17,7 @@ export const fetchCsrf = createAsyncThunk<string, undefined>(
 
 interface Login {
   isAuthenticated: boolean;
-  user: any;
+  user: UserRead;
 }
 
 interface LoginErrorResponse {
@@ -111,7 +111,7 @@ export const logout = createAsyncThunk(
       credentials: "include",
     })
       .then(isResponseOk)
-      .then((data) => {
+      .then(() => {
         dispatch(fetchCsrf());
         return { isAuthenticated: false };
       });
@@ -143,7 +143,7 @@ const slice = createSlice({
     },
   },
   extraReducers: (builder) => {
-    builder.addCase(fetchCsrf.rejected, (state, action) => {
+    builder.addCase(fetchCsrf.rejected, (state) => {
       state.csrf = undefined;
     });
     builder.addCase(fetchCsrf.fulfilled, (state, action) => {

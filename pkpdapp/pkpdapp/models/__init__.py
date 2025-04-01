@@ -10,6 +10,7 @@ from .units import Unit
 from .compound import Compound
 from .efficacy_experiment import EfficacyExperiment
 from .project import Project, ProjectAccess
+from .results_table import ResultsTable
 from .subject_group import SubjectGroup
 from .protocol import Protocol
 from .dose import Dose
@@ -28,7 +29,8 @@ from .pharmacokinetic_model import (
 from .combined_model import (
     CombinedModel,
     PkpdMapping,
-    DerivedVariable
+    DerivedVariable,
+    TimeInterval
 )
 from .dataset import Dataset
 from .variable import Variable

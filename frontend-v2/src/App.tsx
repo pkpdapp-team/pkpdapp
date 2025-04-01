@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import "./App.css";
 
 import {
@@ -13,15 +13,26 @@ import { useAppDispatch } from "./app/hooks";
 import { RootState } from "./app/store";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { Typography } from "@mui/material";
+
+import { SimulationContext } from "./contexts/SimulationContext";
+import { SimulateResponse } from "./app/backendApi";
+import { CollapsibleSidebarProvider } from "./shared/contexts/CollapsibleSidebarContext";
+import { ProjectDescriptionProvider } from "./shared/contexts/ProjectDescriptionContext";
+import { PageName, setPage } from "./features/main/mainSlice";
 
 function App() {
   const dispatch = useAppDispatch();
   const isAuth = useSelector(isAuthenticated);
   const error = useSelector((state: RootState) => state.login.error);
+  const [simulations, setSimulations] = useState<SimulateResponse[]>([]);
+  const simulationContext = {
+    simulations,
+    setSimulations,
+  };
 
   const onLogin = (username: string, password: string) => {
     dispatch(login({ username, password }));
+    dispatch(setPage(PageName.PROJECTS));
   };
 
   useEffect(() => {
@@ -29,27 +40,20 @@ function App() {
   }, [dispatch]);
 
   return (
-    <>
+    <SimulationContext.Provider value={simulationContext}>
       {isAuth ? (
         <>
-          <Sidebar />
-          <ToastContainer />
+          <CollapsibleSidebarProvider>
+            <ProjectDescriptionProvider>
+              <Sidebar />
+              <ToastContainer />
+            </ProjectDescriptionProvider>
+          </CollapsibleSidebarProvider>
         </>
       ) : (
         <Login onLogin={onLogin} isLoading={false} errorMessage={error} />
       )}
-      <Typography
-        sx={{
-          position: "fixed",
-          bottom: 0,
-          right: 0,
-          color: "gray",
-          paddingRight: 1,
-        }}
-      >
-        pkpdx version {import.meta.env.VITE_APP_VERSION?.slice(0, 7) || "dev"}
-      </Typography>
-    </>
+    </SimulationContext.Provider>
   );
 }
 
