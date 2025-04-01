@@ -123,6 +123,7 @@ export default function Sidebar() {
       return acc && dv.type !== "AUC";
     }, true)
     : false;
+  const noIntervals = intervals.length === 0;
 
   const warnings: { [key: string]: string } = {};
   const errors: { [key: string]: string } = {};
@@ -212,7 +213,7 @@ export default function Sidebar() {
     if (page === PageName.TRIAL_DESIGN && PageName.MODEL in errors) {
       return true;
     }
-    if (page === PageName.RESULTS && noSecondaryParameters) {
+    if (page === PageName.RESULTS && (noSecondaryParameters || noIntervals)) {
       return true;
     }
     if (page === PageName.DATA && PageName.MODEL in errors) {
@@ -222,9 +223,6 @@ export default function Sidebar() {
       page === PageName.SIMULATIONS &&
       (PageName.MODEL in errors || PageName.TRIAL_DESIGN in errors)
     ) {
-      return true;
-    }
-    if (page === PageName.RESULTS && intervals.length === 0) {
       return true;
     }
     if (selectedProject === null) {
