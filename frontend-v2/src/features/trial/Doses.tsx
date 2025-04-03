@@ -2,10 +2,8 @@ import { FC, useEffect, useMemo } from "react";
 import {
   TableCell,
   TableRow,
-  IconButton,
   Button,
   Stack,
-  Typography,
   Box,
   Tooltip,
 } from "@mui/material";
@@ -14,15 +12,10 @@ import {
   Protocol,
   ProtocolRead,
   UnitRead,
-  useCompoundRetrieveQuery,
   useProtocolUpdateMutation,
   useVariableRetrieveQuery,
 } from "../../app/backendApi";
-import Delete from "@mui/icons-material/Delete";
 import { useFieldArray, useForm } from "react-hook-form";
-import UnitField from "../../components/UnitField";
-import FloatField from "../../components/FloatField";
-import IntegerField from "../../components/IntegerField";
 import useDirty from "../../hooks/useDirty";
 import useInterval from "../../hooks/useInterval";
 import { useSelector } from "react-redux";
@@ -30,6 +23,7 @@ import { RootState } from "../../app/store";
 import { selectIsProjectShared } from "../login/loginSlice";
 import { TableHeader } from "../../components/TableHeader";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
+import DoseRow from "./DoseRow";
 
 interface Props {
   onChange: () => void;
@@ -39,10 +33,6 @@ interface Props {
 }
 
 const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
-  const { data: compound } = useCompoundRetrieveQuery(
-    { id: project?.compound || 0 },
-    { skip: !project || !project.compound },
-  );
   const { data: variable, isLoading: isVariableLoading } =
     useVariableRetrieveQuery(
       { id: protocol.variables[0] || 0 },
@@ -96,9 +86,6 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
   });
 
   const isPreclinical = project.species !== "H";
-  const defaultProps = {
-    disabled: isSharedWithMe,
-  };
   const defaultSymbol = isPreclinical ? "mg/kg" : "mg";
   const defaultUnit = units.find((u) => u.symbol === defaultSymbol);
   const baseUnit = units.find((u) => u.id === protocol.amount_unit);
@@ -120,9 +107,11 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
   }
 
   const handleAddRow = () => {
-    const isSmallMolecule = compound?.compound_type === "SM";
     const lastDose = doses[doses.length - 1];
-    const increment = (lastDose.repeats && lastDose.repeats > 1) ? ((lastDose.repeat_interval || 1) * lastDose.repeats) : (lastDose.duration || 1);
+    const increment =
+      lastDose.repeats && lastDose.repeats > 1
+        ? (lastDose.repeat_interval || 1) * lastDose.repeats
+        : lastDose.duration || 1;
     const lastDoseEndTime = lastDose.start_time + increment;
     appendDose({
       amount: lastDose.amount,
@@ -131,10 +120,6 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
       start_time: lastDoseEndTime,
       repeat_interval: lastDose.repeat_interval,
     });
-  };
-
-  const handleDeleteRow = (index: number) => {
-    removeDose(index);
   };
 
   const selectedAmountId = getValues("amount_unit");
@@ -200,114 +185,22 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
           </Box>
         </TableCell>
       </TableRow>
-      {doses.map((dose, index) => (
-        <TableRow key={dose.id}>
-          <TableCell>
-            <FloatField
-              sx={{ minWidth: "6rem" }}
-              size="small"
-              label={"Dose"}
-              name={`doses.${index}.amount`}
-              control={control}
-              rules={{
-                required: true,
-                min: { value: 0, message: "Must be greater or equal to 0" },
-              }}
-              textFieldProps={defaultProps}
-            />
-          </TableCell>
-          <TableCell>
-            {protocol.amount_unit && index === 0 ? (
-              <UnitField
-                size="small"
-                label={"Unit"}
-                name={`amount_unit`}
-                control={control}
-                baseUnit={baseUnit}
-                isPreclinicalPerKg={isPreclinical}
-                selectProps={defaultProps}
-              />
-            ) : (
-              <Typography>{selectedAmountLabel}</Typography>
-            )}
-          </TableCell>
-          <TableCell>
-            <IntegerField
-              size="small"
-              label={"Number of Doses"}
-              name={`doses.${index}.repeats`}
-              control={control}
-              rules={{
-                required: true,
-                min: { value: 1, message: "One or more required" },
-              }}
-              textFieldProps={defaultProps}
-            />
-          </TableCell>
-          <TableCell>
-            <FloatField
-              size="small"
-              label="Start Time"
-              name={`doses.${index}.start_time`}
-              control={control}
-              rules={{
-                required: true,
-                min: {
-                  value: doses[index - 1]?.start_time + 1e4 * Number.EPSILON || 0,
-                  message: "value > prev. dose or 0",
-                }
-              }}
-              textFieldProps={defaultProps}
-            />
-          </TableCell>
-          <TableCell>
-            <FloatField
-              size="small"
-              label={"Dosing Duration"}
-              name={`doses.${index}.duration`}
-              control={control}
-              rules={{
-                required: true,
-                min: {
-                  value: Number.EPSILON,
-                  message: "Must be greater than 0",
-                },
-              }}
-              textFieldProps={defaultProps}
-            />
-          </TableCell>
-          <TableCell>
-            <FloatField
-              size="small"
-              label={"Dosing Interval"}
-              name={`doses.${index}.repeat_interval`}
-              control={control}
-              rules={{
-                required: true,
-                min: {
-                  value: Number.EPSILON,
-                  message: "Must be greater than 0",
-                },
-              }}
-              textFieldProps={defaultProps}
-            />
-          </TableCell>
-          <TableCell>
-            <Typography>
-              {units.find((u) => u.id === protocol.time_unit)?.symbol}
-            </Typography>
-          </TableCell>
-          <TableCell align="center">
-            {index !== 0 && (
-              <IconButton
-                onClick={() => handleDeleteRow(index)}
-                disabled={isSharedWithMe}
-              >
-                <Delete />
-              </IconButton>
-            )}
-          </TableCell>
-        </TableRow>
+      {protocol.doses.map((dose, index) => (
+        <DoseRow
+          key={dose.id}
+          index={index}
+          baseUnit={baseUnit}
+          disabled={isSharedWithMe}
+          doseId={dose.id}
+          control={control}
+          isPreclinical={isPreclinical}
+          minStartTime={
+            doses[index - 1]?.start_time + 1e4 * Number.EPSILON || 0
+          }
+          removeDose={removeDose}
+          selectedAmountLabel={selectedAmountLabel}
+          timeUnit={units.find((u) => u.id === protocol.time_unit)}
+        />
       ))}
     </>
   );
