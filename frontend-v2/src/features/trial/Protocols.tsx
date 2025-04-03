@@ -80,11 +80,14 @@ const Protocols: FC = () => {
   const isSharedWithMe = useSelector((state: RootState) =>
     selectIsProjectShared(state, project),
   );
-  const { data: projectProtocols, isLoading: isProtocolsLoading } =
-    useProtocolListQuery(
-      { projectId: selectedProjectOrZero },
-      { skip: !selectedProject },
-    );
+  const {
+    data: projectProtocols,
+    isLoading: isProtocolsLoading,
+    refetch: refetchProtocols,
+  } = useProtocolListQuery(
+    { projectId: selectedProjectOrZero },
+    { skip: !selectedProject },
+  );
   const { data: models, isLoading: isModelsLoading } =
     useCombinedModelListQuery(
       { projectId: selectedProjectOrZero },
@@ -165,9 +168,10 @@ const Protocols: FC = () => {
   const removeGroup = (groupID: number) => async () => {
     const subjectGroup = groups?.find((g) => g.id === groupID);
     const subjectCount = subjectGroup?.subjects.length || 0;
-    const confirmationMessage = subjectCount === 0
-      ? `Are you sure you want to delete ${subjectGroup?.name}?`
-      : `Are you sure you want to delete group ${subjectGroup?.name} and all its subjects?`;
+    const confirmationMessage =
+      subjectCount === 0
+        ? `Are you sure you want to delete ${subjectGroup?.name}?`
+        : `Are you sure you want to delete group ${subjectGroup?.name} and all its subjects?`;
     if (window?.confirm(confirmationMessage)) {
       setTab(tab - 1);
       await destroySubjectGroup({ id: groupID });
@@ -178,6 +182,7 @@ const Protocols: FC = () => {
 
   const onProtocolChange = () => {
     refetchGroups();
+    refetchProtocols();
   };
 
   function a11yProps(index: number) {

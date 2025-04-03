@@ -197,6 +197,7 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
           minStartTime={
             doses[index - 1]?.start_time + 1e4 * Number.EPSILON || 0
           }
+          onChange={onChange}
           removeDose={removeDose}
           selectedAmountLabel={selectedAmountLabel}
           timeUnit={units.find((u) => u.id === protocol.time_unit)}

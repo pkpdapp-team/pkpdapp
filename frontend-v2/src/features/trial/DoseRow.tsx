@@ -23,6 +23,7 @@ type Props = {
   index: number;
   isPreclinical: boolean;
   minStartTime: number;
+  onChange: () => void;
   removeDose: (index: number) => void;
   selectedAmountLabel: string;
   timeUnit?: UnitRead;
@@ -36,6 +37,7 @@ const DoseRow: FC<Props> = ({
   index,
   isPreclinical,
   minStartTime,
+  onChange,
   removeDose,
   selectedAmountLabel,
   timeUnit,
@@ -66,6 +68,7 @@ const DoseRow: FC<Props> = ({
         if (JSON.stringify(data) !== JSON.stringify(dose)) {
           await updateDose({ id: doseId, dose: data });
           refetchDose();
+          onChange();
         }
       }),
     [dose, handleSubmit, doseId, refetchDose, updateDose],
