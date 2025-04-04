@@ -236,9 +236,9 @@ export function tableRow({
     intervals,
   });
   const values = tableColumns.map((column, index) => {
-    let col_interval = interval ? interval : intervals[index];
-    let col_simulation = simulation ? simulation : simulations[index];
-    let col_variable = variable
+    const col_interval = interval ? interval : intervals[index];
+    const col_simulation = simulation ? simulation : simulations[index];
+    const col_variable = variable
       ? variable
       : concentrationVariables[index];
 

@@ -50,9 +50,9 @@ export default function useExportSimulation({
   model,
   project,
 }: iExportSimulation): [
-    () => void,
-    { error: FetchBaseQueryError | SerializedError | undefined },
-  ] {
+  () => void,
+  { error: FetchBaseQueryError | SerializedError | undefined },
+] {
   const { groups } = useSubjectGroups();
   const { compound, protocols } = useProtocols();
   const { data: variables } = useVariableListQuery(
@@ -86,11 +86,7 @@ export default function useExportSimulation({
         let rows = Object.keys(simInputs.variables).map((key) => {
           const variable = variables.find((v) => v.qname === key);
           const unit = units.find((u) => u.id === variable?.unit);
-          return [
-            `${key} (${unit?.symbol || ""})`,
-            simInputs.variables[key],
-            ,
-          ];
+          return [`${key} (${unit?.symbol || ""})`, simInputs.variables[key]];
         });
         if (response?.data) {
           const cols = Object.keys(response.data[0].outputs);
