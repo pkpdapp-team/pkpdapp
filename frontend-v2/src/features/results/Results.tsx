@@ -1,7 +1,6 @@
 import { Tabs, Tab, Box, Button, IconButton } from "@mui/material";
 import RemoveCircleOutlineIcon from "@mui/icons-material/RemoveCircleOutline";
 import { SyntheticEvent, FC, useState } from "react";
-import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import ResultsTab from "./ResultsTab";
 import { TableHeader } from "../../components/TableHeader";
 import { useResults } from "./useResults";
@@ -129,24 +128,22 @@ const Results: FC = () => {
           >
             Add Table
           </Button>
-        </Box >
-      </Box >
+        </Box>
+      </Box>
 
-      {
-        results.map((table, index) => {
-          return (
-            <Box
-              key={table.id}
-              role="tabpanel"
-              id={`table-tabpanel-${index}`}
-              hidden={tab !== index}
-              sx={{ p: 3 }}
-            >
-              <ResultsTab table={table} />
-            </Box>
-          );
-        })
-      }
+      {results.map((table, index) => {
+        return (
+          <Box
+            key={table.id}
+            role="tabpanel"
+            id={`table-tabpanel-${index}`}
+            hidden={tab !== index}
+            sx={{ p: 3 }}
+          >
+            <ResultsTab table={table} />
+          </Box>
+        );
+      })}
     </>
   );
 };

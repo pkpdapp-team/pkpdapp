@@ -26,7 +26,6 @@ import {
 } from "../../app/backendApi";
 import { useFieldArray, useForm, useFormState } from "react-hook-form";
 import FloatField from "../../components/FloatField";
-import UnitField from "../../components/UnitField";
 import { FC, useEffect, useMemo, useState } from "react";
 import TextField from "../../components/TextField";
 import SelectField from "../../components/SelectField";
@@ -217,16 +216,24 @@ const Drug: FC = () => {
     }
   };
 
-
-  const c50Unit = units.find((u) => u.symbol === "pmol/L")
+  const c50Unit = units.find((u) => u.symbol === "pmol/L");
   const c50Units = c50Unit?.compatible_units.filter((unit) =>
-    ["pmol/L", "nmol/L", "µmol/L", "pg/mL", "ng/mL", "µg/mL", "ng/L", "µg/L", "mg/L"].includes(unit.symbol)
+    [
+      "pmol/L",
+      "nmol/L",
+      "µmol/L",
+      "pg/mL",
+      "ng/mL",
+      "µg/mL",
+      "ng/L",
+      "µg/L",
+      "mg/L",
+    ].includes(unit.symbol),
   );
   const c50UnitOpt = c50Units
     ? c50Units.map((unit: { [key: string]: string }) => {
-      return { value: unit.id, label: unit.symbol };
-    }
-    )
+        return { value: unit.id, label: unit.symbol };
+      })
     : [];
 
   const molMassUnit = units.find((u) => u.id === compound.molecular_mass_unit);
@@ -235,15 +242,15 @@ const Drug: FC = () => {
   );
   const molMassUnitOpt = molMassUnits
     ? molMassUnits.map((unit: { [key: string]: string }) => {
-      // add (Da) and (kDa) for clarity
-      if (unit.symbol === "g/mol") {
-        return { value: unit.id, label: `${unit.symbol} (Da)` };
-      }
-      if (unit.symbol === "kg/mol") {
-        return { value: unit.id, label: `${unit.symbol} (kDa)` };
-      }
-      return { value: unit.id, label: unit.symbol };
-    })
+        // add (Da) and (kDa) for clarity
+        if (unit.symbol === "g/mol") {
+          return { value: unit.id, label: `${unit.symbol} (Da)` };
+        }
+        if (unit.symbol === "kg/mol") {
+          return { value: unit.id, label: `${unit.symbol} (kDa)` };
+        }
+        return { value: unit.id, label: unit.symbol };
+      })
     : [];
 
   const defaultProps = { disabled: isSharedWithMe };
