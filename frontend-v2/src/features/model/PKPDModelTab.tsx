@@ -302,11 +302,7 @@ const PKPDModelTab: FC<Props> = ({ model, project, control }: Props) => {
                 </Tooltip>
               )}
             </Stack>
-            <Stack
-              direction="row"
-              spacing={1}
-              sx={{ marginTop: "1rem" }}
-            >
+            <Stack direction="row" spacing={1} sx={{ marginTop: "1rem" }}>
               <Button
                 variant="outlined"
                 onClick={() => setIsCodeModalOpen(true)}
@@ -330,11 +326,13 @@ const PKPDModelTab: FC<Props> = ({ model, project, control }: Props) => {
         isOpen={isCodeModalOpen}
         onClose={() => setIsCodeModalOpen(false)}
         code={model.mmt}
+        language="mmt"
       />
       <CodeModal
         isOpen={isSbmlModalOpen}
         onClose={() => setIsSbmlModalOpen(false)}
         code={model.sbml}
+        language="xml"
       />
     </Grid>
   );

@@ -11,6 +11,7 @@
     "@mui/material": "^6.4.10",
     "@mui/x-data-grid": "^7.28.3",
     "@reduxjs/toolkit": "^2.6.1",
+    "highlight.js": "^11.11.1",
     "papaparse": "^5.5.2",
     "plotly.js-basic-dist-min": "^3.0.1",
     "react": "^19.1.0",
@@ -20,7 +21,9 @@
     "react-player": "^2.16.0",
     "react-plotly.js": "^2.6.0",
     "react-redux": "^9.2.0",
-    "react-toastify": "^11.0.5"
+    "react-toastify": "^11.0.5",
+    "rehype-dom": "^7.0.1",
+    "rehype-react": "^8.0.0"
   },
   "scripts": {
     "start": "npx tsc && vite",
