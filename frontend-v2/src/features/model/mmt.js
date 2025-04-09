@@ -35,18 +35,6 @@ export default function mmt(hljs) {
       keyword: "model PDCompartment PKCompartment environment",
     },
   };
-  // field: value
-  const METADATA_MODE = {
-    scope: "meta",
-    begin: [/\s*/, /\w+/, /:\s*/, /.+$/],
-    beginScope: { 2: "keyword", 4: "comment" },
-    keywords: {
-      $pattern: hljs.IDENT_RE,
-      keyword: "author name desc",
-    },
-    end: /\w\n/,
-    endsWithParent: true,
-  };
   // (PD|PK)Compartment.variable
   const SCOPED_VARIABLE_MODE = {
     begin: [/(PD|PK)Compartment/, /\./, hljs.UNDERSCORE_IDENT_RE],
@@ -75,6 +63,12 @@ export default function mmt(hljs) {
     beginScope: { 1: "punctuation", 2: "comment" },
     end: /\n/,
   };
+  // field: description
+  const METADATA_MODE = {
+    scope: "meta",
+    beginKeywords: "author name desc",
+    contains: [COMMENT_MODE],
+  };
   // in [value] expressions
   const IN_VALUE_MODE = {
     scope: "expression",
@@ -96,7 +90,7 @@ export default function mmt(hljs) {
       keyword: FUNCTIONS,
     },
     contains: [NUMBER_MODE, SCOPED_VARIABLE_MODE, IDENTIFIER_MODE],
-    end: /\)\n/,
+    end: /\)/,
   };
   // dot(variable) = expression : description
   const DOT_VARIABLE_MODE = {
