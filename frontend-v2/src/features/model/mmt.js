@@ -7,6 +7,7 @@ Category: config
 
 const FUNCTIONS = [
   "if",
+  "piecewise",
   "cos",
   "sin",
   "tan",
