@@ -47,6 +47,9 @@ export default function mmt(hljs) {
     end: /[\n+\-*/^]?/,
     excludesEnd: true,
   };
+  const KEYWORD_MODE = {
+    beginKeywords: "bind label",
+  };
   const NUMBER_MODE = {
     scope: "number",
     begin: hljs.C_NUMBER_RE,
@@ -126,6 +129,7 @@ export default function mmt(hljs) {
       COMMENT_MODE,
       FUNCTION_MODE,
       METADATA_MODE,
+      KEYWORD_MODE,
       IDENTIFIER_MODE,
     ],
     end: /\n/,
