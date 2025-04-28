@@ -23,7 +23,6 @@ import { selectIsProjectShared } from "../login/loginSlice";
 import { TableHeader } from "../../components/TableHeader";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import DoseRow from "./DoseRow";
-import { NEW_MODELS_FEATURE } from "../../shared/features";
 import { version } from "os";
 
 interface Props {
