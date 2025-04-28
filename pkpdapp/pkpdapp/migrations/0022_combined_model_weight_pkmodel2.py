@@ -19,7 +19,7 @@ def revert_set_default_unit(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("pkpdapp", "0021_resultstable_filters"),
+        ("pkpdapp", "0022_auto_20250303_1353"),
     ]
 
     operations = [
