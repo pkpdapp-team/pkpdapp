@@ -107,9 +107,11 @@ const SetUnits: FC<IMapObservations> = ({
             >
               <InputLabel id="select-time-unit-label">Set Time Unit</InputLabel>
               <Select
+                label="Set Time Unit"
                 labelId="select-time-unit-label"
                 value={state.timeUnit || ""}
                 onChange={setTimeUnit}
+
               >
                 {timeUnitOptions.map((option) => (
                   <MenuItem key={option.value} value={option.value}>
