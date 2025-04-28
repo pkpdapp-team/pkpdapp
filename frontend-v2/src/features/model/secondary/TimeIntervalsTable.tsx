@@ -202,6 +202,7 @@ const TimeIntervalsTable: FC<TableProps> = (props) => {
       setIntervals([...intervals, newInterval]);
     }
   }
+  console.log("intervals", intervals);
   function removeInterval(id: number) {
     const newIntervals = intervals.filter((i) => i.id !== id);
     setIntervals(newIntervals);
@@ -241,7 +242,7 @@ const TimeIntervalsTable: FC<TableProps> = (props) => {
           <TableBody>
             {intervals.map((interval, index) => (
               <IntervalRow
-                key={interval.id}
+                key={`{interval.id}_${interval.start_time}_${interval.end_time}_${interval.unit}`}
                 interval={interval}
                 onDelete={onDelete(interval.id)}
                 onUpdate={onUpdate(interval.id)}
