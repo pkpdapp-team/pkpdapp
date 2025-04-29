@@ -24,6 +24,7 @@ import {
   useCompoundListQuery,
   CompoundRead,
   ProjectRead,
+  ResultsTableRead,
 } from "../../app/backendApi";
 import ProjectRow from "./Project";
 import { RootState } from "../../app/store";
@@ -35,6 +36,8 @@ import useDataset from "../../hooks/useDataset";
 import { TableHeader } from "../../components/TableHeader";
 import DnsIcon from "@mui/icons-material/Dns";
 import { getTableHeight } from "../../shared/calculateTableHeights";
+import { columns } from "../results/columns";
+import { useResults } from "../results/useResults";
 
 const PROJECT_TABLE_BREAKPOINTS = [
   {
@@ -109,6 +112,7 @@ const ProjectTable: FC = () => {
   const { data: units, isLoading: unitsLoading } = useUnitListQuery({});
 
   const [addProject] = useProjectCreateMutation();
+  const { createResults } = useResults();
   const [addCombinedModel] = useCombinedModelCreateMutation();
   const [addCompound] = useCompoundCreateMutation();
   const [addSimulation] = useSimulationCreateMutation();
@@ -171,6 +175,8 @@ const ProjectTable: FC = () => {
       compound: 0,
       user_access,
     };
+
+
     let compound: Compound | undefined = undefined;
     if (type === "SM") {
       compound = {
@@ -202,6 +208,21 @@ const ProjectTable: FC = () => {
       })
       .then((newProject) => {
         if (newProject?.data) {
+          createResults({
+            resultsTable: {
+              id: 0,
+              name: 'Table 1',
+              project: newProject.data.id,
+              columns: "parameters",
+              rows: "variables",
+              filters: {
+                parameterIndex: "columns",
+                variableIndex: "rows",
+                groupIndex: 0,
+                intervalIndex: 0,
+              },
+            }
+          });
           addDataset(newProject.data.id);
           addCombinedModel({
             combinedModel: {

@@ -70,12 +70,31 @@ const Simulations: FC = () => {
     (state: RootState) => state.main.selectedProject,
   );
   const { groups } = useSubjectGroups();
-  const [visibleGroups, setVisibleGroups] = useState<string[]>(["Project"]);
+  const [groupVisibility, setGroupVisibility] = useState<{ [key: string]: boolean }>({ "Project": true });
+  const visibleGroups = Object.keys(groupVisibility).filter((key: string) => groupVisibility[key]);
   const [showReference, setShowReference] = useState<boolean>(false);
   useEffect(() => {
-    // display groups by default, when they are loaded or deleted.
     const groupData = groups || [];
-    setVisibleGroups(["Project", ...groupData.map((group) => group.name)]);
+    setGroupVisibility((prevState) => {
+      const prevStateKeys = Object.keys(prevState);
+      // any new groups that are not in the previous state are displayed
+      const newGroups = groupData.filter(
+        (group) => !prevStateKeys.includes(group.name),
+      ).map((group) => group.name);
+      // previous state intersection with groupData, making sure to keep Project
+      let newState: { [key: string]: boolean } = {};
+      for (const groupName of prevStateKeys) {
+        const ingroupData = groupData.find((g) => g.name === groupName);
+        if (ingroupData) {
+          newState[groupName] = prevState[groupName];
+        }
+      }
+      // add new groups to the state
+      for (const groupName of newGroups) {
+        newState[groupName] = true;
+      }
+      return newState;
+    });
   }, [groups]);
   const projectIdOrZero = projectId || 0;
   const { data: project, isLoading: isProjectLoading } =
@@ -163,8 +182,8 @@ const Simulations: FC = () => {
   const hasPlots = simulation ? simulation.plots.length > 0 : false;
   const hasSecondaryParameters = model
     ? model.derived_variables.reduce((acc, dv) => {
-        return acc || dv.type === "AUC";
-      }, false)
+      return acc || dv.type === "AUC";
+    }, false)
     : false;
 
   const {
@@ -348,16 +367,11 @@ const Simulations: FC = () => {
   orderedSliders.sort((a, b) => a.priority - b.priority);
 
   const handleVisibleGroups = (event: ChangeEvent<HTMLInputElement>) => {
-    if (!event.target.checked) {
-      const newState = visibleGroups.filter(
-        (name) => name !== event.target.value,
-      );
-      setVisibleGroups(newState);
-      return;
-    } else {
-      const newState = new Set([...visibleGroups, event.target.value]);
-      setVisibleGroups([...newState]);
-    }
+    const groupName = event.target.value;
+    setGroupVisibility((prevState) => ({
+      ...prevState,
+      [groupName]: !prevState[groupName],
+    }));
   };
 
   const constVariables = model ? getConstVariables(variables || [], model) : [];
