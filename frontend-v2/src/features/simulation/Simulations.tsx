@@ -70,29 +70,24 @@ const Simulations: FC = () => {
     (state: RootState) => state.main.selectedProject,
   );
   const { groups } = useSubjectGroups();
-  const [groupVisibility, setGroupVisibility] = useState<{ [key: string]: boolean }>({ "Project": true });
-  const visibleGroups = Object.keys(groupVisibility).filter((key: string) => groupVisibility[key]);
+  const [groupVisibility, setGroupVisibility] = useState<{
+    [key: string]: boolean;
+  }>({ Project: true });
+  const visibleGroups = Object.keys(groupVisibility).filter(
+    (key: string) => groupVisibility[key],
+  );
   const [showReference, setShowReference] = useState<boolean>(false);
   useEffect(() => {
     const groupData = groups || [];
     setGroupVisibility((prevState) => {
-      const prevStateKeys = Object.keys(prevState);
-      // any new groups that are not in the previous state are displayed
-      const newGroups = groupData.filter(
-        (group) => !prevStateKeys.includes(group.name),
-      ).map((group) => group.name);
-      // previous state intersection with groupData, making sure to keep Project
-      let newState: { [key: string]: boolean } = {};
-      for (const groupName of prevStateKeys) {
-        const ingroupData = groupData.find((g) => g.name === groupName);
-        if (ingroupData) {
-          newState[groupName] = prevState[groupName];
-        }
-      }
-      // add new groups to the state
-      for (const groupName of newGroups) {
-        newState[groupName] = true;
-      }
+      // 'Project' plus the names of all available subject groups
+      const groupNames = ["Project", ...groupData.map((group) => group.name)];
+      const newState: Record<string, boolean> = {};
+      groupNames.forEach((groupName) => {
+        // Visibility is previous visibility state or true if not set yet.
+        newState[groupName] =
+          prevState[groupName] === undefined ? true : prevState[groupName];
+      });
       return newState;
     });
   }, [groups]);
@@ -182,8 +177,8 @@ const Simulations: FC = () => {
   const hasPlots = simulation ? simulation.plots.length > 0 : false;
   const hasSecondaryParameters = model
     ? model.derived_variables.reduce((acc, dv) => {
-      return acc || dv.type === "AUC";
-    }, false)
+        return acc || dv.type === "AUC";
+      }, false)
     : false;
 
   const {
@@ -409,7 +404,7 @@ const Simulations: FC = () => {
 
   const [dimensions, setDimensions] = useState({
     width: window.innerWidth,
-    height: window.innerHeight
+    height: window.innerHeight,
   });
 
   const containerRef: MutableRefObject<HTMLElement | null> = useRef(null);
@@ -418,7 +413,7 @@ const Simulations: FC = () => {
     const debouncedHandleResize = debounce(function handleResize() {
       setDimensions({
         width: containerRef?.current?.clientWidth || 0,
-        height: containerRef?.current?.clientHeight || 0
+        height: containerRef?.current?.clientHeight || 0,
       });
     }, 1000);
 
@@ -436,23 +431,23 @@ const Simulations: FC = () => {
   useEffect(() => {
     setDimensions({
       width: containerRef?.current?.clientWidth || 0,
-      height: containerRef?.current?.clientHeight || 0
+      height: containerRef?.current?.clientHeight || 0,
     });
-  }, [data?.length, model, plots?.length])
+  }, [data?.length, model, plots?.length]);
 
-  const isHorizontal = layout.includes('horizontal') || layout?.length === 0;
-  const isVertical = layout.includes('vertical') || layout?.length === 0;
+  const isHorizontal = layout.includes("horizontal") || layout?.length === 0;
+  const isVertical = layout.includes("vertical") || layout?.length === 0;
 
   const getXlLayout = () => {
     if (isVertical && !isHorizontal) {
-      return 12
+      return 12;
     }
 
     if (plots?.length === 1) return 12;
     if (plots?.length === 2) return 6;
 
-    return screen.width > 2500 ? 4 : 6
-  }
+    return screen.width > 2500 ? 4 : 6;
+  };
 
   const tableLayout = getXlLayout();
 
@@ -472,7 +467,10 @@ const Simulations: FC = () => {
   }
 
   return (
-    <Box sx={{ display: "flex", minHeight: '60vh', height: 'calc(80vh - 24px)' }} ref={containerRef}>
+    <Box
+      sx={{ display: "flex", minHeight: "60vh", height: "calc(80vh - 24px)" }}
+      ref={containerRef}
+    >
       <SimulationsSidePanel
         portalId="simulations-portal"
         addPlotOptions={addPlotOptions}
