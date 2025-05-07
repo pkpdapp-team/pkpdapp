@@ -17,7 +17,10 @@ interface IProtocolDataGrid {
 const ROW_COLS = ["Administration Name", "Amount", "Amount Unit"];
 
 const ProtocolDataGrid: FC<IProtocolDataGrid> = ({ group, state }) => {
-  const [selected, setSelected] = useState<GridRowSelectionModel>([]);
+  const [selected, setSelected] = useState<GridRowSelectionModel>({
+    type: "include",
+    ids: new Set(),
+  });
   const idField = state.fields.find(
     (field) => state.normalisedFields.get(field) === "ID",
   );
@@ -56,7 +59,7 @@ const ProtocolDataGrid: FC<IProtocolDataGrid> = ({ group, state }) => {
     <div
       style={{ height: "inherit", display: "flex", flexDirection: "column" }}
     >
-      {selected.length > 0 && (
+      {selected.ids.size > 0 && (
         <SubjectGroupForm group={group} state={state} selected={selected} />
       )}
       <DataGrid

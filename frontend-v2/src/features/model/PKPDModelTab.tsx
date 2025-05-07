@@ -151,7 +151,12 @@ const PKPDModelTab: FC<Props> = ({ model, project, control }: Props) => {
 
   return (
     <Grid container spacing={2} marginTop={5}>
-      <Grid item xl={4} md={8} xs={10}>
+      <Grid
+        size={{
+          xl: 4,
+          md: 8,
+          xs: 10
+        }}>
         <Stack direction="row" alignItems="center" spacing={1}>
           <SelectField
             size="small"
@@ -164,8 +169,13 @@ const PKPDModelTab: FC<Props> = ({ model, project, control }: Props) => {
           />
         </Stack>
       </Grid>
-      <Grid container item spacing={2}>
-        <Grid item xl={4} md={8} xs={10}>
+      <Grid container spacing={2}>
+        <Grid
+          size={{
+            xl: 4,
+            md: 8,
+            xs: 10
+          }}>
           <Stack direction="row" alignItems="center" spacing={1}>
             <SelectField
               size="small"
@@ -240,8 +250,13 @@ const PKPDModelTab: FC<Props> = ({ model, project, control }: Props) => {
           )}
         </Grid>
       </Grid>
-      <Grid container item spacing={2}>
-        <Grid item xl={4} md={8} xs={10}>
+      <Grid container spacing={2}>
+        <Grid
+          size={{
+            xl: 4,
+            md: 8,
+            xs: 10
+          }}>
           <Stack direction="row" alignItems="center" spacing={1}>
             <SelectField
               size="small"
@@ -258,7 +273,12 @@ const PKPDModelTab: FC<Props> = ({ model, project, control }: Props) => {
         <Box width="100%" />
         {pdIsTumourGrowth && (
           <>
-            <Grid item xl={4} md={8} xs={10}>
+            <Grid
+              size={{
+                xl: 4,
+                md: 8,
+                xs: 10
+              }}>
               <Stack direction="row" alignItems="center" spacing={1}>
                 <SelectField
                   size="small"
@@ -274,8 +294,14 @@ const PKPDModelTab: FC<Props> = ({ model, project, control }: Props) => {
           </>
         )}
         <Box width="100%" height="0" />
-        <Grid container item spacing={2} sx={{ paddingTop: "0" }}>
-          <Grid item xs={12} md={8} xl={5} sx={{ paddingTop: "0 !important" }}>
+        <Grid container spacing={2} sx={{ paddingTop: "0" }}>
+          <Grid
+            sx={{ paddingTop: "0 !important" }}
+            size={{
+              xs: 12,
+              md: 8,
+              xl: 5
+            }}>
             <Stack
               sx={{
                 display: "flex",

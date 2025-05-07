@@ -29,7 +29,7 @@ const SubjectGroupForm: FC<ISubjectGroupForm> = ({
     event.preventDefault();
     const newValue = selectedGroupInput.current?.value || group.id;
     const newData = [...state.data];
-    selected.forEach((id) => {
+    selected.ids.forEach((id) => {
       newData
         .filter((row) => (idField ? row[idField] === id : false))
         .forEach((row) => {
@@ -52,7 +52,7 @@ const SubjectGroupForm: FC<ISubjectGroupForm> = ({
       }}
     >
       <Typography variant="caption" sx={{ marginRight: "1rem" }}>
-        {selected?.length} rows selected.
+        {selected?.ids.size} rows selected.
       </Typography>
       <InputLabel sx={{ marginRight: "1rem" }} htmlFor="new-group-id-input">
         New Group ID

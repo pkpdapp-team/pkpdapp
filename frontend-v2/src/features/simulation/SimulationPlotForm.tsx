@@ -318,7 +318,7 @@ const SimulationPlotForm: FC<SimulationPlotFormProps> = ({
         {lhs_y_axes.map((yAxis) => (
           <ListItem key={yAxis.id}>
             <Grid container spacing={2}>
-              <Grid item xs={3}>
+              <Grid size={3}>
                 <SelectField
                   label="Variable"
                   name={`plots.${index}.y_axes.${yAxis.index}.variable`}
@@ -329,7 +329,7 @@ const SimulationPlotForm: FC<SimulationPlotFormProps> = ({
                   selectProps={defaultProps}
                 />
               </Grid>
-              <Grid item xs={2}>
+              <Grid size={2}>
                 <IconButton
                   onClick={() => handleRemoveYAxis(yAxis)}
                   disabled={isSharedWithMe}
@@ -361,7 +361,7 @@ const SimulationPlotForm: FC<SimulationPlotFormProps> = ({
         {cx_lines.map((cxLine, cxLineIndex) => (
           <ListItem key={cxLine.id}>
             <Grid container spacing={2}>
-              <Grid item xs={3}>
+              <Grid size={3}>
                 <TextField
                   label="Cx"
                   name={`plots.${index}.cx_lines.${cxLineIndex}.value`}
@@ -373,7 +373,7 @@ const SimulationPlotForm: FC<SimulationPlotFormProps> = ({
                   }}
                 />
               </Grid>
-              <Grid item xs={2}>
+              <Grid size={2}>
                 <IconButton
                   onClick={() => handleRemoveCxLine(cxLineIndex)}
                   disabled={isSharedWithMe}
@@ -442,7 +442,7 @@ const SimulationPlotForm: FC<SimulationPlotFormProps> = ({
         {rhs_y_axes.map((yAxis) => (
           <ListItem key={yAxis.id}>
             <Grid container spacing={2}>
-              <Grid item xs={7}>
+              <Grid size={7}>
                 <SelectField
                   label="Variable"
                   name={`plots.${index}.y_axes.${yAxis.index}.variable`}
@@ -453,7 +453,7 @@ const SimulationPlotForm: FC<SimulationPlotFormProps> = ({
                   selectProps={defaultProps}
                 />
               </Grid>
-              <Grid item xs={2}>
+              <Grid size={2}>
                 <IconButton
                   onClick={() => handleRemoveYAxis(yAxis)}
                   disabled={isSharedWithMe}

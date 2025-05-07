@@ -265,8 +265,15 @@ const Drug: FC = () => {
       <div
         style={{ display: "flex", paddingTop: "1rem", flexDirection: "column" }}
       >
-        <Grid container xl={12}>
-          <Grid item xl={3} xs={7} sx={{ paddingRight: "2rem" }}>
+        <Grid container size={{
+          xl: 12
+        }}>
+          <Grid
+            sx={{ paddingRight: "2rem" }}
+            size={{
+              xl: 3,
+              xs: 7
+            }}>
             <Typography variant="h6" component="h2" gutterBottom>
               Drug Properties
             </Typography>
@@ -291,8 +298,15 @@ const Drug: FC = () => {
             </Stack>
           </Grid>
         </Grid>
-        <Grid sx={{ paddingTop: ".5rem" }} container xl={12}>
-          <Grid item xl={3} xs={7} sx={{ paddingRight: "2rem" }}>
+        <Grid sx={{ paddingTop: ".5rem" }} container size={{
+          xl: 12
+        }}>
+          <Grid
+            sx={{ paddingRight: "2rem" }}
+            size={{
+              xl: 3,
+              xs: 7
+            }}>
             <Typography variant="h6" component="h2" gutterBottom>
               Target Properties
             </Typography>
@@ -320,8 +334,14 @@ const Drug: FC = () => {
           </Grid>
         </Grid>
       </div>
-      <Grid container xl={12} sx={{ paddingTop: "3rem" }}>
-        <Grid item xl={4} xs={7}>
+      <Grid container sx={{ paddingTop: "3rem" }} size={{
+        xl: 12
+      }}>
+        <Grid
+          size={{
+            xl: 4,
+            xs: 7
+          }}>
           <Box sx={{ display: "flex" }}>
             <Typography variant="h6" component="h2" gutterBottom>
               Efficacy-Safety Data
