@@ -213,7 +213,7 @@ const Data: FC = () => {
   ) : (
     <>
       <Grid container spacing={2}>
-        <Grid item xs={true}>
+        <Grid size="grow">
           {pageTitle && (
             <Typography variant="h5" component="h1" gutterBottom>
               {pageTitle}
@@ -223,7 +223,7 @@ const Data: FC = () => {
         <Grid
           container
           sx={{ display: "flex", justifyContent: "flex-end" }}
-          xs={true}
+          size="grow"
         >
           <Button
             variant="outlined"

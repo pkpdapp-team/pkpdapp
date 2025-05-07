@@ -1,4 +1,4 @@
-import { Delete } from "@mui/icons-material";
+import Delete from "@mui/icons-material/Delete";
 import { IconButton, TableCell, TableRow, Typography } from "@mui/material";
 import { FC, useEffect, useMemo } from "react";
 import FloatField from "../../components/FloatField";

@@ -513,12 +513,12 @@ const Simulations: FC = () => {
         >
           {plots.map((plot, index) => (
             <Grid
-              xl={tableLayout}
-              md={tableLayout}
-              sm={tableLayout}
-              item
               key={index}
-            >
+              size={{
+                xl: tableLayout,
+                md: tableLayout,
+                sm: tableLayout
+              }}>
               {data?.length && model ? (
                 <SimulationPlotView
                   index={index}
