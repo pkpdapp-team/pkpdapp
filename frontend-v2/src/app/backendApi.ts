@@ -58,7 +58,9 @@ const injectedRtkApi = api.injectEndpoints({
     >({
       query: (queryArg) => ({
         url: `/api/biomarker_type/`,
-        params: { dataset_id: queryArg.datasetId },
+        params: {
+          dataset_id: queryArg.datasetId,
+        },
       }),
     }),
     biomarkerTypeCreate: build.mutation<
@@ -112,7 +114,9 @@ const injectedRtkApi = api.injectEndpoints({
     >({
       query: (queryArg) => ({
         url: `/api/combined_model/`,
-        params: { project_id: queryArg.projectId },
+        params: {
+          project_id: queryArg.projectId,
+        },
       }),
     }),
     combinedModelCreate: build.mutation<
@@ -241,7 +245,9 @@ const injectedRtkApi = api.injectEndpoints({
     datasetList: build.query<DatasetListApiResponse, DatasetListApiArg>({
       query: (queryArg) => ({
         url: `/api/dataset/`,
-        params: { project_id: queryArg.projectId },
+        params: {
+          project_id: queryArg.projectId,
+        },
       }),
     }),
     datasetCreate: build.mutation<
@@ -773,7 +779,9 @@ const injectedRtkApi = api.injectEndpoints({
     >({
       query: (queryArg) => ({
         url: `/api/results_table/`,
-        params: { project_id: queryArg.projectId },
+        params: {
+          project_id: queryArg.projectId,
+        },
       }),
     }),
     resultsTableCreate: build.mutation<
@@ -833,7 +841,9 @@ const injectedRtkApi = api.injectEndpoints({
     >({
       query: (queryArg) => ({
         url: `/api/simulation/`,
-        params: { project_id: queryArg.projectId },
+        params: {
+          project_id: queryArg.projectId,
+        },
       }),
     }),
     simulationCreate: build.mutation<
@@ -1011,7 +1021,9 @@ const injectedRtkApi = api.injectEndpoints({
     unitRetrieve: build.query<UnitRetrieveApiResponse, UnitRetrieveApiArg>({
       query: (queryArg) => ({
         url: `/api/unit/${queryArg.id}/`,
-        params: { compound_id: queryArg.compoundId },
+        params: {
+          compound_id: queryArg.compoundId,
+        },
       }),
     }),
     unitUpdate: build.mutation<UnitUpdateApiResponse, UnitUpdateApiArg>({
