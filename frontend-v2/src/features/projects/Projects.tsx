@@ -24,7 +24,6 @@ import {
   useCompoundListQuery,
   CompoundRead,
   ProjectRead,
-  ResultsTableRead,
 } from "../../app/backendApi";
 import ProjectRow from "./Project";
 import { RootState } from "../../app/store";
@@ -36,7 +35,6 @@ import useDataset from "../../hooks/useDataset";
 import { TableHeader } from "../../components/TableHeader";
 import DnsIcon from "@mui/icons-material/Dns";
 import { getTableHeight } from "../../shared/calculateTableHeights";
-import { columns } from "../results/columns";
 import { useResults } from "../results/useResults";
 
 const PROJECT_TABLE_BREAKPOINTS = [
@@ -176,7 +174,6 @@ const ProjectTable: FC = () => {
       user_access,
     };
 
-
     let compound: Compound | undefined = undefined;
     if (type === "SM") {
       compound = {
@@ -211,7 +208,7 @@ const ProjectTable: FC = () => {
           createResults({
             resultsTable: {
               id: 0,
-              name: 'Table 1',
+              name: "Table 1",
               project: newProject.data.id,
               columns: "parameters",
               rows: "variables",
@@ -221,7 +218,7 @@ const ProjectTable: FC = () => {
                 groupIndex: 0,
                 intervalIndex: 0,
               },
-            }
+            },
           });
           addDataset(newProject.data.id);
           addCombinedModel({
@@ -257,7 +254,13 @@ const ProjectTable: FC = () => {
 
   return (
     <>
-      <Box sx={{ display: "flex", justifyContent: "space-between", paddingBottom: '1rem' }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          paddingBottom: "1rem",
+        }}
+      >
         <TableHeader label="Projects" variant="h4" />
         <DropdownButton
           useIcon={false}
@@ -307,7 +310,7 @@ const ProjectTable: FC = () => {
                   sx={{ borderBottom: "solid 2px blue" }}
                   padding="checkbox"
                 >
-                  <DnsIcon fontSize='small' sx={{ marginTop: '.5rem' }} />
+                  <DnsIcon fontSize="small" sx={{ marginTop: ".5rem" }} />
                 </TableCell>
                 <TableCell sx={{ borderBottom: "solid 2px blue" }}>
                   <div style={{ ...defaultHeaderSx }}>
@@ -354,7 +357,10 @@ const ProjectTable: FC = () => {
                 <TableCell sx={{ borderBottom: "solid 2px blue" }}>
                   <div style={{ ...defaultHeaderSx }}>Description </div>
                 </TableCell>
-                <TableCell sx={{ borderBottom: "solid 2px blue" }} width='10rem'>
+                <TableCell
+                  sx={{ borderBottom: "solid 2px blue" }}
+                  width="10rem"
+                >
                   <div style={{ ...defaultHeaderSx }}>Actions</div>
                 </TableCell>
               </TableRow>
