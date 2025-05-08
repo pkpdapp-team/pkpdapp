@@ -19,6 +19,7 @@ import { UnitRead, VariableRead } from "../../app/backendApi";
 import { validateState } from "./dataValidation";
 import { Row } from "./LoadData";
 import { TableHeader } from "../../components/TableHeader";
+import { generateAdministrationIds } from "./CreateDosingProtocols";
 import {
   calculateTableHeights,
   getTableHeight,
@@ -58,15 +59,24 @@ const DosingProtocols: FC<IDosingProtocols> = ({
   const amountVariableField = findFieldByType("Amount Variable", state);
   const timeField = findFieldByType("Time", state);
   const timeUnitField = findFieldByType("Time Unit", state);
+  const groupIdField = findFieldByType("Group ID", state);
   const addlDosesField = findFieldByType("Additional Doses", state);
   const interDoseField = findFieldByType("Interdose Interval", state);
   const dosingRows: Row[] = amountField
     ? state.data.filter(
-        (row) =>
-          (row[amountField] && row[amountField] !== ".") ||
-          parseInt(row[administrationIdField]),
-      )
+      (row) =>
+        (row[amountField] && row[amountField] !== ".") ||
+        parseInt(row[administrationIdField]),
+    )
     : state.data.filter((row) => parseInt(row[administrationIdField]));
+  const missingAdministrationIds = dosingRows.some((row) => !(administrationIdField in row));
+  if (amountField && missingAdministrationIds) {
+    generateAdministrationIds(
+      dosingRows,
+      "Administration ID",
+      groupIdField,
+    )
+  }
   const administrationIds = administrationIdField
     ? dosingRows.map((row) => row[administrationIdField])
     : [];
@@ -80,7 +90,7 @@ const DosingProtocols: FC<IDosingProtocols> = ({
     return (
       variableUnit?.symbol !== "" &&
       amountUnits?.find((unit) => parseInt(unit.id) === variable.unit) !==
-        undefined
+      undefined
     );
   };
   const modelAmounts = variables?.filter(isAmount) || [];

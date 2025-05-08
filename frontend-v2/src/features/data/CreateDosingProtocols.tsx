@@ -39,7 +39,7 @@ function findFieldByType(type: string, state: StepperState) {
  * @param groupIdField
  * @returns an array of modified dosing rows.
  */
-function generateAdministrationIds(
+export function generateAdministrationIds(
   dosingRows: Row[],
   administrationIdField: string,
   groupIdField: string,
