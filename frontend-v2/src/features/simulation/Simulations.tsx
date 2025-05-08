@@ -1,4 +1,4 @@
-import { Alert, Grid, Snackbar, Box, debounce } from "@mui/material";
+import { Alert, Grid, Snackbar, Box, debounce, Typography } from "@mui/material";
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
 import {
@@ -177,8 +177,8 @@ const Simulations: FC = () => {
   const hasPlots = simulation ? simulation.plots.length > 0 : false;
   const hasSecondaryParameters = model
     ? model.derived_variables.reduce((acc, dv) => {
-        return acc || dv.type === "AUC";
-      }, false)
+      return acc || dv.type === "AUC";
+    }, false)
     : false;
 
   const {
@@ -511,6 +511,16 @@ const Simulations: FC = () => {
           direction="row"
           wrap={isHorizontal && !isVertical ? "nowrap" : "wrap"}
         >
+          {plots.length === 0 && (
+            <Grid>
+              <Typography
+                variant="h6"
+                component="h6"
+              >
+                No plots available. Please add a plot by using the button in the Simulations side panel.
+              </Typography>
+            </Grid>
+          )}
           {plots.map((plot, index) => (
             <Grid
               key={index}
