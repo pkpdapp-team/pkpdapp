@@ -179,17 +179,15 @@ const PKPDModelTab: FC<Props> = ({ model, project, control }: Props) => {
           }}
         >
           <Stack direction="column">
-            <Stack direction="row" alignItems="center" spacing={1}>
-              <SelectField
-                size="small"
-                label="PK Model"
-                name="model.pk_model"
-                control={control}
-                options={pk_model_options}
-                formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
-                selectProps={defaultProps}
-              />
-            </Stack>
+            <SelectField
+              size="small"
+              label="PK Model"
+              name="model.pk_model"
+              control={control}
+              options={pk_model_options}
+              formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
+              selectProps={defaultProps}
+            />
             {model.pk_model && (
               <Stack
                 sx={{
@@ -262,17 +260,15 @@ const PKPDModelTab: FC<Props> = ({ model, project, control }: Props) => {
             xs: 10,
           }}
         >
-          <Stack direction="row" alignItems="center" spacing={1}>
-            <SelectField
-              size="small"
-              label="PD Model"
-              name="model.pd_model"
-              control={control}
-              options={pd_model_options}
-              formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
-              selectProps={defaultProps}
-            />
-          </Stack>
+          <SelectField
+            size="small"
+            label="PD Model"
+            name="model.pd_model"
+            control={control}
+            options={pd_model_options}
+            formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
+            selectProps={defaultProps}
+          />
         </Grid>
 
         {pdIsTumourGrowth && (
@@ -283,17 +279,15 @@ const PKPDModelTab: FC<Props> = ({ model, project, control }: Props) => {
               xs: 10,
             }}
           >
-            <Stack direction="row" alignItems="center" spacing={1}>
-              <SelectField
-                size="small"
-                label="Secondary PD Model"
-                name="model.pd_model2"
-                control={control}
-                options={pd_model2_options}
-                formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
-                selectProps={defaultProps}
-              />
-            </Stack>
+            <SelectField
+              size="small"
+              label="Secondary PD Model"
+              name="model.pd_model2"
+              control={control}
+              options={pd_model2_options}
+              formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
+              selectProps={defaultProps}
+            />
           </Grid>
         )}
       </Grid>
@@ -305,33 +299,27 @@ const PKPDModelTab: FC<Props> = ({ model, project, control }: Props) => {
             xl: 5,
           }}
         >
-          <Stack direction="column">
-            <Stack
-              sx={{
-                display: "flex",
-                paddingTop: "0",
-                "& .MuiFormControlLabel-label": { fontSize: ".9rem" },
-              }}
-              direction="row"
-              alignItems="center"
-              flexWrap="wrap"
-              justifyContent="space-between"
-            >
-              {pdModelHasHillCoefficient && (
-                <Tooltip title="Includes the Hill coefficient to the PD response">
-                  <div>
-                    <Checkbox
-                      label="Hill Coefficient"
-                      name="model.has_hill_coefficient"
-                      control={control}
-                      checkboxFieldProps={{
-                        disabled: !model.pd_model || isSharedWithMe,
-                      }}
-                    />
-                  </div>
-                </Tooltip>
-              )}
-            </Stack>
+          <Stack
+            direction="column"
+            sx={{
+              paddingTop: "0",
+              "& .MuiFormControlLabel-label": { fontSize: ".9rem" },
+            }}
+          >
+            {pdModelHasHillCoefficient && (
+              <Tooltip title="Includes the Hill coefficient to the PD response">
+                <div>
+                  <Checkbox
+                    label="Hill Coefficient"
+                    name="model.has_hill_coefficient"
+                    control={control}
+                    checkboxFieldProps={{
+                      disabled: !model.pd_model || isSharedWithMe,
+                    }}
+                  />
+                </div>
+              </Tooltip>
+            )}
             <Stack direction="row" spacing={1} sx={{ marginTop: "1rem" }}>
               <Button
                 variant="outlined"
