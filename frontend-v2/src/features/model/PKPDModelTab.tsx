@@ -150,14 +150,15 @@ const PKPDModelTab: FC<Props> = ({ model, project, control }: Props) => {
   };
 
   return (
-    <Grid container spacing={2} marginTop={5}>
-      <Grid
-        size={{
-          xl: 4,
-          md: 8,
-          xs: 10
-        }}>
-        <Stack direction="row" alignItems="center" spacing={1}>
+    <Stack direction="column" spacing={2} marginTop={5}>
+      <Grid container spacing={2}>
+        <Grid
+          size={{
+            xl: 4,
+            md: 8,
+            xs: 10,
+          }}
+        >
           <SelectField
             size="small"
             label="Species"
@@ -167,87 +168,6 @@ const PKPDModelTab: FC<Props> = ({ model, project, control }: Props) => {
             formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
             selectProps={defaultProps}
           />
-        </Stack>
-      </Grid>
-      <Grid container spacing={2}>
-        <Grid
-          size={{
-            xl: 4,
-            md: 8,
-            xs: 10
-          }}>
-          <Stack direction="row" alignItems="center" spacing={1}>
-            <SelectField
-              size="small"
-              label="PK Model"
-              name="model.pk_model"
-              control={control}
-              options={pk_model_options}
-              formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
-              selectProps={defaultProps}
-            />
-          </Stack>
-          {model.pk_model && (
-            <Stack
-              sx={{
-                display: "flex",
-                "& .MuiFormControlLabel-label": { fontSize: ".9rem" },
-              }}
-              direction="row"
-              alignItems="center"
-              flexWrap="wrap"
-              justifyContent="space-between"
-            >
-              <Tooltip title="Includes Michaelis-Menten parameters (CLmax and Km)">
-                <div>
-                  <Checkbox
-                    label="Saturation"
-                    name="model.has_saturation"
-                    control={control}
-                    checkboxFieldProps={{
-                      disabled: !model.pk_model || isSharedWithMe,
-                    }}
-                  />
-                </div>
-              </Tooltip>
-              <Tooltip title="Includes an effect compartment">
-                <div style={{ fontSize: "12px !important" }}>
-                  <Checkbox
-                    label="Effect Compartment"
-                    name="model.has_effect"
-                    control={control}
-                    checkboxFieldProps={{
-                      disabled: !model.pk_model || isSharedWithMe,
-                    }}
-                  />
-                </div>
-              </Tooltip>
-              <Tooltip title="Includes a time delay following PO or SC administration">
-                <div>
-                  <Checkbox
-                    label="Lag Time"
-                    name="model.has_lag"
-                    control={control}
-                    checkboxFieldProps={{
-                      disabled: !model.pk_model || isSharedWithMe,
-                    }}
-                  />
-                </div>
-              </Tooltip>
-              <Tooltip title="Includes bioavailability (F), if not selected F=1">
-                <div>
-                  <Checkbox
-                    label="Bioavailability"
-                    name="model.has_bioavailability"
-                    control={control}
-                    checkboxFieldProps={{
-                      disabled: !model.pk_model || isSharedWithMe,
-                    }}
-                  />
-                </div>
-              </Tooltip>
-            </Stack>
-          )}
         </Grid>
       </Grid>
       <Grid container spacing={2}>
@@ -255,8 +175,93 @@ const PKPDModelTab: FC<Props> = ({ model, project, control }: Props) => {
           size={{
             xl: 4,
             md: 8,
-            xs: 10
-          }}>
+            xs: 10,
+          }}
+        >
+          <Stack direction="column">
+            <Stack direction="row" alignItems="center" spacing={1}>
+              <SelectField
+                size="small"
+                label="PK Model"
+                name="model.pk_model"
+                control={control}
+                options={pk_model_options}
+                formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
+                selectProps={defaultProps}
+              />
+            </Stack>
+            {model.pk_model && (
+              <Stack
+                sx={{
+                  display: "flex",
+                  "& .MuiFormControlLabel-label": { fontSize: ".9rem" },
+                }}
+                direction="row"
+                alignItems="center"
+                flexWrap="wrap"
+                justifyContent="space-between"
+              >
+                <Tooltip title="Includes Michaelis-Menten parameters (CLmax and Km)">
+                  <div>
+                    <Checkbox
+                      label="Saturation"
+                      name="model.has_saturation"
+                      control={control}
+                      checkboxFieldProps={{
+                        disabled: !model.pk_model || isSharedWithMe,
+                      }}
+                    />
+                  </div>
+                </Tooltip>
+                <Tooltip title="Includes an effect compartment">
+                  <div style={{ fontSize: "12px !important" }}>
+                    <Checkbox
+                      label="Effect Compartment"
+                      name="model.has_effect"
+                      control={control}
+                      checkboxFieldProps={{
+                        disabled: !model.pk_model || isSharedWithMe,
+                      }}
+                    />
+                  </div>
+                </Tooltip>
+                <Tooltip title="Includes a time delay following PO or SC administration">
+                  <div>
+                    <Checkbox
+                      label="Lag Time"
+                      name="model.has_lag"
+                      control={control}
+                      checkboxFieldProps={{
+                        disabled: !model.pk_model || isSharedWithMe,
+                      }}
+                    />
+                  </div>
+                </Tooltip>
+                <Tooltip title="Includes bioavailability (F), if not selected F=1">
+                  <div>
+                    <Checkbox
+                      label="Bioavailability"
+                      name="model.has_bioavailability"
+                      control={control}
+                      checkboxFieldProps={{
+                        disabled: !model.pk_model || isSharedWithMe,
+                      }}
+                    />
+                  </div>
+                </Tooltip>
+              </Stack>
+            )}
+          </Stack>
+        </Grid>
+      </Grid>
+      <Grid container spacing={2}>
+        <Grid
+          size={{
+            xl: 4,
+            md: 8,
+            xs: 10,
+          }}
+        >
           <Stack direction="row" alignItems="center" spacing={1}>
             <SelectField
               size="small"
@@ -270,38 +275,37 @@ const PKPDModelTab: FC<Props> = ({ model, project, control }: Props) => {
           </Stack>
         </Grid>
 
-        <Box width="100%" />
         {pdIsTumourGrowth && (
-          <>
-            <Grid
-              size={{
-                xl: 4,
-                md: 8,
-                xs: 10
-              }}>
-              <Stack direction="row" alignItems="center" spacing={1}>
-                <SelectField
-                  size="small"
-                  label="Secondary PD Model"
-                  name="model.pd_model2"
-                  control={control}
-                  options={pd_model2_options}
-                  formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
-                  selectProps={defaultProps}
-                />
-              </Stack>
-            </Grid>
-          </>
-        )}
-        <Box width="100%" height="0" />
-        <Grid container spacing={2} sx={{ paddingTop: "0" }}>
           <Grid
-            sx={{ paddingTop: "0 !important" }}
             size={{
-              xs: 12,
+              xl: 4,
               md: 8,
-              xl: 5
-            }}>
+              xs: 10,
+            }}
+          >
+            <Stack direction="row" alignItems="center" spacing={1}>
+              <SelectField
+                size="small"
+                label="Secondary PD Model"
+                name="model.pd_model2"
+                control={control}
+                options={pd_model2_options}
+                formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
+                selectProps={defaultProps}
+              />
+            </Stack>
+          </Grid>
+        )}
+      </Grid>
+      <Grid container spacing={2} sx={{ paddingTop: "0" }}>
+        <Grid
+          size={{
+            xs: 12,
+            md: 8,
+            xl: 5,
+          }}
+        >
+          <Stack direction="column">
             <Stack
               sx={{
                 display: "flex",
@@ -344,9 +348,8 @@ const PKPDModelTab: FC<Props> = ({ model, project, control }: Props) => {
                 Show SBML code
               </Button>
             </Stack>
-          </Grid>
+          </Stack>
         </Grid>
-        <Box width="100%" height="0" />
       </Grid>
       <CodeModal
         isOpen={isCodeModalOpen}
@@ -360,7 +363,7 @@ const PKPDModelTab: FC<Props> = ({ model, project, control }: Props) => {
         code={model.sbml}
         language="xml"
       />
-    </Grid>
+    </Stack>
   );
 };
 
