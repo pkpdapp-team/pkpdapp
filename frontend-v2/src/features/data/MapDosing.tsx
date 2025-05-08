@@ -66,7 +66,7 @@ const MapDosing: FC<IMapDosing> = ({
     (field) => state.normalisedFields.get(field) === "Administration ID",
   );
 
-  const hasDosingRows = amountField && administrationIdField;
+  const hasDosingRows = amountField !== undefined;
   const hasInvalidUnits =
     hasDosingRows &&
     state.data
@@ -94,7 +94,7 @@ const MapDosing: FC<IMapDosing> = ({
 
   return hasDosingRows ? (
     <DosingProtocols
-      administrationIdField={administrationIdField || ""}
+      administrationIdField={administrationIdField || "Administration ID"}
       amountUnitField={amountUnitField}
       amountUnit={amountUnit}
       state={state}
