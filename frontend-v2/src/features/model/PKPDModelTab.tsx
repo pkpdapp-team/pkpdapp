@@ -9,7 +9,7 @@ import {
   usePharmacokineticListQuery,
 } from "../../app/backendApi";
 import { Control } from "react-hook-form";
-import { Stack, Grid, Tooltip, Box, Button } from "@mui/material";
+import { Stack, Grid, Tooltip, Button } from "@mui/material";
 import SelectField from "../../components/SelectField";
 import Checkbox from "../../components/Checkbox";
 import { FormData } from "./Model";
