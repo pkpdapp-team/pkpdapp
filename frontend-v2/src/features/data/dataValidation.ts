@@ -257,12 +257,20 @@ function validateCatCovariates(state: StepperState) {
   return validationErrors;
 }
 
+export function validateDosingRows(state: StepperState) {
+  const amountField = state.fields.find(
+    (field) => state.normalisedFields.get(field) === "Amount",
+  );
+  return (
+    amountField !== undefined &&
+    state.data.some((row) => row[amountField] !== ".")
+  );
+}
+
 export const validateState = (state: StepperState) => {
   const { fields, normalisedFields, normalisedHeaders } = state;
   const errors: string[] = [];
-  const hasNoDosing =
-    !normalisedHeaders.includes("Amount") ||
-    state.data.every((row) => row["Amount"] === ".");
+  const hasNoDosing = !validateDosingRows(state);
   // check for mandatory fields
   for (const field of manditoryHeaders) {
     if (!normalisedHeaders.includes(field)) {
