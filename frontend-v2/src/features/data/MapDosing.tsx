@@ -1,8 +1,7 @@
-import { FC, useRef } from "react";
+import { FC } from "react";
 import DosingProtocols from "./DosingProtocols";
 import CreateDosingProtocols from "./CreateDosingProtocols";
 import { StepperState } from "./LoadDataStepper";
-import { validateDosingRows } from "./dataValidation";
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
 import {
@@ -34,11 +33,6 @@ const MapDosing: FC<IMapDosing> = ({
   const administrationIdField = state.fields.find(
     (field) => state.normalisedFields.get(field) === "Administration ID",
   );
-
-  // Check if the uploaded CSV had rows containing non-zero amounts.
-  // Use a ref to persist the initial value across renders.
-  const hasDosingRowsRef = useRef(validateDosingRows(state));
-  const hasDosingRows = hasDosingRowsRef.current;
 
   // Fetch API data.
   const projectId = useSelector(
@@ -72,7 +66,7 @@ const MapDosing: FC<IMapDosing> = ({
   );
 
   const hasInvalidUnits =
-    hasDosingRows &&
+    !!amountUnitField &&
     state.data
       .map((row) => row[amountUnitField])
       .some((symbol) => !units?.find((unit) => unit.symbol === symbol));
@@ -96,7 +90,7 @@ const MapDosing: FC<IMapDosing> = ({
     );
   });
 
-  return hasDosingRows ? (
+  return state.hasDosingRows ? (
     <DosingProtocols
       administrationIdField={administrationIdField || "Administration ID"}
       amountUnitField={amountUnitField}

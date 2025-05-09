@@ -3,7 +3,11 @@ import Papa from "papaparse";
 import { FC, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 import MapHeaders from "./MapHeaders";
-import { normaliseHeader, validateState } from "./dataValidation";
+import {
+  normaliseHeader,
+  validateDosingRows,
+  validateState,
+} from "./dataValidation";
 import { StepperState } from "./LoadDataStepper";
 import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
 import { TableHeader } from "../../components/TableHeader";
@@ -170,6 +174,15 @@ const LoadData: FC<ILoadDataProps> = ({ state, notificationsInfo }) => {
           state.setGroupColumn(groupColumn);
           state.setErrors(errors);
           state.setWarnings(fieldValidation.warnings);
+          state.setHasDosingRows(
+            validateDosingRows({
+              ...state,
+              data: csvData.data as Data,
+              fields,
+              normalisedFields,
+              normalisedHeaders: [...normalisedFields.values()],
+            }),
+          );
         };
         reader.readAsText(file);
       });

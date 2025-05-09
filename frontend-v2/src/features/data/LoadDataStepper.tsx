@@ -73,6 +73,8 @@ export type StepperState = {
   setAmountUnit: (amountUnit: string) => void;
   groupColumn: string;
   setGroupColumn: (primaryCohort: string) => void;
+  hasDosingRows: boolean;
+  setHasDosingRows: (hasDosingRows: boolean) => void;
 };
 
 function validateSubjectProtocols(protocols: IProtocol[]) {
@@ -103,6 +105,7 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
   const [timeUnit, setTimeUnit] = useState<string | undefined>(undefined);
   const [amountUnit, setAmountUnit] = useState<string | undefined>(undefined);
   const [groupColumn, setGroupColumn] = useState("Group");
+  const [hasDosingRows, setHasDosingRows] = useState(false);
   const selectedProject = useSelector(
     (state: RootState) => state.main.selectedProject,
   );
@@ -132,6 +135,8 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
     setAmountUnit,
     groupColumn,
     setGroupColumn,
+    hasDosingRows,
+    setHasDosingRows,
     get fields() {
       return [...normalisedFields.keys()];
     },
