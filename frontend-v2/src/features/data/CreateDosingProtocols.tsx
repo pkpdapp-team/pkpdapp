@@ -47,8 +47,9 @@ export function generateAdministrationIds(
   const dosingCompartments = [
     ...new Set(dosingRows.map((row) => row["Amount Variable"])),
   ];
-  const groupIds = dosingRows.map((row) => row[groupIdField]);
-  const uniqueGroupIds = [...new Set(groupIds)];
+  const uniqueGroupIds = [
+    ...new Set(dosingRows.map((row) => row[groupIdField])),
+  ];
   const administrationIds: string[] = [];
   dosingRows.forEach((row) => {
     const groupIndex = uniqueGroupIds.indexOf(row[groupIdField]) + 1;
@@ -217,11 +218,16 @@ const CreateDosingProtocols: FC<IDosingProtocols> = ({
     state.setNormalisedFields(newNormalisedFields);
     state.setData(newData);
   }
-  dosingRows = generateAdministrationIds(
-    dosingRows,
-    administrationIdField,
-    groupIdField,
+  const missingAdministrationIds = dosingRows.some(
+    (row) => !(administrationIdField in row),
   );
+  if (missingAdministrationIds) {
+    dosingRows = generateAdministrationIds(
+      dosingRows,
+      administrationIdField,
+      groupIdField,
+    );
+  }
 
   type InputChangeEvent =
     | ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -262,6 +268,9 @@ const CreateDosingProtocols: FC<IDosingProtocols> = ({
           <Table stickyHeader size="small">
             <TableHead>
               <TableRow>
+                <TableCell>
+                  <Typography>Administration ID</Typography>
+                </TableCell>
                 <TableCell>
                   <Typography>Group</Typography>
                 </TableCell>
@@ -318,6 +327,9 @@ const CreateDosingProtocols: FC<IDosingProtocols> = ({
                     currentRow?.[amountUnitField] || defaultAmountUnit;
                   return (
                     <TableRow key={adminId}>
+                      <TableCell sx={{ width: "5rem" }}>
+                        {currentRow?.[administrationIdField]}
+                      </TableCell>
                       <TableCell sx={{ width: "5rem" }}>
                         {currentRow?.[groupIdField]}
                       </TableCell>

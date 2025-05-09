@@ -92,14 +92,16 @@ const MapDosing: FC<IMapDosing> = ({
     state.setNormalisedFields(newNormalisedFields);
   }
 
-  const dosingCompartments = projectProtocols?.map((protocol) => {
-    return (
-      protocol.mapped_qname ||
-      variables?.find((variable) => variable.id === protocol.variables[0])
-        ?.qname ||
-      ""
-    );
-  });
+  const dosingCompartments = projectProtocols
+    ?.filter((protocol) => protocol.variables.length > 0)
+    .map((protocol) => {
+      return (
+        protocol.mapped_qname ||
+        variables?.find((variable) => variable.id === protocol.variables[0])
+          ?.qname ||
+        ""
+      );
+    });
 
   return state.hasDosingRows ? (
     <DosingProtocols
