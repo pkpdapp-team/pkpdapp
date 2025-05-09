@@ -56,19 +56,19 @@ type Field = string;
 
 export type StepperState = {
   fileName: string;
+  setFileName: (fileName: string) => void;
   fields: Field[];
   normalisedHeaders: Field[];
   normalisedFields: Map<Field, string>;
+  setNormalisedFields: (normalisedFields: Map<Field, string>) => void;
   data: Data;
+  setData: (data: Data) => void;
   errors: string[];
+  setErrors: (errors: string[]) => void;
   warnings: string[];
+  setWarnings: (warnings: string[]) => void;
   timeUnit?: string;
   setTimeUnit: (timeUnit: string) => void;
-  setFileName: (fileName: string) => void;
-  setNormalisedFields: (fields: Map<Field, string>) => void;
-  setData: (data: Data) => void;
-  setErrors: (errors: string[]) => void;
-  setWarnings: (warnings: string[]) => void;
   amountUnit?: string;
   setAmountUnit: (amountUnit: string) => void;
   groupColumn: string;
@@ -120,15 +120,15 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
 
   const state = {
     fileName,
-    normalisedFields,
-    data,
-    errors,
-    warnings,
-    setErrors,
-    setWarnings,
     setFileName,
+    normalisedFields,
     setNormalisedFields,
+    data,
     setData,
+    errors,
+    setErrors,
+    warnings,
+    setWarnings,
     timeUnit,
     setTimeUnit,
     amountUnit,
