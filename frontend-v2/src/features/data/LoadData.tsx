@@ -157,13 +157,16 @@ const LoadData: FC<ILoadDataProps> = ({ state, notificationsInfo }) => {
           const normalisedFields = new Map(fields.map(normaliseHeader));
           state.setData(csvData.data as Data);
           state.setNormalisedFields(normalisedFields);
-          const fieldValidation = validateState({
+          // Make a copy of the new state that we can pass to validators.
+          const csvState = {
             ...state,
             data: csvData.data as Data,
             fields,
             normalisedFields,
             normalisedHeaders: [...normalisedFields.values()],
-          });
+          };
+          const fieldValidation = validateState(csvState);
+          state.setHasDosingRows(validateDosingRows(csvState));
           const groupColumn =
             fields.find(
               (field) => normalisedFields.get(field) === "Cat Covariate",
@@ -174,15 +177,6 @@ const LoadData: FC<ILoadDataProps> = ({ state, notificationsInfo }) => {
           state.setGroupColumn(groupColumn);
           state.setErrors(errors);
           state.setWarnings(fieldValidation.warnings);
-          state.setHasDosingRows(
-            validateDosingRows({
-              ...state,
-              data: csvData.data as Data,
-              fields,
-              normalisedFields,
-              normalisedHeaders: [...normalisedFields.values()],
-            }),
-          );
         };
         reader.readAsText(file);
       });
