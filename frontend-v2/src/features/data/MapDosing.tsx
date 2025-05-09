@@ -21,20 +21,7 @@ interface IMapDosing {
   };
 }
 
-const MapDosing: FC<IMapDosing> = ({
-  state,
-  notificationsInfo,
-}: IMapDosing) => {
-  // Derived state from the uploaded CSV data.
-  const amountUnitField =
-    state.fields.find((field) =>
-      ["Amount Unit", "Unit"].includes(state.normalisedFields.get(field) || ""),
-    ) || "Amount Unit";
-  const administrationIdField = state.fields.find(
-    (field) => state.normalisedFields.get(field) === "Administration ID",
-  );
-
-  // Fetch API data.
+function useApiQueries() {
   const projectId = useSelector(
     (state: RootState) => state.main.selectedProject,
   );
@@ -64,6 +51,30 @@ const MapDosing: FC<IMapDosing> = ({
     { dosedPkModelId: model?.id || 0 },
     { skip: !model?.id },
   );
+
+  return {
+    amountUnit,
+    projectProtocols,
+    units,
+    variables,
+  };
+}
+
+const MapDosing: FC<IMapDosing> = ({
+  state,
+  notificationsInfo,
+}: IMapDosing) => {
+  // Derived state from the uploaded CSV data.
+  const amountUnitField =
+    state.fields.find((field) =>
+      ["Amount Unit", "Unit"].includes(state.normalisedFields.get(field) || ""),
+    ) || "Amount Unit";
+  const administrationIdField = state.fields.find(
+    (field) => state.normalisedFields.get(field) === "Administration ID",
+  );
+
+  // Fetch API data.
+  const { amountUnit, projectProtocols, units, variables } = useApiQueries();
 
   const hasInvalidUnits =
     !!amountUnitField &&
