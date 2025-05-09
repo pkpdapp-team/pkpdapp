@@ -1,4 +1,4 @@
-import { FC } from "react";
+import { FC, useState } from "react";
 import DosingProtocols from "./DosingProtocols";
 import CreateDosingProtocols from "./CreateDosingProtocols";
 import { StepperState } from "./LoadDataStepper";
@@ -25,6 +25,12 @@ const MapDosing: FC<IMapDosing> = ({
   state,
   notificationsInfo,
 }: IMapDosing) => {
+  const amountField = state.fields.find(
+    (field) => state.normalisedFields.get(field) === "Amount",
+  );
+  // The amount field will be created if it doesn't exist, so this needs to be a 
+  // persistent state
+  const [hasDosingRows, _setHasDosingRows] = useState<boolean>(amountField !== undefined);
   const projectId = useSelector(
     (state: RootState) => state.main.selectedProject,
   );
@@ -55,9 +61,6 @@ const MapDosing: FC<IMapDosing> = ({
     { skip: !model?.id },
   );
 
-  const amountField = state.fields.find(
-    (field) => state.normalisedFields.get(field) === "Amount",
-  );
   const amountUnitField =
     state.fields.find((field) =>
       ["Amount Unit", "Unit"].includes(state.normalisedFields.get(field) || ""),
@@ -66,7 +69,6 @@ const MapDosing: FC<IMapDosing> = ({
     (field) => state.normalisedFields.get(field) === "Administration ID",
   );
 
-  const hasDosingRows = amountField !== undefined;
   const hasInvalidUnits =
     hasDosingRows &&
     state.data
