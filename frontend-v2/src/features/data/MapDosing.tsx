@@ -1,4 +1,4 @@
-import { FC } from "react";
+import { FC, useRef } from "react";
 import DosingProtocols from "./DosingProtocols";
 import CreateDosingProtocols from "./CreateDosingProtocols";
 import { StepperState } from "./LoadDataStepper";
@@ -25,6 +25,27 @@ const MapDosing: FC<IMapDosing> = ({
   state,
   notificationsInfo,
 }: IMapDosing) => {
+  // Derived state from the uploaded CSV data.
+  const amountField = state.fields.find(
+    (field) => state.normalisedFields.get(field) === "Amount",
+  );
+  const amountUnitField =
+    state.fields.find((field) =>
+      ["Amount Unit", "Unit"].includes(state.normalisedFields.get(field) || ""),
+    ) || "Amount Unit";
+  const administrationIdField = state.fields.find(
+    (field) => state.normalisedFields.get(field) === "Administration ID",
+  );
+
+  // Check if the uploaded CSV had rows containing non-zero amounts.
+  // Use a ref to persist the initial value across renders.
+  const hasDosingRowsRef = useRef(
+    amountField !== undefined &&
+      state.data.every((row) => row[amountField] !== "."),
+  );
+  const hasDosingRows = hasDosingRowsRef.current;
+
+  // Fetch API data.
   const projectId = useSelector(
     (state: RootState) => state.main.selectedProject,
   );
@@ -55,18 +76,6 @@ const MapDosing: FC<IMapDosing> = ({
     { skip: !model?.id },
   );
 
-  const amountField = state.fields.find(
-    (field) => state.normalisedFields.get(field) === "Amount",
-  );
-  const amountUnitField =
-    state.fields.find((field) =>
-      ["Amount Unit", "Unit"].includes(state.normalisedFields.get(field) || ""),
-    ) || "Amount Unit";
-  const administrationIdField = state.fields.find(
-    (field) => state.normalisedFields.get(field) === "Administration ID",
-  );
-
-  const hasDosingRows = amountField !== undefined;
   const hasInvalidUnits =
     hasDosingRows &&
     state.data
