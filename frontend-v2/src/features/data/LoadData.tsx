@@ -3,7 +3,11 @@ import Papa from "papaparse";
 import { FC, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 import MapHeaders from "./MapHeaders";
-import { normaliseHeader, validateState } from "./dataValidation";
+import {
+  normaliseHeader,
+  validateDosingRows,
+  validateState,
+} from "./dataValidation";
 import { StepperState } from "./LoadDataStepper";
 import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
 import { TableHeader } from "../../components/TableHeader";
@@ -153,13 +157,16 @@ const LoadData: FC<ILoadDataProps> = ({ state, notificationsInfo }) => {
           const normalisedFields = new Map(fields.map(normaliseHeader));
           state.setData(csvData.data as Data);
           state.setNormalisedFields(normalisedFields);
-          const fieldValidation = validateState({
+          // Make a copy of the new state that we can pass to validators.
+          const csvState = {
             ...state,
             data: csvData.data as Data,
             fields,
             normalisedFields,
             normalisedHeaders: [...normalisedFields.values()],
-          });
+          };
+          const fieldValidation = validateState(csvState);
+          state.setHasDosingRows(validateDosingRows(csvState));
           const groupColumn =
             fields.find(
               (field) => normalisedFields.get(field) === "Cat Covariate",
