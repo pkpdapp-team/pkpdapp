@@ -1889,7 +1889,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/runtime@npm:^7.12.5, @babel/runtime@npm:^7.18.3, @babel/runtime@npm:^7.27.0, @babel/runtime@npm:^7.5.5, @babel/runtime@npm:^7.8.4, @babel/runtime@npm:^7.8.7":
+"@babel/runtime@npm:^7.12.5, @babel/runtime@npm:^7.18.3, @babel/runtime@npm:^7.5.5, @babel/runtime@npm:^7.8.4, @babel/runtime@npm:^7.8.7":
   version: 7.27.0
   resolution: "@babel/runtime@npm:7.27.0"
   dependencies:
@@ -2923,13 +2923,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mui/x-data-grid@npm:^8.2.0":
-  version: 8.2.0
-  resolution: "@mui/x-data-grid@npm:8.2.0"
+"@mui/x-data-grid@npm:^8.3.0":
+  version: 8.3.0
+  resolution: "@mui/x-data-grid@npm:8.3.0"
   dependencies:
-    "@babel/runtime": "npm:^7.27.0"
+    "@babel/runtime": "npm:^7.27.1"
     "@mui/utils": "npm:^7.0.2"
-    "@mui/x-internals": "npm:8.2.0"
+    "@mui/x-internals": "npm:8.3.0"
     clsx: "npm:^2.1.1"
     prop-types: "npm:^15.8.1"
     reselect: "npm:^5.1.1"
@@ -2946,19 +2946,19 @@ __metadata:
       optional: true
     "@emotion/styled":
       optional: true
-  checksum: 10c0/22fb4977650c393972557057d3933eaa9353f7905db69c4d4c071b71d7d613ad1710277d24ca2299b17a55c488cb3b360a30febeebe3434813f6124bea95f743
+  checksum: 10c0/0fc312267c6dc56d1972ab37e8e60b1af72f296e8d1e004d1f2c2b1f527e8e4511a4bcf6f2ed8688cca280b152f66e17e8d256374b4553166074e158545417dc
   languageName: node
   linkType: hard
 
-"@mui/x-internals@npm:8.2.0":
-  version: 8.2.0
-  resolution: "@mui/x-internals@npm:8.2.0"
+"@mui/x-internals@npm:8.3.0":
+  version: 8.3.0
+  resolution: "@mui/x-internals@npm:8.3.0"
   dependencies:
-    "@babel/runtime": "npm:^7.27.0"
+    "@babel/runtime": "npm:^7.27.1"
     "@mui/utils": "npm:^7.0.2"
   peerDependencies:
     react: ^17.0.0 || ^18.0.0 || ^19.0.0
-  checksum: 10c0/de3beb8eb4048df138683e77fa37d724999491266e5cffd9474e50139f11cbec9532948a22a3b9271d98eb72911fe45d4a9aca8677bd4998bfb50bf9ab579f56
+  checksum: 10c0/330e7d8b5a5d35b4327e905739526bc0ff3485c47e89886858baab5666436c537eff4df3b18e2506d079938ad032a7345a6490f4655fb40da76d137a8f5eca57
   languageName: node
   linkType: hard
 
@@ -3025,9 +3025,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@reduxjs/toolkit@npm:^2.8.0":
-  version: 2.8.0
-  resolution: "@reduxjs/toolkit@npm:2.8.0"
+"@reduxjs/toolkit@npm:^2.8.1":
+  version: 2.8.1
+  resolution: "@reduxjs/toolkit@npm:2.8.1"
   dependencies:
     "@standard-schema/spec": "npm:^1.0.0"
     "@standard-schema/utils": "npm:^0.3.0"
@@ -3043,7 +3043,7 @@ __metadata:
       optional: true
     react-redux:
       optional: true
-  checksum: 10c0/dd19b115234861911b91ae258ed047247a0a09a8750eb0ec9f3ca83b37590f2bfc2c56f56dd541fa24f55d8e9dfbad2360d3737c3168c9adcb9895c621a6a827
+  checksum: 10c0/29fe2cbaffb5581a59d0633840b5c098d54503ccf4f2296272657085fd46943bbfcbdde1496fda15c551c53361e3809639d5b07dcee9c20c5485988aac13b945
   languageName: node
   linkType: hard
 
@@ -3652,12 +3652,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:^22.15.14":
-  version: 22.15.14
-  resolution: "@types/node@npm:22.15.14"
+"@types/node@npm:^22.15.17":
+  version: 22.15.17
+  resolution: "@types/node@npm:22.15.17"
   dependencies:
     undici-types: "npm:~6.21.0"
-  checksum: 10c0/a977c1518d53e3b85e8c56fe619d6eca4bc79224d24e7068f55589b3b4a60b8390c859290068b9a00d8a07bee809535afaa952fc31544dff8f8de8975d94c531
+  checksum: 10c0/fb92aa10b628683c5b965749f955bc2322485ecb0ea6c2f4cae5f2c7537a16834607e67083a9e9281faaae8d7dee9ada8d6a5c0de9a52c17d82912ef00c0fdd4
   languageName: node
   linkType: hard
 
@@ -3698,12 +3698,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react-dom@npm:^19.1.3":
-  version: 19.1.3
-  resolution: "@types/react-dom@npm:19.1.3"
+"@types/react-dom@npm:^19.1.4":
+  version: 19.1.4
+  resolution: "@types/react-dom@npm:19.1.4"
   peerDependencies:
     "@types/react": ^19.0.0
-  checksum: 10c0/bb1e3f7a446958f5aa7e46f74cf8470dab7444ab958a57efacca1abcc9847e4ca71e2df68515176ed8fe3fc89315bd949d60f1f346cbadbdbf302bff59d3961b
+  checksum: 10c0/6ae65e7dce761c06b6cdc38221eb320ecb17b1a346f6055053d549fa07c0ddfdb8274e051e7940b5769f2591c982001ebd5d8dc3e0738418d262021ef15c09fd
   languageName: node
   linkType: hard
 
@@ -5986,14 +5986,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint-config-prettier@npm:^10.1.3":
-  version: 10.1.3
-  resolution: "eslint-config-prettier@npm:10.1.3"
+"eslint-config-prettier@npm:^10.1.5":
+  version: 10.1.5
+  resolution: "eslint-config-prettier@npm:10.1.5"
   peerDependencies:
     eslint: ">=7.0.0"
   bin:
     eslint-config-prettier: bin/cli.js
-  checksum: 10c0/8e0b1fea63cb606afe5fe1c01b38eacd8764cc257cbe9af6ee3c8b4b9532432a7bf720eda1434f6e16e31be37ed9e279c3efcf1f3853b608bb67068e73dcd534
+  checksum: 10c0/5486255428e4577e8064b40f27db299faf7312b8e43d7b4bc913a6426e6c0f5950cd519cad81ae24e9aecb4002c502bc665c02e3b52efde57af2debcf27dd6e0
   languageName: node
   linkType: hard
 
@@ -6647,8 +6647,8 @@ __metadata:
     "@fontsource/comfortaa": "npm:^5.2.5"
     "@mui/icons-material": "npm:^7.1.0"
     "@mui/material": "npm:^7.1.0"
-    "@mui/x-data-grid": "npm:^8.2.0"
-    "@reduxjs/toolkit": "npm:^2.8.0"
+    "@mui/x-data-grid": "npm:^8.3.0"
+    "@reduxjs/toolkit": "npm:^2.8.1"
     "@rtk-query/codegen-openapi": "npm:^2.0.0"
     "@svgr/rollup": "npm:^8.1.0"
     "@testing-library/dom": "npm:^10.4.0"
@@ -6656,16 +6656,16 @@ __metadata:
     "@testing-library/react": "npm:^16.3.0"
     "@testing-library/user-event": "npm:^14.6.1"
     "@types/jest": "npm:^29.5.14"
-    "@types/node": "npm:^22.15.14"
+    "@types/node": "npm:^22.15.17"
     "@types/papaparse": "npm:^5.3.16"
     "@types/react": "npm:^19.1.3"
-    "@types/react-dom": "npm:^19.1.3"
+    "@types/react-dom": "npm:^19.1.4"
     "@types/react-plotly.js": "npm:^2.6.3"
     "@vitejs/plugin-react": "npm:^4.4.1"
     cypress: "npm:^12.17.4"
     env-cmd: "npm:^10.1.0"
     eslint: "npm:^9.26.0"
-    eslint-config-prettier: "npm:^10.1.3"
+    eslint-config-prettier: "npm:^10.1.5"
     eslint-plugin-jsx-a11y: "npm:^6.10.2"
     eslint-plugin-react: "npm:^7.37.5"
     eslint-plugin-react-hooks: "npm:^5.2.0"
@@ -6677,7 +6677,7 @@ __metadata:
     react: "npm:^19.1.0"
     react-dom: "npm:^19.1.0"
     react-dropzone: "npm:^14.3.8"
-    react-hook-form: "npm:^7.56.2"
+    react-hook-form: "npm:^7.56.3"
     react-player: "npm:^2.16.0"
     react-plotly.js: "npm:^2.6.0"
     react-redux: "npm:^9.2.0"
@@ -9814,12 +9814,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-hook-form@npm:^7.56.2":
-  version: 7.56.2
-  resolution: "react-hook-form@npm:7.56.2"
+"react-hook-form@npm:^7.56.3":
+  version: 7.56.3
+  resolution: "react-hook-form@npm:7.56.3"
   peerDependencies:
     react: ^16.8.0 || ^17 || ^18 || ^19
-  checksum: 10c0/9eeca7525c5c0b1356670e7cc77687298c7280a31c99bca396596124371467c310cad22f2c10efd9c75b4570d07740ee1c6ad481d59c1b725c7600767f0a35af
+  checksum: 10c0/9467b027fd030d93ba3c8de85853d381ca92ba70bfdb9d0569a63dae44c1459082f5863a4ceb8690789a7185a588516182904db4c72546119c966bf25316d591
   languageName: node
   linkType: hard
 
