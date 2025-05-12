@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   CompoundRead,
   DoseRead,
@@ -25,7 +26,9 @@ export default function useEditProtocol({
   variable,
   watchProtocolId,
 }: EditProtocolProps) {
-  const hasProtocol: boolean = watchProtocolId != null;
+  const [hasProtocol, setHasProtocol] = useState<boolean>(
+    watchProtocolId !== null,
+  );
   const variableUnit = units.find((unit) => unit.id === variable.unit);
   const defaultTimeUnit = timeVariable
     ? units?.find((u) => u.id === timeVariable.unit)
@@ -48,6 +51,7 @@ export default function useEditProtocol({
       repeats: 1,
       duration: 0.0833,
     };
+    setHasProtocol(true);
     return createProtocol({
       protocol: {
         doses: [defaultDose],
@@ -62,6 +66,7 @@ export default function useEditProtocol({
 
   const removeProtocol = () => {
     if (hasProtocol && watchProtocolId) {
+      setHasProtocol(false);
       return destroyProtocol({ id: watchProtocolId });
     }
   };

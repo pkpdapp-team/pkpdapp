@@ -64,15 +64,11 @@ const VariableRow: FC<Props> = ({
     name: "model.derived_variables",
   });
 
-  const {
-    handleSubmit,
-    reset,
-    setValue,
-    formState: { isDirty: isDirtyForm },
-    watch,
-  } = useForm<Variable>({ defaultValues: variable || { id: 0, name: "" } });
+  const { handleSubmit, reset, setValue, formState, watch } = useForm<Variable>(
+    { defaultValues: variable || { id: 0, name: "" } },
+  );
   const watchProtocolId = watch("protocol");
-  const isDirty = watchProtocolId !== variable?.protocol || isDirtyForm;
+  const isDirty = watchProtocolId !== variable?.protocol || formState.isDirty;
   useDirty(isDirty);
   const [updateVariable] = useVariableUpdateMutation();
   const { addProtocol, removeProtocol, hasProtocol } = useEditProtocol({
@@ -94,10 +90,12 @@ const VariableRow: FC<Props> = ({
     }
   }
   async function onRemoveProtocol() {
-    const value = await removeProtocol();
-    if (value && "data" in value) {
-      setValue("protocol", null);
-    }
+    setValue("protocol", null);
+    updateVariable({
+      id: variable.id,
+      variable: { ...variable, protocol: null },
+    });
+    removeProtocol();
   }
 
   const isSharedWithMe = useSelector((state: RootState) =>
