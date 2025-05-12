@@ -33,7 +33,7 @@ export type FormData = {
   model: CombinedModel;
 };
 
-const Model: FC = () => {
+function useApiQueries() {
   const projectId = useSelector(
     (state: RootState) => state.main.selectedProject,
   );
@@ -57,8 +57,6 @@ const Model: FC = () => {
     { id: model?.pd_model || 0 },
     { skip: !model?.pd_model },
   );
-
-  const [updateModel] = useCombinedModelUpdateMutation();
   const { data: variables, isLoading: isVariablesLoading } =
     useVariableListQuery(
       { dosedPkModelId: model?.id || 0 },
@@ -73,42 +71,84 @@ const Model: FC = () => {
     { compoundId: project?.compound },
     { skip: !project || !project.compound },
   );
-  const [updateSimulation] = useSimulationUpdateMutation();
+
   const simulation = useMemo(() => {
     return simulations?.[0] || undefined;
   }, [simulations]);
+
+  const loading = [
+    isProjectLoading,
+    isModelsLoading,
+    isVariablesLoading,
+    isProtocolsLoading,
+    isSimulationsLoading,
+    isLoadingCompound,
+    isLoadingUnits,
+  ];
+
+  return {
+    isLoading: loading.some((x) => x),
+    compound,
+    model,
+    pd_model,
+    project,
+    protocols,
+    simulation,
+    units,
+    variables,
+  };
+}
+
+const DEFAULT_MODEL: CombinedModelRead = {
+  id: 0,
+  name: "",
+  project: 0,
+  mappings: [],
+  derived_variables: [],
+  time_intervals: [],
+  components: "",
+  variables: [],
+  mmt: "",
+  sbml: "",
+  time_unit: 0,
+  is_library_model: false,
+};
+
+const DEFAULT_PROJECT: ProjectRead = {
+  id: 0,
+  user_access: [],
+  name: "",
+  created: "",
+  compound: 0,
+  users: [],
+  protocols: [],
+  datasets: [],
+};
+
+const Model: FC = () => {
+  const {
+    isLoading,
+    compound,
+    model,
+    pd_model,
+    project,
+    protocols,
+    simulation,
+    units,
+    variables,
+  } = useApiQueries();
+  const [updateModel] = useCombinedModelUpdateMutation();
+  const [updateSimulation] = useSimulationUpdateMutation();
   const [updateProject] = useProjectUpdateMutation();
   const [setParamsToDefault] =
     useCombinedModelSetParamsToDefaultsUpdateMutation();
 
-  const defaultModel: CombinedModelRead = {
-    id: 0,
-    name: "",
-    project: projectIdOrZero,
-    mappings: [],
-    derived_variables: [],
-    time_intervals: [],
-    components: "",
-    variables: [],
-    mmt: "",
-    sbml: "",
-    time_unit: 0,
-    is_library_model: false,
-  };
-  const defaultProject: ProjectRead = {
-    id: 0,
-    user_access: [],
-    name: "",
-    created: "",
-    compound: 0,
-    users: [],
-    protocols: [],
-    datasets: [],
-  };
-
   const defaultValues: FormData = {
-    project: defaultProject,
-    model: defaultModel,
+    project: DEFAULT_PROJECT,
+    model: {
+      ...DEFAULT_MODEL,
+      project: project?.id || 0,
+    },
   };
 
   const {
@@ -187,16 +227,7 @@ const Model: FC = () => {
     return () => clearInterval(intervalId);
   }, [submit, isDirty]);
 
-  const loading = [
-    isProjectLoading,
-    isModelsLoading,
-    isVariablesLoading,
-    isProtocolsLoading,
-    isSimulationsLoading,
-    isLoadingCompound,
-    isLoadingUnits,
-  ];
-  if (loading.some((x) => x)) {
+  if (isLoading) {
     return <div>Loading...</div>;
   }
 
