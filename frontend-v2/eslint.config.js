@@ -10,14 +10,11 @@ export default [
   js.configs.recommended,
   reactRecommended,
   reactJSXRuntime,
+  reactHooks.configs["recommended-latest"],
+  pluginJsxA11y.flatConfigs.recommended,
   ...typescript.configs.recommended,
   prettier,
   {
-    plugins: {
-      "jsx-a11y": pluginJsxA11y,
-      "react-hooks": reactHooks,
-    },
-    rules: pluginJsxA11y.configs.recommended.rules,
     settings: {
       react: {
         version: "detect",
