@@ -19,7 +19,7 @@ import {
   useVariableListQuery,
 } from "../../app/backendApi";
 import { useForm } from "react-hook-form";
-import { FC, useEffect, useMemo } from "react";
+import { FC, useCallback, useEffect, useMemo } from "react";
 import { DynamicTabs, TabPanel } from "../../components/DynamicTabs";
 import MapVariablesTab from "./MapVariablesTab";
 import PKPDModelTab from "./PKPDModelTab";
@@ -140,64 +140,72 @@ function useModelFormState({
     }
   }, [model, project, reset]);
 
-  const submit = handleSubmit((data: FormData) => {
-    if (!model || !project) {
-      return;
-    }
-
-    // if tlag checkbox is unchecked, then remove tlag derived variables
-    if (data.model.has_lag !== model.has_lag && !data.model.has_lag) {
-      data.model.derived_variables = data.model.derived_variables.filter(
-        (dv) => dv.type !== "TLG",
+  const handleFormData = useCallback(
+    (data: FormData) => {
+      if (!model || !project) {
+        return;
+      }
+      // if tlag checkbox is unchecked, then remove tlag derived variables
+      if (data.model.has_lag !== model.has_lag && !data.model.has_lag) {
+        data.model.derived_variables = data.model.derived_variables.filter(
+          (dv) => dv.type !== "TLG",
+        );
+      }
+      // if only pd_model has changed, need to clear pd_model2
+      if (data.model.pd_model !== model?.pd_model) {
+        data.model.pd_model2 = null;
+      }
+      // if species changed then update project
+      if (data.project.species !== project.species) {
+        updateProject({
+          id: project.id,
+          project: { ...project, species: data.project.species },
+        });
+        // if species has changed, then clear the models
+        data.model.pk_model = null;
+        data.model.pd_model = null;
+        data.model.pd_model2 = null;
+      }
+      return updateModel({ id: model.id, combinedModel: data.model }).then(
+        (response) => {
+          if (response?.data) {
+            // if the pk_model has changed, need to reset the simulation time_max_unit and set default parameters again
+            if (data.model.pk_model !== model?.pk_model && simulation) {
+              const time_max_unit = response.data.time_unit;
+              updateSimulation({
+                id: simulation.id,
+                simulation: { ...simulation, time_max_unit },
+              });
+            }
+            // if the pk model has changed, need to reset the parameters
+            if (data.model.pk_model !== model?.pk_model) {
+              setParamsToDefault({ id: model.id, combinedModel: data.model });
+            }
+          }
+        },
       );
-    }
-
-    // if only pd_model has changed, need to clear pd_model2
-    if (data.model.pd_model !== model?.pd_model) {
-      data.model.pd_model2 = null;
-    }
-
-    // if species changed then update project
-    if (data.project.species !== project.species) {
-      updateProject({
-        id: project.id,
-        project: { ...project, species: data.project.species },
-      });
-
-      // if species has changed, then clear the models
-      data.model.pk_model = null;
-      data.model.pd_model = null;
-      data.model.pd_model2 = null;
-    }
-    return updateModel({ id: model.id, combinedModel: data.model }).then(
-      (response) => {
-        if (response?.data) {
-          // if the pk_model has changed, need to reset the simulation time_max_unit and set default parameters again
-          if (data.model.pk_model !== model?.pk_model && simulation) {
-            const time_max_unit = response.data.time_unit;
-            updateSimulation({
-              id: simulation.id,
-              simulation: { ...simulation, time_max_unit },
-            });
-          }
-          // if the pk model has changed, need to reset the parameters
-          if (data.model.pk_model !== model?.pk_model) {
-            setParamsToDefault({ id: model.id, combinedModel: data.model });
-          }
-        }
-      },
-    );
-  });
+    },
+    [
+      model,
+      project,
+      simulation,
+      updateModel,
+      updateProject,
+      updateSimulation,
+      setParamsToDefault,
+    ],
+  );
 
   useEffect(() => {
     const intervalId = setInterval(() => {
       if (isDirty) {
+        const submit = handleSubmit(handleFormData);
         submit();
       }
     }, 1000);
 
     return () => clearInterval(intervalId);
-  }, [submit, isDirty]);
+  }, [handleSubmit, handleFormData, isDirty]);
 
   return { control };
 }
