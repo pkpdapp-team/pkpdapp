@@ -240,7 +240,6 @@ const Model: FC = () => {
     units,
     variables,
   } = useApiQueries();
-  const [updateModel] = useCombinedModelUpdateMutation();
 
   const { control } = useModelFormState({ model, project, simulation });
 
