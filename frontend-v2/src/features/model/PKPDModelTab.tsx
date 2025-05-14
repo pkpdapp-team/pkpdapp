@@ -1,7 +1,6 @@
 import { FC, useState } from "react";
 import {
   CombinedModelRead,
-  CombinedModelUpdateApiArg,
   Pharmacokinetic,
   PharmacodynamicRead,
   ProjectRead,
@@ -24,7 +23,6 @@ interface Props {
   model: CombinedModelRead;
   project: ProjectRead;
   control: Control<FormData>;
-  updateModel: (data: CombinedModelUpdateApiArg) => void;
 }
 
 const pk_model_order = [

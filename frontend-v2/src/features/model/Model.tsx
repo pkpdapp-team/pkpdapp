@@ -4,6 +4,7 @@ import {
   CombinedModel,
   CombinedModelRead,
   ProjectRead,
+  SimulationRead,
   useCombinedModelListQuery,
   useCombinedModelSetParamsToDefaultsUpdateMutation,
   useCombinedModelUpdateMutation,
@@ -99,50 +100,21 @@ function useApiQueries() {
   };
 }
 
-const DEFAULT_MODEL: CombinedModelRead = {
-  id: 0,
-  name: "",
-  project: 0,
-  mappings: [],
-  derived_variables: [],
-  time_intervals: [],
-  components: "",
-  variables: [],
-  mmt: "",
-  sbml: "",
-  time_unit: 0,
-  is_library_model: false,
-};
-
-const DEFAULT_PROJECT: ProjectRead = {
-  id: 0,
-  user_access: [],
-  name: "",
-  created: "",
-  compound: 0,
-  users: [],
-  protocols: [],
-  datasets: [],
-};
-
-const Model: FC = () => {
-  const {
-    isLoading,
-    compound,
-    model,
-    pd_model,
-    project,
-    protocols,
-    simulation,
-    units,
-    variables,
-  } = useApiQueries();
+function useModelFormState({
+  model,
+  project,
+  simulation,
+}: {
+  model?: CombinedModelRead | null;
+  project?: ProjectRead;
+  simulation?: SimulationRead;
+}) {
   const [updateModel] = useCombinedModelUpdateMutation();
   const [updateSimulation] = useSimulationUpdateMutation();
   const [updateProject] = useProjectUpdateMutation();
+
   const [setParamsToDefault] =
     useCombinedModelSetParamsToDefaultsUpdateMutation();
-
   const defaultValues: FormData = {
     project: DEFAULT_PROJECT,
     model: {
@@ -227,6 +199,51 @@ const Model: FC = () => {
     return () => clearInterval(intervalId);
   }, [submit, isDirty]);
 
+  return { control };
+}
+
+const DEFAULT_MODEL: CombinedModelRead = {
+  id: 0,
+  name: "",
+  project: 0,
+  mappings: [],
+  derived_variables: [],
+  time_intervals: [],
+  components: "",
+  variables: [],
+  mmt: "",
+  sbml: "",
+  time_unit: 0,
+  is_library_model: false,
+};
+
+const DEFAULT_PROJECT: ProjectRead = {
+  id: 0,
+  user_access: [],
+  name: "",
+  created: "",
+  compound: 0,
+  users: [],
+  protocols: [],
+  datasets: [],
+};
+
+const Model: FC = () => {
+  const {
+    isLoading,
+    compound,
+    model,
+    pd_model,
+    project,
+    protocols,
+    simulation,
+    units,
+    variables,
+  } = useApiQueries();
+  const [updateModel] = useCombinedModelUpdateMutation();
+
+  const { control } = useModelFormState({ model, project, simulation });
+
   if (isLoading) {
     return <div>Loading...</div>;
   }
@@ -281,12 +298,7 @@ const Model: FC = () => {
         marginBottom={0}
       >
         <TabPanel>
-          <PKPDModelTab
-            model={model}
-            project={project}
-            control={control}
-            updateModel={updateModel}
-          />
+          <PKPDModelTab model={model} project={project} control={control} />
         </TabPanel>
         <TabPanel>
           <MapVariablesTab
