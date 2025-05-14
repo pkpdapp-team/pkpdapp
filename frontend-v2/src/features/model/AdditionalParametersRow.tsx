@@ -1,6 +1,6 @@
 // src/components/ProjectTable.tsx
 import { FC, useEffect } from "react";
-import { Control, useFieldArray, useForm } from "react-hook-form";
+import { Control } from "react-hook-form";
 import {
   TableCell,
   TableRow,
@@ -11,20 +11,17 @@ import {
   Radio,
 } from "@mui/material";
 import {
-  Variable,
-  useVariableUpdateMutation,
   CombinedModelRead,
   CompoundRead,
   ProjectRead,
   UnitRead,
   VariableRead,
 } from "../../app/backendApi";
-import useDirty from "../../hooks/useDirty";
 import { FormData } from "./Model";
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
 import { selectIsProjectShared } from "../login/loginSlice";
-import useEditProtocol from "./useEditProtocol";
+import { useFormData, useVariableFormState } from "./variableUtils";
 
 interface Props {
   project: ProjectRead;
@@ -62,67 +59,24 @@ const AdditionalParametersRow: FC<Props> = ({
   isAnyLagTimeSelected,
 }) => {
   const {
-    fields: mappings,
-    append: appendMapping,
-    remove: removeMapping,
-  } = useFieldArray({
-    control,
-    name: "model.mappings",
-  });
-  const {
-    fields: derivedVariables,
-    append: derivedVariablesAppend,
-    remove: derivedVariablesRemove,
-  } = useFieldArray({
-    control,
-    name: "model.derived_variables",
-  });
-
-  const {
-    handleSubmit,
-    reset,
-    formState: { isDirty: isDirtyForm },
-    watch,
-  } = useForm<Variable>({ defaultValues: variable || { id: 0, name: "" } });
-  const watchProtocolId = watch("protocol");
-  const isDirty = watchProtocolId !== variable?.protocol || isDirtyForm;
-  useDirty(isDirty);
-  const [updateVariable] = useVariableUpdateMutation();
-  const { hasProtocol } = useEditProtocol({
+    mappings,
+    appendMapping,
+    removeMapping,
+    derivedVariables,
+    derivedVariablesAppend,
+    derivedVariablesRemove,
+  } = useFormData({ control });
+  const { hasProtocol } = useVariableFormState({
     compound,
     project,
-    units,
     timeVariable,
+    units,
     variable,
-    watchProtocolId,
   });
 
   const isSharedWithMe = useSelector((state: RootState) =>
     selectIsProjectShared(state, project),
   );
-
-  useEffect(() => {
-    reset(variable);
-  }, [variable, reset]);
-
-  useEffect(() => {
-    const intervalId = setInterval(() => {
-      if (isDirty) {
-        handleSubmit((data) => {
-          // @ts-expect-error - lower_bound and upper_bound can be null
-          if (data.lower_bound === "") {
-            data.lower_bound = null;
-          }
-          // @ts-expect-error - lower_bound and upper_bound can be null
-          if (data.upper_bound === "") {
-            data.upper_bound = null;
-          }
-          updateVariable({ id: variable.id, variable: data });
-        })();
-      }
-    }, 1000);
-    return () => clearInterval(intervalId);
-  }, [handleSubmit, isDirty, updateVariable, variable.id]);
 
   const isPD = variable.qname.startsWith("PD");
   const linkToPD = isPD
