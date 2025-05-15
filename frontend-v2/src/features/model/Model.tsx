@@ -117,8 +117,9 @@ function useModelFormState({
     useCombinedModelSetParamsToDefaultsUpdateMutation();
 
   const species = project?.species;
+  const defaultModel = model || DEFAULT_MODEL;
   const defaultValues: FormData = {
-    ...DEFAULT_MODEL,
+    ...defaultModel,
     project: project?.id || 0,
     species,
   };
@@ -126,11 +127,10 @@ function useModelFormState({
     reset,
     handleSubmit,
     control,
-    formState: { isDirty, dirtyFields },
+    formState: { isDirty },
   } = useForm<FormData>({
     defaultValues,
   });
-  console.log(isDirty, dirtyFields);
 
   useDirty(isDirty);
 
@@ -245,7 +245,6 @@ const Model: FC = () => {
   } = useApiQueries();
 
   const { control } = useModelFormState({ model, project, simulation });
-  console.log(control);
 
   if (isLoading) {
     return <div>Loading...</div>;
