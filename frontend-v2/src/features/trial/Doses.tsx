@@ -17,7 +17,6 @@ import {
 } from "../../app/backendApi";
 import { useFieldArray, useForm } from "react-hook-form";
 import useDirty from "../../hooks/useDirty";
-import useInterval from "../../hooks/useInterval";
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
 import { selectIsProjectShared } from "../login/loginSlice";
@@ -43,7 +42,7 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
     control,
     handleSubmit,
     reset,
-    formState: { isDirty },
+    formState: { isDirty, submitCount },
     getValues,
   } = useForm<Protocol>({
     defaultValues: protocol,
@@ -78,12 +77,11 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
     [handleSubmit, onChange, protocol, updateProtocol],
   );
 
-  // save protocol every second if dirty
-  useInterval({
-    callback: handleSave,
-    delay: 1000,
-    isDirty,
-  });
+  useEffect(() => {
+    if (isDirty && submitCount === 0) {
+      handleSave();
+    }
+  }, [isDirty, submitCount, handleSave]);
 
   const isPreclinical = project.species !== "H";
   const defaultSymbol = isPreclinical ? "mg/kg" : "mg";
