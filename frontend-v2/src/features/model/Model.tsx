@@ -127,7 +127,7 @@ function useModelFormState({
     reset,
     handleSubmit,
     control,
-    formState: { isDirty },
+    formState: { isDirty, submitCount },
   } = useForm<FormData>({
     defaultValues,
   });
@@ -203,15 +203,11 @@ function useModelFormState({
   );
 
   useEffect(() => {
-    const intervalId = setInterval(() => {
-      if (isDirty) {
-        const submit = handleSubmit(handleFormData);
-        submit();
-      }
-    }, 1000);
-
-    return () => clearInterval(intervalId);
-  }, [handleSubmit, handleFormData, isDirty]);
+    if (isDirty && submitCount === 0) {
+      const submit = handleSubmit(handleFormData);
+      submit();
+    }
+  }, [handleSubmit, handleFormData, isDirty, submitCount]);
 
   return { control };
 }

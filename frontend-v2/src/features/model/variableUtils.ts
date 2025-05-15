@@ -55,7 +55,7 @@ export function useVariableFormState({
   const {
     handleSubmit,
     reset,
-    formState: { isDirty: isDirtyForm },
+    formState: { isDirty: isDirtyForm, submitCount },
     setValue,
     watch,
   } = useForm<Variable>({ defaultValues: variable || { id: 0, name: "" } });
@@ -77,23 +77,20 @@ export function useVariableFormState({
   }, [variable, reset]);
 
   useEffect(() => {
-    const intervalId = setInterval(() => {
-      if (isDirty) {
-        handleSubmit((data) => {
-          // @ts-expect-error - lower_bound and upper_bound can be null
-          if (data.lower_bound === "") {
-            data.lower_bound = null;
-          }
-          // @ts-expect-error - lower_bound and upper_bound can be null
-          if (data.upper_bound === "") {
-            data.upper_bound = null;
-          }
-          updateVariable({ id: variable.id, variable: data });
-        })();
-      }
-    }, 1000);
-    return () => clearInterval(intervalId);
-  }, [handleSubmit, isDirty, updateVariable, variable.id]);
+    if (isDirty && submitCount === 0) {
+      handleSubmit((data) => {
+        // @ts-expect-error - lower_bound and upper_bound can be null
+        if (data.lower_bound === "") {
+          data.lower_bound = null;
+        }
+        // @ts-expect-error - lower_bound and upper_bound can be null
+        if (data.upper_bound === "") {
+          data.upper_bound = null;
+        }
+        updateVariable({ id: variable.id, variable: data });
+      })();
+    }
+  }, [handleSubmit, isDirty, submitCount, updateVariable, variable.id]);
 
   return {
     handleSubmit,
