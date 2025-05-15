@@ -4,6 +4,7 @@ import {
   CombinedModel,
   CombinedModelRead,
   ProjectRead,
+  ProjectSpeciesEnum,
   SimulationRead,
   useCombinedModelListQuery,
   useCombinedModelSetParamsToDefaultsUpdateMutation,
@@ -29,9 +30,8 @@ import useDirty from "../../hooks/useDirty";
 import { SubPageName } from "../main/mainSlice";
 import { TableHeader } from "../../components/TableHeader";
 
-export type FormData = {
-  project: ProjectRead;
-  model: CombinedModel;
+export type FormData = Omit<CombinedModel, "species"> & {
+  species: ProjectSpeciesEnum | undefined;
 };
 
 function useApiQueries() {
@@ -115,14 +115,14 @@ function useModelFormState({
 
   const [setParamsToDefault] =
     useCombinedModelSetParamsToDefaultsUpdateMutation();
-  const defaultValues: FormData = {
-    project: DEFAULT_PROJECT,
-    model: {
-      ...DEFAULT_MODEL,
-      project: project?.id || 0,
-    },
-  };
 
+  const species = project?.species;
+  const defaultModel = model || DEFAULT_MODEL;
+  const defaultValues: FormData = {
+    ...defaultModel,
+    project: project?.id || 0,
+    species,
+  };
   const {
     reset,
     handleSubmit,
@@ -135,42 +135,48 @@ function useModelFormState({
   useDirty(isDirty);
 
   useEffect(() => {
-    if (model && project) {
-      reset({ model, project });
+    if (model && species) {
+      const newModel: FormData = {
+        ...model,
+        species,
+      };
+      reset(newModel);
     }
-  }, [model, project, reset]);
+  }, [model, species, reset]);
 
   const handleFormData = useCallback(
     (data: FormData) => {
       if (!model || !project) {
         return;
       }
+      const { species, ...modelData } = data;
       // if tlag checkbox is unchecked, then remove tlag derived variables
-      if (data.model.has_lag !== model.has_lag && !data.model.has_lag) {
-        data.model.derived_variables = data.model.derived_variables.filter(
+      if (modelData.has_lag !== model.has_lag && !modelData.has_lag) {
+        modelData.derived_variables = modelData.derived_variables.filter(
           (dv) => dv.type !== "TLG",
         );
       }
       // if only pd_model has changed, need to clear pd_model2
-      if (data.model.pd_model !== model?.pd_model) {
-        data.model.pd_model2 = null;
+      if (modelData.pd_model !== model?.pd_model) {
+        modelData.pd_model2 = null;
       }
       // if species changed then update project
-      if (data.project.species !== project.species) {
+      if (species !== project.species) {
         updateProject({
           id: project.id,
-          project: { ...project, species: data.project.species },
+          project: { ...project, species },
         });
         // if species has changed, then clear the models
-        data.model.pk_model = null;
-        data.model.pd_model = null;
-        data.model.pd_model2 = null;
+        modelData.pk_model = null;
+        modelData.pd_model = null;
+        modelData.pd_model2 = null;
       }
-      return updateModel({ id: model.id, combinedModel: data.model }).then(
+
+      return updateModel({ id: model.id, combinedModel: modelData }).then(
         (response) => {
           if (response?.data) {
             // if the pk_model has changed, need to reset the simulation time_max_unit and set default parameters again
-            if (data.model.pk_model !== model?.pk_model && simulation) {
+            if (modelData.pk_model !== model?.pk_model && simulation) {
               const time_max_unit = response.data.time_unit;
               updateSimulation({
                 id: simulation.id,
@@ -178,8 +184,8 @@ function useModelFormState({
               });
             }
             // if the pk model has changed, need to reset the parameters
-            if (data.model.pk_model !== model?.pk_model) {
-              setParamsToDefault({ id: model.id, combinedModel: data.model });
+            if (modelData.pk_model !== model?.pk_model) {
+              setParamsToDefault({ id: model.id, combinedModel: modelData });
             }
           }
         },
@@ -223,17 +229,6 @@ const DEFAULT_MODEL: CombinedModelRead = {
   sbml: "",
   time_unit: 0,
   is_library_model: false,
-};
-
-const DEFAULT_PROJECT: ProjectRead = {
-  id: 0,
-  user_access: [],
-  name: "",
-  created: "",
-  compound: 0,
-  users: [],
-  protocols: [],
-  datasets: [],
 };
 
 const Model: FC = () => {
@@ -321,10 +316,8 @@ const Model: FC = () => {
           <ParametersTab
             model={model}
             project={project}
-            control={control}
             variables={variables}
             units={units}
-            compound={compound}
           />
         </TabPanel>
         <TabPanel>

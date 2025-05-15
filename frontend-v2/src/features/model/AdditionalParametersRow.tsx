@@ -60,8 +60,8 @@ const AdditionalParametersRow: FC<Props> = ({
 }) => {
   const {
     mappings,
-    appendMapping,
-    removeMapping,
+    mappingsAppend,
+    mappingsRemove,
     derivedVariables,
     derivedVariablesAppend,
     derivedVariablesRemove,
@@ -143,9 +143,9 @@ const AdditionalParametersRow: FC<Props> = ({
   const addPDMapping = () => {
     if (effectVariable) {
       if (mappings.length > 0) {
-        removeMapping(0);
+        mappingsRemove(0);
       }
-      appendMapping({
+      mappingsAppend({
         pk_variable: variable.id,
         pd_variable: effectVariable.id,
         pkpd_model: model.id,
@@ -158,7 +158,7 @@ const AdditionalParametersRow: FC<Props> = ({
       (mapping) => mapping.pk_variable === variable.id,
     );
     if (mapping_index >= 0) {
-      removeMapping(mapping_index);
+      mappingsRemove(mapping_index);
     }
   };
 
