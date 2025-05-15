@@ -1,4 +1,11 @@
-import { Alert, Grid, Snackbar, Box, debounce, Typography } from "@mui/material";
+import {
+  Alert,
+  Grid,
+  Snackbar,
+  Box,
+  debounce,
+  Typography,
+} from "@mui/material";
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
 import {
@@ -177,8 +184,8 @@ const Simulations: FC = () => {
   const hasPlots = simulation ? simulation.plots.length > 0 : false;
   const hasSecondaryParameters = model
     ? model.derived_variables.reduce((acc, dv) => {
-      return acc || dv.type === "AUC";
-    }, false)
+        return acc || dv.type === "AUC";
+      }, false)
     : false;
 
   const {
@@ -203,7 +210,7 @@ const Simulations: FC = () => {
     reset,
     handleSubmit,
     control,
-    formState: { isDirty },
+    formState: { isDirty, submitCount },
     setValue,
   } = useForm<Simulation>({
     defaultValues: simulation || defaultSimulation,
@@ -282,14 +289,10 @@ const Simulations: FC = () => {
       updateSimulation({ id: simulation?.id || 0, simulation: dta });
     };
 
-    const intervalId = setInterval(() => {
-      if (!isDirty || !simulation) {
-        return;
-      }
-      handleSubmit(onSubmit)();
-    }, 1000);
-
-    return () => clearInterval(intervalId);
+    if (simulation && isDirty && submitCount === 0) {
+      const submit = handleSubmit(onSubmit);
+      submit();
+    }
   }, [handleSubmit, isDirty, simulation, updateSimulation]);
 
   const filterOutputs = model?.is_library_model
@@ -513,11 +516,9 @@ const Simulations: FC = () => {
         >
           {plots.length === 0 && (
             <Grid>
-              <Typography
-                variant="h6"
-                component="h6"
-              >
-                No plots available. Please add a plot by using the button in the Simulations side panel.
+              <Typography variant="h6" component="h6">
+                No plots available. Please add a plot by using the button in the
+                Simulations side panel.
               </Typography>
             </Grid>
           )}
@@ -527,8 +528,9 @@ const Simulations: FC = () => {
               size={{
                 xl: tableLayout,
                 md: tableLayout,
-                sm: tableLayout
-              }}>
+                sm: tableLayout,
+              }}
+            >
               {data?.length && model ? (
                 <SimulationPlotView
                   index={index}
