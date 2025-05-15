@@ -265,7 +265,7 @@ const Simulations: FC = () => {
       : { error: "Unknown error" }
     : undefined;
 
-  // save simulation every second if dirty
+  // Save simulation if dirty and not already saved.
   useEffect(() => {
     const onSubmit = (dta: Simulation) => {
       for (let i = 0; i < dta.plots.length; i++) {
