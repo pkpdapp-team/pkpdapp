@@ -293,7 +293,7 @@ const Simulations: FC = () => {
       const submit = handleSubmit(onSubmit);
       submit();
     }
-  }, [handleSubmit, isDirty, simulation, updateSimulation]);
+  }, [handleSubmit, isDirty, submitCount, simulation, updateSimulation]);
 
   const filterOutputs = model?.is_library_model
     ? ["environment.t", "PDCompartment.C_Drug"]

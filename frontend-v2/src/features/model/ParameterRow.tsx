@@ -10,7 +10,6 @@ import {
 } from "../../app/backendApi";
 import UnitField from "../../components/UnitField";
 import useDirty from "../../hooks/useDirty";
-import useInterval from "../../hooks/useInterval";
 import FloatField from "../../components/FloatField";
 import { selectIsProjectShared } from "../login/loginSlice";
 import { useSelector } from "react-redux";
@@ -27,7 +26,7 @@ const ParameterRow: FC<Props> = ({ project, variable, units }) => {
     control,
     handleSubmit,
     reset,
-    formState: { isDirty: isDirtyForm },
+    formState: { isDirty: isDirtyForm, submitCount },
   } = useForm<Variable>({ defaultValues: variable || { id: 0, name: "" } });
   const [updateVariable] = useVariableUpdateMutation();
 
@@ -52,11 +51,11 @@ const ParameterRow: FC<Props> = ({ project, variable, units }) => {
     [handleSubmit, updateVariable, variable],
   );
 
-  useInterval({
-    callback: submit,
-    delay: 1000,
-    isDirty,
-  });
+  useEffect(() => {
+    if (isDirty && submitCount === 0) {
+      submit();
+    }
+  }, [isDirty, submitCount, submit]);
 
   if (variable.constant !== true) {
     return null;

@@ -13,7 +13,6 @@ import {
 } from "../../app/backendApi";
 import { Control, useForm } from "react-hook-form";
 import useDirty from "../../hooks/useDirty";
-import useInterval from "../../hooks/useInterval";
 
 type Props = {
   baseUnit?: UnitRead;
@@ -49,7 +48,7 @@ const DoseRow: FC<Props> = ({
   const {
     control: doseControl,
     handleSubmit,
-    formState: { isDirty },
+    formState: { isDirty, submitCount },
     reset,
   } = useForm<DoseRead>({
     defaultValues: dose,
@@ -74,12 +73,11 @@ const DoseRow: FC<Props> = ({
     [dose, handleSubmit, doseId, refetchDose, updateDose],
   );
 
-  // save dose every second if dirty
-  useInterval({
-    callback: handleSave,
-    delay: 1000,
-    isDirty,
-  });
+  useEffect(() => {
+    if (isDirty && submitCount === 0) {
+      handleSave();
+    }
+  }, [handleSave, isDirty, submitCount]);
 
   const defaultProps = {
     disabled,
