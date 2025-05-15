@@ -19,7 +19,7 @@ export function useFormData({ control }: { control: Control<FormData> }) {
     remove: removeMapping,
   } = useFieldArray({
     control,
-    name: "model.mappings",
+    name: "mappings",
   });
   const {
     fields: derivedVariables,
@@ -27,7 +27,7 @@ export function useFormData({ control }: { control: Control<FormData> }) {
     remove: derivedVariablesRemove,
   } = useFieldArray({
     control,
-    name: "model.derived_variables",
+    name: "derived_variables",
   });
   return {
     mappings,

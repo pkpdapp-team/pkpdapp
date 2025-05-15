@@ -160,7 +160,7 @@ const PKPDModelTab: FC<Props> = ({ model, project, control }: Props) => {
           <SelectField
             size="small"
             label="Species"
-            name="project.species"
+            name="species"
             control={control}
             options={speciesOptions}
             formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
@@ -180,7 +180,7 @@ const PKPDModelTab: FC<Props> = ({ model, project, control }: Props) => {
             <SelectField
               size="small"
               label="PK Model"
-              name="model.pk_model"
+              name="pk_model"
               control={control}
               options={pk_model_options}
               formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
@@ -201,7 +201,7 @@ const PKPDModelTab: FC<Props> = ({ model, project, control }: Props) => {
                   <div>
                     <Checkbox
                       label="Saturation"
-                      name="model.has_saturation"
+                      name="has_saturation"
                       control={control}
                       checkboxFieldProps={{
                         disabled: !model.pk_model || isSharedWithMe,
@@ -213,7 +213,7 @@ const PKPDModelTab: FC<Props> = ({ model, project, control }: Props) => {
                   <div style={{ fontSize: "12px !important" }}>
                     <Checkbox
                       label="Effect Compartment"
-                      name="model.has_effect"
+                      name="has_effect"
                       control={control}
                       checkboxFieldProps={{
                         disabled: !model.pk_model || isSharedWithMe,
@@ -225,7 +225,7 @@ const PKPDModelTab: FC<Props> = ({ model, project, control }: Props) => {
                   <div>
                     <Checkbox
                       label="Lag Time"
-                      name="model.has_lag"
+                      name="has_lag"
                       control={control}
                       checkboxFieldProps={{
                         disabled: !model.pk_model || isSharedWithMe,
@@ -237,7 +237,7 @@ const PKPDModelTab: FC<Props> = ({ model, project, control }: Props) => {
                   <div>
                     <Checkbox
                       label="Bioavailability"
-                      name="model.has_bioavailability"
+                      name="has_bioavailability"
                       control={control}
                       checkboxFieldProps={{
                         disabled: !model.pk_model || isSharedWithMe,
@@ -261,7 +261,7 @@ const PKPDModelTab: FC<Props> = ({ model, project, control }: Props) => {
           <SelectField
             size="small"
             label="PD Model"
-            name="model.pd_model"
+            name="pd_model"
             control={control}
             options={pd_model_options}
             formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
@@ -280,7 +280,7 @@ const PKPDModelTab: FC<Props> = ({ model, project, control }: Props) => {
             <SelectField
               size="small"
               label="Secondary PD Model"
-              name="model.pd_model2"
+              name="pd_model2"
               control={control}
               options={pd_model2_options}
               formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
@@ -309,7 +309,7 @@ const PKPDModelTab: FC<Props> = ({ model, project, control }: Props) => {
                 <div>
                   <Checkbox
                     label="Hill Coefficient"
-                    name="model.has_hill_coefficient"
+                    name="has_hill_coefficient"
                     control={control}
                     checkboxFieldProps={{
                       disabled: !model.pd_model || isSharedWithMe,

@@ -1,13 +1,11 @@
 import { FC } from "react";
 import {
   CombinedModelRead,
-  CompoundRead,
   ProjectRead,
   UnitRead,
   VariableRead,
   useCombinedModelSetParamsToDefaultsUpdateMutation,
 } from "../../app/backendApi";
-import { Control } from "react-hook-form";
 import {
   TableContainer,
   Table,
@@ -23,7 +21,6 @@ import {
 import ParameterRow from "./ParameterRow";
 import HelpButton from "../../components/HelpButton";
 import { getConstVariables, getNoReset } from "./resetToSpeciesDefaults";
-import { FormData } from "./Model";
 import { defaultHeaderSx } from "../../shared/tableHeadersSx";
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
@@ -37,9 +34,7 @@ import { TableHeader } from "../../components/TableHeader";
 interface Props {
   model: CombinedModelRead;
   project: ProjectRead;
-  control: Control<FormData>;
   variables: VariableRead[];
-  compound: CompoundRead;
   units: UnitRead[];
 }
 
