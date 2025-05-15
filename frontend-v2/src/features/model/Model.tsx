@@ -19,7 +19,7 @@ import {
   useUnitListQuery,
   useVariableListQuery,
 } from "../../app/backendApi";
-import { useForm } from "react-hook-form";
+import { useForm, useFormState } from "react-hook-form";
 import { FC, useCallback, useEffect, useMemo } from "react";
 import { DynamicTabs, TabPanel } from "../../components/DynamicTabs";
 import MapVariablesTab from "./MapVariablesTab";
@@ -117,32 +117,21 @@ function useModelFormState({
     useCombinedModelSetParamsToDefaultsUpdateMutation();
 
   const species = project?.species;
-  const defaultModel = model || DEFAULT_MODEL;
   const defaultValues: FormData = {
-    ...defaultModel,
+    ...DEFAULT_MODEL,
     project: project?.id || 0,
     species,
   };
-  const {
-    reset,
-    handleSubmit,
-    control,
-    formState: { isDirty, submitCount },
-  } = useForm<FormData>({
+  const values = getFormValues(model, species);
+  const { reset, handleSubmit, control } = useForm<FormData>({
     defaultValues,
+    values,
+  });
+  const { isDirty, isSubmitting } = useFormState({
+    control,
   });
 
   useDirty(isDirty);
-
-  useEffect(() => {
-    if (model && species) {
-      const newModel: FormData = {
-        ...model,
-        species,
-      };
-      reset(newModel);
-    }
-  }, [model, species, reset]);
 
   const handleFormData = useCallback(
     (data: FormData) => {
@@ -172,6 +161,12 @@ function useModelFormState({
         modelData.pd_model2 = null;
       }
 
+      // Reset form isDirty and isSubmitting state from previous submissions.
+      reset({
+        ...modelData,
+        project: project.id,
+        species,
+      });
       return updateModel({ id: model.id, combinedModel: modelData }).then(
         (response) => {
           if (response?.data) {
@@ -199,15 +194,16 @@ function useModelFormState({
       updateProject,
       updateSimulation,
       setParamsToDefault,
+      reset,
     ],
   );
 
   useEffect(() => {
-    if (isDirty && submitCount === 0) {
+    if (isDirty && !isSubmitting) {
       const submit = handleSubmit(handleFormData);
       submit();
     }
-  }, [handleSubmit, handleFormData, isDirty, submitCount]);
+  }, [handleSubmit, handleFormData, isDirty, isSubmitting]);
 
   return { control };
 }
@@ -226,6 +222,23 @@ const DEFAULT_MODEL: CombinedModelRead = {
   time_unit: 0,
   is_library_model: false,
 };
+
+function getFormValues(
+  model: CombinedModelRead | null | undefined,
+  species: ProjectSpeciesEnum | undefined,
+): FormData {
+  if (model && species) {
+    return {
+      ...model,
+      species,
+    };
+  } else {
+    return {
+      ...DEFAULT_MODEL,
+      species,
+    };
+  }
+}
 
 const Model: FC = () => {
   const {
