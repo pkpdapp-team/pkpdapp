@@ -15,8 +15,8 @@ import useEditProtocol from "./useEditProtocol";
 export function useFormData({ control }: { control: Control<FormData> }) {
   const {
     fields: mappings,
-    append: appendMapping,
-    remove: removeMapping,
+    append: mappingsAppend,
+    remove: mappingsRemove,
   } = useFieldArray({
     control,
     name: "mappings",
@@ -31,8 +31,8 @@ export function useFormData({ control }: { control: Control<FormData> }) {
   });
   return {
     mappings,
-    appendMapping,
-    removeMapping,
+    mappingsAppend,
+    mappingsRemove,
     derivedVariables,
     derivedVariablesAppend,
     derivedVariablesRemove,
