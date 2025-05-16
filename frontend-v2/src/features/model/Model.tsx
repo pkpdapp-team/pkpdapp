@@ -193,9 +193,15 @@ function useModelFormState({
   project?: ProjectRead;
 }) {
   const species = project?.species;
-  const defaultValues = getFormValues(model, species);
+  const defaultValues: FormData = {
+    ...DEFAULT_MODEL,
+    project: project?.id || 0,
+    species,
+  };
+  const values = getFormValues(model, species);
   const { reset, handleSubmit, control } = useForm<FormData>({
     defaultValues,
+    values,
   });
   const { isDirty } = useFormState({
     control,
