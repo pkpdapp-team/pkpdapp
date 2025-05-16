@@ -95,9 +95,7 @@ const ProjectRow: FC<Props> = ({
   } = useProjectDescription();
 
   useEffect(() => {
-    if (isEditMode) {
-      setIsEditMode(false);
-    }
+    setIsEditMode(false);
   }, [isSelected]);
 
   const modalityOptions = [
