@@ -41,11 +41,11 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
   const {
     control,
     handleSubmit,
-    reset,
     formState: { isDirty, submitCount },
     getValues,
   } = useForm<Protocol>({
     defaultValues: protocol,
+    values: protocol,
   });
   useDirty(isDirty);
   const [updateProtocol] = useProtocolUpdateMutation();
@@ -61,10 +61,6 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
     control,
     name: "doses",
   });
-
-  useEffect(() => {
-    reset(protocol);
-  }, [protocol, reset]);
 
   const handleSave = useMemo(
     () =>

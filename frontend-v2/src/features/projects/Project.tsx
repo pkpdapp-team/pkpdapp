@@ -121,9 +121,11 @@ const ProjectRow: FC<Props> = ({
     molecular_mass: 100,
     target_molecular_mass: 100,
   };
+  const formValues = project && compound ? { project, compound } : undefined;
   const { reset, handleSubmit, control, setValue, register } =
     useForm<FormData>({
       defaultValues: { project, compound: defaultCompound },
+      values: formValues,
     });
 
   const [userAccessOpen, setUserAccessOpen] = useState<boolean>(false);
@@ -145,10 +147,6 @@ const ProjectRow: FC<Props> = ({
   );
   const [projectAccessDestroy] = useProjectAccessDestroyMutation();
 
-  useEffect(() => {
-    reset({ project, compound });
-  }, [project, compound, reset]);
-
   const handleSave = useMemo(
     () =>
       handleSubmit((data: FormData) => {
@@ -167,7 +165,7 @@ const ProjectRow: FC<Props> = ({
           }
         }
       }),
-    [handleSubmit, compound, project, updateCompound, updateProject],
+    [handleSubmit, compound, project, updateCompound, updateProject, dispatch],
   );
 
   const onCancel = () => {

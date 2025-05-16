@@ -124,6 +124,6 @@ export default function useSimulationInputs(
             simulationInputMode.ALL_OUTPUTS_NO_AMOUNTS,
           )
         : DEFAULT_INPUTS,
-    [simulation, sliderValues, variables, timeMax],
+    [model, simulation, sliderValues, variables, timeMax],
   );
 }
