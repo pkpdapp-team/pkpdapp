@@ -59,7 +59,6 @@ export function useVariableFormState({
     watch,
   } = useForm<Variable>({
     defaultValues: variable || { id: 0, name: "" },
-    values: variable,
   });
   const watchProtocolId = watch("protocol");
   const isDirty = watchProtocolId !== variable?.protocol || isDirtyVariable;
