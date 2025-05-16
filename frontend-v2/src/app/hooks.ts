@@ -47,9 +47,12 @@ export function useFieldState<T extends FieldValues>({
   const [fieldValue, setFieldValue] = useState<any>(initialValue);
 
   useEffect(() => {
-    if (fieldValue !== initialValue) {
-      setFieldValue(initialValue);
-    }
+    setFieldValue((value: typeof initialValue) => {
+      if (value === initialValue) {
+        return value;
+      }
+      return initialValue;
+    });
   }, [initialValue]);
 
   return [fieldValue, setFieldValue];
