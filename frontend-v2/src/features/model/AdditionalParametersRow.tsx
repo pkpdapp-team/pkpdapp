@@ -1,4 +1,3 @@
-// src/components/ProjectTable.tsx
 import { FC, useEffect } from "react";
 import { Control } from "react-hook-form";
 import {
@@ -37,6 +36,7 @@ interface Props {
   isAnyLinkToPdSelected: boolean;
   updateLagTimes: (key: number, value: boolean) => void;
   isAnyLagTimeSelected: boolean;
+  onChange: () => void;
 }
 
 type DerivedVariableType = "AUC" | "RO" | "FUP" | "BPR" | "TLG";
@@ -57,6 +57,7 @@ const AdditionalParametersRow: FC<Props> = ({
   isAnyLinkToPdSelected,
   updateLagTimes,
   isAnyLagTimeSelected,
+  onChange,
 }) => {
   const {
     mappings,
@@ -86,7 +87,12 @@ const AdditionalParametersRow: FC<Props> = ({
 
   const onClickDerived = (type: DerivedVariableType) => () => {
     const index = derivedIndex(type);
-    return index >= 0 ? removeDerived(index) : addDerived(type);
+    if (index >= 0) {
+      removeDerived(index);
+    } else {
+      addDerived(type);
+    }
+    onChange();
   };
 
   const derivedIndex = (type: DerivedVariableType) => {
@@ -151,6 +157,7 @@ const AdditionalParametersRow: FC<Props> = ({
         pkpd_model: model.id,
       });
     }
+    onChange();
   };
 
   const removePDMapping = () => {
@@ -160,6 +167,7 @@ const AdditionalParametersRow: FC<Props> = ({
     if (mapping_index >= 0) {
       mappingsRemove(mapping_index);
     }
+    onChange();
   };
 
   const addDerived = (type: DerivedVariableType) => {
