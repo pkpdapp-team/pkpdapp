@@ -19,7 +19,7 @@ import {
   useUnitListQuery,
   useVariableListQuery,
 } from "../../app/backendApi";
-import { useForm } from "react-hook-form";
+import { useForm, useFormState } from "react-hook-form";
 import { FC, useCallback, useEffect, useMemo } from "react";
 import { DynamicTabs, TabPanel } from "../../components/DynamicTabs";
 import MapVariablesTab from "./MapVariablesTab";
@@ -100,14 +100,16 @@ function useApiQueries() {
   };
 }
 
-function useModelFormState({
+function useModelFormDataCallback({
   model,
   project,
   simulation,
+  reset,
 }: {
   model?: CombinedModelRead | null;
   project?: ProjectRead;
   simulation?: SimulationRead;
+  reset: (values?: Partial<FormData>) => void;
 }) {
   const [updateModel] = useCombinedModelUpdateMutation();
   const [updateSimulation] = useSimulationUpdateMutation();
@@ -115,34 +117,6 @@ function useModelFormState({
 
   const [setParamsToDefault] =
     useCombinedModelSetParamsToDefaultsUpdateMutation();
-
-  const species = project?.species;
-  const defaultModel = model || DEFAULT_MODEL;
-  const defaultValues: FormData = {
-    ...defaultModel,
-    project: project?.id || 0,
-    species,
-  };
-  const {
-    reset,
-    handleSubmit,
-    control,
-    formState: { isDirty, submitCount },
-  } = useForm<FormData>({
-    defaultValues,
-  });
-
-  useDirty(isDirty);
-
-  useEffect(() => {
-    if (model && species) {
-      const newModel: FormData = {
-        ...model,
-        species,
-      };
-      reset(newModel);
-    }
-  }, [model, species, reset]);
 
   const handleFormData = useCallback(
     (data: FormData) => {
@@ -172,6 +146,12 @@ function useModelFormState({
         modelData.pd_model2 = null;
       }
 
+      // Reset form isDirty and isSubmitting state from previous submissions.
+      reset({
+        ...modelData,
+        project: project.id,
+        species,
+      });
       return updateModel({ id: model.id, combinedModel: modelData }).then(
         (response) => {
           if (response?.data) {
@@ -199,17 +179,37 @@ function useModelFormState({
       updateProject,
       updateSimulation,
       setParamsToDefault,
+      reset,
     ],
   );
+  return handleFormData;
+}
 
-  useEffect(() => {
-    if (isDirty && submitCount === 0) {
-      const submit = handleSubmit(handleFormData);
-      submit();
-    }
-  }, [handleSubmit, handleFormData, isDirty, submitCount]);
+function useModelFormState({
+  model,
+  project,
+}: {
+  model?: CombinedModelRead | null;
+  project?: ProjectRead;
+}) {
+  const species = project?.species;
+  const defaultValues: FormData = {
+    ...DEFAULT_MODEL,
+    project: project?.id || 0,
+    species,
+  };
+  const values = getFormValues(model, species);
+  const { reset, handleSubmit, control } = useForm<FormData>({
+    defaultValues,
+    values,
+  });
+  const { isDirty } = useFormState({
+    control,
+  });
 
-  return { control };
+  useDirty(isDirty);
+
+  return { control, reset, handleSubmit };
 }
 
 const DEFAULT_MODEL: CombinedModelRead = {
@@ -227,6 +227,23 @@ const DEFAULT_MODEL: CombinedModelRead = {
   is_library_model: false,
 };
 
+function getFormValues(
+  model: CombinedModelRead | null | undefined,
+  species: ProjectSpeciesEnum | undefined,
+): FormData {
+  if (model && species) {
+    return {
+      ...model,
+      species,
+    };
+  } else {
+    return {
+      ...DEFAULT_MODEL,
+      species,
+    };
+  }
+}
+
 const Model: FC = () => {
   const {
     isLoading,
@@ -240,7 +257,30 @@ const Model: FC = () => {
     variables,
   } = useApiQueries();
 
-  const { control } = useModelFormState({ model, project, simulation });
+  const { control, reset, handleSubmit } = useModelFormState({
+    model,
+    project,
+  });
+  const handleFormData = useModelFormDataCallback({
+    model,
+    project,
+    simulation,
+    reset,
+  });
+
+  /* 
+  Submit whenever the form is dirty
+  and previous updates have finished (or reset).
+  */
+  const { isDirty, isSubmitting } = useFormState({
+    control,
+  });
+  useEffect(() => {
+    if (isDirty && !isSubmitting) {
+      const submit = handleSubmit(handleFormData);
+      submit();
+    }
+  }, [handleSubmit, handleFormData, isDirty, isSubmitting]);
 
   if (isLoading) {
     return <div>Loading...</div>;

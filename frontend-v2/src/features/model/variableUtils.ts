@@ -54,13 +54,15 @@ export function useVariableFormState({
 }) {
   const {
     handleSubmit,
-    reset,
-    formState: { isDirty: isDirtyForm, submitCount },
+    formState: { isDirty: isDirtyVariable, submitCount },
     setValue,
     watch,
-  } = useForm<Variable>({ defaultValues: variable || { id: 0, name: "" } });
+  } = useForm<Variable>({
+    defaultValues: variable || { id: 0, name: "" },
+    values: variable,
+  });
   const watchProtocolId = watch("protocol");
-  const isDirty = watchProtocolId !== variable?.protocol || isDirtyForm;
+  const isDirty = watchProtocolId !== variable?.protocol || isDirtyVariable;
   useDirty(isDirty);
   const [updateVariable] = useVariableUpdateMutation();
   const { addProtocol, removeProtocol, hasProtocol } = useEditProtocol({
@@ -71,10 +73,6 @@ export function useVariableFormState({
     variable,
     watchProtocolId,
   });
-
-  useEffect(() => {
-    reset(variable);
-  }, [variable, reset]);
 
   useEffect(() => {
     if (isDirty && submitCount === 0) {
