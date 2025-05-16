@@ -275,6 +275,7 @@ const Model: FC = () => {
   const { isDirty, isSubmitting } = useFormState({
     control,
   });
+
   useEffect(() => {
     if (isDirty && !isSubmitting) {
       const submit = handleSubmit(handleFormData);
@@ -346,6 +347,7 @@ const Model: FC = () => {
             variables={variables}
             units={units}
             compound={compound}
+            onChange={handleSubmit(handleFormData)}
           />
         </TabPanel>
         <TabPanel>

@@ -60,6 +60,7 @@ interface Props {
   variables: VariableRead[];
   units: UnitRead[];
   compound: CompoundRead;
+  onChange: () => void;
 }
 
 const MapVariablesTab: FC<Props> = ({
@@ -69,6 +70,7 @@ const MapVariablesTab: FC<Props> = ({
   variables,
   units,
   compound,
+  onChange,
 }: Props) => {
   const [dosings, setDosing] = useState<
     {
@@ -478,6 +480,7 @@ const MapVariablesTab: FC<Props> = ({
                 isAnyLinkToPdSelected={isAnyLinkToPdSelected}
                 updateLagTimes={updateLagTimes}
                 isAnyLagTimeSelected={isAnyLagTimeSelected}
+                onChange={onChange}
               />
             ))}
           </TableBody>
