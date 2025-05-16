@@ -34,9 +34,11 @@ export default function useSimulation(
       : { error: "Unknown error" }
     : undefined;
   const page = useSelector((state: RootState) => state.main.selectedPage);
+  const serialisedInputs = JSON.stringify(simInputs);
 
   useEffect(() => {
     let ignore = false;
+    const simInputs = JSON.parse(serialisedInputs);
     if (
       runSimulation &&
       simInputs.outputs?.length > 1 &&
@@ -70,7 +72,7 @@ export default function useSimulation(
     model,
     protocols,
     simulate,
-    JSON.stringify(simInputs),
+    serialisedInputs,
     page,
     runSimulation,
     setSimulations,
