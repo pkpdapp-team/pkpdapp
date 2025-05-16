@@ -49,15 +49,11 @@ const DoseRow: FC<Props> = ({
     control: doseControl,
     handleSubmit,
     formState: { isDirty, submitCount },
-    reset,
   } = useForm<DoseRead>({
     defaultValues: dose,
+    values: dose,
   });
   useDirty(isDirty);
-
-  useEffect(() => {
-    reset(dose);
-  }, [dose, reset]);
 
   const [updateDose] = useDoseUpdateMutation();
 
@@ -70,7 +66,7 @@ const DoseRow: FC<Props> = ({
           onChange();
         }
       }),
-    [dose, handleSubmit, doseId, refetchDose, updateDose],
+    [dose, handleSubmit, doseId, refetchDose, updateDose, onChange],
   );
 
   useEffect(() => {

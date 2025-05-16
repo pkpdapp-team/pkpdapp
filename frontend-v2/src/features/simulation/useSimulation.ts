@@ -73,6 +73,8 @@ export default function useSimulation(
     JSON.stringify(simInputs),
     page,
     runSimulation,
+    setSimulations,
+    simInputs,
   ]);
 
   return {

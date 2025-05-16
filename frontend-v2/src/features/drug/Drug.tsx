@@ -96,12 +96,13 @@ const Drug: FC = () => {
   // create a form for the compound data using react-hook-form
   const { reset, handleSubmit, control, setValue, getValues } =
     useForm<Compound>({
-      defaultValues: compound || {
+      defaultValues: {
         name: "",
         description: "",
         compound_type: "SM",
         efficacy_experiments: [],
       },
+      values: compound,
     });
   const { isDirty } = useFormState({ control });
   useDirty(isDirty);
@@ -115,10 +116,6 @@ const Drug: FC = () => {
     name: "efficacy_experiments",
     keyName: "theKey",
   });
-
-  useEffect(() => {
-    reset(compound);
-  }, [compound, reset]);
 
   const dispatch = useDispatch();
 
@@ -156,7 +153,7 @@ const Drug: FC = () => {
             .then(() => dispatch(decrementDirtyCount()));
         }
       }),
-    [compound, handleSubmit, updateCompound],
+    [compound, handleSubmit, updateCompound, dispatch],
   );
 
   useEffect(() => {
@@ -265,15 +262,19 @@ const Drug: FC = () => {
       <div
         style={{ display: "flex", paddingTop: "1rem", flexDirection: "column" }}
       >
-        <Grid container size={{
-          xl: 12
-        }}>
+        <Grid
+          container
+          size={{
+            xl: 12,
+          }}
+        >
           <Grid
             sx={{ paddingRight: "2rem" }}
             size={{
               xl: 3,
-              xs: 7
-            }}>
+              xs: 7,
+            }}
+          >
             <Typography variant="h6" component="h2" gutterBottom>
               Drug Properties
             </Typography>
@@ -298,15 +299,20 @@ const Drug: FC = () => {
             </Stack>
           </Grid>
         </Grid>
-        <Grid sx={{ paddingTop: ".5rem" }} container size={{
-          xl: 12
-        }}>
+        <Grid
+          sx={{ paddingTop: ".5rem" }}
+          container
+          size={{
+            xl: 12,
+          }}
+        >
           <Grid
             sx={{ paddingRight: "2rem" }}
             size={{
               xl: 3,
-              xs: 7
-            }}>
+              xs: 7,
+            }}
+          >
             <Typography variant="h6" component="h2" gutterBottom>
               Target Properties
             </Typography>
@@ -334,14 +340,19 @@ const Drug: FC = () => {
           </Grid>
         </Grid>
       </div>
-      <Grid container sx={{ paddingTop: "3rem" }} size={{
-        xl: 12
-      }}>
+      <Grid
+        container
+        sx={{ paddingTop: "3rem" }}
+        size={{
+          xl: 12,
+        }}
+      >
         <Grid
           size={{
             xl: 4,
-            xs: 7
-          }}>
+            xs: 7,
+          }}
+        >
           <Box sx={{ display: "flex" }}>
             <Typography variant="h6" component="h2" gutterBottom>
               Efficacy-Safety Data

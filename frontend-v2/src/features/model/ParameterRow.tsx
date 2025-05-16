@@ -25,16 +25,12 @@ const ParameterRow: FC<Props> = ({ project, variable, units }) => {
   const {
     control,
     handleSubmit,
-    reset,
-    formState: { isDirty: isDirtyForm, submitCount },
-  } = useForm<Variable>({ defaultValues: variable || { id: 0, name: "" } });
+    formState: { isDirty, submitCount },
+  } = useForm<Variable>({
+    defaultValues: variable || { id: 0, name: "" },
+    values: variable,
+  });
   const [updateVariable] = useVariableUpdateMutation();
-
-  useEffect(() => {
-    reset(variable);
-  }, [variable, reset]);
-
-  const isDirty = isDirtyForm;
   useDirty(isDirty);
 
   const isSharedWithMe = useSelector((state: RootState) =>

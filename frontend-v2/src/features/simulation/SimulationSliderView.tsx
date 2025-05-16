@@ -68,7 +68,7 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
       setValue(defaultValue);
       onChange(slider.variable, defaultValue);
     }
-  }, [onChange, defaultValue, variable]);
+  }, [onChange, defaultValue, variable, slider.variable]);
 
   const handleSliderChange = (
     event: Event | SyntheticEvent<Element, Event>,
@@ -121,9 +121,12 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
 
   const commitChanges = () => {
     commitChangesWithValue(new Event("commit"), value);
-  }
+  };
 
-  const commitChangesWithValue = (_event: React.SyntheticEvent | Event, value: number | number[]) => {
+  const commitChangesWithValue = (
+    _event: React.SyntheticEvent | Event,
+    value: number | number[],
+  ) => {
     // value should always be a number
     if (typeof value !== "number") {
       return;
