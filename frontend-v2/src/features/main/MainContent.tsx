@@ -28,7 +28,7 @@ function TabPanel(props: TabPanelProps) {
       hidden={value !== index}
       id={`simple-tabpanel-${index}`}
       aria-labelledby={`simple-tab-${index}`}
-      style={{ width: '100%'}}
+      style={{ width: "100%" }}
       {...other}
     >
       <Box sx={{ p: 3, zIndex: value === index ? 1000 : 1, paddingBottom: 0 }}>

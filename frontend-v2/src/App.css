@@ -27,24 +27,36 @@
 }
 
 @keyframes onExpand {
-  0%   {transform: translate(-190px); overflow-X: 'visible';}
-  100% {transform: translate(0); overflow-x: 'hidden';}
+  0% {
+    transform: translate(-190px);
+    overflow-x: "visible";
+  }
+  100% {
+    transform: translate(0);
+    overflow-x: "hidden";
+  }
 }
 
 @keyframes onCollapse {
-  0%   {transform: translate(190px); overflow-X: 'visible';}
-  100% {transform: translate(0); overflow-x: 'hidden';}
+  0% {
+    transform: translate(190px);
+    overflow-x: "visible";
+  }
+  100% {
+    transform: translate(0);
+    overflow-x: "hidden";
+  }
 }
 
 .on-expand {
   animation-name: onExpand;
-  animation-duration: .35s;
+  animation-duration: 0.35s;
   animation-timing-function: linear;
 }
 
 .on-collapse {
   animation-name: onCollapse;
-  animation-duration: .35s;
+  animation-duration: 0.35s;
   animation-timing-function: linear;
 }
 

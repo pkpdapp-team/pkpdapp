@@ -16,7 +16,7 @@ import useDirty from "../../hooks/useDirty";
 
 type Props = {
   baseUnit?: UnitRead;
-  control: Control<Protocol, any, Protocol>;
+  control: Control<Protocol>;
   disabled: boolean;
   doseId: number;
   index: number;
