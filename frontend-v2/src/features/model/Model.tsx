@@ -3,9 +3,13 @@ import { RootState } from "../../app/store";
 import {
   CombinedModel,
   CombinedModelRead,
+  CompoundRead,
+  PharmacodynamicRead,
   ProjectRead,
   ProjectSpeciesEnum,
+  ProtocolListApiResponse,
   SimulationRead,
+  UnitListApiResponse,
   useCombinedModelListQuery,
   useCombinedModelSetParamsToDefaultsUpdateMutation,
   useCombinedModelUpdateMutation,
@@ -18,6 +22,7 @@ import {
   useSimulationUpdateMutation,
   useUnitListQuery,
   useVariableListQuery,
+  VariableListApiResponse,
 } from "../../app/backendApi";
 import { useForm, useFormState } from "react-hook-form";
 import { FC, useCallback, useEffect, useMemo } from "react";
@@ -106,8 +111,8 @@ function useModelFormDataCallback({
   simulation,
   reset,
 }: {
-  model?: CombinedModelRead | null;
-  project?: ProjectRead;
+  model: CombinedModelRead;
+  project: ProjectRead;
   simulation?: SimulationRead;
   reset: (values?: Partial<FormData>) => void;
 }) {
@@ -189,19 +194,17 @@ function useModelFormState({
   model,
   project,
 }: {
-  model?: CombinedModelRead | null;
-  project?: ProjectRead;
+  model: CombinedModelRead;
+  project: ProjectRead;
 }) {
-  const species = project?.species;
+  const species = project.species;
   const defaultValues: FormData = {
-    ...DEFAULT_MODEL,
-    project: project?.id || 0,
+    ...model,
+    project: project.id,
     species,
   };
-  const values = getFormValues(model, species);
   const { reset, handleSubmit, control } = useForm<FormData>({
     defaultValues,
-    values,
   });
   const { isDirty } = useFormState({
     control,
@@ -212,51 +215,27 @@ function useModelFormState({
   return { control, reset, handleSubmit };
 }
 
-const DEFAULT_MODEL: CombinedModelRead = {
-  id: 0,
-  name: "",
-  project: 0,
-  mappings: [],
-  derived_variables: [],
-  time_intervals: [],
-  components: "",
-  variables: [],
-  mmt: "",
-  sbml: "",
-  time_unit: 0,
-  is_library_model: false,
-};
-
-function getFormValues(
-  model: CombinedModelRead | null | undefined,
-  species: ProjectSpeciesEnum | undefined,
-): FormData {
-  if (model && species) {
-    return {
-      ...model,
-      species,
-    };
-  } else {
-    return {
-      ...DEFAULT_MODEL,
-      species,
-    };
-  }
+interface TabbedModelFormProps {
+  model: CombinedModelRead;
+  project: ProjectRead;
+  variables: VariableListApiResponse;
+  protocols: ProtocolListApiResponse;
+  compound: CompoundRead;
+  units: UnitListApiResponse;
+  pd_model?: PharmacodynamicRead;
+  simulation?: SimulationRead;
 }
 
-const Model: FC = () => {
-  const {
-    isLoading,
-    compound,
-    model,
-    pd_model,
-    project,
-    protocols,
-    simulation,
-    units,
-    variables,
-  } = useApiQueries();
-
+const TabbedModelForm: FC<TabbedModelFormProps> = ({
+  model,
+  pd_model,
+  project,
+  simulation,
+  variables,
+  protocols,
+  compound,
+  units,
+}) => {
   const { control, reset, handleSubmit } = useModelFormState({
     model,
     project,
@@ -282,14 +261,6 @@ const Model: FC = () => {
       submit();
     }
   }, [handleSubmit, handleFormData, isDirty, isSubmitting]);
-
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
-
-  if (!model || !project || !variables || !protocols || !compound || !units) {
-    return <div>Not found</div>;
-  }
 
   const tabErrors: { [key: string]: string } = {};
   const tabKeys = [
@@ -363,6 +334,39 @@ const Model: FC = () => {
         </TabPanel>
       </DynamicTabs>
     </>
+  );
+};
+
+const Model: FC = () => {
+  const {
+    isLoading,
+    compound,
+    model,
+    pd_model,
+    project,
+    protocols,
+    simulation,
+    units,
+    variables,
+  } = useApiQueries();
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+  if (!model || !project || !variables || !protocols || !compound || !units) {
+    return <div>Not found</div>;
+  }
+  return (
+    <TabbedModelForm
+      model={model}
+      pd_model={pd_model}
+      project={project}
+      simulation={simulation}
+      variables={variables}
+      protocols={protocols}
+      compound={compound}
+      units={units}
+    />
   );
 };
 
