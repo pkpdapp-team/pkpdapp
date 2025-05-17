@@ -1,8 +1,8 @@
 # Using a 2-stage build. This is the builder for javascript frontend
 
-FROM node:20 as build
+FROM node:22 AS build
 
-ENV YARN_VERSION 4.2.2
+ENV YARN_VERSION=4.2.2
 RUN yarn policies set-version $YARN_VERSION
 
 RUN mkdir -p /app/frontend
