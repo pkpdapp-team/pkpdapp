@@ -269,7 +269,7 @@ const ProjectTable: FC = () => {
             { label: "Small Molecule", value: "SM" },
             { label: "Large Molecule", value: "LM" },
           ]}
-          onOptionSelected={(value: "SM" | "LM") => handleAddRow(value)}
+          onOptionSelected={handleAddRow}
         >
           New Project
         </DropdownButton>

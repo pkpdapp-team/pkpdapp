@@ -120,8 +120,8 @@ export default function Sidebar() {
   const groupsAreComplete = protocolsAreComplete?.every((dosing) => dosing);
   const noSecondaryParameters = model
     ? model.derived_variables.reduce((acc, dv) => {
-      return acc && dv.type !== "AUC";
-    }, true)
+        return acc && dv.type !== "AUC";
+      }, true)
     : false;
   const noIntervals = intervals.length === 0;
 

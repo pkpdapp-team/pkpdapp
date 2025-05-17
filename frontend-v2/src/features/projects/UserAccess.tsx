@@ -63,14 +63,15 @@ const UserAccess: FC<Props> = ({
 
   const currentUser = useSelector(selectCurrentUser);
   const myUserId = currentUser?.id || 0;
-  const sharedUsers = userAccess.map(({ user }) => user)
+  const sharedUsers = userAccess.map(({ user }) => user);
 
   // create list of user options for select
-  const userOptions = users
-    ?.filter((user) => user.id !== myUserId && !sharedUsers.includes(user.id))
-    .map((user) => {
-      return { value: user.id, label: user.username };
-    }) || [];
+  const userOptions =
+    users
+      ?.filter((user) => user.id !== myUserId && !sharedUsers.includes(user.id))
+      .map((user) => {
+        return { value: user.id, label: user.username };
+      }) || [];
 
   return (
     <Dialog maxWidth="lg" open={open} onClose={onClose}>
@@ -111,7 +112,7 @@ const UserAccess: FC<Props> = ({
             data_cy="add-y-axis"
             options={userOptions}
             onOptionSelected={addUser}
-            sx={{ marginTop: '1rem'}}
+            sx={{ marginTop: "1rem" }}
           >
             Add user
           </DropdownButton>

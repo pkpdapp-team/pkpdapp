@@ -58,18 +58,18 @@ export function valuesPerInterval(
     const start =
       startIndex > 0
         ? interpolate(
-          [times[startIndex - 1], times[startIndex]],
-          [values[startIndex - 1], values[startIndex]],
-          startTime,
-        )
+            [times[startIndex - 1], times[startIndex]],
+            [values[startIndex - 1], values[startIndex]],
+            startTime,
+          )
         : values[0];
     const end =
       endIndex > -1
         ? interpolate(
-          [times[endIndex - 1], times[endIndex]],
-          [values[endIndex - 1], values[endIndex]],
-          endTime,
-        )
+            [times[endIndex - 1], times[endIndex]],
+            [values[endIndex - 1], values[endIndex]],
+            endTime,
+          )
         : values[values.length - 1];
     const intervalValues = [
       start,
@@ -132,20 +132,20 @@ export function thresholdCrossingPoints(
   const startTime =
     thresholdStart > 0
       ? interpolate(
-        [intervalValues[thresholdStart - 1], intervalValues[thresholdStart]],
-        [intervalTimes[thresholdStart - 1], intervalTimes[thresholdStart]],
-        threshold,
-      )
+          [intervalValues[thresholdStart - 1], intervalValues[thresholdStart]],
+          [intervalTimes[thresholdStart - 1], intervalTimes[thresholdStart]],
+          threshold,
+        )
       : intervalTimes[0];
   const endTime =
     thresholdStart === -1 // threshold never reached
       ? startTime
       : thresholdEnd > 0
         ? interpolate(
-          [intervalValues[thresholdEnd - 1], intervalValues[thresholdEnd]],
-          [intervalTimes[thresholdEnd - 1], intervalTimes[thresholdEnd]],
-          threshold,
-        )
+            [intervalValues[thresholdEnd - 1], intervalValues[thresholdEnd]],
+            [intervalTimes[thresholdEnd - 1], intervalTimes[thresholdEnd]],
+            threshold,
+          )
         : intervalTimes[intervalTimes.length - 1]; // threshold reached beyond the end of the interval
   return [endTime - startTime, thresholdEnd];
 }
@@ -238,16 +238,16 @@ export function tableRow({
   const values = tableColumns.map((column, index) => {
     const col_interval = interval ? interval : intervals[index];
     const col_simulation = simulation ? simulation : simulations[index];
-    const col_variable = variable
-      ? variable
-      : concentrationVariables[index];
+    const col_variable = variable ? variable : concentrationVariables[index];
 
-    if (col_interval === undefined || col_simulation === undefined || col_variable === undefined) {
+    if (
+      col_interval === undefined ||
+      col_simulation === undefined ||
+      col_variable === undefined
+    ) {
       return "";
     }
-    return column.value(
-      col_interval, col_simulation, col_variable
-    );
+    return column.value(col_interval, col_simulation, col_variable);
   });
   return { header, values };
 }

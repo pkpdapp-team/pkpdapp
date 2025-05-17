@@ -34,6 +34,15 @@ export function useDefaultValue<T extends FieldValues>({
   return nextValue as string | number | undefined;
 }
 
+type FieldValue = string | number | null | undefined;
+type FieldState = [FieldValue, React.Dispatch<FieldValue>];
+/**
+ * Subscribe to the stored value for a given path within a form control object.
+ * @param props.control A form control object.
+ * @param props.name Path of a field within the control object.
+ * @param props.defaultValue Default value for name.
+ * @returns Current value for name and a function to set the value.
+ */
 export function useFieldState<T extends FieldValues>({
   name,
   control,
@@ -44,11 +53,11 @@ export function useFieldState<T extends FieldValues>({
     ? defaultFromFormKey || defaultValue
     : defaultFromFormKey;
 
-  const [fieldValue, setFieldValue] = useState<any>(initialValue);
+  const [fieldValue, setFieldValue] = useState<FieldValue>(initialValue);
 
   useEffect(() => {
     setFieldValue(initialValue);
   }, [initialValue]);
 
-  return [fieldValue, setFieldValue];
+  return [fieldValue, setFieldValue] as FieldState;
 }
