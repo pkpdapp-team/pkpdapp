@@ -7,13 +7,13 @@ import {
   ProjectRead,
   UnitRead,
   VariableRead,
-} from "../../app/backendApi";
-import UnitField from "../../components/UnitField";
-import useDirty from "../../hooks/useDirty";
-import FloatField from "../../components/FloatField";
-import { selectIsProjectShared } from "../login/loginSlice";
+} from "../../../app/backendApi";
+import UnitField from "../../../components/UnitField";
+import useDirty from "../../../hooks/useDirty";
+import FloatField from "../../../components/FloatField";
+import { selectIsProjectShared } from "../../login/loginSlice";
 import { useSelector } from "react-redux";
-import { RootState } from "../../app/store";
+import { RootState } from "../../../app/store";
 
 interface Props {
   project: ProjectRead;

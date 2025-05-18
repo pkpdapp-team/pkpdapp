@@ -6,7 +6,7 @@ import {
   ProjectSpeciesEnum,
   UnitRead,
   VariableRead,
-} from "../../app/backendApi";
+} from "../../../app/backendApi";
 import { Control } from "react-hook-form";
 import {
   Box,
@@ -19,12 +19,12 @@ import {
   Tooltip,
 } from "@mui/material";
 import VariableRow from "./VariableRow";
-import HelpButton from "../../components/HelpButton";
-import { FormData } from "./Model";
-import { defaultHeaderSx } from "../../shared/tableHeadersSx";
-import { TableHeader } from "../../components/TableHeader";
+import HelpButton from "../../../components/HelpButton";
+import { FormData } from "../Model";
+import { defaultHeaderSx } from "../../../shared/tableHeadersSx";
+import { TableHeader } from "../../../components/TableHeader";
 import AdditionalParametersRow from "./AdditionalParametersRow";
-import { getTableHeight } from "../../shared/calculateTableHeights";
+import { getTableHeight } from "../../../shared/calculateTableHeights";
 
 export const TABLE_BREAKPOINTS = [
   {

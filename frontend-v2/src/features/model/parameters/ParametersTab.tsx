@@ -5,7 +5,7 @@ import {
   UnitRead,
   VariableRead,
   useCombinedModelSetParamsToDefaultsUpdateMutation,
-} from "../../app/backendApi";
+} from "../../../app/backendApi";
 import {
   TableContainer,
   Table,
@@ -19,17 +19,17 @@ import {
   Box,
 } from "@mui/material";
 import ParameterRow from "./ParameterRow";
-import HelpButton from "../../components/HelpButton";
+import HelpButton from "../../../components/HelpButton";
 import { getConstVariables, getNoReset } from "./resetToSpeciesDefaults";
-import { defaultHeaderSx } from "../../shared/tableHeadersSx";
+import { defaultHeaderSx } from "../../../shared/tableHeadersSx";
 import { useSelector } from "react-redux";
-import { RootState } from "../../app/store";
-import { selectIsProjectShared } from "../login/loginSlice";
+import { RootState } from "../../../app/store";
+import { selectIsProjectShared } from "../../login/loginSlice";
 import {
   getTableHeight,
   SINGLE_TABLE_BREAKPOINTS,
-} from "../../shared/calculateTableHeights";
-import { TableHeader } from "../../components/TableHeader";
+} from "../../../shared/calculateTableHeights";
+import { TableHeader } from "../../../components/TableHeader";
 
 interface Props {
   model: CombinedModelRead;
