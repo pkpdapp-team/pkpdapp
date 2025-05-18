@@ -7,7 +7,7 @@ import {
   VariableRead,
   useProtocolCreateMutation,
   useProtocolDestroyMutation,
-} from "../../app/backendApi";
+} from "../../../app/backendApi";
 
 interface EditProtocolProps {
   compound: CompoundRead;

@@ -6,10 +6,10 @@ import {
   useVariableUpdateMutation,
   Variable,
   VariableRead,
-} from "../../app/backendApi";
-import { FormData } from "./Model";
+} from "../../../app/backendApi";
+import { FormData } from "../Model";
 import { useEffect } from "react";
-import useDirty from "../../hooks/useDirty";
+import useDirty from "../../../hooks/useDirty";
 import useEditProtocol from "./useEditProtocol";
 
 export function useFormData({ control }: { control: Control<FormData> }) {

@@ -15,11 +15,11 @@ import {
   ProjectRead,
   UnitRead,
   VariableRead,
-} from "../../app/backendApi";
-import { FormData } from "./Model";
+} from "../../../app/backendApi";
+import { FormData } from "../Model";
 import { useSelector } from "react-redux";
-import { RootState } from "../../app/store";
-import { selectIsProjectShared } from "../login/loginSlice";
+import { RootState } from "../../../app/store";
+import { selectIsProjectShared } from "../../login/loginSlice";
 import { useFormData, useVariableFormState } from "./variableUtils";
 
 interface Props {
