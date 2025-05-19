@@ -1,6 +1,6 @@
 // src/components/ProjectTable.tsx
-import { FC, useEffect, useMemo, useState } from "react";
-import { useForm, useFieldArray } from "react-hook-form";
+import { FC, useEffect, useCallback, useState } from "react";
+import { useForm, useFieldArray, useFormState } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
@@ -14,6 +14,7 @@ import {
   Tooltip,
   Stack,
   TextField as MaterialTextField,
+  ButtonBase,
 } from "@mui/material";
 import Delete from "@mui/icons-material/Delete";
 import PersonAdd from "@mui/icons-material/PersonAdd";
@@ -51,6 +52,7 @@ interface Props {
   isSelected: boolean;
   otherProjectNames: string[];
   isAnyProjectSelected: boolean;
+  compound?: CompoundRead;
 }
 
 export interface FormData {
@@ -66,11 +68,12 @@ export const speciesOptions = [
   { value: "O", label: "Other" },
 ];
 
-const ProjectRow: FC<Props> = ({
+const ProjectEditorRow: FC<Props> = ({
   project,
   isSelected,
   isAnyProjectSelected,
   otherProjectNames,
+  compound,
 }) => {
   const dispatch = useDispatch();
   const [
@@ -107,24 +110,12 @@ const ProjectRow: FC<Props> = ({
 
   const [showConfirmDelete, setShowConfirmDelete] = useState<boolean>(false);
 
-  const { data: compound, isLoading } = useCompoundRetrieveQuery({
-    id: project.compound,
-  });
-  const defaultCompound: CompoundRead = {
-    id: 1,
-    name: "",
-    description: "",
-    compound_type: "SM",
-    efficacy_experiments: [],
-    molecular_mass: 100,
-    target_molecular_mass: 100,
-  };
-  const formValues = project && compound ? { project, compound } : undefined;
+  const formValues = { project, compound };
   const { reset, handleSubmit, control, setValue, register } =
     useForm<FormData>({
-      defaultValues: { project, compound: defaultCompound },
-      values: formValues,
+      defaultValues: formValues,
     });
+  const { isDirty, defaultValues } = useFormState({ control });
 
   const [userAccessOpen, setUserAccessOpen] = useState<boolean>(false);
 
@@ -145,26 +136,35 @@ const ProjectRow: FC<Props> = ({
   );
   const [projectAccessDestroy] = useProjectAccessDestroyMutation();
 
-  const handleSave = useMemo(
-    () =>
-      handleSubmit((data: FormData) => {
-        if (compound && project) {
-          if (JSON.stringify(compound) !== JSON.stringify(data.compound)) {
-            dispatch(incrementDirtyCount());
-            updateCompound({ id: compound.id, compound: data.compound }).then(
-              () => dispatch(decrementDirtyCount()),
-            );
-          }
-          if (JSON.stringify(project) !== JSON.stringify(data.project)) {
-            dispatch(incrementDirtyCount());
-            updateProject({ id: project.id, project: data.project }).then(() =>
-              dispatch(decrementDirtyCount()),
-            );
-          }
+  const submitForm = useCallback(
+    (data: FormData) => {
+      if (compound && project) {
+        if (compound.name !== data.compound.name) {
+          dispatch(incrementDirtyCount());
+          updateCompound({ id: compound.id, compound: data.compound }).then(
+            () => dispatch(decrementDirtyCount()),
+          );
         }
-      }),
-    [handleSubmit, compound, project, updateCompound, updateProject, dispatch],
+        if (isDirty) {
+          reset(data);
+          dispatch(incrementDirtyCount());
+          updateProject({ id: project.id, project: data.project }).then(() =>
+            dispatch(decrementDirtyCount()),
+          );
+        }
+      }
+    },
+    [
+      isDirty,
+      reset,
+      updateCompound,
+      updateProject,
+      dispatch,
+      compound,
+      project,
+    ],
   );
+  const handleSave = handleSubmit(submitForm);
 
   const onCancel = () => {
     setValue("project.description", project.description);
@@ -175,10 +175,6 @@ const ProjectRow: FC<Props> = ({
     setUserAccessOpen(false);
     setIsEditMode(false);
   };
-
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
 
   if (compound === undefined) {
     return <div>Error: cannot find compound...</div>;
@@ -276,7 +272,7 @@ const ProjectRow: FC<Props> = ({
             />
           ) : (
             <label htmlFor={`project-${project.id}`}>
-              <Typography>{project?.name}</Typography>
+              <Typography>{defaultValues?.project?.name}</Typography>
             </label>
           )}
         </TableCell>
@@ -306,23 +302,26 @@ const ProjectRow: FC<Props> = ({
           </Typography>
         </TableCell>
         <TableCell>
-          <Typography component="span">
+          <ButtonBase
+            focusRipple
+            onClick={() => onOpenDescriptionModal(project.id)}
+          >
             {isEditMode ? (
               <Typography
+                component="span"
                 sx={{ color: "blue", cursor: "pointer" }}
-                onClick={() => onOpenDescriptionModal(project.id)}
               >
                 {project?.description?.length ? "Read" : "Add"}
               </Typography>
             ) : (
               <Typography
-                onClick={() => onOpenDescriptionModal(project.id)}
+                component="span"
                 sx={{ color: "blue", cursor: "pointer" }}
               >
                 {project?.description?.length ? "Read" : ""}
               </Typography>
             )}
-          </Typography>
+          </ButtonBase>
         </TableCell>
         <TableCell>
           {!isEditMode ? (
@@ -435,6 +434,18 @@ const ProjectRow: FC<Props> = ({
       )}
     </>
   );
+};
+
+const ProjectRow: FC<Props> = (props) => {
+  const { data: compound, isLoading } = useCompoundRetrieveQuery({
+    id: props.project.compound,
+  });
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  return <ProjectEditorRow {...props} compound={compound} />;
 };
 
 export default ProjectRow;
