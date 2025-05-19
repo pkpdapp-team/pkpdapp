@@ -32,7 +32,6 @@ interface Props {
   model: CombinedModelRead;
   project: ProjectRead;
   control: Control<FormData>;
-  updateModel: (data: CombinedModelUpdateApiArg) => void;
   compound: CompoundRead;
 }
 
@@ -239,14 +238,14 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
                 size="small"
                 sx={{ flex: "1" }}
                 label="Weight"
-                name={`project.species_weight`}
+                name={`species_weight`}
                 control={control}
                 textFieldProps={{ sx: { width: "calc(50% - 7rem)" }, ...defaultProps }}
               />
               <UnitField
                 size="small"
                 label={"Unit"}
-                name={`project.species_weight_unit`}
+                name={`species_weight_unit`}
                 control={control}
                 baseUnit={units.find((u) => u.id === project.species_weight_unit)}
                 selectProps={{ sx: { width: "6rem" }, ...defaultProps }}
@@ -254,13 +253,18 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
               />
             </React.Fragment>
           }
-        </Stack>
+        </Grid>
       </Grid>
-      <Grid container item spacing={2}>
-        <Grid item xl={4} md={8} xs={10}>
+      <Grid container spacing={2}>
+        <Grid
+          size={{
+            xl: 4,
+            md: 8,
+            xs: 10,
+          }}
+        >
           {version_greater_than_2 &&
             <Stack
-
               direction="row" alignItems="center" spacing={1}
             >
               <FormControl sx={{ width: "calc(100% - 3rem)" }} size="small">
@@ -328,8 +332,8 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
                 <Tooltip title="Includes Michaelis-Menten parameters (CLmax and Km)">
                   <div>
                     <Checkbox
-                      label="Effect Compartment"
-                      name="model.has_effect"
+                      label="Saturation"
+                      name="has_saturation"
                       control={control}
                       checkboxFieldProps={{
                         disabled: !model.pk_model || isSharedWithMe,
@@ -343,7 +347,7 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
                   <div style={{ fontSize: "12px !important" }}>
                     <Checkbox
                       label="Effect Compartment"
-                      name="model.has_effect"
+                      name="has_effect"
                       control={control}
                       checkboxFieldProps={{
                         disabled: !model.pk_model || isSharedWithMe,
@@ -357,7 +361,7 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
                     <SelectField
                       size="small"
                       label="Effect Compartments"
-                      name="model.number_of_effect_compartments"
+                      name="number_of_effect_compartments"
                       control={control}
                       options={Array.from(Array(6).keys()).map((i) => { return { value: i, label: i.toString() } })}
                       formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
@@ -371,7 +375,7 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
                   <div>
                     <Checkbox
                       label="ADA"
-                      name="model.has_anti_drug_antibodies"
+                      name="has_anti_drug_antibodies"
                       control={control}
                       checkboxFieldProps={{
                         disabled: !model.pk_model || isSharedWithMe || compound.compound_type !== "LM"
@@ -380,30 +384,24 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
                   </div>
                 </Tooltip>
               }
-              <Tooltip title="Includes a time delay following PO or SC administration">
-                <div>
-                  <Checkbox
-                    label="Lag Time"
-                    name="model.has_lag"
-                    control={control}
-                    checkboxFieldProps={{
-                      disabled: !model.pk_model || isSharedWithMe,
-                    }}
-                  />
-                </div>
-              </Tooltip>
             </Stack>
           )}
         </Grid>
       </Grid>
-      <Grid container item spacing={2}>
-        <Grid item xl={5} md={8} xs={10}>
+      <Grid container spacing={2}>
+        <Grid
+          size={{
+            xl: 4,
+            md: 8,
+            xs: 10,
+          }}
+        >
           {version_greater_than_2 &&
             <Stack direction="row" alignItems="center" spacing={1}>
               <SelectField
                 size="small"
                 label="Extravascular PK Model"
-                name="model.pk_model2"
+                name="pk_model2"
                 control={control}
                 options={pk_model2_options}
                 formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
@@ -423,7 +421,7 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
               <div>
                 <Checkbox
                   label="Lag Time"
-                  name="model.has_lag"
+                  name="has_lag"
                   control={control}
                   checkboxFieldProps={{
                     disabled: !model.pk_model || isSharedWithMe,
@@ -435,7 +433,7 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
               <div>
                 <Checkbox
                   label="Bioavailability"
-                  name="model.has_bioavailability"
+                  name="has_bioavailability"
                   control={control}
                   checkboxFieldProps={{
                     disabled: !model.pk_model || isSharedWithMe,
@@ -445,108 +443,27 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
             </Tooltip>
           </Stack>
         </Grid>
-        <Grid container item spacing={2}>
-          <Grid item xl={4} md={8} xs={10}>
-            <Stack direction="row" alignItems="center" spacing={1}>
-              <SelectField
-                size="small"
-                label="PD Model"
-                name="model.pd_model"
-                control={control}
-                options={pd_model_options}
-                formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
-                selectProps={defaultProps}
-              />
-            </Stack>
-          </Grid>
+      </Grid>
+      <Grid container spacing={2}>
+        <Grid
+          size={{
+            xl: 4,
+            md: 8,
+            xs: 10,
+          }}
+        >
+          <SelectField
+            size="small"
+            label="PD Model"
+            name="pd_model"
+            control={control}
+            options={pd_model_options}
+            formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
+            selectProps={defaultProps}
+          />
         </Grid>
         <Box width="100%" />
         {pdIsTumourGrowth && (
-          <>
-            <Grid item xl={4} md={8} xs={10}>
-              <Stack direction="row" alignItems="center" spacing={1}>
-                <SelectField
-                  size="small"
-                  label="Secondary PD Model"
-                  name="model.pd_model2"
-                  control={control}
-                  options={pd_model2_options}
-                  formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
-                  selectProps={defaultProps}
-                />
-              </Stack>
-            </Grid>
-          </>
-        )}
-        <Box width="100%" height="0" />
-        <Grid container item spacing={2} sx={{ paddingTop: "0" }}>
-          <Grid item xs={12} md={8} xl={5} sx={{ paddingTop: "0 !important" }}>
-
-            {pdModelHasHillCoefficient && (
-              <Stack
-                sx={{
-                  display: "flex",
-                  paddingTop: "0",
-                  "& .MuiFormControlLabel-label": { fontSize: ".9rem" },
-                }}
-                direction="row"
-                alignItems="center"
-                flexWrap="wrap"
-                justifyContent="space-between"
-              >
-                <Tooltip title="Includes the Hill coefficient to the PD response">
-                  <div>
-                    <Checkbox
-                      label="Saturation"
-                      name="has_saturation"
-                      control={control}
-                      checkboxFieldProps={{
-                        disabled: !model.pk_model || isSharedWithMe,
-                      }}
-                    />
-                  </div>
-                </Tooltip>
-                <Tooltip title="Includes an effect compartment">
-                  <div style={{ fontSize: "12px !important" }}>
-                    <Checkbox
-                      label="Effect Compartment"
-                      name="has_effect"
-                      control={control}
-                      checkboxFieldProps={{
-                        disabled: !model.pk_model || isSharedWithMe,
-                      }}
-                    />
-                  </div>
-                </Tooltip>
-                <Tooltip title="Includes a time delay following PO or SC administration">
-                  <div>
-                    <Checkbox
-                      label="Lag Time"
-                      name="has_lag"
-                      control={control}
-                      checkboxFieldProps={{
-                        disabled: !model.pk_model || isSharedWithMe,
-                      }}
-                    />
-                  </div>
-                </Tooltip>
-                <Tooltip title="Includes bioavailability (F), if not selected F=1">
-                  <div>
-                    <Checkbox
-                      label="Bioavailability"
-                      name="has_bioavailability"
-                      control={control}
-                      checkboxFieldProps={{
-                        disabled: !model.pk_model || isSharedWithMe,
-                      }}
-                    />
-                  </div>
-                </Tooltip>
-              </Stack>
-            )}
-          </Grid>
-        </Grid>
-        <Grid container spacing={2}>
           <Grid
             size={{
               xl: 4,
@@ -554,25 +471,7 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
               xs: 10,
             }}
           >
-            <SelectField
-              size="small"
-              label="PD Model"
-              name="pd_model"
-              control={control}
-              options={pd_model_options}
-              formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
-              selectProps={defaultProps}
-            />
-          </Grid>
-
-          {pdIsTumourGrowth && (
-            <Grid
-              size={{
-                xl: 4,
-                md: 8,
-                xs: 10,
-              }}
-            >
+            <Stack direction="row" alignItems="center" spacing={1}>
               <SelectField
                 size="small"
                 label="Secondary PD Model"
@@ -582,69 +481,71 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
                 formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
                 selectProps={defaultProps}
               />
-            </Grid>
-          )}
-        </Grid>
-        <Grid container spacing={2} sx={{ paddingTop: "0" }}>
-          <Grid
-            size={{
-              xs: 12,
-              md: 8,
-              xl: 5,
-            }}
-          >
-            <Stack
-              direction="column"
-              sx={{
-                paddingTop: "0",
-                "& .MuiFormControlLabel-label": { fontSize: ".9rem" },
-              }}
-            >
-              {pdModelHasHillCoefficient && (
-                <Tooltip title="Includes the Hill coefficient to the PD response">
-                  <div>
-                    <Checkbox
-                      label="Hill Coefficient"
-                      name="has_hill_coefficient"
-                      control={control}
-                      checkboxFieldProps={{
-                        disabled: !model.pd_model || isSharedWithMe,
-                      }}
-                    />
-                  </div>
-                </Tooltip>
-              )}
-              <Stack direction="row" spacing={1} sx={{ marginTop: "1rem" }}>
-                <Button
-                  variant="outlined"
-                  onClick={() => setIsCodeModalOpen(true)}
-                  endIcon={<CodeOutlinedIcon />}
-                >
-                  Show MMT code
-                </Button>
-                <Button
-                  variant="outlined"
-                  onClick={() => setIsSbmlModalOpen(true)}
-                  endIcon={<CodeOutlinedIcon />}
-                >
-                  Show SBML code
-                </Button>
-              </Stack>
             </Stack>
           </Grid>
+        )}
+      </Grid>
+      <Grid container spacing={2} sx={{ paddingTop: "0" }}>
+        <Grid
+          size={{
+            xs: 12,
+            md: 8,
+            xl: 5,
+          }}
+          sx={{ paddingTop: "0 !important" }}
+        >
+          <Stack
+            direction="column"
+            sx={{
+              paddingTop: "0",
+              "& .MuiFormControlLabel-label": { fontSize: ".9rem" },
+            }}
+          >
+            {pdModelHasHillCoefficient && (
+              <Tooltip title="Includes the Hill coefficient to the PD response">
+                <div>
+                  <Checkbox
+                    label="Hill Coefficient"
+                    name="has_hill_coefficient"
+                    control={control}
+                    checkboxFieldProps={{
+                      disabled: !model.pd_model || isSharedWithMe,
+                    }}
+                  />
+                </div>
+              </Tooltip>
+            )}
+            <Stack direction="row" spacing={1} sx={{ marginTop: "1rem" }}>
+              <Button
+                variant="outlined"
+                onClick={() => setIsCodeModalOpen(true)}
+                endIcon={<CodeOutlinedIcon />}
+              >
+                Show MMT code
+              </Button>
+              <Button
+                variant="outlined"
+                onClick={() => setIsSbmlModalOpen(true)}
+                endIcon={<CodeOutlinedIcon />}
+              >
+                Show SBML code
+              </Button>
+            </Stack>
+          </Stack>
         </Grid>
-        <CodeModal
-          isOpen={isCodeModalOpen}
-          onClose={() => setIsCodeModalOpen(false)}
-          code={model.mmt}
-          language="mmt"
-        />
-        <CodeModal
-          isOpen={isSbmlModalOpen}
-          onClose={() => setIsSbmlModalOpen(false)}
-          code={model.sbml}
-          language="xml"
-        />
+      </Grid>
+      <CodeModal
+        isOpen={isCodeModalOpen}
+        onClose={() => setIsCodeModalOpen(false)}
+        code={model.mmt}
+        language="mmt"
+      />
+      <CodeModal
+        isOpen={isSbmlModalOpen}
+        onClose={() => setIsSbmlModalOpen(false)}
+        code={model.sbml}
+        language="xml"
+      />
     </Stack >
   );
 };

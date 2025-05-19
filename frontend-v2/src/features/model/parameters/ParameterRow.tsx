@@ -51,7 +51,7 @@ const ParameterRow: FC<Props> = ({ model, project, variable, variables, units, m
     update: derivedVariablesUpdate,
   } = useFieldArray({
     control: modelControl,
-    name: "model.derived_variables",
+    name: "derived_variables",
   });
 
   const submit = useMemo(

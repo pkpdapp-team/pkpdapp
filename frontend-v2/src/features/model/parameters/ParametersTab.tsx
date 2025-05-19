@@ -1,4 +1,5 @@
 import { FC } from "react";
+import { Control } from "react-hook-form";
 import {
   CombinedModelRead,
   ProjectRead,
@@ -23,8 +24,9 @@ import HelpButton from "../../../components/HelpButton";
 import { getConstVariables, getNoReset } from "./resetToSpeciesDefaults";
 import { defaultHeaderSx } from "../../../shared/tableHeadersSx";
 import { useSelector } from "react-redux";
-import { RootState } from "../../../app/store";
-import { selectIsProjectShared } from "../../login/loginSlice";
+import { FormData } from "./Model";
+import { RootState } from "../../app/store";
+import { selectIsProjectShared } from "../login/loginSlice";
 import {
   getTableHeight,
   SINGLE_TABLE_BREAKPOINTS,
@@ -35,6 +37,7 @@ interface Props {
   model: CombinedModelRead;
   project: ProjectRead;
   variables: VariableRead[];
+  control: Control<FormData>;
   units: UnitRead[];
 }
 

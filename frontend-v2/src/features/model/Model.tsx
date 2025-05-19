@@ -37,6 +37,8 @@ import { TableHeader } from "../../components/TableHeader";
 
 export type FormData = Omit<CombinedModel, "species"> & {
   species: ProjectSpeciesEnum | undefined;
+  species_weight: number | undefined;
+  species_weight_unit: number | undefined;
 };
 
 function useApiQueries() {
@@ -199,10 +201,15 @@ function useModelFormState({
   project: ProjectRead;
 }) {
   const species = project.species;
+  const species = project.species;
+  const species_weight = project.species_weight;
+  const species_weight_unit = project.species_weight_unit;
   const defaultValues: FormData = {
     ...model,
     project: project.id,
     species,
+    species_weight,
+    species_weight_unit,
   };
   const { reset, handleSubmit, control } = useForm<FormData>({
     defaultValues,
@@ -313,7 +320,6 @@ const TabbedModelForm: FC<TabbedModelFormProps> = ({
             model={model}
             project={project}
             control={control}
-            updateModel={updateModel}
             compound={compound}
           />
         </TabPanel>
@@ -333,6 +339,7 @@ const TabbedModelForm: FC<TabbedModelFormProps> = ({
             model={model}
             project={project}
             variables={variables}
+            control={control}
             units={units}
           />
         </TabPanel>
