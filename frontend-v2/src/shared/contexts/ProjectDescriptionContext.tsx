@@ -10,7 +10,7 @@ type ProjectDescriptionContextType = {
 const ProjectDescriptionContext = createContext<ProjectDescriptionContextType>({
   isDescriptionModalOpen: false,
   descriptionProjectId: null,
-  onOpenDescriptionModal: (_id: number | null) => {
+  onOpenDescriptionModal: () => {
     return;
   },
   onCloseDescriptionModal: () => {

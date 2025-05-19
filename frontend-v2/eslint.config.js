@@ -6,13 +6,19 @@ import reactHooks from "eslint-plugin-react-hooks";
 import typescript from "typescript-eslint";
 import pluginJsxA11y from "eslint-plugin-jsx-a11y";
 
-export default [
+export default typescript.config(
   js.configs.recommended,
+  typescript.configs.recommended,
+  {
+    rules: {
+      "@typescript-eslint/no-unused-vars": "warn",
+      "@typescript-eslint/no-explicit-any": "warn",
+    },
+  },
   reactRecommended,
   reactJSXRuntime,
   reactHooks.configs["recommended-latest"],
   pluginJsxA11y.flatConfigs.recommended,
-  ...typescript.configs.recommended,
   prettier,
   {
     settings: {
@@ -24,4 +30,4 @@ export default [
   {
     ignores: ["src/app/api.ts", "src/app/backendApi.ts"],
   },
-];
+);

@@ -26,8 +26,8 @@
     "rehype-react": "^8.0.0"
   },
   "scripts": {
-    "start": "npx tsc && vite",
-    "build": "npx tsc && vite build",
+    "start": "npx tsc && eslint src && vite",
+    "build": "npx tsc && eslint src && vite build",
     "serve": "vite preview",
     "lint": "eslint src",
     "format": "prettier --write ./src",
