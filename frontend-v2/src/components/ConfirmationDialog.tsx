@@ -1,10 +1,11 @@
-import { FC } from "react";
+import { FC, useEffect, useRef } from "react";
 import {
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
   Button,
+  ButtonBaseActions,
 } from "@mui/material";
 
 interface ConfirmationDialogProps {
@@ -22,6 +23,14 @@ const ConfirmationDialog: FC<ConfirmationDialogProps> = ({
   onConfirm,
   onCancel,
 }) => {
+  const confirmFocus = useRef<ButtonBaseActions>(null);
+  useEffect(() => {
+    if (open) {
+      setTimeout(() => {
+        confirmFocus.current?.focusVisible();
+      });
+    }
+  }, [open]);
   return (
     <Dialog open={open} onClose={onCancel}>
       <DialogTitle>{title}</DialogTitle>
@@ -30,7 +39,7 @@ const ConfirmationDialog: FC<ConfirmationDialogProps> = ({
         <Button onClick={onCancel} color="primary">
           Cancel
         </Button>
-        <Button onClick={onConfirm} color="primary" autoFocus>
+        <Button action={confirmFocus} onClick={onConfirm} color="primary">
           Confirm
         </Button>
       </DialogActions>
