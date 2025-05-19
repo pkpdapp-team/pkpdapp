@@ -24,9 +24,9 @@ import HelpButton from "../../../components/HelpButton";
 import { getConstVariables, getNoReset } from "./resetToSpeciesDefaults";
 import { defaultHeaderSx } from "../../../shared/tableHeadersSx";
 import { useSelector } from "react-redux";
-import { FormData } from "./Model";
-import { RootState } from "../../app/store";
-import { selectIsProjectShared } from "../login/loginSlice";
+import { FormData } from "../Model";
+import { RootState } from "../../../app/store";
+import { selectIsProjectShared } from "../../login/loginSlice";
 import {
   getTableHeight,
   SINGLE_TABLE_BREAKPOINTS,

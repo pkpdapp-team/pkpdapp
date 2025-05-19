@@ -201,7 +201,6 @@ function useModelFormState({
   project: ProjectRead;
 }) {
   const species = project.species;
-  const species = project.species;
   const species_weight = project.species_weight;
   const species_weight_unit = project.species_weight_unit;
   const defaultValues: FormData = {

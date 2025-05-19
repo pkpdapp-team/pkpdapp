@@ -21,8 +21,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "../../../app/store";
 import { selectIsProjectShared } from "../../login/loginSlice";
 import { useFormData, useVariableFormState } from "./variableUtils";
-import useEditProtocol from "./useEditProtocol";
-import { DerivedVariableType, derivedIndex } from "./derivedVariable";
+import { DerivedVariableType, derivedIndex } from "../derivedVariable";
 
 interface Props {
   project: ProjectRead;

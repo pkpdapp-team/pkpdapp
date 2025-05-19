@@ -22,8 +22,8 @@ import { RootState } from "../../../app/store";
 import { selectIsProjectShared } from "../../login/loginSlice";
 import { useFormData, useVariableFormState } from "./variableUtils";
 import useEditProtocol from "./useEditProtocol";
-import { SimulationContext } from "../../contexts/SimulationContext";
-import { derivedIndex } from "./derivedVariable";
+import { SimulationContext } from "../../../contexts/SimulationContext";
+import { derivedIndex } from "../derivedVariable";
 
 interface Props {
   project: ProjectRead;

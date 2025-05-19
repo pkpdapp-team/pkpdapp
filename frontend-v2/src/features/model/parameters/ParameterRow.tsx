@@ -1,5 +1,5 @@
 import { FC, ReactNode, useEffect, useMemo } from "react";
-import { FormData } from "./Model";
+import { FormData } from "../Model";
 import { Control, useFieldArray, useForm } from "react-hook-form";
 import { TableCell, TableRow, Tooltip, Typography, Select, SelectChangeEvent, MenuItem, Stack } from "@mui/material";
 import {
@@ -9,14 +9,14 @@ import {
   UnitRead,
   VariableRead,
   CombinedModelRead,
-} from "../../app/backendApi";
-import UnitField from "../../components/UnitField";
-import useDirty from "../../hooks/useDirty";
-import FloatField from "../../components/FloatField";
-import { selectIsProjectShared } from "../login/loginSlice";
+} from "../../../app/backendApi";
+import UnitField from "../../../components/UnitField";
+import useDirty from "../../../hooks/useDirty";
+import FloatField from "../../../components/FloatField";
+import { selectIsProjectShared } from "../../login/loginSlice";
 import { useSelector } from "react-redux";
-import { RootState } from "../../app/store";
-import { derivedIndex, DerivedVariableType } from "./derivedVariable";
+import { RootState } from "../../../app/store";
+import { derivedIndex, DerivedVariableType } from "../derivedVariable";
 
 
 interface Props {
