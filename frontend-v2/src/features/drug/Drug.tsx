@@ -125,7 +125,6 @@ const DrugForm: FC<DrugFormProps> = ({ project, compound, units }) => {
               selectedExperimentIndex === -1 &&
               result.data.efficacy_experiments.length > 0
             ) {
-              setValue("use_efficacy", result.data.efficacy_experiments[0].id);
               const newCompound = {
                 ...data,
                 efficacy_experiments: result.data.efficacy_experiments,
@@ -141,7 +140,7 @@ const DrugForm: FC<DrugFormProps> = ({ project, compound, units }) => {
         });
       }
     },
-    [compound, updateCompound, isDirty, reset, setValue],
+    [compound, updateCompound, isDirty, reset],
   );
   const submit = handleSubmit(submitForm);
 
