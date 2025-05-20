@@ -14,11 +14,14 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
 import {
   Compound,
+  CompoundRead,
   EfficacyRead,
+  ProjectRead,
+  UnitListApiResponse,
   useCompoundRetrieveQuery,
   useCompoundUpdateMutation,
   useProjectRetrieveQuery,
@@ -26,7 +29,7 @@ import {
 } from "../../app/backendApi";
 import { useFieldArray, useForm, useFormState } from "react-hook-form";
 import FloatField from "../../components/FloatField";
-import { FC, useEffect, useMemo, useState } from "react";
+import { FC, useCallback, useEffect, useState } from "react";
 import TextField from "../../components/TextField";
 import SelectField from "../../components/SelectField";
 import { selectIsProjectShared } from "../login/loginSlice";
@@ -35,7 +38,6 @@ import EditIcon from "@mui/icons-material/Edit";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
 import Delete from "@mui/icons-material/Delete";
-import { decrementDirtyCount, incrementDirtyCount } from "../main/mainSlice";
 import AddCircleOutlineOutlinedIcon from "@mui/icons-material/AddCircleOutlineOutlined";
 import { getTableHeight } from "../../shared/calculateTableHeights";
 import useDirty from "../../hooks/useDirty";
@@ -71,22 +73,13 @@ export const DOUBLE_TABLE_SECOND_BREAKPOINTS = [
   },
 ];
 
-const Drug: FC = () => {
-  const projectId = useSelector(
-    (state: RootState) => state.main.selectedProject,
-  );
-  const { data: project, isLoading: isProjectLoading } =
-    useProjectRetrieveQuery({ id: projectId || 0 }, { skip: !projectId });
-  const { data: compound, isLoading: isCompoundLoading } =
-    useCompoundRetrieveQuery(
-      { id: project?.compound || 0 },
-      { skip: !project },
-    );
+interface DrugFormProps {
+  project: ProjectRead;
+  compound: CompoundRead;
+  units: UnitListApiResponse;
+}
+const DrugForm: FC<DrugFormProps> = ({ project, compound, units }) => {
   const [updateCompound] = useCompoundUpdateMutation();
-  const { data: units, isLoading: isLoadingUnits } = useUnitListQuery(
-    { compoundId: project?.compound },
-    { skip: !project?.compound },
-  );
 
   const isSharedWithMe = useSelector((state: RootState) =>
     selectIsProjectShared(state, project),
@@ -96,15 +89,9 @@ const Drug: FC = () => {
   // create a form for the compound data using react-hook-form
   const { reset, handleSubmit, control, setValue, getValues } =
     useForm<Compound>({
-      defaultValues: {
-        name: "",
-        description: "",
-        compound_type: "SM",
-        efficacy_experiments: [],
-      },
-      values: compound,
+      defaultValues: compound,
     });
-  const { isDirty } = useFormState({ control });
+  const { isDirty, defaultValues } = useFormState({ control });
   useDirty(isDirty);
 
   const {
@@ -114,68 +101,63 @@ const Drug: FC = () => {
   } = useFieldArray({
     control,
     name: "efficacy_experiments",
-    keyName: "theKey",
   });
 
-  const dispatch = useDispatch();
-
-  const submit = useMemo(
-    () =>
-      handleSubmit((data) => {
-        if (
-          data &&
-          compound &&
-          JSON.stringify(data) !== JSON.stringify(compound)
-        ) {
-          // strange bug in react-hook-form is creating efficancy_experiments with undefined compounds, remove these for now.
-          data.efficacy_experiments = data.efficacy_experiments.filter(
-            (efficacy_experiment) => efficacy_experiment.compound !== undefined,
-          );
-          dispatch(incrementDirtyCount());
-          updateCompound({ id: compound.id, compound: data })
-            .then((result) => {
-              // if the compound has no efficacy experiments, but the result has, then set the first one as the use_efficacy
-              if (result?.data) {
-                if (
-                  compound.efficacy_experiments.length === 0 &&
-                  result.data.efficacy_experiments.length > 0
-                ) {
-                  updateCompound({
-                    id: compound.id,
-                    compound: {
-                      ...data,
-                      use_efficacy: result.data.efficacy_experiments[0].id,
-                    },
-                  });
-                }
-              }
-            })
-            .then(() => dispatch(decrementDirtyCount()));
-        }
-      }),
-    [compound, handleSubmit, updateCompound, dispatch],
+  const submitForm = useCallback(
+    (data: Compound) => {
+      if (isDirty) {
+        // strange bug in react-hook-form is creating efficancy_experiments with undefined compounds, remove these for now.
+        data.efficacy_experiments = data.efficacy_experiments.filter(
+          (efficacy_experiment) => efficacy_experiment.compound !== undefined,
+        );
+        reset(data);
+        setIsEditIndex(null);
+        updateCompound({ id: compound.id, compound: data }).then((result) => {
+          // if the compound has no efficacy experiments, but the result has, then set the first one as the use_efficacy
+          if (result?.data) {
+            reset({
+              ...data,
+              efficacy_experiments: result.data.efficacy_experiments,
+            });
+            if (
+              result.data.use_efficacy === null &&
+              result.data.efficacy_experiments.length > 0
+            ) {
+              setValue("use_efficacy", result.data.efficacy_experiments[0].id);
+              updateCompound({
+                id: compound.id,
+                compound: {
+                  ...data,
+                  use_efficacy: result.data.efficacy_experiments[0].id,
+                },
+              });
+            }
+          }
+        });
+      }
+    },
+    [compound, updateCompound, isDirty, reset, setValue],
   );
+  const submit = handleSubmit(submitForm);
 
   useEffect(() => {
     if (isDirty) {
+      const submit = handleSubmit(submitForm);
       submit();
     }
-  }, [isDirty, submit]);
-
-  useEffect(() => {
-    submit();
-  }, [efficacy_experiments?.length, submit]);
+  }, [isDirty, handleSubmit, submitForm]);
 
   const addNewEfficacyExperiment = () => {
     append([
       {
         name: "",
-        c50: compound?.target_concentration || 0,
-        c50_unit: compound?.target_concentration_unit || 0,
+        c50: compound.target_concentration || 0,
+        c50_unit: compound.target_concentration_unit || 0,
         hill_coefficient: 1,
-        compound: compound?.id || 0,
+        compound: compound.id,
       },
     ]);
+    submit();
   };
 
   const deleteEfficacyExperiment = (index: number) => {
@@ -184,32 +166,44 @@ const Drug: FC = () => {
         "Are you sure you want to permanently delete this efficacy-safety data?",
       )
     ) {
+      if (isEfficacySelected(index)) {
+        setValue("use_efficacy", null);
+      }
       remove(index);
+      submit();
     }
   };
 
-  if (isProjectLoading || isCompoundLoading || isLoadingUnits) {
-    return <div>Loading...</div>;
-  }
-
-  if (!compound || !project || !units) {
-    return <div>Not found</div>;
-  }
-
-  const isEfficacySelected = (efficacy_experiment: EfficacyRead) => {
-    if (compound.use_efficacy === undefined) {
+  const isEfficacySelected = (index: number) => {
+    const efficacy_experiment = defaultValues?.efficacy_experiments?.[
+      index
+    ] as EfficacyRead;
+    if (compound.use_efficacy === null) {
       return false;
     }
-    return efficacy_experiment.id === compound.use_efficacy;
+    return efficacy_experiment?.id === compound.use_efficacy;
   };
 
-  const handleSelectEfficacy = (efficacy_experiment: EfficacyRead) => {
+  const handleSelectEfficacy = (index: number) => {
+    const efficacy_experiment = compound.efficacy_experiments[index];
     if (efficacy_experiment.id === compound.use_efficacy) {
       setValue("use_efficacy", null);
-      submit();
+      updateCompound({
+        id: compound.id,
+        compound: {
+          ...compound,
+          use_efficacy: null,
+        },
+      });
     } else {
       setValue("use_efficacy", efficacy_experiment.id);
-      submit();
+      updateCompound({
+        id: compound.id,
+        compound: {
+          ...compound,
+          use_efficacy: efficacy_experiment.id,
+        },
+      });
     }
   };
 
@@ -398,7 +392,7 @@ const Drug: FC = () => {
           </TableHead>
           <TableBody>
             {efficacy_experiments.map((efficacy_experiment, index) => (
-              <TableRow key={index}>
+              <TableRow key={`efficacy-experiment-${efficacy_experiment?.id}`}>
                 <TableCell width="5rem" size="small">
                   <Tooltip
                     arrow
@@ -407,16 +401,10 @@ const Drug: FC = () => {
                   >
                     <div style={{ display: "flex", alignItems: "center" }}>
                       <Radio
-                        checked={isEfficacySelected(
-                          efficacy_experiment as unknown as EfficacyRead,
-                        )}
-                        onClick={() =>
-                          handleSelectEfficacy(
-                            efficacy_experiment as unknown as EfficacyRead,
-                          )
-                        }
+                        checked={isEfficacySelected(index)}
+                        onClick={() => handleSelectEfficacy(index)}
                         disabled={isSharedWithMe}
-                        id={`efficacy_experiment-${efficacy_experiment?.theKey}`}
+                        id={`efficacy_experiment-${efficacy_experiment?.id}`}
                       />
                     </div>
                   </Tooltip>
@@ -433,7 +421,7 @@ const Drug: FC = () => {
                     />
                   ) : (
                     <label
-                      htmlFor={`efficacy_experiment-${efficacy_experiment?.theKey}`}
+                      htmlFor={`efficacy_experiment-${efficacy_experiment?.id}`}
                     >
                       <Typography>
                         {getValues(`efficacy_experiments.${index}.name`) || "-"}
@@ -507,7 +495,6 @@ const Drug: FC = () => {
                         <IconButton
                           onClick={() => {
                             submit();
-                            handleOnEdit(index, false);
                           }}
                         >
                           <CheckIcon />
@@ -516,8 +503,8 @@ const Drug: FC = () => {
                       <Tooltip arrow title="Discard changes">
                         <IconButton
                           onClick={() => {
-                            reset();
                             handleOnEdit(index, false);
+                            reset();
                           }}
                         >
                           <CloseIcon />
@@ -573,6 +560,37 @@ const Drug: FC = () => {
         </Table>
       </TableContainer>
     </div>
+  );
+};
+
+const Drug: FC = () => {
+  const projectId = useSelector(
+    (state: RootState) => state.main.selectedProject,
+  );
+  const { data: project, isLoading: isProjectLoading } =
+    useProjectRetrieveQuery({ id: projectId || 0 }, { skip: !projectId });
+  const { data: compound, isLoading: isCompoundLoading } =
+    useCompoundRetrieveQuery(
+      { id: project?.compound || 0 },
+      { skip: !project },
+    );
+  const { data: units, isLoading: isLoadingUnits } = useUnitListQuery(
+    { compoundId: project?.compound },
+    { skip: !project?.compound },
+  );
+
+  if (isProjectLoading || isCompoundLoading || isLoadingUnits) {
+    return <div>Loading...</div>;
+  }
+
+  if (!compound || !project || !units) {
+    return <div>Not found</div>;
+  }
+
+  return (
+    <Box sx={{ paddingTop: "1rem" }}>
+      <DrugForm project={project} compound={compound} units={units} />
+    </Box>
   );
 };
 
