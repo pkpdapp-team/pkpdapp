@@ -8,9 +8,16 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  TextField,
   IconButton,
   SvgIcon,
   Box,
+  OutlinedInput,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
+  Chip,
 } from "@mui/material";
 import {
   Compound,
@@ -87,6 +94,7 @@ const SM_SIM_TIME = 24;
 const LM_SIM_TIME = 168;
 const ProjectTable: FC = () => {
   const [sortBy, setSortBy] = useState<SortOptions>(SortOptions.CREATED);
+  const [filterBy, setFilterBy] = useState<string[]>([]);
 
   const handleSortBy = (option: SortOptions) => {
     setSortBy((prev) => {
@@ -105,7 +113,9 @@ const ProjectTable: FC = () => {
   const { data: compounds, isLoading: compoundsLoading } =
     useCompoundListQuery();
 
-  const projects = projectsUnordered ? [...projectsUnordered] : undefined;
+  let projects = projectsUnordered ? [...projectsUnordered] : undefined;
+
+
 
   const { data: units, isLoading: unitsLoading } = useUnitListQuery({});
 
@@ -118,6 +128,23 @@ const ProjectTable: FC = () => {
 
   if (isLoading || unitsLoading || compoundsLoading) {
     return <div>Loading...</div>;
+  }
+
+  const allTagsSet = projects?.reduce((acc, project) => {
+    if (project.tags) {
+      project.tags.split(",").forEach((tag) => {
+        acc.add(tag.trim());
+      });
+    }
+    return acc;
+  }, new Set<string>());
+  const allTags = allTagsSet ? Array.from(allTagsSet) : [];
+
+  if (filterBy.length > 0) {
+    projects = projects?.filter((project) => {
+      const tags = project.tags ? project.tags.split(",") : [];
+      return filterBy.every((tag) => tags.includes(tag));
+    });
   }
 
   const compoundNames = compounds?.reduce(
@@ -277,6 +304,41 @@ const ProjectTable: FC = () => {
           New Project
         </DropdownButton>
       </Box>
+      <FormControl sx={{ m: 1, width: 300 }} size="small">
+        <InputLabel id="filter-by-tags-label">Filter By Tag</InputLabel>
+        <Select
+          labelId="filter-by-tags-label"
+          id="filter-by-tags"
+          multiple
+          value={filterBy}
+          onChange={(event) => {
+            const {
+              target: { value },
+            } = event;
+            setFilterBy(
+              // On autofill we get a stringified value.
+              typeof value === 'string' ? value.split(',') : value,
+            );
+          }}
+          input={<OutlinedInput id="filter-by-tags-chip" label="Filter By Tag" />}
+          renderValue={(selected) => (
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+              {selected.map((value) => (
+                <Chip key={value} label={value} />
+              ))}
+            </Box>
+          )}
+        >
+          {allTags.map((tag) => (
+            <MenuItem
+              key={tag}
+              value={tag}
+            >
+              {tag}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl >
       <TableContainer
         sx={{
           height: getTableHeight({ steps: PROJECT_TABLE_BREAKPOINTS }),
@@ -358,6 +420,9 @@ const ProjectTable: FC = () => {
                   </div>
                 </TableCell>
                 <TableCell sx={{ borderBottom: "solid 2px blue" }}>
+                  <div style={{ ...defaultHeaderSx }}>Tags </div>
+                </TableCell>
+                <TableCell sx={{ borderBottom: "solid 2px blue" }}>
                   <div style={{ ...defaultHeaderSx }}>Description </div>
                 </TableCell>
                 <TableCell
@@ -383,6 +448,7 @@ const ProjectTable: FC = () => {
                     .slice(0, i)
                     .concat(projectNames.slice(i + 1))}
                   isSelected={selectedProject === project.id}
+                  allTags={allTags}
                 />
               ))}
             </TableBody>

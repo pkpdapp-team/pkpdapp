@@ -3261,6 +3261,8 @@ export type Project = {
   name: string;
   /** short description of the project */
   description?: string;
+  /** comma separated list of tags for this project */
+  tags?: string;
   /** subject species
     
     * `M` - Mouse
@@ -3285,6 +3287,8 @@ export type ProjectRead = {
   /** short description of the project */
   description?: string;
   created: string;
+  /** comma separated list of tags for this project */
+  tags?: string;
   /** subject species
     
     * `M` - Mouse
@@ -3307,6 +3311,8 @@ export type PatchedProject = {
   name?: string;
   /** short description of the project */
   description?: string;
+  /** comma separated list of tags for this project */
+  tags?: string;
   /** subject species
     
     * `M` - Mouse
@@ -3331,6 +3337,8 @@ export type PatchedProjectRead = {
   /** short description of the project */
   description?: string;
   created?: string;
+  /** comma separated list of tags for this project */
+  tags?: string;
   /** subject species
     
     * `M` - Mouse
