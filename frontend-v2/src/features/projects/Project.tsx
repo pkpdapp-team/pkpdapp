@@ -235,7 +235,7 @@ const ProjectRow: FC<Props> = ({
     return true;
   };
 
-  const tags = project.tags == "" ? [] : project.tags.split(",").map((tag) => tag.trim());
+  const tags = project.tags ? project.tags.split(",").map((tag) => tag.trim()) : [];
 
   const copyProject = () => {
     projectCopyUpdate({ id: project.id, project: project });

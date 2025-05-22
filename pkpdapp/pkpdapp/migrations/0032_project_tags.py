@@ -6,13 +6,15 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('pkpdapp', '0031_new_derived_variables'),
+        ("pkpdapp", "0031_new_derived_variables"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='project',
-            name='tags',
-            field=models.TextField(default='', help_text='comma separated list of tags for this project'),
+            model_name="project",
+            name="tags",
+            field=models.TextField(
+                default="", help_text="comma separated list of tags for this project"
+            ),
         ),
     ]

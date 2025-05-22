@@ -17,6 +17,8 @@ from pkpdapp.models import (
     Project,
     DerivedVariable,
     Compound,
+    Protocol,
+    Dose,
 )
 
 
@@ -37,6 +39,15 @@ class TestDerivedVariables(TestCase):
             pk_model=self.pk_model,
             pd_model=self.pd_model,
             project=self.project,
+        )
+        protocol = Protocol.objects.create(
+            name="test protocol",
+            project=self.project,
+        )
+        Dose.objects.create(
+            protocol=protocol,
+            start_time=0,
+            amount=100,
         )
 
     def test_michaelis_menten(self):
@@ -96,7 +107,7 @@ class TestDerivedVariables(TestCase):
         self.assertFalse(myokit_model.get("PDCompartment.C_Drug_C1_eMM").is_constant())
         self.assertEqual(
             str(myokit_model.get("PDCompartment.C_Drug_C1_eMM").rhs()),
-            "PDCompartment.C_Drug * (1 / (1 + (PKCompartment.C1 / PDCompartment.Km_C_Drug)^PDCompartment.h_C_Drug)) + PDCompartment.C_Drug_lin",  # noqa E501
+            "(PDCompartment.C_Drug - PDCompartment.C_Drug_lin) * (1 / (1 + (PKCompartment.C1 / PDCompartment.Km_C_Drug)^PDCompartment.h_C_Drug)) + PDCompartment.C_Drug_lin",  # noqa E501
         )
         self.assertEqual(
             str(myokit_model.get("PDCompartment.STIM").rhs()),
@@ -113,6 +124,7 @@ class TestDerivedVariables(TestCase):
         )
         self.pkpd_model = CombinedModel.objects.get(pk=self.pkpd_model.pk)
         myokit_model = self.pkpd_model.get_myokit_model()
+
         vars = [v.qname() for v in myokit_model.variables()]
         for var in [
             "PDCompartment.C_Drug",
@@ -126,7 +138,7 @@ class TestDerivedVariables(TestCase):
         self.assertTrue(myokit_model.get("PDCompartment.C_Drug_Emax").is_constant())
         self.assertEqual(
             str(myokit_model.get("PDCompartment.C_Drug_Emax").rhs()),
-            "PDCompartment.C_Drug * (PDCompartment.C_Drug^PDCompartment.h_C_Drug / (PDCompartment.C_Drug^PDCompartment.h_C_Drug + PDCompartment.D50_C_Drug^PDCompartment.h_C_Drug)) + PDCompartment.C_Drug_min",  # noqa E501
+            "(PDCompartment.C_Drug - PDCompartment.C_Drug_min) * (100^PDCompartment.h_C_Drug / (100^PDCompartment.h_C_Drug + PDCompartment.D50_C_Drug^PDCompartment.h_C_Drug)) + PDCompartment.C_Drug_min",  # noqa E501
         )
         self.assertEqual(
             str(myokit_model.get("PDCompartment.STIM").rhs()),
@@ -156,7 +168,7 @@ class TestDerivedVariables(TestCase):
         self.assertTrue(myokit_model.get("PDCompartment.C_Drug_Imax").is_constant())
         self.assertEqual(
             str(myokit_model.get("PDCompartment.C_Drug_Imax").rhs()),
-            "PDCompartment.C_Drug * (1 - PDCompartment.C_Drug^PDCompartment.h_C_Drug / (PDCompartment.C_Drug^PDCompartment.h_C_Drug + PDCompartment.D50_C_Drug^PDCompartment.h_C_Drug)) + PDCompartment.C_Drug_min",  # noqa E501
+            "(PDCompartment.C_Drug - PDCompartment.C_Drug_min) * (1 - PDCompartment.C_Drug^PDCompartment.h_C_Drug / (PDCompartment.C_Drug^PDCompartment.h_C_Drug + PDCompartment.D50_C_Drug^PDCompartment.h_C_Drug)) + PDCompartment.C_Drug_min",  # noqa E501
         )
         self.assertEqual(
             str(myokit_model.get("PDCompartment.STIM").rhs()),
@@ -215,7 +227,7 @@ class TestDerivedVariables(TestCase):
         self.assertFalse(myokit_model.get("PDCompartment.C_Drug_TDI").is_constant())
         self.assertEqual(
             str(myokit_model.get("PDCompartment.C_Drug_TDI").rhs()),
-            "PDCompartment.C_Drug * exp(-(PDCompartment.k_C_Drug * environment.t)) + PDCompartment.C_Drug_min",  # noqa E501
+            "(PDCompartment.C_Drug - PDCompartment.C_Drug_min) * exp(-(PDCompartment.k_C_Drug * environment.t)) + PDCompartment.C_Drug_min",  # noqa E501
         )
         self.assertEqual(
             str(myokit_model.get("PDCompartment.STIM").rhs()),
@@ -245,7 +257,7 @@ class TestDerivedVariables(TestCase):
         self.assertFalse(myokit_model.get("PDCompartment.C_Drug_IND").is_constant())
         self.assertEqual(
             str(myokit_model.get("PDCompartment.C_Drug_IND").rhs()),
-            "PDCompartment.C_Drug * (1 - exp(-(PDCompartment.k_C_Drug * environment.t))) + PDCompartment.C_Drug_min",  # noqa E501
+            "(PDCompartment.C_Drug - PDCompartment.C_Drug_min) * (1 - exp(-(PDCompartment.k_C_Drug * environment.t))) + PDCompartment.C_Drug_min",  # noqa E501
         )
         self.assertEqual(
             str(myokit_model.get("PDCompartment.STIM").rhs()),

@@ -575,6 +575,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
             time_var = pkpd_model.binding("time")
             myokit_compartment = myokit_var.parent()
             var_name = derived_variable.pk_variable.name
+            var = None
             if (
                 derived_variable.type == DerivedVariable.Type.AREA_UNDER_CURVE
             ):  # noqa: E501
@@ -685,7 +686,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 var.set_rhs(
                     myokit.Plus(
                         myokit.Multiply(
-                            myokit.Subtract(
+                            myokit.Minus(
                                 myokit.Name(myokit_var),
                                 myokit.Name(lin_var),
                             ),
@@ -753,7 +754,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 var.set_rhs(
                     myokit.Plus(
                         myokit.Multiply(
-                            myokit.Subtract(
+                            myokit.Minus(
                                 myokit.Name(myokit_var),
                                 myokit.Name(min_var),
                             ),
@@ -817,7 +818,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 var.set_rhs(
                     myokit.Plus(
                         myokit.Multiply(
-                            myokit.Subtract(
+                            myokit.Minus(
                                 myokit.Name(myokit_var),
                                 myokit.Name(min_var),
                             ),
@@ -914,7 +915,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 var.set_rhs(
                     myokit.Plus(
                         myokit.Multiply(
-                            myokit.Subtract(
+                            myokit.Minus(
                                 myokit.Name(myokit_var),
                                 myokit.Name(min_var),
                             ),
@@ -958,7 +959,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 var.set_rhs(
                     myokit.Plus(
                         myokit.Multiply(
-                            myokit.Subtract(
+                            myokit.Minus(
                                 myokit.Name(myokit_var),
                                 myokit.Name(min_var),
                             ),
@@ -982,7 +983,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 )
             # replace the original variable with the new one in the model
             for comp_var in myokit_compartment.variables():
-                if comp_var == var:
+                if var is None or comp_var == var:
                     continue
                 new_expr = comp_var.rhs().clone(
                     {myokit.Name(myokit_var): myokit.Name(var)}
