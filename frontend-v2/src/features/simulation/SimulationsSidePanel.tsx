@@ -62,6 +62,7 @@ type SimulationsSidePanelType = {
   handleChangeSlider: (variable: number, value: number) => void;
   handleRemoveSlider: (index: number) => () => void;
   handleSaveSlider: (slider: SimulationSlider) => (value: number) => void;
+  handleSaveAllSlider: () => void;
   exportSimulation: () => void;
   showReference: boolean;
   setShowReference: (reference: boolean) => void;
@@ -144,6 +145,7 @@ export const SimulationsSidePanel = ({
   handleChangeSlider,
   handleRemoveSlider,
   handleSaveSlider,
+  handleSaveAllSlider,
   exportSimulation,
   showReference,
   setShowReference,
@@ -495,6 +497,14 @@ export const SimulationsSidePanel = ({
                       units={units}
                     />
                   ))}
+                  <Button
+                    variant="outlined"
+                    sx={{ width: "12rem", marginTop: ".5rem" }}
+                    onClick={handleSaveAllSlider}
+                    disabled={isSharedWithMe}
+                  >
+                    Save All Sliders
+                  </Button>
                 </Collapse>
               </Box>
             </Box>

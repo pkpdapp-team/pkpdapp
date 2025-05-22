@@ -184,8 +184,8 @@ const Simulations: FC = () => {
   const hasPlots = simulation ? simulation.plots.length > 0 : false;
   const hasSecondaryParameters = model
     ? model.derived_variables.reduce((acc, dv) => {
-        return acc || dv.type === "AUC";
-      }, false)
+      return acc || dv.type === "AUC";
+    }, false)
     : false;
 
   const {
@@ -405,6 +405,24 @@ const Simulations: FC = () => {
     });
   };
 
+  const handleSaveAllSlider = () => {
+    for (const slider of sliders) {
+      const variable = variables?.find((v) => v.id === slider.variable);
+      if (!variable) {
+        return;
+      }
+      const value = sliderValues?.[slider.variable];
+      if (value === undefined) {
+        return;
+      }
+      updateVariable({
+        id: slider.variable,
+        variable: { ...variable, default_value: value },
+      });
+    }
+  };
+
+
   const [dimensions, setDimensions] = useState({
     width: window.innerWidth,
     height: window.innerHeight,
@@ -495,6 +513,7 @@ const Simulations: FC = () => {
         handleChangeSlider={handleChangeSlider}
         handleRemoveSlider={handleRemoveSlider}
         handleSaveSlider={handleSaveSlider}
+        handleSaveAllSlider={handleSaveAllSlider}
         exportSimulation={exportSimulation}
         showReference={showReference}
         setShowReference={setShowReference}
