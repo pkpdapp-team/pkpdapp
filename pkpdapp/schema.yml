@@ -4938,6 +4938,9 @@ components:
           type: string
           format: date-time
           readOnly: true
+        tags:
+          type: string
+          description: comma separated list of tags for this project
         species:
           allOf:
           - $ref: '#/components/schemas/ProjectSpeciesEnum'
@@ -5597,6 +5600,9 @@ components:
           type: string
           format: date-time
           readOnly: true
+        tags:
+          type: string
+          description: comma separated list of tags for this project
         species:
           allOf:
           - $ref: '#/components/schemas/ProjectSpeciesEnum'

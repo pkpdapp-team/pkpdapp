@@ -223,36 +223,40 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
             xs: 10,
           }}
         >
-          <SelectField
-            size="small"
-            label="Species"
-            name="species"
-            control={control}
-            options={speciesOptions}
-            formControlProps={{ sx: { width: "calc(50% - 3rem)" } }}
-            selectProps={defaultProps}
-          />
-          {version_greater_than_2 &&
-            <React.Fragment>
-              <FloatField
-                size="small"
-                sx={{ flex: "1" }}
-                label="Weight"
-                name={`species_weight`}
-                control={control}
-                textFieldProps={{ sx: { width: "calc(50% - 7rem)" }, ...defaultProps }}
-              />
-              <UnitField
-                size="small"
-                label={"Unit"}
-                name={`species_weight_unit`}
-                control={control}
-                baseUnit={units.find((u) => u.id === project.species_weight_unit)}
-                selectProps={{ sx: { width: "6rem" }, ...defaultProps }}
-                version_greater_than_2={version_greater_than_2}
-              />
-            </React.Fragment>
-          }
+          <Stack
+            direction="row" spacing={1}
+          >
+            <SelectField
+              size="small"
+              label="Species"
+              name="species"
+              control={control}
+              options={speciesOptions}
+              formControlProps={{ sx: { width: "calc(50% - 3rem)" } }}
+              selectProps={defaultProps}
+            />
+            {version_greater_than_2 &&
+              <React.Fragment>
+                <FloatField
+                  size="small"
+                  sx={{ flex: "1" }}
+                  label="Weight"
+                  name={`species_weight`}
+                  control={control}
+                  textFieldProps={{ sx: { width: "calc(50% - 7rem)" }, ...defaultProps }}
+                />
+                <UnitField
+                  size="small"
+                  label={"Unit"}
+                  name={`species_weight_unit`}
+                  control={control}
+                  baseUnit={units.find((u) => u.id === project.species_weight_unit)}
+                  selectProps={{ sx: { width: "6rem" }, ...defaultProps }}
+                  version_greater_than_2={version_greater_than_2}
+                />
+              </React.Fragment>
+            }
+          </Stack>
         </Grid>
       </Grid>
       <Grid container spacing={2}>

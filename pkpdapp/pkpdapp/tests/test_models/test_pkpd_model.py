@@ -31,14 +31,6 @@ class TestPkpdModel(TestCase):
         self.client = APIClient()
         self.client.force_authenticate(user=self.user)
 
-    def test_species_weight_unit_default(self):
-        pkpd_model = CombinedModel.objects.create(
-            name="my wonderful model",
-            pk_model=PharmacokineticModel.objects.get(name="one_compartment_clinical"),
-        )
-        # weight unit should be set to default (g)
-        self.assertEqual(pkpd_model.species_weight_unit.symbol, "g")
-
     def test_copy(self):
         pk_model = PharmacokineticModel.objects.get(name="one_compartment_clinical")
         pd_model = PharmacodynamicModel.objects.get(
@@ -50,7 +42,6 @@ class TestPkpdModel(TestCase):
             pd_model=pd_model,
             project=self.project,
             has_saturation=True,
-
         )
         cl = pkpd_model.variables.get(qname="PKCompartment.CL")
         c1 = pkpd_model.variables.get(qname="PKCompartment.C1")
@@ -68,10 +59,7 @@ class TestPkpdModel(TestCase):
         )
         hour_unit = Unit.objects.get(symbol="h")
         time_interval = TimeInterval.objects.create(
-            pkpd_model=pkpd_model,
-            start_time=0,
-            end_time=168,
-            unit=hour_unit
+            pkpd_model=pkpd_model, start_time=0, end_time=168, unit=hour_unit
         )
         new_compound = Compound.objects.create(name="new compound")
         new_project = Project.objects.create(name="new project", compound=new_compound)

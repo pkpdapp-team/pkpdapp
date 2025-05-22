@@ -40,6 +40,11 @@ class Project(models.Model):
 
     created = models.DateTimeField(auto_now_add=True)
 
+    tags = models.TextField(
+        help_text="comma separated list of tags for this project",
+        default="",
+    )
+
     # species is a enum field
     class Species(models.TextChoices):
         MOUSE = "M", "Mouse"

@@ -14,6 +14,10 @@ import {
   Tooltip,
   Stack,
   TextField as MaterialTextField,
+  Chip,
+  FormControl,
+  InputLabel,
+  Autocomplete,
 } from "@mui/material";
 import Delete from "@mui/icons-material/Delete";
 import PersonAdd from "@mui/icons-material/PersonAdd";
@@ -51,6 +55,7 @@ interface Props {
   isSelected: boolean;
   otherProjectNames: string[];
   isAnyProjectSelected: boolean;
+  allTags: string[];
 }
 
 export interface FormData {
@@ -71,6 +76,7 @@ const ProjectRow: FC<Props> = ({
   isSelected,
   isAnyProjectSelected,
   otherProjectNames,
+  allTags,
 }) => {
   const dispatch = useDispatch();
   const [
@@ -229,6 +235,8 @@ const ProjectRow: FC<Props> = ({
     return true;
   };
 
+  const tags = project.tags ? project.tags.split(",").map((tag) => tag.trim()) : [];
+
   const copyProject = () => {
     projectCopyUpdate({ id: project.id, project: project });
   };
@@ -245,6 +253,8 @@ const ProjectRow: FC<Props> = ({
 
     return 15;
   };
+
+  const unusedTags = allTags.filter((tag) => !tags.includes(tag));
 
   return (
     <>
@@ -304,6 +314,31 @@ const ProjectRow: FC<Props> = ({
           <Typography component="span">
             {speciesOptions.find((s) => s.value === project.species)?.label}
           </Typography>
+        </TableCell>
+        <TableCell>
+          {isEditMode ? (
+            <Autocomplete
+              multiple
+              freeSolo
+              id="tags-standard"
+              options={unusedTags}
+              getOptionLabel={(option) => option}
+              defaultValue={tags}
+              onChange={(event, value) => setValue("project.tags", value.join(","))}
+              renderInput={(params) => (
+                <MaterialTextField
+                  {...params}
+                  variant="standard"
+                />
+              )}
+            />
+          ) : (
+            <Stack direction="row" spacing={0.5}>
+              {tags.map((tag) => (
+                <Chip key={tag} label={tag} />
+              ))}
+            </Stack>
+          )}
         </TableCell>
         <TableCell>
           <Typography component="span">
