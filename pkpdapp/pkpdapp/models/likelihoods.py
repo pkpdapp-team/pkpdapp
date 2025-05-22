@@ -415,6 +415,8 @@ class LogLikelihood(models.Model):
                 high=noise_params[1],
                 size=length,
             )
+        else:
+            raise RuntimeError("unrecognised form", self.form)
         return value
 
     def add_noise(self, output_values, noise_params=None):
@@ -710,11 +712,31 @@ class LogLikelihood(models.Model):
         print(myokit_model.code())
         myokit_simulator = model.get_myokit_simulator()
 
+        fitted_parameters_set = {
+            param.variable.qname
+            for param in self.parameters.all()
+            if (param.child.is_random() and param.variable is not None)
+        }
+
         fixed_parameters_dict = {
             param.variable.qname: param.child.value
             for param in self.parameters.all()
             if (not param.child.is_random() and param.variable is not None)
         }
+        # add any constant params that are:
+        #  - in myokit model
+        #  - not in the fitted parameters
+        #  - not in the fixed parameters
+        for variable in myokit_model.variables():
+            if (
+                variable.is_constant()
+                and variable.qname() not in fitted_parameters_set
+                and variable.qname() not in fixed_parameters_dict
+            ):
+                fixed_parameters_dict[variable.qname()] = variable.value()
+
+        print(f"fitted_parameters_set: {fitted_parameters_set}")
+        print(f"fixed_parameters_dict: {fixed_parameters_dict}")
 
         conversion_factors = []
         for name in output_names:
@@ -744,6 +766,7 @@ class LogLikelihood(models.Model):
         return pints_model, fitted_parameters
 
     def get_param(self, qname):
+        print("looking for param", qname)
         param = LogLikelihoodParameter.objects.get(parent=self, variable__qname=qname)
         return param
 

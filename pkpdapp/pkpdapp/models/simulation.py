@@ -7,6 +7,13 @@
 from django.db import models
 from django.core.validators import MinValueValidator
 
+from pkpdapp.models import (
+    Inference,
+    InferenceMixin,
+    LogLikelihood,
+    Algorithm,
+)
+
 
 # class to store options for simulation and plotting of results
 # a project can have multiple simulations
@@ -74,8 +81,107 @@ class Simulation(models.Model):
             slider.copy(new_simulation, variable_map)
         return new_simulation
 
+    def quickfit(self, params: dict):
+        """
+        Perform an automatic quickfit of the current slider variable of the simulation.
+        All the observed data in the project will be used for the quickfit.
+        A sum of squares objective function will be used to fit the data.
+        The current value of the sliders will be used as the initial guess for the fit.
+        The bounds of the sliders will be used as the bounds for the fit.
+        The
 
-# model for a simulation plot
+        Parameters
+        ----------
+        sliders : dict
+            A dictionary mapping variable qnames to an object with the following attributes:
+            - value: the current value of the slider
+            - min: the minimum value of the slider
+            - max: the maximum value of the slider
+
+        Returns
+        -------
+        dict
+            A dictionary mapping the qname of the variable to the fitted value.
+            The qname is the name of the variable in the model.
+        """
+        model = self.project.pk_models.first()
+        my_sliders = self.sliders.all()
+        for slider in my_sliders:
+            if slider.variable.qname not in params:
+                raise ValueError(
+                    f"Slider {slider.variable.name} not found in the provided sliders."
+                )
+            param = params[slider.variable.qname]
+            if "value" not in param or "min" not in param or "max" not in param:
+                raise ValueError(
+                    f"Slider {slider.variable.name} does not have the required attributes."
+                )
+
+        algorithm = Algorithm.objects.get(name="XNES")
+        inference = Inference.objects.create(
+            name="quickfit",
+            project=self.project,
+            max_number_of_iterations=100,
+            algorithm=algorithm,
+            number_of_chains=4,
+        )
+
+        dataset = self.project.datasets.first()
+        output_names = {}
+        for bt in dataset.biomarker_types.all():
+            if bt.mapped_qname != "":
+                output_names[bt.mapped_qname] = bt
+
+        if len(output_names) == 0:
+            raise ValueError("No output names found in the dataset.")
+
+        first_name = list(output_names.keys())[0]
+        variable_of_model = model.variables.get(qname=first_name)
+
+        log_likelihood = LogLikelihood.objects.create(
+            variable=variable_of_model,
+            inference=inference,
+            form=LogLikelihood.Form.MODEL,
+        )
+        # remove all outputs except output_names
+        outputs = []
+        for output in log_likelihood.outputs.all():
+            if output.variable.qname in output_names:
+                print("keeping output", output.variable.qname)
+                output.parent.biomarker_type = output_names[output.variable.qname]
+                output.parent.observed = True
+                output.parent.save()
+                outputs.append(output.parent)
+            else:
+                for param in output.parent.parameters.all():
+                    if param != output:
+                        param.child.delete()
+                output.parent.delete()
+
+        # set uniform prior on all params, fixed for others
+        for param in log_likelihood.parameters.all():
+            if param.variable.qname not in params:
+                print("fixing", param.variable.qname)
+                param.set_fixed(param.variable.default_value)
+            else:
+                param_prior = params[param.variable.qname]
+                print("setting prior", param.variable.qname)
+                param.set_uniform_prior(param_prior["min"], param_prior["max"])
+
+        inference_mixin = InferenceMixin(inference)
+        inference_mixin.run_inference()
+
+        ret = {}
+        for result in inference.get_maximum_likelihood():
+            inference_var = result.log_likelihood.outputs.first().variable
+            # noise variables won't have a model variable
+            if inference_var is not None:
+                model_var = model.variables.filter(qname=inference_var.qname).first()
+            else:
+                model_var = None
+            if model_var is not None:
+                ret[model_var.qname] = result.value
+        return ret
 
 
 class SimulationPlot(models.Model):
@@ -111,22 +217,12 @@ class SimulationPlot(models.Model):
         help_text="scale for rhs y axis",
     )
 
-    x_label = models.CharField(
-        max_length=100,
-        blank=True,
-        help_text="label for x axis"
-    )
+    x_label = models.CharField(max_length=100, blank=True, help_text="label for x axis")
 
-    y_label = models.CharField(
-        max_length=100,
-        blank=True,
-        help_text="label for y axis"
-    )
+    y_label = models.CharField(max_length=100, blank=True, help_text="label for y axis")
 
     y2_label = models.CharField(
-        max_length=100,
-        blank=True,
-        help_text="label for rhs y axis"
+        max_length=100, blank=True, help_text="label for rhs y axis"
     )
 
     x_unit = models.ForeignKey(

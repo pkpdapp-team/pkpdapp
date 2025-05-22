@@ -41,6 +41,12 @@ from .inference_results import (
     InferenceFunctionResult,
     InferenceOutputResult,
 )
+
+from .inference import (
+    Inference,
+    Algorithm,
+)
+from .inference_mixin import InferenceMixin
 from .simulation import (
     Simulation,
     SimulationYAxis,
@@ -48,11 +54,4 @@ from .simulation import (
     SimulationSlider,
     SimulationPlot,
 )
-from .inference import (
-    Inference,
-    Algorithm,
-)
 from .tag import Tag
-
-
-from .inference_mixin import InferenceMixin
