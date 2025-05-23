@@ -43,6 +43,7 @@ class Project(models.Model):
     tags = models.TextField(
         help_text="comma separated list of tags for this project",
         default="",
+        blank=True,
     )
 
     # species is a enum field
