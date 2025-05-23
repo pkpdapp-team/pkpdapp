@@ -142,7 +142,6 @@ const ProjectEditorRow: FC<Props> = ({
 
   const submitForm = useCallback(
     (data: FormData) => {
-      console.log(isDirty, data);
       if (compound && project) {
         if (compound.name !== data.compound.name) {
           dispatch(incrementDirtyCount());
