@@ -321,7 +321,7 @@ const ProjectEditorRow: FC<Props> = ({
               getOptionLabel={(option) => option}
               defaultValue={tags}
               onChange={(event, value) =>
-                setValue("project.tags", value.join(","))
+                setValue("project.tags", value.join(","), { shouldDirty: true })
               }
               renderInput={(params) => (
                 <MaterialTextField {...params} variant="standard" />
