@@ -142,6 +142,7 @@ const ProjectEditorRow: FC<Props> = ({
 
   const submitForm = useCallback(
     (data: FormData) => {
+      console.log(isDirty, data);
       if (compound && project) {
         if (compound.name !== data.compound.name) {
           dispatch(incrementDirtyCount());
@@ -321,7 +322,7 @@ const ProjectEditorRow: FC<Props> = ({
               getOptionLabel={(option) => option}
               defaultValue={tags}
               onChange={(event, value) =>
-                setValue("project.tags", value.join(","))
+                setValue("project.tags", value.join(","), { shouldDirty: true })
               }
               renderInput={(params) => (
                 <MaterialTextField {...params} variant="standard" />

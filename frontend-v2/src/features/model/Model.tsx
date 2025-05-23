@@ -130,7 +130,8 @@ function useModelFormDataCallback({
       if (!model || !project) {
         return;
       }
-      const { species, species_weight, species_weight_unit, ...modelData } = data;
+      const { species, species_weight, species_weight_unit, ...modelData } =
+        data;
       // if tlag checkbox is unchecked, then remove tlag derived variables
       if (modelData.has_lag !== model.has_lag && !modelData.has_lag) {
         modelData.derived_variables = modelData.derived_variables.filter(
@@ -143,7 +144,11 @@ function useModelFormDataCallback({
       }
 
       // if species, species_weight, species_weight_unit changed then update project
-      if (species !== project.species || species_weight !== project.species_weight || species_weight_unit !== project.species_weight_unit) {
+      if (
+        species !== project.species ||
+        species_weight !== project.species_weight ||
+        species_weight_unit !== project.species_weight_unit
+      ) {
         updateProject({
           id: project.id,
           project: { ...project, species, species_weight, species_weight_unit },
@@ -155,11 +160,7 @@ function useModelFormDataCallback({
       }
 
       // Reset form isDirty and isSubmitting state from previous submissions.
-      reset({
-        ...modelData,
-        project: project.id,
-        species,
-      });
+      reset(data);
       return updateModel({ id: model.id, combinedModel: modelData }).then(
         (response) => {
           if (response?.data) {
