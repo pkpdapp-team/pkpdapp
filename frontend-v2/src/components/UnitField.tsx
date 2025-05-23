@@ -3,7 +3,6 @@ import { Control, FieldPath, FieldValues } from "react-hook-form";
 import { SelectProps, SxProps } from "@mui/material";
 import { Compound, UnitRead } from "../app/backendApi";
 import SelectField from "./SelectField";
-import { version } from "os";
 
 type Props<T extends FieldValues> = {
   label: string;
@@ -42,16 +41,16 @@ function UnitField<T extends FieldValues>({
     selectProps = { ...selectProps, disabled: true };
   }
 
-  const compatibleUnits = version_greater_than_2 ?
-    baseUnit?.compatible_units.concat(baseUnit2?.compatible_units || []) :
-    isPreclinicalPerKg
+  const compatibleUnits = version_greater_than_2
+    ? baseUnit?.compatible_units.concat(baseUnit2?.compatible_units || [])
+    : isPreclinicalPerKg
       ? baseUnit?.compatible_units.filter((unit) => unit.symbol.endsWith("/kg"))
       : baseUnit?.compatible_units;
 
   const options = compatibleUnits
     ? compatibleUnits.map((unit: { [key: string]: string }) => {
-      return { value: unit.id, label: unit.symbol };
-    })
+        return { value: unit.id, label: unit.symbol };
+      })
     : [];
 
   return (

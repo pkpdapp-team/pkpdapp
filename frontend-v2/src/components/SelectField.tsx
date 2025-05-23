@@ -27,7 +27,6 @@ type Props<T extends FieldValues> = {
   formControlProps?: FormControlProps;
   size?: "small" | "medium";
   sx?: SxProps;
-  labelRhs?: boolean;
 };
 
 function SelectField<T extends FieldValues>({
@@ -38,8 +37,7 @@ function SelectField<T extends FieldValues>({
   rules,
   selectProps,
   formControlProps,
-  size = 'medium',
-  labelRhs = false,
+  size = "medium",
   sx,
 }: Props<T>): ReactElement {
   const labelId = `${name}-label`;

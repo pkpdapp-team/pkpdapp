@@ -1,7 +1,6 @@
-import { FC, ReactNode, useState } from "react";
+import { FC, useState } from "react";
 import {
   CombinedModelRead,
-  Pharmacokinetic,
   PharmacodynamicRead,
   ProjectRead,
   usePharmacodynamicListQuery,
@@ -11,12 +10,24 @@ import {
   useTagListQuery,
 } from "../../app/backendApi";
 import { Control } from "react-hook-form";
-import { Stack, Grid, Tooltip, Box, Button, Typography, FormControl, InputLabel, Select, OutlinedInput, MenuItem, Chip, SelectChangeEvent } from "@mui/material";
+import {
+  Stack,
+  Grid,
+  Tooltip,
+  Box,
+  Button,
+  FormControl,
+  InputLabel,
+  Select,
+  OutlinedInput,
+  MenuItem,
+  Chip,
+  SelectChangeEvent,
+} from "@mui/material";
 import FloatField from "../../components/FloatField";
 import UnitField from "../../components/UnitField";
 import SelectField from "../../components/SelectField";
 import Checkbox from "../../components/Checkbox";
-import { default as MuiCheckbox } from "@mui/material/Checkbox";
 import { FormData } from "./Model";
 import { speciesOptions } from "../projects/Project";
 import { useSelector } from "react-redux";
@@ -24,8 +35,6 @@ import { RootState } from "../../app/store";
 import { selectIsProjectShared } from "../login/loginSlice";
 import { CodeModal } from "./CodeModal";
 import CodeOutlinedIcon from "@mui/icons-material/CodeOutlined";
-import { CompareRounded } from "@mui/icons-material";
-import { version } from "os";
 import React from "react";
 
 interface Props {
@@ -71,7 +80,12 @@ const pd_model_order = [
   "tumour_growth_inhibition_delay_signal_distribution_exp_conc_kill",
 ];
 
-const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) => {
+const PKPDModelTab: FC<Props> = ({
+  model,
+  project,
+  control,
+  compound,
+}: Props) => {
   // get list of pd models
   const { data: pdModels, isLoading: pdModelLoading } =
     usePharmacodynamicListQuery();
@@ -85,9 +99,9 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
   const { data: tagsData, isLoading: tagsLoading } = useTagListQuery();
   const [tags, setTags] = useState<number[]>([]);
 
-  const handleTagChange = (event: SelectChangeEvent<number[]>, child: ReactNode) => {
+  const handleTagChange = (event: SelectChangeEvent<number[]>) => {
     setTags(event.target.value as number[]);
-  }
+  };
   const isSharedWithMe = useSelector((state: RootState) =>
     selectIsProjectShared(state, project),
   );
@@ -110,9 +124,11 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
     if (version_greater_than_2) {
       is_pk_model = m.model_type ? m.model_type === "PK" : false;
     } else {
-      is_pk_model = m.name.includes(clinical ? "_clinical" : "_preclinical")
+      is_pk_model = m.name.includes(clinical ? "_clinical" : "_preclinical");
     }
-    if (!is_pk_model) { return false; }
+    if (!is_pk_model) {
+      return false;
+    }
     if (m.tags) {
       for (const tag of tags) {
         if (!m.tags.includes(tag)) {
@@ -125,30 +141,25 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
   const pkModel2Filtered = pkModels.filter((m) => {
     return version_greater_than_2 && m.model_type === "PKEX";
   });
-  const pdModelsFiltered = pdModels.filter(
-    (m) => {
-      if (version_greater_than_2) {
-        return m.model_type === "PD" || m.model_type === "TG";
-      } else {
-        return !m.name.includes("tumour_growth_inhibition")
-      }
+  const pdModelsFiltered = pdModels.filter((m) => {
+    if (version_greater_than_2) {
+      return m.model_type === "PD" || m.model_type === "TG";
+    } else {
+      return !m.name.includes("tumour_growth_inhibition");
     }
-  );
-  const pdModels2Filtered = pdModels.filter(
-    (m) => {
-      if (version_greater_than_2) {
-        return m.model_type === "TGI";
-      } else {
-        return m.name.includes("tumour_growth_inhibition")
-      }
+  });
+  const pdModels2Filtered = pdModels.filter((m) => {
+    if (version_greater_than_2) {
+      return m.model_type === "TGI";
+    } else {
+      return m.name.includes("tumour_growth_inhibition");
     }
-  );
+  });
 
   const pd_model_options: { value: number | string; label: string }[] =
-    pdModelsFiltered
-      .map((m) => {
-        return { value: m.id, label: m.name };
-      });
+    pdModelsFiltered.map((m) => {
+      return { value: m.id, label: m.name };
+    });
   pd_model_options.sort((a, b) => {
     const aName = a.label;
     const bName = b.label;
@@ -157,13 +168,15 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
     return aIndex - bIndex;
   });
   pd_model_options.push({ value: "", label: "None" });
-  let pk_model_options = pkModelsFiltered.map((m) => {
+  const pk_model_options = pkModelsFiltered.map((m) => {
     return { value: m.id.toString(), label: m.name };
   });
   pk_model_options.push({ value: "", label: "None" });
-  let pk_model2_options = model.pk_model ? pkModel2Filtered.map((m) => {
-    return { value: m.id.toString(), label: m.name };
-  }) : [];
+  const pk_model2_options = model.pk_model
+    ? pkModel2Filtered.map((m) => {
+        return { value: m.id.toString(), label: m.name };
+      })
+    : [];
   pk_model2_options.push({ value: "", label: "None" });
   pk_model_options.sort((a, b) => {
     const aName = a.label.replace("_preclinical", "").replace("_clinical", "");
@@ -181,17 +194,15 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
   );
 
   const pdIsTumourGrowth =
-    model.pd_model && (
-      version_greater_than_2 ?
-        pd_model_map[model.pd_model].model_type === "TG" :
-        pd_model_map[model.pd_model].name.includes("tumour_growth") &&
-        !pd_model_map[model.pd_model].name.includes("inhibition")
-    );
+    model.pd_model &&
+    (version_greater_than_2
+      ? pd_model_map[model.pd_model].model_type === "TG"
+      : pd_model_map[model.pd_model].name.includes("tumour_growth") &&
+        !pd_model_map[model.pd_model].name.includes("inhibition"));
   const pd_model2_options: { value: number | string; label: string }[] =
-    pdModels2Filtered
-      .map((m) => {
-        return { value: m.id, label: m.name };
-      });
+    pdModels2Filtered.map((m) => {
+      return { value: m.id, label: m.name };
+    });
   pd_model2_options.push({ value: "", label: "None" });
 
   const pd_model = model.pd_model ? pd_model_map[model.pd_model] : null;
@@ -207,10 +218,11 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
   };
 
   const tagOptions = tagsData.map((tag) => {
-    return { value: tag.id, label: tag.name }
+    return { value: tag.id, label: tag.name };
   });
 
-  const effectCompartmentTooltip = "Effect compartments will be driven by the concentration in the central compartment (C1), unless unbound concentration for C1 is selected, in which case the effect compartment is driven by the unbound concentration (calc_C1_f)";
+  const effectCompartmentTooltip =
+    "Effect compartments will be driven by the concentration in the central compartment (C1), unless unbound concentration for C1 is selected, in which case the effect compartment is driven by the unbound concentration (calc_C1_f)";
   const modelTypesLabel = "Filter by Model Type";
 
   return (
@@ -223,9 +235,7 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
             xs: 10,
           }}
         >
-          <Stack
-            direction="row" spacing={1}
-          >
+          <Stack direction="row" spacing={1}>
             <SelectField
               size="small"
               label="Species"
@@ -235,7 +245,7 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
               formControlProps={{ sx: { width: "calc(50% - 3rem)" } }}
               selectProps={defaultProps}
             />
-            {version_greater_than_2 &&
+            {version_greater_than_2 && (
               <React.Fragment>
                 <FloatField
                   size="small"
@@ -243,19 +253,24 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
                   label="Weight"
                   name={`species_weight`}
                   control={control}
-                  textFieldProps={{ sx: { width: "calc(50% - 7rem)" }, ...defaultProps }}
+                  textFieldProps={{
+                    sx: { width: "calc(50% - 7rem)" },
+                    ...defaultProps,
+                  }}
                 />
                 <UnitField
                   size="small"
                   label={"Unit"}
                   name={`species_weight_unit`}
                   control={control}
-                  baseUnit={units.find((u) => u.id === project.species_weight_unit)}
+                  baseUnit={units.find(
+                    (u) => u.id === project.species_weight_unit,
+                  )}
                   selectProps={{ sx: { width: "6rem" }, ...defaultProps }}
                   version_greater_than_2={version_greater_than_2}
                 />
               </React.Fragment>
-            }
+            )}
           </Stack>
         </Grid>
       </Grid>
@@ -267,10 +282,8 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
             xs: 10,
           }}
         >
-          {version_greater_than_2 &&
-            <Stack
-              direction="row" alignItems="center" spacing={1}
-            >
+          {version_greater_than_2 && (
+            <Stack direction="row" alignItems="center" spacing={1}>
               <FormControl sx={{ width: "calc(100% - 3rem)" }} size="small">
                 <InputLabel id="tags-label">{modelTypesLabel}</InputLabel>
                 <Select
@@ -280,35 +293,41 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
                   multiple
                   value={tags}
                   onChange={handleTagChange}
-                  input={<OutlinedInput id="select-multiple-tags" label={modelTypesLabel} />}
+                  input={
+                    <OutlinedInput
+                      id="select-multiple-tags"
+                      label={modelTypesLabel}
+                    />
+                  }
                   renderValue={(selected) => (
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
                       {selected.map((value) => {
-                        const label = tagOptions.find((tag) => tag.value === value)?.label;
-                        return (<Chip key={value} label={label} />)
+                        const label = tagOptions.find(
+                          (tag) => tag.value === value,
+                        )?.label;
+                        return <Chip key={value} label={label} />;
                       })}
                     </Box>
                   )}
                 >
                   {tagOptions.map((tag) => (
-                    <MenuItem
-                      key={tag.value}
-                      value={tag.value}
-                    >
+                    <MenuItem key={tag.value} value={tag.value}>
                       {tag.label}
                     </MenuItem>
                   ))}
                 </Select>
               </FormControl>
             </Stack>
-          }
+          )}
           <Stack
             sx={{
               marginTop: 2,
               display: "flex",
               "& .MuiFormControlLabel-label": { fontSize: ".9rem" },
             }}
-            direction="row" alignItems="center" spacing={1}
+            direction="row"
+            alignItems="center"
+            spacing={1}
           >
             <SelectField
               size="small"
@@ -330,9 +349,8 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
               }}
               direction="row"
               spacing={3}
-
             >
-              {!version_greater_than_2 &&
+              {!version_greater_than_2 && (
                 <Tooltip title="Includes Michaelis-Menten parameters (CLmax and Km)">
                   <div>
                     <Checkbox
@@ -345,8 +363,8 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
                     />
                   </div>
                 </Tooltip>
-              }
-              {!version_greater_than_2 &&
+              )}
+              {!version_greater_than_2 && (
                 <Tooltip title="Includes an effect compartment">
                   <div style={{ fontSize: "12px !important" }}>
                     <Checkbox
@@ -358,8 +376,9 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
                       }}
                     />
                   </div>
-                </Tooltip>}
-              {version_greater_than_2 &&
+                </Tooltip>
+              )}
+              {version_greater_than_2 && (
                 <Tooltip title={effectCompartmentTooltip} placement="top">
                   <div style={{ fontSize: "12px !important" }}>
                     <SelectField
@@ -367,14 +386,16 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
                       label="Effect Compartments"
                       name="number_of_effect_compartments"
                       control={control}
-                      options={Array.from(Array(6).keys()).map((i) => { return { value: i, label: i.toString() } })}
+                      options={Array.from(Array(6).keys()).map((i) => {
+                        return { value: i, label: i.toString() };
+                      })}
                       formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
                       selectProps={defaultProps}
                     />
                   </div>
                 </Tooltip>
-              }
-              {version_greater_than_2 &&
+              )}
+              {version_greater_than_2 && (
                 <Tooltip title="Includes Anti-Drug Antibodies">
                   <div>
                     <Checkbox
@@ -382,12 +403,15 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
                       name="has_anti_drug_antibodies"
                       control={control}
                       checkboxFieldProps={{
-                        disabled: !model.pk_model || isSharedWithMe || compound.compound_type !== "LM"
+                        disabled:
+                          !model.pk_model ||
+                          isSharedWithMe ||
+                          compound.compound_type !== "LM",
                       }}
                     />
                   </div>
                 </Tooltip>
-              }
+              )}
             </Stack>
           )}
         </Grid>
@@ -400,7 +424,7 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
             xs: 10,
           }}
         >
-          {version_greater_than_2 &&
+          {version_greater_than_2 && (
             <Stack direction="row" alignItems="center" spacing={1}>
               <SelectField
                 size="small"
@@ -412,7 +436,7 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
                 selectProps={defaultProps}
               />
             </Stack>
-          }
+          )}
           <Stack
             sx={{
               display: "flex",
@@ -550,7 +574,7 @@ const PKPDModelTab: FC<Props> = ({ model, project, control, compound }: Props) =
         code={model.sbml}
         language="xml"
       />
-    </Stack >
+    </Stack>
   );
 };
 
