@@ -82,7 +82,7 @@ const AdditionalParametersRow: FC<Props> = ({
   const linkToPD = isPD
     ? false
     : mappings.find((mapping) => mapping.pk_variable === variable.id) !==
-    undefined;
+      undefined;
 
   const onClickDerived = (type: DerivedVariableType) => () => {
     const index = derivedIndex(type, derivedVariables, variable);
@@ -201,9 +201,16 @@ const AdditionalParametersRow: FC<Props> = ({
 
   const modelHaveTLag = model.has_lag;
   let variable_name = variable.name;
-  if (model.number_of_effect_compartments && model.number_of_effect_compartments > 1 && variable_name == "Ce") {
+  if (
+    model.number_of_effect_compartments &&
+    model.number_of_effect_compartments > 1 &&
+    variable_name == "Ce"
+  ) {
     const compartment_name = variable.qname.split(".")[0];
-    const compartment_number = compartment_name.slice(17, compartment_name.length);
+    const compartment_number = compartment_name.slice(
+      17,
+      compartment_name.length,
+    );
     variable_name = `${variable.name}${compartment_number}`;
   }
 
