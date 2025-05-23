@@ -143,16 +143,7 @@ function useModelFormDataCallback({
         modelData.pd_model2 = null;
       }
 
-      // if species, species_weight, species_weight_unit changed then update project
-      if (
-        species !== project.species ||
-        species_weight !== project.species_weight ||
-        species_weight_unit !== project.species_weight_unit
-      ) {
-        updateProject({
-          id: project.id,
-          project: { ...project, species, species_weight, species_weight_unit },
-        });
+      if (species !== project.species) {
         // if species has changed, then clear the models
         modelData.pk_model = null;
         modelData.pd_model = null;
@@ -165,6 +156,10 @@ function useModelFormDataCallback({
       reset({
         ...data,
         ...modelData,
+      });
+      updateProject({
+        id: project.id,
+        project: { ...project, species, species_weight, species_weight_unit },
       });
       return updateModel({ id: model.id, combinedModel: modelData })
         .then((response) => {
