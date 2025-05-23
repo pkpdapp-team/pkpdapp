@@ -166,8 +166,8 @@ function useModelFormDataCallback({
         ...data,
         ...modelData,
       });
-      return updateModel({ id: model.id, combinedModel: modelData }).then(
-        (response) => {
+      return updateModel({ id: model.id, combinedModel: modelData })
+        .then((response) => {
           if (response?.data) {
             // if the pk_model has changed, need to reset the simulation time_max_unit and set default parameters again
             if (modelData.pk_model !== model?.pk_model && simulation) {
@@ -182,8 +182,17 @@ function useModelFormDataCallback({
               setParamsToDefault({ id: model.id, combinedModel: modelData });
             }
           }
-        },
-      );
+        })
+        .catch((error) => {
+          console.error(error);
+          reset({
+            ...model,
+            project: project.id,
+            species: project.species,
+            species_weight: project.species_weight,
+            species_weight_unit: project.species_weight_unit,
+          });
+        });
     },
     [
       model,
