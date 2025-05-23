@@ -51,8 +51,7 @@ function FloatField<T extends FieldValues>({
         const handleBlur = (e: FocusEvent<HTMLInputElement>) => {
           const updatedValue = convert(e.target.value);
           if (updatedValue !== value) {
-            e.target.value = updatedValue?.toString() || "";
-            onChange(e);
+            onChange({ target: { value: updatedValue } });
           }
           onBlur();
         };
