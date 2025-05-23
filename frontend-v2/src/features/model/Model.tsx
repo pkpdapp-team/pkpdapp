@@ -157,10 +157,15 @@ function useModelFormDataCallback({
         modelData.pk_model = null;
         modelData.pd_model = null;
         modelData.pd_model2 = null;
+        modelData.mappings = [];
+        modelData.derived_variables = [];
       }
 
       // Reset form isDirty and isSubmitting state from previous submissions.
-      reset(data);
+      reset({
+        ...data,
+        ...modelData,
+      });
       return updateModel({ id: model.id, combinedModel: modelData }).then(
         (response) => {
           if (response?.data) {
