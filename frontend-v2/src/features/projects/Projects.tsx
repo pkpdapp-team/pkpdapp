@@ -8,7 +8,6 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  TextField,
   IconButton,
   SvgIcon,
   Box,
@@ -114,8 +113,6 @@ const ProjectTable: FC = () => {
     useCompoundListQuery();
 
   let projects = projectsUnordered ? [...projectsUnordered] : undefined;
-
-
 
   const { data: units, isLoading: unitsLoading } = useUnitListQuery({});
 
@@ -317,12 +314,14 @@ const ProjectTable: FC = () => {
             } = event;
             setFilterBy(
               // On autofill we get a stringified value.
-              typeof value === 'string' ? value.split(',') : value,
+              typeof value === "string" ? value.split(",") : value,
             );
           }}
-          input={<OutlinedInput id="filter-by-tags-chip" label="Filter By Tag" />}
+          input={
+            <OutlinedInput id="filter-by-tags-chip" label="Filter By Tag" />
+          }
           renderValue={(selected) => (
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
               {selected.map((value) => (
                 <Chip key={value} label={value} />
               ))}
@@ -330,15 +329,12 @@ const ProjectTable: FC = () => {
           )}
         >
           {allTags.map((tag) => (
-            <MenuItem
-              key={tag}
-              value={tag}
-            >
+            <MenuItem key={tag} value={tag}>
               {tag}
             </MenuItem>
           ))}
         </Select>
-      </FormControl >
+      </FormControl>
       <TableContainer
         sx={{
           height: getTableHeight({ steps: PROJECT_TABLE_BREAKPOINTS }),

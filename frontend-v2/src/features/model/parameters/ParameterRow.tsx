@@ -1,7 +1,16 @@
-import { FC, ReactNode, useEffect, useMemo } from "react";
+import { FC, useEffect, useMemo } from "react";
 import { FormData } from "../Model";
 import { Control, useFieldArray, useForm } from "react-hook-form";
-import { TableCell, TableRow, Tooltip, Typography, Select, SelectChangeEvent, MenuItem, Stack } from "@mui/material";
+import {
+  TableCell,
+  TableRow,
+  Tooltip,
+  Typography,
+  Select,
+  SelectChangeEvent,
+  MenuItem,
+  Stack,
+} from "@mui/material";
 import {
   Variable,
   useVariableUpdateMutation,
@@ -16,8 +25,7 @@ import FloatField from "../../../components/FloatField";
 import { selectIsProjectShared } from "../../login/loginSlice";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../app/store";
-import { derivedIndex, DerivedVariableType } from "../derivedVariable";
-
+import { DerivedVariableType } from "../derivedVariable";
 
 interface Props {
   model: CombinedModelRead;
@@ -28,7 +36,14 @@ interface Props {
   modelControl: Control<FormData>;
 }
 
-const ParameterRow: FC<Props> = ({ model, project, variable, variables, units, modelControl }) => {
+const ParameterRow: FC<Props> = ({
+  model,
+  project,
+  variable,
+  variables,
+  units,
+  modelControl,
+}) => {
   const {
     control,
     handleSubmit,
@@ -90,7 +105,10 @@ const ParameterRow: FC<Props> = ({ model, project, variable, variables, units, m
     disabled: isSharedWithMe,
   };
 
-  let nonlinearityOptions: { value: DerivedVariableType | "", label: string }[] = [
+  let nonlinearityOptions: {
+    value: DerivedVariableType | "";
+    label: string;
+  }[] = [
     { value: "EMX", label: "Dose Maximum Effect" },
     { value: "IMX", label: "Dose Maximum Inhibitory Effect" },
     { value: "POW", label: "Dose Hill Effect" },
@@ -113,7 +131,10 @@ const ParameterRow: FC<Props> = ({ model, project, variable, variables, units, m
   let nonlinearityConcentration: null | undefined | number = null;
   for (let i = 0; i < derivedVariables.length; i++) {
     if (derivedVariables[i].pk_variable === variable.id) {
-      if (derivedVariables[i].type === "MM" || derivedVariables[i].type === "EMM") {
+      if (
+        derivedVariables[i].type === "MM" ||
+        derivedVariables[i].type === "EMM"
+      ) {
         nonlinearityConcentration = derivedVariables[i].secondary_variable;
       }
       nonlinearityValue = derivedVariables[i].type;
@@ -121,7 +142,10 @@ const ParameterRow: FC<Props> = ({ model, project, variable, variables, units, m
     }
   }
   const timeVaryingVariables = variables.filter(
-    (v) => !v.constant && v.qname.startsWith("PK") && !variable.refs_by.includes(v.id),
+    (v) =>
+      !v.constant &&
+      v.qname.startsWith("PK") &&
+      !variable.refs_by.includes(v.id),
   );
   const concentrationOptions = timeVaryingVariables.map((variable) => ({
     value: variable.id,
@@ -132,7 +156,7 @@ const ParameterRow: FC<Props> = ({ model, project, variable, variables, units, m
     (variable) => variable.name === "C1",
   )?.id;
 
-  const handleNonlinearityChange = (event: SelectChangeEvent<string>, child: ReactNode) => {
+  const handleNonlinearityChange = (event: SelectChangeEvent<string>) => {
     let secondaryVariable = undefined;
     if (event.target.value === "MM" || event.target.value === "EMM") {
       if (nonlinearityConcentration) {
@@ -164,12 +188,15 @@ const ParameterRow: FC<Props> = ({ model, project, variable, variables, units, m
         secondary_variable: secondaryVariable,
       });
     }
-  }
+  };
 
-  const handleNonlinearityConcChange = (event: SelectChangeEvent<number>, child: ReactNode) => {
+  const handleNonlinearityConcChange = (event: SelectChangeEvent<number>) => {
     // update the secondary variable for the nonlinearity
     if (event.target.value) {
-      const value = typeof event.target.value === "string" ? parseInt(event.target.value) : event.target.value;
+      const value =
+        typeof event.target.value === "string"
+          ? parseInt(event.target.value)
+          : event.target.value;
       derivedVariablesUpdate(nonlinearityIndex, {
         pk_variable: variable.id,
         pkpd_model: model.id,
@@ -177,7 +204,7 @@ const ParameterRow: FC<Props> = ({ model, project, variable, variables, units, m
         secondary_variable: value,
       });
     }
-  }
+  };
 
   return (
     <TableRow>
@@ -236,7 +263,13 @@ const ParameterRow: FC<Props> = ({ model, project, variable, variables, units, m
       <TableCell size="small">
         {isPK && (
           <Stack direction="row" spacing={2}>
-            <Select size="small" value={nonlinearityValue} onChange={handleNonlinearityChange} displayEmpty {...defaultProps}>
+            <Select
+              size="small"
+              value={nonlinearityValue}
+              onChange={handleNonlinearityChange}
+              displayEmpty
+              {...defaultProps}
+            >
               {nonlinearityOptions.map((option) => (
                 <MenuItem value={option.value} key={option.value}>
                   {option.label}
@@ -244,7 +277,12 @@ const ParameterRow: FC<Props> = ({ model, project, variable, variables, units, m
               ))}
             </Select>
             {nonlinearityConcentration && (
-              <Select size="small" value={nonlinearityConcentration} onChange={handleNonlinearityConcChange} {...defaultProps}>
+              <Select
+                size="small"
+                value={nonlinearityConcentration}
+                onChange={handleNonlinearityConcChange}
+                {...defaultProps}
+              >
                 {concentrationOptions.map((option) => (
                   <MenuItem value={option.value} key={option.value}>
                     {option.label}
@@ -255,7 +293,7 @@ const ParameterRow: FC<Props> = ({ model, project, variable, variables, units, m
           </Stack>
         )}
       </TableCell>
-    </TableRow >
+    </TableRow>
   );
 };
 

@@ -21,8 +21,6 @@ import { useSelector } from "react-redux";
 import { RootState } from "../../../app/store";
 import { selectIsProjectShared } from "../../login/loginSlice";
 import { useFormData, useVariableFormState } from "./variableUtils";
-import useEditProtocol from "./useEditProtocol";
-import { SimulationContext } from "../../../contexts/SimulationContext";
 import { derivedIndex } from "../derivedVariable";
 
 interface Props {
@@ -90,7 +88,7 @@ const VariableRow: FC<Props> = ({
   const linkToPD = isPD
     ? false
     : mappings.find((mapping) => mapping.pk_variable === variable.id) !==
-    undefined;
+      undefined;
 
   useEffect(() => {
     updateDosings(variable.id, hasProtocol);
@@ -116,13 +114,9 @@ const VariableRow: FC<Props> = ({
   const concentrationUnit = units.find((unit) => unit.symbol === "pmol/L");
   const isClinical = project.species === "H";
   const version_greater_than_2 = project.version ? project.version >= 3 : false;
-  const amountUnit = version_greater_than_2 ?
-    units.find(
-      (unit) => unit.symbol === "pmol",
-    ) :
-    units.find(
-      (unit) => unit.symbol === (isClinical ? "pmol" : "pmol/kg"),
-    );
+  const amountUnit = version_greater_than_2
+    ? units.find((unit) => unit.symbol === "pmol")
+    : units.find((unit) => unit.symbol === (isClinical ? "pmol" : "pmol/kg"));
   const variableUnit = units.find((unit) => unit.id === variable.unit);
   if (concentrationUnit === undefined || amountUnit === undefined) {
     return <>No concentration or amount unit found</>;
@@ -138,7 +132,6 @@ const VariableRow: FC<Props> = ({
       (unit) => parseInt(unit.id) === variable.unit,
     ) !== undefined;
 
-
   const noMapToPD = isPD || effectVariable === undefined || !isConcentration;
   const noDerivedVariables = !isConcentration || isPD;
   const noDosing = !isAmount;
@@ -147,7 +140,7 @@ const VariableRow: FC<Props> = ({
     return null;
   }
 
-  let variable_name = variable.name;
+  const variable_name = variable.name;
 
   return noDosing ? null : (
     <TableRow>
