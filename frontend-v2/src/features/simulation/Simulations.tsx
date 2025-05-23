@@ -184,8 +184,8 @@ const Simulations: FC = () => {
   const hasPlots = simulation ? simulation.plots.length > 0 : false;
   const hasSecondaryParameters = model
     ? model.derived_variables.reduce((acc, dv) => {
-      return acc || dv.type === "AUC";
-    }, false)
+        return acc || dv.type === "AUC";
+      }, false)
     : false;
 
   const {
@@ -421,7 +421,6 @@ const Simulations: FC = () => {
       });
     }
   };
-
 
   const [dimensions, setDimensions] = useState({
     width: window.innerWidth,
