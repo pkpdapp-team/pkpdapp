@@ -5,8 +5,8 @@ import requests
 
 UserModel = get_user_model()
 
-API_KEY = settings.PREDILOGIN_API_KEY
-BASE_URL = settings.PREDILOGIN_BASE_URL
+API_KEY = settings.AUTH_PREDILOGIN_API_KEY
+BASE_URL = settings.AUTH_PREDILOGIN_BASE_URL
 
 
 def authenticate(password: str, username: str) -> bool:
