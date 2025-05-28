@@ -1,3 +1,9 @@
+#
+# This file is part of PKPDApp (https://github.com/pkpdapp-team/pkpdapp) which
+# is released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
+#
+
 from django.contrib.auth.backends import BaseBackend
 from django.contrib.auth import get_user_model
 from django.conf import settings
