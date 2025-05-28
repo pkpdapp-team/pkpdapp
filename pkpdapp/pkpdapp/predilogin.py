@@ -84,3 +84,9 @@ class PrediBackend(BaseBackend):
         except UserModel.DoesNotExist:
             pass
         return user
+
+    def get_user_permissions(self, user_obj, obj=None):
+        return user_obj.get_user_permissions()
+
+    def get_group_permissions(self, user_obj, obj=None):
+        return user_obj.get_group_permissions()
