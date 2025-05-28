@@ -90,9 +90,9 @@ class PrediBackend(BaseBackend):
         return user
 
     def get_user_permissions(self, user_obj, obj=None):
-        logger.info(f"Getting user permissions for: {user_obj.username}")
+        logger.debug(f"Getting user permissions for: {user_obj.username}")
         return user_obj.get_user_permissions()
 
     def get_group_permissions(self, user_obj, obj=None):
-        logger.info(f"Getting group permissions for: {user_obj.username}")
+        logger.debug(f"Getting group permissions for: {user_obj.username}")
         return user_obj.get_group_permissions()
