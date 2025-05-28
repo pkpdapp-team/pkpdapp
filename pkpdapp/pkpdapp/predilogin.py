@@ -1,6 +1,8 @@
 from django.contrib.auth.backends import BaseBackend
 from django.contrib.auth import get_user_model
 from django.conf import settings
+from django.contrib.auth.models import User
+
 import requests
 import logging
 
@@ -13,7 +15,7 @@ BASE_URL = settings.AUTH_PREDILOGIN_BASE_URL
 
 
 def authenticate(password: str, username: str) -> bool:
-    logger.info(f"Authenticating user: {username}")
+    logger.debug(f"Authenticating user: {username}")
     endpoint = BASE_URL + "/v2.0/users/authenticate"
     headers = {"Content-Type": "application/json", "X-Gravitee-Api-Key": API_KEY}
     body = {"password": password, "userName": username}
@@ -22,7 +24,7 @@ def authenticate(password: str, username: str) -> bool:
 
 
 def check_groupmembership(userid: str, group: str) -> bool:
-    logger.info(f"Checking group membership for user: {userid} in group: {group}")
+    logger.debug(f"Checking group membership for user: {userid} in group: {group}")
     endpoint = BASE_URL + "/v2.0/groups/checkUserMembership"
     headers = {"Content-Type": "application/json", "X-Gravitee-Api-Key": API_KEY}
     body = {
@@ -51,18 +53,19 @@ class PrediBackend(BaseBackend):
         user = None
         if password and authenticate(password, username):
             try:
-                user = UserModel._default_manager.get_by_natural_key(username)
+                user = User.objects.get(username=username)
                 logger.debug(f"User found: {user.username}")
-            except UserModel.DoesNotExist:
+            except User.DoesNotExist:
                 logger.debug(f"User not found, creating new user: {username}")
                 is_user = check_groupmembership(username, "GLOPKPDAPP_User")
                 is_superuser = check_groupmembership(username, "GLOPKPDAPP_Admin")
                 if is_user or is_superuser:
-                    user = UserModel.objects.create_user(
-                        username=username,
-                        password=password,
-                        is_superuser=is_superuser,
-                    )
+                    user = User(username=username)
+                    user.set_password(password)
+                    user.is_staff = is_superuser
+                    user.is_superuser = is_superuser
+                    user.is_active = True
+                    user.save()
             if user and not self.user_can_authenticate(user):
                 user = None
         return user
@@ -80,13 +83,16 @@ class PrediBackend(BaseBackend):
     def get_user(self, user_id):
         user = None
         try:
-            user = UserModel._default_manager.get_by_natural_key(user_id)
-        except UserModel.DoesNotExist:
+            user = User.objects.get(pk=user_id)
+        except User.DoesNotExist:
             pass
+        logger.info(f"Retrieved user: {user.username if user else 'None'}")
         return user
 
     def get_user_permissions(self, user_obj, obj=None):
+        logger.info(f"Getting user permissions for: {user_obj.username}")
         return user_obj.get_user_permissions()
 
     def get_group_permissions(self, user_obj, obj=None):
+        logger.info(f"Getting group permissions for: {user_obj.username}")
         return user_obj.get_group_permissions()
