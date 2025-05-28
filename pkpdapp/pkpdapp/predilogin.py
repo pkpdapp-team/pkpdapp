@@ -76,3 +76,11 @@ class PrediBackend(BaseBackend):
         that attribute are allowed.
         """
         return getattr(user, "is_active", True)
+
+    def get_user(self, user_id):
+        user = None
+        try:
+            user = UserModel._default_manager.get_by_natural_key(user_id)
+        except UserModel.DoesNotExist:
+            pass
+        return user
