@@ -104,6 +104,20 @@ INSTALLED_APPS = [
     "pkpdapp",
 ]
 
+
+use_predi = bool(int(os.environ.get("AUTH_PREDILOGIN_USE", "0")))
+if use_predi:
+    AUTH_PREDILOGIN_API_KEY = os.environ.get(
+        "AUTH_PREDILOGIN_API_KEY", "your_api_key_here"
+    )
+    AUTH_PREDILOGIN_BASE_URL = os.environ.get(
+        "AUTH_PREDILOGIN_BASE_URL", "https://api.predilogin.com"
+    )
+    AUTHENTICATION_BACKENDS = [
+        "pkpdapp.predilogin.PrediBackend",
+        "django.contrib.auth.backends.ModelBackend",
+    ]
+
 use_ldap = bool(int(os.environ.get("AUTH_LDAP_USE", "0")))
 if use_ldap:
     AUTHENTICATION_BACKENDS = [
