@@ -2,6 +2,9 @@ from django.contrib.auth.backends import BaseBackend
 from django.contrib.auth import get_user_model
 from django.conf import settings
 import requests
+import logging
+
+logger = logging.getLogger(__name__)
 
 UserModel = get_user_model()
 
@@ -10,17 +13,16 @@ BASE_URL = settings.AUTH_PREDILOGIN_BASE_URL
 
 
 def authenticate(password: str, username: str) -> bool:
-    print("Authenticating user:", username)
+    logger.info(f"Authenticating user: {username}")
     endpoint = BASE_URL + "/v2.0/users/authenticate"
     headers = {"Content-Type": "application/json", "X-Gravitee-Api-Key": API_KEY}
     body = {"password": password, "userName": username}
     response = requests.post(endpoint, headers=headers, json=body, verify=False)
-    print("Authentication response:", response.status_code, response.text)
     return response.status_code == 200
 
 
 def check_groupmembership(userid: str, group: str) -> bool:
-    print("Checking group membership for user:", userid, "in group:", group)
+    logger.info(f"Checking group membership for user: {userid} in group: {group}")
     endpoint = BASE_URL + "/v2.0/groups/checkUserMembership"
     headers = {"Content-Type": "application/json", "X-Gravitee-Api-Key": API_KEY}
     body = {
@@ -32,7 +34,6 @@ def check_groupmembership(userid: str, group: str) -> bool:
     }
     response = requests.post(endpoint, headers=headers, json=body, verify=False)
     json_response = response.json()
-    print("Group membership response:", response.status_code, json_response)
     members = json_response["groups"][0]["members"]
     return any(member["userId"] == userid for member in members) if members else False
 
@@ -43,12 +44,6 @@ class PrediBackend(BaseBackend):
     """
 
     def authenticate(self, request, username=None, password=None, **kwargs):
-        print(
-            "PrediBackend authenticate called with username:",
-            username,
-            "and password:",
-            password,
-        )
         username = kwargs.get(UserModel.USERNAME_FIELD, username)
         if username is None:
             return None
@@ -57,7 +52,9 @@ class PrediBackend(BaseBackend):
         if password and authenticate(password, username):
             try:
                 user = UserModel._default_manager.get_by_natural_key(username)
+                logger.debug(f"User found: {user.username}")
             except UserModel.DoesNotExist:
+                logger.debug(f"User not found, creating new user: {username}")
                 is_user = check_groupmembership(username, "GLOPKPDAPP_User")
                 is_superuser = check_groupmembership(username, "GLOPKPDAPP_Admin")
                 if is_user or is_superuser:
