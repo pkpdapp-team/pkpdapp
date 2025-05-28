@@ -8,7 +8,7 @@
 
 # PKPDApp
 
-PKPDApp is an open source web-based application to explore, analyse and model the pharmacokinetics and pharmacodynamics of chemical compounds. The app is currently under heavy development, however a preliminary version is being deployed with Heroku and can be found under https://pkpdapp.herokuapp.com/.
+PKPDApp is an open source web-based application to explore, analyse and model the pharmacokinetics and pharmacodynamics of chemical compounds. The app is currently under heavy development, however a preliminary version is being deployed with Heroku and can be found under <https://pkpdapp.herokuapp.com/>.
 
 ## Installation - production
 
@@ -19,8 +19,8 @@ Use these instructions for deploying the application in a production environment
 First clone the repository:
 
 ```bash
-$ git clone https://github.com/pkpdapp-team/pkpdapp.git
-$ cd pkpdapp
+git clone https://github.com/pkpdapp-team/pkpdapp.git
+cd pkpdapp
 ```
 
 ### `.env.prod` file
@@ -40,6 +40,12 @@ The following variables are used for LDAP authentication (optional):
 - `AUTH_LDAP_USE`: set to 1 to use LDAP authentication
 - `AUTH_LDAP_SERVER_URI`: URI of LDAP server (e.g. ldap://ldap.forumsys.com:389)
 
+The following variables are used for PrediLogin authentication (optional):
+
+- `AUTH_PREDILOGIN_USE`: set to 1 to use PrediLogin authentication
+- `AUTH_PREDILOGIN_BASE_URL`: URL of PrediLogin API (e.g. <https://predilogin.example.com/api>)
+- `AUTH_PREDILOGIN_API_KEY`: API key for PrediLogin (e.g. `your_api_key_here`)
+
 For direct binding:
 
 - `AUTH_LDAP_DIRECT_BIND`: set to 1 to bind directly to LDAP server (see [here](https://django-auth-ldap.readthedocs.io/en/latest/authentication.html#direct-bind)
@@ -56,10 +62,10 @@ For search/bind, connecting to the LDAP server either anonymously or with a fixe
 - `AUTH_LDAP_ADMIN_GROUP`: (optional) user must be in this LDAP group to be a superuser (e.g. `cn=admin,ou=groups,dc=example,dc=com`). If not set, then no user will be a superuser.
 
 There are also a number of optional variables that can be set:
+
 - `VITE_APP_ROCHE`: set to true to enable Roche branding
 - `VITE_APP_HELP_URL`: url of help page shown on login
 - `VITE_APP_GA_ID`: Google Analytics ID to enable analytics.
-
 
 ### SSL Certificate
 
@@ -93,13 +99,13 @@ The application is deployed using docker containers and docker-compose, so you w
 To build the containers, run the following command in the root directory of the repository. This runs a script that builds the containers (using `docker compose build`).
 
 ```bash
-$ ./build.sh
+./build.sh
 ```
 
 You can run the container with:
 
 ```bash
-$ docker-compose up
+docker-compose up
 ```
 
 You should be able to see the web application at [127.0.0.1](127.0.0.1).
@@ -107,7 +113,7 @@ You should be able to see the web application at [127.0.0.1](127.0.0.1).
 To leave the container running in the background, use
 
 ```bash
-$ docker-compose up -d
+docker-compose up -d
 ```
 
 ## Installation - development
@@ -120,30 +126,33 @@ NOTE: the current version of the frontend does not currently use the rabbitmq se
 
 1. Install sundials, python dev libraries and rabbitmq server
     - Ubuntu-latest:
+
     ```bash
     apt-get install libsundials-dev python3-dev rabbitmq-server
     ```
-    Note: if you are in WSL then the rabbitmq server will not automatically start, you 
+
+    Note: if you are in WSL then the rabbitmq server will not automatically start, you
     can start it manually using `sudo -u rabbitmq rabbitmq-server`
     - MacOS-latest:
+
     ```bash
     brew install sundials rabbitmq
     ```
+
     Note: to restart rabbitmq after an upgrade: brew services restart rabbitmq
     - Windows-latest:
     Sundials will be installed automatically by installing the app.
 
-
 5. Set environment variables
 
-  - Edit the `.env` file in the root of the repository and edit the following environment
+- Edit the `.env` file in the root of the repository and edit the following environment
   variables to correspond to your particular setup. The most important
   variables to alter are those corresponding to secret keys and passwords, others
   you can probably leave as-is.
 
 6. Install requirements
 
-  - Create a new virtual environment (optional) then install the requirements
+- Create a new virtual environment (optional) then install the requirements
 
 ```bash
 python3 -m venv env
@@ -178,7 +187,7 @@ python manage.py createsuperuser
 
 ### React frontend
 
-Running the frontend will require a local installation of Node.js. On Ubuntu 20.04 LTS, 
+Running the frontend will require a local installation of Node.js. On Ubuntu 20.04 LTS,
 for example, you can install using `snap`
 
 ```bash
@@ -198,15 +207,13 @@ cd frontend
 yarn install
 ```
 
-You can run the frontend using 
+You can run the frontend using
 
 ```bash
 yarn start
 ```
 
 You should be able to see the pkpd web app at [127.0.0.1:3000](127.0.0.1:3000).
-
-
 
 ## Code testing
 
@@ -263,14 +270,15 @@ npx @rtk-query/codegen-openapi openapi-config.json
 Install the cache using
 
 ```bash
-$ sudo apt install memcached
+sudo apt install memcached
 ```
 
 Run memcached using
 
 ```bash
-$ memcached -p 11211
+memcached -p 11211
 ```
 
 ## License
+
 PKPDApp is fully open source. For more information about its license, see [LICENSE.md](LICENSE.md).
