@@ -15,7 +15,7 @@ import {
   useProtocolUpdateMutation,
   useVariableRetrieveQuery,
 } from "../../app/backendApi";
-import { useFieldArray, useForm } from "react-hook-form";
+import { useFieldArray, useForm, useFormState } from "react-hook-form";
 import useDirty from "../../hooks/useDirty";
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
@@ -38,15 +38,11 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
       { skip: !protocol.variables.length },
     );
   const mappedVariable = protocol.mapped_qname || variable?.qname || "";
-  const {
-    control,
-    handleSubmit,
-    formState: { isDirty, submitCount },
-    getValues,
-  } = useForm<Protocol>({
+  const { control, handleSubmit, getValues, reset } = useForm<Protocol>({
     defaultValues: protocol,
     values: protocol,
   });
+  const { isDirty, isSubmitting } = useFormState({ control });
   useDirty(isDirty);
   const [updateProtocol] = useProtocolUpdateMutation();
   const isSharedWithMe = useSelector((state: RootState) =>
@@ -66,18 +62,19 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
     () =>
       handleSubmit(async (data: Protocol) => {
         if (JSON.stringify(data) !== JSON.stringify(protocol)) {
+          reset(data);
           await updateProtocol({ id: protocol.id, protocol: data });
           onChange();
         }
       }),
-    [handleSubmit, onChange, protocol, updateProtocol],
+    [handleSubmit, onChange, protocol, updateProtocol, reset],
   );
 
   useEffect(() => {
-    if (isDirty && submitCount === 0) {
+    if (isDirty && !isSubmitting) {
       handleSave();
     }
-  }, [isDirty, submitCount, handleSave]);
+  }, [isDirty, isSubmitting, handleSave]);
 
   const isPreclinical = project.species !== "H";
   const defaultSymbol = isPreclinical ? "mg/kg" : "mg";

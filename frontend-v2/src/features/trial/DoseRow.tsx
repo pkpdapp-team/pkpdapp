@@ -11,7 +11,7 @@ import {
   useDoseRetrieveQuery,
   useDoseUpdateMutation,
 } from "../../app/backendApi";
-import { Control, useForm } from "react-hook-form";
+import { Control, useForm, useFormState } from "react-hook-form";
 import useDirty from "../../hooks/useDirty";
 
 type Props = {
@@ -48,11 +48,12 @@ const DoseRow: FC<Props> = ({
   const {
     control: doseControl,
     handleSubmit,
-    formState: { isDirty, submitCount },
+    reset,
   } = useForm<DoseRead>({
     defaultValues: dose,
     values: dose,
   });
+  const { isDirty, isSubmitting } = useFormState({ control: doseControl });
   useDirty(isDirty);
 
   const [updateDose] = useDoseUpdateMutation();
@@ -61,19 +62,20 @@ const DoseRow: FC<Props> = ({
     () =>
       handleSubmit(async (data) => {
         if (JSON.stringify(data) !== JSON.stringify(dose)) {
+          reset(data);
           await updateDose({ id: doseId, dose: data });
           refetchDose();
           onChange();
         }
       }),
-    [dose, handleSubmit, doseId, refetchDose, updateDose, onChange],
+    [dose, handleSubmit, doseId, refetchDose, updateDose, onChange, reset],
   );
 
   useEffect(() => {
-    if (isDirty && submitCount === 0) {
+    if (isDirty && !isSubmitting) {
       handleSave();
     }
-  }, [handleSave, isDirty, submitCount]);
+  }, [handleSave, isDirty, isSubmitting]);
 
   const defaultProps = {
     disabled,
