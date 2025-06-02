@@ -195,6 +195,7 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
           removeDose={removeDose}
           selectedAmountLabel={selectedAmountLabel}
           timeUnit={units.find((u) => u.id === protocol.time_unit)}
+          version_greater_than_2={version_greater_than_2}
         />
       ))}
     </>

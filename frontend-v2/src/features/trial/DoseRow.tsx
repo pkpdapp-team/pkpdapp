@@ -26,6 +26,7 @@ type Props = {
   removeDose: (index: number) => void;
   selectedAmountLabel: string;
   timeUnit?: UnitRead;
+  version_greater_than_2?: boolean;
 };
 
 const DoseRow: FC<Props> = ({
@@ -40,6 +41,7 @@ const DoseRow: FC<Props> = ({
   removeDose,
   selectedAmountLabel,
   timeUnit,
+  version_greater_than_2 = false,
 }) => {
   const { data: dose, refetch: refetchDose } = useDoseRetrieveQuery(
     { id: doseId },
@@ -110,6 +112,7 @@ const DoseRow: FC<Props> = ({
             baseUnit={baseUnit}
             isPreclinicalPerKg={isPreclinical}
             selectProps={defaultProps}
+            version_greater_than_2={version_greater_than_2}
           />
         ) : (
           <Typography>{selectedAmountLabel}</Typography>
