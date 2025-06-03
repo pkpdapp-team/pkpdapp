@@ -1,3 +1,6 @@
+// For more info, see https://github.com/storybookjs/eslint-plugin-storybook#configuration-flat-config-format
+import storybook from "eslint-plugin-storybook";
+
 import js from "@eslint/js";
 import prettier from "eslint-config-prettier";
 import reactRecommended from "eslint-plugin-react/configs/recommended.js";
@@ -30,4 +33,5 @@ export default typescript.config(
   {
     ignores: ["src/app/api.ts", "src/app/backendApi.ts"],
   },
+  storybook.configs["flat/recommended"],
 );

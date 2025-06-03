@@ -136,7 +136,10 @@ interface ProtocolsProps {
   isSharedWithMe: boolean;
 }
 
-const Protocols: FC<ProtocolsProps> = ({
+/**
+ * Edit dosing protocols for a project.
+ */
+export const Protocols: FC<ProtocolsProps> = ({
   project,
   projectProtocols,
   refetchProtocols,
