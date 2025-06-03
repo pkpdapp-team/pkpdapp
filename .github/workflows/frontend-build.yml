@@ -5,7 +5,7 @@ on:
   push:
     branches:
       - master
-      - ui-enhancements
+      - develop
   workflow_dispatch:
 
 jobs:
