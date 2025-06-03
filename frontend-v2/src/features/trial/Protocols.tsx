@@ -23,6 +23,11 @@ import {
   useProjectRetrieveQuery,
   useProtocolListQuery,
   useVariableListQuery,
+  ProjectRead,
+  ProtocolListApiResponse,
+  VariableListApiResponse,
+  UnitListApiResponse,
+  SubjectGroupRead,
 } from "../../app/backendApi";
 import { RootState } from "../../app/store";
 import Doses from "./Doses";
@@ -65,21 +70,18 @@ const TABLE_BREAKPOINTS = [
   },
 ];
 
-const Protocols: FC = () => {
-  const [tab, setTab] = useState(0);
+function useApiQueries() {
   const selectedProject = useSelector(
     (state: RootState) => state.main.selectedProject,
   );
   const selectedProjectOrZero = selectedProject || 0;
-  const { groups, refetchGroups } = useSubjectGroups();
+
   const { data: project, isLoading: isProjectLoading } =
     useProjectRetrieveQuery(
       { id: selectedProjectOrZero },
       { skip: !selectedProject },
     );
-  const isSharedWithMe = useSelector((state: RootState) =>
-    selectIsProjectShared(state, project),
-  );
+
   const {
     data: projectProtocols,
     isLoading: isProtocolsLoading,
@@ -88,6 +90,7 @@ const Protocols: FC = () => {
     { projectId: selectedProjectOrZero },
     { skip: !selectedProject },
   );
+
   const { data: models, isLoading: isModelsLoading } =
     useCombinedModelListQuery(
       { projectId: selectedProjectOrZero },
@@ -104,8 +107,6 @@ const Protocols: FC = () => {
     { compoundId: project?.compound || 0 },
     { skip: !project?.compound },
   );
-  const [createSubjectGroup] = useSubjectGroupCreateMutation();
-  const [destroySubjectGroup] = useSubjectGroupDestroyMutation();
 
   const loading = [
     isModelsLoading,
@@ -113,13 +114,42 @@ const Protocols: FC = () => {
     isProtocolsLoading,
     unitsLoading,
   ].some((x) => x);
-  if (loading) {
-    return <div>Loading...</div>;
-  }
 
-  if (!project || !projectProtocols || !units) {
-    return <div>Project not found</div>;
-  }
+  return {
+    project,
+    projectProtocols,
+    refetchProtocols,
+    variables,
+    units,
+    loading,
+  };
+}
+
+interface ProtocolsProps {
+  project: ProjectRead;
+  projectProtocols: ProtocolListApiResponse;
+  refetchProtocols: () => void;
+  variables?: VariableListApiResponse;
+  units: UnitListApiResponse;
+  groups: SubjectGroupRead[];
+  refetchGroups: () => void;
+  isSharedWithMe: boolean;
+}
+
+const Protocols: FC<ProtocolsProps> = ({
+  project,
+  projectProtocols,
+  refetchProtocols,
+  variables,
+  units,
+  groups,
+  refetchGroups,
+  isSharedWithMe,
+}) => {
+  const [tab, setTab] = useState(0);
+
+  const [createSubjectGroup] = useSubjectGroupCreateMutation();
+  const [destroySubjectGroup] = useSubjectGroupDestroyMutation();
 
   const filteredProtocols = projectProtocols?.filter(
     (protocol) => protocol.variables.length > 0,
@@ -363,4 +393,42 @@ const Protocols: FC = () => {
   );
 };
 
-export default Protocols;
+const ProtocolsContainer: FC = () => {
+  const {
+    project,
+    projectProtocols,
+    refetchProtocols,
+    variables,
+    units,
+    loading,
+  } = useApiQueries();
+  const { groups, refetchGroups } = useSubjectGroups();
+  const isSharedWithMe = useSelector((state: RootState) =>
+    selectIsProjectShared(state, project),
+  );
+
+  const loaded = project && projectProtocols && units && groups;
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!loaded) {
+    return <div>Project not found</div>;
+  }
+
+  return (
+    <Protocols
+      project={project}
+      projectProtocols={projectProtocols}
+      refetchProtocols={refetchProtocols}
+      variables={variables}
+      units={units}
+      groups={groups}
+      refetchGroups={refetchGroups}
+      isSharedWithMe={isSharedWithMe}
+    />
+  );
+};
+
+export default ProtocolsContainer;
