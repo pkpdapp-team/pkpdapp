@@ -1,4 +1,4 @@
-import { FC, useEffect, useMemo } from "react";
+import { FC, useCallback, useEffect } from "react";
 import {
   TableCell,
   TableRow,
@@ -58,23 +58,23 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
     name: "doses",
   });
 
-  const handleSave = useMemo(
-    () =>
-      handleSubmit(async (data: Protocol) => {
-        if (JSON.stringify(data) !== JSON.stringify(protocol)) {
-          reset(data);
-          await updateProtocol({ id: protocol.id, protocol: data });
-          onChange();
-        }
-      }),
-    [handleSubmit, onChange, protocol, updateProtocol, reset],
+  const handleFormData = useCallback(
+    async (data: Protocol) => {
+      if (JSON.stringify(data) !== JSON.stringify(protocol)) {
+        reset(data);
+        await updateProtocol({ id: protocol.id, protocol: data });
+        onChange();
+      }
+    },
+    [reset, protocol, updateProtocol, onChange],
   );
 
   useEffect(() => {
     if (isDirty && !isSubmitting) {
+      const handleSave = handleSubmit(handleFormData);
       handleSave();
     }
-  }, [isDirty, isSubmitting, handleSave]);
+  }, [isDirty, isSubmitting, handleSubmit, handleFormData]);
 
   const isPreclinical = project.species !== "H";
   const version_greater_than_2 = project.version ? project.version >= 3 : false;

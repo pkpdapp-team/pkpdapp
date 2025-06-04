@@ -1,6 +1,6 @@
 import Delete from "@mui/icons-material/Delete";
 import { IconButton, TableCell, TableRow, Typography } from "@mui/material";
-import { FC, useEffect, useMemo } from "react";
+import { FC, useCallback, useEffect } from "react";
 import FloatField from "../../components/FloatField";
 import IntegerField from "../../components/IntegerField";
 import UnitField from "../../components/UnitField";
@@ -60,24 +60,24 @@ const DoseRow: FC<Props> = ({
 
   const [updateDose] = useDoseUpdateMutation();
 
-  const handleSave = useMemo(
-    () =>
-      handleSubmit(async (data) => {
-        if (JSON.stringify(data) !== JSON.stringify(dose)) {
-          reset(data);
-          await updateDose({ id: doseId, dose: data });
-          refetchDose();
-          onChange();
-        }
-      }),
-    [dose, handleSubmit, doseId, refetchDose, updateDose, onChange, reset],
+  const handleFormData = useCallback(
+    async (data: DoseRead) => {
+      if (JSON.stringify(data) !== JSON.stringify(dose)) {
+        reset(data);
+        await updateDose({ id: doseId, dose: data });
+        refetchDose();
+        onChange();
+      }
+    },
+    [dose, doseId, refetchDose, updateDose, onChange, reset],
   );
 
   useEffect(() => {
     if (isDirty && !isSubmitting) {
+      const handleSave = handleSubmit(handleFormData);
       handleSave();
     }
-  }, [handleSave, isDirty, isSubmitting]);
+  }, [handleSubmit, handleFormData, isDirty, isSubmitting]);
 
   const defaultProps = {
     disabled,
