@@ -243,7 +243,7 @@ interface TabbedModelFormProps {
   simulation?: SimulationRead;
 }
 
-const TabbedModelForm: FC<TabbedModelFormProps> = ({
+export const TabbedModelForm: FC<TabbedModelFormProps> = ({
   model,
   pd_model,
   project,
@@ -376,7 +376,10 @@ const Model: FC = () => {
   if (isLoading) {
     return <div>Loading...</div>;
   }
-  if (!model || !project || !variables || !protocols || !compound || !units) {
+
+  const loaded =
+    model && project && variables && protocols && compound && units;
+  if (!loaded) {
     return <div>Not found</div>;
   }
   return (

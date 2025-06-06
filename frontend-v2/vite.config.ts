@@ -102,6 +102,8 @@ export default ({ mode }) => {
       coverage: {
         provider: "v8",
         reporter: ["text", "lcov"],
+        include: ["src/**/*.{ts,tsx}"],
+        exclude: ["src/stories"],
       },
     },
   });
