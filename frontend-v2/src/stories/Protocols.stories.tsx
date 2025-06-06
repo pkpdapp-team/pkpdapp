@@ -33,9 +33,11 @@ const meta: Meta<typeof Protocols> = {
     layout: "fullscreen",
     msw: {
       handlers: [
-        http.get("/api/variable/2401", () => {
+        http.get("/api/variable/:id", ({ params }) => {
+          //@ts-expect-error params.id is a string
+          const variableId = parseInt(params.id, 10);
           return HttpResponse.json(
-            variables.find((v) => v.id === 2401),
+            variables.find((v) => v.id === variableId),
             {
               status: 200,
             },
@@ -44,13 +46,19 @@ const meta: Meta<typeof Protocols> = {
         http.get("/api/dose/:id", ({ params }) => {
           //@ts-expect-error params.id is a string
           const doseId = parseInt(params.id, 10);
-          const allDoses = protocolMocks.flatMap((protocol) => protocol.doses);
+          const allProtocolDoses = protocolMocks.flatMap(
+            (protocol) => protocol.doses,
+          );
+          const allGroupDoses = groupMocks.flatMap((group) =>
+            group.protocols.flatMap((protocol) => protocol.doses),
+          );
+          const allDoses = [...allProtocolDoses, ...allGroupDoses];
           const dose = allDoses.find((d) => d.id === doseId);
           return HttpResponse.json(dose, {
             status: 200,
           });
         }),
-        http.put("/api/protocol/4083", async ({ request }) => {
+        http.put("/api/protocol/:id", async ({ request }) => {
           const newProtocol = await request.json();
           let newDoseId = 0;
           // @ts-expect-error newProtocol might be undefined
@@ -66,6 +74,13 @@ const meta: Meta<typeof Protocols> = {
             // @ts-expect-error newProtocol might be undefined
             protocol.id === newProtocol.id ? newProtocol : protocol,
           );
+          groupMocks.forEach((group) => {
+            // @ts-expect-error group.protocols might be undefined
+            group.protocols = group.protocols.map((protocol) =>
+              // @ts-expect-error newProtocol might be undefined
+              protocol.id === newProtocol.id ? newProtocol : protocol,
+            );
+          });
           return HttpResponse.json(newProtocol, {
             status: 200,
           });
@@ -78,6 +93,14 @@ const meta: Meta<typeof Protocols> = {
             id: groupMocks.length + 1, // Simple ID generation
             subjects: [],
           };
+          const maxProtocolId = Math.max(...protocolMocks.map((p) => p.id), 0);
+          // @ts-expect-error responseBody might be undefined
+          newGroup.protocols = responseBody.protocols.map(
+            (protocol: ProtocolRead, index: number) => ({
+              ...protocol,
+              id: maxProtocolId + index + 1, // Assign new ID if not provided
+            }),
+          );
           groupMocks.push(newGroup);
           return HttpResponse.json(newGroup, {
             status: 201,
