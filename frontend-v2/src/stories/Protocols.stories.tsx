@@ -10,10 +10,11 @@ import {
   units,
   groups,
 } from "./protocols.mock";
-import { DoseRead } from "../app/backendApi";
+import { DoseRead, ProtocolRead, SubjectGroupRead } from "../app/backendApi";
 import { useState } from "react";
 
-let protocolMocks = [...projectProtocols];
+let protocolMocks: ProtocolRead[] = [...projectProtocols];
+let groupMocks: SubjectGroupRead[] = [...groups];
 
 const meta: Meta<typeof Protocols> = {
   title: "Trial/Protocols",
@@ -60,6 +61,7 @@ const meta: Meta<typeof Protocols> = {
               dose.id = newDoseId + 1;
             }
           });
+          // @ts-expect-error protocolMocks might be undefined
           protocolMocks = protocolMocks.map((protocol) =>
             // @ts-expect-error newProtocol might be undefined
             protocol.id === newProtocol.id ? newProtocol : protocol,
@@ -68,14 +70,42 @@ const meta: Meta<typeof Protocols> = {
             status: 200,
           });
         }),
+        http.post("/api/subject_group", async ({ request }) => {
+          const responseBody = await request.json();
+          const newGroup: SubjectGroupRead = {
+            // @ts-expect-error responseBody can't be spread
+            ...responseBody,
+            id: groupMocks.length + 1, // Simple ID generation
+            subjects: [],
+          };
+          groupMocks.push(newGroup);
+          return HttpResponse.json(newGroup, {
+            status: 201,
+          });
+        }),
+        http.delete("/api/subject_group/:id", ({ params }) => {
+          // @ts-expect-error params.id is a string
+          const groupId = parseInt(params.id, 10);
+          groupMocks = groupMocks.filter((group) => group.id !== groupId);
+          return HttpResponse.json(
+            { success: true },
+            {
+              status: 200,
+            },
+          );
+        }),
       ],
     },
   },
   decorators: [
     () => {
       const [protocols, setProtocols] = useState(projectProtocols);
+      const [groups, setGroups] = useState(groupMocks);
       const refetchProtocols = () => {
         setProtocols(protocolMocks);
+      };
+      const refetchGroups = () => {
+        setGroups(groupMocks);
       };
       return (
         <Protocols
@@ -85,7 +115,7 @@ const meta: Meta<typeof Protocols> = {
           units={units}
           projectProtocols={protocols}
           refetchProtocols={refetchProtocols}
-          refetchGroups={fn()}
+          refetchGroups={refetchGroups}
           isSharedWithMe={false}
         />
       );
@@ -93,6 +123,7 @@ const meta: Meta<typeof Protocols> = {
   ],
   beforeEach: () => {
     protocolMocks = [...projectProtocols];
+    groupMocks = [...groups];
   },
 };
 
@@ -124,5 +155,19 @@ export const AddRow: Story = {
     expect(canvas.getAllByRole("row")).toHaveLength(3);
     await userEvent.click(addRowButton);
     await waitFor(() => expect(canvas.getAllByRole("row")).toHaveLength(4));
+  },
+};
+
+export const AddGroup: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const addGroupButton = canvas.getByRole("button", { name: /Add Group/i });
+    expect(addGroupButton).toBeInTheDocument();
+    expect(canvas.getAllByRole("tab")).toHaveLength(1);
+    await userEvent.click(addGroupButton);
+    await waitFor(() => expect(canvas.getAllByRole("tab")).toHaveLength(2));
+    const newGroupTab = canvas.getByRole("tab", { name: /Group 1/i });
+    expect(newGroupTab).toBeInTheDocument();
+    await userEvent.click(newGroupTab);
   },
 };
