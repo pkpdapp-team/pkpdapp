@@ -2,7 +2,7 @@ import { Meta, StoryObj } from "@storybook/react-vite";
 import { http, HttpResponse } from "msw";
 import { expect, fn, within } from "storybook/test";
 
-import { Protocols } from "./Protocols";
+import { Protocols } from "../features/trial/Protocols";
 import {
   project,
   projectProtocols,
