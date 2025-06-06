@@ -5,9 +5,9 @@ import {
   ProjectRead,
   usePharmacodynamicListQuery,
   usePharmacokineticListQuery,
-  useUnitListQuery,
   CompoundRead,
-  useTagListQuery,
+  UnitRead,
+  TagRead,
 } from "../../app/backendApi";
 import { Control } from "react-hook-form";
 import {
@@ -42,6 +42,8 @@ interface Props {
   project: ProjectRead;
   control: Control<FormData>;
   compound: CompoundRead;
+  units: UnitRead[];
+  tagsData: TagRead[];
 }
 
 const pk_model_order = [
@@ -85,18 +87,14 @@ const PKPDModelTab: FC<Props> = ({
   project,
   control,
   compound,
+  units,
+  tagsData,
 }: Props) => {
   // get list of pd models
   const { data: pdModels, isLoading: pdModelLoading } =
     usePharmacodynamicListQuery();
   const { data: pkModels, isLoading: pkModelLoading } =
     usePharmacokineticListQuery();
-  const { data: units, isLoading: isLoadingUnits } = useUnitListQuery(
-    { compoundId: project?.compound },
-    { skip: !project?.compound },
-  );
-  // get list of possible tags
-  const { data: tagsData, isLoading: tagsLoading } = useTagListQuery();
   const [tags, setTags] = useState<number[]>([]);
 
   const handleTagChange = (event: SelectChangeEvent<number[]>) => {
@@ -108,11 +106,11 @@ const PKPDModelTab: FC<Props> = ({
   const [isCodeModalOpen, setIsCodeModalOpen] = useState(false);
   const [isSbmlModalOpen, setIsSbmlModalOpen] = useState(false);
 
-  const loading = [pdModelLoading, pkModelLoading, isLoadingUnits, tagsLoading];
+  const loading = [pdModelLoading, pkModelLoading];
   if (loading.some((l) => l)) {
     return <div>Loading...</div>;
   }
-  if (!pdModels || !pkModels || !units || !tagsData) {
+  if (!pdModels || !pkModels || !tagsData) {
     return <div>Error loading models.</div>;
   }
 
