@@ -91,6 +91,9 @@ const meta: Meta<typeof Protocols> = {
       );
     },
   ],
+  beforeEach: () => {
+    protocolMocks = [...projectProtocols];
+  },
 };
 
 export default meta;
