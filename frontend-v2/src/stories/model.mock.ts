@@ -75,7 +75,7 @@ export const model: CombinedModelRead = {
   species: "H",
   has_saturation: true,
   has_effect: true,
-  has_lag: true,
+  has_lag: false,
   has_bioavailability: false,
   has_hill_coefficient: false,
   time_max: 30,
