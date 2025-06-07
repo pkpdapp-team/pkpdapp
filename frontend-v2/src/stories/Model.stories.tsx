@@ -1,5 +1,5 @@
 import { Meta, StoryObj } from "@storybook/react-vite";
-import { http, HttpResponse } from "msw";
+import { delay, http, HttpResponse } from "msw";
 import { expect, screen, within, userEvent } from "storybook/test";
 
 import { TabbedModelForm } from "../features/model/Model";
@@ -33,12 +33,14 @@ const meta: Meta<typeof TabbedModelForm> = {
     layout: "fullscreen",
     msw: {
       handlers: [
-        http.get("/api/pharmacokinetic", () => {
+        http.get("/api/pharmacokinetic", async () => {
+          await delay();
           return HttpResponse.json(pkModels, {
             status: 200,
           });
         }),
-        http.get("/api/pharmacodynamic", () => {
+        http.get("/api/pharmacodynamic", async () => {
+          await delay();
           return HttpResponse.json(pdModels, {
             status: 200,
           });
@@ -78,6 +80,30 @@ export const Default: Story = {
     expect(speciesList).toBeInTheDocument();
     expect(pkModelList).toBeInTheDocument();
     expect(pdModelList).toBeInTheDocument();
+  },
+};
+
+export const Species: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const speciesList = await canvas.findByLabelText("Species");
+    expect(speciesList).toHaveTextContent("Rat");
+
+    await userEvent.click(speciesList);
+    const listbox = await screen.findByRole("listbox");
+    await userEvent.selectOptions(listbox, "Mouse");
+    expect(speciesList).toHaveTextContent("Mouse");
+
+    const pkModelList = await canvas.findByRole("combobox", {
+      name: /PK Model/i,
+    });
+    const pdModelList = canvas.getByRole("combobox", { name: /PD Model/i });
+    expect(pkModelList).toContainHTML(
+      "<span class='notranslate' aria-hidden='true'>​</span>",
+    );
+    expect(pdModelList).toContainHTML(
+      "<span class='notranslate' aria-hidden='true'>​</span>",
+    );
   },
 };
 
