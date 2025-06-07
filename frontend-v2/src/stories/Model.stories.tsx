@@ -1,5 +1,5 @@
 import { Meta, StoryObj } from "@storybook/react-vite";
-import { http, HttpResponse } from "msw";
+import { delay, http, HttpResponse } from "msw";
 import { expect, screen, within, userEvent } from "storybook/test";
 
 import { TabbedModelForm } from "../features/model/Model";
@@ -33,12 +33,14 @@ const meta: Meta<typeof TabbedModelForm> = {
     layout: "fullscreen",
     msw: {
       handlers: [
-        http.get("/api/pharmacokinetic", () => {
+        http.get("/api/pharmacokinetic", async () => {
+          await delay();
           return HttpResponse.json(pkModels, {
             status: 200,
           });
         }),
-        http.get("/api/pharmacodynamic", () => {
+        http.get("/api/pharmacodynamic", async () => {
+          await delay();
           return HttpResponse.json(pdModels, {
             status: 200,
           });

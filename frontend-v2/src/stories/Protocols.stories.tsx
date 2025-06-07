@@ -1,5 +1,5 @@
 import { Meta, StoryObj } from "@storybook/react-vite";
-import { http, HttpResponse } from "msw";
+import { delay, http, HttpResponse } from "msw";
 import { expect, fn, within, userEvent, waitFor } from "storybook/test";
 
 import { Protocols } from "../features/trial/Protocols";
@@ -33,7 +33,8 @@ const meta: Meta<typeof Protocols> = {
     layout: "fullscreen",
     msw: {
       handlers: [
-        http.get("/api/variable/:id", ({ params }) => {
+        http.get("/api/variable/:id", async ({ params }) => {
+          await delay();
           //@ts-expect-error params.id is a string
           const variableId = parseInt(params.id, 10);
           return HttpResponse.json(
@@ -43,7 +44,8 @@ const meta: Meta<typeof Protocols> = {
             },
           );
         }),
-        http.get("/api/dose/:id", ({ params }) => {
+        http.get("/api/dose/:id", async ({ params }) => {
+          await delay();
           //@ts-expect-error params.id is a string
           const doseId = parseInt(params.id, 10);
           const allProtocolDoses = protocolMocks.flatMap(
@@ -59,6 +61,7 @@ const meta: Meta<typeof Protocols> = {
           });
         }),
         http.put("/api/protocol/:id", async ({ request }) => {
+          await delay();
           const newProtocol = await request.json();
           let newDoseId = 0;
           // @ts-expect-error newProtocol might be undefined
@@ -86,6 +89,7 @@ const meta: Meta<typeof Protocols> = {
           });
         }),
         http.post("/api/subject_group", async ({ request }) => {
+          await delay();
           const responseBody = await request.json();
           const newGroup: SubjectGroupRead = {
             // @ts-expect-error responseBody can't be spread
@@ -106,7 +110,8 @@ const meta: Meta<typeof Protocols> = {
             status: 201,
           });
         }),
-        http.delete("/api/subject_group/:id", ({ params }) => {
+        http.delete("/api/subject_group/:id", async ({ params }) => {
+          await delay();
           // @ts-expect-error params.id is a string
           const groupId = parseInt(params.id, 10);
           groupMocks = groupMocks.filter((group) => group.id !== groupId);
@@ -121,25 +126,24 @@ const meta: Meta<typeof Protocols> = {
     },
   },
   decorators: [
-    () => {
-      const [protocols, setProtocols] = useState(projectProtocols);
-      const [groups, setGroups] = useState(groupMocks);
-      const refetchProtocols = () => {
+    (Story, { args }) => {
+      const [protocols, setProtocols] = useState(args.projectProtocols);
+      const [groups, setGroups] = useState(args.groups);
+      const refetchProtocols = async () => {
+        await delay();
         setProtocols(protocolMocks);
       };
-      const refetchGroups = () => {
+      const refetchGroups = async () => {
+        await delay();
         setGroups(groupMocks);
       };
       return (
         <Protocols
-          project={project}
+          {...args}
           groups={groups}
-          variables={variables}
-          units={units}
           projectProtocols={protocols}
           refetchProtocols={refetchProtocols}
           refetchGroups={refetchGroups}
-          isSharedWithMe={false}
         />
       );
     },
