@@ -83,6 +83,30 @@ export const Default: Story = {
   },
 };
 
+export const Species: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const speciesList = await canvas.findByLabelText("Species");
+    expect(speciesList).toHaveTextContent("Rat");
+
+    await userEvent.click(speciesList);
+    const listbox = await screen.findByRole("listbox");
+    await userEvent.selectOptions(listbox, "Mouse");
+    expect(speciesList).toHaveTextContent("Mouse");
+
+    const pkModelList = await canvas.findByRole("combobox", {
+      name: /PK Model/i,
+    });
+    const pdModelList = canvas.getByRole("combobox", { name: /PD Model/i });
+    expect(pkModelList).toContainHTML(
+      "<span class='notranslate' aria-hidden='true'>​</span>",
+    );
+    expect(pdModelList).toContainHTML(
+      "<span class='notranslate' aria-hidden='true'>​</span>",
+    );
+  },
+};
+
 export const PKModel: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
