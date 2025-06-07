@@ -98,12 +98,8 @@ export const Species: Story = {
       name: /PK Model/i,
     });
     const pdModelList = canvas.getByRole("combobox", { name: /PD Model/i });
-    expect(pkModelList).toContainHTML(
-      "<span class='notranslate' aria-hidden='true'>​</span>",
-    );
-    expect(pdModelList).toContainHTML(
-      "<span class='notranslate' aria-hidden='true'>​</span>",
-    );
+    expect(pkModelList).toHaveTextContent("None");
+    expect(pdModelList).toHaveTextContent("None");
   },
 };
 
