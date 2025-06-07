@@ -142,8 +142,8 @@ const meta: Meta<typeof Protocols> = {
           {...args}
           groups={groups}
           projectProtocols={protocols}
-          refetchProtocols={refetchProtocols}
-          refetchGroups={refetchGroups}
+          refetchProtocols={fn(refetchProtocols)}
+          refetchGroups={fn(refetchGroups)}
         />
       );
     },
