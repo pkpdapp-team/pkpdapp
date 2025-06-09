@@ -1,6 +1,6 @@
 import { Meta, StoryObj } from "@storybook/react-vite";
 import { delay, http, HttpResponse } from "msw";
-import { expect, screen, within, userEvent, fn } from "storybook/test";
+import { expect, screen, within, userEvent, fn, waitFor } from "storybook/test";
 import { useDispatch } from "react-redux";
 import { setProject as setReduxProject } from "../features/main/mainSlice";
 
@@ -345,11 +345,21 @@ export const SecondaryParameters: Story = {
     const secondaryParametersTab = canvas.getByRole("tab", {
       name: /Secondary Parameters/i,
     });
-    await delay();
+    await delay(1000);
     await userEvent.click(secondaryParametersTab);
 
     const addButton = screen.getByRole("button", { name: /Add/i });
     expect(addButton).toBeInTheDocument();
     await userEvent.click(addButton);
+
+    const timeIntervalsTable = screen.getByRole("table", {
+      name: /Define time intervals/i,
+    });
+    expect(timeIntervalsTable).toBeInTheDocument();
+
+    await waitFor(() => {
+      const rows = within(timeIntervalsTable).getAllByRole("row");
+      expect(rows).toHaveLength(2);
+    }); // Header row + 1 data row
   },
 };

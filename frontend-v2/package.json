@@ -31,7 +31,7 @@
     "serve": "vite preview",
     "lint": "eslint src",
     "format": "prettier --write ./src",
-    "test": "vitest --project=storybook",
+    "test": "npx tsc && eslint src && vitest --project=storybook",
     "cypress:open": "cypress open",
     "cypress:e2e": "start-server-and-test 'yarn start' http://127.0.0.1:3000 \"cypress run --e2e\"",
     "storybook": "storybook dev -p 6006",
