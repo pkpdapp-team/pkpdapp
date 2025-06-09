@@ -70,7 +70,7 @@ export const DynamicTabs: FC<PropsWithChildren<DynamicTabsProps>> = ({
   for (const key in tabErrors) {
     errors[key] = (
       <Tooltip title={tabErrors[key]}>
-        <ErrorIcon color="error" />
+        <ErrorIcon color="error" titleAccess={tabErrors[key]} />
       </Tooltip>
     );
   }

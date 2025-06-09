@@ -1,8 +1,12 @@
 import { Meta, StoryObj } from "@storybook/react-vite";
 import { delay, http, HttpResponse } from "msw";
-import { expect, screen, within, userEvent } from "storybook/test";
+import { expect, screen, within, userEvent, fn } from "storybook/test";
 
-import { TabbedModelForm } from "../features/model/Model";
+import {
+  CombinedModelUpdate,
+  ProjectUpdate,
+  TabbedModelForm,
+} from "../features/model/Model";
 import {
   model,
   pd_model,
@@ -15,6 +19,15 @@ import {
   pkModels,
   pdModels,
 } from "./model.mock";
+import {
+  useCombinedModelUpdateMutation,
+  useProjectUpdateMutation,
+} from "../app/backendApi";
+import { useState } from "react";
+
+// Use mutable copies of snapshots to allow for API updates.
+let mockModel = { ...model };
+let mockProject = { ...project };
 
 const meta: Meta<typeof TabbedModelForm> = {
   title: "Model/TabbedModelForm",
@@ -28,6 +41,8 @@ const meta: Meta<typeof TabbedModelForm> = {
     protocols,
     compound,
     units,
+    updateModel: fn(),
+    updateProject: fn(),
   },
   parameters: {
     layout: "fullscreen",
@@ -45,9 +60,92 @@ const meta: Meta<typeof TabbedModelForm> = {
             status: 200,
           });
         }),
+        http.put("/api/combined_model/:id", async ({ params, request }) => {
+          await delay();
+          //@ts-expect-error params.id is a string
+          const modelId = parseInt(params.id, 10);
+          const modelData = await request.json();
+          //@ts-expect-error modelData is DefaultBodyType
+          mockModel = { ...modelData, id: modelId };
+          return HttpResponse.json(mockModel, {
+            status: 200,
+          });
+        }),
+        http.put("/api/project/:id", async ({ params, request }) => {
+          await delay();
+          //@ts-expect-error params.id is a string
+          const projectId = parseInt(params.id, 10);
+          const projectData = await request.json();
+          //@ts-expect-error projectData is DefaultBodyType
+          mockProject = { ...projectData, id: projectId };
+          return HttpResponse.json(mockProject, {
+            status: 200,
+          });
+        }),
+        http.put("/api/simulation/:id", async ({ params, request }) => {
+          await delay();
+          //@ts-expect-error params.id is a string
+          const simulationId = parseInt(params.id, 10);
+          const simulationData = await request.json();
+          return HttpResponse.json(
+            //@ts-expect-error simulationData is DefaultBodyType
+            { ...simulationData, id: simulationId },
+            {
+              status: 200,
+            },
+          );
+        }),
+        http.put(
+          "/api/combined_model/:id/set_params_to_defaults",
+          async ({ params, request }) => {
+            await delay();
+            //@ts-expect-error params.id is a string
+            const modelId = parseInt(params.id, 10);
+            const modelData = await request.json();
+            //@ts-expect-error modelData is DefaultBodyType
+            mockModel = { ...modelData, id: modelId };
+            return HttpResponse.json(mockModel, {
+              status: 200,
+            });
+          },
+        ),
       ],
     },
   },
+  decorators: [
+    (Story, { args }) => {
+      const [model, setModel] = useState(args.model);
+      const [project, setProject] = useState(args.project);
+      const [updateModel] = useCombinedModelUpdateMutation();
+      const [updateProject] = useProjectUpdateMutation();
+      const updateMockModel: CombinedModelUpdate = async ({
+        id,
+        combinedModel,
+      }) => {
+        args.updateModel({ id, combinedModel });
+        await updateModel({ id, combinedModel });
+        mockModel = { ...mockModel, ...combinedModel };
+        setModel(mockModel);
+        return mockModel;
+      };
+      const updateMockProject: ProjectUpdate = async ({ id, project }) => {
+        args.updateProject({ id, project });
+        await updateProject({ id, project });
+        mockProject = { ...mockProject, ...project };
+        setProject(mockProject);
+        return mockProject;
+      };
+      return (
+        <TabbedModelForm
+          {...args}
+          model={model}
+          project={project}
+          updateModel={updateMockModel}
+          updateProject={updateMockProject}
+        />
+      );
+    },
+  ],
 };
 
 export default meta;
@@ -104,6 +202,12 @@ export const Species: Story = {
     expect(pdModelList).toContainHTML(
       "<span class='notranslate' aria-hidden='true'>​</span>",
     );
+    const errorIcon = await canvas.findByRole("img", {
+      name: "Please select a PK model to simulate.",
+    });
+    expect(errorIcon).toBeInTheDocument();
+    const checkboxes = canvas.queryAllByRole("checkbox");
+    expect(checkboxes).toHaveLength(0);
   },
 };
 

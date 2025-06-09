@@ -110,15 +110,17 @@ function useModelFormDataCallback({
   project,
   simulation,
   reset,
+  updateModel,
+  updateProject,
 }: {
   model: CombinedModelRead;
   project: ProjectRead;
   simulation?: SimulationRead;
   reset: (values?: Partial<FormData>) => void;
+  updateModel: CombinedModelUpdate;
+  updateProject: ProjectUpdate;
 }) {
-  const [updateModel] = useCombinedModelUpdateMutation();
   const [updateSimulation] = useSimulationUpdateMutation();
-  const [updateProject] = useProjectUpdateMutation();
 
   const [setParamsToDefault] =
     useCombinedModelSetParamsToDefaultsUpdateMutation();
@@ -194,7 +196,7 @@ function useModelFormState({
   model,
   project,
 }: {
-  model: CombinedModelRead;
+  model: CombinedModel;
   project: ProjectRead;
 }) {
   const species = project.species;
@@ -215,6 +217,15 @@ function useModelFormState({
   return { control, reset, handleSubmit };
 }
 
+export type CombinedModelUpdate = (arg: {
+  id: number;
+  combinedModel: CombinedModel;
+}) => Promise<{ data?: CombinedModelRead }>;
+export type ProjectUpdate = (arg: {
+  id: number;
+  project: ProjectRead;
+}) => Promise<{ data?: ProjectRead }>;
+
 interface TabbedModelFormProps {
   model: CombinedModelRead;
   project: ProjectRead;
@@ -224,6 +235,8 @@ interface TabbedModelFormProps {
   units: UnitListApiResponse;
   pd_model?: PharmacodynamicRead;
   simulation?: SimulationRead;
+  updateModel: CombinedModelUpdate;
+  updateProject: ProjectUpdate;
 }
 
 export const TabbedModelForm: FC<TabbedModelFormProps> = ({
@@ -235,6 +248,8 @@ export const TabbedModelForm: FC<TabbedModelFormProps> = ({
   protocols,
   compound,
   units,
+  updateModel,
+  updateProject,
 }) => {
   const { control, reset, handleSubmit } = useModelFormState({
     model,
@@ -245,6 +260,8 @@ export const TabbedModelForm: FC<TabbedModelFormProps> = ({
     project,
     simulation,
     reset,
+    updateModel,
+    updateProject,
   });
 
   /* 
@@ -270,7 +287,7 @@ export const TabbedModelForm: FC<TabbedModelFormProps> = ({
     SubPageName.SECONDARYPARAMETERS,
   ];
   if (model.pk_model === null) {
-    tabErrors[tabKeys[0]] = "Please select a PK model to simulate";
+    tabErrors[tabKeys[0]] = "Please select a PK model to simulate.";
   }
   const hasPdModel = model.pd_model !== null;
   const isTumourModel =
@@ -282,17 +299,17 @@ export const TabbedModelForm: FC<TabbedModelFormProps> = ({
     // put exception for tumour growth models with no kill
     if (!(isTumourModel && noKillModel)) {
       tabErrors[tabKeys[1]] =
-        "Please select a PK variable to link PK and PD models (Link to PD column)";
+        "Please select a PK variable to link PK and PD models (Link to PD column.)";
     }
   }
   if (
     model.has_lag &&
     !model.derived_variables.find((dv) => dv.type === "TLG")
   ) {
-    tabErrors[tabKeys[1]] = "Please select a lag time variable";
+    tabErrors[tabKeys[1]] = "Please select a lag time variable.";
   }
   if (protocols && protocols.length === 0) {
-    tabErrors[tabKeys[1]] = "Please select a dosing compartment";
+    tabErrors[tabKeys[1]] = "Please select a dosing compartment.";
   }
 
   const isOtherSpeciesSelected = project.species === "O";
@@ -349,6 +366,8 @@ const Model: FC = () => {
     units,
     variables,
   } = useApiQueries();
+  const [updateModel] = useCombinedModelUpdateMutation();
+  const [updateProject] = useProjectUpdateMutation();
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -369,6 +388,8 @@ const Model: FC = () => {
       protocols={protocols}
       compound={compound}
       units={units}
+      updateModel={updateModel}
+      updateProject={updateProject}
     />
   );
 };
