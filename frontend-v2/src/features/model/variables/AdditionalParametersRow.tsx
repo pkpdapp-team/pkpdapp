@@ -275,6 +275,7 @@ const AdditionalParametersRow: FC<Props> = ({
               <MuiCheckbox
                 checked={isLinkedTo("AUC")}
                 onClick={onClickDerived("AUC")}
+                aria-label={`Secondary parameters: ${variable.name}`}
               />
             }
             label=""

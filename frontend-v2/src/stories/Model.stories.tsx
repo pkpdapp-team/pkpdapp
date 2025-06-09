@@ -1,6 +1,8 @@
 import { Meta, StoryObj } from "@storybook/react-vite";
 import { delay, http, HttpResponse } from "msw";
 import { expect, screen, within, userEvent, fn } from "storybook/test";
+import { useDispatch } from "react-redux";
+import { setProject as setReduxProject } from "../features/main/mainSlice";
 
 import {
   CombinedModelUpdate,
@@ -20,10 +22,12 @@ import {
   pdModels,
 } from "./model.mock";
 import {
+  DerivedVariableRead,
+  TimeIntervalRead,
   useCombinedModelUpdateMutation,
   useProjectUpdateMutation,
 } from "../app/backendApi";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 // Use mutable copies of snapshots to allow for API updates.
 let mockModel = { ...model };
@@ -60,13 +64,86 @@ const meta: Meta<typeof TabbedModelForm> = {
             status: 200,
           });
         }),
+        http.get("/api/combined_model", async ({ request }) => {
+          await delay();
+          const url = new URL(request.url);
+
+          const projectId = url.searchParams.get("project_id");
+          if (projectId) {
+            return HttpResponse.json([mockModel], {
+              status: 200,
+            });
+          }
+          return HttpResponse.json([], { status: 200 });
+        }),
+        http.get("/api/unit", async ({ request }) => {
+          await delay();
+          const url = new URL(request.url);
+
+          const compoundId = url.searchParams.get("compound_id");
+          if (compoundId) {
+            return HttpResponse.json(units, {
+              status: 200,
+            });
+          }
+          return HttpResponse.json([], { status: 200 });
+        }),
+        http.get("/api/variable", async ({ request }) => {
+          await delay();
+          const url = new URL(request.url);
+          const pkModel = url.searchParams.get("dosed_pk_model_id");
+          if (pkModel) {
+            return HttpResponse.json(variables, {
+              status: 200,
+            });
+          }
+          return HttpResponse.json([], { status: 200 });
+        }),
+        http.get("/api/project/:id", async ({ params }) => {
+          await delay();
+          //@ts-expect-error params.id is a string
+          const projectId = parseInt(params.id, 10);
+          if (projectId === mockProject.id) {
+            return HttpResponse.json(mockProject, {
+              status: 200,
+            });
+          }
+          return HttpResponse.json(
+            { error: "Project not found" },
+            { status: 404 },
+          );
+        }),
         http.put("/api/combined_model/:id", async ({ params, request }) => {
           await delay();
           //@ts-expect-error params.id is a string
           const modelId = parseInt(params.id, 10);
           const modelData = await request.json();
           //@ts-expect-error modelData is DefaultBodyType
-          mockModel = { ...modelData, id: modelId };
+          const timeIntervals = modelData?.time_intervals.map(
+            (interval: TimeIntervalRead, index: number) => {
+              return {
+                ...interval,
+                pkpd_model: modelId,
+                id: interval.id || index + 1, // Ensure each interval has a unique ID
+              };
+            },
+          );
+          //@ts-expect-error modelData is DefaultBodyType
+          const derivedVariables = modelData?.derived_variables.map(
+            (variable: DerivedVariableRead, index: number) => {
+              return {
+                ...variable,
+                id: variable.id || index + 1, // Ensure each derived variable has a unique ID
+              };
+            },
+          );
+          mockModel = {
+            //@ts-expect-error modelData is DefaultBodyType
+            ...modelData,
+            id: modelId,
+            time_intervals: timeIntervals,
+            derived_variables: derivedVariables,
+          };
           return HttpResponse.json(mockModel, {
             status: 200,
           });
@@ -118,6 +195,13 @@ const meta: Meta<typeof TabbedModelForm> = {
       const [project, setProject] = useState(args.project);
       const [updateModel] = useCombinedModelUpdateMutation();
       const [updateProject] = useProjectUpdateMutation();
+      const dispatch = useDispatch();
+      const projectId = args.project.id;
+
+      useEffect(() => {
+        dispatch(setReduxProject(projectId));
+      }, [dispatch, projectId]);
+
       const updateMockModel: CombinedModelUpdate = async ({
         id,
         combinedModel,
@@ -146,6 +230,10 @@ const meta: Meta<typeof TabbedModelForm> = {
       );
     },
   ],
+  beforeEach: () => {
+    mockModel = { ...model };
+    mockProject = { ...project };
+  },
 };
 
 export default meta;
@@ -237,5 +325,31 @@ export const PDModel: Story = {
     expect(pdModelList).toHaveTextContent(
       "indirect_effects_stimulation_elimination",
     );
+  },
+};
+
+export const SecondaryParameters: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const mapVariablesTab = canvas.getByRole("tab", {
+      name: /Map Variables/i,
+    });
+    await userEvent.click(mapVariablesTab);
+
+    const checkbox = await canvas.findByRole("checkbox", {
+      name: /Secondary Parameters: C1/i,
+    });
+    expect(checkbox).toBeInTheDocument();
+    await userEvent.click(checkbox);
+
+    const secondaryParametersTab = canvas.getByRole("tab", {
+      name: /Secondary Parameters/i,
+    });
+    await delay();
+    await userEvent.click(secondaryParametersTab);
+
+    const addButton = screen.getByRole("button", { name: /Add/i });
+    expect(addButton).toBeInTheDocument();
+    await userEvent.click(addButton);
   },
 };
