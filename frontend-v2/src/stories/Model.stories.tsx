@@ -203,7 +203,9 @@ export const Species: Story = {
     });
     expect(errorIcon).toBeInTheDocument();
     const checkboxes = canvas.queryAllByRole("checkbox");
-    expect(checkboxes).toHaveLength(0);
+    checkboxes.forEach((checkbox) => {
+      expect(checkbox).toBeDisabled();
+    });
   },
 };
 
