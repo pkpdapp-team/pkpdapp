@@ -1,4 +1,4 @@
-import { FC, useState } from "react";
+import { FC, useEffect, useState } from "react";
 import {
   Box,
   Button,
@@ -126,20 +126,27 @@ function IntervalRow({
   onUpdate,
   editUnits = false,
 }: IntervalRowProps) {
-  const [start, setStart] = useState(interval.start_time);
-  const [end, setEnd] = useState(interval.end_time);
+  const [value, setValue] = useState(interval);
+  const start = value.start_time;
+  const end = value.end_time;
   const units = useTimeUnits();
   const intervalUnit = units?.find((unit) => +unit.id === interval.unit);
 
+  useEffect(() => {
+    setValue(interval);
+  }, [interval]);
+
   function onChangeStart(event: React.ChangeEvent<HTMLInputElement>) {
     const newStartTime = parseFloat(event.target.value);
-    setStart(newStartTime);
-    onUpdate({ ...interval, start_time: newStartTime });
+    const newValue = { ...value, start_time: newStartTime };
+    setValue(newValue);
+    onUpdate(newValue);
   }
   function onChangeEnd(event: React.ChangeEvent<HTMLInputElement>) {
     const newEndTime = parseFloat(event.target.value);
-    setEnd(newEndTime);
-    onUpdate({ ...interval, end_time: newEndTime });
+    const newValue = { ...value, end_time: newEndTime };
+    setValue(newValue);
+    onUpdate(newValue);
   }
 
   return (
@@ -209,14 +216,21 @@ const TimeIntervalsTable: FC<TableProps> = (props) => {
   function updateInterval(id: number, interval: TimeIntervalRead) {
     setIntervals(intervals.map((i) => (i.id === id ? interval : i)));
   }
-  const onDelete = (id: number) => () => removeInterval(id);
+  const onDelete = (id: number) => () => {
+    return removeInterval(id);
+  };
   const onUpdate = (id: number) => (interval: TimeIntervalRead) =>
     updateInterval(id, interval);
 
   return (
     <>
       <Box sx={{ display: "flex" }}>
-        <Typography variant="h5" component="h2" sx={{ marginRight: "1rem" }}>
+        <Typography
+          id="time-intervals-heading"
+          variant="h5"
+          component="h2"
+          sx={{ marginRight: "1rem" }}
+        >
           Define time intervals
         </Typography>
         <Button
@@ -231,17 +245,19 @@ const TimeIntervalsTable: FC<TableProps> = (props) => {
       <TableContainer
         sx={{ maxHeight: getTableHeight({ steps: TABLE_BREAKPOINTS }) }}
       >
-        <Table {...props} stickyHeader>
+        <Table {...props} stickyHeader aria-labelledby="time-intervals-heading">
           <TableHead>
-            <TableCell sx={{ width: "20rem" }}>Start time</TableCell>
-            <TableCell sx={{ width: "20rem" }}>End time</TableCell>
-            <TableCell sx={{ width: "10rem" }}>Unit</TableCell>
-            <TableCell>Remove</TableCell>
+            <TableRow>
+              <TableCell sx={{ width: "20rem" }}>Start time</TableCell>
+              <TableCell sx={{ width: "20rem" }}>End time</TableCell>
+              <TableCell sx={{ width: "10rem" }}>Unit</TableCell>
+              <TableCell>Remove</TableCell>
+            </TableRow>
           </TableHead>
           <TableBody>
             {intervals.map((interval, index) => (
               <IntervalRow
-                key={`{interval.id}_${interval.start_time}_${interval.end_time}_${interval.unit}`}
+                key={interval.id}
                 interval={interval}
                 onDelete={onDelete(interval.id)}
                 onUpdate={onUpdate(interval.id)}
