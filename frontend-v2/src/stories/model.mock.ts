@@ -1,8 +1,6 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
-// @ts-nocheck
-import { PharmacodynamicRead } from "../../app/backendApi";
+import { PharmacodynamicRead } from "../app/backendApi";
 
-export const pd_model: PharmacodynamicRead = {
+export const pd_model = {
   id: 7,
   components: [
     {
@@ -29,7 +27,7 @@ export const pd_model: PharmacodynamicRead = {
   time_max: 30,
   is_library_model: true,
   project: null,
-};
+} as unknown as PharmacodynamicRead;
 
 export const pdModels = [
   {
