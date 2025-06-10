@@ -5,9 +5,11 @@ type TableHeaderType = {
   label: string;
   tooltip?: string;
   variant?: TypographyTypeMap["props"]["variant"];
+  id?: string;
 };
 
 export const TableHeader = ({
+  id,
   label,
   tooltip,
   variant = "h5",
@@ -21,7 +23,9 @@ export const TableHeader = ({
         transform: "scale(0.85)",
       }}
     >
-      <Typography variant={variant}>{label}</Typography>
+      <Typography id={id} variant={variant}>
+        {label}
+      </Typography>
       <Tooltip
         title={tooltip}
         arrow
