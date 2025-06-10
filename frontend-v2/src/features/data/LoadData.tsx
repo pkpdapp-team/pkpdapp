@@ -245,6 +245,7 @@ const LoadData: FC<ILoadDataProps> = ({ state, notificationsInfo }) => {
             }}
           >
             <TableHeader
+              id="imported-data-table-header"
               label="Imported Data Table"
               tooltip="The column types, which are automatically suggested based on the
               headers in the data, can be customized in the table by selecting
@@ -252,6 +253,7 @@ const LoadData: FC<ILoadDataProps> = ({ state, notificationsInfo }) => {
             />
             <MapHeaders
               data={state.data}
+              labelId="imported-data-table-header"
               setNormalisedFields={setNormalisedFields}
               normalisedFields={state.normalisedFields}
               notificationsInfo={notificationsInfo}

@@ -1,6 +1,6 @@
 import { Meta, StoryObj } from "@storybook/react-vite";
 import { delay, http, HttpResponse } from "msw";
-import { expect, fn, within, userEvent, waitFor } from "storybook/test";
+import { expect, fn, within, waitFor } from "storybook/test";
 
 import { Protocols } from "../features/trial/Protocols";
 import {
@@ -17,7 +17,7 @@ let protocolMocks: ProtocolRead[] = [...projectProtocols];
 let groupMocks: SubjectGroupRead[] = [...groups];
 
 const meta: Meta<typeof Protocols> = {
-  title: "Trial/Protocols",
+  title: "Trial Design",
   component: Protocols,
   args: {
     project,
@@ -173,7 +173,7 @@ export const Default: Story = {
 };
 
 export const AddRow: Story = {
-  play: async ({ canvasElement }) => {
+  play: async ({ canvasElement, userEvent }) => {
     const canvas = within(canvasElement);
     const addRowButton = await canvas.findByRole("button", {
       name: /Add New Row/i,
@@ -186,7 +186,7 @@ export const AddRow: Story = {
 };
 
 export const AddGroup: Story = {
-  play: async ({ canvasElement }) => {
+  play: async ({ canvasElement, userEvent }) => {
     const canvas = within(canvasElement);
     const addGroupButton = canvas.getByRole("button", { name: /Add Group/i });
     expect(addGroupButton).toBeInTheDocument();
