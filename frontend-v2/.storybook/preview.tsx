@@ -4,7 +4,9 @@ import { initialize, mswLoader } from "msw-storybook-addon";
 import { store } from "../src/app/store";
 
 // Initialize MSW
-initialize();
+initialize({
+  quiet: true, // Suppress console messages
+});
 
 const preview: Preview = {
   parameters: {
