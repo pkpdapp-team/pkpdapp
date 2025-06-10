@@ -99,6 +99,25 @@ export default ({ mode }) => {
             retry: 2,
           },
         },
+        {
+          extends: true,
+          plugins: [
+            // The plugin will run tests for the stories defined in your Storybook config
+            // See options at: https://storybook.js.org/docs/next/writing-tests/integrations/vitest-addon#storybooktest
+            storybookTest({ configDir: path.join(dirname, ".storybook") }),
+          ],
+          test: {
+            name: "storybook-firefox",
+            browser: {
+              enabled: true,
+              headless: true,
+              provider: "playwright",
+              instances: [{ browser: "chromium" }, { browser: "firefox" }],
+            },
+            setupFiles: [".storybook/vitest.setup.ts"],
+            retry: 2,
+          },
+        },
       ],
       coverage: {
         provider: "v8",
