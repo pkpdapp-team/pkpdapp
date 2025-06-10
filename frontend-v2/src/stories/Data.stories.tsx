@@ -1,11 +1,10 @@
 import { Meta, StoryObj } from "@storybook/react-vite";
-import { delay, http, HttpResponse } from "msw";
 import { expect, within, screen } from "storybook/test";
 import { useDispatch } from "react-redux";
 import { setProject as setReduxProject } from "../features/main/mainSlice";
 
 import Data from "../features/data/Data";
-import { model, project, variables, protocols, units } from "./model.mock";
+import { project, projectHandlers } from "./project.mock";
 import testCSV from "./mockData/Data.File_pkpd.explorer_06.js";
 
 const meta: Meta<typeof Data> = {
@@ -14,65 +13,7 @@ const meta: Meta<typeof Data> = {
   parameters: {
     layout: "fullscreen",
     msw: {
-      handlers: [
-        http.get("/api/project/:id", async ({ params }) => {
-          await delay();
-          if (params.id) {
-            return HttpResponse.json(project, { status: 200 });
-          }
-          return HttpResponse.json(
-            { error: "Project not found" },
-            { status: 404 },
-          );
-        }),
-        http.get("/api/combined_model", async ({ request }) => {
-          await delay();
-          const url = new URL(request.url);
-
-          const projectId = url.searchParams.get("project_id");
-          if (projectId) {
-            return HttpResponse.json([model], {
-              status: 200,
-            });
-          }
-          return HttpResponse.json([], { status: 200 });
-        }),
-        http.get("/api/protocol", async ({ request }) => {
-          await delay();
-          const url = new URL(request.url);
-
-          const projectId = url.searchParams.get("project_id");
-          if (projectId) {
-            return HttpResponse.json(protocols, {
-              status: 200,
-            });
-          }
-          return HttpResponse.json([], { status: 200 });
-        }),
-        http.get("/api/unit", async ({ request }) => {
-          await delay();
-          const url = new URL(request.url);
-
-          const compoundId = url.searchParams.get("compound_id");
-          if (compoundId) {
-            return HttpResponse.json(units, {
-              status: 200,
-            });
-          }
-          return HttpResponse.json([], { status: 200 });
-        }),
-        http.get("/api/variable", async ({ request }) => {
-          await delay();
-          const url = new URL(request.url);
-          const pkModel = url.searchParams.get("dosed_pk_model_id");
-          if (pkModel) {
-            return HttpResponse.json(variables, {
-              status: 200,
-            });
-          }
-          return HttpResponse.json([], { status: 200 });
-        }),
-      ],
+      handlers: [...projectHandlers],
     },
   },
   decorators: [
