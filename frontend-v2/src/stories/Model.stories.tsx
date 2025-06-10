@@ -350,11 +350,11 @@ export const SecondaryParameters: Story = {
     await delay(1000);
     await userEvent.click(secondaryParametersTab);
 
-    const addButton = screen.getByRole("button", { name: /Add/i });
+    const addButton = canvas.getByRole("button", { name: /Add/i });
     expect(addButton).toBeInTheDocument();
     await userEvent.click(addButton);
 
-    const timeIntervalsTable = screen.getByRole("table", {
+    const timeIntervalsTable = canvas.getByRole("table", {
       name: /Define time intervals/i,
     });
     expect(timeIntervalsTable).toBeInTheDocument();
