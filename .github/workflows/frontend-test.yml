@@ -33,3 +33,5 @@ jobs:
 
       - name: Run tests
         run: yarn test-storybook
+        env:
+          HOME: /root
