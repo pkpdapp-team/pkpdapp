@@ -1,12 +1,10 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable no-loss-of-precision */
-// @ts-nocheck
 import {
   ProjectRead,
   ProtocolRead,
   UnitRead,
   VariableRead,
-} from "../../app/backendApi";
+} from "../app/backendApi";
 
 export const project: ProjectRead = {
   id: 65,
@@ -452,7 +450,7 @@ export const variables: VariableRead[] = [
     protocol: null,
   },
 ];
-export const units: UnitRead[] = [
+export const units = [
   {
     id: 41,
     compatible_units: [
@@ -5553,5 +5551,5 @@ export const units: UnitRead[] = [
     mol: 1,
     multiplier: -15,
   },
-];
+] as unknown as UnitRead[];
 export const groups = [];

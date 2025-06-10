@@ -1,11 +1,10 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable no-loss-of-precision */
-// @ts-nocheck
 import { http, HttpResponse, delay } from "msw";
 import { useState } from "react";
 import {
   ProjectRead,
   SimulationRead,
+  DerivedVariableRead,
   VariableRead,
   ProtocolRead,
   CompoundRead,
@@ -14,10 +13,11 @@ import {
   TimeIntervalRead,
   useCombinedModelUpdateMutation,
   useProjectUpdateMutation,
+  CombinedModel,
 } from "../app/backendApi";
 import { CombinedModelUpdate, ProjectUpdate } from "../features/model/Model";
 
-export const model: CombinedModelRead = {
+export const model = {
   id: 57,
   mappings: [
     {
@@ -88,7 +88,7 @@ export const model: CombinedModelRead = {
   pk_model: 2,
   pd_model: 7,
   pd_model2: null,
-};
+} as unknown as CombinedModelRead;
 export const project: ProjectRead = {
   id: 57,
   user_access: [
@@ -863,7 +863,7 @@ export const compound: CompoundRead = {
   target_concentration_unit: 1,
   dissociation_unit: 1,
 };
-export const units: UnitRead[] = [
+export const units = [
   {
     id: 41,
     compatible_units: [
@@ -5964,7 +5964,7 @@ export const units: UnitRead[] = [
     mol: 1,
     multiplier: -15,
   },
-];
+] as unknown[] as UnitRead[];
 
 // Use mutable copies of snapshots to allow for API updates.
 let mockModel = { ...model };
@@ -6091,8 +6091,21 @@ export const projectHandlers = [
   ),
 ];
 
-export function useMockModel(args) {
-  const [model, setModel] = useState(args.model);
+interface UseMockModelArgs {
+  model: CombinedModelRead;
+  updateModel: ({
+    id,
+    combinedModel,
+  }: {
+    id: number;
+    combinedModel: CombinedModel;
+  }) => void;
+}
+
+export function useMockModel(
+  args: UseMockModelArgs,
+): [CombinedModelRead, CombinedModelUpdate] {
+  const [model, setModel] = useState<CombinedModelRead>(args.model);
   const [updateModel] = useCombinedModelUpdateMutation();
 
   const updateMockModel: CombinedModelUpdate = async ({
@@ -6109,8 +6122,21 @@ export function useMockModel(args) {
   return [model, updateMockModel];
 }
 
-export function useMockProject(args) {
-  const [project, setProject] = useState(args.project);
+interface UseMockProjectArgs {
+  project: ProjectRead;
+  updateProject: ({
+    id,
+    project,
+  }: {
+    id: number;
+    project: ProjectRead;
+  }) => void;
+}
+
+export function useMockProject(
+  args: UseMockProjectArgs,
+): [ProjectRead, ProjectUpdate] {
+  const [project, setProject] = useState<ProjectRead>(args.project);
   const [updateProject] = useProjectUpdateMutation();
 
   const updateMockProject: ProjectUpdate = async ({ id, project }) => {

@@ -70,8 +70,14 @@ const meta: Meta<typeof TabbedModelForm> = {
   },
   decorators: [
     (Story, { args }) => {
-      const [model, updateMockModel] = useMockModel(args);
-      const [project, updateMockProject] = useMockProject(args);
+      const [model, updateMockModel] = useMockModel({
+        model: args.model,
+        updateModel: args.updateModel,
+      });
+      const [project, updateMockProject] = useMockProject({
+        project: args.project,
+        updateProject: args.updateProject,
+      });
       const dispatch = useDispatch();
       const projectId = args.project.id;
 
