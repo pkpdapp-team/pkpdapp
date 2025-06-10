@@ -1,6 +1,6 @@
 import { Meta, StoryObj } from "@storybook/react-vite";
 import { delay, http, HttpResponse } from "msw";
-import { expect, screen, within, userEvent, fn, waitFor } from "storybook/test";
+import { expect, screen, within, fn, waitFor } from "storybook/test";
 import { useDispatch } from "react-redux";
 import { setProject as setReduxProject } from "../features/main/mainSlice";
 
@@ -270,7 +270,7 @@ export const Default: Story = {
 };
 
 export const Species: Story = {
-  play: async ({ canvasElement }) => {
+  play: async ({ canvasElement, userEvent }) => {
     const canvas = within(canvasElement);
     const speciesList = await canvas.findByLabelText("Species");
     expect(speciesList).toHaveTextContent("Rat");
@@ -300,7 +300,7 @@ export const Species: Story = {
 };
 
 export const PKModel: Story = {
-  play: async ({ canvasElement }) => {
+  play: async ({ canvasElement, userEvent }) => {
     const canvas = within(canvasElement);
     const pkModelList = await canvas.findByLabelText("PK Model");
     expect(pkModelList).toHaveTextContent("one_compartment_preclinical");
@@ -313,7 +313,7 @@ export const PKModel: Story = {
 };
 
 export const PDModel: Story = {
-  play: async ({ canvasElement }) => {
+  play: async ({ canvasElement, userEvent }) => {
     const canvas = within(canvasElement);
     const pdModelList = await canvas.findByLabelText("PD Model");
     expect(pdModelList).toHaveTextContent("direct_effects_emax");
@@ -331,7 +331,7 @@ export const PDModel: Story = {
 };
 
 export const SecondaryParameters: Story = {
-  play: async ({ canvasElement }) => {
+  play: async ({ canvasElement, userEvent }) => {
     const canvas = within(canvasElement);
     const mapVariablesTab = canvas.getByRole("tab", {
       name: /Map Variables/i,

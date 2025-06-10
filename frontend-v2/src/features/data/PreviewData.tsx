@@ -80,6 +80,7 @@ const PreviewData: FC<IPreviewData> = ({
   return (
     <>
       <TableHeader
+        id="preview-dataset-header"
         label="Preview Dataset"
         tooltip="Preview your data. Click 'Finish' to upload and save."
       />
@@ -96,6 +97,7 @@ const PreviewData: FC<IPreviewData> = ({
           }}
         >
           <DataGrid
+            aria-labelledby="preview-dataset-header"
             rows={visibleRows.map((row, index) => ({ id: index, ...row }))}
             columns={visibleFields.map((field) => ({
               field,
