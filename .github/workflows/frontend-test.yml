@@ -31,5 +31,7 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
 
-      - name: Run tests
-        run: yarn test-storybook
+      - name: Run tests in Firefox and Chrome
+        run: npx vitest run --project=storybook-firefox
+        env:
+          HOME: /root
