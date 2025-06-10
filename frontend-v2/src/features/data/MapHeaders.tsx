@@ -32,6 +32,7 @@ interface IMapHeaders {
     isOpen: boolean;
     count: number;
   };
+  labelId?: string;
 }
 
 const MapHeaders: FC<IMapHeaders> = ({
@@ -39,6 +40,7 @@ const MapHeaders: FC<IMapHeaders> = ({
   normalisedFields,
   setNormalisedFields,
   notificationsInfo,
+  labelId,
 }: IMapHeaders) => {
   const {
     page,
@@ -78,7 +80,7 @@ const MapHeaders: FC<IMapHeaders> = ({
           transition: "all .35s ease-in",
         }}
       >
-        <Table stickyHeader size="small">
+        <Table stickyHeader size="small" aria-labelledby={labelId}>
           <TableHead>
             <TableRow>
               {fields.map((field, index) => (

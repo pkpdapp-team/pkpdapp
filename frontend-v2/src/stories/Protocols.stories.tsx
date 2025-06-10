@@ -17,7 +17,7 @@ let protocolMocks: ProtocolRead[] = [...projectProtocols];
 let groupMocks: SubjectGroupRead[] = [...groups];
 
 const meta: Meta<typeof Protocols> = {
-  title: "Trial/Protocols",
+  title: "Trial Design",
   component: Protocols,
   args: {
     project,

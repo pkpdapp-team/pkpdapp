@@ -34,7 +34,7 @@ let mockModel = { ...model };
 let mockProject = { ...project };
 
 const meta: Meta<typeof TabbedModelForm> = {
-  title: "Model/TabbedModelForm",
+  title: "Edit Model",
   component: TabbedModelForm,
   args: {
     model,
