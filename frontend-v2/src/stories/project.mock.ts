@@ -1,97 +1,186 @@
 /* eslint-disable no-loss-of-precision */
+import { http, HttpResponse, delay } from "msw";
+import { useState } from "react";
 import {
   ProjectRead,
-  ProtocolRead,
-  UnitRead,
+  SimulationRead,
+  DerivedVariableRead,
   VariableRead,
+  ProtocolRead,
+  CompoundRead,
+  UnitRead,
+  CombinedModelRead,
+  TimeIntervalRead,
+  useCombinedModelUpdateMutation,
+  useProjectUpdateMutation,
+  CombinedModel,
 } from "../app/backendApi";
+import { CombinedModelUpdate, ProjectUpdate } from "../features/model/Model";
 
-export const project: ProjectRead = {
-  id: 65,
-  user_access: [
+export const model = {
+  id: 57,
+  mappings: [
     {
-      id: 85,
+      id: 81,
+      datetime: null,
       read_only: false,
-      user: 1,
-      project: 65,
+      pkpd_model: 57,
+      pk_variable: 2192,
+      pd_variable: 2196,
     },
   ],
-  datasets: [297],
-  protocols: [4083, 4084],
-  name: "untitled5",
+  derived_variables: [],
+  time_intervals: [],
+  components: [
+    {
+      name: "PDCompartment",
+      states: [],
+      variables: [2195, 2197, 2198],
+      outputs: [2196, 2199, 2200],
+      equations: [
+        '<math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mi>PDCompartment.C_Drug</mi><mo>=</mo><mrow><mn>1.0</mn><mo>*</mo><mi>PKCompartment.C1</mi></mrow></mrow></math>',
+        '<math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mi>PDCompartment.STIM</mi><mo>=</mo><mfrac><msup><mi>PDCompartment.C_Drug</mi><mi>PDCompartment.HC</mi></msup><mfenced><mrow><msup><mi>PDCompartment.C_Drug</mi><mi>PDCompartment.HC</mi></msup><mo>+</mo><msup><mi>PDCompartment.C50</mi><mi>PDCompartment.HC</mi></msup></mrow></mfenced></mfrac></mrow></math>',
+        '<math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mi>PDCompartment.E</mi><mo>=</mo><piecewise><piece><mrow><mrow><mo>+</mo><mi>PDCompartment.Emax</mi></mrow><mo>*</mo><mi>PDCompartment.STIM</mi></mrow><mrow><mi>PDCompartment.E0</mi><mo>==</mo><mn>0.0</mn></mrow></piece><otherwise><mrow><mi>PDCompartment.E0</mi><mo>*</mo><mfenced><mrow><mn>1.0</mn><mo>+</mo><mrow><mfenced><mrow><mi>PDCompartment.Emax</mi><mo>-</mo><mn>1.0</mn></mrow></mfenced><mo>*</mo><mi>PDCompartment.STIM</mi></mrow></mrow></mfenced></mrow></otherwise></piecewise></mrow></math>',
+      ],
+    },
+    {
+      name: "PKCompartment",
+      states: [2187, 2188, 2189, 2190, 2191],
+      variables: [2180, 2181, 2182, 2183, 2184, 2185, 2186],
+      outputs: [2187, 2188, 2189, 2190, 2191, 2192, 2193],
+      equations: [
+        '<math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mi>PKCompartment.C1</mi><mo>=</mo><mfrac><mi>PKCompartment.A1</mi><mi>PKCompartment.V1</mi></mfrac></mrow></math>',
+        '<math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mi>PKCompartment.CL_t</mi><mo>=</mo><mrow><mi>PKCompartment.CL</mi><mo>+</mo><mrow><mi>PKCompartment.CLmax</mi><mo>*</mo><mfenced><mfrac><mn>1.0</mn><mfenced><mrow><mn>1.0</mn><mo>+</mo><mfrac><mi>PKCompartment.C1</mi><mi>PKCompartment.Km</mi></mfrac></mrow></mfenced></mfrac></mfenced></mrow></mrow></mrow></math>',
+        '<math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mfrac><mi>dPKCompartment.Aa</mi><mi>dt</mi></mfrac><mo>=</mo><mrow><mrow><mo>-</mo><mi>PKCompartment.ka</mi></mrow><mo>*</mo><mi>PKCompartment.Aa</mi></mrow></mrow></math>',
+        '<math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mfrac><mi>dPKCompartment.A1</mi><mi>dt</mi></mfrac><mo>=</mo><mrow><mrow><mrow><mrow><mi>PKCompartment.ka</mi><mo>*</mo><mi>PKCompartment.Aa</mi></mrow><mo>*</mo><mi>PKCompartment.F</mi></mrow><mo>-</mo><mrow><mi>PKCompartment.CL</mi><mo>*</mo><mi>PKCompartment.C1</mi></mrow></mrow><mo>-</mo><mrow><mrow><mi>PKCompartment.CLmax</mi><mo>*</mo><mfenced><mfrac><mn>1.0</mn><mfenced><mrow><mn>1.0</mn><mo>+</mo><mfrac><mi>PKCompartment.C1</mi><mi>PKCompartment.Km</mi></mfrac></mrow></mfenced></mfrac></mfenced></mrow><mo>*</mo><mi>PKCompartment.C1</mi></mrow></mrow></mrow></math>',
+        '<math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mfrac><mi>dPKCompartment.Ce</mi><mi>dt</mi></mfrac><mo>=</mo><mrow><mi>PKCompartment.ke0</mi><mo>*</mo><mfenced><mrow><mrow><mi>PKCompartment.C1</mi><mo>*</mo><mi>PKCompartment.Kpu</mi></mrow><mo>-</mo><mi>PKCompartment.Ce</mi></mrow></mfenced></mrow></mrow></math>',
+        '<math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mfrac><mi>dPKCompartment.AUC1</mi><mi>dt</mi></mfrac><mo>=</mo><mi>PKCompartment.C1</mi></mrow></math>',
+        '<math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mfrac><mi>dPKCompartment.AUCe</mi><mi>dt</mi></mfrac><mo>=</mo><mi>PKCompartment.Ce</mi></mrow></math>',
+      ],
+    },
+    {
+      name: "environment",
+      states: [],
+      variables: [],
+      outputs: [2194],
+      equations: [],
+    },
+  ],
+  variables: [
+    2180, 2181, 2182, 2183, 2184, 2185, 2186, 2187, 2188, 2189, 2190, 2191,
+    2192, 2193, 2194, 2195, 2196, 2197, 2198, 2199, 2200,
+  ],
+  mmt: "[[model]]\nauthor: Michael Gertz, Soledad Castano\nname: 1-compartment PK Model\n# Initial values\nPKCompartment.Aa   = 0\nPKCompartment.A1   = 0\nPKCompartment.AUC1 = 0\nPKCompartment.AUCe = 0\nPKCompartment.Ce   = 0\n\n[PDCompartment]\nC50 = 100000 : Concentration that produces half-maximal effects\n    in [mM (1e-09)]\nC_Drug = 1 * PKCompartment.C1 : Drug concentration causing the PD effect\n    in [mM (1e-09)]\nE = if(E0 == 0, +Emax * STIM, E0 * (1 + (Emax - 1) * STIM))\n    in [1]\n    desc: PD effect\nE0 = 100 : Baseline of the PD effect\n    in [1]\nEmax = 5\n    in [1]\n    desc: Maximal fold change from baseline (value range: 1 (no effect) to inf)\nHC = 1 : Hill coefficient\n    in [1]\nSTIM = C_Drug^HC / (C_Drug^HC + C50^HC) : Extent of stimulation\n    in [1]\n\n[PKCompartment]\ndot(A1) = ka * Aa * F - CL * C1 - CLmax * (1 / (1 + C1 / Km)) * C1\n    in [mol/g (1e-15)]\n    desc: Amount of drug in the central compartment\ndot(AUC1) = C1 : AUC of drug in the central compartment\n    in [s*mol/m^3 (3.6000000000000036e-06)]\ndot(AUCe) = Ce : AUC of drug in the effect compartment\n    in [s*mol/m^3 (3.6000000000000036e-06)]\ndot(Aa) = -ka * Aa : Amount of drug in the 'depo' compartment\n    in [mol/g (1e-15)]\nC1 = A1 / V1 : Concentration of drug in the central compartment\n    in [mM (1e-09)]\nCL = 1 : Linear clearance from central compartment\n    in [m^3/g/s (2.777777777777775e-10)]\nCL_t = CL + CLmax * (1 / (1 + C1 / Km))\n    in [m^3/g/s (2.777777777777775e-10)]\n    desc: Total clearance as a function of time\nCLmax = 0\n    in [m^3/g/s (2.777777777777775e-10)]\n    desc: Maximum nonlinear clearance from central compartment (CLmax = Vmax/Km)\ndot(Ce) = ke0 * (C1 * Kpu - Ce)\n    in [mM (1e-09)]\n    desc: Concentration of drug in the effect compartment\nF = 1 : Fraction absorbed / bioavailability\n    in [1]\nKm = 1 : Michaelis-Menten constant\n    in [mM (1e-09)]\nKpu = 1 : Unbound effect compartment to total plasma partitioning coefficient\n    in [1]\nV1 = 1 : Volume of the central compartment\n    in [m^3/g (1e-06)]\nka = 1 : First order absorption rate constant\n    in [S/F (0.0002777777777777778)]\nke0 = 1 : Equilibration rate constant effect compartment\n    in [S/F (0.0002777777777777778)]\ntlag = 0 : Absorption lag time from extravasc compartment\n    in [s (3600)]\n\n[environment]\nt = 0 bind time\n    in [s (3600)]\n\n",
+  sbml: '<sbml xmlns="http://www.sbml.org/sbml/level3/version2/core" level="3" version="2">\n  <model id="1-compartment PK Model" timeUnits="s_times_3600">\n    <listOfUnitDefinitions>\n      <unitDefinition id="s_times_3600">\n        <unit kind="second" exponent="1.0" multiplier="3600.0"/>\n      </unitDefinition>\n      <unitDefinition id="S_per_F_times_0_dot_0002777777777777778">\n        <unit kind="second" exponent="-1.0" multiplier="0.0002777777777777778"/>\n      </unitDefinition>\n      <unitDefinition id="m3_per_g_times_1e_minus_6">\n        <unit kind="gram" exponent="-1.0" multiplier="1e-06"/>\n        <unit kind="metre" exponent="3.0"/>\n      </unitDefinition>\n      <unitDefinition id="m3_per_g_per_s_times_2_dot_777777777777775e_minus_10">\n        <unit kind="gram" exponent="-1.0" multiplier="2.777777777777775e-10"/>\n        <unit kind="metre" exponent="3.0"/>\n        <unit kind="second" exponent="-1.0"/>\n      </unitDefinition>\n      <unitDefinition id="mM_times_1e_minus_9">\n        <unit kind="metre" exponent="-3.0" multiplier="1e-09"/>\n        <unit kind="mole" exponent="1.0"/>\n      </unitDefinition>\n      <unitDefinition id="mol_per_g_times_1e_minus_15">\n        <unit kind="gram" exponent="-1.0" multiplier="1e-15"/>\n        <unit kind="mole" exponent="1.0"/>\n      </unitDefinition>\n      <unitDefinition id="s_mol_per_m3_times_3_dot_6000000000000036e_minus_06">\n        <unit kind="metre" exponent="-3.0" multiplier="3.6000000000000036e-06"/>\n        <unit kind="second" exponent="1.0"/>\n        <unit kind="mole" exponent="1.0"/>\n      </unitDefinition>\n    </listOfUnitDefinitions>\n    <listOfParameters>\n      <parameter id="tlag" units="s_times_3600" constant="true" value="0.0"/>\n      <parameter id="ka" units="S_per_F_times_0_dot_0002777777777777778" constant="true" value="1.0"/>\n      <parameter id="F" constant="true" value="1.0"/>\n      <parameter id="V1" units="m3_per_g_times_1e_minus_6" constant="true" value="1.0"/>\n      <parameter id="CL" units="m3_per_g_per_s_times_2_dot_777777777777775e_minus_10" constant="true" value="1.0"/>\n      <parameter id="CLmax" units="m3_per_g_per_s_times_2_dot_777777777777775e_minus_10" constant="true" value="0.0"/>\n      <parameter id="Km" units="mM_times_1e_minus_9" constant="true" value="1.0"/>\n      <parameter id="ke0" units="S_per_F_times_0_dot_0002777777777777778" constant="true" value="1.0"/>\n      <parameter id="Kpu" constant="true" value="1.0"/>\n      <parameter id="C1" units="mM_times_1e_minus_9"/>\n      <parameter id="CL_t" units="m3_per_g_per_s_times_2_dot_777777777777775e_minus_10"/>\n      <parameter id="Aa" units="mol_per_g_times_1e_minus_15"/>\n      <parameter id="A1" units="mol_per_g_times_1e_minus_15"/>\n      <parameter id="Ce" units="mM_times_1e_minus_9"/>\n      <parameter id="AUC1" units="s_mol_per_m3_times_3_dot_6000000000000036e_minus_06"/>\n      <parameter id="AUCe" units="s_mol_per_m3_times_3_dot_6000000000000036e_minus_06"/>\n      <parameter id="E0" constant="true" value="100.0"/>\n      <parameter id="Emax" constant="true" value="5.0"/>\n      <parameter id="C50" units="mM_times_1e_minus_9" constant="true" value="100000.0"/>\n      <parameter id="HC" constant="true" value="1.0"/>\n      <parameter id="C_Drug" units="mM_times_1e_minus_9"/>\n      <parameter id="STIM"/>\n      <parameter id="E"/>\n    </listOfParameters>\n    <listOfInitialAssignments>\n      <initialAssignment symbol="C1">\n        <math xmlns="http://www.w3.org/1998/Math/MathML">\n          <apply>\n            <divide/>\n            <ci>A1</ci>\n            <ci>V1</ci>\n          </apply>\n        </math>\n      </initialAssignment>\n      <initialAssignment symbol="CL_t">\n        <math xmlns="http://www.w3.org/1998/Math/MathML">\n          <apply>\n            <plus/>\n            <ci>CL</ci>\n            <apply>\n              <times/>\n              <ci>CLmax</ci>\n              <apply>\n                <divide/>\n                <cn>1.0</cn>\n                <apply>\n                  <plus/>\n                  <cn>1.0</cn>\n                  <apply>\n                    <divide/>\n                    <ci>C1</ci>\n                    <ci>Km</ci>\n                  </apply>\n                </apply>\n              </apply>\n            </apply>\n          </apply>\n        </math>\n      </initialAssignment>\n      <initialAssignment symbol="Aa">\n        <math xmlns="http://www.w3.org/1998/Math/MathML">\n          <cn>0.0</cn>\n        </math>\n      </initialAssignment>\n      <initialAssignment symbol="A1">\n        <math xmlns="http://www.w3.org/1998/Math/MathML">\n          <cn>0.0</cn>\n        </math>\n      </initialAssignment>\n      <initialAssignment symbol="Ce">\n        <math xmlns="http://www.w3.org/1998/Math/MathML">\n          <cn>0.0</cn>\n        </math>\n      </initialAssignment>\n      <initialAssignment symbol="AUC1">\n        <math xmlns="http://www.w3.org/1998/Math/MathML">\n          <cn>0.0</cn>\n        </math>\n      </initialAssignment>\n      <initialAssignment symbol="AUCe">\n        <math xmlns="http://www.w3.org/1998/Math/MathML">\n          <cn>0.0</cn>\n        </math>\n      </initialAssignment>\n      <initialAssignment symbol="C_Drug">\n        <math xmlns="http://www.w3.org/1998/Math/MathML">\n          <apply>\n            <times/>\n            <cn>1.0</cn>\n            <ci>C1</ci>\n          </apply>\n        </math>\n      </initialAssignment>\n      <initialAssignment symbol="STIM">\n        <math xmlns="http://www.w3.org/1998/Math/MathML">\n          <apply>\n            <divide/>\n            <apply>\n              <power/>\n              <ci>C_Drug</ci>\n              <ci>HC</ci>\n            </apply>\n            <apply>\n              <plus/>\n              <apply>\n                <power/>\n                <ci>C_Drug</ci>\n                <ci>HC</ci>\n              </apply>\n              <apply>\n                <power/>\n                <ci>C50</ci>\n                <ci>HC</ci>\n              </apply>\n            </apply>\n          </apply>\n        </math>\n      </initialAssignment>\n      <initialAssignment symbol="E">\n        <math xmlns="http://www.w3.org/1998/Math/MathML">\n          <piecewise>\n            <piece>\n              <apply>\n                <times/>\n                <apply>\n                  <plus/>\n                  <ci>Emax</ci>\n                </apply>\n                <ci>STIM</ci>\n              </apply>\n              <apply>\n                <eq/>\n                <ci>E0</ci>\n                <cn>0.0</cn>\n              </apply>\n            </piece>\n            <otherwise>\n              <apply>\n                <times/>\n                <ci>E0</ci>\n                <apply>\n                  <plus/>\n                  <cn>1.0</cn>\n                  <apply>\n                    <times/>\n                    <apply>\n                      <minus/>\n                      <ci>Emax</ci>\n                      <cn>1.0</cn>\n                    </apply>\n                    <ci>STIM</ci>\n                  </apply>\n                </apply>\n              </apply>\n            </otherwise>\n          </piecewise>\n        </math>\n      </initialAssignment>\n    </listOfInitialAssignments>\n    <listOfRules>\n      <rateRule variable="Aa">\n        <math xmlns="http://www.w3.org/1998/Math/MathML">\n          <apply>\n            <times/>\n            <apply>\n              <minus/>\n              <ci>ka</ci>\n            </apply>\n            <ci>Aa</ci>\n          </apply>\n        </math>\n      </rateRule>\n      <rateRule variable="A1">\n        <math xmlns="http://www.w3.org/1998/Math/MathML">\n          <apply>\n            <minus/>\n            <apply>\n              <minus/>\n              <apply>\n                <times/>\n                <apply>\n                  <times/>\n                  <ci>ka</ci>\n                  <ci>Aa</ci>\n                </apply>\n                <ci>F</ci>\n              </apply>\n              <apply>\n                <times/>\n                <ci>CL</ci>\n                <ci>C1</ci>\n              </apply>\n            </apply>\n            <apply>\n              <times/>\n              <apply>\n                <times/>\n                <ci>CLmax</ci>\n                <apply>\n                  <divide/>\n                  <cn>1.0</cn>\n                  <apply>\n                    <plus/>\n                    <cn>1.0</cn>\n                    <apply>\n                      <divide/>\n                      <ci>C1</ci>\n                      <ci>Km</ci>\n                    </apply>\n                  </apply>\n                </apply>\n              </apply>\n              <ci>C1</ci>\n            </apply>\n          </apply>\n        </math>\n      </rateRule>\n      <rateRule variable="Ce">\n        <math xmlns="http://www.w3.org/1998/Math/MathML">\n          <apply>\n            <times/>\n            <ci>ke0</ci>\n            <apply>\n              <minus/>\n              <apply>\n                <times/>\n                <ci>C1</ci>\n                <ci>Kpu</ci>\n              </apply>\n              <ci>Ce</ci>\n            </apply>\n          </apply>\n        </math>\n      </rateRule>\n      <rateRule variable="AUC1">\n        <math xmlns="http://www.w3.org/1998/Math/MathML">\n          <ci>C1</ci>\n        </math>\n      </rateRule>\n      <rateRule variable="AUCe">\n        <math xmlns="http://www.w3.org/1998/Math/MathML">\n          <ci>Ce</ci>\n        </math>\n      </rateRule>\n    </listOfRules>\n  </model>\n</sbml>\n',
+  time_unit: 9,
+  is_library_model: true,
+  read_only: false,
+  datetime: null,
+  name: "model for project 57",
+  species: "H",
+  has_saturation: true,
+  has_effect: true,
+  has_lag: false,
+  has_bioavailability: false,
+  has_hill_coefficient: false,
+  time_max: 30,
+  project: 57,
+  pk_model: 2,
+  pd_model: 7,
+  pd_model2: null,
+} as unknown as CombinedModelRead;
+export const project: ProjectRead = {
+  id: 57,
+  user_access: [
+    {
+      id: 57,
+      read_only: false,
+      user: 1,
+      project: 57,
+    },
+  ],
+  datasets: [269],
+  protocols: [4067, 4085],
+  name: "model parameters",
   description: "",
-  created: "2025-06-02T17:39:24.715303Z",
+  created: "2025-05-19T09:14:10.264792Z",
   species: "R",
-  compound: 90,
+  compound: 57,
   users: [1],
 };
-export const projectProtocols: ProtocolRead[] = [
-  {
-    id: 4083,
-    doses: [
-      {
-        id: 9857,
-        start_time: 0,
-        amount: 1,
-        duration: 0.0833,
-        repeats: 1,
-        repeat_interval: 20,
-        read_only: false,
-        datetime: null,
-      },
-    ],
-    variables: [2401],
-    subjects: [],
-    read_only: false,
-    datetime: null,
-    name: "A1",
-    dose_type: "D",
-    mapped_qname: "PKCompartment.A1",
-    dataset: null,
-    project: 65,
-    compound: null,
-    time_unit: 9,
-    amount_unit: 66,
-    group: null,
-  },
-  {
-    id: 4084,
-    doses: [
-      {
-        id: 9866,
-        start_time: 0,
-        amount: 1,
-        duration: 0.0833,
-        repeats: 1,
-        repeat_interval: 20,
-        read_only: false,
-        datetime: null,
-      },
-    ],
-    variables: [],
-    subjects: [],
-    read_only: false,
-    datetime: null,
-    name: "A1 - Group 1",
-    dose_type: "D",
-    mapped_qname: "PKCompartment.A1",
-    dataset: null,
-    project: 65,
-    compound: null,
-    time_unit: 9,
-    amount_unit: 11,
-    group: null,
-  },
-];
+export const simulation: SimulationRead = {
+  id: 57,
+  sliders: [],
+  plots: [
+    {
+      id: 2681,
+      y_axes: [
+        {
+          id: 3762,
+          right: false,
+          variable: 2192,
+        },
+      ],
+      cx_lines: [],
+      index: 0,
+      x_scale: "lin",
+      y_scale: "lin",
+      y2_scale: "lin",
+      x_label: "",
+      y_label: "",
+      y2_label: "",
+      min: null,
+      max: null,
+      min2: null,
+      max2: null,
+      x_unit: 9,
+      y_unit: 6,
+      y_unit2: null,
+    },
+    {
+      id: 2682,
+      y_axes: [
+        {
+          id: 3763,
+          right: false,
+          variable: 2188,
+        },
+      ],
+      cx_lines: [],
+      index: 0,
+      x_scale: "lin",
+      y_scale: "lin",
+      y2_scale: "lin",
+      x_label: "",
+      y_label: "",
+      y2_label: "",
+      min: null,
+      max: null,
+      min2: null,
+      max2: null,
+      x_unit: 9,
+      y_unit: 56,
+      y_unit2: null,
+    },
+  ],
+  name: "default",
+  nrows: 1,
+  ncols: 1,
+  time_max: 168,
+  abs_tolerance: 0.000001,
+  rel_tolerance: 0.000001,
+  project: 57,
+  time_max_unit: 9,
+};
 export const variables: VariableRead[] = [
   {
-    id: 2398,
+    id: 2180,
     read_only: false,
     datetime: null,
     is_public: false,
     lower_bound: 0,
     upper_bound: null,
-    default_value: 1,
+    default_value: 0.4,
     lower_threshold: null,
     upper_threshold: null,
     is_log: false,
@@ -106,27 +195,28 @@ export const variables: VariableRead[] = [
     display: true,
     axis: false,
     threshold_unit: null,
-    unit: 35,
+    unit: 20,
     pd_model: null,
     pk_model: null,
-    dosed_pk_model: 65,
+    dosed_pk_model: 57,
     protocol: null,
   },
   {
-    id: 2399,
+    id: 2181,
     read_only: false,
     datetime: null,
     is_public: false,
-    lower_bound: null,
+    lower_bound: 0,
     upper_bound: null,
-    default_value: 0,
+    default_value: 0.4,
     lower_threshold: null,
     upper_threshold: null,
     is_log: false,
-    name: "RateAbs",
-    description: "Absorption rate",
+    name: "CLmax",
+    description:
+      "Maximum nonlinear clearance from central compartment (CLmax = Vmax/Km)",
     binding: null,
-    qname: "PKCompartment.RateAbs",
+    qname: "PKCompartment.CLmax",
     unit_symbol: null,
     constant: true,
     state: false,
@@ -134,20 +224,77 @@ export const variables: VariableRead[] = [
     display: true,
     axis: false,
     threshold_unit: null,
-    unit: 75,
+    unit: 20,
     pd_model: null,
     pk_model: null,
-    dosed_pk_model: 65,
+    dosed_pk_model: 57,
     protocol: null,
   },
   {
-    id: 2400,
+    id: 2182,
     read_only: false,
     datetime: null,
     is_public: false,
     lower_bound: null,
     upper_bound: null,
     default_value: 1,
+    lower_threshold: null,
+    upper_threshold: null,
+    is_log: false,
+    name: "Km",
+    description: "Michaelis-Menten constant",
+    binding: null,
+    qname: "PKCompartment.Km",
+    unit_symbol: null,
+    constant: true,
+    state: false,
+    color: 1,
+    display: true,
+    axis: false,
+    threshold_unit: null,
+    unit: 1,
+    pd_model: null,
+    pk_model: null,
+    dosed_pk_model: 57,
+    protocol: null,
+  },
+  {
+    id: 2183,
+    read_only: false,
+    datetime: null,
+    is_public: false,
+    lower_bound: null,
+    upper_bound: null,
+    default_value: 0.2,
+    lower_threshold: null,
+    upper_threshold: null,
+    is_log: false,
+    name: "Kpu",
+    description:
+      "Unbound effect compartment to total plasma partitioning coefficient",
+    binding: null,
+    qname: "PKCompartment.Kpu",
+    unit_symbol: null,
+    constant: true,
+    state: false,
+    color: 1,
+    display: true,
+    axis: false,
+    threshold_unit: null,
+    unit: 53,
+    pd_model: null,
+    pk_model: null,
+    dosed_pk_model: 57,
+    protocol: null,
+  },
+  {
+    id: 2184,
+    read_only: false,
+    datetime: null,
+    is_public: false,
+    lower_bound: null,
+    upper_bound: null,
+    default_value: 80,
     lower_threshold: null,
     upper_threshold: null,
     is_log: false,
@@ -162,14 +309,70 @@ export const variables: VariableRead[] = [
     display: true,
     axis: false,
     threshold_unit: null,
-    unit: 32,
+    unit: 73,
     pd_model: null,
     pk_model: null,
-    dosed_pk_model: 65,
+    dosed_pk_model: 57,
     protocol: null,
   },
   {
-    id: 2401,
+    id: 2185,
+    read_only: false,
+    datetime: null,
+    is_public: false,
+    lower_bound: null,
+    upper_bound: null,
+    default_value: 0.04,
+    lower_threshold: null,
+    upper_threshold: null,
+    is_log: false,
+    name: "ka",
+    description: "First order absorption rate constant",
+    binding: null,
+    qname: "PKCompartment.ka",
+    unit_symbol: null,
+    constant: true,
+    state: false,
+    color: 1,
+    display: true,
+    axis: false,
+    threshold_unit: null,
+    unit: 10,
+    pd_model: null,
+    pk_model: null,
+    dosed_pk_model: 57,
+    protocol: null,
+  },
+  {
+    id: 2186,
+    read_only: false,
+    datetime: null,
+    is_public: false,
+    lower_bound: null,
+    upper_bound: null,
+    default_value: 0.1,
+    lower_threshold: null,
+    upper_threshold: null,
+    is_log: false,
+    name: "ke0",
+    description: "Equilibration rate constant effect compartment",
+    binding: null,
+    qname: "PKCompartment.ke0",
+    unit_symbol: null,
+    constant: true,
+    state: false,
+    color: 1,
+    display: true,
+    axis: false,
+    threshold_unit: null,
+    unit: 10,
+    pd_model: null,
+    pk_model: null,
+    dosed_pk_model: 57,
+    protocol: null,
+  },
+  {
+    id: 2187,
     read_only: false,
     datetime: null,
     is_public: false,
@@ -190,14 +393,126 @@ export const variables: VariableRead[] = [
     display: true,
     axis: false,
     threshold_unit: null,
-    unit: 4,
+    unit: 70,
     pd_model: null,
     pk_model: null,
-    dosed_pk_model: 65,
-    protocol: 4083,
+    dosed_pk_model: 57,
+    protocol: null,
   },
   {
-    id: 2402,
+    id: 2188,
+    read_only: false,
+    datetime: null,
+    is_public: false,
+    lower_bound: null,
+    upper_bound: null,
+    default_value: 0,
+    lower_threshold: null,
+    upper_threshold: null,
+    is_log: false,
+    name: "AUC1",
+    description: "AUC of drug in the central compartment",
+    binding: null,
+    qname: "PKCompartment.AUC1",
+    unit_symbol: null,
+    constant: false,
+    state: true,
+    color: 1,
+    display: true,
+    axis: false,
+    threshold_unit: null,
+    unit: 56,
+    pd_model: null,
+    pk_model: null,
+    dosed_pk_model: 57,
+    protocol: null,
+  },
+  {
+    id: 2189,
+    read_only: false,
+    datetime: null,
+    is_public: false,
+    lower_bound: null,
+    upper_bound: null,
+    default_value: 0,
+    lower_threshold: null,
+    upper_threshold: null,
+    is_log: false,
+    name: "AUCe",
+    description: "AUC of drug in the effect compartment",
+    binding: null,
+    qname: "PKCompartment.AUCe",
+    unit_symbol: null,
+    constant: false,
+    state: true,
+    color: 1,
+    display: true,
+    axis: false,
+    threshold_unit: null,
+    unit: 56,
+    pd_model: null,
+    pk_model: null,
+    dosed_pk_model: 57,
+    protocol: null,
+  },
+  {
+    id: 2190,
+    read_only: false,
+    datetime: null,
+    is_public: false,
+    lower_bound: null,
+    upper_bound: null,
+    default_value: 0,
+    lower_threshold: null,
+    upper_threshold: null,
+    is_log: false,
+    name: "Aa",
+    description: "Amount of drug in the 'depo' compartment",
+    binding: null,
+    qname: "PKCompartment.Aa",
+    unit_symbol: null,
+    constant: false,
+    state: true,
+    color: 1,
+    display: true,
+    axis: false,
+    threshold_unit: null,
+    unit: 70,
+    pd_model: null,
+    pk_model: null,
+    dosed_pk_model: 57,
+    protocol: 4067,
+  },
+  {
+    id: 2191,
+    read_only: false,
+    datetime: null,
+    is_public: false,
+    lower_bound: null,
+    upper_bound: null,
+    default_value: 0,
+    lower_threshold: null,
+    upper_threshold: null,
+    is_log: false,
+    name: "Ce",
+    description: "Concentration of drug in the effect compartment",
+    binding: null,
+    qname: "PKCompartment.Ce",
+    unit_symbol: null,
+    constant: false,
+    state: true,
+    color: 1,
+    display: true,
+    axis: false,
+    threshold_unit: null,
+    unit: 6,
+    pd_model: null,
+    pk_model: null,
+    dosed_pk_model: 57,
+    protocol: null,
+  },
+  {
+    id: 2192,
     read_only: false,
     datetime: null,
     is_public: false,
@@ -221,24 +536,24 @@ export const variables: VariableRead[] = [
     unit: 6,
     pd_model: null,
     pk_model: null,
-    dosed_pk_model: 65,
+    dosed_pk_model: 57,
     protocol: null,
   },
   {
-    id: 2403,
+    id: 2193,
     read_only: false,
     datetime: null,
     is_public: false,
     lower_bound: null,
     upper_bound: null,
-    default_value: 0,
+    default_value: 1,
     lower_threshold: null,
     upper_threshold: null,
     is_log: false,
-    name: "CLimm",
-    description: "",
+    name: "CL_t",
+    description: "Total clearance as a function of time",
     binding: null,
-    qname: "PKCompartment.CLimm",
+    qname: "PKCompartment.CL_t",
     unit_symbol: null,
     constant: false,
     state: false,
@@ -246,14 +561,14 @@ export const variables: VariableRead[] = [
     display: true,
     axis: false,
     threshold_unit: null,
-    unit: 35,
+    unit: 19,
     pd_model: null,
     pk_model: null,
-    dosed_pk_model: 65,
+    dosed_pk_model: 57,
     protocol: null,
   },
   {
-    id: 2404,
+    id: 2194,
     read_only: false,
     datetime: null,
     is_public: false,
@@ -277,11 +592,11 @@ export const variables: VariableRead[] = [
     unit: 9,
     pd_model: null,
     pk_model: null,
-    dosed_pk_model: 65,
+    dosed_pk_model: 57,
     protocol: null,
   },
   {
-    id: 2405,
+    id: 2195,
     read_only: false,
     datetime: null,
     is_public: false,
@@ -298,18 +613,18 @@ export const variables: VariableRead[] = [
     unit_symbol: null,
     constant: true,
     state: false,
-    color: 7,
+    color: 15,
     display: true,
     axis: false,
     threshold_unit: null,
     unit: 6,
     pd_model: null,
     pk_model: null,
-    dosed_pk_model: 65,
+    dosed_pk_model: 57,
     protocol: null,
   },
   {
-    id: 2406,
+    id: 2196,
     read_only: false,
     datetime: null,
     is_public: false,
@@ -326,18 +641,18 @@ export const variables: VariableRead[] = [
     unit_symbol: null,
     constant: false,
     state: false,
-    color: 7,
+    color: 15,
     display: true,
     axis: false,
     threshold_unit: null,
     unit: 6,
     pd_model: null,
     pk_model: null,
-    dosed_pk_model: 65,
+    dosed_pk_model: 57,
     protocol: null,
   },
   {
-    id: 2407,
+    id: 2197,
     read_only: false,
     datetime: null,
     is_public: false,
@@ -354,47 +669,47 @@ export const variables: VariableRead[] = [
     unit_symbol: null,
     constant: true,
     state: false,
-    color: 7,
+    color: 15,
     display: true,
     axis: false,
     threshold_unit: null,
     unit: 53,
     pd_model: null,
     pk_model: null,
-    dosed_pk_model: 65,
+    dosed_pk_model: 57,
     protocol: null,
   },
   {
-    id: 2408,
+    id: 2198,
     read_only: false,
     datetime: null,
     is_public: false,
-    lower_bound: null,
-    upper_bound: 1,
-    default_value: 0.8,
+    lower_bound: 1,
+    upper_bound: null,
+    default_value: 5,
     lower_threshold: null,
     upper_threshold: null,
     is_log: false,
-    name: "Imax",
+    name: "Emax",
     description:
-      "Maximal Inhibitory effect (value range: 0 (no effect) to 1 (complete inhibition))",
+      "Maximal fold change from baseline (value range: 1 (no effect) to inf)",
     binding: null,
-    qname: "PDCompartment.Imax",
+    qname: "PDCompartment.Emax",
     unit_symbol: null,
     constant: true,
     state: false,
-    color: 7,
+    color: 15,
     display: true,
     axis: false,
     threshold_unit: null,
     unit: 53,
     pd_model: null,
     pk_model: null,
-    dosed_pk_model: 65,
+    dosed_pk_model: 57,
     protocol: null,
   },
   {
-    id: 2409,
+    id: 2199,
     read_only: false,
     datetime: null,
     is_public: false,
@@ -411,18 +726,18 @@ export const variables: VariableRead[] = [
     unit_symbol: null,
     constant: false,
     state: false,
-    color: 11,
+    color: 19,
     display: true,
     axis: false,
     threshold_unit: null,
     unit: 53,
     pd_model: null,
     pk_model: null,
-    dosed_pk_model: 65,
+    dosed_pk_model: 57,
     protocol: null,
   },
   {
-    id: 2410,
+    id: 2200,
     read_only: false,
     datetime: null,
     is_public: false,
@@ -432,24 +747,122 @@ export const variables: VariableRead[] = [
     lower_threshold: null,
     upper_threshold: null,
     is_log: false,
-    name: "INH",
-    description: "Extent of inhibition",
+    name: "STIM",
+    description: "Extent of stimulation",
     binding: null,
-    qname: "PDCompartment.INH",
+    qname: "PDCompartment.STIM",
     unit_symbol: null,
     constant: false,
     state: false,
-    color: 11,
+    color: 19,
     display: true,
     axis: false,
     threshold_unit: null,
     unit: 53,
     pd_model: null,
     pk_model: null,
-    dosed_pk_model: 65,
+    dosed_pk_model: 57,
     protocol: null,
   },
 ];
+export const protocols: ProtocolRead[] = [
+  {
+    id: 4067,
+    doses: [
+      {
+        id: 9846,
+        start_time: 0,
+        amount: 1,
+        duration: 0.0833,
+        repeats: 1,
+        repeat_interval: 168,
+        read_only: false,
+        datetime: null,
+      },
+    ],
+    variables: [2190],
+    subjects: [],
+    read_only: false,
+    datetime: null,
+    name: "Aa",
+    dose_type: "D",
+    mapped_qname: "PKCompartment.Aa",
+    dataset: null,
+    project: 57,
+    compound: null,
+    time_unit: 9,
+    amount_unit: 66,
+    group: null,
+  },
+  {
+    id: 4085,
+    doses: [
+      {
+        id: 9870,
+        start_time: 0,
+        amount: 1,
+        duration: 0.0833,
+        repeats: 1,
+        repeat_interval: 168,
+        read_only: false,
+        datetime: null,
+      },
+    ],
+    variables: [],
+    subjects: [],
+    read_only: false,
+    datetime: null,
+    name: "Aa - Group 1",
+    dose_type: "D",
+    mapped_qname: "PKCompartment.Aa",
+    dataset: null,
+    project: 57,
+    compound: null,
+    time_unit: 9,
+    amount_unit: 66,
+    group: null,
+  },
+];
+export const compound: CompoundRead = {
+  id: 57,
+  efficacy_experiments: [
+    {
+      id: 141,
+      name: "",
+      c50: 10,
+      hill_coefficient: 1,
+      c50_unit: 1,
+      compound: 57,
+    },
+    {
+      id: 144,
+      name: "",
+      c50: 1,
+      hill_coefficient: 1,
+      c50_unit: 1,
+      compound: 57,
+    },
+  ],
+  name: "big molecule",
+  description: "",
+  molecular_mass: 150000,
+  compound_type: "LM",
+  fraction_unbound_plasma: 1,
+  blood_to_plasma_ratio: 1,
+  intrinsic_clearance: null,
+  intrinsic_clearance_assay: "MS",
+  fraction_unbound_including_cells: 1,
+  target_molecular_mass: 25000,
+  target_concentration: 1,
+  dissociation_constant: 1,
+  is_soluble: true,
+  use_efficacy: 144,
+  molecular_mass_unit: 54,
+  intrinsic_clearance_unit: 8,
+  target_molecular_mass_unit: 54,
+  target_concentration_unit: 1,
+  dissociation_unit: 1,
+};
 export const units = [
   {
     id: 41,
@@ -5551,5 +5964,188 @@ export const units = [
     mol: 1,
     multiplier: -15,
   },
-] as unknown as UnitRead[];
-export const groups = [];
+] as unknown[] as UnitRead[];
+
+// Use mutable copies of snapshots to allow for API updates.
+let mockModel = { ...model };
+let mockProject = { ...project };
+
+export const projectHandlers = [
+  http.get("/api/combined_model", async ({ request }) => {
+    await delay();
+    const url = new URL(request.url);
+
+    const projectId = url.searchParams.get("project_id");
+    if (projectId) {
+      return HttpResponse.json([mockModel], {
+        status: 200,
+      });
+    }
+    return HttpResponse.json([], { status: 200 });
+  }),
+  http.get("/api/protocol", async ({ request }) => {
+    await delay();
+    const url = new URL(request.url);
+
+    const projectId = url.searchParams.get("project_id");
+    if (projectId) {
+      return HttpResponse.json(protocols, {
+        status: 200,
+      });
+    }
+    return HttpResponse.json([], { status: 200 });
+  }),
+  http.get("/api/unit", async ({ request }) => {
+    await delay();
+    const url = new URL(request.url);
+
+    const compoundId = url.searchParams.get("compound_id");
+    if (compoundId) {
+      return HttpResponse.json(units, {
+        status: 200,
+      });
+    }
+    return HttpResponse.json([], { status: 200 });
+  }),
+  http.get("/api/variable", async ({ request }) => {
+    await delay();
+    const url = new URL(request.url);
+    const pkModel = url.searchParams.get("dosed_pk_model_id");
+    if (pkModel) {
+      return HttpResponse.json(variables, {
+        status: 200,
+      });
+    }
+    return HttpResponse.json([], { status: 200 });
+  }),
+  http.get("/api/project/:id", async ({ params }) => {
+    await delay();
+    //@ts-expect-error params.id is a string
+    const projectId = parseInt(params.id, 10);
+    if (projectId === project.id) {
+      return HttpResponse.json(mockProject, {
+        status: 200,
+      });
+    }
+    return HttpResponse.json({ error: "Project not found" }, { status: 404 });
+  }),
+  http.put("/api/combined_model/:id", async ({ params, request }) => {
+    await delay();
+    //@ts-expect-error params.id is a string
+    const modelId = parseInt(params.id, 10);
+    const modelData = await request.json();
+    //@ts-expect-error modelData is DefaultBodyType
+    const timeIntervals = modelData?.time_intervals.map(
+      (interval: TimeIntervalRead, index: number) => {
+        return {
+          ...interval,
+          pkpd_model: modelId,
+          id: interval.id || index + 1, // Ensure each interval has a unique ID
+        };
+      },
+    );
+    //@ts-expect-error modelData is DefaultBodyType
+    const derivedVariables = modelData?.derived_variables.map(
+      (variable: DerivedVariableRead, index: number) => {
+        return {
+          ...variable,
+          id: variable.id || index + 1, // Ensure each derived variable has a unique ID
+        };
+      },
+    );
+    mockModel = {
+      //@ts-expect-error modelData is DefaultBodyType
+      ...modelData,
+      id: modelId,
+      time_intervals: timeIntervals,
+      derived_variables: derivedVariables,
+    };
+    return HttpResponse.json(mockModel, {
+      status: 200,
+    });
+  }),
+  http.put("/api/project/:id", async ({ params, request }) => {
+    await delay();
+    //@ts-expect-error params.id is a string
+    const projectId = parseInt(params.id, 10);
+    const projectData = await request.json();
+    //@ts-expect-error projectData is DefaultBodyType
+    mockProject = { ...projectData, id: projectId };
+    return HttpResponse.json(mockProject, {
+      status: 200,
+    });
+  }),
+  http.put(
+    "/api/combined_model/:id/set_params_to_defaults",
+    async ({ params, request }) => {
+      await delay();
+      //@ts-expect-error params.id is a string
+      const modelId = parseInt(params.id, 10);
+      const modelData = await request.json();
+      //@ts-expect-error modelData is DefaultBodyType
+      mockModel = { ...modelData, id: modelId };
+      return HttpResponse.json(mockModel, {
+        status: 200,
+      });
+    },
+  ),
+];
+
+interface UseMockModelArgs {
+  model: CombinedModelRead;
+  updateModel: ({
+    id,
+    combinedModel,
+  }: {
+    id: number;
+    combinedModel: CombinedModel;
+  }) => void;
+}
+
+export function useMockModel(
+  args: UseMockModelArgs,
+): [CombinedModelRead, CombinedModelUpdate] {
+  const [model, setModel] = useState<CombinedModelRead>(args.model);
+  const [updateModel] = useCombinedModelUpdateMutation();
+
+  const updateMockModel: CombinedModelUpdate = async ({
+    id,
+    combinedModel,
+  }) => {
+    args.updateModel({ id, combinedModel });
+    await updateModel({ id, combinedModel });
+    mockModel = { ...mockModel, ...combinedModel } as CombinedModelRead;
+    setModel(mockModel);
+    return { data: mockModel };
+  };
+
+  return [model, updateMockModel];
+}
+
+interface UseMockProjectArgs {
+  project: ProjectRead;
+  updateProject: ({
+    id,
+    project,
+  }: {
+    id: number;
+    project: ProjectRead;
+  }) => void;
+}
+
+export function useMockProject(
+  args: UseMockProjectArgs,
+): [ProjectRead, ProjectUpdate] {
+  const [project, setProject] = useState<ProjectRead>(args.project);
+  const [updateProject] = useProjectUpdateMutation();
+
+  const updateMockProject: ProjectUpdate = async ({ id, project }) => {
+    args.updateProject({ id, project });
+    await updateProject({ id, project });
+    mockProject = { ...mockProject, ...project } as ProjectRead;
+    setProject(mockProject);
+    return { data: mockProject };
+  };
+
+  return [project, updateMockProject];
+}
