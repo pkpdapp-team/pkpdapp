@@ -138,163 +138,158 @@ const DosingProtocols: FC<IDosingProtocols> = ({
   };
 
   return (
-    <>
-      <Box component="div">
-        <TableHeader
-          label="Dosing"
-          tooltip="Set a dosing compartment and unit for each of your subject groups
+    <Box component="div">
+      <TableHeader
+        label="Dosing"
+        tooltip="Set a dosing compartment and unit for each of your subject groups
           here."
-        />
-        <TableContainer
-          sx={{
-            maxHeight: calculateTableHeights({
-              baseHeight: getTableHeight({ steps: SINGLE_TABLE_BREAKPOINTS }),
-              isOpen: notificationsInfo.isOpen,
-              count: notificationsInfo.count,
-            }),
-            transition: "all .35s ease-in",
-          }}
-        >
-          <Table stickyHeader size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell>
-                  <Typography>{administrationIdField}</Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography>Group ID</Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography>Dosing Compartment</Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography>Amount</Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography>Amount Unit</Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography>Time</Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography>Time Unit</Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography>Additional Doses</Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography>Interdose Interval</Typography>
-                </TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {uniqueAdministrationIds.map((adminId) => {
-                const currentRow = dosingRows.find((row) =>
-                  administrationIdField
-                    ? row[administrationIdField] === adminId
-                    : true,
-                );
-                const selectedVariable = variables?.find(
-                  (variable) =>
-                    variable.qname ===
-                    currentRow?.[amountVariableField || "Amount Variable"],
-                );
-                const compatibleUnits = units?.find(
-                  (unit) => unit.id === selectedVariable?.unit,
-                )?.compatible_units;
-                const adminUnit =
-                  amountUnitField && currentRow && currentRow[amountUnitField];
-                const amount = currentRow?.[amountField];
-                const time = currentRow?.[timeField];
-                return (
-                  <TableRow key={adminId}>
-                    <TableCell sx={{ width: "5rem" }}>{adminId}</TableCell>
-                    <TableCell sx={{ width: "5rem" }}>
-                      <Typography>{currentRow?.["Group ID"] || "."}</Typography>
-                    </TableCell>
-                    <TableCell sx={{ width: "10rem" }}>
-                      <FormControl fullWidth>
-                        <InputLabel
-                          size="small"
-                          id={`select-var-${adminId}-label`}
-                        >
-                          Variable
-                        </InputLabel>
-                        <Select
-                          labelId={`select-var-${adminId}-label`}
-                          id={`select-var-${adminId}`}
-                          label="Variable"
-                          value={selectedVariable?.qname}
-                          onChange={handleAmountMappingChange(adminId)}
-                          size="small"
-                          margin="dense"
-                        >
-                          {modelAmounts?.map((variable) => (
-                            <MenuItem
-                              key={variable.name}
-                              value={variable.qname}
-                            >
-                              {variable.name}
-                            </MenuItem>
-                          ))}
-                        </Select>
-                      </FormControl>
-                    </TableCell>
-                    <TableCell sx={{ width: "10rem" }}>
-                      <Typography>{amount}</Typography>
-                    </TableCell>
-                    <TableCell>
-                      <FormControl fullWidth>
-                        <InputLabel
-                          size="small"
-                          id={`select-unit-${adminId}-label`}
-                        >
-                          Units
-                        </InputLabel>
-                        <Select
-                          labelId={`select-unit-${adminId}-label`}
-                          id={`select-unit-${adminId}`}
-                          label="Units"
-                          value={adminUnit}
-                          onChange={handleAmountUnitChange(adminId)}
-                          sx={{ maxWidth: "10rem" }}
-                          size="small"
-                          margin="dense"
-                        >
-                          {compatibleUnits?.map((unit) => (
-                            <MenuItem key={unit.symbol} value={unit.symbol}>
-                              {unit.symbol}
-                            </MenuItem>
-                          ))}
-                        </Select>
-                      </FormControl>
-                    </TableCell>
-                    <TableCell sx={{ width: "5rem" }}>
-                      <Typography>{time}</Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Typography>
-                        {currentRow?.[timeUnitField] || "."}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Typography>
-                        {currentRow?.[addlDosesField] || "."}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Typography>
-                        {currentRow?.[interDoseField] || "."}
-                      </Typography>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Box>
-    </>
+      />
+      <TableContainer
+        sx={{
+          maxHeight: calculateTableHeights({
+            baseHeight: getTableHeight({ steps: SINGLE_TABLE_BREAKPOINTS }),
+            isOpen: notificationsInfo.isOpen,
+            count: notificationsInfo.count,
+          }),
+          transition: "all .35s ease-in",
+        }}
+      >
+        <Table stickyHeader size="small">
+          <TableHead>
+            <TableRow>
+              <TableCell>
+                <Typography>{administrationIdField}</Typography>
+              </TableCell>
+              <TableCell>
+                <Typography>Group ID</Typography>
+              </TableCell>
+              <TableCell>
+                <Typography>Dosing Compartment</Typography>
+              </TableCell>
+              <TableCell>
+                <Typography>Amount</Typography>
+              </TableCell>
+              <TableCell>
+                <Typography>Amount Unit</Typography>
+              </TableCell>
+              <TableCell>
+                <Typography>Time</Typography>
+              </TableCell>
+              <TableCell>
+                <Typography>Time Unit</Typography>
+              </TableCell>
+              <TableCell>
+                <Typography>Additional Doses</Typography>
+              </TableCell>
+              <TableCell>
+                <Typography>Interdose Interval</Typography>
+              </TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {uniqueAdministrationIds.map((adminId) => {
+              const currentRow = dosingRows.find((row) =>
+                administrationIdField
+                  ? row[administrationIdField] === adminId
+                  : true,
+              );
+              const selectedVariable = variables?.find(
+                (variable) =>
+                  variable.qname ===
+                  currentRow?.[amountVariableField || "Amount Variable"],
+              );
+              const compatibleUnits = units?.find(
+                (unit) => unit.id === selectedVariable?.unit,
+              )?.compatible_units;
+              const adminUnit =
+                amountUnitField && currentRow && currentRow[amountUnitField];
+              const amount = currentRow?.[amountField];
+              const time = currentRow?.[timeField];
+              return (
+                <TableRow key={adminId}>
+                  <TableCell sx={{ width: "5rem" }}>{adminId}</TableCell>
+                  <TableCell sx={{ width: "5rem" }}>
+                    <Typography>{currentRow?.["Group ID"] || "."}</Typography>
+                  </TableCell>
+                  <TableCell sx={{ width: "10rem" }}>
+                    <FormControl fullWidth>
+                      <InputLabel
+                        size="small"
+                        id={`select-var-${adminId}-label`}
+                      >
+                        Variable
+                      </InputLabel>
+                      <Select
+                        labelId={`select-var-${adminId}-label`}
+                        id={`select-var-${adminId}`}
+                        label="Variable"
+                        value={selectedVariable?.qname}
+                        onChange={handleAmountMappingChange(adminId)}
+                        size="small"
+                        margin="dense"
+                      >
+                        {modelAmounts?.map((variable) => (
+                          <MenuItem key={variable.name} value={variable.qname}>
+                            {variable.name}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </TableCell>
+                  <TableCell sx={{ width: "10rem" }}>
+                    <Typography>{amount}</Typography>
+                  </TableCell>
+                  <TableCell>
+                    <FormControl fullWidth>
+                      <InputLabel
+                        size="small"
+                        id={`select-unit-${adminId}-label`}
+                      >
+                        Units
+                      </InputLabel>
+                      <Select
+                        labelId={`select-unit-${adminId}-label`}
+                        id={`select-unit-${adminId}`}
+                        label="Units"
+                        value={adminUnit}
+                        onChange={handleAmountUnitChange(adminId)}
+                        sx={{ maxWidth: "10rem" }}
+                        size="small"
+                        margin="dense"
+                      >
+                        {compatibleUnits?.map((unit) => (
+                          <MenuItem key={unit.symbol} value={unit.symbol}>
+                            {unit.symbol}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </TableCell>
+                  <TableCell sx={{ width: "5rem" }}>
+                    <Typography>{time}</Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography>
+                      {currentRow?.[timeUnitField] || "."}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography>
+                      {currentRow?.[addlDosesField] || "."}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography>
+                      {currentRow?.[interDoseField] || "."}
+                    </Typography>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </Box>
   );
 };
 
