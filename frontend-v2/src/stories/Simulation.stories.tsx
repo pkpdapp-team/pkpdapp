@@ -1,13 +1,13 @@
 import { Meta, StoryObj } from "@storybook/react-vite";
 import { delay, http, HttpResponse } from "msw";
-import { expect, within } from "storybook/test";
+import { expect, screen, within } from "storybook/test";
 import { useDispatch } from "react-redux";
 import {
   setProject as setReduxProject,
   PageName,
   setPage,
 } from "../features/main/mainSlice";
-import { project, projectHandlers } from "./project.mock";
+import { project, projectHandlers, variables } from "./project.mock";
 import { simulationData } from "./simulations.mock";
 
 import Simulations from "../features/simulation/Simulations";
@@ -24,6 +24,19 @@ const meta: Meta<typeof Simulations> = {
         http.get("/api/subject_group", async () => {
           await delay();
           return HttpResponse.json([], { status: 200 });
+        }),
+        http.get("/api/variable/:id", async ({ params }) => {
+          await delay();
+          //@ts-expect-error params.id is a string
+          const variableId = parseInt(params.id, 10);
+          const variable = variables.find((v) => v.id === variableId);
+          if (!variable) {
+            return HttpResponse.json(
+              { detail: "Variable not found" },
+              { status: 404 },
+            );
+          }
+          return HttpResponse.json(variable, { status: 200 });
         }),
         http.put("/api/simulation/:id", async ({ params, request }) => {
           await delay();
@@ -87,5 +100,26 @@ export const Default: Story = {
       name: "Simulations",
     });
     expect(simulationsHeading).toBeInTheDocument();
+  },
+};
+
+export const Parameters: Story = {
+  play: async ({ canvasElement, userEvent }) => {
+    const canvas = within(canvasElement);
+    const parametersButton = await canvas.findByRole("button", {
+      name: "Parameters 0",
+    });
+    expect(parametersButton).toBeInTheDocument();
+    await userEvent.click(parametersButton);
+
+    const addParameterButton = await canvas.findByRole("button", {
+      name: /Add parameter/i,
+    });
+    await userEvent.click(addParameterButton);
+
+    const parameterOption = await screen.findByRole("button", {
+      name: /^V1/,
+    });
+    await userEvent.click(parameterOption);
   },
 };
