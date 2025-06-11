@@ -15,10 +15,12 @@ const CollapsibleSidebarContext = createContext({
 
 export const CollapsibleSidebarProvider = ({
   children,
+  expanded = true,
 }: {
   children: ReactNode;
+  expanded?: boolean;
 }) => {
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(expanded);
   const [hasExpandedChanged, setHasExpandedChanged] = useState(false);
   const [hasSimulationsExpandedChanged, setHasSimulationsExpandedChanged] =
     useState(false);
