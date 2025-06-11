@@ -164,6 +164,7 @@ const VariableRow: FC<Props> = ({
           <FormControlLabel
             control={
               <MuiCheckbox
+                aria-label={`Dosing compartment: ${variable.name}`}
                 sx={{
                   "& .MuiSvgIcon-root": {
                     color: isAnyDosingSelected ? "inherit" : "red",
