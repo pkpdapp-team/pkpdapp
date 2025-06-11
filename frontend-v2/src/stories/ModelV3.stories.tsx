@@ -16,12 +16,12 @@ import {
   projectHandlers,
   useMockModel,
   useMockProject,
-} from "./project.mock";
-import { pd_model, pkModels, pdModels } from "./model.mock";
+} from "./project.v3.mock";
+import { pd_model, pkModels, pdModels, tagsData } from "./model.v3.mock";
 import { useEffect } from "react";
 
 const meta: Meta<typeof TabbedModelForm> = {
-  title: "Edit Model (version 1)",
+  title: "Edit Model (version 3)",
   component: TabbedModelForm,
   args: {
     model,
@@ -32,6 +32,7 @@ const meta: Meta<typeof TabbedModelForm> = {
     protocols,
     compound,
     units,
+    tagsData,
     updateModel: fn(),
     updateProject: fn(),
   },
@@ -116,9 +117,9 @@ export const Default: Story = {
       name: /Species/i,
     });
     const pkModelList = await canvas.findByRole("combobox", {
-      name: /PK Model/i,
+      name: /^PK Model/i,
     });
-    const pdModelList = canvas.getByRole("combobox", { name: /PD Model/i });
+    const pdModelList = canvas.getByRole("combobox", { name: /^PD Model/i });
 
     expect(modelTab).toBeInTheDocument();
     expect(mapVariablesTab).toBeInTheDocument();
@@ -143,9 +144,9 @@ export const Species: Story = {
     expect(speciesList).toHaveTextContent("Mouse");
 
     const pkModelList = await canvas.findByRole("combobox", {
-      name: /PK Model/i,
+      name: /^PK Model/i,
     });
-    const pdModelList = canvas.getByRole("combobox", { name: /PD Model/i });
+    const pdModelList = canvas.getByRole("combobox", { name: /^PD Model/i });
     expect(pkModelList).toHaveTextContent("None");
     expect(pdModelList).toHaveTextContent("None");
     const errorIcon = await canvas.findByRole("img", {
@@ -163,12 +164,12 @@ export const PKModel: Story = {
   play: async ({ canvasElement, userEvent }) => {
     const canvas = within(canvasElement);
     const pkModelList = await canvas.findByLabelText("PK Model");
-    expect(pkModelList).toHaveTextContent("one_compartment_preclinical");
+    expect(pkModelList).toHaveTextContent("1-compartmental model");
 
     await userEvent.click(pkModelList);
     const listbox = await screen.findByRole("listbox");
-    await userEvent.selectOptions(listbox, "three_compartment_preclinical");
-    expect(pkModelList).toHaveTextContent("three_compartment_preclinical");
+    await userEvent.selectOptions(listbox, "3-compartmental model");
+    expect(pkModelList).toHaveTextContent("3-compartmental model");
   },
 };
 
@@ -176,17 +177,12 @@ export const PDModel: Story = {
   play: async ({ canvasElement, userEvent }) => {
     const canvas = within(canvasElement);
     const pdModelList = await canvas.findByLabelText("PD Model");
-    expect(pdModelList).toHaveTextContent("direct_effects_emax");
+    expect(pdModelList).toHaveTextContent("Direct effect model (inhibitory)");
 
     await userEvent.click(pdModelList);
     const listbox = await screen.findByRole("listbox");
-    await userEvent.selectOptions(
-      listbox,
-      "indirect_effects_stimulation_elimination",
-    );
-    expect(pdModelList).toHaveTextContent(
-      "indirect_effects_stimulation_elimination",
-    );
+    await userEvent.selectOptions(listbox, "Direct effect model (stimulatory)");
+    expect(pdModelList).toHaveTextContent("Direct effect model (stimulatory)");
   },
 };
 
@@ -202,12 +198,7 @@ export const MapVariables: Story = {
       name: /Dosing compartment: A1/i,
     });
     expect(dosingCompartmentA1).toBeInTheDocument();
-    expect(dosingCompartmentA1).not.toBeChecked();
-    const dosingCompartmentAa = await canvas.findByRole("checkbox", {
-      name: /Dosing compartment: Aa/i,
-    });
-    expect(dosingCompartmentAa).toBeInTheDocument();
-    expect(dosingCompartmentAa).toBeChecked();
+    expect(dosingCompartmentA1).toBeChecked();
 
     const linkedPDVar = await canvas.findByRole("radio", {
       name: /Link to PD: C1/i,
