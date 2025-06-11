@@ -249,6 +249,7 @@ const AdditionalParametersRow: FC<Props> = ({
             <FormControlLabel
               control={
                 <Radio
+                  aria-label={`Link to PD: ${variable.name}`}
                   sx={{
                     "& .MuiSvgIcon-root": {
                       color: isAnyLinkToPdSelected ? "inherit" : "red",

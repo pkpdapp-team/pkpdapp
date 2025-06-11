@@ -190,6 +190,33 @@ export const PDModel: Story = {
   },
 };
 
+export const MapVariables: Story = {
+  play: async ({ canvasElement, userEvent }) => {
+    const canvas = within(canvasElement);
+    const mapVariablesTab = canvas.getByRole("tab", {
+      name: /Map Variables/i,
+    });
+    await userEvent.click(mapVariablesTab);
+
+    const dosingCompartmentA1 = await canvas.findByRole("checkbox", {
+      name: /Dosing compartment: A1/i,
+    });
+    expect(dosingCompartmentA1).toBeInTheDocument();
+    expect(dosingCompartmentA1).not.toBeChecked();
+    const dosingCompartmentAa = await canvas.findByRole("checkbox", {
+      name: /Dosing compartment: Aa/i,
+    });
+    expect(dosingCompartmentAa).toBeInTheDocument();
+    expect(dosingCompartmentAa).toBeChecked();
+
+    const linkedPDVar = await canvas.findByRole("radio", {
+      name: /Link to PD: C1/i,
+    });
+    expect(linkedPDVar).toBeInTheDocument();
+    expect(linkedPDVar).toBeChecked();
+  },
+};
+
 export const SecondaryParameters: Story = {
   play: async ({ canvasElement, userEvent }) => {
     const canvas = within(canvasElement);
