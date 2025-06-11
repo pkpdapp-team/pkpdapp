@@ -5995,6 +5995,18 @@ export const projectHandlers = [
     }
     return HttpResponse.json([], { status: 200 });
   }),
+  http.get("/api/simulation", async ({ request }) => {
+    await delay();
+    const url = new URL(request.url);
+
+    const projectId = url.searchParams.get("project_id");
+    if (projectId) {
+      return HttpResponse.json([simulation], {
+        status: 200,
+      });
+    }
+    return HttpResponse.json([], { status: 200 });
+  }),
   http.get("/api/unit", async ({ request }) => {
     await delay();
     const url = new URL(request.url);
@@ -6028,6 +6040,17 @@ export const projectHandlers = [
       });
     }
     return HttpResponse.json({ error: "Project not found" }, { status: 404 });
+  }),
+  http.get("/api/compound/:id", async ({ params }) => {
+    await delay();
+    //@ts-expect-error params.id is a string
+    const compoundId = parseInt(params.id, 10);
+    if (compoundId === project.compound) {
+      return HttpResponse.json(compound, {
+        status: 200,
+      });
+    }
+    return HttpResponse.json({ error: "Compound not found" }, { status: 404 });
   }),
   http.put("/api/combined_model/:id", async ({ params, request }) => {
     await delay();
