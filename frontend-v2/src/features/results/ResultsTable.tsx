@@ -138,7 +138,7 @@ export const ResultsTable: FC<ResultsTableProps> = ({
           maxHeight: getTableHeight({ steps: RESULTS_TABLE_HEIGHTS }),
         }}
       >
-        <Table stickyHeader size="small">
+        <Table stickyHeader size="small" aria-label="Results table">
           <TableHead>
             <TableRow>
               <TableCell>{rowColumn}</TableCell>

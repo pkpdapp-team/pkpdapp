@@ -10,7 +10,7 @@ import {
   Stack,
   Badge,
 } from "@mui/material";
-import ReactDOM from "react-dom";
+import { createPortal } from "react-dom";
 import DropdownButton from "../../components/DropdownButton";
 import FloatField from "../../components/FloatField";
 import UnitField from "../../components/UnitField";
@@ -174,166 +174,306 @@ export const SimulationsSidePanel = ({
 
   if (!portalRoot || selectedPage !== PageName.SIMULATIONS) return null;
 
-  return ReactDOM.createPortal(
-    <Box
-      className={simulationAnimationClasses}
-      sx={{
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "space-between",
-        height: "100%",
-        maxHeight: "100%",
-        paddingBottom: "1rem",
-        backgroundColor: "#FBFBFA",
-        borderRight: "1px solid #DBD6D1",
-      }}
-    >
-      <Box
-        sx={{ display: "flex", justifyContent: "flex-start", padding: "1rem" }}
-      >
+  return (
+    <>
+      {createPortal(
         <Box
+          className={simulationAnimationClasses}
           sx={{
-            paddingTop: "5rem",
             display: "flex",
-            alignItems: "center",
             flexDirection: "column",
+            justifyContent: "space-between",
+            height: "100%",
+            maxHeight: "100%",
+            paddingBottom: "1rem",
+            backgroundColor: "#FBFBFA",
+            borderRight: "1px solid #DBD6D1",
           }}
         >
-          <Typography variant="h4">Simulations</Typography>
-          <DropdownButton
-            sx={{ width: "12rem", marginTop: ".5  rem" }}
-            useIcon={false}
-            data_cy="add-plot"
-            options={addPlotOptions}
-            onOptionSelected={handleAddPlot}
-            disabled={isSharedWithMe}
-          >
-            Add new plot
-          </DropdownButton>
-          <Divider
-            sx={{ paddingTop: "1rem", width: "11rem" }}
-            variant="middle"
-          />
           <Box
             sx={{
-              overflowX: "auto",
-              maxHeight: getTableHeight({ steps: SidePanelSteps }),
+              display: "flex",
+              justifyContent: "flex-start",
+              padding: "1rem",
             }}
           >
-            <Box>
-              <Box>
-                <Button
-                  sx={ButtonSx}
-                  disableTouchRipple
-                  disableRipple
-                  disableFocusRipple
-                  disableElevation
-                  onClick={() => setCollapseLayout(!collapseLayout)}
-                  startIcon={collapseLayout ? <ExpandLess /> : <ExpandMore />}
-                >
-                  <Typography>Figures Layout</Typography>
-                </Button>
-                <Collapse
-                  sx={{
-                    transition: "all .35s ease-in",
-                    marginBottom: ".5rem",
-                  }}
-                  timeout={350}
-                  easing="ease-in"
-                  in={collapseLayout}
-                  component="div"
-                >
-                  <FormGroup>
-                    {layoutOptions.map(({ value, label }) => (
-                      <FormControlLabel
-                        key={value}
-                        control={
-                          <Checkbox
-                            checked={layout.includes(value)}
-                            onChange={() => {
-                              onLayoutChange(value);
-                            }}
-                          />
-                        }
-                        label={label}
-                      />
-                    ))}
-                  </FormGroup>
-                </Collapse>
-              </Box>
-              <Box>
-                <Button
-                  sx={ButtonSx}
-                  disableTouchRipple
-                  disableRipple
-                  disableFocusRipple
-                  disableElevation
-                  onClick={() => setCollapseOptions(!collapseOptions)}
-                  startIcon={collapseOptions ? <ExpandLess /> : <ExpandMore />}
-                >
-                  <Typography>Simulation Options</Typography>
-                </Button>
-                <Collapse
-                  sx={{
-                    transition: "all .35s ease-in",
-                    marginBottom: ".5rem",
-                  }}
-                  timeout={350}
-                  easing="ease-in"
-                  in={collapseOptions}
-                  component="div"
-                >
-                  {plots.length > 0 && (
-                    <>
-                      <Stack
-                        direction={"column"}
-                        alignItems={"center"}
-                        spacing={2}
-                        justifyContent="flex-start"
-                        paddingTop="1rem"
-                      >
-                        <FloatField
-                          sx={{ width: "11rem" }}
-                          label="Simulation Duration"
-                          name="time_max"
-                          control={control}
-                          textFieldProps={{ disabled: isSharedWithMe }}
-                        />
-                        <UnitField
-                          sx={{ width: "11rem" }}
-                          label="Unit"
-                          name="time_max_unit"
-                          baseUnit={units.find(
-                            (u) => u.id === simulation?.time_max_unit,
-                          )}
-                          control={control}
-                          selectProps={{
-                            disabled: isSharedWithMe,
-                          }}
-                        />
-                      </Stack>
-                    </>
-                  )}
-                </Collapse>
-              </Box>
-              <Box>
-                {!!groups?.length && (
-                  <>
+            <Box
+              sx={{
+                paddingTop: "5rem",
+                display: "flex",
+                alignItems: "center",
+                flexDirection: "column",
+              }}
+            >
+              <Typography variant="h4">Simulations</Typography>
+              <DropdownButton
+                sx={{ width: "12rem", marginTop: ".5  rem" }}
+                useIcon={false}
+                data_cy="add-plot"
+                options={addPlotOptions}
+                onOptionSelected={handleAddPlot}
+                disabled={isSharedWithMe}
+              >
+                Add new plot
+              </DropdownButton>
+              <Divider
+                sx={{ paddingTop: "1rem", width: "11rem" }}
+                variant="middle"
+              />
+              <Box
+                sx={{
+                  overflowX: "auto",
+                  maxHeight: getTableHeight({ steps: SidePanelSteps }),
+                }}
+              >
+                <Box>
+                  <Box>
                     <Button
                       sx={ButtonSx}
                       disableTouchRipple
                       disableRipple
                       disableFocusRipple
                       disableElevation
-                      onClick={() => setCollapseGroups(!collapseGroups)}
+                      onClick={() => setCollapseLayout(!collapseLayout)}
                       startIcon={
-                        collapseGroups ? <ExpandLess /> : <ExpandMore />
+                        collapseLayout ? <ExpandLess /> : <ExpandMore />
                       }
                     >
-                      <Typography>Groups</Typography>{" "}
+                      <Typography>Figures Layout</Typography>
+                    </Button>
+                    <Collapse
+                      sx={{
+                        transition: "all .35s ease-in",
+                        marginBottom: ".5rem",
+                      }}
+                      timeout={350}
+                      easing="ease-in"
+                      in={collapseLayout}
+                      component="div"
+                    >
+                      <FormGroup>
+                        {layoutOptions.map(({ value, label }) => (
+                          <FormControlLabel
+                            key={value}
+                            control={
+                              <Checkbox
+                                checked={layout.includes(value)}
+                                onChange={() => {
+                                  onLayoutChange(value);
+                                }}
+                              />
+                            }
+                            label={label}
+                          />
+                        ))}
+                      </FormGroup>
+                    </Collapse>
+                  </Box>
+                  <Box>
+                    <Button
+                      sx={ButtonSx}
+                      disableTouchRipple
+                      disableRipple
+                      disableFocusRipple
+                      disableElevation
+                      onClick={() => setCollapseOptions(!collapseOptions)}
+                      startIcon={
+                        collapseOptions ? <ExpandLess /> : <ExpandMore />
+                      }
+                    >
+                      <Typography>Simulation Options</Typography>
+                    </Button>
+                    <Collapse
+                      sx={{
+                        transition: "all .35s ease-in",
+                        marginBottom: ".5rem",
+                      }}
+                      timeout={350}
+                      easing="ease-in"
+                      in={collapseOptions}
+                      component="div"
+                    >
+                      {plots.length > 0 && (
+                        <>
+                          <Stack
+                            direction={"column"}
+                            alignItems={"center"}
+                            spacing={2}
+                            justifyContent="flex-start"
+                            paddingTop="1rem"
+                          >
+                            <FloatField
+                              sx={{ width: "11rem" }}
+                              label="Simulation Duration"
+                              name="time_max"
+                              control={control}
+                              textFieldProps={{ disabled: isSharedWithMe }}
+                            />
+                            <UnitField
+                              sx={{ width: "11rem" }}
+                              label="Unit"
+                              name="time_max_unit"
+                              baseUnit={units.find(
+                                (u) => u.id === simulation?.time_max_unit,
+                              )}
+                              control={control}
+                              selectProps={{
+                                disabled: isSharedWithMe,
+                              }}
+                            />
+                          </Stack>
+                        </>
+                      )}
+                    </Collapse>
+                  </Box>
+                  <Box>
+                    {!!groups?.length && (
+                      <>
+                        <Button
+                          sx={ButtonSx}
+                          disableTouchRipple
+                          disableRipple
+                          disableFocusRipple
+                          disableElevation
+                          onClick={() => setCollapseGroups(!collapseGroups)}
+                          startIcon={
+                            collapseGroups ? <ExpandLess /> : <ExpandMore />
+                          }
+                        >
+                          <Typography>Groups</Typography>{" "}
+                          <Badge
+                            sx={{ marginLeft: "auto", marginRight: "1rem" }}
+                            badgeContent={visibleGroups?.length}
+                            color="primary"
+                          />
+                        </Button>
+                        <Collapse
+                          sx={{
+                            transition: "all .35s ease-in",
+                            marginBottom: ".5rem",
+                          }}
+                          timeout={350}
+                          easing="ease-in"
+                          in={collapseGroups}
+                          component="div"
+                        >
+                          <FormGroup>
+                            <FormControlLabel
+                              control={
+                                <Checkbox
+                                  checked={visibleGroups.includes("Project")}
+                                  value="Project"
+                                  onChange={handleVisibleGroups}
+                                />
+                              }
+                              label="Project"
+                            />
+                            {groups?.map((group) => (
+                              <FormControlLabel
+                                key={group.name}
+                                control={
+                                  <Checkbox
+                                    checked={visibleGroups.includes(group.name)}
+                                    value={group.name}
+                                    onChange={handleVisibleGroups}
+                                  />
+                                }
+                                label={group.name}
+                              />
+                            ))}
+                          </FormGroup>
+                        </Collapse>
+                      </>
+                    )}
+                  </Box>
+                  <Box sx={{ width: "11rem" }}>
+                    <Button
+                      sx={ButtonSx}
+                      disableTouchRipple
+                      disableRipple
+                      disableFocusRipple
+                      disableElevation
+                      onClick={() => setCollapseReference(!collapseReference)}
+                      startIcon={
+                        collapseReference ? <ExpandLess /> : <ExpandMore />
+                      }
+                    >
+                      <Typography>Reference</Typography>
+                    </Button>
+                    <Collapse
+                      sx={{
+                        transition: "all .35s ease-in",
+                        marginBottom: ".5rem",
+                      }}
+                      timeout={350}
+                      easing="ease-in"
+                      in={collapseReference}
+                      component="div"
+                    >
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={showReference}
+                            onChange={(e) => setShowReference(e.target.checked)}
+                          ></Checkbox>
+                        }
+                        label="Show reference"
+                      />
+                    </Collapse>
+                  </Box>
+                  <Box sx={{ width: "11rem" }}>
+                    <Button
+                      sx={ButtonSx}
+                      disableTouchRipple
+                      disableRipple
+                      disableFocusRipple
+                      disableElevation
+                      onClick={() => setCollapseLegend(!collapseLegend)}
+                      startIcon={
+                        collapseReference ? <ExpandLess /> : <ExpandMore />
+                      }
+                    >
+                      <Typography>Legend</Typography>
+                    </Button>
+                    <Collapse
+                      sx={{
+                        transition: "all .35s ease-in",
+                        marginBottom: ".5rem",
+                      }}
+                      timeout={350}
+                      easing="ease-in"
+                      in={collapseLegend}
+                      component="div"
+                    >
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={shouldShowLegend}
+                            onChange={(e) =>
+                              setShouldShowLegend(e.target.checked)
+                            }
+                          ></Checkbox>
+                        }
+                        label="Show Legend"
+                      />
+                    </Collapse>
+                  </Box>
+                  <Box sx={{ width: "11rem" }}>
+                    <Button
+                      sx={ButtonSx}
+                      disableTouchRipple
+                      disableRipple
+                      disableFocusRipple
+                      disableElevation
+                      onClick={() => setCollapseParameters(!collapseParameters)}
+                      startIcon={
+                        collapseParameters ? <ExpandLess /> : <ExpandMore />
+                      }
+                    >
+                      <Typography>Parameters</Typography>
                       <Badge
                         sx={{ marginLeft: "auto", marginRight: "1rem" }}
-                        badgeContent={visibleGroups?.length}
+                        badgeContent={orderedSliders?.length}
                         color="primary"
                       />
                     </Button>
@@ -344,184 +484,58 @@ export const SimulationsSidePanel = ({
                       }}
                       timeout={350}
                       easing="ease-in"
-                      in={collapseGroups}
+                      in={collapseParameters}
                       component="div"
                     >
-                      <FormGroup>
-                        <FormControlLabel
-                          control={
-                            <Checkbox
-                              checked={visibleGroups.includes("Project")}
-                              value="Project"
-                              onChange={handleVisibleGroups}
-                            />
-                          }
-                          label="Project"
+                      <DropdownButton
+                        variant="outlined"
+                        sx={{ width: "12rem", marginTop: ".5rem" }}
+                        useIcon={false}
+                        options={addSliderOptions}
+                        onOptionSelected={handleAddSlider}
+                        data_cy="add-parameter-slider"
+                        disabled={isSharedWithMe}
+                      >
+                        Add Parameter
+                      </DropdownButton>
+                      {orderedSliders.map((slider, index) => (
+                        <SimulationSliderView
+                          key={index}
+                          index={index}
+                          slider={slider}
+                          onChange={handleChangeSlider}
+                          onRemove={handleRemoveSlider(slider.fieldArrayIndex)}
+                          onSave={handleSaveSlider(slider)}
+                          units={units}
                         />
-                        {groups?.map((group) => (
-                          <FormControlLabel
-                            key={group.name}
-                            control={
-                              <Checkbox
-                                checked={visibleGroups.includes(group.name)}
-                                value={group.name}
-                                onChange={handleVisibleGroups}
-                              />
-                            }
-                            label={group.name}
-                          />
-                        ))}
-                      </FormGroup>
+                      ))}
+                      <Button
+                        variant="outlined"
+                        sx={{ width: "12rem", marginTop: ".5rem" }}
+                        onClick={handleSaveAllSlider}
+                        disabled={isSharedWithMe}
+                      >
+                        Save All Sliders
+                      </Button>
                     </Collapse>
-                  </>
-                )}
-              </Box>
-              <Box sx={{ width: "11rem" }}>
-                <Button
-                  sx={ButtonSx}
-                  disableTouchRipple
-                  disableRipple
-                  disableFocusRipple
-                  disableElevation
-                  onClick={() => setCollapseReference(!collapseReference)}
-                  startIcon={
-                    collapseReference ? <ExpandLess /> : <ExpandMore />
-                  }
-                >
-                  <Typography>Reference</Typography>
-                </Button>
-                <Collapse
-                  sx={{
-                    transition: "all .35s ease-in",
-                    marginBottom: ".5rem",
-                  }}
-                  timeout={350}
-                  easing="ease-in"
-                  in={collapseReference}
-                  component="div"
-                >
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={showReference}
-                        onChange={(e) => setShowReference(e.target.checked)}
-                      ></Checkbox>
-                    }
-                    label="Show reference"
-                  />
-                </Collapse>
-              </Box>
-              <Box sx={{ width: "11rem" }}>
-                <Button
-                  sx={ButtonSx}
-                  disableTouchRipple
-                  disableRipple
-                  disableFocusRipple
-                  disableElevation
-                  onClick={() => setCollapseLegend(!collapseLegend)}
-                  startIcon={
-                    collapseReference ? <ExpandLess /> : <ExpandMore />
-                  }
-                >
-                  <Typography>Legend</Typography>
-                </Button>
-                <Collapse
-                  sx={{
-                    transition: "all .35s ease-in",
-                    marginBottom: ".5rem",
-                  }}
-                  timeout={350}
-                  easing="ease-in"
-                  in={collapseLegend}
-                  component="div"
-                >
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={shouldShowLegend}
-                        onChange={(e) => setShouldShowLegend(e.target.checked)}
-                      ></Checkbox>
-                    }
-                    label="Show Legend"
-                  />
-                </Collapse>
-              </Box>
-              <Box sx={{ width: "11rem" }}>
-                <Button
-                  sx={ButtonSx}
-                  disableTouchRipple
-                  disableRipple
-                  disableFocusRipple
-                  disableElevation
-                  onClick={() => setCollapseParameters(!collapseParameters)}
-                  startIcon={
-                    collapseParameters ? <ExpandLess /> : <ExpandMore />
-                  }
-                >
-                  <Typography>Parameters</Typography>
-                  <Badge
-                    sx={{ marginLeft: "auto", marginRight: "1rem" }}
-                    badgeContent={orderedSliders?.length}
-                    color="primary"
-                  />
-                </Button>
-                <Collapse
-                  sx={{
-                    transition: "all .35s ease-in",
-                    marginBottom: ".5rem",
-                  }}
-                  timeout={350}
-                  easing="ease-in"
-                  in={collapseParameters}
-                  component="div"
-                >
-                  <DropdownButton
-                    variant="outlined"
-                    sx={{ width: "12rem", marginTop: ".5rem" }}
-                    useIcon={false}
-                    options={addSliderOptions}
-                    onOptionSelected={handleAddSlider}
-                    data_cy="add-parameter-slider"
-                    disabled={isSharedWithMe}
-                  >
-                    Add Parameter
-                  </DropdownButton>
-                  {orderedSliders.map((slider, index) => (
-                    <SimulationSliderView
-                      key={index}
-                      index={index}
-                      slider={slider}
-                      onChange={handleChangeSlider}
-                      onRemove={handleRemoveSlider(slider.fieldArrayIndex)}
-                      onSave={handleSaveSlider(slider)}
-                      units={units}
-                    />
-                  ))}
-                  <Button
-                    variant="outlined"
-                    sx={{ width: "12rem", marginTop: ".5rem" }}
-                    onClick={handleSaveAllSlider}
-                    disabled={isSharedWithMe}
-                  >
-                    Save All Sliders
-                  </Button>
-                </Collapse>
+                  </Box>
+                </Box>
               </Box>
             </Box>
           </Box>
-        </Box>
-      </Box>
-      <Box sx={{ display: "flex", justifyContent: "center" }}>
-        <Button variant="contained" onClick={exportSimulation}>
-          Export to CSV
-        </Button>
-        <HelpButton title={"Export to CSV"}>
-          A variables are reported in pmol, C or T variables are reported in
-          pmol/L and AUC variables are reported in pmol/L*h. These units cannot
-          be changed in the current version.
-        </HelpButton>
-      </Box>
-    </Box>,
-    portalRoot,
+          <Box sx={{ display: "flex", justifyContent: "center" }}>
+            <Button variant="contained" onClick={exportSimulation}>
+              Export to CSV
+            </Button>
+            <HelpButton title={"Export to CSV"}>
+              A variables are reported in pmol, C or T variables are reported in
+              pmol/L and AUC variables are reported in pmol/L*h. These units
+              cannot be changed in the current version.
+            </HelpButton>
+          </Box>
+        </Box>,
+        portalRoot,
+      )}
+    </>
   );
 };
