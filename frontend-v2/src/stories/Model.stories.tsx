@@ -228,7 +228,7 @@ export const SecondaryParameters: Story = {
     await userEvent.click(mapVariablesTab);
 
     const checkbox = await canvas.findByRole("checkbox", {
-      name: /Secondary Parameters: C1/i,
+      name: /Secondary Parameters: Ce/i,
     });
     expect(checkbox).toBeInTheDocument();
     await userEvent.click(checkbox);
@@ -250,7 +250,7 @@ export const SecondaryParameters: Story = {
 
     await waitFor(() => {
       const rows = within(timeIntervalsTable).getAllByRole("row");
-      expect(rows).toHaveLength(2);
-    }); // Header row + 1 data row
+      expect(rows).toHaveLength(4);
+    }); // Header row + 3 time intervals
   },
 };
