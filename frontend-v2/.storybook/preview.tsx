@@ -21,6 +21,18 @@ const preview: Preview = {
       // 'off' - skip a11y checks entirely
       test: "todo",
     },
+    options: {
+      storySort: {
+        order: [
+          "Drug and Target",
+          "Edit Model",
+          "Data Upload",
+          "Trial Design",
+          "Simulations",
+          "Results",
+        ],
+      },
+    },
   },
   decorators: [
     (Story) => {
