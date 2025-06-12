@@ -29,8 +29,36 @@ export const model = {
       pd_variable: 2196,
     },
   ],
-  derived_variables: [],
-  time_intervals: [],
+  derived_variables: [
+    {
+      id: 92,
+      read_only: false,
+      datetime: null,
+      type: "AUC",
+      pkpd_model: 57,
+      pk_variable: 2192,
+    },
+  ],
+  time_intervals: [
+    {
+      id: 156,
+      read_only: false,
+      datetime: null,
+      start_time: 0.0,
+      end_time: 20.0,
+      pkpd_model: 57,
+      unit: 9,
+    },
+    {
+      id: 157,
+      read_only: false,
+      datetime: null,
+      start_time: 40.0,
+      end_time: 60.0,
+      pkpd_model: 57,
+      unit: 9,
+    },
+  ],
   components: [
     {
       name: "PDCompartment",
